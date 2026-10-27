@@ -43,6 +43,9 @@ type RaceAbility struct {
 	Choice *PowerChoice `json:"choice,omitempty"`
 	// GrantsProficiency entra no PADRÃO da ficha, como a da classe.
 	GrantsProficiency []string `json:"grantsProficiency,omitempty"`
+	// Ancestry: a habilidade só vale na ascendência escolhida — a Luz Sagrada
+	// do aggelus, as Sombras Profanas do sulfure (p31, ALE-505).
+	Ancestry string `json:"ancestry,omitempty"`
 }
 
 type RaceForScreen struct {
@@ -54,7 +57,7 @@ type RaceForScreen struct {
 }
 
 // AbilityVariant é uma opção de uma habilidade que se escolhe — a Resistência
-// Elemental do qareen tem seis, a Herança Divina do suraggel tem duas.
+// Elemental do qareen tem seis.
 type AbilityVariant struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

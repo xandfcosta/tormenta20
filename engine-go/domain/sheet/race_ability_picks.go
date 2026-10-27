@@ -358,3 +358,15 @@ func TrainsOnPick(dto CharacterDTO, abilityID, option string) string {
 	}
 	return option
 }
+
+// raceAncestry é a ascendência escolhida para a raça na posição `at` — a do
+// suraggel, guardada com a distribuição de atributo (ALE-505).
+func raceAncestry(dto CharacterDTO, at int, race string) string {
+	blob, found := raceBlobOf(dto, at, race)
+	if !found {
+		return ""
+	}
+	var ancestry string
+	_ = json.Unmarshal(blob["ascendencia"], &ancestry)
+	return ancestry
+}

@@ -71,6 +71,8 @@ type RaceAbility struct {
 	// Memória Póstuma). O que vale é o `abilityPicks`; daqui o motor só lê se a
 	// escolha é a TROCA por poder da Tormenta, que não custa Carisma (p24).
 	Choice *RaceAbilityChoice `json:"choice"`
+	// Ancestry: a habilidade só vale na ascendência escolhida (p31, ALE-505).
+	Ancestry string `json:"ancestry"`
 }
 
 // RaceAbilityChoice é o que o motor lê da escolha de uma habilidade de raça.

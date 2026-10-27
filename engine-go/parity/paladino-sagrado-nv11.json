@@ -432,6 +432,22 @@
           "amount": 1,
           "bonusType": "untyped",
           "note": "Suraggel"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Diplomacia"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "expertise",
+            "name": "Intuição"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
         }
       ]
     },
@@ -522,6 +538,28 @@
             "source": "Armadura completa",
             "bonusType": "untyped",
             "amount": -2
+          }
+        ]
+      },
+      "expertise:Diplomacia": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "suraggel",
+            "source": "Raça: Suraggel",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "expertise:Intuição": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "suraggel",
+            "source": "Raça: Suraggel",
+            "bonusType": "untyped",
+            "amount": 2
           }
         ]
       },
@@ -778,14 +816,19 @@
         "name": "Diplomacia",
         "attribute": "charisma",
         "base": 10,
-        "itemBonus": 0,
-        "total": 10,
+        "itemBonus": 2,
+        "total": 12,
         "halfLevel": 5,
         "attrValue": 5,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Suraggel",
+            "amount": 2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -881,14 +924,19 @@
         "name": "Intuição",
         "attribute": "wisdom",
         "base": 9,
-        "itemBonus": 0,
-        "total": 9,
+        "itemBonus": 2,
+        "total": 11,
         "halfLevel": 5,
         "attrValue": 4,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Suraggel",
+            "amount": 2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1330,14 +1378,19 @@
         "name": "Diplomacia",
         "attribute": "charisma",
         "base": 10,
-        "itemBonus": 0,
-        "total": 10,
+        "itemBonus": 2,
+        "total": 12,
         "halfLevel": 5,
         "attrValue": 5,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Suraggel",
+            "amount": 2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {
@@ -1433,14 +1486,19 @@
         "name": "Intuição",
         "attribute": "wisdom",
         "base": 9,
-        "itemBonus": 0,
-        "total": 9,
+        "itemBonus": 2,
+        "total": 11,
         "halfLevel": 5,
         "attrValue": 4,
         "training": 0,
         "trained": false,
         "trainedBy": [],
-        "itemContributions": [],
+        "itemContributions": [
+          {
+            "source": "Raça: Suraggel",
+            "amount": 2
+          }
+        ],
         "armorPenaltyApplied": 0
       },
       {

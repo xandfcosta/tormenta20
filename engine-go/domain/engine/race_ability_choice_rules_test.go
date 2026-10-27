@@ -117,3 +117,32 @@ func TestTheMemoryBorrowsAnAbilityAndTheSizeOfAnotherRace(t *testing.T) {
 		t.Errorf("o osteon qareen é Médio e ganhou %+d em Furtividade", got)
 	}
 }
+
+// p31 suraggel: "Luz Sagrada (Aggelus). Você recebe +2 em Diplomacia e
+// Intuição" e "Sombras Profanas (Sulfure). Você recebe +2 em Enganação e
+// Furtividade". A habilidade vale pela ASCENDÊNCIA escolhida na distribuição
+// de atributo — um lugar só para a escolha (ALE-505).
+func TestTheSuraggelAbilityFollowsTheAncestry(t *testing.T) {
+	r := BookRuleset(primeBook(t))
+	suraggel := func(ancestry string) Character {
+		return Character{
+			Races:                []CharacterRace{{Race: "suraggel"}},
+			RaceAttributeChoices: `{"floatingPicks":[],"ascendencia":"` + ancestry + `"}`,
+			ClassPowers:          "[]",
+		}
+	}
+	aggelus, sulfure := suraggel("aggelus"), suraggel("sulfure")
+	for _, c := range []struct {
+		name  string
+		ch    Character
+		skill string
+		want  int
+	}{
+		{"aggelus", aggelus, "Diplomacia", 2}, {"aggelus", aggelus, "Intuição", 2}, {"aggelus", aggelus, "Enganação", 0},
+		{"sulfure", sulfure, "Enganação", 2}, {"sulfure", sulfure, "Furtividade", 2}, {"sulfure", sulfure, "Diplomacia", 0},
+	} {
+		if got := expertiseBonus(t, r, c.ch, c.skill); got != c.want {
+			t.Errorf("suraggel %s: %s = %+d, esperava %+d", c.name, c.skill, got, c.want)
+		}
+	}
+}

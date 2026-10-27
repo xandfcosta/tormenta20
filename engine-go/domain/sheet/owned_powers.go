@@ -200,12 +200,17 @@ func raceHeldPowersOf(dto CharacterDTO) []OwnedPower {
 // o personagem guarda a raça por um dos dois.
 func raceAbilitiesOf(dto CharacterDTO) []OwnedPower {
 	outside := []OwnedPower{}
-	for _, r := range dto.Races {
+	for i, r := range dto.Races {
 		race, found := book.RaceTraitsByKey()[r.Race]
 		if !found {
 			continue
 		}
+		ancestry := raceAncestry(dto, i, r.Race)
 		for _, ability := range race.Abilities {
+			// A habilidade da OUTRA ascendência não é da ficha (p31, ALE-505).
+			if ability.Ancestry != "" && ability.Ancestry != ancestry {
+				continue
+			}
 			outside = append(outside, OwnedPower{
 				ID: ability.ID, Name: ability.Name, Detail: ability.Description,
 				Source: PowerFromRace, Owner: race.Name,

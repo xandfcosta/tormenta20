@@ -202,7 +202,7 @@ var activationsPart07 = []Activation{
 		Action:   "padrao",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 30,
+		BookPage: 31,
 	},
 	{
 		ID:       "race.suraggel.sombras-profanas",
@@ -211,7 +211,7 @@ var activationsPart07 = []Activation{
 		Action:   "padrao",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 30,
+		BookPage: 31,
 	},
 	{
 		ID:       "race.trog.mau-cheiro",

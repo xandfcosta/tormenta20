@@ -16,16 +16,19 @@ package engine
 // the race NAME — `getRace` resolves by it. AttrTotals are the FINAL totals,
 // after item and race mods.
 type VitalContext struct {
-	Level              int                              `json:"level"`
-	Classes            []ClassEntry                     `json:"classes"`
-	RaceID             string                           `json:"raceId"`
-	RaceAbilityChoices []string                         `json:"raceAbilityChoices"`
-	PowerIDs           []string                         `json:"powerIds"`
-	ClassChoices       map[string]ClassChoiceSelections `json:"classChoices"`
-	GodPower           string                           `json:"godPower"`
-	Origin             string                           `json:"origin"`
-	OriginChoices      []string                         `json:"originChoices"`
-	AttrTotals         map[string]int                   `json:"attrTotals"`
+	Level              int          `json:"level"`
+	Classes            []ClassEntry `json:"classes"`
+	RaceID             string       `json:"raceId"`
+	RaceAbilityChoices []string     `json:"raceAbilityChoices"`
+	// RaceAncestry é a ascendência escolhida (o suraggel, p31): a habilidade
+	// presa a uma ascendência só vale nela (ALE-505).
+	RaceAncestry  string                           `json:"raceAncestry,omitempty"`
+	PowerIDs      []string                         `json:"powerIds"`
+	ClassChoices  map[string]ClassChoiceSelections `json:"classChoices"`
+	GodPower      string                           `json:"godPower"`
+	Origin        string                           `json:"origin"`
+	OriginChoices []string                         `json:"originChoices"`
+	AttrTotals    map[string]int                   `json:"attrTotals"`
 }
 
 type VitalPools struct {
@@ -86,7 +89,7 @@ func (r *Ruleset) vitalGrantMods(ctx VitalContext) []Modifier {
 
 	if ctx.RaceID != "" {
 		if race := r.getRace(ctx.RaceID); race != nil {
-			out = append(out, raceModifiers(race, toSet(ctx.RaceAbilityChoices))...)
+			out = append(out, raceModifiers(race, toSet(ctx.RaceAbilityChoices), ctx.RaceAncestry)...)
 		}
 	}
 	for _, ce := range ctx.Classes {
