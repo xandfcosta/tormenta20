@@ -73,6 +73,9 @@ func (h sheetHost) PublishSkillTest(
 		Roll: test.Roll, Modifier: test.Modifier, Total: test.Total,
 		Natural20: test.Natural20, Natural1: test.Natural1,
 		ByHand: byHand, UsedSkill: test.UsedSkill, Rolls: test.Rolls,
+		// Quem rola é o DONO da ficha — a ficha só aceita gesto dele —, e o
+		// rolar de novo é só dele (ALE-507).
+		CharacterID: characterID, ByUserID: row.Ownerid,
 	}
 	for _, spent := range test.Spends {
 		roll.Spends = append(roll.Spends, live.SkillTestPaid{Name: spent.Name, Bonus: spent.Bonus, PM: spent.PM})

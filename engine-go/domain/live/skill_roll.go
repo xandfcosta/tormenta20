@@ -46,6 +46,23 @@ type SkillTestRoll struct {
 	// quando se rolaram dois (ALE-500).
 	UsedSkill string `json:"usedSkill,omitempty"`
 	Rolls     []int  `json:"rolls,omitempty"`
+	// CharacterID é a ficha que rolou: o rolar de novo cobra o PM DELA, e é
+	// dela que saem as ofertas (ALE-507).
+	CharacterID int64 `json:"characterId,omitempty"`
+	// Rerolls são os "rolar de novo" pagos, em ordem: vale o ÚLTIMO dado
+	// (p226), e a faixa diz quais saíram.
+	Rerolls []SkillTestReroll `json:"rerolls,omitempty"`
+}
+
+// SkillTestReroll é um "rolar de novo" pago: "Etiqueta · 1 PM, o d20 4 saiu".
+type SkillTestReroll struct {
+	Name      string `json:"name"`
+	PM        int    `json:"pm"`
+	Discarded int    `json:"discarded"`
+	// Bonus é o que o segundo teste ganha (o +5 do Resoluto, p55), e Natural é
+	// o 11+ que vale 20 natural (Sorte de Nimb, p48).
+	Bonus   int  `json:"bonus,omitempty"`
+	Natural bool `json:"natural,omitempty"`
 }
 
 // SkillTestPaid é um gasto do teste como a mesa lê: "Audácia +3 · 2 PM".

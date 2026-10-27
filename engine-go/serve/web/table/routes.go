@@ -140,7 +140,7 @@ func tableSignalsExpr() string {
 		// `TestEverySignalDeclaredByValueHasAReader` não alcança este canal: ele
 		// lê o VALOR de atributo (`data-ref="x"`), e a declaração aqui é uma
 		// string montada em Go.
-		"d20: 10, error: '', command_error: '', move_error: '', bleeding_roll: '', bleeding_error: ''",
+		"d20: 10, error: '', command_error: '', move_error: '', bleeding_roll: '', bleeding_error: '', reroll_d20: ''",
 		// O chão padrão é DERIVADO e não digitado: escrever 'pedra' aqui seria a
 		// terceira cópia da mesma escolha (a lista, o servidor e a página), e a
 		// que fica para trás quando alguém trocar o padrão é justamente esta —
@@ -354,7 +354,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// depende de QUEM OLHA — só quem rolou cancela o que é dele —, e o
 	// construtor puro não recebe o usuário.
 	view.Attack = attackProposalOf(st, userID)
-	view.SkillTest = skillTestBandOf(st)
+	view.SkillTest = s.skillTestBandFor(ctx, st, userID, campaignID, sessionID)
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Title = sess.Title.String
