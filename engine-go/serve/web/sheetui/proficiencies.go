@@ -43,8 +43,8 @@ type sheetProficiency struct {
 	// qualquer ajuste manual.
 	Has bool
 	// FromClass é o que as classes concedem por si. Ela existe separada de `Has`
-	// para o jogador distinguir um ajuste deliberado do que veio de fábrica: sem
-	// isso, uma proficiência tirada na mão parece defeito da conta.
+	// para o jogador distinguir o que marcou na mão do que tem origem — e o que
+	// tem origem não se desmarca na mão (ALE-510).
 	FromClass bool
 	// FromRace marca a concessão que é SÓ da raça — o Vanguardista do kliren
 	// (ALE-493) —, para o selo dizer "raça" e não "classe".
@@ -212,6 +212,13 @@ func proficiencySwap(dto sheet.CharacterDTO, key string) ([]string, error) {
 			key, strings.Join(book.ProficiencyKeys(), ", "))
 	}
 	found := savedProficiencies(dto.Proficiencies)
+	// O QUE TEM ORIGEM NÃO SE DESMARCA NA MÃO (decisão do dono, ALE-510):
+	// desmarcar deixaria a ficha dizendo que a classe, a raça ou o poder dão
+	// uma proficiência que ela não tem. Ela sai com a origem.
+	if granters := grantersOf(dto, key); found[key] && len(granters) > 0 {
+		return nil, fmt.Errorf("A proficiência em %s vem de %s, e sai com a origem, não na mão",
+			book.ProficiencyLabel(key), strings.Join(granters, ", "))
+	}
 	found[key] = !found[key]
 	after := make([]string, 0, len(found))
 	for _, cat := range book.ProficiencyCategories {

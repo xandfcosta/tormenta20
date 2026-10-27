@@ -14,6 +14,9 @@ import (
 //	pesadas ou escudos (se for proficiente em armas marciais, você também pode
 //	escolher armas exóticas). Você recebe essa proficiência. Você pode escolher
 //	este poder outras vezes para proficiências diferentes."
+//
+// E a decisão do dono: o que vem de uma ORIGEM — classe, raça ou poder — não
+// se desmarca na mão, para a proficiência não perder a ligação com quem a deu.
 
 const proficiencyPowerPath = "escolha/proficiencia/"
 
@@ -23,6 +26,12 @@ func guerreiroWithTheClassDefault(t *testing.T) (sceneFixture, int64) {
 	f, id := guerreiro(t)
 	saveHand(t, f, id, `["armas-simples","armas-marciais","armaduras-leves","armaduras-pesadas","escudos"]`)
 	return f, id
+}
+
+func toggleProficiencyOf(t *testing.T, f sceneFixture, id int64, key string) string {
+	t.Helper()
+	target := fmt.Sprintf("/personagens/%d/proficiencias/alterna/%s?tab=proficiencies", id, key)
+	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String())
 }
 
 func TestTheProficiencyPowerGrantsTheChosenProficiencyAndTakesASlot(t *testing.T) {
@@ -57,6 +66,23 @@ func TestTheProficiencyPowerRefusesWhatTheSheetHasAndExoticWithoutMartial(t *tes
 	saveHand(t, g, other, `["armas-simples"]`)
 	if refusal := powerCommand(t, g, other, proficiencyPowerPath+"armas-exoticas", ""); !strings.Contains(refusal, "marciais") {
 		t.Errorf("a Proficiência em armas exóticas sem marciais deu %q; want a recusa que cita as marciais", refusal)
+	}
+}
+
+// O que tem origem não se desmarca na mão; o que foi marcado na mão, sim.
+func TestAProficiencyWithASourceDoesNotUncheckByHand(t *testing.T) {
+	f, id := guerreiroWithTheClassDefault(t)
+	if refusal := powerCommand(t, f, id, proficiencyPowerPath+"armas-de-fogo", ""); refusal != "" {
+		t.Fatalf("escolher armas de fogo foi recusado: %q", refusal)
+	}
+	if refusal := toggleProficiencyOf(t, f, id, "armas-de-fogo"); !strings.Contains(refusal, "Proficiência") {
+		t.Errorf("desmarcar armas de fogo, do poder, deu %q; want a recusa que nomeia o poder", refusal)
+	}
+	if refusal := toggleProficiencyOf(t, f, id, "armas-marciais"); !strings.Contains(refusal, "Guerreiro") {
+		t.Errorf("desmarcar armas marciais, da classe, deu %q; want a recusa que nomeia a classe", refusal)
+	}
+	if !saved(t, f, id)["armas-marciais"] || !saved(t, f, id)["armas-de-fogo"] {
+		t.Error("a recusa gravou mesmo assim")
 	}
 }
 
