@@ -1,5 +1,7 @@
 package book
 
+import "strings"
+
 // AS PROFICIÊNCIAS QUE A CLASSE CONCEDE.
 //
 // Elas moram aqui e não na ficha nem na forja porque a tabela é lida do
@@ -78,6 +80,18 @@ func IsProficiencyCategory(key string) bool {
 		}
 	}
 	return false
+}
+
+// ProficiencyLabel é o nome que a pessoa lê — "armas-de-fogo" vira "armas de
+// fogo", em minúscula para caber no meio de uma frase. Chave desconhecida volta
+// como veio.
+func ProficiencyLabel(key string) string {
+	for _, c := range ProficiencyCategories {
+		if c.Key == key {
+			return strings.ToLower(c.Label)
+		}
+	}
+	return key
 }
 
 // ProficiencyKeys são as sete chaves na ordem do livro.

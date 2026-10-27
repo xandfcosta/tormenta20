@@ -144,6 +144,11 @@ func powerPicksFit(dto CharacterDTO) error {
 		if err := picksAreOptions(power, picks); err != nil {
 			return err
 		}
+		if power.Choice.Kind == "proficiency" {
+			if err := proficiencyPicksFit(dto, power, picks); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

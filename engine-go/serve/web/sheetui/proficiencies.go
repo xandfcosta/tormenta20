@@ -42,13 +42,16 @@ type sheetProficiency struct {
 	// Has é o estado GUARDADO — o que o personagem de fato tem, depois de
 	// qualquer ajuste manual.
 	Has bool
-	// FromClass é o que as classes concedem por si. Ela existe separada de `Tem`
-	// para o jogador distinguir um ajuste deliberado do que veio de fábrica: sem
-	// isso, uma proficiência tirada na mão parece defeito da conta.
+	// FromClass é o que as classes concedem por si. Ela existe separada de `Has`
+	// para o jogador distinguir o que marcou na mão do que tem origem — e o que
+	// tem origem não se desmarca na mão (ALE-510).
 	FromClass bool
 	// FromRace marca a concessão que é SÓ da raça — o Vanguardista do kliren
 	// (ALE-493) —, para o selo dizer "raça" e não "classe".
 	FromRace bool
+	// FromPower marca a concessão que é SÓ do poder Proficiência (p129,
+	// ALE-510), para o selo dizer "poder".
+	FromPower bool
 	// Sources são as classes e raças que concedem, para a etiqueta explicar de
 	// onde vem.
 	Sources []string
@@ -58,6 +61,9 @@ type sheetProficiency struct {
 func (p sheetProficiency) Badge() string {
 	if p.FromRace {
 		return "raça"
+	}
+	if p.FromPower {
+		return "poder"
 	}
 	return "classe"
 }
@@ -73,6 +79,7 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	found := savedProficiencies(dto.Proficiencies)
 	sources := proficiencySources(dto)
 	byRace := raceProficiencySources(dto)
+	byPower := powerProficiencySources(dto)
 
 	byGroup := map[string]*proficiencyGroup{}
 	order := []string{book.WeaponGroup, book.ArmorGroup}
@@ -87,7 +94,8 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 			Has:       found[cat.Key],
 			FromClass: len(sources[cat.Key]) > 0,
 			FromRace:  len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) > 0,
-			Sources:   append(append([]string{}, sources[cat.Key]...), byRace[cat.Key]...),
+			FromPower: len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) == 0 && len(byPower[cat.Key]) > 0,
+			Sources:   grantersOf(dto, cat.Key),
 		})
 	}
 	return []proficiencyGroup{*byGroup[book.WeaponGroup], *byGroup[book.ArmorGroup]}
@@ -163,14 +171,30 @@ func raceProficiencySources(dto sheet.CharacterDTO) map[string][]string {
 	return out
 }
 
-// classDefault é o alvo do "Restaurar padrão": tudo o que as classes e as
-// raças concedem, e nada do que foi acrescentado na mão.
+// powerProficiencySources diz, por categoria, se o poder Proficiência a
+// concede (p129, ALE-510).
+func powerProficiencySources(dto sheet.CharacterDTO) map[string][]string {
+	out := map[string][]string{}
+	for _, key := range sheet.PowerProficiencies(dto.PowerChoices) {
+		out[key] = []string{"Proficiência"}
+	}
+	return out
+}
+
+// grantersOf são as ORIGENS da categoria — classes, raças e o poder —, na
+// ordem em que a etiqueta as diz.
+func grantersOf(dto sheet.CharacterDTO, key string) []string {
+	out := append([]string{}, proficiencySources(dto)[key]...)
+	out = append(out, raceProficiencySources(dto)[key]...)
+	return append(out, powerProficiencySources(dto)[key]...)
+}
+
+// classDefault é o alvo do "Restaurar padrão": tudo o que as classes, as
+// raças e o poder Proficiência concedem, e nada do que foi acrescentado na mão.
 func classDefault(dto sheet.CharacterDTO) []string {
-	sources := proficiencySources(dto)
-	byRace := raceProficiencySources(dto)
-	standard := make([]string, 0, len(sources))
+	standard := []string{}
 	for _, cat := range book.ProficiencyCategories {
-		if len(sources[cat.Key]) > 0 || len(byRace[cat.Key]) > 0 {
+		if len(grantersOf(dto, cat.Key)) > 0 {
 			standard = append(standard, cat.Key)
 		}
 	}
@@ -188,6 +212,13 @@ func proficiencySwap(dto sheet.CharacterDTO, key string) ([]string, error) {
 			key, strings.Join(book.ProficiencyKeys(), ", "))
 	}
 	found := savedProficiencies(dto.Proficiencies)
+	// O QUE TEM ORIGEM NÃO SE DESMARCA NA MÃO (decisão do dono, ALE-510):
+	// desmarcar deixaria a ficha dizendo que a classe, a raça ou o poder dão
+	// uma proficiência que ela não tem. Ela sai com a origem.
+	if granters := grantersOf(dto, key); found[key] && len(granters) > 0 {
+		return nil, fmt.Errorf("A proficiência em %s vem de %s, e sai com a origem, não na mão",
+			book.ProficiencyLabel(key), strings.Join(granters, ", "))
+	}
 	found[key] = !found[key]
 	after := make([]string, 0, len(found))
 	for _, cat := range book.ProficiencyCategories {

@@ -59,8 +59,8 @@ func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 	if !strings.Contains(screen, "Padrão: Guerreiro") {
 		t.Error("a etiqueta não diz de qual classe vem a proficiência")
 	}
-	// A ETIQUETA "classe" é o que separa um ajuste deliberado do que veio de
-	// fábrica; sem ela, uma proficiência tirada na mão parece defeito da conta.
+	// A ETIQUETA "classe" é o que separa o que tem origem do que foi marcado na
+	// mão; sem ela, a recusa de desmarcar pareceria defeito.
 	if strings.Count(screen, ">classe</span>") == 0 {
 		t.Error("nenhuma linha está marcada como padrão de classe")
 	}
@@ -102,9 +102,10 @@ func TestHeavyArmorGrantsTheLightOne(t *testing.T) {
 // RESTAURAR DESCARTA O AJUSTE MANUAL — e é o predicado que importa.
 //
 // O caso prende as DUAS direções, e é isso que o faz discriminar: uma
-// proficiência acrescentada na mão SAI, e uma concedida pela classe que foi
-// tirada na mão VOLTA. Um caso só numa direção passaria por igual se o restaurar
-// fizesse união em vez de substituição.
+// proficiência acrescentada na mão SAI, e uma concedida pela classe que está
+// AUSENTE — de antes de a origem travar o desmarcar (ALE-510), ou de uma classe
+// que chegou depois — VOLTA. Um caso só numa direção passaria por igual se o
+// restaurar fizesse união em vez de substituição.
 func TestRestoringTheDefaultDiscardsTheManualAdjustment(t *testing.T) {
 	f, id := guerreiro(t)
 	// Exóticas nenhuma classe concede; marciais o guerreiro concede e aqui está
@@ -130,23 +131,24 @@ func TestRestoringTheDefaultDiscardsTheManualAdjustment(t *testing.T) {
 //
 // O comando manda a CATEGORIA e não o estado desejado, e é o servidor que decide
 // o novo valor: mandar "ligada" perderia para o clique repetido e para a mesma
-// ficha aberta em dois aparelhos.
+// ficha aberta em dois aparelhos. A categoria é uma que nenhuma origem concede
+// ao guerreiro: a que tem origem não se desmarca na mão (ALE-510).
 func TestTogglingTurnsTheProficiencyOnAndOff(t *testing.T) {
 	f, id := guerreiro(t)
-	saveHand(t, f, id, `["armas-marciais"]`)
-	route := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-marciais", id)
+	saveHand(t, f, id, `["armas-exoticas"]`)
+	route := fmt.Sprintf("/personagens/%d/proficiencias/alterna/armas-exoticas", id)
 
 	if rec := f.requests(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar deu %d: %s", rec.Code, rec.Body.String())
 	}
-	if saved(t, f, id)["armas-marciais"] {
+	if saved(t, f, id)["armas-exoticas"] {
 		t.Fatal("o primeiro toque não DESLIGOU a proficiência")
 	}
 
 	if rec := f.requests(t, f.player, http.MethodPost, route, ""); rec.Code != http.StatusOK {
 		t.Fatalf("alternar de volta deu %d: %s", rec.Code, rec.Body.String())
 	}
-	if !saved(t, f, id)["armas-marciais"] {
+	if !saved(t, f, id)["armas-exoticas"] {
 		t.Error("o segundo toque não LIGOU de volta: o comando não alterna, ele fixa")
 	}
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"slices"
 	"t20engine/app/accounts"
 	"t20engine/app/character"
 	"t20engine/domain/account"
@@ -79,8 +80,18 @@ func (sd Seeder) CreateCharacter(
 		totalLevel += c.Level
 		classes[i] = c.ClassName
 	}
+	// O poder Proficiência (p129) grava a escolhida na coluna, como a classe
+	// (ALE-510): a ficha da semente nasce como nasceria pelo gesto.
+	proficiencies := book.GrantedProficiencies(classes, body.Races)
+	if body.PowerChoices != nil {
+		for _, key := range sheet.PowerProficiencies(string(*body.PowerChoices)) {
+			if !slices.Contains(proficiencies, key) {
+				proficiencies = append(proficiencies, key)
+			}
+		}
+	}
 	id, err := sd.births.Create(ctx, ownerID, body.Name, body, totalLevel,
-		book.GrantedProficiencies(classes, body.Races), sheet.ToStringSet(body.TrainedExpertises))
+		proficiencies, sheet.ToStringSet(body.TrainedExpertises))
 	if err != nil {
 		return 0, err
 	}

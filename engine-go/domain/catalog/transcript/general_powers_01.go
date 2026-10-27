@@ -169,6 +169,12 @@ var generalPowersPart01 = []GeneralPower{
 		Description: "Escolha uma proficiência: armas marciais, armas de fogo, armaduras pesadas ou escudos (se for proficiente em armas marciais, pode escolher armas exóticas). Pode ser pego várias vezes, para proficiências diferentes.",
 		BookPage:    129,
 		UID:         "pwr_v23jgvz3uj",
+		Choice: &PowerChoice{
+			Kind:       "proficiency",
+			Label:      "Proficiência",
+			Repeatable: true,
+			Exclude:    []string{"armas-simples", "armaduras-leves"},
+		},
 	},
 	{
 		ID:            "saque-rapido",
