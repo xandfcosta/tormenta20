@@ -263,6 +263,7 @@ var classPowersPart11 = []ClassPower{
 	{
 		ID:        "class.lutador.aumento-de-atributo",
 		ClassName: "Lutador",
+		BookPage:  76,
 		UID:       "pwr_xbm3gsip4n",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},

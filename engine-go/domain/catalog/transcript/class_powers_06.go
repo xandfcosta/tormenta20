@@ -13,6 +13,7 @@ var classPowersPart06 = []ClassPower{
 	{
 		ID:        "class.cacador.impeto",
 		ClassName: "Caçador",
+		BookPage:  51,
 		UID:       "pwr_4pojmlsnjj",
 		PowerUID:  "pwr_ycwgrnb6oa",
 	},
@@ -24,6 +25,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Inimigo de (Criatura)",
 		Description: "Escolha tipo de criatura (animal/construto/espírito/monstro/morto-vivo, ou duas raças humanoides). Marca da Presa contra criatura desse tipo dobra dados de bônus de dano. Pode escolher várias vezes.",
+		BookPage:    51,
 		UID:         "pwr_24ctbprb2y",
 	},
 	{
@@ -150,6 +152,7 @@ var classPowersPart06 = []ClassPower{
 		Name:           "Baluarte (aliados adjacentes)",
 		Description:    "Pode gastar 2 PM adicionais para fornecer mesmo bônus de Baluarte a todos aliados adjacentes.",
 		GrantedAtLevel: 7,
+		BookPage:       53,
 		UID:            "pwr_oazz44hwxh",
 		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
@@ -169,6 +172,7 @@ var classPowersPart06 = []ClassPower{
 		Name:           "Baluarte (aliados em alcance curto)",
 		Description:    "Pode gastar 5 PM adicionais para fornecer Baluarte a todos aliados em alcance curto.",
 		GrantedAtLevel: 15,
+		BookPage:       53,
 		UID:            "pwr_vbtwjlnffd",
 		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
@@ -333,6 +337,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Postura: Aríete Implacável",
 		Description: "Aumenta bônus de ataque em investidas em +2 (ou mais por 2 PM). Investida contra construto/objeto = +2d8. Postura de Combate.",
+		BookPage:    54,
 		UID:         "pwr_3pq4oqzt62",
 	},
 	{
@@ -340,6 +345,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Postura: Castigo de Ferro",
 		Description: "Sempre que aliado adjacente sofre ataque corpo-a-corpo, gasta 1 PM para ataque contra criatura que o atacou. Postura de Combate.",
+		BookPage:    54,
 		UID:         "pwr_jjvpmyzp7n",
 	},
 	{
@@ -347,6 +353,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Postura: Foco de Batalha",
 		Description: "Sempre que inimigo atacar você, recebe 1 PM temporário cumulativo. Máximo = nível por cena. Postura de Combate.",
+		BookPage:    54,
 		UID:         "pwr_lkctxq4puq",
 	},
 	{
@@ -354,6 +361,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Postura: Muralha Intransponível",
 		Description: "Precisa empunhar escudo. +1 Defesa e Reflexos. Quando sofre efeito que permite Reflexos para reduzir dano à metade, não sofre dano algum se passar. Postura de Combate.",
+		BookPage:    54,
 		UID:         "pwr_nfjbwamx34",
 		Modifiers: []Modifier{
 			{
@@ -383,6 +391,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Postura: Provocação Petulante",
 		Description: "Inimigos em alcance curto fazem Vontade CD Car ou só podem atacar você. Mental. Postura de Combate.",
+		BookPage:    54,
 		UID:         "pwr_spxkpoywaz",
 	},
 	{
@@ -390,6 +399,7 @@ var classPowersPart06 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Postura: Torre Inabalável",
 		Description: "Imune a qualquer tentativa de tirá-lo do lugar. Soma Constituição na Defesa e pode substituir testes de Reflexos e Vontade por Fortitude. Não pode se deslocar. Postura de Combate.",
+		BookPage:    55,
 		UID:         "pwr_3xdh4xubvi",
 		Modifiers: []Modifier{
 			{

@@ -2,6 +2,7 @@ package book
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -167,7 +168,21 @@ func loadTheActivations() {
 	})
 }
 
+// Activations é o registro, com a página HERDADA do dono: o poder de classe,
+// o geral, o item, o poder do deus. A ativação escreve página só quando o dono
+// não tem (ALE-495).
 func Activations() []Activation {
+	list := transcribedActivations()
+	for i, a := range list {
+		if page, owned := ownerPageOf(a); owned {
+			list[i].BookPage = page
+		}
+	}
+	return list
+}
+
+// transcribedActivations é o registro como foi escrito, sem herança.
+func transcribedActivations() []Activation {
 	raw, ok := catalog.Resource("activations")
 	if !ok {
 		return nil
@@ -175,6 +190,44 @@ func Activations() []Activation {
 	var list []Activation
 	_ = json.Unmarshal(raw, &list)
 	return list
+}
+
+// ownerPageOf é a página do DONO da ativação, achado pelo id: `class.*` no
+// poder de classe, `item.*` no item, `deus.<deus>.*` no poder que aquele deus
+// concede (pelo nome), e o id sem prefixo no poder geral. Raça e origem não
+// têm página por habilidade, e a variante sem verbete (`class.paladino.
+// julgamento-zelo`) não acha dono — as duas escrevem a sua.
+func ownerPageOf(a Activation) (int, bool) {
+	page := 0
+	switch prefix, rest, _ := strings.Cut(a.ID, "."); {
+	case prefix == "class":
+		page = ClassPowers()[a.ID].BookPage
+	case prefix == "item":
+		if item := ItemByID(rest); item != nil {
+			page = item.BookPage
+		}
+	case prefix == "deus":
+		god, _, _ := strings.Cut(rest, ".")
+		page = divinePowerPage(god, a.Name)
+	case !strings.Contains(a.ID, "."):
+		page = GeneralPowers()[a.ID].BookPage
+	}
+	return page, page > 0
+}
+
+// divinePowerPage é a página do poder que o deus concede, pelo nome.
+func divinePowerPage(god, name string) int {
+	type granted struct {
+		DeusID   string `json:"deusId"`
+		Name     string `json:"name"`
+		BookPage int    `json:"bookPage"`
+	}
+	for _, row := range ListOf[granted]("divine-powers") {
+		if row.DeusID == god && row.Name == name {
+			return row.BookPage
+		}
+	}
+	return 0
 }
 
 // ActivationOf acha a ativação de um poder pelo ID e, se falhar, pelo NOME.

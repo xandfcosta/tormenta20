@@ -1,21 +1,23 @@
 package transcript
 
 type Activation struct {
-	ID           string           `json:"id"`
-	Name         string           `json:"name"`
-	Kind         string           `json:"kind"`
-	Action       string           `json:"action"`
-	PMCost       PMCost           `json:"pmCost"`
-	Uses         *string          `json:"uses"`
-	RequiresFlag string           `json:"requiresFlag,omitempty"`
-	BookPage     int              `json:"bookPage"`
-	Grant        *ActivationGrant `json:"grant,omitempty"`
-	Cumulative   *CumulativeGrant `json:"cumulative,omitempty"`
-	Flag         string           `json:"flag,omitempty"`
-	StanceGroup  string           `json:"stanceGroup,omitempty"`
-	Scaling      *PMScaling       `json:"scaling,omitempty"`
-	SkillSpend   *SkillSpend      `json:"skillSpend,omitempty"`
-	Rider        *ActivationRider `json:"rider,omitempty"`
+	ID           string  `json:"id"`
+	Name         string  `json:"name"`
+	Kind         string  `json:"kind"`
+	Action       string  `json:"action"`
+	PMCost       PMCost  `json:"pmCost"`
+	Uses         *string `json:"uses"`
+	RequiresFlag string  `json:"requiresFlag,omitempty"`
+	// BookPage só quando o dono não tem página — ver o
+	// `book.TestNoActivationRepeatsItsOwnersPage` (ALE-495).
+	BookPage    int              `json:"bookPage,omitempty"`
+	Grant       *ActivationGrant `json:"grant,omitempty"`
+	Cumulative  *CumulativeGrant `json:"cumulative,omitempty"`
+	Flag        string           `json:"flag,omitempty"`
+	StanceGroup string           `json:"stanceGroup,omitempty"`
+	Scaling     *PMScaling       `json:"scaling,omitempty"`
+	SkillSpend  *SkillSpend      `json:"skillSpend,omitempty"`
+	Rider       *ActivationRider `json:"rider,omitempty"`
 }
 
 type ActivationRider struct {

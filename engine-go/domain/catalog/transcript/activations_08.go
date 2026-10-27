@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 8 de 13 de `Activations` (activations.go).
+// Parte 8 de 12 de `Activations` (activations.go).
 var activationsPart08 = []Activation{
 	{
 		ID:       "class.paladino.julgamento-zelo",
@@ -9,16 +9,15 @@ var activationsPart08 = []Activation{
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 84,
+		BookPage: 83,
 	},
 	{
-		ID:       "class.paladino.orar",
-		Name:     "Orar",
-		Kind:     "instant",
-		Action:   "varia",
-		PMCost:   PMCost{Written: "variavel"},
-		Uses:     nil,
-		BookPage: 84,
+		ID:     "class.paladino.orar",
+		Name:   "Orar",
+		Kind:   "instant",
+		Action: "varia",
+		PMCost: PMCost{Written: "variavel"},
+		Uses:   nil,
 	},
 	{
 		ID:       "class.paladino.virtude-caridade",
@@ -27,7 +26,7 @@ var activationsPart08 = []Activation{
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
-		BookPage: 84,
+		BookPage: 83,
 	},
 	{
 		ID:       "class.paladino.virtude-castidade",
@@ -36,7 +35,7 @@ var activationsPart08 = []Activation{
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
-		BookPage: 84,
+		BookPage: 83,
 	},
 	{
 		ID:       "class.paladino.virtude-compaixao",
@@ -45,7 +44,7 @@ var activationsPart08 = []Activation{
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
-		BookPage: 84,
+		BookPage: 83,
 	},
 	{
 		ID:       "class.paladino.virtude-humildade",
@@ -54,7 +53,7 @@ var activationsPart08 = []Activation{
 		Action:   "completa",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     ptr("cena"),
-		BookPage: 84,
+		BookPage: 83,
 	},
 	{
 		ID:       "class.paladino.virtude-temperanca",
@@ -66,22 +65,20 @@ var activationsPart08 = []Activation{
 		BookPage: 84,
 	},
 	{
-		ID:       "class.paladino.caminho-egide-sagrada",
-		Name:     "Caminho: Égide Sagrada",
-		Kind:     "instant",
-		Action:   "movimento",
-		PMCost:   PMCost{Fixed: 2},
-		Uses:     ptr("cena"),
-		BookPage: 85,
+		ID:     "class.paladino.caminho-egide-sagrada",
+		Name:   "Caminho: Égide Sagrada",
+		Kind:   "instant",
+		Action: "movimento",
+		PMCost: PMCost{Fixed: 2},
+		Uses:   ptr("cena"),
 	},
 	{
-		ID:       "class.paladino.caminho-montaria-sagrada",
-		Name:     "Caminho: Montaria Sagrada",
-		Kind:     "instant",
-		Action:   "movimento",
-		PMCost:   PMCost{Fixed: 2},
-		Uses:     nil,
-		BookPage: 85,
+		ID:     "class.paladino.caminho-montaria-sagrada",
+		Name:   "Caminho: Montaria Sagrada",
+		Kind:   "instant",
+		Action: "movimento",
+		PMCost: PMCost{Fixed: 2},
+		Uses:   nil,
 	},
 	{
 		ID:       "race.dahllan.amiga-das-plantas",

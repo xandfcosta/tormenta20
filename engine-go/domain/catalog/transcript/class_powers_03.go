@@ -91,7 +91,7 @@ var classPowersPart03 = []ClassPower{
 		ClassName:   "Bardo",
 		Name:        "Música: Balada Fascinante",
 		Description: "Teste de Atuação oposto pelo teste de Vontade de criatura no alcance. Se passar, fica fascinada enquanto bardo se concentrar. Música.",
-		BookPage:    44,
+		BookPage:    45,
 		UID:         "pwr_jzd5odkzp4",
 	},
 	{
@@ -410,6 +410,7 @@ var classPowersPart03 = []ClassPower{
 	{
 		ID:        "class.bucaneiro.aumento-de-atributo",
 		ClassName: "Bucaneiro",
+		BookPage:  47,
 		UID:       "pwr_wl4ennklnv",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
@@ -426,6 +427,7 @@ var classPowersPart03 = []ClassPower{
 		ClassName:   "Bucaneiro",
 		Name:        "Bravata Audaz",
 		Description: "Jura façanha específica (roubar tesouro de Sckhar, beijo do príncipe etc.) até fim da aventura. Se cumprir, PM aumentam +2 por nível até fim da aventura.",
+		BookPage:    48,
 		UID:         "pwr_sw67bi2zei",
 		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
@@ -434,6 +436,7 @@ var classPowersPart03 = []ClassPower{
 		ClassName:   "Bucaneiro",
 		Name:        "Bravata Imprudente",
 		Description: "Na primeira rodada de combate, jura derrotar inimigos com restrição (mão nas costas, vendado, cego). Se vencer com restrição, +2 ataque e +2 margem de ameaça até fim da aventura.",
+		BookPage:    48,
 		UID:         "pwr_l22y3mnn74",
 		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},

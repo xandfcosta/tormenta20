@@ -109,6 +109,7 @@ var classPowersPart13 = []ClassPower{
 	{
 		ID:        "class.paladino.aumento-de-atributo",
 		ClassName: "Paladino",
+		BookPage:  82,
 		UID:       "pwr_glzakmng43",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
