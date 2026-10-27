@@ -203,15 +203,6 @@ var activationsPart03 = []Activation{
 		BookPage: 51,
 	},
 	{
-		ID:       "class.cacador.ponto-fraco",
-		Name:     "Ponto Fraco",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
-		Uses:     nil,
-		BookPage: 51,
-	},
-	{
 		ID:       "class.cavaleiro.armadura-da-honra",
 		Name:     "Armadura da Honra",
 		Kind:     "passive",
