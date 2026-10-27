@@ -45,3 +45,24 @@ func SpellProgressions() map[string]SpellProgression {
 	}
 	return table
 }
+
+// SpellByID acha a magia no acervo.
+//
+//	SpellByID("bola-de-fogo") // {bola-de-fogo Bola de Fogo 2 …}, true
+func SpellByID(id string) (Spell, bool) {
+	for _, m := range Catalogs().Spells {
+		if m.ID == id {
+			return m, true
+		}
+	}
+	return Spell{}, false
+}
+
+// SpellName é o nome da magia; id desconhecido volta como veio, para a frase
+// de recusa ainda dizer o que chegou.
+func SpellName(id string) string {
+	if spell, found := SpellByID(id); found {
+		return spell.Name
+	}
+	return id
+}

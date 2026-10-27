@@ -1144,6 +1144,11 @@ regra que o livro dá para condição — "aplique apenas o mais severo" (p394) 
 também para custo: *"reduções no custo de PM não são cumulativas"* (p226).
 Lento mais Imóvel não dá 2,25m, dá 0m.
 
+**O Foco em Magia é a exceção ESCRITA**: −1 PM na magia escolhida, *"cumulativo
+com outras reduções de custo"* (p131). Ele não é modificador `pmCost` — entraria
+na disputa da p226 —, e o `SpellPmCostFor` o soma por fora, antes do fator e do
+piso (ALE-510).
+
 **O primeiro fator INCONDICIONAL chegou na ALE-428**, e a linha acima sobreviveu
 a ele: a Alta Arcana é passiva de 20º nível e não pende de interruptor nenhum.
 Aqui estava escrito que todo fator vinha de condição e que esse dia pediria uma

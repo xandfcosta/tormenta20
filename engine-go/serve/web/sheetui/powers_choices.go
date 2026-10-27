@@ -201,7 +201,9 @@ func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []power
 	offered := p.Choice.Offered()
 	out := make([]powerOption, 0, len(offered))
 	for _, o := range offered {
-		if p.Choice.Kind == "trained-expertise" && !owned[o.ID] {
+		// O Foco em Perícia pede perícia treinada e o Foco em Magia, magia do
+		// grimório: as duas escolhem do que a ficha JÁ tem.
+		if (p.Choice.Kind == "trained-expertise" || p.Choice.Kind == "spell") && !owned[o.ID] {
 			continue
 		}
 		count := 0
@@ -478,10 +480,14 @@ func thatTogglesAttributeGesture(attribute string) string {
 }
 
 // ownedOptionsOf é o que a ficha já tem entre as opções de escolha: as perícias
-// treinadas e as proficiências. As duas famílias não colidem — "Luta" e
-// "armas-marciais" —, então um conjunto só serve às duas.
+// treinadas, as proficiências e as magias do grimório. As três famílias não
+// colidem — "Luta", "armas-marciais" e "bola-de-fogo" —, então um conjunto só
+// serve a todas.
 func ownedOptionsOf(dto sheet.CharacterDTO) map[string]bool {
 	out := sheet.ToStringSet(sheet.UnmarshalStrings(dto.Proficiencies))
+	for _, spell := range dto.Spells {
+		out[spell.CatalogSpellID] = true
+	}
 	for _, e := range dto.Expertises {
 		if e.Trained {
 			out[e.Name] = true

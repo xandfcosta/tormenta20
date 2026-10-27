@@ -79,6 +79,9 @@ type learnedSpellRow struct {
 	// CostCut avisa que este custo vai sair cortado, e por quem — ver
 	// `costCutNote`. Vazio quando nada corta.
 	CostCut string
+	// FocusCut diz que o Foco em Magia tira 1 PM desta magia — ver
+	// `spellFocusNote`. Vazio quando ela não foi escolhida.
+	FocusCut string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -178,7 +181,8 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			Effect: fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command: learned.CatalogSpellID,
-			CostCut: costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
+			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
+			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {
@@ -300,10 +304,8 @@ func augmentDescription(spellID string, index int) string {
 
 // spellOfBook acha a magia no acervo já ordenado.
 func spellOfBook(id string) book.Spell {
-	for _, m := range book.Catalogs().Spells {
-		if m.ID == id {
-			return m
-		}
+	if spell, found := book.SpellByID(id); found {
+		return spell
 	}
 	return book.Spell{ID: id, Name: id}
 }

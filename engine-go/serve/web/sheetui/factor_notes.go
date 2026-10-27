@@ -1,6 +1,8 @@
 package sheetui
 
 import (
+	"slices"
+
 	"strconv"
 
 	"t20engine/domain/book"
@@ -41,6 +43,16 @@ func costCutNote(dto sheet.CharacterDTO, tradition string) string {
 		return ""
 	}
 	return owned.Name + " corta este custo " + writtenRatio(factor) + writtenPage(owned.Page)
+}
+
+// spellFocusNote é a frase do Foco em Magia: "Foco em Magia tira 1 PM deste
+// custo (p131)". Ela segue a regra do `costCutNote`: o número grande da prévia
+// é o custo cheio, e quem desconta é o servidor ao conjurar (ALE-428, ALE-510).
+func spellFocusNote(dto sheet.CharacterDTO, spellID string) string {
+	if !slices.Contains(sheet.PowerPicks(dto.PowerChoices)["foco-em-magia"], spellID) {
+		return ""
+	}
+	return "Foco em Magia tira 1 PM deste custo (p131)"
 }
 
 // stanceBonusNote é a frase do contador de degraus: "Fúria Titânica dobra este

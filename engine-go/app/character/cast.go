@@ -121,8 +121,8 @@ func (p Plays) Cast(
 	// que está conjurando (ALE-357).
 	active := sheet.ToStringSet(dto.Conditionals)
 	tradition := sheet.SpellTradition(dto.Classes, spell.Classes)
-	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, tradition)
-	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, tradition)
+	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, tradition, catalogSpellID)
+	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, tradition, catalogSpellID)
 	limit := dto.Ruleset.SpellPmLimitFor(ec, active, spell.Classes)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)

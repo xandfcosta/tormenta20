@@ -77,7 +77,7 @@ type PowerChoiceOption struct {
 // Offered são as opções que a escolha oferece. A lista do catálogo, quando ele
 // a escreve; para a escolha de ARMA (Especialização em Arma, p65), as armas do
 // catálogo de itens; para a de perícia, as perícias do livro; para a de
-// proficiência, as categorias do livro — escrevê-las de novo no verbete seria a
+// proficiência, as categorias do livro; para a de magia, o acervo de magias — escrevê-las de novo no verbete seria a
 // segunda cópia de uma lista que já tem dono.
 //
 //	ClassPowers()["class.guerreiro.especializacao-em-arma"].Choice.Offered()
@@ -89,6 +89,15 @@ func (c PowerChoice) Offered() []PowerChoiceOption {
 			if !slices.Contains(c.Exclude, e.Name) {
 				out = append(out, PowerChoiceOption{ID: e.Name, Name: e.Name})
 			}
+		}
+		return out
+	}
+	// A de MAGIA (Foco em Magia, p131) sai do acervo de magias; quem filtra as
+	// do grimório da ficha é a tela.
+	if c.Kind == "spell" {
+		out := []PowerChoiceOption{}
+		for _, spell := range Catalogs().Spells {
+			out = append(out, PowerChoiceOption{ID: spell.ID, Name: spell.Name})
 		}
 		return out
 	}

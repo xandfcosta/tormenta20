@@ -108,6 +108,20 @@ func WithoutPowerPick(blob, power, option string) (string, int) {
 	return marshalPowerPicks(picks), left
 }
 
+// spellPicksFit confere as escolhas do Foco em Magia (p131): "uma magia que
+// possa lançar" — uma do grimório — e "magias diferentes".
+func spellPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
+	for i, pick := range picks {
+		if slices.Contains(picks[:i], pick) {
+			return fmt.Errorf("%s já escolheu %s; cada vez é uma magia diferente", power.Name, book.SpellName(pick))
+		}
+		if !slices.ContainsFunc(dto.Spells, func(s SpellDTO) bool { return s.CatalogSpellID == pick }) {
+			return fmt.Errorf("%s escolhe uma magia que a ficha possa lançar, e %s não está no grimório", power.Name, book.SpellName(pick))
+		}
+	}
+	return nil
+}
+
 // WithoutPowerPicksOf apaga as escolhas de um poder — o que acontece quando o
 // poder sai da ficha, para não sobrar escolha de poder que ninguém tem.
 func WithoutPowerPicksOf(blob, power string) string {
@@ -146,6 +160,11 @@ func powerPicksFit(dto CharacterDTO) error {
 		}
 		if power.Choice.Kind == "proficiency" {
 			if err := proficiencyPicksFit(dto, power, picks); err != nil {
+				return err
+			}
+		}
+		if power.Choice.Kind == "spell" {
+			if err := spellPicksFit(dto, power, picks); err != nil {
 				return err
 			}
 		}
