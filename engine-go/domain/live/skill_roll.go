@@ -51,11 +51,12 @@ type SkillTestRoll struct {
 	CharacterID int64 `json:"characterId,omitempty"`
 	// Rerolls são os "rolar de novo" pagos, em ordem: vale o ÚLTIMO dado
 	// (p226), e a faixa diz quais saíram.
-	Rerolls []SkillTestReroll `json:"rerolls,omitempty"`
+	Rerolls []DieReroll `json:"rerolls,omitempty"`
 }
 
-// SkillTestReroll é um "rolar de novo" pago: "Etiqueta · 1 PM, o d20 4 saiu".
-type SkillTestReroll struct {
+// DieReroll é um "rolar de novo" pago, do teste ou do ataque: "Etiqueta · 1 PM,
+// o d20 4 saiu".
+type DieReroll struct {
 	Name      string `json:"name"`
 	PM        int    `json:"pm"`
 	Discarded int    `json:"discarded"`

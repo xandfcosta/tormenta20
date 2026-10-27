@@ -58,8 +58,17 @@ templ attackProposed(v View) {
 					<span aria-hidden="true">·</span>
 					<span class="text-penalty-ink">{ v.Attack.Guard }</span>
 				}
+				if v.Attack.Rerolled != "" {
+					<span aria-hidden="true">·</span>
+					<span class="text-grimorio-gold">{ v.Attack.Rerolled }</span>
+				}
 			</p>
-			<span class="ml-auto flex items-center gap-2">
+			<span class="ml-auto flex flex-wrap items-center gap-2">
+				// O ROLAR DE NOVO é de QUEM ROLOU, antes de o mestre confirmar
+				// (p226, ALE-508) — a mesma divisa da faixa do teste.
+				for _, offer := range v.Attack.Offers {
+					@rerollOfferButton(offer)
+				}
 				// CANCELAR é de quem rolou e do mestre. Oferecer a quem seria
 				// recusado é desenhar um erro — a fronteira de verdade é o
 				// `CancelAttack`, e isto é só não oferecer.
@@ -152,14 +161,19 @@ templ skillTestRolled(v View) {
 						</label>
 					}
 					for _, offer := range v.SkillTest.Offers {
-						<button
-							type="button"
-							data-on:click={ offer.Command }
-							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-foreground"
-						>{ offer.Label }</button>
+						@rerollOfferButton(offer)
 					}
 				</span>
 			}
 		</section>
 	}
+}
+
+// rerollOfferButton é o "Rolar de novo · Sortudo · 3 PM" das duas faixas.
+templ rerollOfferButton(offer rerollOffer) {
+	<button
+		type="button"
+		data-on:click={ offer.Command }
+		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-foreground"
+	>{ offer.Label }</button>
 }

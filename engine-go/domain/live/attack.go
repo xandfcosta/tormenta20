@@ -107,6 +107,23 @@ type PendingAttack struct {
 	// ByUserID é quem rolou. O mestre confirma por qualquer um; quem propôs
 	// cancela o que é dele.
 	ByUserID int64 `json:"byUserId"`
+	// Rerolls são os "rolar de novo" pagos, em ordem: vale o ÚLTIMO dado
+	// (p226, ALE-508).
+	Rerolls []DieReroll `json:"rerolls,omitempty"`
+	// Replay é o que o pedido escolheu e o provisório não diz: rolar de novo
+	// refaz o golpe com o mesmo pedido e outro d20.
+	Replay AttackReplay `json:"replay,omitzero"`
+}
+
+// AttackReplay é o pedido do golpe que o resultado não carrega. A arma vai
+// pelo ÍNDICE porque é ele que o pedido usa; WeaponID é o id do catálogo, que
+// é o que o Mestre em Arma escolheu (p66).
+type AttackReplay struct {
+	WeaponIndex        int    `json:"weaponIndex,omitempty"`
+	WeaponID           string `json:"weaponId,omitempty"`
+	SwitchesDamageType bool   `json:"switchesDamageType,omitempty"`
+	BoostSteps         int    `json:"boostSteps,omitempty"`
+	BoostSplit         string `json:"boostSplit,omitempty"`
 }
 
 // ForeseenCondition é uma condição que o livro reserva ao golpe, do jeito que a

@@ -36,8 +36,9 @@ func (s Scene) AttackRoutes(r chi.Router) {
 	r.Post(sessionPattern+"/tabuleiro/pecas/{tokenId}/atacar", s.tableStateCommand(proposesAttackOnObject))
 	r.Post(sessionPattern+"/ataque/confirmar", s.gmCommand(confirmsAttack))
 	r.Post(sessionPattern+"/ataque/cancelar", s.tableStateCommand(cancelsAttack))
-	// O ROLAR DE NOVO mora na faixa do teste, irmã desta (ALE-507).
+	// O ROLAR DE NOVO mora nas faixas do teste e do ataque (ALE-507, ALE-508).
 	r.Post(sessionPattern+"/teste/rolar-de-novo/{gasto}", s.tableStateCommand(rerollsSkillTest))
+	r.Post(sessionPattern+"/ataque/rolar-de-novo/{gasto}", s.tableStateCommand(rerollsAttack))
 }
 
 // proposesAttack rola o ataque de quem está na vez contra a linha do caminho.

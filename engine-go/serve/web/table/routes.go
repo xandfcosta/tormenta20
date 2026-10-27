@@ -353,7 +353,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// O PROVISÓRIO do ataque é montado aqui e não no `tableViewOf` porque ele
 	// depende de QUEM OLHA — só quem rolou cancela o que é dele —, e o
 	// construtor puro não recebe o usuário.
-	view.Attack = attackProposalOf(st, userID)
+	view.Attack = s.attackProposalFor(ctx, st, userID, campaignID, sessionID)
 	view.SkillTest = s.skillTestBandFor(ctx, st, userID, campaignID, sessionID)
 	view.Status = sess.Status
 	if sess.Title.Valid {

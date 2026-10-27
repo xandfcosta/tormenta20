@@ -48,7 +48,7 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
 		Tally: fmt.Sprintf("d20 %s %s %d = %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier), t.Total),
 		Seal:  "Teste", Class: "mesa-ataque-comum",
-		Paid: writtenPaid(t.Spends), Rerolled: writtenRerolls(t),
+		Paid: writtenPaid(t.Spends), Rerolled: writtenRerolls(t.Rerolls, t.Roll),
 	}
 	// A TROCA aparece no nome: "Diplomacia com Enganação" — o número da conta é
 	// o da outra perícia, e sem isso a mesa estranharia o total.

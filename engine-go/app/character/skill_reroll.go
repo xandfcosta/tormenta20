@@ -23,6 +23,12 @@ import (
 //
 //	offers := character.RerollOffersFor(dto, "Diplomacia") // [Etiqueta 1 PM]
 func RerollOffersFor(dto sheet.CharacterDTO, skill string) []book.SkillSpendOffer {
+	return rerollOffersOf(dto, book.SkillSpendTarget{Skill: skill, Flags: sheetFlags(dto)})
+}
+
+// rerollOffersOf são as ofertas das ativações de rolar de novo que a ficha
+// POSSUI, para o teste do alvo.
+func rerollOffersOf(dto sheet.CharacterDTO, target book.SkillSpendTarget) []book.SkillSpendOffer {
 	owned := []book.Activation{}
 	for _, a := range book.Activations() {
 		if a.SkillSpend != nil && a.SkillSpend.Kind == book.SpendReroll && sheet.OwnsActivation(dto, a) {
@@ -32,7 +38,7 @@ func RerollOffersFor(dto sheet.CharacterDTO, skill string) []book.SkillSpendOffe
 	if len(owned) == 0 {
 		return nil
 	}
-	return book.RerollOffers(owned, book.SkillSpendTarget{Skill: skill, Flags: sheetFlags(dto)})
+	return book.RerollOffers(owned, target)
 }
 
 // RerollSkillTest rola o teste de novo com o gasto `key`, cobra o PM e devolve
@@ -66,7 +72,7 @@ func (p Plays) RerollSkillTest(
 	if err != nil {
 		return test, err
 	}
-	reroll := live.SkillTestReroll{Name: offer.Name, PM: offer.PM, Discarded: test.Roll, Bonus: offer.Bonus}
+	reroll := live.DieReroll{Name: offer.Name, PM: offer.PM, Discarded: test.Roll, Bonus: offer.Bonus}
 	test.Roll, test.Modifier, test.Total = rolled, test.Modifier+offer.Bonus, resolved.Total
 	test.Natural20, test.Natural1, test.Rolls = resolved.Natural20, resolved.Natural1, nil
 	// "Qualquer resultado 11 ou mais na segunda rolagem será considerado um 20
