@@ -59,26 +59,41 @@ templ proficiencyGroupPanel(v View, group proficiencyGroup) {
 // o texto de quem não tem, e o `aria-pressed`. Cor sozinha não serve — é a
 // mesma razão pela qual o guarda de contraste existe — e aqui o dado é binário
 // e vale a redundância.
+//
+// A LINHA TRAVADA não é botão e escreve a origem embaixo (decisão do dono,
+// ALE-510): o `title` do selo não existe no celular.
 templ proficiencyRow(v View, row sheetProficiency) {
 	<li class={ "rounded-sm text-xs", templ.KV("bg-bonus/10", row.Has) }>
-		@ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", row.Has), "aria-label": swapLabel(row), "data-on:click": proficiencyCommand(v, row.Key)}) {
-			if row.Has {
-				@ui.Icon("Check", "size-3.5 text-bonus-ink")
-			} else {
-				@ui.Icon("X", "size-3.5 text-muted-foreground")
-			}
-			<span class={ templ.KV("text-foreground", row.Has), templ.KV("text-muted-foreground line-through", !row.Has) }>
-				{ row.Label }
-			</span>
-			// O selo marca o que tem ORIGEM — a classe, a raça ou o poder
-			// Proficiência —, para o jogador distinguir o que se marca na mão do
-			// que só sai com a origem (ALE-510).
-			if row.FromClass || row.FromRace || row.FromPower {
-				<span
-					title={ sourceTag(row) }
-					class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"
-				>{ row.Badge() }</span>
+		if row.Origin != "" {
+			<div class="flex min-h-11 w-full items-center justify-center gap-2 px-2">
+				@proficiencyRowFace(row)
+			</div>
+			<p class="-mt-1.5 pb-1.5 text-center text-2xs text-muted-foreground">{ row.Origin }</p>
+		} else {
+			@ui.Button(ui.VariantGhost, ui.SizeInline, "min-h-11 w-full gap-2 px-2 text-left", templ.Attributes{"type": "button", "aria-pressed": fmt.Sprintf("%t", row.Has), "aria-label": swapLabel(row), "data-on:click": proficiencyCommand(v, row.Key)}) {
+				@proficiencyRowFace(row)
 			}
 		}
 	</li>
+}
+
+// proficiencyRowFace é o que a linha mostra, botão ou não.
+templ proficiencyRowFace(row sheetProficiency) {
+	if row.Has {
+		@ui.Icon("Check", "size-3.5 text-bonus-ink")
+	} else {
+		@ui.Icon("X", "size-3.5 text-muted-foreground")
+	}
+	<span class={ templ.KV("text-foreground", row.Has), templ.KV("text-muted-foreground line-through", !row.Has) }>
+		{ row.Label }
+	</span>
+	// O selo marca o que tem ORIGEM — a classe, a raça ou o poder
+	// Proficiência —, para o jogador distinguir o que se marca na mão do
+	// que só sai com a origem (ALE-510).
+	if row.FromClass || row.FromRace || row.FromPower {
+		<span
+			title={ sourceTag(row) }
+			class="ml-1 rounded-md bg-muted px-1 text-3xs uppercase tracking-[0.14em] text-muted-foreground"
+		>{ row.Badge() }</span>
+	}
 }

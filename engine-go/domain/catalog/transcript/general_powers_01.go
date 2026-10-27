@@ -151,7 +151,7 @@ var generalPowersPart01 = []GeneralPower{
 				FromChoice: "scope",
 			},
 		},
-		Choice: &PowerChoice{Kind: "weapon", Label: "Arma", Repeatable: true},
+		Choice: &PowerChoice{Kind: "weapon", Label: "Arma", Repeatable: true, RequiresProficiency: true},
 	},
 	{
 		ID:            "ginete",

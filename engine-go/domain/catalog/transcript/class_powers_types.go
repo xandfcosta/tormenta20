@@ -33,6 +33,9 @@ type PowerChoice struct {
 	CountLevels []int    `json:"countLevels,omitempty"`
 	SwapFor     string   `json:"swapFor,omitempty"`
 	Exclude     []string `json:"exclude,omitempty"`
+	// RequiresProficiency diz que a arma escolhida pede proficiência — o Foco
+	// em Arma (p128), e não a Especialização em Arma (p65).
+	RequiresProficiency bool `json:"requiresProficiency,omitempty"`
 }
 
 type PowerChoiceOption struct {

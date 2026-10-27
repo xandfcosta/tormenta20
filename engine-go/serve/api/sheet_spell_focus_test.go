@@ -73,3 +73,17 @@ func TestTheSpellFocusOffersTheGrimoire(t *testing.T) {
 		t.Error("a lista oferece Relâmpago, que não está no grimório")
 	}
 }
+
+// "uma magia que possa LANÇAR": a do grimório acima do círculo que a ficha
+// alcança fica de fora. O Arcanista 8 lança até o 2º círculo (p37), e o
+// Teletransporte é do 3º.
+func TestTheSpellFocusLeavesOutTheSpellTheSheetCannotCastYet(t *testing.T) {
+	f := newSceneFixture(t)
+	learnSpell(t, f, "teletransporte")
+	if refusal := powerCommand(t, f, f.charID, spellFocusPath+"teletransporte", ""); !strings.Contains(refusal, "círculo") {
+		t.Errorf("o Foco em Teletransporte, de 3º círculo, deu %q; want a recusa pelo círculo", refusal)
+	}
+	if strings.Contains(powerScreen(t, f, f.charID), "/escolha/foco-em-magia/teletransporte") {
+		t.Error("a lista oferece Teletransporte, que o Arcanista 8 ainda não lança")
+	}
+}

@@ -186,41 +186,6 @@ func (o powerOption) Written() string {
 	return o.Label
 }
 
-// optionsOf monta as opções do poder com a contagem do que já foi escolhido.
-//
-// A escolha de perícia TREINADA oferece só as treinadas da ficha: o Foco em
-// Perícia pede o treino como pré-requisito (p130), e oferecer a sem treino é
-// desenhar uma recusa. As que DÃO o que falta — o Treinamento em Perícia e a
-// Proficiência — oferecem só o que a ficha ainda não tem, mais o que elas
-// mesmas deram, para poder ser tirado. `owned` é o que a ficha já tem: as
-// perícias treinadas e as proficiências (`ownedOptionsOf`).
-func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []powerOption {
-	if p.Choice == nil {
-		return nil
-	}
-	offered := p.Choice.Offered()
-	out := make([]powerOption, 0, len(offered))
-	for _, o := range offered {
-		// O Foco em Perícia pede perícia treinada e o Foco em Magia, magia do
-		// grimório: as duas escolhem do que a ficha JÁ tem.
-		if (p.Choice.Kind == "trained-expertise" || p.Choice.Kind == "spell") && !owned[o.ID] {
-			continue
-		}
-		count := 0
-		for _, pick := range picks {
-			if pick == o.ID {
-				count++
-			}
-		}
-		gives := p.Choice.Kind == "untrained-expertise" || p.Choice.Kind == "proficiency"
-		if gives && owned[o.ID] && count == 0 {
-			continue
-		}
-		out = append(out, powerOption{Value: o.ID, Label: o.Name, Count: count})
-	}
-	return out
-}
-
 // pickerChoice é uma escolha de valor único — caminho ou devoto.
 type pickerChoice struct {
 	Options []filterOption
@@ -477,21 +442,4 @@ func thatTogglesAttributeGesture(attribute string) string {
 	return "const escolhidos = [...$race_attributes]; const onde = escolhidos.indexOf('" + attribute + "'); " +
 		"if (onde >= 0) { escolhidos.splice(onde, 1) } else { escolhidos.push('" + attribute + "') }; " +
 		"$race_attributes = escolhidos"
-}
-
-// ownedOptionsOf é o que a ficha já tem entre as opções de escolha: as perícias
-// treinadas, as proficiências e as magias do grimório. As três famílias não
-// colidem — "Luta", "armas-marciais" e "bola-de-fogo" —, então um conjunto só
-// serve a todas.
-func ownedOptionsOf(dto sheet.CharacterDTO) map[string]bool {
-	out := sheet.ToStringSet(sheet.UnmarshalStrings(dto.Proficiencies))
-	for _, spell := range dto.Spells {
-		out[spell.CatalogSpellID] = true
-	}
-	for _, e := range dto.Expertises {
-		if e.Trained {
-			out[e.Name] = true
-		}
-	}
-	return out
 }
