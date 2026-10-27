@@ -22,7 +22,11 @@ type ExtraDamage struct {
 func (w WeaponCard) IsMelee() bool { return w.Skill == "Luta" }
 
 type WeaponCard struct {
-	Name      string             `json:"name"`
+	Name string `json:"name"`
+	// CatalogID é o item do catálogo, vazio no desarmado. Não vai para o fio:
+	// quem o lê é o rolar de novo do Mestre em Arma, que escolhe uma arma do
+	// catálogo (p66, ALE-508).
+	CatalogID string             `json:"-"`
 	Skill     string             `json:"skill"`     // "Luta" | "Pontaria"
 	Attribute string             `json:"attribute"` // the skill perícia's attribute
 	Attack    int                `json:"attack"`
@@ -151,8 +155,10 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
-		cards = append(cards, shared.card(ch, it.Name, w,
-			append([]string{weaponScope}, weaponKindScopes(w)...), damageThis, steps, nonLethal))
+		card := shared.card(ch, it.Name, w,
+			append([]string{weaponScope}, weaponKindScopes(w)...), damageThis, steps, nonLethal)
+		card.CatalogID = *it.CatalogID
+		cards = append(cards, card)
 		if len(cards) == 2 {
 			break
 		}

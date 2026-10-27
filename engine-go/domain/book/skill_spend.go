@@ -54,6 +54,9 @@ type SkillSpend struct {
 	// NaturalFrom é o "qualquer resultado N ou mais na segunda rolagem será
 	// considerado um 20 natural" do rolar de novo (Sorte de Nimb, p48).
 	NaturalFrom int `json:"naturalFrom,omitempty"`
+	// ChosenWeapon diz que o rolar de novo é do TESTE DE ATAQUE com a arma
+	// que o poder escolheu (Mestre em Arma, p66, ALE-508).
+	ChosenWeapon bool `json:"chosenWeapon,omitempty"`
 }
 
 // As formas de gasto.
@@ -93,6 +96,9 @@ type SkillSpendTarget struct {
 	// PowerPicks é o `powerChoices` da ficha: as perícias que o Especialista
 	// escolheu, pelo id do poder.
 	PowerPicks map[string][]string
+	// WeaponID é a arma do catálogo quando o teste é de ATAQUE, e vazio num
+	// teste de perícia (ALE-508).
+	WeaponID string
 }
 
 // SkillSpendOffer é um gasto que a ficha pode fazer NESTE teste.
@@ -196,14 +202,22 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 
 // RerollOffers são os "rolar de novo" que as ativações POSSUÍDAS oferecem para
 // esta perícia, DEPOIS de rolada (p226, ALE-507). O bônus é o do segundo teste
-// (o +5 do Resoluto, p55).
+// (o +5 do Resoluto, p55). No teste de ATAQUE a perícia é Luta ou Pontaria, e o
+// `WeaponID` acende o Mestre em Arma (ALE-508).
 //
 //	RerollOffers(owned, SkillSpendTarget{Skill: "Diplomacia"}) // [Etiqueta 1 PM, Sortudo 3 PM]
 func RerollOffers(owned []Activation, target SkillSpendTarget) []SkillSpendOffer {
 	out := []SkillSpendOffer{}
 	for _, a := range owned {
 		spend := a.SkillSpend
-		if spend == nil || spend.Kind != SpendReroll || !appliesTo(*spend, target) {
+		if spend == nil || spend.Kind != SpendReroll {
+			continue
+		}
+		if spend.ChosenWeapon {
+			if target.WeaponID == "" || !slices.Contains(target.PowerPicks[a.ID], target.WeaponID) {
+				continue
+			}
+		} else if !appliesTo(*spend, target) {
 			continue
 		}
 		out = append(out, SkillSpendOffer{
