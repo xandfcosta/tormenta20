@@ -163,6 +163,11 @@ func powerPicksFit(dto CharacterDTO) error {
 				return err
 			}
 		}
+		if power.Choice.RequiresProficiency {
+			if err := weaponPicksFit(dto, power, picks); err != nil {
+				return err
+			}
+		}
 		if power.Choice.Kind == "spell" {
 			if err := spellPicksFit(dto, power, picks); err != nil {
 				return err

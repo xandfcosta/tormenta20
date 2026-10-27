@@ -219,6 +219,12 @@ func proficiencySwap(dto sheet.CharacterDTO, key string) ([]string, error) {
 		return nil, fmt.Errorf("A proficiência em %s vem de %s, e sai com a origem, não na mão",
 			book.ProficiencyLabel(key), strings.Join(granters, ", "))
 	}
+	// E a que um poder PEDE também fica: o Foco em Arma tem a proficiência com
+	// a arma como pré-requisito (p128).
+	if power, needed := sheet.ProficienciesTheChoicesNeed(dto)[key]; found[key] && needed {
+		return nil, fmt.Errorf("O %s pede a proficiência em %s: tire a escolha dele antes",
+			power, book.ProficiencyLabel(key))
+	}
 	found[key] = !found[key]
 	after := make([]string, 0, len(found))
 	for _, cat := range book.ProficiencyCategories {

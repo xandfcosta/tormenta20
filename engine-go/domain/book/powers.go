@@ -65,6 +65,9 @@ type PowerChoice struct {
 	// Exclude são as opções que o livro tira da lista — Luta e Pontaria no
 	// Foco em Perícia (p130).
 	Exclude []string `json:"exclude"`
+	// RequiresProficiency diz que a arma escolhida pede proficiência: o Foco
+	// em Arma (p128), e não a Especialização em Arma (p65).
+	RequiresProficiency bool `json:"requiresProficiency"`
 }
 
 type PowerChoiceOption struct {
