@@ -9,14 +9,14 @@ import (
 
 // keepsChosenExpertises recusa o gesto que tiraria a ficha de uma escolha que
 // nomeia perícia — o Especialista (p73, ALE-501), o Ofício do Vanguardista
-// (p28, ALE-493): a mudança é aplicada numa cópia e conferida ANTES de gravar.
+// (p28, ALE-493), o Foco e o Treinamento em Perícia (p130-131, ALE-510): a mudança é aplicada numa cópia e conferida ANTES de gravar.
 // Ficha sem essas escolhas não paga a carga.
 //
 // Os gestos que passam por aqui são os que mexem no N ou no treino: treino,
 // ofício, item vestido e atributo de raça. Usar item, melhoria e material não
 // mudam a Inteligência permanente — a poção é efeito aplicado, que já não conta.
 func (s Scene) keepsChosenExpertises(r *http.Request, row sqlcgen.Character, change func(*sheet.CharacterDTO)) error {
-	if !sheet.HasCountedChoice(row.Powerchoices) &&
+	if !sheet.HasExpertiseChoice(row.Powerchoices) &&
 		!sheet.HasRaceAbilityPicks(row.Raceattributechoices, row.Secondaryracechoices) {
 		return nil
 	}

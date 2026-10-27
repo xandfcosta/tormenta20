@@ -32,8 +32,10 @@ func choiceRefs(create map[string]json.RawMessage, where string, expertises []st
 		}
 		// A escolha contada por atributo oferece as perícias TREINADAS desta
 		// ficha — as do Especialista (ALE-501) —, e a de perícia treinada
-		// também — o Foco em Perícia (ALE-510).
-		if power.Choice.CountAttribute != "" || power.Choice.Kind == "trained-expertise" {
+		// também — o Foco em Perícia (ALE-510). A do Treinamento em Perícia
+		// treina a escolhida, e a semente a declara treinada.
+		kind := power.Choice.Kind
+		if power.Choice.CountAttribute != "" || kind == "trained-expertise" || kind == "untrained-expertise" {
 			// Sem a lista, a ficha nasce com as treinadas PADRÃO do elenco
 			// (o `enrichCreate`), e é delas que a escolha sai.
 			if offered = listaDe(create, "trainedExpertises"); len(offered) == 0 {

@@ -1253,9 +1253,23 @@
             "charisma": 2,
             "size": "Médio",
             "displacement": 9,
+            "trainedExpertises": [
+              "Luta",
+              "Atletismo",
+              "Pontaria",
+              "Reflexos",
+              "Fortitude",
+              "Vontade",
+              "Percepção",
+              "Intimidação",
+              "Investigação",
+              "Misticismo",
+              "Acrobacia"
+            ],
             "classPowers": [
               "foco-em-arma",
-              "foco-em-pericia"
+              "foco-em-pericia",
+              "treinamento-em-pericia"
             ],
             "powerChoices": {
               "foco-em-arma": [
@@ -1263,6 +1277,9 @@
               ],
               "foco-em-pericia": [
                 "Fortitude"
+              ],
+              "treinamento-em-pericia": [
+                "Acrobacia"
               ]
             },
             "items": [
