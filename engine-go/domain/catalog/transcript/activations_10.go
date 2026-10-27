@@ -312,9 +312,17 @@ var activationsPart10 = []Activation{
 		Name:     "Gritar Ordens",
 		Kind:     "instant",
 		Action:   "livre",
-		PMCost:   PMCost{Written: "variavel"},
+		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 80,
+		Scaling: &PMScaling{
+			BasePM:          1,
+			StepPM:          1,
+			StepLabel:       "+1 nos testes de perícia dos aliados",
+			FirstStepLevel:  0,
+			StepEveryLevels: 0,
+			CapAttribute:    "charisma",
+		},
 	},
 	{
 		ID:       "class.nobre.palavras-afiadas-2d6",

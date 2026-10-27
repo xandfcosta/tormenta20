@@ -3,6 +3,7 @@ package character
 import (
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
@@ -28,6 +29,27 @@ func ClassPowerLevel(dto sheet.CharacterDTO, activationID string) int {
 		}
 	}
 	return int(dto.Level)
+}
+
+// PowerMaxSteps é quantos degraus esta ficha pode pagar no poder: o nível da
+// classe que o fornece e, no custo variável, o atributo que o verbete escreve
+// (p224, ALE-506). Os três leitores — o gesto, o seletor e a postura — passam
+// por aqui, para o teto que a tela mostra ser o que o servidor aceita.
+//
+//	character.PowerMaxSteps(dto, *book.ActivationOf("class.nobre.gritar-ordens", "")) // Car − 1, até nível − 1
+func PowerMaxSteps(dto sheet.CharacterDTO, spec book.Activation) int {
+	if spec.Scaling == nil {
+		return 0
+	}
+	attributes := map[string]int{}
+	if spec.Scaling.CapAttribute != "" {
+		if computed, err := sheet.Compute(dto); err == nil {
+			for key, attr := range computed.Attributes {
+				attributes[key] = attr.Total
+			}
+		}
+	}
+	return book.MaxSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID), attributes)
 }
 
 // PowerUse é quanto um poder já foi usado nesta cena e neste dia.

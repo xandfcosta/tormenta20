@@ -37,7 +37,7 @@ func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation) *useDegrees {
 	}
 	d := &useDegrees{
 		BasePm: spec.Scaling.BasePm, StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
-		MaxSteps: book.LevelSteps(*spec.Scaling, character.ClassPowerLevel(dto, spec.ID)),
+		MaxSteps: character.PowerMaxSteps(dto, spec),
 	}
 	for steps := 0; steps <= d.MaxSteps; steps++ {
 		d.Buys = append(d.Buys, grantWritten(book.ScaledGrantModifiers(spec, steps)))

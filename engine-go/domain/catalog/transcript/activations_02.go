@@ -319,9 +319,16 @@ var activationsPart02 = []Activation{
 		Name:     "Espreitar",
 		Kind:     "instant",
 		Action:   "livre",
-		PMCost:   PMCost{Written: "variavel"},
+		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 51,
+		Scaling: &PMScaling{
+			BasePM:          1,
+			StepPM:          1,
+			StepLabel:       "+1 em perícia contra a criatura marcada",
+			FirstStepLevel:  0,
+			StepEveryLevels: 0,
+		},
 	},
 	{
 		ID:       "class.cacador.ervas-curativas",

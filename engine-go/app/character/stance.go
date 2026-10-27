@@ -180,10 +180,7 @@ func (p Plays) EndStance(
 // não dá: acima do teto que o nível NA CLASSE abre (p40), ou sem PM para o total.
 // Poder que não vende degrau tem teto zero.
 func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int) (int, error) {
-	max := 0
-	if spec.Scaling != nil {
-		max = book.LevelSteps(*spec.Scaling, ClassPowerLevel(dto, spec.ID))
-	}
+	max := PowerMaxSteps(dto, spec)
 	if can, reason := book.ScaledDecision(spec, steps, max, int(dto.ManaAvailable())); !can {
 		return 0, fmt.Errorf("%s: %s", spec.Name, reason)
 	}

@@ -277,9 +277,17 @@ var activationsPart04 = []Activation{
 		Name:     "Agite Antes de Usar",
 		Kind:     "instant",
 		Action:   "livre",
-		PMCost:   PMCost{Written: "variavel"},
+		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 68,
+		Scaling: &PMScaling{
+			BasePM:          1,
+			StepPM:          1,
+			StepLabel:       "+1 dado de dano do preparado",
+			FirstStepLevel:  0,
+			StepEveryLevels: 0,
+			CapAttribute:    "intelligence",
+		},
 	},
 	{
 		ID:       "class.inventor.ajuste-de-mira",
