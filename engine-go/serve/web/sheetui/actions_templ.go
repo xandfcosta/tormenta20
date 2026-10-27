@@ -82,7 +82,7 @@ func ActionsBody(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+			if row.Degrees != nil && row.Degrees.opensDialog() {
 				templ_7745c5c3_Err = useStepperDialog(v, row).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

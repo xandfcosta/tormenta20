@@ -220,8 +220,8 @@ func rowFromPower(power powerRow) actionRow {
 		if row.Live {
 			row.Detail = power.InEffect + " em curso"
 		}
-		roll := actionRoll{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: "$stance_degrees = 0; "}
-		if power.Degrees.MaxSteps > 0 {
+		roll := actionRoll{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: useResets}
+		if power.Degrees.opensDialog() {
 			roll.Command, roll.Opens = useOpensCommand(power.Command), useDialogID(power.Command)
 		}
 		row.Rolls = []actionRoll{roll}

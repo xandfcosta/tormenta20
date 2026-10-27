@@ -39,7 +39,7 @@ templ powersPanelSection(v View) {
 		if row.Stance != nil && row.Stance.MaxSteps > 0 {
 			@stanceStepperDialog(v, row)
 		}
-		if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+		if row.Degrees != nil && row.Degrees.opensDialog() {
 			@useStepperDialog(v, row)
 		}
 	}
@@ -175,7 +175,7 @@ templ powerActionSlot(v View, row powerRow) {
 				aria-label={ "Usar " + row.Name }
 				disabled?={ !row.Can }
 				title={ row.Why }
-				if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+				if row.Degrees != nil && row.Degrees.opensDialog() {
 					aria-haspopup="dialog"
 				}
 				data-on:click={ useCommand(v, row) }
@@ -249,6 +249,25 @@ templ useStepperDialog(v View, row powerRow) {
 				class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeSmall, "") }
 			>+</button>
 		</div>
+		// OS ACRÉSCIMOS da ficha — o Espreitar, o Ponto Fraco — escritos por
+		// contagem de degraus e pela caixa do Inimigo: uma linha por estado, e o
+		// sinal escolhe qual aparece (p51, ALE-509).
+		for steps, parts := range row.Degrees.Riders {
+			@riderLine(parts, riderShows(steps, false))
+			@riderLine(row.Degrees.Doubled[steps], riderShows(steps, true))
+		}
+		if row.Degrees.CanDouble {
+			<label class="flex min-h-11 items-start gap-2 rounded-sm border border-grimorio-iron p-2 text-sm text-foreground">
+				<input type="checkbox" data-bind:prey_favored class="mt-1"/>
+				<span>
+					A presa é do tipo do Inimigo
+					<span class="block text-2xs text-muted-foreground">Inimigo de (Criatura): dobra o dado, as perícias e a margem (p51)</span>
+				</span>
+			</label>
+		}
+		if len(row.Degrees.Riders) > 0 || row.Degrees.CanDouble {
+			<p class="text-xs text-muted-foreground">Tudo vale contra a criatura marcada, até o fim da cena — ligue o interruptor no golpe e no teste contra ela.</p>
+		}
 		<button
 			type="button"
 			aria-label={ "Confirmar " + row.Name }
@@ -256,6 +275,21 @@ templ useStepperDialog(v View, row powerRow) {
 			class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "w-full") }
 		>Usar</button>
 	}
+}
+
+// riderLine é "dano +1d8 · perícias +2 (Espreitar)", com o número em ouro.
+templ riderLine(parts []riderPart, shows string) {
+	<p data-show={ shows } class="flex flex-wrap justify-center gap-x-2.5 gap-y-1 text-xs text-foreground">
+		for _, part := range parts {
+			<span>
+				{ part.What }
+				<span class="text-grimorio-gold">{ part.Value }</span>
+				if part.Source != "" {
+					{ "(" + part.Source + ")" }
+				}
+			</span>
+		}
+	</p>
 }
 
 // stanceStepperDialog escolhe quantos degraus pagar.
