@@ -85,11 +85,13 @@ func useOpensCommand(powerID string) string {
 	return fmt.Sprintf("$stance_degrees = 0; $detail = '%s'", useDialogID(powerID))
 }
 
-// useCounterExpr é o que o contador mostra: o que o degrau compra e o PM.
+// useCounterExpr é o que o contador mostra: o que o degrau compra e o PM. O
+// poder sem concessão — o custo variável do Gritar Ordens (ALE-506) — não tem
+// o que escrever antes do PM, e a frase do degrau já diz o que ele compra.
 func useCounterExpr(d useDegrees) string {
 	blob, _ := json.Marshal(d.Buys)
-	return fmt.Sprintf("%s[$stance_degrees] + ' · ' + (%d + %d * $stance_degrees) + ' PM'",
-		blob, d.BasePm, d.StepPm)
+	return fmt.Sprintf("(%s[$stance_degrees] ? %s[$stance_degrees] + ' · ' : '') + (%d + %d * $stance_degrees) + ' PM'",
+		blob, blob, d.BasePm, d.StepPm)
 }
 
 // useCommand é o toque no "Usar": abre o contador no poder que vende degrau, e
