@@ -23,7 +23,7 @@ func TestTheHighArcanaHalvesTheSpellCostLast(t *testing.T) {
 	}
 
 	// 4 PM de base mais 2 de aprimoramento são 6, e a metade é 3.
-	if got := world.SpellPmCostFor(arcanista20, 4, 2, nil, "arcana"); got != 3 {
+	if got := world.SpellPmCostFor(arcanista20, 4, 2, nil, "arcana", ""); got != 3 {
 		t.Errorf("a magia de 6 PM saiu por %d PM, e a p39 manda cobrar a metade: 3", got)
 	}
 
@@ -36,20 +36,20 @@ func TestTheHighArcanaHalvesTheSpellCostLast(t *testing.T) {
 	// entra pela coleta.
 	comAlquebrado := arcanista20
 	comAlquebrado.ActiveConditions = `["alquebrado"]`
-	if got := world.SpellPmCostFor(comAlquebrado, 4, 2, nil, "arcana"); got != 3 {
+	if got := world.SpellPmCostFor(comAlquebrado, 4, 2, nil, "arcana", ""); got != 3 {
 		t.Errorf("com o Alquebrado a magia saiu por %d PM: o +1 dele entra ANTES da "+
 			"metade (7 → 3), e não depois (3 + 1 = 4)", got)
 	}
 
 	// O PISO DE 1 PM é da p226 e vem DEPOIS do fator: metade de 1 é zero, e
 	// "uma habilidade nunca pode ter seu custo reduzido para menos de 1 PM".
-	if got := world.SpellPmCostFor(arcanista20, 1, 0, nil, "arcana"); got != 1 {
+	if got := world.SpellPmCostFor(arcanista20, 1, 0, nil, "arcana", ""); got != 1 {
 		t.Errorf("a magia de 1 PM saiu por %d PM, e o piso da p226 é 1", got)
 	}
 
 	// O TRUQUE continua de graça: ele custa zero por natureza, e nem o fator nem
 	// o piso alcançam o que já era zero.
-	if got := world.SpellPmCostFor(arcanista20, 0, 0, nil, "arcana"); got != 0 {
+	if got := world.SpellPmCostFor(arcanista20, 0, 0, nil, "arcana", ""); got != 0 {
 		t.Errorf("o truque passou a custar %d PM, e ele é de graça (p171)", got)
 	}
 
@@ -59,7 +59,7 @@ func TestTheHighArcanaHalvesTheSpellCostLast(t *testing.T) {
 	arcanistaClerigo := Character{Level: 20, Classes: []CharacterClass{
 		{ClassName: "Arcanista", Level: 20}, {ClassName: "Clérigo", Level: 10},
 	}}
-	if got := world.SpellPmCostFor(arcanistaClerigo, 4, 2, nil, "divina"); got != 6 {
+	if got := world.SpellPmCostFor(arcanistaClerigo, 4, 2, nil, "divina", ""); got != 6 {
 		t.Errorf("a magia divina saiu por %d PM, e a Alta Arcana só corta as arcanas (p39)", got)
 	}
 
@@ -69,7 +69,7 @@ func TestTheHighArcanaHalvesTheSpellCostLast(t *testing.T) {
 	arcanista19 := Character{
 		Level: 19, Classes: []CharacterClass{{ClassName: "Arcanista", Level: 19}},
 	}
-	if got := world.SpellPmCostFor(arcanista19, 4, 2, nil, "arcana"); got != 6 {
+	if got := world.SpellPmCostFor(arcanista19, 4, 2, nil, "arcana", ""); got != 6 {
 		t.Errorf("o arcanista de 19º pagou %d PM: a Alta Arcana só chega no 20º", got)
 	}
 }

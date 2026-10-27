@@ -157,6 +157,9 @@ templ castSpellDialog(v View, spell learnedSpellRow) {
 		if spell.CostCut != "" {
 			<p class="text-2xs text-arcane-ink">{ spell.CostCut }</p>
 		}
+		if spell.FocusCut != "" {
+			<p class="text-2xs text-arcane-ink">{ spell.FocusCut }</p>
+		}
 		if len(spell.Augments) > 0 {
 			<div class="space-y-1">
 				<p class={ ui.SectionLabelClasses("muted", "") }>Aprimoramentos</p>

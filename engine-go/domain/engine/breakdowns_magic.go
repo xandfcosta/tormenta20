@@ -294,16 +294,20 @@ func resolvePmCostMod(contribs []Contribution) int {
 // calcular o modificador só para a ficha deixa o mosaico "Custo PM" dizendo −2
 // enquanto a conjuração cobra preço cheio.
 //
-// @example SpellPmCostFor(druida20, 3, 0, nil) // 1
+// O FOCO EM MAGIA (p131) tira 1 PM da magia escolhida "cumulativo com outras
+// reduções de custo": é a exceção escrita à p226, e por isso fica fora da
+// disputa do `resolvePmCostMod` (ALE-510).
+//
+// @example SpellPmCostFor(druida20, 3, 0, nil, "divina", "bola-de-fogo") // 1
 func (r *Ruleset) SpellPmCostFor(
-	ch Character, basePm, augmentPm int, conditionals map[string]bool, tradition string,
+	ch Character, basePm, augmentPm int, conditionals map[string]bool, tradition, spellID string,
 ) int {
 	raw := basePm + augmentPm
 	if raw <= 0 {
 		return 0
 	}
 	effects := r.sheetEffects(ch, conditionals)
-	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions)
+	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions) - spellFocusCut(ch, spellID)
 	// O FATOR É O ÚLTIMO, e o livro diz a ordem por extenso: a Alta Arcana
 	// reduz à metade "após aplicar aprimoramentos e quaisquer outros efeitos
 	// que reduzam custo" (p39). Antes da soma, o +1 do Alquebrado entraria
@@ -312,6 +316,18 @@ func (r *Ruleset) SpellPmCostFor(
 	// E o PISO continua por último de todos: metade de 1 PM é zero, e a p226
 	// não deixa descer abaixo de 1.
 	return max(1, pmCostFactor(effects, tradition).Applied(raw+mod))
+}
+
+// spellFocusCut é quanto o Foco em Magia tira desta magia: 1 PM por escolha
+// dela, e a p131 manda escolher magias diferentes.
+func spellFocusCut(ch Character, spellID string) int {
+	cut := 0
+	for _, pick := range parsePowerChoices(ch.PowerChoices)["foco-em-magia"] {
+		if pick == spellID {
+			cut++
+		}
+	}
+	return cut
 }
 
 // pmCostFactor é o fator que corta o custo desta magia: o que vale para toda

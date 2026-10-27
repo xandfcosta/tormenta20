@@ -316,6 +316,7 @@ var generalPowersPart02 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Lançar magias"}},
 		BookPage:      131,
 		UID:           "pwr_iqlka2e4md",
+		Choice:        &PowerChoice{Kind: "spell", Label: "Magia", Repeatable: true},
 	},
 	{
 		ID:            "magia-acelerada",
