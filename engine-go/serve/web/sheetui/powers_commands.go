@@ -46,7 +46,8 @@ func usePower(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) 
 	if err != nil {
 		return err
 	}
-	if err := s.plays.UsePower(r.Context(), row, dto, id, steps); err != nil {
+	choice := character.UseChoice{Steps: steps, Doubled: signals.PreyFavored != nil && *signals.PreyFavored}
+	if err := s.plays.UsePower(r.Context(), row, dto, id, choice); err != nil {
 		return err
 	}
 	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)

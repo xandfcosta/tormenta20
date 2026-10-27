@@ -192,7 +192,7 @@ func boostModifiers(boost *ClassPowerBoost, degrees int, split string, classLeve
 		}
 		m.Amount *= share
 		if m.Dice != "" {
-			m.Dice = multiplyDice(m.Dice, share)
+			m.Dice = MultiplyDice(m.Dice, share)
 		}
 		out = append(out, m)
 	}
@@ -215,8 +215,8 @@ func boostBuys(boost *ClassPowerBoost, degrees int) string {
 	return ""
 }
 
-// multiplyDice escreve "NdF" com N vezes `by` — 1d8 com 3 degraus é 3d8.
-func multiplyDice(dice string, by int) string {
+// MultiplyDice escreve "NdF" com N vezes `by` — 1d8 com 3 degraus é 3d8.
+func MultiplyDice(dice string, by int) string {
 	count, faces, ok := strings.Cut(dice, "d")
 	n, err := strconv.Atoi(count)
 	if !ok || err != nil {

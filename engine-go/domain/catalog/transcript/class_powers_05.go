@@ -224,12 +224,14 @@ var classPowersPart05 = []ClassPower{
 		MinLevel:      12,
 	},
 	{
-		ID:          "class.cacador.espreitar",
+		ID: "class.cacador.espreitar",
+		Modeled: []string{
+			"acréscimo da Marca da Presa: +1 em perícia contra a marcada, +1 por degrau, dobra com o Inimigo (ALE-509)",
+		},
 		ClassName:   "Caçador",
 		Name:        "Espreitar",
 		Description: "Quando usa Marca da Presa, +1 em testes de perícia contra criatura marcada. Bônus +1 para cada PM gasto. Dobra com Inimigo.",
 		BookPage:    51,
 		UID:         "pwr_fymagdc35u",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
 	},
 }

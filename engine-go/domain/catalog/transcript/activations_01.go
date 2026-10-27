@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 1 de 11 de `Activations` (activations.go).
+// Parte 1 de 13 de `Activations` (activations.go).
 var activationsPart01 = []Activation{
 	{
 		ID:           "class.barbaro.alma-de-bronze",

@@ -925,7 +925,9 @@ cuja escolha da Deformidade deixou de ser lida — e o número do oráculo mudou
 
 Antes de acrescentar forma nova ao `Modifier`, veja se o caso não é um destes:
 `context` com nota é o interruptor que a PESSOA liga, `against` com traço é
-"contra o quê", e `terrain` é o tipo de terreno. Dos dezesseis poderes
+"contra o quê", e `terrain` é o tipo de terreno. **Cada `against` é um
+interruptor**; modificadores que a pessoa liga JUNTOS dividem uma flag
+(`flagOn`), como a Marca da Presa e os acréscimos dela (ALE-509). Dos dezesseis poderes
 condicionais fechados na ALE-399, **catorze couberam sem nada novo** — o que
 faltava era o dado, não o motor.
 
@@ -1338,11 +1340,11 @@ lado dizia "3 mods". Hoje a chave é o `engine.FlagGroupID`, e "metade ligada"
 deixou de ser representável — o que valia igual para a POSTURA, que gravava uma
 linha por condicional calculada no instante de entrar e recalculada no de sair.
 
-Não era defeito VIVO: toda flag do livro é de POSTURA — `furia`, `inspiracao` e
-as seis Posturas de Combate do cavaleiro (p54) —, e a tela de situacionais exclui
-as posturas. O que o tornou alcançável foi
-a emenda de campanha — um mestre que conceda um item com dois modificadores
-`flagOn` cai exatamente ali.
+Quando foi consertado não era defeito VIVO: as flags do livro eram de POSTURA,
+e a tela de situacionais exclui as posturas. Hoje há flags fora delas — o
+Folião, o terreno do Explorador (ALE-503) e a `marca-da-presa`, que junta o dado
+da Marca e os **acréscimos** dela (Espreitar, Ponto Fraco) num interruptor só
+(ALE-509).
 
 **O `transcript.Items` chega ao processo por dois caminhos, e só um é sempre
 inteiro.** O `catalog.Resource` é `go:embed` — existe sempre que o binário

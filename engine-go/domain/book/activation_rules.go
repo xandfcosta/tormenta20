@@ -187,6 +187,47 @@ func ScaledGrantModifiers(spec Activation, steps int) []engine.Modifier {
 	return out
 }
 
+// GrantModifiersWithRiders é a concessão com os degraus pagos e o que os
+// ACRÉSCIMOS que a ficha tem somam a ela (p51, ALE-509): o Espreitar põe +1
+// em perícia e mais 1 por degrau, o Ponto Fraco +2 na margem. `doubled` é a
+// caixa do Inimigo — a presa é do tipo escolhido —, e dobra os dados e os
+// números de tudo; ele só vale quando um acréscimo dobra, e quem recusa a
+// caixa sem o poder é o caso de uso.
+//
+//	GrantModifiersWithRiders(marca, 1, []Activation{espreitar}, false) // dano 1d8, perícia +2
+func GrantModifiersWithRiders(spec Activation, steps int, riders []Activation, doubled bool) []engine.Modifier {
+	out := ScaledGrantModifiers(spec, steps)
+	for _, r := range riders {
+		if r.Rider == nil || r.Rider.On != spec.ID {
+			continue
+		}
+		for _, m := range r.Rider.Modifiers {
+			m.Amount += r.Rider.PerStep * steps
+			out = append(out, m)
+		}
+	}
+	if !doubled {
+		return out
+	}
+	for i := range out {
+		out[i].Amount *= 2
+		if out[i].Dice != "" {
+			out[i].Dice = engine.MultiplyDice(out[i].Dice, 2)
+		}
+	}
+	return out
+}
+
+// RidersDouble diz se algum dos acréscimos dobra a concessão (o Inimigo).
+func RidersDouble(spec Activation, riders []Activation) bool {
+	for _, r := range riders {
+		if r.Rider != nil && r.Rider.On == spec.ID && r.Rider.Doubles {
+			return true
+		}
+	}
+	return false
+}
+
 // O BÔNUS CUMULATIVO DE CENA (p42).
 //
 // A regra é de uma linha e mora aqui por isso: ela é do LIVRO — quanto cada

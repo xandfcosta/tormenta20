@@ -17,12 +17,14 @@ var classPowersPart06 = []ClassPower{
 		PowerUID:  "pwr_ycwgrnb6oa",
 	},
 	{
-		ID:          "class.cacador.inimigo-de-criatura",
+		ID: "class.cacador.inimigo-de-criatura",
+		Modeled: []string{
+			"a caixa \"a presa é do tipo do Inimigo\" no gesto da Marca da Presa dobra o dado, o Espreitar e o Ponto Fraco (ALE-509)",
+		},
 		ClassName:   "Caçador",
 		Name:        "Inimigo de (Criatura)",
 		Description: "Escolha tipo de criatura (animal/construto/espírito/monstro/morto-vivo, ou duas raças humanoides). Marca da Presa contra criatura desse tipo dobra dados de bônus de dano. Pode escolher várias vezes.",
 		UID:         "pwr_24ctbprb2y",
-		Unmodeled:   "o tipo de criatura escolhido dobra a Marca da Presa, que é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:          "class.cacador.olho-do-falcao",
@@ -34,13 +36,15 @@ var classPowersPart06 = []ClassPower{
 		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
-		ID:          "class.cacador.ponto-fraco",
+		ID: "class.cacador.ponto-fraco",
+		Modeled: []string{
+			"acréscimo da Marca da Presa: +2 na margem de ameaça contra a marcada, dobra com o Inimigo (ALE-509)",
+		},
 		ClassName:   "Caçador",
 		Name:        "Ponto Fraco",
 		Description: "Quando usa Marca da Presa, +2 margem de ameaça contra criatura marcada. Dobra com Inimigo.",
 		BookPage:    51,
 		UID:         "pwr_cmrtwfklsu",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
 	},
 	{
 		ID:             "class.cavaleiro.codigo-de-honra",

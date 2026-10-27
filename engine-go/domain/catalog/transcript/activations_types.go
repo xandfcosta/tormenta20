@@ -15,6 +15,14 @@ type Activation struct {
 	StanceGroup  string           `json:"stanceGroup,omitempty"`
 	Scaling      *PMScaling       `json:"scaling,omitempty"`
 	SkillSpend   *SkillSpend      `json:"skillSpend,omitempty"`
+	Rider        *ActivationRider `json:"rider,omitempty"`
+}
+
+type ActivationRider struct {
+	On        string     `json:"on"`
+	Modifiers []Modifier `json:"modifiers,omitempty"`
+	PerStep   int        `json:"perStep,omitempty"`
+	Doubles   bool       `json:"doubles,omitempty"`
 }
 
 type SkillSpend struct {
