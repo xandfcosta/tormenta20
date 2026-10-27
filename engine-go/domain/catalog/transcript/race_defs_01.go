@@ -5,6 +5,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "humano",
 		Name:             "Humano",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{},
 		Abilities: []RaceAbility{
 			{
@@ -32,6 +33,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "anao",
 		Name:             "Anão",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"constitution", 2}, {"wisdom", 1}, {"dexterity", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -109,6 +111,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "dahllan",
 		Name:             "Dahllan",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"wisdom", 2}, {"dexterity", 1}, {"intelligence", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -141,6 +144,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "elfo",
 		Name:             "Elfo",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"intelligence", 2}, {"dexterity", 1}, {"constitution", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -184,6 +188,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "goblin",
 		Name:             "Goblin",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"dexterity", 2}, {"intelligence", 1}, {"charisma", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -254,6 +259,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "lefou",
 		Name:             "Lefou",
+		Type:             "monstro",
 		AttributeBonuses: OrderedMap[int]{{"charisma", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -305,6 +311,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "minotauro",
 		Name:             "Minotauro",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"strength", 2}, {"constitution", 1}, {"wisdom", -1}},
 		Abilities: []RaceAbility{
 			{

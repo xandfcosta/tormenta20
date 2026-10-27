@@ -31,6 +31,9 @@ type raceAbilityBlock struct {
 	// já filtrados pela busca (ALE-502).
 	PowerGroups []powerGroup
 	Search      string
+	// RaceGroups são as habilidades das raças humanoides que a Memória
+	// Póstuma pode tomar, por raça (ALE-504).
+	RaceGroups []powerGroup
 }
 
 // powerGroup é um grupo de poder geral — Combate, Destino, Magia, Tormenta.
@@ -78,6 +81,11 @@ func raceAbilityBlocksOf(dto sheet.CharacterDTO, race, query string) []raceAbili
 			ID: ability.ID, Name: ability.Name, Detail: ability.Description,
 			Chosen: len(choice.Picks), Count: ability.Choice.Count,
 		}
+		if ability.Choice.Kind == "variant" {
+			for _, v := range ability.Variants {
+				block.Skills = append(block.Skills, pickedOption(v.ID, v.Name, choice.Picks))
+			}
+		}
 		for _, skill := range skillsOffered(dto, ability.Choice.Kind) {
 			block.Skills = append(block.Skills, pickedOption(skill, skill, choice.Picks))
 		}
@@ -90,6 +98,7 @@ func raceAbilityBlocksOf(dto sheet.CharacterDTO, race, query string) []raceAbili
 		if sheet.IsTrainedOrPower(*ability.Choice) {
 			block.Search = query
 			block.PowerGroups = generalPowerGroupsOf(choice.Picks, query)
+			block.RaceGroups = borrowableRaceGroupsOf(choice.Picks)
 		}
 		out = append(out, block)
 	}
@@ -107,6 +116,9 @@ func skillsOffered(dto sheet.CharacterDTO, kind string) []string {
 	}
 	if kind == "craft" {
 		return crafts
+	}
+	if kind == "variant" {
+		return nil
 	}
 	out := []string{}
 	for _, e := range book.Expertises() {
@@ -156,6 +168,29 @@ func generalPowerGroupsOf(picks []string, query string) []powerGroup {
 		if len(group.Options) > 0 {
 			out = append(out, group)
 		}
+	}
+	return out
+}
+
+// borrowableRaceGroupsOf são as habilidades das raças humanoides, uma raça por
+// grupo; a raça que não é Média diz o tamanho, porque ele vem junto (p29).
+func borrowableRaceGroupsOf(picks []string) []powerGroup {
+	sizes := map[string]string{}
+	races, _, _ := book.CharacterCatalogs()
+	for _, r := range races {
+		sizes[r.ID] = r.Size
+	}
+	out := []powerGroup{}
+	for _, race := range sheet.BorrowableRaces() {
+		title := race.Name
+		if size := sizes[race.ID]; size != "" && size != "Médio" {
+			title += " · " + size
+		}
+		group := powerGroup{Title: title}
+		for _, ability := range race.Abilities {
+			group.Options = append(group.Options, pickedOption(ability.ID, ability.Name, picks))
+		}
+		out = append(out, group)
 	}
 	return out
 }

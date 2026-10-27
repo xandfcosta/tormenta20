@@ -57,6 +57,9 @@ func WithRaceAbilityPick(dto *CharacterDTO, abilityID, option string) error {
 	picks := picksIn(blob)
 	if i := slices.Index(picks[abilityID], option); i >= 0 {
 		picks[abilityID] = slices.Delete(slices.Clone(picks[abilityID]), i, i+1)
+		// Devolver a habilidade emprestada leva a escolha dela junto: escolha
+		// de habilidade que a ficha não tem é recusada (ALE-504).
+		delete(picks, option)
 	} else {
 		picks[abilityID] = append(picks[abilityID], option)
 	}
@@ -121,6 +124,17 @@ func abilityPicksFit(dto CharacterDTO, ability book.RaceAbility, picks []string)
 	for i, pick := range picks {
 		if slices.Contains(picks[:i], pick) {
 			return fmt.Errorf("%s escolheu %s duas vezes", ability.Name, pick)
+		}
+		if choice.Kind == trainedOrPower {
+			if _, _, ok := borrowableAbility(pick); ok {
+				continue
+			}
+		}
+		if choice.Kind == variantChoice {
+			if !slices.ContainsFunc(ability.Variants, func(v book.AbilityVariant) bool { return v.ID == pick }) {
+				return fmt.Errorf("%q não é variante de %s", pick, ability.Name)
+			}
+			continue
 		}
 		powerPick := (choice.SwapFor == tormentaSwap && isTormentaPower(pick)) ||
 			(choice.Kind == trainedOrPower && isGeneralPower(pick))
@@ -198,6 +212,12 @@ func raceAbilitiesWithChoice(dto CharacterDTO) map[string]book.RaceAbility {
 			}
 		}
 	}
+	// A emprestada que pede escolha a guarda como se fosse da raça (ALE-504).
+	for id, b := range borrowedAbilities(dto) {
+		if b.ability.Choice != nil {
+			out[id] = b.ability
+		}
+	}
 	return out
 }
 
@@ -211,6 +231,9 @@ func raceWithAbility(dto CharacterDTO, abilityID string) (int, string) {
 		if slices.ContainsFunc(traits.Abilities, func(a book.RaceAbility) bool { return a.ID == abilityID }) {
 			return i, r.Race
 		}
+	}
+	if b, ok := borrowedAbilities(dto)[abilityID]; ok {
+		return slices.IndexFunc(dto.Races, func(r RaceDTO) bool { return r.Race == b.by }), b.by
 	}
 	return -1, ""
 }
@@ -301,6 +324,19 @@ func RaceAbilityChoices(dto CharacterDTO) []RaceAbilityChoice {
 				out = append(out, RaceAbilityChoice{Race: r.Race, Ability: ability, Picks: picks[ability.ID]})
 			}
 		}
+		// A emprestada que pede escolha vem logo depois, no cartão da raça
+		// que a tomou (ALE-504).
+		borrowed := borrowedAbilities(dto)
+		ids := make([]string, 0, len(borrowed))
+		for id, b := range borrowed {
+			if b.by == r.Race && b.ability.Choice != nil {
+				ids = append(ids, id)
+			}
+		}
+		slices.Sort(ids)
+		for _, id := range ids {
+			out = append(out, RaceAbilityChoice{Race: r.Race, Ability: borrowed[id].ability, Picks: picks[id]})
+		}
 	}
 	return out
 }
@@ -312,6 +348,9 @@ func RaceAbilityChoices(dto CharacterDTO) []RaceAbilityChoice {
 func TrainsOnPick(dto CharacterDTO, abilityID, option string) string {
 	ability, known := raceAbilitiesWithChoice(dto)[abilityID]
 	if !known || ability.Choice.Kind != trainedOrPower || isGeneralPower(option) || trainedIn(dto, option) {
+		return ""
+	}
+	if _, _, borrowable := borrowableAbility(option); borrowable {
 		return ""
 	}
 	if slices.Contains(RaceAbilityPicks(dto)[abilityID], option) {

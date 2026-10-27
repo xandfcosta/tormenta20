@@ -3,6 +3,7 @@ package transcript
 type RaceDefinition struct {
 	ID                   string          `json:"id"`
 	Name                 string          `json:"name"`
+	Type                 string          `json:"tipo"`
 	AttributeBonuses     OrderedMap[int] `json:"attributeBonuses"`
 	Abilities            []RaceAbility   `json:"abilities"`
 	UID                  string          `json:"uid"`

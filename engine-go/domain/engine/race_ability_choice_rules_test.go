@@ -83,3 +83,37 @@ func TestTheMemoryGivesAGeneralPowerThatCountsLikeAnyOther(t *testing.T) {
 		t.Errorf("Antenas pela Memória Póstuma tirou %d de Carisma, esperava −1 (p136)", got)
 	}
 }
+
+// p29 Memória Póstuma: "você pode ser um osteon de outra raça humanoide que não
+// humano. Neste caso, você ganha uma habilidade dessa raça a sua escolha. Se a
+// raça era de tamanho diferente de Médio, você também possui sua categoria de
+// tamanho." Uma HABILIDADE — não os atributos da raça (ALE-504).
+func TestTheMemoryBorrowsAnAbilityAndTheSizeOfAnotherRace(t *testing.T) {
+	r := BookRuleset(primeBook(t))
+	osteon := Character{
+		Races:                []CharacterRace{{Race: "osteon"}},
+		RaceAttributeChoices: `{"abilityPicks":{"osteon-memoria-postuma":["goblin-rato-das-ruas"]}}`,
+		ClassPowers:          "[]",
+	}
+	if got := expertiseBonus(t, r, osteon, "Fortitude"); got != 2 {
+		t.Errorf("Rato das Ruas emprestado deu +%d em Fortitude, esperava +2", got)
+	}
+	if got := expertiseBonus(t, r, osteon, "Furtividade"); got != 2 {
+		t.Errorf("o osteon goblin é Pequeno e ganhou %+d em Furtividade, esperava +2 (Tab. 1-21)", got)
+	}
+	effects := ComputeItemEffects(r.ActiveItemsFor(osteon))
+	if got := StatFor(effects, ModifierTarget{K: "attribute", Name: "dexterity"}).Total; got != 0 {
+		t.Errorf("o osteon goblin ganhou %+d de Destreza: a Memória empresta uma habilidade, e não os atributos", got)
+	}
+
+	// A habilidade emprestada que pede escolha a guarda pela chave dela.
+	osteon.RaceAttributeChoices = `{"abilityPicks":{"osteon-memoria-postuma":["qareen-resistencia-elemental"],` +
+		`"qareen-resistencia-elemental":["qareen-res-fogo"]}}`
+	effects = ComputeItemEffects(r.ActiveItemsFor(osteon))
+	if got := StatFor(effects, ModifierTarget{K: "damageReduction", DamageType: "fogo"}).Total; got != 10 {
+		t.Errorf("a Resistência Elemental emprestada com fogo deu RD %d a fogo, esperava 10", got)
+	}
+	if got := expertiseBonus(t, r, osteon, "Furtividade"); got != 0 {
+		t.Errorf("o osteon qareen é Médio e ganhou %+d em Furtividade", got)
+	}
+}

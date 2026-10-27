@@ -5,6 +5,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "qareen",
 		Name:             "Qareen",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"charisma", 2}, {"intelligence", 1}, {"wisdom", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -116,6 +117,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "suraggel",
 		Name:             "Suraggel",
+		Type:             "espirito",
 		AttributeBonuses: OrderedMap[int]{},
 		Abilities: []RaceAbility{
 			{
@@ -155,6 +157,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "silfide",
 		Name:             "Sílfide",
+		Type:             "espirito",
 		AttributeBonuses: OrderedMap[int]{{"charisma", 2}, {"dexterity", 1}, {"strength", -2}},
 		Abilities: []RaceAbility{
 			{
@@ -190,6 +193,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "sereia-tritao",
 		Name:             "Sereia/Tritão",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{},
 		Abilities: []RaceAbility{
 			{
@@ -230,6 +234,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "osteon",
 		Name:             "Osteon",
+		Type:             "morto-vivo",
 		AttributeBonuses: OrderedMap[int]{{"constitution", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -317,6 +322,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "medusa",
 		Name:             "Medusa",
+		Type:             "monstro",
 		AttributeBonuses: OrderedMap[int]{{"dexterity", 2}, {"charisma", 1}},
 		Abilities: []RaceAbility{
 			{
@@ -360,6 +366,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "kliren",
 		Name:             "Kliren",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"intelligence", 2}, {"charisma", 1}, {"strength", -1}},
 		Abilities: []RaceAbility{
 			{
@@ -414,6 +421,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "hynne",
 		Name:             "Hynne",
+		Type:             "humanoide",
 		AttributeBonuses: OrderedMap[int]{{"dexterity", 2}, {"charisma", 1}, {"strength", -1}},
 		Abilities: []RaceAbility{
 			{

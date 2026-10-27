@@ -47,7 +47,7 @@ func choiceRefs(create map[string]json.RawMessage, where string, expertises []st
 	// A ESCOLHA DE HABILIDADE DE RAÇA (ALE-493): a chave é a habilidade, e o
 	// valor é perícia do livro ou poder geral — o da Tormenta na troca da
 	// Deformidade, qualquer um na Memória Póstuma (ALE-502).
-	expertisesAndPowers := append(slices.Clone(expertises), generalPowerIDs()...)
+	expertisesAndPowers := append(append(slices.Clone(expertises), generalPowerIDs()...), raceAbilityIDs()...)
 	picks := raceAbilityPicksOf(create)
 	for _, ability := range sortedKeys(picks) {
 		name, known := raceAbilityWithChoice(ability)
@@ -118,4 +118,20 @@ func sortedKeys(m map[string][]string) []string {
 	}
 	slices.Sort(keys)
 	return keys
+}
+
+// raceAbilityIDs são as habilidades de raça — a Memória Póstuma toma uma de
+// outra raça (ALE-504).
+func raceAbilityIDs() []string {
+	out := []string{}
+	for key, race := range book.RaceTraitsByKey() {
+		if key != race.ID {
+			continue
+		}
+		for _, ability := range race.Abilities {
+			out = append(out, ability.ID)
+		}
+	}
+	slices.Sort(out)
+	return out
 }

@@ -46,8 +46,10 @@ type RaceAbility struct {
 }
 
 type RaceForScreen struct {
-	ID        string        `json:"id"`
-	Name      string        `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Type é o tipo de criatura, no vocabulário do bestiário (ALE-469).
+	Type      string        `json:"tipo"`
 	Abilities []RaceAbility `json:"abilities"`
 }
 

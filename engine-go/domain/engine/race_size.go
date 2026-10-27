@@ -37,7 +37,11 @@ func (r *Ruleset) raceSizeItem(ch Character) *ActiveItem {
 	if len(ch.Races) == 0 {
 		return nil
 	}
-	race := r.raceEntryByID(ch.Races[0].Race)
+	sized := ch.Races[0].Race
+	if borrowed := r.borrowedSizeRace(ch); borrowed != "" {
+		sized = borrowed
+	}
+	race := r.raceEntryByID(sized)
 	if race == nil {
 		return nil
 	}
