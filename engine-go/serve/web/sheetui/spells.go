@@ -180,7 +180,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Augments:  augmentRowsOf(learned.CatalogSpellID, spell, castable),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			Effect: fromBook.BaseEffect, Page: fromBook.BookPage,
-			Command: learned.CatalogSpellID,
+			Command:  learned.CatalogSpellID,
 			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
 		})
