@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 2 de 10 de `Activations` (activations.go).
+// Parte 2 de 11 de `Activations` (activations.go).
 var activationsPart02 = []Activation{
 	{
 		ID:       "class.bucaneiro.ataque-acrobatico",
@@ -317,9 +317,9 @@ var activationsPart02 = []Activation{
 	{
 		ID:       "class.cacador.espreitar",
 		Name:     "Espreitar",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
+		Kind:     "instant",
+		Action:   "livre",
+		PMCost:   PMCost{Written: "variavel"},
 		Uses:     nil,
 		BookPage: 51,
 	},
@@ -438,11 +438,11 @@ var activationsPart02 = []Activation{
 	{
 		ID:       "class.cavaleiro.escudeiro",
 		Name:     "Escudeiro",
-		Kind:     "passive",
-		Action:   "passivo",
-		PMCost:   PMCost{Fixed: 0},
+		Kind:     "instant",
+		Action:   "livre",
+		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 53,
+		BookPage: 54,
 	},
 	{
 		ID:       "class.cavaleiro.especializacao-em-armadura",

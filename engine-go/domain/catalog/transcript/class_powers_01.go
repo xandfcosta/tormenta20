@@ -288,7 +288,7 @@ var classPowersPart01 = []ClassPower{
 		ID:          "class.arcanista.raio-arcano",
 		ClassName:   "Arcanista",
 		Name:        "Raio Arcano",
-		Description: "Ação padrão, 1 PM: causa 1d8 dano arcano em alvo em alcance curto. +1d8 por círculo de magia acima do 1° que pode lançar. Alvo: Reflexos (CD atributo-chave) reduz à metade.",
+		Description: "Ação padrão: causa 1d8 de dano de essência em um alvo em alcance curto. +1d8 por círculo de magia acima do 1º que pode lançar. Reflexos (CD atributo-chave) reduz à metade. Conta como magia para habilidades e itens que beneficiem suas magias.",
 		BookPage:    39,
 		UID:         "pwr_uoki63typ4",
 		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",

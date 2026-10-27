@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 1 de 10 de `Activations` (activations.go).
+// Parte 1 de 11 de `Activations` (activations.go).
 var activationsPart01 = []Activation{
 	{
 		ID:           "class.barbaro.alma-de-bronze",
@@ -263,8 +263,8 @@ var activationsPart01 = []Activation{
 	{
 		ID:       "class.bardo.fascinar-em-massa",
 		Name:     "Fascinar em Massa",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 44,
@@ -325,8 +325,8 @@ var activationsPart01 = []Activation{
 	{
 		ID:       "class.bardo.manipular-em-massa",
 		Name:     "Manipular em Massa",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 45,
@@ -375,8 +375,8 @@ var activationsPart01 = []Activation{
 	{
 		ID:       "class.bardo.musica-melodia-restauradora",
 		Name:     "Música: Melodia Restauradora",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 45,

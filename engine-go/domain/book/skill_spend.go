@@ -48,6 +48,9 @@ type SkillSpend struct {
 	RequiresFlag string `json:"requiresFlag,omitempty"`
 	// Context é o quando do livro que o mestre julga ("para interrogar").
 	Context string `json:"context,omitempty"`
+	// AnySkill diz que a troca ou os dois d20 valem em QUALQUER perícia — a
+	// Fé Guerreira troca qualquer teste por Guerra, em combate (ALE-492).
+	AnySkill bool `json:"anySkill,omitempty"`
 }
 
 // As formas de gasto.
@@ -191,7 +194,7 @@ func appliesTo(spend SkillSpend, target SkillSpendTarget) bool {
 	if target.Skill == spend.SwapTo {
 		return false
 	}
-	return slices.Contains(spend.Skills, target.Skill) || slices.Contains(spend.Attributes, target.Attribute)
+	return spend.AnySkill || slices.Contains(spend.Skills, target.Skill) || slices.Contains(spend.Attributes, target.Attribute)
 }
 
 // swapUsable diz se a perícia de destino existe na ficha e pode ser rolada: a

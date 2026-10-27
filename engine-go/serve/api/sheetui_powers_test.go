@@ -182,8 +182,12 @@ func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 // passivas. Sumir com a seção faria a tela mudar de forma
 // por classe; e mandar às Magias quem não conjura seria mandá-lo a uma aba
 // vazia.
+//
+// O guerreiro é de nível 2: no 3º ele ganha o Durão, que é gesto (ALE-492), e
+// o Ataque Especial do 1º é impulso no ataque, e não ação.
 func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {
-	f, id := fighterFixture(t)
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Recruta", "Guerreiro", 2, 0, 0)
 	if screen := powerScreen(t, f, id); !strings.Contains(screen, "Suas habilidades são passivas") {
 		t.Error("o guerreiro sem ação não recebeu a frase que não manda a lugar nenhum")
 	}

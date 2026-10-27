@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 3 de 10 de `Activations` (activations.go).
+// Parte 3 de 11 de `Activations` (activations.go).
 var activationsPart03 = []Activation{
 	{
 		ID:       "class.cavaleiro.estandarte",
@@ -203,20 +203,20 @@ var activationsPart03 = []Activation{
 	{
 		ID:       "class.clerigo.canalizar-amplo",
 		Name:     "Canalizar Amplo",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
-		BookPage: 57,
+		BookPage: 58,
 	},
 	{
 		ID:       "class.clerigo.comunhao-vital",
 		Name:     "Comunhão Vital",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
-		BookPage: 57,
+		BookPage: 58,
 	},
 	{
 		ID:       "class.clerigo.conhecimento-magico",
@@ -248,11 +248,11 @@ var activationsPart03 = []Activation{
 	{
 		ID:       "class.clerigo.magia-sagrada-profana",
 		Name:     "Magia Sagrada/Profana",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
-		BookPage: 57,
+		BookPage: 58,
 	},
 	{
 		ID:       "class.clerigo.mestre-celebrante",
@@ -311,8 +311,8 @@ var activationsPart03 = []Activation{
 	{
 		ID:       "class.clerigo.prece-de-combate",
 		Name:     "Prece de Combate",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
 		BookPage: 58,

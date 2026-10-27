@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 7 de 10 de `Activations` (activations.go).
+// Parte 7 de 11 de `Activations` (activations.go).
 var activationsPart07 = []Activation{
 	{
 		ID:       "class.paladino.julgamento-zelo",

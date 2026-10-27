@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 6 de 10 de `Activations` (activations.go).
+// Parte 6 de 11 de `Activations` (activations.go).
 var activationsPart06 = []Activation{
 	{
 		ID:       "class.lutador.lingua-dos-becos",
@@ -14,8 +14,8 @@ var activationsPart06 = []Activation{
 	{
 		ID:       "class.lutador.lutador-de-chao",
 		Name:     "Lutador de Chão",
-		Kind:     "passive",
-		Action:   "passivo",
+		Kind:     "instant",
+		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 77,
