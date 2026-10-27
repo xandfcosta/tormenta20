@@ -1253,6 +1253,18 @@
             "charisma": 2,
             "size": "Médio",
             "displacement": 9,
+            "classPowers": [
+              "foco-em-arma",
+              "foco-em-pericia"
+            ],
+            "powerChoices": {
+              "foco-em-arma": [
+                "espada-longa"
+              ],
+              "foco-em-pericia": [
+                "Fortitude"
+              ]
+            },
             "items": [
               {
                 "catalogId": "espada-longa",
