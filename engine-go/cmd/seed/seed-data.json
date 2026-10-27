@@ -823,6 +823,14 @@
                 "caminho": "bruxo"
               }
             },
+            "classPowers": [
+              "foco-em-magia"
+            ],
+            "powerChoices": {
+              "foco-em-magia": [
+                "bola-de-fogo"
+              ]
+            },
             "items": [
               {
                 "catalogId": "adaga",
