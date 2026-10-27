@@ -192,6 +192,9 @@ type Request struct {
 	// permite o gesto de menu — que não tem onde digitar — sem fechar a porta
 	// para a mesa que rola dado na mão.
 	D20 *int
+	// CountsAsNaturalTwenty diz que o `D20` "será considerado um 20 natural"
+	// (Sorte de Nimb, p48): só o rolar de novo o acende (ALE-508).
+	CountsAsNaturalTwenty bool
 }
 
 // strikerFor confere QUEM ATACA e monta o combatente dele.
@@ -264,7 +267,7 @@ func (r Request) TargetObjectTokenID() string {
 	return r.TargetObject.TokenID
 }
 
-// proposeAgainstObject resolve um golpe contra uma PEÇA DE CENÁRIO (p239).
+// rollAgainstObject resolve um golpe contra uma PEÇA DE CENÁRIO (p239).
 //
 // Ele é um irmão do `Propose` e não um ramo dentro dele, e a razão é o que ele
 // NÃO faz: não há linha da fila a achar, não há `CharacterID` do alvo, não há
@@ -274,7 +277,7 @@ func (r Request) TargetObjectTokenID() string {
 //
 // O que ele DIVIDE é o que importa dividir: a vez, a posse, a ação padrão e a
 // arma — e isso vem pelo `strikerFor`, que é o pedaço comum de verdade.
-func (s Strike) proposeAgainstObject(
+func (s Strike) rollAgainstObject(
 	ctx context.Context, who app.Caller, role string, req Request,
 ) (live.PendingAttack, error) {
 	attackerEntry, striker, err := s.strikerFor(ctx, role, req)
@@ -300,7 +303,7 @@ func (s Strike) proposeAgainstObject(
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	out, err := engine.ResolveAttackUnder(weapon, alvo, situations, d20, s.rollDie)
+	out, err := req.resolver()(weapon, alvo, situations, d20, s.rollDie)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -316,9 +319,7 @@ func (s Strike) proposeAgainstObject(
 		Announces: foreseenOf(out),
 		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 		BoostPowerID: boost.powerID, BoostPM: boost.pm, Charge: req.Charge,
-	}
-	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
-		return live.PendingAttack{}, err
+		Replay: req.replayOf(weapon),
 	}
 	return pending, nil
 }
@@ -326,8 +327,21 @@ func (s Strike) proposeAgainstObject(
 // Propose rola o ataque e guarda o provisório. Ninguém perde PV aqui: quem
 // confirma é o mestre, pela mesma divisa do movimento no tabuleiro.
 func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
+	pending, err := s.roll(ctx, who, role, req)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
+		return live.PendingAttack{}, err
+	}
+	return pending, nil
+}
+
+// roll rola o golpe ou a manobra do pedido, sem guardar: quem guarda é o
+// `Propose`, e o `Reroll` junta antes o que o primeiro dado deixou.
+func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
 	if req.TargetObject != nil {
-		return s.proposeAgainstObject(ctx, who, role, req)
+		return s.rollAgainstObject(ctx, who, role, req)
 	}
 	attackerEntry, striker, err := s.strikerFor(ctx, role, req)
 	if err != nil {
@@ -366,13 +380,13 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		return live.PendingAttack{}, err
 	}
 	if req.Maneuver != "" {
-		return s.proposeManeuver(ctx, who, req, attackerEntry, target, striker, victim, weapon, d20)
+		return s.rollManeuver(ctx, who, req, attackerEntry, target, striker, victim, weapon, d20)
 	}
 	situations, err := s.specialSituations(ctx, req)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	out, err := engine.ResolveAttackUnder(weapon, engine.AttackTarget{
+	out, err := req.resolver()(weapon, engine.AttackTarget{
 		Defense:               victim.Defense,
 		DamageReduction:       victim.DamageReduction,
 		DamageReductionByType: victim.DamageReductionByType,
@@ -395,19 +409,17 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 		Announces: foreseenOf(out),
 		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
 		BoostPowerID: boost.powerID, BoostPM: boost.pm, Charge: req.Charge,
-	}
-	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
-		return live.PendingAttack{}, err
+		Replay: req.replayOf(weapon),
 	}
 	return pending, nil
 }
 
-// proposeManeuver resolve o teste OPOSTO da manobra e guarda o provisório.
+// rollManeuver resolve o teste OPOSTO da manobra e guarda o provisório.
 //
 // Ele divide com o golpe tudo que vem antes: a vez, a posse, a ação padrão e as
 // duas pontas da fila. O que muda é só a REGRA no meio — e é por isso que ele é
 // um ramo aqui, e não um caso de uso irmão que repetiria sete conferências.
-func (s Strike) proposeManeuver(
+func (s Strike) rollManeuver(
 	ctx context.Context, who app.Caller, req Request,
 	attackerEntry, target live.InitiativeEntry,
 	striker, victim Combatant, weapon engine.WeaponCard, d20 int,
@@ -433,14 +445,11 @@ func (s Strike) proposeManeuver(
 
 	pending := live.PendingAttack{
 		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
-		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID,
+		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, Replay: req.replayOf(weapon),
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
 		},
-	}
-	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, pending); err != nil {
-		return live.PendingAttack{}, err
 	}
 	return pending, nil
 }

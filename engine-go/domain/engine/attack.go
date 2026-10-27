@@ -179,7 +179,31 @@ func ResolveAttackUnder(
 	card WeaponCard, target AttackTarget, situations []SpecialSituation,
 	d20 int, rollDie func(faces int) (int, error),
 ) (AttackOutcome, error) {
-	w := attackWorld(card, target, situations, d20, rollDie)
+	return resolveAttack(card, target, situations, attackDie{Rolled: d20, Natural: d20}, rollDie)
+}
+
+// ResolveAttackCountingAsNaturalTwenty é o ataque cujo d20 "será considerado
+// um 20 natural" (Sorte de Nimb, p48, ALE-508): o dado ROLADO soma no total, e
+// o 20 decide o acerto e o crítico (p221, p231).
+//
+// @example ResolveAttackCountingAsNaturalTwenty(carta, alvo, nil, 13, rolar)
+func ResolveAttackCountingAsNaturalTwenty(
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	d20 int, rollDie func(faces int) (int, error),
+) (AttackOutcome, error) {
+	return resolveAttack(card, target, situations, attackDie{Rolled: d20, Natural: 20}, rollDie)
+}
+
+// attackDie é o d20 do ataque em suas duas leituras: o que SOMA no total e o
+// que as pontas da p221 e a margem de ameaça leem. São o mesmo número, menos
+// quando um poder manda contar o dado como 20 natural.
+type attackDie struct{ Rolled, Natural int }
+
+func resolveAttack(
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	die attackDie, rollDie func(faces int) (int, error),
+) (AttackOutcome, error) {
+	w := attackWorldOf(card, target, situations, die, rollDie)
 	out := outcomeFromWorld(w)
 	// A CHANCE DO ALVO ecoa no resultado, e só quando há extra para ela
 	// alcançar: anunciar "25% de ignorar o extra" num acerto normal mandaria a
@@ -224,9 +248,16 @@ func attackWorld(
 	card WeaponCard, target AttackTarget, situations []SpecialSituation,
 	d20 int, rollDie func(faces int) (int, error),
 ) *ecs.World {
+	return attackWorldOf(card, target, situations, attackDie{Rolled: d20, Natural: d20}, rollDie)
+}
+
+func attackWorldOf(
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	die attackDie, rollDie func(faces int) (int, error),
+) *ecs.World {
 	w := ecs.NewWorld()
 	ecs.Set(w, w.Spawn(), theAttackResource{})
-	ecs.Run(w, attackSystems(card, target, situations, d20, rollDie)...)
+	ecs.Run(w, attackSystems(card, target, situations, die, rollDie)...)
 	return w
 }
 

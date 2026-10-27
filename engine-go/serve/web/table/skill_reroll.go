@@ -110,17 +110,22 @@ func (s Scene) skillTestBandFor(
 }
 
 // writtenRerolls diz os "rolar de novo" pagos: "rolou de novo (Etiqueta · 1
-// PM): o d20 4 saiu". Vale o último dado (p226).
-func writtenRerolls(t *live.SkillTestRoll) string {
-	parts := make([]string, 0, len(t.Rerolls))
-	for _, r := range t.Rerolls {
+// PM): o d20 4 saiu". Vale o último dado (p226). O dado que cada um ROLOU é o
+// que o seguinte descartou, e o último é o `roll` que ficou.
+func writtenRerolls(rerolls []live.DieReroll, roll int) string {
+	parts := make([]string, 0, len(rerolls))
+	for i, r := range rerolls {
+		rolled := roll
+		if i+1 < len(rerolls) {
+			rolled = rerolls[i+1].Discarded
+		}
 		paid := r.Name
 		if r.Bonus != 0 {
 			paid += fmt.Sprintf(" %s%d", signOf(r.Bonus), abs(r.Bonus))
 		}
 		part := fmt.Sprintf("rolou de novo (%s · %d PM): o d20 %d saiu", paid, r.PM, r.Discarded)
 		if r.Natural {
-			part += fmt.Sprintf("; %d conta como 20 natural", t.Roll)
+			part += fmt.Sprintf("; %d conta como 20 natural", rolled)
 		}
 		parts = append(parts, part)
 	}

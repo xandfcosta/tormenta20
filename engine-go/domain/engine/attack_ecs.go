@@ -114,15 +114,15 @@ type attackFault struct{ Err error }
 
 func attackSystems(
 	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	d20 int, rollDie func(faces int) (int, error),
+	die attackDie, rollDie func(faces int) (int, error),
 ) []ecs.System {
 	return []ecs.System{
 		spawnTheSituations(situations),
 		dropWhatDoesNotReachThisWeapon(card),
 		forbidTheAttackIfAnyoneSaysSo,
 		tallyTheSituations,
-		judgeTheHit(card, target, d20),
-		judgeTheCritical(card, target, d20),
+		judgeTheHit(card, target, die),
+		judgeTheCritical(card, target, die.Natural),
 		undoTheHitOnConcealment(rollDie),
 		spawnTheDamageParcels(card),
 		dropEverythingIfItMissed,
@@ -150,18 +150,18 @@ func attackSystems(
 // exceção nenhuma, e ler ali a AUSÊNCIA da regra é o erro — ela mora na página
 // seguinte, em "Regras Adicionais de testes". Um 20 natural errava contra
 // Defesa alta, e nada acusava.
-func judgeTheHit(card WeaponCard, target AttackTarget, d20 int) ecs.System {
+func judgeTheHit(card WeaponCard, target AttackTarget, die attackDie) ecs.System {
 	return func(w *ecs.World) {
 		// A Tabela 5-3 já somou, e ela entra nos DOIS lados: a posição elevada
 		// no ataque, a cobertura na Defesa (p239).
 		situations := resourceOf[situationTally](w)
-		total := d20 + card.Attack + situations.Attack
+		total := die.Rolled + card.Attack + situations.Attack
 		defense := target.Defense + situations.Defense
 		setResource(w, effectiveDefense{Value: defense})
 		setResource(w, hitVerdict{
-			Roll:  d20,
+			Roll:  die.Rolled,
 			Total: total,
-			Hit:   d20 == 20 || (d20 != 1 && total >= defense),
+			Hit:   die.Natural == 20 || (die.Natural != 1 && total >= defense),
 		})
 	}
 }

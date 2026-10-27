@@ -41,6 +41,10 @@ type attackProposal struct {
 	// Meu diz se quem olha foi quem rolou: só ele cancela o que é dele. O mestre
 	// cancela por qualquer um, e isso é decidido na tela pelo `Mestre` da view.
 	Mine bool
+	// Rerolled diz os "rolar de novo" pagos, e Offers são os botões de quem
+	// rolou (p226, ALE-508).
+	Rerolled string
+	Offers   []rerollOffer
 }
 
 // attackProposalOf traduz o provisório do regime na faixa, ou nil quando não há
@@ -57,9 +61,10 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Attacker: entryLabel(st, pa.AttackerEntryID), Target: targetLabel(*pa, st),
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
-		Boost: writtenBoost(*pa),
-		Guard: writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
-		Mine:  pa.ByUserID == userID,
+		Boost:    writtenBoost(*pa),
+		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
+		Mine:     pa.ByUserID == userID,
+		Rerolled: writtenRerolls(pa.Rerolls, pa.Roll),
 	}
 	if pa.Maneuver != nil {
 		// A TINTA DO CRACHÁ É NEUTRA, e é a única que pode ser: as outras três

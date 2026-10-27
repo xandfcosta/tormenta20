@@ -1202,8 +1202,18 @@
             "classPowers": [
               "encouracado",
               "fanatico",
-              "inexpugnavel"
+              "inexpugnavel",
+              "class.guerreiro.especializacao-em-arma",
+              "class.guerreiro.mestre-em-arma"
             ],
+            "powerChoices": {
+              "class.guerreiro.especializacao-em-arma": [
+                "espada-longa"
+              ],
+              "class.guerreiro.mestre-em-arma": [
+                "espada-longa"
+              ]
+            },
             "items": [
               {
                 "catalogId": "armadura-completa",

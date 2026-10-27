@@ -30,6 +30,7 @@ type SkillSpend struct {
 	Context      string   `json:"context,omitempty"`
 	AnySkill     bool     `json:"anySkill,omitempty"`
 	NaturalFrom  int      `json:"naturalFrom,omitempty"`
+	ChosenWeapon bool     `json:"chosenWeapon,omitempty"`
 }
 
 type ActivationGrant struct {
