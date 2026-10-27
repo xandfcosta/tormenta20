@@ -52,6 +52,10 @@ type sheetProficiency struct {
 	// FromPower marca a concessão que é SÓ do poder Proficiência (p129,
 	// ALE-510), para o selo dizer "poder".
 	FromPower bool
+	// Origin é a frase da linha TRAVADA — "vem de Guerreiro", "o Foco em Arma
+	// pede" —, vazia quando a linha se marca e desmarca na mão. A linha
+	// travada não é botão: o servidor recusaria o toque (ALE-510).
+	Origin string
 	// Sources são as classes e raças que concedem, para a etiqueta explicar de
 	// onde vem.
 	Sources []string
@@ -80,6 +84,7 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	sources := proficiencySources(dto)
 	byRace := raceProficiencySources(dto)
 	byPower := powerProficiencySources(dto)
+	needed := sheet.ProficienciesTheChoicesNeed(dto)
 
 	byGroup := map[string]*proficiencyGroup{}
 	order := []string{book.WeaponGroup, book.ArmorGroup}
@@ -96,6 +101,7 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 			FromRace:  len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) > 0,
 			FromPower: len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) == 0 && len(byPower[cat.Key]) > 0,
 			Sources:   grantersOf(dto, cat.Key),
+			Origin:    lockedOrigin(found[cat.Key], grantersOf(dto, cat.Key), needed[cat.Key]),
 		})
 	}
 	return []proficiencyGroup{*byGroup[book.WeaponGroup], *byGroup[book.ArmorGroup]}
@@ -187,6 +193,21 @@ func grantersOf(dto sheet.CharacterDTO, key string) []string {
 	out := append([]string{}, proficiencySources(dto)[key]...)
 	out = append(out, raceProficiencySources(dto)[key]...)
 	return append(out, powerProficiencySources(dto)[key]...)
+}
+
+// lockedOrigin é a frase da linha que não se desmarca na mão: a que a ficha
+// TEM e que uma origem dá, ou que um poder pede. Vazia para as outras — a que
+// não tem continua se marcando, mesmo com origem.
+func lockedOrigin(has bool, granters []string, neededBy string) string {
+	switch {
+	case !has:
+		return ""
+	case len(granters) > 0:
+		return "vem de " + strings.Join(granters, ", ")
+	case neededBy != "":
+		return "o " + neededBy + " pede"
+	}
+	return ""
 }
 
 // classDefault é o alvo do "Restaurar padrão": tudo o que as classes, as

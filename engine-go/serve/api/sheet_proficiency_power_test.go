@@ -121,3 +121,20 @@ func TestTheProficiencyPowerOffersOnlyWhatTheSheetLacks(t *testing.T) {
 		t.Error("a lista oferece armas marciais ao guerreiro, que já as tem")
 	}
 }
+
+// A LINHA COM ORIGEM NÃO É BOTÃO, e diz de onde vem (decisão do dono, ALE-510):
+// a origem fica escrita, e não só no `title` do selo, que o celular não mostra.
+func TestTheLockedProficiencySaysWhereItComesFromAndHasNoGesture(t *testing.T) {
+	f, id := guerreiroWithTheClassDefault(t)
+	screen := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
+	if !strings.Contains(screen, "vem de Guerreiro") {
+		t.Error("a linha de armas marciais não diz que vem do Guerreiro")
+	}
+	if strings.Contains(screen, "/proficiencias/alterna/armas-marciais") {
+		t.Error("armas marciais, da classe, ainda tem o gesto de desmarcar")
+	}
+	if !strings.Contains(screen, "/proficiencias/alterna/armas-exoticas") {
+		t.Error("armas exóticas, sem origem, perdeu o gesto de marcar")
+	}
+}
