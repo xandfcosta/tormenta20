@@ -118,8 +118,8 @@ func WithoutPowerPicksOf(blob, power string) string {
 
 // powerPicksFit confere as escolhas: só de poder que a ficha tem — escolhido ou
 // concedido pelo nível —, só opção que o livro oferece, e mais de uma só no
-// poder repetível. A escolha contada por atributo tem conferência própria, que
-// depende da ficha (`ChosenExpertisesFit`).
+// poder repetível. A escolha que depende do treino ou do atributo da ficha tem
+// conferência própria (`ChosenExpertisesFit`).
 func powerPicksFit(dto CharacterDTO) error {
 	// A POSSE é pelo id ou pelo NOME: o Foco em Perícia que a origem dá tem o
 	// id do benefício, e a escolha mora no id do poder (ALE-510).
@@ -143,26 +143,6 @@ func powerPicksFit(dto CharacterDTO) error {
 		}
 		if err := picksAreOptions(power, picks); err != nil {
 			return err
-		}
-		if power.Choice.Kind == "trained-expertise" {
-			if err := trainedPicksFit(dto, power, picks); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// trainedPicksFit confere a escolha de perícia TREINADA que se repete: cada
-// vez é uma perícia diferente, e treinada — "Pré-requisito: treinado na
-// perícia escolhida" (Foco em Perícia, p130).
-func trainedPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
-	for i, pick := range picks {
-		if slices.Contains(picks[:i], pick) {
-			return fmt.Errorf("%s já escolheu %s; cada vez é uma perícia diferente", power.Name, pick)
-		}
-		if !trainedIn(dto, pick) {
-			return fmt.Errorf("%s pede perícia treinada, e %s não é treinada nesta ficha", power.Name, pick)
 		}
 	}
 	return nil

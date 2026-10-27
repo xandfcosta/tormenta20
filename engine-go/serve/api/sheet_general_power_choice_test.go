@@ -97,6 +97,21 @@ func TestSkillFocusRefusesAnUntrainedSkillAndTheAttackSkills(t *testing.T) {
 	}
 }
 
+// O pré-requisito vale enquanto o poder fica: destreinar a escolhida é
+// recusado, e destreinar outra perícia não.
+func TestSkillFocusKeepsTheChosenSkillTrained(t *testing.T) {
+	f, id := focusedAtTheTable(t, "soldado", "[]")
+	if refusal := powerCommand(t, f, id, skillFocusPath+url.PathEscape("Intimidação"), ""); refusal != "" {
+		t.Fatalf("escolher Intimidação no Foco foi recusado: %q", refusal)
+	}
+	if refusal := sheetPost(t, f, id, "/pericias/treino/"+url.PathEscape("Enganação"), ""); refusal != "" {
+		t.Fatalf("destreinar Enganação, sem poder nenhum nela, foi recusado: %q", refusal)
+	}
+	if refusal := sheetPost(t, f, id, "/pericias/treino/"+url.PathEscape("Intimidação"), ""); !strings.Contains(refusal, "Foco em Perícia") {
+		t.Errorf("destreinar Intimidação, escolhida no Foco em Perícia, deu %q; want a recusa que nomeia o poder", refusal)
+	}
+}
+
 // ESCOLHER DE NOVO é outra perícia e outra vaga.
 func TestSkillFocusTakenTwiceKeepsBothSkills(t *testing.T) {
 	f, id := focusedAtTheTable(t, "soldado", "[]")

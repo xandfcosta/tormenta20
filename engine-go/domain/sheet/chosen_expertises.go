@@ -38,7 +38,8 @@ func countAttributeValue(dto CharacterDTO, choice book.PowerChoice) (int, error)
 }
 
 // ChosenExpertisesFit confere as escolhas que nomeiam perícias contra a ficha
-// como ela está: as contadas por atributo cabem no limite e são treinadas, e as
+// como ela está: as contadas por atributo cabem no limite e são treinadas, as
+// do Foco em Perícia são treinadas (ALE-510), e as
 // das habilidades de raça apontam perícia e Ofício que existem (ALE-493).
 func ChosenExpertisesFit(dto CharacterDTO) error {
 	picks := PowerPicks(dto.PowerChoices)
@@ -48,12 +49,20 @@ func ChosenExpertisesFit(dto CharacterDTO) error {
 	}
 	sort.Strings(ids)
 	for _, id := range ids {
-		power, known := book.ClassPowers()[id]
-		if !known || power.Choice == nil || power.Choice.CountAttribute == "" {
+		power, known := book.PowerWithChoice(id)
+		if !known {
 			continue
 		}
-		if err := expertisePicksFit(dto, power, picks[id]); err != nil {
-			return err
+		if power.Choice.CountAttribute != "" {
+			if err := expertisePicksFit(dto, power, picks[id]); err != nil {
+				return err
+			}
+			continue
+		}
+		if power.Choice.Kind == "trained-expertise" {
+			if err := trainedPicksFit(dto, power, picks[id]); err != nil {
+				return err
+			}
 		}
 	}
 	// As habilidades de raça também nomeiam perícias: o Ofício do
@@ -82,6 +91,21 @@ func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) 
 	return nil
 }
 
+// trainedPicksFit confere a escolha de perícia que se repete: cada vez é uma
+// perícia diferente, e treinada — o pré-requisito do Foco em Perícia (p130).
+func trainedPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
+	for i, pick := range picks {
+		if slices.Contains(picks[:i], pick) {
+			return fmt.Errorf("%s já escolheu %s; cada vez é uma perícia diferente", power.Name, pick)
+		}
+		if !trainedIn(dto, pick) {
+			return fmt.Errorf("%s escolheu %s, e ela não seria treinada nesta ficha: tire-a do %s antes",
+				power.Name, pick, power.Name)
+		}
+	}
+	return nil
+}
+
 func writtenSkills(n int) string {
 	if n == 1 {
 		return "1 perícia"
@@ -93,12 +117,18 @@ func trainedIn(dto CharacterDTO, skill string) bool {
 	return slices.ContainsFunc(dto.Expertises, func(e ExpertiseDTO) bool { return e.Name == skill && e.Trained })
 }
 
-// HasCountedChoice diz se o `powerChoices` guarda alguma escolha contada por
-// atributo — o atalho que poupa carregar a ficha inteira nos gestos que só
-// PODERIAM tirá-la da escolha.
-func HasCountedChoice(blob string) bool {
+// HasExpertiseChoice diz se o `powerChoices` guarda alguma escolha que depende
+// do treino ou do atributo da ficha — a contada por atributo e a do Foco em
+// Perícia. É o atalho que poupa carregar a ficha
+// inteira nos gestos que só PODERIAM tirá-la da escolha.
+func HasExpertiseChoice(blob string) bool {
 	for id := range PowerPicks(blob) {
-		if power, known := book.ClassPowers()[id]; known && power.Choice != nil && power.Choice.CountAttribute != "" {
+		power, known := book.PowerWithChoice(id)
+		if !known {
+			continue
+		}
+		kind := power.Choice.Kind
+		if power.Choice.CountAttribute != "" || kind == "trained-expertise" {
 			return true
 		}
 	}
