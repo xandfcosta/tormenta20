@@ -1153,7 +1153,8 @@
             "size": "Médio",
             "displacement": 9,
             "classPowers": [
-              "class.nobre.armadura-brilhante"
+              "class.nobre.armadura-brilhante",
+              "class.nobre.jogo-da-corte"
             ],
             "items": [
               {
