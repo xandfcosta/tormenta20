@@ -197,8 +197,9 @@ func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int) (int, 
 // estado de jogo — e a ordem importa: o PM primeiro, porque é ele que pode
 // faltar. Somar o uso antes deixaria um uso gasto por um poder que não saiu.
 func (p Plays) UsePower(
-	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, powerID string, steps int,
+	ctx context.Context, row sqlcgen.Character, dto sheet.CharacterDTO, powerID string, choice UseChoice,
 ) error {
+	steps := choice.Steps
 	spec := book.ActivationOf(powerID, "")
 	if spec == nil {
 		return fmt.Errorf("o poder %q não tem ativação no catálogo", powerID)
@@ -226,6 +227,11 @@ func (p Plays) UsePower(
 	if err != nil {
 		return err
 	}
+	riders := RidersOf(dto, *spec)
+	if choice.Doubled && !book.RidersDouble(*spec, riders) {
+		return fmt.Errorf("%s: nenhum poder da ficha dobra este uso (o Inimigo de (Criatura), p51)", spec.Name)
+	}
+	mods := book.GrantModifiersWithRiders(*spec, steps, riders, choice.Doubled)
 	scope := book.ChargedScope(*spec)
 	if scope == "" && spec.Grant == nil {
 		// Sem limite COBRADO e sem concessão não há contador nem efeito, e sobra
@@ -243,7 +249,7 @@ func (p Plays) UsePower(
 				return fmt.Errorf("somar o uso de %q: %w", spec.ID, err)
 			}
 		}
-		return writeGrantedEffect(ctx, q, row.ID, *spec, steps)
+		return writeGrantedEffect(ctx, q, row.ID, *spec, mods)
 	})
 }
 
@@ -259,12 +265,12 @@ func (p Plays) UsePower(
 // em vez de abrir uma segunda — o `active_effects` é único em (personagem,
 // catálogo, escopo), e o livro não empilha a mesma fonte consigo.
 func writeGrantedEffect(
-	ctx context.Context, q *sqlcgen.Queries, characterID int64, spec book.Activation, steps int,
+	ctx context.Context, q *sqlcgen.Queries, characterID int64, spec book.Activation, mods []engine.Modifier,
 ) error {
 	if spec.Grant == nil || spec.Grant.Kind != "active-effect" || len(spec.Grant.Modifiers) == 0 {
 		return nil
 	}
-	blob, err := json.Marshal(book.ScaledGrantModifiers(spec, steps))
+	blob, err := json.Marshal(mods)
 	if err != nil {
 		return fmt.Errorf("escrever a concessão de %q: %w", spec.ID, err)
 	}

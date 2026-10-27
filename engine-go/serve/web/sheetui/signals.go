@@ -88,6 +88,9 @@ type Signals struct {
 	// Os degraus escolhidos ao entrar numa postura que escala com o nível, e a
 	// busca da lista de poderes.
 	PowerSteps *int64 `json:"stance_degrees"`
+	// A caixa do Inimigo de (Criatura) no diálogo da Marca da Presa: a presa
+	// é do tipo escolhido, e o uso dobra (p51, ALE-509).
+	PreyFavored *bool `json:"prey_favored"`
 	// O impulso de PM escolhido na linha de ataque — ver `attack_boost.go`. A
 	// arma vem junto porque a escolha é DAQUELA linha: o impulso ligado na
 	// espada não viaja no golpe do arco.

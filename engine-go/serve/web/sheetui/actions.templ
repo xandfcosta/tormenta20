@@ -51,7 +51,7 @@ templ ActionsBody(v View) {
 			if row.Stance != nil && row.Stance.MaxSteps > 0 {
 				@stanceStepperDialog(v, row)
 			}
-			if row.Degrees != nil && row.Degrees.MaxSteps > 0 {
+			if row.Degrees != nil && row.Degrees.opensDialog() {
 				@useStepperDialog(v, row)
 			}
 		}

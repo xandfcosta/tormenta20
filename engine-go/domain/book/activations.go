@@ -69,7 +69,10 @@ type Activation struct {
 	Grant      *PowerGrant `json:"grant"`
 	// Cumulative é o bônus que SOBE A CADA GATILHO — ver `CumulativeBonus`.
 	Cumulative *CumulativeBonus `json:"cumulative"`
-	BookPage   int              `json:"bookPage"`
+	// Rider é o que este poder ACRESCENTA ao uso de outro — ver
+	// `ActivationRider`.
+	Rider    *ActivationRider `json:"rider,omitempty"`
+	BookPage int              `json:"bookPage"`
 }
 
 // CumulativeBonus é o bônus que sobe a cada gatilho enquanto a postura dura —
@@ -95,6 +98,21 @@ type CumulativeBonus struct {
 	// todo modificador do catálogo usa. Reusado e não inventado: um segundo
 	// vocabulário de alvo divergiria do primeiro no dia seguinte.
 	Targets []engine.ModifierTarget `json:"targets"`
+}
+
+// ActivationRider é o poder que não tem gesto: ele entra no efeito de OUTRO
+// quando a ficha o usa — o Espreitar, o Ponto Fraco e o Inimigo de (Criatura)
+// na Marca da Presa (p51, ALE-509). Ver `GrantModifiersWithRiders`.
+type ActivationRider struct {
+	// On é a ativação que ele acompanha.
+	On string `json:"on"`
+	// Modifiers somam ao efeito, e PerStep acrescenta ao Amount de cada um por
+	// degrau pago ("+1 para cada PM adicional gasto na habilidade").
+	Modifiers []engine.Modifier `json:"modifiers,omitempty"`
+	PerStep   int               `json:"perStep,omitempty"`
+	// Doubles dobra o efeito inteiro quando quem usa diz que vale — o Inimigo,
+	// contra a presa do tipo escolhido.
+	Doubles bool `json:"doubles,omitempty"`
 }
 
 // ActivationScale é a postura que sobe de degrau com o nível.

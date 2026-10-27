@@ -1660,7 +1660,11 @@
                 "constitution"
               ]
             },
-            "classPowers": [],
+            "classPowers": [
+              "class.cacador.espreitar",
+              "class.cacador.ponto-fraco",
+              "class.cacador.inimigo-de-criatura"
+            ],
             "items": [
               {
                 "catalogId": "espada-longa",
