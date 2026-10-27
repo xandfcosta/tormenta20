@@ -46,8 +46,6 @@ var notAGesture = map[string]string{
 	// já COBERTO por outro mecanismo
 	"class.cavaleiro.baluarte": "situacional com degraus", "class.cavaleiro.duelo": "situacional",
 	"class.guerreiro.ataque-especial-4": "impulso no ataque", "class.paladino.golpe-divino-1d8": "impulso no ataque",
-	// forma que ainda não existe
-	"class.cavaleiro.etiqueta": "rolar de novo no teste: forma nova (linha na ALE-492)",
 }
 
 type pmEntry struct{ id, name, description string }

@@ -46,6 +46,7 @@ escolha
 estado
 ferramenta
 flag
+gasto
 habilidade
 id
 indice

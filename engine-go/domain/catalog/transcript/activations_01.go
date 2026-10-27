@@ -307,11 +307,16 @@ var activationsPart01 = []Activation{
 	{
 		ID:       "class.bardo.lendas-e-historias",
 		Name:     "Lendas e Histórias",
-		Kind:     "instant",
+		Kind:     "skill-spend",
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     nil,
 		BookPage: 44,
+		SkillSpend: &SkillSpend{
+			Kind:    "reroll",
+			Skills:  []string{"Conhecimento", "Misticismo", "Nobreza", "Religião"},
+			Context: "para informação, identificar criaturas ou itens mágicos",
+		},
 	},
 	{
 		ID:       "class.bardo.manipular",

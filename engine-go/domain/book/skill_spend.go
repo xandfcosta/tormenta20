@@ -51,6 +51,9 @@ type SkillSpend struct {
 	// AnySkill diz que a troca ou os dois d20 valem em QUALQUER perícia — a
 	// Fé Guerreira troca qualquer teste por Guerra, em combate (ALE-492).
 	AnySkill bool `json:"anySkill,omitempty"`
+	// NaturalFrom é o "qualquer resultado N ou mais na segunda rolagem será
+	// considerado um 20 natural" do rolar de novo (Sorte de Nimb, p48).
+	NaturalFrom int `json:"naturalFrom,omitempty"`
 }
 
 // As formas de gasto.
@@ -67,6 +70,9 @@ const (
 	// SpendDoubleTraining soma o treino de novo, nas perícias que o poder
 	// escolheu (Especialista, p73, ALE-501).
 	SpendDoubleTraining = "double-training"
+	// SpendReroll rola o teste de NOVO depois de ver o dado, e vale o segundo
+	// (p226, ALE-507). Não entra nas ofertas de antes de rolar.
+	SpendReroll = "reroll"
 )
 
 // SkillSpendTarget é o que a oferta precisa saber da perícia e da ficha.
@@ -108,6 +114,9 @@ type SkillSpendOffer struct {
 	// SwapTo é a perícia que a troca usa; Context, o quando do livro.
 	SwapTo  string
 	Context string
+	// NaturalFrom: no rolar de novo, o resultado a partir do qual o segundo
+	// dado vale 20 natural (Sorte de Nimb, p48).
+	NaturalFrom int
 }
 
 // SkillSpendOffers são os gastos que as ativações POSSUÍDAS oferecem para esta
@@ -181,6 +190,26 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 			byGroup[spend.Group] = len(out)
 		}
 		out = append(out, offer)
+	}
+	return out
+}
+
+// RerollOffers são os "rolar de novo" que as ativações POSSUÍDAS oferecem para
+// esta perícia, DEPOIS de rolada (p226, ALE-507). O bônus é o do segundo teste
+// (o +5 do Resoluto, p55).
+//
+//	RerollOffers(owned, SkillSpendTarget{Skill: "Diplomacia"}) // [Etiqueta 1 PM, Sortudo 3 PM]
+func RerollOffers(owned []Activation, target SkillSpendTarget) []SkillSpendOffer {
+	out := []SkillSpendOffer{}
+	for _, a := range owned {
+		spend := a.SkillSpend
+		if spend == nil || spend.Kind != SpendReroll || !appliesTo(*spend, target) {
+			continue
+		}
+		out = append(out, SkillSpendOffer{
+			ID: a.ID, Key: SpendKey(a.ID), Name: a.Name, Kind: spend.Kind, PM: ActivationPm(a),
+			Bonus: spend.Amount, Context: spend.Context, NaturalFrom: spend.NaturalFrom,
+		})
 	}
 	return out
 }

@@ -400,11 +400,16 @@ var activationsPart04 = []Activation{
 	{
 		ID:       "class.inventor.chutes-e-palavroes",
 		Name:     "Chutes e Palavrões",
-		Kind:     "instant",
+		Kind:     "skill-spend",
 		Action:   "livre",
 		PMCost:   PMCost{Fixed: 1},
 		Uses:     ptr("rodada"),
 		BookPage: 70,
+		SkillSpend: &SkillSpend{
+			Kind:    "reroll",
+			Skills:  []string{"Ofício (engenhoqueiro)"},
+			Context: "para ativar uma engenhoca, uma vez por rodada",
+		},
 	},
 	{
 		ID:       "class.inventor.conhecimento-de-formulas",
