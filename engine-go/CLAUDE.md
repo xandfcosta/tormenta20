@@ -2316,7 +2316,7 @@ dizer está na seção H do [GLOSSARY](../GLOSSARY.md).
   link carrega (`commandRoute`, `tabRoute`), e a do grimório fica intacta até a
   última aba. Aba ainda não migrada desenha um vazio que leva à ficha de hoje —
   nunca o painel do grimório dentro da cena Tempestade. As que já migraram
-  estão em `migratedTabs`, no `sheetui/tempestade.go`.
+  são os casos do `tempestadePanel`, no `sheetui/tempestade.templ`.
 - **O fim da migração é apagar**, não converter: o `.scene-grimorio`, os
   tokens `grimorio-*`, a Cinzel, a Liberation, a JetBrains Mono e a `/grimorio`
   saem de uma vez, depois da última tela.

@@ -11,6 +11,7 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
+	"t20engine/serve/web/ds"
 )
 
 // A aba PERÍCIAS como dado.
@@ -74,6 +75,8 @@ type expertiseRow struct {
 	// Custom é o ofício do jogador, o único que pode ser removido.
 	Custom bool
 	Rows   []breakdownRow
+	// Sum é a mesma conta na forma da ficha paralela: uma linha por parcela.
+	Sum []ds.SumTerm
 	// TotalValue é o `Total` como número, para a prévia do total com os gastos.
 	TotalValue int
 	// Spends são os gastos de PM que valem NESTE teste (ALE-489), e
@@ -192,6 +195,7 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 		AutoFail:    autoFails(sheet, entry.Name),
 		Custom:      entry.Custom,
 		Rows:        expertiseBreakdownRows(breaks),
+		Sum:         expertiseSumTerms(breaks),
 	}
 	return row
 }

@@ -32,11 +32,6 @@ func sheetSystem(v View) ui.DesignSystem {
 	return ui.SystemGrimoire
 }
 
-// migratedTabs são as abas que JÁ vestem o Tempestade. A que não está aqui
-// mostra um vazio que leva à ficha de hoje — nunca o painel do grimório dentro
-// da cena nova, que é a mistura que a transição por escopo proíbe.
-var migratedTabs = map[string]bool{}
-
 // tabRoute é o endereço de uma aba, levando a marca quando a ficha é a
 // paralela. As abas são LINKS pela razão de sempre (`?tab=` é endereço
 // guardado).
@@ -145,13 +140,11 @@ func activeEffects(v View) []activeEffect {
 // diferente de zero e prende na faixa, então "levou 12" é o mesmo gesto do
 // −1, com outro número. O zero não sai: um passo zero é recusado pela rota.
 func vitalAmountPost(v View, which string, sign int) string {
-	route := commandRoute(v, "/vitais/"+which+"/§")
-	before, after, _ := strings.Cut(route, "§")
-	minus := ""
+	value := "$vital_amount"
 	if sign < 0 {
-		minus = "-"
+		value = "-" + value
 	}
-	return fmt.Sprintf("$vital_amount > 0 && @post('%s' + %s$vital_amount + '%s')", before, minus, after)
+	return "$vital_amount > 0 && " + sheetPostWith(v, "/vitais/"+which+"/§", value)
 }
 
 // whoLine é a linha de quem é, debaixo do nome: classe, raça e devoção.
