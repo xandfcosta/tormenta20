@@ -42,5 +42,6 @@
       { "address": "/campanhas/1/sessoes/4", "session": "player" }
     ]
   },
-  "admin": { "visits": [{ "address": "/admin", "session": "gm" }] }
+  "admin": { "visits": [{ "address": "/admin", "session": "gm" }] },
+  "specimen": { "visits": [{ "address": "/sistema", "session": "gm" }] }
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -129,5 +130,27 @@ func TestThePageComesBackInTheChosenMode(t *testing.T) {
 		if body := page(mode); strings.Contains(body, "data-mode=") {
 			t.Errorf("com o cookie %q, o <html> afirmou um modo", mode)
 		}
+	}
+}
+
+// A folha viva veste o sistema novo, e o resto do app continua no grimório até
+// a vez de cada tela: é a transição POR ESCOPO da ALE-497.
+func TestOnlyTheMigratedSceneWearsTheNewSystem(t *testing.T) {
+	s, owner := hubFixture(t)
+
+	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`)
+	scopeOf := func(path string) string {
+		tag := shell.FindString(pedeHub(t, s, owner, http.MethodGet, path).Body.String())
+		if tag == "" {
+			t.Fatalf("%s não desenhou a casca", path)
+		}
+		return tag
+	}
+
+	if tag := scopeOf("/sistema"); !strings.Contains(tag, "scene-ds") || strings.Contains(tag, "scene-grimorio") {
+		t.Errorf("a folha viva não saiu só no escopo scene-ds: %s", tag)
+	}
+	if tag := scopeOf("/"); strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
+		t.Errorf("o hub, que ainda não migrou, não saiu no grimório: %s", tag)
 	}
 }

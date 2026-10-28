@@ -153,6 +153,9 @@ const QUERIDOS = [
   'PackagePlus',
   'AlertTriangle',
   'Coins',
+  // O sistema novo (ALE-479): a linha que abre a conta e o botão de mais ações.
+  'ChevronDown',
+  'Ellipsis',
 ]
 
 const indice = readFileSync(resolve(LUCIDE, 'iconsAndAliases.mjs'), 'utf8')
