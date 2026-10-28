@@ -1,8 +1,11 @@
 package sheetui
 
 import (
+	"strconv"
 	"strings"
 
+	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/serve/web/ds"
 )
 
@@ -46,4 +49,60 @@ func sumTermsOf(rows []breakdownRow) []ds.SumTerm {
 		})
 	}
 	return terms
+}
+
+// weaponSumTerms são as duas contas de uma arma, na língua das Perícias: o
+// ataque, com o porquê de a Destreza ter entrado quando entrou, e o dano, com
+// o atributo que de fato soma nele. As duas fecham no número da arma: o que
+// sobra sem nome vira "Outros", como em `expertiseSumTerms`.
+func weaponSumTerms(card engine.WeaponCard) (attack, damage []ds.SumTerm) {
+	attack = expertiseSumTerms(card.Expertise)
+	if note := dexNote(card); note != "" {
+		attack[0].Note = note
+	}
+	attack = withContributions(attack, card.Attack-card.Expertise.Total, card.AttackAll.Contributions, card.AttackOwn.Contributions)
+
+	bonus := card.DamageBonus
+	if card.Skill == "Luta" {
+		strength := ds.SumTerm{Label: "Força", Value: book.WithSign(card.StrDamage)}
+		if card.DexDamage {
+			strength = ds.SumTerm{Label: "Destreza", Note: "Acuidade com Arma", Value: book.WithSign(card.StrDamage)}
+		}
+		damage = append(damage, strength)
+		bonus -= card.StrDamage
+	}
+	damage = withContributions(damage, bonus, card.DamageAll.Contributions, card.DamageOwn.Contributions)
+	return attack, damage
+}
+
+// withContributions acrescenta as parcelas com nome que somam `total`, e o
+// resto, se houver, como "Outros".
+func withContributions(terms []ds.SumTerm, total int, groups ...[]engine.BreakdownContribution) []ds.SumTerm {
+	shown := 0
+	for _, group := range groups {
+		for _, c := range group {
+			terms = append(terms, ds.SumTerm{Label: c.Source, Note: c.Note, Value: book.WithSign(c.Amount), Penalty: c.Amount < 0})
+			shown += c.Amount
+		}
+	}
+	if rest := total - shown; rest != 0 {
+		terms = append(terms, ds.SumTerm{Label: "Outros", Value: book.WithSign(rest), Penalty: rest < 0})
+	}
+	return terms
+}
+
+// dexNote diz por que a Destreza entrou no ataque: a arma que o livro deixa
+// usar assim (a adaga, com a página dela) ou a Acuidade com Arma.
+func dexNote(card engine.WeaponCard) string {
+	switch card.DexBy {
+	case engine.DexByWeapon:
+		note := card.Name + ": Destreza no lugar de Força"
+		if item := book.ItemByID(card.CatalogID); item != nil && item.BookPage != 0 {
+			note += " (p" + strconv.Itoa(item.BookPage) + ")"
+		}
+		return note
+	case engine.DexByFinesse:
+		return "Acuidade com Arma: Destreza no lugar de Força"
+	}
+	return ""
 }

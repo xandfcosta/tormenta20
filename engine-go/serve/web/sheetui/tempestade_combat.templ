@@ -47,7 +47,11 @@ templ tempestadeCombat(v View) {
 // conta, sem total.
 templ combatSum(tile statTile) {
 	@ds.Sum(combatSumHead(tile), nil) {
-		@ds.SumTerms(sumTermsOf(tile.Rows))
+		if tile.Sum != nil {
+			@ds.SumTerms(tile.Sum)
+		} else {
+			@ds.SumTerms(sumTermsOf(tile.Rows))
+		}
 		@ds.SumTotal(tile.Value, nil)
 		if tile.Extra != nil {
 			<p class="ds-sum-section">{ tile.Extra.Title }</p>
@@ -56,14 +60,16 @@ templ combatSum(tile statTile) {
 	}
 }
 
-// weaponSum é uma arma: duas contas, a do ataque e a do dano. Uma arma não tem
-// "total", tem duas contas.
+// weaponSum é uma arma: duas contas, a do ataque e a do dano, cada uma com o
+// seu total — uma arma não tem "total", tem duas contas, e o atributo de uma
+// não soma na outra.
 templ weaponSum(w weaponTile) {
 	@ds.Sum(weaponSumHead(w), nil) {
-		<p class="ds-sum-section">Ataque</p>
-		@ds.SumTerms(sumTermsOf(w.AttackRows))
+		<p class="ds-sum-section">{ "Ataque · " + w.Skill }</p>
+		@ds.SumTerms(w.AttackSum)
 		@ds.SumTotal(w.Attack, nil)
-		<p class="ds-sum-section">{ "Dano " + w.Damage + " · crítico " + w.Crit }</p>
-		@ds.SumTerms(sumTermsOf(w.DamageRows))
+		<p class="ds-sum-section">{ "Dano · crítico " + w.Crit }</p>
+		@ds.SumTerms(w.DamageSum)
+		@ds.SumTotal(w.Damage, nil)
 	}
 }

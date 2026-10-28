@@ -6,6 +6,7 @@ import (
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
+	"t20engine/serve/web/ds"
 )
 
 // A aba COMBATE como dado.
@@ -63,6 +64,9 @@ type statTile struct {
 	// são dois tons e não uma família.
 	Magic bool
 	Rows  []breakdownRow
+	// Sum é a conta na língua da ficha paralela, quando ela difere das `Rows`
+	// (os ataques). Vazia, a ficha paralela traduz as `Rows`.
+	Sum []ds.SumTerm
 	// Extra são valores que se RELACIONAM com o número sem somar nele — as
 	// fontes da redução de dano, sob a Defesa.
 	Extra *extraBlock
@@ -111,6 +115,10 @@ type weaponTile struct {
 	// lista com um total: uma arma não tem "total", tem duas contas.
 	AttackRows []breakdownRow
 	DamageRows []breakdownRow
+	// AttackSum e DamageSum são as mesmas duas contas na língua da ficha
+	// paralela (`weaponSumTerms`).
+	AttackSum []ds.SumTerm
+	DamageSum []ds.SumTerm
 }
 
 // attributeAbbr são as abreviações que a mesa fala, na ordem do livro.
@@ -300,6 +308,7 @@ func attackTile(key, label, title string, ex engine.ExpertiseBreakdown, all engi
 		Key: key, Label: label, Title: title, Icon: iconForAttack(key),
 		Value: book.WithSign(ex.Total + all.Total),
 		Rows:  expertiseRows(ex, &all),
+		Sum:   withContributions(expertiseSumTerms(ex), all.Total, all.Contributions),
 	}
 }
 
@@ -376,6 +385,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 	tiles := make([]weaponTile, 0, len(cards))
 	for i, card := range cards {
 		attackRows, damageRows := weaponRows(card)
+		attackSum, damageSum := weaponSumTerms(card)
 		tiles = append(tiles, weaponTile{
 			Key:         "weapon-" + strconv.Itoa(i),
 			Name:        card.Name,
@@ -386,6 +396,8 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Crit:        critLabel(card),
 			AttackRows:  attackRows,
 			DamageRows:  damageRows,
+			AttackSum:   attackSum,
+			DamageSum:   damageSum,
 		})
 	}
 	return tiles
