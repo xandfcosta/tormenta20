@@ -4,6 +4,8 @@ import { expectTextIsDrawnWithAShippedFace } from './support/fonts'
 import { expectNothingIsClippedSideways, measureSidewaysClipping } from './support/geometry'
 import { MEASURED_SCENES, SESSION_FILE } from './support/measured-scenes'
 import { expectCinzelAcimaDoPiso } from './support/typography'
+import { expectOneFocusRing } from './support/focus'
+import { DS_TEXT_FLOOR, DS_TOUCH_FLOOR, measureDsText, measureDsTouchTargets } from './support/ds-floors'
 
 /**
  * A APARÊNCIA DE TODA CENA QUE DESENHA PÁGINA.
@@ -121,6 +123,11 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
           test.skip(true, `esta bancada não serve ${visit.address}`)
           return
         }
+        // A Cinzel é do grimório, e o sistema Tempestade não a usa (ALE-497): a
+        // cena migrada não tem texto em Cinzel para medir, e o piso de leitura
+        // dela é o do caso irmão abaixo.
+        const migrated = await page.locator('[data-slot="scene-shell"].scene-ds').count()
+        test.skip(migrated > 0, `${where} veste o sistema Tempestade, que não usa a Cinzel`)
         await expectCinzelAcimaDoPiso(page, `em ${where}`)
       })
 
@@ -175,6 +182,42 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
         ).toEqual([])
       })
 
+      // OS PISOS DO SISTEMA TEMPESTADE (ALE-479) entram no laço e PULAM a cena
+      // que ainda veste o grimório. O pulo é visível no relatório, com o motivo,
+      // e some sozinho no dia em que a cena migrar — não há lista de cenas
+      // migradas para alguém esquecer de atualizar.
+      test(`o sistema Tempestade não desenha texto abaixo de ${DS_TEXT_FLOOR}px em ${where}`, async ({ page }) => {
+        const response = await page.goto(visit.address)
+        if (visit.mayBeAbsent && response?.status() === 404) {
+          test.skip(true, `esta bancada não serve ${visit.address}`)
+          return
+        }
+        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
+        const report = await measureDsText(page)
+        test.skip(report.escopos === 0, `${where} ainda veste o grimório`)
+        expect(report.medidos, `${where}: nenhum texto medido no escopo .scene-ds`).toBeGreaterThan(MEASURED_TEXT_FLOOR)
+        expect(report.falhas, `texto abaixo de ${DS_TEXT_FLOOR}px no sistema Tempestade em ${where}`).toEqual([])
+      })
+
+      test.describe('no toque', () => {
+        // `hasTouch` liga o `pointer: coarse`, que é o que sobe o controle para
+        // 44px. Medir com mouse mediria a densidade compacta, que é de mouse.
+        test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+        test(`o sistema Tempestade não oferece alvo menor que ${DS_TOUCH_FLOOR}px em ${where}`, async ({ page }) => {
+          const response = await page.goto(visit.address)
+          if (visit.mayBeAbsent && response?.status() === 404) {
+            test.skip(true, `esta bancada não serve ${visit.address}`)
+            return
+          }
+          expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
+          const report = await measureDsTouchTargets(page)
+          test.skip(report.escopos === 0, `${where} ainda veste o grimório`)
+          expect(report.medidos, `${where}: nenhum alvo medido no escopo .scene-ds`).toBeGreaterThan(0)
+          expect(report.falhas, `alvo menor que ${DS_TOUCH_FLOOR}×${DS_TOUCH_FLOOR} no toque em ${where}`).toEqual([])
+        })
+      })
+
       // A FACE DESENHADA entra no mesmo laço pela razão do corte lateral: ela é
       // o que torna os outros três medidores repetíveis. Contraste, piso da
       // Cinzel e corte lateral medem texto DESENHADO, e com a face vindo da
@@ -192,3 +235,42 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
     })
   }
 }
+
+// O CONTROLE DOS PISOS: os dois medidores acusam o que reprova de verdade. Sem
+// isto, "nada abaixo do piso" e "o seletor não casou com nada" seriam a mesma
+// cor no relatório.
+test.describe('os pisos do sistema Tempestade', () => {
+  test.use({ storageState: SESSION_FILE.gm, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  // O FOCO do sistema novo é UMA cara POR MODO, e é desenhado e não aceso: a
+  // folha viva tem toda peça do kit, então é onde uma segunda cara apareceria
+  // primeiro. Uma metade por vez, porque as duas lado a lado têm de fato dois
+  // roxos — o claro e o escuro —, e o medidor contaria o modo como defeito.
+  for (const [shown, hidden] of [['light', 'dark'], ['dark', 'light']]) {
+    test(`o realce de foco é um só na metade ${shown} da folha viva`, async ({ page }) => {
+      await page.goto('/sistema')
+      await page.addStyleTag({
+        content: `.ds-preview[data-preview='${hidden}'], [data-slot='scene-shell'] > header, form[action='/modo'] { display: none }`,
+      })
+      await expectOneFocusRing(page, `na metade ${shown} da folha viva`, 20)
+    })
+  }
+
+  test('os medidores acusam um texto e um alvo que reprovam', async ({ page }) => {
+    await page.goto('/sistema')
+    await page.evaluate(() => {
+      const scope = document.querySelector('.scene-ds') as HTMLElement
+      const tiny = document.createElement('span')
+      tiny.textContent = 'miúdo'
+      tiny.style.fontSize = '10px'
+      const small = document.createElement('button')
+      small.textContent = 'x'
+      small.style.cssText = 'width:20px;height:20px;min-width:0;padding:0'
+      scope.prepend(tiny, small)
+    })
+    const text = await measureDsText(page)
+    expect(text.falhas).toEqual(['10px: "miúdo"'])
+    const touch = await measureDsTouchTargets(page)
+    expect(touch.falhas).toEqual(['<button> «x» 20×20'])
+  })
+})

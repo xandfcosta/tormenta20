@@ -70,7 +70,10 @@ export async function medeOContraste(page: Page): Promise<MedicaoDeContraste> {
     }
 
     const checked: string[] = []
-    const fails = [...document.querySelectorAll('.scene-grimorio *')]
+    // Os DOIS escopos, enquanto a UI migra (ALE-497). Varrendo só o grimório, a
+    // cena Tempestade passava com 5 textos medidos — os do diálogo do livro, que
+    // ainda veste o grimório — e nenhum dela.
+    const fails = [...document.querySelectorAll(':is(.scene-grimorio, .scene-ds) *')]
       .map((el) => {
         const text = [...el.childNodes]
           .filter((n) => n.nodeType === 3)

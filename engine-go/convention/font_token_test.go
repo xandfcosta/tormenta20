@@ -45,14 +45,28 @@ var (
 )
 
 func TestEveryFontTokenNamesAFaceTheAppShips(t *testing.T) {
-	source := filepath.Join("..", "serve", "web", "assets", "src", "index.css")
-	sheet, err := os.ReadFile(source)
-	if err != nil {
-		t.Fatalf("ler a folha-fonte: %v", err)
+	// TODA folha-fonte, e não só o `index.css`: o sistema Tempestade mora no
+	// `ds.css` (ALE-479), e um guarda que lesse um arquivo só deixaria a face do
+	// sistema novo apontar para a máquina sem acusar nada — foi medido, com a
+	// `--font-ds` sabotada e o guarda verde.
+	source := filepath.Join("..", "serve", "web", "assets", "src", "*.css")
+	sheets, err := filepath.Glob(source)
+	if err != nil || len(sheets) == 0 {
+		t.Fatalf("nenhuma folha-fonte em %s: %v", source, err)
 	}
+	var joined strings.Builder
+	for _, path := range sheets {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("ler a folha-fonte %s: %v", path, err)
+		}
+		joined.Write(raw)
+		joined.WriteString("\n")
+	}
+	sheet := joined.String()
 
 	shipped := map[string]bool{}
-	for _, found := range fontFaceFamily.FindAllStringSubmatch(string(sheet), -1) {
+	for _, found := range fontFaceFamily.FindAllStringSubmatch(sheet, -1) {
 		shipped[strings.ToLower(found[1])] = true
 	}
 	if len(shipped) == 0 {
@@ -60,13 +74,13 @@ func TestEveryFontTokenNamesAFaceTheAppShips(t *testing.T) {
 	}
 
 	declarations := map[string]string{}
-	for _, found := range fontToken.FindAllStringSubmatch(string(sheet), -1) {
+	for _, found := range fontToken.FindAllStringSubmatch(sheet, -1) {
 		declarations[found[1]] = found[2]
 	}
 
 	base := systemFontBaseline(t)
 	measured, inBaseline := 0, map[string]bool{}
-	for _, found := range fontToken.FindAllStringSubmatch(string(sheet), -1) {
+	for _, found := range fontToken.FindAllStringSubmatch(sheet, -1) {
 		token, stack := found[1], found[2]
 		measured++
 		first := firstFamily(stack, declarations)

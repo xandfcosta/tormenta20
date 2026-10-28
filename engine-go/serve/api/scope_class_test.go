@@ -33,6 +33,11 @@ func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 	// que existir na folha. Guarda que reprova o que está certo é guarda que
 	// alguém desliga.
 	classAttribute := regexp.MustCompile(`class="([^"]*)"`)
+	// A classe CONDICIONAL também, e ela é como a casca escolhe o escopo desde
+	// que há dois sistemas (ALE-479): `templ.KV("scene-ds", …)`. Lendo só o
+	// `class="…"`, o escopo do sistema novo podia ser renomeado com o guarda
+	// verde — medido, trocando-o por `scene-dsx`.
+	conditionalClass := regexp.MustCompile(`templ\.KV\("([^"]*)"`)
 	scope := regexp.MustCompile(`^scene-[a-z0-9-]+$`)
 	used := map[string][]string{}
 	for _, path := range houseSources(t) {
@@ -40,8 +45,10 @@ func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ler %s: %v", path, err)
 		}
-		for _, found := range classAttribute.FindAllStringSubmatch(semOsComentarios(string(source)), -1) {
-			for _, class := range strings.Fields(found[1]) {
+		code := semOsComentarios(string(source))
+		found := append(classAttribute.FindAllStringSubmatch(code, -1), conditionalClass.FindAllStringSubmatch(code, -1)...)
+		for _, match := range found {
+			for _, class := range strings.Fields(match[1]) {
 				if scope.MatchString(class) {
 					used[class] = append(used[class], filepath.Base(path))
 				}

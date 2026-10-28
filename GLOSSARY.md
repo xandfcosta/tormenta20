@@ -569,3 +569,21 @@ resolvidas por palpite:**
   esta issue: o acervo de CENAS guardadas e o acervo de PODERES não têm nada em
   comum além da palavra. Se um dia um deles for renomeado na tela, é o segundo —
   "acervo" é a palavra da mesa para o primeiro.
+
+## H. O sistema Tempestade (ALE-497)
+
+A UI está sendo refeita do zero, e as telas migram uma a uma. Até a última, o
+app veste DOIS sistemas de desenho, e é a CENA quem diz qual. Os termos abaixo
+são os que a migração precisou nomear. O que ainda é do grimório (a seção D-bis,
+o **crachá** de `ui.BadgeClasses`) continua valendo nas telas que não migraram.
+
+| Canônico | Identificador | Proibidos | O que é |
+|---|---|---|---|
+| **sistema de desenho** | `ui.DesignSystem`, `Page.System` | ~~tema~~ | Qual dos dois a cena veste: o **grimório** (`SystemGrimoire`, o zero do tipo, `.scene-grimorio`) ou o **Tempestade** (`SystemTempestade`, `.scene-ds`). `tema` está proibido porque claro e escuro também são chamados assim, e são outra coisa — o **modo de cor**. |
+| **Tempestade** | `SystemTempestade`, `.scene-ds`, `--ds-*` | ~~ds novo~~, ~~v2~~ | O sistema novo: uma face só (Atkinson Hyperlegible Next), seis tamanhos de texto com piso de 12px, alvo de 44px no toque e a paleta neutra-violeta com a ação em roxo. O nome é o da paleta escolhida, e é o que distingue as duas metades da migração sem dizer qual é a "nova" — que deixa de ser nova no dia seguinte. |
+| **modo de cor** | `ui.ColorMode`, cookie `color_mode`, `<html data-mode>`, `POST /modo` | ~~tema~~, ~~dark mode~~ | Claro, escuro ou o do sistema operacional, escolhido pela PESSOA e válido em toda cena Tempestade. Quem não escolheu não tem modo, e o CSS segue o `prefers-color-scheme`. É cookie e não `localStorage` porque o servidor entrega o `<html>` já no modo certo, sem o quadro no modo errado. |
+| **kit** | `serve/web/ds` | ~~componentes~~ sozinho | As peças com que toda tela Tempestade se monta. A tela não escolhe cor: a peça escreve a classe e a variante. Peça nova entra no kit e na **folha viva** antes de entrar numa tela. |
+| **folha viva** | `serve/web/specimen`, `/sistema` | ~~storybook~~, ~~catálogo~~ (é do mestre) | A tela que desenha cada peça do kit nos dois modos, para o olho conferir e o guarda de aparência medir. Ela substitui a folha de especificação do grimório (`/grimorio`) quando o grimório for apagado. |
+| **crachá removível** | `ds.RemovableBadge` | ~~chip~~, ~~ficha~~ | O crachá do que está ATIVO e pode sair — uma condição na ficha —, com o botão de tirar dentro. ~~ficha~~ está proibido pelo motivo óbvio: a ficha é a do personagem. O crachá que só informa é o `ds.Badge`, mesma palavra da linha da seção G. |
+| **linha da conta** | `ds.SumRow`, `ds.SumTerm` | ~~acordeão~~, ~~decomposição~~ (na tela) | A linha que mostra nome e total e, ao toque, ABRE a conta com uma **parcela** por linha, quantas houver (decisão do dono: "a conta pode crescer indefinidamente"). Na conta, só a penalidade tem cor. |
+| **barra de baixo** | `ds.BottomNav` | ~~tab bar~~, ~~rodapé~~ | A navegação fixa embaixo da tela, no celular — a decisão da fase 1 da ALE-497. No desktop a mesma navegação é a das **abas** (`ds.Tabs`). |

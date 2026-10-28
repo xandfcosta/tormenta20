@@ -1,0 +1,355 @@
+package ds
+
+import "t20engine/serve/web/ui"
+
+// Button é o botão do sistema. O conteúdo é filho, e `attrs` leva o resto —
+// o gesto do Datastar, o `type`, o `aria-label`.
+//
+//	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit"}) { Preparar }
+templ Button(v ButtonVariant, attrs templ.Attributes) {
+	<button
+		class="ds-button"
+		if v != ButtonPrimary {
+			data-variant={ string(v) }
+		}
+		{ attrs... }
+	>
+		{ children... }
+	</button>
+}
+
+// LinkButton tem a cara do botão e é um `<a>`: navegar é link, e um botão com
+// JavaScript perderia o clique do meio, o "abrir em nova aba" e o teclado.
+templ LinkButton(v ButtonVariant, href templ.SafeURL, attrs templ.Attributes) {
+	<a
+		href={ href }
+		class="ds-button"
+		if v != ButtonPrimary {
+			data-variant={ string(v) }
+		}
+		{ attrs... }
+	>
+		{ children... }
+	</a>
+}
+
+// IconButton é o botão só de ícone. O `label` é OBRIGATÓRIO e vira o nome
+// acessível: um ícone não diz nada a quem não o vê.
+templ IconButton(v ButtonVariant, icon, label string, attrs templ.Attributes) {
+	<button
+		class="ds-button"
+		data-icon
+		if v != ButtonPrimary {
+			data-variant={ string(v) }
+		}
+		aria-label={ label }
+		title={ label }
+		{ attrs... }
+	>
+		@ui.Icon(icon, "ds-icon")
+	</button>
+}
+
+// TextField é o campo com rótulo, ajuda e erro.
+templ TextField(f Field, attrs templ.Attributes) {
+	<div
+		class="ds-field"
+		if f.Error != "" {
+			data-invalid
+		}
+	>
+		<label for={ f.ID }>{ f.Label }</label>
+		<input
+			class="ds-input"
+			id={ f.ID }
+			name={ f.Name }
+			type={ ui.InputType(f.Type) }
+			value={ f.Value }
+			if f.Placeholder != "" {
+				placeholder={ f.Placeholder }
+			}
+			if f.Error != "" {
+				aria-invalid="true"
+				aria-describedby={ f.ID + "-help" }
+			} else if f.Help != "" {
+				aria-describedby={ f.ID + "-help" }
+			}
+			{ attrs... }
+		/>
+		if f.Error != "" {
+			<span class="ds-help" id={ f.ID + "-help" }>{ f.Error }</span>
+		} else if f.Help != "" {
+			<span class="ds-help" id={ f.ID + "-help" }>{ f.Help }</span>
+		}
+	</div>
+}
+
+// SearchField é a busca: o ícone desenha, e o `label` é o nome acessível —
+// uma busca não tem rótulo visível, e o placeholder não é rótulo.
+templ SearchField(id, label string, attrs templ.Attributes) {
+	<div class="ds-search">
+		@ui.Icon("Search", "ds-icon")
+		<input class="ds-input" id={ id } type="search" aria-label={ label } placeholder={ label } { attrs... }/>
+	</div>
+}
+
+// Segmented é o filtro da MESMA lista (todas, treinadas, com bônus). Navegar
+// para outra tela é aba; trocar o recorte do que está na tela é isto.
+templ Segmented(label string) {
+	<div class="ds-segmented" role="group" aria-label={ label }>
+		{ children... }
+	</div>
+}
+
+templ SegmentedOption(pressed bool, attrs templ.Attributes) {
+	<button type="button" aria-pressed={ ui.AriaBool(pressed) } { attrs... }>
+		{ children... }
+	</button>
+}
+
+// Tabs é a navegação DENTRO de uma tela, no desktop. No celular a mesma
+// navegação é a `BottomNav`.
+templ Tabs(label string) {
+	<nav class="ds-tabs" aria-label={ label }>
+		{ children... }
+	</nav>
+}
+
+templ Tab(href templ.SafeURL, current bool) {
+	<a
+		href={ href }
+		if current {
+			aria-current="page"
+		}
+	>
+		{ children... }
+	</a>
+}
+
+// BottomNav é a barra fixa de baixo, no celular (decisão do dono, ALE-497).
+templ BottomNav(label string) {
+	<nav class="ds-bottom-nav" aria-label={ label }>
+		{ children... }
+	</nav>
+}
+
+templ BottomNavItem(href templ.SafeURL, icon string, current bool) {
+	<a
+		href={ href }
+		if current {
+			aria-current="page"
+		}
+	>
+		if icon != "" {
+			@ui.Icon(icon, "ds-icon")
+		}
+		{ children... }
+	</a>
+}
+
+// Badge é o CRACHÁ: ele INFORMA (a origem, o custo, a página) e não é
+// clicável — para isso há o botão e o crachá removível.
+templ Badge(text string, outline bool) {
+	<span
+		class="ds-badge"
+		if outline {
+			data-variant="outline"
+		}
+	>{ text }</span>
+}
+
+// RemovableBadge é o crachá do que está ATIVO e pode sair: uma condição na
+// ficha. O `removeAttrs` leva o gesto de tirar.
+templ RemovableBadge(label string, removeAttrs templ.Attributes) {
+	<span class="ds-badge-removable">
+		{ label }
+		<button type="button" aria-label={ "Tirar " + label } title={ "Tirar " + label } { removeAttrs... }>
+			@ui.Icon("X", "ds-icon")
+		</button>
+	</span>
+}
+
+// List é a moldura das linhas, com o cabeçalho de coluna.
+templ List(title, trailing string) {
+	<div class="ds-list">
+		if title != "" || trailing != "" {
+			<div class="ds-list-head"><span>{ title }</span><span>{ trailing }</span></div>
+		}
+		{ children... }
+	</div>
+}
+
+// Row é a linha de lista: nome e nota à esquerda, o valor à direita. Com
+// `href`, ela é link; sem, é só leitura.
+templ Row(title, meta, value string, href templ.SafeURL) {
+	if href != "" {
+		<a class="ds-row" href={ href }>
+			@rowFace(title, meta, value)
+		</a>
+	} else {
+		<div class="ds-row">
+			@rowFace(title, meta, value)
+		</div>
+	}
+}
+
+templ rowFace(title, meta, value string) {
+	<div>
+		<div class="ds-row-title">{ title }</div>
+		if meta != "" {
+			<div class="ds-row-meta">{ meta }</div>
+		}
+	</div>
+	<span class="ds-row-value">{ value }</span>
+}
+
+// SumRow é a linha que ABRE A CONTA: fechada, nome e total; aberta, uma linha
+// por parcela, quantas houver (decisão do dono, ALE-497).
+templ SumRow(title, hint, total string, terms []SumTerm, open bool) {
+	<details class="ds-sum" open?={ open }>
+		<summary>
+			<div>
+				<div class="ds-row-title">{ title }</div>
+				if hint != "" {
+					<div class="ds-row-meta">{ hint }</div>
+				}
+			</div>
+			<span class="ds-row-value">{ total }</span>
+			@ui.Icon("ChevronDown", "ds-icon")
+		</summary>
+		<div class="ds-sum-body">
+			<dl>
+				for _, t := range terms {
+					<dt>
+						{ t.Label }
+						if t.Note != "" {
+							<small>{ t.Note }</small>
+						}
+					</dt>
+					<dd
+						if t.Penalty {
+							data-penalty
+						}
+					>{ t.Value }</dd>
+				}
+			</dl>
+			<div class="ds-sum-total"><span>Total</span><span>{ total }</span></div>
+		</div>
+	</details>
+}
+
+// Stats é a grade dos seis atributos: três colunas no celular, seis no resto.
+templ Stats() {
+	<div class="ds-stats">
+		{ children... }
+	</div>
+}
+
+templ Stat(key, value string) {
+	<div class="ds-stat">
+		<span class="ds-stat-key">{ key }</span>
+		<span class="ds-stat-value">{ value }</span>
+	</div>
+}
+
+templ MeterView(m Meter) {
+	<div class="ds-meter">
+		<div class="ds-meter-head">
+			<span class="ds-meter-key">{ m.Label }</span>
+			<span class="ds-meter-value">
+				{ ui.Int(m.Value) }
+				if m.Max > 0 {
+					<small>{ " / " + ui.Int(m.Max) }</small>
+				}
+				if m.Temp > 0 {
+					<small>{ " · +" + ui.Int(m.Temp) + " temp." }</small>
+				}
+				if m.Unit != "" {
+					<small>{ " " + m.Unit }</small>
+				}
+			</span>
+		</div>
+		if m.Max > 0 {
+			<div class="ds-bar" aria-hidden="true">
+				<span
+					if m.Kind != MeterPlain {
+						data-kind={ string(m.Kind) }
+					}
+					style={ "width:" + m.share(m.Value) }
+				></span>
+				if m.Temp > 0 {
+					<span data-kind="temp" style={ "width:" + m.share(m.Temp) }></span>
+				}
+			</div>
+		}
+	</div>
+}
+
+// Card é a moldura de um poder, uma magia ou um item. `aside` é o que fica no
+// canto do título (um selo), e o corpo é filho.
+templ Card(title string, aside templ.Component) {
+	<article class="ds-card">
+		<div class="ds-card-head">
+			<h3 class="ds-card-title">{ title }</h3>
+			if aside != nil {
+				@aside
+			}
+		</div>
+		{ children... }
+	</article>
+}
+
+templ RollView(r Roll) {
+	<div class="ds-roll">
+		<span class="ds-roll-what">{ r.What }</span>
+		<span class="ds-roll-total">{ ui.Int(r.Total) }</span>
+		<span class="ds-roll-parts">
+			{ r.Die + " " }<b>{ ui.Int(r.Natural) }</b>
+			for _, t := range r.Terms {
+				{ rollTermText(t) }
+			}
+		</span>
+		for _, line := range r.Lines {
+			<span class="ds-roll-parts">{ line }</span>
+		}
+	</div>
+}
+
+// Dialog é o `<dialog>` nativo: ele vai para a camada de topo e prende o foco
+// sem uma linha de JavaScript. No celular a folha desce até a borda de baixo.
+// `foot` leva os botões; o corpo é filho.
+templ Dialog(id, title string, foot templ.Component) {
+	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" }>
+		<div class="ds-dialog-head">
+			<h2 class="ds-dialog-title" id={ id + "-title" }>{ title }</h2>
+			<form method="dialog">
+				@IconButton(ButtonGhost, "X", "Fechar", nil)
+			</form>
+		</div>
+		<div class="ds-dialog-body">
+			{ children... }
+		</div>
+		if foot != nil {
+			<div class="ds-dialog-foot">
+				@foot
+			</div>
+		}
+	</dialog>
+}
+
+templ Toast(text string, action templ.Component) {
+	<div class="ds-toast" role="status">
+		<span>{ text }</span>
+		if action != nil {
+			@action
+		}
+	</div>
+}
+
+templ Empty(title, text string) {
+	<div class="ds-empty">
+		<span class="ds-empty-title">{ title }</span>
+		{ text }
+		{ children... }
+	</div>
+}

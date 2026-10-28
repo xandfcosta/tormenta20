@@ -7,6 +7,10 @@
  * ALE-272 (fatia 10c), quando a SPA saiu: era ela quem o hospedava, e não quem
  * o possuía — a paleta sempre foi da casa. */
 @import "./src/index.css";
+/* O sistema novo, que convive com o grimório até a última tela migrar
+ * (ALE-497). Ele só vale dentro de `.scene-ds`, então importá-lo aqui não muda
+ * nenhuma tela que ainda não migrou. */
+@import "./src/ds.css";
 
 /* Os templates. MEDIDO na ALE-278 (fatia 4), e o resultado desmente o que estava
  * escrito aqui: estas duas linhas não mudam UM BYTE da folha compilada.
@@ -44,6 +48,7 @@
 
 @source "../*.templ";
 @source "../../web/ui/*.templ";
+@source "../../web/ds/*.templ";
 /* O KIT (ALE-278, fatia 4). Ele saiu de `api/` para `web/ui/`, e o glob acima é
  * de um nível só — sem esta linha, `Button`, `TextField` e a casca inteira
  * perderiam as classes, em silêncio. */

@@ -109,6 +109,7 @@ primeiro que voltar.
 | como a ficha é montada do banco | `domain/sheet` |
 | o que a tela desenha | `serve/web/<cena>` |
 | a folha, uma ilha de JS, uma fonte | `serve/web/assets` |
+| uma peça do sistema Tempestade | `serve/web/ds` (e a folha viva em `/sistema`) |
 | quem cumpre o que a cena pede | `serve/api` |
 | onde o dado é gravado | `infra/db` |
 | por que a suíte reprovou uma convenção | `convention` |
@@ -1984,9 +1985,12 @@ segue foi todo descoberto errando — está aqui para ninguém redescobrir:
   junto (ALE-283). O `go build`, o `templ generate`, o `go vet`, a suíte Go
   inteira e o próprio guarda de tinta ficaram VERDES; quem acusou foi o e2e, com
   oito casos de leiaute e contraste. O `TestEveryScopeClassExistsInTheStylesheet`
-  fecha o buraco, e ele lê só o que está dentro de `class=` — a primeira versão
-  varria o arquivo inteiro e reprovava `scene-title`, `scene-shell` e
-  `scene-content`, que são valores de `data-slot` e não classes.
+  fecha o buraco, e ele lê só o que está dentro de `class=` e de `templ.KV("…")`
+  — a primeira versão varria o arquivo inteiro e reprovava `scene-title`,
+  `scene-shell` e `scene-content`, que são valores de `data-slot` e não classes.
+  O `templ.KV` entrou com o segundo sistema (ALE-479): a casca escolhe o escopo
+  por condição, e lendo só o `class="…"` o `scene-ds` podia ser renomeado com o
+  guarda verde.
 
   > **A lição maior é sobre renome em massa, e vale para a próxima varredura:**
   > `\bnome\b` alcança muito mais que identificador Go. Numa entrada só de mapa,
@@ -2227,6 +2231,8 @@ que a divisão existe para conseguir.
   `go:embed` do `api`;
 - `Overlays []templ.Component` — o livro, o verbete e o buscador, que leem
   catálogo. A casca só reserva o lugar.
+- `ColorMode` — o claro ou escuro que a pessoa escolheu, lido do cookie
+  `color_mode`. A casca o escreve no `<html data-mode>`, e não sabe de cookie.
 
 Quem preenche é o `scene_core.go`, o ÚNICO lugar do projeto que monta uma
 página. Pôr esses campos em cada `ui.Page{…}` seria repetir dezoito vezes o que
@@ -2275,6 +2281,39 @@ contradiz — forma, foco, transição, desabilitado.
 Para quem for escrever a próxima variante: o teste é `grep -bo '\.classe'` na
 folha compilada, dos dois lados do conflito. Não adianta raciocinar pela ordem
 do `class=`, que o navegador ignora.
+
+## Dois sistemas de desenho, até a última tela migrar (ALE-497)
+
+A UI está sendo refeita, e a transição é POR ESCOPO: a cena migrada veste o
+sistema **Tempestade** inteiro, e a que ainda não migrou continua no
+**grimório**. Quem escolhe é a cena, com `ui.Page.System`; o zero do tipo é o
+grimório, para nenhuma tela mudar sem alguém pedir. O que cada palavra quer
+dizer está na seção H do [GLOSSARY](../GLOSSARY.md).
+
+- **Os tokens do Tempestade são `--ds-*` e só existem dentro de `.scene-ds`**
+  (`serve/web/assets/src/ds.css`). Nada é declarado na raiz: um token com o nome
+  de um do grimório repintaria as telas que ainda não migraram.
+- **Cada cor é UM token com os dois modos** (`light-dark()`), e o modo é o
+  `color-scheme` do elemento que USA o token. É por isso que a folha viva
+  desenha as duas metades lado a lado com um `data-preview` só, e por isso o
+  modo escolhido é um atributo no `<html>` e não um segundo bloco de tokens.
+- **A tela não escolhe cor.** Ela se monta com as peças de `serve/web/ds`, que
+  escrevem a classe e a variante; o que a tela escreve é leiaute (`grid`, `gap`,
+  `px-4`), e a escala de espaço do Tailwind já é a do sistema (base 4). Peça
+  nova entra no kit e na `/sistema` ANTES de entrar numa tela.
+- **Os pisos do sistema novo são outros**: 12px de texto e 44×44 de alvo no
+  toque. Quem mede é o e2e (`support/ds-floors.ts`, no laço do
+  `appearance.spec.ts`), e ele PULA a cena sem `.scene-ds`, com o motivo no
+  relatório — não existe lista de cenas migradas para alguém esquecer. O guarda
+  da Cinzel pula a cena migrada pelo motivo inverso.
+- **Três medidores tiveram de aprender o segundo escopo**, e os três passavam
+  VERDE sobre a cena nova sem medi-la: o de contraste varria só
+  `.scene-grimorio *` (5 textos medidos na `/sistema`, os do diálogo do livro),
+  o de face lia só o `index.css`, e o de escopo lia só o `class="…"`. Medidor
+  novo que mire um escopo pelo nome mira os DOIS até o grimório sair.
+- **O fim da migração é apagar**, não converter: o `.scene-grimorio`, os
+  tokens `grimorio-*`, a Cinzel, a Liberation, a JetBrains Mono e a `/grimorio`
+  saem de uma vez, depois da última tela.
 
 ## O anel de foco é UMA receita, e o repouso dela existe para não animar (ALE-318)
 

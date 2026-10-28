@@ -1,0 +1,225 @@
+package specimen
+
+import (
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/routes"
+)
+
+// A FOLHA VIVA desenha o kit inteiro DUAS vezes, uma por modo, lado a lado.
+//
+// Lado a lado, e não só o seletor: assim uma visita mede os dois modos — o
+// guarda de contraste lê o que está desenhado, e com um modo por vez ele mediria
+// metade do sistema em cada execução. O seletor continua aqui porque é ele que
+// prova o caminho de verdade, o do cookie.
+templ specimen() {
+	<div class="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6">
+		<div class="grid gap-2">
+			<p class="ds-card-text">
+				O kit do sistema Tempestade. Toda tela migrada se monta com estas peças, e peça nova entra aqui antes de entrar numa tela.
+			</p>
+			@colorModeSwitch()
+		</div>
+		<div class="grid gap-6 lg:grid-cols-2">
+			@modePanel("light", "Claro")
+			@modePanel("dark", "Escuro")
+		</div>
+	</div>
+}
+
+// colorModeSwitch é o seletor de modo: um formulário, porque trocar o modo
+// repinta a página inteira e não há remendo que valha a pena.
+templ colorModeSwitch() {
+	<form method="post" action={ templ.SafeURL(routes.ColorMode) } class="flex flex-wrap items-center gap-2">
+		<input type="hidden" name="voltar" value="/sistema"/>
+		<span class="ds-row-meta">Modo desta página</span>
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit", "name": "modo", "value": "claro"}) {
+			Claro
+		}
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit", "name": "modo", "value": "escuro"}) {
+			Escuro
+		}
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit", "name": "modo", "value": "sistema"}) {
+			Do sistema
+		}
+	</form>
+}
+
+// modePanel força um modo num pedaço da página. O `id` de cada campo leva o
+// modo, porque as duas metades desenham as mesmas peças e um `id` repetido
+// quebraria o `for=` do rótulo.
+templ modePanel(mode, title string) {
+	<section class="ds-preview grid content-start gap-4 rounded-xl p-4" data-preview={ mode } aria-label={ "Modo " + title }>
+		<h2 class="ds-dialog-title">{ title }</h2>
+		@specimenBlock("Botão") {
+			<div class="flex flex-wrap items-center gap-2">
+				@ds.Button(ds.ButtonPrimary, nil) {
+					Rolar ataque
+				}
+				@ds.Button(ds.ButtonSecondary, nil) {
+					Preparar
+				}
+				@ds.Button(ds.ButtonGhost, nil) {
+					Cancelar
+				}
+				@ds.IconButton(ds.ButtonSecondary, "Ellipsis", "Mais ações", nil)
+				@ds.Button(ds.ButtonDanger, nil) {
+					Esquecer magia
+				}
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"disabled": true}) {
+					Sem PM
+				}
+			</div>
+		}
+		@specimenBlock("Campo, busca e erro") {
+			<div class="grid gap-3">
+				@ds.TextField(ds.Field{ID: mode + "-name", Name: "nome", Label: "Nome do personagem", Value: "Lia Ventobravo"}, nil)
+				@ds.SearchField(mode+"-search", "Buscar poder", nil)
+				@ds.TextField(ds.Field{ID: mode + "-email", Name: "email", Label: "E-mail", Type: "email", Value: "lia@", Error: "O e-mail precisa de domínio, como lia@mesa.com"}, nil)
+			</div>
+		}
+		@specimenBlock("Abas e segmentado") {
+			<div class="grid gap-3">
+				@ds.Tabs("Abas da ficha") {
+					@ds.Tab("#", true) {
+						Ficha
+					}
+					@ds.Tab("#", false) {
+						Combate
+					}
+					@ds.Tab("#", false) {
+						Poderes
+					}
+					@ds.Tab("#", false) {
+						Magias
+					}
+				}
+				@ds.Segmented("Filtro de perícias") {
+					@ds.SegmentedOption(true, nil) {
+						Todas
+					}
+					@ds.SegmentedOption(false, nil) {
+						Treinadas
+					}
+					@ds.SegmentedOption(false, nil) {
+						Com bônus
+					}
+				}
+			</div>
+		}
+		@specimenBlock("Crachá e crachá removível") {
+			<div class="flex flex-wrap items-center gap-2">
+				@ds.Badge("poder", false)
+				@ds.Badge("classe", false)
+				@ds.Badge("2 PM", true)
+				@ds.Badge("p. 128", true)
+				@ds.RemovableBadge("Abalado", nil)
+				@ds.RemovableBadge("Caído", nil)
+			</div>
+		}
+		@specimenBlock("Linha e linha da conta") {
+			@ds.List("Perícias", "total") {
+				@ds.SumRow("Acrobacia", "com poder e item", "+16", []ds.SumTerm{
+					{Label: "Destreza", Value: "+4"},
+					{Label: "Treinada", Value: "+4"},
+					{Label: "Metade do nível", Value: "+4"},
+					{Label: "Foco em Perícia", Note: "poder, p. 129", Value: "+2"},
+					{Label: "Manto élfico", Note: "item", Value: "+2"},
+				}, true)
+				@ds.SumRow("Atletismo", "", "+3", []ds.SumTerm{
+					{Label: "Força", Value: "+1"},
+					{Label: "Metade do nível", Value: "+4"},
+					{Label: "Armadura", Note: "penalidade", Value: "−2", Penalty: true},
+				}, true)
+				@ds.Row("Conhecimento", "só treinada", "—", "")
+			}
+		}
+		@specimenBlock("Atributo e medidor") {
+			<div class="grid gap-4">
+				@ds.Stats() {
+					@ds.Stat("FOR", "+1")
+					@ds.Stat("DES", "+4")
+					@ds.Stat("CON", "+2")
+					@ds.Stat("INT", "+0")
+					@ds.Stat("SAB", "+1")
+					@ds.Stat("CAR", "+3")
+				}
+				@ds.MeterView(ds.Meter{Label: "PV", Value: 38, Max: 52, Temp: 6, Kind: ds.MeterPV})
+				@ds.MeterView(ds.Meter{Label: "PM", Value: 11, Max: 24, Kind: ds.MeterPM})
+				@ds.MeterView(ds.Meter{Label: "Deslocamento", Value: 9, Unit: "m"})
+			</div>
+		}
+		@specimenBlock("Cartão e rolagem") {
+			<div class="grid gap-3">
+				@ds.Card("Foco em Arma", ds.Badge("passivo", true)) {
+					<p class="ds-card-text">+2 nos testes de ataque com a arma escolhida.</p>
+					<div class="flex items-center justify-between gap-2">
+						@ds.Badge("Florete", false)
+						@ds.Button(ds.ButtonGhost, nil) {
+							Trocar arma
+						}
+					</div>
+				}
+				@ds.RollView(ds.Roll{
+					What:    "Ataque · Florete",
+					Total:   27,
+					Die:     "d20",
+					Natural: 12,
+					Terms:   []ds.RollTerm{{Label: "Luta", Value: 12}, {Label: "Foco em Arma", Value: 2}, {Label: "arma mágica", Value: 1}},
+					Lines:   []string{"Dano: 1d6+4 → 9 · crítico 18/×2"},
+				})
+			</div>
+		}
+		@specimenBlock("Diálogo, aviso e vazio") {
+			<div class="grid gap-3">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": mode + "-dialog", "command": "show-modal"}) {
+					Abrir diálogo
+				}
+				@ds.Dialog(mode+"-dialog", "Escolher poder", dialogFoot()) {
+					@ds.SearchField(mode+"-dialog-search", "Buscar", nil)
+				}
+				@ds.Toast("PM gasto: 2 (Foco em Magia)", undoButton())
+				@ds.Empty("Nenhuma magia preparada", "Escolha magias na aba Magias.")
+			</div>
+		}
+		@specimenBlock("Barra de baixo") {
+			@ds.BottomNav("Abas da ficha, no celular") {
+				@ds.BottomNavItem("#", "", true) {
+					Ficha
+				}
+				@ds.BottomNavItem("#", "", false) {
+					Combate
+				}
+				@ds.BottomNavItem("#", "", false) {
+					Poderes
+				}
+				@ds.BottomNavItem("#", "", false) {
+					Magias
+				}
+			}
+		}
+	</section>
+}
+
+templ undoButton() {
+	@ds.Button(ds.ButtonSecondary, nil) {
+		Desfazer
+	}
+}
+
+templ dialogFoot() {
+	<form method="dialog" class="contents">
+		@ds.Button(ds.ButtonGhost, nil) {
+			Cancelar
+		}
+		@ds.Button(ds.ButtonPrimary, nil) {
+			Escolher
+		}
+	</form>
+}
+
+templ specimenBlock(title string) {
+	<div class="grid gap-2">
+		<h3 class="ds-list-head px-0">{ title }</h3>
+		{ children... }
+	</div>
+}

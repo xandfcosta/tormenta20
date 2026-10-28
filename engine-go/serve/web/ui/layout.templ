@@ -62,6 +62,46 @@ type Page struct {
 	// destino é melhor que a seta genérica quando a cena não é filha óbvia de
 	// ninguém.
 	BackLabel string
+	// System é o sistema de desenho da cena. A UI está migrando tela a tela
+	// (ALE-497), e a cena que não diz nada continua no grimório — é o zero do
+	// tipo de propósito, para nenhuma tela mudar sem alguém pedir.
+	System DesignSystem
+	// ColorMode é a escolha de claro ou escuro que a pessoa fez, e quem a lê do
+	// cookie é o hospedeiro. Vazio é "siga o sistema operacional". Ela sai no
+	// `<html>` já na resposta: decidir no navegador desenharia um quadro no modo
+	// errado antes de trocar.
+	ColorMode ColorMode
+}
+
+// DesignSystem é qual dos dois sistemas a cena veste durante a migração.
+type DesignSystem string
+
+const (
+	// SystemGrimoire é o sistema de antes, até a última tela migrar.
+	SystemGrimoire DesignSystem = ""
+	// SystemTempestade é o sistema novo: as peças de `serve/web/ds`, só dentro
+	// do escopo `.scene-ds`.
+	SystemTempestade DesignSystem = "tempestade"
+)
+
+// ColorMode é o modo de cor ESCOLHIDO. Não há valor para "sistema": quem não
+// escolheu não tem modo, e o CSS segue o `prefers-color-scheme`.
+type ColorMode string
+
+const (
+	ColorModeSystem ColorMode = ""
+	ColorModeLight  ColorMode = "light"
+	ColorModeDark   ColorMode = "dark"
+)
+
+// ParseColorMode lê o valor do cookie. O que não for um dos dois modos é
+// "siga o sistema" — um cookie velho ou adulterado não pode quebrar a página.
+func ParseColorMode(raw string) ColorMode {
+	switch ColorMode(raw) {
+	case ColorModeLight, ColorModeDark:
+		return ColorMode(raw)
+	}
+	return ColorModeSystem
 }
 
 // ShellShape são as três posturas da casca, e elas se excluem — um campo em vez
@@ -85,7 +125,12 @@ const (
 
 templ Layout(p Page, body templ.Component) {
 	<!DOCTYPE html>
-	<html lang="pt-BR">
+	<html
+		lang="pt-BR"
+		if p.ColorMode != ColorModeSystem {
+			data-mode={ string(p.ColorMode) }
+		}
+	>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
@@ -139,10 +184,16 @@ templ Layout(p Page, body templ.Component) {
 				if p.Back != "" {
 					data-voltar={ p.Back }
 				}
-				class="scene-grimorio relative flex h-dvh flex-col overflow-hidden"
+				class={ "relative flex h-dvh flex-col overflow-hidden",
+					templ.KV("scene-grimorio", p.System == SystemGrimoire),
+					templ.KV("scene-ds", p.System == SystemTempestade) }
 			>
-				<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
-				if p.Shape == ShellDense {
+				if p.System == SystemGrimoire {
+					<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
+				}
+				if p.Shape == ShellDense && p.System == SystemTempestade {
+					@denseHeader(p)
+				} else if p.Shape == ShellDense {
 					<header
 						class="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
 						style="padding-top: max(0.75rem, env(safe-area-inset-top))"
@@ -199,4 +250,22 @@ templ Layout(p Page, body templ.Component) {
 			</section>
 		</body>
 	</html>
+}
+
+// denseHeader é o cabeçalho denso no sistema novo. Ele mora aqui, e não no kit
+// `ds`, porque é a CASCA quem o desenha e o kit importa este pacote — o
+// contrário seria um ciclo.
+templ denseHeader(p Page) {
+	<header class="ds-header">
+		<a href={ templ.SafeURL(p.Back) } class="ds-header-back">
+			if p.BackLabel != "" {
+				{ "‹ " + p.BackLabel }
+			} else {
+				‹ Voltar
+			}
+		</a>
+		if p.VisibleTitle != "" {
+			<h1 class="ds-header-title">{ p.VisibleTitle }</h1>
+		}
+	</header>
 }

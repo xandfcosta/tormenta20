@@ -44,6 +44,12 @@ import (
 // de uma criatura de fora da Mesa vem para cá.
 const MasterBestiary = "/mestre/bestiario"
 
+// ColorMode é onde a pessoa troca entre claro, escuro e o do sistema.
+//
+// Quem o atende é o hospedeiro, porque o modo é um cookie que vale para toda
+// cena; quem o cita é o seletor de modo, que mora numa cena.
+const ColorMode = "/modo"
+
 // Book é a cena que abre o PDF do livro.
 //
 // Ela é citada pela Mesa, que monta o botão de sair para o livro. O endereço é a

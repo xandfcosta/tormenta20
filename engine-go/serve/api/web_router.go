@@ -15,6 +15,7 @@ import (
 	"t20engine/serve/web/reader"
 	"t20engine/serve/web/routes"
 	"t20engine/serve/web/sheetui"
+	"t20engine/serve/web/specimen"
 	"t20engine/serve/web/table"
 
 	"github.com/go-chi/chi/v5"
@@ -55,6 +56,9 @@ func (s *Server) WebRouter() http.Handler {
 	// por rota, mas porque dentro dele ela seria inalcançável para exatamente
 	// quem precisa dela.
 	door.Routes(r, door.New(s.doorHost(), s.accountGate(), s.accountResets()))
+	// O MODO DE COR é anônimo pelo motivo da porta: ela também veste o sistema
+	// novo, e quem ainda não entrou escolhe claro ou escuro do mesmo jeito.
+	r.Post(routes.ColorMode, s.handleColorMode)
 	// O HUB: o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
@@ -67,6 +71,7 @@ func (s *Server) WebRouter() http.Handler {
 		// A FICHA é filha do endereço do elenco: `/personagens/{id}`.
 		sheetui.Routes(r, sheetui.New(s.sheetHost(), s.characterPlays()))
 		grimoire.Routes(r, grimoire.New(s.sceneCore()))
+		specimen.Routes(r, specimen.New(s.sceneCore()))
 		// A MESA DO MESTRE: o trilho, os catálogos, o bestiário, os encontros e o
 		// improviso.
 		master.Routes(r, master.New(s.sceneCore()))
