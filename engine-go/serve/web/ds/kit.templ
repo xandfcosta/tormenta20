@@ -319,10 +319,11 @@ templ RollView(r Roll) {
 }
 
 // Dialog é o `<dialog>` nativo: ele vai para a camada de topo e prende o foco
-// sem uma linha de JavaScript. No celular a folha desce até a borda de baixo.
+// sem uma linha de JavaScript. O `data-preserve-attr` o mantém aberto quando um
+// gesto remenda a cena por baixo dele. No celular a folha desce até a borda de baixo.
 // `foot` leva os botões; o corpo é filho.
 templ Dialog(id, title string, foot templ.Component) {
-	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" }>
+	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" } data-preserve-attr="open">
 		<div class="ds-dialog-head">
 			<h2 class="ds-dialog-title" id={ id + "-title" }>{ title }</h2>
 			<form method="dialog">
