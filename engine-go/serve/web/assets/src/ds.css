@@ -691,6 +691,9 @@
   .ds-dialog {
     width: min(32rem, calc(100vw - 2rem));
     max-height: calc(100dvh - 2rem);
+    /* O reset do Tailwind zera a margem de todo elemento, e é a `margin: auto`
+     * do navegador que centraliza o modal. */
+    margin: auto;
     padding: 0;
     overflow: hidden;
     border: 0;
