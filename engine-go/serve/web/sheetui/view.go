@@ -62,6 +62,8 @@ type View struct {
 	// DEGRAU DE NÍVEL: o nível de um personagem é a SOMA dos níveis de classe, e
 	// subir um nível é escolher QUAL classe o recebe.
 	AsClasses []sheetClass
+	// Identity é quem o personagem é, linha a linha, para o ⋯ da ficha paralela.
+	Identity []identityLine
 	// Tabs são as sete da ficha, com a ativa marcada. Ver `Tabs`.
 	Tabs []Tab
 	// ActiveTab é o valor resolvido — nunca o que veio na URL cru, que pode ser
@@ -200,6 +202,7 @@ func (s Scene) Load(
 		NoMana:    dto.MpMax == 0,
 		Classes:   card.Classes,
 		AsClasses: stepClasses(dto),
+		Identity:  identityOf(dto, card.Classes),
 		ActiveTab: aba,
 
 		Proficiencies: proficiencyGroupsOf(dto),

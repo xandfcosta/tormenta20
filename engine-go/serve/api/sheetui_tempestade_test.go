@@ -123,3 +123,22 @@ func TestATabNotYetMigratedLeadsToTheSheetOfToday(t *testing.T) {
 		t.Errorf("a ficha paralela desenhou classe do grimório: %v", grimoire)
 	}
 }
+
+// O ⋯ DIZ QUEM É (decisão do dono): no celular o cabeçalho só cabe o nome, e
+// o retrato, a classe, a raça e a divindade moram no diálogo do ⋯.
+func TestTheSheetMenuSaysWhoTheCharacterIs(t *testing.T) {
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
+	seedRaca(t, f.s, id, "osteon")
+	devoteOf(t, f, id, "Khalmyr", "Dom da Verdade")
+
+	menu := regexp.MustCompile(`(?s)<dialog[^>]*id="sheet-menu".*?</dialog>`).FindString(parallelSheet(t, f, id, "expertises"))
+	if menu == "" {
+		t.Fatal("a ficha paralela não desenhou o diálogo do ⋯")
+	}
+	for _, want := range []string{"ds-avatar", "Guerreiro 3", "Osteon", "Khalmyr", "Soldado"} {
+		if !strings.Contains(menu, want) {
+			t.Errorf("o ⋯ não diz %q", want)
+		}
+	}
+}

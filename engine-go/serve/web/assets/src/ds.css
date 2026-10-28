@@ -808,6 +808,19 @@
     font-weight: 700;
     user-select: none;
   }
+  .ds-avatar[data-large] {
+    width: 4rem;
+    height: 4rem;
+    font-size: var(--ds-t-lg);
+  }
+  .ds-sheet-identity {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+  }
+  .ds-sheet-identity > .ds-list {
+    justify-self: stretch;
+  }
   .ds-sheet-name {
     margin: 0;
     overflow: hidden;
@@ -817,7 +830,9 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+  /* No celular o cabeçalho só cabe o nome: quem é mora no ⋯. */
   .ds-sheet-who {
+    display: none;
     margin: 0;
     overflow: hidden;
     color: var(--ds-ink-3);
@@ -999,6 +1014,9 @@
       top: 0;
       z-index: 1;
       background: var(--ds-bg);
+    }
+    .ds-sheet-who {
+      display: block;
     }
     .ds-sheet-head > .ds-def,
     .ds-sheet-phone-only,

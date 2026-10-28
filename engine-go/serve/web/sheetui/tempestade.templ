@@ -48,8 +48,8 @@ templ tempestadeSheet(v View) {
 	</div>
 }
 
-// sheetHeader é o cabeçalho: a volta ao elenco, o retrato, quem é, a Defesa e
-// o ⋯. A Defesa mora aqui no celular porque é o número que a mesa pergunta em
+// sheetHeader é o cabeçalho: a volta ao elenco, o retrato, quem é (só no
+// desktop; no celular mora no ⋯), a Defesa e o ⋯. A Defesa mora aqui no celular porque é o número que a mesa pergunta em
 // voz alta, e o cabeçalho aparece em toda aba; no desktop ela está na coluna.
 templ sheetHeader(v View) {
 	<header class="ds-sheet-head">
@@ -66,7 +66,7 @@ templ sheetHeader(v View) {
 			<b>{ v.Defense }</b>
 			<span>DEF</span>
 		</div>
-		@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Nível e aparência", templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
+		@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Quem é, nível e aparência", templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
 	</header>
 }
 
@@ -279,11 +279,20 @@ templ sheetMoreDialog(v View) {
 	}
 }
 
-// sheetMenuDialog é o ⋯: só o que é raro — o nível e o modo de cor. O nível
-// só aparece aqui no celular: no desktop ele já está na coluna, e dois degraus
-// na mesma tela são dois lugares para procurar.
+// sheetMenuDialog é o ⋯: quem o personagem é, por extenso, e o que é raro —
+// o nível e o modo de cor. O nível só aparece aqui no celular: no desktop ele
+// já está na coluna, e dois degraus na mesma tela são dois lugares para
+// procurar.
 templ sheetMenuDialog(v View) {
 	@ds.Dialog("sheet-menu", v.Name, nil) {
+		<div class="ds-sheet-identity">
+			<div class="ds-avatar" data-large aria-hidden="true" style={ "background: " + v.Gradient }>{ v.Initials }</div>
+			@ds.List("", "") {
+				for _, line := range v.Identity {
+					@ds.Row(line.Label, "", line.Value, "")
+				}
+			}
+		</div>
 		<div class="ds-sheet-phone-only">
 			@levelControl(v)
 		</div>

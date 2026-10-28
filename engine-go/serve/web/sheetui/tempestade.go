@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/domain/book"
+	"t20engine/domain/sheet"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
@@ -162,6 +164,41 @@ func whoLine(v View) string {
 		parts = append(parts, v.Summary)
 	}
 	return strings.Join(parts, " · ")
+}
+
+// identityLine é uma linha de quem é, no ⋯.
+type identityLine struct {
+	Label string
+	Value string
+}
+
+// identityOf é quem o personagem é, por extenso: no celular o cabeçalho só
+// cabe o nome, e isto mora no ⋯ (decisão do dono). Personagem sem classe,
+// raça ou origem ainda está sendo feito, e a linha diz o que falta em vez de
+// sumir.
+func identityOf(dto sheet.CharacterDTO, classes string) []identityLine {
+	races := make([]string, 0, len(dto.Races))
+	for _, r := range dto.Races {
+		races = append(races, book.RaceLabel(r.Race))
+	}
+	god := "Nenhuma"
+	if dto.God != nil && *dto.God != "" {
+		god = *dto.God
+	}
+	return []identityLine{
+		{"Classe", orMissing(classes)},
+		{"Raça", orMissing(strings.Join(races, " / "))},
+		{"Divindade", god},
+		{"Origem", orMissing(book.OriginLabel(dto.Origin))},
+		{"Tamanho", orMissing(dto.Size)},
+	}
+}
+
+func orMissing(value string) string {
+	if strings.TrimSpace(value) == "" {
+		return "—"
+	}
+	return value
 }
 
 // meterOf traduz o vital da ficha para o medidor do kit. O temporário chega
