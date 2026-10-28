@@ -509,6 +509,9 @@
    * deixava as parcelas soltas, longe do nome que elas explicam (decisão do
    * dono). A margem da direita põe os valores da conta na coluna do total da
    * linha: o chevron e o espaço antes dele. */
+  .ds-sum[open] > summary [data-sum-hint] {
+    display: none;
+  }
   .ds-sum[open] {
     background: var(--ds-sunk);
   }
