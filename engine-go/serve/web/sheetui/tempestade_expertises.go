@@ -44,29 +44,37 @@ func expertiseSumTerms(ex engine.ExpertiseBreakdown) []ds.SumTerm {
 }
 
 // expertiseHint é a nota debaixo do nome: o atributo e o estado do treino.
+// A perícia trancada não entra aqui: o estado dela é o `expertiseAlert`.
 //
-//	expertiseHint(row) // "CAR · só treinada"
+//	expertiseHint(row) // "FOR · treinada"
 func expertiseHint(row expertiseRow) string {
 	parts := []string{attributeAbbr[row.Attribute]}
 	switch {
 	case row.AutoFail:
 		parts = append(parts, "falha automática")
-	case row.Locked:
-		parts = append(parts, "só treinada")
 	case row.Trained:
 		parts = append(parts, "treinada")
 	}
 	return strings.Join(parts, " · ")
 }
 
+// expertiseAlert diz por que o número da perícia trancada não vale (p115): o
+// número riscado sozinho não explicava nada (decisão do dono).
+func expertiseAlert(row expertiseRow) string {
+	if row.Locked {
+		return "só treinada — você não tem treino"
+	}
+	return ""
+}
+
 // expertiseSumHead é a linha fechada. A falha automática não tem número (p394),
-// e a perícia trancada mostra o dela apagado: ele existe e não vale.
+// e a perícia trancada mostra o dela riscado: ele existe e não vale.
 func expertiseSumHead(row expertiseRow) ds.SumHead {
 	total := row.Total
 	if row.AutoFail {
 		total = "—"
 	}
-	return ds.SumHead{Title: row.Name, Hint: expertiseHint(row), Total: total, Muted: row.Locked}
+	return ds.SumHead{Title: row.Name, Hint: expertiseHint(row), Alert: expertiseAlert(row), Total: total, Muted: row.Locked}
 }
 
 // expertiseSumAttrs são o que a linha faz além de abrir. O `name` comum deixa

@@ -550,6 +550,11 @@
   }
   .ds-row-value[data-muted] {
     color: var(--ds-ink-3);
+    text-decoration: line-through;
+  }
+  .ds-row-meta > b {
+    color: var(--ds-ink-2);
+    font-weight: 700;
   }
   /* O que se FAZ com a conta mora embaixo dela: uma linha por gesto, e a linha
    * quebra inteira em vez de cortar um controle ao meio. */

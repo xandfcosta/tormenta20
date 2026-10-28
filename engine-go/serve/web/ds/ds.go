@@ -50,10 +50,12 @@ type SumTerm struct {
 }
 
 // SumHead é a linha fechada da conta. Muted é o total que existe e não vale —
-// a perícia só para treinados, sem treino.
+// a perícia só para treinados, sem treino —, e ele sai riscado; Alert é o
+// porquê, em destaque depois da nota. Um sem o outro não se explica.
 type SumHead struct {
 	Title string
 	Hint  string
+	Alert string
 	Total string
 	Open  bool
 	Muted bool

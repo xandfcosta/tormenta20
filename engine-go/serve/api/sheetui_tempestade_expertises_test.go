@@ -44,4 +44,10 @@ func TestTheParallelExpertiseTabLocksTheTrainingThatTheOriginGives(t *testing.T)
 	if !regexp.MustCompile(`<input[^>]*role="switch"[^>]*data-on:change="[^"]*/pericias/treino/Acrobacia`).MatchString(acrobatics) {
 		t.Errorf("a Acrobacia, de treino livre, não tem o interruptor que alterna o treino:\n%s", acrobatics)
 	}
+
+	// A "só treinada" sem treino diz POR QUE o número não vale (decisão do
+	// dono): o número riscado sozinho não explicava nada.
+	if acting := expertiseSum(t, page, "Atuação"); !strings.Contains(acting, "só treinada — você não tem treino") {
+		t.Errorf("a Atuação sem treino não diz que precisa de treino:\n%s", acting)
+	}
 }

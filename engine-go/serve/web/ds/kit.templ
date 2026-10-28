@@ -226,8 +226,16 @@ templ Sum(h SumHead, attrs templ.Attributes) {
 		<summary>
 			<div>
 				<div class="ds-row-title">{ h.Title }</div>
-				if h.Hint != "" {
-					<div class="ds-row-meta">{ h.Hint }</div>
+				if h.Hint != "" || h.Alert != "" {
+					<div class="ds-row-meta">
+						{ h.Hint }
+						if h.Hint != "" && h.Alert != "" {
+							{ " · " }
+						}
+						if h.Alert != "" {
+							<b>{ h.Alert }</b>
+						}
+					</div>
 				}
 			</div>
 			<span
