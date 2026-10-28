@@ -62,6 +62,31 @@ type Page struct {
 	// destino é melhor que a seta genérica quando a cena não é filha óbvia de
 	// ninguém.
 	BackLabel string
+	// ColorMode é a escolha de claro ou escuro que a pessoa fez, e quem a lê do
+	// cookie é o hospedeiro. Vazio é "siga o sistema operacional". Ela sai no
+	// `<html>` já na resposta: decidir no navegador desenharia um quadro no modo
+	// errado antes de trocar.
+	ColorMode ColorMode
+}
+
+// ColorMode é o modo de cor ESCOLHIDO. Não há valor para "sistema": quem não
+// escolheu não tem modo, e o CSS segue o `prefers-color-scheme`.
+type ColorMode string
+
+const (
+	ColorModeSystem ColorMode = ""
+	ColorModeLight  ColorMode = "light"
+	ColorModeDark   ColorMode = "dark"
+)
+
+// ParseColorMode lê o valor do cookie. O que não for um dos dois modos é
+// "siga o sistema" — um cookie velho ou adulterado não pode quebrar a página.
+func ParseColorMode(raw string) ColorMode {
+	switch ColorMode(raw) {
+	case ColorModeLight, ColorModeDark:
+		return ColorMode(raw)
+	}
+	return ColorModeSystem
 }
 
 // ShellShape são as três posturas da casca, e elas se excluem — um campo em vez
@@ -85,7 +110,12 @@ const (
 
 templ Layout(p Page, body templ.Component) {
 	<!DOCTYPE html>
-	<html lang="pt-BR">
+	<html
+		lang="pt-BR"
+		if p.ColorMode != ColorModeSystem {
+			data-mode={ string(p.ColorMode) }
+		}
+	>
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>

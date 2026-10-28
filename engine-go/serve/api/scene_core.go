@@ -76,11 +76,13 @@ func (c sceneCore) WritePage(
 	w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component,
 ) {
 	var buf bytes.Buffer
-	// A CASCA RECEBE o que ela não pode conhecer: o endereço dos estáticos e as
-	// três sobreposições. Este é o único lugar que monta uma página, e pôr os
-	// campos em cada `ui.Page{…}` seria repetir dezoito vezes o que não varia.
+	// A CASCA RECEBE o que ela não pode conhecer: o endereço dos estáticos, as
+	// três sobreposições e o modo de cor que o cookie traz. Este é o único
+	// lugar que monta uma página, e pôr os campos em cada `ui.Page{…}` seria
+	// repetir dezoito vezes o que não varia.
 	p.Asset = assets.URL
 	p.Overlays = []templ.Component{finder.Dialog(), bookui.BookDialog(), bookui.EntryDialog()}
+	p.ColorMode = colorModeOf(r)
 	if err := ui.Layout(p, body).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
 		// teria mandado 200 e meia página, e o jogador veria uma tela cortada

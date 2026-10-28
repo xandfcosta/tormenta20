@@ -55,6 +55,9 @@ func (s *Server) WebRouter() http.Handler {
 	// por rota, mas porque dentro dele ela seria inalcançável para exatamente
 	// quem precisa dela.
 	door.Routes(r, door.New(s.doorHost(), s.accountGate(), s.accountResets()))
+	// O MODO DE COR é anônimo pelo motivo da porta: quem ainda não entrou
+	// escolhe claro ou escuro do mesmo jeito.
+	r.Post(routes.ColorMode, s.handleColorMode)
 	// O HUB: o menu principal, atrás de sessão como todo o resto.
 	r.Group(func(r chi.Router) {
 		r.Use(s.requirePage)
