@@ -413,3 +413,19 @@ func TestTheOriginSkillBenefitTrainsAndTheTabSaysWhoTrainedIt(t *testing.T) {
 			"e a coluna é das perícias da classe e das escolhas livres")
 	}
 }
+
+// A TROCA DE ATRIBUTO LEVA A MARCA DA FICHA, como todo comando: sem ela, trocar
+// o atributo dentro da sessão devolveria a ficha de página inteira, com a volta
+// que tira o jogador da mesa.
+func TestTheAttributeSwapKeepsTheEmbeddedMark(t *testing.T) {
+	f, id := expertiseFixture(t)
+	page := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=expertises&embutida=1", id), "").Body.String()
+	sel := regexp.MustCompile(`<select[^>]*aria-label="Acrobacia atributo"[^>]*>`).FindString(page)
+	if sel == "" {
+		t.Fatal("a ficha embutida não desenhou o seletor de atributo da Acrobacia")
+	}
+	if !strings.Contains(sel, "embutida=1") {
+		t.Errorf("a troca de atributo sai da ficha embutida:\n    %s", sel)
+	}
+}

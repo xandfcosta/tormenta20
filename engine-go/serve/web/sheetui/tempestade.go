@@ -145,13 +145,11 @@ func activeEffects(v View) []activeEffect {
 // diferente de zero e prende na faixa, então "levou 12" é o mesmo gesto do
 // −1, com outro número. O zero não sai: um passo zero é recusado pela rota.
 func vitalAmountPost(v View, which string, sign int) string {
-	route := commandRoute(v, "/vitais/"+which+"/§")
-	before, after, _ := strings.Cut(route, "§")
-	minus := ""
+	value := "$vital_amount"
 	if sign < 0 {
-		minus = "-"
+		value = "-" + value
 	}
-	return fmt.Sprintf("$vital_amount > 0 && @post('%s' + %s$vital_amount + '%s')", before, minus, after)
+	return "$vital_amount > 0 && " + sheetPostWith(v, "/vitais/"+which+"/§", value)
 }
 
 // whoLine é a linha de quem é, debaixo do nome: classe, raça e devoção.

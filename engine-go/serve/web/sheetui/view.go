@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
@@ -410,9 +411,18 @@ func SheetRefetch(v View) string {
 // por combinação daria centenas deles numa página que já tem um diálogo por
 // linha.
 func attributeCommand(v View, command string) string {
-	return fmt.Sprintf(
-		"@post('/personagens/%d/pericias/atributo/%s/' + evt.target.value + '?tab=%s')",
-		v.ID, command, v.ActiveTab)
+	return sheetPostWith(v, "/pericias/atributo/"+command+"/§", "evt.target.value")
+}
+
+// sheetPostWith é o `@post` de um comando que leva um valor da TELA no
+// caminho: o `§` marca onde o valor entra. O endereço sai do `commandRoute`
+// como todo comando, e é isso que mantém a aba e as marcas da ficha.
+//
+//	sheetPostWith(v, "/vitais/pv/§", "$vital_amount")
+//	// "@post('/personagens/3/vitais/pv/' + $vital_amount + '?tab=combat')"
+func sheetPostWith(v View, path, value string) string {
+	before, after, _ := strings.Cut(commandRoute(v, path), "§")
+	return fmt.Sprintf("@post('%s' + %s + '%s')", before, value, after)
 }
 
 // totalLabel é o nome acessível do número de uma perícia.
