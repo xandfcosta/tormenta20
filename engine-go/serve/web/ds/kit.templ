@@ -1,6 +1,9 @@
 package ds
 
-import "t20engine/serve/web/ui"
+import (
+	"t20engine/serve/web/routes"
+	"t20engine/serve/web/ui"
+)
 
 // Button é o botão do sistema. O conteúdo é filho, e `attrs` leva o resto —
 // o gesto do Datastar, o `type`, o `aria-label`.
@@ -316,10 +319,11 @@ templ RollView(r Roll) {
 }
 
 // Dialog é o `<dialog>` nativo: ele vai para a camada de topo e prende o foco
-// sem uma linha de JavaScript. No celular a folha desce até a borda de baixo.
+// sem uma linha de JavaScript. O `data-preserve-attr` o mantém aberto quando um
+// gesto remenda a cena por baixo dele. No celular a folha desce até a borda de baixo.
 // `foot` leva os botões; o corpo é filho.
 templ Dialog(id, title string, foot templ.Component) {
-	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" }>
+	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" } data-preserve-attr="open">
 		<div class="ds-dialog-head">
 			<h2 class="ds-dialog-title" id={ id + "-title" }>{ title }</h2>
 			<form method="dialog">
@@ -352,4 +356,23 @@ templ Empty(title, text string) {
 		{ text }
 		{ children... }
 	</div>
+}
+
+// ColorModeSwitch é o seletor do modo de cor. É um FORMULÁRIO e não um gesto do
+// Datastar: trocar o modo repinta a página inteira, e um formulário faz isso
+// sem remendo nenhum. `current` marca o modo em vigor, e `back` é para onde o
+// `POST /modo` volta.
+//
+//	@ds.ColorModeSwitch(ui.ColorModeOf(r), "/sistema")
+templ ColorModeSwitch(current ui.ColorMode, back string) {
+	<form method="post" action={ templ.SafeURL(routes.ColorMode) } class="ds-segmented" role="group" aria-label="Modo de cor">
+		<input type="hidden" name="voltar" value={ back }/>
+		@colorModeOption("claro", "Claro", current == ui.ColorModeLight)
+		@colorModeOption("escuro", "Escuro", current == ui.ColorModeDark)
+		@colorModeOption("sistema", "Do sistema", current == ui.ColorModeSystem)
+	</form>
+}
+
+templ colorModeOption(value, label string, pressed bool) {
+	<button type="submit" name="modo" value={ value } aria-pressed={ ui.AriaBool(pressed) }>{ label }</button>
 }

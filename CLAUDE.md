@@ -541,15 +541,17 @@ Quem fecha: `TestEverySignalDeclaredByValueHasAReader` (3),
 `TestEverySignalTheTableDeclaresHasAReader` (4), e a catraca para a FORMA. **O 7
 não tem guarda** — são três sítios, e estão nomeados aqui por isso.
 
-#### O id de elemento tem OITO canais
+#### O id de elemento tem NOVE canais
 
 `id="x"` · `getElementById('x')` · `aria-labelledby` · `aria-describedby` ·
-`for=` · `popovertarget` · `querySelector('#x')` · e **`el.id === 'x'`**, que foi
-o que escapou: o renome passou por cima, o Enter deixou de abrir o primeiro
-achado, e nada mais mudou na tela.
+`for=` · `popovertarget` · `commandfor` · `querySelector('#x')` · e
+**`el.id === 'x'`**, que foi o que escapou: o renome passou por cima, o Enter
+deixou de abrir o primeiro achado, e nada mais mudou na tela.
 
 Quem cobra é o `TestEveryReferencedElementIdExists` — todo id APONTADO existe em
-algum `.templ`. Ele não cobra o contrário: um id pode existir só para o CSS.
+algum `.templ`, escrito como `id="x"` ou entregue a uma peça do kit que o
+escreve (`ds.Dialog("x", …)`). Ele não cobra o contrário: um id pode existir só
+para o CSS.
 
 ### Renomear ao encontrar
 

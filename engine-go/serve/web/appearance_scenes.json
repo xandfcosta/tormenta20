@@ -21,7 +21,9 @@
       { "address": "/personagens/1", "session": "gm" },
       { "address": "/personagens/1?tab=combat", "session": "gm" },
       { "address": "/personagens/1?tab=bag", "session": "gm" },
-      { "address": "/personagens/3?tab=spells", "session": "gm" }
+      { "address": "/personagens/3?tab=spells", "session": "gm" },
+      { "address": "/personagens/1?tempestade=1", "session": "gm" },
+      { "address": "/personagens/3?tab=spells&tempestade=1", "session": "gm" }
     ]
   },
   "master": {

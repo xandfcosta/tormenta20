@@ -1,0 +1,304 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// A CASCA DA FICHA PARALELA (ALE-473), pelo mockup aprovado: no celular, o
+// cabeçalho em cima e a faixa dos vitais com a barra de baixo embaixo; no
+// desktop, a coluna da ficha à esquerda e as sete abas à direita.
+//
+// `data-system` é o que distingue as duas fichas no FRAGMENTO que um gesto
+// devolve: a casca da página só vem no GET, e o remendo de um comando tem de
+// continuar Tempestade.
+templ tempestadeSheet(v View) {
+	<div data-system="tempestade" data-on:keydown__window="evt.key === 'Escape' && ($detail = '')" class="ds-sheet">
+		@sheetHeader(v)
+		<div class="ds-sheet-body">
+			@sheetRail(v)
+			<div class="ds-sheet-main">
+				<div class="ds-sheet-tabs">
+					@ds.Tabs("Seções da ficha") {
+						for _, tab := range v.Tabs {
+							@ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active) {
+								{ tab.Label }
+							}
+						}
+					}
+				</div>
+				if v.Refusal != "" {
+					<p role="alert" class="ds-alert">{ v.Refusal }</p>
+				}
+				@tempestadePanel(v)
+			</div>
+		</div>
+		@vitalStrip(v)
+		@sheetBottomNav(v)
+		@sheetMenuDialog(v)
+		@sheetMoreDialog(v)
+		@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV)
+		if !v.NoMana {
+			@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM)
+		}
+		@tempestadeClassChoice(v, +1, "Qual classe sobe de nível?")
+		@tempestadeClassChoice(v, -1, "Qual classe desce de nível?")
+	</div>
+}
+
+// sheetHeader é o cabeçalho: a volta ao elenco, o retrato, quem é (só no
+// desktop; no celular mora no ⋯), a Defesa e o ⋯. A Defesa mora aqui no celular porque é o número que a mesa pergunta em
+// voz alta, e o cabeçalho aparece em toda aba; no desktop ela está na coluna.
+templ sheetHeader(v View) {
+	<header class="ds-sheet-head">
+		@ds.LinkButton(ds.ButtonGhost, "/personagens", templ.Attributes{"data-icon": true, "aria-label": "Personagens", "title": "Personagens"}) {
+			@ui.Icon("ChevronLeft", "ds-icon")
+		}
+		// O retrato é `aria-hidden`: o nome logo ao lado já diz de quem é.
+		<div class="ds-avatar" aria-hidden="true" style={ "background: " + v.Gradient }>{ v.Initials }</div>
+		<div class="min-w-0">
+			<h1 class="ds-sheet-name">{ v.Name }</h1>
+			<p class="ds-sheet-who">{ whoLine(v) }</p>
+		</div>
+		<div class="ds-def">
+			<b>{ v.Defense }</b>
+			<span>DEF</span>
+		</div>
+		@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Quem é, nível e aparência", templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
+	</header>
+}
+
+// sheetRail é a coluna da ficha, no desktop.
+templ sheetRail(v View) {
+	<aside class="ds-sheet-rail" aria-label="Personagem">
+		@railVital(v, "pv", meterOf("PV", v.PV, ds.MeterPV), "Dano ou cura…")
+		if !v.NoMana {
+			@railVital(v, "pm", meterOf("PM", v.PM, ds.MeterPM), "Gastar…")
+		}
+		if effects := activeEffects(v); len(effects) > 0 {
+			<div class="ds-field">
+				<span class="ds-field-label">Efeitos ativos</span>
+				<div class="flex flex-wrap gap-2">
+					for _, e := range effects {
+						@ds.RemovableBadge(e.Name, templ.Attributes{"data-on:click": e.Remove})
+					}
+				</div>
+			</div>
+		}
+		<div class="ds-def" data-wide>
+			<span>DEFESA</span>
+			<b>{ v.Defense }</b>
+		</div>
+		<div class="ds-stats">
+			for _, attr := range v.Combat.Attributes {
+				<div class="ds-stat">
+					<span class="ds-stat-key">{ attr.Abbr }</span>
+					<span class="ds-stat-value">{ attr.Value }</span>
+				</div>
+			}
+		</div>
+		@levelControl(v)
+	</aside>
+}
+
+templ railVital(v View, which string, m ds.Meter, more string) {
+	<div class="grid gap-2">
+		@ds.MeterView(m)
+		<div class="ds-rail-steps">
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Menos 1 " + m.Label, "data-on:click": sheetPost(v, "/vitais/"+which+"/-1")}) {
+				−1
+			}
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Mais 1 " + m.Label, "data-on:click": sheetPost(v, "/vitais/"+which+"/1")}) {
+				+1
+			}
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "vital-" + which, "command": "show-modal"}) {
+				{ more }
+			}
+		</div>
+	</div>
+}
+
+// levelControl é o degrau de nível — o ÚNICO lugar do app que muda o nível de
+// um personagem. Ele aparece na coluna, no desktop, e no ⋯, só no celular.
+templ levelControl(v View) {
+	<div class="ds-level">
+		<div>
+			<div class="ds-row-title">{ "Nível " + strconv.FormatInt(v.Level, 10) }</div>
+			if v.Classes != "" {
+				<div class="ds-row-meta">{ v.Classes }</div>
+			}
+		</div>
+		<div class="flex gap-2">
+			@tempestadeLevelStep(v, -1, "Diminuir o nível", "Minus")
+			@tempestadeLevelStep(v, +1, "Aumentar o nível", "Plus")
+		</div>
+	</div>
+}
+
+// tempestadeLevelStep age direto com UMA classe elegível e pergunta com mais
+// de uma: adivinhar a classe poria um nível de Bardo no Guerreiro em silêncio.
+// Sem classe elegível, desabilitado e não escondido.
+templ tempestadeLevelStep(v View, step int, label, icon string) {
+	if directStep(v, step) != "" {
+		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "data-on:click": directStep(v, step)})
+	} else if len(thatCan(v.AsClasses, step)) > 1 {
+		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "commandfor": stepDialog(step), "command": "show-modal"})
+	} else {
+		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "disabled": true})
+	}
+}
+
+templ tempestadeClassChoice(v View, step int, title string) {
+	if len(thatCan(v.AsClasses, step)) > 1 {
+		@ds.Dialog(stepDialog(step), title, nil) {
+			<p class="ds-card-text">O nível do personagem é a soma dos níveis de classe, então o nível é sempre de UMA delas.</p>
+			@ds.List("", "") {
+				for _, class := range thatCan(v.AsClasses, step) {
+					<button
+						type="button"
+						class="ds-row w-full text-left"
+						data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + stepCommand(v, class.Name, step) }
+					>
+						<span class="ds-row-title">{ class.Name }</span>
+						<span class="ds-row-value">{ strconv.FormatInt(class.Level, 10) }</span>
+					</button>
+				}
+			}
+		}
+	}
+}
+
+// tempestadePanel desenha a aba aberta, se ela já migrou. A que não migrou diz
+// isso e leva à ficha de hoje — `data-sheet-of-today` é o que declara o único
+// link que SAI da ficha paralela.
+templ tempestadePanel(v View) {
+	if migratedTabs[v.ActiveTab] {
+		@sheetPanel(v)
+	} else {
+		@ds.Empty(activeTabLabel(v)+" ainda está na ficha de hoje", "Esta aba ainda não foi refeita no sistema novo.") {
+			<div class="mt-3 flex justify-center">
+				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(sheetRoute(v.ID, v.ActiveTab)), templ.Attributes{"data-sheet-of-today": true}) {
+					{ "Abrir " + activeTabLabel(v) + " na ficha de hoje" }
+				}
+			</div>
+		}
+	}
+}
+
+// vitalStrip é a faixa dos vitais, no celular: −1 e +1 à mão, e o número abre
+// o diálogo de dano ou cura.
+templ vitalStrip(v View) {
+	<div class="ds-vitals">
+		@stripVital(v, "pv", "PV", v.PV, ds.MeterPV)
+		if !v.NoMana {
+			@stripVital(v, "pm", "PM", v.PM, ds.MeterPM)
+		}
+	</div>
+}
+
+templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKind) {
+	<div class="ds-vital">
+		@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/-1")})
+		<button type="button" class="ds-vital-open" commandfor={ "vital-" + which } command="show-modal" aria-label={ label + " " + vital.Fraction + ", ajustar" }>
+			<span class="ds-vital-line">
+				<span class="ds-vital-key">{ label }</span>
+				<span class="ds-vital-value">{ strconv.FormatInt(vital.Current, 10) }<small>{ "/" + strconv.FormatInt(vital.Max, 10) }</small></span>
+			</span>
+			<span class="ds-bar" data-thin aria-hidden="true">
+				<span data-kind={ string(kind) } style={ "width:" + strconv.Itoa(vital.Percent) + "%" }></span>
+			</span>
+		</button>
+		@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/1")})
+	</div>
+}
+
+// vitalDialog é o dano ou a cura de qualquer valor. O temporário é LEITURA: ele
+// vem dos efeitos ativos, e o app não tem gesto que o escreva à mão.
+templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKind) {
+	@ds.Dialog("vital-"+which, title, nil) {
+		@ds.MeterView(meterOf(map[string]string{"pv": "PV", "pm": "PM"}[which], vital, kind))
+		if vital.Temp != "" {
+			<p class="ds-card-text">{ vital.Temp + " temporários, vindos dos efeitos ativos." }</p>
+		}
+		<div class="ds-field">
+			<label for={ "vital-" + which + "-amount" }>Valor</label>
+			<div class="ds-vital-amount">
+				<input id={ "vital-" + which + "-amount" } class="ds-input" type="number" inputmode="numeric" min="1" data-bind:vital_amount/>
+				if which == "pv" {
+					@vitalAmountButton(v, which, -1, "Dano")
+					@vitalAmountButton(v, which, +1, "Cura")
+				} else {
+					@vitalAmountButton(v, which, -1, "Gastar")
+					@vitalAmountButton(v, which, +1, "Recuperar")
+				}
+			</div>
+		</div>
+	}
+}
+
+templ vitalAmountButton(v View, which string, sign int, label string) {
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": vitalAmountPost(v, which, sign) + "; document.getElementById('vital-" + which + "').close(); $vital_amount = ''"}) {
+		{ label }
+	}
+}
+
+// sheetBottomNav é a barra de baixo: cinco abas e o Mais.
+templ sheetBottomNav(v View) {
+	@ds.BottomNav("Seções da ficha") {
+		for _, place := range bottomNavPlaces(v) {
+			@ds.BottomNavItem(templ.SafeURL(place.Href), place.Tab.Icon, place.Current) {
+				{ place.Tab.Label }
+				if place.Count > 0 {
+					<span class="ds-nav-count" aria-label={ strconv.Itoa(place.Count) + " ativos" }>{ strconv.Itoa(place.Count) }</span>
+				}
+			}
+		}
+		<button
+			type="button"
+			commandfor="sheet-more"
+			command="show-modal"
+			if moreIsCurrent(v) {
+				aria-current="page"
+			}
+		>
+			@ui.Icon("Ellipsis", "ds-icon")
+			Mais
+		</button>
+	}
+}
+
+templ sheetMoreDialog(v View) {
+	@ds.Dialog("sheet-more", "Mais seções", nil) {
+		@ds.List("", "") {
+			for _, tab := range moreTabs(v) {
+				@ds.Row(tab.Label, "", "", templ.SafeURL(tabRoute(v, tab.Value)))
+			}
+		}
+	}
+}
+
+// sheetMenuDialog é o ⋯: quem o personagem é, por extenso, e o que é raro —
+// o nível e o modo de cor. O nível só aparece aqui no celular: no desktop ele
+// já está na coluna, e dois degraus na mesma tela são dois lugares para
+// procurar.
+templ sheetMenuDialog(v View) {
+	@ds.Dialog("sheet-menu", v.Name, nil) {
+		<div class="ds-sheet-identity">
+			<div class="ds-avatar" data-large aria-hidden="true" style={ "background: " + v.Gradient }>{ v.Initials }</div>
+			@ds.List("", "") {
+				for _, line := range v.Identity {
+					@ds.Row(line.Label, "", line.Value, "")
+				}
+			}
+		</div>
+		<div class="ds-sheet-phone-only">
+			@levelControl(v)
+		</div>
+		<div class="ds-field">
+			<span class="ds-field-label">Aparência</span>
+			@ds.ColorModeSwitch(v.ColorMode, tabRoute(v, v.ActiveTab))
+		</div>
+	}
+}

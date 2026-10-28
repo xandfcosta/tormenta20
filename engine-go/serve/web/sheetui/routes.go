@@ -113,6 +113,8 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")),
 		pageSignals.term(), pageSignals)
 	view.Embedded = insideSessionAsked(r)
+	view.Tempestade = tempestadeAsked(r) && !view.Embedded
+	view.ColorMode = ui.ColorModeOf(r)
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -132,7 +134,8 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title: view.Name + " · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
-		Shape: ui.ShellBare,
+		Shape:  ui.ShellBare,
+		System: sheetSystem(view),
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
@@ -144,7 +147,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: ''," +
 			" power_search: '', stance_degrees: 0, power: '', show_passives: false," +
-			" power_source: 'raca', race_attributes: [], expertise_d20: 0, " + ExpertiseSpendsDeclaration() + "}",
+			" power_source: 'raca', race_attributes: [], expertise_d20: 0, vital_amount: '', " + ExpertiseSpendsDeclaration() + "}",
 	}, SceneBody(view))
 }
 
@@ -211,6 +214,8 @@ func (s Scene) sheetCommand(
 		view, status, err := s.Load(
 			r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")), signals.term(), signals)
 		view.Embedded = insideSessionAsked(r)
+		view.Tempestade = tempestadeAsked(r) && !view.Embedded
+		view.ColorMode = ui.ColorModeOf(r)
 		if err != nil {
 			http.Error(w, err.Error(), status)
 			return

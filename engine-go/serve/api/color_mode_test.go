@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"t20engine/infra/db/sqlcgen"
 )
 
 // O MODO DE COR, pelo roteador de verdade (ALE-479).
@@ -153,4 +155,44 @@ func TestOnlyTheMigratedSceneWearsTheNewSystem(t *testing.T) {
 	if tag := scopeOf("/"); strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
 		t.Errorf("o hub, que ainda não migrou, não saiu no grimório: %s", tag)
 	}
+}
+
+// O SELETOR DIZ QUAL MODO ESTÁ VALENDO: sem isso a pessoa aperta "Escuro" sem
+// saber se já estava nele. Sem escolha, é "Do sistema" que vem marcado.
+func TestTheColorModeSwitchMarksTheModeInForce(t *testing.T) {
+	s, owner := hubFixture(t)
+	pressed := regexp.MustCompile(`<button[^>]*value="([a-z]+)"[^>]*aria-pressed="true"|<button[^>]*aria-pressed="true"[^>]*value="([a-z]+)"`)
+	markedWith := func(mode string) []string {
+		req := httptest.NewRequest(http.MethodGet, "/sistema", nil)
+		session, err := s.accountGate().SignSession(mustUser(t, s, owner))
+		if err != nil {
+			t.Fatalf("assinar: %v", err)
+		}
+		req.AddCookie(&http.Cookie{Name: s.cfg.CookieName, Value: session})
+		if mode != "" {
+			req.AddCookie(&http.Cookie{Name: "color_mode", Value: mode})
+		}
+		rec := httptest.NewRecorder()
+		s.WebRouter().ServeHTTP(rec, req)
+		var got []string
+		for _, m := range pressed.FindAllStringSubmatch(rec.Body.String(), -1) {
+			got = append(got, m[1]+m[2])
+		}
+		return got
+	}
+
+	for cookie, want := range map[string]string{"dark": "escuro", "light": "claro", "": "sistema"} {
+		if got := markedWith(cookie); len(got) != 1 || got[0] != want {
+			t.Errorf("com o cookie %q, marcados = %v; quero só %q", cookie, got, want)
+		}
+	}
+}
+
+func mustUser(t *testing.T, s *Server, id int64) sqlcgen.User {
+	t.Helper()
+	user, err := s.queries.GetUserByID(context.Background(), id)
+	if err != nil {
+		t.Fatalf("usuário: %v", err)
+	}
+	return user
 }

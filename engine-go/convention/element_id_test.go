@@ -38,10 +38,19 @@ import (
 // é escolha: um id existe legitimamente só para o CSS ou como âncora, e um
 // guarda que os proibisse mandaria apagar desenho válido.
 var (
-	idDeclaration = regexp.MustCompile(`(?:^|\s)id="([a-zA-Z][\w-]*)"`)
-	idReferences  = []*regexp.Regexp{
+	// A peça do kit que RECEBE o id (`ds.Dialog("x", …)`) declara tanto quanto
+	// um `id="x"` escrito: o kit o escreve no `<dialog>`, e o guarda lê a fonte.
+	idDeclarations = []*regexp.Regexp{
+		regexp.MustCompile(`(?:^|\s)id="([a-zA-Z][\w-]*)"`),
+		regexp.MustCompile(`ds\.Dialog\("([a-zA-Z][\w-]*)"`),
+	}
+	idReferences = []*regexp.Regexp{
 		regexp.MustCompile(`getElementById\(['"]([a-zA-Z][\w-]*)['"]\)`),
-		regexp.MustCompile(`(?:aria-labelledby|aria-describedby|popovertarget|for)="([a-zA-Z][\w-]*)"`),
+		// O `commandfor` é o NONO canal: o botão que abre o `<dialog>` sem uma
+		// linha de JavaScript (ALE-473). Ele vem escrito como atributo ou como
+		// chave de `templ.Attributes`, e as duas formas apontam.
+		regexp.MustCompile(`\b(?:aria-labelledby|aria-describedby|popovertarget|commandfor|for)="([a-zA-Z][\w-]*)"`),
+		regexp.MustCompile(`"commandfor":\s*"([a-zA-Z][\w-]*)"`),
 		regexp.MustCompile(`querySelector\(['"]#([a-zA-Z][\w-]*)['"]\)`),
 		// `el.id === 'x'` é o OITAVO canal, e ele custou um vermelho de
 		// Playwright: o Enter do buscador comparava `activeElement.id` com um
@@ -77,8 +86,10 @@ func TestEveryReferencedElementIdExists(t *testing.T) {
 			if strings.HasPrefix(strings.TrimSpace(row), "//") {
 				continue
 			}
-			for _, m := range idDeclaration.FindAllStringSubmatch(row, -1) {
-				declared[m[1]] = true
+			for _, rx := range idDeclarations {
+				for _, m := range rx.FindAllStringSubmatch(row, -1) {
+					declared[m[1]] = true
+				}
 			}
 			for _, rx := range idReferences {
 				for _, m := range rx.FindAllStringSubmatch(row, -1) {

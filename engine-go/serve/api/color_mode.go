@@ -7,26 +7,9 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// O MODO DE COR é escolha da PESSOA, e mora num cookie (ALE-479).
-//
-// Cookie e não `localStorage`: quem desenha a página é o servidor, e ele só
-// consegue entregar o `<html>` já no modo certo se a escolha viajar com o
-// pedido. Decidir no navegador desenharia um quadro no modo errado antes de
-// trocar — o "piscar" que todo tema escuro feito em JavaScript tem.
-//
-// Ele é ANÔNIMO: a porta também veste o sistema, e quem ainda não entrou tem
-// tanto direito ao escuro quanto quem entrou.
-const colorModeCookie = "color_mode"
-
-// colorModeOf lê a escolha do pedido. Sem cookie, ou com um valor que não é um
-// dos dois modos, é "siga o sistema operacional".
-func colorModeOf(r *http.Request) ui.ColorMode {
-	c, err := r.Cookie(colorModeCookie)
-	if err != nil {
-		return ui.ColorModeSystem
-	}
-	return ui.ParseColorMode(c.Value)
-}
+// O MODO DE COR é escolha da PESSOA, e mora num cookie (`ui.ColorModeCookie`).
+// O formulário é ANÔNIMO: a porta também veste o sistema, e quem ainda não
+// entrou tem tanto direito ao escuro quanto quem entrou.
 
 // handleColorMode grava a escolha e volta para a tela de onde ela veio.
 //
@@ -43,7 +26,7 @@ func (s *Server) handleColorMode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookie := &http.Cookie{
-		Name:     colorModeCookie,
+		Name:     ui.ColorModeCookie,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   s.cfg.CookieSecure,

@@ -241,7 +241,7 @@
     display: grid;
     gap: 0.25rem;
   }
-  .ds-field > label {
+  .ds-field > :is(label, .ds-field-label) {
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
     font-weight: 600;
@@ -357,7 +357,12 @@
     background: var(--ds-surface);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .ds-bottom-nav > a {
+  .ds-bottom-nav > :is(a, button) {
+    position: relative;
+    border: 0;
+    background: none;
+    font-family: var(--font-ds);
+    cursor: pointer;
     display: grid;
     place-items: center;
     align-content: center;
@@ -368,7 +373,7 @@
     font-weight: 500;
     text-decoration: none;
   }
-  .ds-bottom-nav > a[aria-current='page'] {
+  .ds-bottom-nav > :is(a, button)[aria-current='page'] {
     color: var(--ds-action);
     font-weight: 600;
     box-shadow: inset 0 2px 0 var(--ds-action);
@@ -686,6 +691,9 @@
   .ds-dialog {
     width: min(32rem, calc(100vw - 2rem));
     max-height: calc(100dvh - 2rem);
+    /* O reset do Tailwind zera a margem de todo elemento, e é a `margin: auto`
+     * do navegador que centraliza o modal. */
+    margin: auto;
     padding: 0;
     overflow: hidden;
     border: 0;
@@ -769,5 +777,255 @@
     color: var(--ds-ink);
     font-size: var(--ds-t-md);
     font-weight: 700;
+  }
+}
+
+/* A FICHA (ALE-473). As peças acima são do kit; as daqui são o leiaute da
+ * ficha, que só ela usa — por isso moram juntas e com o prefixo `ds-sheet`, e
+ * não no kit. A troca de celular para desktop é por LARGURA (64rem), a mesma
+ * da casa: a coluna da ficha precisa de 20rem e a lista de pelo menos 40. */
+@layer components {
+  .ds-sheet {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    background: var(--ds-bg);
+  }
+  .ds-sheet-head {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem 0.5rem 0.25rem;
+    border-bottom: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+  }
+  .ds-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--ds-r-control);
+    color: #ffffff;
+    font-weight: 700;
+    user-select: none;
+  }
+  .ds-avatar[data-large] {
+    width: 4rem;
+    height: 4rem;
+    font-size: var(--ds-t-lg);
+  }
+  .ds-sheet-identity {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+  }
+  .ds-sheet-identity > .ds-list {
+    justify-self: stretch;
+  }
+  .ds-sheet-name {
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--ds-t-lg);
+    line-height: 1.2;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* No celular o cabeçalho só cabe o nome: quem é mora no ⋯. */
+  .ds-sheet-who {
+    display: none;
+    margin: 0;
+    overflow: hidden;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .ds-def {
+    display: grid;
+    justify-items: center;
+    min-width: 3rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-control);
+  }
+  .ds-def > b {
+    font-size: var(--ds-t-lg);
+    line-height: 1.2;
+  }
+  .ds-def > span {
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .ds-def[data-wide] {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.5rem 0.75rem;
+  }
+  .ds-sheet-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+  .ds-sheet-rail {
+    display: none;
+  }
+  .ds-sheet-main {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    align-content: start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    overflow-y: auto;
+  }
+  .ds-sheet-tabs {
+    display: none;
+  }
+  .ds-alert {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ds-danger);
+    border-radius: var(--ds-r-control);
+    color: var(--ds-danger);
+    font-size: var(--ds-t-sm);
+    font-weight: 600;
+  }
+  .ds-level {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  /* A FAIXA DOS VITAIS: as duas metades lado a lado, cada uma com o −1, o
+   * número que abre o diálogo e o +1. */
+  .ds-vitals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-top: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+  }
+  .ds-vital {
+    display: grid;
+    grid-template-columns: var(--ds-h-control) minmax(0, 1fr) var(--ds-h-control);
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .ds-vital-open {
+    display: grid;
+    align-content: center;
+    gap: 3px;
+    height: var(--ds-h-control);
+    padding: 0 0.25rem;
+    border: 0;
+    border-radius: var(--ds-r-control);
+    background: none;
+    color: inherit;
+    font-family: var(--font-ds);
+    text-align: left;
+    cursor: pointer;
+  }
+  .ds-vital-open:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-vital-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+  .ds-vital-key {
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+  }
+  .ds-vital-value {
+    font-size: var(--ds-t-md);
+    font-weight: 700;
+  }
+  .ds-vital-value > small {
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    font-weight: 400;
+  }
+  .ds-bar[data-thin] {
+    height: 0.25rem;
+  }
+  .ds-vital-amount {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.5rem;
+  }
+  .ds-nav-count {
+    position: absolute;
+    top: 0.375rem;
+    left: calc(50% + 0.375rem);
+    display: grid;
+    place-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.25rem;
+    border-radius: var(--ds-r-pill);
+    background: var(--ds-action);
+    color: var(--ds-action-ink);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .ds-rail-steps {
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr;
+    gap: 0.25rem;
+  }
+  .ds-rail-steps > .ds-button {
+    justify-self: stretch;
+    padding: 0 0.5rem;
+  }
+
+  @media (min-width: 64rem) {
+    .ds-sheet-rail {
+      display: grid;
+      flex: none;
+      align-content: start;
+      gap: 1rem;
+      width: 20rem;
+      padding: 1rem;
+      overflow-y: auto;
+      border-right: 1px solid var(--ds-line);
+      background: var(--ds-surface);
+    }
+    .ds-sheet-rail .ds-stats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .ds-sheet-main {
+      gap: 1rem;
+      padding: 0 1.5rem 1.5rem;
+    }
+    .ds-sheet-tabs {
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--ds-bg);
+    }
+    .ds-sheet-who {
+      display: block;
+    }
+    .ds-sheet-head > .ds-def,
+    .ds-sheet-phone-only,
+    .ds-sheet > .ds-vitals,
+    .ds-sheet > .ds-bottom-nav {
+      display: none;
+    }
   }
 }

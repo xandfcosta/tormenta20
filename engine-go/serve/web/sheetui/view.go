@@ -8,6 +8,7 @@ import (
 
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
+	"t20engine/serve/web/ui"
 )
 
 // A FICHA como dado: a casca, as abas e o crachá.
@@ -34,6 +35,11 @@ type View struct {
 	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
 	// quem só queria trocar de seção.
 	Embedded bool
+	// Tempestade diz que esta é a FICHA PARALELA, vestida no sistema novo
+	// enquanto é construída. Ver `tempestade.go`.
+	Tempestade bool
+	// ColorMode é o modo de cor em vigor, para o seletor do ⋯ marcar o certo.
+	ColorMode ui.ColorMode
 	// Initials e Gradiente são o retrato derivado do nome, como no palco e no
 	// cartão da campanha: o app não guarda imagem de personagem.
 	Initials string
@@ -56,6 +62,8 @@ type View struct {
 	// DEGRAU DE NÍVEL: o nível de um personagem é a SOMA dos níveis de classe, e
 	// subir um nível é escolher QUAL classe o recebe.
 	AsClasses []sheetClass
+	// Identity é quem o personagem é, linha a linha, para o ⋯ da ficha paralela.
+	Identity []identityLine
 	// Tabs são as sete da ficha, com a ativa marcada. Ver `Tabs`.
 	Tabs []Tab
 	// ActiveTab é o valor resolvido — nunca o que veio na URL cru, que pode ser
@@ -194,6 +202,7 @@ func (s Scene) Load(
 		NoMana:    dto.MpMax == 0,
 		Classes:   card.Classes,
 		AsClasses: stepClasses(dto),
+		Identity:  identityOf(dto, card.Classes),
 		ActiveTab: aba,
 
 		Proficiencies: proficiencyGroupsOf(dto),
@@ -342,6 +351,9 @@ func commandRoute(v View, path string) string {
 	route := fmt.Sprintf("/personagens/%d%s?tab=%s", v.ID, path, v.ActiveTab)
 	if v.Embedded {
 		route += "&embutida=1"
+	}
+	if v.Tempestade {
+		route += "&tempestade=1"
 	}
 	return route
 }
