@@ -95,6 +95,12 @@ templ modePanel(mode, title string) {
 				}
 			</div>
 		}
+		@specimenBlock("Interruptor") {
+			<div class="flex flex-wrap items-center gap-4">
+				@ds.Switch("Treinada", true, nil)
+				@ds.Switch("Em vigor", false, nil)
+			</div>
+		}
 		@specimenBlock("Crachá e crachá removível") {
 			<div class="flex flex-wrap items-center gap-2">
 				@ds.Badge("poder", false)

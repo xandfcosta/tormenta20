@@ -49,6 +49,16 @@ type SumTerm struct {
 	Penalty bool
 }
 
+// SumHead é a linha fechada da conta. Muted é o total que existe e não vale —
+// a perícia só para treinados, sem treino.
+type SumHead struct {
+	Title string
+	Hint  string
+	Total string
+	Open  bool
+	Muted bool
+}
+
 // MeterKind escolhe a cor da barra: PV e PM têm cor própria, e o resto é tinta.
 type MeterKind string
 

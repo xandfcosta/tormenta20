@@ -207,38 +207,77 @@ templ rowFace(title, meta, value string) {
 }
 
 // SumRow é a linha que ABRE A CONTA: fechada, nome e total; aberta, uma linha
-// por parcela, quantas houver (decisão do dono, ALE-497).
+// por parcela, quantas houver (decisão do dono, ALE-497). É a forma pronta de
+// `Sum` + `SumTerms` + `SumTotal`, para a conta que não leva controle nenhum.
 templ SumRow(title, hint, total string, terms []SumTerm, open bool) {
-	<details class="ds-sum" open?={ open }>
+	@Sum(SumHead{Title: title, Hint: hint, Total: total, Open: open}, nil) {
+		@SumTerms(terms)
+		@SumTotal(total, nil)
+	}
+}
+
+// Sum é a linha da conta com o corpo à escolha de quem chama: as parcelas, o
+// total, e o que mais a conta pede (o treino, o rolar).
+//
+// O `open` é do NAVEGADOR, e o remendo do Datastar o preserva: sem isso, todo
+// gesto feito com a conta aberta a fecharia ao redesenhar a cena.
+templ Sum(h SumHead, attrs templ.Attributes) {
+	<details class="ds-sum" open?={ h.Open } data-preserve-attr="open" { attrs... }>
 		<summary>
 			<div>
-				<div class="ds-row-title">{ title }</div>
-				if hint != "" {
-					<div class="ds-row-meta">{ hint }</div>
+				<div class="ds-row-title">{ h.Title }</div>
+				if h.Hint != "" {
+					<div class="ds-row-meta">{ h.Hint }</div>
 				}
 			</div>
-			<span class="ds-row-value">{ total }</span>
+			<span
+				class="ds-row-value"
+				if h.Muted {
+					data-muted
+				}
+			>{ h.Total }</span>
 			@ui.Icon("ChevronDown", "ds-icon")
 		</summary>
 		<div class="ds-sum-body">
-			<dl>
-				for _, t := range terms {
-					<dt>
-						{ t.Label }
-						if t.Note != "" {
-							<small>{ t.Note }</small>
-						}
-					</dt>
-					<dd
-						if t.Penalty {
-							data-penalty
-						}
-					>{ t.Value }</dd>
-				}
-			</dl>
-			<div class="ds-sum-total"><span>Total</span><span>{ total }</span></div>
+			{ children... }
 		</div>
 	</details>
+}
+
+// SumTerms são as parcelas. O que vier em `children` entra no fim da MESMA
+// lista — a parcela que só existe quando o jogador marca alguma coisa.
+templ SumTerms(terms []SumTerm) {
+	<dl>
+		for _, t := range terms {
+			<dt>
+				{ t.Label }
+				if t.Note != "" {
+					<small>{ t.Note }</small>
+				}
+			</dt>
+			<dd
+				if t.Penalty {
+					data-penalty
+				}
+			>{ t.Value }</dd>
+		}
+		{ children... }
+	</dl>
+}
+
+// SumTotal é a linha do total. Os `attrs` vão no número, para a conta que muda
+// na tela antes de ir ao servidor.
+templ SumTotal(total string, attrs templ.Attributes) {
+	<div class="ds-sum-total"><span>Total</span><span { attrs... }>{ total }</span></div>
+}
+
+// Switch é o interruptor: liga e desliga uma coisa só, e o rótulo diz qual. Os
+// `attrs` vão no `input`, que é quem tem o estado.
+templ Switch(label string, checked bool, attrs templ.Attributes) {
+	<label class="ds-switch">
+		<input type="checkbox" role="switch" checked?={ checked } { attrs... }/>
+		{ label }
+	</label>
 }
 
 // Stats é a grade dos seis atributos: três colunas no celular, seis no resto.
