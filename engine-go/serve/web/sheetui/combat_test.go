@@ -190,3 +190,12 @@ func rowValue(t *testing.T, text string) int {
 	}
 	return n
 }
+
+// COM A ACUIDADE COM ARMA, A PARCELA DO DANO É A DESTREZA, e o rótulo a segue:
+// o número já era o da Destreza, e a linha dizia "FOR".
+func TestTheFinesseDamageRowSaysDexterity(t *testing.T) {
+	_, damage := weaponRows(engine.WeaponCard{Skill: "Luta", StrDamage: 3, DexDamage: true})
+	if len(damage) == 0 || damage[0].Label != "DES" || damage[0].Value != "+3" {
+		t.Errorf("a primeira parcela do dano com Acuidade não é DES +3: %+v", damage)
+	}
+}

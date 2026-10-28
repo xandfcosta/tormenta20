@@ -221,6 +221,10 @@ templ SumRow(title, hint, total string, terms []SumTerm, open bool) {
 //
 // O `open` é do NAVEGADOR, e o remendo do Datastar o preserva: sem isso, todo
 // gesto feito com a conta aberta a fecharia ao redesenhar a cena.
+//
+// ABERTA, A NOTA SOME e o aviso fica: a nota resume o que a conta aberta já
+// mostra, e repetida em cima dela é ruído (decisão do dono); o aviso diz o que
+// a conta não diz.
 templ Sum(h SumHead, attrs templ.Attributes) {
 	<details class="ds-sum" open?={ h.Open } data-preserve-attr="open" { attrs... }>
 		<summary>
@@ -228,9 +232,13 @@ templ Sum(h SumHead, attrs templ.Attributes) {
 				<div class="ds-row-title">{ h.Title }</div>
 				if h.Hint != "" || h.Alert != "" {
 					<div class="ds-row-meta">
-						{ h.Hint }
-						if h.Hint != "" && h.Alert != "" {
-							{ " · " }
+						if h.Hint != "" {
+							<span data-sum-hint>
+								{ h.Hint }
+								if h.Alert != "" {
+									{ " · " }
+								}
+							</span>
 						}
 						if h.Alert != "" {
 							<b>{ h.Alert }</b>

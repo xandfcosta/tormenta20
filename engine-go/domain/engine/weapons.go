@@ -35,6 +35,13 @@ type WeaponCard struct {
 	// AttackOwn é o ataque que vale só para esta arma — o Foco em Arma.
 	AttackOwn TotalContribs `json:"attackOwn,omitzero"`
 	Damage    string        `json:"damage"` // dice, e.g. "1d8"
+	// DexBy diz quem pôs a Destreza no lugar da Força no ATAQUE: a própria arma
+	// (a adaga, p146) ou a Acuidade com Arma. Vazio quando é a Força. DexDamage
+	// diz que ela entrou também no DANO, o que só a Acuidade faz — e é o que
+	// deixa a conta da ficha rotular a parcela certa. Fora do fio de propósito:
+	// é explicação para a tela, e o fio já tem o número.
+	DexBy     string `json:"-"`
+	DexDamage bool   `json:"-"`
 	// DamageType é o tipo do dano da ARMA — "corte", "perfuracao", "impacto" —,
 	// e ele vale para os dados dela e para os bônus numéricos que a acompanham
 	// (a Força, o dano do encanto sem tipo próprio). As parcelas de OUTRO tipo
@@ -218,6 +225,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 	}
 	skill, attribute := "Luta", "strength"
 	strDamage := b.forTotal
+	dexBy, dexDamageUsed := "", false
 	if w.Purpose == "ranged" {
 		skill, attribute = "Pontaria", "dexterity"
 		strDamage = 0
@@ -226,10 +234,15 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		dexAttack, dexDamage := weaponDexUse(w, b.hasFinesse, b.forTotal, b.dexTotal)
 		if dexAttack {
 			attribute = "dexterity"
+			dexBy = DexByFinesse
+			if w.Finesse {
+				dexBy = DexByWeapon
+			}
 		}
 		if dexDamage {
 			strDamage = b.dexTotal
 		}
+		dexDamageUsed = dexDamage
 	}
 	// weaponSkillState returns the stored Luta row (attribute strength); force
 	// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
@@ -252,6 +265,8 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		Damage:        damage,
 		DamageType:    w.Type,
 		StrDamage:     strDamage,
+		DexBy:         dexBy,
+		DexDamage:     dexDamageUsed,
 		DamageBonus:   strDamage + b.damageAll.Total + ownDamage.Total,
 		DamageAll:     b.damageAll,
 		DamageOwn:     ownDamage,
@@ -263,6 +278,12 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		CriticalBonus: b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 	}
 }
+
+// Quem pôs a Destreza no ataque: a arma (`WeaponStats.Finesse`) ou o poder.
+const (
+	DexByWeapon  = "weapon"
+	DexByFinesse = "acuidade-com-arma"
+)
 
 // weaponDexUse mirrors weapon-cards.ts weaponDexUse: whether a wielded weapon may
 // use Destreza instead of Força on attack/damage (T20 p145). Only when DES beats

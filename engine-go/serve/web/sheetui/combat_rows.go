@@ -100,7 +100,12 @@ func expertiseRows(ex engine.ExpertiseBreakdown, all *engine.TotalContribs) []br
 func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 	attack = append(expertiseRows(card.Expertise, &card.AttackAll), rowsFromContributions(card.AttackOwn.Contributions)...)
 	if card.Skill == "Luta" {
-		damage = append(damage, breakdownRow{Label: "FOR", Value: book.WithSign(card.StrDamage)})
+		// Com a Acuidade com Arma a parcela é a Destreza, e o rótulo a segue.
+		label := "FOR"
+		if card.DexDamage {
+			label = "DES"
+		}
+		damage = append(damage, breakdownRow{Label: label, Value: book.WithSign(card.StrDamage)})
 	}
 	damage = append(damage, rowsFromContributions(card.DamageAll.Contributions)...)
 	return attack, append(damage, rowsFromContributions(card.DamageOwn.Contributions)...)

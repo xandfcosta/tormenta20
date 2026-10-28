@@ -1,0 +1,75 @@
+package sheetui
+
+import "t20engine/serve/web/ds"
+
+// tempestadeCombat é a aba Combate da ficha paralela: os atributos (só no
+// celular — no desktop eles já estão na coluna), Defesa e os dois ataques, as
+// armas empunhadas e, para quem conjura, a magia. Cada número é uma linha que
+// abre a conta, como nas Perícias.
+templ tempestadeCombat(v View) {
+	<section class="grid gap-3" aria-label="Combate">
+		<div class="ds-sheet-phone-only">
+			@ds.Stats() {
+				for _, attr := range v.Combat.Attributes {
+					@ds.Stat(attr.Abbr, attr.Value)
+				}
+			}
+		</div>
+		if len(v.Combat.Tiles) > 0 {
+			@ds.List("Defesa e ataque", "total") {
+				for _, tile := range v.Combat.Tiles {
+					@combatSum(tile)
+				}
+			}
+		}
+		if v.Combat.ShowWeapons {
+			@ds.List("Armas empunhadas", "ataque") {
+				if len(v.Combat.Weapons) == 0 {
+					@ds.Row("Nenhuma arma empunhada", "", "", "")
+				}
+				for _, weapon := range v.Combat.Weapons {
+					@weaponSum(weapon)
+				}
+			}
+		}
+		if len(v.Combat.MagicTiles) > 0 {
+			@ds.List("Magia", "") {
+				for _, tile := range v.Combat.MagicTiles {
+					@combatSum(tile)
+				}
+			}
+		}
+	</section>
+}
+
+// combatSum é uma caixa do Combate como linha da conta. O que se relaciona com
+// o número sem somar nele (a redução de dano, sob a Defesa) vem numa segunda
+// conta, sem total.
+templ combatSum(tile statTile) {
+	@ds.Sum(combatSumHead(tile), nil) {
+		if tile.Sum != nil {
+			@ds.SumTerms(tile.Sum)
+		} else {
+			@ds.SumTerms(sumTermsOf(tile.Rows))
+		}
+		@ds.SumTotal(tile.Value, nil)
+		if tile.Extra != nil {
+			<p class="ds-sum-section">{ tile.Extra.Title }</p>
+			@ds.SumTerms(sumTermsOf(tile.Extra.Rows))
+		}
+	}
+}
+
+// weaponSum é uma arma: duas contas, a do ataque e a do dano, cada uma com o
+// seu total — uma arma não tem "total", tem duas contas, e o atributo de uma
+// não soma na outra.
+templ weaponSum(w weaponTile) {
+	@ds.Sum(weaponSumHead(w), nil) {
+		<p class="ds-sum-section">{ "Ataque · " + w.Skill }</p>
+		@ds.SumTerms(w.AttackSum)
+		@ds.SumTotal(w.Attack, nil)
+		<p class="ds-sum-section">{ "Dano · crítico " + w.Crit }</p>
+		@ds.SumTerms(w.DamageSum)
+		@ds.SumTotal(w.Damage, nil)
+	}
+}
