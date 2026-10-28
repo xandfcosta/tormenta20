@@ -17,6 +17,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Armadilha: Arataca",
 		Description: "Vítima sofre 2d6 perfuração e fica agarrada. Escapa com ação padrão e teste de Força ou Acrobacia (CD Sab).",
+		BookPage:    50,
 		UID:         "pwr_fktmswnmkr",
 	},
 	{
@@ -24,6 +25,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Armadilha: Espinhos",
 		Description: "Vítima sofre 6d6 perfuração. Reflexos (CD Sab) reduz à metade.",
+		BookPage:    50,
 		UID:         "pwr_agplod5qed",
 	},
 	{
@@ -31,6 +33,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Armadilha: Laço",
 		Description: "Vítima testa Reflexos (CD Sab). Passa = fica caída. Falha = agarrada.",
+		BookPage:    50,
 		UID:         "pwr_sdco6lw5hw",
 	},
 	{
@@ -38,7 +41,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Armadilha: Rede",
 		Description: "Criaturas na área ficam enredadas. Vítima escapa com ação padrão + Força/Acrobacia (CD 25). Área = terreno difícil.",
-		BookPage:    150,
+		BookPage:    50,
 		UID:         "pwr_kmlb6ce2me",
 	},
 	{
@@ -46,6 +49,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Armadilheiro",
 		Description: "Soma Sabedoria nas rolagens de dano e CD de suas armadilhas (cumulativo).",
+		BookPage:    50,
 		UID:         "pwr_eytcnqz4t3",
 		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{
@@ -83,6 +87,7 @@ var classPowersPart05 = []ClassPower{
 	{
 		ID:        "class.cacador.aumento-de-atributo",
 		ClassName: "Caçador",
+		BookPage:  50,
 		UID:       "pwr_jhpz7ukbvh",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
@@ -101,6 +106,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Camuflagem",
 		Description: "Gasta 2 PM para se esconder sem camuflagem/cobertura.",
+		BookPage:    50,
 		UID:         "pwr_twepghjuoq",
 		MinLevel:    6,
 	},
@@ -176,7 +182,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Empatia Selvagem",
 		Description: "Comunica-se com animais. Pode usar Adestramento com animais para mudar atitude e persuasão (como Diplomacia).",
-		BookPage:    21,
+		BookPage:    51,
 		UID:         "pwr_iniosirfq5",
 		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},

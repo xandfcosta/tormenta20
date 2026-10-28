@@ -110,6 +110,7 @@ var classPowersPart02 = []ClassPower{
 	{
 		ID:        "class.barbaro.aumento-de-atributo",
 		ClassName: "Bárbaro",
+		BookPage:  41,
 		UID:       "pwr_m6ifjogwjm",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
@@ -414,6 +415,7 @@ var classPowersPart02 = []ClassPower{
 	{
 		ID:        "class.bardo.aumento-de-atributo",
 		ClassName: "Bardo",
+		BookPage:  44,
 		UID:       "pwr_7pqcv35p7a",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},

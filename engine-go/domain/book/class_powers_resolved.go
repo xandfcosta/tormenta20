@@ -63,8 +63,10 @@ func classPowerRows() []map[string]json.RawMessage {
 			fora = append(fora, linha) // concessão que carrega a própria regra
 			continue
 		}
-		// A concessão vence sobre o verbete: ela é quem diz o nível, e nada
-		// mais dela pode sobrescrever a regra porque ela não tem mais nada.
+		// A concessão vence sobre o verbete: ela é quem diz o nível e a
+		// PÁGINA em que aquela classe imprime o poder — cada classe repete o
+		// texto do Aumento de Atributo na sua (ALE-495). A regra não tem como
+		// ser sobrescrita porque a concessão não a carrega.
 		juntas := make(map[string]json.RawMessage, len(verbete)+len(linha))
 		for k, v := range verbete {
 			juntas[k] = v

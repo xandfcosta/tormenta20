@@ -7,6 +7,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Cavaleiro",
 		Name:        "Caminho: Montaria",
 		Description: "Recebe cavalo de guerra. +5 em testes de Adestramento e Cavalgar com ela. L11 vira parceiro mestre. Se morrer, pode comprar/treinar outra (1 semana).",
+		BookPage:    55,
 		UID:         "pwr_dybhg3xfdi",
 		Unmodeled:   "é parceiro, e a regra de parceiros é da p260 (ALE-425)",
 		Prerequisites: []Prerequisite{
@@ -103,6 +104,7 @@ var classPowersPart07 = []ClassPower{
 	{
 		ID:        "class.clerigo.aumento-de-atributo",
 		ClassName: "Clérigo",
+		BookPage:  57,
 		UID:       "pwr_nbi3kf6yll",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
@@ -174,6 +176,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Clérigo",
 		Name:        "Canalizar Energia Positiva/Negativa",
 		Description: "Ação padrão + PM. Onda de luz/trevas afeta criaturas em alcance curto. Cada PM gasto: luz cura 1d6 PV em criaturas vivas e causa 1d6 dano de luz em mortos-vivos (Vontade CD Sab reduz à metade). Trevas inverso.",
+		BookPage:    57,
 		UID:         "pwr_3lrmvni64c",
 	},
 	{
@@ -209,6 +212,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:     "Clérigo",
 		Name:          "Expulsar/Comandar Mortos-Vivos",
 		Description:   "Ação padrão + 3 PM: expulsa (energia positiva) ou comanda (energia negativa) todos mortos-vivos em alcance curto. Expulsos ficam apavorados por 1d6 rodadas. Comandados não inteligentes seguem ordens por 1 dia. Vontade CD Sab evita.",
+		BookPage:      58,
 		UID:           "pwr_p3gtr7qdxl",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 	},
@@ -256,6 +260,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Clérigo",
 		Name:        "Missa: Bênção da Vida",
 		Description: "Participantes recebem PV temporários = seu nível + Sabedoria. Missa.",
+		BookPage:    58,
 		UID:         "pwr_mtqyz7snif",
 	},
 	{
@@ -263,6 +268,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Clérigo",
 		Name:        "Missa: Chamado às Armas",
 		Description: "Participantes recebem +1 em testes de ataque e rolagens de dano. Missa.",
+		BookPage:    58,
 		UID:         "pwr_3e5544lklj",
 	},
 	{
@@ -270,6 +276,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Clérigo",
 		Name:        "Missa: Elevação do Espírito",
 		Description: "Participantes recebem PM temporários = sua Sabedoria. Missa.",
+		BookPage:    58,
 		UID:         "pwr_p7fstf7uvx",
 	},
 	{
@@ -277,6 +284,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Clérigo",
 		Name:        "Missa: Escudo Divino",
 		Description: "Participantes recebem +1 Defesa e testes de resistência. Missa.",
+		BookPage:    58,
 		UID:         "pwr_v5m47a3lg2",
 	},
 	{
@@ -284,6 +292,7 @@ var classPowersPart07 = []ClassPower{
 		ClassName:   "Clérigo",
 		Name:        "Missa: Superar as Limitações",
 		Description: "Cada participante recebe +1d6 num único teste a sua escolha. Pode usá-lo até próximo dia. Missa.",
+		BookPage:    58,
 		UID:         "pwr_ngv5lx7r6a",
 	},
 	{

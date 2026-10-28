@@ -45,7 +45,7 @@ var classPowersPart10 = []ClassPower{
 		ClassName:   "Inventor",
 		Name:        "Mestre Alquimista",
 		Description: "Pode fabricar poções com fórmulas que conheça de qualquer círculo.",
-		BookPage:    70,
+		BookPage:    69,
 		UID:         "pwr_ocdcj77taf",
 		Unmodeled:   "é fabricação de item, que não é conta da ficha (ALE-464)",
 		Prerequisites: []Prerequisite{
@@ -286,6 +286,7 @@ var classPowersPart10 = []ClassPower{
 	{
 		ID:        "class.ladino.aumento-de-atributo",
 		ClassName: "Ladino",
+		BookPage:  73,
 		UID:       "pwr_ityb6k5lke",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
@@ -294,6 +295,7 @@ var classPowersPart10 = []ClassPower{
 		ClassName:   "Ladino",
 		Name:        "Contatos no Submundo",
 		Description: "Em vila ou maior, gasta 2 PM e teste Carisma CD 10. Se passar e estiver na comunidade: +5 Investigação para interrogar, compra itens mundanos/poções/pergaminhos com 20% desconto, acesso a itens proibidos.",
+		BookPage:    73,
 		UID:         "pwr_k3ubri572m",
 		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
@@ -302,7 +304,7 @@ var classPowersPart10 = []ClassPower{
 		ClassName:     "Ladino",
 		Name:          "Emboscar",
 		Description:   "Na primeira rodada de cada combate, gasta 2 PM para ação padrão adicional em seu turno.",
-		BookPage:      51,
+		BookPage:      73,
 		UID:           "pwr_oztoillzif",
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Furtividade"}},
 	},
