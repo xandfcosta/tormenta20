@@ -1001,6 +1001,7 @@
       background: var(--ds-bg);
     }
     .ds-sheet-head > .ds-def,
+    .ds-sheet-phone-only,
     .ds-sheet > .ds-vitals,
     .ds-sheet > .ds-bottom-nav {
       display: none;

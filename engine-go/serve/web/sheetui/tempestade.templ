@@ -121,7 +121,7 @@ templ railVital(v View, which string, m ds.Meter, more string) {
 }
 
 // levelControl é o degrau de nível — o ÚNICO lugar do app que muda o nível de
-// um personagem. Ele aparece na coluna, no desktop, e no ⋯, no celular.
+// um personagem. Ele aparece na coluna, no desktop, e no ⋯, só no celular.
 templ levelControl(v View) {
 	<div class="ds-level">
 		<div>
@@ -279,10 +279,14 @@ templ sheetMoreDialog(v View) {
 	}
 }
 
-// sheetMenuDialog é o ⋯: só o que é raro — o nível e o modo de cor.
+// sheetMenuDialog é o ⋯: só o que é raro — o nível e o modo de cor. O nível
+// só aparece aqui no celular: no desktop ele já está na coluna, e dois degraus
+// na mesma tela são dois lugares para procurar.
 templ sheetMenuDialog(v View) {
 	@ds.Dialog("sheet-menu", v.Name, nil) {
-		@levelControl(v)
+		<div class="ds-sheet-phone-only">
+			@levelControl(v)
+		</div>
 		<div class="ds-field">
 			<span class="ds-field-label">Aparência</span>
 			@ds.ColorModeSwitch(v.ColorMode, tabRoute(v, v.ActiveTab))

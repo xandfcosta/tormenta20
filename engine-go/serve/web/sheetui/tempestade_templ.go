@@ -544,7 +544,7 @@ func railVital(v View, which string, m ds.Meter, more string) templ.Component {
 }
 
 // levelControl é o degrau de nível — o ÚNICO lugar do app que muda o nível de
-// um personagem. Ele aparece na coluna, no desktop, e no ⋯, no celular.
+// um personagem. Ele aparece na coluna, no desktop, e no ⋯, só no celular.
 func levelControl(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1430,7 +1430,9 @@ func sheetMoreDialog(v View) templ.Component {
 	})
 }
 
-// sheetMenuDialog é o ⋯: só o que é raro — o nível e o modo de cor.
+// sheetMenuDialog é o ⋯: só o que é raro — o nível e o modo de cor. O nível
+// só aparece aqui no celular: no desktop ele já está na coluna, e dois degraus
+// na mesma tela são dois lugares para procurar.
 func sheetMenuDialog(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1464,11 +1466,15 @@ func sheetMenuDialog(v View) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<div class=\"ds-sheet-phone-only\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Err = levelControl(v).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, " <div class=\"ds-field\"><span class=\"ds-field-label\">Aparência</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "</div><div class=\"ds-field\"><span class=\"ds-field-label\">Aparência</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1476,7 +1482,7 @@ func sheetMenuDialog(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
