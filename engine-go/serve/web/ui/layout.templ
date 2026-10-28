@@ -1,5 +1,7 @@
 package ui
 
+import "net/http"
+
 // A CASCA da cena. Escrever o leiaute à mão numa tela nova, em vez de usá-la,
 // perde CINCO coisas, e só uma é o padding:
 //
@@ -93,6 +95,22 @@ const (
 	ColorModeLight  ColorMode = "light"
 	ColorModeDark   ColorMode = "dark"
 )
+
+// ColorModeCookie guarda a escolha da PESSOA. É cookie e não `localStorage`
+// porque quem desenha a página é o servidor, e ele só entrega o `<html>` já no
+// modo certo se a escolha viajar com o pedido (ALE-479).
+const ColorModeCookie = "color_mode"
+
+// ColorModeOf lê a escolha do pedido. Ela mora aqui, e não no hospedeiro, porque
+// além da casca há quem DESENHE o seletor e precise dizer qual modo está
+// marcado — a ficha e a folha viva.
+func ColorModeOf(r *http.Request) ColorMode {
+	c, err := r.Cookie(ColorModeCookie)
+	if err != nil {
+		return ColorModeSystem
+	}
+	return ParseColorMode(c.Value)
+}
 
 // ParseColorMode lê o valor do cookie. O que não for um dos dois modos é
 // "siga o sistema" — um cookie velho ou adulterado não pode quebrar a página.

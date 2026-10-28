@@ -82,7 +82,7 @@ func (c sceneCore) WritePage(
 	// repetir dezoito vezes o que não varia.
 	p.Asset = assets.URL
 	p.Overlays = []templ.Component{finder.Dialog(), bookui.BookDialog(), bookui.EntryDialog()}
-	p.ColorMode = colorModeOf(r)
+	p.ColorMode = ui.ColorModeOf(r)
 	if err := ui.Layout(p, body).Render(r.Context(), &buf); err != nil {
 		// Em buffer e não direto no `w`: um erro no meio da renderização já
 		// teria mandado 200 e meia página, e o jogador veria uma tela cortada
