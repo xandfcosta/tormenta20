@@ -21,5 +21,5 @@ func (s Scene) handleSpecimen(w http.ResponseWriter, r *http.Request) {
 		Back:         "/",
 		BackLabel:    "Início",
 		System:       ui.SystemTempestade,
-	}, specimen())
+	}, specimen(ui.ColorModeOf(r)))
 }

@@ -2,7 +2,7 @@ package specimen
 
 import (
 	"t20engine/serve/web/ds"
-	"t20engine/serve/web/routes"
+	"t20engine/serve/web/ui"
 )
 
 // A FOLHA VIVA desenha o kit inteiro DUAS vezes, uma por modo, lado a lado.
@@ -11,13 +11,13 @@ import (
 // guarda de contraste lê o que está desenhado, e com um modo por vez ele mediria
 // metade do sistema em cada execução. O seletor continua aqui porque é ele que
 // prova o caminho de verdade, o do cookie.
-templ specimen() {
+templ specimen(mode ui.ColorMode) {
 	<div class="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6">
 		<div class="grid gap-2">
 			<p class="ds-card-text">
 				O kit do sistema Tempestade. Toda tela migrada se monta com estas peças, e peça nova entra aqui antes de entrar numa tela.
 			</p>
-			@colorModeSwitch()
+			@colorModeRow(mode)
 		</div>
 		<div class="grid gap-6 lg:grid-cols-2">
 			@modePanel("light", "Claro")
@@ -26,22 +26,11 @@ templ specimen() {
 	</div>
 }
 
-// colorModeSwitch é o seletor de modo: um formulário, porque trocar o modo
-// repinta a página inteira e não há remendo que valha a pena.
-templ colorModeSwitch() {
-	<form method="post" action={ templ.SafeURL(routes.ColorMode) } class="flex flex-wrap items-center gap-2">
-		<input type="hidden" name="voltar" value="/sistema"/>
+templ colorModeRow(mode ui.ColorMode) {
+	<div class="flex flex-wrap items-center gap-2">
 		<span class="ds-row-meta">Modo desta página</span>
-		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit", "name": "modo", "value": "claro"}) {
-			Claro
-		}
-		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit", "name": "modo", "value": "escuro"}) {
-			Escuro
-		}
-		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit", "name": "modo", "value": "sistema"}) {
-			Do sistema
-		}
-	</form>
+		@ds.ColorModeSwitch(mode, "/sistema")
+	</div>
 }
 
 // modePanel força um modo num pedaço da página. O `id` de cada campo leva o
