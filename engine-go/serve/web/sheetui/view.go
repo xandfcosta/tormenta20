@@ -8,6 +8,7 @@ import (
 
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
+	"t20engine/serve/web/ui"
 )
 
 // A FICHA como dado: a casca, as abas e o crachá.
@@ -34,6 +35,11 @@ type View struct {
 	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
 	// quem só queria trocar de seção.
 	Embedded bool
+	// Tempestade diz que esta é a FICHA PARALELA, vestida no sistema novo
+	// enquanto é construída. Ver `tempestade.go`.
+	Tempestade bool
+	// ColorMode é o modo de cor em vigor, para o seletor do ⋯ marcar o certo.
+	ColorMode ui.ColorMode
 	// Initials e Gradiente são o retrato derivado do nome, como no palco e no
 	// cartão da campanha: o app não guarda imagem de personagem.
 	Initials string
@@ -342,6 +348,9 @@ func commandRoute(v View, path string) string {
 	route := fmt.Sprintf("/personagens/%d%s?tab=%s", v.ID, path, v.ActiveTab)
 	if v.Embedded {
 		route += "&embutida=1"
+	}
+	if v.Tempestade {
+		route += "&tempestade=1"
 	}
 	return route
 }

@@ -23,7 +23,11 @@ import (
 // remendo não teria onde pousar.
 templ SceneBody(v View) {
 	<div id="sheet-scene" data-versao={ v.Version } class="flex min-h-0 flex-1 flex-col">
-		@ficha(v)
+		if v.Tempestade {
+			@tempestadeSheet(v)
+		} else {
+			@ficha(v)
+		}
 	</div>
 }
 

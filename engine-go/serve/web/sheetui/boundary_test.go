@@ -47,6 +47,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/sheet":         true, // a ficha: a forma do dado E as regras dela
 	"t20engine/serve/web/characters": true, // a linha de classes do herói, uma só
 	"t20engine/serve/web/ui":         true, // o kit, a casca e a identidade visual
+	"t20engine/serve/web/ds":         true, // o kit do Tempestade, para a ficha paralela (ALE-473)
 }
 
 // O `catalog` está na lista, e a linha é entre LEITURA CRUA e ACESSOR TIPADO.
