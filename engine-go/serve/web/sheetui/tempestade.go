@@ -32,11 +32,6 @@ func sheetSystem(v View) ui.DesignSystem {
 	return ui.SystemGrimoire
 }
 
-// migratedTabs são as abas que JÁ vestem o Tempestade. A que não está aqui
-// mostra um vazio que leva à ficha de hoje — nunca o painel do grimório dentro
-// da cena nova, que é a mistura que a transição por escopo proíbe.
-var migratedTabs = map[string]bool{}
-
 // tabRoute é o endereço de uma aba, levando a marca quando a ficha é a
 // paralela. As abas são LINKS pela razão de sempre (`?tab=` é endereço
 // guardado).

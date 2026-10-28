@@ -172,18 +172,20 @@ templ tempestadeClassChoice(v View, step int, title string) {
 
 // tempestadePanel desenha a aba aberta, se ela já migrou. A que não migrou diz
 // isso e leva à ficha de hoje — `data-sheet-of-today` é o que declara o único
-// link que SAI da ficha paralela.
+// link que SAI da ficha paralela. Nunca o painel do grimório aqui dentro: é a
+// mistura que a transição por escopo proíbe.
 templ tempestadePanel(v View) {
-	if migratedTabs[v.ActiveTab] {
-		@sheetPanel(v)
-	} else {
-		@ds.Empty(activeTabLabel(v)+" ainda está na ficha de hoje", "Esta aba ainda não foi refeita no sistema novo.") {
-			<div class="mt-3 flex justify-center">
-				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(sheetRoute(v.ID, v.ActiveTab)), templ.Attributes{"data-sheet-of-today": true}) {
-					{ "Abrir " + activeTabLabel(v) + " na ficha de hoje" }
-				}
-			</div>
-		}
+	switch v.ActiveTab {
+		case "expertises":
+			@tempestadeExpertises(v)
+		default:
+			@ds.Empty(activeTabLabel(v)+" ainda está na ficha de hoje", "Esta aba ainda não foi refeita no sistema novo.") {
+				<div class="mt-3 flex justify-center">
+					@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(sheetRoute(v.ID, v.ActiveTab)), templ.Attributes{"data-sheet-of-today": true}) {
+						{ "Abrir " + activeTabLabel(v) + " na ficha de hoje" }
+					}
+				</div>
+			}
 	}
 }
 

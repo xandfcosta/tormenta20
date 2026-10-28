@@ -1,0 +1,204 @@
+package sheetui
+
+import (
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeExpertises é a aba Perícias da ficha paralela: a busca, o filtro
+// das treinadas e a nova perícia em cima; as três resistências numa lista e o
+// resto noutra. A busca vai ao servidor como na ficha de hoje (ver o
+// cabeçalho de `expertises.templ`); o filtro das treinadas fica na tela,
+// porque ele não muda o que o servidor desenha — só o que se vê.
+templ tempestadeExpertises(v View) {
+	<section class="grid gap-3" aria-label="Perícias">
+		<div class="flex flex-wrap items-center gap-2">
+			<div class="min-w-0 flex-1">
+				@ds.SearchField("expertise-search", "Buscar perícia", templ.Attributes{
+					"name": "busca", "value": v.Expertises.Search,
+					"data-bind:search": true, "data-on:input__debounce.250ms": sheetGet(v),
+				})
+			</div>
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{
+				"type": "button", "commandfor": "expertise-craft", "command": "show-modal",
+				"data-on:click": "$new_expertise = ''; $new_attribute = 'intelligence'",
+			}) {
+				@ui.Icon("Plus", "ds-icon")
+				Nova perícia
+			}
+		</div>
+		@ds.Segmented("Quais perícias") {
+			@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "String(!$expertise_trained_only)", "data-on:click": "$expertise_trained_only = false"}) {
+				Todas
+			}
+			@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "String($expertise_trained_only)", "data-on:click": "$expertise_trained_only = true"}) {
+				Treinadas
+			}
+		}
+		if len(v.Expertises.Rows) == 0 {
+			@ds.Empty("Nenhuma perícia", "Nada se chama \""+v.Expertises.Search+"\".") {
+			}
+		} else {
+			if saves := savesOf(v.Expertises.Rows); len(saves) > 0 {
+				@ds.List("Resistências", "total") {
+					for _, row := range saves {
+						@expertiseSum(v, row)
+					}
+				}
+			}
+			if others := othersOf(v.Expertises.Rows); len(others) > 0 {
+				@ds.List("Perícias", "total") {
+					for _, row := range others {
+						@expertiseSum(v, row)
+					}
+				}
+			}
+		}
+	</section>
+	@expertiseCraftDialog(v)
+}
+
+// expertiseSum é uma perícia: a conta, e embaixo dela o que se faz com ela.
+templ expertiseSum(v View, row expertiseRow) {
+	@ds.Sum(expertiseSumHead(row), expertiseSumAttrs(row)) {
+		@ds.SumTerms(row.Sum) {
+			for _, spend := range row.Spends {
+				if spendShowsARow(spend) {
+					<dt data-show={ spendSignal(spend.Key) + " > 0" }>{ spendRowLabel(spend) }</dt>
+					<dd data-show={ spendSignal(spend.Key) + " > 0" } data-text={ "(" + spendBonusExpr(spend) + " >= 0 ? '+' : '') + " + spendBonusExpr(spend) }></dd>
+				}
+			}
+		}
+		if len(row.Spends) > 0 {
+			@ds.SumTotal(row.Total, templ.Attributes{"data-text": spendsTotalExpr(row)})
+		} else {
+			@ds.SumTotal(expertiseSumHead(row).Total, nil)
+		}
+		<div class="ds-sum-actions">
+			<div class="ds-sum-line">
+				<label for={ "expertise-attr-" + row.Key }>Atributo</label>
+				<select class="ds-input ds-select" id={ "expertise-attr-" + row.Key } aria-label={ row.Name + " atributo" } data-on:change={ attributeCommand(v, row.Command) }>
+					for _, option := range v.Expertises.Attributes {
+						<option value={ option.Key } selected?={ option.Key == row.Attribute }>{ option.Label }</option>
+					}
+				</select>
+				<span class="flex-1"></span>
+				// O treino que vem de FORA da coluna (a origem, p85) não tem
+				// controle: alternar a coluna não mudaria nada, e um interruptor
+				// que não muda nada mente.
+				if row.TrainedBy != "" {
+					<span class="ds-locked">
+						@ui.Icon("Lock", "ds-icon")
+						{ row.TrainedBy }
+					</span>
+				} else {
+					@ds.Switch("Treinada", row.Trained, templ.Attributes{"aria-label": row.Name + " treinada", "data-on:change": sheetPost(v, "/pericias/treino/"+row.Command)})
+				}
+			</div>
+			@expertiseSpends(row)
+			@expertiseSumRoll(v, row)
+			if row.Custom {
+				<div class="ds-sum-line">
+					@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/pericias/remover/"+row.Command)}) {
+						{ "Remover " + row.Name }
+					}
+				</div>
+			}
+		</div>
+	}
+}
+
+// expertiseSpends são os gastos de PM que valem neste teste (ALE-489), um
+// interruptor cada: marcar é ligar. A regra das marcas — o que desmarca o quê,
+// o Orgulho que escolhe quantos PM — é a mesma da ficha de hoje, e mora em
+// `expertises_spends.go`.
+templ expertiseSpends(row expertiseRow) {
+	if len(row.Spends) > 0 {
+		<div class="ds-field">
+			<span class="ds-field-label">Gastar PM neste teste</span>
+			for _, spend := range row.Spends {
+				<div class="ds-sum-line">
+					@ds.Switch(spend.Name+" · "+spendChipCost(spend), false, templ.Attributes{
+						"data-effect":    "el.checked = " + spendSignal(spend.Key) + " > 0",
+						"data-on:change": spendToggleCommand(row, spend),
+					})
+					if spend.PerPM {
+						<span class="flex items-center gap-2" data-show={ spendSignal(spend.Key) + " > 0" }>
+							@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos um PM de "+spend.Name, templ.Attributes{"type": "button", "data-on:click": spendStepCommand(spend, -1)})
+							<span class="tabular-nums" data-text={ spendStepLabelExpr(spend) }></span>
+							@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais um PM de "+spend.Name, templ.Attributes{"type": "button", "data-on:click": spendStepCommand(spend, 1)})
+						</span>
+					}
+				</div>
+			}
+			<p class="ds-help" data-show={ spendsCostExpr(row) + " > 0" }>
+				custa <b data-text={ spendsCostExpr(row) + " + ' PM'" }></b> ao rolar · sobram <span data-text={ spendsLeftExpr(row) }></span>
+			</p>
+			if row.Locked && row.SpendsUnlock {
+				<p class="ds-help">{ row.Name + " só se rola com treino (p115). Um gasto marcado destrava este teste." }</p>
+			}
+		</div>
+	}
+}
+
+// expertiseSumRoll é o rolar: o servidor rola, ou a mesa diz o que rolou — os dois
+// de primeira classe, por decisão do dono. O zero do campo é "não informado",
+// que não é ambíguo porque 0 não é face de d20. A perícia trancada que um gasto
+// destrava mostra os botões apagados até o gasto ser marcado (ALE-489).
+templ expertiseSumRoll(v View, row expertiseRow) {
+	if !row.Locked || row.SpendsUnlock {
+		<div class="ds-sum-line">
+			@ds.Button(ds.ButtonPrimary, expertiseRollAttrs(row, "$expertise_d20 = 0; "+sheetPost(v, "/pericias/rolar/"+row.Command))) {
+				@ui.Icon("Dices", "ds-icon")
+				Rolar d20
+			}
+			// O "OU ROLEI", O CAMPO E O "USAR" SÃO UM GRUPO, e descem juntos: são
+			// o mesmo gesto em três peças, e quebrar entre elas deixa um botão
+			// órfão numa linha sozinha.
+			<span class="ds-sum-line flex-nowrap">
+				<span class="ds-row-meta">ou rolei</span>
+				<input
+					class="ds-input ds-table-die"
+					type="number"
+					min="1"
+					max="20"
+					inputmode="numeric"
+					placeholder="d20"
+					data-bind="expertise_d20"
+					aria-label={ "O d20 que você rolou na mesa para " + row.Name }
+				/>
+				@ds.Button(ds.ButtonSecondary, expertiseRollAttrs(row, sheetPost(v, "/pericias/rolar/"+row.Command))) {
+					Usar
+				}
+			</span>
+		</div>
+	}
+}
+
+// expertiseCraftDialog cria uma perícia que o livro não tem. A tela diz "nova
+// perícia", e nunca "ofício" — Ofício É uma das 29 do livro (p115); ver o
+// `craftDialog` da ficha de hoje.
+templ expertiseCraftDialog(v View) {
+	@ds.Dialog("expertise-craft", "Nova perícia", expertiseCraftFoot(v)) {
+		@ds.TextField(ds.Field{ID: "craft-name", Label: "Nome", Placeholder: "Ferreiro, Marinheiro…"}, templ.Attributes{"maxlength": "40", "data-bind:new_expertise": true})
+		<div class="ds-field">
+			<label for="craft-attribute">Atributo</label>
+			<select class="ds-input ds-select" id="craft-attribute" data-bind:new_attribute>
+				for _, option := range v.Expertises.Attributes {
+					<option value={ option.Key }>{ option.Label }</option>
+				}
+			</select>
+		</div>
+	}
+}
+
+// expertiseCraftFoot cria e fecha: o `command="close"` fecha o diálogo no mesmo
+// toque que manda o pedido.
+templ expertiseCraftFoot(v View) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{
+		"type": "button", "commandfor": "expertise-craft", "command": "close",
+		"data-on:click": sheetPost(v, "/pericias/nova"),
+	}) {
+		Criar perícia
+	}
+}
