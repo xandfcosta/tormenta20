@@ -12,15 +12,16 @@ import (
 // a conta, e o treino é um interruptor — a não ser que outra coisa treine, e aí
 // é um cadeado que diz quem (decisão do dono, no mockup aprovado).
 
-// expertiseSum recorta a linha de UMA perícia: do `<details>` até o fim dele.
-func expertiseSum(t *testing.T, page, name string) string {
+// sumLine recorta UMA linha da conta pelo título: do `<details>` até o fim
+// dele.
+func sumLine(t *testing.T, page, name string) string {
 	t.Helper()
 	for _, block := range regexp.MustCompile(`(?s)<details[^>]*>.*?</details>`).FindAllString(page, -1) {
 		if strings.Contains(block, `<div class="ds-row-title">`+name+`</div>`) {
 			return block
 		}
 	}
-	t.Fatalf("a aba Perícias paralela não desenhou a linha de %s", name)
+	t.Fatalf("a ficha paralela não desenhou a linha de %s", name)
 	return ""
 }
 
@@ -32,7 +33,7 @@ func TestTheParallelExpertiseTabLocksTheTrainingThatTheOriginGives(t *testing.T)
 	}
 	page := parallelSheet(t, f, id, "expertises")
 
-	fortitude := expertiseSum(t, page, "Fortitude")
+	fortitude := sumLine(t, page, "Fortitude")
 	if !strings.Contains(fortitude, `<span class="ds-row-value">+6</span>`) {
 		t.Errorf("a Fortitude do soldado com o benefício não fechou em +6 (½ nível 1 + CON 3 + treino 2):\n%s", fortitude)
 	}
@@ -40,14 +41,14 @@ func TestTheParallelExpertiseTabLocksTheTrainingThatTheOriginGives(t *testing.T)
 		t.Errorf("a Fortitude treinada pela origem tem de dizer quem treinou, e sem interruptor:\n%s", fortitude)
 	}
 
-	acrobatics := expertiseSum(t, page, "Acrobacia")
+	acrobatics := sumLine(t, page, "Acrobacia")
 	if !regexp.MustCompile(`<input[^>]*role="switch"[^>]*data-on:change="[^"]*/pericias/treino/Acrobacia`).MatchString(acrobatics) {
 		t.Errorf("a Acrobacia, de treino livre, não tem o interruptor que alterna o treino:\n%s", acrobatics)
 	}
 
 	// A "só treinada" sem treino diz POR QUE o número não vale (decisão do
 	// dono): o número riscado sozinho não explicava nada.
-	if acting := expertiseSum(t, page, "Atuação"); !strings.Contains(acting, "só treinada — você não tem treino") {
+	if acting := sumLine(t, page, "Atuação"); !strings.Contains(acting, "só treinada — você não tem treino") {
 		t.Errorf("a Atuação sem treino não diz que precisa de treino:\n%s", acting)
 	}
 }

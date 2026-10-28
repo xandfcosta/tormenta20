@@ -548,6 +548,17 @@
     font-size: var(--ds-t-sm);
     font-weight: 700;
   }
+  /* A conta com mais de uma seção (o ataque e o dano de uma arma) nomeia cada
+   * uma. */
+  .ds-sum-section {
+    margin: 0.5rem 0 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+  }
+  .ds-sum-section:first-child {
+    margin-top: 0.25rem;
+  }
   .ds-row-value[data-muted] {
     color: var(--ds-ink-3);
     text-decoration: line-through;
