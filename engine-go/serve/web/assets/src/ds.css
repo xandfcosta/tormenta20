@@ -504,11 +504,16 @@
   .ds-sum[open] > summary > .ds-icon {
     transform: rotate(180deg);
   }
-  .ds-sum-body {
-    margin: 0 1rem 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--ds-r-control);
+  /* ABERTA, A LINHA E A CONTA SÃO UM BLOCO SÓ: o mesmo fundo do nome até a
+   * última parcela, e a conta sem moldura própria — uma caixa dentro da linha
+   * deixava as parcelas soltas, longe do nome que elas explicam (decisão do
+   * dono). A margem da direita põe os valores da conta na coluna do total da
+   * linha: o chevron e o espaço antes dele. */
+  .ds-sum[open] {
     background: var(--ds-sunk);
+  }
+  .ds-sum-body {
+    padding: 0 calc(2rem + 0.75rem) 0.75rem 1rem;
   }
   .ds-sum-body > dl {
     display: grid;
