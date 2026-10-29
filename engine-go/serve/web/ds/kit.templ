@@ -206,6 +206,21 @@ templ rowFace(title, meta, value string) {
 	<span class="ds-row-value">{ value }</span>
 }
 
+// ActionRow é a linha que ABRE UMA FOLHA ao tocar no nome e tem o gesto na
+// ponta (Usar, Ativar, Conjurar). O nome e o gesto são dois alvos separados: o
+// toque no nome lê, o da ponta age. Sem `children`, é só a linha que lê.
+templ ActionRow(title, meta, dialogID string) {
+	<div class="ds-row ds-action-row">
+		<button type="button" class="ds-action-row-open" commandfor={ dialogID } command="show-modal" aria-haspopup="dialog">
+			<span class="ds-row-title">{ title }</span>
+			if meta != "" {
+				<span class="ds-row-meta">{ meta }</span>
+			}
+		</button>
+		{ children... }
+	</div>
+}
+
 // SumRow é a linha que ABRE A CONTA: fechada, nome e total; aberta, uma linha
 // por parcela, quantas houver (decisão do dono, ALE-497). É a forma pronta de
 // `Sum` + `SumTerms` + `SumTotal`, para a conta que não leva controle nenhum.

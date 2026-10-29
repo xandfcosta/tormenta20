@@ -569,6 +569,43 @@
   .ds-sum-section:first-child {
     margin-top: 0.25rem;
   }
+  .ds-action-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-left: 0;
+  }
+  .ds-action-row-open {
+    display: grid;
+    align-self: stretch;
+    align-content: center;
+    min-width: 0;
+    padding: 0 0 0 1rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ds-action-row-open:hover {
+    background: var(--ds-sunk);
+  }
+  /* A lista que se recolhe (as passivas): o cabeçalho é o que abre. */
+  .ds-list > summary.ds-list-head {
+    list-style: none;
+    cursor: pointer;
+  }
+  .ds-list > summary.ds-list-head::-webkit-details-marker {
+    display: none;
+  }
+  .ds-list[open] > summary.ds-list-head > .ds-icon {
+    transform: rotate(180deg);
+  }
+  .ds-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+  }
   .ds-row-value[data-muted] {
     color: var(--ds-ink-3);
     text-decoration: line-through;
