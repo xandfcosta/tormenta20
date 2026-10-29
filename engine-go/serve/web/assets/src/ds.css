@@ -690,6 +690,31 @@
     font-size: var(--ds-t-sm);
   }
 
+  /* A OPÇÃO: um valor curto que se marca. Marcada, ela ganha a cor da ação e
+   * o peso, e não só a cor — a diferença tem de sobreviver a quem não vê cor. */
+  .ds-option {
+    height: var(--ds-h-control);
+    padding: 0 0.75rem;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-control);
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    font: 500 var(--ds-t-sm) / 1 var(--font-ds);
+    cursor: pointer;
+  }
+  .ds-option:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-option[aria-pressed='true'] {
+    border-color: var(--ds-action);
+    background: color-mix(in oklab, var(--ds-action) 14%, var(--ds-surface));
+    font-weight: 700;
+  }
+  .ds-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
   /* O INTERRUPTOR liga e desliga uma coisa só, e tocar no rótulo também o
    * alterna. */
   .ds-switch {
@@ -924,8 +949,11 @@
     line-height: var(--ds-lh-lg);
     font-weight: 600;
   }
+  /* `max-content` nas linhas: num grid que rola, um filho com `overflow:
+   * hidden` (uma `ds-list`) encolheria até zero para caber na altura. */
   .ds-dialog-body {
     display: grid;
+    grid-auto-rows: max-content;
     gap: 0.75rem;
     padding: 1rem;
     overflow-y: auto;
