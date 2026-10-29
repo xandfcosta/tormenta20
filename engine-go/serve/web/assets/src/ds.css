@@ -697,8 +697,11 @@
 
   /* A OPÇÃO: um valor curto que se marca. Marcada, ela ganha a cor da ação e
    * o peso, e não só a cor — a diferença tem de sobreviver a quem não vê cor. */
+  /* A largura mínima é a altura: a opção de um caractere ("1º") é um alvo
+   * quadrado, e não uma fresta abaixo do piso de toque. */
   .ds-option {
     height: var(--ds-h-control);
+    min-width: var(--ds-h-control);
     padding: 0 0.75rem;
     border: 1px solid var(--ds-line-strong);
     border-radius: var(--ds-r-control);
