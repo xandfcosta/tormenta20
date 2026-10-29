@@ -1,0 +1,202 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeSpells é a aba Magias da ficha paralela: a busca e o Aprender em
+// cima, a CD e o atributo uma vez, o grimório por círculo e as concedidas.
+templ tempestadeSpells(v View) {
+	<section class="grid gap-3" aria-label="Magias">
+		<div class="flex flex-wrap items-center gap-2">
+			<div class="min-w-0 flex-1">
+				@ds.SearchField("grimoire-search", "Buscar magia", templ.Attributes{
+					"value": v.GrimoireSearch, "data-bind:grimoire_search": true,
+					"data-on:input__debounce.250ms": sheetGet(v),
+				})
+			</div>
+			if v.Spells.IsCaster {
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "spell-learn", "command": "show-modal", "aria-haspopup": "dialog"}) {
+					Aprender
+				}
+			}
+		</div>
+		if v.SpellCasting.CD > 0 {
+			<p class="ds-help">CD <b>{ strconv.Itoa(v.SpellCasting.CD) }</b> · { v.SpellCasting.Attribute + " · " + aprendidasEscrito(len(v.Spells.Learned)) }</p>
+		}
+		if len(v.Spells.Learned) == 0 && len(v.Spells.Granted) == 0 {
+			if v.Spells.IsCaster {
+				@ds.Empty("Nenhuma magia aprendida", "Use Aprender para escolher no livro.")
+			} else {
+				@ds.Empty("Nenhuma magia", "Este personagem não conjura por classe.")
+			}
+		}
+		// O FILTRO SÓ APARECE COM DOIS CÍRCULOS: com um só, "Todos" e ele
+		// mostrariam a mesma lista.
+		if options := grimoireCircleOptions(v); len(options) > 2 {
+			<div class="ds-options" role="group" aria-label="Círculo">
+				for _, o := range options {
+					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$grimoire_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+						{ o.Label }
+					}
+				}
+			</div>
+		}
+		if groups, lines := spellCircleGroups(v), grantedSpellLines(v); len(groups) > 0 || len(lines) > 0 {
+			@ds.List("", "") {
+				for _, group := range groups {
+					@ds.ListHead(group.Title, strconv.Itoa(len(group.Spells)))
+					for _, spell := range group.Spells {
+						@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
+							@castGesture(v, spell)
+						}
+					}
+				}
+				if len(lines) > 0 {
+					@ds.ListHead("Concedidas por poderes", strconv.Itoa(len(lines)))
+					for _, line := range lines {
+						@ds.ActionRow(line.Spell.Name, line.Spell.Source+" · "+line.Spell.Circle+" círculo", grantedSheetID(line.Index))
+					}
+				}
+			}
+		}
+	</section>
+	// QUEM ABRE A FOLHA COMEÇA DO ZERO: o fechar zera as seis pilhas. O `close`
+	// não sobe pela árvore, e é a captura que o pega aqui em cima.
+	<div class="contents" data-on:close__capture={ augmentsReset }>
+		for _, group := range spellCircleGroups(v) {
+			for _, spell := range group.Spells {
+				@spellSheet(v, spell)
+			}
+		}
+	</div>
+	for _, line := range grantedSpellLines(v) {
+		@ds.Dialog(grantedSheetID(line.Index), line.Spell.Name, nil) {
+			<p class="ds-row-meta">{ line.Spell.Source + " · " + line.Spell.Circle + " círculo · p" + strconv.Itoa(line.Spell.Page) }</p>
+			<p class="ds-card-text">{ line.Spell.Effect }</p>
+		}
+	}
+	if v.Spells.IsCaster {
+		@learnSpellSheet(v)
+	}
+}
+
+// castGesture é o Conjurar da linha: abre a folha quando há aprimoramento a
+// escolher, e conjura direto quando não há.
+templ castGesture(v View, spell learnedSpellRow) {
+	if castOpensSheet(spell) {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "commandfor": spellSheetID(spell), "command": "show-modal", "aria-haspopup": "dialog"}) {
+			Conjurar
+		}
+	} else {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "data-on:click": augmentsReset + sheetPost(v, "/magias/conjura/"+spell.Command)}) {
+			Conjurar
+		}
+	}
+}
+
+// spellSheet é a folha da magia: a regra, o Preparada de quem prepara, os
+// aprimoramentos com o custo somado, e no pé o Esquecer longe do Conjurar. A
+// soma é PRÉVIA (`costPreview`): quem cobra e recusa é o servidor.
+templ spellSheet(v View, spell learnedSpellRow) {
+	@ds.Dialog(spellSheetID(spell), spell.Name, spellSheetFoot(v, spell)) {
+		<p class="ds-row-meta">{ spellSheetMeta(spell) }</p>
+		<p class="ds-card-text">{ spell.Effect }</p>
+		if v.Spells.RequiresPrep {
+			@ds.Switch("Preparada", spell.Prepared, templ.Attributes{"data-on:change": sheetPost(v, "/magias/prepara/"+spell.Command)})
+		}
+		if len(spell.Augments) > 0 {
+			@ds.List("Aprimoramentos", "") {
+				for _, augment := range spell.Augments {
+					@augmentLine(augment)
+				}
+			}
+		}
+		<p class="ds-help">Custo <b data-text={ costPreview(spell) }></b> · { "você tem " + strconv.FormatInt(v.Spells.PmCurrent, 10) + " PM" }</p>
+		if spell.CostCut != "" {
+			<p class="ds-help">{ spell.CostCut }</p>
+		}
+		if spell.FocusCut != "" {
+			<p class="ds-help">{ spell.FocusCut }</p>
+		}
+	}
+}
+
+templ spellSheetFootBody(v View, spell learnedSpellRow) {
+	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "aria-label": "Esquecer " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/esquece/"+spell.Command)}) {
+		Esquecer
+	}
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command)}) {
+		<span data-text={ "'Conjurar · ' + " + costPreview(spell) }>Conjurar</span>
+	}
+}
+
+// augmentLine é um aprimoramento: o contador do que empilha, o interruptor do
+// que troca, e o cadeado do que pede um círculo acima — que aparece em vez de
+// sumir (ver o GLOSSARY). O interruptor segue o SINAL pelo `data-effect`,
+// porque ligar o exclusivo desliga os outros sem tocar neles.
+templ augmentLine(a augmentRow) {
+	<div class="ds-row">
+		<div>
+			<div class="ds-row-title">{ a.Description }</div>
+			<div class="ds-row-meta">{ augmentPriceWritten(a) }</div>
+		</div>
+		if a.Locked {
+			@ui.Icon("Lock", "ds-icon")
+		} else if a.Stacks {
+			<div class="ds-stepper">
+				@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos de "+a.Description, templ.Attributes{"type": "button", "data-on:click": a.Less})
+				<b class="tabular-nums" data-text={ augmentSignal(a.Index) }></b>
+				@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais de "+a.Description, templ.Attributes{"type": "button", "data-on:click": a.More})
+			</div>
+		} else {
+			@ds.Switch("", false, templ.Attributes{"aria-label": a.Description, "data-on:change": a.Toggle, "data-effect": "el.checked = " + augmentSignal(a.Index) + " > 0"})
+		}
+	</div>
+}
+
+// learnSpellSheet é o Aprender: o catálogo do Capítulo 4, filtrado no servidor
+// pela busca, pelo círculo e pela escola — os filtros do grimório de hoje. A
+// linha traz a regra, que é o que separa uma magia da outra na hora de escolher.
+templ learnSpellSheet(v View) {
+	@ds.Dialog("spell-learn", "Aprender magia", nil) {
+		@ds.SearchField("spell-learn-search", "Buscar no livro", templ.Attributes{
+			"value": v.Spells.Search, "data-bind:spell_search": true,
+			"data-on:input__debounce.250ms": sheetGet(v),
+		})
+		<div class="ds-options" role="group" aria-label="Círculo">
+			for _, o := range circleFilterOptions {
+				@ds.Option(o.Value == v.Spells.Circle, templ.Attributes{"data-on:click": "$spell_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+					{ o.Label }
+				}
+			}
+		</div>
+		<div class="ds-options" role="group" aria-label="Escola">
+			for _, o := range v.Spells.Schools {
+				@ds.Option(o.Active, templ.Attributes{"data-on:click": "$spell_school = '" + o.Value + "'; " + sheetGet(v)}) {
+					{ o.Label }
+				}
+			}
+		</div>
+		@ds.List("No livro", strconv.Itoa(len(v.Spells.Catalog))) {
+			if len(v.Spells.Catalog) == 0 {
+				@ds.Row("Nenhuma magia com esses filtros", "", "", "")
+			}
+			for _, spell := range v.Spells.Catalog {
+				<div class="ds-row ds-pick-row">
+					<div class="min-w-0">
+						<div class="ds-row-title">{ spell.Name }</div>
+						<div class="ds-row-meta">{ spell.Circle + " círculo · " + spell.School + " · p" + strconv.Itoa(spell.Page) }</div>
+						<div class="ds-pick-detail">{ spell.Effect }</div>
+					</div>
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "data-on:click": sheetPost(v, "/magias/aprende/"+spell.Command)}) {
+						Aprender
+					}
+				</div>
+			}
+		}
+	}
+}

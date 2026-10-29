@@ -90,6 +90,9 @@ type ComputedSheet struct {
 	Attributes      map[string]AttributeBreakdown `json:"attributes"`
 	PmLimit         ValueBreakdown                `json:"pmLimit"`
 	BestBaseSpellCd *int                          `json:"bestBaseSpellCd"`
+	// BestSpellAttribute é o atributo-chave da classe que dá a BestBaseSpellCd
+	// ("charisma" para o Arcanista feiticeiro, p37). Fora do fio: só a tela o lê.
+	BestSpellAttribute string `json:"-"`
 	// SpellCdByAttribute is the spell save CD keyed by casting attribute (p173),
 	// so a spell row can pick the CD for any of its applicable classes without
 	// re-deriving.

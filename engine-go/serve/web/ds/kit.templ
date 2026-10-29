@@ -182,10 +182,16 @@ templ RemovableBadge(label, dialogID string, removeAttrs templ.Attributes) {
 templ List(title, trailing string) {
 	<div class="ds-list">
 		if title != "" || trailing != "" {
-			<div class="ds-list-head"><span>{ title }</span><span>{ trailing }</span></div>
+			@ListHead(title, trailing)
 		}
 		{ children... }
 	</div>
+}
+
+// ListHead é o cabeçalho de uma SEÇÃO dentro da lista: as magias de um
+// círculo. A seção não se recolhe, e as linhas seguem na mesma moldura.
+templ ListHead(title, trailing string) {
+	<div class="ds-list-head"><span>{ title }</span><span>{ trailing }</span></div>
 }
 
 // Row é a linha de lista: nome e nota à esquerda, o valor à direita. Com

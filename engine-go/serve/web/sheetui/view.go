@@ -89,6 +89,12 @@ type View struct {
 	// Spells é a aba homônima — o grimório, as concedidas por poder e o catálogo
 	// inteiro do Capítulo 4 para aprender.
 	Spells spellbookPanel
+	// GrimoireSearch, GrimoireCircle e SpellCasting são da aba Magias da ficha
+	// paralela: a busca e o círculo que filtram o grimório, e a CD e o atributo
+	// que o topo diz uma vez.
+	GrimoireSearch string
+	GrimoireCircle string
+	SpellCasting   spellCasting
 	// Bag é a aba homônima — a tira de equipados, a carga da p141, o dinheiro e a
 	// grade do que está guardado.
 	Bag bagPanel
@@ -210,6 +216,7 @@ func (s Scene) Load(
 	}
 	v.Effects = s.effectsPanelOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, signals.SpellSearch, signals.SpellCircle, signals.SpellSchool)
+	v.GrimoireSearch, v.GrimoireCircle = signals.GrimoireSearch, signals.GrimoireCircle
 	v.Powers = s.powersPanelOf(dto, signals.PowerSearch)
 	v.Choices = s.choicesPanelOf(dto, signals.PowerSearch)
 	v.Bag = s.bagPanelOf(dto, bagFilters{
@@ -219,6 +226,7 @@ func (s Scene) Load(
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet))
+		v.SpellCasting = spellCastingOf(sheet)
 		v.Expertises = expertisePanelFor(dto, sheet, search)
 		// DEPOIS dos três, e não ao lado: o painel de Ações não computa nada —
 		// ele reagrupa o Combate, os Poderes e as Magias, e montá-lo antes

@@ -638,6 +638,11 @@
   .ds-list[open] > summary.ds-list-head > .ds-icon {
     transform: rotate(180deg);
   }
+  /* O cabeçalho de uma seção no meio da lista: a linha que o separa da
+   * seção de cima é a mesma que separa duas linhas. */
+  .ds-list > .ds-list-head:not(:first-child) {
+    border-top: 1px solid var(--ds-line);
+  }
   .ds-stepper {
     display: flex;
     align-items: center;
@@ -692,8 +697,11 @@
 
   /* A OPÇÃO: um valor curto que se marca. Marcada, ela ganha a cor da ação e
    * o peso, e não só a cor — a diferença tem de sobreviver a quem não vê cor. */
+  /* A largura mínima é a altura: a opção de um caractere ("1º") é um alvo
+   * quadrado, e não uma fresta abaixo do piso de toque. */
   .ds-option {
     height: var(--ds-h-control);
+    min-width: var(--ds-h-control);
     padding: 0 0.75rem;
     border: 1px solid var(--ds-line-strong);
     border-radius: var(--ds-r-control);
@@ -1056,6 +1064,10 @@
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     border-top: 1px solid var(--ds-line);
+  }
+  /* O destrutivo do pé vai para a ponta oposta, longe do primário. */
+  .ds-dialog-foot > .ds-button[data-variant='danger'] {
+    margin-right: auto;
   }
 
   .ds-toast {

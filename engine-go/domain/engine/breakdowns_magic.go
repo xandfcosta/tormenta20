@@ -86,6 +86,16 @@ func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
 // so race and item bonuses count, and resolves the Arcanista's key attribute
 // through its Caminho. Nil for non-casters.
 func bestBaseSpellCd(ch Character, e ItemEffects) *int {
+	_, best := bestSpellcasting(ch, e)
+	return best
+}
+
+// bestSpellcasting é a classe conjuradora que dá a maior CD: o atributo-chave
+// dela e a CD base. Vazio e nulo para quem não conjura por classe.
+//
+//	bestSpellcasting(samiraFeiticeira, effectsNone()) // "charisma", 19
+func bestSpellcasting(ch Character, e ItemEffects) (string, *int) {
+	attribute := ""
 	var best *int
 	for _, entry := range ch.Classes {
 		attr := spellcastingAttributeFor(ch, entry.ClassName)
@@ -95,10 +105,10 @@ func bestBaseSpellCd(ch Character, e ItemEffects) *int {
 		dc := spellSaveDc(ch.Level, effectiveAttribute(ch, attr, e))
 		if best == nil || dc > *best {
 			d := dc
-			best = &d
+			best, attribute = &d, attr
 		}
 	}
-	return best
+	return attribute, best
 }
 
 // spellCdByAttribute is the per-class CD: the spell
