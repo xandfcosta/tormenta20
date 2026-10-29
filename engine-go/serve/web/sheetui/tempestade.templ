@@ -82,10 +82,13 @@ templ sheetRail(v View) {
 				<span class="ds-field-label">Efeitos ativos</span>
 				<div class="flex flex-wrap gap-2">
 					for _, e := range effects {
-						@ds.RemovableBadge(e.Name, templ.Attributes{"data-on:click": e.Remove})
+						@ds.RemovableBadge(e.Name, e.Dialog, templ.Attributes{"data-on:click": e.Remove})
 					}
 				</div>
 			</div>
+			for _, e := range effects {
+				@activeEffectDialog(e)
+			}
 		}
 		<div class="ds-def" data-wide>
 			<span>DEFESA</span>
@@ -306,5 +309,27 @@ templ sheetMenuDialog(v View) {
 			<span class="ds-field-label">Aparência</span>
 			@ds.ColorModeSwitch(v.ColorMode, tabRoute(v, v.ActiveTab))
 		</div>
+	}
+}
+
+// activeEffectDialog é a descrição de um efeito em vigor: o que ele faz, de
+// onde vem, e o gesto de tirar no pé.
+templ activeEffectDialog(e activeEffect) {
+	@ds.Dialog(e.Dialog, e.Name, activeEffectFoot(e)) {
+		<p class="ds-row-meta">{ e.Meta }</p>
+		if e.Text != "" {
+			<p class="ds-card-text">{ e.Text }</p>
+		}
+		if len(e.Terms) > 0 {
+			<div class="ds-sum-body ds-terms">
+				@ds.SumTerms(e.Terms)
+			</div>
+		}
+	}
+}
+
+templ activeEffectFoot(e activeEffect) {
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": e.Dialog, "command": "close", "data-on:click": e.Remove}) {
+		{ "Tirar " + e.Name }
 	}
 }

@@ -113,26 +113,81 @@ func activeTabLabel(v View) string {
 	return tabByValue(v, v.ActiveTab).Label
 }
 
-// activeEffect é um efeito em vigor com o gesto que o tira, para a coluna da
-// ficha: condição, postura e efeito aplicado. O situacional fica de fora — ele
-// é interruptor da aba Efeitos, e não algo que "está em você".
+// activeEffect é um efeito em vigor com o gesto que o tira e a descrição que
+// o nome abre, para a coluna da ficha: condição, postura e efeito aplicado. O
+// situacional fica de fora — ele é interruptor da aba Efeitos, e não algo que
+// "está em você".
 type activeEffect struct {
 	Name   string
 	Remove string
+	// Dialog é o `id` da descrição; Kind e Meta são a linha de cima dela
+	// ("Condição · p394"), Text o que o efeito faz, e Terms os modificadores
+	// do efeito aplicado.
+	Dialog string
+	Meta   string
+	Text   string
+	Terms  []ds.SumTerm
 }
 
 func activeEffects(v View) []activeEffect {
 	var out []activeEffect
 	for _, c := range v.Effects.Conditions {
-		out = append(out, activeEffect{Name: c.Name, Remove: sheetPost(v, "/efeitos/condicao/"+c.Command)})
+		out = append(out, activeEffect{
+			Name: c.Name, Remove: sheetPost(v, "/efeitos/condicao/"+c.Command),
+			Dialog: "effect-condition-" + c.ID, Meta: withPage("Condição", c.Page), Text: c.Effect,
+		})
 	}
 	for _, s := range v.Effects.Stances {
-		out = append(out, activeEffect{Name: s.Name, Remove: sheetPost(v, "/efeitos/postura/"+s.Command)})
+		effect := activeEffect{
+			Name: s.Name, Remove: sheetPost(v, "/efeitos/postura/"+s.Command),
+			Dialog: "effect-stance-" + s.Flag, Meta: stanceMeta(s),
+		}
+		// O TEXTO DA POSTURA é o do poder que a concede: a postura em curso só
+		// sabe o que foi pago e o que ela dá.
+		if power, ok := stancePower(v, s.Flag); ok {
+			effect.Meta = withPage(effect.Meta, power.Page)
+			effect.Text = power.Detail
+		}
+		out = append(out, effect)
 	}
 	for _, a := range v.Effects.Applied {
-		out = append(out, activeEffect{Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command)})
+		out = append(out, activeEffect{
+			Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command),
+			Dialog: "effect-applied-" + strconv.FormatInt(a.ID, 10), Meta: strings.TrimSuffix("Efeito · "+a.Scope, " · "),
+			Text: a.Detail, Terms: sumTermsOf(a.Modifiers),
+		})
 	}
 	return out
+}
+
+// stanceMeta é "Postura · pago 2 PM · +3".
+func stanceMeta(s stanceRow) string {
+	parts := []string{"Postura"}
+	if s.Paid != "" {
+		parts = append(parts, "pago "+s.Paid)
+	}
+	if s.Bonus != "" {
+		parts = append(parts, s.Bonus)
+	}
+	return strings.Join(parts, " · ")
+}
+
+// stancePower acha o poder que concede a postura, pela flag dela.
+func stancePower(v View, flag string) (powerRow, bool) {
+	for _, row := range v.Powers.Actions {
+		if row.Stance != nil && row.Stance.Flag == flag {
+			return row, true
+		}
+	}
+	return powerRow{}, false
+}
+
+// withPage acrescenta a página à linha de cima, quando há uma.
+func withPage(meta string, page int) string {
+	if page <= 0 {
+		return meta
+	}
+	return meta + " · p" + strconv.Itoa(page)
 }
 
 // vitalAmountPost é o gesto do diálogo de dano ou cura: o VALOR digitado entra

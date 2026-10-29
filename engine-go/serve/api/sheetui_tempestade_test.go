@@ -142,3 +142,28 @@ func TestTheSheetMenuSaysWhoTheCharacterIs(t *testing.T) {
 		}
 	}
 }
+
+// O EFEITO ATIVO DA COLUNA ABRE A DESCRIÇÃO DELE (decisão do dono): o nome do
+// crachá abre um diálogo com o que a condição faz e a página, e o X continua
+// tirando.
+func TestAnActiveEffectInTheRailOpensItsDescription(t *testing.T) {
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
+	if rec := f.requests(t, f.player, http.MethodPost,
+		fmt.Sprintf("/personagens/%d/efeitos/condicao/caido?tab=expertises&tempestade=1", id), ""); rec.Code != http.StatusOK {
+		t.Fatalf("pôr Caído respondeu %d", rec.Code)
+	}
+	page := parallelSheet(t, f, id, "expertises")
+
+	opener := regexp.MustCompile(`<button[^>]*commandfor="(effect-[^"]*)"[^>]*>Caído</button>`).FindStringSubmatch(page)
+	if opener == nil {
+		t.Fatal("o crachá do Caído não abre nada")
+	}
+	dialog := regexp.MustCompile(`(?s)<dialog[^>]*id="` + opener[1] + `".*?</dialog>`).FindString(page)
+	if !strings.Contains(dialog, "Condição") || !strings.Contains(dialog, `class="ds-card-text"`) {
+		t.Errorf("o diálogo do Caído não descreve a condição:\n%s", dialog)
+	}
+	if !strings.Contains(page, `aria-label="Tirar Caído"`) {
+		t.Error("o crachá perdeu o X que tira o Caído")
+	}
+}

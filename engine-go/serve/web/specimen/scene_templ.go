@@ -652,11 +652,11 @@ func modePanel(mode, title string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ds.RemovableBadge("Abalado", nil).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.RemovableBadge("Abalado", "", nil).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ds.RemovableBadge("Caído", nil).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.RemovableBadge("Caído", "", nil).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

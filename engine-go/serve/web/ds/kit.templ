@@ -163,9 +163,15 @@ templ Badge(text string, outline bool) {
 
 // RemovableBadge é o crachá do que está ATIVO e pode sair: uma condição na
 // ficha. O `removeAttrs` leva o gesto de tirar.
-templ RemovableBadge(label string, removeAttrs templ.Attributes) {
+templ RemovableBadge(label, dialogID string, removeAttrs templ.Attributes) {
 	<span class="ds-badge-removable">
-		{ label }
+		// Com `dialogID`, o NOME abre a descrição e o X tira: dois alvos, como na
+		// `ActionRow`. Sem ele, o nome é só texto.
+		if dialogID != "" {
+			<button type="button" class="ds-badge-open" commandfor={ dialogID } command="show-modal" aria-haspopup="dialog">{ label }</button>
+		} else {
+			{ label }
+		}
 		<button type="button" aria-label={ "Tirar " + label } title={ "Tirar " + label } { removeAttrs... }>
 			@ui.Icon("X", "ds-icon")
 		</button>
