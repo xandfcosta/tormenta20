@@ -401,28 +401,39 @@
 
   /* O CRACHÁ REMOVÍVEL. O alvo de tirar é o próprio botão, e ele tem a altura de
    * um controle — o "x" pequeno ao lado do nome é desenho, não alvo. */
+  /* O CRACHÁ REMOVÍVEL: a borda é uma CAMADA por cima (`::after`), e não a
+   * borda do `span`. Assim os botões de dentro têm a altura inteira do
+   * controle — 44px no toque, sem os 2px que a borda comeria —, o hover pinta
+   * cada um até o contorno, cortado pelo raio do `span`, e a borda continua
+   * nítida por cima de tudo. O caminho que ela substitui era o botão com
+   * `margin: -1px` passando POR CIMA da borda, e o hover dele cobria a borda em
+   * pedaços (ALE-473). */
   .ds-badge-removable {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
     height: var(--ds-h-control);
-    padding: 0 0 0 0.75rem;
-    border: 1px solid var(--ds-line-strong);
+    padding-left: 0.75rem;
+    overflow: hidden;
     border-radius: var(--ds-r-control);
     font-size: var(--ds-t-sm);
     font-weight: 500;
   }
-  /* O botão de tirar cobre a BORDA do crachá (`margin: -1px`): dentro dela ele
-   * teria 2px a menos que o alvo, e o crachá ficaria mais alto que os
-   * controles ao lado se crescesse para compensar. */
+  .ds-badge-removable::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: inherit;
+    pointer-events: none;
+  }
   .ds-badge-removable > button {
     display: grid;
     place-items: center;
+    align-self: stretch;
     width: var(--ds-h-control);
-    height: var(--ds-h-control);
-    margin: -1px -1px -1px 0;
     border: 0;
-    border-radius: var(--ds-r-control);
     background: none;
     color: var(--ds-ink-2);
     cursor: pointer;
@@ -430,24 +441,16 @@
   .ds-badge-removable > button:hover {
     background: var(--ds-sunk);
   }
-  /* O nome que ABRE a descrição é um alvo próprio, da borda esquerda até o X. */
+  /* Com o nome clicável, o crachá são duas metades: o nome vai da borda
+   * esquerda até o X, e é um alvo próprio. */
   .ds-badge-removable:has(> .ds-badge-open) {
     padding-left: 0;
   }
-  /* Com o nome clicável, o crachá são DUAS metades, e cada uma se pinta de
-   * borda a borda no hover: o nome com os cantos da esquerda, o X com os da
-   * direita. Arredondado nos quatro, o hover do nome era uma caixa solta por
-   * dentro da borda. */
   .ds-badge-removable > .ds-badge-open {
     width: auto;
-    margin: -1px 0 -1px -1px;
     padding: 0 0.25rem 0 0.75rem;
-    border-radius: var(--ds-r-control) 0 0 var(--ds-r-control);
     color: inherit;
     font: inherit;
-  }
-  .ds-badge-removable:has(> .ds-badge-open) > button:last-child {
-    border-radius: 0 var(--ds-r-control) var(--ds-r-control) 0;
   }
 
   .ds-list {
