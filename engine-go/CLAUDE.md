@@ -2303,9 +2303,10 @@ dizer está na seção H do [GLOSSARY](../GLOSSARY.md).
   nova entra no kit e na `/sistema` ANTES de entrar numa tela.
 - **Os pisos do sistema novo são outros**: 12px de texto e 44×44 de alvo no
   toque. Quem mede é o e2e (`support/ds-floors.ts`, no laço do
-  `appearance.spec.ts`), e ele PULA a cena sem `.scene-ds`, com o motivo no
-  relatório — não existe lista de cenas migradas para alguém esquecer. O guarda
-  da Cinzel pula a cena migrada pelo motivo inverso.
+  `appearance.spec.ts`), e ele só mede a cena com `.scene-ds` — o caso anota
+  no relatório qual sistema a cena veste, e não existe lista de cenas migradas
+  para alguém esquecer. O guarda da Cinzel mede só a outra metade, pelo motivo
+  inverso.
 - **Três medidores tiveram de aprender o segundo escopo**, e os três passavam
   VERDE sobre a cena nova sem medi-la: o de contraste varria só
   `.scene-grimorio *` (5 textos medidos na `/sistema`, os do diálogo do livro),

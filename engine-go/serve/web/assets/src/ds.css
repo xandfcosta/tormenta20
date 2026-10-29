@@ -1057,19 +1057,22 @@
   .ds-vital-open:hover {
     background: var(--ds-sunk);
   }
+  /* O RÓTULO VAI EM CIMA DO NÚMERO, e não ao lado: no toque o meio da faixa
+   * tem 87px, e "PV 137/137" lado a lado não cabe quando a primeira pintura
+   * usa a fonte mais larga da máquina (medido pelo e2e, ALE-473). */
   .ds-vital-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.25rem;
+    display: grid;
+    gap: 1px;
   }
   .ds-vital-key {
     color: var(--ds-ink-2);
     font-size: var(--ds-t-xs);
+    line-height: 1;
     font-weight: 700;
   }
   .ds-vital-value {
     font-size: var(--ds-t-md);
+    line-height: 1.1;
     font-weight: 700;
   }
   .ds-vital-value > small {
