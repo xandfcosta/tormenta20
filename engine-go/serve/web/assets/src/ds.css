@@ -774,7 +774,6 @@
     gap: 0.75rem;
     padding: 0.75rem;
     --ds-filter-above: 0.75rem;
-    --ds-filter-side: 0.75rem;
     --ds-filter-bg: var(--ds-surface);
     border: 1px solid var(--ds-line);
     border-radius: var(--ds-r-surface);
@@ -1075,26 +1074,26 @@
     padding: 1rem;
     overflow-y: auto;
   }
-  /* A BARRA DE FILTROS toma o espaço de cima e dos lados com margem negativa
-   * e o devolve em padding: em repouso nada sai do lugar, e presa ela cobre do
-   * topo até a lista — nada rola visível acima da busca. Quem rola diz o
-   * espaço, o fundo e onde a barra prende: o `top` conta a partir do padding
-   * do rolador, e não da borda, então ele desconta o padding (ou soma o que já
-   * está preso no topo, como as abas). */
+  /* A BARRA DE FILTROS toma o espaço de cima com margem negativa e o devolve
+   * em padding: em repouso nada sai do lugar, e presa ela cobre do topo até a
+   * lista — nada rola visível acima da busca. Dos lados ela não sangra: as
+   * linhas têm a largura dela, e a sangria fazia a aba transbordar. Quem rola
+   * diz o espaço, o fundo e onde a barra prende: o `top` conta a partir do
+   * padding do rolador, e não da borda, então ele desconta o padding (ou soma o
+   * que já está preso no topo, como as abas). */
   .ds-filter-bar {
     position: sticky;
     top: var(--ds-filter-stick);
     z-index: 1;
     display: grid;
     gap: 0.5rem;
-    margin: calc(-1 * var(--ds-filter-above)) calc(-1 * var(--ds-filter-side)) 0;
-    padding: var(--ds-filter-above) var(--ds-filter-side) 0.5rem;
+    margin-top: calc(-1 * var(--ds-filter-above));
+    padding: var(--ds-filter-above) 0 0.5rem;
     background: var(--ds-filter-bg);
   }
   .ds-dialog-body {
     --ds-filter-stick: -1rem;
     --ds-filter-above: 1rem;
-    --ds-filter-side: 1rem;
     --ds-filter-bg: var(--ds-surface);
   }
   .ds-dialog-foot {
@@ -1252,7 +1251,6 @@
     overflow-y: auto;
     --ds-filter-stick: -0.75rem;
     --ds-filter-above: 0.75rem;
-    --ds-filter-side: 0.75rem;
     --ds-filter-bg: var(--ds-bg);
   }
   .ds-sheet-tabs {
@@ -1385,7 +1383,6 @@
       /* As abas já estão presas no topo, com a altura de uma linha. */
       --ds-filter-stick: var(--ds-h-row);
       --ds-filter-above: 1rem;
-      --ds-filter-side: 1.5rem;
     }
     .ds-sheet-tabs {
       display: block;
