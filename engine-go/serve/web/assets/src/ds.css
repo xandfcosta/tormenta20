@@ -463,6 +463,14 @@
     border-radius: var(--ds-r-surface);
     background: var(--ds-surface);
   }
+  /* As listas lado a lado quando cabem duas (as magias por círculo, no
+   * desktop); no celular, uma embaixo da outra. */
+  .ds-list-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    align-items: start;
+    gap: 0.75rem;
+  }
   .ds-list-head {
     display: flex;
     justify-content: space-between;
@@ -1056,6 +1064,10 @@
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     border-top: 1px solid var(--ds-line);
+  }
+  /* O destrutivo do pé vai para a ponta oposta, longe do primário. */
+  .ds-dialog-foot > .ds-button[data-variant='danger'] {
+    margin-right: auto;
   }
 
   .ds-toast {

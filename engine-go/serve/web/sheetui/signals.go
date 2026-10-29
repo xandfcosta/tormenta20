@@ -52,6 +52,9 @@ type Signals struct {
 	SpellSearch string `json:"spell_search"`
 	SpellCircle string `json:"spell_circle"`
 	SpellSchool string `json:"spell_school"`
+	// A busca do grimório na aba Magias da ficha paralela, que filtra o que a
+	// ficha SABE; a de cima filtra o catálogo do Aprender.
+	GrimoireSearch string `json:"grimoire_search"`
 	// Os filtros da Mochila: a busca da grade e o chip de categoria.
 	ItemSearch   string `json:"item_search"`
 	ItemCategory string `json:"item_category"`
