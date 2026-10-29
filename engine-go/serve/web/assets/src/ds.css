@@ -578,6 +578,7 @@
     align-self: stretch;
     align-content: center;
     min-width: 0;
+    min-height: var(--ds-h-control);
     padding: 0 0 0 1rem;
     border: 0;
     background: none;
@@ -590,7 +591,11 @@
     background: var(--ds-sunk);
   }
   /* A lista que se recolhe (as passivas): o cabeçalho é o que abre. */
+  /* Aberta pelo cabeçalho, a lista faz dele um alvo de toque: a altura do
+   * controle, e não a de um rótulo. */
   .ds-list > summary.ds-list-head {
+    align-items: center;
+    min-height: var(--ds-h-control);
     list-style: none;
     cursor: pointer;
   }
