@@ -56,14 +56,23 @@ func TestTheParallelSpellsTabGroupsTheSpellbookByCircle(t *testing.T) {
 	if first < 0 || second < 0 || !(first < seta && seta < second && second < ball) {
 		t.Errorf("o grimório não sai agrupado por círculo: 1º em %d, Seta em %d, 2º em %d, Bola em %d", first, seta, second, ball)
 	}
-	// UMA lista contínua, e cada círculo é uma seção que se recolhe (decisão do
-	// dono): as linhas têm o mesmo padrão em qualquer círculo.
-	if n := len(regexp.MustCompile(`<details class="ds-list-section" open`).FindAllString(page, -1)); n != 2 {
-		t.Errorf("o grimório tem %d seções recolhíveis abertas; a arcanista tem dois círculos", n)
-	}
+	// UMA lista contínua, com o círculo como cabeçalho sempre à vista (decisão
+	// do dono): as linhas têm o mesmo padrão em qualquer círculo.
 	tab := regexp.MustCompile(`(?s)<section[^>]*aria-label="Magias".*?</section>`).FindString(page)
 	if n := strings.Count(tab, `class="ds-list"`); n != 1 {
-		t.Errorf("a aba desenhou %d listas; os círculos são seções de uma lista só", n)
+		t.Errorf("a aba desenhou %d listas; os círculos são cabeçalhos de uma lista só", n)
+	}
+	if strings.Contains(tab, "<details") {
+		t.Error("o círculo se recolhe; ele devia ficar sempre à vista")
+	}
+	// O filtro oferece os círculos que o grimório TEM: o 3º não aparece.
+	for _, circle := range []string{"Todos", "1º", "2º"} {
+		if !regexp.MustCompile(`<button[^>]*class="ds-option"[^>]*>\s*` + circle + `\s*</button>`).MatchString(tab) {
+			t.Errorf("o filtro de círculo não oferece %q", circle)
+		}
+	}
+	if regexp.MustCompile(`class="ds-option"[^>]*>\s*3º\s*</button>`).MatchString(tab) {
+		t.Error("o filtro oferece o 3º círculo, que a arcanista não tem")
 	}
 	// A execução e o alcance saem como a mesa fala, e não como o id do catálogo.
 	if !strings.Contains(page, "Padrão · médio") {
@@ -106,6 +115,21 @@ func TestTheParallelSpellSheetHasTheRuleTheAugmentsAndForgetApart(t *testing.T) 
 	}
 	if !strings.Contains(foot, "tempestade=1") {
 		t.Error("os gestos da folha perdem a marca da ficha paralela")
+	}
+}
+
+// O FILTRO DE CÍRCULO esconde os outros círculos inteiros, cabeçalho e linhas.
+func TestTheParallelSpellsTabFiltersTheSpellbookByCircle(t *testing.T) {
+	f, id := grimoireOfTwo(t)
+	signals := url.QueryEscape(`{"grimoire_circle":"2º"}`)
+	page := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=spells&tempestade=1&datastar=%s", id, signals), "").Body.String()
+
+	if !strings.Contains(page, ">Bola de Fogo<") || !strings.Contains(page, ">2º círculo<") {
+		t.Fatal("o filtro do 2º círculo perdeu a Bola de Fogo")
+	}
+	if strings.Contains(page, ">Seta Infalível de Talude<") || strings.Contains(page, ">1º círculo<") {
+		t.Error("o filtro do 2º círculo deixou o 1º na lista")
 	}
 }
 

@@ -626,33 +626,22 @@
   /* A lista que se recolhe (as passivas): o cabeçalho é o que abre. */
   /* Aberta pelo cabeçalho, a lista faz dele um alvo de toque: a altura do
    * controle, e não a de um rótulo. */
-  .ds-list > summary.ds-list-head,
-  .ds-list-section > summary.ds-list-head {
+  .ds-list > summary.ds-list-head {
     align-items: center;
     min-height: var(--ds-h-control);
     list-style: none;
     cursor: pointer;
   }
-  .ds-list > summary.ds-list-head::-webkit-details-marker,
-  .ds-list-section > summary.ds-list-head::-webkit-details-marker {
+  .ds-list > summary.ds-list-head::-webkit-details-marker {
     display: none;
   }
-  .ds-list[open] > summary.ds-list-head > .ds-icon,
-  .ds-list-section[open] > summary.ds-list-head .ds-icon {
+  .ds-list[open] > summary.ds-list-head > .ds-icon {
     transform: rotate(180deg);
   }
-  /* A seção dentro da lista: a linha entre uma seção e a seguinte é a mesma
-   * que separa duas linhas, e a ponta do cabeçalho junta a contagem e a seta. */
-  .ds-list-section + .ds-list-section > summary.ds-list-head {
+  /* O cabeçalho de uma seção no meio da lista: a linha que o separa da
+   * seção de cima é a mesma que separa duas linhas. */
+  .ds-list > .ds-list-head:not(:first-child) {
     border-top: 1px solid var(--ds-line);
-  }
-  .ds-list-section > summary.ds-list-head:hover {
-    background: var(--ds-sunk);
-  }
-  .ds-list-section-end {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
   }
   .ds-stepper {
     display: flex;

@@ -37,13 +37,13 @@ type spellCircleGroup struct {
 	Spells []learnedSpellRow
 }
 
-// spellCircleGroups agrupa o grimório por círculo. As linhas já chegam em
-// ordem de círculo e nome (`learnedSpellRowsOf`), então o grupo fecha quando o
-// círculo muda.
+// spellCircleGroups agrupa o grimório por círculo, pela busca e pelo filtro.
+// As linhas já chegam em ordem de círculo e nome (`learnedSpellRowsOf`), então
+// o grupo fecha quando o círculo muda — e círculo sem magia não tem grupo.
 func spellCircleGroups(v View) []spellCircleGroup {
 	var groups []spellCircleGroup
 	for _, spell := range v.Spells.Learned {
-		if !nameMatches(spell.Name, v.GrimoireSearch) {
+		if !grimoireShows(v, spell.Name, spell.Circle) {
 			continue
 		}
 		title := spell.Circle + " círculo"
@@ -67,18 +67,41 @@ type grantedSpellLine struct {
 func grantedSpellLines(v View) []grantedSpellLine {
 	var lines []grantedSpellLine
 	for i, spell := range v.Spells.Granted {
-		if nameMatches(spell.Name, v.GrimoireSearch) {
+		if grimoireShows(v, spell.Name, spell.Circle) {
 			lines = append(lines, grantedSpellLine{Index: i, Spell: spell})
 		}
 	}
 	return lines
 }
 
-func nameMatches(name, query string) bool {
-	if strings.TrimSpace(query) == "" {
+// grimoireShows diz se a magia passa pela busca e pelo filtro de círculo.
+func grimoireShows(v View, name, circle string) bool {
+	if v.GrimoireCircle != "" && circle != v.GrimoireCircle {
+		return false
+	}
+	if strings.TrimSpace(v.GrimoireSearch) == "" {
 		return true
 	}
-	return strings.Contains(search.Fold(name), search.Fold(query))
+	return strings.Contains(search.Fold(name), search.Fold(v.GrimoireSearch))
+}
+
+// grimoireCircleOptions são as opções do filtro: "Todos" e os círculos que o
+// grimório e as concedidas TÊM, em ordem — círculo vazio não vira opção.
+func grimoireCircleOptions(v View) []filterOption {
+	has := map[string]bool{}
+	for _, spell := range v.Spells.Learned {
+		has[spell.Circle] = true
+	}
+	for _, spell := range v.Spells.Granted {
+		has[spell.Circle] = true
+	}
+	options := []filterOption{{Value: "", Label: "Todos", Active: v.GrimoireCircle == ""}}
+	for circle := 1; circle <= 5; circle++ {
+		if name := circleName(circle); has[name] {
+			options = append(options, filterOption{Value: name, Label: name, Active: v.GrimoireCircle == name})
+		}
+	}
+	return options
 }
 
 func spellSheetID(spell learnedSpellRow) string {

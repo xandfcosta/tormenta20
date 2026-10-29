@@ -182,27 +182,16 @@ templ RemovableBadge(label, dialogID string, removeAttrs templ.Attributes) {
 templ List(title, trailing string) {
 	<div class="ds-list">
 		if title != "" || trailing != "" {
-			<div class="ds-list-head"><span>{ title }</span><span>{ trailing }</span></div>
+			@ListHead(title, trailing)
 		}
 		{ children... }
 	</div>
 }
 
-// ListSection é uma seção que se recolhe DENTRO de uma lista: o cabeçalho abre
-// e fecha, e as linhas continuam na mesma moldura (as magias por círculo). Ela
-// nasce aberta, e o `data-preserve-attr` guarda o que a pessoa recolheu quando
-// um gesto remenda a cena.
-templ ListSection(title, trailing string) {
-	<details class="ds-list-section" open data-preserve-attr="open">
-		<summary class="ds-list-head">
-			<span>{ title }</span>
-			<span class="ds-list-section-end">
-				{ trailing }
-				@ui.Icon("ChevronDown", "ds-icon")
-			</span>
-		</summary>
-		{ children... }
-	</details>
+// ListHead é o cabeçalho de uma SEÇÃO dentro da lista: as magias de um
+// círculo. A seção não se recolhe, e as linhas seguem na mesma moldura.
+templ ListHead(title, trailing string) {
+	<div class="ds-list-head"><span>{ title }</span><span>{ trailing }</span></div>
 }
 
 // Row é a linha de lista: nome e nota à esquerda, o valor à direita. Com

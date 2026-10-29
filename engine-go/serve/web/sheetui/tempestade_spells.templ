@@ -34,22 +34,31 @@ templ tempestadeSpells(v View) {
 				@ds.Empty("Nenhuma magia", "Este personagem não conjura por classe.")
 			}
 		}
+		// O FILTRO SÓ APARECE COM DOIS CÍRCULOS: com um só, "Todos" e ele
+		// mostrariam a mesma lista.
+		if options := grimoireCircleOptions(v); len(options) > 2 {
+			<div class="ds-options" role="group" aria-label="Círculo">
+				for _, o := range options {
+					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$grimoire_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+						{ o.Label }
+					}
+				}
+			</div>
+		}
 		if groups, lines := spellCircleGroups(v), grantedSpellLines(v); len(groups) > 0 || len(lines) > 0 {
 			@ds.List("", "") {
 				for _, group := range groups {
-					@ds.ListSection(group.Title, strconv.Itoa(len(group.Spells))) {
-						for _, spell := range group.Spells {
-							@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
-								@castGesture(v, spell)
-							}
+					@ds.ListHead(group.Title, strconv.Itoa(len(group.Spells)))
+					for _, spell := range group.Spells {
+						@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
+							@castGesture(v, spell)
 						}
 					}
 				}
 				if len(lines) > 0 {
-					@ds.ListSection("Concedidas por poderes", strconv.Itoa(len(lines))) {
-						for _, line := range lines {
-							@ds.ActionRow(line.Spell.Name, line.Spell.Source+" · "+line.Spell.Circle+" círculo", grantedSheetID(line.Index))
-						}
+					@ds.ListHead("Concedidas por poderes", strconv.Itoa(len(lines)))
+					for _, line := range lines {
+						@ds.ActionRow(line.Spell.Name, line.Spell.Source+" · "+line.Spell.Circle+" círculo", grantedSheetID(line.Index))
 					}
 				}
 			}
