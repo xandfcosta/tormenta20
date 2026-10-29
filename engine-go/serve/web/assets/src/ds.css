@@ -438,7 +438,11 @@
     color: var(--ds-ink-2);
     cursor: pointer;
   }
-  .ds-badge-removable > button:hover {
+  /* O HOVER TEM DOIS ALCANCES (decisão do dono): sobre o nome, o crachá
+   * inteiro muda de cor, porque o gesto é dele todo; sobre o X, só o X, porque
+   * tirar é um gesto à parte. */
+  .ds-badge-removable > button:last-child:hover,
+  .ds-badge-removable:has(> .ds-badge-open:hover) {
     background: var(--ds-sunk);
   }
   /* Com o nome clicável, o crachá são duas metades: o nome vai da borda
