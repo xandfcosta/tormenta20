@@ -17,7 +17,7 @@ templ tempestadeChoicesDialog(v View) {
 			if len(v.Choices.Pending) > 0 {
 				@ds.List(pendingTitle(len(v.Choices.Pending)), "") {
 					for _, p := range v.Choices.Pending {
-						<button type="button" class="ds-row ds-pick-jump" data-on:click={ "$power_source = '" + p.Source + "'" }>
+						<button type="button" class="ds-row ds-pick-jump" data-on:click={ "$power_source = '" + p.Source + "'" } data-attr:aria-current={ "String($power_source === '" + p.Source + "')" }>
 							<span class="ds-row-title">{ p.Label }</span>
 							@ui.Icon("ChevronRight", "ds-icon")
 						</button>

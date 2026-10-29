@@ -743,7 +743,12 @@
   .ds-pick-jump:hover {
     background: var(--ds-sunk);
   }
-
+  /* A pendência da aba que está à vista se pinta com a cor da ação, para a
+   * pessoa saber o que está mostrando (decisão do dono). */
+  .ds-pick-jump[aria-current='true'] {
+    background: color-mix(in oklab, var(--ds-action) 14%, var(--ds-surface));
+    font-weight: 700;
+  }
   .ds-pick-card {
     display: grid;
     gap: 0.75rem;
