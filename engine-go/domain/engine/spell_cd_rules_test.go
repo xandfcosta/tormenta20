@@ -78,19 +78,24 @@ func TestArcanistaKeyAttributeFollowsThePath(t *testing.T) {
 		}
 	}
 	// Nível 10 → 10 + 5 = 15 de base. Inteligência 2 → 17; Carisma 5 → 20.
+	// O atributo sai junto: é ele que a aba Magias escreve ao lado da CD.
 	tests := []struct {
-		path string
-		want int
-		attr string
+		path    string
+		want    int
+		attr    string
+		attrKey string
 	}{
-		{"bruxo", 17, "Inteligência"},
-		{"mago", 17, "Inteligência"},
-		{"feiticeiro", 20, "Carisma"},
+		{"bruxo", 17, "Inteligência", "intelligence"},
+		{"mago", 17, "Inteligência", "intelligence"},
+		{"feiticeiro", 20, "Carisma", "charisma"},
 	}
 	for _, tt := range tests {
-		got := bestBaseSpellCd(arcanist(tt.path), effectsNone())
+		attribute, got := bestSpellcasting(arcanist(tt.path), effectsNone())
 		if got == nil || *got != tt.want {
 			t.Errorf("caminho %s: CD = %v, want %d (%s)", tt.path, deref(got), tt.want, tt.attr)
+		}
+		if attribute != tt.attrKey {
+			t.Errorf("caminho %s: atributo = %q, want %q", tt.path, attribute, tt.attrKey)
 		}
 	}
 

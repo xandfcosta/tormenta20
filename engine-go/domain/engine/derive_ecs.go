@@ -51,6 +51,7 @@ type (
 	derivedMagic struct {
 		pmLimit     ValueBreakdown
 		bestBaseCd  *int
+		bestAttr    string
 		byAttribute map[string]int
 		dcBonus     TotalContribs
 		costMod     TotalContribs
@@ -140,9 +141,11 @@ func deriveMovement(w *ecs.World) {
 
 func deriveMagic(w *ecs.World) {
 	onSheet(w, func(e ecs.Entity, in sheetInput) {
+		bestAttr, bestBaseCd := bestSpellcasting(in.char, in.effects)
 		ecs.Set(w, e, derivedMagic{
 			pmLimit:     pmLimitBreakdown(in.char, in.effects),
-			bestBaseCd:  bestBaseSpellCd(in.char, in.effects),
+			bestBaseCd:  bestBaseCd,
+			bestAttr:    bestAttr,
 			byAttribute: spellCdByAttribute(in.char, in.effects),
 			dcBonus:     spellDCBonus(in.effects),
 			costMod:     pmCostMod(in.effects),
@@ -195,6 +198,7 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 			Attributes:              attrs.v,
 			PmLimit:                 magic.pmLimit,
 			BestBaseSpellCd:         magic.bestBaseCd,
+			BestSpellAttribute:      magic.bestAttr,
 			SpellCdByAttribute:      magic.byAttribute,
 			SpellDCBonus:            magic.dcBonus,
 			PmCostMod:               magic.costMod,
