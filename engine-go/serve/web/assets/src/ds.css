@@ -717,6 +717,11 @@
   }
   /* O DIÁLOGO ESCOLHER (ALE-473): as pendências e a escolha empilhadas no
    * celular, lado a lado no desktop — e o diálogo largo para caber os dois. */
+  /* A ALTURA É FIXA, e não a do conteúdo: trocar de aba não pode fazer o
+   * diálogo pular de tamanho (decisão do dono). O corpo rola. */
+  .ds-dialog:has(.ds-picks) {
+    height: calc(100dvh - 2rem);
+  }
   .ds-picks,
   .ds-picks-main {
     display: grid;
@@ -777,6 +782,7 @@
   @media (min-width: 64rem) {
     .ds-dialog:has(.ds-picks) {
       width: min(56rem, calc(100vw - 2rem));
+      height: min(48rem, calc(100dvh - 2rem));
     }
     .ds-picks {
       grid-template-columns: 16rem minmax(0, 1fr);
