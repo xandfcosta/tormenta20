@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"html"
 	"regexp"
 	"strings"
@@ -36,8 +35,8 @@ func TestTheParallelPowersTabKeepsTheRuleTextInThePowerSheet(t *testing.T) {
 	if !strings.Contains(page, `aria-label="Ativar Fúria"`) {
 		t.Error("a Fúria não tem o gesto de ativar na aba paralela")
 	}
-	// ESCOLHER AINDA É DA FICHA DE HOJE: o link sai declarado.
-	if !regexp.MustCompile(fmt.Sprintf(`<a[^>]*href="/personagens/%d\?tab=abilities"[^>]*data-sheet-of-today|<a[^>]*data-sheet-of-today[^>]*href="/personagens/%d\?tab=abilities"`, id, id)).MatchString(page) {
-		t.Error("o Escolher da aba paralela não leva à ficha de hoje")
+	// O ESCOLHER ABRE O DIÁLOGO DA FICHA PARALELA, e não a ficha de hoje.
+	if !regexp.MustCompile(`<button[^>]*commandfor="power-choices"`).MatchString(page) {
+		t.Error("o Escolher da aba paralela não abre o diálogo de escolhas")
 	}
 }

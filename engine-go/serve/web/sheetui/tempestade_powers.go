@@ -10,8 +10,7 @@ import (
 // A ABA PODERES DA FICHA PARALELA (ALE-473). O dado é o da ficha de hoje
 // (`powersPanel`); daqui sai só o que a folha e a linha leem. A linha NÃO
 // mostra o texto da regra — tocar no nome abre a folha com ele inteiro
-// (decisão do dono) —, e o "Escolher" ainda é da ficha de hoje: ele migra
-// numa fatia própria.
+// (decisão do dono). O "Escolher" abre o diálogo de `tempestade_choices.go`.
 
 // powerSheetID é o `id` da folha de um poder. O ponto do id do catálogo sai,
 // pela razão do `useDialogID`.

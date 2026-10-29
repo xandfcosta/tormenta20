@@ -715,6 +715,73 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+  /* O DIÁLOGO ESCOLHER (ALE-473): as pendências e a escolha empilhadas no
+   * celular, lado a lado no desktop — e o diálogo largo para caber os dois. */
+  .ds-picks,
+  .ds-picks-main {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 1rem;
+  }
+  .ds-pick-jump {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) 1rem;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ds-pick-jump:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-pick-card {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-pick-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .ds-pick-title {
+    margin: 0;
+    font-size: var(--ds-t-md);
+    font-weight: 700;
+  }
+  .ds-pick-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ds-pick-detail {
+    overflow: hidden;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .ds-pick-options {
+    margin-top: 0.5rem;
+  }
+  /* No celular a folha já tem a largura da tela (ver o `.ds-dialog`); só no
+   * desktop ela se alarga para caber as duas colunas. */
+  @media (min-width: 64rem) {
+    .ds-dialog:has(.ds-picks) {
+      width: min(56rem, calc(100vw - 2rem));
+    }
+    .ds-picks {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      align-items: start;
+    }
+  }
   /* O INTERRUPTOR liga e desliga uma coisa só, e tocar no rótulo também o
    * alterna. */
   .ds-switch {

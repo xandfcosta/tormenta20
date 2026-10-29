@@ -19,9 +19,7 @@ templ tempestadePowers(v View) {
 					"data-on:input__debounce.250ms": sheetGet(v),
 				})
 			</div>
-			// O ESCOLHER AINDA É DA FICHA DE HOJE: o diálogo de escolhas migra
-			// numa fatia própria, e até lá ele é uma saída declarada.
-			@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(sheetRoute(v.ID, "abilities")), templ.Attributes{"data-sheet-of-today": true}) {
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": choicesOpens(v)}) {
 				Escolher
 				if n := len(v.Choices.Pending); n > 0 {
 					<span class="ds-badge" aria-hidden="true">{ strconv.Itoa(n) }</span>
@@ -69,6 +67,7 @@ templ tempestadePowers(v View) {
 			}
 		}
 	</section>
+	@tempestadeChoicesDialog(v)
 	for _, row := range powerSheetRows(v.Powers) {
 		@powerSheet(v, row)
 		if row.Stance != nil && row.Stance.MaxSteps > 0 {
