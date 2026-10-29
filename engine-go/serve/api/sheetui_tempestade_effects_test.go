@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"testing"
@@ -82,5 +83,48 @@ func TestTheParallelConditionPickerAppliesAndCloses(t *testing.T) {
 	// O Caído já está aplicado: ele não volta como opção.
 	if strings.Contains(picker, "/efeitos/condicao/caido") {
 		t.Error("o diálogo oferece o Caído, que já está aplicado")
+	}
+}
+
+// effectPicker é o diálogo de um escolhedor da aba, com os sinais da busca.
+func effectPicker(t *testing.T, signals, dialog string) string {
+	t.Helper()
+	f, id, _ := effectsInPlay(t)
+	page := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=conditionals&tempestade=1&datastar=%s", id, url.QueryEscape(signals)), "").Body.String()
+	picker := regexp.MustCompile(`(?s)<dialog[^>]*id="` + dialog + `".*?</dialog>`).FindString(page)
+	if picker == "" {
+		t.Fatalf("a aba não desenhou o diálogo %s", dialog)
+	}
+	return picker
+}
+
+// A BUSCA DO ESCOLHEDOR DE CONDIÇÃO é pelo nome, como a do grimório.
+func TestTheParallelConditionPickerSearchesByName(t *testing.T) {
+	picker := effectPicker(t, `{"condition_search":"apav"}`, "condition-picker")
+	if !strings.Contains(picker, `data-bind:condition_search`) {
+		t.Error("o diálogo de condições não tem a busca")
+	}
+	if !strings.Contains(picker, ">Apavorado<") {
+		t.Error("a busca \"apav\" perdeu o Apavorado")
+	}
+	if strings.Contains(picker, ">Abalado<") {
+		t.Error("a busca \"apav\" deixou o Abalado na lista")
+	}
+}
+
+// O ESCOLHEDOR DE MAGIA tem a busca e o filtro de círculo da aba Magias.
+func TestTheParallelBuffPickerFiltersByNameAndCircle(t *testing.T) {
+	picker := effectPicker(t, `{"buff_search":"escudo"}`, "buff-picker")
+	if !strings.Contains(picker, ">Escudo da Fé<") || strings.Contains(picker, ">Bênção<") {
+		t.Error("a busca \"escudo\" não deixou só o Escudo da Fé")
+	}
+	if !regexp.MustCompile(`role="group" aria-label="Círculo"(?s:.*)\$buff_circle = (&#39;|')3º`).MatchString(picker) {
+		t.Error("o diálogo de magias não tem o filtro de círculo")
+	}
+
+	picker = effectPicker(t, `{"buff_circle":"3º"}`, "buff-picker")
+	if !strings.Contains(picker, ">Heroísmo<") || strings.Contains(picker, ">Bênção<") {
+		t.Error("o filtro do 3º círculo não deixou só as de 3º")
 	}
 }

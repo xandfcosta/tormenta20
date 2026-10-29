@@ -785,16 +785,18 @@
     font-size: var(--ds-t-md);
     font-weight: 700;
   }
+  /* A LINHA DE ESCOLHER é lida antes do toque, então ela respira mais que a
+   * linha de consulta, e a descrição quebra em vez de cortar: escolher pela
+   * metade de uma regra é escolher por nome decorado. */
   .ds-pick-row {
     grid-template-columns: minmax(0, 1fr) auto;
+    padding-block: 0.75rem;
   }
   .ds-pick-detail {
-    overflow: hidden;
+    margin-top: 0.25rem;
     color: var(--ds-ink-3);
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
   .ds-pick-options {
     margin-top: 0.5rem;

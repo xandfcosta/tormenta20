@@ -57,6 +57,11 @@ type Signals struct {
 	GrimoireSearch string `json:"grimoire_search"`
 	// O círculo escolhido no filtro da mesma aba ("2º"); vazio é todos.
 	GrimoireCircle string `json:"grimoire_circle"`
+	// As buscas dos escolhedores da aba Efeitos paralela, e o círculo do de
+	// magia ("2º"; vazio é todos).
+	ConditionSearch string `json:"condition_search"`
+	BuffSearch      string `json:"buff_search"`
+	BuffCircle      string `json:"buff_circle"`
 	// Os filtros da Mochila: a busca da grade e o chip de categoria.
 	ItemSearch   string `json:"item_search"`
 	ItemCategory string `json:"item_category"`

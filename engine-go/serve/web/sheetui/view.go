@@ -95,6 +95,8 @@ type View struct {
 	GrimoireSearch string
 	GrimoireCircle string
 	SpellCasting   spellCasting
+	// EffectPicks são as buscas dos escolhedores da aba Efeitos paralela.
+	EffectPicks effectPickFilters
 	// Bag é a aba homônima — a tira de equipados, a carga da p141, o dinheiro e a
 	// grade do que está guardado.
 	Bag bagPanel
@@ -217,6 +219,7 @@ func (s Scene) Load(
 	v.Effects = s.effectsPanelOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, signals.SpellSearch, signals.SpellCircle, signals.SpellSchool)
 	v.GrimoireSearch, v.GrimoireCircle = signals.GrimoireSearch, signals.GrimoireCircle
+	v.EffectPicks = effectPickFilters{ConditionSearch: signals.ConditionSearch, BuffSearch: signals.BuffSearch, BuffCircle: signals.BuffCircle}
 	v.Powers = s.powersPanelOf(dto, signals.PowerSearch)
 	v.Choices = s.choicesPanelOf(dto, signals.PowerSearch)
 	v.Bag = s.bagPanelOf(dto, bagFilters{

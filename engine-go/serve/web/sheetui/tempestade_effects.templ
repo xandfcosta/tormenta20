@@ -64,10 +64,29 @@ templ tempestadeEffects(v View) {
 		@situationalSheet(v, row)
 	}
 	@ds.Dialog("condition-picker", "Aplicar condição", nil) {
-		@effectPickerRows(v, "condition-picker", "Aplicar condição", "/efeitos/condicao/", v.Effects.ConditionOptions)
+		@ds.SearchField("condition-search", "Buscar condição", templ.Attributes{
+			"value": v.EffectPicks.ConditionSearch, "data-bind:condition_search": true,
+			"data-on:input__debounce.250ms": sheetGet(v),
+		})
+		@effectPickerRows(v, "condition-picker", "Aplicar condição", "/efeitos/condicao/",
+			pickerOptionsShown(v.Effects.ConditionOptions, v.EffectPicks.ConditionSearch, ""))
 	}
 	@ds.Dialog("buff-picker", "Aplicar magia", nil) {
-		@effectPickerRows(v, "buff-picker", "Aplicar magia", "/efeitos/aplica/", v.Effects.BuffOptions)
+		@ds.SearchField("buff-search", "Buscar magia", templ.Attributes{
+			"value": v.EffectPicks.BuffSearch, "data-bind:buff_search": true,
+			"data-on:input__debounce.250ms": sheetGet(v),
+		})
+		if options := buffCircleOptions(v); len(options) > 2 {
+			<div class="ds-options" role="group" aria-label="Círculo">
+				for _, o := range options {
+					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$buff_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+						{ o.Label }
+					}
+				}
+			</div>
+		}
+		@effectPickerRows(v, "buff-picker", "Aplicar magia", "/efeitos/aplica/",
+			pickerOptionsShown(v.Effects.BuffOptions, v.EffectPicks.BuffSearch, v.EffectPicks.BuffCircle))
 	}
 }
 
@@ -103,7 +122,7 @@ templ situationalSheet(v View, row situationalRow) {
 templ effectPickerRows(v View, id, title, route string, options []pickerOption) {
 	@ds.List("", "") {
 		if len(options) == 0 {
-			@ds.Row("Nada a escolher aqui", "", "", "")
+			@ds.Row("Nada com essa busca", "", "", "")
 		}
 		for _, o := range options {
 			<div class="ds-row ds-pick-row">
