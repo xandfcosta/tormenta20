@@ -180,6 +180,8 @@ templ tempestadePanel(v View) {
 			@tempestadeExpertises(v)
 		case "combat":
 			@tempestadeCombat(v)
+		case "abilities":
+			@tempestadePowers(v)
 		default:
 			@ds.Empty(activeTabLabel(v)+" ainda está na ficha de hoje", "Esta aba ainda não foi refeita no sistema novo.") {
 				<div class="mt-3 flex justify-center">
