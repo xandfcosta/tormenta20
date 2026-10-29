@@ -463,6 +463,15 @@
     border-radius: var(--ds-r-surface);
     background: var(--ds-surface);
   }
+  /* Uma fileira de crachás dentro da lista (as condições em vigor), com o
+   * gesto de acrescentar no fim da fileira. */
+  .ds-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem 0.75rem;
+  }
   .ds-list-head {
     display: flex;
     justify-content: space-between;
