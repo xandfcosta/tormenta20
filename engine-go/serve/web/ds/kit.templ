@@ -433,6 +433,14 @@ templ Dialog(id, title string, foot templ.Component) {
 	</dialog>
 }
 
+// FilterBar é a busca e os filtros de uma lista, presos no topo de quem rola
+// — a aba da ficha ou o corpo do diálogo —, para a lista rolar por baixo.
+templ FilterBar() {
+	<div class="ds-filter-bar">
+		{ children... }
+	</div>
+}
+
 templ Toast(text string, action templ.Component) {
 	<div class="ds-toast" role="status">
 		<span>{ text }</span>

@@ -102,7 +102,7 @@ templ attributeChoiceDs(v View, choice attributeChoice) {
 					}
 				} else {
 					@ds.Option(contemTraco(choice.Chosen, o.Value), templ.Attributes{
-						"data-on:click":         thatTogglesAttributeGesture(o.Value),
+						"data-on:click":          thatTogglesAttributeGesture(o.Value),
 						"data-attr:aria-pressed": "String($race_attributes.includes('" + o.Value + "'))",
 					}) {
 						{ o.Label }
@@ -142,9 +142,11 @@ templ raceAbilityDs(v View, block raceAbilityBlock) {
 		}
 		if block.PowerGroups != nil || block.Search != "" {
 			<span class="ds-help">Ou um poder geral</span>
-			@ds.SearchField("race-power-search-"+block.ID, "Buscar poder geral de "+block.Name, templ.Attributes{
-				"value": block.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
-			})
+			@ds.FilterBar() {
+				@ds.SearchField("race-power-search-"+block.ID, "Buscar poder geral de "+block.Name, templ.Attributes{
+					"value": block.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+				})
+			}
 			for _, group := range block.PowerGroups {
 				<span class="ds-help">{ group.Title }</span>
 				@raceAbilityOptions(v, block, group.Options)
@@ -210,7 +212,7 @@ templ classChoicesDs(v View, card classChoiceCard) {
 		for _, counted := range card.Counted {
 			@countedChoiceDs(v, counted)
 		}
-		<div class="ds-field">
+		@ds.FilterBar() {
 			<span class="ds-field-label">Poderes</span>
 			@ds.SearchField("class-power-search-"+card.ClassName, "Buscar poder de "+card.ClassName, templ.Attributes{
 				"value": v.Powers.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
@@ -221,7 +223,7 @@ templ classChoicesDs(v View, card classChoiceCard) {
 				@pickFilterOption("general", "Gerais")
 				@pickFilterOption("chosen", "Escolhidos · "+strconv.Itoa(chosenPowers(card)))
 			}
-		</div>
+		}
 		@ds.List("", "") {
 			for _, power := range card.Powers {
 				@powerPickRow(v, power)

@@ -12,21 +12,23 @@ import (
 // por nome, como na ficha de hoje.
 templ tempestadePowers(v View) {
 	<section class="grid gap-3" aria-label="Poderes">
-		<div class="flex flex-wrap items-center gap-2">
-			<div class="min-w-0 flex-1">
-				@ds.SearchField("power-search", "Buscar poder", templ.Attributes{
-					"value": v.Powers.Search, "data-bind:power_search": true,
-					"data-on:input__debounce.250ms": sheetGet(v),
-				})
-			</div>
-			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": choicesOpens(v)}) {
-				Escolher
-				if n := len(v.Choices.Pending); n > 0 {
-					<span class="ds-badge" aria-hidden="true">{ strconv.Itoa(n) }</span>
-					<span class="sr-only">{ writtenPendings(n) }</span>
+		@ds.FilterBar() {
+			<div class="flex flex-wrap items-center gap-2">
+				<div class="min-w-0 flex-1">
+					@ds.SearchField("power-search", "Buscar poder", templ.Attributes{
+						"value": v.Powers.Search, "data-bind:power_search": true,
+						"data-on:input__debounce.250ms": sheetGet(v),
+					})
+				</div>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": choicesOpens(v)}) {
+					Escolher
+					if n := len(v.Choices.Pending); n > 0 {
+						<span class="ds-badge" aria-hidden="true">{ strconv.Itoa(n) }</span>
+						<span class="sr-only">{ writtenPendings(n) }</span>
+					}
 				}
-			}
-		</div>
+			</div>
+		}
 		if v.Powers.Search != "" {
 			@ds.List("Resultado", strconv.Itoa(len(v.Powers.Results))) {
 				if len(v.Powers.Results) == 0 {

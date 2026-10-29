@@ -12,27 +12,29 @@ import (
 // porque ele não muda o que o servidor desenha — só o que se vê.
 templ tempestadeExpertises(v View) {
 	<section class="grid gap-3" aria-label="Perícias">
-		<div class="flex flex-wrap items-center gap-2">
-			<div class="min-w-0 flex-1">
-				@ds.SearchField("expertise-search", "Buscar perícia", templ.Attributes{
-					"name": "busca", "value": v.Expertises.Search,
-					"data-bind:search": true, "data-on:input__debounce.250ms": sheetGet(v),
-				})
+		@ds.FilterBar() {
+			<div class="flex flex-wrap items-center gap-2">
+				<div class="min-w-0 flex-1">
+					@ds.SearchField("expertise-search", "Buscar perícia", templ.Attributes{
+						"name": "busca", "value": v.Expertises.Search,
+						"data-bind:search": true, "data-on:input__debounce.250ms": sheetGet(v),
+					})
+				</div>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{
+					"type": "button", "commandfor": "expertise-craft", "command": "show-modal",
+					"data-on:click": "$new_expertise = ''; $new_attribute = 'intelligence'",
+				}) {
+					@ui.Icon("Plus", "ds-icon")
+					Nova perícia
+				}
 			</div>
-			@ds.Button(ds.ButtonSecondary, templ.Attributes{
-				"type": "button", "commandfor": "expertise-craft", "command": "show-modal",
-				"data-on:click": "$new_expertise = ''; $new_attribute = 'intelligence'",
-			}) {
-				@ui.Icon("Plus", "ds-icon")
-				Nova perícia
-			}
-		</div>
-		@ds.Segmented("Quais perícias") {
-			@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "String(!$expertise_trained_only)", "data-on:click": "$expertise_trained_only = false"}) {
-				Todas
-			}
-			@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "String($expertise_trained_only)", "data-on:click": "$expertise_trained_only = true"}) {
-				Treinadas
+			@ds.Segmented("Quais perícias") {
+				@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "String(!$expertise_trained_only)", "data-on:click": "$expertise_trained_only = false"}) {
+					Todas
+				}
+				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "String($expertise_trained_only)", "data-on:click": "$expertise_trained_only = true"}) {
+					Treinadas
+				}
 			}
 		}
 		if len(v.Expertises.Rows) == 0 {
