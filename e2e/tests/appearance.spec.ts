@@ -91,6 +91,26 @@ const WIDER_FACE_DEBT = new Set([
   'table · /campanhas/1/sessoes/4 · player',
 ])
 
+/**
+ * Roda os medidores de UMA navegação, um `test.step` cada, e reprova no fim com
+ * a lista de quem reprovou. Os medidores usam `expect` duro por dentro, e o
+ * primeiro vermelho calaria os seguintes; aqui cada um fala, com a mensagem
+ * dele e o nome do medidor na frente.
+ */
+async function runMeasures(where: string, measures: Array<[string, () => Promise<void>]>) {
+  const failures: string[] = []
+  for (const [name, measure] of measures) {
+    await test.step(name, async () => {
+      try {
+        await measure()
+      } catch (error) {
+        failures.push(`${name}: ${error instanceof Error ? error.message : String(error)}`)
+      }
+    })
+  }
+  expect(failures, `medidores que reprovaram em ${where}`).toEqual([])
+}
+
 for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
   for (const visit of scene.visits) {
     // O papel entra no NOME porque a Mesa aparece duas vezes: o mestre e o
@@ -98,139 +118,97 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
     // dois casos de nome igual não diz qual reprovou.
     const where = `${label} · ${visit.address} · ${visit.session}`
 
+    // DUAS NAVEGAÇÕES POR CENA, e não uma por medidor (ALE-322). Cada caso
+    // custava 1,1–1,5s quase todo de abrir contexto e navegar, e a cena rodava
+    // seis: o arquivo era metade da suíte e crescia com o registro. Os
+    // medidores que olham a MESMA página dividem a navegação; o que muda a
+    // página (a face mais larga injeta estilo) vem por último.
     test.describe(`aparência: ${where}`, () => {
       test.use({ storageState: SESSION_FILE[visit.session] })
 
-      test(`sem texto abaixo do mínimo de contraste do AA em ${where}`, async ({ page }) => {
+      test(`no desktop: contraste, Cinzel, piso de texto e fonte em ${where}`, async ({ page }) => {
         const response = await page.goto(visit.address)
         if (visit.mayBeAbsent && response?.status() === 404) {
           test.skip(true, `esta bancada não serve ${visit.address}`)
           return
         }
         expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
+        // A Cinzel é do grimório e os pisos de 12px e 44px são do Tempestade
+        // (ALE-497): cada cena mede os do sistema que ela veste, e o relatório
+        // diz qual foi.
+        const migrated = (await page.locator('[data-slot="scene-shell"].scene-ds').count()) > 0
+        test.info().annotations.push({ type: 'sistema', description: migrated ? 'Tempestade' : 'grimório' })
 
-        const contrast = await medeOContraste(page)
-        expect(
-          contrast.medidos,
-          `${where}: o medidor achou ${contrast.medidos} textos — a cena não carregou, e a asserção seguinte não seria evidência de nada`,
-        ).toBeGreaterThan(MEASURED_TEXT_FLOOR)
-        expect(contrast.falhas, `texto abaixo do AA em ${where}`).toEqual([])
+        await runMeasures(where, [
+          ['contraste AA', async () => {
+            const contrast = await medeOContraste(page)
+            expect(
+              contrast.medidos,
+              `${where}: o medidor achou ${contrast.medidos} textos — a cena não carregou, e a asserção seguinte não seria evidência de nada`,
+            ).toBeGreaterThan(MEASURED_TEXT_FLOOR)
+            expect(contrast.falhas, `texto abaixo do AA em ${where}`).toEqual([])
+          }],
+          ...(migrated
+            ? [[`texto de ${DS_TEXT_FLOOR}px ou mais`, async () => {
+                const report = await measureDsText(page)
+                expect(report.medidos, `${where}: nenhum texto medido no escopo .scene-ds`).toBeGreaterThan(MEASURED_TEXT_FLOOR)
+                expect(report.falhas, `texto abaixo de ${DS_TEXT_FLOOR}px no sistema Tempestade em ${where}`).toEqual([])
+              }] as [string, () => Promise<void>]]
+            : [['Cinzel acima do piso', () => expectCinzelAcimaDoPiso(page, `em ${where}`)] as [string, () => Promise<void>]]),
+          // A FACE DESENHADA é o que torna os outros medidores repetíveis: com
+          // a face vindo da máquina, eles respondem sobre o computador que rodou
+          // a suíte (ALE-362).
+          ['fonte entregue', () => expectTextIsDrawnWithAShippedFace(page, where)],
+        ])
       })
 
-      test(`a Cinzel não desce abaixo do piso de leitura em ${where}`, async ({ page }) => {
-        const response = await page.goto(visit.address)
-        if (visit.mayBeAbsent && response?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visit.address}`)
-          return
-        }
-        // A Cinzel é do grimório, e o sistema Tempestade não a usa (ALE-497): a
-        // cena migrada não tem texto em Cinzel para medir, e o piso de leitura
-        // dela é o do caso irmão abaixo.
-        const migrated = await page.locator('[data-slot="scene-shell"].scene-ds').count()
-        test.skip(migrated > 0, `${where} veste o sistema Tempestade, que não usa a Cinzel`)
-        await expectCinzelAcimaDoPiso(page, `em ${where}`)
-      })
-
-      // O CORTE LATERAL entra no MESMO laço, e essa é a decisão da ALE-342.
-      //
-      // O medidor existia desde a ALE-337 e estava ligado numa cena só — o
-      // catálogo. Uma cena que voltasse a cortar em qualquer outro lugar não
-      // acusava nada, que é a primeira das quatro formas de "não visitar" que o
-      // CLAUDE.md lista: a cena não está na lista.
-      //
-      // Aqui ele não ganha lista PRÓPRIA: pega carona no `MEASURED_SCENES`, que
-      // o `convention.TestEveryPageSceneIsMeasuredForAppearance` já obriga a
-      // estar completo. Cena nova entra nos três medidores de uma vez, e não há
-      // uma segunda enumeração para envelhecer sozinha.
-      //
-      // A 390px porque é a largura em que sobra menos espaço, e conteúdo que não
-      // cabe ali é conteúdo que ninguém alcança — ele não rola.
-      test(`nada é cortado de lado a 390px em ${where}`, async ({ page }) => {
-        await page.setViewportSize({ width: 390, height: 844 })
-        const response = await page.goto(visit.address)
-        if (visit.mayBeAbsent && response?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visit.address}`)
-          return
-        }
-        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-        await expectNothingIsClippedSideways(page, 'body')
-      })
-
-      test(`o leiaute aguenta uma face mais larga em ${where}`, async ({ page }) => {
-        await page.setViewportSize({ width: 390, height: 844 })
-        const response = await page.goto(visit.address)
-        if (visit.mayBeAbsent && response?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visit.address}`)
-          return
-        }
-        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-        await page.addStyleTag({
-          content: `body * { letter-spacing: ${WIDER_FACE_STEP} !important }`,
-        })
-        const { cortados: clipped, medidos: measured } = await measureSidewaysClipping(page, 'body')
-        expect(measured, `${where}: a varredura não achou nó nenhum`).toBeGreaterThan(5)
-        if (WIDER_FACE_DEBT.has(where)) {
-          expect(
-            clipped,
-            `${where} está na dívida da face mais larga e hoje aguenta o passo. Tire a linha de WIDER_FACE_DEBT — uma dívida que afirma o que já foi pago não é relida por ninguém`,
-          ).not.toEqual([])
-          return
-        }
-        expect(
-          clipped,
-          `${where}: com uma face ${WIDER_FACE_STEP} mais larga o conteúdo é cortado. Toda primeira pintura usa a fonte da máquina (\`font-display: swap\`), então isto corta de verdade em carregamento frio`,
-        ).toEqual([])
-      })
-
-      // OS PISOS DO SISTEMA TEMPESTADE (ALE-479) entram no laço e PULAM a cena
-      // que ainda veste o grimório. O pulo é visível no relatório, com o motivo,
-      // e some sozinho no dia em que a cena migrar — não há lista de cenas
-      // migradas para alguém esquecer de atualizar.
-      test(`o sistema Tempestade não desenha texto abaixo de ${DS_TEXT_FLOOR}px em ${where}`, async ({ page }) => {
-        const response = await page.goto(visit.address)
-        if (visit.mayBeAbsent && response?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visit.address}`)
-          return
-        }
-        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-        const report = await measureDsText(page)
-        test.skip(report.escopos === 0, `${where} ainda veste o grimório`)
-        expect(report.medidos, `${where}: nenhum texto medido no escopo .scene-ds`).toBeGreaterThan(MEASURED_TEXT_FLOOR)
-        expect(report.falhas, `texto abaixo de ${DS_TEXT_FLOOR}px no sistema Tempestade em ${where}`).toEqual([])
-      })
-
-      test.describe('no toque', () => {
-        // `hasTouch` liga o `pointer: coarse`, que é o que sobe o controle para
-        // 44px. Medir com mouse mediria a densidade compacta, que é de mouse.
+      // A 390px COM TOQUE, que é como um celular é: `hasTouch` liga o `pointer:
+      // coarse`, que sobe o controle para 44px. O corte lateral mede aqui pela
+      // mesma razão — conteúdo que não cabe a 390px é conteúdo que ninguém
+      // alcança (ALE-342), e o celular de verdade desenha os controles de toque.
+      test.describe('no celular', () => {
         test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
-        test(`o sistema Tempestade não oferece alvo menor que ${DS_TOUCH_FLOOR}px em ${where}`, async ({ page }) => {
+        test(`no celular: alvo de toque, corte lateral e face mais larga em ${where}`, async ({ page }) => {
           const response = await page.goto(visit.address)
           if (visit.mayBeAbsent && response?.status() === 404) {
             test.skip(true, `esta bancada não serve ${visit.address}`)
             return
           }
           expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-          const report = await measureDsTouchTargets(page)
-          test.skip(report.escopos === 0, `${where} ainda veste o grimório`)
-          expect(report.medidos, `${where}: nenhum alvo medido no escopo .scene-ds`).toBeGreaterThan(0)
-          expect(report.falhas, `alvo menor que ${DS_TOUCH_FLOOR}×${DS_TOUCH_FLOOR} no toque em ${where}`).toEqual([])
-        })
-      })
+          const migrated = (await page.locator('[data-slot="scene-shell"].scene-ds').count()) > 0
 
-      // A FACE DESENHADA entra no mesmo laço pela razão do corte lateral: ela é
-      // o que torna os outros três medidores repetíveis. Contraste, piso da
-      // Cinzel e corte lateral medem texto DESENHADO, e com a face vindo da
-      // máquina os três respondem sobre o computador que rodou a suíte
-      // (ALE-362).
-      test(`o texto é desenhado com a fonte que o app entrega em ${where}`, async ({ page }) => {
-        const response = await page.goto(visit.address)
-        if (visit.mayBeAbsent && response?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visit.address}`)
-          return
-        }
-        expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-        await expectTextIsDrawnWithAShippedFace(page, where)
+          await runMeasures(where, [
+            ...(migrated
+              ? [[`alvo de ${DS_TOUCH_FLOOR}px ou mais`, async () => {
+                  const report = await measureDsTouchTargets(page)
+                  expect(report.medidos, `${where}: nenhum alvo medido no escopo .scene-ds`).toBeGreaterThan(0)
+                  expect(report.falhas, `alvo menor que ${DS_TOUCH_FLOOR}×${DS_TOUCH_FLOOR} no toque em ${where}`).toEqual([])
+                }] as [string, () => Promise<void>]]
+              : []),
+            ['nada cortado de lado', () => expectNothingIsClippedSideways(page, 'body')],
+            // A FACE MAIS LARGA por último: ela injeta estilo na página, e
+            // qualquer medidor depois dela mediria a página perturbada.
+            ['face mais larga', async () => {
+              await page.addStyleTag({
+                content: `body * { letter-spacing: ${WIDER_FACE_STEP} !important }`,
+              })
+              const { cortados: clipped, medidos: measured } = await measureSidewaysClipping(page, 'body')
+              expect(measured, `${where}: a varredura não achou nó nenhum`).toBeGreaterThan(5)
+              if (WIDER_FACE_DEBT.has(where)) {
+                expect(
+                  clipped,
+                  `${where} está na dívida da face mais larga e hoje aguenta o passo. Tire a linha de WIDER_FACE_DEBT — uma dívida que afirma o que já foi pago não é relida por ninguém`,
+                ).not.toEqual([])
+                return
+              }
+              expect(
+                clipped,
+                `${where}: com uma face ${WIDER_FACE_STEP} mais larga o conteúdo é cortado. Toda primeira pintura usa a fonte da máquina (\`font-display: swap\`), então isto corta de verdade em carregamento frio`,
+              ).toEqual([])
+            }],
+          ])
+        })
       })
     })
   }
