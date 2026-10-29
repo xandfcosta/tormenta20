@@ -1,7 +1,6 @@
 package sheetui
 
 import (
-	"encoding/json"
 	"net/url"
 	"strconv"
 
@@ -9,12 +8,12 @@ import (
 )
 
 // O DIÁLOGO ESCOLHER DA FICHA PARALELA (ALE-473), pelo mockup aprovado. O dado
-// é o da ficha de hoje (`choicesPanel`); daqui sai só o que o diálogo novo lê
-// diferente: quantas pendências cada aba tem, o filtro dos poderes e os
-// endereços dos gestos.
+// é o da ficha de hoje (`choicesPanel`); daqui sai o que os corpos dos passos
+// leem diferente: o filtro dos poderes e os endereços dos gestos. A divisão em
+// passos é do `tempestade_steps.go`.
 
-// pendingIn conta as pendências de uma aba do diálogo (`raca`, `origem`,
-// `classe`), para o número ao lado do nome dela.
+// pendingIn conta as pendências de uma origem (`raca`, `origem`, `classe`),
+// para o "falta N" do passo da raça.
 func pendingIn(v View, source string) int {
 	n := 0
 	for _, p := range v.Choices.Pending {
@@ -23,20 +22,6 @@ func pendingIn(v View, source string) int {
 		}
 	}
 	return n
-}
-
-// choicesOpens é o gesto do Escolher: abre na aba da primeira pendência, e
-// carrega no sinal a distribuição de atributos que a raça já gravou — sem
-// isso as opções nasceriam desmarcadas sobre uma escolha feita.
-func choicesOpens(v View) string {
-	chosen := []string{}
-	for _, card := range v.Choices.Races {
-		if card.Attribute != nil && card.Attribute.Kind != "ascendencia" {
-			chosen = card.Attribute.Chosen
-		}
-	}
-	written, _ := json.Marshal(chosen)
-	return "$power_source = '" + firstPendingSource(v) + "'; $power_pick_filter = ''; $race_attributes = " + string(written)
 }
 
 // powerPickShows é o `data-show` de um poder na lista da classe, pelo filtro

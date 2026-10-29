@@ -4,13 +4,16 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
-// O DIÁLOGO ESCOLHER DA FICHA PARALELA (ALE-473), pelo mockup aprovado: as
-// pendências no topo, e as escolhas de raça, origem e classe com as peças do
-// kit — opção para o valor curto, interruptor para a lista longa. Todo gesto
-// leva a marca da ficha paralela, e nada do grimório entra no diálogo.
-func TestTheParallelChoicesDialogOffersEveryChoiceWithTheKit(t *testing.T) {
+// O DIÁLOGO ESCOLHER DA FICHA PARALELA (ALE-473), pelo mockup aprovado: a
+// lista dos passos com quanto falta em cada um, e um passo de cada vez — o
+// valor curto como opção, a lista longa com interruptor, e nos poderes a
+// busca e o filtro fixos acima da parte que rola. Todo gesto leva a marca da
+// ficha paralela, e nada do grimório entra no diálogo.
+func TestTheParallelChoicesDialogOpensOneStepAtATime(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Paladino", 3, 0, 0)
 	page := parallelSheet(t, f, id, "abilities")
@@ -22,16 +25,79 @@ func TestTheParallelChoicesDialogOffersEveryChoiceWithTheKit(t *testing.T) {
 	if grimoire := regexp.MustCompile(`[\w:-]*grimorio[\w-]*`).FindAllString(dialog, 3); len(grimoire) > 0 {
 		t.Errorf("o diálogo de escolhas desenhou classe do grimório: %v", grimoire)
 	}
-	if !strings.Contains(dialog, "Faltam") {
-		t.Error("o diálogo não abre com as pendências do paladino")
+	if strings.Contains(dialog, "De onde vem a escolha") {
+		t.Error("o diálogo ainda tem a fileira Raça · Origem · Classe, que repetia a lista dos passos")
 	}
-	for what, pattern := range map[string]string{
-		"o devoto como opção":                    `<button[^>]*class="ds-option"[^>]*data-on:click="[^"]*/poderes/classe/Paladino/devoto/[^"]*tempestade=1`,
-		"o benefício da origem como interruptor": `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/origem/[^"]*tempestade=1`,
-		"o poder da classe como interruptor":     `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/escolhe/[^"]*tempestade=1`,
-	} {
-		if !regexp.MustCompile(pattern).MatchString(dialog) {
-			t.Errorf("o diálogo não oferece %s", what)
+
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	list := findNode(doc, "class", "ds-steps-list")
+	if list == nil {
+		t.Fatal("o diálogo não tem a lista dos passos")
+	}
+	if !strings.Contains(textOf(list), "Faltam") {
+		t.Error("a lista dos passos não diz quantas escolhas faltam")
+	}
+
+	// Cada passo: o toque na lista que o abre, e o que ele oferece por dentro
+	// da parte que rola.
+	steps := []struct{ what, step, inside string }{
+		{"o devoto como opção", "class-Paladino-devotee", `<button[^>]*class="ds-option"[^>]*data-on:click="[^"]*/poderes/classe/Paladino/devoto/[^"]*tempestade=1`},
+		{"o benefício da origem como interruptor", "origin", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/origem/[^"]*tempestade=1`},
+		{"o poder da classe como interruptor", "class-Paladino-powers", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/escolhe/[^"]*tempestade=1`},
+	}
+	for _, s := range steps {
+		if !regexp.MustCompile(`\$choice_step = (&#39;|')` + s.step + `(&#39;|')`).MatchString(renderNode(t, list)) {
+			t.Errorf("a lista não abre o passo %s", s.step)
+		}
+		section := findNode(doc, "id", "choice-step-"+s.step)
+		if section == nil {
+			t.Errorf("falta o passo %s", s.step)
+			continue
+		}
+		scroll := findNode(section, "class", "ds-dialog-scroll")
+		if scroll == nil || !regexp.MustCompile(s.inside).MatchString(renderNode(t, scroll)) {
+			t.Errorf("o passo %s não oferece %s na parte que rola", s.step, s.what)
 		}
 	}
+
+	// NOS PODERES, a busca e o filtro ficam fora da parte que rola, e o filtro
+	// é uma fileira de opções, não o segmentado que quebrava a 390px.
+	powers := findNode(doc, "id", "choice-step-class-Paladino-powers")
+	if powers == nil {
+		return
+	}
+	bar := findNode(powers, "class", "ds-filter-bar")
+	if bar == nil || findNode(findNode(powers, "class", "ds-dialog-scroll"), "class", "ds-filter-bar") != nil {
+		t.Error("a busca dos poderes não está fixa acima da parte que rola")
+	}
+	if bar != nil && (findNode(bar, "aria-label", "Quais poderes") == nil || findNode(bar, "class", "ds-segmented") != nil) {
+		t.Error("o filtro dos poderes não é a fileira de opções")
+	}
+}
+
+func textOf(n *html.Node) string {
+	var b strings.Builder
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if n.Type == html.TextNode {
+			b.WriteString(n.Data)
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+	walk(n)
+	return b.String()
+}
+
+func renderNode(t *testing.T, n *html.Node) string {
+	t.Helper()
+	var b strings.Builder
+	if err := html.Render(&b, n); err != nil {
+		t.Fatal(err)
+	}
+	return b.String()
 }
