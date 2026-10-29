@@ -1,0 +1,311 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeChoicesDialog é o Escolher da ficha paralela: as pendências em cima (no
+// desktop, à esquerda), e as três abas — raça, origem, classe — na ordem em
+// que o livro monta um personagem. Valor curto é opção; lista longa é linha
+// com interruptor (decisão do dono, ver o GLOSSARY).
+templ tempestadeChoicesDialog(v View) {
+	@ds.Dialog("power-choices", "Escolher", nil) {
+		<div class="ds-picks">
+			if len(v.Choices.Pending) > 0 {
+				@ds.List(pendingTitle(len(v.Choices.Pending)), "") {
+					for _, p := range v.Choices.Pending {
+						<button type="button" class="ds-row ds-pick-jump" data-on:click={ "$power_source = '" + p.Source + "'" } data-attr:aria-current={ "String($power_source === '" + p.Source + "')" }>
+							<span class="ds-row-title">{ p.Label }</span>
+							@ui.Icon("ChevronRight", "ds-icon")
+						</button>
+					}
+				}
+			} else {
+				<p class="ds-help">Nenhuma escolha pendente.</p>
+			}
+			<div class="ds-picks-main">
+				@ds.Segmented("De onde vem a escolha") {
+					for _, source := range sourceThree {
+						@ds.SegmentedOption(false, templ.Attributes{
+							"data-attr:aria-pressed": "String($power_source === '" + source + "')",
+							"data-on:click":          "$power_source = '" + source + "'",
+						}) {
+							{ writtenSource(source) }
+							if n := pendingIn(v, source); n > 0 {
+								<span class="ds-badge">{ strconv.Itoa(n) }</span>
+							}
+						}
+					}
+				}
+				<div data-show="$power_source === 'raca'" class="ds-picks-main">
+					@raceChoicesDs(v)
+				</div>
+				<div data-show="$power_source === 'origem'" style="display:none" class="ds-picks-main">
+					@originChoicesDs(v)
+				</div>
+				<div data-show="$power_source === 'classe'" style="display:none" class="ds-picks-main">
+					for _, card := range v.Choices.Classes {
+						@classChoicesDs(v, card)
+					}
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// raceChoicesDs são o bônus de atributo, as variantes e as habilidades de cada
+// raça da ficha.
+templ raceChoicesDs(v View) {
+	if len(v.Choices.Races) == 0 {
+		<p class="ds-help">A raça desta ficha não pede escolha.</p>
+	}
+	for _, card := range v.Choices.Races {
+		<section class="ds-pick-card">
+			<h3 class="ds-pick-title">{ card.Race }</h3>
+			if card.Attribute != nil {
+				@attributeChoiceDs(v, *card.Attribute)
+			}
+			for _, variant := range card.Variants {
+				<div class="ds-field">
+					<span class="ds-field-label">{ variant.Name }</span>
+					<div class="ds-options">
+						for _, o := range variant.Options {
+							@ds.Option(o.Active, templ.Attributes{"data-on:click": sheetPost(v, "/poderes/variante/"+o.Value)}) {
+								{ o.Label }
+							}
+						}
+					</div>
+				</div>
+			}
+			for _, block := range card.Abilities {
+				@raceAbilityDs(v, block)
+			}
+		</section>
+	}
+}
+
+// attributeChoiceDs distribui o bônus da raça. Os atributos entram num sinal
+// de lista e vão juntos num comando só, porque a regra do motor é sobre o
+// CONJUNTO (ver `attributeChoiceBlock`). A ascendência é um valor só, e grava
+// no toque.
+templ attributeChoiceDs(v View, choice attributeChoice) {
+	<div class="ds-field">
+		<span class="ds-field-label">{ attributeWrittenChoice(choice) }</span>
+		<div class="ds-options">
+			for _, o := range choice.Options {
+				if choice.Kind == "ascendencia" {
+					@ds.Option(contemTraco(choice.Chosen, o.Value), templ.Attributes{"data-on:click": sheetPost(v, "/poderes/ascendencia/"+o.Value)}) {
+						{ o.Label }
+					}
+				} else {
+					@ds.Option(contemTraco(choice.Chosen, o.Value), templ.Attributes{
+						"data-on:click":         thatTogglesAttributeGesture(o.Value),
+						"data-attr:aria-pressed": "String($race_attributes.includes('" + o.Value + "'))",
+					}) {
+						{ o.Label }
+					}
+				}
+			}
+		</div>
+	</div>
+	if choice.Kind != "ascendencia" {
+		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/poderes/atributos")}) {
+			Gravar distribuição
+		}
+	}
+}
+
+// raceAbilityDs é uma habilidade de raça que pede escolha (ALE-493): as
+// perícias, os poderes da Tormenta que trocam um bônus (p24), o poder geral e
+// a habilidade de outra raça. Cheia, tocar uma não marcada traz a recusa que
+// diz o porquê.
+templ raceAbilityDs(v View, block raceAbilityBlock) {
+	<div class="ds-field">
+		<div class="ds-pick-head">
+			<span class="ds-field-label">{ block.Name }</span>
+			<span class="ds-row-meta">{ block.Written() }</span>
+		</div>
+		if block.NoCraft {
+			<p class="ds-help">A ficha não tem Ofício. Crie um na aba Perícias.</p>
+		} else {
+			if block.SkillsLabel() != "" {
+				<span class="ds-help">{ block.SkillsLabel() }</span>
+			}
+			@raceAbilityOptions(v, block, block.Skills)
+		}
+		if len(block.Swaps) > 0 {
+			<span class="ds-help">Ou troque um bônus por um poder da Tormenta · não conta na perda de Carisma</span>
+			@raceAbilityOptions(v, block, block.Swaps)
+		}
+		if block.PowerGroups != nil || block.Search != "" {
+			<span class="ds-help">Ou um poder geral</span>
+			@ds.SearchField("race-power-search-"+block.ID, "Buscar poder geral de "+block.Name, templ.Attributes{
+				"value": block.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+			})
+			for _, group := range block.PowerGroups {
+				<span class="ds-help">{ group.Title }</span>
+				@raceAbilityOptions(v, block, group.Options)
+			}
+		}
+		if len(block.RaceGroups) > 0 {
+			<span class="ds-help">Ou uma habilidade de outra raça humanoide · herda o tamanho dela</span>
+			for _, group := range block.RaceGroups {
+				<span class="ds-help">{ group.Title }</span>
+				@raceAbilityOptions(v, block, group.Options)
+			}
+		}
+	</div>
+}
+
+templ raceAbilityOptions(v View, block raceAbilityBlock, options []powerOption) {
+	<div class="ds-options">
+		for _, o := range options {
+			@ds.Option(o.Count > 0, templ.Attributes{"aria-label": block.Name + ": " + o.Label, "data-on:click": raceAbilityPost(v, block, o.Value)}) {
+				{ o.Label }
+			}
+		}
+	</div>
+}
+
+// originChoicesDs são os benefícios da origem, um interruptor cada, com o teto
+// de dois no cabeçalho.
+templ originChoicesDs(v View) {
+	if v.Choices.Origin == nil {
+		<p class="ds-help">Esta origem não está no livro.</p>
+	} else {
+		<section class="ds-pick-card">
+			<div class="ds-pick-head">
+				<h3 class="ds-pick-title">{ v.Choices.Origin.Name }</h3>
+				<span class="ds-row-meta">{ originWritten(*v.Choices.Origin) }</span>
+			</div>
+			@ds.List("", "") {
+				for _, o := range v.Choices.Origin.Options {
+					<div class="ds-row ds-pick-row">
+						<span class="ds-row-title">{ o.Label }</span>
+						@ds.Switch("", o.Active, templ.Attributes{"aria-label": o.Label, "data-on:change": sheetPost(v, "/poderes/origem/"+o.Value)})
+					</div>
+				}
+			}
+		</section>
+	}
+}
+
+// classChoicesDs é uma classe: o caminho e o devoto como opções, as escolhas
+// contadas, e os poderes das vagas com a busca e o filtro.
+templ classChoicesDs(v View, card classChoiceCard) {
+	<section class="ds-pick-card">
+		<div class="ds-pick-head">
+			<h3 class="ds-pick-title">{ card.ClassName + " " + strconv.FormatInt(card.Level, 10) }</h3>
+			<span class="ds-row-meta">{ classWrittenSlots(card) }</span>
+		</div>
+		if card.Path != nil {
+			@classPickerDs(v, card.ClassName, "caminho", "Caminho", *card.Path)
+		}
+		if card.Devotee != nil {
+			@classPickerDs(v, card.ClassName, "devoto", "Devoto", *card.Devotee)
+		}
+		for _, counted := range card.Counted {
+			@countedChoiceDs(v, counted)
+		}
+		<div class="ds-field">
+			<span class="ds-field-label">Poderes</span>
+			@ds.SearchField("class-power-search-"+card.ClassName, "Buscar poder de "+card.ClassName, templ.Attributes{
+				"value": v.Powers.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+			})
+			@ds.Segmented("Quais poderes") {
+				@pickFilterOption("", "Todos")
+				@pickFilterOption("class", "Da classe")
+				@pickFilterOption("general", "Gerais")
+				@pickFilterOption("chosen", "Escolhidos · "+strconv.Itoa(chosenPowers(card)))
+			}
+		</div>
+		@ds.List("", "") {
+			for _, power := range card.Powers {
+				@powerPickRow(v, power)
+			}
+		}
+	</section>
+}
+
+templ pickFilterOption(value, label string) {
+	@ds.SegmentedOption(value == "", templ.Attributes{
+		"data-attr:aria-pressed": "String($power_pick_filter === '" + value + "')",
+		"data-on:click":          "$power_pick_filter = '" + value + "'",
+	}) {
+		{ label }
+	}
+}
+
+// powerPickRow é um poder da lista: nome, de onde vem e uma linha de detalhe —
+// aqui a lista é para ESCOLHER, e o detalhe é o que separa um poder do outro
+// (decisão do dono). O poder que pede escolha (o Aumento de Atributo, que se
+// toma várias vezes) troca o interruptor por opções, cada uma com o "−".
+templ powerPickRow(v View, power powerChoice) {
+	<div class="ds-row ds-pick-row" data-show={ powerPickShows(power) }>
+		<div class="min-w-0">
+			<div class="ds-row-title">{ power.Name }</div>
+			<div class="ds-row-meta">{ power.Source }</div>
+			<div class="ds-pick-detail">{ power.Detail }</div>
+			if len(power.Options) > 0 {
+				<div class="ds-options ds-pick-options">
+					for _, o := range power.Options {
+						@ds.Option(o.Count > 0, templ.Attributes{"aria-label": power.Name + ": " + o.Label, "data-on:click": sheetPost(v, "/poderes/escolha/"+power.ID+"/"+o.Value)}) {
+							{ o.Written() }
+						}
+						if o.Count > 0 {
+							@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar "+o.Label+" de "+power.Name, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/poderes/escolha/"+power.ID+"/"+o.Value+"/tira")})
+						}
+					}
+				</div>
+			}
+		</div>
+		if len(power.Options) == 0 {
+			@ds.Switch("", power.Chosen, templ.Attributes{"aria-label": power.Name, "data-on:change": sheetPost(v, "/poderes/escolhe/"+power.ID)})
+		}
+	</div>
+}
+
+// classPickerDs é uma escolha de valor único — o caminho ou o devoto.
+templ classPickerDs(v View, class, choice, label string, selector pickerChoice) {
+	<div class="ds-field">
+		<span class="ds-field-label">{ label }</span>
+		<div class="ds-options">
+			for _, o := range selector.Options {
+				@ds.Option(o.Active, templ.Attributes{"data-on:click": choiceClassCommand(v, class, choice, o.Value)}) {
+					{ o.Label }
+				}
+			}
+		</div>
+	</div>
+}
+
+// countedChoiceDs é a escolha do poder concedido contada por atributo — as
+// perícias do Especialista (ALE-501), o terreno do Explorador (ALE-503).
+templ countedChoiceDs(v View, counted countedChoice) {
+	<div class="ds-field">
+		<div class="ds-pick-head">
+			<span class="ds-field-label">{ counted.Name }</span>
+			<span class="ds-row-meta">{ counted.Written() }</span>
+		</div>
+		<div class="ds-options">
+			for _, o := range counted.Options {
+				if counted.Repeats {
+					@ds.Option(o.Count > 0, templ.Attributes{"aria-label": counted.Name + ": " + o.Label, "data-on:click": countedPost(v, counted.ID, o.Value, false)}) {
+						{ o.Written() }
+					}
+					if o.Count > 0 {
+						@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar "+o.Label+" de "+counted.Name, templ.Attributes{"type": "button", "data-on:click": countedPost(v, counted.ID, o.Value, true)})
+					}
+				} else {
+					@ds.Option(o.Count > 0, templ.Attributes{"aria-label": counted.Name + ": " + o.Label, "data-on:click": countedPost(v, counted.ID, o.Value, o.Count > 0)}) {
+						{ o.Label }
+					}
+				}
+			}
+		</div>
+		<span class="ds-help">{ counted.Hint() }</span>
+	</div>
+}

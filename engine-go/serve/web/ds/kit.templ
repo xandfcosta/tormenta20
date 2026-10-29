@@ -308,6 +308,15 @@ templ SumTotal(total string, attrs templ.Attributes) {
 	<div class="ds-sum-total"><span>Total</span><span { attrs... }>{ total }</span></div>
 }
 
+// Option é a OPÇÃO: marca um valor curto numa escolha (o caminho, o devoto, um
+// atributo), com `aria-pressed`. Lista longa usa linha com interruptor; ver o
+// GLOSSARY.
+templ Option(pressed bool, attrs templ.Attributes) {
+	<button type="button" class="ds-option" aria-pressed={ ui.AriaBool(pressed) } { attrs... }>
+		{ children... }
+	</button>
+}
+
 // Switch é o interruptor: liga e desliga uma coisa só, e o rótulo diz qual. Os
 // `attrs` vão no `input`, que é quem tem o estado.
 templ Switch(label string, checked bool, attrs templ.Attributes) {

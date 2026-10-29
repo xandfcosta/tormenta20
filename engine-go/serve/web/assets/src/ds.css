@@ -690,6 +690,110 @@
     font-size: var(--ds-t-sm);
   }
 
+  /* A OPÇÃO: um valor curto que se marca. Marcada, ela ganha a cor da ação e
+   * o peso, e não só a cor — a diferença tem de sobreviver a quem não vê cor. */
+  .ds-option {
+    height: var(--ds-h-control);
+    padding: 0 0.75rem;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-control);
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    font: 500 var(--ds-t-sm) / 1 var(--font-ds);
+    cursor: pointer;
+  }
+  .ds-option:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-option[aria-pressed='true'] {
+    border-color: var(--ds-action);
+    background: color-mix(in oklab, var(--ds-action) 14%, var(--ds-surface));
+    font-weight: 700;
+  }
+  .ds-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  /* O DIÁLOGO ESCOLHER (ALE-473): as pendências e a escolha empilhadas no
+   * celular, lado a lado no desktop — e o diálogo largo para caber os dois. */
+  /* A ALTURA É FIXA, e não a do conteúdo: trocar de aba não pode fazer o
+   * diálogo pular de tamanho (decisão do dono). O corpo rola. */
+  .ds-dialog:has(.ds-picks) {
+    height: calc(100dvh - 2rem);
+  }
+  .ds-picks,
+  .ds-picks-main {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 1rem;
+  }
+  .ds-pick-jump {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) 1rem;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ds-pick-jump:hover {
+    background: var(--ds-sunk);
+  }
+  /* A pendência da aba que está à vista se pinta com a cor da ação, para a
+   * pessoa saber o que está mostrando (decisão do dono). */
+  .ds-pick-jump[aria-current='true'] {
+    background: color-mix(in oklab, var(--ds-action) 14%, var(--ds-surface));
+    font-weight: 700;
+  }
+  .ds-pick-card {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-pick-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .ds-pick-title {
+    margin: 0;
+    font-size: var(--ds-t-md);
+    font-weight: 700;
+  }
+  .ds-pick-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ds-pick-detail {
+    overflow: hidden;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .ds-pick-options {
+    margin-top: 0.5rem;
+  }
+  /* No celular a folha já tem a largura da tela (ver o `.ds-dialog`); só no
+   * desktop ela se alarga para caber as duas colunas. */
+  @media (min-width: 64rem) {
+    .ds-dialog:has(.ds-picks) {
+      width: min(56rem, calc(100vw - 2rem));
+      height: min(48rem, calc(100dvh - 2rem));
+    }
+    .ds-picks {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      align-items: start;
+    }
+  }
   /* O INTERRUPTOR liga e desliga uma coisa só, e tocar no rótulo também o
    * alterna. */
   .ds-switch {
@@ -898,6 +1002,19 @@
       0 12px 32px rgb(0 0 0 / 0.18),
       0 0 0 1px var(--ds-line);
   }
+  /* ABERTO, O DIÁLOGO É UMA COLUNA: cabeçalho e pé no tamanho deles, e o corpo
+   * com o resto — é o que dá ao corpo uma altura para rolar. Sem isso o
+   * `max-height` cortava o conteúdo e o `overflow-y` do corpo nunca agia,
+   * porque o corpo crescia junto com o que tinha dentro. Só no `[open]`: o
+   * `display` fechado é o `none` do navegador. */
+  .ds-dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .ds-dialog[open] > .ds-dialog-body {
+    flex: 1;
+    min-height: 0;
+  }
   .ds-dialog::backdrop {
     background: rgb(0 0 0 / 0.4);
   }
@@ -924,8 +1041,11 @@
     line-height: var(--ds-lh-lg);
     font-weight: 600;
   }
+  /* `max-content` nas linhas: num grid que rola, um filho com `overflow:
+   * hidden` (uma `ds-list`) encolheria até zero para caber na altura. */
   .ds-dialog-body {
     display: grid;
+    grid-auto-rows: max-content;
     gap: 0.75rem;
     padding: 1rem;
     overflow-y: auto;
