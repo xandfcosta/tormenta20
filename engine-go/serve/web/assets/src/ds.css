@@ -603,7 +603,9 @@
     text-align: left;
     cursor: pointer;
   }
-  .ds-action-row-open:hover {
+  /* O HOVER É DA LINHA INTEIRA, com o gesto da ponta junto: só no botão do
+   * nome ele pintava uma faixa que parava antes do botão. */
+  .ds-action-row:has(> .ds-action-row-open:hover) {
     background: var(--ds-sunk);
   }
   /* A lista que se recolhe (as passivas): o cabeçalho é o que abre. */
