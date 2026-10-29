@@ -1096,6 +1096,29 @@
     --ds-filter-above: 1rem;
     --ds-filter-bg: var(--ds-surface);
   }
+  /* NO DIÁLOGO A BARRA É FIXA e só a lista rola: o corpo deixa de rolar, e a
+   * parte que rola vai até a borda para a barra de rolagem ficar nela. */
+  .ds-dialog-body:has(> .ds-dialog-scroll) {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+  .ds-dialog-body > .ds-filter-bar {
+    position: static;
+    margin-top: 0;
+    padding: 0;
+  }
+  .ds-dialog-scroll {
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    grid-auto-rows: max-content;
+    gap: 0.75rem;
+    margin-inline: -1rem;
+    padding: 0 1rem 1rem;
+    overflow-y: auto;
+  }
   .ds-dialog-foot {
     display: flex;
     justify-content: flex-end;

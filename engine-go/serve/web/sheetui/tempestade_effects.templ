@@ -70,8 +70,10 @@ templ tempestadeEffects(v View) {
 				"data-on:input__debounce.250ms": sheetGet(v),
 			})
 		}
-		@effectPickerRows(v, "condition-picker", "Aplicar condição", "/efeitos/condicao/",
-			pickerOptionsShown(v.Effects.ConditionOptions, v.EffectPicks.ConditionSearch, ""))
+		@ds.DialogScroll() {
+			@effectPickerRows(v, "condition-picker", "Aplicar condição", "/efeitos/condicao/",
+				pickerOptionsShown(v.Effects.ConditionOptions, v.EffectPicks.ConditionSearch, ""))
+		}
 	}
 	@ds.Dialog("buff-picker", "Aplicar magia", nil) {
 		@ds.FilterBar() {
@@ -89,8 +91,10 @@ templ tempestadeEffects(v View) {
 				</div>
 			}
 		}
-		@effectPickerRows(v, "buff-picker", "Aplicar magia", "/efeitos/aplica/",
-			pickerOptionsShown(v.Effects.BuffOptions, v.EffectPicks.BuffSearch, v.EffectPicks.BuffCircle))
+		@ds.DialogScroll() {
+			@effectPickerRows(v, "buff-picker", "Aplicar magia", "/efeitos/aplica/",
+				pickerOptionsShown(v.Effects.BuffOptions, v.EffectPicks.BuffSearch, v.EffectPicks.BuffCircle))
+		}
 	}
 }
 

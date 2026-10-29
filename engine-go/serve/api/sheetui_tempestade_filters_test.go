@@ -78,3 +78,33 @@ func TestTheParallelSheetFiltersStayOnTop(t *testing.T) {
 		}
 	}
 }
+
+// NO DIÁLOGO A BARRA É FIXA e só a lista rola: com a barra dentro do que rola,
+// a barra de rolagem descia ao lado dos filtros (decisão do dono, ALE-473).
+func TestTheParallelDialogFiltersStayOutsideTheScroll(t *testing.T) {
+	f, barbarian, _ := effectsInPlay(t)
+	g, arcanist := grimoireOfTwo(t)
+	cases := []struct{ what, page, dialog string }{
+		{"o Aprender", parallelSheet(t, g, arcanist, "spells"), "spell-learn"},
+		{"o escolhedor de condição", parallelSheet(t, f, barbarian, "conditionals"), "condition-picker"},
+		{"o escolhedor de magia", parallelSheet(t, f, barbarian, "conditionals"), "buff-picker"},
+	}
+	for _, c := range cases {
+		doc, err := html.Parse(strings.NewReader(c.page))
+		if err != nil {
+			t.Fatal(err)
+		}
+		dialog := findNode(doc, "id", c.dialog)
+		scroll, bar := findNode(dialog, "class", "ds-dialog-scroll"), findNode(dialog, "class", "ds-filter-bar")
+		if scroll == nil || bar == nil {
+			t.Errorf("%s: falta a parte que rola (%v) ou a barra (%v)", c.what, scroll != nil, bar != nil)
+			continue
+		}
+		if findNode(scroll, "class", "ds-filter-bar") != nil {
+			t.Errorf("%s: a barra de filtros mora dentro da parte que rola", c.what)
+		}
+		if findNode(scroll, "class", "ds-list") == nil {
+			t.Errorf("%s: a lista não mora na parte que rola", c.what)
+		}
+	}
+}

@@ -433,10 +433,20 @@ templ Dialog(id, title string, foot templ.Component) {
 	</dialog>
 }
 
-// FilterBar é a busca e os filtros de uma lista, presos no topo de quem rola
-// — a aba da ficha ou o corpo do diálogo —, para a lista rolar por baixo.
+// FilterBar é a busca e os filtros de uma lista, sempre à vista: presa no
+// topo de quem rola na aba da ficha, e fixa acima de `DialogScroll` no diálogo.
 templ FilterBar() {
 	<div class="ds-filter-bar">
+		{ children... }
+	</div>
+}
+
+// DialogScroll é a parte do diálogo que rola, abaixo de uma `FilterBar`: a
+// barra de rolagem fica só ao lado da lista, e não ao lado dos filtros.
+//
+//	@ds.Dialog("x", "Título", nil) { @ds.FilterBar() { … } @ds.DialogScroll() { @ds.List(…) } }
+templ DialogScroll() {
+	<div class="ds-dialog-scroll">
 		{ children... }
 	</div>
 }

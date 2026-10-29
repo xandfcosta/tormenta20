@@ -185,6 +185,7 @@ templ learnSpellSheet(v View) {
 				}
 			</div>
 		}
+		@ds.DialogScroll() {
 		@ds.List("No livro", strconv.Itoa(len(v.Spells.Catalog))) {
 			if len(v.Spells.Catalog) == 0 {
 				@ds.Row("Nenhuma magia com esses filtros", "", "", "")
@@ -201,6 +202,7 @@ templ learnSpellSheet(v View) {
 					}
 				</div>
 			}
+		}
 		}
 	}
 }
