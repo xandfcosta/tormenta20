@@ -434,12 +434,20 @@
   .ds-badge-removable:has(> .ds-badge-open) {
     padding-left: 0;
   }
+  /* Com o nome clicável, o crachá são DUAS metades, e cada uma se pinta de
+   * borda a borda no hover: o nome com os cantos da esquerda, o X com os da
+   * direita. Arredondado nos quatro, o hover do nome era uma caixa solta por
+   * dentro da borda. */
   .ds-badge-removable > .ds-badge-open {
     width: auto;
-    margin-right: 0;
+    margin: -1px 0 -1px -1px;
     padding: 0 0.25rem 0 0.75rem;
+    border-radius: var(--ds-r-control) 0 0 var(--ds-r-control);
     color: inherit;
     font: inherit;
+  }
+  .ds-badge-removable:has(> .ds-badge-open) > button:last-child {
+    border-radius: 0 var(--ds-r-control) var(--ds-r-control) 0;
   }
 
   .ds-list {
