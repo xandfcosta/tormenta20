@@ -401,34 +401,60 @@
 
   /* O CRACHÁ REMOVÍVEL. O alvo de tirar é o próprio botão, e ele tem a altura de
    * um controle — o "x" pequeno ao lado do nome é desenho, não alvo. */
+  /* O CRACHÁ REMOVÍVEL: a borda é uma CAMADA por cima (`::after`), e não a
+   * borda do `span`. Assim os botões de dentro têm a altura inteira do
+   * controle — 44px no toque, sem os 2px que a borda comeria —, o hover pinta
+   * cada um até o contorno, cortado pelo raio do `span`, e a borda continua
+   * nítida por cima de tudo. O caminho que ela substitui era o botão com
+   * `margin: -1px` passando POR CIMA da borda, e o hover dele cobria a borda em
+   * pedaços (ALE-473). */
   .ds-badge-removable {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
     height: var(--ds-h-control);
-    padding: 0 0 0 0.75rem;
-    border: 1px solid var(--ds-line-strong);
+    padding-left: 0.75rem;
+    overflow: hidden;
     border-radius: var(--ds-r-control);
     font-size: var(--ds-t-sm);
     font-weight: 500;
   }
-  /* O botão de tirar cobre a BORDA do crachá (`margin: -1px`): dentro dela ele
-   * teria 2px a menos que o alvo, e o crachá ficaria mais alto que os
-   * controles ao lado se crescesse para compensar. */
+  .ds-badge-removable::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: inherit;
+    pointer-events: none;
+  }
   .ds-badge-removable > button {
     display: grid;
     place-items: center;
+    align-self: stretch;
     width: var(--ds-h-control);
-    height: var(--ds-h-control);
-    margin: -1px -1px -1px 0;
     border: 0;
-    border-radius: var(--ds-r-control);
     background: none;
     color: var(--ds-ink-2);
     cursor: pointer;
   }
-  .ds-badge-removable > button:hover {
+  /* O HOVER TEM DOIS ALCANCES (decisão do dono): sobre o nome, o crachá
+   * inteiro muda de cor, porque o gesto é dele todo; sobre o X, só o X, porque
+   * tirar é um gesto à parte. */
+  .ds-badge-removable > button:last-child:hover,
+  .ds-badge-removable:has(> .ds-badge-open:hover) {
     background: var(--ds-sunk);
+  }
+  /* Com o nome clicável, o crachá são duas metades: o nome vai da borda
+   * esquerda até o X, e é um alvo próprio. */
+  .ds-badge-removable:has(> .ds-badge-open) {
+    padding-left: 0;
+  }
+  .ds-badge-removable > .ds-badge-open {
+    width: auto;
+    padding: 0 0.25rem 0 0.75rem;
+    color: inherit;
+    font: inherit;
   }
 
   .ds-list {
@@ -518,6 +544,11 @@
   .ds-sum-body {
     padding: 0 calc(2rem + 0.75rem) 0.75rem 1rem;
   }
+  /* As parcelas FORA da linha da conta (num diálogo) não têm o recuo que as
+   * alinha com o total da linha. */
+  .ds-sum-body.ds-terms {
+    padding: 0;
+  }
   .ds-sum-body > dl {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -568,6 +599,50 @@
   }
   .ds-sum-section:first-child {
     margin-top: 0.25rem;
+  }
+  .ds-action-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-left: 0;
+  }
+  .ds-action-row-open {
+    display: grid;
+    align-self: stretch;
+    align-content: center;
+    min-width: 0;
+    min-height: var(--ds-h-control);
+    padding: 0 0 0 1rem;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  /* O HOVER É DA LINHA INTEIRA, com o gesto da ponta junto: só no botão do
+   * nome ele pintava uma faixa que parava antes do botão. */
+  .ds-action-row:has(> .ds-action-row-open:hover) {
+    background: var(--ds-sunk);
+  }
+  /* A lista que se recolhe (as passivas): o cabeçalho é o que abre. */
+  /* Aberta pelo cabeçalho, a lista faz dele um alvo de toque: a altura do
+   * controle, e não a de um rótulo. */
+  .ds-list > summary.ds-list-head {
+    align-items: center;
+    min-height: var(--ds-h-control);
+    list-style: none;
+    cursor: pointer;
+  }
+  .ds-list > summary.ds-list-head::-webkit-details-marker {
+    display: none;
+  }
+  .ds-list[open] > summary.ds-list-head > .ds-icon {
+    transform: rotate(180deg);
+  }
+  .ds-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
   }
   .ds-row-value[data-muted] {
     color: var(--ds-ink-3);

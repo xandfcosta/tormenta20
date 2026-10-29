@@ -1,0 +1,208 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadePowers é a aba Poderes da ficha paralela: a busca e o Escolher em
+// cima, as ações, e as passivas recolhidas. A busca achata as duas listas numa,
+// por nome, como na ficha de hoje.
+templ tempestadePowers(v View) {
+	<section class="grid gap-3" aria-label="Poderes">
+		<div class="flex flex-wrap items-center gap-2">
+			<div class="min-w-0 flex-1">
+				@ds.SearchField("power-search", "Buscar poder", templ.Attributes{
+					"value": v.Powers.Search, "data-bind:power_search": true,
+					"data-on:input__debounce.250ms": sheetGet(v),
+				})
+			</div>
+			// O ESCOLHER AINDA É DA FICHA DE HOJE: o diálogo de escolhas migra
+			// numa fatia própria, e até lá ele é uma saída declarada.
+			@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(sheetRoute(v.ID, "abilities")), templ.Attributes{"data-sheet-of-today": true}) {
+				Escolher
+				if n := len(v.Choices.Pending); n > 0 {
+					<span class="ds-badge" aria-hidden="true">{ strconv.Itoa(n) }</span>
+					<span class="sr-only">{ writtenPendings(n) }</span>
+				}
+			}
+		</div>
+		if v.Powers.Search != "" {
+			@ds.List("Resultado", strconv.Itoa(len(v.Powers.Results))) {
+				if len(v.Powers.Results) == 0 {
+					@ds.Row("Nenhum poder para \""+v.Powers.Search+"\"", "", "", "")
+				}
+				for _, row := range v.Powers.Results {
+					@powerLine(v, row)
+				}
+			}
+		} else {
+			@ds.List("Ações", strconv.Itoa(len(v.Powers.Actions))) {
+				if len(v.Powers.Actions) == 0 {
+					@ds.Row(noActionsPhrase(v.Powers.IsCaster), "", "", "")
+				}
+				for _, row := range v.Powers.Actions {
+					@powerLine(v, row)
+				}
+			}
+			// A PASSIVA DE GATILHO COM O GATILHO NO AR fica à vista com as
+			// passivas recolhidas: ela está fazendo efeito agora.
+			if len(v.Powers.LiveTriggers) > 0 {
+				@ds.List("Em vigor agora", "") {
+					for _, row := range v.Powers.LiveTriggers {
+						@ds.ActionRow(row.Name, powerMeta(row), powerSheetID(row))
+					}
+				}
+			}
+			if len(v.Powers.Passives) > 0 {
+				<details class="ds-list" data-preserve-attr="open">
+					<summary class="ds-list-head">
+						<span>{ "Passivas · " + strconv.Itoa(len(v.Powers.Passives)) }</span>
+						@ui.Icon("ChevronDown", "ds-icon")
+					</summary>
+					for _, row := range v.Powers.Passives {
+						@ds.ActionRow(row.Name, powerMeta(row), powerSheetID(row))
+					}
+				</details>
+			}
+		}
+	</section>
+	for _, row := range powerSheetRows(v.Powers) {
+		@powerSheet(v, row)
+		if row.Stance != nil && row.Stance.MaxSteps > 0 {
+			@stanceStepsDialog(v, row)
+		}
+		if row.Degrees != nil && row.Degrees.opensDialog() {
+			@useStepsDialog(v, row)
+		}
+	}
+}
+
+// powerLine é um poder: o nome abre a folha, e a ponta tem o gesto.
+templ powerLine(v View, row powerRow) {
+	@ds.ActionRow(row.Name, powerMeta(row), powerSheetID(row)) {
+		@powerGesture(v, row)
+	}
+}
+
+// powerGesture é o que se faz com o poder: usar o instantâneo, ou entrar e
+// encerrar a postura. O que abre degraus abre o diálogo deles, com o contador
+// zerado; o resto age direto. A recusa do servidor (`Why`) desabilita e diz
+// por quê — no `title` aqui, e por extenso na folha.
+templ powerGesture(v View, row powerRow) {
+	if row.Stance != nil {
+		if row.Stance.Active {
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + row.Name, "data-on:click": sheetPost(v, "/efeitos/postura/"+row.Stance.Flag)}) {
+				Encerrar
+			}
+		} else if row.Stance.MaxSteps > 0 {
+			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Ativar "+row.Name, templ.Attributes{"commandfor": stanceDialogID(row), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": "$stance_degrees = 0"})) {
+				Ativar
+			}
+		} else {
+			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Ativar "+row.Name, templ.Attributes{"data-on:click": "$stance_degrees = 0; " + sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra")})) {
+				{ "Ativar · " + strconv.Itoa(row.Stance.BasePm) + " PM" }
+			}
+		}
+	} else if row.Kind == "instant" {
+		if row.Degrees != nil && row.Degrees.opensDialog() {
+			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Usar "+row.Name, templ.Attributes{"commandfor": useStepsDialogID(row), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": useResets})) {
+				Usar
+			}
+		} else {
+			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Usar "+row.Name, templ.Attributes{"data-on:click": useResets + sheetPost(v, "/poderes/usa/"+row.Command)})) {
+				Usar
+			}
+		}
+	}
+}
+
+// powerSheet é a folha do poder: a regra inteira com a página, o que ele dá
+// agora quando está em curso, a razão da recusa, e o gesto no pé.
+templ powerSheet(v View, row powerRow) {
+	@ds.Dialog(powerSheetID(row), row.Name, powerSheetFoot(v, row)) {
+		<p class="ds-row-meta">{ powerSheetMeta(row) }</p>
+		<p class="ds-card-text">{ row.Detail }</p>
+		if row.InEffect != "" {
+			<p class="ds-help">{ "Em curso: " + row.InEffect }</p>
+		}
+		if !row.Can && row.Why != "" {
+			<p class="ds-help">{ row.Why }</p>
+		}
+	}
+}
+
+templ powerSheetFootBody(v View, row powerRow) {
+	@powerGesture(v, row)
+}
+
+// useStepsDialog escolhe quantos degraus pagar num USO — a Marca da Presa,
+// cujo degrau troca o dado (p50). A regra das linhas de acréscimo é a do
+// `useStepperDialog` da ficha de hoje.
+templ useStepsDialog(v View, row powerRow) {
+	@ds.Dialog(useStepsDialogID(row), row.Name, stepsConfirm(useStepsDialogID(row), "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
+		<p class="ds-help">{ "Cada +" + strconv.Itoa(row.Degrees.StepPm) + " PM compra " + row.Degrees.StepLabel + "." }</p>
+		@stepsCounter(row.Degrees.MaxSteps, useCounterExpr(*row.Degrees))
+		for steps, parts := range row.Degrees.Riders {
+			@stepRiderLine(parts, riderShows(steps, false))
+			@stepRiderLine(row.Degrees.Doubled[steps], riderShows(steps, true))
+		}
+		if row.Degrees.CanDouble {
+			@ds.Switch("A presa é do tipo do Inimigo (dobra o dado, as perícias e a margem, p51)", false, templ.Attributes{"data-bind:prey_favored": true})
+		}
+		if len(row.Degrees.Riders) > 0 || row.Degrees.CanDouble {
+			<p class="ds-help">Tudo vale contra a criatura marcada, até o fim da cena — ligue o interruptor no golpe e no teste contra ela.</p>
+		}
+	}
+}
+
+// stanceStepsDialog escolhe quantos degraus pagar ao entrar na postura. O custo
+// é PRÉVIA, e quem cobra é o servidor.
+templ stanceStepsDialog(v View, row powerRow) {
+	@ds.Dialog(stanceDialogID(row), row.Name, stepsConfirm(stanceDialogID(row), "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))) {
+		if says := degreeRateSays(row); says != "" {
+			<p class="ds-help">{ says }</p>
+		}
+		@stepsCounter(row.Stance.MaxSteps, degreeCounterShows(row))
+		<p class="ds-help" data-text={ "'Custo: ' + " + costStancePreview(row) }></p>
+		if row.Stance.BonusNote != "" {
+			<p class="ds-help">{ row.Stance.BonusNote }</p>
+		}
+	}
+}
+
+// stepsCounter é o − e o + dos degraus, entre 0 e `max`.
+templ stepsCounter(max int, shows string) {
+	<div class="ds-stepper">
+		@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos um degrau", templ.Attributes{"type": "button", "data-on:click": "$stance_degrees = Math.max(0, $stance_degrees - 1)"})
+		<b class="tabular-nums" data-text={ shows }></b>
+		@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais um degrau", templ.Attributes{"type": "button", "data-on:click": "$stance_degrees = Math.min(" + strconv.Itoa(max) + ", $stance_degrees + 1)"})
+	</div>
+}
+
+// stepsConfirmBody confirma e fecha: o `command="close"` fecha o diálogo no
+// mesmo toque que manda o pedido.
+templ stepsConfirmBody(dialogID, label, aria, post string) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": aria, "commandfor": dialogID, "command": "close", "data-on:click": post}) {
+		{ label }
+	}
+}
+
+// stepRiderLine é "dano +1d8 · perícias +2 (Espreitar)": uma linha por estado do
+// contador, e o sinal escolhe qual aparece.
+templ stepRiderLine(parts []riderPart, shows string) {
+	<p class="ds-help" data-show={ shows }>
+		for i, part := range parts {
+			if i > 0 {
+				{ " · " }
+			}
+			{ part.What + " " }
+			<b>{ part.Value }</b>
+			if part.Source != "" {
+				{ " (" + part.Source + ")" }
+			}
+		}
+	</p>
+}

@@ -163,9 +163,15 @@ templ Badge(text string, outline bool) {
 
 // RemovableBadge é o crachá do que está ATIVO e pode sair: uma condição na
 // ficha. O `removeAttrs` leva o gesto de tirar.
-templ RemovableBadge(label string, removeAttrs templ.Attributes) {
+templ RemovableBadge(label, dialogID string, removeAttrs templ.Attributes) {
 	<span class="ds-badge-removable">
-		{ label }
+		// Com `dialogID`, o NOME abre a descrição e o X tira: dois alvos, como na
+		// `ActionRow`. Sem ele, o nome é só texto.
+		if dialogID != "" {
+			<button type="button" class="ds-badge-open" commandfor={ dialogID } command="show-modal" aria-haspopup="dialog">{ label }</button>
+		} else {
+			{ label }
+		}
 		<button type="button" aria-label={ "Tirar " + label } title={ "Tirar " + label } { removeAttrs... }>
 			@ui.Icon("X", "ds-icon")
 		</button>
@@ -204,6 +210,21 @@ templ rowFace(title, meta, value string) {
 		}
 	</div>
 	<span class="ds-row-value">{ value }</span>
+}
+
+// ActionRow é a linha que ABRE UMA FOLHA ao tocar no nome e tem o gesto na
+// ponta (Usar, Ativar, Conjurar). O nome e o gesto são dois alvos separados: o
+// toque no nome lê, o da ponta age. Sem `children`, é só a linha que lê.
+templ ActionRow(title, meta, dialogID string) {
+	<div class="ds-row ds-action-row">
+		<button type="button" class="ds-action-row-open" commandfor={ dialogID } command="show-modal" aria-haspopup="dialog">
+			<span class="ds-row-title">{ title }</span>
+			if meta != "" {
+				<span class="ds-row-meta">{ meta }</span>
+			}
+		</button>
+		{ children... }
+	</div>
 }
 
 // SumRow é a linha que ABRE A CONTA: fechada, nome e total; aberta, uma linha
