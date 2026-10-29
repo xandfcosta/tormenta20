@@ -738,6 +738,7 @@
   .ds-pick-jump:hover {
     background: var(--ds-sunk);
   }
+
   .ds-pick-card {
     display: grid;
     gap: 0.75rem;
@@ -989,6 +990,19 @@
     box-shadow:
       0 12px 32px rgb(0 0 0 / 0.18),
       0 0 0 1px var(--ds-line);
+  }
+  /* ABERTO, O DIÁLOGO É UMA COLUNA: cabeçalho e pé no tamanho deles, e o corpo
+   * com o resto — é o que dá ao corpo uma altura para rolar. Sem isso o
+   * `max-height` cortava o conteúdo e o `overflow-y` do corpo nunca agia,
+   * porque o corpo crescia junto com o que tinha dentro. Só no `[open]`: o
+   * `display` fechado é o `none` do navegador. */
+  .ds-dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .ds-dialog[open] > .ds-dialog-body {
+    flex: 1;
+    min-height: 0;
   }
   .ds-dialog::backdrop {
     background: rgb(0 0 0 / 0.4);
