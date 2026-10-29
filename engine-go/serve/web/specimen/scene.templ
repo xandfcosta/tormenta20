@@ -128,6 +128,17 @@ templ modePanel(mode, title string) {
 				@ds.Row("Conhecimento", "só treinada", "—", "")
 			}
 		}
+		@specimenBlock("Lista com seções que se recolhem") {
+			@ds.List("", "") {
+				@ds.ListSection("1º círculo", "2") {
+					@ds.Row("Armadura Arcana", "Padrão · pessoal", "", "")
+					@ds.Row("Luz", "Padrão · curto", "", "")
+				}
+				@ds.ListSection("2º círculo", "1") {
+					@ds.Row("Bola de Fogo", "Padrão · médio", "", "")
+				}
+			}
+		}
 		@specimenBlock("Atributo e medidor") {
 			<div class="grid gap-4">
 				@ds.Stats() {

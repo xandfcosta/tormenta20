@@ -34,24 +34,26 @@ templ tempestadeSpells(v View) {
 				@ds.Empty("Nenhuma magia", "Este personagem não conjura por classe.")
 			}
 		}
-		<div class="ds-list-columns">
-			for _, group := range spellCircleGroups(v) {
-				@ds.List(group.Title, "") {
-					for _, spell := range group.Spells {
-						@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
-							@castGesture(v, spell)
+		if groups, lines := spellCircleGroups(v), grantedSpellLines(v); len(groups) > 0 || len(lines) > 0 {
+			@ds.List("", "") {
+				for _, group := range groups {
+					@ds.ListSection(group.Title, strconv.Itoa(len(group.Spells))) {
+						for _, spell := range group.Spells {
+							@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
+								@castGesture(v, spell)
+							}
+						}
+					}
+				}
+				if len(lines) > 0 {
+					@ds.ListSection("Concedidas por poderes", strconv.Itoa(len(lines))) {
+						for _, line := range lines {
+							@ds.ActionRow(line.Spell.Name, line.Spell.Source+" · "+line.Spell.Circle+" círculo", grantedSheetID(line.Index))
 						}
 					}
 				}
 			}
-			if lines := grantedSpellLines(v); len(lines) > 0 {
-				@ds.List("Concedidas por poderes", "") {
-					for _, line := range lines {
-						@ds.ActionRow(line.Spell.Name, line.Spell.Source+" · "+line.Spell.Circle+" círculo", grantedSheetID(line.Index))
-					}
-				}
-			}
-		</div>
+		}
 	</section>
 	// QUEM ABRE A FOLHA COMEÇA DO ZERO: o fechar zera as seis pilhas. O `close`
 	// não sobe pela árvore, e é a captura que o pega aqui em cima.

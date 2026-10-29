@@ -188,6 +188,23 @@ templ List(title, trailing string) {
 	</div>
 }
 
+// ListSection é uma seção que se recolhe DENTRO de uma lista: o cabeçalho abre
+// e fecha, e as linhas continuam na mesma moldura (as magias por círculo). Ela
+// nasce aberta, e o `data-preserve-attr` guarda o que a pessoa recolheu quando
+// um gesto remenda a cena.
+templ ListSection(title, trailing string) {
+	<details class="ds-list-section" open data-preserve-attr="open">
+		<summary class="ds-list-head">
+			<span>{ title }</span>
+			<span class="ds-list-section-end">
+				{ trailing }
+				@ui.Icon("ChevronDown", "ds-icon")
+			</span>
+		</summary>
+		{ children... }
+	</details>
+}
+
 // Row é a linha de lista: nome e nota à esquerda, o valor à direita. Com
 // `href`, ela é link; sem, é só leitura.
 templ Row(title, meta, value string, href templ.SafeURL) {

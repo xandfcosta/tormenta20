@@ -56,6 +56,15 @@ func TestTheParallelSpellsTabGroupsTheSpellbookByCircle(t *testing.T) {
 	if first < 0 || second < 0 || !(first < seta && seta < second && second < ball) {
 		t.Errorf("o grimório não sai agrupado por círculo: 1º em %d, Seta em %d, 2º em %d, Bola em %d", first, seta, second, ball)
 	}
+	// UMA lista contínua, e cada círculo é uma seção que se recolhe (decisão do
+	// dono): as linhas têm o mesmo padrão em qualquer círculo.
+	if n := len(regexp.MustCompile(`<details class="ds-list-section" open`).FindAllString(page, -1)); n != 2 {
+		t.Errorf("o grimório tem %d seções recolhíveis abertas; a arcanista tem dois círculos", n)
+	}
+	tab := regexp.MustCompile(`(?s)<section[^>]*aria-label="Magias".*?</section>`).FindString(page)
+	if n := strings.Count(tab, `class="ds-list"`); n != 1 {
+		t.Errorf("a aba desenhou %d listas; os círculos são seções de uma lista só", n)
+	}
 	// A execução e o alcance saem como a mesa fala, e não como o id do catálogo.
 	if !strings.Contains(page, "Padrão · médio") {
 		t.Error("a linha da Bola de Fogo não diz \"Padrão · médio\"")

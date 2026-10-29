@@ -463,14 +463,6 @@
     border-radius: var(--ds-r-surface);
     background: var(--ds-surface);
   }
-  /* As listas lado a lado quando cabem duas (as magias por círculo, no
-   * desktop); no celular, uma embaixo da outra. */
-  .ds-list-columns {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-    align-items: start;
-    gap: 0.75rem;
-  }
   .ds-list-head {
     display: flex;
     justify-content: space-between;
@@ -634,17 +626,33 @@
   /* A lista que se recolhe (as passivas): o cabeçalho é o que abre. */
   /* Aberta pelo cabeçalho, a lista faz dele um alvo de toque: a altura do
    * controle, e não a de um rótulo. */
-  .ds-list > summary.ds-list-head {
+  .ds-list > summary.ds-list-head,
+  .ds-list-section > summary.ds-list-head {
     align-items: center;
     min-height: var(--ds-h-control);
     list-style: none;
     cursor: pointer;
   }
-  .ds-list > summary.ds-list-head::-webkit-details-marker {
+  .ds-list > summary.ds-list-head::-webkit-details-marker,
+  .ds-list-section > summary.ds-list-head::-webkit-details-marker {
     display: none;
   }
-  .ds-list[open] > summary.ds-list-head > .ds-icon {
+  .ds-list[open] > summary.ds-list-head > .ds-icon,
+  .ds-list-section[open] > summary.ds-list-head .ds-icon {
     transform: rotate(180deg);
+  }
+  /* A seção dentro da lista: a linha entre uma seção e a seguinte é a mesma
+   * que separa duas linhas, e a ponta do cabeçalho junta a contagem e a seta. */
+  .ds-list-section + .ds-list-section > summary.ds-list-head {
+    border-top: 1px solid var(--ds-line);
+  }
+  .ds-list-section > summary.ds-list-head:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-list-section-end {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .ds-stepper {
     display: flex;
