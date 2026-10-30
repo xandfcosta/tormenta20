@@ -29,9 +29,9 @@ func RerollOffersFor(dto sheet.CharacterDTO, skill string) []book.SkillSpendOffe
 // rerollOffersOf são as ofertas das ativações de rolar de novo que a ficha
 // POSSUI, para o teste do alvo.
 func rerollOffersOf(dto sheet.CharacterDTO, target book.SkillSpendTarget) []book.SkillSpendOffer {
-	owned := []book.Activation{}
+	owned, index := []book.Activation{}, sheet.OwnedIndexOf(dto)
 	for _, a := range book.Activations() {
-		if a.SkillSpend != nil && a.SkillSpend.Kind == book.SpendReroll && sheet.OwnsActivation(dto, a) {
+		if a.SkillSpend != nil && a.SkillSpend.Kind == book.SpendReroll && index.Has(a) {
 			owned = append(owned, a)
 		}
 	}

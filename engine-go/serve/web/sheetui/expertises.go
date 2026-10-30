@@ -107,12 +107,13 @@ func expertisePanelFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, te
 		Search:        term,
 		Attributes:    attributeOptions(computed),
 	}
+	spends := character.PrepareSkillSpends(dto, computed)
 	for i, entry := range sortedExpertises(dto) {
 		if !matchesSearch(entry.Name, term) {
 			continue
 		}
 		row := expertiseRowFor(i, entry, computed)
-		row.withSpends(character.SkillSpendOffersFor(dto, computed, entry.Name), int(dto.ManaAvailable()))
+		row.withSpends(spends.For(entry.Name), int(dto.ManaAvailable()))
 		panel.Rows = append(panel.Rows, row)
 	}
 	return panel
