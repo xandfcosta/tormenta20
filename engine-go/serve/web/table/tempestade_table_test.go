@@ -46,7 +46,8 @@ func TestTheEndlessStripStartsNowAndMarksEveryNewRound(t *testing.T) {
 }
 
 // O STREAM DA SESSÃO PARALELA manda só o que ela desenha: o cabeçalho, o
-// cartão do ataque, a barra de alvo das Ações e as três peças da Mesa. A lista e a página não podem
+// cartão do ataque, a barra de alvo das Ações, as três peças da Mesa e o
+// Tabuleiro. A lista e a página não podem
 // discordar sobre quais regiões existem — um remendo para um id que não está
 // na página é escrever no vazio.
 func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
@@ -55,7 +56,7 @@ func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
 	for _, r := range regions {
 		ids = append(ids, r.ID)
 	}
-	want := []string{"table-header", "table-attack", "table-turn-target", "table-register", "table-party", "table-tracker"}
+	want := []string{"table-header", "table-attack", "table-turn-target", "table-register", "table-party", "table-tracker", "table-board"}
 	if strings.Join(ids, ",") != strings.Join(want, ",") {
 		t.Errorf("a sessão paralela recebe as regiões %v; queria %v", ids, want)
 	}
@@ -71,5 +72,34 @@ func TestATableGestureOfTheParallelSessionCarriesTheMark(t *testing.T) {
 	v.Tempestade = false
 	if got := tableCommand(v, "POST", "sangramento/d20"); strings.Contains(got, "tempestade") {
 		t.Errorf("o gesto da mesa de hoje levou a marca: %s", got)
+	}
+}
+
+// OS GESTOS DO MAPA NA SESSÃO PARALELA levam a marca, pela razão dos da mesa: a
+// parada, o cancelar e a troca de aba respondem redesenhando o tabuleiro, e
+// sem ela devolveriam o de hoje dentro da sessão nova.
+func TestABoardGestureOfTheParallelSessionCarriesTheMark(t *testing.T) {
+	v := View{Board: BoardView{
+		Base: "/campanhas/6/sessoes/9/tabuleiro", MoveTarget: "p1",
+		Movement: &moveView{TokenID: "p1"},
+		Tabs:     []boardTab{{ID: "b1", Active: true}, {ID: "b2"}},
+		Pulled:   &pullScreen{Scene: "Cripta"},
+	}}
+	v.wearParallel(true)
+	for name, got := range map[string]string{
+		"o cancelar":       moveCommand(v.Board, "cancelar"),
+		"a parada":         clickedPointStop(v.Board),
+		"a soltura":        dropFor(v.Board, "peca", 2, 3),
+		"a aba":            v.Board.Tabs[1].Command,
+		"a volta do puxão": v.Board.Pulled.ReturnCommand,
+	} {
+		if !strings.Contains(got, "?tempestade=1'") {
+			t.Errorf("%s da sessão paralela saiu sem a marca: %s", name, got)
+		}
+	}
+	plain := View{Board: BoardView{Base: "/campanhas/6/sessoes/9/tabuleiro", MoveTarget: "p1"}}
+	plain.wearParallel(false)
+	if got := clickedPointStop(plain.Board); strings.Contains(got, "tempestade") {
+		t.Errorf("a parada da sessão de hoje levou a marca: %s", got)
 	}
 }

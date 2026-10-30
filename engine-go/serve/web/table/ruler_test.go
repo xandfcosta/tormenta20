@@ -45,6 +45,20 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 	}
 }
 
+// A RÉGUA DA SESSÃO PARALELA escreve a distância numa linha e a faixa embaixo
+// (mockup `tabuleiro.html`), então a leitura sai em DUAS partes além da frase
+// inteira. Com uma ponta só, a dica ocupa a primeira linha e a faixa fica vazia.
+func TestTheRulerReadingComesInTwoLines(t *testing.T) {
+	read := polylineReading([]engine.Square{{}, {X: 7}})
+	if read["ruler_distance"] != "7 quadrados (10,5m)" || read["ruler_band"] != "alcance médio" {
+		t.Errorf("a régua de 7 quadrados saiu em %q e %q", read["ruler_distance"], read["ruler_band"])
+	}
+	one := polylineReading([]engine.Square{{}})
+	if one["ruler_distance"] != emptyRulerHint || one["ruler_band"] != "" {
+		t.Errorf("com uma ponta só a régua saiu em %q e %q", one["ruler_distance"], one["ruler_band"])
+	}
+}
+
 // Sem a zona morta, um pixel de diferença no clique trocaria a forma inteira do
 // gabarito debaixo do dedo: um clique quase em linha viraria diagonal e o cone
 // mudaria de lado enquanto a pessoa tenta acertar a casa.

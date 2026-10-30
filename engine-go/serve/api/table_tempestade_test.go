@@ -189,3 +189,56 @@ func TestTheParallelSessionDrawsTheTable(t *testing.T) {
 		}
 	}
 }
+
+// O TABULEIRO DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado
+// `tabuleiro.html`: o mapa é o de hoje, e o que flutua em volta veste o kit —
+// o nome do lugar, o enquadramento e a barra das ferramentas do jogador com o
+// nome escrito. As ferramentas do mestre não chegam ao HTML do jogador.
+func TestTheParallelSessionDrawsTheBoard(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	closed := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	if !strings.Contains(closed, "O mestre ainda não abriu um tabuleiro") {
+		t.Error("sem tabuleiro, a sessão paralela não diz que o mestre ainda não abriu")
+	}
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
+		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
+		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
+	}
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	if strings.Contains(page, "Tabuleiro ainda está na sessão de hoje") {
+		t.Fatal("o Tabuleiro da sessão paralela ainda leva à sessão de hoje")
+	}
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	region := findNode(doc, "id", "table-board")
+	if region == nil {
+		t.Fatal("a sessão paralela não tem a região table-board")
+	}
+	if findNode(region, "id", "board-scene") == nil {
+		t.Error("o Tabuleiro paralelo não desenha o mapa de hoje")
+	}
+	if strings.Contains(renderNode(t, region), "board-rail") {
+		t.Error("o Tabuleiro paralelo ainda desenha o trilho de hoje")
+	}
+	tools := findNode(region, "aria-label", "Ferramentas do mapa")
+	if tools == nil {
+		t.Fatal("o Tabuleiro paralelo não tem a barra das ferramentas")
+	}
+	text := textOf(tools)
+	for _, want := range []string{"Mover", "Vista", "Régua", "Gabarito"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("a barra das ferramentas não escreve %q: %q", want, text)
+		}
+	}
+	for _, gmOnly := range []string{"Marcar", "Borracha"} {
+		if strings.Contains(renderNode(t, tools), gmOnly) {
+			t.Errorf("a barra do jogador oferece %q, que é do mestre", gmOnly)
+		}
+	}
+	if !strings.Contains(textOf(region), "Taverna do Javali") {
+		t.Error("o Tabuleiro paralelo não diz o nome do lugar")
+	}
+}

@@ -72,139 +72,7 @@ templ boardTable(v BoardView) {
 					@openBoardButton(v)
 				}
 			}
-			// A CENA é a JANELA sobre um plano infinito, e tudo o que não é o mapa
-			// flutua POR CIMA dela: o trilho, os avisos e os ajudantes de ferramenta.
-			//
-			// Sobrepor e não empilhar: um aviso que EMPURRA o mapa muda o tamanho da
-			// cena, e a casa debaixo do dedo troca de lugar no meio do gesto.
-			//
-			// E ela NÃO ROLA — rolagem nativa precisaria de uma caixa com fim. Quem
-			// anda é a janela, num par de sinais, e o plano inteiro é deslocado por um
-			// `transform` só, em vez de recalcular a posição de cada peça.
-			//
-			// A GRADE e o AMBIENTE são fundo da CENA e não do plano: dentro do plano
-			// deslocado eles cobririam só o pedaço de onde saíram, e arrastar revelaria
-			// o vazio.
-			//
-			// FERRAMENTA LIGADA torna a peça e o losango INERTES ao dedo. Sem isso a
-			// peça continua por CIMA das camadas de clique e o pointerdown sobre ela
-			// vira arrasto: com a régua ligada, medir a distância até o ogro MOVERIA o
-			// ogro.
-			<div
-				id={ sceneId }
-				data-attr:style={ sceneStyle }
-				data-class="{'board-with-tool': $tool !== ''}"
-				data-on:wheel={ wheelMovesViewport }
-				data-on:keydown__window={ zoomPeloTeclado }
-				data-on:focusin={ viewportFollowsFocus }
-				class={ "board-scene grimorio-frame ground-" + v.Chao }
-			>
-				<div aria-hidden="true" class="board-ambient"></div>
-				<div aria-hidden="true" class="board-grid"></div>
-				// O PLANO É DOIS, e a divisa é onde as camadas de clique entram. Um
-				// `transform` cria CONTEXTO DE EMPILHAMENTO: com o plano deslocado, o
-				// `z-index: 2` do marcador deixou de valer contra as camadas — ele passa
-				// a disputar como FILHO de um plano que compete inteiro com elas, e as
-				// camadas vêm depois no DOM.
-				//
-				// EMBAIXO das camadas fica o que é CHÃO: terreno, rastro, alcance,
-				// gabarito — coisas que se olha e não se clica. Em CIMA fica o que
-				// RESPONDE ao dedo: peças, marcadores, régua, destino.
-				<div class="board-plane board-plane-ground">
-					// O TERRENO vem ANTES das peças para ficar por baixo delas: uma peça
-					// em cima de terreno difícil continua sendo a peça que se clica.
-					//
-					// Um laço só para as quatro espécies, com a classe saindo do nome
-					// dela: quatro laços dariam quatro lugares para esquecer o quinto.
-					for _, q := range v.Terrain {
-						// O ÍCONE mora DENTRO da casa e o CSS o põe no canto da espécie.
-						// Ver `terrain_drawing.go`.
-						<div aria-hidden="true" class={ squareClass(q.Species) } style={ posicaoNoPlano(q.X, q.Y, 1) }>
-							@ui.Icon(drawing(board.TerrainKind(q.Species)).Icon, "terrain-mark")
-						</div>
-					}
-					// A TRILHA é rastro: vem antes das peças para que a peça que anda por
-					// cima dela continue sendo a peça que se clica.
-					if v.Movement != nil {
-						for _, q := range v.Movement.Trail {
-							<div aria-hidden="true" class="board-trail" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
-						}
-						// Sem as PARADAS marcadas, o caminho é uma faixa contínua e não há
-						// como ver quantas pernas o "Desfazer parada" vai encontrar.
-						for _, q := range v.Movement.Stops {
-							<div aria-hidden="true" class="board-stop" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
-						}
-					}
-					// O ALCANCE é PINTURA e não alvo de clique: quem tem orçamento é o
-					// jogador NA VEZ dele — o mestre move sem teto (-1), e fora de combate
-					// todo mundo também. Se a casa alcançável fosse o único alvo, o mestre
-					// não teria onde clicar.
-					//
-					// O SEGUNDO MOVIMENTO vem ANTES do primeiro no HTML: as duas faixas
-					// chegam disjuntas do motor, e ter o ouro por cima garante que uma casa
-					// de fronteira nunca apareça azul por acidente de empate.
-					for _, q := range v.SecondReach {
-						<div aria-hidden="true" class="board-range board-range-second" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
-					}
-					for _, q := range v.Range {
-						<div aria-hidden="true" class="board-range" style={ posicaoNoPlano(q.X, q.Y, 1) }></div>
-					}
-					// O LAÇO do retângulo mora no plano do CHÃO: o que ele delimita é área,
-					// e área fica por baixo de quem está em pé nela.
-					//
-					// UM nó posicionado por expressão, e não um por casa: desenhar mil divs
-					// para mostrar a INTENÇÃO de pintar mil casas seria pagar o preço do
-					// resultado antes de a pessoa ter pedido.
-					// DOIS NÓS e não um, e isto CONGELA O NAVEGADOR se voltar a ser um
-					// só: com `data-show` e `data-attr:style` no MESMO elemento, o
-					// `data-show` escreve `el.style.display` e o `data-attr:style`
-					// reescreve o atributo `style` inteiro, apagando o `display` que o
-					// outro acabou de pôr — o que faz o outro pôr de novo. O renderizador
-					// trava em laço, e o sintoma não é um erro: é a aba que para de
-					// responder a tudo, inclusive a navegar para fora.
-					//
-					// Então quem ESCONDE é o de fora e quem POSICIONA é o de dentro.
-					<div aria-hidden="true" data-show={ openIsLasso() }>
-						<div data-attr:style={ lassoStyle } class="board-lasso"></div>
-					</div>
-				</div>
-				// O GABARITO vem ACIMA do terreno e ABAIXO das peças: quem está dentro
-				// precisa aparecer POR CIMA da área, senão a bola de fogo esconde
-				// justamente quem ela pega. Quem o põe entre os dois é o `z-index`,
-				// porque ele é IRMÃO dos planos e não filho — ver o `viewportDrawing`.
-				@drawnTemplate(v)
-				@clickLayers(v)
-				// O PLANO DE CIMA: o que RESPONDE ao dedo. Ele repete o
-				// `transform` da janela — os dois planos andam juntos, e o preço
-				// de dois `translate` é o mesmo de um, porque quem compõe é a GPU.
-				<div class="board-plane board-plane-tokens">
-					for _, m := range v.Markers {
-						@planMarker(v, m)
-					}
-					// O FANTASMA vem ANTES das peças: uma peça grande parada ao lado da
-					// origem invade a casa dele, e quem tem de ficar por cima é a peça —
-					// ela se clica, ele não.
-					if v.Ghost != nil {
-						@originGhost(*v.Ghost)
-					}
-					for _, p := range v.Tokens {
-						@planToken(v, p)
-						// O MENU vem logo depois da peça e é irmão dela no plano,
-						// como o do marcador: ele é posicionado pela mesma casa, e
-						// pendurá-lo DENTRO do botão faria um botão dentro de outro.
-						if v.GM {
-							@tokenMenu(v, p)
-						}
-					}
-				</div>
-				// A RÉGUA vem por CIMA de tudo: ela é uma linha fina entre dois
-				// pontos, e uma peça em cima dela apagaria metade da medida.
-				@drawnRuler(v)
-				// A SETA DO MOVIMENTO sobe pela mesma razão: ela liga o fantasma à peça,
-				// e as duas pontas dela são discos que a apagariam por baixo.
-				@moveArrow(v)
-				// A SETA VIVA do arrasto sobe junto e pela mesma razão.
-				@movePreview(v)
+			@boardScene(v, "grimorio-frame") {
 				// O TRILHO flutua sobre o mapa, colado à esquerda e centrado na
 				// altura: ele é o que se troca com mais frequência na cena, e a
 				// mão volta sempre ao mesmo lugar.
@@ -220,7 +88,7 @@ templ boardTable(v BoardView) {
 				// AGORA (a medida, o gabarito, o custo do movimento).
 				@boardNotices(v)
 				@toolHelpers(v)
-			</div>
+			}
 		</section>
 	}
 }

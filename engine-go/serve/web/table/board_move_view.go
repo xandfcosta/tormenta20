@@ -300,6 +300,9 @@ func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, budg
 type moveRange struct {
 	Class string
 	Text  string
+	// Short é a faixa na caixa da sessão paralela, onde as três dividem a
+	// largura: a segunda diz só o que SOMA à primeira, que está ao lado.
+	Short string
 	// Active é a faixa em que o caminho INTEIRO cai, e é a que fica acesa. As
 	// outras continuam na tela, apagadas: quem nunca viu o azul não descobriria
 	// que ele existe se só a faixa da vez aparecesse.
@@ -313,9 +316,9 @@ type moveRange struct {
 // que alguém reescrevesse uma — com a tela dizendo "gasta a ação principal" ao
 // lado de uma bolinha que diz outra coisa.
 var rangesThree = []moveRange{
-	{Class: "board-band-fits", Text: "ação de movimento"},
-	{Class: "board-band-second", Text: "ação de movimento + ação principal"},
-	{Class: "board-band-beyond", Text: "não cabe no turno"},
+	{Class: "board-band-fits", Text: "ação de movimento", Short: "ação de movimento"},
+	{Class: "board-band-second", Text: "ação de movimento + ação principal", Short: "+ ação principal"},
+	{Class: "board-band-beyond", Text: "não cabe no turno", Short: "não cabe no turno"},
 }
 
 // costRange diz em qual das três faixas o caminho INTEIRO cai (T20 p233).

@@ -111,15 +111,21 @@ func polylineReading(stops []engine.Square) map[string]any {
 		labels = append(labels, metersLeg(leg))
 	}
 	if len(stops) < 2 {
-		return map[string]any{"ruler_labels": labels, "ruler_text": emptyRulerHint}
+		return map[string]any{"ruler_labels": labels, "ruler_text": emptyRulerHint,
+			"ruler_distance": emptyRulerHint, "ruler_band": ""}
 	}
+	m := engine.Measurement{
+		Squares: total,
+		Metres:  float64(total) * engine.SquareMetres,
+		Band:    engine.BandFor(total),
+	}
+	// A FRASE INTEIRA é a da régua de hoje; as duas partes são a da sessão
+	// paralela, que escreve a faixa embaixo da distância (`tabuleiro.html`).
 	return map[string]any{
-		"ruler_labels": labels,
-		"ruler_text": rulerReading(engine.Measurement{
-			Squares: total,
-			Metres:  float64(total) * engine.SquareMetres,
-			Band:    engine.BandFor(total),
-		}),
+		"ruler_labels":   labels,
+		"ruler_text":     rulerReading(m),
+		"ruler_distance": rulerDistance(m),
+		"ruler_band":     rulerBand(m),
 	}
 }
 
@@ -130,11 +136,21 @@ func polylineReading(stops []engine.Square) map[string]any {
 //
 // @example rulerReading(engine.Measure(a, b)) // "3 quadrados (4,5m) · alcance curto"
 func rulerReading(m engine.Measurement) string {
-	strip := "alcance " + string(m.Band)
+	return rulerDistance(m) + " · " + rulerBand(m)
+}
+
+// rulerDistance é a distância em quadrados e em metros: "3 quadrados (4,5m)".
+func rulerDistance(m engine.Measurement) string {
+	return fmt.Sprintf("%d %s (%sm)", m.Squares, quadradosEmPortugues(m.Squares), meters(m.Metres))
+}
+
+// rulerBand é a faixa do livro (p224): "alcance curto", ou "além do alcance
+// longo", que não é uma faixa com nome.
+func rulerBand(m engine.Measurement) string {
 	if m.Band == engine.RangeBeyond {
-		strip = "além do alcance longo"
+		return "além do alcance longo"
 	}
-	return fmt.Sprintf("%d %s (%sm) · %s", m.Squares, quadradosEmPortugues(m.Squares), meters(m.Metres), strip)
+	return "alcance " + string(m.Band)
 }
 
 // metersLeg é o rótulo que pousa sobre a linha entre duas paradas (pedido

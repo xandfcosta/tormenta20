@@ -28,8 +28,12 @@ type mapTool struct {
 	// Shortcut é a tecla, e ela é fixa por ferramenta (ver o comentário do topo).
 	Shortcut string
 	Label    string
-	Icon     string
-	Hint     string
+	// Short é o nome escrito embaixo do ícone na barra da sessão paralela
+	// (ALE-473), onde o botão tem a largura de uma palavra. Só as ferramentas de
+	// todo mundo o têm: a sessão paralela é do jogador.
+	Short string
+	Icon  string
+	Hint  string
 	// GMOnly: pintar chão e marcar lugar são gestos de quem MONTA a mesa.
 	GMOnly bool
 	// Hue é a classe que tinge o ícone com a cor da espécie, nos pincéis de
@@ -56,16 +60,16 @@ const EraserTool = "borracha"
 // agrupadas, com a borracha fechando porque ela é o desfazer das quatro acima.
 func MapTools() []mapTool {
 	rail := []mapTool{
-		{ID: "", Label: "Mover a peça", Icon: "MousePointer2",
+		{ID: "", Label: "Mover a peça", Short: "Mover", Icon: "MousePointer2",
 			Hint: "Mover a peça: o clique escolhe a casa para onde ela vai"},
 		// A MÃO é a SEGUNDA e não a última, e ela é de TODO MUNDO: sem moldura não há
 		// rolagem nativa, então arrastar a vista deixou de ser conforto e virou o único
 		// jeito de chegar ao outro lado do plano.
-		{ID: ViewTool, Label: "Arrastar a vista", Icon: "Hand",
+		{ID: ViewTool, Label: "Arrastar a vista", Short: "Vista", Icon: "Hand",
 			Hint: "Arrastar a vista: o clique e o arrasto percorrem o plano, que não tem bordas"},
-		{ID: FerramentaDaRegua, Label: "Régua", Icon: "Ruler",
+		{ID: FerramentaDaRegua, Label: "Régua", Short: "Régua", Icon: "Ruler",
 			Hint: "Régua: mede a distância e diz a faixa de alcance do livro (p224)"},
-		{ID: FerramentaDoGabarito, Label: "Gabarito", Icon: "Radar",
+		{ID: FerramentaDoGabarito, Label: "Gabarito", Short: "Gabarito", Icon: "Radar",
 			Hint: "Gabarito de área: a esfera, o cone, a linha e o quadrado (p225), e quem eles pegam"},
 		{ID: MarkTool, Label: "Marcar", Icon: "MapPin", GMOnly: true,
 			Hint: "Marcar um lugar: o clique põe um ponto ESCONDIDO no mapa, para revelar quando quiser"},

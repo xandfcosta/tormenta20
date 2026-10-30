@@ -49,7 +49,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	view.Tempestade = parallelSessionAsked(r, view)
+	view.wearParallel(parallelSessionAsked(r, view))
 
 	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
@@ -119,7 +119,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		}
 		// A MARCA VALE EM TODO QUADRO, e não só no primeiro: sem ela, o cabeçalho
 		// de hoje voltava à sessão paralela no primeiro tique depois de abrir.
-		view.Tempestade = parallelSessionAsked(r, view)
+		view.wearParallel(parallelSessionAsked(r, view))
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
@@ -302,9 +302,8 @@ type tableRegion struct {
 // pergunta ao MESMO cálculo da produção quais regiões o stream mandaria para
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
-	// A SESSÃO PARALELA desenha só o cabeçalho como região: as superfícies que
-	// migraram são a Ficha (que o stream nunca toca) e as outras ainda levam à
-	// sessão de hoje.
+	// A SESSÃO PARALELA tem as regiões das superfícies que ela desenha; a Ficha
+	// o stream nunca toca.
 	if v.Tempestade {
 		return []tableRegion{
 			{"table-header", tempestadeHeader(v)},
@@ -313,6 +312,7 @@ func TableRegions(v View) []tableRegion {
 			{"table-register", tempestadeRegister(v)},
 			{"table-party", tempestadeParty(v)},
 			{"table-tracker", tempestadeTracker(v)},
+			{"table-board", tempestadeBoardRegion(v)},
 		}
 	}
 	regions := []tableRegion{

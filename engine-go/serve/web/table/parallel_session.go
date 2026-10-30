@@ -46,3 +46,21 @@ func pageSystemAndStream(view View) (ui.DesignSystem, string) {
 	}
 	return ui.SystemGrimoire, view.SessionBase() + "/fluxo"
 }
+
+// wearParallel veste a view da sessão paralela quando ela foi pedida: a marca
+// vai para o cabeçalho e para os gestos do mapa, que respondem redesenhando o
+// tabuleiro. As abas e a volta do puxão chegam montadas sem ela, e são
+// remontadas aqui.
+func (v *View) wearParallel(asked bool) {
+	v.Tempestade = asked
+	if !asked {
+		return
+	}
+	v.Board.Mark = markedIfParallel("", true)
+	for i := range v.Board.Tabs {
+		v.Board.Tabs[i].Command = tabCommand(v.Board, v.Board.Tabs[i].ID)
+	}
+	if v.Board.Pulled != nil {
+		v.Board.Pulled.ReturnCommand = tabCommand(v.Board, v.Board.Pulled.ReturnTab)
+	}
+}

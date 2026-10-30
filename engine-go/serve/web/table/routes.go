@@ -101,7 +101,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
-	view.Tempestade = parallelSessionAsked(r, view)
+	view.wearParallel(parallelSessionAsked(r, view))
 	system, stream := pageSystemAndStream(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.

@@ -1,0 +1,242 @@
+package table
+
+import (
+	"fmt"
+	"strings"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// O TABULEIRO DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado
+// `tabuleiro.html`: o mapa e os gestos são os de hoje (`boardScene`), e o que
+// flutua por cima veste o kit. A sessão paralela é do JOGADOR, então nada do
+// mestre chega aqui — nem a cortina, nem a lente, nem as ferramentas de montar.
+
+// tempestadeBoardRegion é a região do stream, com o id da de hoje.
+templ tempestadeBoardRegion(v View) {
+	<div id="table-board" class="ds-board-region">
+		@tempestadeBoard(v.Board)
+		// A RECUSA de uma parada, pela razão da de hoje (`tableBoard`): a mais
+		// comum é a da primeira parada, quando ainda não há cartão onde pendurá-la.
+		<p class="ds-help ds-board-refusal" data-show="$move_error != ''" data-text="$move_error" aria-live="assertive"></p>
+	</div>
+}
+
+// tempestadeBoard é o mapa, ou a frase de quem espera. As duas frases são
+// diferentes de propósito, como as de hoje: sem tabuleiro não há o que ver, e
+// com a cortina há uma cena sendo montada — e a cortina não desenha grade.
+templ tempestadeBoard(v BoardView) {
+	if !v.Open {
+		<div class="ds-board-waiting">
+			@ds.Empty("O mestre ainda não abriu um tabuleiro.", "Quando ele abrir, o mapa aparece aqui.")
+		</div>
+	} else if v.Curtain {
+		<section class="ds-board-waiting" aria-label="Cortina">
+			@ds.Empty("O mestre está montando a cena.", "O mapa aparece quando ele abrir a cortina.")
+		</section>
+	} else {
+		<section class="ds-board" aria-label={ "Tabuleiro · " + v.Place }>
+			@boardScene(v, "ds-board-scene") {
+				@tempestadePlace(v)
+				@tempestadeFraming(v)
+				@tempestadeNotice(v)
+				// OS CARTÕES moram no pé do mapa, logo acima da barra das ferramentas
+				// no celular. A barra fica FORA do bloco deles porque no desktop ela
+				// vira o trilho à esquerda, e dentro do bloco ela se posicionaria
+				// pelo pé e não pelo mapa.
+				<div class="ds-board-foot">
+					@tempestadeHelpers(v)
+				</div>
+				@tempestadeTools(v)
+			}
+		</section>
+	}
+}
+
+// tempestadePlace é o nome do lugar, e as abas quando há mais de um aberto. É
+// o `<h2>` da região, pela razão do `sceneName`.
+templ tempestadePlace(v BoardView) {
+	if len(v.Tabs) == 0 {
+		<h2 class="ds-board-float ds-board-place">{ v.Place }</h2>
+	} else {
+		<div class="ds-board-float ds-board-place" role="group" aria-label="Tabuleiros abertos">
+			for _, tab := range v.Tabs {
+				if tab.Active {
+					<h2 class="ds-board-tab" aria-current="true">{ tab.Name }</h2>
+				} else {
+					<button type="button" class="ds-board-tab" aria-label={ "Ver o tabuleiro " + tab.Name } data-on:click={ tab.Command }>
+						if tab.Curtain {
+							@ui.Icon("Theater", "ds-icon")
+						}
+						{ tab.Name }
+					</button>
+				}
+			}
+		</div>
+	}
+}
+
+// tempestadeFraming é centralizar e o zoom, os gestos da JANELA de quem olha.
+// Os do zoom desabilitam no limite em vez de sumir, pela razão do `planFraming`.
+templ tempestadeFraming(v BoardView) {
+	<div class="ds-board-float ds-board-zoom" role="group" aria-label="Enquadrar o mapa">
+		<button type="button" class="ds-board-fbtn" aria-label={ CenterTarget(v) } title={ CenterTarget(v) } data-on:click={ centerTokens(v) }>
+			@ui.Icon("Crosshair", "ds-icon")
+		</button>
+		<span class="ds-board-fsep" aria-hidden="true"></span>
+		<button type="button" class="ds-board-fbtn" aria-label="Afastar o mapa" data-attr:disabled={ ZoomAtLimit(-ZoomStep) } data-on:click={ zoomMidScene(step(-ZoomStep)) }>
+			@ui.Icon("Minus", "ds-icon")
+		</button>
+		<button type="button" class="ds-board-fbtn" aria-label="Aproximar o mapa" data-attr:disabled={ ZoomAtLimit(ZoomStep) } data-on:click={ zoomMidScene(step(ZoomStep)) }>
+			@ui.Icon("Plus", "ds-icon")
+		</button>
+	</div>
+}
+
+// tempestadeNotice é a tira do puxão, a única das três de hoje que é do
+// jogador: ela nomeia a cena e carrega a própria saída.
+templ tempestadeNotice(v BoardView) {
+	if v.Pulled != nil {
+		<p role="status" class="ds-board-float ds-board-notice">
+			@ui.Icon("Users2", "ds-icon")
+			<span>{ "O mestre trouxe a mesa para " + v.Pulled.Scene + "." }</span>
+			@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": v.Pulled.ReturnCommand}) {
+				if v.Pulled.Back != "" {
+					{ "Voltar para " + v.Pulled.Back }
+				} else {
+					Continuar aqui
+				}
+			}
+		</p>
+	}
+}
+
+// tempestadeTools é a barra das ferramentas: no pé do mapa no celular, onde o
+// polegar alcança, e o trilho vertical com a tecla no desktop (o CSS troca).
+templ tempestadeTools(v BoardView) {
+	<nav class="ds-board-float ds-board-tools" aria-label="Ferramentas do mapa" data-on:keydown__window={ railKeyboard(v.GM) }>
+		for _, tool := range rail(v.GM) {
+			<button
+				type="button"
+				class="ds-board-tool"
+				title={ tool.Hint + " (tecla " + tool.Shortcut + ")" }
+				aria-label={ shortcutName(tool) }
+				data-attr:aria-pressed={ onIsTool(tool.ID) + " ? 'true' : 'false'" }
+				data-on:click={ pickTool(tool.ID) }
+			>
+				@ui.Icon(tool.Icon, "ds-icon")
+				<span aria-hidden="true">{ tool.Short }</span>
+				<kbd aria-hidden="true">{ tool.Shortcut }</kbd>
+			</button>
+		}
+	</nav>
+}
+
+// tempestadeHelpers são os cartões da ferramenta ligada: a régua, o gabarito, a
+// leitura do arrasto e o movimento proposto.
+templ tempestadeHelpers(v BoardView) {
+	<p role="status" class="ds-board-card" data-row data-show={ "$ruler_text !== '' && $tool === '" + FerramentaDaRegua + "'" }>
+		@ui.Icon("Ruler", "ds-icon ds-board-mark")
+		<span class="ds-board-read">
+			<b data-text="$ruler_distance"></b>
+			<span class="ds-row-meta" data-show="$ruler_band !== ''" data-text="$ruler_band"></span>
+		</span>
+		<button type="button" class="ds-board-fbtn" aria-label="Guardar a régua" data-on:click={ saveRuler }>
+			@ui.Icon("X", "ds-icon")
+		</button>
+	</p>
+	<p role="status" class="ds-board-card" data-row data-show="$preview_text !== ''">
+		@ui.Icon("MapPin", "ds-icon ds-board-mark")
+		<b class="ds-board-read" data-text="$preview_text"></b>
+	</p>
+	@tempestadeTemplate(v)
+	if v.Movement != nil && v.Movement.Mine {
+		@tempestadeMove(v)
+	}
+}
+
+// tempestadeTemplate é o gabarito (p225): a forma, a medida dela com os metros
+// ao lado, e QUEM ele pega pelo nome.
+templ tempestadeTemplate(v BoardView) {
+	<div role="status" class="ds-board-card" data-show={ "$tool === '" + FerramentaDoGabarito + "'" }>
+		<div class="ds-board-line">
+			@ui.Icon("Radar", "ds-icon ds-board-mark")
+			<span class="ds-row-title">Gabarito</span>
+			<button type="button" class="ds-board-fbtn" aria-label="Guardar o gabarito" data-on:click={ saveTemplate }>
+				@ui.Icon("X", "ds-icon")
+			</button>
+		</div>
+		<div class="ds-board-shapes" role="group" aria-label="Forma do gabarito">
+			for _, form := range bookShapes {
+				<button
+					type="button"
+					title={ shapeLabel(form) + ": o " + shapeMeasure(form) + " em quadrados (p225)" }
+					data-attr:aria-pressed={ fmt.Sprintf("$template === %q ? 'true' : 'false'", string(form)) }
+					data-on:click={ pickShape(form) }
+				>{ shapeLabel(form) }</button>
+			}
+		</div>
+		<div class="ds-board-size">
+			for _, form := range bookShapes {
+				<label for="template-size" class="ds-row-meta" data-show={ fmt.Sprintf("$template === %q", string(form)) }>{ shapeMeasure(form) }</label>
+			}
+			<input
+				id="template-size"
+				class="ds-input"
+				type="number"
+				min="1"
+				max={ templateBiggest() }
+				inputmode="numeric"
+				data-bind="template_size"
+				data-on:input__debounce.200ms={ repatchTemplate(v) }
+			/>
+			<span class="ds-row-meta">quadrados ·</span>
+			<span class="ds-row-meta" data-text={ metersSize() }></span>
+		</div>
+		<p class="ds-board-takes" data-text="$template_text"></p>
+	</div>
+}
+
+// tempestadeMove é o movimento proposto. O jogador não confirma: o selo diz
+// Rascunho e o cartão diz quem confirma.
+templ tempestadeMove(v BoardView) {
+	<div class="ds-board-card">
+		<div class="ds-board-line">
+			<span class="ds-board-seal">Rascunho</span>
+			<span class="ds-row-meta">o mestre confirma</span>
+		</div>
+		<p class="ds-row-title" aria-live="polite">
+			{ v.Movement.Label } ·
+			if v.Movement.Budget < 0 {
+				<b>{ fmt.Sprint(v.Movement.Cost) }</b> quadrados
+			} else {
+				<b>{ fmt.Sprintf("%d de %d", v.Movement.Cost, v.Movement.Budget) }</b> quadrados
+				if balance := moveBalance(v.Movement); balance != "" {
+					{ " · " + balance }
+				}
+			}
+		</p>
+		if v.Movement.Budget >= 0 {
+			<ul class="ds-board-bands" aria-label="O que as cores do movimento querem dizer">
+				for _, band := range moveLegend(v.Movement) {
+					<li data-band={ strings.TrimPrefix(band.Class, "board-band-") } title={ band.Text } data-active?={ band.Active }>{ band.Short }</li>
+				}
+			</ul>
+		}
+		if v.Movement.NoActionLeft {
+			<p class="ds-help ds-board-refusal">não sobrou ação neste turno para mover</p>
+		}
+		<div class="ds-board-pair">
+			if v.Movement.CanUndo {
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": moveCommand(v, "desfazer-parada")}) {
+					@ui.Icon("CornerUpLeft", "ds-icon")
+					Desfazer parada
+				}
+			}
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": moveCommand(v, "cancelar")}) {
+				Cancelar
+			}
+		</div>
+	</div>
+}

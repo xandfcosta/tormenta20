@@ -116,8 +116,8 @@ var freezeRuler = fmt.Sprintf("evt.preventDefault(); $ruler_phase = %d", reguaCo
 //
 // As três juntas porque são a mesma coisa: a frase de uma medida cujo desenho
 // sumiu é a resposta a uma pergunta que ninguém consegue mais ver.
-var saveRuler = fmt.Sprintf("$ruler_phase = %d; $ruler_points = []; $ruler_labels = []; $ruler_text = %q",
-	reguaParada, emptyRulerHint)
+var saveRuler = fmt.Sprintf("$ruler_phase = %d; $ruler_points = []; $ruler_labels = []; $ruler_text = %q; $ruler_distance = %q; $ruler_band = ''",
+	reguaParada, emptyRulerHint, emptyRulerHint)
 
 // repatchRuler pede os rótulos das pernas e a frase do total.
 //
@@ -390,5 +390,5 @@ func number(n int) string { return strconv.Itoa(n) }
 // `ruler_points` é uma LISTA de pares e não números soltos: com número variável
 // de paradas, quatro sinais nomeados virariam oito, depois vinte e quatro.
 var rulerSignals = fmt.Sprintf(
-	"ruler_points: [], ruler_aim_x: 0, ruler_aim_y: 0, ruler_phase: %d, ruler_labels: [], ruler_text: %q",
-	reguaParada, emptyRulerHint)
+	"ruler_points: [], ruler_aim_x: 0, ruler_aim_y: 0, ruler_phase: %d, ruler_labels: [], ruler_text: %q, ruler_distance: %q, ruler_band: ''",
+	reguaParada, emptyRulerHint, emptyRulerHint)

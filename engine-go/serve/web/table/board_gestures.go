@@ -27,9 +27,15 @@ import (
 // Uma ilha precisaria receber o mesmo endereço por atributo, e aí haveria dois
 // lugares dizendo a mesma URL.
 
+// gesture é o endereço de um gesto do jogador neste tabuleiro, com a marca da
+// sessão paralela quando ela existe.
+func (v BoardView) gesture(path string) string {
+	return v.Base + "/" + path + v.Mark
+}
+
 // moveCommand escreve a chamada de confirmar ou cancelar.
 func moveCommand(v BoardView, action string) string {
-	return fmt.Sprintf("@post('%s/%s/%s')", v.Base, v.Movement.TokenID, action)
+	return fmt.Sprintf("@post('%s')", v.gesture(v.Movement.TokenID+"/"+action))
 }
 
 // clickedPointStop traduz o PONTO do clique em quadrado do plano.
@@ -43,8 +49,8 @@ func moveCommand(v BoardView, action string) string {
 // pode ser NEGATIVO.
 func clickedPointStop(v BoardView) string {
 	return fmt.Sprintf(
-		"@post('%s/%s/parada', {payload: {from: {x: (%s), y: (%s)}}})",
-		v.Base, v.MoveTarget, clicouEmX, clicouEmY,
+		"@post('%s', {payload: {from: {x: (%s), y: (%s)}}})",
+		v.gesture(v.MoveTarget+"/parada"), clicouEmX, clicouEmY,
 	)
 }
 
@@ -128,8 +134,8 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 			"const cx = %d + Math.round($drag_x / $square), cy = %d + Math.round($drag_y / $square); "+
 			"if (cx === $preview_x && cy === $preview_y) return; "+
 			"$preview_x = cx; $preview_y = cy; "+
-			"@post('%s/%s/previa', {payload: {from: {x: cx, y: cy}}})",
-		p.ID, p.X, p.Y, v.Base, p.ID)
+			"@post('%s', {payload: {from: {x: cx, y: cy}}})",
+		p.ID, p.X, p.Y, v.gesture(p.ID+"/previa"))
 }
 
 // erasePreview limpa a seta viva. Vai no `pointerup`, junto do que solta.
@@ -167,8 +173,8 @@ const erasePreview = "$preview_arrow_fits = ''; $preview_arrow_second = ''; $pre
 //
 // MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func dropFor(v BoardView, who string, x, y int) string {
-	stop := fmt.Sprintf("'%s/%s/parada', {payload: {from: {x: %d + dx, y: %d + dy}}}",
-		v.Base, v.MoveTarget, x, y)
+	stop := fmt.Sprintf("'%s', {payload: {from: {x: %d + dx, y: %d + dy}}}",
+		v.gesture(v.MoveTarget+"/parada"), x, y)
 	destination := "@post(" + stop + ")"
 	if who == "peca" && v.GM && v.MoveTarget != "" {
 		group := fmt.Sprintf("@post('%s/grupo/mover', {payload: {delta: {x: dx, y: dy}, marked_tokens: $marked_tokens}})", v.Base)
@@ -332,7 +338,7 @@ func placeCommand(v BoardView, placeID int64, action string) string {
 // se quer aqui é literalmente ir até a aba que já existe, e uma segunda porta
 // para isso seria uma segunda regra sobre o que significa escolher uma cena.
 func tabCommand(v BoardView, boardID string) string {
-	return fmt.Sprintf("@post('%s/aba/%s')", v.Base, boardID)
+	return fmt.Sprintf("@post('%s')", v.gesture("aba/"+boardID))
 }
 
 // ── ONDE O TABULEIRO POSTA ───────────────────────────────────────────────────
