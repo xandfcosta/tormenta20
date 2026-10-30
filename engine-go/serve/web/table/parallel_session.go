@@ -29,6 +29,9 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 
 // pageSystemAndStream é o sistema que a página veste e o fluxo que ela abre.
 func pageSystemAndStream(view View) (ui.DesignSystem, string) {
+	if view.BoardWindow {
+		return ui.SystemTempestade, view.SessionBase() + "/fluxo?janela=tabuleiro"
+	}
 	if view.Tempestade {
 		return ui.SystemTempestade, view.SessionBase() + "/fluxo"
 	}
@@ -68,5 +71,8 @@ func gmTableAsked(r *http.Request) bool {
 func (v *View) dressForGm(r *http.Request) {
 	if v.GM != nil {
 		v.Tempestade = gmTableAsked(r)
+		// A JANELA À PARTE do tabuleiro (ALE-522) é a mesma sessão desenhando
+		// só o mapa; o fluxo dela leva a marca para remendar só o mapa.
+		v.BoardWindow = v.Tempestade && r.URL.Query().Get("janela") == "tabuleiro"
 	}
 }

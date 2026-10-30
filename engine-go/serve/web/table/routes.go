@@ -288,6 +288,9 @@ func tableSignalsExpr() string {
 // esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
 // CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
 func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
+	if view.BoardWindow {
+		return gmBoardWindow(view)
+	}
 	if view.Tempestade && view.GM != nil {
 		return gmTempestadeScene(view, s.forTableBestiary(r, campaignID, sessionID))
 	}

@@ -121,3 +121,83 @@ func gmRequest(t *testing.T, f sceneFixture, path string, cookie *http.Cookie) *
 	f.s.WebRouter().ServeHTTP(rec, req)
 	return rec
 }
+
+// O TABULEIRO DO MESTRE (ALE-522, fatia 2): o mapa de hoje com o que é do
+// mestre a mais — as ferramentas de montar depois de um vinco, o Terreno que
+// abre as quatro espécies, e os verbos da sessão numa barra só. Nada do
+// grimório entra na região: os diálogos de abrir, encerrar, pôr no mapa e
+// acervo vestem o kit.
+func TestTheParallelGmTableDrawsTheBoard(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	closed := gmBoardRegion(t, f)
+	if !strings.Contains(textOf(closed), "Nenhum tabuleiro aberto") || findNode(closed, "aria-label", "Abrir tabuleiro") == nil {
+		t.Errorf("sem tabuleiro, a mesa do mestre não oferece abrir um: %q", textOf(closed))
+	}
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
+		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
+		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
+	}
+	board := gmBoardRegion(t, f)
+	if findNode(board, "id", "board-scene") == nil {
+		t.Fatal("a mesa do mestre não desenha o mapa")
+	}
+	tools := findNode(board, "aria-label", "Ferramentas do mapa")
+	if tools == nil {
+		t.Fatal("o tabuleiro do mestre não tem a barra das ferramentas")
+	}
+	for _, want := range []string{"Mover", "Vista", "Régua", "Gabarito", "Marcar", "Terreno", "Borracha", "Peça"} {
+		if !strings.Contains(textOf(tools), want) {
+			t.Errorf("a barra do mestre não escreve %q: %q", want, textOf(tools))
+		}
+	}
+	for _, verb := range []string{"Fechar a cortina", "Ver a cena como a mesa vê", "Pôr no mapa", "Abrir o tabuleiro numa janela", "Encerrar o tabuleiro"} {
+		if findNode(board, "aria-label", verb) == nil {
+			t.Errorf("o tabuleiro do mestre não tem o verbo %q", verb)
+		}
+	}
+	rendered := renderNode(t, board)
+	for _, old := range []string{"scene-grimorio", "grimorio-iron", "grimorio-gold", "board-rail"} {
+		if strings.Contains(rendered, old) {
+			t.Errorf("a região do tabuleiro do mestre ainda leva %q, do grimório", old)
+		}
+	}
+}
+
+// A JANELA À PARTE desenha só o mapa: é para a segunda tela ou a TV da mesa.
+func TestTheGmBoardOpensInAWindowOfItsOwn(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
+		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
+		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
+	}
+	page := gmRequest(t, f, f.tableUrl()+"?tempestade=1&janela=tabuleiro", nil).Body.String()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if findNode(doc, "id", "board-scene") == nil {
+		t.Fatal("a janela do tabuleiro não desenha o mapa")
+	}
+	if findNode(doc, "id", "table-tracker") != nil {
+		t.Error("a janela do tabuleiro desenhou a fila, e ela é só o mapa")
+	}
+	if !strings.Contains(page, "/fluxo?janela=tabuleiro") {
+		t.Error("o fluxo da janela não leva a marca da janela: ele remendaria regiões que não existem nela")
+	}
+}
+
+// gmBoardRegion é a região do tabuleiro na mesa nova do mestre.
+func gmBoardRegion(t *testing.T, f sceneFixture) *html.Node {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(gmRequest(t, f, f.tableUrl()+"?tempestade=1", nil).Body.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	region := findNode(doc, "id", "table-board")
+	if region == nil {
+		t.Fatal("a mesa do mestre não tem a região do tabuleiro")
+	}
+	return region
+}
