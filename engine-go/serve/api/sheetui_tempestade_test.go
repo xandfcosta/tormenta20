@@ -49,15 +49,13 @@ func TestEveryGestureOfTheParallelSheetKeepsTheMark(t *testing.T) {
 	// O templ escapa a aspa do atributo (`&#39;`), e o endereço tem `&amp;`
 	// dentro: o fim do endereço é a aspa, escapada ou não.
 	gestures := regexp.MustCompile(`@(?:post|get)\(([^)]*)\)`)
-	// O link para a ficha de HOJE é a exceção, e declarada: ele existe para
-	// sair da paralela, e é o atributo que o diz.
-	links := regexp.MustCompile(`<a(?:[^>](?:[^>]*data-sheet-of-today)?)*?href="(/personagens/[^"]*)"[^>]*>`)
+	links := regexp.MustCompile(`<a[^>]*href="(/personagens/[^"]*)"[^>]*>`)
 	page := parallelSheet(t, f, id, "expertises")
 	seen := 0
 	for _, m := range append(gestures.FindAllStringSubmatch(page, -1), links.FindAllStringSubmatch(page, -1)...) {
 		// Só os endereços DA FICHA: a casca da página traz o buscador, que é
 		// de toda cena e não sabe de ficha nenhuma.
-		if strings.Contains(m[0], "data-sheet-of-today") || !strings.Contains(m[1], "/personagens/") {
+		if !strings.Contains(m[1], "/personagens/") {
 			continue
 		}
 		seen++
@@ -101,16 +99,12 @@ func TestTheBottomBarGivesTheFifthPlaceToSpellsOnlyToWhoCasts(t *testing.T) {
 	}
 }
 
-// ABA QUE AINDA NÃO MIGROU não desenha o grimório dentro da Tempestade: ela
-// diz que está na ficha de hoje e leva até lá, na mesma aba.
-func TestATabNotYetMigratedLeadsToTheSheetOfToday(t *testing.T) {
+// O GESTO NUNCA DEVOLVE O GRIMÓRIO dentro da Tempestade: é a mistura que a
+// transição por escopo proíbe, e todo gesto redesenha a cena inteira.
+func TestAGestureOfTheParallelSheetNeverDrawsTheGrimoire(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
 
-	page := parallelSheet(t, f, id, "proficiencies")
-	if !strings.Contains(page, fmt.Sprintf(`href="/personagens/%d?tab=proficiencies"`, id)) {
-		t.Error("a aba não migrada não leva às Proficiências da ficha de hoje")
-	}
 	// O recorte é a CENA, e a cena sozinha é o que um gesto devolve: a página
 	// traz também os diálogos da casca (o livro, o buscador), que são de toda
 	// tela e migram com ela, não com a ficha.

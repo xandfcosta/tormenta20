@@ -1055,6 +1055,20 @@
   }
   /* A barra de filtros do guardado não é a primeira coisa de quem rola: o
    * espaço acima dela é o vão da seção, e não o padding do rolador. */
+  /* AS PROFICIÊNCIAS (ALE-473): a frase e o restaurar numa linha, e as duas
+   * famílias lado a lado no desktop. */
+  .ds-prof-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .ds-prof-groups {
+    display: grid;
+    gap: 0.75rem;
+    align-items: start;
+  }
   .ds-bag-halves {
     --ds-filter-above: 0.75rem;
     display: grid;
@@ -1070,6 +1084,9 @@
     }
     .ds-bag-top > .ds-meter + .ds-button {
       margin-left: auto;
+    }
+    .ds-prof-groups {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
     .ds-bag-halves {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

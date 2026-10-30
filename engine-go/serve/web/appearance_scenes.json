@@ -28,7 +28,8 @@
       { "address": "/personagens/3?tab=combat&tempestade=1", "session": "gm" },
       { "address": "/personagens/1?tab=abilities&tempestade=1", "session": "gm" },
       { "address": "/personagens/26?tab=conditionals&tempestade=1", "session": "player" },
-      { "address": "/personagens/1?tab=bag&tempestade=1", "session": "gm" }
+      { "address": "/personagens/1?tab=bag&tempestade=1", "session": "gm" },
+      { "address": "/personagens/6?tab=proficiencies&tempestade=1", "session": "gm" }
     ]
   },
   "master": {

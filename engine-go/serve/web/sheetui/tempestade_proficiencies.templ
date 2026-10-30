@@ -1,0 +1,46 @@
+package sheetui
+
+import (
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeProficiencies é a aba Proficiências da ficha paralela: as duas
+// famílias como listas, lado a lado no desktop. A linha que tem origem — a
+// classe, a raça, o poder — fica travada e diz de onde vem; a outra tem o
+// interruptor, e o estado é sempre o do servidor (ver `proficiencyPanel`).
+templ tempestadeProficiencies(v View) {
+	<section class="grid gap-3" aria-label="Proficiências">
+		<div class="ds-prof-head">
+			<span class="ds-row-meta">Liga e desliga o que a classe não concede.</span>
+			// RESTAURAR descarta todo ajuste manual e não pergunta antes: o
+			// estado anterior se refaz com um toque por linha (ver
+			// `proficiencyPanel`).
+			@ds.Button(ds.ButtonGhost, templ.Attributes{
+				"type": "button", "title": "Marca exatamente o que as classes concedem e descarta os ajustes manuais",
+				"data-on:click": defaultClassCommand(v),
+			}) {
+				Restaurar padrão
+			}
+		</div>
+		<div class="ds-prof-groups">
+			for _, group := range v.Proficiencies {
+				@ds.List(group.Title, "") {
+					for _, row := range group.Rows {
+						<div class="ds-row">
+							<span class="ds-row-title">{ row.Label }</span>
+							if row.Origin != "" {
+								<span class="ds-locked">
+									@ui.Icon("Lock", "ds-icon")
+									{ row.Origin }
+								</span>
+							} else {
+								@ds.Switch("", row.Has, templ.Attributes{"aria-label": row.Label, "data-on:change": proficiencyCommand(v, row.Key)})
+							}
+						</div>
+					}
+				}
+			}
+		</div>
+	</section>
+}
