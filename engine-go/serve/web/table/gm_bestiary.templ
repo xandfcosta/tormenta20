@@ -1,0 +1,176 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+	"t20engine/domain/book"
+	"t20engine/serve/web/bookui"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/master"
+)
+
+// O BESTIÁRIO DAS CONSULTAS no kit (ALE-522). As rotas, os sinais e o
+// recorte são os da cena do mestre (`master.BestiaryView`); muda o desenho,
+// porque a cena de lá ainda veste o grimório e a mesa do mestre não.
+
+// gmBestiaryFilters é a busca, a faixa de ND e os tipos. A busca é o gesto do
+// meio do combate, e por isso vem primeiro e sozinha na linha.
+templ gmBestiaryFilters(b master.BestiaryView) {
+	<div class="ds-gm-bestiary-filters">
+		@ds.SearchField("gm-bestiary-search", "Buscar criatura", templ.Attributes{
+			"name": "busca", "value": b.Term, "data-bind:search": true,
+			"data-on:input__debounce.250ms": fmt.Sprintf("@get('%s')", b.BestiaryBase()),
+		})
+		<div class="ds-gm-cr">
+			@gmCRField(b, "gm-cr-min", "ND mínimo", "ndMin", master.CRInBox(b.CRMin))
+			@gmCRField(b, "gm-cr-max", "ND máximo", "ndMax", master.CRInBox(b.CRMax))
+		</div>
+		<div class="ds-options" role="group" aria-label="Filtrar por tipo">
+			for _, t := range book.CreatureTypes {
+				@ds.Option(b.TypeOn(t), templ.Attributes{"data-on:click": fmt.Sprintf("@post('%s/tipo/%s')", b.BestiaryBase(), t)}) {
+					{ book.TypeName(t) }
+				}
+			}
+		</div>
+	</div>
+}
+
+// gmCRField é um campo de ND. O `step` de 0,25 é do livro: o ND anda em
+// quartos abaixo de 1; o servidor aperta a faixa de novo.
+templ gmCRField(b master.BestiaryView, id, label, signal, value string) {
+	@ds.TextField(ds.Field{ID: id, Label: label, Type: "number", Value: value}, templ.Attributes{
+		"min": "0", "max": "20", "step": "0.25", "inputmode": "decimal", "data-bind": signal,
+		"data-on:input__debounce.400ms": fmt.Sprintf("@get('%s')", b.BestiaryBase()),
+	})
+}
+
+// gmEntryList é a lista: tocar numa criatura ABRE a folha dela (`abrir=1`),
+// com a criatura escolhida marcada.
+templ gmEntryList(b master.BestiaryView) {
+	if len(b.Entries) == 0 {
+		@ds.Empty("Nenhuma criatura", "Nenhuma criatura casa com os filtros.")
+	} else {
+		@ds.List("Criaturas", fmt.Sprintf("%d de %d", len(b.Entries), b.Total)) {
+			for _, m := range b.Entries {
+				<a
+					class="ds-row ds-gm-entry"
+					href={ templ.SafeURL(b.BestiaryBase() + "?criatura=" + m.ID) }
+					data-on:click={ fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, master.OpenTheEntry(b.BestiaryBase())) }
+					if b.Chosen != nil && b.Chosen.ID == m.ID {
+						aria-current="true"
+					}
+				>
+					<span class="ds-gm-member-body">
+						<span class="ds-row-title">{ m.Name }</span>
+						<span class="ds-row-meta">{ book.TypeName(m.Kind) + " · " + book.SizeName(m.Size) + " · ND " + book.CRWritten(m.ND) }</span>
+					</span>
+					<span class="ds-row-meta ds-gm-entry-nums">{ fmt.Sprintf("PV %d · Def %d", m.HP, m.Defense) }</span>
+				</a>
+			}
+		}
+	}
+}
+
+// gmCreatureBlock é o bloco do livro na folha da criatura. A ORDEM é regra:
+// os números de agora, e logo os Ataques e as Habilidades — o mestre abre o
+// bestiário no meio do combate para saber o que a criatura rola AGORA.
+templ gmCreatureBlock(m book.Entry, bookRef bookui.BookAddress) {
+	<div class="ds-gm-creature">
+		<p class="ds-row-meta">
+			{ fmt.Sprintf("%s · %s · ND %s · XP %d · ", book.TypeName(m.Kind), book.SizeName(m.Size), book.CRWritten(m.ND), book.XPForCR(m.ND)) }
+			@bookui.PageSeal(bookRef, m.BookPage, m.Name)
+		</p>
+		@ds.Stats() {
+			@ds.Stat("PV", strconv.Itoa(m.HP))
+			@ds.Stat("Defesa", strconv.Itoa(m.Defense))
+			@ds.Stat("Iniciativa", book.WithSign(m.Initiative))
+			@ds.Stat("Percepção", book.WithSign(m.Perception))
+			@ds.Stat("Deslocamento", m.Speed)
+			if m.PM != nil {
+				@ds.Stat("PM", strconv.Itoa(*m.PM))
+			}
+		}
+		if len(m.Attacks) > 0 {
+			@ds.List("Ataques", "") {
+				for _, a := range m.Attacks {
+					<div class="ds-row">
+						<span class="ds-gm-member-body">
+							<span class="ds-row-title">{ a.Name }</span>
+							if a.Special != "" {
+								<span class="ds-row-meta">{ a.Special }</span>
+							}
+						</span>
+						<span class="ds-row-value">{ book.WithSign(a.AttackBonus) + " · " + a.Damage }</span>
+					</div>
+				}
+			}
+		}
+		if len(m.SpecialAbilities) > 0 {
+			<section class="ds-gm-creature-part">
+				<h3 class="ds-field-label">Habilidades especiais</h3>
+				for _, h := range m.SpecialAbilities {
+					<p>
+						for _, chunk := range book.WithLinks(h) {
+							@bookui.Chunk(chunk, bookRef)
+						}
+					</p>
+				}
+			</section>
+		}
+		<section class="ds-gm-creature-part">
+			<h3 class="ds-field-label">Resistências</h3>
+			@ds.Stats() {
+				@ds.Stat("Fort", book.WithSign(m.Fortitude))
+				@ds.Stat("Ref", book.WithSign(m.Reflex))
+				@ds.Stat("Von", book.WithSign(m.Will))
+			}
+		</section>
+		<section class="ds-gm-creature-part">
+			<h3 class="ds-field-label">Atributos</h3>
+			@ds.Stats() {
+				@ds.Stat("For", book.WithSignPtr(m.Strength))
+				@ds.Stat("Des", book.WithSignPtr(m.Dexterity))
+				@ds.Stat("Con", book.WithSignPtr(m.Constitution))
+				@ds.Stat("Int", book.WithSignPtr(m.Intelligence))
+				@ds.Stat("Sab", book.WithSignPtr(m.Wisdom))
+				@ds.Stat("Car", book.WithSignPtr(m.Charisma))
+			}
+		</section>
+		if len(m.Skills) > 0 {
+			<section class="ds-gm-creature-part">
+				<h3 class="ds-field-label">Perícias</h3>
+				<p>
+					for i, p := range m.Skills {
+						if i > 0 {
+							{ " · " }
+						}
+						{ p.Name + " " + book.WithSign(p.Bonus) }
+						if p.Note != "" {
+							{ " (" + p.Note + ")" }
+						}
+					}
+				</p>
+			</section>
+		}
+		if m.Equipment != "" {
+			<section class="ds-gm-creature-part">
+				<h3 class="ds-field-label">Equipamento</h3>
+				<p>
+					for _, chunk := range book.WithLinks(m.Equipment) {
+						@bookui.Chunk(chunk, bookRef)
+					}
+				</p>
+			</section>
+		}
+		if m.Treasure != "" {
+			<section class="ds-gm-creature-part">
+				<h3 class="ds-field-label">Tesouro</h3>
+				<p>
+					for _, chunk := range book.WithLinks(m.Treasure) {
+						@bookui.Chunk(chunk, bookRef)
+					}
+				</p>
+			</section>
+		}
+	</div>
+}

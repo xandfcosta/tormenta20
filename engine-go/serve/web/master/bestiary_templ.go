@@ -589,11 +589,11 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", crInBox(v.CRMin)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", CRInBox(v.CRMin)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", crInBox(v.CRMax)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", CRInBox(v.CRMax)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -629,7 +629,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var23 string
-				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(v.typeOn(t)))
+				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(ui.AriaBool(v.TypeOn(t)))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 330, Col: 46}
 				}
@@ -654,7 +654,7 @@ func BestiaryFilters(v BestiaryView) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				if v.typeOn(t) {
+				if v.TypeOn(t) {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, " class=\"min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -919,7 +919,7 @@ func EntryList(v BestiaryView) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())))
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, OpenTheEntry(v.BestiaryBase())))
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/bestiary.templ`, Line: 421, Col: 123}
 				}

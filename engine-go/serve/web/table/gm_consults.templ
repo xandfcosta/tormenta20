@@ -91,15 +91,22 @@ templ gmGroup(v View) {
 							{ m.Name }
 						</span>
 						<span class="ds-row-meta">{ memberMeta(m) }</span>
-						@gmPoolLine("PV", "pv", poolOrNothing(m.PV))
-						@gmPoolLine("PM", "pm", poolOrNothing(m.PM))
 					</span>
-					<span class="ds-gm-steps">
-						@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar 1 PV de "+m.Name, templ.Attributes{"type": "button", "title": "Tirar PV de " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "ferir")})
-						@ds.IconButton(ds.ButtonSecondary, "Plus", "Devolver 1 PV a "+m.Name, templ.Attributes{"type": "button", "title": "Devolver PV a " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "curar")})
-						<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
-							@ui.Icon("ExternalLink", "ds-icon")
-						</a>
+					<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
+						@ui.Icon("ExternalLink", "ds-icon")
+					</a>
+					// AS BARRAS descem para a largura toda da linha, com o − e o +
+					// ao lado: na coluna de 19rem do desktop, nome, barras e três
+					// botões numa fileira só deixavam o texto passar por baixo deles.
+					<span class="ds-gm-member-vitals">
+						<span class="ds-gm-member-body">
+							@gmPoolLine("PV", "pv", poolOrNothing(m.PV))
+							@gmPoolLine("PM", "pm", poolOrNothing(m.PM))
+						</span>
+						<span class="ds-gm-steps">
+							@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar 1 PV de "+m.Name, templ.Attributes{"type": "button", "title": "Tirar PV de " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "ferir")})
+							@ds.IconButton(ds.ButtonSecondary, "Plus", "Devolver 1 PV a "+m.Name, templ.Attributes{"type": "button", "title": "Devolver PV a " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "curar")})
+						</span>
 					</span>
 				</div>
 			}
@@ -180,9 +187,8 @@ templ gmNpcEditor(v View) {
 // OUTRA criatura (`entryDraft`).
 templ gmBestiary(b master.BestiaryView) {
 	<div id="table-bestiary" class="ds-gm-bestiary" data-signals={ master.BestiarySignals(b) }>
-		@master.BestiaryFilters(b)
-		<p class="ds-row-meta">{ fmt.Sprintf("%d de %d", len(b.Entries), b.Total) }</p>
-		@master.EntryList(b)
+		@gmBestiaryFilters(b)
+		@gmEntryList(b)
 		if b.Chosen != nil {
 			@gmCreature(b, *b.Chosen)
 		}
@@ -204,11 +210,10 @@ templ gmCreature(b master.BestiaryView, m book.Entry) {
 		<div class="ds-gm-float" role="dialog" aria-modal="true" data-attr:data-expanded="$sheet_open" aria-label={ m.Name }>
 			<div class="ds-dialog-head">
 				<span class="ds-dialog-title">{ m.Name }</span>
-				<span class="ds-row-meta">{ fmt.Sprintf("%s · ND %s · p%d", book.TypeName(m.Kind), book.CRWritten(m.ND), m.BookPage) }</span>
 				@ds.IconButton(ds.ButtonGhost, "X", "Fechar a ficha de "+m.Name, templ.Attributes{"type": "button", "data-on:click": "$sheet_open = false"})
 			</div>
 			<div class="ds-gm-creature-body">
-				@master.EntryBlock(m, b.Book)
+				@gmCreatureBlock(m, b.Book)
 			</div>
 			<div class="ds-gm-creature-foot">
 				<div class="ds-gm-edit-nums">
