@@ -314,7 +314,7 @@ func theGameMasterConfirmsAMissAgainst(t *testing.T, f sceneFixture, attacker, t
 
 var (
 	defenceBadge = regexp.MustCompile(`>DEF</span>\s*<span[^>]*>(\d+)</span>`)
-	actionValue  = regexp.MustCompile(`tabular-nums text-foreground">([^<]+)</span>`)
+	actionValue  = regexp.MustCompile(`class="ds-row-value">([^<]+)</span>`)
 	skillTotal   = regexp.MustCompile(`aria-label="Refl ([+-]\d+)"`)
 )
 
@@ -339,7 +339,7 @@ func defenceOnTheSheet(t *testing.T, f sceneFixture, id int64) int {
 // QUADRADOS, e o que a Torre Inabalável promete zerar é o que a mesa fala.
 func strideOnTheActionsSurface(t *testing.T, f sceneFixture) string {
 	t.Helper()
-	linha := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Mover", "</li>")
+	linha := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Mover", `class="ds-row `)
 	found := actionValue.FindStringSubmatch(linha)
 	if found == nil {
 		t.Fatalf("não achei o deslocamento na linha de Mover:\n%s", recorte(linha))

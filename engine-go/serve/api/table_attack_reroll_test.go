@@ -67,8 +67,8 @@ func TestLuckyRerollsTheAttackAndTheSecondDieStands(t *testing.T) {
 	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
 
 	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(page, "mesa-ataque-selo") {
-		t.Fatal("a página da mesa não desenhou a faixa do provisório")
+	if !strings.Contains(page, `id="table-attack" class="ds-strike"`) {
+		t.Fatal("a página da mesa não desenhou o cartão do provisório")
 	}
 	if !strings.Contains(page, "Rolar de novo · Sortudo · 3 PM") {
 		t.Fatal("a faixa de quem rolou não oferece o Sortudo")

@@ -22,10 +22,16 @@ type skillTestBand struct {
 	// Tally é a conta inteira em monoespaçado: "d20 14 + 7 = 21". A mesa
 	// desconfia de número sem origem — "21" pede "de onde?".
 	Tally string
+	// Sum e Total são a mesma conta partida, para o cartão da sessão do
+	// jogador, que escreve o total grande e a soma ao lado: "d20 14 + 7" e 21.
+	Sum   string
+	Total int
 	// Seal e Class são o selo e a cor dele. Sem CD não há passou/falhou, então o
 	// selo diz só o que NÃO depende de CD: os naturais da p221.
 	Seal  string
 	Class string
+	// Tone é o tom do selo no kit: "good" no 20 natural, "danger" no 1.
+	Tone string
 	// ByHand diz que o d20 veio da mesa. Sem a marca ninguém sabe se confia no
 	// app ou no dado que rolou na mão.
 	ByHand bool
@@ -46,10 +52,12 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	t := st.LastSkillTest
 	band := &skillTestBand{
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
-		Tally: fmt.Sprintf("d20 %s %s %d = %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier), t.Total),
+		Sum:   fmt.Sprintf("d20 %s %s %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier)),
+		Total: t.Total,
 		Seal:  "Teste", Class: "mesa-ataque-comum",
 		Paid: writtenPaid(t.Spends), Rerolled: writtenRerolls(t.Rerolls, t.Roll),
 	}
+	band.Tally = fmt.Sprintf("%s = %d", band.Sum, band.Total)
 	// A TROCA aparece no nome: "Diplomacia com Enganação" — o número da conta é
 	// o da outra perícia, e sem isso a mesa estranharia o total.
 	if t.UsedSkill != "" {
@@ -60,9 +68,9 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	// nenhuma, e a CD é do mestre, dita em voz.
 	switch {
 	case t.Natural20:
-		band.Seal, band.Class = "20 natural", "mesa-ataque-critico"
+		band.Seal, band.Class, band.Tone = "20 natural", "mesa-ataque-critico", "good"
 	case t.Natural1:
-		band.Seal, band.Class = "1 natural", "mesa-ataque-erro"
+		band.Seal, band.Class, band.Tone = "1 natural", "mesa-ataque-erro", "danger"
 	}
 	return band
 }
@@ -108,4 +116,20 @@ func abs(n int) int {
 		return -n
 	}
 	return n
+}
+
+// rolledTestLine é a linha ao lado do total, no cartão da sessão do jogador: a
+// soma, o que foi pago, de onde veio o dado e os "rolar de novo" pagos.
+func rolledTestLine(band skillTestBand) string {
+	parts := []string{band.Sum}
+	if band.Paid != "" {
+		parts = append(parts, band.Paid)
+	}
+	if band.ByHand {
+		parts = append(parts, "dado rolado na mesa")
+	}
+	if band.Rerolled != "" {
+		parts = append(parts, band.Rerolled)
+	}
+	return strings.Join(parts, " · ")
 }

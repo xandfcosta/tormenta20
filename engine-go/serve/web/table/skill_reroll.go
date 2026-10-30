@@ -24,23 +24,13 @@ import (
 // rerollOffer é um botão da faixa: "Rolar de novo · Etiqueta · 1 PM".
 type rerollOffer struct {
 	Label string
-	// Path é o endereço do gesto; o `@post` sai do `offerCommand`, com a marca
-	// da sessão em que a faixa é desenhada.
+	// Path é o endereço do gesto; o `@post` sai do `offerCommand`.
 	Path string
 }
 
-// offerCommand é o `@post` de uma oferta. Na sessão paralela ele leva a marca,
-// para a resposta redesenhar a mesa nova (ver `parallelSessionAsked`).
-func offerCommand(offer rerollOffer, parallel bool) string {
-	return "@post('" + markedIfParallel(offer.Path, parallel) + "')"
-}
-
-// markedIfParallel põe a marca da sessão paralela num endereço da mesa.
-func markedIfParallel(path string, parallel bool) string {
-	if parallel {
-		return path + "?tempestade=1"
-	}
-	return path
+// offerCommand é o `@post` de uma oferta.
+func offerCommand(offer rerollOffer) string {
+	return "@post('" + offer.Path + "')"
 }
 
 // rerollsSkillTest rola de novo o último teste com o gasto do caminho.

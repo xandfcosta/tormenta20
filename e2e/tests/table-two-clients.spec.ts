@@ -27,7 +27,7 @@ async function asDuasTelas(browser: Browser) {
   // mestre agiria antes de o stream do jogador existir, e a ausência do eco
   // seria lida como "não propagou".
   await expect(gmScreen.getByRole('button', { name: /^Abrir a iniciativa/ }).first()).toBeVisible()
-  await expect(playerScreen.getByRole('group', { name: 'O que ver na sessão' })).toBeVisible()
+  await expect(playerScreen.getByRole('navigation', { name: 'Superfícies da sessão' })).toBeVisible()
   return {
     telaDoMestre: gmScreen,
     telaDoJogador: playerScreen,
@@ -99,14 +99,14 @@ async function garanteACena(page: Page) {
 test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
   const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
-    // O SELETOR DE SUPERFÍCIE é do jogador: ele escolhe entre a própria ficha, a
-    // mesa e o tabuleiro. O mestre vê tudo junto, no palco dele.
+    // A BARRA DA SESSÃO é do jogador: ele escolhe entre as Ações, a própria
+    // ficha, a mesa e o tabuleiro. O mestre vê tudo junto, no palco dele.
     await expect(
-      playerScreen.getByRole('group', { name: 'O que ver na sessão' }),
+      playerScreen.getByRole('navigation', { name: 'Superfícies da sessão' }),
       'o jogador não recebeu a cena do jogador',
     ).toBeVisible()
     await expect(
-      gmScreen.getByRole('group', { name: 'O que ver na sessão' }),
+      gmScreen.getByRole('navigation', { name: 'Superfícies da sessão' }),
       'o mestre recebeu a cena do JOGADOR',
     ).toHaveCount(0)
 
@@ -186,7 +186,7 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
     await gmScreen.keyboard.press('Escape')
 
     // E a tela do jogador aprende sozinha, sem recarregar. É a issue inteira.
-    await expect(fila.getByText('ABALADO').first()).toBeVisible()
+    await expect(fila.getByText(/^abalado$/i).first()).toBeVisible()
 
     await tiraDaFila(gmScreen, target)
     await expect(fila.getByText(target)).toHaveCount(0)
@@ -317,47 +317,54 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
     await openTheTracker(gmScreen)
     await gmScreen.getByRole('button', { name: 'Adicionar grupo' }).click()
 
-    // O NOME do personagem deste jogador, lido na superfície MESA — que é onde
-    // ele está antes de o jogador abrir a ficha, e é o nome que o botão "Ferir
-    // …" da gaveta do mestre carrega.
-    const initiativeHeader = playerScreen.locator('h2', { hasText: '·' }).first()
-    await expect(initiativeHeader).toBeVisible()
-    const pcName = (await initiativeHeader.innerText()).split('·').pop()?.trim() ?? ''
-    expect(pcName, 'não achei o nome do personagem do jogador').not.toBe('')
+    // OS NOMES dos personagens deste jogador, lidos na superfície MESA — as
+    // linhas que dizem "você". São TODOS, e não o primeiro: o jogador da semente
+    // tem mais de um na fila, e a Ficha embutida é a de um deles só.
+    const mine = playerScreen.locator('#table-tracker .ds-queue-row[data-mine] .ds-row-title')
+    await expect(mine.first()).toBeVisible()
+    const pcNames = (await mine.allInnerTexts()).map((text) =>
+      text.split('\n')[0].replace(/\s*(agora|você)\s*/g, ' ').trim(),
+    )
+    expect(pcNames.length, 'não achei o personagem do jogador na fila').toBeGreaterThan(0)
 
     await playerScreen.getByRole('button', { name: 'Ficha', exact: true }).click()
     // Uma seção que NÃO é a que abre: é ela que prova que o remendo respeita
     // onde a pessoa está.
-    await playerScreen.getByRole('button', { name: 'Combate' }).click()
-    await expect(playerScreen.getByRole('heading', { name: 'Combate' })).toBeVisible()
+    const combat = playerScreen.getByRole('navigation', { name: 'Seções da ficha' }).getByRole('link', { name: 'Combate' })
+    await combat.click()
+    await expect(combat).toHaveAttribute('aria-current', 'page')
 
     // A barra da ficha é `aria-hidden` de propósito — o que se LÊ é a fração.
     const sheetHP = async () => {
       const text = await playerScreen.locator('#sheet-scene').innerText()
-      return text.match(/\d+\/\d+/)?.[0] ?? ''
+      return text.match(/\d+\s*\/\s*\d+/)?.[0] ?? ''
     }
-    await expect.poll(sheetHP).toMatch(/\d+\/\d+/)
+    await expect.poll(sheetHP).toMatch(/\d+\s*\/\s*\d+/)
     const earlier = await sheetHP()
 
-    // O mestre fere O PERSONAGEM DESTE JOGADOR, e não o primeiro da fila: a
+    // O mestre fere OS PERSONAGENS DESTE JOGADOR, e não o primeiro da fila: a
     // ordem sai de um d20, então mirar "o primeiro" editaria a ficha de outra
     // pessoa e o caso passaria a afirmar nada.
-    await gmScreen
-      .locator('#tracker-drawer')
-      .getByRole('button', { name: `Ferir ${pcName}` })
-      .first()
-      .click()
+    for (const pcName of pcNames) {
+      await gmScreen
+        .locator('#tracker-drawer')
+        .getByRole('button', { name: `Ferir ${pcName}` })
+        .first()
+        .click()
+    }
 
     await expect
       .poll(sheetHP, { timeout: 8000, message: 'a ficha do jogador não soube do dano' })
       .not.toBe(earlier)
     // E ele continua em Combate: o remendo trouxe a seção dele, não a padrão.
     await expect(
-      playerScreen.getByRole('heading', { name: 'Combate' }),
+      combat,
       'o remendo devolveu a ficha na aba padrão e tirou o jogador de onde ele estava',
-    ).toBeVisible()
+    ).toHaveAttribute('aria-current', 'page')
 
-    await tiraDaFila(gmScreen, pcName)
+    for (const pcName of pcNames) {
+      await tiraDaFila(gmScreen, pcName)
+    }
   } finally {
     await closes()
   }

@@ -16,12 +16,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A SESSÃO PARALELA (ALE-473), pelo mockup aprovado `sessao.html`: a visão do
-// jogador com personagem, aberta com `?tempestade=1`. O cabeçalho com a faixa
-// sem fim em cima; a barra da sessão embaixo no celular (decisão do dono: é
-// onde o polegar alcança) e em cima no desktop; a Ficha embutida já na ficha
-// paralela. As quatro superfícies vestem o kit; o mapa do Tabuleiro é o de
-// hoje, porque ele é conteúdo e não moldura (ver `tempestadeBoard`).
+// A SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado `sessao.html`. O
+// cabeçalho com a faixa sem fim em cima; a barra da sessão embaixo no celular
+// (decisão do dono: é onde o polegar alcança) e em cima no desktop. As quatro
+// superfícies vestem o kit; o mapa do Tabuleiro é o de hoje, porque ele é
+// conteúdo e não moldura (ver `tempestadeBoard`).
 func tempestadeTableScene(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -52,6 +51,10 @@ func tempestadeTableScene(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = tempestadeAttack(v).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = tempestadeSkillTest(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -709,7 +712,7 @@ func tempestadeAttack(v View) templ.Component {
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer, true)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var29), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

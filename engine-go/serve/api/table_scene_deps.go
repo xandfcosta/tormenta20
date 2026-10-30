@@ -106,7 +106,7 @@ func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View
 		return nil
 	}
 	sheet.Embedded = true
-	// NA SESSÃO PARALELA a ficha embutida também é a paralela (ALE-473).
-	sheet.Tempestade = sheetui.TempestadeAsked(r)
+	// A ficha embutida é a do Tempestade, como a sessão do jogador (ALE-473).
+	sheet.Tempestade = true
 	return &sheet
 }

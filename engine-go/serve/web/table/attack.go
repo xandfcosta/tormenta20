@@ -367,7 +367,7 @@ func cancelsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 
 // attackCommand escreve o `@post` dos dois verbos da faixa.
 func attackCommand(v View, verb string) string {
-	return fmt.Sprintf("@post('%s')", markedIfParallel(routes.Session(v.CampaignID, v.SessionID)+"/ataque/"+verb, v.Tempestade))
+	return fmt.Sprintf("@post('%s')", routes.Session(v.CampaignID, v.SessionID)+"/ataque/"+verb)
 }
 
 // attackSwitchingTheDamageType é o `@post` do golpe que troca o tipo do dano.

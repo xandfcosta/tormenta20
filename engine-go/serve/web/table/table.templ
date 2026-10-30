@@ -3,127 +3,8 @@ package table
 import (
 	"fmt"
 	"t20engine/domain/book"
-	"t20engine/serve/web/sheetui"
 	"t20engine/serve/web/ui"
 )
-
-// A Mesa do jogador desenhada. Nenhuma REGRA aqui: o que decide mora em
-// `view.go`, onde se testa sem HTML.
-templ tableScene(v View) {
-	// A largura de leitura é de cada PÁGINA, não da casca: a Mesa é uma coluna e
-	// o admin é uma grade de dois painéis. Sem isto, as linhas da fila esticam
-	// 1500px e o número da iniciativa fica a meia tela do nome.
-	//
-	// `mesa-palco` é a classe da casa que dá ALTURA MEDIDA a uma cena
-	// (`container-type: size`, index.css), e ela exige caixa com altura definida
-	// — daí o `main` PREENCHER o palco (`flex-1`) com o miolo rolando por dentro,
-	// em vez de crescer com o conteúdo e deixar a casca rolar por fora. Com isso
-	// as duas faixas deixam de precisar de `sticky`.
-	//
-	// O `data-attr:style` traz as variáveis do ARRASTO, e elas moram AQUI porque
-	// o `#table` é a única raiz que o remendo nunca toca — as variáveis descem
-	// por herança até quem está sendo arrastado. Na peça ou no plano, o primeiro
-	// remendo de outro jogador as apagaria no meio do gesto.
-	<main
-		id="table"
-		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
-		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
-	>
-		@tableHeader(v)
-		@surfaceSelector(v)
-		// O ATAQUE PROPOSTO vem ACIMA da superfície porque ele é a coisa que a mesa
-		// tem de decidir agora: embaixo do mapa, numa tela de 390px, ele nasceria
-		// fora da dobra no exato momento em que alguém precisa clicar nele.
-		@attackProposed(v)
-		@skillTestRolled(v)
-		// MINHA FICHA fica FORA de `TableRegions` de propósito: o stream nunca a
-		// toca, e quem a mantém em dia são os comandos dela, que remendam o
-		// `#sheet-scene` por conta.
-		if v.MySheet != nil {
-			// O OUVIDO DA FICHA: o stream só avisa que o personagem mudou, e é o
-			// CLIENTE que repede a ficha — na aba em que a pessoa está, que só
-			// ele sabe.
-			//
-			// FORA do `#sheet-scene` de propósito: aquele nó é substituído a cada
-			// remendo da ficha, e um ouvinte que se apaga e renasce no meio do
-			// caminho pode perder o aviso que o fez nascer.
-			//
-			// O filtro é obrigatório: sem ele o ouvinte dispara em QUALQUER
-			// remendo de sinal, e o stream também escreve `superficie` quando o
-			// mestre puxa alguém para o mapa — a ficha seria repedida por causa
-			// de um gesto que não tem nada a ver com ela.
-			<div
-				data-on-signal-patch-filter="{include: /^sheet_version$/}"
-				data-on-signal-patch={ sheetui.SheetRefetch(*v.MySheet) }
-				class="hidden"
-			></div>
-			<div data-show={ surface(superficieDaFicha) } class="flex min-h-0 flex-1 flex-col">
-				@sheetui.SceneBody(*v.MySheet)
-			</div>
-			// AS AÇÕES ficam na mesma coluna de leitura da Mesa e não na da
-			// Ficha: a ficha é grade de números e usa a largura toda; esta é uma
-			// lista, e lista larga obriga o olho a atravessar a tela entre o nome
-			// e o número.
-			<div data-show={ surface(superficieDasAcoes) } class="mx-auto min-h-0 w-full max-w-3xl flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
-				@turnTargetBar(v)
-				@sheetui.ActionsBody(*v.MySheet)
-			</div>
-		}
-		// A MESA: quem está na cena e em que ordem. Rola por dentro, nunca a
-		// página. A largura de leitura mora AQUI e não no `main`: uma coluna de
-		// 48rem é a medida certa para a fila e para o grupo, e a errada para o
-		// mapa.
-		<div data-show={ surface(superficieDaMesa) } class="mx-auto min-h-0 w-full max-w-3xl flex-1 space-y-4 overflow-y-auto p-3 sm:p-4">
-			@tableRegisterRegion(v)
-			@tableParty(v)
-			@tableTracker(v)
-		</div>
-		// O TABULEIRO ocupa a tela inteira, sem coluna: espremido numa coluna de
-		// leitura, o mapa cabia em 8×4 quadrados.
-		<div data-show={ surface(superficieDoTabuleiro) } class="flex min-h-0 flex-1 flex-col p-2 sm:p-3">
-			@tableBoard(v)
-		</div>
-		// AS REGIÕES QUE NÃO SÃO SUPERFÍCIE ficam fora das duas: são diálogos (e,
-		// para o jogador, cascas vazias), e o stream remenda POR ID.
-		@tableMap(v)
-		@tableCollectionPlaces(v)
-		@tableConfigSession(v)
-		@tableCommands(v)
-	</main>
-}
-
-// O SELETOR DE SUPERFÍCIE do jogador.
-//
-// DOIS níveis e não um: aqui se escolhe A SUPERFÍCIE, e dentro de cada uma
-// continuam as seções dela. Uma fileira única misturando "partes de mim" com
-// "partes da mesa" fica ilegível no telefone.
-//
-// Ancorado no topo e sempre visível: a premissa do app é tela cheia, com ninguém
-// rolando a página atrás de menu.
-templ surfaceSelector(v View) {
-	// A MESMA largura de leitura da superfície Mesa, e não a linha inteira:
-	// esticado em 1920px, cada aba viraria um botão de centenas de pixels.
-	// Centrado, ele encabeça a coluna na Mesa e continua alcançável no
-	// Tabuleiro.
-	<div role="group" aria-label="O que ver na sessão" class="mx-auto flex w-full max-w-3xl shrink-0 gap-1 px-3 pt-2 sm:px-4">
-		for _, layer := range surfaces(v) {
-			<button
-				type="button"
-				data-attr:aria-pressed={ fmt.Sprintf("%s ? 'true' : 'false'", surface(layer.ID)) }
-				data-class={ surfaceStyling(layer.ID) }
-				data-on:click={ pickSurface(layer.ID) }
-				class="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-none border px-2 text-xs uppercase tracking-wide outline-none transition-colors"
-			>
-				// O ÍCONE SAI NO TELEFONE. Com QUATRO superfícies a 390px sobram
-				// ~93px por botão, e ícone mais rótulo não cabem: medido, o
-				// "Tabuleiro" saía "TABU…". Some o ícone e não a palavra porque é
-				// a palavra que diz o que o botão faz — o ícone é reforço.
-				@ui.Icon(layer.Icon, "size-4 shrink-0 hidden sm:block")
-				<span class="truncate">{ layer.Label }</span>
-			</button>
-		}
-	</div>
-}
 
 // AS REGIÕES DA MESA: cada uma tem raiz com id ESTÁVEL e hash próprio, e o
 // stream manda só as que mudaram. Remendar a cena inteira a cada mudança de
@@ -249,12 +130,6 @@ func turnStripInk(p turnAhead) string {
 // clicou.
 templ tableRegisterRegion(v View) {
 	<div id="table-register">
-		// O teste de quem sangra, para o JOGADOR: o mestre o tem na faixa de
-		// baixo, e desenhá-lo aqui também daria duas perguntas iguais na tela
-		// dele (p236).
-		if v.GM == nil {
-			@bleedingPrompt(v)
-		}
 		if v.SceneActive && v.Eu != nil {
 			@tableRegister(v)
 		}
@@ -267,77 +142,8 @@ templ tableParty(v View) {
 		id="table-party"
 		class={ templ.KV("flex min-h-0 flex-1 flex-col", v.GM != nil) }
 	>
-		if v.GM != nil {
-			@gmCast(v)
-		} else {
-			@cardsParty(v)
-		}
+		@gmCast(v)
 	</div>
-}
-
-// O GRUPO em cartões, a superfície do JOGADOR. Aparece FORA de cena de
-// propósito: PV do grupo não é informação de combate.
-templ cardsParty(v View) {
-	if len(v.Group) > 0 {
-		<section class="space-y-1.5">
-			<h2 class={ ui.SectionLabelClasses("muted", "") }>Grupo</h2>
-			<div class="grid gap-2 sm:grid-cols-2">
-				for _, m := range v.Group {
-					// O RETRATO ANCORA O CARTÃO: sem nada à esquerda, o nome e as barras
-					// ficam soltos e gastam altura sem dizer quem é.
-					//
-					// É a monogram e não uma moldura de foto: não há campo de imagem no
-					// modelo, e uma caixa que espera foto e recebe duas letras fica pior
-					// que uma desenhada para duas letras. No dia em que a foto entrar,
-					// ela entra aqui.
-					<article class="flex items-center gap-2.5 border border-border/60 bg-card/60 p-2.5">
-						<span
-							aria-hidden="true"
-							class="monogram size-11 rounded-sm text-sm"
-							style={ "background: " + ui.NameGradient(m.Name) }
-						>{ m.Initials }</span>
-						<div class="flex min-w-0 flex-1 flex-col gap-1">
-							<div class="flex items-baseline justify-between gap-2">
-								<span class="flex min-w-0 items-baseline gap-1.5">
-									// A presença é um PONTO e não um anel, porque aqui o cartão tem
-									// largura de sobra.
-									//
-									// E ele nunca vai sozinho: cor não existe para quem usa leitor
-									// de tela, então a frase viaja no `title` e num rótulo
-									// só-para-leitor.
-									if m.Presence != nil {
-										<span
-											title={ m.Name + " — " + m.Presence.Sentence }
-											class={ "size-2 shrink-0 self-center rounded-full",
-												templ.KV("bg-hp-full", m.Presence.AtTable),
-												templ.KV("bg-grimorio-iron", !m.Presence.AtTable) }
-										></span>
-										<span class="sr-only">{ m.Presence.Sentence }</span>
-									}
-									<span class="truncate font-medium">{ m.Name }</span>
-								</span>
-								<span class="shrink-0 bg-muted px-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">Nv { fmt.Sprint(m.Level) }</span>
-							</div>
-							if m.Classes != "" {
-								<p class="truncate text-xs text-muted-foreground">{ m.Classes }</p>
-							}
-							// PV E PM LADO A LADO: empilhadas, gastam duas linhas para dizer
-							// duas coisas que cabem numa.
-							//
-							// O RÓTULO FICA, mesmo apertado: sem ele, o que separa PV de PM é
-							// só a cor, e cor sozinha não informa quem não a distingue. O
-							// `aria-label` da barra já diz a frase inteira; isto é para quem
-							// enxerga.
-							<div class="flex items-center gap-3">
-								@barraCompacta("PV", m.PV)
-								@barraCompacta("PM", m.PM)
-							</div>
-						</div>
-					</article>
-				}
-			</div>
-		</section>
-	}
 }
 
 // O TABULEIRO vem ANTES da fila e depois do Grupo: quando há mapa, é nele que a
@@ -707,11 +513,7 @@ templ rowVerbs(v View, l tableRow) {
 templ trackerBar(v View, l tableRow, pool, label string, b *tableBar) {
 	if b != nil {
 		<div class="flex items-center gap-1">
-			if b.Hidden && v.GM == nil {
-				<p class="text-xs italic text-muted-foreground">{ label } ocultos pelo mestre</p>
-			} else {
-				@barra(label, *b)
-			}
+			@barra(label, *b)
 			if v.GM != nil {
 				@vitalStep(v, l, pool, "curar", "+", healVerb(pool))
 				@vitalStep(v, l, pool, "ferir", "−", harmVerb(pool))
@@ -763,28 +565,6 @@ templ rowEye(v View, l tableRow, pool, label string, hidden bool) {
 			@ui.Icon("Eye", "size-4")
 		}
 	</button>
-}
-
-// barraCompacta é a barra do cartão do Grupo, feita para duas caberem numa
-// linha. A diferença para a `barra` é só o que ocupa largura: o rótulo encolhe e
-// o número perde o máximo, que já viaja no `aria-label`.
-templ barraCompacta(label string, b tableBar) {
-	<div class="flex min-w-0 flex-1 items-center gap-1">
-		<span class={ ui.SectionLabelClasses("muted", "shrink-0") }>{ label }</span>
-		<div
-			role="progressbar"
-			aria-valuenow={ fmt.Sprint(b.Current) }
-			aria-valuemin={ fmt.Sprint(min(0, b.Current)) }
-			aria-valuemax={ fmt.Sprint(b.Max) }
-			aria-label={ barLabel(label, b) }
-			class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
-		>
-			<div class={ "h-full rounded-full", b.Tone } style={ fmt.Sprintf("width: %d%%", b.Pct) }></div>
-		</div>
-		<span class="shrink-0 font-mono text-[13px] tabular-nums text-foreground">{ ui.HitPoints(b.Current) }/{ fmt.Sprint(b.Max) }</span>
-		@reservaDeTemporarios(b)
-		@downedWord(b)
-	</div>
 }
 
 // reservaDeTemporarios é o `+70` que segue a fração, no azul do PV temporário.
@@ -1023,12 +803,3 @@ templ editarCombatente(v View) {
 	</dialog>
 }
 
-// downedWord é a palavra de quem caiu, depois da fração: "morrendo", "estável"
-// ou "morto" (p236). Ela é TEXTO e não só cor, porque é o que separa três
-// barras vazias que, sem ela, dizem a mesma coisa — e o morto e o que sangra
-// pedem gestos diferentes do mestre.
-templ downedWord(b tableBar) {
-	if b.Down != "" {
-		<span class={ "shrink-0 text-2xs font-semibold", ui.DownedInk(b.Down) }>{ b.Down }</span>
-	}
-}

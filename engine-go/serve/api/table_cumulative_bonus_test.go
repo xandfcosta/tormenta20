@@ -39,7 +39,7 @@ import (
 // casava com o `+5` de `1d6+5` — o DANO do detalhe, que não se mexe quando o
 // bônus sobe. O caso teria passado verde sobre o número errado, que é a
 // armadilha que o `CLAUDE.md` chama de instrumento com cara de resultado.
-var attackValue = regexp.MustCompile(`tabular-nums text-foreground">([+-]\d+)</span>`)
+var attackValue = regexp.MustCompile(`>([+-]\d+)</span>`)
 
 // ragingBarbarianWithTheBloodPower é a bancada: o bárbaro de nível 6, com a
 // Sangue dos Inimigos escolhida e EM FÚRIA, num combate com um Goblin.
@@ -105,7 +105,7 @@ func attackOnTheActionsSurface(t *testing.T, f sceneFixture) int {
 	t.Helper()
 	// RECORTADO À LINHA DE ATACAR: o grupo inteiro tem Manobra, Fintar e mais,
 	// e o primeiro número grande da superfície pode não ser o do ataque.
-	linha := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Atacar · ", "</li>")
+	linha := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Atacar · ", `class="ds-row `)
 	found := attackValue.FindStringSubmatch(linha)
 	if found == nil {
 		t.Fatalf("não achei o número da linha de Atacar:\n%s", recorte(linha))

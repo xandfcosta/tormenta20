@@ -131,17 +131,30 @@ templ tempestadeTracker(v View) {
 	</div>
 }
 
-// queueVital é o PV de uma linha da fila: o número e a barra de quem a mesa
-// deixa ver, e a frase para o resto — o mestre esconde, e a tela diz que
-// escondeu em vez de deixar o lugar vazio.
+// queueVital é o PV e o PM de uma linha da fila: o número e a barra de quem a
+// mesa deixa ver, e a frase para o resto — o mestre esconde, e a tela diz que
+// escondeu em vez de deixar o lugar vazio. A linha sem o pool não desenha nada
+// dele, porque "não rastreia" e "escondido" são coisas diferentes.
 templ queueVital(row tableRow) {
 	if row.PV == nil || row.PV.Hidden {
 		<div class="ds-row-meta">PV ocultos pelo mestre</div>
-	} else {
+	}
+	if (row.PV != nil && !row.PV.Hidden) || (row.PM != nil && !row.PM.Hidden) {
 		<div class="ds-queue-vital">
-			<span class="ds-row-meta">{ fmt.Sprintf("PV %d/%d", row.PV.Current, row.PV.Max) }</span>
-			<span class="ds-bar" aria-label={ barLabel("PV", *row.PV) }><span data-kind="pv" style={ fmt.Sprintf("width:%d%%", row.PV.Pct) }></span></span>
+			@queueBar("PV", "pv", row.PV)
+			@queueBar("PM", "pm", row.PM)
 		</div>
+	}
+	if row.PM != nil && row.PM.Hidden {
+		<div class="ds-row-meta">PM ocultos pelo mestre</div>
+	}
+}
+
+// queueBar é o número e a barra de um pool que a mesa vê.
+templ queueBar(label, kind string, b *tableBar) {
+	if b != nil && !b.Hidden {
+		<span class="ds-row-meta">{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }</span>
+		<span class="ds-bar" aria-label={ barLabel(label, *b) }><span data-kind={ kind } style={ fmt.Sprintf("width:%d%%", b.Pct) }></span></span>
 	}
 }
 

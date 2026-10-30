@@ -590,7 +590,6 @@ func (s Scene) respondGm(
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
-		view.wearParallel(parallelSessionAsked(r, view))
 		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
 		// do stream: aqui não há digital anterior para comparar — este caminho
 		// responde a um pedido, não mantém uma conexão. Vale porque quem recebe

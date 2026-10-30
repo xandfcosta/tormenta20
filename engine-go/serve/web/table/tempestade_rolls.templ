@@ -1,0 +1,49 @@
+package table
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// O TESTE ROLADO DA SESSÃO DO JOGADOR (ALE-473), pelo mockup `paridade.html`:
+// o cartão do ataque SEM os verbos, pela razão do `skillTestRolled` — um teste
+// informa e não muda nada, e a CD é do mestre, em voz. O selo diz só os
+// naturais (p221), e o "Rolar de novo" é de quem rolou (p226).
+templ tempestadeSkillTest(v View) {
+	if v.SkillTest != nil {
+		<section id="table-skill-test" class="ds-strike" data-test role="status" aria-label="Teste rolado">
+			<div class="ds-strike-head">
+				@ds.Badge("Teste", true)
+				if v.SkillTest.Tone != "" {
+					<span class="ds-seal" data-tone={ v.SkillTest.Tone }>{ v.SkillTest.Seal }</span>
+				}
+				<span class="ds-row-meta">{ v.SkillTest.Who + " · " }<b>{ v.SkillTest.Skill }</b></span>
+			</div>
+			// `aria-live` na CONTA, pela razão do de hoje: o selo já é lido no
+			// nome acessível, e quem ouve precisa do resultado.
+			<div class="ds-strike-roll" aria-live="polite">
+				<b class="ds-strike-verdict">{ strconv.Itoa(v.SkillTest.Total) }</b>
+				<span class="ds-strike-tally">{ rolledTestLine(*v.SkillTest) }</span>
+			</div>
+			if len(v.SkillTest.Offers) > 0 {
+				<div class="ds-strike-foot" data-fill>
+					if v.SkillTest.ByHand {
+						<label class="ds-strike-hand">
+							<span class="ds-row-meta">Eu rolei</span>
+							<input class="ds-input" type="number" min="1" max="20" inputmode="numeric" data-bind:reroll_d20 aria-label="O d20 que você rolou de novo na mesa"/>
+						</label>
+					}
+					for _, offer := range v.SkillTest.Offers {
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
+							{ offer.Label }
+						}
+					}
+				</div>
+			}
+		</section>
+	} else {
+		// O NÓ VAZIO fica, pela razão do ataque: o stream remenda POR ID.
+		<section id="table-skill-test" hidden></section>
+	}
+}
