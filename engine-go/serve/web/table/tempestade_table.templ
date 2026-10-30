@@ -53,8 +53,20 @@ templ tempestadeTableScene(v View) {
 				</div>
 			</div>
 		}
+		// A MESA: o registro, a fila e o grupo, cada um região do stream. A ordem
+		// troca sozinha fora de cena (o grupo vem primeiro), pelo CSS, porque as
+		// regiões mudam por conta própria e a casca não.
+		<div class="ds-session-surface" data-show={ surface(superficieDaMesa) }>
+			<div class="ds-session-scroll">
+				<div class="ds-mesa">
+					@tempestadeRegister(v)
+					@tempestadeTracker(v)
+					@tempestadeParty(v)
+				</div>
+			</div>
+		</div>
 		for _, layer := range surfaces(v) {
-			if layer.ID != superficieDaFicha && layer.ID != superficieDasAcoes {
+			if layer.ID != superficieDaFicha && layer.ID != superficieDasAcoes && layer.ID != superficieDaMesa {
 				<div class="ds-session-surface ds-session-todo" data-show={ surface(layer.ID) }>
 					@ds.Empty(layer.Label+" ainda está na sessão de hoje", "Esta superfície ainda não foi refeita no sistema novo.") {
 						<div class="mt-3 flex justify-center">
