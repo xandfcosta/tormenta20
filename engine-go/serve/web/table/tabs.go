@@ -334,6 +334,9 @@ type pullScreen struct {
 	Scene         string
 	Back          string
 	ReturnCommand string
+	// ReturnTab é a aba do `ReturnCommand`, para a sessão paralela remontá-lo
+	// com a marca.
+	ReturnTab string
 }
 
 // tableTabs monta a barra a partir dos tabuleiros abertos, JÁ REDIGIDOS pelo
@@ -358,7 +361,7 @@ func tableTabs(open []*board.BoardState, role, active string, campaignID, sessio
 			Name:    tabName(fromTable, i),
 			Active:  activeTabIs(fromTable.ID, active, i),
 			Curtain: fromTable.Curtained,
-			Command: fmt.Sprintf("@post('%s/aba/%s')", tableBoardBase(campaignID, sessionID), fromTable.ID),
+			Command: tabCommand(BoardView{Base: tableBoardBase(campaignID, sessionID)}, fromTable.ID),
 		}
 		if sheet.Active && role == "gm" {
 			sheet.ShowsTable = fmt.Sprintf("@post('%s/aba/%s/mostrar')",
@@ -409,9 +412,9 @@ func removePull(bar []boardTab, pulledFrom string) *pullScreen {
 	// estava aqui só precisa de um jeito de dizer "vi" — e dizer "vi" é escolher
 	// esta aba, que é o mesmo gesto que solta qualquer um do puxão.
 	if back == nil || back.ID == current.ID {
-		return &pullScreen{Scene: current.Name, ReturnCommand: current.Command}
+		return &pullScreen{Scene: current.Name, ReturnCommand: current.Command, ReturnTab: current.ID}
 	}
-	return &pullScreen{Scene: current.Name, Back: back.Name, ReturnCommand: back.Command}
+	return &pullScreen{Scene: current.Name, Back: back.Name, ReturnCommand: back.Command, ReturnTab: back.ID}
 }
 
 // activeTabIs resolve o id vazio, que é "a primeira aberta".

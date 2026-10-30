@@ -86,6 +86,10 @@ type BoardView struct {
 	//
 	// Escrita SÓ pelo `tableBoardBase` e pelo `placeDraftBase`.
 	Base string
+	// Mark é a marca da SESSÃO PARALELA no fim dos gestos que o jogador faz
+	// (`View.wearParallel`): eles respondem redesenhando o tabuleiro, e sem ela
+	// devolveriam o de hoje dentro da sessão nova.
+	Mark string
 	// BoardID é qual tabuleiro ESTA view desenha, e ele viaja para a tela
 	// porque o COPIAR precisa registrar de onde a peça saiu.
 	BoardID string
