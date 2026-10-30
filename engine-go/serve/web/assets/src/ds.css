@@ -1502,12 +1502,32 @@
   .ds-actions-with > .ds-option > .ds-row-meta {
     margin-left: 0.375rem;
   }
-  /* A COLUNA DE LEITURA das Ações, pela razão da de hoje: lista larga obriga
-   * o olho a atravessar a tela entre o nome e o número. */
-  .ds-actions,
-  .ds-target > * {
-    width: 100%;
-    max-width: 48rem;
+  /* UM BLOCO POR GRUPO, e os blocos em COLUNAS quando a tela é larga: uma
+   * lista só esticada deixava metade do desktop vazia (pedido do dono), e cada
+   * bloco continua estreito o bastante para o olho ir do nome ao número sem
+   * atravessar a tela. */
+  .ds-action-group {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+  }
+  details.ds-action-group {
+    display: block;
+  }
+  details.ds-action-group > summary {
+    display: flex;
+    cursor: pointer;
+    list-style: none;
+  }
+  @media (min-width: 64rem) {
+    .ds-actions {
+      grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+      align-items: start;
+      padding: 1rem 1.5rem;
+    }
+    .ds-actions > :not(.ds-action-group) {
+      grid-column: 1 / -1;
+    }
   }
   /* A LINHA DA AÇÃO — o nome não é `ds-action-row`, que é a linha do kit cujo
    * nome abre uma folha. */

@@ -71,7 +71,7 @@ templ tempestadePowers(v View) {
 	</section>
 	@tempestadeChoicesDialog(v)
 	for _, row := range powerSheetRows(v.Powers) {
-		@powerSheet(v, row)
+		@powerSheet(v, row, powerSheetID(row))
 		if row.Stance != nil && row.Stance.MaxSteps > 0 {
 			@stanceStepsDialog(v, row, stanceDialogID(row))
 		}
@@ -122,8 +122,8 @@ templ powerGesture(v View, row powerRow) {
 
 // powerSheet é a folha do poder: a regra inteira com a página, o que ele dá
 // agora quando está em curso, a razão da recusa, e o gesto no pé.
-templ powerSheet(v View, row powerRow) {
-	@ds.Dialog(powerSheetID(row), row.Name, powerSheetFoot(v, row)) {
+templ powerSheet(v View, row powerRow, id string) {
+	@ds.Dialog(id, row.Name, powerSheetFoot(v, row)) {
 		<p class="ds-row-meta">{ powerSheetMeta(row) }</p>
 		<p class="ds-card-text">{ row.Detail }</p>
 		if row.InEffect != "" {

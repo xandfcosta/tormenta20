@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
 )
 
 // AS AÇÕES DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `sessao.html`.
@@ -32,26 +33,45 @@ templ tempestadeActionsBody(v View) {
 		if len(v.Actions.Groups) == 0 {
 			@ds.Empty("Nada a fazer num turno", "Empunhe uma arma na Mochila.")
 		}
+		// UM BLOCO POR GRUPO — o interruptor e a lista que ele muda —, para os
+		// grupos se distribuírem em colunas quando a tela é larga.
 		for _, group := range v.Actions.Groups {
-			if len(group.Chips) > 0 {
-				<div class="ds-options ds-actions-with" role="group" aria-label={ "Com, em " + group.Title }>
-					<span class="ds-field-label">Com</span>
-					for _, chip := range group.Chips {
-						@actionChipDs(v, group, chip)
-					}
-				</div>
-			}
-			@ds.List(group.Title, group.Note) {
-				for _, row := range group.Rows {
-					@actionRowDs(v, group, row)
+			<section class="ds-action-group">
+				if len(group.Chips) > 0 {
+					<div class="ds-options ds-actions-with" role="group" aria-label={ "Com, em " + group.Title }>
+						<span class="ds-field-label">Com</span>
+						for _, chip := range group.Chips {
+							@actionChipDs(v, group, chip)
+						}
+					</div>
 				}
-			}
+				@ds.List(group.Title, group.Note) {
+					for _, row := range group.Rows {
+						@actionRowDs(v, group, row)
+					}
+				}
+			</section>
 		}
-		if v.Actions.Passives > 0 {
-			<p class="ds-help">{ "Passivas · " + strconv.Itoa(v.Actions.Passives) + " · já estão nos seus números, nada a acionar" }</p>
+		// AS PASSIVAS, listadas e recolhidas: não há gesto a fazer com elas, mas
+		// saber quais são é parte de decidir o turno (pedido do dono). O nome
+		// abre a folha do poder, com a regra inteira.
+		if len(v.Powers.Passives) > 0 {
+			<details class="ds-list ds-action-group" data-preserve-attr="open">
+				<summary class="ds-list-head">
+					<span>{ "Passivas · " + strconv.Itoa(len(v.Powers.Passives)) + " · já estão nos seus números" }</span>
+					@ui.Icon("ChevronDown", "ds-icon")
+				</summary>
+				for _, row := range v.Powers.Passives {
+					@ds.ActionRow(row.Name, powerMeta(row), actionsDialogID(powerSheetID(row)))
+				}
+			</details>
 		}
-		// OS DIÁLOGOS DE DEGRAU das Ações, com id próprio: os da aba Poderes
-		// convivem na mesma página (ver `actionsDialogID`).
+		// AS FOLHAS DAS PASSIVAS e os diálogos de degrau das Ações, com id
+		// próprio: os da aba Poderes convivem na mesma página (ver
+		// `actionsDialogID`).
+		for _, row := range v.Powers.Passives {
+			@powerSheet(v, row, actionsDialogID(powerSheetID(row)))
+		}
 		for _, row := range v.Powers.Actions {
 			if row.Stance != nil && row.Stance.MaxSteps > 0 {
 				@stanceStepsDialog(v, row, actionsDialogID(stanceDialogID(row)))
