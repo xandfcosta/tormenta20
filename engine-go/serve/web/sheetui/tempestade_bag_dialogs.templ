@@ -1,0 +1,220 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// OS DIÁLOGOS DA MOCHILA PARALELA: a folha de cada item, as melhorias e o
+// editar dele, e três compartilhados — adicionar, item próprio e dinheiro.
+// Todo gesto que grava fecha o diálogo no mesmo toque (`command="close"`).
+
+// itemSheetDs é a folha do item (ver o GLOSSARY).
+templ itemSheetDs(v View, s itemSheet) {
+	@ds.Dialog(itemSheetID(s.Command), s.Name, itemSheetFoot(v, s)) {
+		<p class="ds-help">{ writtenWeight(s) }</p>
+		if s.NoProficiency {
+			<p role="alert" class="ds-alert">Sem proficiência: a penalidade da p142 já está no ataque.</p>
+		}
+		if len(s.Equip) > 0 {
+			<div class="ds-field">
+				<span class="ds-field-label">Equipar</span>
+				<div class="ds-options">
+					for _, place := range s.Equip {
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": itemSheetID(s.Command), "command": "close", "data-on:click": equipCommand(v, s, place)}) {
+							{ place.Label }
+						}
+					}
+				</div>
+			</div>
+		}
+		if s.Consumable != nil {
+			// O DADO É DA MESA: quem rola é a pessoa, e o servidor aceita o
+			// número que ela mandar (ver `consumeBlock`).
+			<div class="ds-field">
+				<span class="ds-field-label">{ "Usar · " + s.Consumable.Scope }</span>
+				if s.Consumable.HpDice != "" {
+					@ds.TextField(ds.Field{ID: "roll-hp-" + s.Command, Label: "PV rolados (" + s.Consumable.HpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_hp": true})
+				}
+				if s.Consumable.MpDice != "" {
+					@ds.TextField(ds.Field{ID: "roll-mp-" + s.Command, Label: "PM rolados (" + s.Consumable.MpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_mp": true})
+				}
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Usar " + s.Name, "commandfor": itemSheetID(s.Command), "command": "close", "data-on:click": sheetPost(v, "/itens/"+s.Command+"/usa")}) {
+					Usar
+				}
+			</div>
+		}
+		if s.Book != nil {
+			<div class="ds-field">
+				<span class="ds-field-label">{ s.Book.Category + " · T$ " + s.Book.Price + " · p" + strconv.Itoa(s.Book.Page) }</span>
+				for _, row := range s.Book.Rows {
+					<p class="ds-help">{ row }</p>
+				}
+			</div>
+		}
+		if len(s.Overlays) > 0 {
+			@ds.List("Melhorias e material", "") {
+				for _, o := range s.Overlays {
+					@ds.Row(o.Name, o.Effect, "", "")
+				}
+			}
+		}
+		// O ENCANTO SÓ SE LÊ: quem encanta é o mestre (p333).
+		if len(s.Enchants) > 0 {
+			@ds.List("Encantos", "") {
+				for _, o := range s.Enchants {
+					@ds.Row(o.Name, o.Effect, "", "")
+				}
+			}
+		}
+	}
+	if s.Overlayable {
+		@improvementsDs(v, s)
+	}
+	@ds.Dialog(itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))) {
+		@itemFormFields(itemEditID(s.Command))
+	}
+}
+
+// itemSheetFoot é o pé da folha: o Remover à esquerda, longe do resto, e o
+// Melhorias e o Editar, que abrem os diálogos deles carregando o item.
+templ itemSheetFoot(v View, s itemSheet) {
+	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "aria-label": "Remover " + s.Name, "commandfor": itemSheetID(s.Command), "command": "close", "data-on:click": sheetPost(v, "/itens/"+s.Command+"/remover")}) {
+		Remover
+	}
+	if s.Overlayable {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Melhorias de " + s.Name, "commandfor": itemImprovementsID(s.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": improvementsOpens(s)}) {
+			Melhorias
+		}
+	}
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Editar " + s.Name, "commandfor": itemEditID(s.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": editOpens(s)}) {
+		Editar
+	}
+}
+
+// improvementsDs escolhe melhorias e material. As listas já vêm filtradas pela
+// família do item, e quem recusa o resto é o servidor (`fitsItemImprovement`).
+templ improvementsDs(v View, s itemSheet) {
+	@ds.Dialog(itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)) {
+		@ds.List("Melhorias", "") {
+			for _, c := range s.Improvements {
+				<div class="ds-row ds-pick-row">
+					<div class="min-w-0">
+						<div class="ds-row-title">{ c.Name }</div>
+						<div class="ds-row-meta">{ "T$ " + c.Price }</div>
+						<div class="ds-pick-detail">{ c.Effect }</div>
+					</div>
+					@ds.Switch("", c.Active, templ.Attributes{"aria-label": c.Name, "data-on:change": thatTogglesImprovementGesture(c), "data-effect": "el.checked = " + improvementSignal(c)})
+				</div>
+			}
+		}
+		<div class="ds-field">
+			<label for={ "material-" + s.Command }>Material</label>
+			<select class="ds-input" id={ "material-" + s.Command } data-bind:item_material>
+				<option value="">Nenhum</option>
+				for _, c := range s.Materials {
+					<option value={ c.ID } selected?={ c.Active }>{ c.Name + " · T$ " + c.Price }</option>
+				}
+			</select>
+		</div>
+	}
+}
+
+templ improvementsFoot(v View, s itemSheet) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "commandfor": itemImprovementsID(s.Command), "command": "close", "data-on:click": sheetPost(v, "/itens/"+s.Command+"/melhorias")}) {
+		Aplicar
+	}
+}
+
+// itemAddDialog é o "Adicionar item": o Capítulo 3 com a busca e a categoria
+// fixas e só a lista rolando, e no pé o item próprio, para o que o livro não
+// tem — Catálogo e Custom viraram um gesto só (decisão do dono).
+templ itemAddDialog(v View) {
+	@ds.Dialog("item-add", "Adicionar item", itemAddFoot()) {
+		@ds.FilterBar() {
+			@ds.SearchField("catalog-search", "Buscar no livro", templ.Attributes{
+				"value": v.Bag.CatalogSearch, "data-bind:catalog_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+			})
+			<div class="ds-options ds-options-line" role="group" aria-label="Categoria do livro">
+				for _, o := range v.Bag.CatalogCategories {
+					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$catalog_category = '" + o.Value + "'; " + sheetGet(v)}) {
+						{ o.Label }
+					}
+				}
+			</div>
+			@ds.TextField(ds.Field{ID: "catalog-qty", Label: "Quantidade", Type: "number"}, templ.Attributes{"min": "1", "max": "9999", "data-bind:item_qty": true})
+		}
+		@ds.DialogScroll() {
+			@ds.List("No livro", strconv.Itoa(len(v.Bag.Catalog))) {
+				if len(v.Bag.Catalog) == 0 {
+					@ds.Row("Nenhum item para essa busca", "", "", "")
+				}
+				for _, row := range v.Bag.Catalog {
+					<div class="ds-row ds-pick-row">
+						<div class="min-w-0">
+							<div class="ds-row-title">{ row.Name }</div>
+							<div class="ds-row-meta">{ row.Category + " · " + row.Slots + " espaço · T$ " + row.Price }</div>
+						</div>
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Adicionar " + row.Name, "commandfor": "item-add", "command": "close", "data-on:click": sheetPost(v, "/itens/adiciona/"+row.ID)}) {
+							Adicionar
+						}
+					</div>
+				}
+			}
+		}
+	}
+}
+
+templ itemAddFoot() {
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "item-custom", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": "$item_name = ''; $item_qty = 1; $item_slots = 1"}) {
+		Item fora do livro
+	}
+}
+
+// customItemDialog é o item fora do livro — nome, quantidade e espaços. O
+// editar de cada item é o mesmo formulário, com outro destino.
+templ customItemDialog(v View) {
+	@ds.Dialog("item-custom", "Item fora do livro", itemFormFoot("item-custom", "Adicionar", sheetPost(v, "/itens/custom"))) {
+		@itemFormFields("item-custom")
+	}
+}
+
+templ itemFormFields(id string) {
+	@ds.TextField(ds.Field{ID: id + "-name", Label: "Nome"}, templ.Attributes{"maxlength": "80", "data-bind:item_name": true})
+	<div class="grid grid-cols-2 gap-3">
+		@ds.TextField(ds.Field{ID: id + "-qty", Label: "Quantidade", Type: "number"}, templ.Attributes{"min": "1", "max": "9999", "data-bind:item_qty": true})
+		@ds.TextField(ds.Field{ID: id + "-slots", Label: "Espaços", Type: "number"}, templ.Attributes{"min": "0", "step": "0.5", "data-bind:item_slots": true})
+	</div>
+}
+
+templ itemFormFoot(id, button, command string) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "commandfor": id, "command": "close", "data-on:click": command}) {
+		{ button }
+	}
+}
+
+// bagMoneyDialog são as três coisas que se fazem com dinheiro na mesa:
+// receber, gastar e escrever o total (ver `moneyModes`).
+templ bagMoneyDialog(v View) {
+	@ds.Dialog("bag-money", "Dinheiro", bagMoneyFoot(v)) {
+		<p class="ds-help">{ "Você tem T$ " + v.Bag.Money.Tibar + "." }</p>
+		<div class="ds-options" role="group" aria-label="O que fazer com o dinheiro">
+			for _, mode := range moneyModes {
+				@ds.Option(mode.Value == "receber", templ.Attributes{
+					"data-on:click":          "$tibar_mode = '" + mode.Value + "'",
+					"data-attr:aria-pressed": "String($tibar_mode === '" + mode.Value + "')",
+				}) {
+					{ mode.Label }
+				}
+			}
+		</div>
+		@ds.TextField(ds.Field{ID: "tibar-value", Label: "Valor em T$", Type: "number"}, templ.Attributes{"min": "0", "step": "0.01", "data-bind:tibar_value": true})
+	}
+}
+
+templ bagMoneyFoot(v View) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "commandfor": "bag-money", "command": "close", "data-on:click": sheetPost(v, "/dinheiro")}) {
+		Confirmar
+	}
+}

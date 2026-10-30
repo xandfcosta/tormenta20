@@ -366,17 +366,12 @@ func thatTogglesImprovementGesture(choice overlayChoice) string {
 // apareceriam marcadas na armadura aberta em seguida — e o botão Aplicar
 // gravaria nela o que era de outra.
 func thatOpensTheImprovementsGesture(sheet itemSheet) string {
-	return "$item_improvements = " + improvementWrittenList(sheet) +
-		"; $item_material = '" + chosenMaterial(sheet) + "'" +
-		"; $detail = 'melhorias-" + sheet.Command + "'"
+	return improvementsOpens(sheet) + "; $detail = 'melhorias-" + sheet.Command + "'"
 }
 
 // thatOpensEditGesture põe os valores atuais no formulário.
 func thatOpensEditGesture(sheet itemSheet) string {
-	return "$item_name = " + strconv.Quote(sheet.Name) +
-		"; $item_qty = " + strconv.FormatInt(sheet.Quantity, 10) +
-		"; $item_slots = " + strings.Replace(sheet.Slots, ",", ".", 1) +
-		"; $detail = 'editar-" + sheet.Command + "'"
+	return editOpens(sheet) + "; $detail = 'editar-" + sheet.Command + "'"
 }
 
 func improvementWrittenList(sheet itemSheet) string {

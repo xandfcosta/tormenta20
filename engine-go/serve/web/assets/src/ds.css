@@ -1027,6 +1027,46 @@
   .ds-bar > span[data-kind='pm'] {
     background: var(--ds-pm);
   }
+  /* A carga estourada tem a cor do perigo, e o aviso diz o que ela custa. */
+  .ds-bar > span[data-kind='danger'] {
+    background: var(--ds-danger-fill);
+  }
+  /* A MOCHILA (ALE-473): a carga, o dinheiro e o adicionar numa linha que
+   * quebra no celular, e o que está em uso e o guardado lado a lado no
+   * desktop. */
+  .ds-bag-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem;
+  }
+  .ds-bag-top > .ds-meter {
+    flex: 1 1 100%;
+  }
+  /* A barra de filtros do guardado não é a primeira coisa de quem rola: o
+   * espaço acima dela é o vão da seção, e não o padding do rolador. */
+  .ds-bag-halves {
+    --ds-filter-above: 0.75rem;
+    display: grid;
+    gap: 0.75rem;
+  }
+  /* A linha que diz quanto sobra no teto não é item: ela não tem gesto. */
+  .ds-row-free {
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 64rem) {
+    .ds-bag-top > .ds-meter {
+      flex: 0 1 26rem;
+    }
+    .ds-bag-top > .ds-meter + .ds-button {
+      margin-left: auto;
+    }
+    .ds-bag-halves {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 1rem;
+    }
+  }
   .ds-bar > span[data-kind='temp'] {
     background: repeating-linear-gradient(135deg, var(--ds-temp) 0 3px, transparent 3px 6px);
   }

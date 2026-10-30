@@ -107,15 +107,15 @@ func TestATabNotYetMigratedLeadsToTheSheetOfToday(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
 
-	page := parallelSheet(t, f, id, "bag")
-	if !strings.Contains(page, fmt.Sprintf(`href="/personagens/%d?tab=bag"`, id)) {
-		t.Error("a aba não migrada não leva à Mochila da ficha de hoje")
+	page := parallelSheet(t, f, id, "proficiencies")
+	if !strings.Contains(page, fmt.Sprintf(`href="/personagens/%d?tab=proficiencies"`, id)) {
+		t.Error("a aba não migrada não leva às Proficiências da ficha de hoje")
 	}
 	// O recorte é a CENA, e a cena sozinha é o que um gesto devolve: a página
 	// traz também os diálogos da casca (o livro, o buscador), que são de toda
 	// tela e migram com ela, não com a ficha.
 	scene := f.requests(t, f.player, http.MethodPost,
-		fmt.Sprintf("/personagens/%d/vitais/pv/-1?tab=bag&tempestade=1", id), "").Body.String()
+		fmt.Sprintf("/personagens/%d/vitais/pv/-1?tab=proficiencies&tempestade=1", id), "").Body.String()
 	if !strings.Contains(scene, "sheet-scene") {
 		t.Fatal("o gesto não devolveu a cena da ficha")
 	}

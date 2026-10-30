@@ -1,0 +1,146 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/domain/sheet"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeBag é a aba Mochila da ficha paralela: a carga, o dinheiro e o
+// adicionar em cima; o que está em uso (mãos e vestidos, com o teto e o que
+// sobra) e o guardado como lista, com a busca sempre à vista. No desktop as
+// duas metades ficam lado a lado.
+templ tempestadeBag(v View) {
+	<section class="grid gap-3" aria-label="Mochila">
+		<div class="ds-bag-top">
+			@loadMeterDs(v.Bag.Load)
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{
+				"type": "button", "commandfor": "bag-money", "command": "show-modal", "aria-haspopup": "dialog",
+				"aria-label": "Mexer no dinheiro", "data-on:click": "$tibar_mode = 'receber'; $tibar_value = 0",
+			}) {
+				@ui.Icon("Coins", "ds-icon")
+				{ "T$ " + v.Bag.Money.Tibar }
+			}
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{
+				"type": "button", "commandfor": "item-add", "command": "show-modal", "aria-haspopup": "dialog",
+				"data-on:click": "$item_qty = 1; $catalog_search = ''; $catalog_category = ''",
+			}) {
+				@ui.Icon("Plus", "ds-icon")
+				Adicionar item
+			}
+		</div>
+		if v.Bag.Load.Overloaded {
+			<p role="alert" class="ds-alert">{ overloadNotice(v.Bag.Load) }</p>
+		}
+		<div class="ds-bag-halves">
+			<div class="grid content-start gap-3">
+				@inUseList(v, "Mãos", v.Bag.Hands, v.Bag.HandsUsed, sheet.HandsLimit, freePlaces(v.Bag.HandsUsed, sheet.HandsLimit, "mão livre", "mãos livres"))
+				@inUseList(v, "Vestidos", v.Bag.Vested, v.Bag.VestedUsed, sheet.VestedLimit, freePlaces(v.Bag.VestedUsed, sheet.VestedLimit, "lugar livre", "lugares livres"))
+			</div>
+			<div class="grid content-start gap-3">
+				@ds.FilterBar() {
+					@ds.SearchField("bag-search", "Buscar item", templ.Attributes{
+						"value": v.Bag.Search, "data-bind:item_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+					})
+					<div class="ds-options ds-options-line" role="group" aria-label="Categoria">
+						for _, o := range v.Bag.Categories {
+							@ds.Option(o.Active, templ.Attributes{"data-on:click": "$item_category = '" + o.Value + "'; " + sheetGet(v)}) {
+								{ o.Label }
+							}
+						}
+					</div>
+				}
+				@ds.List("Guardado", writtenItems(v.Bag.StowedTotal)) {
+					if len(v.Bag.Stowed) == 0 {
+						if v.Bag.StowedTotal > 0 {
+							@ds.Row("Nenhum item para esse filtro", "", "", "")
+						} else {
+							@ds.Row("Mochila vazia", "use Adicionar item", "", "")
+						}
+					}
+					for _, tile := range v.Bag.Stowed {
+						@ds.ActionRow(tile.Name, stowedMeta(tile), itemSheetID(tile.Command)) {
+							if s := itemSheetByCommand(v, tile.Command); s != nil && s.Consumable != nil {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Usar " + tile.Name, "commandfor": itemSheetID(tile.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": "$item_roll_hp = 0; $item_roll_mp = 0"}) {
+									Usar
+								}
+							} else {
+								@itemMoreButton(tile.Name, tile.Command)
+							}
+						}
+					}
+				}
+			</div>
+		</div>
+	</section>
+	for _, s := range v.Bag.Sheets {
+		@itemSheetDs(v, s)
+	}
+	@bagMoneyDialog(v)
+	@itemAddDialog(v)
+	@customItemDialog(v)
+}
+
+// loadMeterDs é a carga como medidor: o número contra o limite, a barra, e a
+// conta do limite embaixo. Com a regra desligada o número fica — o livro só a
+// deixa desligar "desde que os jogadores não abusem" (p141), e não dá para
+// vigiar abuso sem ver o quanto se carrega.
+templ loadMeterDs(load loadMeter) {
+	<div class="ds-meter">
+		<div class="ds-meter-head">
+			<span class="ds-meter-key">Carga</span>
+			<span class="ds-meter-value">
+				{ load.Used }
+				<small>{ " / " + strconv.Itoa(load.Limit) }</small>
+			</span>
+		</div>
+		<div
+			class="ds-bar"
+			role="progressbar"
+			aria-label="Espaços de carga"
+			aria-valuenow={ load.Used }
+			aria-valuemin="0"
+			aria-valuemax={ strconv.Itoa(load.Limit) }
+		>
+			<span
+				if loadKind(load) != "" {
+					data-kind={ loadKind(load) }
+				}
+				style={ "width:" + strconv.Itoa(load.Percent) + "%" }
+			></span>
+		</div>
+		<span class="ds-row-meta">
+			{ load.LimitLabel }
+			if !load.Enforced {
+				{ " · a critério do mestre" }
+			}
+		</span>
+	</div>
+}
+
+// inUseList é um teto do livro (p141): as linhas do que está nele, com o
+// contador "x / y" no cabeçalho e o que sobra no fim.
+templ inUseList(v View, title string, positions []equippedPosition, used, ceiling int, free string) {
+	@ds.List(title, strconv.Itoa(used)+" / "+strconv.Itoa(ceiling)) {
+		for _, row := range inUseRowsOf(positions) {
+			@ds.ActionRow(row.Name, row.Meta, itemSheetID(row.Command)) {
+				@itemMoreButton(row.Name, row.Command)
+			}
+		}
+		if free != "" {
+			<div class="ds-row ds-row-free">
+				<span class="ds-row-meta">{ free }</span>
+			</div>
+		}
+	}
+}
+
+// itemMoreButton é o ⋯ da linha: abre a folha do item, como o nome.
+templ itemMoreButton(name, command string) {
+	@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Ações de "+name, templ.Attributes{
+		"type": "button", "commandfor": itemSheetID(command), "command": "show-modal", "aria-haspopup": "dialog",
+		"data-on:click": "$item_roll_hp = 0; $item_roll_mp = 0",
+	})
+}
