@@ -1,0 +1,228 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+	"t20engine/domain/book"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/master"
+	"t20engine/serve/web/ui"
+)
+
+// AS CONSULTAS DO MESTRE (ALE-522, fatia 3): o que se abre com uma pergunta na
+// cabeça — as notas, o grupo, o elenco e o bestiário —, em abas na coluna da
+// direita. As rotas, os sinais e os remendos são os do palco de hoje; muda onde
+// cada coisa mora e o que ela veste.
+//
+// As abas são SINAL (`$gm_consult`) e não endereço: trocar de aba no meio do
+// combate não pode recarregar a mesa, e cada corpo guarda o que o mestre
+// digitou nele.
+templ gmConsults(v View, b master.BestiaryView) {
+	<div class="ds-gm-consult-head">
+		<nav class="ds-tabs ds-gm-consult-tabs" aria-label="Consultas do mestre">
+			for i, tab := range gmConsultTabs {
+				<button
+					type="button"
+					if i == 0 {
+						aria-current="page"
+					}
+					data-attr:aria-current={ consultCurrent(tab.ID) }
+					data-on:click={ fmt.Sprintf("$gm_consult = %q", tab.ID) }
+				>{ tab.Label }</button>
+			}
+		</nav>
+		@ds.IconButton(ds.ButtonGhost, "PanelRightClose", "Recolher as consultas", templ.Attributes{"type": "button", "data-gm-collapse": true, "data-on:click": "$gm_consults_open = false"})
+	</div>
+	<div class="ds-session-scroll ds-gm-consult" data-show={ consultShown(gmConsultNotes) }>
+		@gmNotes(v)
+	</div>
+	<div class="ds-session-scroll ds-gm-consult" data-show={ consultShown(gmConsultGroup) } style="display:none">
+		@gmGroup(v)
+	</div>
+	<div class="ds-session-scroll ds-gm-consult" data-show={ consultShown(gmConsultCast) } style="display:none">
+		@gmCastList(v)
+	</div>
+	<div class="ds-session-scroll ds-gm-consult" data-show={ consultShown(gmConsultBestiary) } style="display:none">
+		@gmBestiary(b)
+	</div>
+	@gmNpcEditor(v)
+}
+
+// gmNotes é o caderno da sessão: a mesma caixa e a mesma prévia do palco de
+// hoje (`notesBody`), e por isso a mesma regra — a caixa é semeada uma vez e
+// nunca remendada. Com as notas numa janela à parte, a aba só avisa: duas
+// caixas sobre a mesma linha do banco gravariam uma por cima da outra.
+templ gmNotes(v View) {
+	<section class="ds-gm-notes" data-init={ seedNotes(v) } data-on:storage__window={ watchesTheNotesWindow(v) }>
+		<div class="ds-gm-notes-head">
+			@ds.Segmented("Modo de visualização das notas") {
+				for _, mode := range gmNoteModes {
+					@ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": escolheOModo(mode.ID)}) {
+						{ mode.Label }
+					}
+				}
+			}
+			@autosaveState()
+			@ds.IconButton(ds.ButtonGhost, "ExternalLink", "Abrir as notas numa janela", templ.Attributes{"type": "button", "title": "Abrir as notas numa janela — para o segundo monitor", "data-on:click": opensTheNotesWindow(v)})
+		</div>
+		<p class="ds-help" data-show="$notes_window" style="display:none">As notas estão abertas numa janela à parte.</p>
+		<div class="ds-gm-notes-body" data-show="!$notes_window">
+			@notesBody(v)
+		</div>
+	</section>
+}
+
+// gmGroup são os personagens da campanha: quem joga, se está na mesa, o PV e o
+// PM, e a ficha completa numa aba à parte. O − e o + são os do elenco de hoje
+// (`castVital`): o mestre cura quem não está na fila também.
+templ gmGroup(v View) {
+	if len(v.Group) == 0 {
+		@ds.Empty("Nenhum personagem na campanha", "Os personagens aparecem aqui quando entram na campanha.")
+	} else {
+		@ds.List("Grupo", groupAtTable(v.Group)) {
+			for _, m := range v.Group {
+				<div class="ds-row ds-gm-member">
+					<span class="ds-gm-monogram" aria-hidden="true">{ m.Initials }</span>
+					<span class="ds-gm-member-body">
+						<span class="ds-row-title">
+							if m.Presence != nil {
+								<span class="ds-gm-presence" data-at-table?={ m.Presence.AtTable } title={ m.Presence.Sentence }></span>
+							}
+							{ m.Name }
+						</span>
+						<span class="ds-row-meta">{ memberMeta(m) }</span>
+						@gmPoolLine("PV", "pv", poolOrNothing(m.PV))
+						@gmPoolLine("PM", "pm", poolOrNothing(m.PM))
+					</span>
+					<span class="ds-gm-steps">
+						@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar 1 PV de "+m.Name, templ.Attributes{"type": "button", "title": "Tirar PV de " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "ferir")})
+						@ds.IconButton(ds.ButtonSecondary, "Plus", "Devolver 1 PV a "+m.Name, templ.Attributes{"type": "button", "title": "Devolver PV a " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "curar")})
+						<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
+							@ui.Icon("ExternalLink", "ds-icon")
+						</a>
+					</span>
+				</div>
+			}
+		}
+	}
+}
+
+// gmCastList é o elenco da campanha, e é a REGIÃO `table-npcs`: ela muda quando
+// o mestre guarda ou apaga um NPC, no ritmo dele e não no da fila.
+//
+// "Do bestiário" troca de aba em vez de abrir um segundo caminho: guardar do
+// livro é o gesto da criatura aberta (`gmCreature`), e um segundo lugar para
+// ele divergiria do primeiro.
+templ gmCastList(v View) {
+	<div id="table-npcs" class="ds-gm-cast">
+		<div class="ds-gm-cast-intro">
+			<p class="ds-help">Quem existe nesta campanha fora do combate. Eles voltam semana que vem.</p>
+			<span class="ds-gm-cast-new">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Novo no elenco", "data-on:click": openEditor(v, 0)}) {
+					@ui.Icon("UserPlus", "ds-icon")
+					Novo
+				}
+				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf("$gm_consult = %q", gmConsultBestiary)}) {
+					@ui.Icon("BookOpen", "ds-icon")
+					Do bestiário
+				}
+			</span>
+		</div>
+		if len(v.NPCs) == 0 {
+			@ds.Empty("Nenhum NPC guardado ainda", "Crie um com o Novo, ou abra uma criatura no Bestiário e guarde no elenco.")
+		} else {
+			@ds.List("Elenco da campanha", strconv.Itoa(len(v.NPCs))) {
+				for _, npc := range v.NPCs {
+					<div class="ds-row ds-gm-npc">
+						<span class="ds-gm-member-body">
+							<span class="ds-row-title">{ npc.Name }</span>
+							if npc.Summary != "" {
+								<span class="ds-row-meta">{ npcMeta(npc) }</span>
+							} else {
+								<span class="ds-row-meta ds-gm-unreadable">O bloco deste NPC está ilegível — dá para apagar.</span>
+							}
+						</span>
+						<span class="ds-gm-steps">
+							if npc.PV > 0 {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": npcCommand(v, npc, "na-fila")}) {
+									Pôr na fila
+								}
+							}
+							@ds.IconButton(ds.ButtonGhost, "Pencil", "Editar o bloco de "+npc.Name, templ.Attributes{"type": "button", "data-on:click": openEditor(v, npc.ID)})
+							@ds.IconButton(ds.ButtonGhost, "Trash2", "Apagar "+npc.Name+" do elenco", templ.Attributes{"type": "button", "data-on:click": npcCommand(v, npc, "apagar")})
+						</span>
+					</div>
+				}
+			}
+		}
+	</div>
+}
+
+// gmNpcEditor é o editor de bloco de hoje (`blockEditor`) numa folha do kit.
+// Quem a abre é o SERVIDOR, ligando `$draft_open` ao devolver o rascunho
+// semeado — por isso ela é sobreposição com `data-show`, e não `<dialog>`:
+// um `showModal()` precisaria de um gesto no cliente que o servidor não dá.
+templ gmNpcEditor(v View) {
+	<div class="ds-gm-overlay" data-show="$draft_open" style="display:none">
+		<div class="ds-gm-float ds-gm-npc-editor" role="dialog" aria-modal="true" aria-label="Bloco do NPC">
+			@blockEditor(v)
+		</div>
+	</div>
+}
+
+// gmBestiary é a aba Bestiário, e é a raiz que as rotas do painel remendam
+// (`table-bestiary`) quando a mesa é a nova — ver `bestiaryPanel`. Os filtros e
+// a lista são os da cena do mestre; o `data-signals` fica na raiz pela mesma
+// razão do `tableBestiary`: ele reecoa a busca e a criatura que o servidor
+// acabou de desenhar.
+templ gmBestiary(b master.BestiaryView) {
+	<div id="table-bestiary" class="ds-gm-bestiary" data-signals={ master.BestiarySignals(b) }>
+		@master.BestiaryFilters(b)
+		<p class="ds-row-meta">{ fmt.Sprintf("%d de %d", len(b.Entries), b.Total) }</p>
+		@master.EntryList(b)
+		if b.Chosen != nil {
+			@gmCreature(b, *b.Chosen)
+		}
+	</div>
+}
+
+// gmCreature é a criatura aberta: o bloco do livro, o ajuste de PV, iniciativa
+// e cópias, e os dois verbos — guardar no elenco e pôr na fila. Ela é a mesma
+// sobreposição do `master.CreatureDialog` (aberta por `$sheet_open`, que o
+// remendo redeclara), vestida no kit.
+templ gmCreature(b master.BestiaryView, m book.Entry) {
+	<div
+		class="ds-gm-overlay"
+		data-show="$sheet_open"
+		style="display:none"
+		data-on:click="evt.target === el && ($sheet_open = false)"
+		data-on:keydown__window="evt.key === 'Escape' && ($sheet_open = false)"
+	>
+		<div class="ds-gm-float" role="dialog" aria-modal="true" data-attr:data-expanded="$sheet_open" aria-label={ m.Name }>
+			<div class="ds-dialog-head">
+				<span class="ds-dialog-title">{ m.Name }</span>
+				<span class="ds-row-meta">{ fmt.Sprintf("%s · ND %s · p%d", book.TypeName(m.Kind), book.CRWritten(m.ND), m.BookPage) }</span>
+				@ds.IconButton(ds.ButtonGhost, "X", "Fechar a ficha de "+m.Name, templ.Attributes{"type": "button", "data-on:click": "$sheet_open = false"})
+			</div>
+			<div class="ds-gm-creature-body">
+				@master.EntryBlock(m, b.Book)
+			</div>
+			<div class="ds-gm-creature-foot">
+				<div class="ds-gm-edit-nums">
+					@ds.TextField(ds.Field{ID: "gm-entry-hp", Label: "PV", Type: "number"}, templ.Attributes{"data-bind:entry_hp": true, "min": "1", "max": "999", "inputmode": "numeric"})
+					@ds.TextField(ds.Field{ID: "gm-entry-ini", Label: "Iniciativa", Type: "number"}, templ.Attributes{"data-bind:entry_initiative": true, "min": "-5", "max": "40", "inputmode": "numeric"})
+					@ds.TextField(ds.Field{ID: "gm-entry-copies", Label: "Cópias", Type: "number"}, templ.Attributes{"data-bind:entry_copies": true, "min": "1", "max": strconv.Itoa(maxCopiasDeUmVerbete), "inputmode": "numeric"})
+				</div>
+				@ds.TextField(ds.Field{ID: "gm-npc-name", Label: "Nome no elenco", Placeholder: "em branco, fica o do livro"}, templ.Attributes{"data-bind:npc_name": true})
+				<div class="ds-gm-two">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": saveToCastPost(b)}) {
+						Guardar no elenco
+					}
+					@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-indicator:sending": true, "data-attr:disabled": "$sending", "data-on:click": fmt.Sprintf("@post('%s/enviar')", b.BestiaryBase())}) {
+						<span data-text="'Pôr ' + $entry_copies + ' na fila'">Pôr na fila</span>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+}
