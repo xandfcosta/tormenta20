@@ -486,7 +486,7 @@ func (v View) SessionBase() string { return routes.Session(v.CampaignID, v.Sessi
 // regras extraídas, e o que impede as duas telas de divergirem é compartilhar a
 // REGRA, não a rota.
 func tableCommand(v View, method, action string) string {
-	path := v.SessionBase() + "/" + action
+	path := markedIfParallel(v.SessionBase()+"/"+action, v.Tempestade)
 	if method == "POST" {
 		return fmt.Sprintf("@post('%s')", path)
 	}

@@ -1581,6 +1581,162 @@
     justify-content: flex-end;
     gap: 0.5rem;
   }
+  /* A MESA DA SESSÃO PARALELA (ALE-473): em combate o registro, a fila e o
+   * grupo, nessa ordem; fora de cena o grupo sobe (o `data-idle` é da frase de
+   * espera, que a fila desenha). No desktop, a fila à esquerda e o registro e o
+   * grupo à direita. */
+  .ds-mesa {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .ds-mesa:has([data-idle]) > .ds-mesa-party {
+    order: -1;
+  }
+  .ds-mesa-register {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .ds-mesa-register:empty {
+    display: none;
+  }
+  .ds-reg {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  /* Fechado, o `<details>` ainda abre o vão da grade para o conteúdo oculto. */
+  .ds-reg:is(details):not([open]) {
+    gap: 0;
+  }
+  .ds-reg[data-bleeding] {
+    border-color: var(--ds-danger);
+  }
+  .ds-reg-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    list-style: none;
+    cursor: pointer;
+  }
+  .ds-reg-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.5rem;
+  }
+  .ds-reg-line > .ds-field .ds-input {
+    width: 5.5rem;
+  }
+  .ds-reg-total {
+    display: grid;
+    justify-items: end;
+    margin-left: auto;
+  }
+  .ds-reg-total > b {
+    font-size: var(--ds-t-xl);
+  }
+  .ds-reg > .ds-button {
+    justify-self: start;
+  }
+  .ds-reg-error {
+    color: var(--ds-danger);
+  }
+  .ds-queue-row {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    align-items: start;
+    padding-block: 0.5rem;
+  }
+  .ds-queue-row[data-now] {
+    background: color-mix(in oklab, var(--ds-action) 10%, var(--ds-surface));
+    box-shadow: inset 3px 0 0 var(--ds-action);
+  }
+  .ds-queue-ini {
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-lg);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .ds-queue-row[data-now] .ds-queue-ini {
+    color: var(--ds-action);
+  }
+  .ds-queue-body,
+  .ds-party-body {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .ds-queue-body > .ds-row-title,
+  .ds-party-body > .ds-row-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .ds-queue-you {
+    color: var(--ds-action);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+  }
+  .ds-queue-vital {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 8rem);
+    justify-content: start;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ds-party-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    padding-block: 0.5rem;
+  }
+  .ds-party-vitals {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+  }
+  .ds-presence {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--ds-line-strong);
+  }
+  .ds-presence[data-here] {
+    background: var(--ds-good);
+  }
+  .ds-waiting {
+    margin: 0;
+    padding: 0.75rem;
+    border: 1px dashed var(--ds-line-strong);
+    border-radius: var(--ds-r-surface);
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    text-align: center;
+  }
+  @media (min-width: 64rem) {
+    .ds-mesa {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      grid-template-areas: 'tracker register' 'tracker party';
+      grid-template-rows: auto 1fr;
+      align-items: start;
+      padding: 1rem 1.5rem;
+    }
+    .ds-mesa-tracker {
+      grid-area: tracker;
+    }
+    .ds-mesa-register {
+      grid-area: register;
+    }
+    .ds-mesa-party {
+      grid-area: party;
+    }
+  }
   /* A FILEIRA DE SEÇÕES da ficha embutida: os ícones da barra da ficha solta,
    * deslizando, logo acima da barra da sessão. Só no celular; no desktop as
    * seções são as abas de cima da ficha. */

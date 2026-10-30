@@ -153,3 +153,39 @@ func TestAParallelSessionGestureAnswersWithTheNewRegions(t *testing.T) {
 		t.Errorf("o gesto da sessão paralela respondeu com o cabeçalho de hoje:\n%s", firstRows(answer, 6))
 	}
 }
+
+// A MESA DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `mesa.html`: em
+// combate, a fila com quem joga agora e o PV dos outros oculto; o registro
+// encolhido para quem já está na fila; e o grupo.
+func TestTheParallelSessionDrawsTheTable(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	if strings.Contains(page, "Mesa ainda está na sessão de hoje") {
+		t.Fatal("a Mesa da sessão paralela ainda leva à sessão de hoje")
+	}
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for id, wants := range map[string][]string{
+		"table-tracker":  {"Iniciativa", "Ogro cansado", "PV ocultos pelo mestre", "Arcanista", "você"},
+		"table-register": {"Você está na fila com 12"},
+		"table-party":    {"Grupo", "Arcanista"},
+	} {
+		region := findNode(doc, "id", id)
+		if region == nil {
+			t.Errorf("a Mesa paralela não tem a região %s", id)
+			continue
+		}
+		if findNode(region, "class", "ds-list") == nil && id != "table-register" {
+			t.Errorf("a região %s não está desenhada no kit", id)
+		}
+		text := textOf(region)
+		for _, want := range wants {
+			if !strings.Contains(text, want) {
+				t.Errorf("a região %s não mostra %q", id, want)
+			}
+		}
+	}
+}

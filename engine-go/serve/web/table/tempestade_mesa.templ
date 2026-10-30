@@ -1,0 +1,178 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// A MESA DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `mesa.html`: o
+// registro da iniciativa (encolhido para quem já está na fila), o teste de
+// quem sangra, a fila e o grupo. Cada peça é região do stream, com o id da
+// Mesa de hoje, porque é por ele que o remendo pousa.
+
+// tempestadeRegister é o registro da iniciativa e o teste de quem sangra.
+templ tempestadeRegister(v View) {
+	<div id="table-register" class="ds-mesa-register">
+		if v.Bleeding != nil {
+			@tempestadeBleeding(v)
+		}
+		if v.SceneActive && v.Eu != nil {
+			if v.Eu.InQueue {
+				// JÁ NA FILA, o registro encolhe numa linha, e o "Rolar de novo"
+				// abre o mesmo formulário.
+				<details class="ds-reg" data-preserve-attr="open">
+					<summary class="ds-reg-summary">
+						<span class="ds-row-title">{ fmt.Sprintf("Você está na fila com %d", myInitiativeOf(v)) }</span>
+						<span class="ds-button" data-variant="ghost">
+							@ui.Icon("Dices", "ds-icon")
+							Rolar de novo
+						</span>
+					</summary>
+					@registerForm(v)
+				</details>
+			} else {
+				<section class="ds-reg" aria-label="Registrar iniciativa">
+					<span class="ds-row-title">Registrar iniciativa</span>
+					@registerForm(v)
+				</section>
+			}
+		}
+	</div>
+}
+
+// registerForm é o d20 da mesa ou o "Rolar" daqui, o bônus e o total que vai
+// ser registrado. Só o d20 sai no fio: o total é do servidor, que tem a ficha.
+// O botão espera um dado de 1 a 20 — o campo vazio vira ZERO no sinal.
+templ registerForm(v View) {
+	<div class="ds-reg-line">
+		@ds.TextField(ds.Field{ID: "d20", Label: "Dado (d20)", Type: "number"}, templ.Attributes{"min": "1", "max": "20", "inputmode": "numeric", "data-bind:d20": true})
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "$d20 = Math.floor(Math.random() * 20) + 1"}) {
+			@ui.Icon("Dices", "ds-icon")
+			Rolar
+		}
+		<div class="ds-reg-total">
+			<span class="ds-row-meta">{ "bônus " + signed(v.Eu.Bonus) }</span>
+			<b data-show="$d20 >= 1 && $d20 <= 20" data-text={ fmt.Sprintf("$d20 + %d", v.Eu.Bonus) }></b>
+		</div>
+	</div>
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{
+		"type": "button", "data-indicator:registering": true,
+		"data-attr:disabled": "$registering || !($d20 >= 1 && $d20 <= 20)",
+		"data-on:click":      tableCommand(v, "POST", "iniciativa"),
+	}) {
+		Registrar
+	}
+	<p class="ds-help ds-reg-error" data-show="$error != ''" data-text="$error"></p>
+}
+
+// tempestadeBleeding é o teste de quem sangra (p236), com as frases de hoje
+// (`live.BleedingLine`): o d20 contra a CD, e o 1d6 de dano se falhar.
+templ tempestadeBleeding(v View) {
+	<section class="ds-reg" data-bleeding aria-label="Sangramento">
+		<p class="ds-row-title" aria-live="polite">{ v.Bleeding.Line }</p>
+		if v.Bleeding.CanAnswer && v.Bleeding.Die != "" {
+			<div class="ds-reg-line">
+				@ds.TextField(ds.Field{ID: "bleeding-roll", Label: "Resultado do " + v.Bleeding.Die, Type: "number"}, templ.Attributes{"min": "1", "max": strconv.Itoa(v.Bleeding.Faces), "inputmode": "numeric", "data-bind:bleeding_roll": true})
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf("$bleeding_roll = Math.floor(Math.random() * %d) + 1", v.Bleeding.Faces)}) {
+					@ui.Icon("Dices", "ds-icon")
+					Rolar
+				}
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{
+					"type": "button", "data-indicator:bleeding_sending": true,
+					"data-attr:disabled": fmt.Sprintf("$bleeding_sending || !($bleeding_roll >= 1 && $bleeding_roll <= %d)", v.Bleeding.Faces),
+					"data-on:click":      tableCommand(v, "POST", "sangramento/"+v.Bleeding.Die),
+				}) {
+					{ "Enviar " + v.Bleeding.Die }
+				}
+			</div>
+		}
+		<p class="ds-help ds-reg-error" data-show="$bleeding_error != ''" data-text="$bleeding_error" aria-live="assertive"></p>
+	</section>
+}
+
+// tempestadeTracker é a fila: a iniciativa, o nome, "agora" na vez e "você"
+// na minha linha, o PV de quem a mesa deixa ver e as condições. Fora de cena
+// ela dá lugar à frase de espera, e o `data-idle` é o que põe o grupo em cima.
+templ tempestadeTracker(v View) {
+	<div id="table-tracker" class="ds-mesa-tracker">
+		if len(v.Queue) > 0 {
+			@ds.List("Iniciativa", roundWritten(v)) {
+				for _, row := range v.Queue {
+					<div class="ds-row ds-queue-row" data-now?={ row.OnTurn } data-mine?={ row.Mine }>
+						<span class="ds-queue-ini">{ strconv.Itoa(row.Initiative) }</span>
+						<div class="ds-queue-body">
+							<div class="ds-row-title">
+								{ row.Label }
+								if row.OnTurn {
+									@ds.Badge("agora", false)
+								}
+								if row.Mine {
+									<span class="ds-queue-you">você</span>
+								}
+							</div>
+							@queueVital(row)
+							if len(row.Conditions) > 0 {
+								<div class="ds-badges">
+									for _, c := range row.Conditions {
+										@ds.Badge(c, true)
+									}
+								</div>
+							}
+						</div>
+					</div>
+				}
+			}
+		} else {
+			<p class="ds-waiting" data-idle>Fora de cena. O mestre ainda não começou.</p>
+		}
+	</div>
+}
+
+// queueVital é o PV de uma linha da fila: o número e a barra de quem a mesa
+// deixa ver, e a frase para o resto — o mestre esconde, e a tela diz que
+// escondeu em vez de deixar o lugar vazio.
+templ queueVital(row tableRow) {
+	if row.PV == nil || row.PV.Hidden {
+		<div class="ds-row-meta">PV ocultos pelo mestre</div>
+	} else {
+		<div class="ds-queue-vital">
+			<span class="ds-row-meta">{ fmt.Sprintf("PV %d/%d", row.PV.Current, row.PV.Max) }</span>
+			<span class="ds-bar" aria-label={ barLabel("PV", *row.PV) }><span data-kind="pv" style={ fmt.Sprintf("width:%d%%", row.PV.Pct) }></span></span>
+		</div>
+	}
+}
+
+// tempestadeParty é o grupo: retrato, quem está na mesa agora, classe e
+// nível, e as barras de PV e PM. Aparece fora de cena também, porque PV do
+// grupo não é informação de combate.
+templ tempestadeParty(v View) {
+	<div id="table-party" class="ds-mesa-party">
+		if len(v.Group) > 0 {
+			@ds.List("Grupo", strconv.Itoa(len(v.Group))) {
+				for _, m := range v.Group {
+					<div class="ds-row ds-party-row">
+						<span class="ds-avatar" aria-hidden="true" style={ "background: " + ui.NameGradient(m.Name) }>{ m.Initials }</span>
+						<div class="ds-party-body">
+							<div class="ds-row-title">
+								if m.Presence != nil {
+									<span class="ds-presence" data-here?={ m.Presence.AtTable } role="img" aria-label={ m.Presence.Sentence }></span>
+								}
+								{ m.Name }
+							</div>
+							<div class="ds-row-meta">{ m.Classes }</div>
+							<div class="ds-party-vitals">
+								<span class="ds-row-meta">{ fmt.Sprintf("PV %d/%d", m.PV.Current, m.PV.Max) }</span>
+								<span class="ds-bar" aria-label={ barLabel("PV", m.PV) }><span data-kind="pv" style={ fmt.Sprintf("width:%d%%", m.PV.Pct) }></span></span>
+								<span class="ds-row-meta">{ fmt.Sprintf("PM %d/%d", m.PM.Current, m.PM.Max) }</span>
+								<span class="ds-bar" aria-label={ barLabel("PM", m.PM) }><span data-kind="pm" style={ fmt.Sprintf("width:%d%%", m.PM.Pct) }></span></span>
+							</div>
+						</div>
+					</div>
+				}
+			}
+		}
+	</div>
+}
