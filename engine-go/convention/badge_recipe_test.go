@@ -133,14 +133,15 @@ func TestNoHandwrittenBadgeRecipe(t *testing.T) {
 		t.Fatalf("o guarda leu só %d atributos `class`: o padrão parou de casar e ele deixou de cobrar qualquer coisa", attributesRead)
 	}
 	// A terceira: se a RECEITA for desfeita ou renomeada, ninguém a estaria
-	// usando — e "ninguém usa" e "não sei procurar" se parecem no terminal.
-	if byRecipe < 6 {
+	// usando — e "ninguém usa" e "não sei procurar" se parecem no terminal. O
+	// piso caiu de 6 para 1 quando a ficha do grimório saiu (ALE-473): a receita
+	// é do grimório, e as telas Tempestade usam o crachá do kit.
+	if byRecipe < 1 {
 		t.Fatalf("só %d sítios chamam `ui.BadgeClasses`: ou ela foi desfeita, ou o padrão parou de casar", byRecipe)
 	}
-	// E a prova de que o ramo do enfeite é alcançado: os `<span>` redondos da
-	// escala miúda (o círculo da magia, o crachá do item guardado) continuam
-	// existindo e TÊM de ser achados.
-	if aMao < 2 {
-		t.Fatalf("o guarda achou só %d enfeites redondos fora da família: o ramo que os separa do alvo não está sendo alcançado", aMao)
-	}
+	// A prova de que o ramo do ENFEITE era alcançado saiu com a ficha do
+	// grimório (ALE-473): os dois `<span>` redondos que ele achava — o círculo da
+	// magia e o crachá do item guardado — moravam nela. O ramo continua, e quem
+	// o exercita é o caso que monta o enfeite à mão, se um dia ele voltar a ter
+	// terreno.
 }

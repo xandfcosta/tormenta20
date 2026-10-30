@@ -22,10 +22,10 @@ func TestTheParallelSessionDressesThePlayerSheetInTempestade(t *testing.T) {
 	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	if !strings.Contains(page, "scene-ds") {
-		t.Fatal("a sessão paralela não veste o Tempestade")
+		t.Fatal("a sessão do jogador não veste o Tempestade")
 	}
 	if strings.Contains(page, "O que ver na sessão") {
-		t.Error("a sessão paralela ainda desenha o seletor de superfície de hoje")
+		t.Error("a sessão do jogador ainda desenha o seletor de superfície de hoje")
 	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
@@ -33,7 +33,7 @@ func TestTheParallelSessionDressesThePlayerSheetInTempestade(t *testing.T) {
 	}
 	surfaces := findNode(doc, "aria-label", "Superfícies da sessão")
 	if surfaces == nil {
-		t.Fatal("a sessão paralela não tem a barra da sessão")
+		t.Fatal("a sessão do jogador não tem a barra da sessão")
 	}
 	for _, s := range []string{"Ações", "Ficha", "Mesa", "Tabuleiro"} {
 		if !strings.Contains(textOf(surfaces), s) {
@@ -42,15 +42,15 @@ func TestTheParallelSessionDressesThePlayerSheetInTempestade(t *testing.T) {
 	}
 	sheet := findNode(doc, "id", "sheet-scene")
 	if sheet == nil || findNode(sheet, "data-system", "tempestade") == nil {
-		t.Fatal("a Ficha embutida não é a ficha paralela")
+		t.Fatal("a Ficha embutida não é a ficha")
 	}
 	sheetHTML := renderNode(t, sheet)
 	if strings.Contains(sheetHTML, "ds-sheet-head") {
 		t.Error("a Ficha embutida repete o cabeçalho da ficha solta, e a sessão já tem o dela")
 	}
 	sections := findNode(sheet, "aria-label", "Seções da ficha")
-	if sections == nil || !regexp.MustCompile(`embutida=1[^"']*tempestade=1|tempestade=1[^"']*embutida=1`).MatchString(renderNode(t, sections)) {
-		t.Error("as seções da Ficha embutida não trocam de aba com as duas marcas")
+	if sections == nil || !strings.Contains(renderNode(t, sections), "embutida=1") {
+		t.Error("as seções da Ficha embutida não trocam de aba dentro da sessão")
 	}
 }
 
@@ -59,12 +59,12 @@ func TestTheGmKeepsTodaysStageInTheParallelSession(t *testing.T) {
 	f := newSceneFixture(t)
 	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(page, "scene-ds") {
-		t.Error("o mestre recebeu a sessão paralela")
+		t.Error("o mestre recebeu a sessão do jogador")
 	}
 }
 
 // O STREAM MANTÉM O CABEÇALHO NOVO depois do primeiro quadro. Ele recarrega a
-// mesa a cada mudança, e a marca da sessão paralela tem de valer em todo
+// mesa a cada mudança, e a marca da sessão do jogador tem de valer em todo
 // quadro — e não só no primeiro, que é como o cabeçalho de hoje voltava dois
 // segundos depois de abrir a página.
 func TestTheParallelSessionStreamKeepsTheNewHeaderAfterATurn(t *testing.T) {
@@ -103,11 +103,11 @@ func TestTheParallelSessionStreamKeepsTheNewHeaderAfterATurn(t *testing.T) {
 
 	f.posts(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "{}")
 	if after := nextHeader("depois da vez"); !strings.Contains(after, "ds-session-head") {
-		t.Error("depois de a vez andar, o fluxo mandou o cabeçalho de hoje para a sessão paralela")
+		t.Error("depois de a vez andar, o fluxo mandou o cabeçalho de hoje para a sessão do jogador")
 	}
 }
 
-// AS AÇÕES DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado: a barra de alvo
+// AS AÇÕES DA SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado: a barra de alvo
 // fixa no topo, que carrega de quem é a vez (`my_turn`), e as ações desenhadas
 // no kit. O que gasta a vez lê o alvo E a vez; a reação, não.
 func TestTheParallelSessionDrawsTheActionsInTempestade(t *testing.T) {
@@ -115,7 +115,7 @@ func TestTheParallelSessionDrawsTheActionsInTempestade(t *testing.T) {
 	f.scene(t)
 	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(page, "Ações ainda está na sessão de hoje") {
-		t.Fatal("as Ações da sessão paralela ainda levam à sessão de hoje")
+		t.Fatal("as Ações da sessão do jogador ainda levam à sessão de hoje")
 	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
@@ -137,7 +137,7 @@ func TestTheParallelSessionDrawsTheActionsInTempestade(t *testing.T) {
 	}
 }
 
-// O GESTO DA MESA NA SESSÃO PARALELA responde com as regiões NOVAS. Os
+// O GESTO DA MESA NA SESSÃO DO JOGADOR responde com as regiões NOVAS. Os
 // comandos da mesa redesenham a mesa na hora, e sem a marca devolviam o
 // cabeçalho de hoje — o mesmo defeito do stream, por outro caminho.
 func TestAParallelSessionGestureAnswersWithTheNewRegions(t *testing.T) {
@@ -145,11 +145,11 @@ func TestAParallelSessionGestureAnswersWithTheNewRegions(t *testing.T) {
 	f.scene(t)
 	answer := f.posts(t, f.player, f.tableUrl()+"/ataque/cancelar", "{}")
 	if !strings.Contains(answer, "ds-session-head") {
-		t.Errorf("o gesto da sessão paralela respondeu com o cabeçalho de hoje:\n%s", firstRows(answer, 6))
+		t.Errorf("o gesto da sessão do jogador respondeu com o cabeçalho de hoje:\n%s", firstRows(answer, 6))
 	}
 }
 
-// A MESA DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `mesa.html`: em
+// A MESA DA SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado `mesa.html`: em
 // combate, a fila com quem joga agora e o PV dos outros oculto; o registro
 // encolhido para quem já está na fila; e o grupo.
 func TestTheParallelSessionDrawsTheTable(t *testing.T) {
@@ -157,7 +157,7 @@ func TestTheParallelSessionDrawsTheTable(t *testing.T) {
 	f.scene(t)
 	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(page, "Mesa ainda está na sessão de hoje") {
-		t.Fatal("a Mesa da sessão paralela ainda leva à sessão de hoje")
+		t.Fatal("a Mesa da sessão do jogador ainda leva à sessão de hoje")
 	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
@@ -170,7 +170,7 @@ func TestTheParallelSessionDrawsTheTable(t *testing.T) {
 	} {
 		region := findNode(doc, "id", id)
 		if region == nil {
-			t.Errorf("a Mesa paralela não tem a região %s", id)
+			t.Errorf("a Mesa não tem a região %s", id)
 			continue
 		}
 		if findNode(region, "class", "ds-list") == nil && id != "table-register" {
@@ -185,7 +185,7 @@ func TestTheParallelSessionDrawsTheTable(t *testing.T) {
 	}
 }
 
-// O TABULEIRO DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado
+// O TABULEIRO DA SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado
 // `tabuleiro.html`: o mapa é o de hoje, e o que flutua em volta veste o kit —
 // o nome do lugar, o enquadramento e a barra das ferramentas do jogador com o
 // nome escrito. As ferramentas do mestre não chegam ao HTML do jogador.
@@ -194,7 +194,7 @@ func TestTheParallelSessionDrawsTheBoard(t *testing.T) {
 	f.scene(t)
 	closed := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(closed, "O mestre ainda não abriu um tabuleiro") {
-		t.Error("sem tabuleiro, a sessão paralela não diz que o mestre ainda não abriu")
+		t.Error("sem tabuleiro, a sessão do jogador não diz que o mestre ainda não abriu")
 	}
 	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
 		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
@@ -202,7 +202,7 @@ func TestTheParallelSessionDrawsTheBoard(t *testing.T) {
 	}
 	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	if strings.Contains(page, "Tabuleiro ainda está na sessão de hoje") {
-		t.Fatal("o Tabuleiro da sessão paralela ainda leva à sessão de hoje")
+		t.Fatal("o Tabuleiro da sessão do jogador ainda leva à sessão de hoje")
 	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
@@ -210,7 +210,7 @@ func TestTheParallelSessionDrawsTheBoard(t *testing.T) {
 	}
 	region := findNode(doc, "id", "table-board")
 	if region == nil {
-		t.Fatal("a sessão paralela não tem a região table-board")
+		t.Fatal("a sessão do jogador não tem a região table-board")
 	}
 	if findNode(region, "id", "board-scene") == nil {
 		t.Error("o Tabuleiro paralelo não desenha o mapa de hoje")

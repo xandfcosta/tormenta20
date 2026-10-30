@@ -5,7 +5,42 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
+
+// powersTabOf recorta o painel da aba Poderes — a `<section>` dele, sem os
+// diálogos que vêm depois —, e falha quando não o acha. A folha de cada poder é
+// desenhada fora do painel e repete o nome, então a tela inteira acharia ali o
+// que a lista escondeu.
+func powersTabOf(t *testing.T, screen string) string {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(screen))
+	if err != nil {
+		t.Fatalf("ler a aba Poderes: %v", err)
+	}
+	panel := findNode(doc, "aria-label", "Poderes")
+	if panel == nil || panel.Data != "section" {
+		t.Fatal("a ficha não desenhou o painel de Poderes")
+	}
+	return renderNode(t, panel)
+}
+
+// powerListRowOf é a linha daquele poder na lista — do `ds-row` que abre a linha
+// ao fim dela —, ou "". O âncora é o TÍTULO da linha: o nome de um poder pode
+// aparecer na meta de outro.
+func powerListRowOf(panel, name string) string {
+	at := strings.Index(panel, `<span class="ds-row-title">`+name+`</span>`)
+	if at < 0 {
+		return ""
+	}
+	start := strings.LastIndex(panel[:at], `<div class="ds-row`)
+	end := strings.Index(panel[at:], "</div>")
+	if start < 0 || end < 0 {
+		return ""
+	}
+	return panel[start : at+end]
+}
 
 // O ENCANTO ATIVÁVEL DE UM ITEM EQUIPADO É PODER (ALE-433).
 //
@@ -25,13 +60,14 @@ func TestTheActivatableEnchantOfAWieldedItemIsAPower(t *testing.T) {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 
-	screen := powerPanel(powerScreen(t, f, id))
-	row := powerRowOf(screen, "Dançarina")
+	screen := powersTabOf(t, powerScreen(t, f, id))
+	row := powerListRowOf(screen, "Dançarina")
 	if row == "" {
 		t.Fatalf("o encanto ativável não entrou no acervo:\n%s", screen)
 	}
-	for _, want := range []string{"Espada longa", "1 PM", "movimento"} {
-		if !strings.Contains(row, want) {
+	// "movimento" sem caixa: a linha escreve a ação em versal.
+	for _, want := range []string{"espada longa", "1 pm", "movimento"} {
+		if !strings.Contains(strings.ToLower(row), want) {
 			t.Errorf("a linha da Dançarina não diz %q:\n%s", want, row)
 		}
 	}
@@ -80,7 +116,13 @@ func TestAStowedWeaponOffersNoEnchantPower(t *testing.T) {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 
-	if row := powerRowOf(powerPanel(powerScreen(t, f, id)), "Dançarina"); row != "" {
+	// O CONTROLE da ausência é o Durão: o guerreiro de nível 3 o tem, e a
+	// lista que não acha a linha dele não está sendo lida.
+	panel := powersTabOf(t, powerScreen(t, f, id))
+	if powerListRowOf(panel, "Durão") == "" {
+		t.Fatalf("o controle já estava errado: o acervo não tem o Durão do guerreiro:\n%s", panel)
+	}
+	if row := powerListRowOf(panel, "Dançarina"); row != "" {
 		t.Errorf("o encanto da arma GUARDADA entrou no acervo:\n%s", row)
 	}
 	before := pm(t, f, id)

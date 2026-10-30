@@ -12,7 +12,7 @@ package sheetui
 // assunto, o painel nomeia a coisa.
 //
 // Ele é a lista contra a qual a varredura cobra que TODA aba desenhe um painel
-// de verdade. `Tabs` e o `switch` do `sheetPanel` são duas listas que precisam
+// de verdade. `Tabs` e o `switch` do `tempestadePanel` são duas listas que precisam
 // andar juntas, e o modo de errar é silencioso: um nome na lista sem caso no
 // switch abre a seção VAZIA, e o jogador vê uma tela em branco — pior do que
 // qualquer aviso. Aba nova sem linha aqui falha NOMEANDO a aba, em vez de o

@@ -259,20 +259,3 @@ func proficiencySwap(dto sheet.CharacterDTO, key string) ([]string, error) {
 // A lista que a mensagem de erro cita é a do livro (`book.ProficiencyKeys`), na
 // ordem DELE e não em ordem alfabética: alfabética também seria estável, e
 // trocaria a escala de dificuldade da p142 por uma ordem que não diz nada.
-
-// sourceTag é o `title` da etiqueta "classe": "Padrão: Guerreiro, Nobre".
-func sourceTag(row sheetProficiency) string {
-	return "Padrão: " + strings.Join(row.Sources, ", ")
-}
-
-// swapLabel é o nome acessível do botão de cada linha.
-//
-// O VERBO diz o que o clique FAZ, e não o estado atual: um leitor de tela lê o
-// botão para decidir se aperta, e "Armas marciais" sozinho não diz se apertar
-// dá ou tira.
-func swapLabel(row sheetProficiency) string {
-	if row.Has {
-		return "Remover proficiência: " + row.Label
-	}
-	return "Adicionar proficiência: " + row.Label
-}

@@ -3,11 +3,12 @@ package sheetui
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 )
 
 // OS PASSOS DO ESCOLHER (ALE-473), pelo mockup aprovado: cada escolha que a
 // ficha pede abre sozinha, e a lista diz quanto falta em cada uma. O dado é o
-// da ficha de hoje (`choicesPanel`); daqui sai só a divisão em passos.
+// do painel (`choicesPanel`); daqui sai só a divisão em passos.
 
 // choiceStep é um passo do Escolher (ver o GLOSSARY).
 type choiceStep struct {
@@ -20,11 +21,13 @@ type choiceStep struct {
 	Count string
 	Done  bool
 	// Kind diz o que o passo desenha: `race`, `origin`, `powers`, `path`,
-	// `devotee` ou `counted`.
+	// `devotee`, `counted` ou `general`.
 	Kind    string
 	Race    raceChoiceCard
 	Class   classChoiceCard
 	Counted countedChoice
+	// Power é o poder geral do passo `general`.
+	Power powerChoice
 }
 
 // Tag é o que a lista mostra na ponta do passo: quanto falta, ou "feito".
@@ -81,6 +84,7 @@ func choiceStepsOf(v View) []choiceStep {
 			})
 		}
 	}
+	all = append(all, generalChoiceSteps(v)...)
 	steps := make([]choiceStep, 0, len(all))
 	for _, done := range []bool{false, true} {
 		for _, s := range all {
@@ -90,6 +94,42 @@ func choiceStepsOf(v View) []choiceStep {
 		}
 	}
 	return steps
+}
+
+// generalChoiceSteps são os poderes gerais que a ficha TEM e cuja escolha
+// falta — o Foco em Perícia que a origem dá (p92) sem a perícia. Sem passo
+// próprio, a pendência entrava no crachá e não na lista, e o passo da classe
+// podia dizer "feito" com ela em aberto. As opções são as da linha do poder na
+// lista da classe.
+func generalChoiceSteps(v View) []choiceStep {
+	var steps []choiceStep
+	for _, p := range v.Choices.Pending {
+		if p.PowerID == "" {
+			continue
+		}
+		power, found := ownedPowerChoice(v, p.PowerID)
+		if !found {
+			continue
+		}
+		label := strings.TrimPrefix(p.Label, power.Name+": escolher ")
+		steps = append(steps, choiceStep{
+			ID: "general-" + p.PowerID, Title: power.Name + " · " + label, Meta: "poder geral",
+			Count: "falta 1", Kind: "general", Power: power,
+		})
+	}
+	return steps
+}
+
+// ownedPowerChoice acha a linha do poder na lista de alguma classe.
+func ownedPowerChoice(v View, id string) (powerChoice, bool) {
+	for _, card := range v.Choices.Classes {
+		for _, power := range card.Powers {
+			if power.ID == id {
+				return power, true
+			}
+		}
+	}
+	return powerChoice{}, false
 }
 
 // pickerStep é o passo de uma escolha de valor só — o caminho, o devoto —, com

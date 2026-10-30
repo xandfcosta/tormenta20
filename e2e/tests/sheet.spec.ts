@@ -2,17 +2,17 @@ import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
 import { expectOneFocusRing } from './support/focus'
 import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
-import { medeATipografia } from './support/typography'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
  * A FICHA — o que só o navegador mede: LEIAUTE REAL nos seis formatos.
  *
  * O que o servidor escreve está preso em Go, que é mais barato: endereço das
- * abas, posse, degrau de nível, faixa dos vitais. Sobra para cá a geometria: o
- * crachá é uma fileira com retrato, identidade, nível e oito botões de vital, e
- * a barra de abas tem sete itens — um controle que sai da janela não é feio, é
- * inalcançável.
+ * abas, posse, degrau de nível, faixa dos vitais. Sobra para cá a geometria: no
+ * celular a ficha empilha o cabeçalho, a faixa dos vitais (PV e PM, cada um com
+ * −1, o número e +1) e a barra de baixo, e no desktop troca as duas últimas pela
+ * coluna e pela fileira de sete abas — um controle que sai da janela não é feio,
+ * é inalcançável.
  */
 test.use({ storageState: '.auth/user.json' })
 
@@ -38,8 +38,9 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
 
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 
-  // O CRACHÁ é o que mais aperta: oito passos de vital, o degrau de nível e o
-  // retrato na mesma fileira. No telefone em pé é onde a conta estoura.
+  // O CABEÇALHO e a FAIXA DOS VITAIS são o que mais aperta: retrato, nome,
+  // Defesa e ⋯ numa fileira, e seis botões de vital na outra. No telefone em pé
+  // é onde a conta estoura.
   await page.setViewportSize({ width: 390, height: 844 })
   await expectDentroDaJanela(page)
 })
@@ -54,6 +55,10 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
  */
 test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
   await aFichaDoPrimeiro(page)
+  // DUAS navegações se chamam "Seções da ficha" — a fileira de abas e a barra de
+  // baixo —, e a largura decide qual está desenhada. Lidas na largura do
+  // desktop, são as sete abas; a barra de baixo, com cinco e o Mais, está
+  // escondida e o `getByRole` não a vê.
   const addresses = await page
     .getByRole('navigation', { name: 'Seções da ficha' })
     .getByRole('link')
@@ -89,13 +94,13 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     ).toBeGreaterThan(30)
     expect(ratio.falhas, `texto abaixo do AA em ${address}`).toEqual([])
 
-    // A TIPOGRAFIA entra no MESMO caminhar, pela mesma razão que o contraste.
-    const typography = await medeATipografia(page)
-    expect(
-      typography.medidos,
-      `em ${address} o medidor não achou NENHUM texto em Cinzel: ou a fonte não carregou, ou o filtro parou de casar — e o silêncio abaixo não seria evidência`,
-    ).toBeGreaterThan(0)
-    expect(typography.falhas, `Cinzel abaixo do piso de leitura em ${address}`).toEqual([])
+    // A TIPOGRAFIA saiu deste caminhar, e não por esquecimento: o medidor dela
+    // é o da CINZEL, e a ficha Tempestade não desenha Cinzel nenhuma — a face é
+    // a Atkinson. Mantido, ele reprovaria no próprio controle ("nenhum texto em
+    // Cinzel") em toda aba, que é medir a fonte errada e não a ficha. O piso de
+    // texto do sistema novo (12px) é do `measureDsText`, e quem o passa pelas
+    // abas da ficha é o `appearance.spec`, pelas cenas do
+    // `appearance_scenes.json`.
 
     // E O ANEL DE FOCO entra no MESMO caminhar, pela terceira vez e pela mesma
     // razão: à parte ele seria enumeração.
@@ -121,11 +126,11 @@ const oIdDoConjurador = (page: import('@playwright/test').Page) => oIdDoHeroi(pa
 
 /**
  * O PAINEL RAMIFICA PELO DADO, e caminhar pelas abas não alcança isso: o caso
- * acima abre as sete abas de um guerreiro. A tripla mágica do Combate — Limite
- * PM, CD Magia, Custo PM — só existe para quem conjura por classe, e ela usa a
- * paleta ARCANA, outra tinta sobre o mesmo painel.
+ * acima abre as sete abas de um guerreiro. A lista Magia do Combate — limite de
+ * PM, CD das magias, modificador de custo — só existe para quem conjura por
+ * classe, e sem este caso nenhuma linha dela é medida.
  */
-test('a paleta arcana do Combate é legível para quem conjura', async ({ page }) => {
+test('a lista Magia do Combate é legível para quem conjura', async ({ page }) => {
   const id = await oIdDoConjurador(page)
 
   await page.setViewportSize({ width: 390, height: 844 })
@@ -134,8 +139,8 @@ test('a paleta arcana do Combate é legível para quem conjura', async ({ page }
   // O CONTROLE de que a tripla está mesmo na tela: sem ela, o contraste abaixo
   // mede um Combate sem nada de arcano e passa dizendo o contrário.
   await expect(
-    page.getByRole('button', { name: /^CD Magia/ }),
-    'a ficha do conjurador não desenhou a tripla mágica: a paleta arcana não entrou na medição',
+    page.getByRole('region', { name: 'Combate' }).getByText('CD das magias', { exact: true }),
+    'a ficha do conjurador não desenhou a lista Magia: o ramo de quem conjura não entrou na medição',
   ).toBeVisible()
 
   const contrast = await medeOContraste(page)
@@ -167,8 +172,8 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
 
   // O DENOMINADOR DE UM DIÁLOGO NÃO É COMPARATIVO: `medidos` dá o mesmo número
   // com o diálogo fechado e com ele aberto, porque o medidor descarta o nó que
-  // ESCONDE A SI MESMO e não o que está debaixo de um ancestral escondido — e a
-  // cena do Datastar esconde por `data-show` no pai. Quem prova que o diálogo
+  // ESCONDE A SI MESMO e não o que está debaixo de um ancestral escondido — e o
+  // `<dialog>` fechado esconde a si, não aos filhos. Quem prova que o diálogo
   // abriu é o `toBeVisible` de dentro dele; o que os dois blocos abaixo
   // acrescentam é LEIAUTE REAL com a caixa no ar.
 
@@ -176,12 +181,15 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
   // aprimoramento fora de alcance — o Necromante é nível 12, alcança o 3º
   // círculo, e a Invisibilidade tem aprimoramento de 4º.
   await page.getByRole('button', { name: 'Conjurar Invisibilidade' }).click()
-  await expect(page.getByText(/exige o 4º círculo/)).toBeVisible()
+  const cast = page.getByRole('dialog', { name: 'Invisibilidade' })
+  await expect(cast.getByText(/exige o 4º círculo/)).toBeVisible()
+  await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
   await page.keyboard.press('Escape')
+  await expect(cast).toBeHidden()
 
   // O DIÁLOGO DE APRENDER leva o Capítulo 4 inteiro.
-  await page.getByRole('button', { name: 'Aprender magia' }).click()
+  await page.getByRole('button', { name: 'Aprender', exact: true }).click()
   const crate = page.getByRole('dialog', { name: 'Aprender magia' })
   await expect(crate).toBeVisible()
   await expectDentroDaJanela(page)
@@ -208,21 +216,25 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(`/personagens/${id}?tab=spells`)
 
-  await page.getByRole('button', { name: 'Aprender magia' }).click()
+  await page.getByRole('button', { name: 'Aprender', exact: true }).click()
   const learn = page.getByRole('dialog', { name: 'Aprender magia' })
   await learn.getByRole('searchbox').fill('Explosão de Chamas')
-  await learn.getByText('Explosão de Chamas', { exact: true }).click()
+  await learn.getByRole('button', { name: 'Aprender Explosão de Chamas' }).click()
   await expect(
     page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }),
     'a magia com truque não entrou no grimório: não há o que medir abaixo',
   ).toBeVisible()
-  await page.getByRole('button', { name: 'Fechar aprender magia' }).click()
+  await learn.getByRole('button', { name: 'Fechar' }).click()
 
   await page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }).click()
   const cast = page.getByRole('dialog', { name: 'Explosão de Chamas' })
-  const cost = cast.getByText(/^\d+ PM$/)
+  // A prévia é o `<b>` do "Custo … · você tem … PM": o rodapé repete o número
+  // no botão de conjurar, e um `getByText` de "N PM" casaria os dois.
+  const cost = cast.locator('p', { hasText: /^Custo/ }).locator('b')
   const moreDamage = cast.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
-  const cantrip = cast.getByRole('switch').first()
+  // Pelo NOME, e não pelo primeiro: quem prepara magia tem o "Preparada" antes
+  // dos aprimoramentos, e ele também é um interruptor.
+  const cantrip = cast.getByRole('switch', { name: /^Truque:/ })
 
   // O CONTROLE em duas medidas: o mostrador tem de MUDAR antes do que eu vim
   // medir, senão um repouso igual ao sucesso não testemunha nada (ALE-218).
@@ -232,10 +244,7 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
 
   await cantrip.click()
   await expect(cost, 'o truque não zerou a prévia: a tela cobra o que o servidor não cobra (p171)').toHaveText('0 PM')
-  await expect(
-    cantrip,
-    'o truque não ficou ligado',
-  ).toHaveAttribute('aria-checked', 'true')
+  await expect(cantrip, 'o truque não ficou ligado').toBeChecked()
   // E o aprimoramento que estava ligado tem de ter SUMIDO da escolha: a tela não
   // pode oferecer uma combinação que o servidor recusa.
   await expect(
@@ -247,8 +256,8 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
 /**
  * A MOCHILA ABERTA, com a ficha de um item e o catálogo do Capítulo 3.
  *
- * O caminhar pelas sete abas cobre a tira e a grade, mas nenhum dos DIÁLOGOS —
- * equipar, usar, melhorias e as ~160 linhas do catálogo. Eles justificam o
+ * O caminhar pelas sete abas cobre as listas, mas nenhum dos DIÁLOGOS —
+ * equipar, usar, melhorias e as ~200 linhas do catálogo. Eles justificam o
  * navegador por conta própria: são caixas que rolam dentro de si numa tela de
  * 390px.
  */
@@ -257,9 +266,10 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(`/personagens/${id}?tab=bag`)
 
-  // O CONTROLE do painel: sem a tira desenhada, o resto mede uma mochila vazia.
+  // O CONTROLE do painel: sem a lista das mãos desenhada, o resto mede uma
+  // mochila vazia. O ⋯ da linha só existe para o que está em uso.
   await expect(
-    page.getByRole('button', { name: 'Guardar Machado de batalha' }),
+    page.getByRole('button', { name: 'Ações de Machado de batalha' }),
     'a mochila do tanque não desenhou os equipados: nada abaixo mediria a fatia 7',
   ).toBeVisible()
   await expectNadaRolaDeLado(page)
@@ -267,18 +277,21 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
   expect(inPanel.medidos, 'o medidor não achou texto na mochila').toBeGreaterThan(30)
   expect(inPanel.falhas, 'texto abaixo do AA na mochila').toEqual([])
 
-  // A FICHA DO ITEM, aberta pelo cartão da tira.
-  await page.getByRole('button', { name: 'Abrir Machado de batalha' }).click()
+  // A FICHA DO ITEM, aberta pelo ⋯ da linha.
+  await page.getByRole('button', { name: 'Ações de Machado de batalha' }).click()
   const sheet = page.getByRole('dialog', { name: 'Machado de batalha' })
   await expect(sheet).toBeVisible()
   await expect(sheet.getByRole('button', { name: 'Melhorias de Machado de batalha' })).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
   await page.keyboard.press('Escape')
+  await expect(sheet).toBeHidden()
 
   // O CATÁLOGO leva o Capítulo 3 inteiro numa caixa que rola dentro de si.
-  await page.getByRole('button', { name: 'Adicionar do catálogo' }).click()
-  await expect(page.getByRole('dialog', { name: 'Adicionar do catálogo' })).toBeVisible()
+  await page.getByRole('button', { name: 'Adicionar item' }).click()
+  const catalog = page.getByRole('dialog', { name: 'Adicionar item' })
+  await expect(catalog).toBeVisible()
+  await expect(catalog.getByRole('button', { name: 'Adicionar Adaga' })).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
 })
@@ -295,9 +308,12 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(`/personagens/${id}?tab=abilities`)
 
-  // O CONTROLE da lista: sem poderes na tela o resto mede uma aba vazia.
+  // O CONTROLE da lista: sem poderes na tela o resto mede uma aba vazia. O nome
+  // do botão leva as pendências junto ("Escolher 2 escolhas pendentes"), então
+  // o casamento é pelo começo.
+  const choose = page.getByRole('region', { name: 'Poderes' }).getByRole('button', { name: /^Escolher/ })
   await expect(
-    page.getByRole('button', { name: 'Escolher poderes', exact: true }),
+    choose,
     'a aba Poderes não desenhou o gesto de escolher: nada abaixo mediria a fatia 8',
   ).toBeVisible()
   await expectNadaRolaDeLado(page)
@@ -305,13 +321,14 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
   expect(inList.medidos, 'o medidor não achou texto nos Poderes').toBeGreaterThan(30)
   expect(inList.falhas, 'texto abaixo do AA nos Poderes').toEqual([])
 
-  await page.getByRole('button', { name: 'Escolher poderes', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Escolher poderes' })
+  await choose.click()
+  const dialog = page.getByRole('dialog', { name: 'Escolher' })
   await expect(dialog).toBeVisible()
-  await dialog.getByRole('button', { name: 'Classe', exact: true }).click()
-  // O `:visible` não é preciosismo: as três abas são desenhadas de uma vez e
-  // alternadas por `data-show`, então o primeiro `switch` do DOM é o da Origem,
-  // que está escondido — e esperar por ele é esperar para sempre.
+  // O PASSO DA CLASSE é o que leva a lista longa; o Tanque é Guerreiro.
+  await dialog.getByRole('navigation', { name: 'Escolhas' }).getByRole('button', { name: /^Guerreiro/ }).click()
+  // O `:visible` não é preciosismo: os passos são desenhados de uma vez e
+  // alternados por `data-show`, então o primeiro `switch` do DOM pode ser de um
+  // passo escondido — e esperar por ele é esperar para sempre.
   await expect(dialog.locator('[role="switch"]:visible').first()).toBeVisible()
   await expectDentroDaJanela(page)
   await expectNadaRolaDeLado(page)
@@ -324,54 +341,60 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
 // `TestEverySheetTabDrawsSomething`).
 
 /**
- * O CELULAR DEITADO, e o orçamento do crachá.
+ * O CELULAR DEITADO, e o orçamento da faixa dos vitais.
  *
- * O TETO É O CRACHÁ e não a lista, e isso é deliberado: ele é a única peça
- * COMPARTILHADA pelas sete abas, então uma regra presa aqui cobre as sete sem
- * enumerar nenhuma — a oitava aba já nasce medida. Prender "a lista mostra uma
- * linha" seria a mesma garantia sete vezes, e ainda ficaria impossível nas duas
- * abas cujo "primeiro filho" é um bloco de 242px e não uma linha.
+ * O TETO É A FAIXA e não a lista, e isso é deliberado: ela é a peça de altura
+ * VARIÁVEL compartilhada pelas sete abas — o cabeçalho e a barra de baixo têm
+ * altura fixa no CSS —, então uma regra presa aqui cobre as sete sem enumerar
+ * nenhuma, e a oitava aba já nasce medida.
  *
- * O TETO é ARITMÉTICA e não um número redondo: duas fileiras de alvo de toque
- * mais o respiro entre elas. Duas e não uma porque a fileira ENROLA de
- * propósito — os oito passos de vital são 44px de alvo mínimo cada, e
- * espremê-los numa linha só trocaria este defeito por um de alvo de toque.
- * Escrito como conta para dizer de qual soma o teto saiu; um número redondo some
+ * O TETO é ARITMÉTICA e não um número redondo: UMA fileira de alvo de toque,
+ * mais o `padding` de 0,5rem em cima e embaixo (16) e a borda de cima (1), com
+ * três de folga. Uma fileira e não duas porque PV e PM ficam lado a lado em
+ * qualquer largura — a grade é `repeat(auto-fit, minmax(0, 1fr))`, e o mínimo
+ * zero não deixa nada descer. O antigo crachá ENROLAVA de propósito em duas;
+ * a faixa não precisa, e o dia em que ela enrolar é o defeito que este teto
+ * pega. O alvo entra com 44, que é o controle no TOQUE (`pointer: coarse`); o
+ * Chromium do e2e aponta fino e desenha 32, então o teto vale para os dois.
+ * Escrito como conta para dizer de qual soma ele saiu; um número redondo some
  * no dia em que alguém precisa saber se pode mexer nele.
  *
- * Só um navegador testemunha: a chave é `max-lg:landscape:`, que é largura MAIS
- * orientação, e em jsdom não há orientação.
+ * Só um navegador testemunha: é LEIAUTE REAL de uma grade numa janela de 390px
+ * de altura, e em jsdom tudo mede zero.
  */
-test('deitado, o crachá do jogador não come metade da tela', async ({ page }) => {
+test('deitado, a faixa dos vitais não come metade da tela', async ({ page }) => {
   await aFichaDoPrimeiro(page)
+  // Na largura do desktop a navegação visível é a fileira de sete abas (ver o
+  // caso "nenhum painel").
   const addresses = await page
     .getByRole('navigation', { name: 'Seções da ficha' })
     .getByRole('link')
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
   expect(addresses, 'a barra de abas veio vazia: este caso não mediria nada').toHaveLength(7)
 
-  // 44 é o alvo mínimo de toque; o respiro é o `py-1` (8), o `gap-y-1` (4) e a
-  // borda de cima (1), com três de folga.
   const TOUCH_TARGET = 44
-  const BADGE_CEILING = 2 * TOUCH_TARGET + 8 + 4 + 1 + 3
+  const STRIP_CEILING = TOUCH_TARGET + 8 + 8 + 1 + 3
 
   await page.setViewportSize({ width: 844, height: 390 })
   for (const address of addresses) {
     await page.goto(address)
-    const badge = page.locator('#player-badge')
+    // A faixa não tem papel nem nome; o que a identifica na tela é o PV dela.
+    const strip = page.locator('.ds-vitals')
     // `toBeVisible` ANTES de medir: uma caixa escondida devolve zero sem
-    // reclamar, e um zero passaria neste teto com folga.
-    await expect(badge, `o crachá sumiu em ${address}: sem ele não há medição`).toBeVisible()
-    const box = await badge.boundingBox()
+    // reclamar, e um zero passaria neste teto com folga. O botão do PV de
+    // dentro dela prova que é a faixa desenhada, e não um contêiner vazio.
+    await expect(strip, `a faixa dos vitais sumiu em ${address}: sem ela não há medição`).toBeVisible()
+    await expect(strip.getByRole('button', { name: /^PV \d+\/\d+, ajustar$/ })).toBeVisible()
+    const box = await strip.boundingBox()
     expect(
       box?.height,
-      `o crachá come ${Math.round(box?.height ?? 0)}px dos 390 em ${address}`,
-    ).toBeLessThanOrEqual(BADGE_CEILING)
+      `a faixa dos vitais come ${Math.round(box?.height ?? 0)}px dos 390 em ${address}`,
+    ).toBeLessThanOrEqual(STRIP_CEILING)
 
     // E o que o corte NÃO pode custar: mexer no PV é o gesto mais frequente da
-    // noite, e o crachá existe para que ele não dependa de qual aba está
-    // aberta. Um passo de vital fora da janela deitado seria trocar um defeito
-    // por outro.
+    // noite, e a faixa existe para que ele não dependa de qual aba está aberta.
+    // Um passo de vital fora da janela deitado seria trocar um defeito por
+    // outro.
     await expectDentroDaJanela(page)
     await expectNadaRolaDeLado(page)
   }

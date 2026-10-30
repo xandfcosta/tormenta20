@@ -13,7 +13,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeChoicesDialog é o Escolher da ficha paralela, em passos (ver o
+// tempestadeChoicesDialog é o Escolher da ficha, em passos (ver o
 // GLOSSARY): a lista do que falta e um passo de cada vez. No celular a lista
 // some quando um passo abre, e o cabeçalho do passo toma o lugar do do
 // diálogo, com a seta de voltar; no desktop as duas camadas ficam lado a lado,
@@ -359,7 +359,7 @@ func choiceStepSection(v View, step choiceStep) templ.Component {
 					}
 					ctx = templ.InitializeContext(ctx)
 					for _, power := range step.Class.Powers {
-						templ_7745c5c3_Err = powerPickRow(v, power).Render(ctx, templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = powerPickRow(v, power, true).Render(ctx, templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -382,6 +382,29 @@ func choiceStepSection(v View, step choiceStep) templ.Component {
 				}
 			case "counted":
 				templ_7745c5c3_Err = countedChoiceDs(v, step.Counted).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			case "general":
+				templ_7745c5c3_Var17 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+					templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+					if !templ_7745c5c3_IsBuffer {
+						defer func() {
+							templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+							if templ_7745c5c3_Err == nil {
+								templ_7745c5c3_Err = templ_7745c5c3_BufErr
+							}
+						}()
+					}
+					ctx = templ.InitializeContext(ctx)
+					templ_7745c5c3_Err = powerPickRow(v, step.Power, false).Render(ctx, templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					return nil
+				})
+				templ_7745c5c3_Err = ds.List("", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var17), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -7,7 +7,7 @@ import (
 	"t20engine/domain/live"
 )
 
-// A FAIXA SEM FIM DA SESSÃO PARALELA (ALE-473, decisão do dono): ela começa em
+// A FAIXA SEM FIM DA SESSÃO DO JOGADOR (ALE-473, decisão do dono): ela começa em
 // quem joga agora, segue pela rodada seguinte e marca CADA volta com o número
 // da rodada que começa — e não só a primeira, como a faixa de três.
 func TestTheEndlessStripStartsNowAndMarksEveryNewRound(t *testing.T) {
@@ -45,7 +45,7 @@ func TestTheEndlessStripStartsNowAndMarksEveryNewRound(t *testing.T) {
 	}
 }
 
-// O STREAM DA SESSÃO PARALELA manda só o que ela desenha: o cabeçalho, o
+// O STREAM DA SESSÃO DO JOGADOR manda só o que ela desenha: o cabeçalho, o
 // cartão do ataque, a barra de alvo das Ações, as três peças da Mesa e o
 // Tabuleiro. A lista e a página não podem
 // discordar sobre quais regiões existem — um remendo para um id que não está
@@ -58,6 +58,6 @@ func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
 	}
 	want := []string{"table-header", "table-attack", "table-skill-test", "table-turn-target", "table-register", "table-party", "table-tracker", "table-board"}
 	if strings.Join(ids, ",") != strings.Join(want, ",") {
-		t.Errorf("a sessão paralela recebe as regiões %v; queria %v", ids, want)
+		t.Errorf("a sessão do jogador recebe as regiões %v; queria %v", ids, want)
 	}
 }

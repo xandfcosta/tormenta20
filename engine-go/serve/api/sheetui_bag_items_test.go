@@ -7,6 +7,8 @@ import (
 	"strings"
 	"t20engine/infra/db/sqlcgen"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func TestTheItemCardOffersTheReachablePlaces(t *testing.T) {
@@ -16,13 +18,16 @@ func TestTheItemCardOffersTheReachablePlaces(t *testing.T) {
 	itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	screen := bagScreen(t, f, id)
+	// O RECORTE é a folha de cada item: os lugares moram nela, e procurar na
+	// tela inteira deixaria a folha do montante responder pela da adaga.
+	dagger := renderNode(t, itemDialogOf(t, screen, "Adaga"))
 	// UMA MÃO: a adaga é de uma mão e não é versátil, então ocupar as duas não
 	// ganharia nada (p150) e a opção não existe.
-	if !strings.Contains(screen, "Empunhar (1 mão)") {
+	if !strings.Contains(dagger, "Empunhar (1 mão)") {
 		t.Error("a adaga não oferece empunhar com uma mão")
 	}
 	// DUAS MÃOS, obrigatórias: o montante não cabe numa mão só.
-	if !strings.Contains(screen, "Empunhar (2 mãos)") {
+	if !strings.Contains(renderNode(t, itemDialogOf(t, screen, "Montante")), "Empunhar (2 mãos)") {
 		t.Error("o montante não oferece as duas mãos")
 	}
 	// O CONSUMÍVEL não se equipa em lugar nenhum, e por isso ele mostra o USAR
@@ -32,7 +37,7 @@ func TestTheItemCardOffersTheReachablePlaces(t *testing.T) {
 	}
 	// E O ESTADO ATUAL não é oferecido: um item guardado com um botão "Guardar"
 	// é um controle que não faz nada.
-	if strings.Contains(itemScreenSheet(screen, "Adaga"), ">Guardar<") {
+	if strings.Contains(dagger, ">Guardar<") {
 		t.Error("um item já guardado oferece Guardar")
 	}
 }
@@ -131,7 +136,7 @@ func TestACustomItemRequiresANameAndHalfStepSlots(t *testing.T) {
 func customItem(t *testing.T, f sceneFixture, id int64, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/itens/custom?tab=bag", id)
-	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
+	return bagRefusal(t, f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // EDITAR muda os três campos, e REMOVER tira da ficha.
@@ -141,7 +146,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 
 	target := fmt.Sprintf("/personagens/%d/itens/%d/edita?tab=bag", id, item)
 	body := `{"item_name":"Lembrança da Ana","item_qty":3,"item_slots":0.5}`
-	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String()); refusal != "" {
+	if refusal := bagRefusal(t, f.requests(t, f.player, http.MethodPost, target, body).Body.String()); refusal != "" {
 		t.Fatalf("editar foi recusado: %q", refusal)
 	}
 	edited := sheetNameItem(t, f, id, "Lembrança da Ana")
@@ -213,7 +218,7 @@ func TestWhatIsNotConsumableCannotBeUsed(t *testing.T) {
 func use(t *testing.T, f sceneFixture, id, item int64, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/itens/%d/usa?tab=bag", id, item)
-	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
+	return bagRefusal(t, f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 // A MELHORIA QUE NÃO CABE É RECUSADA PELO SERVIDOR.
@@ -281,7 +286,7 @@ func TestAnInventedImprovementDoesNotEnter(t *testing.T) {
 func improvements(t *testing.T, f sceneFixture, id, item int64, body string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/itens/%d/melhorias?tab=bag", id, item)
-	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
+	return bagRefusal(t, f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 func itemImprovements(t *testing.T, f sceneFixture, item int64) string {
@@ -449,21 +454,10 @@ func TestTheHandCardNamesTheEnchantsOfTheWeapon(t *testing.T) {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 
-	// O CARTÃO É O DA MÃO, e o recorte vai até o cartão vizinho: a ficha do
-	// item desenha os mesmos nomes mais abaixo na tela, e procurar na tela
-	// inteira passaria verde sobre um cartão vazio.
-	tela := bagScreen(t, f, id)
-	inicio := strings.Index(tela, "MÃO PRINCIPAL")
-	if inicio < 0 {
-		inicio = strings.Index(tela, "Mão principal")
-	}
-	if inicio < 0 {
-		t.Fatal("a tira das mãos não saiu na tela")
-	}
-	cartao := tela[inicio:]
-	if fim := strings.Index(cartao, "Mão secundária"); fim > 0 {
-		cartao = cartao[:fim]
-	}
+	// O CARTÃO É A LINHA DA MÃO (ver `handCardOf`): a folha do item desenha os
+	// mesmos nomes mais abaixo na tela, e procurar na tela inteira passaria
+	// verde sobre um cartão vazio.
+	cartao := handCardOf(t, bagScreen(t, f, id))
 	// O CONTROLE é a Certeira: mesma forma, mesmo cartão, e ela já funcionava.
 	if !strings.Contains(cartao, "Certeira") {
 		t.Fatalf("o controle já estava errado: o cartão não traz a melhoria:\n%s", cartao)
@@ -500,24 +494,25 @@ func TestThePlayerSeesTheEnchantsOfTheirWeapon(t *testing.T) {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 
-	ficha := itemScreenSheet(bagScreen(t, f, id), "Espada longa")
-	if ficha == "" {
-		t.Fatal("a ficha da espada longa não saiu na tela")
+	// O BLOCO é a lista "Encantos" da folha do item, recortada pelo NÓ e não
+	// pelo texto: cortar no primeiro `</div>` depois da palavra devolvia só o
+	// cabeçalho, e a ausência de botão passava verde por truncagem.
+	sheet := itemDialogOf(t, bagScreen(t, f, id), "Espada longa")
+	block := listNamed(sheet, "Encantos")
+	if block == nil {
+		t.Fatalf("a folha da espada não tem o bloco de encantos:\n%s", renderNode(t, sheet))
 	}
-	for _, escrito := range []string{"Encantos", "Flamejante", "Formidável", "+1d6 de dano de fogo"} {
-		if !strings.Contains(ficha, escrito) {
-			t.Errorf("a ficha da espada não escreve %q:\n%s", escrito, ficha)
+	written := renderNode(t, block)
+	for _, escrito := range []string{"Flamejante", "Formidável", "+1d6 de dano de fogo"} {
+		if !strings.Contains(written, escrito) {
+			t.Errorf("o bloco de encantos não escreve %q:\n%s", escrito, written)
 		}
 	}
-	// E O QUE ELA NÃO PODE TER: um interruptor. O diálogo de melhorias usa
+	// E O QUE ELE NÃO PODE TER: um interruptor. O diálogo de melhorias usa
 	// `role="switch"` em cada linha; se o bloco do encanto ganhar um, o jogador
 	// passou a escolher.
-	bloco := ficha[strings.Index(ficha, "Encantos"):]
-	if fim := strings.Index(bloco, "</div>"); fim > 0 {
-		bloco = bloco[:fim]
-	}
-	if strings.Contains(bloco, `role="switch"`) || strings.Contains(bloco, "<button") {
-		t.Errorf("o bloco de encantos oferece um gesto, e o jogador não encanta:\n%s", bloco)
+	if strings.Contains(written, `role="switch"`) || strings.Contains(written, "<button") {
+		t.Errorf("o bloco de encantos oferece um gesto, e o jogador não encanta:\n%s", written)
 	}
 }
 
@@ -532,12 +527,14 @@ func TestTheMaterialStepReachesBothTheHandCardAndTheCombatTile(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded")
 
-	// O CONTROLE: antes do material, as duas telas dizem o dado do catálogo.
+	// O CONTROLE: antes do material, as duas telas dizem o dado do catálogo. A
+	// carta de Combate diz o dano INTEIRO — o dado e a Força +4 do combatente —,
+	// e o cartão da Mochila só o dado.
 	if carta := handCardOf(t, bagScreen(t, f, id)); !strings.Contains(carta, "Dano 1d8") {
 		t.Fatalf("o cartão da mão não diz o dado da espada nua:\n%s", carta)
 	}
-	if tela := combatScreen(t, f, id); !strings.Contains(tela, "Dano 1d8") {
-		t.Fatal("a carta de Combate não diz o dado da espada nua")
+	if linha := combatWeaponMeta(t, combatScreen(t, f, id), "Espada longa"); !strings.Contains(linha, "1d8+4") {
+		t.Fatalf("a carta de Combate não diz o dado da espada nua: %q", linha)
 	}
 
 	if err := f.s.characterPlays().SaveItemOverlays(
@@ -549,28 +546,96 @@ func TestTheMaterialStepReachesBothTheHandCardAndTheCombatTile(t *testing.T) {
 	if carta := handCardOf(t, bagScreen(t, f, id)); !strings.Contains(carta, "Dano 1d10") {
 		t.Errorf("o cartão da mão não andou o dado da espada de adamante:\n%s", carta)
 	}
-	if tela := combatScreen(t, f, id); !strings.Contains(tela, "Dano 1d10") {
-		t.Error("a carta de Combate não andou o dado da espada de adamante")
+	if linha := combatWeaponMeta(t, combatScreen(t, f, id), "Espada longa"); !strings.Contains(linha, "1d10+4") {
+		t.Errorf("a carta de Combate não andou o dado da espada de adamante: %q", linha)
 	}
 }
 
-// handCardOf recorta o cartão da MÃO PRINCIPAL.
+// handCardOf recorta a linha da MÃO PRINCIPAL: o título e a meta, que moram no
+// mesmo botão que abre a folha.
 //
-// O recorte vai até o cartão vizinho porque a ficha do item desenha o dado do
-// LIVRO mais abaixo na mesma tela — procurar na tela inteira passaria verde
-// sobre um cartão que não mudou.
-func handCardOf(t *testing.T, tela string) string {
+// O recorte para no fim desse botão porque a folha do item desenha o dado do
+// LIVRO e os mesmos nomes mais abaixo na tela — ir até "Mão secundária", como
+// o recorte antigo, ia até o fim da página quando a segunda mão está livre, e
+// passava verde sobre um cartão que não mudou.
+func handCardOf(t *testing.T, screen string) string {
 	t.Helper()
-	inicio := strings.Index(tela, "MÃO PRINCIPAL")
-	if inicio < 0 {
-		inicio = strings.Index(tela, "Mão principal")
+	inUse := inUseOf(t, screen)
+	at := strings.Index(inUse, "Mão principal")
+	if at < 0 {
+		t.Fatal("a lista das mãos não tem a mão principal")
 	}
-	if inicio < 0 {
-		t.Fatal("a tira das mãos não saiu na tela")
+	start := strings.LastIndex(inUse[:at], `<div class="ds-row`)
+	end := strings.Index(inUse[at:], "</button>")
+	if start < 0 || end < 0 {
+		t.Fatalf("a mão principal não está numa linha da lista:\n%s", inUse)
 	}
-	carta := tela[inicio:]
-	if fim := strings.Index(carta, "Mão secundária"); fim > 0 {
-		carta = carta[:fim]
+	return inUse[start : at+end]
+}
+
+// combatWeaponMeta devolve a meta da carta de UMA arma na aba Combate — perícia,
+// dano e crítico —, e falha quando a carta não existe.
+func combatWeaponMeta(t *testing.T, screen, weapon string) string {
+	t.Helper()
+	anchor := `<div class="ds-row-title">` + weapon + `</div><div class="ds-row-meta">`
+	at := strings.Index(screen, anchor)
+	if at < 0 {
+		t.Fatalf("a aba Combate não tem a carta de %q", weapon)
 	}
-	return carta
+	meta := screen[at+len(anchor):]
+	if end := strings.Index(meta, "</div>"); end >= 0 {
+		meta = meta[:end]
+	}
+	return meta
+}
+
+// itemDialogOf acha a FOLHA de um item — o `<dialog>` do kit cujo título é o
+// nome dele — e falha quando não a acha.
+//
+// O âncora é o título, e não um `aria-label` com o nome: a linha da lista e o
+// botão "Ações de …" também levam o nome, e a folha é a única que o tem como
+// título de diálogo.
+func itemDialogOf(t *testing.T, screen, name string) *html.Node {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(screen))
+	if err != nil {
+		t.Fatalf("ler a Mochila: %v", err)
+	}
+	var found *html.Node
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if found != nil {
+			return
+		}
+		if n.Type == html.ElementNode && n.Data == "dialog" {
+			if title := findNode(n, "class", "ds-dialog-title"); title != nil && textOf(title) == name {
+				found = n
+				return
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+	walk(doc)
+	if found == nil {
+		t.Fatalf("a folha de %q não saiu na tela", name)
+	}
+	return found
+}
+
+// listNamed acha, dentro de um nó, a lista do kit (`ds-list`) cujo cabeçalho
+// começa com aquele título, ou nil.
+func listNamed(n *html.Node, head string) *html.Node {
+	if n.Type == html.ElementNode && attr(n, "class") == "ds-list" {
+		if h := findNode(n, "class", "ds-list-head"); h != nil && h.FirstChild != nil && textOf(h.FirstChild) == head {
+			return n
+		}
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if found := listNamed(c, head); found != nil {
+			return found
+		}
+	}
+	return nil
 }

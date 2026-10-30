@@ -16,7 +16,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeBag é a aba Mochila da ficha paralela: a carga, o dinheiro e o
+// tempestadeBag é a aba Mochila da ficha: a carga, o dinheiro e o
 // adicionar em cima; o que está em uso (mãos e vestidos, com o teto e o que
 // sobra) e o guardado como lista, com a busca sempre à vista. No desktop as
 // duas metades ficam lado a lado.
@@ -173,7 +173,7 @@ func tempestadeBag(v View) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " <div class=\"ds-options ds-options-line\" role=\"group\" aria-label=\"Categoria\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, " <div class=\"ds-options ds-options-line\" data-scrolls-x role=\"group\" aria-label=\"Categoria\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

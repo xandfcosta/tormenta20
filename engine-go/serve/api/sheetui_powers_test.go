@@ -10,6 +10,8 @@ import (
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func barbaro(t *testing.T, level int64) (sceneFixture, int64) {
@@ -68,21 +70,25 @@ func TestTheCollectionJoinsTheProvenances(t *testing.T) {
 	seedRaca(t, f.s, id, "Anão")
 	choiceCom(t, f, id, `["class.barbaro.golpe-poderoso"]`, `["origin-batedor-pericia-sobrevivencia"]`)
 
-	// O RECORTE É DO PAINEL, e não da tela: o diálogo de escolher desenha TODOS
+	// O RECORTE É DA LISTA, e não da tela: o diálogo de escolher desenha TODOS
 	// os benefícios e TODOS os poderes eletivos como opções, então procurar na
 	// tela inteira acharia justamente o que a lista não deve mostrar — e o
 	// guarda afirmaria o contrário do que mede.
-	screen := powerPanel(powerScreen(t, f, id))
+	rows := powerRowsOnScreen(t, powerScreen(t, f, id))
 	for _, want := range []string{
 		"Fúria",          // automática da classe, nível 1
 		"Golpe Poderoso", // escolhida
 		"Sobrevivência",  // benefício de origem escolhido
-		"Bárbaro",        // o crachá da fonte, encurtado
 	} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
+		if _, found := rowTitled(rows, want); !found {
+			t.Errorf("a lista não tem %q; tem %v", want, rowTitles(rows))
 		}
 	}
+	// O crachá da fonte, encurtado.
+	if fury, _ := rowTitled(rows, "Fúria"); !strings.HasPrefix(fury.Meta, "Bárbaro") {
+		t.Errorf("a Fúria não diz que vem do Bárbaro: %q", fury.Meta)
+	}
+	titles := strings.Join(rowTitles(rows), "\n")
 	// O QUE NÃO FOI ESCOLHIDO não aparece: a origem oferece cinco benefícios e o
 	// personagem leva três, então listar todos daria como possuído o que ninguém
 	// escolheu.
@@ -91,11 +97,11 @@ func TestTheCollectionJoinsTheProvenances(t *testing.T) {
 	// escreve nomes, então um id aqui seria uma string que nunca poderia
 	// aparecer — asserção que não pode falhar. Medido: com o filtro de escolha
 	// REMOVIDO, a versão por id continuava verde.
-	if strings.Contains(screen, "À Prova de Tudo") {
+	if strings.Contains(titles, "À Prova de Tudo") {
 		t.Error("um benefício de origem não escolhido apareceu como possuído")
 	}
 	// E O QUE O NÍVEL AINDA NÃO DEU também não: a Fúria Raivosa é do 6º.
-	if strings.Contains(screen, "Fúria Raivosa") {
+	if strings.Contains(titles, "Fúria Raivosa") {
 		t.Error("um poder acima do nível apareceu como possuído")
 	}
 }
@@ -120,33 +126,122 @@ func TestTheGodPowerIsInTheCollection(t *testing.T) {
 	f, id := barbaro(t, 5)
 	devoteOf(t, f, id, "Khalmyr", "Dom da Verdade")
 
-	screen := powerPanel(powerScreen(t, f, id))
-	if !strings.Contains(screen, "Dom da Verdade") {
-		t.Error("o poder concedido pelo deus não está no acervo")
+	row, found := rowTitled(powerRowsOnScreen(t, powerScreen(t, f, id)), "Dom da Verdade")
+	if !found {
+		t.Fatal("o poder concedido pelo deus não está no acervo")
 	}
 	// O CRACHÁ DIZ O DEUS, e não só que o poder existe: a procedência encurtada
 	// cai em "Geral" para tudo que ela não conhece, e um poder divino carimbado
 	// de geral é a linha mentindo sobre de onde ele veio.
-	if !strings.Contains(powerRowOf(screen, "Dom da Verdade"), "Khalmyr") {
-		t.Errorf("o crachá do poder divino não diz o deus: %q",
-			powerRowOf(screen, "Dom da Verdade"))
+	if !strings.HasPrefix(row.Meta, "Khalmyr") {
+		t.Errorf("o crachá do poder divino não diz o deus: %q", row.Meta)
 	}
 }
 
-// powerRowOf é a linha daquele poder na lista — o pedaço entre o <li> que o
-// contém e o fim dele. Afirmar sobre a tela inteira casaria o crachá de um
-// poder com o nome de outro.
+// powerRowOf é a linha daquele poder na lista — o `ds-action-row` que tem o
+// nome. Afirmar sobre a tela inteira casaria o crachá de um poder com o nome
+// de outro.
 func powerRowOf(screen, name string) string {
-	at := strings.Index(screen, name)
+	at := strings.Index(screen, ">"+name+"</span>")
 	if at < 0 {
 		return ""
 	}
-	start := strings.LastIndex(screen[:at], "<li")
-	end := strings.Index(screen[at:], "</li>")
+	start := strings.LastIndex(screen[:at], `<div class="ds-row ds-action-row"`)
+	end := strings.Index(screen[at:], "</div>")
 	if start < 0 || end < 0 {
 		return ""
 	}
 	return screen[start : at+end]
+}
+
+// actionListOnScreen é uma lista de uma aba da ficha — "Ações", "Passivas ·
+// 7", "Em vigor" — com as linhas como a pessoa as lê.
+type actionListOnScreen struct {
+	Head string
+	Rows []actionRowOnScreen
+}
+
+// actionRowOnScreen é uma linha de lista: o nome, a nota com a procedência e
+// o custo, e o gesto da ponta — o `aria-label` dele, o texto, e o diálogo que
+// ele abre (vazio quando age direto).
+type actionRowOnScreen struct {
+	Title, Meta          string
+	Gesture, GestureText string
+	GestureOpens         string
+}
+
+// actionListsOf lê as listas da seção `aria-label` da aba. O RECORTE é a
+// SEÇÃO, e não a tela: o Escolher desenha todos os benefícios e todos os
+// poderes eletivos como opção, e as folhas repetem os nomes — procurar na tela
+// inteira acharia justamente o que a lista não deve mostrar.
+func actionListsOf(t *testing.T, page, section string) []actionListOnScreen {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatalf("ler a página: %v", err)
+	}
+	root := findNode(doc, "aria-label", section)
+	if root == nil || root.Data != "section" {
+		t.Fatalf("a página não tem a seção %q — o resto mediria o nada", section)
+	}
+	lists := []actionListOnScreen{}
+	for _, list := range nodesWithClassToken(root, "ds-list") {
+		read := actionListOnScreen{}
+		if heads := nodesWithClassToken(list, "ds-list-head"); len(heads) > 0 {
+			if first := firstElementChild(heads[0]); first != nil {
+				read.Head = spacedText(first)
+			}
+		}
+		for _, row := range nodesWithClassToken(list, "ds-action-row") {
+			read.Rows = append(read.Rows, actionRowOf(row))
+		}
+		lists = append(lists, read)
+	}
+	return lists
+}
+
+func actionRowOf(row *html.Node) actionRowOnScreen {
+	read := actionRowOnScreen{}
+	if title := nodesWithClassToken(row, "ds-row-title"); len(title) > 0 {
+		read.Title = spacedText(title[0])
+	}
+	if meta := nodesWithClassToken(row, "ds-row-meta"); len(meta) > 0 {
+		read.Meta = spacedText(meta[0])
+	}
+	if gesture := nodesWithClassToken(row, "ds-button"); len(gesture) > 0 {
+		read.Gesture = attr(gesture[0], "aria-label")
+		read.GestureText = spacedText(gesture[0])
+		read.GestureOpens = attr(gesture[0], "commandfor")
+	}
+	return read
+}
+
+// powerRowsOnScreen são todas as linhas da aba Poderes, de todas as listas.
+func powerRowsOnScreen(t *testing.T, page string) []actionRowOnScreen {
+	t.Helper()
+	rows := []actionRowOnScreen{}
+	for _, list := range actionListsOf(t, page, "Poderes") {
+		rows = append(rows, list.Rows...)
+	}
+	return rows
+}
+
+// rowTitled é a linha com aquele nome, e se ela existe.
+func rowTitled(rows []actionRowOnScreen, title string) (actionRowOnScreen, bool) {
+	for _, row := range rows {
+		if row.Title == title {
+			return row, true
+		}
+	}
+	return actionRowOnScreen{}, false
+}
+
+func rowTitles(rows []actionRowOnScreen) []string {
+	titles := []string{}
+	for _, row := range rows {
+		titles = append(titles, row.Title)
+	}
+	return titles
 }
 
 func devoteOf(t *testing.T, f sceneFixture, id int64, god, power string) {
@@ -161,17 +256,30 @@ func devoteOf(t *testing.T, f sceneFixture, id int64, god, power string) {
 // AS AÇÕES vêm em cima e ordenadas; as passivas ficam na outra seção.
 func TestActionsComeSortedAndPassivesComeApart(t *testing.T) {
 	f, id := barbaro(t, 5)
-	screen := powerScreen(t, f, id)
+	lists := actionListsOf(t, powerScreen(t, f, id), "Poderes")
 
-	if !strings.Contains(screen, "Ações") || !strings.Contains(screen, "Passivas · mostrar") {
-		t.Fatal("a tela não desenhou as duas seções")
+	var actions, passives []actionRowOnScreen
+	for _, list := range lists {
+		switch {
+		case list.Head == "Ações":
+			actions = list.Rows
+		case strings.HasPrefix(list.Head, "Passivas · "):
+			passives = list.Rows
+		}
+	}
+	if actions == nil || passives == nil {
+		t.Fatalf("a tela não desenhou as duas seções: %+v", lists)
 	}
 	// A FÚRIA é postura e vai para as ações; o Instinto Selvagem é passivo.
-	actions := actionsSlice(screen)
-	if !strings.Contains(actions, "Ativar Fúria") {
-		t.Error("a postura não está entre as ações")
+	if fury, _ := rowTitled(actions, "Fúria"); fury.Gesture != "Ativar Fúria" {
+		t.Errorf("a postura não está entre as ações com o gesto de ativar: %v", rowTitles(actions))
 	}
-	if strings.Contains(actions, "Instinto Selvagem") {
+	// O CONTROLE: o Instinto Selvagem existe — nas passivas —, e é por isso
+	// que a ausência dele nas ações quer dizer alguma coisa.
+	if _, found := rowTitled(passives, "Instinto Selvagem +1"); !found {
+		t.Errorf("o Instinto Selvagem não está nas passivas: %v", rowTitles(passives))
+	}
+	if _, found := rowTitled(actions, "Instinto Selvagem +1"); found {
 		t.Error("uma passiva foi para a seção de ações")
 	}
 }
@@ -207,9 +315,12 @@ func TestWithoutActionsTheScreenExplainsInsteadOfShowingAVoid(t *testing.T) {
 func TestTheStanceStepsComeFromTheLevelInTheClass(t *testing.T) {
 	for _, level := range []int64{4, 5} {
 		noStep, flat := barbaro(t, level)
-		if screen := powerScreen(t, noStep, flat); !strings.Contains(screen, "Ativar 2 PM") {
+		// UM TOQUE SÓ é o gesto que age direto, sem abrir o diálogo dos
+		// degraus, e diz o preço no próprio botão.
+		fury, _ := rowTitled(powerRowsOnScreen(t, powerScreen(t, noStep, flat)), "Fúria")
+		if fury.GestureText != "Ativar · 2 PM" || fury.GestureOpens != "" {
 			t.Errorf("no %dº nível a Fúria devia entrar num toque só, por 2 PM — a "+
-				"Tabela 1-6 só abre o primeiro degrau no 6º", level)
+				"Tabela 1-6 só abre o primeiro degrau no 6º; o gesto é %+v", level, fury)
 		}
 	}
 
@@ -783,14 +894,22 @@ func TestTheStanceAndItsDegreeDoNotShareAName(t *testing.T) {
 
 	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
-	// O CONTROLE primeiro: sem a seção da postura não há o que confundir, e o
-	// caso passaria verde sobre uma tela que não desenhou nada.
-	if !strings.Contains(screen, "Posturas ativas") {
-		t.Fatal("a aba Efeitos não desenhou a seção das posturas — o resto mediria o nada")
+	var inForce []actionRowOnScreen
+	for _, list := range actionListsOf(t, screen, "Efeitos") {
+		if list.Head == "Em vigor" {
+			inForce = list.Rows
+		}
 	}
-	if !strings.Contains(screen, "Fúria · degraus") {
-		t.Error("o efeito do degrau saiu sem dizer que é o degrau: a tela mostra " +
-			"\"Fúria\" duas vezes, e o ✕ de uma delas apaga só o que foi pago a mais")
+	// O CONTROLE primeiro: sem a linha da postura não há o que confundir, e o
+	// caso passaria verde sobre uma tela que não desenhou nada.
+	if stance, _ := rowTitled(inForce, "Fúria"); !strings.HasPrefix(stance.Meta, "Postura") {
+		t.Fatalf("a aba Efeitos não desenhou a postura em vigor — o resto mediria o nada: %v",
+			rowTitles(inForce))
+	}
+	if _, found := rowTitled(inForce, "Fúria · degraus"); !found {
+		t.Errorf("o efeito do degrau saiu sem dizer que é o degrau: a tela mostra "+
+			"\"Fúria\" duas vezes, e o Encerrar de uma delas apaga só o que foi pago a mais: %v",
+			rowTitles(inForce))
 	}
 }
 

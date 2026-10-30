@@ -7,9 +7,9 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadePowers é a aba Poderes da ficha paralela: a busca e o Escolher em
+// tempestadePowers é a aba Poderes da ficha: a busca e o Escolher em
 // cima, as ações, e as passivas recolhidas. A busca achata as duas listas numa,
-// por nome, como na ficha de hoje.
+// por nome.
 templ tempestadePowers(v View) {
 	<section class="grid gap-3" aria-label="Poderes">
 		@ds.FilterBar() {
@@ -140,8 +140,7 @@ templ powerSheetFootBody(v View, row powerRow) {
 }
 
 // useStepsDialog escolhe quantos degraus pagar num USO — a Marca da Presa,
-// cujo degrau troca o dado (p50). A regra das linhas de acréscimo é a do
-// `useStepperDialog` da ficha de hoje.
+// cujo degrau troca o dado (p50).
 templ useStepsDialog(v View, row powerRow, id string) {
 	@ds.Dialog(id, row.Name, stepsConfirm(id, "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
 		<p class="ds-help">{ "Cada +" + strconv.Itoa(row.Degrees.StepPm) + " PM compra " + row.Degrees.StepLabel + "." }</p>

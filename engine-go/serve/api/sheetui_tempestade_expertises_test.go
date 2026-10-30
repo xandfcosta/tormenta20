@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// A ABA PERÍCIAS DA FICHA PARALELA (ALE-473): cada perícia é uma linha que abre
+// A ABA PERÍCIAS DA FICHA (ALE-473): cada perícia é uma linha que abre
 // a conta, e o treino é um interruptor — a não ser que outra coisa treine, e aí
 // é um cadeado que diz quem (decisão do dono, no mockup aprovado).
 
@@ -21,7 +21,7 @@ func sumLine(t *testing.T, page, name string) string {
 			return block
 		}
 	}
-	t.Fatalf("a ficha paralela não desenhou a linha de %s", name)
+	t.Fatalf("a ficha não desenhou a linha de %s", name)
 	return ""
 }
 

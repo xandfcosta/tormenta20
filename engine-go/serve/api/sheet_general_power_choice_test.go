@@ -146,8 +146,8 @@ func TestTheOriginSkillFocusTakesItsSkillWithoutASlot(t *testing.T) {
 func TestTheOriginSkillFocusIsPendingAndOffersTheTrainedSkills(t *testing.T) {
 	f, id := focusedAtTheTable(t, "membro-de-guilda", `["poder-foco-em-pericia"]`)
 	page := powerScreen(t, f, id)
-	if !strings.Contains(page, "Foco em Perícia: escolher perícia") {
-		t.Error("a ficha não diz que falta a perícia do Foco da origem")
+	if step := choiceStepTitled(t, page, "Foco em Perícia · perícia"); step.Tag != "falta 1" {
+		t.Errorf("o passo do Foco da origem diz %q, e falta escolher a perícia", step.Tag)
 	}
 	if !strings.Contains(page, "/escolha/foco-em-pericia/Engana") {
 		t.Error("a lista de poderes não oferece Enganação, treinada, ao Foco em Perícia")

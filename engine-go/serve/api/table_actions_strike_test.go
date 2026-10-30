@@ -168,7 +168,7 @@ func TestNoRollLeavesTheActionsSurfaceWithoutATarget(t *testing.T) {
 // A RECUSA TEM DE CHEGAR NA SUPERFÍCIE DE ONDE O GESTO SAIU.
 //
 // Medido no navegador, e é o defeito que OLHAR a tela pegou: a frase da regra é
-// desenhada pelo `ruleRefusal`, que mora dentro do `#sheet-scene` — e esse nó
+// desenhada pela recusa da ficha, que mora dentro do `#sheet-scene` — e esse nó
 // vive na superfície FICHA, escondido por `data-show` enquanto a pessoa está
 // nas Ações. O jogador apertava Rolar, o servidor recusava com a frase certa, e
 // a tela dele não mudava NADA. Um gesto que não faz nada e não diz por quê é

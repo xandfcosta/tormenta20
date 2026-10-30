@@ -51,7 +51,7 @@ const HEROES = [
 test('o medidor acusa um alvo que reprova de verdade', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/personagens/1?tab=expertises')
-  await expect(page.getByRole('heading', { name: 'Perícias' }).first()).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Perícias' })).toBeVisible()
 
   await page.evaluate(() => {
     const crate = document.createElement('div')
@@ -83,14 +83,28 @@ for (const hero of HEROES) {
       // nome errado desenha a primeira aba em SILÊNCIO, e sete medições da mesma
       // página passam com cara de sete abas. O `networkidle` também não serve na
       // Mesa, onde o SSE nunca fecha.
-      await expect(page.locator('[aria-current="page"]')).toBeVisible()
+      //
+      // DUAS navegações marcam `aria-current`: a fileira de abas, escondida a
+      // 390px, e a barra de baixo, que tem cinco abas e o Mais — e o Mais é quem
+      // fica marcado quando a aba pedida mora nele. Então a barra prova que a
+      // ficha DESENHOU, e a fileira escondida prova QUAL aba: é a única que
+      // leva o endereço de todas as sete.
+      await expect(page.locator('.ds-bottom-nav [aria-current="page"]')).toBeVisible()
+      await expect(
+        page.locator(`.ds-tabs a[aria-current="page"][href$="?tab=${aba}"]`),
+        `a ficha não abriu a aba ${aba}: a medição seria de outra`,
+      ).toHaveCount(1)
 
       const { medidos: measured, alvos: targets } = await touchTargets(page)
 
       // O DENOMINADOR: sem alvo medido, a asserção final é verde sobre uma
       // página que não carregou — uma cena fora de cena devolve `medidos=4` e
-      // passa.
-      expect(measured, `a aba ${aba} mediu ${measured} alvos: ela não desenhou`).toBeGreaterThan(15)
+      // passa. O piso é a MOLDURA da ficha, que toda aba desenha: o cabeçalho
+      // (volta e ⋯, 2), a faixa dos vitais (−1, número e +1 de PV e PM, 6) e a
+      // barra de baixo (cinco abas e o Mais, 6) — 14. Mais que isso não dá para
+      // cobrar de toda aba: a Magias de quem não conjura é a moldura, a busca e
+      // uma frase. QUAL aba desenhou é o controle de cima que prova.
+      expect(measured, `a aba ${aba} mediu ${measured} alvos: a ficha não desenhou`).toBeGreaterThanOrEqual(14)
 
       for (const a of targets.filter((x) => x.reprova)) {
         rejects.push(`${aba}: "${a.nome}" ${a.larg}x${a.alt} — ${a.familia}`)

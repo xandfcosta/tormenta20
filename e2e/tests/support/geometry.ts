@@ -236,7 +236,7 @@ export async function expectDentroDaJanela(page: Page, root = 'body'): Promise<v
  * passa verde com razão. Rolar de lado para achar o botão de fechar é
  * justamente a experiência que esta asserção existe para impedir.
  *
- * Ignora quem rola de lado DE PROPÓSITO, marcado com `data-rola-lado`.
+ * Ignora quem rola de lado DE PROPÓSITO, marcado com `data-scrolls-x`.
  *
  * @example await expectNadaRolaDeLado(page, '.scene-grimorio')
  */
@@ -246,7 +246,7 @@ export async function expectNadaRolaDeLado(page: Page, root = 'body'): Promise<v
     if (!root) return null
     return [...root.querySelectorAll<HTMLElement>('*')]
       .filter((node) => {
-        if (node.closest('[data-rola-lado]')) return false
+        if (node.closest('[data-scrolls-x]')) return false
         const style = getComputedStyle(node)
         const canScroll = style.overflowX === 'auto' || style.overflowX === 'scroll'
         return canScroll && node.scrollWidth > node.clientWidth + 1
@@ -549,8 +549,10 @@ export async function expectEveryToggleDrawsItsState(page: Page, root: string): 
     // O nó pode SUMIR no clique (um filtro que recarrega a lista). Aí não há o
     // que comparar, e contá-lo como mudo seria acusar o que não se mediu.
     if (after === null) continue
+    // SÓ CONTA COMO MEDIDO o controle cujo estado mudou: o que não ligou nada
+    // não testemunhou desenho nenhum, e somá-lo daria um denominador de mentira.
+    if (before.aria === after.aria) continue
     measured++
-    if (before.aria === after.aria) continue // o clique não ligou nada: ver o CONTROLE acima
     if (before.estilo === after.estilo && before.html === after.html) {
       silent.push(`${after.nome}: aria foi de ${before.aria} para ${after.aria} e nada mudou na tela`)
     }
@@ -570,16 +572,30 @@ type RetratoDoControle = { nome: string; estilo: string; html: string; aria: str
 
 async function retratoDo(control: ReturnType<Page['locator']>): Promise<RetratoDoControle> {
   return control.evaluate((n) => {
-    const cs = getComputedStyle(n as HTMLElement)
     const painting = [
       'backgroundColor', 'color', 'borderColor', 'borderWidth', 'borderStyle',
       'opacity', 'boxShadow', 'fontWeight', 'textDecorationLine', 'outlineColor',
+      'transform', 'left',
     ] as const
+    // O DESENHO do interruptor do kit mora nos PSEUDOELEMENTOS (o trilho e a
+    // bolinha), e não no nó: medir só o nó acusaria de mudo o que muda na tela.
+    const drawn = [null, '::before', '::after']
+      .map((pseudo) => {
+        const cs = getComputedStyle(n as HTMLElement, pseudo)
+        return painting.map((k) => cs[k]).join('|')
+      })
+      .join('||')
+    // O ESTADO de um `<input role="switch">` é o `.checked`, e não um atributo:
+    // ler só `aria-checked` dava `null` antes e depois, e o caso pulava o
+    // controle contando-o como medido — verde sem medir.
+    const input = n as HTMLInputElement
+    const state =
+      n.tagName === 'INPUT' ? String(input.checked) : (n.getAttribute('aria-checked') ?? n.getAttribute('aria-pressed') ?? '')
     return {
       nome: n.getAttribute('aria-label') ?? n.textContent?.trim().slice(0, 40) ?? n.tagName,
-      estilo: painting.map((k) => cs[k]).join('|'),
+      estilo: drawn,
       html: (n as HTMLElement).innerHTML,
-      aria: n.getAttribute('aria-checked') ?? n.getAttribute('aria-pressed') ?? '',
+      aria: state,
     }
   })
 }

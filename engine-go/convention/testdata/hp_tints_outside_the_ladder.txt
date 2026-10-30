@@ -32,9 +32,6 @@ engine-go/serve/web/campaigns/one.templ
 # A Mesa: o ponto do "Ao vivo", o crachá de presença e o de condição.
 engine-go/serve/web/table/table.templ
 
-# A CARGA da mochila estoura em vermelho, e ela conta espaços e não PV — o
-# comentário de lá já separa a BARRA (crítico) do aviso (texto).
-engine-go/serve/web/sheetui/bag.templ
 
 # A dificuldade do encontro: cinco degraus do livro (p281), e eles são OUTRA
 # escada — de "calmo" a "mortal", sobre o nível do grupo e não sobre vida.

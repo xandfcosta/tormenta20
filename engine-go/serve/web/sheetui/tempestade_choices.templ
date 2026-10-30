@@ -31,7 +31,7 @@ templ raceStepBody(v View, card raceChoiceCard) {
 
 // attributeChoiceDs distribui o bônus da raça. Os atributos entram num sinal
 // de lista e vão juntos num comando só, porque a regra do motor é sobre o
-// CONJUNTO (ver `attributeChoiceBlock`). A ascendência é um valor só, e grava
+// CONJUNTO. A ascendência é um valor só, e grava
 // no toque.
 templ attributeChoiceDs(v View, choice attributeChoice) {
 	<div class="ds-field">
@@ -135,7 +135,7 @@ templ powersStepFilters(v View, card classChoiceCard) {
 		@ds.SearchField("class-power-search-"+card.ClassName, "Buscar poder de "+card.ClassName, templ.Attributes{
 			"value": v.Powers.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
 		})
-		<div class="ds-options ds-options-line" role="group" aria-label="Quais poderes">
+		<div class="ds-options ds-options-line" data-scrolls-x role="group" aria-label="Quais poderes">
 			@pickFilterOption("", "Todos")
 			@pickFilterOption("class", "Da classe")
 			@pickFilterOption("general", "Gerais")
@@ -157,8 +157,15 @@ templ pickFilterOption(value, label string) {
 // aqui a lista é para ESCOLHER, e o detalhe é o que separa um poder do outro
 // (decisão do dono). O poder que pede escolha (o Aumento de Atributo, que se
 // toma várias vezes) troca o interruptor por opções, cada uma com o "−".
-templ powerPickRow(v View, power powerChoice) {
-	<div class="ds-row ds-pick-row" data-show={ powerPickShows(power) }>
+// `filtered` liga o filtro da lista da classe; o passo de um poder só não tem
+// filtro, e a linha não pode sumir por um filtro escolhido noutro passo.
+templ powerPickRow(v View, power powerChoice, filtered bool) {
+	<div
+		class="ds-row ds-pick-row"
+		if filtered {
+			data-show={ powerPickShows(power) }
+		}
+	>
 		<div class="min-w-0">
 			<div class="ds-row-title">{ power.Name }</div>
 			<div class="ds-row-meta">{ power.Source }</div>

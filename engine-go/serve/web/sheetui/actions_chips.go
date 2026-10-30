@@ -36,13 +36,12 @@ type actionChip struct {
 	// Path é o caminho do gesto, e ele é o MESMO das abas Poderes e Efeitos:
 	// um segundo caminho de escrita seria uma segunda regra de validação. O
 	// ENDEREÇO sai do `chipCommand`, com as marcas da ficha em que o chip é
-	// desenhado — escrito à mão aqui, com `?embutida=1` fixo, ele devolvia a
-	// ficha de hoje dentro da sessão paralela (ALE-473).
+	// desenhado.
 	Path string
 	// Before é o que roda antes do gesto: o sinal que ele lê.
 	Before string
 	// Detail é a sobreposição de hoje que o chip que pergunta abre, e Dialog é
-	// o diálogo do kit que a mesma pergunta abre na sessão paralela.
+	// o diálogo do kit que a mesma pergunta abre na sessão do jogador.
 	Detail, Dialog string
 	// Asks marca o chip que ABRE uma escolha em vez de fazer o gesto — hoje só a
 	// postura que escala com o nível. O botão ganha `aria-haspopup`, porque quem
@@ -201,7 +200,7 @@ func stanceChips(power powerRow) []actionChip {
 
 // chipCommand escreve o gesto do chip na ficha em que ele é desenhado: o
 // caminho vira endereço pelo `sheetPost`, com a aba e as marcas dela. O chip
-// que pergunta abre a sobreposição de hoje; na sessão paralela, quem abre o
+// que pergunta abre a sobreposição de hoje; na sessão do jogador, quem abre o
 // diálogo do kit é o `commandfor` (`Dialog`).
 //
 //	chipCommand(v, chip) // "$stance_degrees = 0; @post('/personagens/7/poderes/postura/furia/entra?tab=…&embutida=1')"
@@ -270,25 +269,6 @@ func numbersMovedBy(targets []engine.ModifierTarget) []string {
 		out = append(out, t.K)
 	}
 	return out
-}
-
-// chipTitle é o que o chip diz ao passar o mouse: o que o degrau compra, ou a
-// razão de ele estar apagado. Um chip desligado e sem explicação manda procurar.
-func chipTitle(chip actionChip) string {
-	if !chip.Can && chip.Why != "" {
-		return chip.Why
-	}
-	return chip.Note
-}
-
-// ariaBool escreve o `aria-pressed` de um interruptor. Ele é "true"/"false" e
-// não a ausência do atributo: um botão que ALTERNA tem estado, e quem lê por
-// leitor de tela precisa dele nos dois sentidos.
-func ariaBool(on bool) string {
-	if on {
-		return "true"
-	}
-	return "false"
 }
 
 // groupOrderOf são os custos que caem naquele grupo da tela.

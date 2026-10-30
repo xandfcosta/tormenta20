@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-// A ABA PROFICIÊNCIAS DA FICHA PARALELA (ALE-473), pelo mockup aprovado: as
+// A ABA PROFICIÊNCIAS DA FICHA (ALE-473), pelo mockup aprovado: as
 // duas famílias como listas; a que tem origem fica travada, com a origem
 // escrita, e a outra tem o interruptor; e o Restaurar padrão em cima.
 func TestTheParallelProficienciesTabLocksWhatHasAnOrigin(t *testing.T) {
@@ -19,20 +19,17 @@ func TestTheParallelProficienciesTabLocksWhatHasAnOrigin(t *testing.T) {
 	// A semente não grava proficiência; o Restaurar padrão grava o que a
 	// classe concede, e só a linha que o personagem TEM fica travada.
 	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost,
-		fmt.Sprintf("/personagens/%d/proficiencias/padrao?tab=proficiencies&tempestade=1", id), "").Body.String()); refusal != "" {
+		fmt.Sprintf("/personagens/%d/proficiencias/padrao?tab=proficiencies", id), "").Body.String()); refusal != "" {
 		t.Fatalf("restaurar o padrão: %s", refusal)
 	}
 	page := parallelSheet(t, f, id, "proficiencies")
-	if strings.Contains(page, "ainda está na ficha de hoje") {
-		t.Fatal("a aba Proficiências paralela ainda leva à ficha de hoje")
-	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
 	}
 	tab := findNode(doc, "aria-label", "Proficiências")
 	if tab == nil {
-		t.Fatal("a ficha paralela não desenhou a aba Proficiências")
+		t.Fatal("a ficha não desenhou a aba Proficiências")
 	}
 	text, rendered := textOf(tab), renderNode(t, tab)
 	for _, want := range []string{"Armas", "Armaduras & Escudos", "Armas marciais", "Restaurar padrão"} {
@@ -47,8 +44,8 @@ func TestTheParallelProficienciesTabLocksWhatHasAnOrigin(t *testing.T) {
 	if !strings.Contains(text, "Guerreiro") {
 		t.Error("a linha travada não diz de onde vem")
 	}
-	// As exóticas não vêm de nada: o interruptor alterna, na ficha paralela.
-	if !regexp.MustCompile(`<input[^>]*role="switch"[^>]*aria-label="Armas exóticas"[^>]*data-on:change="[^"]*/proficiencias/alterna/[^"]*tempestade=1`).MatchString(rendered) {
+	// As exóticas não vêm de nada: o interruptor alterna, na ficha.
+	if !regexp.MustCompile(`<input[^>]*role="switch"[^>]*aria-label="Armas exóticas"[^>]*data-on:change="[^"]*/proficiencias/alterna/`).MatchString(rendered) {
 		t.Error("as armas exóticas não têm o interruptor que alterna")
 	}
 }

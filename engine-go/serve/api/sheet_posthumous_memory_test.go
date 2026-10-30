@@ -33,13 +33,21 @@ func trainedOn(t *testing.T, f sceneFixture, id int64, skill string) bool {
 	return false
 }
 
+// posthumousMemoryField é o bloco da Memória Póstuma no passo do osteon.
+func posthumousMemoryField(t *testing.T, screen string) choiceFieldOnScreen {
+	t.Helper()
+	field, found := choiceFieldIn(t, screen, "Raça · Osteon", "Memória Póstuma")
+	if !found {
+		t.Fatal("o passo do osteon não tem o bloco da Memória Póstuma")
+	}
+	return field
+}
+
 // ESCOLHER A PERÍCIA A TREINA, e destreiná-la é recusado (decisão do dono).
 func TestThePosthumousMemoryTrainsTheChosenSkill(t *testing.T) {
 	f, id := osteon(t)
 
-	if !strings.Contains(powerScreen(t, f, id), "Osteon: Memória Póstuma: 1 escolha por fazer") {
-		t.Error("o osteon sem a Memória escolhida não tem a pendência")
-	}
+	assertRaceAbilityPending(t, powerScreen(t, f, id), "Raça · Osteon", "Memória Póstuma", "0 de 1")
 	if refusal := raceAbilityCommand(t, f, id, "osteon-memoria-postuma", "Luta"); refusal != "" {
 		t.Fatalf("escolher Luta na Memória Póstuma: %q", refusal)
 	}
@@ -62,13 +70,19 @@ func TestThePosthumousMemoryGivesAGeneralPower(t *testing.T) {
 		t.Fatalf("escolher Vontade de Ferro: %q", refusal)
 	}
 	screen := powerScreen(t, f, id)
-	if !strings.Contains(powerPanel(screen), "Vontade de Ferro") {
+	if _, found := rowTitled(powerRowsOnScreen(t, screen), "Vontade de Ferro"); !found {
 		t.Error("o poder geral da Memória Póstuma não aparece na aba Poderes")
 	}
-	for _, want := range []string{"1 de 1", `aria-label="Tirar Vontade de Ferro de Memória Póstuma"`, `aria-label="Memória Póstuma: Acrobacia"`} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
-		}
+	field := posthumousMemoryField(t, screen)
+	if field.Written != "1 de 1" {
+		t.Errorf("a Memória Póstuma diz %q, quer 1 de 1", field.Written)
+	}
+	// A ESCOLHIDA é a opção marcada, e marcar e tirar são o mesmo toque.
+	if !field.Options["Memória Póstuma: Vontade de Ferro"] {
+		t.Error("Vontade de Ferro escolhida não está marcada na Memória Póstuma")
+	}
+	if _, offered := field.Options["Memória Póstuma: Acrobacia"]; !offered {
+		t.Error("a Memória Póstuma não oferece a perícia Acrobacia")
 	}
 }
 
@@ -86,13 +100,15 @@ func TestThePosthumousMemoryBorrowsAHumanoidAbility(t *testing.T) {
 		t.Fatalf("emprestar Rato das Ruas do goblin: %q", refusal)
 	}
 	screen := powerScreen(t, f, id)
-	if !strings.Contains(powerPanel(screen), "Rato das Ruas") {
+	if _, found := rowTitled(powerRowsOnScreen(t, screen), "Rato das Ruas"); !found {
 		t.Error("a habilidade emprestada não aparece na aba Poderes")
 	}
-	for _, want := range []string{"Goblin · Pequeno", `aria-label="Tirar Rato das Ruas de Memória Póstuma"`} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
-		}
+	field := posthumousMemoryField(t, screen)
+	if !strings.Contains(field.HTML, "Goblin · Pequeno") {
+		t.Error("o grupo do goblin não diz o tamanho que vem junto")
+	}
+	if !field.Options["Memória Póstuma: Rato das Ruas"] {
+		t.Error("Rato das Ruas emprestada não está marcada na Memória Póstuma")
 	}
 }
 
@@ -104,14 +120,12 @@ func TestTheBorrowedAbilityMakesItsOwnChoice(t *testing.T) {
 	if refusal := raceAbilityCommand(t, f, id, "osteon-memoria-postuma", "qareen-resistencia-elemental"); refusal != "" {
 		t.Fatalf("emprestar a Resistência Elemental: %q", refusal)
 	}
-	if !strings.Contains(powerScreen(t, f, id), "Osteon: Resistência Elemental: 1 escolha por fazer") {
-		t.Error("a Resistência Elemental emprestada sem elemento não tem a pendência")
-	}
+	assertRaceAbilityPending(t, powerScreen(t, f, id), "Raça · Osteon", "Resistência Elemental", "0 de 1")
 	if refusal := raceAbilityCommand(t, f, id, "qareen-resistencia-elemental", "qareen-res-fogo"); refusal != "" {
 		t.Fatalf("escolher fogo na emprestada: %q", refusal)
 	}
-	if !strings.Contains(powerScreen(t, f, id), `aria-label="Tirar Fogo (do fogo) de Resistência Elemental"`) {
-		t.Error("o elemento escolhido não aparece no sub-bloco")
+	if field, _ := choiceFieldIn(t, powerScreen(t, f, id), "Raça · Osteon", "Resistência Elemental"); !field.Options["Resistência Elemental: Fogo (do fogo)"] {
+		t.Errorf("o elemento escolhido não aparece marcado no sub-bloco: %v", field.Options)
 	}
 	if refusal := raceAbilityCommand(t, f, id, "osteon-memoria-postuma", "qareen-resistencia-elemental"); refusal != "" {
 		t.Fatalf("devolver a emprestada: %q", refusal)

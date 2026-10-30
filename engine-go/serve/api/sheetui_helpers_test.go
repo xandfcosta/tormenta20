@@ -116,24 +116,18 @@ func screenSaved(screen string) string {
 	return screen[start : start+end]
 }
 
-// hpTintOf devolve a tinta com que a FAIXA de PV foi pintada na tela, e falha
-// alto quando não acha — sem isso, um seletor que não casa com nada e uma
-// tinta ausente se parecem no terminal.
-//
-// Ele lê o trecho ANTES do `data-vital="PV"`, que é onde a barra mora, e aceita
-// as duas grafias que o repositório usa para a mesma tinta: a classe da paleta
-// (`bg-hp-full`) e o valor arbitrário (`bg-[color:var(--hp-full)]`). Aceitar as
-// duas é o que impede o guarda de passar verde sobre um renome de grafia.
+// hpTintOf devolve o degrau da escada com que a barra de PV foi pintada na
+// tela, e falha alto quando não acha — sem isso, um seletor que não casa com
+// nada e uma tinta ausente se parecem no terminal.
 func hpTintOf(t *testing.T, screen string) string {
 	t.Helper()
-	cut := strings.Index(screen, `data-vital="PV"`)
-	if cut < 0 {
+	if !strings.Contains(screen, `aria-label="PV `) {
 		t.Fatal("a tela não desenha o PV: o guarda mediria o vazio")
 	}
-	findings := regexp.MustCompile(`hp-(full|hurt|critical)`).FindAllStringSubmatch(screen[:cut], -1)
-	if len(findings) == 0 {
-		t.Fatal("a faixa de PV não foi pintada com nenhuma tinta da escada")
+	// A BARRA DE PV da faixa e a da coluna levam o mesmo tom, e a primeira basta.
+	found := regexp.MustCompile(`data-kind="pv" data-tone="(full|hurt|critical)"`).FindStringSubmatch(screen)
+	if found == nil {
+		t.Fatal("a barra de PV não foi pintada com nenhum degrau da escada")
 	}
-	// A ÚLTIMA é a da barra: as anteriores podem ser de outra fileira da cena.
-	return findings[len(findings)-1][1]
+	return found[1]
 }

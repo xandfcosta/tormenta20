@@ -8,7 +8,7 @@ import (
 	"t20engine/domain/search"
 )
 
-// A ABA EFEITOS DA FICHA PARALELA (ALE-473). O dado é o da ficha de hoje
+// A ABA EFEITOS DA FICHA (ALE-473). O dado é o do painel
 // (`effectsPanel`); daqui sai só o que a aba lê. As descrições da condição,
 // da postura e do efeito aplicado são as da coluna (`activeEffects`), uma só
 // por efeito.
@@ -47,14 +47,13 @@ func situationalMeta(row situationalRow) string {
 	return meta
 }
 
-// situationalToggles é o gesto do interruptor: a chave vai no sinal, como na
-// ficha de hoje.
+// situationalToggles é o gesto do interruptor: a chave vai no sinal.
 func situationalToggles(v View, row situationalRow) string {
 	return "$conditional = '" + row.Key + "'; " + sheetPost(v, "/efeitos/situacao")
 }
 
-// degreeChooses escolhe o degrau E liga o situacional, pela regra do
-// `degreePicker`: escolher o degrau é dizer que o PM foi gasto.
+// degreeChooses escolhe o degrau E liga o situacional: escolher o degrau é
+// dizer que o PM foi gasto.
 func degreeChooses(v View, row situationalRow, steps int) string {
 	return "$conditional = '" + row.Key + "'; $conditional_degrees = " + strconv.Itoa(steps) + "; " +
 		sheetPost(v, "/efeitos/situacao/degraus")

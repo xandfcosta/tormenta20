@@ -1,10 +1,5 @@
 package api
 
-import "t20engine/infra/events"
-import "t20engine/domain/board"
-
-import "t20engine/domain/live"
-
 import (
 	"context"
 	"encoding/json"
@@ -15,10 +10,12 @@ import (
 	"strings"
 	"t20engine/app"
 	"t20engine/app/boards"
+	"t20engine/domain/board"
+	"t20engine/domain/engine"
+	"t20engine/domain/live"
+	"t20engine/infra/events"
 	"testing"
 	"time"
-
-	"t20engine/domain/engine"
 )
 
 // O tabuleiro sobrevive ao reinício do servidor: a memória é a verdade da

@@ -44,31 +44,50 @@ func saveHand(t *testing.T, f sceneFixture, id int64, blob string) {
 	}
 }
 
-// A TABELA DO LIVRO CHEGA NA TELA, e a etiqueta diz DE ONDE vem.
+// A TABELA DO LIVRO CHEGA NA TELA, e a linha diz DE ONDE vem.
 //
 // O guerreiro do livro (p64) sabe usar armas marciais, armaduras pesadas e
 // escudos — e não sabe usar armas exóticas, que nenhuma classe concede. A tela
 // tem de dizer as duas coisas: o que a classe deu, com o nome da classe, e o que
 // ela não deu.
+//
+// A ficha só trava — e só diz a origem — da linha que ela TEM: o blob abaixo é
+// o padrão do guerreiro escrito à mão, MAIS as exóticas, que ele tem sem origem
+// nenhuma. É o par que discrimina: uma linha travada "porque está marcada"
+// travaria as exóticas também.
 func TestTheProficienciesPanelSaysWhatTheClassGrants(t *testing.T) {
 	f, id := guerreiro(t)
+	saveHand(t, f, id, `["armas-simples","armas-marciais","armas-exoticas",`+
+		`"armaduras-leves","armaduras-pesadas","escudos"]`)
 
 	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
 
-	if !strings.Contains(screen, "Padrão: Guerreiro") {
-		t.Error("a etiqueta não diz de qual classe vem a proficiência")
-	}
-	// A ETIQUETA "classe" é o que separa o que tem origem do que foi marcado na
-	// mão; sem ela, a recusa de desmarcar pareceria defeito.
-	if strings.Count(screen, ">classe</span>") == 0 {
-		t.Error("nenhuma linha está marcada como padrão de classe")
-	}
-	for _, label := range []string{"Armas simples", "Armas marciais", "Armas exóticas", "Escudos"} {
-		if !strings.Contains(screen, label) {
-			t.Errorf("a categoria %q não está no painel", label)
+	// A TRAVA com o nome da classe é o que separa o que tem origem do que foi
+	// marcado na mão; sem ela, a falta do interruptor pareceria defeito.
+	for _, label := range []string{"Armas marciais", "Armaduras pesadas", "Escudos"} {
+		row := proficiencyRow(t, screen, label)
+		if !strings.Contains(row, `class="ds-locked"`) || !strings.Contains(row, "vem de Guerreiro") {
+			t.Errorf("a linha %q não diz que vem do Guerreiro:\n%s", label, row)
 		}
 	}
+	if row := proficiencyRow(t, screen, "Armas exóticas"); !strings.Contains(row, `role="switch"`) ||
+		strings.Contains(row, "vem de") {
+		t.Errorf("as exóticas, que nenhuma classe concede, saíram travadas com origem:\n%s", row)
+	}
+}
+
+// proficiencyRow recorta a linha de UMA categoria do painel, do título até o
+// fim da linha. Falha nomeando a categoria: um rótulo que mudou não pode virar
+// "a linha não tem a trava".
+func proficiencyRow(t *testing.T, screen, label string) string {
+	t.Helper()
+	start := strings.Index(screen, `<span class="ds-row-title">`+label+`</span>`)
+	if start < 0 {
+		t.Fatalf("a categoria %q não está no painel de Proficiências", label)
+	}
+	row, _, _ := strings.Cut(screen[start:], "</div>")
+	return row
 }
 
 // ARMADURA PESADA CONCEDE A LEVE — e isso o LIVRO NÃO DIZ.
@@ -271,37 +290,58 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 	}
 }
 
+// sectionLabel é o NOME ACESSÍVEL que cada aba dá à sua seção, e ele nem
+// sempre é o rótulo da aba — por isso é escrito à mão aqui, e não lido do
+// `Tabs()`.
+var sectionLabel = map[string]string{
+	"proficiencies": "Proficiências",
+	"combat":        "Combate",
+	"expertises":    "Perícias",
+	"conditionals":  "Efeitos",
+	"spells":        "Magias",
+	"bag":           "Mochila",
+	"abilities":     "Poderes",
+}
+
 func TestEverySheetTabDrawsSomething(t *testing.T) {
 	f, id := guerreiro(t)
 
 	var visited int
 	for _, aba := range sheetui.Tabs() {
-		title, knows := panelTitle[aba.Value]
+		title, knows := sectionLabel[aba.Value]
 		if !knows {
-			t.Errorf("a aba %q não tem título esperado neste guarda — acrescente a "+
-				"linha ao mapa `panelTitle`", aba.Value)
+			t.Errorf("a aba %q não tem seção esperada neste guarda — acrescente a "+
+				"linha ao mapa `sectionLabel`", aba.Value)
 			continue
 		}
 		visited++
 		screen := f.requests(t, f.player, http.MethodGet,
 			fmt.Sprintf("/personagens/%d?tab=%s", id, aba.Value), "").Body.String()
-		if !strings.Contains(screen, ">"+title+"</h2>") {
+		if !strings.Contains(screen, `<section class="grid gap-3" aria-label="`+title+`">`) {
 			t.Errorf("a aba %q não desenhou painel nenhum", aba.Value)
 		}
 		// E ELA SE ANUNCIA: ler `aria-current` é ler HTML, e HTML o servidor
 		// escreve — a camada mais barata que segura isto é esta, e aqui ela varre
 		// as sete abas em vez de uma.
 		//
-		// O par CONTA + LUGAR é o guarda inteiro: uma aba ativa a mais não
+		// A ficha tem DUAS navegações — as abas do desktop e a barra de baixo do
+		// celular —, e cada uma acende a sua marca. O par CONTA + LUGAR vale
+		// DENTRO das abas do desktop, que têm as sete: uma aba ativa a mais não
 		// estoura nada na tela, ela só põe duas seções acesas ao mesmo tempo.
-		if n := strings.Count(screen, `aria-current="page"`); n != 1 {
-			t.Errorf("a aba %q desenhou %d marcas de aba ativa, e a ficha tem UMA", aba.Value, n)
+		tabs := navOf(t, screen, `<nav class="ds-tabs"`)
+		if n := strings.Count(tabs, `aria-current="page"`); n != 1 {
+			t.Errorf("a aba %q desenhou %d marcas de aba ativa nas abas, e a ficha tem UMA", aba.Value, n)
 			continue
 		}
-		afterMark := screen[strings.Index(screen, `aria-current="page"`):]
+		afterMark := tabs[strings.Index(tabs, `aria-current="page"`):]
 		labeled, _, _ := strings.Cut(afterMark, "</a>")
 		if !strings.Contains(labeled, aba.Label) {
 			t.Errorf("com ?tab=%s a marca de aba ativa não caiu no link %q", aba.Value, aba.Label)
+		}
+		// A barra de baixo tem cinco lugares e o Mais: a marca cai no lugar da
+		// aba ou no Mais, mas é UMA só.
+		if n := strings.Count(navOf(t, screen, `<nav class="ds-bottom-nav"`), `aria-current="page"`); n != 1 {
+			t.Errorf("com ?tab=%s a barra de baixo desenhou %d marcas de aba ativa, e tem UMA", aba.Value, n)
 		}
 	}
 	// CONTROLE: sem ele, um `Tabs` que virasse vazio faria o laço não
@@ -309,6 +349,17 @@ func TestEverySheetTabDrawsSomething(t *testing.T) {
 	if visited != 7 {
 		t.Fatalf("%d abas visitadas, e a ficha tem sete: o guarda mediu outra coisa", visited)
 	}
+}
+
+// navOf recorta uma navegação da ficha, da abertura até o `</nav>`.
+func navOf(t *testing.T, screen, opening string) string {
+	t.Helper()
+	start := strings.Index(screen, opening)
+	if start < 0 {
+		t.Fatalf("a ficha não desenhou a navegação %s", opening)
+	}
+	nav, _, _ := strings.Cut(screen[start:], "</nav>")
+	return nav
 }
 
 // VARREDURA: nenhum comando da ficha perde a aba aberta.
@@ -354,18 +405,22 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 	}
 }
 
-// A RAÇA TAMBÉM CONCEDE (p28 Vanguardista: armas de fogo; ALE-493). A etiqueta
-// diz que vem da raça, e restaurar o padrão a traz de volta.
+// A RAÇA TAMBÉM CONCEDE (p28 Vanguardista: armas de fogo; ALE-493). Restaurar
+// o padrão a traz de volta, e a linha diz que vem da raça.
+//
+// O blob começa SEM as armas de fogo: a linha que a ficha não tem é um
+// interruptor, e só a que ela tem diz a origem — o controle é a linha antes do
+// restaurar.
 func TestTheRaceGrantedProficiencyIsPartOfTheDefault(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Kliren", "Inventor", 3, 0, 0)
 	seedRaca(t, f.s, id, "kliren")
 	saveHand(t, f, id, `["armas-simples"]`)
+	route := fmt.Sprintf("/personagens/%d?tab=proficiencies", id)
 
-	screen := f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
-	if !strings.Contains(screen, "Padrão: Kliren") || !strings.Contains(screen, ">raça</span>") {
-		t.Error("a etiqueta de armas de fogo não diz que vem da raça kliren")
+	before := f.requests(t, f.player, http.MethodGet, route, "").Body.String()
+	if row := proficiencyRow(t, before, "Armas de fogo"); !strings.Contains(row, `role="switch"`) {
+		t.Fatalf("antes de restaurar as armas de fogo já estão travadas — o caso mediria o repouso:\n%s", row)
 	}
 	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/proficiencias/padrao", id), "")
@@ -374,5 +429,9 @@ func TestTheRaceGrantedProficiencyIsPartOfTheDefault(t *testing.T) {
 	}
 	if !saved(t, f, id)["armas-de-fogo"] {
 		t.Error("restaurar o padrão deixou o kliren sem armas de fogo")
+	}
+	after := f.requests(t, f.player, http.MethodGet, route, "").Body.String()
+	if row := proficiencyRow(t, after, "Armas de fogo"); !strings.Contains(row, "vem de Kliren") {
+		t.Errorf("a linha de armas de fogo não diz que vem da raça kliren:\n%s", row)
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// A ABA PODERES DA FICHA PARALELA (ALE-473): a linha não mostra o texto da
+// A ABA PODERES DA FICHA (ALE-473): a linha não mostra o texto da
 // regra, e tocar no nome abre a folha com a regra inteira (decisão do dono). O
 // texto existe na página UMA vez — dentro da folha daquele poder.
 func TestTheParallelPowersTabKeepsTheRuleTextInThePowerSheet(t *testing.T) {
@@ -21,7 +21,7 @@ func TestTheParallelPowersTabKeepsTheRuleTextInThePowerSheet(t *testing.T) {
 		}
 	}
 	if instinct == "" {
-		t.Fatal("a aba paralela não tem a folha do Instinto Selvagem")
+		t.Fatal("a aba não tem a folha do Instinto Selvagem")
 	}
 	text := regexp.MustCompile(`(?s)<p class="ds-card-text">(.*?)</p>`).FindStringSubmatch(instinct)
 	if text == nil || len(html.UnescapeString(text[1])) < 20 {
@@ -33,10 +33,10 @@ func TestTheParallelPowersTabKeepsTheRuleTextInThePowerSheet(t *testing.T) {
 
 	// A Fúria é postura: a linha tem o gesto de ativar.
 	if !strings.Contains(page, `aria-label="Ativar Fúria"`) {
-		t.Error("a Fúria não tem o gesto de ativar na aba paralela")
+		t.Error("a Fúria não tem o gesto de ativar na aba")
 	}
-	// O ESCOLHER ABRE O DIÁLOGO DA FICHA PARALELA, e não a ficha de hoje.
+	// O ESCOLHER ABRE O DIÁLOGO DE ESCOLHAS.
 	if !regexp.MustCompile(`<button[^>]*commandfor="power-choices"`).MatchString(page) {
-		t.Error("o Escolher da aba paralela não abre o diálogo de escolhas")
+		t.Error("o Escolher da aba não abre o diálogo de escolhas")
 	}
 }

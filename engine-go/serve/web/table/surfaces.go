@@ -73,9 +73,9 @@ func pickSurface(which string) string {
 	return fmt.Sprintf("$surface = %q", which)
 }
 
-// sessionSurfaceIcon é o ícone de cada superfície na barra da sessão
-// paralela. Ações é o ALVO, e não as espadas da barra de hoje: na sessão
-// paralela as espadas são da seção Combate da ficha, logo acima.
+// sessionSurfaceIcon é o ícone de cada superfície na barra da sessão do
+// jogador. Ações é o ALVO, e não as espadas: as espadas são da seção Combate
+// da ficha, logo acima.
 func sessionSurfaceIcon(id string) string {
 	switch id {
 	case superficieDasAcoes:

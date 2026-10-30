@@ -38,7 +38,7 @@ import (
 // lista, e não é por precaução: é a tentação MEDIDA.
 var permitidos = map[string]bool{
 	// O `ds` é o KIT do sistema novo, irmão do `ui`: peças de desenho, sem
-	// estado nem regra. A sessão paralela (ALE-473) se monta com ele.
+	// estado nem regra. A sessão do jogador (ALE-473) se monta com ele.
 	"t20engine/serve/web/ds": true,
 	// O vocabulário do grupo: quem pede e as recusas tipadas.
 	"t20engine/app": true,

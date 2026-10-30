@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"t20engine/app/character"
 	"t20engine/domain/engine"
@@ -112,14 +113,24 @@ func TestAnEffectFromAnotherSheetCannotBeEnded(t *testing.T) {
 	}
 }
 
-// O PAINEL CHEGA NA TELA.
+// O PAINEL CHEGA NA TELA: as condições e o que está em vigor, cada um com o
+// gesto de aplicar. Os dois blocos de baixo (situação, sempre ativos) só
+// existem quando a ficha os tem, e um combatente sem nada não os desenha.
+//
+// Recortado na ABA: o trilho do lado também diz "Efeitos ativos" quando há
+// algum, e a página inteira casaria com ele.
 func TestTheEffectsPanelDrawsTheFourBlocks(t *testing.T) {
 	f, id := fighterFixture(t)
-	screen := effectScreen(t, f, id)
+	tab := effectsTab(t, effectScreen(t, f, id))
 
-	for _, want := range []string{"Condições (p394)", "Efeitos ativos", "Aplicar condição", "Aplicar magia"} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
+	for _, want := range []string{
+		`<div class="ds-list-head"><span>Condições · p394</span>`,
+		`<div class="ds-list-head"><span>Em vigor</span>`,
+		`aria-label="Aplicar condição"`,
+		`aria-label="Aplicar magia"`,
+	} {
+		if !strings.Contains(tab, want) {
+			t.Errorf("a aba Efeitos não tem %s", want)
 		}
 	}
 }
@@ -163,10 +174,14 @@ func TestATempHpPoolDoesNotWipeTheOneAlreadyThere(t *testing.T) {
 	// nasce fechado dentro de um `fixed inset-0`. Uma mensagem dizendo "a aba não
 	// mostra" afirmaria sobre PRESENÇA VISUAL o que este instrumento não olha
 	// (ALE-347, conferido no navegador).
+	//
+	// A linha da conta inteira, e não o número solto: "+9" casa com qualquer
+	// bônus da página.
 	screen := effectScreen(t, f, id)
 	for _, howMuch := range []string{"+30", "+9"} {
-		if !strings.Contains(screen, howMuch) {
-			t.Errorf("o HTML da aba não traz %q de PV temporários", howMuch)
+		line := regexp.MustCompile(`<dt>PV temporários (<small>[^<]*</small>)?</dt><dd>\` + howMuch + `</dd>`)
+		if !line.MatchString(screen) {
+			t.Errorf("o HTML da aba não traz a linha de %s PV temporários", howMuch)
 		}
 	}
 }
@@ -260,9 +275,11 @@ func TestTheSheetReadsTheEffectDurationInPortuguese(t *testing.T) {
 	if rec := effect(t, f, id, "aplica/velocidade"); rec.Code != http.StatusOK {
 		t.Fatalf("conjurar a sustentada deu %d", rec.Code)
 	}
-	screen := effectScreen(t, f, id)
+	// Recortado na ABA: o escolhedor de magias, que mora fora dela, lista a
+	// Velocidade sempre, e o controle mediria o catálogo em vez do efeito.
+	screen := effectsTab(t, effectScreen(t, f, id))
 
-	if !strings.Contains(screen, "Velocidade") {
+	if !strings.Contains(screen, `aria-label="Encerrar Velocidade"`) {
 		t.Fatal("o controle falhou: o efeito não chegou à aba")
 	}
 	if strings.Contains(screen, ">sustained<") || strings.Contains(screen, " sustained") {
@@ -288,10 +305,13 @@ func TestTheBreakdownDoesNotEchoTheSourceName(t *testing.T) {
 	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
 
-	if !strings.Contains(screen, "Armadura Arcana (cena)") {
-		t.Fatal("o controle falhou: a procedência não chegou à decomposição")
+	// Recortado na conta da DEFESA: a aba também mostra a magia no trilho dos
+	// efeitos e na descrição dela, e lá o nome é o assunto, não eco.
+	defence := sumLine(t, screen, "Defesa")
+	if !strings.Contains(defence, "Armadura Arcana (cena)") {
+		t.Fatalf("o controle falhou: a procedência não chegou à decomposição da Defesa:\n%s", defence)
 	}
-	if n := strings.Count(screen, "Armadura Arcana"); n != 1 {
+	if n := strings.Count(defence, "Armadura Arcana"); n != 1 {
 		t.Errorf("o nome aparece %d vezes na decomposição, e uma basta", n)
 	}
 }

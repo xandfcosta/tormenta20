@@ -86,24 +86,38 @@ func combatScreen(t *testing.T, f sceneFixture, id int64) string {
 //	Fortitude = ½ nível 1 + Constituição 3     = +4
 //	Reflexos  = ½ nível 1 + Destreza 2         = +3
 //	Vontade   = ½ nível 1 + Sabedoria 1        = +2
+//
+// As resistências moram no topo das Perícias e não no Combate (decisão do
+// dono, ALE-473), e é de lá que elas são lidas.
 func TestTheCombatPanelSaysTheEngineNumbers(t *testing.T) {
 	f, id := fighterFixture(t)
 	screen := combatScreen(t, f, id)
 
-	// Rótulo E valor no mesmo `aria-label`, que é como a caixa se nomeia: procurar
-	// só o número acharia o "12" de qualquer outro lugar da página.
-	for _, want := range []string{
-		"Defesa 12", "Atq CaC +7", "Atq Dist +3", "Fort +4", "Refl +3", "Vont +2",
+	// O número da linha FECHADA, achada pelo título: procurar só o número
+	// acharia o "12" de qualquer outro lugar da página.
+	for name, want := range map[string]string{
+		"Defesa": "12", "Ataque corpo a corpo": "+7", "Ataque à distância": "+3",
 	} {
-		if !strings.Contains(screen, `aria-label="`+want+`"`) {
-			t.Errorf("a tela não tem a caixa %q", want)
+		if got := expertiseRowTotal(t, screen, name); got != want {
+			t.Errorf("a linha %q do Combate diz %s, e o livro compõe %s", name, got, want)
+		}
+	}
+	expertises := f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=expertises", id), "").Body.String()
+	for name, want := range map[string]string{"Fortitude": "+4", "Reflexos": "+3", "Vontade": "+2"} {
+		if got := expertiseRowTotal(t, expertises, name); got != want {
+			t.Errorf("a resistência %q diz %s, e o livro compõe %s", name, got, want)
 		}
 	}
 	// Os SEIS atributos, e o "+0" é tão informativo quanto os outros: uma caixa
-	// que some é uma pergunta sem resposta.
-	for _, want := range []string{"FOR", "+4", "DES", "+2", "CON", "+3", "INT", "SAB", "CAR"} {
-		if !strings.Contains(screen, ">"+want+"</p>") {
-			t.Errorf("a tela não tem o atributo %q", want)
+	// que some é uma pergunta sem resposta. Chave e valor no MESMO par, ou o
+	// "+4" da Força casaria com o de qualquer outra caixa.
+	for key, want := range map[string]string{
+		"FOR": "+4", "DES": "+2", "CON": "+3", "INT": "+0", "SAB": "+1", "CAR": "+0",
+	} {
+		pair := `<span class="ds-stat-key">` + key + `</span> <span class="ds-stat-value">` + want + `</span>`
+		if !strings.Contains(screen, pair) {
+			t.Errorf("a tela não tem o atributo %s %s", key, want)
 		}
 	}
 }
@@ -121,23 +135,23 @@ func TestActiveConditionalsEnterTheAttack(t *testing.T) {
 	seedEfeitoCondicional(t, f.s, id, 3)
 
 	// DESLIGADO: o ataque é o mesmo de sempre — ½ nível 1 + Força 4 + treino 2.
-	if screen := combatScreen(t, f, id); !strings.Contains(screen, `aria-label="Atq CaC +7"`) {
-		t.Fatal("com o condicional desligado o ataque não é +7: o painel mudou de base e o resto do caso não mede nada")
+	if got := expertiseRowTotal(t, combatScreen(t, f, id), "Ataque corpo a corpo"); got != "+7" {
+		t.Fatalf("com o condicional desligado o ataque é %s e não +7: o painel mudou de base e o resto do caso não mede nada", got)
 	}
 
 	ligaOCondicional(t, f, id)
 
 	// LIGADO: +3, e o número é escrito à mão — 7 + 3.
-	page := combatScreen(t, f, id)
-	if !strings.Contains(page, `aria-label="Atq CaC +10"`) {
-		t.Error("com o condicional LIGADO o ataque continua sem os +3: o painel computa a ficha base " +
-			"e mostra o número de quem não está com o efeito ativo")
+	melee := sumLine(t, combatScreen(t, f, id), "Ataque corpo a corpo")
+	if !strings.Contains(melee, `<span class="ds-row-value">+10</span>`) {
+		t.Errorf("com o condicional LIGADO o ataque continua sem os +3: o painel computa a ficha base "+
+			"e mostra o número de quem não está com o efeito ativo:\n%s", melee)
 	}
-	// A DECOMPOSIÇÃO tem de contar a mesma história que a caixa: um total que
-	// sobe sem linha que o explique é pior que o total errado, porque parece
-	// certo.
-	if !strings.Contains(page, "(cond.)") {
-		t.Error("o diálogo do ataque não mostra a linha do condicional que somou os +3")
+	// A DECOMPOSIÇÃO tem de contar a mesma história que a linha: um total que
+	// sobe sem parcela que o explique é pior que o total errado, porque parece
+	// certo. Na MESMA linha, e não em qualquer lugar da página.
+	if !strings.Contains(melee, "(cond.)") {
+		t.Errorf("a conta do ataque não mostra a parcela do condicional que somou os +3:\n%s", melee)
 	}
 }
 

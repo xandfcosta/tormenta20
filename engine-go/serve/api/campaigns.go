@@ -10,6 +10,7 @@ import (
 	"t20engine/app"
 	"t20engine/app/campaign"
 	"t20engine/app/session"
+
 	// O APELIDO é o preço medido de `app/campaign` morar ao lado de
 	// `domain/campaign`, e ele é cobrado em DOIS arquivos — este e o
 	// `serve/web/campaigns/routes.go`. O plural, que é o padrão da casa para

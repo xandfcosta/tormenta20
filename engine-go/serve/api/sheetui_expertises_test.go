@@ -65,6 +65,18 @@ func training(t *testing.T, f sceneFixture, id int64, name string) (trained bool
 	return false, ""
 }
 
+// expertiseRowTotal lê o número da linha FECHADA de uma perícia — o que a
+// pessoa vê antes de abrir a conta.
+func expertiseRowTotal(t *testing.T, page, name string) string {
+	t.Helper()
+	line := sumLine(t, page, name)
+	match := regexp.MustCompile(`<span class="ds-row-value"[^>]*>([^<]*)</span>`).FindStringSubmatch(line)
+	if match == nil {
+		t.Fatalf("a linha de %s não tem o número da linha fechada:\n%s", name, line)
+	}
+	return match[1]
+}
+
 // O PAINEL CHEGA NA TELA com os números do motor.
 //
 // Os esperados são escritos À MÃO, do combatente de nível 3: ½ nível 1, Luta
@@ -77,14 +89,10 @@ func TestTheExpertisesPanelSaysTheEngineNumbers(t *testing.T) {
 	f, id := expertiseFixture(t)
 	screen := expertiseScreen(t, f, id, "")
 
-	for _, want := range []string{"Detalhar Luta +7", "Detalhar Fortitude +4", "Detalhar Acrobacia +3"} {
-		if !strings.Contains(screen, `aria-label="`+want+`"`) {
-			t.Errorf("a tela não tem %q", want)
+	for _, want := range []struct{ name, total string }{{"Luta", "+7"}, {"Fortitude", "+4"}, {"Acrobacia", "+3"}} {
+		if got := expertiseRowTotal(t, screen, want.name); got != want.total {
+			t.Errorf("a linha de %s diz %s, quer %s", want.name, got, want.total)
 		}
-	}
-	// O CABEÇALHO diz as duas parcelas que valem para todas as linhas.
-	if !strings.Contains(screen, "treino +2 • ½ nível 1") {
-		t.Error("o cabeçalho não diz o treino e o ½ nível do personagem")
 	}
 }
 
@@ -123,8 +131,9 @@ func TestTheSearchFindsWithoutAccentAndWithoutCase(t *testing.T) {
 		}
 	}
 	// SEM ACHADO a lista diz isso, em vez de ficar vazia parecendo defeito.
-	if empty := expertiseScreen(t, f, id, "zzz"); !strings.Contains(empty, "Nenhuma perícia para") {
-		t.Error("uma busca sem achado deixou a lista muda")
+	if empty := expertiseScreen(t, f, id, "zzz"); !strings.Contains(empty, "Nenhuma perícia") ||
+		!strings.Contains(empty, "Nada se chama &#34;zzz&#34;.") {
+		t.Error("uma busca sem achado deixou a lista muda, ou não disse o que foi buscado")
 	}
 }
 
@@ -137,8 +146,14 @@ func TestTheSearchFindsWithoutAccentAndWithoutCase(t *testing.T) {
 func TestTheSearchGetCarriesTheTab(t *testing.T) {
 	f, id := expertiseFixture(t)
 	screen := expertiseScreen(t, f, id, "")
-	if !strings.Contains(screen, "?tab=expertises&#39;)") {
-		t.Error("o `@get` da busca não carrega o `?tab=`: a resposta viria noutra aba")
+	// Recortado no CAMPO da busca: a aba inteira tem um `@post` com o mesmo
+	// `?tab=` em cada linha, e casar a página casaria qualquer um deles.
+	field := regexp.MustCompile(`<input[^>]*id="expertise-search"[^>]*>`).FindString(screen)
+	if field == "" {
+		t.Fatal("a aba não desenhou o campo de busca")
+	}
+	if !regexp.MustCompile(`data-on:input[^=]*="@get\(&#39;[^"]*\?tab=expertises&#39;\)"`).MatchString(field) {
+		t.Errorf("o `@get` da busca não carrega o `?tab=`: a resposta viria noutra aba\n    %s", field)
 	}
 }
 
@@ -350,19 +365,20 @@ func TestTheEnchantExemptsOneExpertiseFromTheArmorPenaltyOnScreen(t *testing.T) 
 	screen := expertiseScreen(t, f, id, "")
 	// O CONTROLE é a Acrobacia: mesma perícia penalizada, sem encanto nenhum, e
 	// ela continua pagando as duas peças.
-	if !strings.Contains(screen, `aria-label="Detalhar Acrobacia -4"`) {
-		t.Fatalf("a Acrobacia não sofreu as duas penalidades: ½ nível 1 + DES 2 − 5 da " +
-			"armadura − 2 do escudo = −4")
+	if got := expertiseRowTotal(t, screen, "Acrobacia"); got != "-4" {
+		t.Fatalf("a Acrobacia ficou em %s e não sofreu as duas penalidades: ½ nível 1 + DES 2 − 5 da "+
+			"armadura − 2 do escudo = −4", got)
 	}
 	// E A FURTIVIDADE: 1 + 2 + 5 do encanto − 2 do escudo = +6. A armadura saiu
 	// da conta, e só ela.
-	if !strings.Contains(screen, `aria-label="Detalhar Furtividade +6"`) {
-		t.Errorf("a Furtividade não ficou em +6 (½ nível 1 + DES 2 + 5 do Sombrio − 2 do escudo)")
+	if got := expertiseRowTotal(t, screen, "Furtividade"); got != "+6" {
+		t.Errorf("a Furtividade ficou em %s, quer +6 (½ nível 1 + DES 2 + 5 do Sombrio − 2 do escudo)", got)
 	}
-	// E A LINHA DIZ POR QUÊ: um número que muda sem motivo escrito é a ficha
-	// escondendo o que o item faz (ALE-430).
-	if !strings.Contains(screen, "a penalidade deste item não se aplica") {
-		t.Error("a decomposição não diz que a penalidade da armadura foi isentada")
+	// E A CONTA DA FURTIVIDADE DIZ POR QUÊ: um número que muda sem motivo
+	// escrito é a ficha escondendo o que o item faz (ALE-430). Recortada na
+	// linha dela, porque a frase em qualquer lugar da aba não diz de quem é.
+	if !strings.Contains(sumLine(t, screen, "Furtividade"), "a penalidade deste item não se aplica") {
+		t.Error("a conta da Furtividade não diz que a penalidade da armadura foi isentada")
 	}
 }
 
@@ -377,8 +393,8 @@ func TestTheEnchantExemptsOneExpertiseFromTheArmorPenaltyOnScreen(t *testing.T) 
 // interruptor que não muda nada mente.
 func TestTheOriginSkillBenefitTrainsAndTheTabSaysWhoTrainedIt(t *testing.T) {
 	f, id := expertiseFixture(t)
-	if !strings.Contains(expertiseScreen(t, f, id, ""), `aria-label="Detalhar Fortitude +4"`) {
-		t.Fatal("o controle já estava errado: sem o benefício, a Fortitude não é +4")
+	if got := expertiseRowTotal(t, expertiseScreen(t, f, id, ""), "Fortitude"); got != "+4" {
+		t.Fatalf("o controle já estava errado: sem o benefício, a Fortitude é %s e não +4", got)
 	}
 
 	target := fmt.Sprintf("/personagens/%d/poderes/origem/origin-soldado-pericia-fortitude?tab=powers", id)
@@ -387,26 +403,23 @@ func TestTheOriginSkillBenefitTrainsAndTheTabSaysWhoTrainedIt(t *testing.T) {
 	}
 	screen := expertiseScreen(t, f, id, "")
 
-	if !strings.Contains(screen, `aria-label="Detalhar Fortitude +6"`) {
-		t.Error("o soldado que escolhe a perícia Fortitude não ficou com +6 (1 + 3 + treino 2)")
+	if got := expertiseRowTotal(t, screen, "Fortitude"); got != "+6" {
+		t.Errorf("o soldado que escolhe a perícia Fortitude ficou com %s, e não +6 (1 + 3 + treino 2)", got)
 	}
-	// A TAG do interruptor inteira, e não um trecho dela: a ordem dos atributos
-	// é do `templ`, e ninguém a prometeu.
-	button := regexp.MustCompile(`<button[^>]*aria-label="Fortitude treinada"[^>]*>`).FindString(screen)
-	if button == "" {
-		t.Fatal("a aba não desenhou o interruptor de treino da Fortitude")
+	// O CONTROLE do interruptor: a Acrobacia, de treino livre, TEM o que
+	// alterna a coluna. Sem ele, "a Fortitude não tem interruptor" passaria
+	// verde numa aba que não desenha interruptor nenhum.
+	if !regexp.MustCompile(`<input[^>]*role="switch"[^>]*/pericias/treino/Acrobacia`).MatchString(sumLine(t, screen, "Acrobacia")) {
+		t.Fatal("a Acrobacia, de treino livre, não tem o interruptor de treino: o caso não mede a ausência na Fortitude")
 	}
-	for _, want := range []string{`aria-checked="true"`, `aria-disabled="true"`} {
-		if !strings.Contains(button, want) {
-			t.Errorf("o interruptor da Fortitude não tem %s: a tela diz que ela não é "+
-				"treinada, ou deixa alternar, enquanto o total soma o treino da origem\n    %s", want, button)
-		}
+	// No lugar do interruptor, o cadeado que diz quem treinou: alternar a
+	// coluna não mudaria nada, e um interruptor que não muda nada mente.
+	fortitude := sumLine(t, screen, "Fortitude")
+	if strings.Contains(fortitude, `role="switch"`) || strings.Contains(fortitude, "/pericias/treino/Fortitude") {
+		t.Errorf("a Fortitude treinada pela origem ainda tem o interruptor que alternaria a coluna sem efeito:\n%s", fortitude)
 	}
-	if strings.Contains(button, "data-on:click") {
-		t.Errorf("o interruptor travado ainda manda o gesto, que alternaria a coluna sem efeito\n    %s", button)
-	}
-	if !strings.Contains(screen, "Treinada pela Origem: Soldado") {
-		t.Error("a aba não diz de onde veio o treino da Fortitude")
+	if !strings.Contains(fortitude, "Treinada pela Origem: Soldado") {
+		t.Errorf("a linha da Fortitude não diz de onde veio o treino:\n%s", fortitude)
 	}
 	if trained, _ := training(t, f, id, "Fortitude"); trained {
 		t.Error("escolher o benefício escreveu a coluna `trained`: quem treina é a origem, " +

@@ -125,7 +125,8 @@ func TestNoDataShowNodeIsBornVisible(t *testing.T) {
 	if filesRead < 40 {
 		t.Fatalf("o guarda leu só %d arquivos `.templ`: a caminhada parou de achar as cenas", filesRead)
 	}
-	if candidates < 15 {
+	// O piso caiu de 15 para 10 quando a ficha do grimório saiu (ALE-473).
+	if candidates < 10 {
 		t.Fatalf("o guarda achou só %d nós que ele sabe julgar: o padrão parou de casar e o verde não significa nada", candidates)
 	}
 }

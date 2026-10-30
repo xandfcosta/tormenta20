@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// A ABA MAGIAS DA FICHA PARALELA (ALE-473), pelo mockup aprovado: a CD e o
+// A ABA MAGIAS DA FICHA (ALE-473), pelo mockup aprovado: a CD e o
 // atributo uma vez no topo, o grimório agrupado por círculo, e a linha sem o
 // texto da regra — tocar no nome abre a folha da magia, com a regra, os
 // aprimoramentos, o custo e o Esquecer no pé, longe do Conjurar.
@@ -35,7 +35,7 @@ func spellSheetOf(t *testing.T, page, id string) string {
 	t.Helper()
 	dialog := regexp.MustCompile(`(?s)<dialog[^>]*id="` + id + `".*?</dialog>`).FindString(page)
 	if dialog == "" {
-		t.Fatalf("a aba Magias paralela não desenhou a folha %q", id)
+		t.Fatalf("a aba Magias não desenhou a folha %q", id)
 	}
 	return dialog
 }
@@ -44,9 +44,6 @@ func TestTheParallelSpellsTabGroupsTheSpellbookByCircle(t *testing.T) {
 	f, id := grimoireOfTwo(t)
 	page := parallelSheet(t, f, id, "spells")
 
-	if strings.Contains(page, "ainda está na ficha de hoje") {
-		t.Fatal("a aba Magias paralela ainda leva à ficha de hoje")
-	}
 	// Inteligência 4 no 9º nível: 10 + 4 + 4 (p173).
 	if !strings.Contains(page, "CD <b>18</b>") || !strings.Contains(page, "Inteligência") {
 		t.Error("o topo da aba não diz a CD 18 e o atributo Inteligência")
@@ -84,7 +81,7 @@ func TestTheParallelSpellsTabGroupsTheSpellbookByCircle(t *testing.T) {
 		t.Error("o Conjurar da linha da Bola de Fogo não abre a folha dela")
 	}
 	if grimoire := regexp.MustCompile(`[\w:-]*grimorio[\w-]*`).FindAllString(sceneShell.FindString(page), 3); len(grimoire) > 0 {
-		t.Errorf("a aba Magias paralela vestiu o grimório: %v", grimoire)
+		t.Errorf("a aba Magias vestiu o grimório: %v", grimoire)
 	}
 }
 
@@ -113,9 +110,6 @@ func TestTheParallelSpellSheetHasTheRuleTheAugmentsAndForgetApart(t *testing.T) 
 	if forget < 0 || cast < 0 || forget > cast {
 		t.Errorf("o pé da folha não tem o Esquecer antes do Conjurar (esquecer em %d, conjurar em %d)", forget, cast)
 	}
-	if !strings.Contains(foot, "tempestade=1") {
-		t.Error("os gestos da folha perdem a marca da ficha paralela")
-	}
 }
 
 // O FILTRO DE CÍRCULO esconde os outros círculos inteiros, cabeçalho e linhas.
@@ -123,7 +117,7 @@ func TestTheParallelSpellsTabFiltersTheSpellbookByCircle(t *testing.T) {
 	f, id := grimoireOfTwo(t)
 	signals := url.QueryEscape(`{"grimoire_circle":"2º"}`)
 	page := f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=spells&tempestade=1&datastar=%s", id, signals), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=spells&datastar=%s", id, signals), "").Body.String()
 
 	if !strings.Contains(page, ">Bola de Fogo<") || !strings.Contains(page, ">2º círculo<") {
 		t.Fatal("o filtro do 2º círculo perdeu a Bola de Fogo")
@@ -137,7 +131,7 @@ func TestTheParallelSpellsTabSearchesTheSpellbookByName(t *testing.T) {
 	f, id := grimoireOfTwo(t)
 	signals := url.QueryEscape(`{"grimoire_search":"bola"}`)
 	rec := f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=spells&tempestade=1&datastar=%s", id, signals), "")
+		fmt.Sprintf("/personagens/%d?tab=spells&datastar=%s", id, signals), "")
 	page := rec.Body.String()
 
 	if !strings.Contains(page, ">Bola de Fogo<") {
@@ -154,7 +148,7 @@ func TestTheParallelLearnDialogIsOnlyForCasters(t *testing.T) {
 	f, id := arcanista(t)
 	page := parallelSheet(t, f, id, "spells")
 	learn := spellSheetOf(t, page, "spell-learn")
-	if !regexp.MustCompile(`data-on:click="[^"]*/magias/aprende/bola-de-fogo[^"]*tempestade=1`).MatchString(learn) {
+	if !regexp.MustCompile(`data-on:click="[^"]*/magias/aprende/bola-de-fogo`).MatchString(learn) {
 		t.Error("o diálogo Aprender não oferece a Bola de Fogo")
 	}
 	if !regexp.MustCompile(`<button[^>]*commandfor="spell-learn"`).MatchString(page) {

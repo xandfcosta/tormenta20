@@ -109,7 +109,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		Signals: tableSignalsExpr(),
 		System:  system,
 		// O FLUXO LEVA A MARCA: é ele que redesenha o cabeçalho a cada tique, e
-		// sem ela o stream mandaria o cabeçalho de hoje para a sessão paralela.
+		// sem ela o stream mandaria o cabeçalho de hoje para a sessão do jogador.
 		Init: fmt.Sprintf("@get('%s')", stream),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
@@ -169,7 +169,7 @@ func tableSignalsExpr() string {
 		// uma INTENÇÃO de quem joga, e não um fato da mesa: escolher contra quem
 		// se vai rolar não muda nada para ninguém até o dado cair.
 		"turn_target: ''",
-		// A VEZ, na sessão paralela: a barra de alvo a escreve a cada tique do
+		// A VEZ, na sessão do jogador: a barra de alvo a escreve a cada tique do
 		// stream, e as Ações apagam o que gasta a vez quando ela é falsa.
 		"my_turn: true",
 		// OS SINAIS DA FICHA QUE A ABA AÇÕES LÊ, com o TIPO certo: o contador de

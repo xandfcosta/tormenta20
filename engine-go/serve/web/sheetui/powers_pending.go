@@ -34,6 +34,8 @@ type pendencia struct {
 	// Source é `raca`, `origin` ou `class` — a aba do diálogo que a resolve.
 	Source string
 	Label  string
+	// PowerID é o poder geral cuja escolha falta, quando a pendência é dessas.
+	PowerID string
 }
 
 // sheetPendings são as escolhas que faltam, na ordem das abas.
@@ -63,6 +65,7 @@ func generalChoicePendings(dto sheet.CharacterDTO) []pendencia {
 		seen[id] = true
 		outside = append(outside, pendencia{
 			Source: "classe", Label: power.Name + ": escolher " + strings.ToLower(power.Choice.Label),
+			PowerID: id,
 		})
 	}
 	return outside
@@ -128,22 +131,21 @@ func raceAbilityPendings(dto sheet.CharacterDTO) []pendencia {
 	return outside
 }
 
+// originBenefitCeiling é quantos benefícios a origem COBRA: o que ela oferece,
+// até o teto de dois. O Amnésico é a exceção que ensinou: "em vez de dois
+// benefícios, recebe uma perícia e um poder escolhidos pelo mestre" (p88), e
+// cobrar dois de quem só tem o poder único daria uma pendência que a pessoa
+// não tem como resolver, para sempre.
+func originBenefitCeiling(origin book.Origin) int {
+	return min(len(sheet.OriginBenefitsOf(origin)), sheet.BenefitsOriginLimit)
+}
+
 func originPending(dto sheet.CharacterDTO) []pendencia {
 	origin, found := book.Origins()[dto.Origin]
 	if !found {
 		return nil
 	}
-	// A COBRANÇA É PELO QUE A ORIGEM OFERECE, e não pelo teto de dois. O
-	// Amnésico é a exceção que ensinou: ele tem ZERO benefícios na lista, porque
-	// "em vez de dois benefícios, recebe uma perícia e um poder escolhidos pelo
-	// mestre" (p88) — cobrar dois dele daria uma pendência que a pessoa não tem
-	// como resolver, para sempre.
-	offers := len(sheet.OriginBenefitsOf(origin))
-	ceiling := sheet.BenefitsOriginLimit
-	if offers < ceiling {
-		ceiling = offers
-	}
-	missing := ceiling - len(sheet.UnmarshalStrings(dto.OriginChoices))
+	missing := originBenefitCeiling(origin) - len(sheet.UnmarshalStrings(dto.OriginChoices))
 	if missing <= 0 {
 		return nil
 	}
@@ -216,10 +218,3 @@ func writtenPendings(total int) string {
 
 // writtenSources é o rótulo da aba do diálogo.
 var writtenSources = map[string]string{"raca": "Raça", "origem": "Origem", "classe": "Classe"}
-
-func writtenSource(source string) string {
-	if name, found := writtenSources[source]; found {
-		return name
-	}
-	return strings.ToUpper(source)
-}

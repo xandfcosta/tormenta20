@@ -183,12 +183,12 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
 })
 
 /**
- * O CRACHÁ DA DEFESA cabe no rodapé da ficha a 390px, com o alvo CAÍDO.
+ * O CRACHÁ DA DEFESA cabe no cabeçalho da ficha a 390px, com o alvo CAÍDO.
  *
- * O Caído parte a Defesa em duas (p394), e o crachá mostra as duas: `10` vira
- * `5 CaC · 15 Dist`, três vezes mais largo. Ele é `shrink-0` num flex ao lado do
- * nome do herói, que TRUNCA — então o risco não é o crachá transbordar, é ele
- * espremer o nome até sumir.
+ * O Caído parte a Defesa em duas (p394), e o crachá mostra as duas: `22` vira
+ * `17 CaC · 27 Dist`, várias vezes mais largo. Ele é uma coluna `auto` da grade
+ * do cabeçalho, ao lado do nome do herói, que TRUNCA — então o risco não é o
+ * crachá transbordar, é ele espremer o nome até sumir.
  *
  * E2E porque a pergunta é de LEIAUTE REAL: quanto o nome trunca depende da
  * fonte e do algoritmo do navegador, e em jsdom tudo mede zero.
@@ -197,27 +197,29 @@ test('a cena de campanhas tem a mesma forma da de personagens: palco em cima, li
  * caído, então o guarda de transbordo media o crachá curto e dizia "passou". A
  * cena estava na lista; o DADO não.
  */
-test('o crachá da Defesa partida cabe no rodapé da ficha a 390px', async ({ page }) => {
+test('o crachá da Defesa partida cabe no cabeçalho da ficha a 390px', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   // A aba dos EFEITOS porque é lá que a condição se aplica; o crachá medido é o
-  // do RODAPÉ, que aparece em todas elas — e é justamente esse o argumento dele.
+  // do CABEÇALHO, que aparece em todas elas — e é justamente esse o argumento
+  // dele.
   await page.goto('/personagens/1?tab=conditionals')
 
   // O CONTROLE: em pé, o crachá é curto — é assim que se sabe que a medição
   // depois é do caso novo e não do que já estava lá.
-  const badge = page.locator('span', { hasText: /^DEF$/ }).locator('..')
+  const header = page.locator('header').filter({ has: page.getByRole('heading', { level: 1 }) })
+  const badge = header.locator('span', { hasText: /^DEF$/ }).locator('..')
   await expect(badge).toBeVisible()
   const short = await badge.evaluate((el) => el.getBoundingClientRect().width)
 
   await page.getByRole('button', { name: 'Aplicar condição' }).click()
-  await page.getByRole('button', { name: /^Caído/ }).click()
+  await page.getByRole('button', { name: 'Aplicar condição: Caído' }).click()
   await expect(badge).toContainText('CaC')
 
   const measurement = await badge.evaluate((el) => {
     const box = el.getBoundingClientRect()
     const row = el.parentElement as HTMLElement
     const father = row.getBoundingClientRect()
-    const label = row.querySelector('p') as HTMLElement | null
+    const label = row.querySelector('h1') as HTMLElement | null
     return {
       largura: box.width,
       foraPelaDireita: box.right - father.right,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"t20engine/domain/sheet"
@@ -36,9 +35,6 @@ type View struct {
 	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
 	// quem só queria trocar de seção.
 	Embedded bool
-	// Tempestade diz que esta é a FICHA PARALELA, vestida no sistema novo
-	// enquanto é construída. Ver `tempestade.go`.
-	Tempestade bool
 	// ColorMode é o modo de cor em vigor, para o seletor do ⋯ marcar o certo.
 	ColorMode ui.ColorMode
 	// Initials e Gradiente são o retrato derivado do nome, como no palco e no
@@ -63,7 +59,7 @@ type View struct {
 	// DEGRAU DE NÍVEL: o nível de um personagem é a SOMA dos níveis de classe, e
 	// subir um nível é escolher QUAL classe o recebe.
 	AsClasses []sheetClass
-	// Identity é quem o personagem é, linha a linha, para o ⋯ da ficha paralela.
+	// Identity é quem o personagem é, linha a linha, para o ⋯ da ficha.
 	Identity []identityLine
 	// Tabs são as sete da ficha, com a ativa marcada. Ver `Tabs`.
 	Tabs []Tab
@@ -89,13 +85,12 @@ type View struct {
 	// Spells é a aba homônima — o grimório, as concedidas por poder e o catálogo
 	// inteiro do Capítulo 4 para aprender.
 	Spells spellbookPanel
-	// GrimoireSearch, GrimoireCircle e SpellCasting são da aba Magias da ficha
-	// paralela: a busca e o círculo que filtram o grimório, e a CD e o atributo
+	// GrimoireSearch, GrimoireCircle e SpellCasting são da aba Magias: a busca e o círculo que filtram o grimório, e a CD e o atributo
 	// que o topo diz uma vez.
 	GrimoireSearch string
 	GrimoireCircle string
 	SpellCasting   spellCasting
-	// EffectPicks são as buscas dos escolhedores da aba Efeitos paralela.
+	// EffectPicks são as buscas dos escolhedores da aba Efeitos.
 	EffectPicks effectPickFilters
 	// Bag é a aba homônima — a tira de equipados, a carga da p141, o dinheiro e a
 	// grade do que está guardado.
@@ -255,44 +250,6 @@ func sheetRoute(id int64, aba string) string {
 	return fmt.Sprintf("/personagens/%d?tab=%s", id, aba)
 }
 
-// routeVital traduz o rótulo da tela para o pedaço da URL.
-//
-// Duas palavras para a mesma coisa é o que o GLOSSARY chama de colisão, e aqui
-// ela é deliberada e contida: a TELA diz "PV" porque é o que a mesa fala, e a
-// ROTA diz "pv" porque endereço é minúsculo. Esta função é a única costura.
-func routeVital(label string) string {
-	if label == "PM" {
-		return "pm"
-	}
-	return "pv"
-}
-
-// stepSignal escreve o rótulo do botão: "+5", "−1".
-//
-// O MENOS É O SINAL TIPOGRÁFICO (U+2212) e não o hífen: no mesmo tamanho de
-// fonte o hífen fica mais curto e mais alto que o traço do "+", e a fileira dos
-// quatro botões desalinha.
-func stepSignal(step int) string {
-	if step < 0 {
-		return "−" + strconv.Itoa(-step)
-	}
-	return "+" + strconv.Itoa(step)
-}
-
-// stepLabel é o nome acessível: "Curar 5 de PV", "Ferir 1 de PV".
-//
-// O VERBO muda com o sinal em vez de "mais 5 PV", porque é o verbo que a mesa
-// usa — e um leitor de tela lendo "menos cinco pê vê" obriga quem ouve a
-// traduzir de volta para "levou cinco".
-func stepLabel(label string, step int) string {
-	verb := "Curar"
-	if step < 0 {
-		verb = "Ferir"
-		step = -step
-	}
-	return fmt.Sprintf("%s %d de %s", verb, step, label)
-}
-
 // stepClasses monta as classes com a elegibilidade de cada uma.
 //
 // Quem tem uma classe só sobe direto; quem tem duas é PERGUNTADO qual recebe o
@@ -364,9 +321,6 @@ func commandRoute(v View, path string) string {
 	if v.Embedded {
 		route += "&embutida=1"
 	}
-	if v.Tempestade {
-		route += "&tempestade=1"
-	}
 	return route
 }
 
@@ -391,18 +345,8 @@ func sheetGet(v View) string {
 // Dois comandos separados por `;` e NUNCA num ternário: sequência dentro de
 // ternário é erro de sintaxe que o Datastar engole, e o gesto inteiro vira nada.
 func tabEmbeddedGet(v View, aba string) string {
-	return fmt.Sprintf("$sheet_tab = %q; @get('/personagens/%d?tab=%s&embutida=1%s')",
-		aba, v.ID, aba, parallelMark(v))
-}
-
-// parallelMark é a marca da ficha paralela nos pedidos que a SESSÃO faz à
-// ficha embutida: sem ela, a troca de seção e o aviso do stream devolveriam a
-// ficha de hoje dentro da sessão paralela.
-func parallelMark(v View) string {
-	if v.Tempestade {
-		return "&tempestade=1"
-	}
-	return ""
+	return fmt.Sprintf("$sheet_tab = %q; @get('/personagens/%d?tab=%s&embutida=1')",
+		aba, v.ID, aba)
 }
 
 // SheetRefetch é o comando que o AVISO do stream dispara: a mesma ficha, na
@@ -422,7 +366,7 @@ func SheetRefetch(v View) string {
 	// o tipo de segunda escrita que sai de sincronia.
 	return fmt.Sprintf(
 		"$sheet_version !== document.getElementById('sheet-scene').dataset.versao && "+
-			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1%s')", v.ID, parallelMark(v))
+			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
 }
 
 // attributeCommand escreve o `@post` que repõe a perícia noutro atributo.
@@ -446,17 +390,6 @@ func sheetPostWith(v View, path, value string) string {
 	return fmt.Sprintf("@post('%s' + %s + '%s')", before, value, after)
 }
 
-// totalLabel é o nome acessível do número de uma perícia.
-//
-// A falha automática não diz um número, porque não há um: ela diz o que
-// aconteceu. Um botão chamado "—" não informa nada a quem usa leitor de tela.
-func totalLabel(row expertiseRow) string {
-	if row.AutoFail {
-		return "Falha automática em " + row.Name + " — detalhar"
-	}
-	return "Detalhar " + row.Name + " " + row.Total
-}
-
 // stepCommand escreve o `@post` de subir ou descer uma classe.
 //
 // A CLASSE VAI NO CAMINHO, codificada: nome de classe é do catálogo e não tem
@@ -464,11 +397,6 @@ func totalLabel(row expertiseRow) string {
 // quebra no dia em que uma classe nova chegar.
 func stepCommand(v View, class string, step int) string {
 	return sheetPost(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(class), step))
-}
-
-// vitalCommand escreve o `@post` de um passo de PV ou PM.
-func vitalCommand(v View, label string, step int) string {
-	return sheetPost(v, fmt.Sprintf("/vitais/%s/%d", routeVital(label), step))
 }
 
 // proficiencyCommand escreve o `@post` de ligar ou desligar uma categoria.

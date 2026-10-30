@@ -280,7 +280,7 @@ funcionar, e o que ele não mede?"**
 - **"Existe agora" e "existe quando importa" são perguntas diferentes** — o nó
   medido some no quadro seguinte, e a animação some pedida (ALE-174).
 - **Varredura de um nível não é varredura** — o defeito morava em `for` →
-  `@expertiseDetail` → `@overlay`, e só o último tinha o atributo. O conserto é o
+  o detalhe da perícia → o overlay, e só o último tinha o atributo. O conserto é o
   fecho transitivo (ALE-298).
 - **Ler a norma até o fim é parte de construir o medidor** — contar `< 24px`
   inflou o defeito em 25×, porque o WCAG 2.5.8 tem duas exceções que tamanho não
@@ -525,7 +525,7 @@ Isto é checklist, não história: renomear é ato humano, nenhum guarda o cobre
 | 4 | declaração | `data-signals="{…}"`, e as strings montadas em Go |
 | 5 | tag JSON do servidor | `json:"creature_search"` |
 | 6 | filtro de remendo | `data-on-signal-patch-filter="{include: /^sheet_version$/}"` |
-| 7 | **argumento de string** | `@pickerDialog("condition_dialog", …)`, que monta `"$" + sinal` |
+| 7 | **argumento de string** | `toggleBadge(aba, key, …)`, que monta `"$" + key` |
 
 Os canais 3 e 7 deixaram quatro diálogos sem abrir com a suíte de Go inteira
 verde: **a expressão passa a ler `undefined`, que em JavaScript não é erro** — é
@@ -539,7 +539,8 @@ das vezes mora num bloco `const (…)` com a palavra na linha de cima.
 
 Quem fecha: `TestEverySignalDeclaredByValueHasAReader` (3),
 `TestEverySignalTheTableDeclaresHasAReader` (4), e a catraca para a FORMA. **O 7
-não tem guarda** — são três sítios, e estão nomeados aqui por isso.
+não tem guarda** — hoje é um sítio só, o `toggleBadge` do acervo do mestre, e
+está nomeado aqui por isso.
 
 #### O id de elemento tem NOVE canais
 

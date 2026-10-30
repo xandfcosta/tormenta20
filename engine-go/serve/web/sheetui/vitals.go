@@ -71,15 +71,3 @@ func withTempPool(v sheetVital, target string, effects []sheet.EffectDTO) sheetV
 	}
 	return v
 }
-
-// tempReserveTitle é a frase que explica a reserva, por vital.
-//
-// DUAS FRASES e não uma com o rótulo interpolado: o verbo é diferente — o PV é
-// gasto pelo DANO que chega, e o PM pelo que a pessoa escolhe fazer —, e é o
-// verbo que diz o que vai acontecer com aquele número.
-func tempReserveTitle(label string) string {
-	if label == "PM" {
-		return "PM temporários — conjurar e ativar poder gastam estes primeiro (p106)"
-	}
-	return "PV temporários — o dano gasta estes primeiro (p106)"
-}

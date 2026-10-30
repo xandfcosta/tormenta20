@@ -2312,12 +2312,13 @@ dizer está na seção H do [GLOSSARY](../GLOSSARY.md).
   `.scene-grimorio *` (5 textos medidos na `/sistema`, os do diálogo do livro),
   o de face lia só o `index.css`, e o de escopo lia só o `class="…"`. Medidor
   novo que mire um escopo pelo nome mira os DOIS até o grimório sair.
-- **A tela grande migra em PARALELO** (ALE-473, decisão do dono): a ficha nova
-  mora no MESMO endereço com a marca `?tempestade=1`, que todo comando e todo
-  link carrega (`commandRoute`, `tabRoute`), e a do grimório fica intacta até a
-  última aba. Aba ainda não migrada desenha um vazio que leva à ficha de hoje —
-  nunca o painel do grimório dentro da cena Tempestade. As que já migraram
-  são os casos do `tempestadePanel`, no `sheetui/tempestade.templ`.
+- **A tela grande migra em PARALELO** (ALE-473, decisão do dono): a nova mora
+  no MESMO endereço atrás de uma marca (`?tempestade=1`) que todo comando e todo
+  link carrega, e a do grimório fica intacta até a última parte. Parte ainda não
+  migrada desenha um vazio que leva à de hoje — nunca o grimório dentro da cena
+  Tempestade. Quando a última parte migra, a marca sai e a de hoje é APAGADA, e
+  os testes que liam o desenho dela são portados antes: foi assim com a ficha e
+  com a sessão do jogador.
 - **O fim da migração é apagar**, não converter: o `.scene-grimorio`, os
   tokens `grimorio-*`, a Cinzel, a Liberation, a JetBrains Mono e a `/grimorio`
   saem de uma vez, depois da última tela.

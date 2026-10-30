@@ -18,10 +18,9 @@ import (
 // declarada com cuidado, documentada em três linhas de comentário, e NINGUÉM a
 // lê — então ela não estoura, ela faz o desenho "não fazer nada".
 //
-// O caso que originou o guarda foi o `Indented`. Ele existe para a linha que
-// EXPLICA a de cima em vez de somar ao lado dela — as contribuições de item sob
-// o "Outros" das Perícias —, era escrito em `expertises.go` e não aparecia em
-// `.templ` nenhum. O efeito na tela é uma decomposição que NÃO FECHA:
+// O caso que originou o guarda foi um campo de RECUO, para a linha que EXPLICA
+// a de cima em vez de somar ao lado dela — as contribuições de item sob o
+// "Outros" das Perícias —, escrito na decomposição e lido por `.templ` nenhum. O efeito na tela é uma decomposição que NÃO FECHA:
 //
 //	½ nível +5 · Atributo (DES) +0 · Treino +0 · Outros −7
 //	Penalidade de armadura −7          ← esta EXPLICA o "Outros", não soma
@@ -51,9 +50,11 @@ func TestEveryBreakdownRowFieldHasAReader(t *testing.T) {
 	// O DENOMINADOR. Sem ele, um `breakdownRow` renomeado deixa `written` vazio e
 	// o guarda passa verde sem ter olhado nada — que é a diferença entre "nada
 	// reprovou" e "não mediu".
-	if len(written) < 4 || sites < 20 {
+	// O piso dos sítios caiu de 20 para 15 quando a decomposição das Perícias
+	// deixou de ser `breakdownRow` (ALE-473).
+	if len(written) < 4 || sites < 15 {
 		t.Fatalf("a varredura achou %d campos escritos em %d literais de `breakdownRow` — "+
-			"esperava ao menos 4 campos em 20 sítios (eram 23 no dia). "+
+			"esperava ao menos 4 campos em 15 sítios (eram 19 no dia). "+
 			"O tipo foi renomeado ou o parser parou de achá-lo",
 			len(written), sites)
 	}
@@ -69,7 +70,7 @@ func TestEveryBreakdownRowFieldHasAReader(t *testing.T) {
 	if len(loose) > 0 {
 		t.Errorf("%d campo(s) de `breakdownRow` são ESCRITOS e nenhum `.templ` os lê: %s\n"+
 			"Um campo sem leitor não estoura — ele faz o desenho não acontecer.\n"+
-			"Ou desenhe o campo em `combat.templ`, ou apague-o de quem o escreve.\n"+
+			"Ou desenhe o campo em `tempestade_combat.templ`, ou apague-o de quem o escreve.\n"+
 			"(medidos: %d campos em %d literais)",
 			len(loose), strings.Join(loose, ", "), len(written), sites)
 	}
@@ -96,9 +97,8 @@ func breakdownRowFieldsWritten(t *testing.T) ([]string, int) {
 			// não o via: dentro de `[]breakdownRow{ {…}, {…} }` o Go permite omitir
 			// o nome do tipo, então o `Type` do literal de dentro é NIL. Medido — o
 			// denominador acusou 10 literais onde um `grep` de `breakdownRow{`
-			// achava 18, e os que faltavam eram todos desta forma, o
-			// `expertiseBreakdownRows` entre eles. Guarda que varre um nível não
-			// varre.
+			// achava 18, e os que faltavam eram todos desta forma. Guarda que
+			// varre um nível não varre.
 			if isBreakdownRowSlice(literal.Type) {
 				for _, element := range literal.Elts {
 					if inner, ok := element.(*ast.CompositeLit); ok && inner.Type == nil {

@@ -154,9 +154,17 @@ func TestTheSpellsPanelDrawsTheSpellbookAndTheCatalog(t *testing.T) {
 	spell(t, f, id, "aprende/bola-de-fogo")
 	screen := spellScreen(t, f, id)
 
-	for _, want := range []string{"Grimório", "1 aprendida", "Conjurar Bola de Fogo", "Aprender magia"} {
+	// O GRIMÓRIO é a lista por círculo, com a conta de cada um; o Aprender
+	// abre o catálogo num diálogo.
+	for _, want := range []string{
+		"1 aprendida",
+		`<div class="ds-list-head"><span>2º círculo</span><span>1</span></div>`,
+		`aria-label="Conjurar Bola de Fogo"`,
+		`commandfor="spell-learn"`,
+		"Aprender magia",
+	} {
 		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
+			t.Errorf("a tela não tem %s", want)
 		}
 	}
 	// O CATÁLOGO sai inteiro, menos o que já se sabe.
@@ -174,7 +182,9 @@ func TestWhoDoesNotCastDoesNotGetTheCatalog(t *testing.T) {
 	f, id := fighterFixture(t)
 	screen := spellScreen(t, f, id)
 
-	if strings.Contains(screen, `aria-label="Aprender magia"`) {
+	// O botão e o diálogo que ele abre: a conjuradora do caso acima tem os
+	// dois, e é ela o controle de que o canal existe.
+	if strings.Contains(screen, `commandfor="spell-learn"`) || strings.Contains(screen, `id="spell-learn"`) {
 		t.Error("um guerreiro recebeu o botão de aprender magia")
 	}
 	if strings.Contains(screen, "/magias/aprende/") {

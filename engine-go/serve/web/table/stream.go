@@ -6,11 +6,12 @@ import (
 	"t20engine/serve/web/ui"
 
 	"crypto/sha256"
-	"github.com/a-h/templ"
 	"net/http"
 	"strconv"
 	"t20engine/infra/events"
 	"time"
+
+	"github.com/a-h/templ"
 
 	"github.com/starfederation/datastar-go/datastar"
 )
@@ -298,7 +299,7 @@ type tableRegion struct {
 // pergunta ao MESMO cálculo da produção quais regiões o stream mandaria para
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
-	// A SESSÃO PARALELA tem as regiões das superfícies que ela desenha; a Ficha
+	// A SESSÃO DO JOGADOR tem as regiões das superfícies que ela desenha; a Ficha
 	// o stream nunca toca.
 	if v.Tempestade {
 		return []tableRegion{

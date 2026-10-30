@@ -10,7 +10,7 @@ import (
 	"t20engine/serve/web/ds"
 )
 
-// A ABA PERÍCIAS DA FICHA PARALELA (ALE-473), pelo mockup aprovado: cada
+// A ABA PERÍCIAS DA FICHA (ALE-473), pelo mockup aprovado: cada
 // perícia é uma linha que ABRE A CONTA no lugar, e embaixo da conta ficam o
 // atributo, o treino, os gastos de PM e o rolar. O dado é o mesmo da ficha de
 // hoje (`expertisePanel`); daqui sai só o que a peça nova lê diferente.
@@ -80,8 +80,7 @@ func expertiseSumHead(row expertiseRow) ds.SumHead {
 // expertiseSumAttrs são o que a linha faz além de abrir. O `name` comum deixa
 // UMA conta aberta por vez (o navegador fecha a outra), porque os gastos de PM e o d20
 // da mesa são sinais da ABA, e não da linha: duas contas abertas mostrariam o
-// mesmo gasto marcado nas duas. Abrir zera os gastos, como o diálogo da ficha
-// de hoje fazia.
+// mesmo gasto marcado nas duas. Abrir zera os gastos.
 func expertiseSumAttrs(row expertiseRow) templ.Attributes {
 	attrs := templ.Attributes{"name": "expertise"}
 	if reset := spendsResetCommand(row); reset != "" {

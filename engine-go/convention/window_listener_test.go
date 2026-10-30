@@ -118,7 +118,7 @@ func TestNoWindowListenerIsHungInsideALoop(t *testing.T) {
 	//
 	// Sem isto o guarda passa verde sobre o defeito que o originou, e eu descobri
 	// isso do jeito certo — rodando-o contra a árvore de ONTEM. A cadeia real
-	// era `for` → `@expertiseDetail` → `@overlay`, e só o último tinha o
+	// era `for` → o detalhe da perícia → o overlay, e só o último tinha o
 	// atributo. Um guarda que olha UM nível mede a folha e ignora o galho.
 	caller := map[string][]string{}
 	err = read(func(name string, rows []string) {

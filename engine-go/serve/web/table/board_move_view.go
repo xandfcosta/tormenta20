@@ -300,7 +300,7 @@ func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, budg
 type moveRange struct {
 	Class string
 	Text  string
-	// Short é a faixa na caixa da sessão paralela, onde as três dividem a
+	// Short é a faixa na caixa da sessão do jogador, onde as três dividem a
 	// largura: a segunda diz só o que SOMA à primeira, que está ao lado.
 	Short string
 	// Active é a faixa em que o caminho INTEIRO cai, e é a que fica acesa. As

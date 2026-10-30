@@ -5,10 +5,10 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeExpertises é a aba Perícias da ficha paralela: a busca, o filtro
+// tempestadeExpertises é a aba Perícias da ficha: a busca, o filtro
 // das treinadas e a nova perícia em cima; as três resistências numa lista e o
-// resto noutra. A busca vai ao servidor como na ficha de hoje (ver o
-// cabeçalho de `expertises.templ`); o filtro das treinadas fica na tela,
+// resto noutra. A busca vai ao servidor, porque é ele que monta a conta de cada
+// perícia; o filtro das treinadas fica na tela,
 // porque ele não muda o que o servidor desenha — só o que se vê.
 templ tempestadeExpertises(v View) {
 	<section class="grid gap-3" aria-label="Perícias">
@@ -112,8 +112,7 @@ templ expertiseSum(v View, row expertiseRow) {
 
 // expertiseSpends são os gastos de PM que valem neste teste (ALE-489), um
 // interruptor cada: marcar é ligar. A regra das marcas — o que desmarca o quê,
-// o Orgulho que escolhe quantos PM — é a mesma da ficha de hoje, e mora em
-// `expertises_spends.go`.
+// o Orgulho que escolhe quantos PM — mora em `expertises_spends.go`.
 templ expertiseSpends(row expertiseRow) {
 	if len(row.Spends) > 0 {
 		<div class="ds-field">
@@ -178,8 +177,7 @@ templ expertiseSumRoll(v View, row expertiseRow) {
 }
 
 // expertiseCraftDialog cria uma perícia que o livro não tem. A tela diz "nova
-// perícia", e nunca "ofício" — Ofício É uma das 29 do livro (p115); ver o
-// `craftDialog` da ficha de hoje.
+// perícia", e nunca "ofício" — Ofício É uma das 29 do livro (p115).
 templ expertiseCraftDialog(v View) {
 	@ds.Dialog("expertise-craft", "Nova perícia", expertiseCraftFoot(v)) {
 		@ds.TextField(ds.Field{ID: "craft-name", Label: "Nome", Placeholder: "Ferreiro, Marinheiro…"}, templ.Attributes{"maxlength": "40", "data-bind:new_expertise": true})

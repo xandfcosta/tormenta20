@@ -7,20 +7,16 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// AS AÇÕES DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `sessao.html`.
+// AS AÇÕES DA SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado `sessao.html`.
 // O dado é o da superfície de hoje (`v.Actions`); daqui sai só o desenho no kit
 // e duas leituras novas nos botões: o ALVO (`$turn_target`) e a VEZ
 // (`$my_turn`), que a barra de alvo da mesa escreve. O que gasta a vez apaga
 // fora dela (decisão do dono); a livre e a reação, não.
 
 // ActionsSurface é a superfície Ações que a ficha manda junto de cada remendo
-// dentro da sessão: a de hoje, ou a paralela.
+// dentro da sessão.
 templ ActionsSurface(v View) {
-	if v.Tempestade {
-		@tempestadeActionsBody(v)
-	} else {
-		@ActionsBody(v)
-	}
+	@tempestadeActionsBody(v)
 }
 
 templ tempestadeActionsBody(v View) {
