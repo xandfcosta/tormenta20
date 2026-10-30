@@ -34,3 +34,39 @@ func pageSystemAndStream(view View) (ui.DesignSystem, string) {
 	}
 	return ui.SystemGrimoire, view.SessionBase() + "/fluxo"
 }
+
+// A MESA DO MESTRE EM PARALELO (ALE-522): `?tempestade=1` grava um cookie, e
+// é o cookie que a página, o stream e os comandos leem. Uma marca no endereço
+// teria de viajar em cada gesto, e a da sessão do jogador esqueceu três
+// caminhos antes de dar certo; o cookie viaja sozinho. `?tempestade=0` apaga.
+const GmTableCookie = "mesa_mestre_tempestade"
+
+// rememberGmTable grava ou apaga o cookie pela marca do endereço.
+func rememberGmTable(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Query().Get("tempestade") {
+	case "1":
+		http.SetCookie(w, &http.Cookie{Name: GmTableCookie, Value: "1", Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	case "0":
+		http.SetCookie(w, &http.Cookie{Name: GmTableCookie, Value: "", Path: "/", MaxAge: -1, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+	}
+}
+
+// gmTableAsked diz se o pedido quer a mesa nova do mestre: a marca do
+// endereço vence, e sem ela vale o cookie.
+func gmTableAsked(r *http.Request) bool {
+	switch r.URL.Query().Get("tempestade") {
+	case "1":
+		return true
+	case "0":
+		return false
+	}
+	c, err := r.Cookie(GmTableCookie)
+	return err == nil && c.Value == "1"
+}
+
+// dressForGm veste a view do MESTRE no Tempestade quando ele pediu.
+func (v *View) dressForGm(r *http.Request) {
+	if v.GM != nil {
+		v.Tempestade = gmTableAsked(r)
+	}
+}

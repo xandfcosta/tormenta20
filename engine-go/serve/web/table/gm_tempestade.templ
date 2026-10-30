@@ -1,0 +1,462 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/domain/live"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/master"
+	"t20engine/serve/web/ui"
+)
+
+// A MESA DO MESTRE NO TEMPESTADE (ALE-522), pelo mockup aprovado `mestre.html`.
+// No celular, três superfícies na barra de baixo — Fila, Tabuleiro e
+// Consultas — e a linha do turno fixa acima dela; no desktop, as três ficam à
+// vista lado a lado, e a fila e as consultas recolhem. O Tabuleiro e as
+// Consultas desta fatia ainda levam ao palco de hoje.
+templ gmTempestadeScene(v View, b master.BestiaryView) {
+	<main id="table" class="ds-session" data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant'}">
+		@gmHeader(v)
+		@gmAttack(v)
+		@tempestadeSkillTest(v)
+		<nav class="ds-session-nav ds-gm-nav" aria-label="Superfícies do mestre">
+			for _, s := range gmSurfaces {
+				<button type="button" data-attr:aria-current={ fmt.Sprintf("%s ? 'page' : 'false'", surface(s.ID)) } data-on:click={ pickSurface(s.ID) }>
+					@ui.Icon(s.Icon, "ds-icon")
+					{ s.Label }
+				</button>
+			}
+		</nav>
+		<div class="ds-gm-grid" data-class="{'ds-gm-no-queue': !$gm_queue_open, 'ds-gm-no-consults': !$gm_consults_open}">
+			<div class="ds-session-surface ds-gm-col" data-gm-col="queue" data-show={ surface(superficieDaMesa) }>
+				<div class="ds-session-scroll">
+					@gmQueue(v)
+				</div>
+			</div>
+			<button type="button" class="ds-gm-rail" data-gm-rail="queue" aria-label="Abrir a fila" data-on:click="$gm_queue_open = true">
+				@ui.Icon("PanelLeftOpen", "ds-icon")
+				<span>Fila</span>
+			</button>
+			<div class="ds-session-surface ds-gm-col" data-gm-col="board" data-show={ surface(superficieDoTabuleiro) }>
+				@gmNotYet(v, "O Tabuleiro ainda está no palco de hoje")
+			</div>
+			<div class="ds-session-surface ds-gm-col" data-gm-col="consults" data-show={ surface(superficieDasConsultas) }>
+				<div class="ds-gm-col-head">
+					<span class="ds-row-title">Consultas</span>
+					@ds.IconButton(ds.ButtonGhost, "PanelRightClose", "Recolher as consultas", templ.Attributes{"type": "button", "data-on:click": "$gm_consults_open = false"})
+				</div>
+				@gmNotYet(v, "As Consultas ainda estão no palco de hoje")
+			</div>
+			<button type="button" class="ds-gm-rail" data-gm-rail="consults" aria-label="Abrir as consultas" data-on:click="$gm_consults_open = true">
+				@ui.Icon("PanelRightOpen", "ds-icon")
+				<span>Consultas</span>
+			</button>
+		</div>
+		@gmTurnBar(v)
+		@gmMenu(v)
+		@gmAddDialog(v)
+		@gmConditionPicker(v)
+	</main>
+}
+
+// gmNotYet é a superfície que ainda não migrou: ela leva ao palco de hoje, e
+// nunca o desenha aqui dentro.
+templ gmNotYet(v View, sentence string) {
+	<div class="ds-session-todo">
+		@ds.Empty(sentence, "Esta superfície ainda não foi refeita no sistema novo.") {
+			<div class="mt-3 flex justify-center">
+				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(v.SessionBase()+"?tempestade=0"), nil) {
+					Abrir o palco de hoje
+				}
+			</div>
+		}
+	</div>
+}
+
+// gmHeader é o cabeçalho da sessão do jogador com o selo "Mestre" e um ⋯ só.
+// A faixa é a mesma, sem "você".
+templ gmHeader(v View) {
+	<header id="table-header" class="ds-session-head">
+		<div class="ds-session-line" aria-live="polite">
+			<span class="ds-live" role="img" aria-label="Ao vivo"></span>
+			<span class="ds-row-meta ds-gm-where">{ gmWhere(v) }</span>
+			<span class="ds-gm-seal">Mestre</span>
+			<span class="ds-session-spacer"></span>
+			@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Cena, descanso e sessão", templ.Attributes{"type": "button", "commandfor": "gm-menu", "command": "show-modal"})
+		</div>
+		@endlessStrip(v)
+	</header>
+}
+
+// gmTurnBar é a linha do turno, fixa embaixo: o que a vez ainda tem, o ‹ e o
+// Próximo. Não repete quem joga — o nome já está no topo.
+templ gmTurnBar(v View) {
+	<div id="table-commands" class="ds-gm-turn">
+		if v.GM != nil {
+			<span class="ds-row-meta ds-gm-turn-what" aria-live="polite">{ v.GM.Counter }</span>
+			<p class="ds-help ds-reg-error" data-show="$command_error != ''" data-text="$command_error" aria-live="assertive"></p>
+			if v.SceneActive {
+				@ds.IconButton(ds.ButtonSecondary, "ChevronLeft", "Turno anterior", gmTurnAttrs(v, "iniciativa/vez-anterior"))
+				@ds.Button(ds.ButtonPrimary, gmTurnAttrs(v, "iniciativa/proxima-vez")) {
+					{ v.GM.Advance.Label }
+					@ui.Icon("ChevronRight", "ds-icon")
+				}
+			}
+		}
+	</div>
+}
+
+// gmQueue é a fila do mestre: o Adicionar no cabeçalho, uma linha por
+// combatente e a folha de cada um. Fora de cena, as três cenas do livro.
+templ gmQueue(v View) {
+	<div id="table-tracker" class="ds-gm-queue">
+		if !v.SceneActive {
+			<div class="ds-empty">
+				<span class="ds-empty-title">Fora de cena</span>
+				Comece uma cena para a fila andar.
+				<div class="ds-gm-scenes">
+					for _, k := range []live.SceneKind{live.SceneAction, live.SceneExploration, live.SceneRoleplay} {
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Iniciar uma cena de " + k.Name(), "data-on:click": tableCommand(v, "POST", "cena/iniciar/"+string(k))}) {
+							{ k.Name() }
+						}
+					}
+				</div>
+			</div>
+		}
+		<section class="ds-list" aria-label="Iniciativa">
+			<div class="ds-list-head ds-gm-queue-head">
+				<span>{ "Iniciativa · " + roundWritten(v) }</span>
+				<span class="ds-gm-head-acts">
+					@ds.IconButton(ds.ButtonSecondary, "UserPlus", "Adicionar à fila", templ.Attributes{"type": "button", "commandfor": "gm-add", "command": "show-modal"})
+					@ds.IconButton(ds.ButtonGhost, "PanelLeftClose", "Recolher a fila", templ.Attributes{"type": "button", "data-gm-collapse": true, "data-on:click": "$gm_queue_open = false"})
+				</span>
+			</div>
+			for _, row := range v.Queue {
+				@gmQueueRow(v, row)
+			}
+			if len(v.Queue) == 0 {
+				<p class="ds-help ds-gm-empty-queue">A fila está vazia. O Adicionar traz o grupo ou um combatente.</p>
+			}
+		</section>
+		for _, row := range v.Queue {
+			@gmCombatantSheet(v, row)
+		}
+	</div>
+}
+
+// gmQueueRow é uma linha: o toque no corpo abre a folha, e o − e o + tiram e
+// devolvem UM PV (Shift: cinco), que é o gesto mais frequente da noite.
+templ gmQueueRow(v View, row tableRow) {
+	<div class="ds-row ds-gm-row" data-now?={ row.OnTurn }>
+		<span class="ds-queue-ini">{ strconv.Itoa(row.Initiative) }</span>
+		<button type="button" class="ds-gm-open" aria-label={ "Abrir " + row.Label } commandfor={ combatantDialog(row) } command="show-modal">
+			<span class="ds-row-title">
+				{ row.Label }
+				if row.OnTurn {
+					@ds.Badge("agora", false)
+				}
+				if row.IsSheet {
+					@ds.Badge("Ficha", true)
+				}
+			</span>
+			@gmPoolLine("PV", "pv", row.PV)
+			@gmPoolLine("PM", "pm", row.PM)
+			if len(row.Conditions) > 0 {
+				<span class="ds-badges">
+					for _, c := range row.Conditions {
+						@ds.Badge(conditionWritten(c), true)
+					}
+				</span>
+			}
+		</button>
+		if row.PV != nil {
+			<span class="ds-gm-steps">
+				@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar 1 PV de "+row.Label, templ.Attributes{"type": "button", "data-on:click": rowVital(v, row, "hp", "ferir")})
+				@ds.IconButton(ds.ButtonSecondary, "Plus", "Devolver 1 PV a "+row.Label, templ.Attributes{"type": "button", "data-on:click": rowVital(v, row, "hp", "curar")})
+			</span>
+		}
+	</div>
+}
+
+// gmPoolLine é o número e a barra de um pool, com o olho riscado quando a
+// mesa não o vê — o mestre vê sempre o número.
+templ gmPoolLine(label, kind string, b *tableBar) {
+	if b != nil {
+		<span class="ds-gm-vital">
+			<span class="ds-row-meta">
+				{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }
+				if b.Down != "" {
+					<span class="ds-down">{ b.Down }</span>
+				}
+			</span>
+			@vitalBar(label, kind, *b)
+			if b.Hidden {
+				<span class="ds-gm-eye" title={ "A mesa não vê os " + label }>
+					@ui.Icon("EyeOff", "ds-icon")
+				</span>
+			} else {
+				<span></span>
+			}
+		</span>
+	}
+}
+
+// gmCombatantSheet é a FOLHA de uma linha: o editor de PV e PM dentro dela, o
+// que a mesa vê, as condições, a edição e o Remover.
+templ gmCombatantSheet(v View, row tableRow) {
+	@ds.Dialog(combatantDialog(row), row.Label, nil) {
+		<div class="ds-gm-sheet-top">
+			<span class="ds-row-meta">{ combatantMeta(row) }</span>
+			<span class="ds-gm-sheet-tools">
+				if row.CharacterID != 0 {
+					<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", row.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + row.Label } title={ "Abrir a ficha completa de " + row.Label }>
+						@ui.Icon("ExternalLink", "ds-icon")
+					</a>
+				}
+				@ds.IconButton(ds.ButtonGhost, "Pencil", "Editar nome e iniciativa", templ.Attributes{"type": "button", "data-on:click": openEditInline(row)})
+			</span>
+		</div>
+		<div class="ds-gm-edit" data-show={ fmt.Sprintf("$edit_row === %q", row.ID) } style="display:none">
+			@ds.TextField(ds.Field{ID: "edit-name-" + row.ID, Label: "Nome"}, templ.Attributes{"data-bind:edit_name": true})
+			<div class="ds-gm-edit-nums">
+				@ds.TextField(ds.Field{ID: "edit-ini-" + row.ID, Label: "Iniciativa", Type: "number"}, templ.Attributes{"data-bind:edit_initiative": true})
+				@ds.TextField(ds.Field{ID: "edit-hp-" + row.ID, Label: "PV", Type: "number"}, templ.Attributes{"data-bind:edit_hp": true})
+				@ds.TextField(ds.Field{ID: "edit-hpmax-" + row.ID, Label: "PV máx.", Type: "number"}, templ.Attributes{"data-bind:edit_hp_max": true})
+			</div>
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": saveEditInline(v)}) {
+				Salvar
+			}
+		</div>
+		<div class="ds-gm-pools">
+			@gmPoolEditor(v, row, "hp", "PV", "pv", row.PV)
+			@gmPoolEditor(v, row, "mp", "PM", "pm", row.PM)
+		</div>
+		<div class="ds-gm-conds">
+			<span class="ds-field-label">Condições</span>
+			<div class="ds-badges">
+				for _, c := range row.Conditions {
+					<button type="button" class="ds-gm-cond" aria-label={ "Tirar " + conditionWritten(c) + " de " + row.Label } data-on:click={ fmt.Sprintf("$condition_row = %q; ", row.ID) + toggleConditionRow(v, c) }>
+						{ conditionWritten(c) }
+						@ui.Icon("X", "ds-icon")
+					</button>
+				}
+				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "commandfor": "gm-conditions", "command": "show-modal", "data-on:click": openConditionsInline(row)}) {
+					+ Aplicar condição
+				}
+			</div>
+		</div>
+		<div class="ds-gm-sheet-foot">
+			@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": rowCommand(v, row, "remover")}) {
+				@ui.Icon("Trash2", "ds-icon")
+				Remover da fila
+			}
+		</div>
+	}
+}
+
+// gmPoolEditor é o editor de um pool DENTRO da folha (decisão do dono: sem
+// outro diálogo): o medidor, −1 e +1, o valor, e os dois verbos com o valor
+// escrito no botão. O interruptor diz o que a mesa vê.
+templ gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) {
+	if b != nil {
+		<div class="ds-gm-pool">
+			<div class="ds-gm-pool-head">
+				<span class="ds-row-title">{ label } <b>{ ui.Quantity(int(b.Current)) }</b>{ fmt.Sprintf("/%d", b.Max) }</span>
+				if b.Down != "" {
+					<span class="ds-down">{ b.Down }</span>
+				}
+			</div>
+			@vitalBar(label, kind, *b)
+			<div class="ds-gm-pool-line">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Menos 1 " + label, "data-on:click": rowVitalBy(v, row, pool, "ferir", "1")}) {
+					−1
+				}
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Mais 1 " + label, "data-on:click": rowVitalBy(v, row, pool, "curar", "1")}) {
+					+1
+				}
+				<input class="ds-input" type="number" min="1" max="999" inputmode="numeric" aria-label={ "Valor de " + label } data-bind:gm_amount/>
+			</div>
+			<div class="ds-gm-pool-verbs">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-attr:disabled": "!($gm_amount >= 1)", "data-on:click": rowVitalBy(v, row, pool, "ferir", "' + $gm_amount + '"), "data-text": fmt.Sprintf("%q + ' ' + $gm_amount", poolLoss(pool))}) {
+					{ poolLoss(pool) }
+				}
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-attr:disabled": "!($gm_amount >= 1)", "data-on:click": rowVitalBy(v, row, pool, "curar", "' + $gm_amount + '"), "data-text": fmt.Sprintf("%q + ' ' + $gm_amount", poolGain(pool))}) {
+					{ poolGain(pool) }
+				}
+			</div>
+			@ds.Switch("A mesa vê os "+label, !b.Hidden, templ.Attributes{"data-on:change": rowCommand(v, row, "vitais/"+pool+"/oculto")})
+		</div>
+	}
+}
+
+// gmAttack é o ATAQUE A CONFIRMAR, curto (decisão do dono): quem fez, quem
+// recebe, o veredito e o dano, com ✕ e ✓. Os Detalhes abrem a conta inteira.
+templ gmAttack(v View) {
+	if v.Attack != nil {
+		<section id="table-attack" class="ds-strike" data-short aria-label="Ataque para confirmar">
+			<div class="ds-strike-head">
+				@ds.Badge("Para confirmar", true)
+				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+			</div>
+			<div class="ds-strike-short">
+				<span class="ds-seal" data-tone={ v.Attack.Tone }>{ v.Attack.Verdict }</span>
+				if v.Attack.Damage > 0 {
+					<span class="ds-strike-dmg"><b>{ strconv.Itoa(v.Attack.Damage) }</b> de dano</span>
+				}
+				<span class="ds-session-spacer"></span>
+				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "commandfor": "gm-attack-details", "command": "show-modal"}) {
+					Detalhes
+				}
+				@ds.IconButton(ds.ButtonSecondary, "X", "Cancelar o ataque", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")})
+				@ds.IconButton(ds.ButtonPrimary, "Check", "Confirmar e aplicar", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "confirmar")})
+			</div>
+			@ds.Dialog("gm-attack-details", "Ataque para confirmar", nil) {
+				<p class="ds-row-meta">
+					{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b>
+					if v.Attack.Weapon != "" {
+						{ " · " + v.Attack.Weapon }
+					}
+				</p>
+				if !v.Attack.Maneuver {
+					<div class="ds-strike-roll">
+						<b class="ds-strike-verdict">{ strconv.Itoa(v.Attack.Total) }</b>
+						<span class="ds-strike-tally">{ v.Attack.Verdict + " · Defesa " + strconv.Itoa(v.Attack.Defense) }</span>
+					</div>
+				}
+				if len(v.Attack.Dice) > 0 {
+					<dl class="ds-gm-dmg">
+						<dt>{ fmt.Sprintf("%dd%d", len(v.Attack.Dice), v.Attack.Faces) }</dt>
+						<dd>
+							for _, d := range v.Attack.Dice {
+								<span class="ds-die">{ strconv.Itoa(d) }</span>
+							}
+						</dd>
+						if v.Attack.Absorbed > 0 {
+							<dt>RD do alvo</dt>
+							<dd>{ "−" + strconv.Itoa(v.Attack.Absorbed) }</dd>
+						}
+						<dt>Dano</dt>
+						<dd><b>{ strconv.Itoa(v.Attack.Damage) }</b></dd>
+					</dl>
+				}
+				<p class="ds-help">{ v.Attack.Tally }</p>
+				for _, line := range attackNotes(v.Attack) {
+					<p class="ds-help">{ line }</p>
+				}
+				<div class="ds-strike-foot">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-attack-details').close(); " + attackCommand(v, "cancelar")}) {
+						Cancelar
+					}
+					@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-attack-details').close(); " + attackCommand(v, "confirmar")}) {
+						Confirmar e aplicar
+					}
+				</div>
+			}
+		</section>
+	} else {
+		<section id="table-attack" hidden></section>
+	}
+}
+
+// gmMenu é o ⋯: a cena, os descansos e a sessão — o que acontece poucas vezes
+// por noite.
+templ gmMenu(v View) {
+	@ds.Dialog("gm-menu", "Cena, descanso e sessão", nil) {
+		<div class="ds-gm-menu">
+			if v.SceneActive {
+				<span class="ds-field-label">Cena</span>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "cena/encerrar")}) {
+					Encerrar a cena
+				}
+			}
+			<span class="ds-field-label">Descanso</span>
+			<div class="ds-gm-two">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "descanso/cena")}) {
+					Expirar efeitos · cena
+				}
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "gm-day-rest", "command": "show-modal"}) {
+					Recuperar · dia
+				}
+			</div>
+			<span class="ds-field-label">Sessão</span>
+			<div class="ds-gm-two">
+				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(v.SessionBase()+"?tempestade=0"), nil) {
+					@ui.Icon("Settings", "ds-icon")
+					Configurações
+				}
+				@ds.LinkButton(ds.ButtonGhost, templ.SafeURL(campaignChronicle(v)), nil) {
+					@ui.Icon("LogOut", "ds-icon")
+					Sair da sessão
+				}
+			</div>
+		</div>
+	}
+	@ds.Dialog("gm-day-rest", "Descanso de dia", nil) {
+		<p class="ds-help">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p106).</p>
+		@ds.Segmented("Qualidade do descanso") {
+			for _, q := range restOptions {
+				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$rest_quality === %q ? 'true' : 'false'", q.Value), "data-on:click": fmt.Sprintf("$rest_quality = %q", q.Value)}) {
+					{ q.Label }
+				}
+			}
+		}
+		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-day-rest').close(); document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "descanso/dia")}) {
+			Descansar
+		}
+	}
+}
+
+// gmAddDialog é o Adicionar único: o grupo da campanha ou um combatente. O
+// bestiário entra com as Consultas.
+templ gmAddDialog(v View) {
+	@ds.Dialog("gm-add", "Adicionar à fila", nil) {
+		@ds.Segmented("O que adicionar") {
+			@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "$gm_add_tab === 'group' ? 'true' : 'false'", "data-on:click": "$gm_add_tab = 'group'"}) {
+				Grupo
+			}
+			@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "$gm_add_tab === 'combatant' ? 'true' : 'false'", "data-on:click": "$gm_add_tab = 'combatant'"}) {
+				Combatente
+			}
+		}
+		<div class="ds-gm-add" data-show="$gm_add_tab === 'group'" style="display:none">
+			<p class="ds-help">Traz os personagens da campanha que ainda não estão na fila. Clicar de novo traz só quem faltou.</p>
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-add').close(); " + tableCommand(v, "POST", "iniciativa/por-no-mapa")}) {
+				Adicionar o grupo
+			}
+		</div>
+		<div class="ds-gm-add" data-show="$gm_add_tab === 'combatant'">
+			@ds.TextField(ds.Field{ID: "gm-new-name", Label: "Nome"}, templ.Attributes{"data-bind:new_name": true})
+			<div class="ds-gm-edit-nums">
+				@ds.TextField(ds.Field{ID: "gm-new-ini", Label: "Iniciativa", Type: "number"}, templ.Attributes{"data-bind:new_initiative": true})
+				@ds.TextField(ds.Field{ID: "gm-new-hp", Label: "PV", Type: "number"}, templ.Attributes{"data-bind:new_hp": true})
+			</div>
+			@ds.Segmented("Tipo") {
+				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "$new_type === 'npc' ? 'true' : 'false'", "data-on:click": "$new_type = 'npc'"}) {
+					NPC
+				}
+				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "$new_type === 'character' ? 'true' : 'false'", "data-on:click": "$new_type = 'character'"}) {
+					Ficha
+				}
+			}
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-attr:disabled": "$new_name.trim() === ''", "data-on:click": "document.getElementById('gm-add').close(); " + tableCommand(v, "POST", "iniciativa/adicionar")}) {
+				Adicionar à fila
+			}
+		</div>
+	}
+}
+
+// gmConditionPicker é a lista das condições do livro (p394-395) para a linha
+// que a folha escolheu: cada uma é um interruptor.
+templ gmConditionPicker(v View) {
+	@ds.Dialog("gm-conditions", "Aplicar condição", nil) {
+		<p class="ds-help">Rastreio: o bloco de uma criatura é escrito à mão, então o efeito é você quem aplica.</p>
+		<div class="ds-options">
+			for _, c := range conditionCatalog() {
+				@ds.Option(false, templ.Attributes{"title": c.Description, "data-attr:aria-pressed": onCondition(c.ID) + " ? 'true' : 'false'", "data-on:click": toggleConditionRow(v, c.ID)}) {
+					{ c.Name }
+				}
+			}
+		</div>
+	}
+}

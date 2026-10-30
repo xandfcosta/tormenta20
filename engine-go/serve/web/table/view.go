@@ -192,9 +192,12 @@ func marcaAPresenca(group []Member, connected map[int64]bool) {
 
 // tableRow é uma linha da fila de iniciativa como o jogador a vê.
 type tableRow struct {
-	ID         string
-	Label      string
-	Initiative int
+	// CharacterID é a ficha atrás da linha, zero no NPC: a folha do combatente
+	// do mestre abre a ficha completa por ela (ALE-522).
+	CharacterID int64
+	ID          string
+	Label       string
+	Initiative  int
 	// IsSheet responde "esta linha é ficha ou é NPC?". O par na tela é
 	// `Ficha`/`NPC`, porque `PC` é termo proibido pelo GLOSSARY.
 	IsSheet bool
@@ -336,6 +339,7 @@ func tableTrackerOf(
 		//
 		// Só linha com personagem atrás tem reserva — NPC não tem ficha.
 		if e.CharacterID != nil {
+			row.CharacterID = *e.CharacterID
 			withTempPool(row.PV, pools.Hp[*e.CharacterID])
 			withTempPool(row.PM, pools.Mp[*e.CharacterID])
 		}

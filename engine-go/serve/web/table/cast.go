@@ -78,14 +78,13 @@ func castMemberOf(st Scene, c commandCtx) (*initiative.Combatant, error) {
 //
 // Ele existe porque as rotas da fila são por `entryId`, e o elenco é justamente
 // onde mora quem não tem linha na iniciativa. A conta e os passos são os mesmos
-// — o `poolDeltas` e o `vitalSteps` são compartilhados de propósito, senão as
+// — o `poolDeltas` e o `vitalStepOf` são compartilhados de propósito, senão as
 // duas telas passariam a chamar de "um golpe" coisas diferentes.
 func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
 	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-		raw := chi.URLParam(c.R, "step")
-		step, ok := vitalSteps[raw]
-		if !ok {
-			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", raw)
+		step, err := vitalStepOf(c.R)
+		if err != nil {
+			return nil, err
 		}
 		pool := chi.URLParam(c.R, "pool")
 		hp, mp, ok := poolDeltas(pool, sign*step)

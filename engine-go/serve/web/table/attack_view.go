@@ -45,6 +45,17 @@ type attackProposal struct {
 	// rolou (p226, ALE-508).
 	Rerolled string
 	Offers   []rerollOffer
+	// O CARTÃO CURTO do mestre (ALE-522) diz o resultado em três números, e o
+	// diálogo dos Detalhes decompõe: o total contra a Defesa, cada dado do dano
+	// e o que a RD absorveu. Tone é o tom do veredito no kit.
+	Tone     string
+	Total    int
+	Defense  int
+	Damage   int
+	Dice     []int
+	Faces    int
+	Absorbed int
+	Maneuver bool
 }
 
 // attackProposalOf traduz o provisório do regime na faixa, ou nil quando não há
@@ -65,8 +76,10 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:     pa.ByUserID == userID,
 		Rerolled: writtenRerolls(pa.Rerolls, pa.Roll),
+		Total:    pa.Total, Defense: pa.Defense, Dice: pa.Dice, Faces: pa.Faces, Absorbed: pa.Absorbed,
 	}
 	if pa.Maneuver != nil {
+		out.Maneuver = true
 		// A TINTA DO CRACHÁ É NEUTRA, e é a única que pode ser: as outras três
 		// desta faixa — crítico, acerto, erro — são cor de DESFECHO, e a manobra
 		// não tem um para colorir.
@@ -76,11 +89,11 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	}
 	switch {
 	case pa.Critical:
-		out.Verdict, out.Class = "Crítico", "mesa-ataque-critico"
+		out.Verdict, out.Class, out.Tone, out.Damage = "Crítico", "mesa-ataque-critico", "good", pa.Damage
 	case pa.Hit:
-		out.Verdict, out.Class = "Acertou", "mesa-ataque-acerto"
+		out.Verdict, out.Class, out.Tone, out.Damage = "Acertou", "mesa-ataque-acerto", "good", pa.Damage
 	default:
-		out.Verdict, out.Class = "Errou", "mesa-ataque-erro"
+		out.Verdict, out.Class, out.Tone = "Errou", "mesa-ataque-erro", "danger"
 	}
 	return out
 }
