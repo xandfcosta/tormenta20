@@ -21,8 +21,8 @@ import (
 // A MESA DO MESTRE NO TEMPESTADE (ALE-522), pelo mockup aprovado `mestre.html`.
 // No celular, três superfícies na barra de baixo — Fila, Tabuleiro e
 // Consultas — e a linha do turno fixa acima dela; no desktop, as três ficam à
-// vista lado a lado, e a fila e as consultas recolhem. O Tabuleiro e as
-// Consultas desta fatia ainda levam ao palco de hoje.
+// vista lado a lado, e a fila e as consultas recolhem. As Consultas ainda levam
+// ao palco de hoje.
 func gmTempestadeScene(v View, b master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -44,7 +44,7 @@ func gmTempestadeScene(v View, b master.BestiaryView) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"table\" class=\"ds-session\" data-signals=\"{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant'}\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main id=\"table\" class=\"ds-session\" data-signals=\"{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false}\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -159,7 +159,7 @@ func gmTempestadeScene(v View, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = gmNotYet(v, "O Tabuleiro ainda está no palco de hoje").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = gmBoardRegion(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -217,6 +217,14 @@ func gmTempestadeScene(v View, b master.BestiaryView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = gmConditionPicker(v).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = gmPopulate(v).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = gmArchive(v).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -341,7 +349,7 @@ func gmHeader(v View) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(gmWhere(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 83, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 85, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -406,7 +414,7 @@ func gmTurnBar(v View) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(v.GM.Counter)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 97, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 99, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -440,7 +448,7 @@ func gmTurnBar(v View) templ.Component {
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(v.GM.Advance.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 102, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 104, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -514,7 +522,7 @@ func gmQueue(v View) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(k.Name())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 121, Col: 17}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 123, Col: 17}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
@@ -539,7 +547,7 @@ func gmQueue(v View) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("Iniciativa · " + roundWritten(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 129, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 131, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -631,7 +639,7 @@ func gmQueueRow(v View, row tableRow) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(row.Initiative))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 152, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 154, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -644,7 +652,7 @@ func gmQueueRow(v View, row tableRow) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir " + row.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 153, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 155, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -657,7 +665,7 @@ func gmQueueRow(v View, row tableRow) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(combatantDialog(row))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 153, Col: 112}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 155, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -670,7 +678,7 @@ func gmQueueRow(v View, row tableRow) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 155, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 157, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -781,7 +789,7 @@ func gmPoolLine(label, kind string, b *tableBar) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s %d/%d", label, b.Current, b.Max))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 188, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 190, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -799,7 +807,7 @@ func gmPoolLine(label, kind string, b *tableBar) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(b.Down)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 190, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 192, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -826,7 +834,7 @@ func gmPoolLine(label, kind string, b *tableBar) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("A mesa não vê os " + label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 195, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 197, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 				if templ_7745c5c3_Err != nil {
@@ -901,7 +909,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(combatantMeta(row))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 210, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 212, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -919,7 +927,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 				var templ_7745c5c3_Var33 templ.SafeURL
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/personagens/%d", row.CharacterID)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 213, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 215, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
@@ -932,7 +940,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a ficha completa de " + row.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 213, Col: 213}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 215, Col: 213}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 				if templ_7745c5c3_Err != nil {
@@ -945,7 +953,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a ficha completa de " + row.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 213, Col: 264}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 215, Col: 264}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 				if templ_7745c5c3_Err != nil {
@@ -975,7 +983,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$edit_row === %q", row.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 220, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 222, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -1055,7 +1063,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tirar " + conditionWritten(c) + " de " + row.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 239, Col: 110}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 241, Col: 110}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 				if templ_7745c5c3_Err != nil {
@@ -1068,7 +1076,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$condition_row = %q; ", row.ID) + toggleConditionRow(v, c))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 239, Col: 200}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 241, Col: 200}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 				if templ_7745c5c3_Err != nil {
@@ -1081,7 +1089,7 @@ func gmCombatantSheet(v View, row tableRow) templ.Component {
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(conditionWritten(c))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 240, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 242, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -1194,7 +1202,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 265, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 267, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -1207,7 +1215,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Quantity(int(b.Current)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 265, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 267, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -1220,7 +1228,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/%d", b.Max))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 265, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 267, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -1238,7 +1246,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 				var templ_7745c5c3_Var47 string
 				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(b.Down)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 267, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 269, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 				if templ_7745c5c3_Err != nil {
@@ -1312,7 +1320,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue("Valor de " + label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 278, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 280, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
@@ -1337,7 +1345,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 				var templ_7745c5c3_Var52 string
 				templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(poolLoss(pool))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 282, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 284, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 				if templ_7745c5c3_Err != nil {
@@ -1364,7 +1372,7 @@ func gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) t
 				var templ_7745c5c3_Var54 string
 				templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(poolGain(pool))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 285, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 287, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 				if templ_7745c5c3_Err != nil {
@@ -1432,7 +1440,7 @@ func gmAttack(v View) templ.Component {
 			var templ_7745c5c3_Var56 string
 			templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Attacker + " → ")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 300, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 302, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 			if templ_7745c5c3_Err != nil {
@@ -1445,7 +1453,7 @@ func gmAttack(v View) templ.Component {
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Target)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 300, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 302, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
@@ -1458,7 +1466,7 @@ func gmAttack(v View) templ.Component {
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Attack.Tone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 303, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 305, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 			if templ_7745c5c3_Err != nil {
@@ -1471,7 +1479,7 @@ func gmAttack(v View) templ.Component {
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Verdict)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 303, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 305, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 			if templ_7745c5c3_Err != nil {
@@ -1489,7 +1497,7 @@ func gmAttack(v View) templ.Component {
 				var templ_7745c5c3_Var60 string
 				templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(v.Attack.Damage))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 305, Col: 67}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 307, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 				if templ_7745c5c3_Err != nil {
@@ -1557,7 +1565,7 @@ func gmAttack(v View) templ.Component {
 				var templ_7745c5c3_Var63 string
 				templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Attacker + " → ")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 316, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 318, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 				if templ_7745c5c3_Err != nil {
@@ -1570,7 +1578,7 @@ func gmAttack(v View) templ.Component {
 				var templ_7745c5c3_Var64 string
 				templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Target)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 316, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 318, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var64))
 				if templ_7745c5c3_Err != nil {
@@ -1584,7 +1592,7 @@ func gmAttack(v View) templ.Component {
 					var templ_7745c5c3_Var65 string
 					templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(" · " + v.Attack.Weapon)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 318, Col: 32}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 320, Col: 32}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 					if templ_7745c5c3_Err != nil {
@@ -1603,7 +1611,7 @@ func gmAttack(v View) templ.Component {
 					var templ_7745c5c3_Var66 string
 					templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(v.Attack.Total))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 323, Col: 65}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 325, Col: 65}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 					if templ_7745c5c3_Err != nil {
@@ -1616,7 +1624,7 @@ func gmAttack(v View) templ.Component {
 					var templ_7745c5c3_Var67 string
 					templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Verdict + " · Defesa " + strconv.Itoa(v.Attack.Defense))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 324, Col: 103}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 326, Col: 103}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 					if templ_7745c5c3_Err != nil {
@@ -1639,7 +1647,7 @@ func gmAttack(v View) templ.Component {
 					var templ_7745c5c3_Var68 string
 					templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%dd%d", len(v.Attack.Dice), v.Attack.Faces))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 329, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 331, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 					if templ_7745c5c3_Err != nil {
@@ -1657,7 +1665,7 @@ func gmAttack(v View) templ.Component {
 						var templ_7745c5c3_Var69 string
 						templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(d))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 332, Col: 46}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 334, Col: 46}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 						if templ_7745c5c3_Err != nil {
@@ -1680,7 +1688,7 @@ func gmAttack(v View) templ.Component {
 						var templ_7745c5c3_Var70 string
 						templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs("−" + strconv.Itoa(v.Attack.Absorbed))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 337, Col: 52}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 339, Col: 52}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 						if templ_7745c5c3_Err != nil {
@@ -1698,7 +1706,7 @@ func gmAttack(v View) templ.Component {
 					var templ_7745c5c3_Var71 string
 					templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(v.Attack.Damage))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 340, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 342, Col: 44}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 					if templ_7745c5c3_Err != nil {
@@ -1716,7 +1724,7 @@ func gmAttack(v View) templ.Component {
 				var templ_7745c5c3_Var72 string
 				templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(v.Attack.Tally)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 343, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 345, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 				if templ_7745c5c3_Err != nil {
@@ -1734,7 +1742,7 @@ func gmAttack(v View) templ.Component {
 					var templ_7745c5c3_Var73 string
 					templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(line)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 345, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 347, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 					if templ_7745c5c3_Err != nil {
@@ -2042,7 +2050,7 @@ func gmMenu(v View) templ.Component {
 						var templ_7745c5c3_Var86 string
 						templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(q.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 400, Col: 14}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 402, Col: 14}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 						if templ_7745c5c3_Err != nil {
@@ -2405,7 +2413,7 @@ func gmConditionPicker(v View) templ.Component {
 					var templ_7745c5c3_Var101 string
 					templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 457, Col: 13}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_tempestade.templ`, Line: 459, Col: 13}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var101))
 					if templ_7745c5c3_Err != nil {

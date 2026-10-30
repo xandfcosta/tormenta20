@@ -1687,6 +1687,197 @@
   .ds-strike-hand > .ds-input {
     width: 4rem;
   }
+  /* O TABULEIRO DO MESTRE (ALE-522, fatia 2). O menu da peça, o de copiar e as
+   * ações do marcador moram DENTRO do mapa e são do `boardScene`, que o palco
+   * de hoje também desenha: aqui eles vestem o kit pelo escopo do mapa novo, e
+   * a posição continua a da regra de hoje. */
+  .ds-board-scene .board-token-menu,
+  .ds-board-scene .board-marker-actions,
+  .ds-board-scene .board-token-copy {
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-control);
+    background: var(--ds-surface);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.2);
+    color: var(--ds-ink);
+    font-family: var(--font-ds);
+  }
+  .ds-board-scene .board-token-verb {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--ds-r-control);
+    color: var(--ds-ink-2);
+  }
+  .ds-board-scene .board-token-verb:hover {
+    border-color: var(--ds-line-strong);
+    color: var(--ds-ink);
+  }
+  .ds-board-scene .board-token-verb[aria-pressed='true'] {
+    border-color: var(--ds-action);
+    color: var(--ds-action);
+  }
+  .ds-board-scene .board-token-verb-danger:hover {
+    border-color: var(--ds-danger);
+    color: var(--ds-danger);
+  }
+  .ds-board-scene .board-token-crease {
+    background: var(--ds-line);
+  }
+  .ds-board-scene .board-token-copy-mode:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-board-scene .board-token-copy-name {
+    color: var(--ds-ink);
+    font-size: var(--ds-t-sm);
+  }
+  .ds-board-scene .board-token-copy-phrase {
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-xs);
+  }
+  @media (pointer: coarse) {
+    .ds-board-scene .board-token-verb {
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+  }
+  .ds-gm-pick {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    cursor: pointer;
+  }
+  .ds-gm-pick > .ds-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--ds-ink-2);
+  }
+  .ds-gm-menu-pop {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    min-width: 15rem;
+    padding: 0.25rem;
+  }
+  .ds-gm-menu-pop:popover-open {
+    display: grid;
+  }
+  .ds-gm-menu-row {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: var(--ds-r-control);
+    background: none;
+    color: var(--ds-ink);
+    font: inherit;
+    font-size: var(--ds-t-sm);
+    text-align: left;
+  }
+  button.ds-gm-menu-row:hover,
+  .ds-gm-menu-row[aria-current] {
+    background: var(--ds-sunk);
+  }
+  .ds-gm-menu-row > .ds-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--ds-ink-2);
+  }
+  .ds-gm-menu-sep {
+    height: 1px;
+    margin: 0.25rem;
+    background: var(--ds-line);
+  }
+  .ds-board-scene {
+    container-type: inline-size;
+  }
+  .ds-gm-board-bar {
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    max-width: calc(100% - 1rem);
+    padding: 0.125rem;
+  }
+  /* O MAPA ESTREITO põe a barra embaixo do seletor, em vez de disputar a linha
+   * com ele (decisão do dono: os controles se ajustam ao tamanho do mapa). */
+  @container (max-width: 40rem) {
+    .ds-gm-board-bar {
+      top: 3.25rem;
+    }
+    .ds-gm-notice {
+      top: 6.25rem;
+    }
+  }
+  .ds-gm-terrain {
+    left: 50%;
+    bottom: calc(0.5rem + var(--ds-board-bar) + 0.5rem);
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.25rem;
+    transform: translateX(-50%);
+  }
+  .ds-gm-tools {
+    max-width: calc(100% - 1rem);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .ds-gm-crease {
+    flex: none;
+    width: 1px;
+    margin: 0.375rem 0.125rem;
+    background: var(--ds-line);
+  }
+  .ds-gm-piece-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.5rem;
+  }
+  .ds-gm-piece-grid select,
+  .ds-gm-piece-grid input,
+  .ds-gm-piece > input {
+    width: 100%;
+    min-width: 0;
+  }
+  .ds-gm-archive-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+  }
+  .ds-option[data-off] {
+    border-style: dashed;
+    color: var(--ds-ink-3);
+  }
+  .ds-gm-window {
+    height: 100dvh;
+  }
+  @media (min-width: 64rem) {
+    .ds-gm-tools {
+      top: 50%;
+      bottom: auto;
+      left: 0.5rem;
+      flex-direction: column;
+      height: auto;
+      max-height: calc(100% - 1rem);
+      overflow-y: auto;
+      transform: translateY(-50%);
+    }
+    .ds-gm-crease {
+      width: auto;
+      height: 1px;
+      margin: 0.125rem 0.375rem;
+    }
+    .ds-gm-terrain {
+      top: 50%;
+      bottom: auto;
+      left: 5.5rem;
+      flex-direction: column;
+      transform: translateY(-50%);
+    }
+  }
+
   /* A MESA DO MESTRE (ALE-522), pelo mockup `mestre.html`. No celular, a fila,
    * o tabuleiro e as consultas são superfícies da barra de baixo, com a linha do
    * turno logo acima dela; no desktop as três ficam lado a lado, e a fila e as

@@ -1,0 +1,452 @@
+package table
+
+import (
+	"fmt"
+
+	"t20engine/domain/board"
+	"t20engine/domain/engine"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// O TABULEIRO DO MESTRE NO TEMPESTADE (ALE-522, fatia 2), pelo mockup
+// `mestre.html`. O mapa é o mesmo do jogador (`boardScene`); o que é do mestre
+// a mais — o seletor de tabuleiros, os verbos da sessão, as ferramentas de
+// montar e os diálogos — veste o kit. O menu da peça e as ações do marcador
+// moram DENTRO do mapa e são do `boardScene`, e vestem o kit pelo escopo do
+// `.ds-board-scene` no CSS.
+
+// gmBoardRegion é a região do stream, com o id da de hoje.
+templ gmBoardRegion(v View) {
+	<div id="table-board" class="ds-board-region">
+		@gmBoard(v.Board, v)
+		<p class="ds-help ds-board-refusal" data-show="$move_error != ''" data-text="$move_error" aria-live="assertive"></p>
+	</div>
+}
+
+// gmBoard é o mapa do mestre, ou o convite a abrir um. O mestre não vê a
+// cortina no lugar da cena: ele vê a cena e o aviso de que a mesa não a vê.
+templ gmBoard(b BoardView, v View) {
+	if !b.Open {
+		<div class="ds-board-waiting">
+			@ds.Empty("Nenhum tabuleiro aberto", "Vale para combate e para cena de interpretação.") {
+				<div class="ds-gm-scenes">
+					@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Abrir tabuleiro", "commandfor": "open-board", "command": "show-modal"}) {
+						Abrir tabuleiro
+					}
+					if len(b.Collection) > 0 {
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "place-archive", "command": "show-modal"}) {
+							@ui.Icon("Library", "ds-icon")
+							Acervo da campanha
+						}
+					}
+				</div>
+			}
+		</div>
+	} else {
+		<section class="ds-board" aria-label={ "Tabuleiro · " + b.Place }>
+			@boardScene(b, "ds-board-scene") {
+				@gmScenePick(b)
+				@gmBoardBar(b, v)
+				@gmNotices(b)
+				<div class="ds-board-foot">
+					@gmNewPieceBar(b)
+					@gmPartyBar()
+					@gmClipboard(b)
+					@tempestadeHelpers(b)
+				</div>
+				@gmTools(b)
+			}
+		</section>
+		@gmTokenEdit(b)
+		@gmCloseBoard(b)
+	}
+	@gmOpenBoard(b)
+}
+
+// gmScenePick é o nome do tabuleiro, e o SELETOR quando há mais de um aberto
+// (decisão do dono: uma fileira de abas não cabe com três ou mais). A lista
+// diz qual está sob cortina, e embaixo ficam abrir outro, o acervo e o
+// "mostrar esta à mesa".
+templ gmScenePick(b BoardView) {
+	<button type="button" class="ds-board-float ds-board-place ds-gm-pick" popovertarget="gm-scenes" aria-haspopup="menu">
+		<span class="ds-row-title">{ b.Place }</span>
+		if len(b.Tabs) > 1 {
+			<span class="ds-row-meta">{ fmt.Sprintf("· %d abertos", len(b.Tabs)) }</span>
+		}
+		@ui.Icon("ChevronDown", "ds-icon")
+	</button>
+	<div id="gm-scenes" popover class="ds-board-float ds-gm-menu-pop" role="menu">
+		for _, tab := range b.Tabs {
+			if tab.Active {
+				<span class="ds-gm-menu-row" aria-current="true">
+					if tab.Curtain {
+						@ui.Icon("Theater", "ds-icon")
+					} else {
+						<span></span>
+					}
+					<b>{ tab.Name }</b>
+				</span>
+			} else {
+				<button type="button" class="ds-gm-menu-row" data-on:click={ tab.Command }>
+					if tab.Curtain {
+						@ui.Icon("Theater", "ds-icon")
+					} else {
+						<span></span>
+					}
+					<span>{ tab.Name }</span>
+				</button>
+			}
+		}
+		// Com um tabuleiro só não há abas, mas o menu ainda diz qual está aberto:
+		// sem a linha, ele abriria só com o "Abrir outro".
+		if len(b.Tabs) == 0 {
+			<span class="ds-gm-menu-row" aria-current="true"><span></span><b>{ b.Place }</b></span>
+		}
+		<span class="ds-gm-menu-sep"></span>
+		<button type="button" class="ds-gm-menu-row" commandfor="open-board" command="show-modal">
+			@ui.Icon("Plus", "ds-icon")
+			<span>Abrir outro tabuleiro</span>
+		</button>
+		if len(b.Collection) > 0 {
+			<button type="button" class="ds-gm-menu-row" commandfor="place-archive" command="show-modal">
+				@ui.Icon("Library", "ds-icon")
+				<span>Acervo da campanha</span>
+			</button>
+		}
+		for _, tab := range b.Tabs {
+			if tab.Active && tab.ShowsTable != "" {
+				<button type="button" class="ds-gm-menu-row" data-on:click={ tab.ShowsTable }>
+					@ui.Icon("Users2", "ds-icon")
+					<span>Mostrar esta à mesa</span>
+				</button>
+			}
+		}
+	</div>
+}
+
+// gmBoardBar é o enquadramento e os verbos da sessão numa barra só; ela desce
+// para baixo do seletor quando o mapa é estreito (o CSS mede o mapa).
+templ gmBoardBar(b BoardView, v View) {
+	<div class="ds-board-float ds-gm-board-bar" role="group" aria-label="Enquadrar e montar o mapa">
+		<button type="button" class="ds-board-fbtn" aria-label={ CenterTarget(b) } title={ CenterTarget(b) } data-on:click={ centerTokens(b) }>
+			@ui.Icon("Crosshair", "ds-icon")
+		</button>
+		<button type="button" class="ds-board-fbtn" aria-label="Afastar o mapa" data-attr:disabled={ ZoomAtLimit(-ZoomStep) } data-on:click={ zoomMidScene(step(-ZoomStep)) }>
+			@ui.Icon("Minus", "ds-icon")
+		</button>
+		<button type="button" class="ds-board-fbtn" aria-label="Aproximar o mapa" data-attr:disabled={ ZoomAtLimit(ZoomStep) } data-on:click={ zoomMidScene(step(ZoomStep)) }>
+			@ui.Icon("Plus", "ds-icon")
+		</button>
+		<span class="ds-board-fsep" aria-hidden="true"></span>
+		<button type="button" class="ds-board-fbtn" aria-pressed={ fmt.Sprint(b.CurtainNotice) } aria-label={ gmCurtainLabel(b) } title={ gmCurtainLabel(b) } data-on:click={ curtainCommand(b, curtainTarget(b.CurtainNotice)) }>
+			@ui.Icon("Theater", "ds-icon")
+		</button>
+		<button type="button" class="ds-board-fbtn" aria-pressed={ fmt.Sprint(b.Lens) } aria-label={ gmLensLabel(b) } title={ gmLensLabel(b) } data-on:click={ lensCommand(b) }>
+			if b.Lens {
+				@ui.Icon("EyeOff", "ds-icon")
+			} else {
+				@ui.Icon("Eye", "ds-icon")
+			}
+		</button>
+		<button type="button" class="ds-board-fbtn" aria-label="Pôr no mapa" title="Pôr no mapa — o clique direito põe só as fichas" data-on:click={ openMap() } data-on:contextmenu={ sheetsShortcut(b) }>
+			@ui.Icon("UserPlus", "ds-icon")
+		</button>
+		if !v.BoardWindow {
+			<button type="button" class="ds-board-fbtn" aria-label="Abrir o tabuleiro numa janela" title="Abrir o tabuleiro numa janela à parte — para a segunda tela ou a TV da mesa" data-on:click={ boardWindowOpens(v) }>
+				@ui.Icon("ExternalLink", "ds-icon")
+			</button>
+		}
+		<button type="button" class="ds-board-fbtn" aria-label="Encerrar o tabuleiro" title="Encerrar o tabuleiro" commandfor="close-board" command="show-modal">
+			@ui.Icon("X", "ds-icon")
+		</button>
+	</div>
+}
+
+// gmNotices são os avisos do mestre: a cortina fechada e a lente acesa, cada um
+// com a própria saída — um modo que se esquece é pior que nenhum.
+templ gmNotices(b BoardView) {
+	if b.CurtainNotice {
+		<p role="status" class="ds-board-float ds-board-notice ds-gm-notice">
+			@ui.Icon("Theater", "ds-icon")
+			<span>A cortina está fechada: a mesa não vê esta cena.</span>
+			@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": curtainCommand(b, "abrir")}) {
+				Abrir a cortina
+			}
+		</p>
+	}
+	if b.Lens {
+		<p role="status" class="ds-board-float ds-board-notice ds-gm-notice">
+			@ui.Icon("Eye", "ds-icon")
+			<span>{ lensPhrase(b.HiddenTokens) }</span>
+			@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": lensCommand(b)}) {
+				Voltar à vista do mestre
+			}
+		</p>
+	}
+}
+
+// gmTools é a barra das ferramentas do mestre: as de todos, um vinco e as de
+// montar. O TERRENO é um botão só (decisão do dono) que abre as quatro espécies
+// numa fileira acima da barra.
+templ gmTools(b BoardView) {
+	<div class="ds-gm-terrain ds-board-float" data-show="$gm_terrain_open" style="display:none" role="group" aria-label="Espécies de terreno">
+		for _, t := range rail(true) {
+			if isBrush(t.ID) {
+				<button
+					type="button"
+					class="ds-board-tool"
+					title={ t.Hint }
+					aria-label={ t.Label }
+					data-attr:aria-pressed={ onIsTool(t.ID) + " ? 'true' : 'false'" }
+					data-on:click={ pickTool(t.ID) + "; $gm_terrain_open = false" }
+				>
+					@ui.Icon(t.Icon, "ds-icon")
+					<span aria-hidden="true">{ t.Label }</span>
+				</button>
+			}
+		}
+	</div>
+	<nav class="ds-board-float ds-board-tools ds-gm-tools" aria-label="Ferramentas do mapa" data-on:keydown__window={ railKeyboard(true) }>
+		for _, t := range rail(true) {
+			if !t.GMOnly {
+				@gmToolButton(t.ID, t.Icon, t.Short, shortcutName(t), t.Hint)
+			}
+		}
+		<span class="ds-gm-crease" aria-hidden="true"></span>
+		for _, t := range rail(true) {
+			if t.ID == MarkTool {
+				@gmToolButton(t.ID, t.Icon, "Marcar", shortcutName(t), t.Hint)
+			}
+		}
+		<button
+			type="button"
+			class="ds-board-tool"
+			aria-label="Terreno — as quatro espécies da p238"
+			aria-haspopup="true"
+			data-attr:aria-pressed={ terrainPressed() + " ? 'true' : 'false'" }
+			data-on:click="$gm_terrain_open = !$gm_terrain_open"
+		>
+			@ui.Icon("Paintbrush", "ds-icon")
+			<span aria-hidden="true">Terreno</span>
+		</button>
+		for _, t := range rail(true) {
+			if t.ID == EraserTool {
+				@gmToolButton(t.ID, t.Icon, "Borracha", shortcutName(t), t.Hint)
+			}
+		}
+		@gmToolButton(NewPieceTool, "PackagePlus", "Peça", "Nova peça — o clique escolhe a casa", "Nova peça: a porta, o baú, o barril — o clique escolhe a casa")
+	</nav>
+}
+
+templ gmToolButton(id, icon, short, label, hint string) {
+	<button
+		type="button"
+		class="ds-board-tool"
+		title={ hint }
+		aria-label={ label }
+		data-attr:aria-pressed={ onIsTool(id) + " ? 'true' : 'false'" }
+		data-on:click={ pickTool(id) + "; $gm_terrain_open = false" }
+	>
+		@ui.Icon(icon, "ds-icon")
+		<span aria-hidden="true">{ short }</span>
+	</button>
+}
+
+// gmNewPieceBar é a peça avulsa: o nome, a aparência e o tamanho; e, para o
+// OBJETO, o exemplo da Tabela 5-4, o material e os PV — com a Defesa e a RD
+// que o livro dá a eles.
+templ gmNewPieceBar(b BoardView) {
+	<div class="ds-board-card ds-gm-piece" role="status" data-show={ onIsTool(NewPieceTool) } style="display:none">
+		<div class="ds-board-line">
+			@ui.Icon("PackagePlus", "ds-icon ds-board-mark")
+			<span class="ds-row-title">Nova peça</span>
+			<span class="ds-row-meta">clique numa casa para pôr</span>
+		</div>
+		<input class="ds-input" type="text" data-bind="new_token_name" placeholder="Porta da cripta" aria-label="Nome da peça"/>
+		@ds.Segmented("Aparência da peça") {
+			for _, a := range piecesLooks {
+				@ds.SegmentedOption(false, templ.Attributes{"title": a.Hint, "aria-label": "Aparência: " + a.Label, "data-attr:aria-pressed": fmt.Sprintf("$new_token_look === %q ? 'true' : 'false'", a.ID), "data-on:click": fmt.Sprintf("$new_token_look = %q", a.ID)}) {
+					{ a.Label }
+				}
+			}
+		}
+		<div class="ds-gm-piece-grid">
+			<label class="ds-field">
+				<span>Tamanho</span>
+				<select class="ds-input" data-bind="new_token_size" data-on:change="$new_token_defense = Number(evt.target.selectedOptions[0].dataset.defense)" aria-label="Tamanho da peça">
+					for _, t := range piecesSizes {
+						<option value={ t.ID } data-defense={ fmt.Sprint(t.Defense) }>{ t.ID + " · " + t.Side }</option>
+					}
+				</select>
+			</label>
+			<label class="ds-field" data-show="$new_token_look === 'object'">
+				<span>Do livro</span>
+				<select class="ds-input" data-on:change="evt.target.value && ($new_token_size = evt.target.selectedOptions[0].dataset.size, $new_token_material = evt.target.selectedOptions[0].dataset.material, $new_token_hp = Number(evt.target.selectedOptions[0].dataset.hp), $new_token_defense = Number(evt.target.selectedOptions[0].dataset.defense), $new_token_rd = Number(evt.target.selectedOptions[0].dataset.rd), $new_token_name = $new_token_name || evt.target.selectedOptions[0].text)" aria-label="Exemplo da Tabela 5-4">
+					<option value="">— à mão —</option>
+					for _, e := range engine.ObjectExamplesOfTheBook() {
+						<option value={ e.ID } data-size={ e.Size } data-material={ e.Material } data-hp={ fmt.Sprint(e.HitPoints) } data-defense={ fmt.Sprint(objectDefenseOf(e.Size)) } data-rd={ fmt.Sprint(objectRdOf(e.Material)) }>{ e.Name }</option>
+					}
+				</select>
+			</label>
+			<label class="ds-field" data-show="$new_token_look === 'object'">
+				<span>Material</span>
+				<select class="ds-input" data-bind="new_token_material" data-on:change="$new_token_rd = Number(evt.target.selectedOptions[0].dataset.rd)" aria-label="Material do objeto">
+					for _, m := range piecesMaterials {
+						<option value={ m.ID } data-rd={ fmt.Sprint(m.Rd) }>{ fmt.Sprintf("%s · RD %d", m.ID, m.Rd) }</option>
+					}
+				</select>
+			</label>
+			<label class="ds-field" data-show="$new_token_look === 'object'">
+				<span>PV</span>
+				<input class="ds-input" type="number" min="1" data-bind="new_token_hp" aria-label="Pontos de vida do objeto"/>
+			</label>
+		</div>
+		<p class="ds-help" data-show="$new_token_look === 'object'" data-text="$new_token_hp > 0 ? `Defesa ${$new_token_defense} · RD ${$new_token_rd}` : 'sem PV: cenário que não se ataca'"></p>
+	</div>
+}
+
+// gmPartyBar diz o grupo marcado para mover junto, com a saída.
+templ gmPartyBar() {
+	<p class="ds-board-card" data-row role="status" data-show={ hasMarkedParty } style="display:none">
+		@ui.Icon("LayoutGrid", "ds-icon ds-board-mark")
+		<span class="ds-board-read" data-text={ partyPhrase }></span>
+		<button type="button" class="ds-board-fbtn" aria-label="Desmarcar o grupo" data-on:click={ unmarkParty }>
+			@ui.Icon("X", "ds-icon")
+		</button>
+	</p>
+}
+
+// gmClipboard é a área de transferência das peças copiadas, com a saída.
+templ gmClipboard(b BoardView) {
+	<div class="ds-board-card" data-row data-show="$area_token !== ''" style="display:none" data-on:keydown__window={ pasteInTheMiddleOfTheView(b) }>
+		@ui.Icon("Copy", "ds-icon ds-board-mark")
+		<span class="ds-board-read" aria-live="polite" data-text="$area_label + ' · ' + $area_phrase"></span>
+		<button type="button" class="ds-board-fbtn" aria-label="Esvaziar a área de transferência" data-on:click={ emptiesTheClipboard }>
+			@ui.Icon("X", "ds-icon")
+		</button>
+	</div>
+}
+
+// gmOpenBoard abre um tabuleiro: o lugar e o chão.
+templ gmOpenBoard(b BoardView) {
+	@ds.Dialog("open-board", "Abrir tabuleiro", nil) {
+		<p class="ds-help">O tabuleiro não tem bordas: cada quadrado é 1,5m (p236) e a cena cresce para onde a mesa for.</p>
+		@ds.TextField(ds.Field{ID: "new-place-field", Label: "Lugar", Placeholder: "Taverna do Javali"}, templ.Attributes{"data-bind:new_place": true})
+		<label class="ds-field">
+			<span>Chão</span>
+			<select class="ds-input" data-bind:new_ground>
+				for _, floor := range board.PlaceGrounds {
+					<option value={ floor.ID }>{ floor.Label }</option>
+				}
+			</select>
+		</label>
+		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('open-board').close(); " + sceneBoardCommand(b, "abrir")}) {
+			Abrir
+		}
+	}
+}
+
+// gmCloseBoard pergunta antes de encerrar: a cena vai para o acervo.
+templ gmCloseBoard(b BoardView) {
+	@ds.Dialog("close-board", "Encerrar o tabuleiro?", nil) {
+		<p class="ds-help">A cena sai da mesa e fica no acervo da campanha, com as peças onde estão.</p>
+		@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('close-board').close(); " + sceneBoardCommand(b, "encerrar")}) {
+			Encerrar
+		}
+	}
+}
+
+// gmTokenEdit é o editar da peça, que o menu da peça abre pelo id.
+templ gmTokenEdit(b BoardView) {
+	@ds.Dialog("edit-token", "Editar a peça", nil) {
+		@ds.TextField(ds.Field{ID: "token-name", Label: "Nome da peça"}, templ.Attributes{"maxlength": "60", "data-bind": "token_name"})
+		<label class="ds-field">
+			<span>Tamanho</span>
+			<select id="token-size" class="ds-input" data-bind="token_size">
+				for _, t := range tokenSizes {
+					<option value={ t.ID }>{ t.Label }</option>
+				}
+			</select>
+		</label>
+		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": saveEditToken(b)}) {
+			Salvar
+		}
+	}
+}
+
+// gmPopulate é o Pôr no mapa: as fichas já vêm escolhidas, e quem já está no
+// mapa aparece apagado. É região do stream (`table-populate`), como a de hoje.
+templ gmPopulate(v View) {
+	<div id="table-populate">
+		@ds.Dialog("populate", "Pôr no mapa", nil) {
+			<p class="ds-help">As fichas já vêm escolhidas. Quem você marcar aqui nasce no mapa: as fichas de um lado, o resto do outro.</p>
+			<div class="ds-options">
+				for _, cand := range v.Board.Candidates {
+					if cand.OnBoard {
+						<span class="ds-option" data-off>
+							{ cand.Name }
+							<span class="ds-row-meta">já no mapa</span>
+						</span>
+					} else {
+						@ds.Option(false, templ.Attributes{"data-id": cand.ID, "data-ficha": cand.Sheet, "data-attr:aria-pressed": estaEscolhido(cand.ID) + " ? 'true' : 'false'", "data-on:click": toggleMap(cand.ID)}) {
+							{ cand.Name }
+							<span class="ds-row-meta">{ map[bool]string{true: "Ficha", false: "NPC"}[cand.Sheet] }</span>
+						}
+					}
+				}
+			</div>
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-attr:disabled": "$map_selection === ''", "data-on:click": "document.getElementById('populate').close(); " + mapCommand(v.Board)}) {
+				Pôr no mapa
+			}
+		}
+	</div>
+}
+
+// gmArchive é o acervo: as cenas encerradas, com Ver (a que está aberta),
+// Reabrir e Apagar. Região do stream (`table-archive`), como a de hoje.
+templ gmArchive(v View) {
+	<div id="table-archive">
+		if len(v.Board.Collection) > 0 {
+			@ds.Dialog("place-archive", "Lugares da campanha", nil) {
+				<p class="ds-help">As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova.</p>
+				@ds.List("", "") {
+					for _, l := range v.Board.Collection {
+						<div class="ds-row ds-gm-archive-row">
+							<div class="min-w-0">
+								<div class="ds-row-title">{ l.Name }</div>
+								<div class="ds-row-meta">
+									if l.OpenedAt != "" {
+										{ "nesta mesa agora · " + ui.TokenCount(l.Tokens) }
+									} else {
+										{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Tokens), l.When) }
+									}
+								</div>
+							</div>
+							if l.OpenedAt != "" {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('place-archive').close(); " + tabCommand(v.Board, l.OpenedAt)}) {
+									Ver
+								}
+							} else {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('place-archive').close(); " + placeCommand(v.Board, l.ID, "reabrir")}) {
+									Reabrir
+								}
+								@ds.IconButton(ds.ButtonGhost, "Trash2", "Apagar "+l.Name, templ.Attributes{"type": "button", "data-on:click": placeCommand(v.Board, l.ID, "remover")})
+							}
+						</div>
+					}
+				}
+			}
+		}
+	</div>
+}
+
+// gmBoardWindow é a JANELA À PARTE: só o mapa, para a segunda tela ou a TV da
+// mesa. O fluxo dela remenda só o tabuleiro.
+templ gmBoardWindow(v View) {
+	<main id="table" class="ds-session ds-gm-window" data-signals="{gm_terrain_open: false}">
+		@gmBoardRegion(v)
+		@gmPopulate(v)
+		@gmArchive(v)
+	</main>
+}

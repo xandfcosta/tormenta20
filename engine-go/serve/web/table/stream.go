@@ -304,6 +304,13 @@ func TableRegions(v View) []tableRegion {
 	// A SESSÃO DO JOGADOR tem as regiões das superfícies que ela desenha; a Ficha
 	// o stream nunca toca.
 	// A MESA DO MESTRE no Tempestade (ALE-522) tem as regiões da fatia da Fila.
+	if v.BoardWindow {
+		return []tableRegion{
+			{"table-board", gmBoardRegion(v)},
+			{"table-populate", gmPopulate(v)},
+			{"table-archive", gmArchive(v)},
+		}
+	}
 	if v.Tempestade && v.GM != nil {
 		return []tableRegion{
 			{"table-header", gmHeader(v)},
@@ -311,6 +318,9 @@ func TableRegions(v View) []tableRegion {
 			{"table-skill-test", tempestadeSkillTest(v)},
 			{"table-tracker", gmQueue(v)},
 			{"table-commands", gmTurnBar(v)},
+			{"table-board", gmBoardRegion(v)},
+			{"table-populate", gmPopulate(v)},
+			{"table-archive", gmArchive(v)},
 		}
 	}
 	if v.Tempestade {

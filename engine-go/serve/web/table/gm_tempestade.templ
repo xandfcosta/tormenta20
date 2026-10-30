@@ -13,10 +13,10 @@ import (
 // A MESA DO MESTRE NO TEMPESTADE (ALE-522), pelo mockup aprovado `mestre.html`.
 // No celular, três superfícies na barra de baixo — Fila, Tabuleiro e
 // Consultas — e a linha do turno fixa acima dela; no desktop, as três ficam à
-// vista lado a lado, e a fila e as consultas recolhem. O Tabuleiro e as
-// Consultas desta fatia ainda levam ao palco de hoje.
+// vista lado a lado, e a fila e as consultas recolhem. As Consultas ainda levam
+// ao palco de hoje.
 templ gmTempestadeScene(v View, b master.BestiaryView) {
-	<main id="table" class="ds-session" data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant'}">
+	<main id="table" class="ds-session" data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false}">
 		@gmHeader(v)
 		@gmAttack(v)
 		@tempestadeSkillTest(v)
@@ -39,7 +39,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 				<span>Fila</span>
 			</button>
 			<div class="ds-session-surface ds-gm-col" data-gm-col="board" data-show={ surface(superficieDoTabuleiro) }>
-				@gmNotYet(v, "O Tabuleiro ainda está no palco de hoje")
+				@gmBoardRegion(v)
 			</div>
 			<div class="ds-session-surface ds-gm-col" data-gm-col="consults" data-show={ surface(superficieDasConsultas) }>
 				<div class="ds-gm-col-head">
@@ -57,6 +57,8 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 		@gmMenu(v)
 		@gmAddDialog(v)
 		@gmConditionPicker(v)
+		@gmPopulate(v)
+		@gmArchive(v)
 	</main>
 }
 

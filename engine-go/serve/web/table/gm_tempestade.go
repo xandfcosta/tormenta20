@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"t20engine/domain/board"
 	"t20engine/domain/book"
 
 	"github.com/a-h/templ"
@@ -106,3 +107,43 @@ var restOptions = []struct{ Value, Label string }{
 
 // conditionCatalog são as condições do livro, para a lista de aplicar.
 func conditionCatalog() []book.Condition { return book.Catalogs().Conditions }
+
+// gmCurtainLabel e gmLensLabel dizem o que o toque FAZ, nos dois estados.
+func gmCurtainLabel(b BoardView) string {
+	if b.CurtainNotice {
+		return "Abrir a cortina para a mesa"
+	}
+	return "Fechar a cortina"
+}
+
+func gmLensLabel(b BoardView) string {
+	if b.Lens {
+		return "Voltar à vista do mestre"
+	}
+	return "Ver a cena como a mesa vê"
+}
+
+// isBrush diz se a ferramenta é uma espécie de terreno (p238).
+func isBrush(id string) bool {
+	for _, k := range board.TerrainKinds {
+		if string(k.ID) == id {
+			return true
+		}
+	}
+	return false
+}
+
+// terrainPressed é a expressão que acende o Terreno com qualquer espécie na mão.
+func terrainPressed() string {
+	parts := make([]string, 0, len(board.TerrainKinds))
+	for _, k := range board.TerrainKinds {
+		parts = append(parts, onIsTool(string(k.ID)))
+	}
+	return "(" + strings.Join(parts, " || ") + ")"
+}
+
+// boardWindowOpens abre o tabuleiro numa janela à parte, com o nome fixo:
+// clicar de novo traz a mesma janela em vez de abrir outra.
+func boardWindowOpens(v View) string {
+	return fmt.Sprintf("const w = window.open('%s?tempestade=1&janela=tabuleiro', 't20-tabuleiro', 'popup,width=1280,height=800'); if (w) { w.focus() }", v.SessionBase())
+}
