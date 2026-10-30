@@ -80,14 +80,25 @@ templ tempestadeHeader(v View) {
 					{ fmt.Sprintf(" · Rodada %d", v.Round) }
 				}
 			</span>
-			<span class="ds-session-spacer"></span>
+			// "SUA VEZ" mora junto da sessão, e LONGE do sair: o selo é o que se
+			// procura com o olho na vez, e o sair é o gesto que não se quer
+			// tocar por engano ao lado dele (decisão do dono).
 			if v.Turn.Kind == "mine" {
 				<span class="ds-your-turn">Sua vez</span>
 			}
-			// SAIR é link pela razão do de hoje: navegar é do navegador.
-			@ds.LinkButton(ds.ButtonGhost, templ.SafeURL(campaignChronicle(v)), templ.Attributes{"title": "Sair da sessão e voltar para a crônica da campanha"}) {
-				Sair
-			}
+			<span class="ds-session-spacer"></span>
+			// SAIR é link pela razão do de hoje: navegar é do navegador. Ícone,
+			// com o nome inteiro para o leitor de tela e no `title`.
+			<a
+				href={ templ.SafeURL(campaignChronicle(v)) }
+				class="ds-button"
+				data-variant="ghost"
+				data-icon
+				aria-label="Sair da sessão"
+				title="Sair da sessão e voltar para a crônica da campanha"
+			>
+				@ui.Icon("LogOut", "ds-icon")
+			</a>
 		</div>
 		if len(v.Endless) > 0 {
 			// UMA LISTA, e a ordem é dita por ela: um `<ol>` já anuncia a posição,
