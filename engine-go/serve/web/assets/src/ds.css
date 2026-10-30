@@ -1540,6 +1540,35 @@
     grid-column: 1 / -1;
     padding-bottom: 0.5rem;
   }
+  /* O IMPULSO DE PM embaixo da linha do ataque (`paridade.html`): os chips na
+   * largura da linha, e o escolhido abre o degrau e o lado do bônus. */
+  .ds-boost {
+    display: flex;
+    grid-column: 1 / -1;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .ds-boost-chosen {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem 0.5rem;
+  }
+  .ds-boost-step {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ds-boost-cost {
+    margin-right: 0.5rem;
+    padding: 0.0625rem 0.375rem;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-control);
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-xs);
+    font-weight: 400;
+  }
   /* O CARTÃO DO ATAQUE, acima de toda superfície. */
   .ds-strike {
     display: grid;

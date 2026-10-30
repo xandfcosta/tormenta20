@@ -51,3 +51,33 @@ func rolledTestCard(t *testing.T, f sceneFixture) *html.Node {
 	}
 	return card
 }
+
+// O IMPULSO DE PM NO ATAQUE das Ações do jogador (mockup `paridade.html`):
+// embaixo da linha do ataque, o chip que escolhe, o degrau e o lado do bônus.
+// O Atacar paga e zera a escolha — o próximo golpe paga de novo se quiser.
+func TestTheParallelActionsOfferTheAttackBoost(t *testing.T) {
+	f, warrior, _ := barbarianOnTurn(t)
+	seedClasse(t, f.s, warrior, "Guerreiro", 5)
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	actions := findNode(doc, "id", "actions-scene")
+	if actions == nil {
+		t.Fatal("a sessão do jogador não desenhou as Ações")
+	}
+	boost := findNode(actions, "aria-label", "Impulso do ataque")
+	if boost == nil {
+		t.Fatal("o ataque das Ações não oferece o impulso de PM")
+	}
+	surface := html.UnescapeString(renderNode(t, boost))
+	for _, want := range []string{"Ataque Especial", "$boost_power", "Mais um degrau de Ataque Especial", "no dano"} {
+		if !strings.Contains(surface, want) {
+			t.Errorf("o impulso não tem %q", want)
+		}
+	}
+	if !strings.Contains(html.UnescapeString(renderNode(t, actions)), "$boost_power = ''") {
+		t.Error("o Atacar não zera o impulso escolhido")
+	}
+}

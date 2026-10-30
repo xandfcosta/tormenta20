@@ -87,7 +87,7 @@ templ tempestadeActionsBody(v View) {
 // gesto. A linha que o servidor recusa aparece apagada com o motivo, em vez de
 // sumir — "Fúria — falta PM" responde; a ausência manda procurar.
 templ actionRowDs(v View, group actionGroup, row actionRow) {
-	<div class="ds-row ds-turn-action" data-refused?={ !row.Can }>
+	<div class="ds-row ds-turn-action" data-refused?={ !row.Can } data-boosted?={ len(row.Boosts) > 0 }>
 		<div class="min-w-0">
 			<div class="ds-row-title">
 				{ row.Name }
@@ -95,7 +95,11 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 					@ds.Badge("em curso", true)
 				}
 			</div>
-			if row.Detail != "" {
+			// COM IMPULSO a linha já mostra o golpe que sai: o detalhe e o total
+			// leem a prévia da escolha, e o custo aparece ao lado do número.
+			if row.Detail != "" && len(row.Boosts) > 0 {
+				<div class="ds-row-meta" data-text={ boostPreviewExpr(row.Weapon, row.Boosts, "detail", row.Detail) }>{ row.Detail }</div>
+			} else if row.Detail != "" {
 				<div class="ds-row-meta">{ row.Detail }</div>
 			}
 			if !row.Can && row.Why != "" {
@@ -105,31 +109,42 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 		if row.Cost != "" {
 			<span class="ds-row-meta">{ row.Cost }</span>
 		}
-		if row.Value != "" {
+		if len(row.Boosts) > 0 {
+			<span class="ds-row-value">
+				<span class="ds-boost-cost" data-show={ boostOnExpr(row.Weapon) } data-text={ boostCostExpr(row.Weapon, row.Boosts) }></span>
+				<span data-text={ boostPreviewExpr(row.Weapon, row.Boosts, "attack", row.Value) }>{ row.Value }</span>
+			</span>
+		} else if row.Value != "" {
 			<span class="ds-row-value">{ row.Value }</span>
 		}
-		if len(row.Rolls) == 1 {
-			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary)
+		if len(row.Rolls) == 1 && len(row.Boosts) > 0 {
+			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary, rollClearsTheBoost())
+		} else if len(row.Rolls) == 1 {
+			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary, "")
 		}
 		if len(row.Rolls) > 1 {
 			<div class="ds-options ds-turn-action-rolls">
 				for _, roll := range row.Rolls {
-					@actionRollDs(v, group, roll, ds.ButtonSecondary)
+					@actionRollDs(v, group, roll, ds.ButtonSecondary, "")
 				}
 			</div>
+		}
+		if len(row.Boosts) > 0 {
+			@boostStripDs(row)
 		}
 	</div>
 }
 
 // actionRollDs é o gesto de rolar. Ele espera o ALVO quando precisa de um, e a
 // VEZ quando o grupo gasta a vez; o diálogo de degraus abre pelo `commandfor`.
-templ actionRollDs(v View, group actionGroup, roll actionRoll, look ds.ButtonVariant) {
+// O `after` roda depois de mandar o gesto — o ataque zera o impulso escolhido.
+templ actionRollDs(v View, group actionGroup, roll actionRoll, look ds.ButtonVariant, after string) {
 	if roll.Dialog != "" {
 		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"commandfor": roll.Dialog, "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": useResets})) {
 			{ roll.Label }
 		}
 	} else {
-		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"data-on:click": rollCommand(v, roll, "")})) {
+		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"data-on:click": rollCommand(v, roll, after)})) {
 			{ roll.Label }
 		}
 	}

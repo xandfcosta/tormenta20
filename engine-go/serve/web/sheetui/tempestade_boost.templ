@@ -1,0 +1,57 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// O IMPULSO DE PM NO ATAQUE das Ações do jogador (ALE-473, mockup
+// `paridade.html`): embaixo da linha do ataque, como o `boostStrip` de hoje e
+// pela mesma razão — na coluna da direita ele empurraria o nome da arma para
+// fora a 390px. A escolha mora em sinais (ver `attack_boost.go`), e o Atacar a
+// leva junto e a zera.
+templ boostStripDs(row actionRow) {
+	<div class="ds-boost" role="group" aria-label="Impulso do ataque">
+		<span class="ds-field-label">Com</span>
+		for _, boost := range row.Boosts {
+			<button
+				type="button"
+				class="ds-option"
+				disabled?={ !boost.Can }
+				title={ boost.Why }
+				data-attr:aria-pressed={ ariaBoolExpr(boostChosenExpr(row.Weapon, boost.PowerID)) }
+				data-on:click={ boostToggleCommand(row.Weapon, boost) }
+			>
+				{ boost.Name }
+				<span class="ds-row-meta" data-show={ "!(" + boostChosenExpr(row.Weapon, boost.PowerID) + ")" }>{ strconv.Itoa(boost.BasePM) + " PM" }</span>
+			</button>
+			<span class="ds-boost-chosen" data-show={ boostChosenExpr(row.Weapon, boost.PowerID) }>
+				if boost.MaxSteps > 0 {
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-icon": true, "aria-label": "Menos um degrau de " + boost.Name, "data-on:click": boostStepCommand(boost, -1)}) {
+						−
+					}
+				}
+				<b class="ds-boost-step" data-text={ boostStepLabelExpr(boost) }></b>
+				if boost.MaxSteps > 0 {
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-icon": true, "aria-label": "Mais um degrau de " + boost.Name, "data-on:click": boostStepCommand(boost, 1)}) {
+						+
+					}
+				}
+				if boost.Split {
+					<span class="ds-segmented" role="radiogroup" aria-label={ "Para onde vai o bônus de " + boost.Name }>
+						for _, side := range boostSplits {
+							<button
+								type="button"
+								role="radio"
+								data-attr:aria-checked={ ariaBoolExpr(boostSplitIsExpr(side.Value)) }
+								data-attr:aria-pressed={ ariaBoolExpr(boostSplitIsExpr(side.Value)) }
+								data-on:click={ boostSplitCommand(side.Value) }
+							>{ side.Label }</button>
+						}
+					</span>
+				}
+			</span>
+		}
+	</div>
+}
