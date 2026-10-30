@@ -13,10 +13,9 @@ import (
 // A MESA DO MESTRE NO TEMPESTADE (ALE-522), pelo mockup aprovado `mestre.html`.
 // No celular, três superfícies na barra de baixo — Fila, Tabuleiro e
 // Consultas — e a linha do turno fixa acima dela; no desktop, as três ficam à
-// vista lado a lado, e a fila e as consultas recolhem. As Consultas ainda levam
-// ao palco de hoje.
+// vista lado a lado, e a fila e as consultas recolhem.
 templ gmTempestadeScene(v View, b master.BestiaryView) {
-	<main id="table" class="ds-session" data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false}">
+	<main id="table" class="ds-session" data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes'}">
 		@gmHeader(v)
 		@gmAttack(v)
 		@tempestadeSkillTest(v)
@@ -42,11 +41,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 				@gmBoardRegion(v)
 			</div>
 			<div class="ds-session-surface ds-gm-col" data-gm-col="consults" data-show={ surface(superficieDasConsultas) }>
-				<div class="ds-gm-col-head">
-					<span class="ds-row-title">Consultas</span>
-					@ds.IconButton(ds.ButtonGhost, "PanelRightClose", "Recolher as consultas", templ.Attributes{"type": "button", "data-on:click": "$gm_consults_open = false"})
-				</div>
-				@gmNotYet(v, "As Consultas ainda estão no palco de hoje")
+				@gmConsults(v, b)
 			</div>
 			<button type="button" class="ds-gm-rail" data-gm-rail="consults" aria-label="Abrir as consultas" data-on:click="$gm_consults_open = true">
 				@ui.Icon("PanelRightOpen", "ds-icon")
@@ -60,20 +55,6 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 		@gmPopulate(v)
 		@gmArchive(v)
 	</main>
-}
-
-// gmNotYet é a superfície que ainda não migrou: ela leva ao palco de hoje, e
-// nunca o desenha aqui dentro.
-templ gmNotYet(v View, sentence string) {
-	<div class="ds-session-todo">
-		@ds.Empty(sentence, "Esta superfície ainda não foi refeita no sistema novo.") {
-			<div class="mt-3 flex justify-center">
-				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(v.SessionBase()+"?tempestade=0"), nil) {
-					Abrir o palco de hoje
-				}
-			</div>
-		}
-	</div>
 }
 
 // gmHeader é o cabeçalho da sessão do jogador com o selo "Mestre" e um ⋯ só.
@@ -419,6 +400,11 @@ templ gmAddDialog(v View) {
 			}
 			@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "$gm_add_tab === 'combatant' ? 'true' : 'false'", "data-on:click": "$gm_add_tab = 'combatant'"}) {
 				Combatente
+			}
+			// O BESTIÁRIO é a aba das Consultas: a criatura aberta já tem o ajuste
+			// e o "Pôr na fila", e um segundo lugar para ele divergiria do primeiro.
+			@ds.SegmentedOption(false, templ.Attributes{"data-on:click": "document.getElementById('gm-add').close(); $gm_consult = 'bestiary'; $gm_consults_open = true; $surface = 'consultas'"}) {
+				Bestiário
 			}
 		}
 		<div class="ds-gm-add" data-show="$gm_add_tab === 'group'" style="display:none">

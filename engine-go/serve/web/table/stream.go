@@ -321,6 +321,7 @@ func TableRegions(v View) []tableRegion {
 			{"table-board", gmBoardRegion(v)},
 			{"table-populate", gmPopulate(v)},
 			{"table-archive", gmArchive(v)},
+			{"table-npcs", gmCastList(v)},
 		}
 	}
 	if v.Tempestade {
