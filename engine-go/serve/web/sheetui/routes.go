@@ -242,7 +242,7 @@ func (s Scene) sheetCommand(
 		// Só EMBUTIDA: fora da sessão o `#actions-scene` não existe na página, e
 		// mandar remendo para um id que não está lá é trabalho que ninguém usa.
 		if view.Embedded {
-			if acoes, err := ui.RenderFragment(r.Context(), ActionsBody(view)); err == nil {
+			if acoes, err := ui.RenderFragment(r.Context(), ActionsSurface(view)); err == nil {
 				_ = sse.PatchElements(acoes)
 			}
 		}

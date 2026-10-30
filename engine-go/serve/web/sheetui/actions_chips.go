@@ -33,9 +33,17 @@ type actionChip struct {
 	Why  string
 	// Note é o que o degrau compra ("+1 no bônus de Fúria"), vindo do catálogo.
 	Note string
-	// Command é o endereço do gesto, e ele é o MESMO das abas Poderes e Efeitos:
-	// um segundo caminho de escrita seria uma segunda regra de validação.
-	Command string
+	// Path é o caminho do gesto, e ele é o MESMO das abas Poderes e Efeitos:
+	// um segundo caminho de escrita seria uma segunda regra de validação. O
+	// ENDEREÇO sai do `chipCommand`, com as marcas da ficha em que o chip é
+	// desenhado — escrito à mão aqui, com `?embutida=1` fixo, ele devolvia a
+	// ficha de hoje dentro da sessão paralela (ALE-473).
+	Path string
+	// Before é o que roda antes do gesto: o sinal que ele lê.
+	Before string
+	// Detail é a sobreposição de hoje que o chip que pergunta abre, e Dialog é
+	// o diálogo do kit que a mesma pergunta abre na sessão paralela.
+	Detail, Dialog string
 	// Asks marca o chip que ABRE uma escolha em vez de fazer o gesto — hoje só a
 	// postura que escala com o nível. O botão ganha `aria-haspopup`, porque quem
 	// lê por leitor de tela precisa saber que o toque vai pedir mais uma coisa.
@@ -120,19 +128,18 @@ func sharesANumber(left, right []string) bool {
 // Elas moram em abas diferentes porque são coisas diferentes de ADMINISTRAR;
 // aqui são a mesma coisa de USAR — "um interruptor que muda este número" —, e
 // por isso viram uma lista só.
-func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []actionChip {
+func chipsOffered(powers powersPanel, situational []situationalRow) []actionChip {
 	chips := []actionChip{}
 	for _, power := range powers.Actions {
 		if power.Stance != nil {
-			chips = append(chips, stanceChips(id, power)...)
+			chips = append(chips, stanceChips(power)...)
 		}
 	}
 	for _, row := range situational {
 		chips = append(chips, actionChip{
 			Label: row.Label, On: row.Active, Can: true, Bonus: row.Dice,
-			Moves: numbersMovedBy(row.Targets),
-			Command: fmt.Sprintf("$status = %q; @post('/personagens/%d/efeitos/situacao?embutida=1')",
-				row.Key, id),
+			Moves:  numbersMovedBy(row.Targets),
+			Before: fmt.Sprintf("$status = %q; ", row.Key), Path: "/efeitos/situacao",
 		})
 	}
 	return chips
@@ -157,7 +164,7 @@ func chipsOffered(id int64, powers powersPanel, situational []situationalRow) []
 // Sem degrau a escolher, segue de um toque — são as seis Posturas de Combate
 // (p54) e todo bárbaro abaixo do 6º. Perguntar ali seria um toque a mais numa
 // pergunta de uma resposta só.
-func stanceChips(id int64, power powerRow) []actionChip {
+func stanceChips(power powerRow) []actionChip {
 	stance := power.Stance
 	if stance.Active {
 		return []actionChip{{
@@ -169,8 +176,7 @@ func stanceChips(id int64, power powerRow) []actionChip {
 			Bonus:     bonusInEffect(stance),
 			Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
 			GroupCost: stanceGroupCost(stance.Flag),
-			Command: fmt.Sprintf("@post('/personagens/%d/efeitos/postura/%s?embutida=1')",
-				id, stance.Flag),
+			Path:      "/efeitos/postura/" + stance.Flag,
 		}}
 	}
 	chip := actionChip{
@@ -179,8 +185,7 @@ func stanceChips(id int64, power powerRow) []actionChip {
 		Can:   power.Can, Why: power.Why,
 		Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
 		GroupCost: stanceGroupCost(stance.Flag),
-		Command: fmt.Sprintf("$stance_degrees = 0; @post('/personagens/%d/poderes/postura/%s/entra?embutida=1')",
-			id, stance.Flag),
+		Before:    "$stance_degrees = 0; ", Path: "/poderes/postura/" + stance.Flag + "/entra",
 	}
 	if stance.MaxSteps > 0 {
 		// O `+` é a mesma grafia do crachá da linha ("POSTURA · 2+ PM"), e aqui
@@ -188,10 +193,30 @@ func stanceChips(id int64, power powerRow) []actionChip {
 		// que anuncia 2 PM e abre um diálogo que cobra 3 é um preço que muda
 		// depois do toque.
 		chip.Cost = strconv.Itoa(stance.BasePm) + "+ PM"
-		chip.Command = fmt.Sprintf("$stance_degrees = 0; $detail = 'postura-%s'", stance.Flag)
+		chip.Path, chip.Detail, chip.Dialog = "", "postura-"+stance.Flag, actionsDialogID(stanceDialogID(power))
 		chip.Asks = true
 	}
 	return []actionChip{chip}
+}
+
+// chipCommand escreve o gesto do chip na ficha em que ele é desenhado: o
+// caminho vira endereço pelo `sheetPost`, com a aba e as marcas dela. O chip
+// que pergunta abre a sobreposição de hoje; na sessão paralela, quem abre o
+// diálogo do kit é o `commandfor` (`Dialog`).
+//
+//	chipCommand(v, chip) // "$stance_degrees = 0; @post('/personagens/7/poderes/postura/furia/entra?tab=…&embutida=1')"
+func chipCommand(v View, chip actionChip) string {
+	if chip.Asks {
+		return chip.Before + "$detail = '" + chip.Detail + "'"
+	}
+	return chip.Before + sheetPost(v, chip.Path)
+}
+
+// actionsDialogID é o id de um diálogo de degrau desenhado na superfície
+// Ações. Ele é OUTRO que o da aba Poderes porque os dois convivem na página
+// da sessão, e o `commandfor` acharia o primeiro — escondido na Ficha.
+func actionsDialogID(id string) string {
+	return "actions-" + id
 }
 
 // bonusInEffect é o "+3" de uma postura em curso.

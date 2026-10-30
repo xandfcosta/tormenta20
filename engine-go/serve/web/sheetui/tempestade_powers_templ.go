@@ -286,7 +286,7 @@ func tempestadePowers(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if row.Stance != nil && row.Stance.MaxSteps > 0 {
-				templ_7745c5c3_Err = stanceStepsDialog(v, row).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = stanceStepsDialog(v, row, stanceDialogID(row)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -296,7 +296,7 @@ func tempestadePowers(v View) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if row.Degrees != nil && row.Degrees.opensDialog() {
-				templ_7745c5c3_Err = useStepsDialog(v, row).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = useStepsDialog(v, row, useStepsDialogID(row)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -657,7 +657,7 @@ func powerSheetFootBody(v View, row powerRow) templ.Component {
 // useStepsDialog escolhe quantos degraus pagar num USO — a Marca da Presa,
 // cujo degrau troca o dado (p50). A regra das linhas de acréscimo é a do
 // `useStepperDialog` da ficha de hoje.
-func useStepsDialog(v View, row powerRow) templ.Component {
+func useStepsDialog(v View, row powerRow, id string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -747,7 +747,7 @@ func useStepsDialog(v View, row powerRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog(useStepsDialogID(row), row.Name, stepsConfirm(useStepsDialogID(row), "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ds.Dialog(id, row.Name, stepsConfirm(id, "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -757,7 +757,7 @@ func useStepsDialog(v View, row powerRow) templ.Component {
 
 // stanceStepsDialog escolhe quantos degraus pagar ao entrar na postura. O custo
 // é PRÉVIA, e quem cobra é o servidor.
-func stanceStepsDialog(v View, row powerRow) templ.Component {
+func stanceStepsDialog(v View, row powerRow, id string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -855,7 +855,7 @@ func stanceStepsDialog(v View, row powerRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog(stanceDialogID(row), row.Name, stepsConfirm(stanceDialogID(row), "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ds.Dialog(id, row.Name, stepsConfirm(id, "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,6 +1,7 @@
 package table
 
 import (
+	"strings"
 	"testing"
 
 	"t20engine/domain/live"
@@ -44,16 +45,18 @@ func TestTheEndlessStripStartsNowAndMarksEveryNewRound(t *testing.T) {
 	}
 }
 
-// O STREAM DA SESSÃO PARALELA manda só o que ela desenha: o cabeçalho. A lista
-// e a página não podem discordar sobre quais regiões existem — um remendo
-// para um id que não está na página é escrever no vazio.
-func TestTheParallelSessionStreamsOnlyItsHeader(t *testing.T) {
+// O STREAM DA SESSÃO PARALELA manda só o que ela desenha: o cabeçalho, o
+// cartão do ataque e a barra de alvo das Ações. A lista e a página não podem
+// discordar sobre quais regiões existem — um remendo para um id que não está
+// na página é escrever no vazio.
+func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
 	regions := TableRegions(View{Tempestade: true, Eu: &tableMe{}})
-	if len(regions) != 1 || regions[0].ID != "table-header" {
-		ids := []string{}
-		for _, r := range regions {
-			ids = append(ids, r.ID)
-		}
-		t.Errorf("a sessão paralela recebe as regiões %v; queria só o cabeçalho", ids)
+	ids := []string{}
+	for _, r := range regions {
+		ids = append(ids, r.ID)
+	}
+	want := []string{"table-header", "table-attack", "table-turn-target"}
+	if strings.Join(ids, ",") != strings.Join(want, ",") {
+		t.Errorf("a sessão paralela recebe as regiões %v; queria %v", ids, want)
 	}
 }

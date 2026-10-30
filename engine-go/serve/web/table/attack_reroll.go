@@ -94,8 +94,7 @@ func (s Scene) attackProposalFor(
 	for _, offer := range character.AttackRerollOffersFor(dto, meleeAttack(*pa), pa.Replay.WeaponID) {
 		band.Offers = append(band.Offers, rerollOffer{
 			Label: fmt.Sprintf("Rolar de novo · %s · %d PM", offer.Name, offer.PM),
-			Command: fmt.Sprintf("@post('%s/ataque/rolar-de-novo/%s')",
-				routes.Session(campaignID, sessionID), offer.Key),
+			Path:  fmt.Sprintf("%s/ataque/rolar-de-novo/%s", routes.Session(campaignID, sessionID), offer.Key),
 		})
 	}
 	return band

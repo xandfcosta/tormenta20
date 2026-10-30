@@ -306,7 +306,11 @@ func TableRegions(v View) []tableRegion {
 	// migraram são a Ficha (que o stream nunca toca) e as outras ainda levam à
 	// sessão de hoje.
 	if v.Tempestade {
-		return []tableRegion{{"table-header", tempestadeHeader(v)}}
+		return []tableRegion{
+			{"table-header", tempestadeHeader(v)},
+			{"table-attack", tempestadeAttack(v)},
+			{"table-turn-target", tempestadeTargetBar(v)},
+		}
 	}
 	regions := []tableRegion{
 		{"table-header", tableHeader(v)},

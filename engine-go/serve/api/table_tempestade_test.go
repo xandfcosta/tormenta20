@@ -111,3 +111,45 @@ func TestTheParallelSessionStreamKeepsTheNewHeaderAfterATurn(t *testing.T) {
 		t.Error("depois de a vez andar, o fluxo mandou o cabeçalho de hoje para a sessão paralela")
 	}
 }
+
+// AS AÇÕES DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado: a barra de alvo
+// fixa no topo, que carrega de quem é a vez (`my_turn`), e as ações desenhadas
+// no kit. O que gasta a vez lê o alvo E a vez; a reação, não.
+func TestTheParallelSessionDrawsTheActionsInTempestade(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	if strings.Contains(page, "Ações ainda está na sessão de hoje") {
+		t.Fatal("as Ações da sessão paralela ainda levam à sessão de hoje")
+	}
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := findNode(doc, "id", "table-turn-target")
+	if target == nil || !strings.Contains(attr(target, "data-signals"), "my_turn") {
+		t.Fatal("a barra de alvo não carrega de quem é a vez")
+	}
+	if findNode(target, "data-bind", "turn_target") == nil {
+		t.Error("a barra de alvo não escolhe o alvo")
+	}
+	actions := findNode(doc, "id", "actions-scene")
+	if actions == nil || findNode(actions, "class", "ds-list") == nil {
+		t.Fatal("as Ações não estão desenhadas no kit")
+	}
+	if !regexp.MustCompile(`data-attr:disabled="[^"]*\$turn_target === (&#39;|')(&#39;|')[^"]*!\$my_turn|data-attr:disabled="[^"]*!\$my_turn[^"]*\$turn_target`).MatchString(renderNode(t, actions)) {
+		t.Error("o ataque não espera o alvo E a vez")
+	}
+}
+
+// O GESTO DA MESA NA SESSÃO PARALELA responde com as regiões NOVAS. Os
+// comandos da mesa redesenham a mesa na hora, e sem a marca devolviam o
+// cabeçalho de hoje — o mesmo defeito do stream, por outro caminho.
+func TestAParallelSessionGestureAnswersWithTheNewRegions(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	answer := f.posts(t, f.player, f.tableUrl()+"/ataque/cancelar?tempestade=1", "{}")
+	if !strings.Contains(answer, "ds-session-head") {
+		t.Errorf("o gesto da sessão paralela respondeu com o cabeçalho de hoje:\n%s", firstRows(answer, 6))
+	}
+}

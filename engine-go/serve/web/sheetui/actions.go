@@ -40,6 +40,10 @@ type actionsPanel struct {
 // seção.
 type actionGroup struct {
 	Title string
+	// OnTurn marca o que GASTA a vez — padrão, movimento, completa —, e é o que
+	// apaga fora da vez na sessão paralela (decisão do dono). A livre e a
+	// reação não: a reação é justamente o que se faz fora da vez (p233).
+	OnTurn bool
 	// Note é o que o título não diz — "abre mão das duas", "não gastam a vez".
 	Note string
 	Rows []actionRow
@@ -114,6 +118,9 @@ type actionRoll struct {
 	Before  string
 	// Opens marca o gesto que abre uma escolha, para o `aria-haspopup`.
 	Opens string
+	// Dialog é o diálogo do kit que o gesto abre na sessão paralela, pelo
+	// `commandfor` — o `Opens` é a sobreposição de hoje.
+	Dialog string
 }
 
 // rollCommand é a expressão do toque num gesto da superfície.
@@ -156,11 +163,11 @@ func actionsPanelFrom(
 		}
 		if len(rows) > 0 {
 			panel.Groups = append(panel.Groups,
-				actionGroup{Title: group.title, Note: group.note, Rows: rows})
+				actionGroup{Title: group.title, Note: group.note, OnTurn: group.onTurn, Rows: rows})
 		}
 	}
 	panel.Passives = len(powers.Passives)
-	hangChips(&panel, chipsOffered(id, powers, effects.Situational))
+	hangChips(&panel, chipsOffered(powers, effects.Situational))
 	dropRowsTheChipAlreadySays(&panel)
 	return panel
 }
@@ -173,16 +180,17 @@ func actionsPanelFrom(
 // — a livre é escolha consciente no seu turno, a reação vale fora dele — não se
 // perde: ela vai escrita na linha, no `Cost`.
 var groupOrder = []struct {
-	title string
-	note  string
-	costs []engine.ActionCost
+	title  string
+	note   string
+	onTurn bool
+	costs  []engine.ActionCost
 }{
-	{"Ação padrão", "", []engine.ActionCost{engine.ActionStandard}},
-	{"Ação de movimento", "", []engine.ActionCost{engine.ActionMovement}},
-	{"Ação completa", "abre mão das duas", []engine.ActionCost{engine.ActionFull}},
-	{"Livre e reação", "não gastam a vez",
+	{"Ação padrão", "", true, []engine.ActionCost{engine.ActionStandard}},
+	{"Ação de movimento", "", true, []engine.ActionCost{engine.ActionMovement}},
+	{"Ação completa", "abre mão das duas", true, []engine.ActionCost{engine.ActionFull}},
+	{"Livre e reação", "não gastam a vez", false,
 		[]engine.ActionCost{engine.ActionFree, engine.ActionReaction}},
-	{"Custo que a mesa decide", "o livro não fixa um",
+	{"Custo que a mesa decide", "o livro não fixa um", false,
 		[]engine.ActionCost{engine.ActionVaries}},
 }
 
@@ -223,6 +231,7 @@ func rowFromPower(power powerRow) actionRow {
 		roll := actionRoll{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: useResets}
 		if power.Degrees.opensDialog() {
 			roll.Command, roll.Opens = useOpensCommand(power.Command), useDialogID(power.Command)
+			roll.Dialog = actionsDialogID(useStepsDialogID(power))
 		}
 		row.Rolls = []actionRoll{roll}
 	}

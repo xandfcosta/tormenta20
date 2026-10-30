@@ -1,0 +1,140 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// AS AÇÕES DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `sessao.html`.
+// O dado é o da superfície de hoje (`v.Actions`); daqui sai só o desenho no kit
+// e duas leituras novas nos botões: o ALVO (`$turn_target`) e a VEZ
+// (`$my_turn`), que a barra de alvo da mesa escreve. O que gasta a vez apaga
+// fora dela (decisão do dono); a livre e a reação, não.
+
+// ActionsSurface é a superfície Ações que a ficha manda junto de cada remendo
+// dentro da sessão: a de hoje, ou a paralela.
+templ ActionsSurface(v View) {
+	if v.Tempestade {
+		@tempestadeActionsBody(v)
+	} else {
+		@ActionsBody(v)
+	}
+}
+
+templ tempestadeActionsBody(v View) {
+	<div id="actions-scene" class="ds-actions">
+		// A RECUSA MORA AQUI TAMBÉM, pela razão do `ActionsBody`: um gesto das
+		// Ações recusado só dentro da Ficha seria recusado num nó escondido.
+		if v.Refusal != "" {
+			<p role="alert" class="ds-alert">{ v.Refusal }</p>
+		}
+		if len(v.Actions.Groups) == 0 {
+			@ds.Empty("Nada a fazer num turno", "Empunhe uma arma na Mochila.")
+		}
+		for _, group := range v.Actions.Groups {
+			if len(group.Chips) > 0 {
+				<div class="ds-options ds-actions-with" role="group" aria-label={ "Com, em " + group.Title }>
+					<span class="ds-field-label">Com</span>
+					for _, chip := range group.Chips {
+						@actionChipDs(v, group, chip)
+					}
+				</div>
+			}
+			@ds.List(group.Title, group.Note) {
+				for _, row := range group.Rows {
+					@actionRowDs(v, group, row)
+				}
+			}
+		}
+		if v.Actions.Passives > 0 {
+			<p class="ds-help">{ "Passivas · " + strconv.Itoa(v.Actions.Passives) + " · já estão nos seus números, nada a acionar" }</p>
+		}
+		// OS DIÁLOGOS DE DEGRAU das Ações, com id próprio: os da aba Poderes
+		// convivem na mesma página (ver `actionsDialogID`).
+		for _, row := range v.Powers.Actions {
+			if row.Stance != nil && row.Stance.MaxSteps > 0 {
+				@stanceStepsDialog(v, row, actionsDialogID(stanceDialogID(row)))
+			}
+			if row.Degrees != nil && row.Degrees.opensDialog() {
+				@useStepsDialog(v, row, actionsDialogID(useStepsDialogID(row)))
+			}
+		}
+	</div>
+}
+
+// actionRowDs é uma coisa que dá para fazer: o nome, o detalhe, o número e o
+// gesto. A linha que o servidor recusa aparece apagada com o motivo, em vez de
+// sumir — "Fúria — falta PM" responde; a ausência manda procurar.
+templ actionRowDs(v View, group actionGroup, row actionRow) {
+	<div class="ds-row ds-turn-action" data-refused?={ !row.Can }>
+		<div class="min-w-0">
+			<div class="ds-row-title">
+				{ row.Name }
+				if row.Live {
+					@ds.Badge("em curso", true)
+				}
+			</div>
+			if row.Detail != "" {
+				<div class="ds-row-meta">{ row.Detail }</div>
+			}
+			if !row.Can && row.Why != "" {
+				<div class="ds-row-meta ds-turn-action-why">{ row.Why }</div>
+			}
+		</div>
+		if row.Cost != "" {
+			<span class="ds-row-meta">{ row.Cost }</span>
+		}
+		if row.Value != "" {
+			<span class="ds-row-value">{ row.Value }</span>
+		}
+		if len(row.Rolls) == 1 {
+			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary)
+		}
+		if len(row.Rolls) > 1 {
+			<div class="ds-options ds-turn-action-rolls">
+				for _, roll := range row.Rolls {
+					@actionRollDs(v, group, roll, ds.ButtonSecondary)
+				}
+			</div>
+		}
+	</div>
+}
+
+// actionRollDs é o gesto de rolar. Ele espera o ALVO quando precisa de um, e a
+// VEZ quando o grupo gasta a vez; o diálogo de degraus abre pelo `commandfor`.
+templ actionRollDs(v View, group actionGroup, roll actionRoll, look ds.ButtonVariant) {
+	if roll.Dialog != "" {
+		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"commandfor": roll.Dialog, "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": useResets})) {
+			{ roll.Label }
+		}
+	} else {
+		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"data-on:click": rollCommand(v, roll, "")})) {
+			{ roll.Label }
+		}
+	}
+}
+
+// actionChipDs é um interruptor que muda os números do grupo — a postura, a
+// situação. O que pergunta abre o diálogo de degraus.
+templ actionChipDs(v View, group actionGroup, chip actionChip) {
+	if chip.Asks {
+		@ds.Option(false, chipAttrs(group, chip, templ.Attributes{"commandfor": chip.Dialog, "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": "$stance_degrees = 0"})) {
+			{ chip.Label }
+			@chipFigure(chip)
+		}
+	} else {
+		@ds.Option(chip.On, chipAttrs(group, chip, templ.Attributes{"data-on:click": chipCommand(v, chip)})) {
+			{ chip.Label }
+			@chipFigure(chip)
+		}
+	}
+}
+
+templ chipFigure(chip actionChip) {
+	if chip.Bonus != "" {
+		<span class="ds-row-meta">{ chip.Bonus }</span>
+	} else if chip.Cost != "" {
+		<span class="ds-row-meta">{ chip.Cost }</span>
+	}
+}

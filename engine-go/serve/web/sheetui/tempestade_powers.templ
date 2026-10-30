@@ -73,10 +73,10 @@ templ tempestadePowers(v View) {
 	for _, row := range powerSheetRows(v.Powers) {
 		@powerSheet(v, row)
 		if row.Stance != nil && row.Stance.MaxSteps > 0 {
-			@stanceStepsDialog(v, row)
+			@stanceStepsDialog(v, row, stanceDialogID(row))
 		}
 		if row.Degrees != nil && row.Degrees.opensDialog() {
-			@useStepsDialog(v, row)
+			@useStepsDialog(v, row, useStepsDialogID(row))
 		}
 	}
 }
@@ -142,8 +142,8 @@ templ powerSheetFootBody(v View, row powerRow) {
 // useStepsDialog escolhe quantos degraus pagar num USO — a Marca da Presa,
 // cujo degrau troca o dado (p50). A regra das linhas de acréscimo é a do
 // `useStepperDialog` da ficha de hoje.
-templ useStepsDialog(v View, row powerRow) {
-	@ds.Dialog(useStepsDialogID(row), row.Name, stepsConfirm(useStepsDialogID(row), "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
+templ useStepsDialog(v View, row powerRow, id string) {
+	@ds.Dialog(id, row.Name, stepsConfirm(id, "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
 		<p class="ds-help">{ "Cada +" + strconv.Itoa(row.Degrees.StepPm) + " PM compra " + row.Degrees.StepLabel + "." }</p>
 		@stepsCounter(row.Degrees.MaxSteps, useCounterExpr(*row.Degrees))
 		for steps, parts := range row.Degrees.Riders {
@@ -161,8 +161,8 @@ templ useStepsDialog(v View, row powerRow) {
 
 // stanceStepsDialog escolhe quantos degraus pagar ao entrar na postura. O custo
 // é PRÉVIA, e quem cobra é o servidor.
-templ stanceStepsDialog(v View, row powerRow) {
-	@ds.Dialog(stanceDialogID(row), row.Name, stepsConfirm(stanceDialogID(row), "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))) {
+templ stanceStepsDialog(v View, row powerRow, id string) {
+	@ds.Dialog(id, row.Name, stepsConfirm(id, "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))) {
 		if says := degreeRateSays(row); says != "" {
 			<p class="ds-help">{ says }</p>
 		}
