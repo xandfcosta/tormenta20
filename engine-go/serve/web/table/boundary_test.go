@@ -37,6 +37,9 @@ import (
 // aqui dentro é pôr o banco dentro da cena. O `database/sql` fica fora da
 // lista, e não é por precaução: é a tentação MEDIDA.
 var permitidos = map[string]bool{
+	// O `ds` é o KIT do sistema novo, irmão do `ui`: peças de desenho, sem
+	// estado nem regra. A sessão paralela (ALE-473) se monta com ele.
+	"t20engine/serve/web/ds": true,
 	// O vocabulário do grupo: quem pede e as recusas tipadas.
 	"t20engine/app": true,
 	// O `app/boards` é o store dos tabuleiros abertos — a orquestração que a

@@ -101,12 +101,17 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
+	view.Tempestade = parallelSessionAsked(r, view)
+	system, stream := pageSystemAndStream(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Signals: tableSignalsExpr(),
-		Init:    fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
+		System:  system,
+		// O FLUXO LEVA A MARCA: é ele que redesenha o cabeçalho a cada tique, e
+		// sem ela o stream mandaria o cabeçalho de hoje para a sessão paralela.
+		Init: fmt.Sprintf("@get('%s')", stream),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um
@@ -165,6 +170,9 @@ func tableSignalsExpr() string {
 		// uma INTENÇÃO de quem joga, e não um fato da mesa: escolher contra quem
 		// se vai rolar não muda nada para ninguém até o dado cair.
 		"turn_target: ''",
+		// A VEZ, na sessão paralela: a barra de alvo a escreve a cada tique do
+		// stream, e as Ações apagam o que gasta a vez quando ela é falsa.
+		"my_turn: true",
 		// OS SINAIS DA FICHA QUE A ABA AÇÕES LÊ, com o TIPO certo: o contador de
 		// degraus (postura e Marca da Presa) e a tira do impulso de PM. Sem a
 		// declaração eles nascem texto vazio, e a leitura do `Signals` da ficha
@@ -279,27 +287,13 @@ func tableSignalsExpr() string {
 // esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
 // CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
 func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
+	if view.Tempestade {
+		return tempestadeTableScene(view)
+	}
 	if view.GM == nil {
 		return tableScene(view)
 	}
 	return gmStage(view, s.forTableBestiary(r, campaignID, sessionID))
-}
-
-// tablePlayerSheet carrega a ficha que a superfície "Minha ficha" desenha.
-//
-// Só na CARGA FRIA e não no stream: a ficha é sete painéis
-// computados, e ela muda pelos comandos DELA — que remendam o `#sheet-scene`
-// direto. Recomputá-la a cada tique da sessão seria pagar o preço mais caro da
-// página para descobrir que nada mudou.
-//
-// Falha em silêncio de propósito: uma ficha que não carrega tira a aba da tela,
-// e não derruba a sessão. Estar numa mesa é mais importante que ver a própria
-// ficha dentro dela, e o jogador continua tendo o elenco.
-func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
-	if view.GM != nil || view.Eu == nil {
-		return nil
-	}
-	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
 }
 
 // LoadView monta a Mesa inteira para desenhar: busca tudo o que a tela precisa

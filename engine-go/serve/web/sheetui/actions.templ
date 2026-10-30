@@ -67,7 +67,7 @@ templ actionSection(v View, group actionGroup) {
 			}
 		</p>
 		if len(group.Chips) > 0 {
-			@chipStrip(group.Chips)
+			@chipStrip(v, group.Chips)
 		}
 		<ul class="divide-y divide-grimorio-iron rounded-sm border border-grimorio-iron">
 			for _, row := range group.Rows {
@@ -255,7 +255,7 @@ templ boostStrip(row actionRow) {
 // pelo `aria-haspopup`: "não pressionado" promete que o toque liga alguma
 // coisa, e o toque dele abre um contador. Quem ouve a tela recebe a promessa
 // certa nos dois casos.
-templ chipStrip(chips []actionChip) {
+templ chipStrip(v View, chips []actionChip) {
 	<div class="mb-1.5 flex flex-wrap items-center gap-1.5">
 		<span class={ ui.SectionLabelClasses("muted", "text-3xs") }>com</span>
 		for _, chip := range chips {
@@ -268,7 +268,7 @@ templ chipStrip(chips []actionChip) {
 				} else {
 					aria-pressed={ ariaBool(chip.On) }
 				}
-				data-on:click={ chip.Command }
+				data-on:click={ chipCommand(v, chip) }
 				class={ "inline-flex min-h-11 items-center gap-1 rounded-sm border px-2.5 text-xs transition-colors",
 					templ.KV("border-2 border-grimorio-gold bg-grimorio-gold/10 font-semibold text-grimorio-gold", chip.On),
 					templ.KV("border-grimorio-iron text-muted-foreground", !chip.On) }

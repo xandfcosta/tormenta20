@@ -308,3 +308,16 @@ func writtenNonLethal(pa live.PendingAttack) string {
 // "→ 11 de dano não" / "letal", e "dano não" sozinho no fim de uma linha diz o
 // contrário do que a regra diz.
 const nonLethalWords = "não letal"
+
+// attackNotes são as linhas do cartão do ataque além da conta: o impulso, as
+// situações, a guarda aberta e o que já foi rolado de novo — na ordem em que o
+// de hoje as escreve.
+func attackNotes(a *attackProposal) []string {
+	var notes []string
+	for _, line := range []string{a.Boost, a.Situations, a.Guard, a.Rerolled} {
+		if line != "" {
+			notes = append(notes, line)
+		}
+	}
+	return notes
+}

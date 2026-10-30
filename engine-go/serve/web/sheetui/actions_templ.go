@@ -199,7 +199,7 @@ func actionSection(v View, group actionGroup) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(group.Chips) > 0 {
-			templ_7745c5c3_Err = chipStrip(group.Chips).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = chipStrip(v, group.Chips).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1030,7 +1030,7 @@ func boostStrip(row actionRow) templ.Component {
 // pelo `aria-haspopup`: "não pressionado" promete que o toque liga alguma
 // coisa, e o toque dele abre um contador. Quem ouve a tela recebe a promessa
 // certa nos dois casos.
-func chipStrip(chips []actionChip) templ.Component {
+func chipStrip(v View, chips []actionChip) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -1141,9 +1141,9 @@ func chipStrip(chips []actionChip) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var59 string
-			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue(chip.Command)
+			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue(chipCommand(v, chip))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/actions.templ`, Line: 271, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/actions.templ`, Line: 271, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var59)
 			if templ_7745c5c3_Err != nil {

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/a-h/templ"
+
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/ds"
@@ -17,10 +19,10 @@ import (
 // grimório fica intacta. No dia em que a última aba migrar, a marca some e a
 // ficha do grimório é apagada — e este arquivo encolhe para o que for casca.
 
-// tempestadeAsked diz se o pedido é da ficha paralela. A marca viaja na query
+// TempestadeAsked diz se o pedido é da ficha paralela. A marca viaja na query
 // pela razão do `?tab=`: o handler descobre o que desenhar lendo a requisição,
 // e todo comando redesenha a cena inteira.
-func tempestadeAsked(r *http.Request) bool {
+func TempestadeAsked(r *http.Request) bool {
 	return r.URL.Query().Get("tempestade") == "1"
 }
 
@@ -36,6 +38,16 @@ func sheetSystem(v View) ui.DesignSystem {
 		return ui.SystemTempestade
 	}
 	return ui.SystemGrimoire
+}
+
+// tabGesture é o que o toque numa aba faz. Solta, a troca macia guarda o
+// endereço e pede a cena; DENTRO DA SESSÃO o endereço é o da sessão e não
+// muda, e a aba só pede a ficha nova (`tabEmbeddedGet`).
+func tabGesture(v View, tab string) templ.Attributes {
+	if v.Embedded {
+		return templ.Attributes{"data-on:click__prevent": tabEmbeddedGet(v, tab)}
+	}
+	return ds.SoftNav()
 }
 
 // tabRoute é o endereço de uma aba, levando a marca quando a ficha é a

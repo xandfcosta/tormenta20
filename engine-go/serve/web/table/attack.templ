@@ -173,7 +173,7 @@ templ skillTestRolled(v View) {
 templ rerollOfferButton(offer rerollOffer) {
 	<button
 		type="button"
-		data-on:click={ offer.Command }
+		data-on:click={ offerCommand(offer, false) }
 		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-foreground"
 	>{ offer.Label }</button>
 }

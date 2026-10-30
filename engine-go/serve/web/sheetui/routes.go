@@ -113,7 +113,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")),
 		pageSignals.term(), pageSignals)
 	view.Embedded = insideSessionAsked(r)
-	view.Tempestade = tempestadeAsked(r) && !view.Embedded
+	view.Tempestade = TempestadeAsked(r)
 	view.ColorMode = ui.ColorModeOf(r)
 	if err != nil {
 		http.Error(w, err.Error(), status)
@@ -220,7 +220,7 @@ func (s Scene) sheetCommand(
 		view, status, err := s.Load(
 			r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")), signals.term(), signals)
 		view.Embedded = insideSessionAsked(r)
-		view.Tempestade = tempestadeAsked(r) && !view.Embedded
+		view.Tempestade = TempestadeAsked(r)
 		view.ColorMode = ui.ColorModeOf(r)
 		if err != nil {
 			http.Error(w, err.Error(), status)
@@ -242,7 +242,7 @@ func (s Scene) sheetCommand(
 		// Só EMBUTIDA: fora da sessão o `#actions-scene` não existe na página, e
 		// mandar remendo para um id que não está lá é trabalho que ninguém usa.
 		if view.Embedded {
-			if acoes, err := ui.RenderFragment(r.Context(), ActionsBody(view)); err == nil {
+			if acoes, err := ui.RenderFragment(r.Context(), ActionsSurface(view)); err == nil {
 				_ = sse.PatchElements(acoes)
 			}
 		}

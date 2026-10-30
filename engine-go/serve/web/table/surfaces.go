@@ -84,3 +84,18 @@ func surfaceStyling(which string) string {
 		"{'surface-chosen': %s, 'border-grimorio-iron': !(%s), 'text-muted-foreground': !(%s)}",
 		surface(which), surface(which), surface(which))
 }
+
+// sessionSurfaceIcon é o ícone de cada superfície na barra da sessão
+// paralela. Ações é o ALVO, e não as espadas da barra de hoje: na sessão
+// paralela as espadas são da seção Combate da ficha, logo acima.
+func sessionSurfaceIcon(id string) string {
+	switch id {
+	case superficieDasAcoes:
+		return "Target"
+	case superficieDaFicha:
+		return "ScrollText"
+	case superficieDaMesa:
+		return "Users2"
+	}
+	return "LayoutGrid"
+}

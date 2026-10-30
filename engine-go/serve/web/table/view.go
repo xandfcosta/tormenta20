@@ -43,9 +43,16 @@ type View struct {
 	// Upcoming é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
 	Upcoming []turnAhead
-	Group    []Member
-	Queue    []tableRow
-	Eu       *tableMe
+	// Endless é a faixa SEM FIM da sessão paralela: a fila inteira a partir de
+	// quem joga agora, e mais três da rodada seguinte (ver o GLOSSARY, "faixa").
+	Endless []turnAhead
+	// Tempestade é a sessão paralela (`?tempestade=1`), só para o jogador com
+	// personagem: a página e o stream desenham o sistema novo, e as superfícies
+	// que ainda não migraram levam à sessão de hoje.
+	Tempestade bool
+	Group      []Member
+	Queue      []tableRow
+	Eu         *tableMe
 	// MySheet é a ficha do personagem DESTE jogador, desenhada dentro da
 	// sessão. Nil para o mestre e para quem não tem personagem na campanha — é a
 	// mesma trava do `Mestre`: o que a view não tem, a cena não desenha.
@@ -282,86 +289,6 @@ func tableTurnOf(st *live.SessionRuntimeState, mine map[int64]bool) tableTurn {
 	return tableTurn{Kind: "other", Label: onTurn.Label}
 }
 
-// A FAIXA DE QUEM VEM DEPOIS: a vez de agora e as duas seguintes, na ordem da
-// mesa, dando a volta.
-//
-// Ler a lista não responde "chamo quem depois?" no ÚLTIMO da rodada — ali o
-// próximo está no TOPO, e é justamente o turno em que a pergunta mais importa.
-//
-// Ela não substitui o "Próximo: Arwen" do botão, e a repetição é deliberada: a
-// faixa é onde se LÊ a ordem, o botão é o que o CLIQUE vai fazer.
-
-// turnAhead é um lugar na faixa.
-type turnAhead struct {
-	Label string
-	// Mine é o meu personagem, e é o que faz a faixa responder "quanto falta para
-	// mim?" — a pergunta do JOGADOR, que é quem mais precisa dela.
-	Mine bool
-	// Now é a vez em curso. Sempre a primeira, e escrito mesmo assim: o
-	// desenho não deve depender da posição no laço para saber o que destacar.
-	Now bool
-	// WrapsRound marca o lugar onde a rodada seguinte começa — o ponto em que a
-	// lista deu a volta. Sem ele a faixa mentiria por omissão: "Zumbi 2 › Ogro"
-	// parece a mesma rodada, e não é.
-	WrapsRound bool
-	// SaysYou troca o nome pela palavra, e ela é uma decisão da faixa INTEIRA e
-	// não desta linha: a palavra só desambigua enquanto for UMA. Com dois
-	// personagens meus na faixa, "você › Fulano › ⟲ você" deixa de responder
-	// quanto falta para mim.
-	SaysYou bool
-}
-
-// turnStripOf traduz a janela circular para a tela.
-//
-// A REGRA continua no `live`: quem escolhe os três e dá a volta é o
-// `UpcomingTurns`. O que se decide aqui são dois fatos de APRESENTAÇÃO: qual
-// dos três é de quem está olhando, e onde a rodada vira.
-//
-// A VOLTA é recalculada do índice em vez de vir do `UpcomingTurns`, que devolve
-// entradas e não posições — a regra é *quem* vem; isto é *onde desenhar o
-// símbolo*.
-//
-// A fila que chega aqui é a que o `StateForRole` já redigiu: um segundo caminho
-// até os nomes seria um segundo lugar por onde vazar o que a mesa não vê.
-func turnStripOf(st *live.SessionRuntimeState, mine map[int64]bool) []turnAhead {
-	window := live.UpcomingTurns(st.Initiative, st.TurnIndex, turnsAhead)
-	strip := make([]turnAhead, 0, len(window))
-	for step, entry := range window {
-		strip = append(strip, turnAhead{
-			Label:      entry.Label,
-			Mine:       entry.CharacterID != nil && mine[*entry.CharacterID],
-			Now:        step == 0,
-			WrapsRound: st.TurnIndex+step == len(st.Initiative),
-		})
-	}
-	// "VOCÊ" é decisão da faixa inteira, então ela é tomada com ela pronta: a
-	// palavra só desambigua enquanto for UMA. Ver o `SaysYou`.
-	if meusNaFaixa(strip) == 1 {
-		for i := range strip {
-			strip[i].SaysYou = strip[i].Mine
-		}
-	}
-	return strip
-}
-
-func meusNaFaixa(strip []turnAhead) int {
-	howMany := 0
-	for _, p := range strip {
-		if p.Mine {
-			howMany++
-		}
-	}
-	return howMany
-}
-
-// turnsAhead é o tamanho da faixa: a vez e as duas seguintes.
-//
-// TRÊS é escolhido e não medido — o Go não sabe quanto cabe na caixa. Três
-// nomes cabem no cabeçalho a 390px sem truncar a ponto de não identificar
-// ninguém. Quem quer a ordem inteira tem o trilho e a gaveta; crescer a faixa
-// até competir com eles é como ela deixa de caber.
-const turnsAhead = 3
-
 // tableBarOf resolve a porcentagem (presa em 0..100) e o tom.
 //
 // Máximo ausente ou zero devolve 0% em vez de dividir: uma linha sem pool não
@@ -488,6 +415,7 @@ func tableViewOf(
 		Round:    st.Round,
 		Turn:     tableTurnOf(st, mine),
 		Upcoming: turnStripOf(st, mine),
+		Endless:  endlessStripOf(st, mine),
 		Group:    group,
 		Queue:    tableTrackerOf(st, mine, pools),
 		Eu:       eu,

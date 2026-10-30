@@ -590,6 +590,7 @@ func (s Scene) respondGm(
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
+		view.Tempestade = parallelSessionAsked(r, view)
 		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
 		// do stream: aqui não há digital anterior para comparar — este caminho
 		// responde a um pedido, não mantém uma conexão. Vale porque quem recebe
@@ -597,7 +598,6 @@ func (s Scene) respondGm(
 		//
 		// O GESTO CONTÍNUO é a exceção que criou o `onlyRegions`: no arrasto do
 		// pincel cada casa cruzada devolveria a Mesa inteira, 353 KB por casa.
-		//
 		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
 		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
 		// a frase sai de qualquer jeito.

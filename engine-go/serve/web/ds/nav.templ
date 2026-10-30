@@ -49,3 +49,12 @@ templ BottomNavItem(href templ.SafeURL, icon string, current bool, attrs templ.A
 		{ children... }
 	</a>
 }
+
+// SectionNav é a FILEIRA DE SEÇÕES (ver o GLOSSARY): as seções da ficha
+// embutida na sessão, com os ícones da barra da ficha solta, numa fileira que
+// desliza logo acima da barra da sessão. Os itens são `BottomNavItem`.
+templ SectionNav(label string) {
+	<nav class="ds-section-nav" aria-label={ label }>
+		{ children... }
+	</nav>
+}

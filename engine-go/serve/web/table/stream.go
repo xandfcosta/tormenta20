@@ -49,6 +49,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
+	view.Tempestade = parallelSessionAsked(r, view)
 
 	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
@@ -116,6 +117,9 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
+		// A MARCA VALE EM TODO QUADRO, e não só no primeiro: sem ela, o cabeçalho
+		// de hoje voltava à sessão paralela no primeiro tique depois de abrir.
+		view.Tempestade = parallelSessionAsked(r, view)
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
@@ -298,6 +302,16 @@ type tableRegion struct {
 // pergunta ao MESMO cálculo da produção quais regiões o stream mandaria para
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
+	// A SESSÃO PARALELA desenha só o cabeçalho como região: as superfícies que
+	// migraram são a Ficha (que o stream nunca toca) e as outras ainda levam à
+	// sessão de hoje.
+	if v.Tempestade {
+		return []tableRegion{
+			{"table-header", tempestadeHeader(v)},
+			{"table-attack", tempestadeAttack(v)},
+			{"table-turn-target", tempestadeTargetBar(v)},
+		}
+	}
 	regions := []tableRegion{
 		{"table-header", tableHeader(v)},
 		// O ATAQUE PROPOSTO muda no ritmo do COMBATE, que não é o do cabeçalho nem
