@@ -54,6 +54,9 @@ templ IconButton(v ButtonVariant, icon, label string, attrs templ.Attributes) {
 }
 
 // TextField é o campo com rótulo, ajuda e erro.
+// Os atributos do `<input>` usam dois `if` e não um `else if`: na lista de
+// atributos o templ escreve o `else` como um atributo
+// (`TestNoElementRepeatsAnAttribute`).
 templ TextField(f Field, attrs templ.Attributes) {
 	<div
 		class="ds-field"
@@ -73,8 +76,8 @@ templ TextField(f Field, attrs templ.Attributes) {
 			}
 			if f.Error != "" {
 				aria-invalid="true"
-				aria-describedby={ f.ID + "-help" }
-			} else if f.Help != "" {
+			}
+			if f.Error != "" || f.Help != "" {
 				aria-describedby={ f.ID + "-help" }
 			}
 			{ attrs... }
