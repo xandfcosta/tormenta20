@@ -1,0 +1,147 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeEffects é a aba Efeitos da ficha paralela: as condições e o que
+// está em vigor em cima, a situação e os sempre ativos dos itens embaixo — a
+// ordem é a da frequência na mesa.
+templ tempestadeEffects(v View) {
+	<section class="grid gap-3" aria-label="Efeitos">
+		@ds.List("Condições · p394", "") {
+			<div class="ds-badges">
+				for _, e := range effectsOfKind(v, "condition") {
+					@ds.RemovableBadge(e.Name, e.Dialog, templ.Attributes{"data-on:click": e.Remove})
+				}
+				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "commandfor": "condition-picker", "command": "show-modal", "aria-haspopup": "dialog", "aria-label": "Aplicar condição"}) {
+					@ui.Icon("Plus", "ds-icon")
+					Condição
+				}
+			</div>
+		}
+		@ds.List("Em vigor", "") {
+			for _, e := range effectsOfKind(v, "stance", "applied") {
+				@ds.ActionRow(e.Name, e.Meta, e.Dialog) {
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + e.Name, "data-on:click": e.Remove}) {
+						Encerrar
+					}
+				}
+			}
+			<div class="ds-row">
+				<div>
+					<div class="ds-row-title">Aplicar uma magia em você</div>
+					<div class="ds-row-meta">a que alguém conjurou; o consumível se usa na Mochila</div>
+				</div>
+				@ds.IconButton(ds.ButtonGhost, "Plus", "Aplicar magia", templ.Attributes{"type": "button", "commandfor": "buff-picker", "command": "show-modal", "aria-haspopup": "dialog"})
+			</div>
+		}
+		if len(v.Effects.Situational) > 0 {
+			@ds.List("Situação · você liga quando vale", "") {
+				for _, row := range v.Effects.Situational {
+					@ds.ActionRow(row.Label, situationalMeta(row), situationalSheetID(row)) {
+						@ds.Switch("", row.Active, templ.Attributes{"aria-label": row.Label, "data-on:change": situationalToggles(v, row)})
+					}
+				}
+			}
+		}
+		if len(v.Effects.AlwaysOn) > 0 {
+			<details class="ds-list" data-preserve-attr="open">
+				<summary class="ds-list-head">
+					<span>{ "Sempre ativos, dos itens · " + strconv.Itoa(len(v.Effects.AlwaysOn)) }</span>
+					@ui.Icon("ChevronDown", "ds-icon")
+				</summary>
+				for _, row := range v.Effects.AlwaysOn {
+					@ds.Row(row.Label, row.Source, "", "")
+				}
+			</details>
+		}
+	</section>
+	for _, row := range v.Effects.Situational {
+		@situationalSheet(v, row)
+	}
+	@ds.Dialog("condition-picker", "Aplicar condição", nil) {
+		@ds.FilterBar() {
+			@ds.SearchField("condition-search", "Buscar condição", templ.Attributes{
+				"value": v.EffectPicks.ConditionSearch, "data-bind:condition_search": true,
+				"data-on:input__debounce.250ms": sheetGet(v),
+			})
+		}
+		@ds.DialogScroll() {
+			@effectPickerRows(v, "condition-picker", "Aplicar condição", "/efeitos/condicao/",
+				pickerOptionsShown(v.Effects.ConditionOptions, v.EffectPicks.ConditionSearch, ""))
+		}
+	}
+	@ds.Dialog("buff-picker", "Aplicar magia", nil) {
+		@ds.FilterBar() {
+			@ds.SearchField("buff-search", "Buscar magia", templ.Attributes{
+				"value": v.EffectPicks.BuffSearch, "data-bind:buff_search": true,
+				"data-on:input__debounce.250ms": sheetGet(v),
+			})
+			if options := buffCircleOptions(v); len(options) > 2 {
+				<div class="ds-options" role="group" aria-label="Círculo">
+					for _, o := range options {
+						@ds.Option(o.Active, templ.Attributes{"data-on:click": "$buff_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+							{ o.Label }
+						}
+					}
+				</div>
+			}
+		}
+		@ds.DialogScroll() {
+			@effectPickerRows(v, "buff-picker", "Aplicar magia", "/efeitos/aplica/",
+				pickerOptionsShown(v.Effects.BuffOptions, v.EffectPicks.BuffSearch, v.EffectPicks.BuffCircle))
+		}
+	}
+}
+
+// situationalSheet é a folha de um situacional: de onde vem, o que ele muda
+// quando ligado, e os degraus quando o poder os vende — com o preço em cada
+// um, porque quem paga o PM é a mesa (ALE-454).
+templ situationalSheet(v View, row situationalRow) {
+	@ds.Dialog(situationalSheetID(row), row.Label, nil) {
+		<p class="ds-row-meta">{ row.Source }</p>
+		if len(row.Modifiers) > 0 {
+			<div class="ds-sum-body ds-terms">
+				@ds.SumTerms(sumTermsOf(row.Modifiers))
+			</div>
+		}
+		if len(row.Degrees) > 0 {
+			<div class="ds-field">
+				<span class="ds-field-label">Degraus pagos</span>
+				<div class="ds-options">
+					for _, d := range row.Degrees {
+						@ds.Option(d.Chosen && row.Active, templ.Attributes{"data-on:click": degreeChooses(v, row, d.Steps)}) {
+							{ d.Label + " · " + d.Pm }
+						}
+					}
+				</div>
+			</div>
+		}
+		@ds.Switch("Ligado", row.Active, templ.Attributes{"data-on:change": situationalToggles(v, row)})
+	}
+}
+
+// effectPickerRows é o corpo do escolhedor de condição ou de magia: o nome, o
+// que ela faz, e o Aplicar, que fecha o diálogo no mesmo toque.
+templ effectPickerRows(v View, id, title, route string, options []pickerOption) {
+	@ds.List("", "") {
+		if len(options) == 0 {
+			@ds.Row("Nada com essa busca", "", "", "")
+		}
+		for _, o := range options {
+			<div class="ds-row ds-pick-row">
+				<div class="min-w-0">
+					<div class="ds-row-title">{ o.Label }</div>
+					<div class="ds-pick-detail">{ o.Detail }</div>
+				</div>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": title + ": " + o.Label, "commandfor": id, "command": "close", "data-on:click": sheetPost(v, route+o.Command)}) {
+					Aplicar
+				}
+			</div>
+		}
+	}
+}

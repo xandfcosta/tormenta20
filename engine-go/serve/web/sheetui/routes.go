@@ -143,11 +143,12 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
 			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0," +
 			" spell_search: '', spell_circle: '', spell_school: '', grimoire_search: '', grimoire_circle: ''," +
+			" condition_search: '', buff_search: '', buff_circle: ''," +
 			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +
 			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: ''," +
 			" power_search: '', stance_degrees: 0, power: '', show_passives: false," +
-			" power_source: 'raca', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', " + ExpertiseSpendsDeclaration() + "}",
+			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', " + ExpertiseSpendsDeclaration() + "}",
 	}, SceneBody(view))
 }
 

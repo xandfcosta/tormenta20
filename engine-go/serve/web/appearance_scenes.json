@@ -26,7 +26,8 @@
       { "address": "/personagens/3?tab=spells&tempestade=1", "session": "gm" },
       { "address": "/personagens/1?tab=combat&tempestade=1", "session": "gm" },
       { "address": "/personagens/3?tab=combat&tempestade=1", "session": "gm" },
-      { "address": "/personagens/1?tab=abilities&tempestade=1", "session": "gm" }
+      { "address": "/personagens/1?tab=abilities&tempestade=1", "session": "gm" },
+      { "address": "/personagens/26?tab=conditionals&tempestade=1", "session": "player" }
     ]
   },
   "master": {

@@ -118,9 +118,12 @@ func activeTabLabel(v View) string {
 // situacional fica de fora — ele é interruptor da aba Efeitos, e não algo que
 // "está em você".
 type activeEffect struct {
+	// Kind é "condition", "stance" ou "applied": a aba Efeitos separa a
+	// condição do que está em vigor.
+	Kind   string
 	Name   string
 	Remove string
-	// Dialog é o `id` da descrição; Kind e Meta são a linha de cima dela
+	// Dialog é o `id` da descrição; Meta é a linha de cima dela
 	// ("Condição · p394"), Text o que o efeito faz, e Terms os modificadores
 	// do efeito aplicado.
 	Dialog string
@@ -133,13 +136,13 @@ func activeEffects(v View) []activeEffect {
 	var out []activeEffect
 	for _, c := range v.Effects.Conditions {
 		out = append(out, activeEffect{
-			Name: c.Name, Remove: sheetPost(v, "/efeitos/condicao/"+c.Command),
+			Kind: "condition", Name: c.Name, Remove: sheetPost(v, "/efeitos/condicao/"+c.Command),
 			Dialog: "effect-condition-" + c.ID, Meta: withPage("Condição", c.Page), Text: c.Effect,
 		})
 	}
 	for _, s := range v.Effects.Stances {
 		effect := activeEffect{
-			Name: s.Name, Remove: sheetPost(v, "/efeitos/postura/"+s.Command),
+			Kind: "stance", Name: s.Name, Remove: sheetPost(v, "/efeitos/postura/"+s.Command),
 			Dialog: "effect-stance-" + s.Flag, Meta: stanceMeta(s),
 		}
 		// O TEXTO DA POSTURA é o do poder que a concede: a postura em curso só
@@ -152,7 +155,7 @@ func activeEffects(v View) []activeEffect {
 	}
 	for _, a := range v.Effects.Applied {
 		out = append(out, activeEffect{
-			Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command),
+			Kind: "applied", Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command),
 			Dialog: "effect-applied-" + strconv.FormatInt(a.ID, 10), Meta: strings.TrimSuffix("Efeito · "+a.Scope, " · "),
 			Text: a.Detail, Terms: sumTermsOf(a.Modifiers),
 		})

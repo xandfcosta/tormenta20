@@ -63,6 +63,8 @@ type pickerOption struct {
 	// magia. Sem ela o jogador escolhe por nome decorado.
 	Detail  string
 	Command string
+	// Circle é o círculo da magia ("2º"), para o filtro; a condição não tem.
+	Circle string
 }
 
 type stanceRow struct {
@@ -302,6 +304,7 @@ func buffOptions() []pickerOption {
 			Label:   m.Name,
 			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(scope),
 			Command: m.ID,
+			Circle:  circleName(m.Circle),
 		})
 	}
 	return options

@@ -1,0 +1,87 @@
+package sheetui
+
+import (
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// tempestadeChoicesDialog é o Escolher da ficha paralela, em passos (ver o
+// GLOSSARY): a lista do que falta e um passo de cada vez. No celular a lista
+// some quando um passo abre, e o cabeçalho do passo toma o lugar do do
+// diálogo, com a seta de voltar; no desktop as duas camadas ficam lado a lado,
+// e a lista não rola junto com o passo.
+templ tempestadeChoicesDialog(v View) {
+	@ds.Dialog("power-choices", "Escolher", nil) {
+		<div class="ds-steps" data-attr:data-step-open="String($choice_step !== '')">
+			{{ steps := choiceStepsOf(v) }}
+			<nav class="ds-steps-list" aria-label="Escolhas">
+				if len(steps) == 0 {
+					<p class="ds-help">Esta ficha não pede escolha.</p>
+				} else {
+					@ds.List(stepsTitle(steps), "") {
+						for _, step := range steps {
+							<button
+								type="button"
+								class="ds-row ds-step-row"
+								data-on:click={ "$choice_step = '" + step.ID + "'" }
+								data-attr:aria-current={ "$choice_step === '" + step.ID + "' ? 'step' : 'false'" }
+							>
+								<span class="min-w-0">
+									<span class="ds-row-title">{ step.Title }</span>
+									<span class="ds-row-meta">{ step.Meta }</span>
+								</span>
+								<span class="ds-step-tag" data-done?={ step.Done }>{ step.Tag() }</span>
+								@ui.Icon("ChevronRight", "ds-icon")
+							</button>
+						}
+					}
+				}
+			</nav>
+			for _, step := range steps {
+				@choiceStepSection(v, step)
+			}
+		</div>
+	}
+}
+
+// choiceStepSection é um passo aberto: o cabeçalho com a contagem, os filtros
+// fixos quando a lista é longa, e a parte que rola.
+templ choiceStepSection(v View, step choiceStep) {
+	<section class="ds-step" id={ "choice-step-" + step.ID } aria-label={ step.Title } data-show={ "$choice_step === '" + step.ID + "'" } style="display: none">
+		<div class="ds-step-head">
+			<span class="ds-step-back">
+				@ds.IconButton(ds.ButtonGhost, "ChevronLeft", "Voltar às escolhas", templ.Attributes{"type": "button", "data-on:click": "$choice_step = ''"})
+			</span>
+			<h3 class="ds-step-title">{ step.Title }</h3>
+			if step.Count != "" {
+				<span class="ds-step-count">{ step.Count }</span>
+			}
+			<form method="dialog" class="ds-step-close">
+				@ds.IconButton(ds.ButtonGhost, "X", "Fechar", nil)
+			</form>
+		</div>
+		if step.Kind == "powers" {
+			@powersStepFilters(v, step.Class)
+		}
+		@ds.DialogScroll() {
+			switch step.Kind {
+				case "race":
+					@raceStepBody(v, step.Race)
+				case "origin":
+					@originStepBody(v, *v.Choices.Origin)
+				case "powers":
+					@ds.List("", "") {
+						for _, power := range step.Class.Powers {
+							@powerPickRow(v, power)
+						}
+					}
+				case "path":
+					@classPickerDs(v, step.Class.ClassName, "caminho", "Caminho", *step.Class.Path)
+				case "devotee":
+					@classPickerDs(v, step.Class.ClassName, "devoto", "Devoto", *step.Class.Devotee)
+				case "counted":
+					@countedChoiceDs(v, step.Counted)
+			}
+		}
+	</section>
+}

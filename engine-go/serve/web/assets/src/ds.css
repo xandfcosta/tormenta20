@@ -241,6 +241,9 @@
     display: grid;
     gap: 0.25rem;
   }
+  .ds-field > .ds-filter-bar {
+    --ds-filter-above: 0.25rem;
+  }
   .ds-field > :is(label, .ds-field-label) {
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
@@ -462,6 +465,15 @@
     border: 1px solid var(--ds-line);
     border-radius: var(--ds-r-surface);
     background: var(--ds-surface);
+  }
+  /* Uma fileira de crachás dentro da lista (as condições em vigor), com o
+   * gesto de acrescentar no fim da fileira. */
+  .ds-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem 0.75rem;
   }
   .ds-list-head {
     display: flex;
@@ -723,22 +735,73 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  /* O DIÁLOGO ESCOLHER (ALE-473): as pendências e a escolha empilhadas no
-   * celular, lado a lado no desktop — e o diálogo largo para caber os dois. */
-  /* A ALTURA É FIXA, e não a do conteúdo: trocar de aba não pode fazer o
-   * diálogo pular de tamanho (decisão do dono). O corpo rola. */
-  .ds-dialog:has(.ds-picks) {
+  /* O ESCOLHER EM PASSOS (ALE-473): a lista do que falta e um passo de cada
+   * vez. A ALTURA É FIXA, e não a do conteúdo: trocar de passo não pode fazer o
+   * diálogo pular de tamanho (decisão do dono). Quem rola é a lista dos passos
+   * e a parte de baixo do passo aberto — nunca o corpo inteiro. */
+  .ds-dialog:has(.ds-steps) {
     height: calc(100dvh - 2rem);
   }
-  .ds-picks,
-  .ds-picks-main {
-    display: grid;
-    grid-auto-rows: max-content;
-    gap: 1rem;
+  .ds-dialog-body:has(> .ds-steps) {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
   }
-  .ds-pick-jump {
+  .ds-steps {
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .ds-steps-list {
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .ds-step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+    padding: 0 1rem;
+  }
+  .ds-step > .ds-filter-bar {
+    position: static;
+    margin-top: 0;
+    padding: 0;
+  }
+  /* No celular é uma camada de cada vez: com um passo aberto a lista some, e o
+   * cabeçalho do passo, com a seta de voltar e o fechar, toma o lugar do do
+   * diálogo. */
+  .ds-steps[data-step-open='true'] > .ds-steps-list,
+  .ds-dialog:has(.ds-steps[data-step-open='true']) > .ds-dialog-head {
+    display: none;
+  }
+  .ds-step-head {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline: -1rem;
+    padding: 0.75rem 1rem 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-step-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--ds-t-lg);
+    line-height: var(--ds-lh-lg);
+    font-weight: 600;
+  }
+  .ds-step-count {
+    font-size: var(--ds-t-sm);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .ds-step-row {
     width: 100%;
-    grid-template-columns: minmax(0, 1fr) 1rem;
+    grid-template-columns: minmax(0, 1fr) auto 1rem;
+    min-height: 3.5rem;
     border-right: 0;
     border-bottom: 0;
     border-left: 0;
@@ -748,22 +811,36 @@
     text-align: left;
     cursor: pointer;
   }
-  .ds-pick-jump:hover {
+  .ds-step-row .ds-row-title,
+  .ds-step-row .ds-row-meta {
+    display: block;
+  }
+  .ds-step-row:hover {
     background: var(--ds-sunk);
   }
-  /* A pendência da aba que está à vista se pinta com a cor da ação, para a
-   * pessoa saber o que está mostrando (decisão do dono). */
-  .ds-pick-jump[aria-current='true'] {
+  /* O passo aberto se pinta com a cor da ação, para a pessoa saber o que o
+   * lado direito está mostrando (decisão do dono). */
+  .ds-step-row[aria-current='step'] {
     background: color-mix(in oklab, var(--ds-action) 14%, var(--ds-surface));
-    font-weight: 700;
   }
-  .ds-pick-card {
-    display: grid;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border: 1px solid var(--ds-line);
-    border-radius: var(--ds-r-surface);
-    background: var(--ds-surface);
+  .ds-step-tag {
+    color: var(--ds-action);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .ds-step-tag[data-done] {
+    color: var(--ds-ink-3);
+    font-weight: 400;
+  }
+  /* Uma fileira só de opções, que desliza para o lado em vez de quebrar. */
+  .ds-options-line {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .ds-options-line > * {
+    flex: none;
   }
   .ds-pick-head {
     display: flex;
@@ -771,35 +848,56 @@
     justify-content: space-between;
     gap: 0.5rem;
   }
-  .ds-pick-title {
-    margin: 0;
-    font-size: var(--ds-t-md);
-    font-weight: 700;
-  }
+  /* A LINHA DE ESCOLHER é lida antes do toque, então ela respira mais que a
+   * linha de consulta, e a descrição quebra em vez de cortar: escolher pela
+   * metade de uma regra é escolher por nome decorado. */
   .ds-pick-row {
     grid-template-columns: minmax(0, 1fr) auto;
+    padding-block: 0.75rem;
   }
   .ds-pick-detail {
-    overflow: hidden;
+    margin-top: 0.25rem;
     color: var(--ds-ink-3);
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
   .ds-pick-options {
     margin-top: 0.5rem;
   }
-  /* No celular a folha já tem a largura da tela (ver o `.ds-dialog`); só no
-   * desktop ela se alarga para caber as duas colunas. */
+  /* No desktop as duas camadas ficam lado a lado, e a lista dos passos é uma
+   * coluna que não rola junto com o passo. */
   @media (min-width: 64rem) {
-    .ds-dialog:has(.ds-picks) {
-      width: min(56rem, calc(100vw - 2rem));
+    .ds-dialog:has(.ds-steps) {
+      width: min(60rem, calc(100vw - 2rem));
       height: min(48rem, calc(100dvh - 2rem));
     }
-    .ds-picks {
-      grid-template-columns: 16rem minmax(0, 1fr);
-      align-items: start;
+    .ds-steps {
+      grid-template-columns: 17rem minmax(0, 1fr);
+    }
+    .ds-steps[data-step-open='true'] > .ds-steps-list {
+      display: block;
+    }
+    .ds-dialog:has(.ds-steps[data-step-open='true']) > .ds-dialog-head {
+      display: flex;
+    }
+    .ds-steps-list {
+      border-right: 1px solid var(--ds-line);
+    }
+    .ds-step {
+      grid-column: 2;
+    }
+    .ds-step-back,
+    .ds-step-close {
+      display: none;
+    }
+    .ds-step-head {
+      margin: 0;
+      padding: 1rem 0 0;
+      border-bottom: 0;
+    }
+    .ds-step-title {
+      font-size: var(--ds-t-md);
+      line-height: var(--ds-lh-md);
     }
   }
   /* O INTERRUPTOR liga e desliga uma coisa só, e tocar no rótulo também o
@@ -1058,6 +1156,52 @@
     padding: 1rem;
     overflow-y: auto;
   }
+  /* A BARRA DE FILTROS toma o espaço de cima com margem negativa e o devolve
+   * em padding: em repouso nada sai do lugar, e presa ela cobre do topo até a
+   * lista — nada rola visível acima da busca. Dos lados ela não sangra: as
+   * linhas têm a largura dela, e a sangria fazia a aba transbordar. Quem rola
+   * diz o espaço, o fundo e onde a barra prende: o `top` conta a partir do
+   * padding do rolador, e não da borda, então ele desconta o padding (ou soma o
+   * que já está preso no topo, como as abas). */
+  .ds-filter-bar {
+    position: sticky;
+    top: var(--ds-filter-stick);
+    z-index: 1;
+    display: grid;
+    gap: 0.5rem;
+    margin-top: calc(-1 * var(--ds-filter-above));
+    padding: var(--ds-filter-above) 0 0.5rem;
+    background: var(--ds-filter-bg);
+  }
+  .ds-dialog-body {
+    --ds-filter-stick: -1rem;
+    --ds-filter-above: 1rem;
+    --ds-filter-bg: var(--ds-surface);
+  }
+  /* NO DIÁLOGO A BARRA É FIXA e só a lista rola: o corpo deixa de rolar, e a
+   * parte que rola vai até a borda para a barra de rolagem ficar nela. */
+  .ds-dialog-body:has(> .ds-dialog-scroll) {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+  .ds-dialog-body > .ds-filter-bar {
+    position: static;
+    margin-top: 0;
+    padding: 0;
+  }
+  .ds-dialog-scroll {
+    --ds-filter-stick: 0;
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    grid-auto-rows: max-content;
+    gap: 0.75rem;
+    margin-inline: -1rem;
+    padding: 0 1rem 1rem;
+    overflow-y: auto;
+  }
   .ds-dialog-foot {
     display: flex;
     justify-content: flex-end;
@@ -1211,6 +1355,9 @@
     gap: 0.75rem;
     padding: 0.75rem;
     overflow-y: auto;
+    --ds-filter-stick: -0.75rem;
+    --ds-filter-above: 0.75rem;
+    --ds-filter-bg: var(--ds-bg);
   }
   .ds-sheet-tabs {
     display: none;
@@ -1339,6 +1486,9 @@
     .ds-sheet-main {
       gap: 1rem;
       padding: 0 1.5rem 1.5rem;
+      /* As abas já estão presas no topo, com a altura de uma linha. */
+      --ds-filter-stick: var(--ds-h-row);
+      --ds-filter-above: 1rem;
     }
     .ds-sheet-tabs {
       display: block;

@@ -11,19 +11,32 @@ import (
 // cima, a CD e o atributo uma vez, o grimório por círculo e as concedidas.
 templ tempestadeSpells(v View) {
 	<section class="grid gap-3" aria-label="Magias">
-		<div class="flex flex-wrap items-center gap-2">
-			<div class="min-w-0 flex-1">
-				@ds.SearchField("grimoire-search", "Buscar magia", templ.Attributes{
-					"value": v.GrimoireSearch, "data-bind:grimoire_search": true,
-					"data-on:input__debounce.250ms": sheetGet(v),
-				})
-			</div>
-			if v.Spells.IsCaster {
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "spell-learn", "command": "show-modal", "aria-haspopup": "dialog"}) {
-					Aprender
+		@ds.FilterBar() {
+			<div class="flex flex-wrap items-center gap-2">
+				<div class="min-w-0 flex-1">
+					@ds.SearchField("grimoire-search", "Buscar magia", templ.Attributes{
+						"value": v.GrimoireSearch, "data-bind:grimoire_search": true,
+						"data-on:input__debounce.250ms": sheetGet(v),
+					})
+				</div>
+				if v.Spells.IsCaster {
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "spell-learn", "command": "show-modal", "aria-haspopup": "dialog"}) {
+						Aprender
+					}
 				}
+			</div>
+			// O FILTRO SÓ APARECE COM DOIS CÍRCULOS: com um só, "Todos" e ele
+			// mostrariam a mesma lista.
+			if options := grimoireCircleOptions(v); len(options) > 2 {
+				<div class="ds-options" role="group" aria-label="Círculo">
+					for _, o := range options {
+						@ds.Option(o.Active, templ.Attributes{"data-on:click": "$grimoire_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+							{ o.Label }
+						}
+					}
+				</div>
 			}
-		</div>
+		}
 		if v.SpellCasting.CD > 0 {
 			<p class="ds-help">CD <b>{ strconv.Itoa(v.SpellCasting.CD) }</b> · { v.SpellCasting.Attribute + " · " + aprendidasEscrito(len(v.Spells.Learned)) }</p>
 		}
@@ -33,17 +46,6 @@ templ tempestadeSpells(v View) {
 			} else {
 				@ds.Empty("Nenhuma magia", "Este personagem não conjura por classe.")
 			}
-		}
-		// O FILTRO SÓ APARECE COM DOIS CÍRCULOS: com um só, "Todos" e ele
-		// mostrariam a mesma lista.
-		if options := grimoireCircleOptions(v); len(options) > 2 {
-			<div class="ds-options" role="group" aria-label="Círculo">
-				for _, o := range options {
-					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$grimoire_circle = '" + o.Value + "'; " + sheetGet(v)}) {
-						{ o.Label }
-					}
-				}
-			</div>
 		}
 		if groups, lines := spellCircleGroups(v), grantedSpellLines(v); len(groups) > 0 || len(lines) > 0 {
 			@ds.List("", "") {
@@ -163,24 +165,27 @@ templ augmentLine(a augmentRow) {
 // linha traz a regra, que é o que separa uma magia da outra na hora de escolher.
 templ learnSpellSheet(v View) {
 	@ds.Dialog("spell-learn", "Aprender magia", nil) {
-		@ds.SearchField("spell-learn-search", "Buscar no livro", templ.Attributes{
-			"value": v.Spells.Search, "data-bind:spell_search": true,
-			"data-on:input__debounce.250ms": sheetGet(v),
-		})
-		<div class="ds-options" role="group" aria-label="Círculo">
-			for _, o := range circleFilterOptions {
-				@ds.Option(o.Value == v.Spells.Circle, templ.Attributes{"data-on:click": "$spell_circle = '" + o.Value + "'; " + sheetGet(v)}) {
-					{ o.Label }
+		@ds.FilterBar() {
+			@ds.SearchField("spell-learn-search", "Buscar no livro", templ.Attributes{
+				"value": v.Spells.Search, "data-bind:spell_search": true,
+				"data-on:input__debounce.250ms": sheetGet(v),
+			})
+			<div class="ds-options" role="group" aria-label="Círculo">
+				for _, o := range circleFilterOptions {
+					@ds.Option(o.Value == v.Spells.Circle, templ.Attributes{"data-on:click": "$spell_circle = '" + o.Value + "'; " + sheetGet(v)}) {
+						{ o.Label }
+					}
 				}
-			}
-		</div>
-		<div class="ds-options" role="group" aria-label="Escola">
-			for _, o := range v.Spells.Schools {
-				@ds.Option(o.Active, templ.Attributes{"data-on:click": "$spell_school = '" + o.Value + "'; " + sheetGet(v)}) {
-					{ o.Label }
+			</div>
+			<div class="ds-options" role="group" aria-label="Escola">
+				for _, o := range v.Spells.Schools {
+					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$spell_school = '" + o.Value + "'; " + sheetGet(v)}) {
+						{ o.Label }
+					}
 				}
-			}
-		</div>
+			</div>
+		}
+		@ds.DialogScroll() {
 		@ds.List("No livro", strconv.Itoa(len(v.Spells.Catalog))) {
 			if len(v.Spells.Catalog) == 0 {
 				@ds.Row("Nenhuma magia com esses filtros", "", "", "")
@@ -197,6 +202,7 @@ templ learnSpellSheet(v View) {
 					}
 				</div>
 			}
+		}
 		}
 	}
 }

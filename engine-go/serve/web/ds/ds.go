@@ -131,3 +131,11 @@ func rollTermText(t RollTerm) string {
 	}
 	return " + " + t.Label + " " + strconv.Itoa(t.Value)
 }
+
+// dialogBackdropCloses fecha o diálogo no toque no fundo. O fundo entrega o
+// clique ao próprio `<dialog>`, e por isso o alvo tem de ser ele E o ponto tem
+// de cair fora da caixa: o clique de teclado (Enter num botão) chega com as
+// coordenadas zeradas, e só o alvo o separa. O `closedby="any"` faria isto
+// nativo, mas ainda não chegou a todos os navegadores.
+const dialogBackdropCloses = "evt.target === el && ((r) => evt.clientX < r.left || evt.clientX > r.right || " +
+	"evt.clientY < r.top || evt.clientY > r.bottom)(el.getBoundingClientRect()) && el.close()"
