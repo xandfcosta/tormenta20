@@ -188,6 +188,17 @@ templ List(title, trailing string) {
 	</div>
 }
 
+// BareList é a lista sem a moldura do cartão, para dentro de um diálogo ou de
+// outra moldura (ver o GLOSSARY).
+templ BareList(title, trailing string) {
+	<div class="ds-list" data-bare>
+		if title != "" || trailing != "" {
+			@ListHead(title, trailing)
+		}
+		{ children... }
+	</div>
+}
+
 // ListHead é o cabeçalho de uma SEÇÃO dentro da lista: as magias de um
 // círculo. A seção não se recolhe, e as linhas seguem na mesma moldura.
 templ ListHead(title, trailing string) {

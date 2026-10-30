@@ -54,7 +54,7 @@ templ itemSheetDs(v View, s itemSheet) {
 			</div>
 		}
 		if len(s.Overlays) > 0 {
-			@ds.List("Melhorias e material", "") {
+			@ds.BareList("Melhorias e material", "") {
 				for _, o := range s.Overlays {
 					@ds.Row(o.Name, o.Effect, "", "")
 				}
@@ -62,7 +62,7 @@ templ itemSheetDs(v View, s itemSheet) {
 		}
 		// O ENCANTO SÓ SE LÊ: quem encanta é o mestre (p333).
 		if len(s.Enchants) > 0 {
-			@ds.List("Encantos", "") {
+			@ds.BareList("Encantos", "") {
 				for _, o := range s.Enchants {
 					@ds.Row(o.Name, o.Effect, "", "")
 				}
@@ -97,7 +97,7 @@ templ itemSheetFoot(v View, s itemSheet) {
 // família do item, e quem recusa o resto é o servidor (`fitsItemImprovement`).
 templ improvementsDs(v View, s itemSheet) {
 	@ds.Dialog(itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)) {
-		@ds.List("Melhorias", "") {
+		@ds.BareList("Melhorias", "") {
 			for _, c := range s.Improvements {
 				<div class="ds-row ds-pick-row">
 					<div class="min-w-0">

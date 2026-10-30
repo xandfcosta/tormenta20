@@ -466,6 +466,16 @@
     border-radius: var(--ds-r-surface);
     background: var(--ds-surface);
   }
+  .ds-list[data-bare] {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+  .ds-list[data-bare] > .ds-list-head,
+  .ds-list[data-bare] > .ds-row {
+    padding-inline: 0;
+  }
   /* Uma fileira de crachás dentro da lista (as condições em vigor), com o
    * gesto de acrescentar no fim da fileira. */
   .ds-badges {

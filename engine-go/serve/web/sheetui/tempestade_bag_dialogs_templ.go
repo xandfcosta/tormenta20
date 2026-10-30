@@ -250,7 +250,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.List("Melhorias e material", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.BareList("Melhorias e material", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -280,7 +280,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.List("Encantos", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.BareList("Encantos", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -520,7 +520,7 @@ func improvementsDs(v View, s itemSheet) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = ds.List("Melhorias", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.BareList("Melhorias", "").Render(templ.WithChildren(ctx, templ_7745c5c3_Var19), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
