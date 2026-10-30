@@ -8,12 +8,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A SESSÃO PARALELA (ALE-473), pelo mockup aprovado `sessao.html`: a visão do
-// jogador com personagem, aberta com `?tempestade=1`. O cabeçalho com a faixa
-// sem fim em cima; a barra da sessão embaixo no celular (decisão do dono: é
-// onde o polegar alcança) e em cima no desktop; a Ficha embutida já na ficha
-// paralela. As quatro superfícies vestem o kit; o mapa do Tabuleiro é o de
-// hoje, porque ele é conteúdo e não moldura (ver `tempestadeBoard`).
+// A SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado `sessao.html`. O
+// cabeçalho com a faixa sem fim em cima; a barra da sessão embaixo no celular
+// (decisão do dono: é onde o polegar alcança) e em cima no desktop. As quatro
+// superfícies vestem o kit; o mapa do Tabuleiro é o de hoje, porque ele é
+// conteúdo e não moldura (ver `tempestadeBoard`).
 templ tempestadeTableScene(v View) {
 	<main id="table" class="ds-session">
 		@tempestadeHeader(v)
@@ -192,7 +191,7 @@ templ tempestadeAttack(v View) {
 			if len(v.Attack.Offers) > 0 || v.Attack.Mine {
 				<div class="ds-strike-foot">
 					for _, offer := range v.Attack.Offers {
-						@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer, true)}) {
+						@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
 							{ offer.Label }
 						}
 					}

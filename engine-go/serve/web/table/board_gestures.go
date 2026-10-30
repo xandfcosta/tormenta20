@@ -27,10 +27,9 @@ import (
 // Uma ilha precisaria receber o mesmo endereço por atributo, e aí haveria dois
 // lugares dizendo a mesma URL.
 
-// gesture é o endereço de um gesto do jogador neste tabuleiro, com a marca da
-// sessão paralela quando ela existe.
+// gesture é o endereço de um gesto neste tabuleiro.
 func (v BoardView) gesture(path string) string {
-	return v.Base + "/" + path + v.Mark
+	return v.Base + "/" + path
 }
 
 // moveCommand escreve a chamada de confirmar ou cancelar.

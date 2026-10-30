@@ -101,7 +101,6 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
-	view.wearParallel(parallelSessionAsked(r, view))
 	system, stream := pageSystemAndStream(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
@@ -290,9 +289,6 @@ func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64
 	if view.Tempestade {
 		return tempestadeTableScene(view)
 	}
-	if view.GM == nil {
-		return tableScene(view)
-	}
 	return gmStage(view, s.forTableBestiary(r, campaignID, sessionID))
 }
 
@@ -421,7 +417,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	}
 	// A PRESENÇA É DOS DOIS PAPÉIS, e não só do mestre (decisão do dono): saber
 	// quem caiu é o que faz a mesa ESPERAR em vez de continuar sem alguém. Por
-	// isso ela é calculada FORA do ramo do mestre — dentro dele, o `cardsParty`
+	// isso ela é calculada FORA do ramo do mestre — dentro dele, o `tempestadeParty`
 	// do jogador desenharia o ponto de presença que nunca chegaria.
 	members, present := s.membrosEPresenca(ctx, campaignID, sessionID)
 	connected := live.ConnectedCharacters(members, present)
@@ -430,6 +426,9 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 		r := ofViewGm(st, members, present, true)
 		view.GM = &r
 	}
+	// O JOGADOR recebe a sessão no Tempestade, e o mestre segue com o palco de
+	// hoje até a vez dele (ALE-473).
+	view.Tempestade = view.GM == nil
 	return view, http.StatusOK, nil
 }
 

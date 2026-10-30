@@ -49,7 +49,6 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	view.wearParallel(parallelSessionAsked(r, view))
 
 	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
@@ -117,9 +116,6 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
-		// A MARCA VALE EM TODO QUADRO, e não só no primeiro: sem ela, o cabeçalho
-		// de hoje voltava à sessão paralela no primeiro tique depois de abrir.
-		view.wearParallel(parallelSessionAsked(r, view))
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
@@ -346,13 +342,6 @@ func TableRegions(v View) []tableRegion {
 	if v.GM != nil {
 		regions = append(regions, tableRegion{"table-tracker-rail", tableRailTracker(v)})
 		regions = append(regions, tableRegion{"table-npcs", tableListNpCs(v)})
-	}
-	// O ALVO DA VEZ só existe na superfície Ações, que é de QUEM TEM PERSONAGEM
-	// na sessão — a mesma condição do `tablePlayerSheet`, escrita de novo aqui
-	// pela razão do bloco acima: a lista e a página não podem discordar sobre
-	// quais regiões existem, e o `MySheet` é nulo na view que o stream monta.
-	if v.GM == nil && v.Eu != nil {
-		regions = append(regions, tableRegion{"table-turn-target", turnTargetBar(v)})
 	}
 	return regions
 }

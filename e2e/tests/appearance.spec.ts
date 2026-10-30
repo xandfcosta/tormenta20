@@ -88,7 +88,6 @@ const WIDER_FACE_STEP = '0.2em'
 const WIDER_FACE_DEBT = new Set([
   'campaigns · /campanhas · gm',
   'characters · /personagens · gm',
-  'table · /campanhas/1/sessoes/4 · player',
 ])
 
 /**

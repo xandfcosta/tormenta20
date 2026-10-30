@@ -40,7 +40,7 @@ func TestTheRolledTestOffersTheRerollToWhoRolled(t *testing.T) {
 // rolledTestCard é a região do teste rolado na sessão do jogador.
 func rolledTestCard(t *testing.T, f sceneFixture) *html.Node {
 	t.Helper()
-	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +58,7 @@ func rolledTestCard(t *testing.T, f sceneFixture) *html.Node {
 func TestTheParallelActionsOfferTheAttackBoost(t *testing.T) {
 	f, warrior, _ := barbarianOnTurn(t)
 	seedClasse(t, f.s, warrior, "Guerreiro", 5)
-	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +91,7 @@ func TestTheParallelQueueSaysWhenTheManaIsHidden(t *testing.T) {
 	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
 	}
-	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)

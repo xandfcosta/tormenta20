@@ -3,7 +3,6 @@ package api
 import (
 	"html"
 	"net/http"
-	"strconv"
 	"strings"
 	"t20engine/serve/web/table"
 	"testing"
@@ -15,34 +14,14 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 
 	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	for _, id := range tableRegionNames {
+	// AS REGIÕES SÃO AS DA PRODUÇÃO, e não uma lista escrita aqui: a lista e a
+	// página não podem discordar sobre quais existem.
+	for _, region := range table.TableRegions(table.View{Tempestade: true}) {
+		id := region.ID
 		mark := `id="` + id + `"`
 		if n := strings.Count(html, mark); n != 1 {
 			t.Errorf("a região %q aparece %d vezes na cena do jogador, e o remendo precisa de exatamente 1", id, n)
 		}
-	}
-}
-
-// A asserção é sobre o RÓTULO que o usuário leria, e não sobre um id interno: é
-// o rótulo que promete.
-func TestTheSelectorHasTheThreeSurfaces(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-
-	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
-
-	if !strings.Contains(html, "O que ver na sessão") {
-		t.Fatal("o jogador não recebeu o seletor de superfícies")
-	}
-	for _, label := range []string{"Ficha", "Mesa", "Tabuleiro"} {
-		if !strings.Contains(html, ">"+label+"<") {
-			t.Errorf("o seletor não oferece %q", label)
-		}
-	}
-	// E a ficha chega DESENHADA, não prometida: aba com rótulo e sem conteúdo
-	// atrás é promessa quebrada.
-	if !strings.Contains(html, `id="sheet-scene"`) {
-		t.Error("a aba Ficha está na tela e a ficha não veio junto")
 	}
 }
 
@@ -56,45 +35,20 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	html := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
 
 	insideSheet := html[strings.Index(html, `id="sheet-scene"`):]
-	if i := strings.Index(insideSheet, "Seções da ficha"); i >= 0 {
-		nav := insideSheet[i : i+3000]
-		if strings.Contains(nav, `href="/personagens/`) {
-			t.Error("a fileira de abas da ficha embutida ainda tem link para fora da sessão")
+	if i := strings.Index(insideSheet, `aria-label="Seções da ficha"`); i >= 0 {
+		nav, _, _ := strings.Cut(insideSheet[i:], "</nav>")
+		// O LINK FICA para quem abre em outra aba, mas o toque é IMPEDIDO e vira
+		// o pedido da ficha embutida: cada `href` tem o seu `__prevent`.
+		links := strings.Count(nav, `href="/personagens/`)
+		if links == 0 || strings.Count(nav, "data-on:click__prevent") != links {
+			t.Errorf("a fileira de abas da ficha embutida tem %d links e %d toques impedidos — "+
+				"o link sem toque impedido tira o jogador da mesa", links, strings.Count(nav, "data-on:click__prevent"))
 		}
 		if !strings.Contains(nav, "embutida=1") {
 			t.Error("a aba embutida não carrega a marca que a mantém dentro da sessão")
 		}
 	} else {
 		t.Fatal("não achei a fileira de abas dentro da ficha embutida")
-	}
-}
-
-// A ficha embutida abre direto nas sete abas, e nenhuma delas diz o nome: a
-// barra de cima é pulada porque o ‹ Voltar dela levaria o jogador para fora da
-// mesa. Pular a barra inteira pulou junto o NOME — o crachá do rodapé diz a raça
-// e a classe, e nunca de quem é a ficha.
-//
-// O caso prende as DUAS metades, e a segunda tem controle: a ficha SOLTA continua
-// com a volta, senão "não achei a volta" seria verde num HTML vazio.
-func TestEmbeddedSheetNamesItsCharacter(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-
-	onTable := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
-	embedded := onTable[strings.Index(onTable, `id="sheet-scene"`):]
-	header, _, _ := strings.Cut(embedded, "Seções da ficha")
-
-	if !strings.Contains(header, ">Arcanista<") {
-		t.Error("a ficha dentro da sessão não diz de quem ela é")
-	}
-	if strings.Contains(header, "‹ Voltar") {
-		t.Error("a ficha embutida tem a volta que tira o jogador da mesa")
-	}
-
-	loose := f.requests(t, f.player, http.MethodGet,
-		"/personagens/"+strconv.FormatInt(f.charID, 10), "").Body.String()
-	if !strings.Contains(loose, "‹ Voltar") {
-		t.Fatal("a ficha de página inteira perdeu a volta — sem ela o caso acima não mede nada")
 	}
 }
 

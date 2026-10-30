@@ -46,9 +46,8 @@ type View struct {
 	// Endless é a faixa SEM FIM da sessão paralela: a fila inteira a partir de
 	// quem joga agora, e mais três da rodada seguinte (ver o GLOSSARY, "faixa").
 	Endless []turnAhead
-	// Tempestade é a sessão paralela (`?tempestade=1`), só para o jogador com
-	// personagem: a página e o stream desenham o sistema novo, e as superfícies
-	// que ainda não migraram levam à sessão de hoje.
+	// Tempestade é a sessão do JOGADOR, que a página e o stream desenham no
+	// sistema novo; o mestre segue com o palco de hoje (ALE-473).
 	Tempestade bool
 	Group      []Member
 	Queue      []tableRow
@@ -486,7 +485,7 @@ func (v View) SessionBase() string { return routes.Session(v.CampaignID, v.Sessi
 // regras extraídas, e o que impede as duas telas de divergirem é compartilhar a
 // REGRA, não a rota.
 func tableCommand(v View, method, action string) string {
-	path := markedIfParallel(v.SessionBase()+"/"+action, v.Tempestade)
+	path := v.SessionBase() + "/" + action
 	if method == "POST" {
 		return fmt.Sprintf("@post('%s')", path)
 	}

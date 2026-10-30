@@ -152,29 +152,24 @@ func superficieDeAcoes(t *testing.T, cena string) string {
 	return entre(t, cena, `id="actions-scene"`, `$surface === &#34;mesa&#34;`)
 }
 
-// A SUPERFÍCIE ESTÁ NO SELETOR, que é o que a torna alcançável.
+// A SUPERFÍCIE ESTÁ NA BARRA DA SESSÃO, que é o que a torna alcançável.
 //
-// Pelo SELETOR e não por um `Contains` na cena inteira: o painel é desenhado
+// Pela BARRA e não por um `Contains` na cena inteira: o painel é desenhado
 // escondido (`data-show`), então o HTML dele existe antes de qualquer clique —
 // procurar "Ação padrão" na página provaria que o servidor montou o painel e
 // nada sobre haver botão que o abra.
-//
-// AQUI NÃO SE AFIRMA NADA SOBRE O MESTRE, e a razão foi medida: a cena do
-// mestre não tem seletor de superfície NENHUM — ele não recebe "Mesa",
-// "Tabuleiro" nem "O que ver na sessão". Um `!Contains(mestre, "Ações")` seria
-// verdadeiro para sempre e por acidente, que é verde sem medição.
-func TestTheActionsSurfaceIsReachableFromTheSelector(t *testing.T) {
+func TestTheActionsSurfaceIsReachableFromTheSessionBar(t *testing.T) {
 	f := newSceneFixture(t)
 	cena := acoesDaMesa(t, f)
 
-	seletor := entre(t, cena, `aria-label="O que ver na sessão"`, "</div>")
-	if !strings.Contains(seletor, ">Ações<") {
-		t.Errorf("o seletor de superfícies não oferece Ações:\n%s", recorte(seletor))
+	seletor := entre(t, cena, `aria-label="Superfícies da sessão"`, "</nav>")
+	if !strings.Contains(seletor, "Ações") {
+		t.Errorf("a barra da sessão não oferece Ações:\n%s", recorte(seletor))
 	}
 	// O CONTROLE: sem ele, um recorte que errasse o fim daria uma string vazia e
 	// a asserção de cima reprovaria por outro motivo que não o medido.
-	if !strings.Contains(seletor, ">Mesa<") {
-		t.Fatalf("o recorte do seletor não pegou nem a Mesa, que sempre está lá:\n%s",
+	if !strings.Contains(seletor, "Mesa") {
+		t.Fatalf("o recorte da barra não pegou nem a Mesa, que sempre está lá:\n%s",
 			recorte(seletor))
 	}
 }
@@ -238,44 +233,6 @@ func TestTheWieldedWeaponIsTheFirstStandardAction(t *testing.T) {
 	}
 	if i, j := strings.Index(padrao, "Atacar"), strings.Index(padrao, "Manobra"); j >= 0 && i > j {
 		t.Errorf("a Manobra vem antes do Atacar, e o ataque é a ação mais comum do turno")
-	}
-}
-
-// AS PASSIVAS SÃO UMA CONTAGEM e nunca linhas.
-//
-// Elas já entram nos números da ficha — a Redução de Dano que o bárbaro tem já
-// está dentro da RD que a aba Combate mostra —, então uma linha por passiva
-// encheria a tela de coisas sobre as quais não há o que fazer. São 238 das 411
-// ativações do catálogo, e é esse o tamanho do ruído evitado.
-//
-// O CONTROLE VEM PRIMEIRO, e ele não é zelo: a primeira versão deste caso
-// afirmava que a "Esquiva Sobrenatural" não estava no painel — e ela não estava
-// porque este bárbaro NÃO A TEM. A ausência era verdadeira e não media nada; o
-// caso passou verde com a sabotagem que põe toda passiva na tela. Por isso a
-// ordem: prove que o poder existe na ficha, depois leia a ausência dele aqui.
-func TestThePassivesAreCountedAndNeverListed(t *testing.T) {
-	f, id := barbarianAtTheTable(t, 6)
-
-	// O CONTROLE LÊ O BLOCO DE PASSIVAS da aba Poderes, e não a aba inteira: o
-	// DIÁLOGO DE ESCOLHER poder lista o acervo da classe, então um `Contains` na
-	// página casa poder que o personagem apenas PODERIA ter. Medido — com a aba
-	// inteira, "Esquiva Sobrenatural" passava no controle e o bárbaro não a tem.
-	ficha := f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=abilities", id), "").Body.String()
-	tidas := entre(t, ficha, "Passivas ·", "</section>")
-	if !strings.Contains(tidas, passivaDoBarbaro) {
-		t.Fatalf("o controle falhou: este bárbaro não TEM %q, e a ausência dela no "+
-			"painel não provaria nada:\n%s", passivaDoBarbaro, recorte(tidas))
-	}
-
-	painel := superficieDeAcoes(t, acoesDaMesa(t, f))
-	if strings.Contains(painel, passivaDoBarbaro) {
-		t.Errorf("a passiva %q virou linha da superfície de Ações — ela já está dentro "+
-			"dos números da ficha, e não há o que acionar", passivaDoBarbaro)
-	}
-	if !strings.Contains(painel, "Passivas ·") {
-		t.Errorf("o painel não diz quantas passivas existem, e aí \"não tenho\" e "+
-			"\"não mostrei\" viram a mesma coisa:\n%s", recorte(painel))
 	}
 }
 
@@ -441,8 +398,8 @@ func TestTheStanceThatScalesAsksForTheDegreeOnTheActionsSurface(t *testing.T) {
 			"tem um degrau para escolher, e escolhê-lo depois custa a entrada "+
 			"inteira de novo:\n%s", recorte(padrao))
 	}
-	// A APÓSTROFE VEM ESCAPADA do templ, como o `&#34;` do recorte da superfície.
-	if !strings.Contains(padrao, "$detail = &#39;postura-furia&#39;") {
+	// O DIÁLOGO DO KIT abre pelo `commandfor`, com o id da superfície Ações.
+	if !strings.Contains(padrao, `commandfor="actions-`) {
 		t.Errorf("o chip da Fúria não abre o contador de degraus:\n%s", recorte(padrao))
 	}
 	// O `+` É O AVISO de que o preço sobe, e ele é a mesma grafia que o crachá

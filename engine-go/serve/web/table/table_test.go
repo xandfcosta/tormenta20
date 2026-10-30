@@ -64,14 +64,15 @@ func TestTableTurnOf(t *testing.T) {
 // MEDIDO no navegador: o `data-bind` do Datastar escreve ZERO no sinal quando
 // um `<input type=number>` esvazia — digitar 7, apagar, e o sinal vai a 0. Sem
 // guarda, apagar para redigitar mostra "Total previsto 8" com bônus 8 e dado
-// nenhum: um total que não existe, lido no instante da decisão.
+// nenhum: um total que não existe, lido no instante da decisão. Sem dado, o
+// total some e o Registrar espera.
 //
 // Este guarda pina a EXPRESSÃO, e não o comportamento. O comportamental
 // exigiria a cena EM JOGO com o jogador tendo personagem nela, e montar esse
 // estado no e2e mede o banco, não o app.
 func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	bonus := int64(8)
-	html, err := ui.RenderFragment(t.Context(), tableScene(View{
+	html, err := ui.RenderFragment(t.Context(), tempestadeRegister(View{
 		CampaignID: 7, SessionID: 42, SceneActive: true,
 		Turn: tableTurn{Kind: "idle"},
 		Eu:   &tableMe{CharacterID: 1, Name: "Samira", Bonus: bonus},
@@ -85,9 +86,6 @@ func TestTheD20PreviewDoesNotLieWithAnEmptyField(t *testing.T) {
 	const strip = "$d20 >= 1 && $d20 <= 20"
 	if !strings.Contains(html, strip) {
 		t.Errorf("a prévia não é condicionada à faixa do dado — campo vazio vira um total inventado")
-	}
-	if !strings.Contains(html, "informe o dado") {
-		t.Error("sem dado, a linha não diz o que falta")
 	}
 	if !strings.Contains(html, "$registering || !(") {
 		t.Error("o botão continua oferecendo uma ação que o servidor vai recusar")

@@ -19,12 +19,6 @@ templ attackProposed(v View) {
 			class="mesa-ataque"
 		>
 			<p class="flex min-w-0 flex-wrap items-center gap-2">
-				// RASCUNHO é a palavra do lado de quem não confirma, e ela explica a
-				// ausência do Confirmar — sem ela a tela do jogador parece a do
-				// mestre com um botão faltando. É a mesma do movimento.
-				if v.GM == nil {
-					<span class="board-draft-seal">Rascunho</span>
-				}
 				<span class={ "mesa-ataque-selo", v.Attack.Class }>{ v.Attack.Verdict }</span>
 				<span class="min-w-0 truncate">{ v.Attack.Attacker } → { v.Attack.Target }</span>
 			</p>
@@ -173,7 +167,7 @@ templ skillTestRolled(v View) {
 templ rerollOfferButton(offer rerollOffer) {
 	<button
 		type="button"
-		data-on:click={ offerCommand(offer, false) }
+		data-on:click={ offerCommand(offer) }
 		class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-foreground"
 	>{ offer.Label }</button>
 }

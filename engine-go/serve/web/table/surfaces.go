@@ -73,18 +73,6 @@ func pickSurface(which string) string {
 	return fmt.Sprintf("$surface = %q", which)
 }
 
-// surfaceStyling liga UMA das duas aparências, e nunca deixa as duas.
-//
-// Os dois lados no `data-class` pela mesma armadilha de CASCATA que a aba do
-// editor de bloco documenta: a marca de escolhida mora em `@layer components` e
-// as cores do Tailwind são utilidades, que vivem numa camada POSTERIOR — camada
-// vence especificidade, e o dourado perderia para o cinza sem nada acusar.
-func surfaceStyling(which string) string {
-	return fmt.Sprintf(
-		"{'surface-chosen': %s, 'border-grimorio-iron': !(%s), 'text-muted-foreground': !(%s)}",
-		surface(which), surface(which), surface(which))
-}
-
 // sessionSurfaceIcon é o ícone de cada superfície na barra da sessão
 // paralela. Ações é o ALVO, e não as espadas da barra de hoje: na sessão
 // paralela as espadas são da seção Combate da ficha, logo acima.
