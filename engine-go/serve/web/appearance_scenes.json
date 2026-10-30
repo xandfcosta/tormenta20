@@ -47,7 +47,8 @@
   "table": {
     "visits": [
       { "address": "/campanhas/1/sessoes/4", "session": "gm" },
-      { "address": "/campanhas/1/sessoes/4", "session": "player" }
+      { "address": "/campanhas/1/sessoes/4", "session": "player" },
+      { "address": "/campanhas/1/sessoes/4?tempestade=1", "session": "player" }
     ]
   },
   "admin": { "visits": [{ "address": "/admin", "session": "gm" }] },

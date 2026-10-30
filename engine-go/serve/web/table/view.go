@@ -43,9 +43,16 @@ type View struct {
 	// Upcoming é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
 	Upcoming []turnAhead
-	Group    []Member
-	Queue    []tableRow
-	Eu       *tableMe
+	// Endless é a faixa SEM FIM da sessão paralela: a fila inteira a partir de
+	// quem joga agora, e mais três da rodada seguinte (ver o GLOSSARY, "faixa").
+	Endless []turnAhead
+	// Tempestade é a sessão paralela (`?tempestade=1`), só para o jogador com
+	// personagem: a página e o stream desenham o sistema novo, e as superfícies
+	// que ainda não migraram levam à sessão de hoje.
+	Tempestade bool
+	Group      []Member
+	Queue      []tableRow
+	Eu         *tableMe
 	// MySheet é a ficha do personagem DESTE jogador, desenhada dentro da
 	// sessão. Nil para o mestre e para quem não tem personagem na campanha — é a
 	// mesma trava do `Mestre`: o que a view não tem, a cena não desenha.
@@ -304,6 +311,10 @@ type turnAhead struct {
 	// lista deu a volta. Sem ele a faixa mentiria por omissão: "Zumbi 2 › Ogro"
 	// parece a mesma rodada, e não é.
 	WrapsRound bool
+	// NewRound é o número da rodada que começa nesta posição, na faixa sem fim
+	// — que dá a volta mais de uma vez e precisa dizer QUAL rodada começa. Zero
+	// onde nenhuma começa.
+	NewRound int
 	// SaysYou troca o nome pela palavra, e ela é uma decisão da faixa INTEIRA e
 	// não desta linha: a palavra só desambigua enquanto for UMA. Com dois
 	// personagens meus na faixa, "você › Fulano › ⟲ você" deixa de responder
@@ -353,6 +364,46 @@ func meusNaFaixa(strip []turnAhead) int {
 	}
 	return howMany
 }
+
+// endlessStripOf é a faixa SEM FIM: a fila inteira a partir de quem joga
+// agora, e mais `endlessTail` da rodada seguinte, com cada volta marcada pela
+// rodada que começa. Ela anda uma casa a cada turno porque é refeita a cada
+// tique do stream a partir da vez.
+//
+// "VOCÊ" vale em toda volta quando o jogador tem UM personagem na fila — é o
+// mesmo, repetido; com dois, o nome volta, pela razão do `SaysYou`.
+func endlessStripOf(st *live.SessionRuntimeState, mine map[int64]bool) []turnAhead {
+	size := len(st.Initiative)
+	if st.TurnIndex < 0 || size == 0 {
+		return nil
+	}
+	strip := make([]turnAhead, 0, size+endlessTail)
+	minePresent := map[int64]bool{}
+	for step := 0; step < size+endlessTail; step++ {
+		position := st.TurnIndex + step
+		entry := st.Initiative[position%size]
+		ahead := turnAhead{Label: entry.Label, Now: step == 0}
+		if entry.CharacterID != nil && mine[*entry.CharacterID] {
+			ahead.Mine = true
+			minePresent[*entry.CharacterID] = true
+		}
+		if step > 0 && position%size == 0 {
+			ahead.WrapsRound = true
+			ahead.NewRound = st.Round + position/size
+		}
+		strip = append(strip, ahead)
+	}
+	if len(minePresent) == 1 {
+		for i := range strip {
+			strip[i].SaysYou = strip[i].Mine
+		}
+	}
+	return strip
+}
+
+// endlessTail é quanto da rodada seguinte a faixa sem fim mostra depois da
+// fila inteira: o bastante para a volta aparecer, mesmo no último da rodada.
+const endlessTail = 3
 
 // turnsAhead é o tamanho da faixa: a vez e as duas seguintes.
 //
@@ -488,6 +539,7 @@ func tableViewOf(
 		Round:    st.Round,
 		Turn:     tableTurnOf(st, mine),
 		Upcoming: turnStripOf(st, mine),
+		Endless:  endlessStripOf(st, mine),
 		Group:    group,
 		Queue:    tableTrackerOf(st, mine, pools),
 		Eu:       eu,

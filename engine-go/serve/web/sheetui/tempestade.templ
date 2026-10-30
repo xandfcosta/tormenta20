@@ -16,7 +16,11 @@ import (
 // continuar Tempestade.
 templ tempestadeSheet(v View) {
 	<div data-system="tempestade" data-on:keydown__window="evt.key === 'Escape' && ($detail = '')" class="ds-sheet">
-		@sheetHeader(v)
+		// DENTRO DA SESSÃO o cabeçalho é o da sessão, e a barra de baixo também:
+		// a ficha troca a dela pela fileira de seções (ver o GLOSSARY).
+		if !v.Embedded {
+			@sheetHeader(v)
+		}
 		<div class="ds-sheet-body">
 			@sheetRail(v)
 			// As descrições dos efeitos moram FORA da coluna: o celular a esconde,
@@ -28,7 +32,7 @@ templ tempestadeSheet(v View) {
 				<div class="ds-sheet-tabs">
 					@ds.Tabs("Seções da ficha") {
 						for _, tab := range v.Tabs {
-							@ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active, ds.SoftNav()) {
+							@ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active, tabGesture(v, tab.Value)) {
 								{ tab.Label }
 							}
 						}
@@ -41,7 +45,17 @@ templ tempestadeSheet(v View) {
 			</div>
 		</div>
 		@vitalStrip(v)
-		@sheetBottomNav(v)
+		if v.Embedded {
+			@ds.SectionNav("Seções da ficha") {
+				for _, tab := range v.Tabs {
+					@ds.BottomNavItem(templ.SafeURL(tabRoute(v, tab.Value)), tab.Icon, tab.Active, tabGesture(v, tab.Value)) {
+						{ tab.Label }
+					}
+				}
+			}
+		} else {
+			@sheetBottomNav(v)
+		}
 		@sheetMenuDialog(v)
 		@sheetMoreDialog(v)
 		@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV)

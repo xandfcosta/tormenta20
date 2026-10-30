@@ -101,12 +101,20 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
+	view.Tempestade = parallelSessionAsked(r, view)
+	system, stream := ui.SystemGrimoire, view.SessionBase()+"/fluxo"
+	if view.Tempestade {
+		system, stream = ui.SystemTempestade, stream+"?tempestade=1"
+	}
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Signals: tableSignalsExpr(),
-		Init:    fmt.Sprintf("@get('%s/fluxo')", view.SessionBase()),
+		System:  system,
+		// O FLUXO LEVA A MARCA: é ele que redesenha o cabeçalho a cada tique, e
+		// sem ela o stream mandaria o cabeçalho de hoje para a sessão paralela.
+		Init: fmt.Sprintf("@get('%s')", stream),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um
@@ -279,10 +287,20 @@ func tableSignalsExpr() string {
 // esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
 // CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
 func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
+	if view.Tempestade {
+		return tempestadeTableScene(view)
+	}
 	if view.GM == nil {
 		return tableScene(view)
 	}
 	return gmStage(view, s.forTableBestiary(r, campaignID, sessionID))
+}
+
+// parallelSessionAsked diz se a sessão é a paralela (`?tempestade=1`): só
+// para o JOGADOR com personagem nela. O mestre segue com o palco de hoje, e
+// quem não tem personagem não tem a Ficha que esta fatia migra.
+func parallelSessionAsked(r *http.Request, view View) bool {
+	return sheetui.TempestadeAsked(r) && view.GM == nil && view.Eu != nil
 }
 
 // tablePlayerSheet carrega a ficha que a superfície "Minha ficha" desenha.

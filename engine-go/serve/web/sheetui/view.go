@@ -391,8 +391,18 @@ func sheetGet(v View) string {
 // Dois comandos separados por `;` e NUNCA num ternário: sequência dentro de
 // ternário é erro de sintaxe que o Datastar engole, e o gesto inteiro vira nada.
 func tabEmbeddedGet(v View, aba string) string {
-	return fmt.Sprintf("$sheet_tab = %q; @get('/personagens/%d?tab=%s&embutida=1')",
-		aba, v.ID, aba)
+	return fmt.Sprintf("$sheet_tab = %q; @get('/personagens/%d?tab=%s&embutida=1%s')",
+		aba, v.ID, aba, parallelMark(v))
+}
+
+// parallelMark é a marca da ficha paralela nos pedidos que a SESSÃO faz à
+// ficha embutida: sem ela, a troca de seção e o aviso do stream devolveriam a
+// ficha de hoje dentro da sessão paralela.
+func parallelMark(v View) string {
+	if v.Tempestade {
+		return "&tempestade=1"
+	}
+	return ""
 }
 
 // SheetRefetch é o comando que o AVISO do stream dispara: a mesma ficha, na
@@ -412,7 +422,7 @@ func SheetRefetch(v View) string {
 	// o tipo de segunda escrita que sai de sincronia.
 	return fmt.Sprintf(
 		"$sheet_version !== document.getElementById('sheet-scene').dataset.versao && "+
-			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
+			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1%s')", v.ID, parallelMark(v))
 }
 
 // attributeCommand escreve o `@post` que repõe a perícia noutro atributo.

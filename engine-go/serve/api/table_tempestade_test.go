@@ -1,0 +1,113 @@
+package api
+
+import (
+	"bufio"
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"regexp"
+	"strings"
+	"testing"
+
+	"golang.org/x/net/html"
+)
+
+// A SESSÃO PARALELA (ALE-473), pelo mockup aprovado `sessao.html`: o jogador
+// com personagem abre a sessão com `?tempestade=1` e recebe o sistema novo —
+// o cabeçalho com a faixa, a barra da sessão embaixo e a Ficha embutida já na
+// ficha paralela, com a fileira de seções. O fluxo leva a marca, para o stream
+// desenhar o cabeçalho novo; e o mestre segue com o palco de hoje.
+func TestTheParallelSessionDressesThePlayerSheetInTempestade(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+
+	if !strings.Contains(page, "scene-ds") {
+		t.Fatal("a sessão paralela não veste o Tempestade")
+	}
+	if !regexp.MustCompile(`@get\((&#39;|')[^'&]*/fluxo\?tempestade=1`).MatchString(page) {
+		t.Error("o fluxo da sessão paralela não leva a marca: o stream desenharia o cabeçalho de hoje")
+	}
+	if strings.Contains(page, "O que ver na sessão") {
+		t.Error("a sessão paralela ainda desenha o seletor de superfície de hoje")
+	}
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	surfaces := findNode(doc, "aria-label", "Superfícies da sessão")
+	if surfaces == nil {
+		t.Fatal("a sessão paralela não tem a barra da sessão")
+	}
+	for _, s := range []string{"Ações", "Ficha", "Mesa", "Tabuleiro"} {
+		if !strings.Contains(textOf(surfaces), s) {
+			t.Errorf("a barra da sessão não tem %s", s)
+		}
+	}
+	sheet := findNode(doc, "id", "sheet-scene")
+	if sheet == nil || findNode(sheet, "data-system", "tempestade") == nil {
+		t.Fatal("a Ficha embutida não é a ficha paralela")
+	}
+	sheetHTML := renderNode(t, sheet)
+	if strings.Contains(sheetHTML, "ds-sheet-head") {
+		t.Error("a Ficha embutida repete o cabeçalho da ficha solta, e a sessão já tem o dela")
+	}
+	sections := findNode(sheet, "aria-label", "Seções da ficha")
+	if sections == nil || !regexp.MustCompile(`embutida=1[^"']*tempestade=1|tempestade=1[^"']*embutida=1`).MatchString(renderNode(t, sections)) {
+		t.Error("as seções da Ficha embutida não trocam de aba com as duas marcas")
+	}
+}
+
+// O MESTRE com a marca segue com o palco de hoje: esta fatia é a visão do
+// jogador.
+func TestTheGmKeepsTodaysStageInTheParallelSession(t *testing.T) {
+	f := newSceneFixture(t)
+	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	if strings.Contains(page, "scene-ds") {
+		t.Error("o mestre recebeu a sessão paralela")
+	}
+}
+
+// O STREAM MANTÉM O CABEÇALHO NOVO depois do primeiro quadro. Ele recarrega a
+// mesa a cada mudança, e a marca da sessão paralela tem de valer em todo
+// quadro — e não só no primeiro, que é como o cabeçalho de hoje voltava dois
+// segundos depois de abrir a página.
+func TestTheParallelSessionStreamKeepsTheNewHeaderAfterATurn(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	srv := httptest.NewServer(f.s.WebRouter())
+	defer srv.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+f.tableUrl()+"/fluxo?tempestade=1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
+	req.Header.Set("Datastar-Request", "true")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("abrir o fluxo: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	reader := bufio.NewReader(resp.Body)
+
+	nextHeader := func(when string) string {
+		for range 30 {
+			if frame := lerQuadro(t, reader); strings.Contains(frame, `id="table-header"`) {
+				return frame
+			}
+		}
+		t.Fatalf("o fluxo não mandou o cabeçalho %s", when)
+		return ""
+	}
+	if first := nextHeader("no primeiro quadro"); !strings.Contains(first, "ds-session-head") {
+		t.Fatal("o primeiro quadro já veio com o cabeçalho de hoje")
+	}
+
+	f.posts(t, f.gm, f.tableUrl()+"/iniciativa/proxima-vez", "{}")
+	if after := nextHeader("depois da vez"); !strings.Contains(after, "ds-session-head") {
+		t.Error("depois de a vez andar, o fluxo mandou o cabeçalho de hoje para a sessão paralela")
+	}
+}
