@@ -2,6 +2,7 @@ package book
 
 import (
 	"encoding/json"
+	"sync"
 
 	"t20engine/domain/catalog"
 )
@@ -80,8 +81,10 @@ func classPowerRows() []map[string]json.RawMessage {
 }
 
 // classPowersResolved devolve o `class-powers.json` com os apontamentos já
-// expandidos, na forma que os leitores deste pacote sempre esperaram.
-func classPowersResolved() []byte {
+// expandidos, na forma que os leitores deste pacote sempre esperaram. O
+// catálogo é embutido e não muda, e a expansão é feita uma vez: ela custava
+// milhares de alocações a cada pergunta (ALE-473). Os bytes são só lidos.
+var classPowersResolved = sync.OnceValue(func() []byte {
 	linhas := classPowerRows()
 	if linhas == nil {
 		return nil
@@ -91,7 +94,7 @@ func classPowersResolved() []byte {
 		return nil
 	}
 	return fora
-}
+})
 
 func textoDe(raw json.RawMessage) string {
 	if raw == nil {

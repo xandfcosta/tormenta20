@@ -2,6 +2,7 @@ package book
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"sync"
 
@@ -171,7 +172,15 @@ func loadTheActivations() {
 // Activations é o registro, com a página HERDADA do dono: o poder de classe,
 // o geral, o item, o poder do deus. A ativação escreve página só quando o dono
 // não tem (ALE-495).
+//
+// Ele é montado UMA vez: o registro é embutido e não muda, e decodificá-lo a
+// cada pergunta custava a maior parte de cada página da ficha. Quem chama
+// recebe uma cópia da lista, para não mexer na de todos.
 func Activations() []Activation {
+	return slices.Clone(activationsOnce())
+}
+
+var activationsOnce = sync.OnceValue(func() []Activation {
 	list := transcribedActivations()
 	for i, a := range list {
 		if page, owned := ownerPageOf(a); owned {
@@ -179,7 +188,7 @@ func Activations() []Activation {
 		}
 	}
 	return list
-}
+})
 
 // transcribedActivations é o registro como foi escrito, sem herança.
 func transcribedActivations() []Activation {

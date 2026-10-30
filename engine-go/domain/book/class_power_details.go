@@ -2,6 +2,8 @@ package book
 
 import (
 	"encoding/json"
+	"slices"
+	"sync"
 
 	"t20engine/domain/engine"
 )
@@ -46,7 +48,14 @@ type PowerModifiers struct {
 // ela evita é a segunda `json.Unmarshal` do mesmo blob com a mesma struct
 // anônima: duas cópias da mesma leitura divergem no dia em que uma delas
 // ganhar um campo.
+//
+// A lista é montada uma vez, como o `classPowersResolved`, e quem chama recebe
+// uma cópia.
 func ClassPowersWithModifiers() []PowerModifiers {
+	return slices.Clone(classPowersWithModifiersOnce())
+}
+
+var classPowersWithModifiersOnce = sync.OnceValue(func() []PowerModifiers {
 	raw := classPowersResolved()
 	if raw == nil {
 		return nil
@@ -54,7 +63,7 @@ func ClassPowersWithModifiers() []PowerModifiers {
 	var powers []PowerModifiers
 	_ = json.Unmarshal(raw, &powers)
 	return powers
-}
+})
 
 // GeneralPowersWithModifiers é o mesmo par para os poderes GERAIS, e ele nasceu
 // com a isenção do Fanático (p128): o `book.GeneralPower` é uma visão de TELA —
@@ -78,6 +87,10 @@ type PowerTeachingSpells struct {
 
 // PowersThatTeachSpells são os poderes cujo bloco de escolha concede magia.
 func PowersThatTeachSpells() []PowerTeachingSpells {
+	return slices.Clone(powersThatTeachSpellsOnce())
+}
+
+var powersThatTeachSpellsOnce = sync.OnceValue(func() []PowerTeachingSpells {
 	raw := classPowersResolved()
 	if raw == nil {
 		return nil
@@ -108,4 +121,4 @@ func PowersThatTeachSpells() []PowerTeachingSpells {
 		outside = append(outside, PowerTeachingSpells{ID: p.ID, Name: p.Name, Options: options})
 	}
 	return outside
-}
+})
