@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"t20engine/serve/web/ui"
 
@@ -143,10 +144,9 @@ func signalsCombatant(r *http.Request) (live.CombatantDraft, error) {
 // segunda conta aqui.
 func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, error) {
 	return func(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
-		raw := chi.URLParam(c.R, "step")
-		step, ok := vitalSteps[raw]
-		if !ok {
-			return nil, fmt.Errorf("passo %q não existe; a tela oferece 1 (clique) e 5 (Shift+clique)", raw)
+		step, err := vitalStepOf(c.R)
+		if err != nil {
+			return nil, err
 		}
 		delta := sign * step
 		hp, mp, ok := poolDeltas(chi.URLParam(c.R, "pool"), delta)
@@ -168,8 +168,20 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 	}
 }
 
-// vitalSteps são os DOIS que a tela oferece: o clique e o Shift+clique.
-var vitalSteps = map[string]int64{"1": 1, "5": 5}
+// vitalStepCeiling é o teto de um passo de vital. O clique dá 1, o Shift+clique
+// 5, e a folha do combatente da mesa nova manda o valor digitado (ALE-522); o
+// teto só barra o número digitado por engano.
+const vitalStepCeiling = 999
+
+// vitalStepOf lê o passo do endereço, compartilhado pela fila e pelo elenco.
+func vitalStepOf(r *http.Request) (int64, error) {
+	raw := chi.URLParam(r, "step")
+	step, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || step < 1 || step > vitalStepCeiling {
+		return 0, fmt.Errorf("o passo %q não vale; ele é um número de 1 a %d", raw, vitalStepCeiling)
+	}
+	return step, nil
+}
 
 // poolDeltas manda o passo para o pool que a URL nomeia — o outro vai nulo,
 // que é como o `DeltaVitals` diz "não mexe".
@@ -590,6 +602,7 @@ func (s Scene) respondGm(
 ) {
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
+		view.dressForGm(r)
 		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
 		// do stream: aqui não há digital anterior para comparar — este caminho
 		// responde a um pedido, não mantém uma conexão. Vale porque quem recebe

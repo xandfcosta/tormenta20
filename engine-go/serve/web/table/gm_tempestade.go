@@ -1,0 +1,108 @@
+package table
+
+import (
+	"fmt"
+	"strings"
+
+	"t20engine/domain/book"
+
+	"github.com/a-h/templ"
+)
+
+// superficieDasConsultas é a terceira superfície do MESTRE: notas, grupo,
+// elenco e bestiário (ALE-522).
+const superficieDasConsultas = "consultas"
+
+// gmSurfaces são as três superfícies do mestre, na ordem da barra. A Fila usa o
+// valor da Mesa do jogador porque é ela que abre, e o sinal nasce nele.
+var gmSurfaces = []playerSurface{
+	{superficieDaMesa, "Fila", "ListOrdered"},
+	{superficieDoTabuleiro, "Tabuleiro", "LayoutGrid"},
+	{superficieDasConsultas, "Consultas", "BookOpen"},
+}
+
+// gmWhere é a linha de onde a mesa está: "Sessão 1 · Rodada 2".
+func gmWhere(v View) string {
+	if v.Turn.Kind == "idle" {
+		return fmt.Sprintf("Sessão %d", v.SessionNum)
+	}
+	return fmt.Sprintf("Sessão %d · Rodada %d", v.SessionNum, v.Round)
+}
+
+// gmTurnAttrs é o gesto de andar a vez, desligado quando a fila não anda.
+func gmTurnAttrs(v View, route string) templ.Attributes {
+	attrs := templ.Attributes{"type": "button"}
+	if v.GM.CanAdvance {
+		attrs["data-on:click"] = tableCommand(v, "POST", route)
+	} else {
+		attrs["disabled"] = true
+	}
+	return attrs
+}
+
+// combatantDialog é o id da folha de uma linha.
+func combatantDialog(row tableRow) string { return "combatant-" + row.ID }
+
+// combatantMeta é a linha de cima da folha: o tipo e a iniciativa.
+func combatantMeta(row tableRow) string {
+	kind := "NPC"
+	if row.IsSheet {
+		kind = "Ficha"
+	}
+	return fmt.Sprintf("%s · iniciativa %d", kind, row.Initiative)
+}
+
+// conditionWritten é o nome da condição como a mesa o lê.
+func conditionWritten(id string) string { return book.ConditionName(id) }
+
+// openEditInline abre a edição DENTRO da folha (o lápis do topo), semeando os
+// sinais que o `saveEditInline` manda.
+func openEditInline(row tableRow) string {
+	pv, pvMax := int64(0), int64(0)
+	if row.PV != nil {
+		pv, pvMax = row.PV.Current, row.PV.Max
+	}
+	return fmt.Sprintf("$edit_row = $edit_row === '%s' ? '' : '%s'; $edit_name = %s; $edit_initiative = %d; $edit_hp = %d; $edit_hp_max = %d",
+		row.ID, row.ID, jsTextHow(row.Label), row.Initiative, pv, pvMax)
+}
+
+// saveEditInline grava e fecha a edição.
+func saveEditInline(v View) string {
+	return fmt.Sprintf("@post('%s/iniciativa/' + $edit_row + '/editar'); $edit_row = ''", v.SessionBase())
+}
+
+// openConditionsInline aponta a lista das condições para esta linha.
+func openConditionsInline(row tableRow) string {
+	return fmt.Sprintf("$condition_row = %q; $row_conditions = %q; $row_label = %s",
+		row.ID, strings.Join(row.Conditions, ","), jsTextHow(row.Label))
+}
+
+// rowVitalBy é o gesto de mexer num pool por um passo escrito — "1", ou a
+// expressão do valor digitado.
+func rowVitalBy(v View, row tableRow, pool, verb, step string) string {
+	return fmt.Sprintf("@post('%s/iniciativa/%s/vitais/%s/%s/%s')", v.SessionBase(), row.ID, pool, verb, step)
+}
+
+// poolLoss e poolGain são os verbos da folha: o PV leva dano e recebe cura; o
+// PM se gasta e se recupera.
+func poolLoss(pool string) string {
+	if pool == "mp" {
+		return "Gastar"
+	}
+	return "Dano"
+}
+
+func poolGain(pool string) string {
+	if pool == "mp" {
+		return "Recuperar"
+	}
+	return "Cura"
+}
+
+// restOptions são as qualidades do descanso do dia (p106), na ordem da tela.
+var restOptions = []struct{ Value, Label string }{
+	{"ruim", "Ruim"}, {"normal", "Normal"}, {"confortavel", "Confortável"}, {"luxuosa", "Luxuosa"},
+}
+
+// conditionCatalog são as condições do livro, para a lista de aplicar.
+func conditionCatalog() []book.Condition { return book.Catalogs().Conditions }

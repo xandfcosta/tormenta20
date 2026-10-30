@@ -112,30 +112,35 @@ templ tempestadeHeader(v View) {
 				@ui.Icon("LogOut", "ds-icon")
 			</a>
 		</div>
-		if len(v.Endless) > 0 {
-			// UMA LISTA, e a ordem é dita por ela: um `<ol>` já anuncia a posição,
-			// e o marcador da rodada é item próprio, lido no lugar em que ela
-			// começa.
-			<ol class="ds-turns" aria-label="Ordem de turnos, a partir de agora">
-				for _, p := range v.Endless {
-					if p.NewRound > 0 {
-						<li class="ds-round-mark">{ fmt.Sprintf("Rodada %d", p.NewRound) }</li>
-					}
-					<li
-						class="ds-turn"
-						if p.Now {
-							data-now
-						}
-						if p.Mine {
-							data-mine
-						}
-					>{ turnStripName(p) }</li>
-				}
-			</ol>
-		} else {
-			<p class="ds-row-meta">Aguardando iniciativa</p>
-		}
+		@endlessStrip(v)
 	</header>
+}
+
+// endlessStrip é a faixa sem fim, nos cabeçalhos do jogador e do mestre.
+templ endlessStrip(v View) {
+	if len(v.Endless) > 0 {
+		// UMA LISTA, e a ordem é dita por ela: um `<ol>` já anuncia a posição,
+		// e o marcador da rodada é item próprio, lido no lugar em que ela
+		// começa.
+		<ol class="ds-turns" aria-label="Ordem de turnos, a partir de agora">
+			for _, p := range v.Endless {
+				if p.NewRound > 0 {
+					<li class="ds-round-mark">{ fmt.Sprintf("Rodada %d", p.NewRound) }</li>
+				}
+				<li
+					class="ds-turn"
+					if p.Now {
+						data-now
+					}
+					if p.Mine {
+						data-mine
+					}
+				>{ turnStripName(p) }</li>
+			}
+		</ol>
+	} else {
+		<p class="ds-row-meta">Aguardando iniciativa</p>
+	}
 }
 
 // tempestadeTargetBar é a barra de ALVO DA VEZ das Ações, e é região

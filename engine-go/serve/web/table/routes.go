@@ -101,6 +101,8 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
+	rememberGmTable(w, r)
+	view.dressForGm(r)
 	system, stream := pageSystemAndStream(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
@@ -286,6 +288,9 @@ func tableSignalsExpr() string {
 // esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
 // CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
 func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
+	if view.Tempestade && view.GM != nil {
+		return gmTempestadeScene(view, s.forTableBestiary(r, campaignID, sessionID))
+	}
 	if view.Tempestade {
 		return tempestadeTableScene(view)
 	}

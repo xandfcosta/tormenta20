@@ -50,6 +50,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
+	view.dressForGm(r)
 
 	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
@@ -117,6 +118,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
+		view.dressForGm(r)
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
@@ -301,6 +303,16 @@ type tableRegion struct {
 func TableRegions(v View) []tableRegion {
 	// A SESSÃO DO JOGADOR tem as regiões das superfícies que ela desenha; a Ficha
 	// o stream nunca toca.
+	// A MESA DO MESTRE no Tempestade (ALE-522) tem as regiões da fatia da Fila.
+	if v.Tempestade && v.GM != nil {
+		return []tableRegion{
+			{"table-header", gmHeader(v)},
+			{"table-attack", gmAttack(v)},
+			{"table-skill-test", tempestadeSkillTest(v)},
+			{"table-tracker", gmQueue(v)},
+			{"table-commands", gmTurnBar(v)},
+		}
+	}
 	if v.Tempestade {
 		return []tableRegion{
 			{"table-header", tempestadeHeader(v)},
