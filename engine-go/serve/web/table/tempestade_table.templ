@@ -20,6 +20,7 @@ templ tempestadeTableScene(v View) {
 		// O ATAQUE PROPOSTO fica acima de toda superfície, pela razão do de
 		// hoje: é o que a mesa tem de decidir agora, onde quer que se esteja.
 		@tempestadeAttack(v)
+		@tempestadeSkillTest(v)
 		<nav class="ds-session-nav" aria-label="Superfícies da sessão">
 			for _, layer := range surfaces(v) {
 				<button

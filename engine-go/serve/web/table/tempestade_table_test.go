@@ -56,7 +56,7 @@ func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
 	for _, r := range regions {
 		ids = append(ids, r.ID)
 	}
-	want := []string{"table-header", "table-attack", "table-turn-target", "table-register", "table-party", "table-tracker", "table-board"}
+	want := []string{"table-header", "table-attack", "table-skill-test", "table-turn-target", "table-register", "table-party", "table-tracker", "table-board"}
 	if strings.Join(ids, ",") != strings.Join(want, ",") {
 		t.Errorf("a sessão paralela recebe as regiões %v; queria %v", ids, want)
 	}

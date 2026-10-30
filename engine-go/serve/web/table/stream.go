@@ -308,6 +308,7 @@ func TableRegions(v View) []tableRegion {
 		return []tableRegion{
 			{"table-header", tempestadeHeader(v)},
 			{"table-attack", tempestadeAttack(v)},
+			{"table-skill-test", tempestadeSkillTest(v)},
 			{"table-turn-target", tempestadeTargetBar(v)},
 			{"table-register", tempestadeRegister(v)},
 			{"table-party", tempestadeParty(v)},

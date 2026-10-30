@@ -1577,6 +1577,58 @@
     justify-content: flex-end;
     gap: 0.5rem;
   }
+  /* O TESTE ROLADO é o cartão do ataque sem os verbos (`paridade.html`): borda
+   * neutra, porque não há nada a decidir, e o total grande. */
+  .ds-strike[data-test] {
+    border-color: var(--ds-line-strong);
+  }
+  .ds-strike[data-test] .ds-strike-verdict {
+    font-size: var(--ds-t-2xl);
+    line-height: 1;
+  }
+  .ds-strike[data-test] .ds-strike-roll {
+    align-items: center;
+  }
+  .ds-strike[data-test] .ds-strike-tally {
+    flex: 1;
+    min-width: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+  }
+  .ds-seal {
+    padding: 0.0625rem 0.5rem;
+    border-radius: var(--ds-r-pill);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+  }
+  .ds-seal[data-tone='good'] {
+    background: color-mix(in oklab, var(--ds-good) 16%, var(--ds-surface));
+    color: var(--ds-good);
+  }
+  .ds-seal[data-tone='danger'] {
+    background: color-mix(in oklab, var(--ds-danger) 14%, var(--ds-surface));
+    color: var(--ds-danger);
+  }
+  .ds-strike-foot[data-fill] {
+    flex-wrap: nowrap;
+    justify-content: stretch;
+  }
+  .ds-strike-foot[data-fill] > .ds-button {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+  .ds-strike-hand {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ds-strike-hand > .ds-input {
+    width: 4rem;
+  }
   /* O TABULEIRO DA SESSÃO PARALELA (ALE-473), pelo mockup `tabuleiro.html`. O
    * mapa é o de hoje (`.board-scene`) e ocupa a superfície inteira; o que flutua
    * por cima é do kit. No celular as ferramentas ficam numa barra no pé do
