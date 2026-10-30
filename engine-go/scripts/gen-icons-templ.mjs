@@ -38,6 +38,10 @@ const QUERIDOS = [
   'Wind',
   'Users2',
   'Scroll',
+  // A barra da sessão (ALE-473): a Ficha e as Ações, que na sessão paralela
+  // trocam as espadas pelo alvo — as espadas são da seção Combate.
+  'ScrollText',
+  'Target',
   'Wand2',
   'PlayCircle',
   'Settings',
