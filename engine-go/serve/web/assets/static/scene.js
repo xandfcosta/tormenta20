@@ -1,65 +1,83 @@
+//#region serve/web/assets/src/lib/fetch-busy.ts
+var e = "button, a, input, select, textarea, [role=\"switch\"]";
+function t(t) {
+	let n = /* @__PURE__ */ new WeakMap();
+	t.addEventListener("datastar-fetch", (t) => {
+		let { type: r, el: i } = t.detail;
+		if (!(i instanceof Element) || !i.matches(e)) return;
+		let a = n.get(i) ?? 0;
+		if (r === "started") {
+			n.set(i, a + 1), i.setAttribute("aria-busy", "true");
+			return;
+		}
+		if (r !== "finished") return;
+		let o = Math.max(0, a - 1);
+		n.set(i, o), o === 0 && i.removeAttribute("aria-busy");
+	});
+}
+//#endregion
 //#region serve/web/assets/src/lib/spatial-nav.ts
-var e = 2, t = {
+var n = 2, r = {
 	left: !0,
 	right: !0,
 	up: !1,
 	down: !1
 };
-function n(e) {
+function i(e) {
 	return (e.left + e.right) / 2;
 }
-function r(e) {
+function a(e) {
 	return (e.top + e.bottom) / 2;
 }
-function i(e, n) {
-	return n === "grid" ? !0 : n === "row" ? t[e] : !t[e];
+function o(e, t) {
+	return t === "grid" ? !0 : t === "row" ? r[e] : !r[e];
 }
-function a(e, t, i) {
-	switch (i) {
-		case "right": return n(t) > n(e) + .5;
-		case "left": return n(t) < n(e) - .5;
-		case "down": return r(t) > r(e) + .5;
-		case "up": return r(t) < r(e) - .5;
+function s(e, t, n) {
+	switch (n) {
+		case "right": return i(t) > i(e) + .5;
+		case "left": return i(t) < i(e) - .5;
+		case "down": return a(t) > a(e) + .5;
+		case "up": return a(t) < a(e) - .5;
 	}
 }
-function o(i, a, o) {
-	let s = Math.abs(n(a) - n(i)), c = Math.abs(r(a) - r(i));
-	return (t[o] ? s : c) + e * (t[o] ? c : s);
+function c(e, t, o) {
+	let s = Math.abs(i(t) - i(e)), c = Math.abs(a(t) - a(e));
+	return (r[o] ? s : c) + n * (r[o] ? c : s);
 }
-function s(e, t, n, r) {
-	if (!i(n, r)) return null;
-	let s = e.find((e) => e.id === t);
-	if (!s) return null;
-	let c = null, l = Infinity;
+function l(e, t, n, r) {
+	if (!o(n, r)) return null;
+	let i = e.find((e) => e.id === t);
+	if (!i) return null;
+	let a = null, l = Infinity;
 	for (let r of e) {
-		if (r.id === t || !a(s.rect, r.rect, n)) continue;
-		let e = o(s.rect, r.rect, n);
-		e < l && (l = e, c = r.id);
+		if (r.id === t || !s(i.rect, r.rect, n)) continue;
+		let e = c(i.rect, r.rect, n);
+		e < l && (l = e, a = r.id);
 	}
-	return c;
+	return a;
 }
-function c(e, t, n) {
+function u(e, t, n) {
 	let r = null, i = Infinity;
-	for (let s of e) {
-		if (!a(t, s.rect, n)) continue;
-		let e = o(t, s.rect, n);
-		e < i && (i = e, r = s.id);
+	for (let a of e) {
+		if (!s(t, a.rect, n)) continue;
+		let e = c(t, a.rect, n);
+		e < i && (i = e, r = a.id);
 	}
 	return r;
 }
-function l(e, t) {
-	let i = null, a = Infinity;
+function d(e, t) {
+	let n = null, r = Infinity;
 	for (let o of e) {
-		let e = n(o.rect) - n(t), s = r(o.rect) - r(t), c = e * e + s * s;
-		c < a && (a = c, i = o.id);
+		let e = i(o.rect) - i(t), s = a(o.rect) - a(t), c = e * e + s * s;
+		c < r && (r = c, n = o.id);
 	}
-	return i;
+	return n;
 }
 //#endregion
 //#region serve/web/assets/src/lib/scene-nav.ts
-var u = "(min-width: 1280px) and (pointer: fine)", d = "a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"]), [data-nav-item]";
-function f(e) {
-	let t = /* @__PURE__ */ new WeakMap(), n = (n) => p(n, e, t), r = typeof window.matchMedia == "function" ? window.matchMedia(u) : null, i = !1, a = () => {
+var f = "(min-width: 1280px) and (pointer: fine)", p = "a[href], button:not([disabled]), [tabindex]:not([tabindex=\"-1\"]), [data-nav-item]";
+function m(e) {
+	let t = /* @__PURE__ */ new WeakMap(), n = (n) => h(n, e, t), r = typeof window.matchMedia == "function" ? window.matchMedia(f) : null, i = !1, a = () => {
 		let t = (r?.matches ?? !1) && e.active?.() !== !1;
 		t !== i && (i = t, t ? window.addEventListener("keydown", n, !0) : window.removeEventListener("keydown", n, !0));
 	};
@@ -67,131 +85,131 @@ function f(e) {
 		r?.removeEventListener("change", a), i && window.removeEventListener("keydown", n, !0), i = !1;
 	};
 }
-function p(e, t, n) {
-	if (e.ctrlKey || e.metaKey || e.altKey || k()) return;
+function h(e, t, n) {
+	if (e.ctrlKey || e.metaKey || e.altKey || A()) return;
 	let r = t.root();
 	if (!r) return;
 	let i = document.activeElement?.closest("[data-nav-region]") ?? null;
 	if (t.delegated || i?.dataset.navMode === "delegated") {
-		if (t.onKey?.(e) || O()) return;
-		let n = A(e);
+		if (t.onKey?.(e) || k()) return;
+		let n = j(e);
 		if (!n) return;
 		if (t.onCommand?.(n)) {
-			j(e);
+			M(e);
 			return;
 		}
-		n.type === "back" && (j(e), t.onEscape());
+		n.type === "back" && (M(e), t.onEscape());
 		return;
 	}
-	if (O()) return;
-	let a = A(e);
-	a && m(e, a, t, i, r, n);
+	if (k()) return;
+	let a = j(e);
+	a && g(e, a, t, i, r, n);
 }
-function m(e, t, n, r, i, a) {
+function g(e, t, n, r, i, a) {
 	switch (t.type) {
 		case "back":
-			_(e, n, r, i, a);
+			ee(e, n, r, i, a);
 			return;
 		case "bumper":
-			v(e, n, t.dir);
+			te(e, n, t.dir);
 			return;
 		case "edge":
-			g(e, n, r, t.to, a);
+			v(e, n, r, t.to, a);
 			return;
 		case "move":
-			h(e, n, r, t.dir, i, a);
+			_(e, n, r, t.dir, i, a);
 			return;
 		case "activate": return;
 	}
 }
-function h(e, t, n, r, i, a) {
+function _(e, t, n, r, i, a) {
 	if (!n) {
 		let n = document.activeElement;
-		(!n || n === document.body) && ee(e, t, i, a);
+		(!n || n === document.body) && y(e, t, i, a);
 		return;
 	}
-	let o = C(n), c = document.activeElement, l = o.indexOf(c), u = l === -1 ? null : s(w(o), String(l), r, T(n));
+	let o = T(n), s = document.activeElement, c = o.indexOf(s), u = c === -1 ? null : l(E(o), String(c), r, ne(n));
 	if (u !== null) {
-		b(o[Number(u)], n, t, a, "hover"), j(e);
+		S(o[Number(u)], n, t, a, "hover"), M(e);
 		return;
 	}
-	let d = te(n, r, E(c), i);
-	d && (y(d, E(c), t, a, "select"), j(e));
+	let d = x(n, r, D(s), i);
+	d && (b(d, D(s), t, a, "select"), M(e));
 }
-function g(e, t, n, r, i) {
+function v(e, t, n, r, i) {
 	if (!n) return;
-	let a = C(n);
-	a.length !== 0 && (b(r === "first" ? a[0] : a[a.length - 1], n, t, i, "hover"), j(e));
+	let a = T(n);
+	a.length !== 0 && (S(r === "first" ? a[0] : a[a.length - 1], n, t, i, "hover"), M(e));
 }
-function _(e, t, n, r, i) {
-	j(e);
+function ee(e, t, n, r, i) {
+	M(e);
 	let a = r.querySelector("[data-nav-region=\"rail\"]");
 	if (n && a && n !== a) {
-		y(a, E(n), t, i, "back");
+		b(a, D(n), t, i, "back");
 		return;
 	}
 	t.onEscape();
 }
-function v(e, t, n) {
-	t.bumpers && (j(e), n === "next" ? t.bumpers.next() : t.bumpers.prev(), t.sfx("select"), requestAnimationFrame(() => {
-		(t.root()?.querySelector("[data-nav-region=\"rail\"]"))?.querySelector(S)?.focus();
+function te(e, t, n) {
+	t.bumpers && (M(e), n === "next" ? t.bumpers.next() : t.bumpers.prev(), t.sfx("select"), requestAnimationFrame(() => {
+		(t.root()?.querySelector("[data-nav-region=\"rail\"]"))?.querySelector(w)?.focus();
 	}));
 }
-function ee(e, t, n, r) {
+function y(e, t, n, r) {
 	let i = n.querySelector("[data-nav-region=\"rail\"]") ?? n.querySelector("[data-nav-region]");
-	i && (y(i, x, t, r, "select"), j(e));
+	i && (b(i, C, t, r, "select"), M(e));
 }
-function y(e, t, n, r, i) {
+function b(e, t, n, r, i) {
 	let a = r.get(e);
-	if (a && e.contains(a) && D(a)) {
-		b(a, e, n, r, i);
+	if (a && e.contains(a) && O(a)) {
+		S(a, e, n, r, i);
 		return;
 	}
-	let o = e.querySelector(S);
+	let o = e.querySelector(w);
 	if (o) {
-		b(o, e, n, r, i);
+		S(o, e, n, r, i);
 		return;
 	}
-	let s = C(e);
+	let s = T(e);
 	if (s.length === 0) return;
-	let c = l(w(s), t);
-	c !== null && b(s[Number(c)], e, n, r, i);
+	let c = d(E(s), t);
+	c !== null && S(s[Number(c)], e, n, r, i);
 }
-function te(e, t, n, r) {
-	let i = Array.from(r.querySelectorAll("[data-nav-region]")).filter((t) => t !== e && D(t)), a = e.getAttribute(`data-nav-edge-${t}`);
+function x(e, t, n, r) {
+	let i = Array.from(r.querySelectorAll("[data-nav-region]")).filter((t) => t !== e && O(t)), a = e.getAttribute(`data-nav-edge-${t}`);
 	if (a) return i.find((e) => e.dataset.navRegion === a) ?? null;
-	let o = c(i.map((e, t) => ({
+	let o = u(i.map((e, t) => ({
 		id: String(t),
-		rect: E(e)
+		rect: D(e)
 	})), n, t);
 	return o === null ? null : i[Number(o)];
 }
-function b(e, t, n, r, i) {
+function S(e, t, n, r, i) {
 	e.focus(), r.set(t, e), n.sfx(i), e.scrollIntoView({
 		block: "nearest",
 		inline: "nearest"
 	});
 }
-var x = {
+var C = {
 	left: 0,
 	top: 0,
 	right: 0,
 	bottom: 0
-}, S = "[role=\"tab\"][data-selected], [role=\"tab\"][data-state=\"active\"]";
-function C(e) {
-	return Array.from(e.querySelectorAll(d)).filter((t) => t.closest("[data-nav-region]") === e && t.getAttribute("role") !== "tabpanel" && !t.hasAttribute("data-nav-skip") && D(t));
+}, w = "[role=\"tab\"][data-selected], [role=\"tab\"][data-state=\"active\"]";
+function T(e) {
+	return Array.from(e.querySelectorAll(p)).filter((t) => t.closest("[data-nav-region]") === e && t.getAttribute("role") !== "tabpanel" && !t.hasAttribute("data-nav-skip") && O(t));
 }
-function w(e) {
+function E(e) {
 	return e.map((e, t) => ({
 		id: String(t),
-		rect: E(e)
+		rect: D(e)
 	}));
 }
-function T(e) {
+function ne(e) {
 	let t = e.dataset.navLayout;
 	return t === "grid" || t === "row" ? t : "column";
 }
-function E(e) {
+function D(e) {
 	let t = e.getBoundingClientRect();
 	return {
 		left: t.left,
@@ -200,15 +218,15 @@ function E(e) {
 		bottom: t.bottom
 	};
 }
-function D(e) {
+function O(e) {
 	let t = e.getBoundingClientRect();
 	return t.width > 0 && t.height > 0;
 }
-function O() {
+function k() {
 	let e = document.activeElement;
 	return e instanceof HTMLElement ? e.tagName === "INPUT" || e.tagName === "TEXTAREA" || e.tagName === "SELECT" || e.isContentEditable : !1;
 }
-function k() {
+function A() {
 	return !!document.querySelector([
 		"[role=\"dialog\"][data-expanded]:not([data-nav-inline])",
 		"[role=\"menu\"][data-expanded]",
@@ -217,7 +235,7 @@ function k() {
 		"dialog[open]"
 	].join(", "));
 }
-function A(e) {
+function j(e) {
 	switch (e.key) {
 		case "ArrowUp": return {
 			type: "move",
@@ -256,16 +274,16 @@ function A(e) {
 		default: return null;
 	}
 }
-function j(e) {
+function M(e) {
 	e.preventDefault(), e.stopPropagation();
 }
 //#endregion
 //#region serve/web/assets/src/lib/audio-gate.ts
-var M = ["pointerdown", "keydown"], N = class {
+var N = ["pointerdown", "keydown"], P = class {
 	ctx = null;
 	constructor(e, t) {
 		this.openContext = e;
-		for (let e of M) t.addEventListener(e, () => this.arm(), { capture: !0 });
+		for (let e of N) t.addEventListener(e, () => this.arm(), { capture: !0 });
 	}
 	ready() {
 		let e = this.ctx;
@@ -274,7 +292,7 @@ var M = ["pointerdown", "keydown"], N = class {
 	arm() {
 		this.ctx ||= this.openContext(), this.ctx?.state === "suspended" && this.ctx.resume();
 	}
-}, P = {
+}, F = {
 	hover: {
 		shape: "sweep",
 		type: "triangle",
@@ -322,90 +340,90 @@ var M = ["pointerdown", "keydown"], N = class {
 		gain: .1
 	}
 };
-function F(e, t, n) {
+function I(e, t, n) {
 	if (n <= 0) return;
-	let r = P[t];
+	let r = F[t];
 	if (r.shape === "bell") {
-		L(e, r, n);
+		R(e, r, n);
 		return;
 	}
-	I(e, r, n);
+	L(e, r, n);
 }
-function I(e, { type: t, from: n, to: r, dur: i, gain: a }, o) {
+function L(e, { type: t, from: n, to: r, dur: i, gain: a }, o) {
 	let s = e.currentTime, c = e.createOscillator();
-	c.type = t, c.frequency.setValueAtTime(n, s), c.frequency.exponentialRampToValueAtTime(r, s + i), c.connect(R(e, a * o, s, .012, i)).connect(e.destination), c.start(s), c.stop(s + i + .02);
+	c.type = t, c.frequency.setValueAtTime(n, s), c.frequency.exponentialRampToValueAtTime(r, s + i), c.connect(z(e, a * o, s, .012, i)).connect(e.destination), c.start(s), c.stop(s + i + .02);
 }
-function L(e, { partials: t, dur: n, gain: r }, i) {
+function R(e, { partials: t, dur: n, gain: r }, i) {
 	let a = e.currentTime;
 	t.forEach((t, o) => {
 		let s = r * i * (o === 0 ? 1 : .45), c = n * (o === 0 ? 1 : .55), l = e.createOscillator();
-		l.type = "sine", l.frequency.setValueAtTime(t, a), l.connect(R(e, s, a, .005, c)).connect(e.destination), l.start(a), l.stop(a + c + .02);
+		l.type = "sine", l.frequency.setValueAtTime(t, a), l.connect(z(e, s, a, .005, c)).connect(e.destination), l.start(a), l.stop(a + c + .02);
 	});
 }
-function R(e, t, n, r, i) {
+function z(e, t, n, r, i) {
 	let a = e.createGain();
 	return a.gain.setValueAtTime(1e-4, n), a.gain.exponentialRampToValueAtTime(Math.max(t, 2e-4), n + r), a.gain.exponentialRampToValueAtTime(1e-4, n + i), a;
 }
 //#endregion
 //#region serve/web/assets/src/lib/sfx-player.ts
-var z = class {
-	constructor(e = B()) {
+var B = class {
+	constructor(e = V()) {
 		this.gate = e;
 	}
 	play(e, t) {
 		try {
 			let n = this.gate.ready();
-			n && F(n, e, t);
+			n && I(n, e, t);
 		} catch {}
 	}
 };
-function B() {
-	return new N(V, window);
-}
 function V() {
+	return new P(H, window);
+}
+function H() {
 	let e = window.AudioContext ?? window.webkitAudioContext;
 	return e ? new e() : null;
 }
-function H() {
-	return new z();
+function U() {
+	return new B();
 }
 //#endregion
 //#region serve/web/assets/src/lib/ui-store.ts
-var U = "t20-ui";
-function W(e, t = globalThis.localStorage) {
-	t?.setItem(U, JSON.stringify({ state: e }));
+var W = "t20-ui";
+function G(e, t = globalThis.localStorage) {
+	t?.setItem(W, JSON.stringify({ state: e }));
 }
-var G = 100;
-function K(e) {
+var K = 100;
+function q(e) {
 	if (e) try {
 		return JSON.parse(e).state;
 	} catch {
 		return;
 	}
 }
-function q(e) {
-	return K(e)?.sfx === !0;
-}
 function J(e) {
-	return Y(K(e)?.volume);
+	return q(e)?.sfx === !0;
 }
 function Y(e) {
-	return typeof e != "number" || Number.isNaN(e) ? G : Math.min(100, Math.max(0, Math.round(e)));
+	return X(q(e)?.volume);
+}
+function X(e) {
+	return typeof e != "number" || Number.isNaN(e) ? K : Math.min(100, Math.max(0, Math.round(e)));
 }
 //#endregion
 //#region serve/web/assets/src/scene.ts
-function X() {
+function re() {
 	let e = globalThis.localStorage?.getItem("t20-ui") ?? null;
 	return {
-		som: q(e),
-		volume: J(e)
+		som: J(e),
+		volume: Y(e)
 	};
 }
-var Z = X(), ne = H();
+var Z = re(), ie = U();
 function Q(e) {
-	Z.som && (e === "hover" && window.matchMedia?.("(pointer: coarse)").matches || ne.play(e, Z.volume / 100));
+	Z.som && (e === "hover" && window.matchMedia?.("(pointer: coarse)").matches || ie.play(e, Z.volume / 100));
 }
-function re(e) {
+function ae(e) {
 	let t = document.querySelector(`[popovertarget="${e.id}"]`);
 	if (!t) return;
 	let n = t.getBoundingClientRect(), r = n.top - 16, i = window.innerHeight - n.bottom - 16, a = r > i;
@@ -415,13 +433,13 @@ function re(e) {
 }
 window.cena = {
 	som() {
-		return Z.som = !Z.som, W({
+		return Z.som = !Z.som, G({
 			sfx: Z.som,
 			volume: Z.volume
 		}), Z.som && Q("select"), Z.som;
 	},
 	volume(e) {
-		return Z.volume = Math.min(100, Math.max(0, Math.round(e))), W({
+		return Z.volume = Math.min(100, Math.max(0, Math.round(e))), G({
 			sfx: Z.som,
 			volume: Z.volume
 		}), Z.volume;
@@ -436,9 +454,9 @@ window.cena = {
 		return { ...Z };
 	},
 	cue: Q
-};
+}, t(document);
 var $ = () => document.querySelector("[data-slot=\"scene-shell\"]");
-f({
+m({
 	root: $,
 	onEscape: () => {
 		let e = $()?.dataset.voltar;
@@ -452,6 +470,6 @@ f({
 });
 for (let e of ["beforetoggle", "toggle"]) document.addEventListener(e, (e) => {
 	let t = e.target;
-	t?.matches?.("[popover]") && e.newState === "open" && re(t);
+	t?.matches?.("[popover]") && e.newState === "open" && ae(t);
 }, !0);
 //#endregion

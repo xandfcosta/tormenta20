@@ -187,6 +187,14 @@
   /* `justify-self` pela razão do segmentado: em grade, o botão esticaria até a
    * coluna, e um botão da largura da tela é outro peso visual. Quem quer o
    * botão largo pede, com uma utilidade de largura. */
+  /* O CONTROLE EM CURSO (ALE-520): o pedido do Datastar que ele disparou
+   * ainda não voltou (`fetch-busy.ts`). Ele apaga NA HORA, sem atraso, porque
+   * o que faltava era o retorno do toque; e continua tocável, porque o −1 se
+   * toca em sequência e um toque engolido seria pior que um apagado. */
+  [aria-busy='true'] {
+    cursor: progress;
+    opacity: 0.6;
+  }
   .ds-button {
     display: inline-flex;
     justify-self: start;
