@@ -1645,6 +1645,7 @@
   .ds-strike-foot[data-fill] > .ds-button {
     flex: 1;
     min-width: 0;
+    max-width: 24rem;
     justify-content: center;
     white-space: normal;
     text-align: center;
@@ -2087,7 +2088,7 @@
     grid-template-columns: max-content minmax(0, 8rem);
     justify-content: start;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem 0.5rem;
   }
   .ds-party-row {
     grid-template-columns: auto minmax(0, 1fr);

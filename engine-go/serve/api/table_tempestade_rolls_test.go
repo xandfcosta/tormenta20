@@ -81,3 +81,30 @@ func TestTheParallelActionsOfferTheAttackBoost(t *testing.T) {
 		t.Error("o Atacar não zera o impulso escolhido")
 	}
 }
+
+// O PM NA FILA do jogador (mockup `paridade.html`): a linha do PM embaixo da
+// do PV, e a frase quando o mestre esconde só o PM — "sem barra" e "escondido"
+// são coisas diferentes, como na fila de hoje.
+func TestTheParallelQueueSaysWhenTheManaIsHidden(t *testing.T) {
+	f := newSceneFixture(t)
+	f.tracker(t)
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
+		t.Fatalf("iniciar cena deu %d", rec.Code)
+	}
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl()+"?tempestade=1", "").Body.String()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	queue := findNode(doc, "id", "table-tracker")
+	if queue == nil {
+		t.Fatal("a sessão do jogador não desenhou a fila")
+	}
+	text := textOf(queue)
+	if !strings.Contains(text, "PV ") {
+		t.Fatalf("a fila não mostra o PV do próprio grupo; o caso não mede nada: %q", text)
+	}
+	if !strings.Contains(text, "PM ocultos pelo mestre") {
+		t.Errorf("a fila não diz que o PM está escondido: %q", text)
+	}
+}
