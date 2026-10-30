@@ -153,7 +153,7 @@ templ gmBoardBar(b BoardView, v View) {
 			@ui.Icon("UserPlus", "ds-icon")
 		</button>
 		if !v.BoardWindow {
-			<button type="button" class="ds-board-fbtn" aria-label="Abrir o tabuleiro numa janela" title="Abrir o tabuleiro numa janela à parte — para a segunda tela ou a TV da mesa" data-on:click={ boardWindowOpens(v) }>
+			<button type="button" class="ds-board-fbtn" data-board-window-opener aria-label="Abrir o tabuleiro numa janela" title="Abrir o tabuleiro numa janela à parte — para a segunda tela ou a TV da mesa" data-on:click={ boardWindowOpens(v) }>
 				@ui.Icon("ExternalLink", "ds-icon")
 			</button>
 		}
@@ -444,7 +444,7 @@ templ gmArchive(v View) {
 // gmBoardWindow é a JANELA À PARTE: só o mapa, para a segunda tela ou a TV da
 // mesa. O fluxo dela remenda só o tabuleiro.
 templ gmBoardWindow(v View) {
-	<main id="table" class="ds-session ds-gm-window" data-attr:style={ dragOffsetStyle } data-signals="{gm_terrain_open: false}">
+	<main id="table" class="ds-session ds-gm-window" data-attr:style={ dragOffsetStyle } data-signals="{gm_terrain_open: false}" data-init={ takesTheBoard(v) } data-on:pagehide__window={ givesTheBoardBack(v) }>
 		@gmBoardRegion(v)
 		@gmPopulate(v)
 		@gmArchive(v)

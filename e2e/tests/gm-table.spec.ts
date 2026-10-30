@@ -185,4 +185,31 @@ test.describe('A mesa do mestre', () => {
     expect(Math.abs(center.x - 512), 'fora do centro horizontal').toBeLessThanOrEqual(2)
     expect(Math.abs(center.y - 384), 'fora do centro vertical').toBeLessThanOrEqual(2)
   })
+
+  /**
+   * O TABULEIRO NUMA JANELA À PARTE sai da aba original, e volta quando ela
+   * fecha. Só o navegador mede: são DOIS documentos conversando pelo evento
+   * `storage`, que nenhum teste de handler vê. No celular não há segunda tela,
+   * e o botão de abrir a janela não aparece.
+   */
+  test('o tabuleiro numa janela sai da aba original e volta quando ela fecha', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(MESA)
+    const board = page.locator('[data-gm-col="board"]')
+    const rail = page.locator('[data-gm-rail="board"]')
+    // O CONTROLE: antes da janela, o tabuleiro está na aba e a faixa não.
+    await expect(board).toBeVisible()
+    await expect(rail).toBeHidden()
+
+    const windowed = await page.context().newPage()
+    await windowed.goto(`${MESA}?janela=tabuleiro`)
+    await expect(board, 'a janela abriu e o tabuleiro continuou na aba original').toBeHidden()
+    await expect(rail).toBeVisible()
+
+    await windowed.close({ runBeforeUnload: true })
+    await expect(board, 'a janela fechou e o tabuleiro não voltou').toBeVisible()
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await expect(page.getByRole('button', { name: 'Abrir o tabuleiro numa janela' })).toBeHidden()
+  })
 })
