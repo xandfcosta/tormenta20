@@ -109,10 +109,6 @@ func tabByValue(v View, value string) Tab {
 	panic(fmt.Sprintf("aba %q não existe; as sete estão em Tabs()", value))
 }
 
-func activeTabLabel(v View) string {
-	return tabByValue(v, v.ActiveTab).Label
-}
-
 // activeEffect é um efeito em vigor com o gesto que o tira e a descrição que
 // o nome abre, para a coluna da ficha: condição, postura e efeito aplicado. O
 // situacional fica de fora — ele é interruptor da aba Efeitos, e não algo que
