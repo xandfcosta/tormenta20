@@ -1,4 +1,4 @@
-import { test, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { expectEveryToggleDrawsItsState } from './support/geometry'
 
 /**
@@ -34,20 +34,23 @@ const THE_SCREENS: Screen[] = [
   { nome: 'os situacionais da ficha', rota: '/personagens/7?tab=conditionals' },
   { nome: 'a mochila da ficha', rota: '/personagens/1?tab=bag' },
   // O DIÁLOGO DE CONJURAR é o caso que abriu a ALE-341, e ele só existe depois
-  // de um clique: os "Trocar" dos aprimoramentos nascem escondidos. Uma
+  // de um clique: os interruptores dos aprimoramentos nascem escondidos. Uma
   // varredura que só carregasse endereços não o alcançaria — é a primeira das
   // quatro formas de "não visitar" que o CLAUDE.md lista.
   {
     nome: 'os aprimoramentos ao conjurar',
     rota: '/personagens/3?tab=spells',
     // A RAIZ É O DIÁLOGO, e isso não é detalhe: varrendo o `body`, o primeiro
-    // clique cai num "Preparada" da lista atrás, o servidor redesenha a ficha e
-    // o diálogo FECHA — os "Trocar" somem antes de serem medidos, e o caso passa
+    // clique cai num controle da lista atrás, o servidor redesenha a ficha e os
+    // interruptores do diálogo somem antes de serem medidos — o caso passa
     // sobre o que não viu. Foi assim que ele passou com o defeito recriado.
-    raiz: '[role="dialog"][aria-label="Bola de Fogo"]',
+    //
+    // `dialog[open]` e não o nome: a folha da magia é um `<dialog>` do kit,
+    // rotulado por `aria-labelledby`, e o aberto é um só.
+    raiz: 'dialog[open]',
     abre: async (page) => {
       await page.getByRole('button', { name: 'Conjurar Bola de Fogo' }).click()
-      await page.waitForTimeout(700)
+      await expect(page.getByRole('dialog', { name: 'Bola de Fogo' })).toBeVisible()
     },
   },
 ]

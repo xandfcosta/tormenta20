@@ -337,11 +337,6 @@ func writtenItems(n int) string {
 	return strconv.Itoa(n) + " itens"
 }
 
-// juntoComPonto é a lista de sobreposições numa linha só.
-func juntoComPonto(names []string) string {
-	return strings.Join(names, " · ")
-}
-
 // overloadNotice diz o que a sobrecarga CUSTA, com os dois números que o
 // motor já aplicou — e não uma frase decorada que pode divergir deles.
 //

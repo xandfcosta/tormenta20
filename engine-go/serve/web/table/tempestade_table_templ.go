@@ -242,7 +242,7 @@ func tempestadeTableScene(v View) templ.Component {
 	})
 }
 
-// tempestadeHeader é o cabeçalho da sessão paralela. O id é o mesmo do
+// tempestadeHeader é o cabeçalho da sessão do jogador. O id é o mesmo do
 // cabeçalho de hoje porque é por ele que o remendo pousa.
 func tempestadeHeader(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -415,7 +415,7 @@ func tempestadeHeader(v View) templ.Component {
 	})
 }
 
-// tempestadeTargetBar é a barra de ALVO DA VEZ das Ações paralelas, e é região
+// tempestadeTargetBar é a barra de ALVO DA VEZ das Ações, e é região
 // do stream pela razão da de hoje: quem muda a lista de alvos é a fila. Ela
 // também ESCREVE DE QUEM É A VEZ (`my_turn`) a cada tique, e diz por que as
 // ações apagaram. Fora de combate a vez é de todos — conjurar não espera fila.

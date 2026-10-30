@@ -8,7 +8,7 @@ import (
 )
 
 // A BARRA DE FILTROS fica presa no topo de quem rola (decisão do dono,
-// ALE-473): a busca e os filtros de cada lista da ficha paralela moram dentro
+// ALE-473): a busca e os filtros de cada lista da ficha moram dentro
 // dela, na aba e no diálogo, para a lista rolar por baixo.
 
 // insideFilterBar diz se o nó com o `id` (ou o grupo com o `aria-label`)

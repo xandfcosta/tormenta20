@@ -129,11 +129,10 @@ func assumes(t *testing.T, f sceneFixture, id int64, flag string) string {
 // liveStances são as posturas em pé, lidas da aba Efeitos.
 func liveStances(t *testing.T, f sceneFixture, id int64) []string {
 	t.Helper()
-	// "Posturas ativas" e não "POSTURAS ATIVAS": a caixa alta é do CSS, e quem
-	// lê o HTML servido lê o que foi ESCRITO. A primeira versão desta sonda
-	// procurava o que a TELA mostra e não achava nada — o mesmo erro que o
-	// guia nomeia para tipografia.
-	bloco := entre(t, sheetTab(t, f, id, "conditionals"), "Posturas ativas", "Efeitos ativos")
+	// A lista "Em vigor" da aba, e não a coluna: a coluna repete os efeitos
+	// ativos em todas as abas. O cabeçalho é lido como foi ESCRITO no HTML —
+	// a caixa alta é do CSS —, e a lista termina na linha fixa de aplicar magia.
+	bloco := entre(t, sheetTab(t, f, id, "conditionals"), "<span>Em vigor</span>", "Aplicar uma magia em você")
 	live := []string{}
 	for _, nome := range []string{
 		"Foco de Batalha", "Muralha Intransponível", "Torre Inabalável",
@@ -310,12 +309,11 @@ func theGameMasterConfirmsAMissAgainst(t *testing.T, f sceneFixture, attacker, t
 	}
 }
 
-// AS TRÊS SONDAS ancoram no que o HTML tem para isso, e não em texto de tela.
+// AS DUAS SONDAS ancoram no que o HTML tem para isso, e não em texto de tela.
 
 var (
-	defenceBadge = regexp.MustCompile(`>DEF</span>\s*<span[^>]*>(\d+)</span>`)
+	defenceBadge = regexp.MustCompile(`class="ds-def"><b>(\d+)</b>`)
 	actionValue  = regexp.MustCompile(`class="ds-row-value">([^<]+)</span>`)
-	skillTotal   = regexp.MustCompile(`aria-label="Refl ([+-]\d+)"`)
 )
 
 // defenceOnTheSheet é o número do crachá — o que a mesa pergunta em voz alta.
@@ -347,21 +345,14 @@ func strideOnTheActionsSurface(t *testing.T, f sceneFixture) string {
 	return found[1]
 }
 
-// reflexesOnTheSheet é o total de Reflexos, lido do RÓTULO ACESSÍVEL do ladrilho
-// de resistência na aba Combate.
-//
-// Pelo `aria-label` e não pelo texto: o ladrilho escreve "Refl" e o número em
-// nós separados, e os testes de resistência não estão na aba Perícias — a
-// primeira versão desta sonda os procurou lá e não achou nada.
+// reflexesOnTheSheet é o total de Reflexos, lido da linha FECHADA da aba
+// Perícias — as resistências moram no topo dela, e não no Combate (ALE-473).
 func reflexesOnTheSheet(t *testing.T, f sceneFixture, id int64) int {
 	t.Helper()
-	found := skillTotal.FindStringSubmatch(sheetTab(t, f, id, "combat"))
-	if found == nil {
-		t.Fatal("não achei o ladrilho de Reflexos na aba Combate")
-	}
-	n, err := strconv.Atoi(strings.TrimPrefix(found[1], "+"))
+	total := expertiseRowTotal(t, sheetTab(t, f, id, "expertises"), "Reflexos")
+	n, err := strconv.Atoi(strings.TrimPrefix(total, "+"))
 	if err != nil {
-		t.Fatalf("o total de Reflexos não é número: %q", found[1])
+		t.Fatalf("o total de Reflexos não é número: %q", total)
 	}
 	return n
 }

@@ -24,6 +24,18 @@ func Join(parts ...string) string {
 
 func Int(n int) string { return strconv.Itoa(n) }
 
+// Quantity é o número que a pessoa LÊ num medidor, com o sinal de MENOS
+// tipográfico quando é negativo — o PV de quem caiu, "−3". O hífen é mais
+// curto que o "+" e se perde ao lado da barra.
+//
+//	Quantity(-3) // "−3"
+func Quantity(n int) string {
+	if n < 0 {
+		return "−" + strconv.Itoa(-n)
+	}
+	return strconv.Itoa(n)
+}
+
 // InputType existe porque `<input>` sem `type` é `text`, mas um atributo
 // vazio no HTML não é: `type=""` faz o navegador cair no padrão por recuperação
 // de erro, e depender de recuperação de erro é depender do navegador.

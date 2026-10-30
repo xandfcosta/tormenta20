@@ -7,7 +7,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-// A ABA PODERES DA FICHA PARALELA (ALE-473). O dado é o da ficha de hoje
+// A ABA PODERES DA FICHA (ALE-473). O dado é o do painel
 // (`powersPanel`); daqui sai só o que a folha e a linha leem. A linha NÃO
 // mostra o texto da regra — tocar no nome abre a folha com ele inteiro
 // (decisão do dono). O "Escolher" abre o diálogo de `tempestade_choices.go`.
@@ -18,8 +18,7 @@ func powerSheetID(row powerRow) string {
 	return "power-" + strings.ReplaceAll(row.ID, ".", "-")
 }
 
-// stanceDialogID e useStepsDialogID são os diálogos de degraus da ficha
-// paralela.
+// stanceDialogID e useStepsDialogID são os diálogos de degraus da ficha.
 func stanceDialogID(row powerRow) string {
 	return "stance-" + row.Stance.Flag
 }

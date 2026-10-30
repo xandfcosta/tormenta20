@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// A ABA EFEITOS DA FICHA PARALELA (ALE-473), pelo mockup aprovado: as
+// A ABA EFEITOS DA FICHA (ALE-473), pelo mockup aprovado: as
 // condições como crachás removíveis, o que está em vigor com o Encerrar, a
 // situação com interruptor, e os sempre ativos dos itens recolhidos.
 
@@ -33,25 +33,22 @@ func effectsTab(t *testing.T, page string) string {
 	t.Helper()
 	tab := regexp.MustCompile(`(?s)<section[^>]*aria-label="Efeitos".*?</section>`).FindString(page)
 	if tab == "" {
-		t.Fatal("a ficha paralela não desenhou a aba Efeitos")
+		t.Fatal("a ficha não desenhou a aba Efeitos")
 	}
 	return tab
 }
 
 func TestTheParallelEffectsTabShowsWhatIsInPlay(t *testing.T) {
 	_, _, page := effectsInPlay(t)
-	if strings.Contains(page, "ainda está na ficha de hoje") {
-		t.Fatal("a aba Efeitos paralela ainda leva à ficha de hoje")
-	}
 	tab := effectsTab(t, page)
 
 	prone := "effect-condition-caido"
 	for what, pattern := range map[string]string{
 		"o Caído como crachá que abre a descrição": `commandfor="` + prone + `"`,
-		"o X do Caído":                 `data-on:click="[^"]*/efeitos/condicao/caido[^"]*tempestade=1`,
+		"o X do Caído":                 `data-on:click="[^"]*/efeitos/condicao/caido`,
 		"o gesto de aplicar condição":  `commandfor="condition-picker"`,
 		"o Encerrar da Fúria":          `aria-label="Encerrar Fúria"[^>]*data-on:click="[^"]*/efeitos/postura/furia`,
-		"o interruptor da situação":    `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/efeitos/situacao[^"]*tempestade=1`,
+		"o interruptor da situação":    `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/efeitos/situacao`,
 		"o gesto de aplicar uma magia": `commandfor="buff-picker"`,
 	} {
 		if !regexp.MustCompile(pattern).MatchString(tab) {
@@ -77,7 +74,7 @@ func TestTheParallelConditionPickerAppliesAndCloses(t *testing.T) {
 	if picker == "" {
 		t.Fatal("a aba não desenhou o diálogo de condições")
 	}
-	if !regexp.MustCompile(`command="close"[^>]*data-on:click="[^"]*/efeitos/condicao/abalado[^"]*tempestade=1`).MatchString(picker) {
+	if !regexp.MustCompile(`command="close"[^>]*data-on:click="[^"]*/efeitos/condicao/abalado`).MatchString(picker) {
 		t.Error("o diálogo não aplica o Abalado e fecha no mesmo toque")
 	}
 	// O Caído já está aplicado: ele não volta como opção.
@@ -91,7 +88,7 @@ func effectPicker(t *testing.T, signals, dialog string) string {
 	t.Helper()
 	f, id, _ := effectsInPlay(t)
 	page := f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=conditionals&tempestade=1&datastar=%s", id, url.QueryEscape(signals)), "").Body.String()
+		fmt.Sprintf("/personagens/%d?tab=conditionals&datastar=%s", id, url.QueryEscape(signals)), "").Body.String()
 	picker := regexp.MustCompile(`(?s)<dialog[^>]*id="` + dialog + `".*?</dialog>`).FindString(page)
 	if picker == "" {
 		t.Fatalf("a aba não desenhou o diálogo %s", dialog)

@@ -51,6 +51,10 @@ type SumTerm struct {
 	Note    string
 	Value   string
 	Penalty bool
+	// Muted é a parcela que vale ZERO e mesmo assim aparece — a Destreza
+	// bloqueada pela armadura (ALE-444): sumir não diria por que a Defesa não
+	// subiu, e aparecer acesa leria como um bônus que existe.
+	Muted bool
 }
 
 // SumHead é a linha fechada da conta. Muted é o total que existe e não vale —
@@ -85,6 +89,11 @@ type Meter struct {
 	Temp  int
 	Unit  string
 	Kind  MeterKind
+	// Tone é o degrau da escada do PV (`ui.HpTone`), que pinta a barra; vazio
+	// nos outros medidores.
+	Tone string
+	// Down é a palavra de quem caiu — morrendo, estável, morto (p236).
+	Down string
 }
 
 // share devolve a fração da barra, em porcentagem, que `n` ocupa.
@@ -128,7 +137,7 @@ func formatPercent(n int) string { return strconv.Itoa(n) + "%" }
 
 // rollTermText escreve a parcela como a conta se lê em voz alta: o sinal, a
 // origem e o tamanho. O sinal é o de MENOS tipográfico (−), e não o hífen, como
-// no `stepSignal` da ficha: o hífen é mais curto que o "+" e desalinha a conta.
+// na conta da ficha: o hífen é mais curto que o "+" e desalinha a conta.
 func rollTermText(t RollTerm) string {
 	if t.Value < 0 {
 		return " − " + t.Label + " " + strconv.Itoa(-t.Value)

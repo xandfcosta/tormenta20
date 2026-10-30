@@ -45,7 +45,7 @@ func TestTheRulerSentenceSaysTheBookRangeBand(t *testing.T) {
 	}
 }
 
-// A RÉGUA DA SESSÃO PARALELA escreve a distância numa linha e a faixa embaixo
+// A RÉGUA DA SESSÃO DO JOGADOR escreve a distância numa linha e a faixa embaixo
 // (mockup `tabuleiro.html`), então a leitura sai em DUAS partes além da frase
 // inteira. Com uma ponta só, a dica ocupa a primeira linha e a faixa fica vazia.
 func TestTheRulerReadingComesInTwoLines(t *testing.T) {

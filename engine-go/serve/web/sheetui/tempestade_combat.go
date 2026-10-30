@@ -9,7 +9,7 @@ import (
 	"t20engine/serve/web/ds"
 )
 
-// A ABA COMBATE DA FICHA PARALELA (ALE-473). O dado é o da ficha de hoje
+// A ABA COMBATE DA FICHA (ALE-473). O dado é o do painel
 // (`panelCombat`); daqui sai só o que a linha da conta lê diferente da caixa.
 // As resistências não entram — moram no topo das Perícias —, e não há
 // "Atacar": na ficha solta não há alvo nem turno (decisões do dono).
@@ -45,7 +45,7 @@ func sumTermsOf(rows []breakdownRow) []ds.SumTerm {
 	for _, row := range rows {
 		terms = append(terms, ds.SumTerm{
 			Label: row.Label, Note: row.Note, Value: row.Value,
-			Penalty: strings.HasPrefix(row.Value, "-"),
+			Penalty: strings.HasPrefix(row.Value, "-"), Muted: row.Muted,
 		})
 	}
 	return terms

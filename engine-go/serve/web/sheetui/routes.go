@@ -113,7 +113,6 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")),
 		pageSignals.term(), pageSignals)
 	view.Embedded = insideSessionAsked(r)
-	view.Tempestade = TempestadeAsked(r)
 	view.ColorMode = ui.ColorModeOf(r)
 	if err != nil {
 		http.Error(w, err.Error(), status)
@@ -123,11 +122,10 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	// ficha" da Mesa, e mandar a página inteira faria o Datastar remendar a cena
 	// da sessão com uma ficha de corpo inteiro.
 	//
-	// O `@get` da ficha PARALELA também: a troca macia de aba e a busca pedem a
+	// O `@get` da ficha solta também: a troca macia de aba e a busca pedem a
 	// cena, e a página inteira — a casca, o buscador, o livro — fazia o
-	// navegador comparar tudo de novo, ~450ms num celular médio (ALE-520). A
-	// ficha de hoje fica como está até sair.
-	if view.Embedded || (view.Tempestade && datastarAsked(r)) {
+	// navegador comparar tudo de novo, ~450ms num celular médio (ALE-520).
+	if view.Embedded || datastarAsked(r) {
 		fragment, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -140,7 +138,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		Title: view.Name + " · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Shape:  ui.ShellBare,
-		System: sheetSystem(view),
+		System: ui.SystemTempestade,
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
@@ -220,7 +218,6 @@ func (s Scene) sheetCommand(
 		view, status, err := s.Load(
 			r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")), signals.term(), signals)
 		view.Embedded = insideSessionAsked(r)
-		view.Tempestade = TempestadeAsked(r)
 		view.ColorMode = ui.ColorModeOf(r)
 		if err != nil {
 			http.Error(w, err.Error(), status)

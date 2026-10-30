@@ -1,17 +1,15 @@
 package api
 
-import "t20engine/domain/live"
-
 import (
 	"context"
 	"database/sql"
 	"errors"
 	"strings"
 	"t20engine/app"
+	"t20engine/domain/live"
 	"t20engine/infra/db/dbvalue"
-	"testing"
-
 	"t20engine/infra/db/sqlcgen"
+	"testing"
 )
 
 // A fronteira de quem pode mexer no PV de quem vive no gateway de socket, e nunca

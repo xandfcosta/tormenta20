@@ -3,12 +3,10 @@ package sheetui
 import (
 	"net/url"
 	"strconv"
-
-	"t20engine/domain/sheet"
 )
 
-// O DIÁLOGO ESCOLHER DA FICHA PARALELA (ALE-473), pelo mockup aprovado. O dado
-// é o da ficha de hoje (`choicesPanel`); daqui sai o que os corpos dos passos
+// O DIÁLOGO ESCOLHER DA FICHA (ALE-473), pelo mockup aprovado. O dado
+// é o do painel (`choicesPanel`); daqui sai o que os corpos dos passos
 // leem diferente: o filtro dos poderes e os endereços dos gestos. A divisão em
 // passos é do `tempestade_steps.go`.
 
@@ -53,7 +51,7 @@ func chosenPowers(card classChoiceCard) int {
 
 // originWritten é o teto da origem: "1 de 2".
 func originWritten(card originChoiceCard) string {
-	return strconv.Itoa(len(card.Chosen)) + " de " + strconv.Itoa(sheet.BenefitsOriginLimit)
+	return strconv.Itoa(len(card.Chosen)) + " de " + strconv.Itoa(card.Ceiling)
 }
 
 // raceAbilityPost e countedPost são os endereços de marcar e tirar uma opção

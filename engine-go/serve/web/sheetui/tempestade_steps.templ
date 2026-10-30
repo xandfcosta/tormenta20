@@ -5,7 +5,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeChoicesDialog é o Escolher da ficha paralela, em passos (ver o
+// tempestadeChoicesDialog é o Escolher da ficha, em passos (ver o
 // GLOSSARY): a lista do que falta e um passo de cada vez. No celular a lista
 // some quando um passo abre, e o cabeçalho do passo toma o lugar do do
 // diálogo, com a seta de voltar; no desktop as duas camadas ficam lado a lado,
@@ -72,7 +72,7 @@ templ choiceStepSection(v View, step choiceStep) {
 				case "powers":
 					@ds.List("", "") {
 						for _, power := range step.Class.Powers {
-							@powerPickRow(v, power)
+							@powerPickRow(v, power, true)
 						}
 					}
 				case "path":
@@ -81,6 +81,10 @@ templ choiceStepSection(v View, step choiceStep) {
 					@classPickerDs(v, step.Class.ClassName, "devoto", "Devoto", *step.Class.Devotee)
 				case "counted":
 					@countedChoiceDs(v, step.Counted)
+				case "general":
+					@ds.List("", "") {
+						@powerPickRow(v, step.Power, false)
+					}
 			}
 		}
 	</section>

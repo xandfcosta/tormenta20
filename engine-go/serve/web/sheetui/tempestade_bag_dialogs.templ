@@ -136,7 +136,7 @@ templ itemAddDialog(v View) {
 			@ds.SearchField("catalog-search", "Buscar no livro", templ.Attributes{
 				"value": v.Bag.CatalogSearch, "data-bind:catalog_search": true, "data-on:input__debounce.250ms": sheetGet(v),
 			})
-			<div class="ds-options ds-options-line" role="group" aria-label="Categoria do livro">
+			<div class="ds-options ds-options-line" data-scrolls-x role="group" aria-label="Categoria do livro">
 				for _, o := range v.Bag.CatalogCategories {
 					@ds.Option(o.Active, templ.Attributes{"data-on:click": "$catalog_category = '" + o.Value + "'; " + sheetGet(v)}) {
 						{ o.Label }

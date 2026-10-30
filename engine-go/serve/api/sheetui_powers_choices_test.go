@@ -2,8 +2,11 @@ package api
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func TestAtTheFirstLevelThereIsNoPowerSlot(t *testing.T) {
@@ -86,12 +89,8 @@ func TestAnOriginWithoutBenefitsDoesNotDemandTwo(t *testing.T) {
 		t.Fatalf("trocar a origem: %v", err)
 	}
 
-	screen := powerScreen(t, f, id)
-	if strings.Contains(screen, "Origem: 2 benefícios") {
-		t.Error("o Amnésico cobra dois benefícios de uma lista que tem um")
-	}
-	if !strings.Contains(screen, "Origem: 1 benefício") {
-		t.Error("o Amnésico não cobra o poder único que ele oferece")
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Origem · Amnésico"); step.Tag != "0 de 1" {
+		t.Errorf("o passo da origem do Amnésico diz %q; ele oferece um só benefício, o poder único, e cobra \"0 de 1\"", step.Tag)
 	}
 }
 
@@ -122,25 +121,28 @@ func TestThePathAndTheDevotoOnlyAcceptWhatTheClassOffers(t *testing.T) {
 	}
 }
 
-// AS PENDÊNCIAS dizem o que ainda falta, e a contagem sai no crachá.
+// AS PENDÊNCIAS dizem o que ainda falta — na ponta de cada passo do Escolher
+// —, e a contagem sai no crachá.
 func TestThePendenciesSayWhatIsMissing(t *testing.T) {
 	f, id := barbaro(t, 3)
 
 	screen := powerScreen(t, f, id)
-	for _, want := range []string{
-		"2 poderes por escolher", // duas vagas, nenhuma usada
-		"Origem: 2 benefícios por escolher",
-		"escolhas pendentes",
+	for _, want := range []choiceStepOnScreen{
+		{Title: "Bárbaro 3", Tag: "0 de 2"}, // duas vagas, nenhuma usada
+		{Title: "Origem · Batedor", Tag: "0 de 2"},
 	} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não anuncia %q", want)
+		if got := choiceStepTitled(t, screen, want.Title); got.Tag != want.Tag {
+			t.Errorf("o passo %q diz %q, quer %q", want.Title, got.Tag, want.Tag)
 		}
 	}
+	if !strings.Contains(screen, "escolhas pendentes") {
+		t.Error("o crachá do Escolher não anuncia as escolhas pendentes")
+	}
 
-	// E ELAS SOMEM quando a escolha é feita.
+	// E ELAS DESCEM quando a escolha é feita.
 	powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", "")
-	if page := powerScreen(t, f, id); !strings.Contains(page, "1 poder por escolher") {
-		t.Error("a pendência não desceu para uma vaga depois da escolha")
+	if got := choiceStepTitled(t, powerScreen(t, f, id), "Bárbaro 3"); got.Tag != "1 de 2" {
+		t.Errorf("a pendência não desceu para uma vaga depois da escolha: o passo diz %q", got.Tag)
 	}
 }
 
@@ -149,13 +151,15 @@ func TestTheDialogOffersWhatFitsInEachTab(t *testing.T) {
 	f, id := arcanista(t)
 	screen := powerScreen(t, f, id)
 
-	if !strings.Contains(screen, "Escolher poderes") {
+	if !strings.Contains(screen, `id="power-choices"`) {
 		t.Fatal("a aba não tem o diálogo de escolher")
 	}
-	// O CAMINHO do arcanista, que ele escolhe desde o 1º nível.
+	// O CAMINHO do arcanista, que ele escolhe desde o 1º nível — no passo
+	// dele, e não em qualquer canto da tela.
+	path := choiceStepBody(t, screen, "Arcanista · caminho")
 	for _, want := range []string{"Bruxo", "Feiticeiro", "Mago"} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("o diálogo não oferece o caminho %q", want)
+		if !strings.Contains(path, want) {
+			t.Errorf("o diálogo não oferece o caminho %q: %q", want, path)
 		}
 	}
 	// E NÃO oferece o que é de outra classe.
@@ -199,16 +203,18 @@ func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 	f, id := barbaro(t, 1)
 	seedRaca(t, f.s, id, "humano")
 
-	if screen := powerScreen(t, f, id); !strings.Contains(screen, "distribuir o bônus de atributo") {
-		t.Fatal("o humano sem distribuição não mostra a pendência")
+	// O humano só pede a distribuição, então o "falta 1" do passo da raça é
+	// ela — e o "feito" depois é ela fechando.
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Raça · Humano"); step.Tag != "falta 1" {
+		t.Fatalf("o humano sem distribuição não mostra a pendência: o passo diz %q", step.Tag)
 	}
 
 	body := `{"race_attributes":["strength","dexterity","constitution"]}`
 	if refusal := powerCommand(t, f, id, "atributos", body); refusal != "" {
 		t.Fatalf("a distribuição foi recusada: %q", refusal)
 	}
-	if screen := powerScreen(t, f, id); strings.Contains(screen, "distribuir o bônus de atributo") {
-		t.Error("a pendência ficou depois de a distribuição fechar")
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Raça · Humano"); step.Tag != "feito" {
+		t.Errorf("a pendência ficou depois de a distribuição fechar: o passo diz %q", step.Tag)
 	}
 }
 
@@ -299,8 +305,8 @@ func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
 	if refused := powerCommand(t, f, id, "escolhe/class.barbaro.golpe-poderoso", ""); !strings.Contains(refused, "2 vagas") {
 		t.Errorf("com o Aumento tomado duas vezes, um terceiro poder coube em 2 vagas: %q", refused)
 	}
-	if page := powerScreen(t, f, id); strings.Contains(page, "poder por escolher") || strings.Contains(page, "poderes por escolher") {
-		t.Error("a pendência ainda pede poder com as duas vagas ocupadas pelo Aumento")
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Bárbaro 3"); step.Tag != "feito" {
+		t.Errorf("a pendência ainda pede poder com as duas vagas ocupadas pelo Aumento: o passo diz %q", step.Tag)
 	}
 
 	// UMA OPÇÃO QUE O LIVRO NÃO TEM é recusada, dizendo quais são.
@@ -369,4 +375,149 @@ func TestTheWeaponSpecializationIsChosenFromTheWeaponCatalog(t *testing.T) {
 	if refused := powerCommand(t, f, id, "escolha/"+poder+"/mochila", ""); !strings.Contains(refused, "Adaga") {
 		t.Errorf("um item que não é arma não foi recusado com as opções: %q", refused)
 	}
+}
+
+// ── a leitura do Escolher ───────────────────────────────────────────────────
+
+// choiceStepOnScreen é um passo da lista do Escolher como a pessoa o lê: o
+// título ("Origem · Batedor"), a nota, e a ponta — "falta 1", "0 de 2" ou
+// "feito". A pendência mora na PONTA: é ela que diz o que ainda falta.
+type choiceStepOnScreen struct {
+	Title, Meta, Tag string
+}
+
+// choiceStepsOnScreen são os passos da lista do Escolher, na ordem da tela.
+func choiceStepsOnScreen(t *testing.T, page string) []choiceStepOnScreen {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatalf("ler a página: %v", err)
+	}
+	list := findNode(doc, "class", "ds-steps-list")
+	if list == nil {
+		t.Fatal("a página não tem a lista dos passos do Escolher — o resto mediria o nada")
+	}
+	steps := []choiceStepOnScreen{}
+	for _, row := range nodesWithClassToken(list, "ds-step-row") {
+		step := choiceStepOnScreen{}
+		if title := nodesWithClassToken(row, "ds-row-title"); len(title) > 0 {
+			step.Title = spacedText(title[0])
+		}
+		if meta := nodesWithClassToken(row, "ds-row-meta"); len(meta) > 0 {
+			step.Meta = spacedText(meta[0])
+		}
+		if tag := nodesWithClassToken(row, "ds-step-tag"); len(tag) > 0 {
+			step.Tag = spacedText(tag[0])
+		}
+		steps = append(steps, step)
+	}
+	return steps
+}
+
+// choiceStepTitled é o passo com aquele título; a falha diz quais passos a
+// lista tem, que é o que se precisa para saber se o título mudou ou se o
+// passo sumiu.
+func choiceStepTitled(t *testing.T, page, title string) choiceStepOnScreen {
+	t.Helper()
+	steps := choiceStepsOnScreen(t, page)
+	for _, step := range steps {
+		if step.Title == title {
+			return step
+		}
+	}
+	t.Fatalf("a lista do Escolher não tem o passo %q; tem %+v", title, steps)
+	return choiceStepOnScreen{}
+}
+
+// choiceFieldOnScreen é um bloco de escolha dentro de um passo — a
+// Deformidade, o Especialista: o "1 de 2" do cabeçalho e as opções, cada uma
+// pelo `aria-label` e dizendo se está marcada. Marcar e desmarcar é o MESMO
+// toque, então "marcada" é o que oferece tirar.
+type choiceFieldOnScreen struct {
+	Written string
+	Options map[string]bool
+	HTML    string
+}
+
+// choiceFieldIn é o bloco `label` do passo `step`, e se ele existe.
+func choiceFieldIn(t *testing.T, page, step, label string) (choiceFieldOnScreen, bool) {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatalf("ler a página: %v", err)
+	}
+	var section *html.Node
+	for _, candidate := range nodesWithClassToken(doc, "ds-step") {
+		if attr(candidate, "aria-label") == step {
+			section = candidate
+		}
+	}
+	if section == nil {
+		t.Fatalf("o Escolher não tem a seção do passo %q", step)
+	}
+	for _, field := range nodesWithClassToken(section, "ds-field") {
+		labels := nodesWithClassToken(field, "ds-field-label")
+		if len(labels) == 0 || spacedText(labels[0]) != label {
+			continue
+		}
+		read := choiceFieldOnScreen{Options: map[string]bool{}, HTML: renderNode(t, field)}
+		if heads := nodesWithClassToken(field, "ds-pick-head"); len(heads) > 0 {
+			if meta := nodesWithClassToken(heads[0], "ds-row-meta"); len(meta) > 0 {
+				read.Written = spacedText(meta[0])
+			}
+		}
+		for _, option := range nodesWithClassToken(field, "ds-option") {
+			read.Options[attr(option, "aria-label")] = attr(option, "aria-pressed") == "true"
+		}
+		return read, true
+	}
+	return choiceFieldOnScreen{}, false
+}
+
+// choiceStepBody é o texto do passo aberto, para o que ele oferece.
+func choiceStepBody(t *testing.T, page, step string) string {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatalf("ler a página: %v", err)
+	}
+	for _, candidate := range nodesWithClassToken(doc, "ds-step") {
+		if attr(candidate, "aria-label") == step {
+			return spacedText(candidate)
+		}
+	}
+	t.Fatalf("o Escolher não tem a seção do passo %q", step)
+	return ""
+}
+
+// nodesWithClassToken são os elementos sob `n` que têm `token` entre as
+// classes — por TOKEN, porque a linha é `ds-row ds-step-row` e casar a string
+// inteira deixaria de ver a variante.
+func nodesWithClassToken(n *html.Node, token string) []*html.Node {
+	found := []*html.Node{}
+	var walk func(*html.Node)
+	walk = func(n *html.Node) {
+		if n.Type == html.ElementNode && slices.Contains(strings.Fields(attr(n, "class")), token) {
+			found = append(found, n)
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			walk(c)
+		}
+	}
+	walk(n)
+	return found
+}
+
+func firstElementChild(n *html.Node) *html.Node {
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.ElementNode {
+			return c
+		}
+	}
+	return nil
+}
+
+// spacedText é o texto do nó com o espaço achatado, como a tela o mostra.
+func spacedText(n *html.Node) string {
+	return strings.Join(strings.Fields(textOf(n)), " ")
 }

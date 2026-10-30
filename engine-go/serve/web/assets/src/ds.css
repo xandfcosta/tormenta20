@@ -611,6 +611,10 @@
   .ds-sum-body dd[data-penalty] {
     color: var(--ds-danger);
   }
+  .ds-sum-body :is(dt, dd)[data-muted] {
+    color: var(--ds-ink-3);
+    font-weight: 400;
+  }
   .ds-sum-total {
     display: flex;
     justify-content: space-between;
@@ -1042,6 +1046,30 @@
   .ds-bar > span[data-kind='pv'] {
     background: var(--ds-pv);
   }
+  /* A ESCADA DO PV (decisão do dono, ALE-473): a barra muda de cor com a fração
+   * — cheia, ferida até a metade, crítica até um quarto (`ui.HpTone`) —, com os
+   * estados que a paleta já tem e já mediu. O `--ds-pv` fica de base para a
+   * barra sem degrau. */
+  .ds-bar > span[data-kind='pv'][data-tone='full'] {
+    background: var(--ds-good);
+  }
+  .ds-bar > span[data-kind='pv'][data-tone='hurt'] {
+    background: var(--ds-warn);
+  }
+  .ds-bar > span[data-kind='pv'][data-tone='critical'] {
+    background: var(--ds-pv);
+  }
+  /* QUEM CAIU (p236): morrendo, estável, morto — ao lado do número do PV. */
+  .ds-down {
+    margin-left: 0.375rem;
+    padding: 0.0625rem 0.375rem;
+    border-radius: var(--ds-r-pill);
+    background: var(--ds-danger-fill);
+    color: var(--ds-danger-fill-ink);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+    white-space: nowrap;
+  }
   .ds-bar > span[data-kind='pm'] {
     background: var(--ds-pm);
   }
@@ -1330,7 +1358,7 @@
  * não no kit. A troca de celular para desktop é por LARGURA (64rem), a mesma
  * da casa: a coluna da ficha precisa de 20rem e a lista de pelo menos 40. */
 @layer components {
-  /* A SESSÃO PARALELA (ALE-473): o cabeçalho com a faixa em cima, a
+  /* A SESSÃO DO JOGADOR (ALE-473): o cabeçalho com a faixa em cima, a
    * superfície no meio e a barra da sessão embaixo no celular — onde o polegar
    * alcança (decisão do dono) — e em cima no desktop. A ordem visual muda por
    * `order`, e não o HTML: a barra é uma só nos dois tamanhos. */
@@ -1446,7 +1474,7 @@
     font-weight: 700;
     box-shadow: inset 0 2px 0 var(--ds-action);
   }
-  /* AS AÇÕES DA SESSÃO PARALELA: a barra de alvo fixa em cima e a lista
+  /* AS AÇÕES DA SESSÃO DO JOGADOR: a barra de alvo fixa em cima e a lista
    * rolando por baixo (decisão do dono, pelo mockup `sessao.html`). */
   .ds-session-scroll {
     flex: 1;
@@ -1659,7 +1687,7 @@
   .ds-strike-hand > .ds-input {
     width: 4rem;
   }
-  /* O TABULEIRO DA SESSÃO PARALELA (ALE-473), pelo mockup `tabuleiro.html`. O
+  /* O TABULEIRO DA SESSÃO DO JOGADOR (ALE-473), pelo mockup `tabuleiro.html`. O
    * mapa é o de hoje (`.board-scene`) e ocupa a superfície inteira; o que flutua
    * por cima é do kit. No celular as ferramentas ficam numa barra no pé do
    * mapa, onde o polegar alcança, com os cartões da ferramenta logo acima; no
@@ -1981,7 +2009,7 @@
     }
   }
 
-  /* A MESA DA SESSÃO PARALELA (ALE-473): em combate o registro, a fila e o
+  /* A MESA DA SESSÃO DO JOGADOR (ALE-473): em combate o registro, a fila e o
    * grupo, nessa ordem; fora de cena o grupo sobe (o `data-idle` é da frase de
    * espera, que a fila desenha). No desktop, a fila à esquerda e o registro e o
    * grupo à direita. */

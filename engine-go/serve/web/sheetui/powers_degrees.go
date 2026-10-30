@@ -171,12 +171,3 @@ func riderShows(steps int, doubled bool) string {
 	}
 	return fmt.Sprintf("$stance_degrees == %d && !$prey_favored", steps)
 }
-
-// useCommand é o toque no "Usar": abre o contador no poder que vende degrau, e
-// usa direto no resto — sempre com o contador zerado antes.
-func useCommand(v View, row powerRow) string {
-	if row.Degrees != nil && row.Degrees.opensDialog() {
-		return useOpensCommand(row.Command)
-	}
-	return useResets + sheetPost(v, "/poderes/usa/"+row.Command)
-}

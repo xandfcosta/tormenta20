@@ -8,11 +8,11 @@ import (
 	"golang.org/x/net/html"
 )
 
-// O DIÁLOGO ESCOLHER DA FICHA PARALELA (ALE-473), pelo mockup aprovado: a
+// O DIÁLOGO ESCOLHER DA FICHA (ALE-473), pelo mockup aprovado: a
 // lista dos passos com quanto falta em cada um, e um passo de cada vez — o
 // valor curto como opção, a lista longa com interruptor, e nos poderes a
 // busca e o filtro fixos acima da parte que rola. Todo gesto leva a marca da
-// ficha paralela, e nada do grimório entra no diálogo.
+// ficha, e nada do grimório entra no diálogo.
 func TestTheParallelChoicesDialogOpensOneStepAtATime(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Paladino", 3, 0, 0)
@@ -20,7 +20,7 @@ func TestTheParallelChoicesDialogOpensOneStepAtATime(t *testing.T) {
 
 	dialog := regexp.MustCompile(`(?s)<dialog[^>]*id="power-choices".*?</dialog>`).FindString(page)
 	if dialog == "" {
-		t.Fatal("a aba Poderes paralela não desenhou o diálogo de escolhas")
+		t.Fatal("a aba Poderes não desenhou o diálogo de escolhas")
 	}
 	if grimoire := regexp.MustCompile(`[\w:-]*grimorio[\w-]*`).FindAllString(dialog, 3); len(grimoire) > 0 {
 		t.Errorf("o diálogo de escolhas desenhou classe do grimório: %v", grimoire)
@@ -44,9 +44,9 @@ func TestTheParallelChoicesDialogOpensOneStepAtATime(t *testing.T) {
 	// Cada passo: o toque na lista que o abre, e o que ele oferece por dentro
 	// da parte que rola.
 	steps := []struct{ what, step, inside string }{
-		{"o devoto como opção", "class-Paladino-devotee", `<button[^>]*class="ds-option"[^>]*data-on:click="[^"]*/poderes/classe/Paladino/devoto/[^"]*tempestade=1`},
-		{"o benefício da origem como interruptor", "origin", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/origem/[^"]*tempestade=1`},
-		{"o poder da classe como interruptor", "class-Paladino-powers", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/escolhe/[^"]*tempestade=1`},
+		{"o devoto como opção", "class-Paladino-devotee", `<button[^>]*class="ds-option"[^>]*data-on:click="[^"]*/poderes/classe/Paladino/devoto/`},
+		{"o benefício da origem como interruptor", "origin", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/origem/`},
+		{"o poder da classe como interruptor", "class-Paladino-powers", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/escolhe/`},
 	}
 	for _, s := range steps {
 		if !regexp.MustCompile(`\$choice_step = (&#39;|')` + s.step + `(&#39;|')`).MatchString(renderNode(t, list)) {

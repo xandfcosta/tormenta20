@@ -7,7 +7,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A CASCA DA FICHA PARALELA (ALE-473), pelo mockup aprovado: no celular, o
+// A CASCA DA FICHA (ALE-473), pelo mockup aprovado: no celular, o
 // cabeçalho em cima e a faixa dos vitais com a barra de baixo embaixo; no
 // desktop, a coluna da ficha à esquerda e as sete abas à direita.
 //
@@ -32,7 +32,7 @@ templ tempestadeSheet(v View) {
 				<div class="ds-sheet-tabs">
 					@ds.Tabs("Seções da ficha") {
 						for _, tab := range v.Tabs {
-							@ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active, tabGesture(v, tab.Value)) {
+							@ds.Tab(templ.SafeURL(sheetRoute(v.ID, tab.Value)), tab.Active, tabGesture(v, tab.Value)) {
 								{ tab.Label }
 							}
 						}
@@ -48,7 +48,7 @@ templ tempestadeSheet(v View) {
 		if v.Embedded {
 			@ds.SectionNav("Seções da ficha") {
 				for _, tab := range v.Tabs {
-					@ds.BottomNavItem(templ.SafeURL(tabRoute(v, tab.Value)), tab.Icon, tab.Active, tabGesture(v, tab.Value)) {
+					@ds.BottomNavItem(templ.SafeURL(sheetRoute(v.ID, tab.Value)), tab.Icon, tab.Active, tabGesture(v, tab.Value)) {
 						{ tab.Label }
 					}
 				}
@@ -228,11 +228,24 @@ templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKin
 		@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/-1")})
 		<button type="button" class="ds-vital-open" commandfor={ "vital-" + which } command="show-modal" aria-label={ label + " " + vital.Fraction + ", ajustar" }>
 			<span class="ds-vital-line">
-				<span class="ds-vital-key">{ label }</span>
-				<span class="ds-vital-value">{ strconv.FormatInt(vital.Current, 10) }<small>{ "/" + strconv.FormatInt(vital.Max, 10) }</small></span>
+				// A PALAVRA DE QUEM CAIU vai ao lado do nome do pool, na linha de
+				// cima: embaixo do número ela cobria a barra a 390px.
+				<span class="ds-vital-key">
+					{ label }
+					if vital.Down != "" {
+						<span class="ds-down">{ vital.Down }</span>
+					}
+				</span>
+				<span class="ds-vital-value">{ ui.Quantity(int(vital.Current)) }<small>{ "/" + strconv.FormatInt(vital.Max, 10) }</small></span>
 			</span>
 			<span class="ds-bar" data-thin aria-hidden="true">
-				<span data-kind={ string(kind) } style={ "width:" + strconv.Itoa(vital.Percent) + "%" }></span>
+				<span
+					data-kind={ string(kind) }
+					if tone := vitalTone(kind, vital); tone != "" {
+						data-tone={ tone }
+					}
+					style={ "width:" + strconv.Itoa(vital.Percent) + "%" }
+				></span>
 			</span>
 		</button>
 		@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/1")})
@@ -298,7 +311,7 @@ templ sheetMoreDialog(v View) {
 	@ds.Dialog("sheet-more", "Mais seções", nil) {
 		@ds.List("", "") {
 			for _, tab := range moreTabs(v) {
-				@ds.Row(tab.Label, "", "", templ.SafeURL(tabRoute(v, tab.Value)))
+				@ds.Row(tab.Label, "", "", templ.SafeURL(sheetRoute(v.ID, tab.Value)))
 			}
 		}
 	}
@@ -323,7 +336,7 @@ templ sheetMenuDialog(v View) {
 		</div>
 		<div class="ds-field">
 			<span class="ds-field-label">Aparência</span>
-			@ds.ColorModeSwitch(v.ColorMode, tabRoute(v, v.ActiveTab))
+			@ds.ColorModeSwitch(v.ColorMode, sheetRoute(v.ID, v.ActiveTab))
 		</div>
 	}
 }

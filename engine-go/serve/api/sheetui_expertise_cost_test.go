@@ -29,7 +29,7 @@ func TestTheExpertisesPageDoesNotRebuildThePowersPerSkill(t *testing.T) {
 			t.Fatalf("semear a perícia %s: %v", e.Name, err)
 		}
 	}
-	path := fmt.Sprintf("/personagens/%d?tab=expertises&tempestade=1", id)
+	path := fmt.Sprintf("/personagens/%d?tab=expertises", id)
 	f.requests(t, f.player, http.MethodGet, path, "")
 
 	const ceiling = 30000

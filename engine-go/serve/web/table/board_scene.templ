@@ -8,7 +8,7 @@ import (
 // boardScene é o MAPA: a janela sobre o plano infinito, com as camadas do chão,
 // as de clique e as peças. O que flutua por cima — o trilho, o nome, os avisos
 // e os ajudantes — chega pelos filhos, e a moldura pelo `frame`, porque é o que muda entre a sessão de
-// hoje e a sessão paralela (ALE-473); o mapa e os gestos são os mesmos.
+// hoje e a sessão do jogador (ALE-473); o mapa e os gestos são os mesmos.
 templ boardScene(v BoardView, frame string) {
 	// A CENA é a JANELA sobre um plano infinito, e tudo o que não é o mapa
 	// flutua POR CIMA dela: o trilho, os avisos e os ajudantes de ferramenta.

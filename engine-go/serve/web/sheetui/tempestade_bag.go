@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// A ABA MOCHILA DA FICHA PARALELA (ALE-473), pelo mockup aprovado. O dado é o
-// da ficha de hoje (`bagPanel`); daqui sai só o que a aba lê diferente: as
+// A ABA MOCHILA DA FICHA (ALE-473), pelo mockup aprovado. O dado é o
+// do painel (`bagPanel`); daqui sai só o que a aba lê diferente: as
 // linhas do que está em uso, quantos lugares sobram, e os gestos que abrem os
 // diálogos carregando o estado do item.
 

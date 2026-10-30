@@ -8,7 +8,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A MESA DA SESSÃO PARALELA (ALE-473), pelo mockup aprovado `mesa.html`: o
+// A MESA DA SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado `mesa.html`: o
 // registro da iniciativa (encolhido para quem já está na fila), o teste de
 // quem sangra, a fila e o grupo. Cada peça é região do stream, com o id da
 // Mesa de hoje, porque é por ele que o remendo pousa.
@@ -141,8 +141,8 @@ templ queueVital(row tableRow) {
 	}
 	if (row.PV != nil && !row.PV.Hidden) || (row.PM != nil && !row.PM.Hidden) {
 		<div class="ds-queue-vital">
-			@queueBar("PV", "pv", row.PV)
-			@queueBar("PM", "pm", row.PM)
+			@poolLine("PV", "pv", row.PV)
+			@poolLine("PM", "pm", row.PM)
 		</div>
 	}
 	if row.PM != nil && row.PM.Hidden {
@@ -150,12 +150,31 @@ templ queueVital(row tableRow) {
 	}
 }
 
-// queueBar é o número e a barra de um pool que a mesa vê.
-templ queueBar(label, kind string, b *tableBar) {
+// poolLine é o número e a barra de um pool que a mesa vê, e a palavra de
+// quem caiu ao lado do número.
+templ poolLine(label, kind string, b *tableBar) {
 	if b != nil && !b.Hidden {
-		<span class="ds-row-meta">{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }</span>
-		<span class="ds-bar" aria-label={ barLabel(label, *b) }><span data-kind={ kind } style={ fmt.Sprintf("width:%d%%", b.Pct) }></span></span>
+		<span class="ds-row-meta">
+			{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }
+			if b.Down != "" {
+				<span class="ds-down">{ b.Down }</span>
+			}
+		</span>
+		@vitalBar(label, kind, *b)
 	}
+}
+
+// vitalBar é a barra de um pool, com o degrau da escada quando é o PV.
+templ vitalBar(label, kind string, b tableBar) {
+	<span class="ds-bar" aria-label={ barLabel(label, b) }>
+		<span
+			data-kind={ kind }
+			if kind == "pv" {
+				data-tone={ ui.HpTone(b.Pct) }
+			}
+			style={ fmt.Sprintf("width:%d%%", b.Pct) }
+		></span>
+	</span>
 }
 
 // tempestadeParty é o grupo: retrato, quem está na mesa agora, classe e
@@ -177,10 +196,8 @@ templ tempestadeParty(v View) {
 							</div>
 							<div class="ds-row-meta">{ m.Classes }</div>
 							<div class="ds-party-vitals">
-								<span class="ds-row-meta">{ fmt.Sprintf("PV %d/%d", m.PV.Current, m.PV.Max) }</span>
-								<span class="ds-bar" aria-label={ barLabel("PV", m.PV) }><span data-kind="pv" style={ fmt.Sprintf("width:%d%%", m.PV.Pct) }></span></span>
-								<span class="ds-row-meta">{ fmt.Sprintf("PM %d/%d", m.PM.Current, m.PM.Max) }</span>
-								<span class="ds-bar" aria-label={ barLabel("PM", m.PM) }><span data-kind="pm" style={ fmt.Sprintf("width:%d%%", m.PM.Pct) }></span></span>
+								@poolLine("PV", "pv", &m.PV)
+								@poolLine("PM", "pm", &m.PM)
 							</div>
 						</div>
 					</div>

@@ -14,30 +14,12 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A FICHA PARALELA (ALE-473): a ficha vestida no Tempestade, construída aba
-// por aba no MESMO endereço com a marca `?tempestade=1`, enquanto a do
-// grimório fica intacta. No dia em que a última aba migrar, a marca some e a
-// ficha do grimório é apagada — e este arquivo encolhe para o que for casca.
-
-// TempestadeAsked diz se o pedido é da ficha paralela. A marca viaja na query
-// pela razão do `?tab=`: o handler descobre o que desenhar lendo a requisição,
-// e todo comando redesenha a cena inteira.
-func TempestadeAsked(r *http.Request) bool {
-	return r.URL.Query().Get("tempestade") == "1"
-}
+// A FICHA NO TEMPESTADE (ALE-473): a casca e o que ela calcula para desenhar.
 
 // datastarAsked diz que o pedido veio de um gesto do Datastar (`@get`), e não
 // de uma navegação: o Datastar marca os pedidos dele com este cabeçalho.
 func datastarAsked(r *http.Request) bool {
 	return r.Header.Get("Datastar-Request") == "true"
-}
-
-// sheetSystem é o sistema que a página da ficha veste.
-func sheetSystem(v View) ui.DesignSystem {
-	if v.Tempestade {
-		return ui.SystemTempestade
-	}
-	return ui.SystemGrimoire
 }
 
 // tabGesture é o que o toque numa aba faz. Solta, a troca macia guarda o
@@ -48,17 +30,6 @@ func tabGesture(v View, tab string) templ.Attributes {
 		return templ.Attributes{"data-on:click__prevent": tabEmbeddedGet(v, tab)}
 	}
 	return ds.SoftNav()
-}
-
-// tabRoute é o endereço de uma aba, levando a marca quando a ficha é a
-// paralela. As abas são LINKS pela razão de sempre (`?tab=` é endereço
-// guardado).
-func tabRoute(v View, tab string) string {
-	route := sheetRoute(v.ID, tab)
-	if v.Tempestade {
-		route += "&tempestade=1"
-	}
-	return route
 }
 
 // bottomNavPlace é um lugar da barra de baixo.
@@ -79,7 +50,7 @@ func bottomNavPlaces(v View) []bottomNavPlace {
 	places := make([]bottomNavPlace, 0, len(order))
 	for _, value := range order {
 		tab := tabByValue(v, value)
-		place := bottomNavPlace{Tab: tab, Href: tabRoute(v, value), Current: tab.Active}
+		place := bottomNavPlace{Tab: tab, Href: sheetRoute(v.ID, value), Current: tab.Active}
 		if value == "conditionals" {
 			place.Count = v.Effects.Count
 		}
@@ -270,5 +241,17 @@ func orMissing(value string) string {
 // escrito ("+6"), porque é assim que a ficha do grimório o mostra.
 func meterOf(label string, vital sheetVital, kind ds.MeterKind) ds.Meter {
 	temp, _ := strconv.Atoi(strings.TrimPrefix(vital.Temp, "+"))
-	return ds.Meter{Label: label, Value: int(vital.Current), Max: int(vital.Max), Temp: temp, Kind: kind}
+	meter := ds.Meter{Label: label, Value: int(vital.Current), Max: int(vital.Max), Temp: temp, Kind: kind, Down: vital.Down}
+	if kind == ds.MeterPV {
+		meter.Tone = ui.HpTone(vital.Percent)
+	}
+	return meter
+}
+
+// vitalTone é o degrau da escada da barra da faixa: o do PV, e nenhum no PM.
+func vitalTone(kind ds.MeterKind, vital sheetVital) string {
+	if kind != ds.MeterPV {
+		return ""
+	}
+	return ui.HpTone(vital.Percent)
 }

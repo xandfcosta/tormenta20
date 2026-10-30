@@ -15,7 +15,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeSpells é a aba Magias da ficha paralela: a busca e o Aprender em
+// tempestadeSpells é a aba Magias da ficha: a busca e o Aprender em
 // cima, a CD e o atributo uma vez, o grimório por círculo e as concedidas.
 func tempestadeSpells(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -791,7 +791,7 @@ func augmentLine(a augmentRow) templ.Component {
 }
 
 // learnSpellSheet é o Aprender: o catálogo do Capítulo 4, filtrado no servidor
-// pela busca, pelo círculo e pela escola — os filtros do grimório de hoje. A
+// pela busca, pelo círculo e pela escola. A
 // linha traz a regra, que é o que separa uma magia da outra na hora de escolher.
 func learnSpellSheet(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {

@@ -174,11 +174,6 @@ func TestTheSpellTripletOnlyShowsForWhoCasts(t *testing.T) {
 	if len(tiles) != 3 {
 		t.Fatalf("o conjurador recebeu %d caixas mágicas, quer 3", len(tiles))
 	}
-	for _, tile := range tiles {
-		if !tile.Magic {
-			t.Errorf("a caixa %q saiu com a paleta de combate em vez da arcana", tile.Label)
-		}
-	}
 }
 
 // rowValue lê o "+5" de uma linha de volta para inteiro.

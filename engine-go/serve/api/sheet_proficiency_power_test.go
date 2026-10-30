@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 // O PODER PROFICIÊNCIA (p129, ALE-510):
@@ -47,9 +49,38 @@ func TestTheProficiencyPowerGrantsTheChosenProficiencyAndTakesASlot(t *testing.T
 	}
 	screen := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=proficiencies", id), "").Body.String()
-	if !strings.Contains(screen, ">poder</span>") || !strings.Contains(screen, "Padrão: Proficiência") {
-		t.Error("o painel não diz que armas de fogo vem do poder Proficiência")
+	if locked := lockedProficiencyOrigin(t, screen, "Armas de fogo"); locked != "vem de Proficiência" {
+		t.Errorf("o painel não diz que armas de fogo vem do poder Proficiência: %q", locked)
 	}
+	if strings.Contains(screen, "/proficiencias/alterna/armas-de-fogo") {
+		t.Error("armas de fogo, do poder, ainda tem o gesto de desmarcar")
+	}
+}
+
+// lockedProficiencyOrigin é o "vem de X" da linha travada da aba
+// Proficiências, ou "" quando a linha tem interruptor.
+func lockedProficiencyOrigin(t *testing.T, screen, label string) string {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(screen))
+	if err != nil {
+		t.Fatalf("ler a página: %v", err)
+	}
+	section := findNode(doc, "aria-label", "Proficiências")
+	if section == nil || section.Data != "section" {
+		t.Fatal("a aba não desenhou a seção das proficiências — o resto mediria o nada")
+	}
+	for _, row := range nodesWithClassToken(section, "ds-row") {
+		title := nodesWithClassToken(row, "ds-row-title")
+		if len(title) == 0 || spacedText(title[0]) != label {
+			continue
+		}
+		if locked := nodesWithClassToken(row, "ds-locked"); len(locked) > 0 {
+			return spacedText(locked[0])
+		}
+		return ""
+	}
+	t.Fatalf("a aba Proficiências não tem a linha %q", label)
+	return ""
 }
 
 // "para proficiências diferentes", e exóticas só para quem sabe usar marciais.

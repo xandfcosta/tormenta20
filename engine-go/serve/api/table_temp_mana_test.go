@@ -38,10 +38,11 @@ import (
 // do rótulo do botão de Inspiração — um número que não se mexe. Dois casos
 // reprovaram dizendo que o motor não funcionava, e o motor estava certo: a
 // sonda é que lia outro número.
-var manaBadge = regexp.MustCompile(`data-vital="PM"[^>]*>(\d+)/(\d+)</span>`)
+var manaBadge = regexp.MustCompile(`aria-label="PM (\d+)/(\d+), ajustar"`)
 
-// manaReserve acha a parcela à parte, que vem logo depois da fração.
-var manaReserve = regexp.MustCompile(`data-vital="PM"[^>]*>\d+/\d+</span>\s*<span[^>]*text-hp-temp[^>]*>\+(\d+)</span>`)
+// manaReserve acha a parcela à parte, que o medidor de PM da coluna escreve
+// logo depois da fração.
+var manaReserve = regexp.MustCompile(`ds-meter-key">PM</span>\s*<span class="ds-meter-value">\d+\s*<small> / \d+</small>\s*<small> · \+(\d+) temp\.</small>`)
 
 // bardOnTurn é a bancada: um bardo de nível 6 com Esgrima Mágica e Golpe
 // Mágico, espada curta na mão, SOB INSPIRAÇÃO, e um Goblin na fila.
@@ -386,23 +387,25 @@ func TestAnEmptyManaPoolStillCastsOnTheTemporaryReserve(t *testing.T) {
 	}
 }
 
-// A RESERVA DIZ DE QUE ELA É, e em cada fileira a frase é a sua.
+// A RESERVA DIZ DE QUE ELA É, e em cada fileira é a sua.
 //
 // O `title` era fixo em "PV temporários — o dano gasta estes primeiro": com o
 // PM ganhando poça, ele passaria a mentir na fileira de baixo, afirmando que
-// aquele número é de vida e que o DANO o consome. O verbo é a diferença — o PV
-// é gasto pelo que chega, o PM pelo que a pessoa escolhe fazer.
+// aquele número é de vida. Na ficha nova a reserva mora DENTRO do medidor do
+// vital dela, e é isso que se afirma: o bardo tem 2 PM temporários e nenhum PV
+// temporário.
 func TestEachTemporaryReserveSaysWhichVitalItIs(t *testing.T) {
 	f, bardo, atacante, goblin := bardOnTurn(t)
 	theGameMasterConfirmsAMeleeHit(t, f, atacante, goblin)
 
 	screen := sheetTab(t, f, bardo, "conditionals")
-	if !strings.Contains(screen, "PM temporários — conjurar e ativar poder gastam estes primeiro") {
-		t.Errorf("a reserva de PM não diz que é de PM")
+	if meter := railMeter(t, screen, "PM"); !strings.Contains(meter, "<small> · +2 temp.</small>") {
+		t.Errorf("a reserva de PM não está no medidor do PM:\n%s", meter)
 	}
-	// O CONTROLE: a frase do PV continua existindo no arquivo servido para
-	// quem a tem. Sem ele, apagar as duas passaria verde aqui.
-	if strings.Contains(screen, "PV temporários — o dano gasta estes primeiro") {
-		t.Errorf("a reserva de PM saiu com a frase do PV")
+	// O CONTROLE: o medidor do PV existe (o `railMeter` falha se não) e não
+	// leva reserva. Sem ele, uma reserva desenhada nos dois medidores passaria
+	// verde aqui.
+	if meter := railMeter(t, screen, "PV"); strings.Contains(meter, "temp.") {
+		t.Errorf("a reserva de PM saiu também no medidor do PV:\n%s", meter)
 	}
 }

@@ -1,12 +1,11 @@
 package api
 
-import "t20engine/domain/live"
-
 import (
 	"bufio"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"t20engine/domain/live"
 	"testing"
 	"time"
 )

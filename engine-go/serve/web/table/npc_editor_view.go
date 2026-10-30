@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"t20engine/domain/book"
 
-	"github.com/a-h/templ"
 	"t20engine/domain/creature"
+
+	"github.com/a-h/templ"
 )
 
 // As expressões e as listas do EDITOR DE BLOCO.

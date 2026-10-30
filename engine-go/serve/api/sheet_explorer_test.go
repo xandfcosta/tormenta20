@@ -22,8 +22,8 @@ func hunter(t *testing.T, level int64) (sceneFixture, int64) {
 func TestTheExplorerPicksATerrainPerFourLevels(t *testing.T) {
 	f, id := hunter(t, 7)
 
-	if !strings.Contains(powerScreen(t, f, id), "Explorador: 2 terrenos por escolher") {
-		t.Error("a caçadora de nível 7 sem terreno não tem a pendência de dois")
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Caçador · Explorador"); step.Tag != "0 de 2" {
+		t.Errorf("a caçadora de nível 7 sem terreno não tem a pendência de dois: o passo diz %q", step.Tag)
 	}
 	if refusal := powerCommand(t, f, id, explorerPath+"area-de-tormenta", ""); !strings.Contains(refusal, "11") {
 		t.Errorf("a área de Tormenta foi aceita no nível 7, ou a recusa não diz o nível: %q", refusal)

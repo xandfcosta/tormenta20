@@ -76,12 +76,9 @@ func seedConditionalDefenseEffect(t *testing.T, s *Server, id int64, howMuch int
 }
 
 // As duas telas escrevem a Defesa de formas diferentes, e cada uma tem o seu
-// seletor: a aba Combate a põe no nome ACESSÍVEL da caixa, e o crachá do topo a
-// põe no `<span>` depois do rótulo `DEF`.
-var (
-	panelDefensePattern = regexp.MustCompile(`aria-label="Defesa ([^"]+)"`)
-	badgeDefensePattern = regexp.MustCompile(`>DEF</span>\s*<span[^>]*>([^<]+)</span>`)
-)
+// seletor: a aba Combate a põe na linha FECHADA da conta "Defesa", e o crachá do
+// topo é o `defenceBadge` — o mesmo que as posturas leem.
+var panelDefensePattern = regexp.MustCompile(`<div class="ds-row-title">Defesa</div>\s*</div>\s*<span class="ds-row-value">([^<]+)</span>`)
 
 func combatTabDefense(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
@@ -92,7 +89,7 @@ func badgeDefense(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	body := f.requests(t, f.player, "GET",
 		fmt.Sprintf("/personagens/%d?tab=expertises", id), "").Body.String()
-	return firstMatchOf(t, badgeDefensePattern, body, "o crachá do topo")
+	return firstMatchOf(t, defenceBadge, body, "o crachá do topo")
 }
 
 func firstMatchOf(t *testing.T, re *regexp.Regexp, html, where string) string {

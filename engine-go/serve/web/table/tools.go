@@ -28,9 +28,9 @@ type mapTool struct {
 	// Shortcut é a tecla, e ela é fixa por ferramenta (ver o comentário do topo).
 	Shortcut string
 	Label    string
-	// Short é o nome escrito embaixo do ícone na barra da sessão paralela
+	// Short é o nome escrito embaixo do ícone na barra da sessão do jogador
 	// (ALE-473), onde o botão tem a largura de uma palavra. Só as ferramentas de
-	// todo mundo o têm: a sessão paralela é do jogador.
+	// todo mundo o têm: a sessão do jogador é do jogador.
 	Short string
 	Icon  string
 	Hint  string

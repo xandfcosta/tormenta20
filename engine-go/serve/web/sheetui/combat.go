@@ -26,7 +26,7 @@ import (
 // lê o estado ligado. O opt-in do jogador vem do banco dentro do próprio DTO,
 // então não há segunda fonte a consultar.
 
-// combatPanel é a aba Combate pronta para desenhar.
+// panelCombat é a aba Combate pronta para desenhar.
 type panelCombat struct {
 	// Tiles são Defesa, Atq CaC e Atq Dist; Saves são as três resistências. Duas
 	// listas e não uma porque elas são DUAS fileiras de três na tela, e juntá-las
@@ -49,7 +49,7 @@ type panelCombat struct {
 // statTile é uma caixa com um número e a decomposição dele por trás.
 type statTile struct {
 	// Key é o que o diálogo compara com o sinal `$detail`, e por isso ela é
-	// única na página. Ver `combatPanel`.
+	// única na página.
 	Key   string
 	Label string
 	// Title é o nome por extenso, para o diálogo: a caixa diz "Atq CaC" porque
@@ -59,13 +59,10 @@ type statTile struct {
 	Icon  string
 	Value string
 	// Sub é a linha pequena sob o número — hoje só "RD 4".
-	Sub string
-	// Magic troca a paleta para a arcana. Booleano e não um `tone` aberto porque
-	// são dois tons e não uma família.
-	Magic bool
-	Rows  []breakdownRow
-	// Sum é a conta na língua da ficha paralela, quando ela difere das `Rows`
-	// (os ataques). Vazia, a ficha paralela traduz as `Rows`.
+	Sub  string
+	Rows []breakdownRow
+	// Sum é a conta na língua da ficha, quando ela difere das `Rows`
+	// (os ataques). Vazia, a ficha traduz as `Rows`.
 	Sum []ds.SumTerm
 	// Extra são valores que se RELACIONAM com o número sem somar nele — as
 	// fontes da redução de dano, sob a Defesa.
@@ -83,10 +80,6 @@ type breakdownRow struct {
 	// Note é o PORQUÊ do modificador ("desbalanceada: -2 em ataque"), e ela
 	// quebra linha em vez de truncar.
 	Note string
-	// Indented é a linha que EXPLICA a de cima em vez de somar ao lado dela — as
-	// contribuições de item sob o "Outros" das Perícias. O Combate não a usa: lá
-	// a lista é plana, porque cada linha é uma parcela do total.
-	Indented bool
 }
 
 type extraBlock struct {
@@ -115,8 +108,8 @@ type weaponTile struct {
 	// lista com um total: uma arma não tem "total", tem duas contas.
 	AttackRows []breakdownRow
 	DamageRows []breakdownRow
-	// AttackSum e DamageSum são as mesmas duas contas na língua da ficha
-	// paralela (`weaponSumTerms`).
+	// AttackSum e DamageSum são as mesmas duas contas em parcelas
+	// (`weaponSumTerms`).
 	AttackSum []ds.SumTerm
 	DamageSum []ds.SumTerm
 }
@@ -362,11 +355,11 @@ func magicTiles(sheet engine.ComputedSheet, caster bool) []statTile {
 	}
 	return []statTile{
 		{Key: "pm-limit", Label: "Limite PM", Title: "Limite de PM por magia", Icon: "Zap",
-			Magic: true, Value: strconv.Itoa(sheet.PmLimit.Total), Rows: pmLimitRows(sheet)},
+			Value: strconv.Itoa(sheet.PmLimit.Total), Rows: pmLimitRows(sheet)},
 		{Key: "spell-dc", Label: "CD Magia", Title: "CD dos testes de resistência das suas magias",
-			Icon: "Sparkles", Magic: true, Value: strconv.Itoa(spellDcTotal(sheet)), Rows: spellDcRows(sheet)},
+			Icon: "Sparkles", Value: strconv.Itoa(spellDcTotal(sheet)), Rows: spellDcRows(sheet)},
 		{Key: "pm-cost", Label: "Custo PM", Title: "Modificador de custo de PM", Icon: "Sparkles",
-			Magic: true, Value: book.WithSign(sheet.PmCostMod.Total), Rows: pmCostRows(sheet)},
+			Value: book.WithSign(sheet.PmCostMod.Total), Rows: pmCostRows(sheet)},
 	}
 }
 

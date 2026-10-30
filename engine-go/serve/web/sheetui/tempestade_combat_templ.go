@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "t20engine/serve/web/ds"
 
-// tempestadeCombat é a aba Combate da ficha paralela: os atributos (só no
+// tempestadeCombat é a aba Combate da ficha: os atributos (só no
 // celular — no desktop eles já estão na coluna), Defesa e os dois ataques, as
 // armas empunhadas e, para quem conjura, a magia. Cada número é uma linha que
 // abre a conta, como nas Perícias.

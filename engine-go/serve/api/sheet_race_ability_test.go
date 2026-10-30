@@ -50,7 +50,7 @@ func TestTheDeformityTakesTwoSkillsOrASkillAndATormentaPower(t *testing.T) {
 		t.Errorf("raceAttributeChoices gravado = %s", got)
 	}
 	// O PODER TROCADO É DA FICHA: aparece no acervo.
-	if !strings.Contains(powerPanel(powerScreen(t, f, id)), "Olhos Vermelhos") {
+	if _, found := rowTitled(powerRowsOnScreen(t, powerScreen(t, f, id)), "Olhos Vermelhos"); !found {
 		t.Error("o poder da Tormenta trocado na Deformidade não aparece na aba Poderes")
 	}
 
@@ -84,9 +84,7 @@ func TestTheVanguardistPicksACraftTheSheetHas(t *testing.T) {
 	f, id := barbaro(t, 3)
 	seedRaca(t, f.s, id, "kliren")
 
-	if !strings.Contains(powerScreen(t, f, id), "Vanguardista: escolher o Ofício") {
-		t.Error("o kliren sem Ofício escolhido não tem a pendência")
-	}
+	assertRaceAbilityPending(t, powerScreen(t, f, id), "Raça · Kliren", "Vanguardista", "0 de 1")
 	if refusal := raceAbilityCommand(t, f, id, "kliren-vanguardista", "Ofício (alquimista)"); !strings.Contains(refusal, "Ofício") {
 		t.Errorf("um Ofício que a ficha não tem foi aceito: %q", refusal)
 	}
@@ -111,17 +109,35 @@ func TestTheChoicesDialogShowsTheDeformity(t *testing.T) {
 		t.Fatalf("escolher Furtividade: %q", refusal)
 	}
 	screen := powerScreen(t, f, id)
-	for _, want := range []string{
-		"1 de 2",
-		"Lefou: Deformidade: 1 escolha por fazer",
-		`aria-label="Tirar Furtividade de Deformidade"`,
-		`aria-label="Deformidade: Percepção"`,
-		`aria-label="Deformidade: Olhos Vermelhos"`,
-	} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
+	field := assertRaceAbilityPending(t, screen, "Raça · Lefou", "Deformidade", "1 de 2")
+	// A ESCOLHIDA é a opção marcada, e marcar e tirar são o mesmo toque.
+	if pressed, offered := field.Options["Deformidade: Furtividade"]; !offered || !pressed {
+		t.Errorf("Furtividade escolhida não está marcada na Deformidade: %v", field.Options)
+	}
+	for _, want := range []string{"Deformidade: Percepção", "Deformidade: Olhos Vermelhos"} {
+		if pressed, offered := field.Options[want]; !offered || pressed {
+			t.Errorf("a Deformidade não oferece %q desmarcada: %v", want, field.Options)
 		}
 	}
+}
+
+// assertRaceAbilityPending afirma a pendência de uma habilidade de raça: o
+// passo da raça ainda não está feito, e o bloco da habilidade diz quantas de
+// quantas. O passo junta TODAS as pendências da raça — a distribuição também
+// —, então é o bloco que nomeia qual delas falta.
+func assertRaceAbilityPending(t *testing.T, screen, step, ability, written string) choiceFieldOnScreen {
+	t.Helper()
+	if got := choiceStepTitled(t, screen, step); got.Tag == "feito" {
+		t.Errorf("o passo %q não tem a pendência de %s: diz %q", step, ability, got.Tag)
+	}
+	field, found := choiceFieldIn(t, screen, step, ability)
+	if !found {
+		t.Fatalf("o passo %q não tem o bloco de %s", step, ability)
+	}
+	if field.Written != written {
+		t.Errorf("o bloco de %s diz %q, quer %q", ability, field.Written, written)
+	}
+	return field
 }
 
 // SEM OFÍCIO NA FICHA, o Vanguardista manda criar um.

@@ -247,10 +247,9 @@ func TestTheSheetPaintsTheHpLadderAndNotOnlyTheWidth(t *testing.T) {
 // este caso ficaria verde sobre uma tela que mostra a reserva o tempo todo.
 func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 	f, id := barbaro(t, 5)
-	const marker = "PV temporários — o dano gasta estes primeiro (p106)"
 
-	if page := powerScreen(t, f, id); strings.Contains(page, marker) {
-		t.Fatal("a ficha SEM poça já mostra a reserva — o caso mediria o repouso")
+	if meter := railMeter(t, powerScreen(t, f, id), "PV"); strings.Contains(meter, "temp.") {
+		t.Fatalf("a ficha SEM poça já mostra a reserva — o caso mediria o repouso:\n%s", meter)
 	}
 
 	// A fração do PV é LIDA antes, e não escrita à mão: o poço do bárbaro vem do
@@ -262,17 +261,14 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 	}
 
 	screen := powerScreen(t, f, id)
-	if !strings.Contains(screen, marker) {
-		t.Error("a reserva não chegou ao crachá")
-	}
 	// O número é do LIVRO e escrito à mão: o Campo de Força dá 30 PV
-	// temporários de cena.
-	if !strings.Contains(screen, ">+30</span>") {
-		t.Error("o crachá não diz QUANTO é a reserva")
+	// temporários de cena. E ele mora no medidor do PV, não num qualquer.
+	if meter := railMeter(t, screen, "PV"); !strings.Contains(meter, "<small> · +30 temp.</small>") {
+		t.Errorf("o medidor do PV não diz QUANTO é a reserva:\n%s", meter)
 	}
 	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
 	// somando.
-	if !strings.Contains(screen, fraction) {
+	if !strings.Contains(screen, `aria-label="PV `+fraction+`, ajustar"`) {
 		t.Errorf("a fração do PV saiu de %q — a reserva virou somando em vez de parcela", fraction)
 	}
 }
@@ -282,4 +278,16 @@ func pvFraction(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	pool := poolsOf(t, f.s, id)
 	return fmt.Sprintf("%d/%d", pool.HpCurrent, pool.HpMax)
+}
+
+// railMeter recorta o medidor de um vital na coluna da ficha — o rótulo, o
+// número e a reserva —, do rótulo até o fim do cabeçalho do medidor.
+func railMeter(t *testing.T, screen, label string) string {
+	t.Helper()
+	start := strings.Index(screen, `<span class="ds-meter-key">`+label+`</span>`)
+	if start < 0 {
+		t.Fatalf("a ficha não desenhou o medidor de %s: o caso mediria o vazio", label)
+	}
+	meter, _, _ := strings.Cut(screen[start:], "</div>")
+	return meter
 }

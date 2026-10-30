@@ -43,7 +43,7 @@ type View struct {
 	// Upcoming é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
 	Upcoming []turnAhead
-	// Endless é a faixa SEM FIM da sessão paralela: a fila inteira a partir de
+	// Endless é a faixa SEM FIM da sessão do jogador: a fila inteira a partir de
 	// quem joga agora, e mais três da rodada seguinte (ver o GLOSSARY, "faixa").
 	Endless []turnAhead
 	// Tempestade é a sessão do JOGADOR, que a página e o stream desenham no

@@ -5,7 +5,6 @@ serve/web/campaigns/one.templ
 serve/web/campaigns/routes.go
 serve/web/master/bestiary.templ
 serve/web/master/collection.templ
-serve/web/sheetui/spells.go
 serve/web/table/board.templ
 serve/web/table/commands.go
 serve/web/table/routes.go

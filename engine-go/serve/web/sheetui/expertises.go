@@ -74,8 +74,7 @@ type expertiseRow struct {
 	AutoFail bool
 	// Custom é o ofício do jogador, o único que pode ser removido.
 	Custom bool
-	Rows   []breakdownRow
-	// Sum é a mesma conta na forma da ficha paralela: uma linha por parcela.
+	// Sum é a conta da perícia: uma linha por parcela.
 	Sum []ds.SumTerm
 	// TotalValue é o `Total` como número, para a prévia do total com os gastos.
 	TotalValue int
@@ -195,7 +194,6 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 		Locked:      trainedOnly && !breaks.Trained,
 		AutoFail:    autoFails(sheet, entry.Name),
 		Custom:      entry.Custom,
-		Rows:        expertiseBreakdownRows(breaks),
 		Sum:         expertiseSumTerms(breaks),
 	}
 	return row
@@ -235,24 +233,4 @@ func autoFails(sheet engine.ComputedSheet, name string) bool {
 		}
 	}
 	return false
-}
-
-// expertiseBreakdownRows é a decomposição de uma perícia.
-//
-// A forma difere da do Combate de propósito: aqui "Outros" é a SOMA dos itens, e
-// as contribuições vêm indentadas por baixo dela. Quem abre uma perícia quer
-// primeiro as quatro parcelas do livro, e só depois de onde saiu a quarta.
-func expertiseBreakdownRows(ex engine.ExpertiseBreakdown) []breakdownRow {
-	rows := []breakdownRow{
-		{Label: "½ nível", Value: book.WithSign(ex.HalfLevel)},
-		{Label: "Atributo (" + attributeAbbr[ex.Attribute] + ")", Value: book.WithSign(ex.AttrValue)},
-		{Label: "Treino", Value: book.WithSign(ex.Training), Note: trainedByText(ex.TrainedBy)},
-		{Label: "Outros", Value: book.WithSign(ex.ItemBonus)},
-	}
-	for _, c := range ex.ItemContributions {
-		rows = append(rows, breakdownRow{
-			Label: c.Source, Value: book.WithSign(c.Amount), Note: c.Note, Indented: true,
-		})
-	}
-	return rows
 }

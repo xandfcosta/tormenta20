@@ -123,7 +123,7 @@ type augmentRow struct {
 	// Toggle, More e Less são os gestos MONTADOS, e não expressões escritas no
 	// `.templ`, porque cada um precisa ver a VIZINHANÇA: ligar o exclusivo apaga
 	// os outros e ligar qualquer outro apaga o exclusivo. É a mesma regra do
-	// `thatOpensCastGesture` — quem troca limpa —, e é ela que impede a tela de
+	// `augmentsReset` — quem troca limpa —, e é ela que impede a tela de
 	// oferecer uma combinação que o servidor vai recusar.
 	Toggle string
 	More   string
@@ -394,35 +394,6 @@ func aprendidasEscrito(n int) string {
 // números.
 func augmentSignal(index int) string {
 	return "$augment" + strconv.Itoa(index)
-}
-
-// augmentChosenClasses é o `data-class` do botão "Trocar": a tinta do ligado e a
-// do desligado, ambas presas ao MESMO sinal que o `aria-checked` usa.
-//
-// As duas listadas, e não só a do ligado: o `data-class` do Datastar ACRESCENTA
-// e REMOVE conforme a expressão, então deixar a do desligado na classe estática
-// faria as duas conviverem no instante ligado — borda dourada com texto cinza.
-//
-// O dourado é o mesmo do "Preparada" da magia, e isso é deliberado: as duas
-// dizem "isto está ligado" na mesma tela.
-func augmentChosenClasses(index int) string {
-	signal := augmentSignal(index)
-	return "{'border-grimorio-gold/60 text-grimorio-gold': " + signal + " > 0," +
-		" 'border-grimorio-iron text-muted-foreground': " + signal + " === 0}"
-}
-
-// thatOpensCastGesture ZERA as pilhas antes de abrir.
-//
-// Quem TROCA de item limpa, e não quem gera — a regra do "remendo em nó
-// compartilhado" do guia do Go. Sem isto, a pilha escolhida numa magia
-// reapareceria na próxima que fosse aberta, e o custo mostrado seria o de outra
-// conjuração.
-func thatOpensCastGesture(spell learnedSpellRow) string {
-	cleanup := ""
-	for i := 0; i < 6; i++ {
-		cleanup += augmentSignal(i) + " = 0; "
-	}
-	return cleanup + "$detail = 'conjura-" + spell.Command + "'"
 }
 
 // costPreview é a expressão que soma o custo na tela.

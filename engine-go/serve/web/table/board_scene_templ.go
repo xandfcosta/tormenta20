@@ -16,7 +16,7 @@ import (
 // boardScene é o MAPA: a janela sobre o plano infinito, com as camadas do chão,
 // as de clique e as peças. O que flutua por cima — o trilho, o nome, os avisos
 // e os ajudantes — chega pelos filhos, e a moldura pelo `frame`, porque é o que muda entre a sessão de
-// hoje e a sessão paralela (ALE-473); o mapa e os gestos são os mesmos.
+// hoje e a sessão do jogador (ALE-473); o mapa e os gestos são os mesmos.
 func boardScene(v BoardView, frame string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

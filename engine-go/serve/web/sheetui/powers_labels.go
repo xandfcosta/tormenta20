@@ -112,14 +112,6 @@ func activationGlyph(kind string) string {
 	return "BookOpen"
 }
 
-// writtenPowers é "26 poderes", com o singular certo.
-func writtenPowers(n int) string {
-	if n == 1 {
-		return "1 poder"
-	}
-	return strconv.Itoa(n) + " poderes"
-}
-
 // noActionsPhrase explica a seção vazia, e ela DEPENDE de quem lê: mandar às
 // Magias quem não conjura seria mandá-lo a uma aba vazia.
 func noActionsPhrase(casts bool) string {
@@ -127,16 +119,6 @@ func noActionsPhrase(casts bool) string {
 		return "Nenhuma ação ativável — suas magias estão na aba Magias."
 	}
 	return "Nenhuma ação ativável. Suas habilidades são passivas."
-}
-
-// powerBadge é a classe do crachá — a postura sai na tinta arcana, que é a
-// mesma da tripla mágica do Combate.
-func powerBadge(kind string) string {
-	base := "shrink-0 rounded-full border px-1.5 py-px text-3xs font-semibold uppercase tracking-wide"
-	if kind == "stance" {
-		return base + " border-arcane/40 text-arcane-ink"
-	}
-	return base + " border-grimorio-iron text-muted-foreground"
 }
 
 // costStancePreview soma o custo dos degraus na tela.

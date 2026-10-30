@@ -13,10 +13,10 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeProficiencies é a aba Proficiências da ficha paralela: as duas
+// tempestadeProficiencies é a aba Proficiências da ficha: as duas
 // famílias como listas, lado a lado no desktop. A linha que tem origem — a
 // classe, a raça, o poder — fica travada e diz de onde vem; a outra tem o
-// interruptor, e o estado é sempre o do servidor (ver `proficiencyPanel`).
+// interruptor, e o estado é sempre o do servidor.
 func tempestadeProficiencies(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -92,7 +92,7 @@ func tempestadeProficiencies(v View) templ.Component {
 					var templ_7745c5c3_Var4 string
 					templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(row.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_proficiencies.templ`, Line: 31, Col: 45}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_proficiencies.templ`, Line: 30, Col: 45}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 					if templ_7745c5c3_Err != nil {
@@ -114,7 +114,7 @@ func tempestadeProficiencies(v View) templ.Component {
 						var templ_7745c5c3_Var5 string
 						templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(row.Origin)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_proficiencies.templ`, Line: 35, Col: 21}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_proficiencies.templ`, Line: 34, Col: 21}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 						if templ_7745c5c3_Err != nil {

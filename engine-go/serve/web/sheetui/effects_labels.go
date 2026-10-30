@@ -267,13 +267,3 @@ func conditionalLabel(c engine.ConditionalEffect) string {
 	}
 	return targetLabel(c.Target)
 }
-
-// activeWrittenEffects é a linha que o leitor de tela ouve no lugar da pílula
-// de contagem, com o singular certo. Um "1" solto é lido como "1", e o número
-// sozinho não diz de quê.
-func activeWrittenEffects(n int) string {
-	if n == 1 {
-		return "1 efeito ativo"
-	}
-	return strconv.Itoa(n) + " efeitos ativos"
-}

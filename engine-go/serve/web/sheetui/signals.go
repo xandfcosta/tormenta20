@@ -52,12 +52,12 @@ type Signals struct {
 	SpellSearch string `json:"spell_search"`
 	SpellCircle string `json:"spell_circle"`
 	SpellSchool string `json:"spell_school"`
-	// A busca do grimório na aba Magias da ficha paralela, que filtra o que a
+	// A busca do grimório na aba Magias da ficha, que filtra o que a
 	// ficha SABE; a de cima filtra o catálogo do Aprender.
 	GrimoireSearch string `json:"grimoire_search"`
 	// O círculo escolhido no filtro da mesma aba ("2º"); vazio é todos.
 	GrimoireCircle string `json:"grimoire_circle"`
-	// As buscas dos escolhedores da aba Efeitos paralela, e o círculo do de
+	// As buscas dos escolhedores da aba Efeitos, e o círculo do de
 	// magia ("2º"; vazio é todos).
 	ConditionSearch string `json:"condition_search"`
 	BuffSearch      string `json:"buff_search"`

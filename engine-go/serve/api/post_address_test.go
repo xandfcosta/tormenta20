@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -169,6 +170,10 @@ func addressesInHTML(origin, html string) (findings []datastarAddress, unreadabl
 				continue
 			}
 			paths := pathsInExpression(argument)
+			// `el.href` é o `href` do próprio elemento (a troca macia de aba).
+			if strings.TrimSpace(argument) == "el.href" {
+				paths = ownHref(text[:start])
+			}
 			if len(paths) == 0 {
 				unreadable = append(unreadable, origin+": "+needle+clipForMessage(argument)+")")
 				continue
@@ -185,6 +190,17 @@ func addressesInHTML(origin, html string) (findings []datastarAddress, unreadabl
 		}
 	}
 	return findings, unreadable
+}
+
+// ownHref é o `href` da tag em que a expressão mora, sem a busca: o texto ATÉ a
+// expressão, a partir do último `<`.
+func ownHref(before string) []string {
+	tag := before[strings.LastIndex(before, "<")+1:]
+	found := regexp.MustCompile(`href="([^"?]+)`).FindStringSubmatch(tag)
+	if found == nil {
+		return nil
+	}
+	return []string{found[1]}
 }
 
 func clipForMessage(s string) string {
@@ -251,6 +267,14 @@ func TestTheAddressExtractorReadsEveryShapeTheScenesWrite(t *testing.T) {
 	}
 	if len(findings) != 1 || findings[0].Method != "GET" || findings[0].Path != "/campanhas/1/sessoes/4/notas" {
 		t.Errorf("o `window.open` saiu como %+v, esperava um GET em /campanhas/1/sessoes/4/notas", findings)
+	}
+
+	// A TROCA MACIA de aba (`ds.SoftNav`) é a SEXTA forma: ela pede `el.href`, e
+	// o endereço é o `href` do PRÓPRIO elemento — ler só a expressão daria nada.
+	const softNav = `<a href="/personagens/7?tab=combat" data-on:click="!(evt.ctrlKey) && (evt.preventDefault(), @get(el.href))">`
+	soft, unread := addressesInHTML("caso", softNav)
+	if len(unread) > 0 || len(soft) != 1 || soft[0].Method != "GET" || soft[0].Path != "/personagens/7" {
+		t.Errorf("a troca macia saiu como %+v (sem ler: %q), esperava um GET em /personagens/7", soft, unread)
 	}
 
 	for _, tc := range cases {

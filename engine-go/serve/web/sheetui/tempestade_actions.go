@@ -6,7 +6,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-// actionWaits é a expressão que APAGA um gesto das Ações paralelas: o alvo que
+// actionWaits é a expressão que APAGA um gesto das Ações: o alvo que
 // falta, e a vez que não é do jogador quando o grupo gasta a vez. Vazia quando
 // nada espera.
 //

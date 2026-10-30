@@ -41,7 +41,7 @@ type actionsPanel struct {
 type actionGroup struct {
 	Title string
 	// OnTurn marca o que GASTA a vez — padrão, movimento, completa —, e é o que
-	// apaga fora da vez na sessão paralela (decisão do dono). A livre e a
+	// apaga fora da vez na sessão do jogador (decisão do dono). A livre e a
 	// reação não: a reação é justamente o que se faz fora da vez (p233).
 	OnTurn bool
 	// Note é o que o título não diz — "abre mão das duas", "não gastam a vez".
@@ -118,7 +118,7 @@ type actionRoll struct {
 	Before  string
 	// Opens marca o gesto que abre uma escolha, para o `aria-haspopup`.
 	Opens string
-	// Dialog é o diálogo do kit que o gesto abre na sessão paralela, pelo
+	// Dialog é o diálogo do kit que o gesto abre na sessão do jogador, pelo
 	// `commandfor` — o `Opens` é a sobreposição de hoje.
 	Dialog string
 }
@@ -273,24 +273,6 @@ func joinWithDot(left, right string) string {
 		return right
 	}
 	return left + " · " + right
-}
-
-// rollWaitsForATarget é a expressão que DESABILITA o botão enquanto não há
-// alvo escolhido.
-//
-// O SINAL É DA MESA e é lido aqui, e os dois lados disso são de propósito: quem
-// desenha a lista de alvos é a Mesa, porque quem muda a lista é a FILA; quem
-// desenha o botão é a ficha, porque o botão mora colado no número. O sinal é o
-// único canal que atravessa os dois remendos — o do stream e o do gateway da
-// ficha — sem ser trocado por nenhum deles.
-//
-// "false" e não a ausência do atributo: `data-attr` trata valor booleano como
-// ATRIBUTO BOOLEANO, então o falso o REMOVE, que é exatamente o certo aqui.
-func rollWaitsForATarget(roll actionRoll) string {
-	if !roll.NeedsTarget {
-		return "false"
-	}
-	return "$turn_target === ''"
 }
 
 // rollTitle explica o botão apagado. Um gesto desabilitado e sem motivo manda

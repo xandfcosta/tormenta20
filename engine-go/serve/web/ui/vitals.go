@@ -57,13 +57,26 @@ func VitalPercent(current, max int64) int {
 //
 //	class={ "h-full", ui.HpFillTone(v.Porcento) } // → "h-full bg-hp-critical"
 func HpFillTone(pct int) string {
+	// AS CLASSES ESCRITAS INTEIRAS, e não montadas do degrau: o guarda das
+	// tintas lê o literal, e `"bg-hp-" + tom` seria uma tinta "hp" que não
+	// existe.
+	return map[string]string{
+		"full": "bg-hp-full", "hurt": "bg-hp-hurt", "critical": "bg-hp-critical",
+	}[HpTone(pct)]
+}
+
+// HpTone é o DEGRAU da escada — `full`, `hurt` ou `critical` —, para o
+// Tempestade, que pinta pelo atributo `data-tone` e não por classe.
+//
+//	HpTone(40) // "hurt"
+func HpTone(pct int) string {
 	switch {
 	case pct <= hpCritical:
-		return "bg-hp-critical"
+		return "critical"
 	case pct <= hpHurt:
-		return "bg-hp-hurt"
+		return "hurt"
 	}
-	return "bg-hp-full"
+	return "full"
 }
 
 // HpInkTone é a classe que ESCREVE o PV, e ela NÃO é a de preencher.

@@ -73,6 +73,8 @@ type originChoiceCard struct {
 	Name    string
 	Options []filterOption
 	Chosen  []string
+	// Ceiling é quantos benefícios a origem cobra (`originBenefitCeiling`).
+	Ceiling int
 	Left    int
 }
 
@@ -288,9 +290,10 @@ func originChoice(dto sheet.CharacterDTO) *originChoiceCard {
 		return nil
 	}
 	chosen := sheet.UnmarshalStrings(dto.OriginChoices)
+	ceiling := originBenefitCeiling(origin)
 	card := &originChoiceCard{
 		Name: origin.Name, Chosen: chosen,
-		Left: sheet.BenefitsOriginLimit - len(chosen),
+		Ceiling: ceiling, Left: ceiling - len(chosen),
 	}
 	for _, b := range sheet.OriginBenefitsOf(origin) {
 		card.Options = append(card.Options, filterOption{
@@ -387,11 +390,6 @@ func casaComABusca(name, term string) bool {
 
 // ── o que a TELA escreve ─────────────────────────────────────────────────────
 
-// classWrittenSlots é "3 de 4 vagas".
-func classWrittenSlots(card classChoiceCard) string {
-	return strconv.Itoa(card.Used) + " de " + strconv.Itoa(card.Slots) + " vagas"
-}
-
 // attributeWrittenChoice descreve o que a raça pede.
 func attributeWrittenChoice(choice attributeChoice) string {
 	if choice.Kind == "ascendencia" {
@@ -408,26 +406,6 @@ func attributeWrittenChoice(choice attributeChoice) string {
 // sourceThree são as abas do diálogo, na ordem em que o livro monta um
 // personagem: raça, origem, classe.
 var sourceThree = []string{"raca", "origem", "classe"}
-
-// firstPendingSource é a aba em que o diálogo ABRE.
-//
-// Quem abriu veio pela pendência, e fazê-lo caçar a aba certa é gastar o clique
-// que ele acabou de dar. Sem pendência nenhuma, ele abre na Raça.
-func firstPendingSource(v View) string {
-	if len(v.Choices.Pending) > 0 {
-		return v.Choices.Pending[0].Source
-	}
-	return "raca"
-}
-
-// choiceChip é a classe de um chip que liga e desliga.
-func choiceChip(active bool) string {
-	base := "rounded-full border px-2 py-0.5 text-3xs uppercase tracking-wider outline-none transition-colors"
-	if active {
-		return base + " border-grimorio-gold/60 bg-accent text-grimorio-gold"
-	}
-	return base + " border-grimorio-iron text-muted-foreground hover:text-foreground"
-}
 
 // choiceClassCommand escreve o `@post` do caminho ou do devoto.
 func choiceClassCommand(v View, class, choice, value string) string {

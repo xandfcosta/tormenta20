@@ -7,7 +7,7 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// tempestadeSpells é a aba Magias da ficha paralela: a busca e o Aprender em
+// tempestadeSpells é a aba Magias da ficha: a busca e o Aprender em
 // cima, a CD e o atributo uma vez, o grimório por círculo e as concedidas.
 templ tempestadeSpells(v View) {
 	<section class="grid gap-3" aria-label="Magias">
@@ -161,7 +161,7 @@ templ augmentLine(a augmentRow) {
 }
 
 // learnSpellSheet é o Aprender: o catálogo do Capítulo 4, filtrado no servidor
-// pela busca, pelo círculo e pela escola — os filtros do grimório de hoje. A
+// pela busca, pelo círculo e pela escola. A
 // linha traz a regra, que é o que separa uma magia da outra na hora de escolher.
 templ learnSpellSheet(v View) {
 	@ds.Dialog("spell-learn", "Aprender magia", nil) {

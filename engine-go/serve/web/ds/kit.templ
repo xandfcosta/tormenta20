@@ -263,7 +263,7 @@ templ Sum(h SumHead, attrs templ.Attributes) {
 templ SumTerms(terms []SumTerm) {
 	<dl>
 		for _, t := range terms {
-			<dt>
+			<dt data-muted?={ t.Muted }>
 				{ t.Label }
 				if t.Note != "" {
 					<small>{ t.Note }</small>
@@ -273,6 +273,7 @@ templ SumTerms(terms []SumTerm) {
 				if t.Penalty {
 					data-penalty
 				}
+				data-muted?={ t.Muted }
 			>{ t.Value }</dd>
 		}
 		{ children... }
@@ -322,7 +323,7 @@ templ MeterView(m Meter) {
 		<div class="ds-meter-head">
 			<span class="ds-meter-key">{ m.Label }</span>
 			<span class="ds-meter-value">
-				{ ui.Int(m.Value) }
+				{ ui.Quantity(m.Value) }
 				if m.Max > 0 {
 					<small>{ " / " + ui.Int(m.Max) }</small>
 				}
@@ -333,12 +334,18 @@ templ MeterView(m Meter) {
 					<small>{ " " + m.Unit }</small>
 				}
 			</span>
+			if m.Down != "" {
+				<span class="ds-down">{ m.Down }</span>
+			}
 		</div>
 		if m.Max > 0 {
 			<div class="ds-bar" aria-hidden="true">
 				<span
 					if m.Kind != MeterPlain {
 						data-kind={ string(m.Kind) }
+					}
+					if m.Tone != "" {
+						data-tone={ m.Tone }
 					}
 					style={ "width:" + m.share(m.Value) }
 				></span>

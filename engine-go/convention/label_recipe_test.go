@@ -151,7 +151,8 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	// A segunda: se o casamento da RECEITA parar de funcionar, o guarda continua
 	// verde porque ninguém a estaria usando — e "ninguém usa" e "não sei
 	// procurar" se parecem no terminal.
-	if byRecipe < 100 {
+	// O piso caiu de 100 para 80 quando a ficha do grimório saiu (ALE-473).
+	if byRecipe < 80 {
 		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", byRecipe)
 	}
 	// A terceira: se o casamento do `class="…"` parar, o laço acima nunca entra e

@@ -11,7 +11,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-// A ABA MAGIAS DA FICHA PARALELA (ALE-473). O dado é o do grimório de hoje
+// A ABA MAGIAS DA FICHA (ALE-473). O dado é o do painel
 // (`spellbookPanel`); daqui sai só o que a folha e a linha leem. Como nos
 // Poderes, a linha não mostra o texto da regra: tocar no nome abre a folha da
 // magia, e o Esquecer mora no pé dela, longe do Conjurar (decisão do dono).
@@ -171,7 +171,7 @@ func castOpensSheet(spell learnedSpellRow) bool {
 }
 
 // augmentsReset zera as seis pilhas: quem abre uma folha limpa, ou a escolha
-// de uma magia reapareceria na próxima (ver `thatOpensCastGesture`).
+// de uma magia reapareceria na próxima.
 const augmentsReset = "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; "
 
 // circleFilterOptions são os círculos do catálogo, para o Aprender: não há

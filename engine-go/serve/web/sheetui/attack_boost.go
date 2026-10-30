@@ -250,15 +250,6 @@ func boostSplitIsExpr(side string) string {
 	return fmt.Sprintf("$%s === %q", boostSplitSignal, side)
 }
 
-// chosenLookExpr é o `data-class` de objeto que alterna as classes de ligado e
-// de desligado. As DUAS alternam: com as de desligado fixas no `class`, a
-// cascata as fazia vencer e o chip ligado continuava cinza (visto na tela). E é
-// de objeto porque a forma de chave única não aceita o `/` de
-// `bg-grimorio-gold/10`.
-func chosenLookExpr(on, off, when string) string {
-	return fmt.Sprintf("{%q: %s, %q: !(%s)}", on, when, off, when)
-}
-
 // ariaBoolExpr escreve a condição como "true"/"false": o `data-attr` põe o
 // verdadeiro como atributo VAZIO, e `aria-pressed=""` não diz nada a ninguém.
 func ariaBoolExpr(when string) string {

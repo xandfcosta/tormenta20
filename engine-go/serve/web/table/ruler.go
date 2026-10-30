@@ -119,8 +119,8 @@ func polylineReading(stops []engine.Square) map[string]any {
 		Metres:  float64(total) * engine.SquareMetres,
 		Band:    engine.BandFor(total),
 	}
-	// A FRASE INTEIRA é a da régua de hoje; as duas partes são a da sessão
-	// paralela, que escreve a faixa embaixo da distância (`tabuleiro.html`).
+	// A FRASE INTEIRA é a da régua do mestre; as duas partes são a da sessão do
+	// jogador, que escreve a faixa embaixo da distância (`tabuleiro.html`).
 	return map[string]any{
 		"ruler_labels":   labels,
 		"ruler_text":     rulerReading(m),

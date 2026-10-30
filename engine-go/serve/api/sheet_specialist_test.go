@@ -198,17 +198,24 @@ func TestTheChoicesDialogShowsTheSpecialist(t *testing.T) {
 	picksSpecialist(t, f, id, "Ladinagem")
 
 	screen := powerScreen(t, f, id)
-	for _, want := range []string{
-		"1 de 2 · Int 2",
-		"Especialista: 1 perícia por escolher",
-		`aria-label="Especialista: Furtividade"`,
-		`aria-label="Tirar Ladinagem de Especialista"`,
-	} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tela não tem %q", want)
-		}
+	if step := choiceStepTitled(t, screen, "Ladino · Especialista"); step.Tag != "1 de 2" {
+		t.Errorf("o passo do Especialista não diz que falta uma perícia: %q", step.Tag)
 	}
-	if strings.Contains(screen, `aria-label="Especialista: Diplomacia"`) {
+	field, found := choiceFieldIn(t, screen, "Ladino · Especialista", "Especialista")
+	if !found {
+		t.Fatal("o passo do Especialista não tem o bloco")
+	}
+	if field.Written != "1 de 2 · Int 2" {
+		t.Errorf("o bloco do Especialista diz %q, quer 1 de 2 · Int 2", field.Written)
+	}
+	if pressed, offered := field.Options["Especialista: Furtividade"]; !offered || pressed {
+		t.Errorf("o Especialista não oferece Furtividade desmarcada: %v", field.Options)
+	}
+	// A ESCOLHIDA é a opção marcada, e marcar e tirar são o mesmo toque.
+	if !field.Options["Especialista: Ladinagem"] {
+		t.Errorf("Ladinagem escolhida não está marcada no Especialista: %v", field.Options)
+	}
+	if _, offered := field.Options["Especialista: Diplomacia"]; offered {
 		t.Error("Diplomacia não é treinada e aparece como opção do Especialista")
 	}
 }

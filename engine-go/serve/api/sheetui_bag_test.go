@@ -9,6 +9,8 @@ import (
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func bagScreen(t *testing.T, f sceneFixture, id int64) string {
@@ -21,7 +23,67 @@ func bagScreen(t *testing.T, f sceneFixture, id int64) string {
 func bagCommand(t *testing.T, f sceneFixture, id int64, path string) string {
 	t.Helper()
 	target := fmt.Sprintf("/personagens/%d/%s?tab=bag", id, path)
-	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String())
+	return bagRefusal(t, f.requests(t, f.player, http.MethodPost, target, "").Body.String())
+}
+
+// bagRefusal acha a frase da RECUSA do gesto, e só ela.
+//
+// O `sceneRefusal` pega o PRIMEIRO `role="alert"` da resposta, e na ficha
+// Tempestade isso não é mais a recusa: a folha de cada item desenha o aviso
+// "Sem proficiência" com o mesmo `role="alert"`, e a carga estourada também.
+// Lido assim, todo gesto sobre uma arma sem proficiência saía "recusado" pelo
+// aviso. A recusa é a filha DIRETA da coluna da ficha (`ds-sheet-main`), logo
+// abaixo das abas; os avisos moram dentro do painel e dos diálogos.
+//
+// A coluna é o CONTROLE: sem ela, "nenhuma recusa" e "não li a resposta" dariam
+// o mesmo "".
+func bagRefusal(t *testing.T, body string) string {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(body))
+	if err != nil {
+		t.Fatalf("ler a resposta do gesto: %v", err)
+	}
+	column := findNode(doc, "class", "ds-sheet-main")
+	if column == nil {
+		t.Fatalf("a resposta do gesto não tem a coluna da ficha (ds-sheet-main), "+
+			"então a recusa não teria onde aparecer:\n%.400s", body)
+	}
+	for c := column.FirstChild; c != nil; c = c.NextSibling {
+		if c.Type == html.ElementNode && c.Data == "p" && attr(c, "role") == "alert" {
+			return strings.TrimSpace(textOf(c))
+		}
+	}
+	return ""
+}
+
+// inUseOf recorta a metade EM USO da Mochila — as listas de Mãos e de
+// Vestidos —, e falha quando não a acha. O fim é a barra de filtros, que abre a
+// metade do guardado e está sempre à vista.
+func inUseOf(t *testing.T, screen string) string {
+	t.Helper()
+	start := strings.Index(screen, "<span>Mãos</span>")
+	if start < 0 {
+		t.Fatal("a Mochila não desenhou a lista das mãos")
+	}
+	end := strings.Index(screen[start:], "ds-filter-bar")
+	if end < 0 {
+		t.Fatal("a Mochila não desenhou a barra de filtros do guardado")
+	}
+	return screen[start : start+end]
+}
+
+// stowedOf recorta a lista do GUARDADO, do cabeçalho dela ao fim do painel.
+func stowedOf(t *testing.T, screen string) string {
+	t.Helper()
+	start := strings.Index(screen, "<span>Guardado</span>")
+	if start < 0 {
+		t.Fatal("a Mochila não desenhou a lista do guardado")
+	}
+	end := strings.Index(screen[start:], "</section>")
+	if end < 0 {
+		t.Fatal("a lista do guardado não fecha o painel")
+	}
+	return screen[start : start+end]
 }
 
 // itemSemeia põe um item na ficha e devolve o id.
@@ -39,15 +101,16 @@ func itemSemeia(t *testing.T, f sceneFixture, id int64, catalog, name string, eq
 	return item.ID
 }
 
-// cardInStrip diz se o item tem CARTÃO na tira de equipados.
+// cardInStrip diz se o item tem LINHA nas listas do que está em uso.
 //
-// Ancorar no NOME não serve, e isso custou um caso verde sobre nada: o nome
-// aparece de novo no diálogo da ficha daquele item, desenhado logo depois do
-// painel — procurar na tela inteira acha justamente o que a tira escondeu. É a
-// mesma armadilha que o `screenSaved` recorta na grade, e aqui o âncora é o
-// botão de GUARDAR, que só o cartão da tira tem.
-func cardInStrip(screen, name string) bool {
-	return strings.Contains(screen, `aria-label="Guardar `+name+`"`)
+// Procurar o nome na tela inteira não serve, e isso já custou um caso verde
+// sobre nada: o nome aparece de novo na folha daquele item, desenhada depois do
+// painel, e na lista do guardado — procurar na tela inteira acha justamente o
+// que as listas esconderam. Por isso o recorte é a metade em uso, e o âncora é
+// o título da linha.
+func cardInStrip(t *testing.T, screen, name string) bool {
+	t.Helper()
+	return strings.Contains(inUseOf(t, screen), `<span class="ds-row-title">`+name+`</span>`)
 }
 
 // equipped lê a coluna direto do banco — o teste não pergunta à tela o que
@@ -68,24 +131,25 @@ func TestTheStripShowsTheTwoCeilingsFromPage141(t *testing.T) {
 	itemSemeia(t, f, id, "armadura-couro", "Armadura de couro", "vested")
 	itemSemeia(t, f, id, "corda", "Corda", "")
 
-	screen := bagScreen(t, f, id)
-	for _, want := range []string{"Mãos", "1/2", "Vestidos", "1/4", "Mão principal", "Mão secundária"} {
-		if !strings.Contains(screen, want) {
-			t.Errorf("a tira não tem %q", want)
+	inUse := inUseOf(t, bagScreen(t, f, id))
+	for _, want := range []string{"Mãos", "1 / 2", "Vestidos", "1 / 4", "Mão principal"} {
+		if !strings.Contains(inUse, want) {
+			t.Errorf("as listas em uso não têm %q", want)
 		}
 	}
-	// AS POSIÇÕES VAZIAS SÃO DESENHADAS, e são contadas: uma mão livre e três
-	// vestidos livres. Só afirmar que a palavra "vazio" aparece deixaria passar
-	// uma tira que desenha um lugar livre e esconde os outros três — e é
-	// justamente a soma que mostra quanto ainda cabe.
-	if free := strings.Count(screen, ">vazio</p>"); free != 4 {
-		t.Errorf("a tira desenhou %d posições livres, quer 4 (1 mão + 3 vestidos)", free)
+	// AS POSIÇÕES LIVRES SÃO CONTADAS: uma mão e três vestidos. Só afirmar que
+	// "livre" aparece deixaria passar uma lista que conta um lugar e esconde os
+	// outros três — e é justamente a soma que mostra quanto ainda cabe.
+	for _, free := range []string{"1 mão livre", "3 lugares livres"} {
+		if !strings.Contains(inUse, free) {
+			t.Errorf("as listas em uso não contam %q", free)
+		}
 	}
-	// O que o item CONCEDE aparece no cartão: sem isso a tira vira uma lista de
+	// O que o item CONCEDE aparece na linha: sem isso a lista vira uma lista de
 	// nomes, e a pergunta que ela existe para responder é "o que isto me dá?".
 	for _, badge := range []string{"Dano 1d8", "Defesa +2"} {
-		if !strings.Contains(screen, badge) {
-			t.Errorf("o cartão não mostra %q", badge)
+		if !strings.Contains(inUse, badge) {
+			t.Errorf("a linha não mostra %q", badge)
 		}
 	}
 }
@@ -105,19 +169,19 @@ func TestAnItemAboveTheCeilingDoesNotVanishFromTheScreen(t *testing.T) {
 	// O CONTROLE vem primeiro: os dois primeiros têm cartão. Sem ele, um
 	// âncora que não casasse com nada diria "sumiu" sobre uma tira inteira.
 	for _, nome := range []string{"Espada longa", "Adaga"} {
-		if !cardInStrip(screen, nome) {
+		if !cardInStrip(t, screen, nome) {
 			t.Fatalf("o controle já estava errado: %q não tem cartão na tira", nome)
 		}
 	}
-	if !cardInStrip(screen, "Escudo leve") {
+	if !cardInStrip(t, screen, "Escudo leve") {
 		t.Error("o terceiro item empunhado sumiu da tira")
 	}
-	if !strings.Contains(screen, "Acima do limite") {
+	if !strings.Contains(inUseOf(t, screen), "Acima do limite") {
 		t.Error("o item fora do teto não é nomeado como tal")
 	}
 	// O CONTADOR denuncia junto: 3/2 é o que faz a pessoa entender por que há
 	// um cartão a mais.
-	if !strings.Contains(screen, "3/2") {
+	if !strings.Contains(inUseOf(t, screen), "3 / 2") {
 		t.Error("o contador das mãos não mostra que passou do teto")
 	}
 }
@@ -139,17 +203,17 @@ func TestTheOneHandedItemDoesNotVanishBehindTheTwoHandedOne(t *testing.T) {
 
 	screen := bagScreen(t, f, id)
 	for _, nome := range []string{"Escudo leve", "Espada longa"} {
-		if !cardInStrip(screen, nome) {
+		if !cardInStrip(t, screen, nome) {
 			t.Errorf("%q não tem cartão na tira: ela escolheu um dos dois slots", nome)
 		}
 	}
-	if !strings.Contains(screen, "Acima do limite") {
+	if !strings.Contains(inUseOf(t, screen), "Acima do limite") {
 		t.Error("o item fora do teto não é nomeado como tal")
 	}
 	// O CONTADOR denuncia junto, e é ele que explica o cartão a mais: uma mão do
 	// escudo e duas da espada são TRÊS, e dizer 2/2 esconde o estouro com a
 	// mesma eficácia com que a tira escondia o item.
-	if !strings.Contains(screen, "3/2") {
+	if !strings.Contains(inUseOf(t, screen), "3 / 2") {
 		t.Error("o contador das mãos não mostra que passou do teto")
 	}
 }
@@ -165,12 +229,12 @@ func TestTwoTwoHandedItemsDoNotSwallowEachOther(t *testing.T) {
 
 	screen := bagScreen(t, f, id)
 	for _, nome := range []string{"Espada longa", "Machado de batalha"} {
-		if !cardInStrip(screen, nome) {
+		if !cardInStrip(t, screen, nome) {
 			t.Errorf("%q não tem cartão na tira: o segundo item de duas mãos "+
 				"substituiu o primeiro", nome)
 		}
 	}
-	if !strings.Contains(screen, "4/2") {
+	if !strings.Contains(inUseOf(t, screen), "4 / 2") {
 		t.Error("o contador das mãos não conta as quatro que dois itens de duas mãos pedem")
 	}
 }
@@ -194,14 +258,14 @@ func TestTheFifthVestedItemDoesNotVanishFromTheScreen(t *testing.T) {
 	screen := bagScreen(t, f, id)
 	// O CONTROLE: os quatro que cabem têm cartão.
 	for _, nome := range []string{"Armadura de couro", "Bandana", "Coroa majestosa", "Anel da proteção"} {
-		if !cardInStrip(screen, nome) {
+		if !cardInStrip(t, screen, nome) {
 			t.Fatalf("o controle já estava errado: %q não tem cartão na tira", nome)
 		}
 	}
-	if !cardInStrip(screen, "Manto da noite") {
+	if !cardInStrip(t, screen, "Manto da noite") {
 		t.Error("o quinto vestido sumiu da tira: ela cortou em quatro posições")
 	}
-	if !strings.Contains(screen, "5/4") {
+	if !strings.Contains(inUseOf(t, screen), "5 / 4") {
 		t.Error("o contador dos vestidos não mostra que passou do teto")
 	}
 }
@@ -217,7 +281,7 @@ func TestStowingTakesItFromTheHandAndPutsItInTheGrid(t *testing.T) {
 	if got := equipped(t, f, item); got != "" {
 		t.Errorf("o item continua equipado como %q", got)
 	}
-	if !strings.Contains(bagScreen(t, f, id), "0/2") {
+	if !strings.Contains(inUseOf(t, bagScreen(t, f, id)), "0 / 2") {
 		t.Error("a mão não ficou livre na tela")
 	}
 }
@@ -348,7 +412,7 @@ func money(t *testing.T, f sceneFixture, id int64, mode string, value float64) s
 	t.Helper()
 	body := fmt.Sprintf(`{"tibar_mode":%q,"tibar_value":%v}`, mode, value)
 	target := fmt.Sprintf("/personagens/%d/dinheiro?tab=bag", id)
-	return sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String())
+	return bagRefusal(t, f.requests(t, f.player, http.MethodPost, target, body).Body.String())
 }
 
 func tibar(t *testing.T, f sceneFixture, id int64) float64 {
@@ -368,19 +432,20 @@ func TestTheGridFiltersBySearchAndByCategory(t *testing.T) {
 
 	withSearch := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=bag&itembusca=balsamo", id), "").Body.String()
-	if !strings.Contains(withSearch, "Bálsamo restaurador") {
+	// O RECORTE é a lista do guardado: a folha de cada item é desenhada fora
+	// dela, filtro ou não, e procurar na tela inteira acharia a espada lá.
+	if found := stowedOf(t, withSearch); !strings.Contains(found, "Bálsamo restaurador") {
 		t.Error("a busca sem acento não achou o Bálsamo")
-	}
-	if strings.Contains(screenSaved(withSearch), "Espada longa") {
+	} else if strings.Contains(found, "Espada longa") {
 		t.Error("a busca deixou passar o que não casa")
 	}
 
 	withChip := f.requests(t, f.player, http.MethodGet,
 		fmt.Sprintf("/personagens/%d?tab=bag&itemcategoria=weapons", id), "").Body.String()
-	if !strings.Contains(screenSaved(withChip), "Espada longa") {
+	if !strings.Contains(stowedOf(t, withChip), "Espada longa") {
 		t.Error("o chip de armas escondeu a espada")
 	}
-	if strings.Contains(screenSaved(withChip), "Bálsamo restaurador") {
+	if strings.Contains(stowedOf(t, withChip), "Bálsamo restaurador") {
 		t.Error("o chip de armas deixou passar um consumível")
 	}
 }

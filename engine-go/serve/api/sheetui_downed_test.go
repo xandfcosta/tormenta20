@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"t20engine/domain/live"
+
+	"golang.org/x/net/html"
 )
 
 // downFixture derruba o personagem do jogador a -3 PV, numa cena de ação com a
@@ -52,6 +54,19 @@ func TestTheSheetAndTheTableSayWhoIsDown(t *testing.T) {
 	}
 	if !strings.Contains(table, "sangra — teste de Constituição (CD 15)") {
 		t.Error("a faixa do mestre não pergunta o teste de quem sangra")
+	}
+	// E a sessão do JOGADOR, no Tempestade, diz a mesma palavra no GRUPO —
+	// recortado na região, porque a ficha embutida na mesma página também a diz.
+	mine, err := html.Parse(strings.NewReader(f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	party := findNode(mine, "id", "table-party")
+	if party == nil {
+		t.Fatal("a sessão do jogador não desenhou o grupo")
+	}
+	if !strings.Contains(textOf(party), "morrendo") {
+		t.Error("o grupo da sessão do jogador não diz \"morrendo\" ao lado do PV de quem sangra")
 	}
 }
 
