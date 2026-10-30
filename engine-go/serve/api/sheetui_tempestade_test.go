@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
@@ -159,5 +160,32 @@ func TestAnActiveEffectInTheRailOpensItsDescription(t *testing.T) {
 	}
 	if !strings.Contains(page, `aria-label="Tirar Caído"`) {
 		t.Error("o crachá perdeu o X que tira o Caído")
+	}
+}
+
+// O PEDIDO DO DATASTAR RECEBE SÓ A CENA (ALE-520): a troca macia de aba e a
+// busca pedem a ficha pelo `@get`, e a página inteira — a casca, o buscador, o
+// livro — fazia o navegador comparar tudo de novo, ~450ms num celular médio.
+// A navegação de verdade continua recebendo a página.
+func TestADatastarGetOfTheParallelSheetGetsOnlyTheScene(t *testing.T) {
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
+	path := fmt.Sprintf("/personagens/%d?tab=combat&tempestade=1", id)
+
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
+	req.Header.Set("Datastar-Request", "true")
+	rec := httptest.NewRecorder()
+	f.s.WebRouter().ServeHTTP(rec, req)
+	body := rec.Body.String()
+	if !strings.Contains(rec.Header().Get("Content-Type"), "text/event-stream") || strings.Contains(body, "<html") {
+		t.Errorf("o @get da ficha recebeu a página inteira (%s)", rec.Header().Get("Content-Type"))
+	}
+	if !strings.Contains(body, `id="sheet-scene"`) || !strings.Contains(body, `aria-label="Combate"`) {
+		t.Error("o @get da ficha não trouxe a cena na aba pedida")
+	}
+
+	if page := parallelSheet(t, f, id, "combat"); !strings.Contains(page, "<html") {
+		t.Error("a navegação de verdade deixou de receber a página")
 	}
 }
