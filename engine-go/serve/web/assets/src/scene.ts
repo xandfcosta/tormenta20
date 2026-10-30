@@ -162,6 +162,14 @@ window.cena = cena
 
 attachFetchBusy(document)
 
+// A TROCA MACIA DE ABA guarda o endereço no histórico sem recarregar
+// (`ds.SoftNav`); o voltar volta o endereço e não a cena, e por isso a cena é
+// pedida de novo. Só as entradas marcadas: um `#` de âncora também dispara
+// `popstate`, e não pede recarga nenhuma.
+window.addEventListener('popstate', (event) => {
+  if ((event.state as { softNav?: boolean } | null)?.softNav) window.location.reload()
+})
+
 const cascaDaCena = () => document.querySelector<HTMLElement>('[data-slot="scene-shell"]')
 
 attachSceneNav({

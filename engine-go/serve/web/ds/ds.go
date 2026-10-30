@@ -11,7 +11,11 @@
 // que é a classe que a casca põe na cena migrada.
 package ds
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/a-h/templ"
+)
 
 // ButtonVariant é o PESO do botão. Um primário por região; o resto é
 // secundário ou fantasma. O destrutivo é o único vermelho preenchido do app.
@@ -139,3 +143,18 @@ func rollTermText(t RollTerm) string {
 // nativo, mas ainda não chegou a todos os navegadores.
 const dialogBackdropCloses = "evt.target === el && ((r) => evt.clientX < r.left || evt.clientX > r.right || " +
 	"evt.clientY < r.top || evt.clientY > r.bottom)(el.getBoundingClientRect()) && el.close()"
+
+// SoftNav é a TROCA MACIA de aba (ver o GLOSSARY): o link guarda o endereço no
+// histórico e pede a cena pelo `@get`, sem recarregar a página. Com Ctrl, Cmd
+// ou Shift ele volta a ser link comum, para abrir noutra guia. A entrada de
+// onde se saiu também é marcada, senão o voltar até ela não recarregaria (ver
+// o `popstate` do `scene.ts`).
+//
+//	@ds.Tab(href, current, ds.SoftNav())
+func SoftNav() templ.Attributes {
+	return templ.Attributes{"data-on:click": softNavigation}
+}
+
+const softNavigation = "!(evt.ctrlKey || evt.metaKey || evt.shiftKey) && (evt.preventDefault(), " +
+	"history.state?.softNav || history.replaceState({softNav: true}, ''), " +
+	"history.pushState({softNav: true}, '', el.href), @get(el.href))"

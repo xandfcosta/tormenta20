@@ -105,7 +105,7 @@ func tempestadeSheet(v View) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active, ds.SoftNav()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1310,7 +1310,7 @@ func sheetBottomNav(v View) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.BottomNavItem(templ.SafeURL(place.Href), place.Tab.Icon, place.Current).Render(templ.WithChildren(ctx, templ_7745c5c3_Var52), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.BottomNavItem(templ.SafeURL(place.Href), place.Tab.Icon, place.Current, ds.SoftNav()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var52), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -50,3 +50,33 @@ test('o botão diz que está trabalhando enquanto o gesto não volta', async ({ 
   await page.unroute('**/vitais/pv/**')
   await page.locator('.ds-vitals').getByRole('button', { name: 'Mais 1 PV' }).click()
 })
+
+for (const [where, width, nav] of [
+  ['no desktop, pelas abas', 1440, 'Seções da ficha'],
+  ['no celular, pela barra de baixo', 390, 'Seções da ficha'],
+] as const) {
+  test(`trocar de aba não recarrega a página, e o voltar devolve a aba (${where})`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    const id = await tanqueId(page)
+    await page.goto(`/personagens/${id}?tab=expertises&tempestade=1`)
+    await expect(page.getByRole('region', { name: 'Perícias' })).toBeVisible()
+
+    // A MARCA mora na janela: uma navegação de verdade a apaga, e a troca
+    // macia a preserva. É a prova de que a página NÃO recarregou.
+    await page.evaluate(() => {
+      ;(window as unknown as { stayed: boolean }).stayed = true
+    })
+
+    await page.getByRole('navigation', { name: nav }).filter({ visible: true }).getByRole('link', { name: /Combate/ }).click()
+    await expect(page).toHaveURL(/tab=combat/)
+    await expect(page.getByRole('region', { name: 'Combate' })).toBeVisible()
+    expect(
+      await page.evaluate(() => (window as unknown as { stayed?: boolean }).stayed),
+      'a troca de aba recarregou a página',
+    ).toBe(true)
+
+    await page.goBack()
+    await expect(page).toHaveURL(/tab=expertises/)
+    await expect(page.getByRole('region', { name: 'Perícias' })).toBeVisible()
+  })
+}

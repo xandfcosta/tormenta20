@@ -454,7 +454,9 @@ window.cena = {
 		return { ...Z };
 	},
 	cue: Q
-}, t(document);
+}, t(document), window.addEventListener("popstate", (e) => {
+	e.state?.softNav && window.location.reload();
+});
 var $ = () => document.querySelector("[data-slot=\"scene-shell\"]");
 m({
 	root: $,
