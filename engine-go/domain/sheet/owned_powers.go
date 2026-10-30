@@ -143,12 +143,34 @@ func activationsOfItem(item ItemDTO, entry book.Item) []OwnedPower {
 // `deus.khalmyr.dom-da-verdade`. É o mesmo elo que o `book.ActivationOf` usa na
 // ida, e o que o guarda do poder único de origem já prende.
 func OwnsActivation(dto CharacterDTO, spec book.Activation) bool {
-	for _, owned := range OwnedPowers(dto) {
-		if owned.ID == spec.ID || owned.Name == spec.Name {
-			return true
-		}
+	return OwnedIndexOf(dto).Has(spec)
+}
+
+// OwnedIndex são os poderes da ficha montados UMA vez, para perguntar várias
+// ativações em seguida. Remontar o `OwnedPowers` a cada pergunta, num laço
+// sobre o registro de ativações e outro sobre as perícias, custava ~46% da
+// página de Perícias (ALE-520).
+//
+//	owned := sheet.OwnedIndexOf(dto)
+//	for _, a := range book.Activations() { if owned.Has(a) { … } }
+type OwnedIndex struct {
+	ids, names map[string]bool
+}
+
+func OwnedIndexOf(dto CharacterDTO) OwnedIndex {
+	powers := OwnedPowers(dto)
+	index := OwnedIndex{ids: make(map[string]bool, len(powers)), names: make(map[string]bool, len(powers))}
+	for _, owned := range powers {
+		index.ids[owned.ID] = true
+		index.names[owned.Name] = true
 	}
-	return false
+	return index
+}
+
+// Has diz se a ficha tem o poder da ativação — pelo id ou pelo nome, como o
+// `OwnsActivation` explica.
+func (o OwnedIndex) Has(spec book.Activation) bool {
+	return o.ids[spec.ID] || o.names[spec.Name]
 }
 
 // borrowedAbilitiesOf são as habilidades que a Memória Póstuma tomou de outra

@@ -15,14 +15,34 @@ import (
 //
 //	offers := character.SkillSpendOffersFor(dto, computed, "Diplomacia")
 func SkillSpendOffersFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, skill string) []book.SkillSpendOffer {
-	owned := []book.Activation{}
+	return PrepareSkillSpends(dto, computed).For(skill)
+}
+
+// SkillSpends é o que os gastos de PM de uma ficha pedem e que NÃO depende da
+// perícia: as ativações que ela possui, os atributos, os totais e as flags
+// acesas. A página de Perícias o prepara uma vez e pergunta perícia a
+// perícia — prepará-lo por perícia remontava os poderes e rodava o motor dos
+// itens 29 vezes por página (ALE-520).
+type SkillSpends struct {
+	computed engine.ComputedSheet
+	owned    []book.Activation
+	target   book.SkillSpendTarget
+}
+
+// PrepareSkillSpends monta o que os gastos pedem, uma vez por ficha.
+//
+//	spends := character.PrepareSkillSpends(dto, computed)
+//	for _, skill := range skills { offers := spends.For(skill) }
+func PrepareSkillSpends(dto sheet.CharacterDTO, computed engine.ComputedSheet) SkillSpends {
+	prepared := SkillSpends{computed: computed}
+	index := sheet.OwnedIndexOf(dto)
 	for _, a := range book.Activations() {
-		if a.SkillSpend != nil && sheet.OwnsActivation(dto, a) {
-			owned = append(owned, a)
+		if a.SkillSpend != nil && index.Has(a) {
+			prepared.owned = append(prepared.owned, a)
 		}
 	}
-	if len(owned) == 0 {
-		return nil
+	if len(prepared.owned) == 0 {
+		return prepared
 	}
 	attributes := map[string]int{}
 	for key, attr := range computed.Attributes {
@@ -32,12 +52,23 @@ func SkillSpendOffersFor(dto sheet.CharacterDTO, computed engine.ComputedSheet, 
 	for _, e := range computed.Expertises {
 		totals[e.Name], trainedIn[e.Name] = e.Total, e.Trained
 	}
-	return book.SkillSpendOffers(owned, book.SkillSpendTarget{
-		Skill: skill, Trained: isTrained(computed, skill), TrainedOnly: trainedOnly(skill),
+	prepared.target = book.SkillSpendTarget{
 		TrainingBonus: engine.TrainingBonusForLevel(int(dto.Level)), Attributes: attributes,
-		Attribute: bookAttributeOf(computed, skill), Totals: totals, TrainedIn: trainedIn,
+		Totals: totals, TrainedIn: trainedIn,
 		Flags: sheetFlags(dto), PowerPicks: sheet.PowerPicks(dto.PowerChoices),
-	})
+	}
+	return prepared
+}
+
+// For são os gastos num teste de `skill`, já com o valor de cada um.
+func (s SkillSpends) For(skill string) []book.SkillSpendOffer {
+	if len(s.owned) == 0 {
+		return nil
+	}
+	target := s.target
+	target.Skill, target.Trained, target.TrainedOnly = skill, isTrained(s.computed, skill), trainedOnly(skill)
+	target.Attribute = bookAttributeOf(s.computed, skill)
+	return book.SkillSpendOffers(s.owned, target)
 }
 
 // bookAttributeOf é o atributo da perícia no LIVRO — o Palpite Fundamentado

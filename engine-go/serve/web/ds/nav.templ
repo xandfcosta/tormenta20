@@ -1,0 +1,51 @@
+package ds
+
+import "t20engine/serve/web/ui"
+
+// AS PEÇAS DE NAVEGAÇÃO do kit: as abas do desktop e a barra de baixo do
+// celular, as duas com a troca macia (`SoftNav`) quando a tela sabe trocar só
+// a cena.
+
+// Tabs é a navegação DENTRO de uma tela, no desktop. No celular a mesma
+// navegação é a `BottomNav`.
+templ Tabs(label string) {
+	<nav class="ds-tabs" aria-label={ label }>
+		{ children... }
+	</nav>
+}
+
+// Tab é uma aba. `attrs` leva o gesto da troca macia (`SoftNav`) quando a
+// tela sabe trocar só a cena.
+templ Tab(href templ.SafeURL, current bool, attrs templ.Attributes) {
+	<a
+		href={ href }
+		if current {
+			aria-current="page"
+		}
+		{ attrs... }
+	>
+		{ children... }
+	</a>
+}
+
+// BottomNav é a barra fixa de baixo, no celular (decisão do dono, ALE-497).
+templ BottomNav(label string) {
+	<nav class="ds-bottom-nav" aria-label={ label }>
+		{ children... }
+	</nav>
+}
+
+templ BottomNavItem(href templ.SafeURL, icon string, current bool, attrs templ.Attributes) {
+	<a
+		href={ href }
+		if current {
+			aria-current="page"
+		}
+		{ attrs... }
+	>
+		if icon != "" {
+			@ui.Icon(icon, "ds-icon")
+		}
+		{ children... }
+	</a>
+}

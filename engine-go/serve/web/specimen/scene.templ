@@ -69,16 +69,16 @@ templ modePanel(mode, title string) {
 		@specimenBlock("Abas e segmentado") {
 			<div class="grid gap-3">
 				@ds.Tabs("Abas da ficha") {
-					@ds.Tab("#", true) {
+					@ds.Tab("#", true, nil) {
 						Ficha
 					}
-					@ds.Tab("#", false) {
+					@ds.Tab("#", false, nil) {
 						Combate
 					}
-					@ds.Tab("#", false) {
+					@ds.Tab("#", false, nil) {
 						Poderes
 					}
-					@ds.Tab("#", false) {
+					@ds.Tab("#", false, nil) {
 						Magias
 					}
 				}
@@ -187,16 +187,16 @@ templ modePanel(mode, title string) {
 		}
 		@specimenBlock("Barra de baixo") {
 			@ds.BottomNav("Abas da ficha, no celular") {
-				@ds.BottomNavItem("#", "", true) {
+				@ds.BottomNavItem("#", "", true, nil) {
 					Ficha
 				}
-				@ds.BottomNavItem("#", "", false) {
+				@ds.BottomNavItem("#", "", false, nil) {
 					Combate
 				}
-				@ds.BottomNavItem("#", "", false) {
+				@ds.BottomNavItem("#", "", false, nil) {
 					Poderes
 				}
-				@ds.BottomNavItem("#", "", false) {
+				@ds.BottomNavItem("#", "", false, nil) {
 					Magias
 				}
 			}

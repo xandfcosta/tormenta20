@@ -19,6 +19,7 @@
  * Nada de estado da aplicação passa por aqui: som e volume são preferência
  * DESTE aparelho, e tela cheia é do navegador.
  */
+import { attachFetchBusy } from '@/lib/fetch-busy'
 import { attachSceneNav } from '@/lib/scene-nav'
 import { type SfxName, createSfxPlayer } from '@/lib/sfx-player'
 import { STORAGE_KEY, persistUi, readStoredSfx, readStoredVolume } from '@/lib/ui-store'
@@ -158,6 +159,16 @@ declare global {
 window.cena = cena
 
 // ── ligação com o HTML do servidor ───────────────────────────────────────────
+
+attachFetchBusy(document)
+
+// A TROCA MACIA DE ABA guarda o endereço no histórico sem recarregar
+// (`ds.SoftNav`); o voltar volta o endereço e não a cena, e por isso a cena é
+// pedida de novo. Só as entradas marcadas: um `#` de âncora também dispara
+// `popstate`, e não pede recarga nenhuma.
+window.addEventListener('popstate', (event) => {
+  if ((event.state as { softNav?: boolean } | null)?.softNav) window.location.reload()
+})
 
 const cascaDaCena = () => document.querySelector<HTMLElement>('[data-slot="scene-shell"]')
 

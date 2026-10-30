@@ -122,7 +122,12 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	// A FICHA DENTRO DA SESSÃO responde só o pedaço: quem pediu foi a aba "Minha
 	// ficha" da Mesa, e mandar a página inteira faria o Datastar remendar a cena
 	// da sessão com uma ficha de corpo inteiro.
-	if view.Embedded {
+	//
+	// O `@get` da ficha PARALELA também: a troca macia de aba e a busca pedem a
+	// cena, e a página inteira — a casca, o buscador, o livro — fazia o
+	// navegador comparar tudo de novo, ~450ms num celular médio (ALE-520). A
+	// ficha de hoje fica como está até sair.
+	if view.Embedded || (view.Tempestade && datastarAsked(r)) {
 		fragment, err := ui.RenderFragment(r.Context(), SceneBody(view))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

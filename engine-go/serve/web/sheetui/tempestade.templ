@@ -28,7 +28,7 @@ templ tempestadeSheet(v View) {
 				<div class="ds-sheet-tabs">
 					@ds.Tabs("Seções da ficha") {
 						for _, tab := range v.Tabs {
-							@ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active) {
+							@ds.Tab(templ.SafeURL(tabRoute(v, tab.Value)), tab.Active, ds.SoftNav()) {
 								{ tab.Label }
 							}
 						}
@@ -259,7 +259,7 @@ templ vitalAmountButton(v View, which string, sign int, label string) {
 templ sheetBottomNav(v View) {
 	@ds.BottomNav("Seções da ficha") {
 		for _, place := range bottomNavPlaces(v) {
-			@ds.BottomNavItem(templ.SafeURL(place.Href), place.Tab.Icon, place.Current) {
+			@ds.BottomNavItem(templ.SafeURL(place.Href), place.Tab.Icon, place.Current, ds.SoftNav()) {
 				{ place.Tab.Label }
 				if place.Count > 0 {
 					<span class="ds-nav-count" aria-label={ strconv.Itoa(place.Count) + " ativos" }>{ strconv.Itoa(place.Count) }</span>

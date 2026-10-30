@@ -24,6 +24,12 @@ func tempestadeAsked(r *http.Request) bool {
 	return r.URL.Query().Get("tempestade") == "1"
 }
 
+// datastarAsked diz que o pedido veio de um gesto do Datastar (`@get`), e não
+// de uma navegação: o Datastar marca os pedidos dele com este cabeçalho.
+func datastarAsked(r *http.Request) bool {
+	return r.Header.Get("Datastar-Request") == "true"
+}
+
 // sheetSystem é o sistema que a página da ficha veste.
 func sheetSystem(v View) ui.DesignSystem {
 	if v.Tempestade {

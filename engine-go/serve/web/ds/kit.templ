@@ -110,46 +110,6 @@ templ SegmentedOption(pressed bool, attrs templ.Attributes) {
 	</button>
 }
 
-// Tabs é a navegação DENTRO de uma tela, no desktop. No celular a mesma
-// navegação é a `BottomNav`.
-templ Tabs(label string) {
-	<nav class="ds-tabs" aria-label={ label }>
-		{ children... }
-	</nav>
-}
-
-templ Tab(href templ.SafeURL, current bool) {
-	<a
-		href={ href }
-		if current {
-			aria-current="page"
-		}
-	>
-		{ children... }
-	</a>
-}
-
-// BottomNav é a barra fixa de baixo, no celular (decisão do dono, ALE-497).
-templ BottomNav(label string) {
-	<nav class="ds-bottom-nav" aria-label={ label }>
-		{ children... }
-	</nav>
-}
-
-templ BottomNavItem(href templ.SafeURL, icon string, current bool) {
-	<a
-		href={ href }
-		if current {
-			aria-current="page"
-		}
-	>
-		if icon != "" {
-			@ui.Icon(icon, "ds-icon")
-		}
-		{ children... }
-	</a>
-}
-
 // Badge é o CRACHÁ: ele INFORMA (a origem, o custo, a página) e não é
 // clicável — para isso há o botão e o crachá removível.
 templ Badge(text string, outline bool) {
