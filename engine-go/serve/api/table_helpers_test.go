@@ -61,7 +61,8 @@ func classesThatReceiveBox(t *testing.T) map[string]bool {
 	return classes
 }
 
-// collectionRow recorta o `<li>` que contém uma marca, e FALHA quando não acha.
+// collectionRow recorta a linha do acervo que contém uma marca, e FALHA quando
+// não acha.
 //
 // Falhar em vez de devolver vazio é o que separa este helper de um instrumento
 // mudo: uma busca que não acha nada faria toda asserção seguinte passar sobre
@@ -69,16 +70,44 @@ func classesThatReceiveBox(t *testing.T) map[string]bool {
 // exatamente o que a maioria dos guardas daqui afirma.
 func collectionRow(t *testing.T, screen, mark string) string {
 	t.Helper()
-	pos := strings.Index(screen, mark)
-	if pos < 0 {
-		t.Fatalf("não achei %q na tela: a asserção seguinte mediria uma string vazia", mark)
+	doc, err := html.Parse(strings.NewReader(screen))
+	if err != nil {
+		t.Fatal(err)
 	}
-	start := strings.LastIndex(screen[:pos], "<li ")
-	end := strings.Index(screen[pos:], "</li>")
-	if start < 0 || end < 0 {
-		t.Fatalf("a marca %q não está dentro de um <li> do acervo", mark)
+	var row *html.Node
+	var visit func(n *html.Node)
+	visit = func(n *html.Node) {
+		if row != nil {
+			return
+		}
+		if n.Type == html.ElementNode && strings.Contains(attr(n, "class"), "ds-gm-archive-row") && strings.Contains(textOf(n), mark) {
+			row = n
+			return
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			visit(c)
+		}
 	}
-	return screen[start : pos+end]
+	visit(doc)
+	if row == nil {
+		t.Fatalf("a marca %q não está numa linha do acervo", mark)
+	}
+	return renderNode(t, row)
+}
+
+// gmBoardPlace é o lugar que o seletor de tabuleiros do mestre diz estar
+// aberto — é o título do mapa na mesa nova (ALE-522).
+func gmBoardPlace(t *testing.T, screen string) string {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(screen))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pick := findNode(doc, "popovertarget", "gm-scenes")
+	if pick == nil {
+		t.Fatal("a mesa do mestre não tem o seletor de tabuleiros")
+	}
+	return textOf(pick)
 }
 
 func contem(squares []engine.Square, target engine.Square) bool {
@@ -181,18 +210,6 @@ func responseDraft(t *testing.T, response string) map[string]any {
 // o rascunho. O teste acusaria o código por um defeito dele mesmo.
 func signals(json string) string {
 	return "?datastar=" + url.QueryEscape(json)
-}
-
-var tableRegionNames = []string{
-	"table-header",
-	"table-register",
-	"table-party",
-	"table-board",
-	"table-populate",
-	"table-archive",
-	"table-session-config",
-	"table-tracker",
-	"table-commands",
 }
 
 // temAlgumaClasse: basta UMA classe posicionada, porque o elemento veste várias —

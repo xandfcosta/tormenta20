@@ -101,7 +101,14 @@ templ tempestadeTracker(v View) {
 		if len(v.Queue) > 0 {
 			@ds.List("Iniciativa", roundWritten(v)) {
 				for _, row := range v.Queue {
-					<div class="ds-row ds-queue-row" data-now?={ row.OnTurn } data-mine?={ row.Mine }>
+					<div
+						class="ds-row ds-queue-row"
+						data-now?={ row.OnTurn }
+						data-mine?={ row.Mine }
+						if row.OnTurn {
+							aria-current="true"
+						}
+					>
 						<span class="ds-queue-ini">{ strconv.Itoa(row.Initiative) }</span>
 						<div class="ds-queue-body">
 							<div class="ds-row-title">
@@ -117,7 +124,7 @@ templ tempestadeTracker(v View) {
 							if len(row.Conditions) > 0 {
 								<div class="ds-badges">
 									for _, c := range row.Conditions {
-										@ds.Badge(c, true)
+										@conditionBadge(c)
 									}
 								</div>
 							}
@@ -165,8 +172,12 @@ templ poolLine(label, kind string, b *tableBar) {
 }
 
 // vitalBar é a barra de um pool, com o degrau da escada quando é o PV.
+//
+// `role="meter"` com o `aria-valuenow` não é só leitura: é o gatilho da
+// piscada da linha que sangrou ou foi curada (`table.ts`, ALE-174) — o NÚMERO,
+// e não a largura, que arredonda.
 templ vitalBar(label, kind string, b tableBar) {
-	<span class="ds-bar" aria-label={ barLabel(label, b) }>
+	<span class="ds-bar" role="meter" aria-label={ barLabel(label, b) } aria-valuemin="0" aria-valuemax={ strconv.FormatInt(b.Max, 10) } aria-valuenow={ strconv.FormatInt(b.Current, 10) }>
 		<span
 			data-kind={ kind }
 			if kind == "pv" {
@@ -175,6 +186,14 @@ templ vitalBar(label, kind string, b tableBar) {
 			style={ fmt.Sprintf("width:%d%%", b.Pct) }
 		></span>
 	</span>
+}
+
+// conditionBadge é o crachá de uma condição na fila, nas duas mesas: a palavra
+// do livro (nunca o id), o efeito no `title` — a condição é rastreio, e quem a
+// aplica é o mestre — e o `data-condicao` que faz o crachá surgir animado
+// (`table.ts`, ALE-174).
+templ conditionBadge(id string) {
+	<span class="ds-badge" data-variant="outline" data-condicao={ id } title={ conditionEffect(id) }>{ conditionWritten(id) }</span>
 }
 
 // tempestadeParty é o grupo: retrato, quem está na mesa agora, classe e

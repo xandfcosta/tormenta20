@@ -6,39 +6,41 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/serve/web/table"
-
 	"golang.org/x/net/html"
 )
 
-// A MESA DO MESTRE EM PARALELO (ALE-522): com `?tempestade=1` o mestre recebe
-// a mesa nova, e a marca vira um COOKIE — o stream e os comandos a leem sem que
-// cada endereço precise carregá-la. `?tempestade=0` volta ao palco de hoje.
-func TestTheGmOpensTheParallelTableAndTheMarkSticks(t *testing.T) {
+// A MESA DO MESTRE é a do Tempestade, sem marca (ALE-522): o palco de hoje
+// saiu, e as Configurações da sessão moram no ⋯ dela, no kit.
+func TestTheGmTableIsTheTempestadeOneWithItsSessionSettings(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-
-	first := gmRequest(t, f, f.tableUrl()+"?tempestade=1", nil)
-	if !strings.Contains(first.Body.String(), "scene-ds") {
-		t.Fatal("com a marca, o mestre não recebeu a mesa no Tempestade")
+	page := gmRequest(t, f, f.tableUrl()).Body.String()
+	if !strings.Contains(page, "scene-ds") {
+		t.Fatal("sem marca, o mestre não recebeu a mesa no Tempestade")
 	}
-	var mark *http.Cookie
-	for _, c := range first.Result().Cookies() {
-		if c.Name == table.GmTableCookie {
-			mark = c
+	if strings.Contains(page, "tempestade=0") {
+		t.Error("a mesa do mestre ainda leva ao palco de hoje")
+	}
+	doc, err := html.Parse(strings.NewReader(page))
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := findNode(doc, "id", "session-config")
+	if config == nil {
+		t.Fatal("a mesa do mestre não tem as Configurações da sessão")
+	}
+	rendered := renderNode(t, config)
+	if !strings.Contains(rendered, "ds-dialog") || strings.Contains(rendered, "grimorio") {
+		t.Error("as Configurações da sessão não vestem o kit")
+	}
+	for _, want := range []string{"Título", "Reiniciar o combate", "Excluir sessão"} {
+		if !strings.Contains(textOf(config), want) {
+			t.Errorf("as Configurações não têm %q: %q", want, textOf(config))
 		}
 	}
-	if mark == nil || mark.Value != "1" {
-		t.Fatalf("a marca não virou cookie: %+v", first.Result().Cookies())
-	}
-	if again := gmRequest(t, f, f.tableUrl(), mark).Body.String(); !strings.Contains(again, "scene-ds") {
-		t.Error("com o cookie e sem a marca no endereço, o mestre voltou ao palco de hoje")
-	}
-	if off := gmRequest(t, f, f.tableUrl()+"?tempestade=0", mark).Body.String(); strings.Contains(off, "scene-ds") {
-		t.Error("`?tempestade=0` não devolveu o palco de hoje")
-	}
-	if plain := gmRequest(t, f, f.tableUrl(), nil).Body.String(); strings.Contains(plain, "scene-ds") {
-		t.Error("sem marca nem cookie, o mestre recebeu a mesa nova")
+	menu := findNode(doc, "id", "gm-menu")
+	if menu == nil || !strings.Contains(renderNode(t, menu), "session-config") {
+		t.Error("o ⋯ do mestre não abre as Configurações")
 	}
 }
 
@@ -48,7 +50,7 @@ func TestTheGmOpensTheParallelTableAndTheMarkSticks(t *testing.T) {
 func TestTheParallelGmTableDrawsTheQueue(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
-	page := gmRequest(t, f, f.tableUrl()+"?tempestade=1", nil).Body.String()
+	page := gmRequest(t, f, f.tableUrl()).Body.String()
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -109,14 +111,11 @@ func TestTheGmWoundsARowByAnyAmount(t *testing.T) {
 	}
 }
 
-// gmRequest é o pedido do mestre, com o cookie da mesa nova quando há um.
-func gmRequest(t *testing.T, f sceneFixture, path string, cookie *http.Cookie) *httptest.ResponseRecorder {
+// gmRequest é o GET do mestre.
+func gmRequest(t *testing.T, f sceneFixture, path string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodGet, path, nil)
 	req.Header.Set("Authorization", "Bearer "+f.token(t, f.gm))
-	if cookie != nil {
-		req.AddCookie(cookie)
-	}
 	rec := httptest.NewRecorder()
 	f.s.WebRouter().ServeHTTP(rec, req)
 	return rec
@@ -172,7 +171,7 @@ func TestTheGmBoardOpensInAWindowOfItsOwn(t *testing.T) {
 		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
 		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
 	}
-	page := gmRequest(t, f, f.tableUrl()+"?tempestade=1&janela=tabuleiro", nil).Body.String()
+	page := gmRequest(t, f, f.tableUrl()+"?janela=tabuleiro").Body.String()
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)
@@ -191,7 +190,7 @@ func TestTheGmBoardOpensInAWindowOfItsOwn(t *testing.T) {
 // gmBoardRegion é a região do tabuleiro na mesa nova do mestre.
 func gmBoardRegion(t *testing.T, f sceneFixture) *html.Node {
 	t.Helper()
-	doc, err := html.Parse(strings.NewReader(gmRequest(t, f, f.tableUrl()+"?tempestade=1", nil).Body.String()))
+	doc, err := html.Parse(strings.NewReader(gmRequest(t, f, f.tableUrl()).Body.String()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +208,7 @@ func TestTheParallelGmTableDrawsTheConsults(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"Capitão Varek"}`)
-	page := gmRequest(t, f, f.tableUrl()+"?tempestade=1", nil).Body.String()
+	page := gmRequest(t, f, f.tableUrl()).Body.String()
 	if strings.Contains(page, "As Consultas ainda estão no palco de hoje") {
 		t.Fatal("as Consultas ainda levam ao palco de hoje")
 	}
@@ -251,21 +250,41 @@ func TestTheParallelGmTableDrawsTheConsults(t *testing.T) {
 	}
 }
 
-// A CRIATURA ABERTA no bestiário da mesa nova volta no kit, com o ajuste e os
-// dois verbos: o remendo tem de ser o desenho da aba, e não o diálogo de hoje.
+// A CRIATURA ABERTA no bestiário volta no kit, com o ajuste e os dois verbos:
+// o remendo é o desenho da aba das Consultas.
 func TestTheGmBestiaryOpensTheCreatureInTheKit(t *testing.T) {
 	f := newSceneFixture(t)
-	mark := &http.Cookie{Name: table.GmTableCookie, Value: "1"}
-	body := gmRequest(t, f, f.tableUrl()+"/bestiario?criatura=ogro&abrir=1", mark).Body.String()
+	body := gmRequest(t, f, f.tableUrl()+"/bestiario?criatura=ogro&abrir=1").Body.String()
 	if strings.Contains(body, "scene-grimorio") {
-		t.Error("com a mesa nova, o bestiário remendou o diálogo do grimório")
+		t.Error("o bestiário remendou o diálogo do grimório")
 	}
 	for _, want := range []string{"Guardar no elenco", "na fila"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("a criatura aberta não tem %q", want)
 		}
 	}
-	if old := gmRequest(t, f, f.tableUrl()+"/bestiario?criatura=ogro&abrir=1", nil).Body.String(); !strings.Contains(old, "scene-grimorio") {
-		t.Error("sem a marca, o bestiário deixou de remendar o diálogo de hoje")
+}
+
+// A PEÇA ARRASTADA ACOMPANHA O DEDO nas duas mesas: o `transform` do
+// `.board-dragging` lê `--arrasto-x`/`--arrasto-y` por herança da raiz `#table`,
+// que o remendo não toca. Sem a raiz escrevê-los, a peça fica parada até soltar.
+func TestTheDraggedTokenFollowsThePointerOnBothTables(t *testing.T) {
+	f := newSceneFixture(t)
+	f.seedOpenBoard(t, "stone")
+	for _, who := range []struct {
+		name string
+		id   int64
+	}{{"mestre", f.gm}, {"jogador", f.player}} {
+		doc, err := html.Parse(strings.NewReader(f.requests(t, who.id, http.MethodGet, f.tableUrl(), "").Body.String()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		root := findNode(doc, "id", "table")
+		if root == nil {
+			t.Fatalf("a mesa do %s não tem a raiz #table", who.name)
+		}
+		if !strings.Contains(attr(root, "data-attr:style"), "--arrasto-x") {
+			t.Errorf("a raiz da mesa do %s não escreve o deslocamento do arrasto: a peça não acompanha o dedo", who.name)
+		}
 	}
 }

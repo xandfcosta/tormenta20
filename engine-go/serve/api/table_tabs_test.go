@@ -6,6 +6,8 @@ import (
 	"strings"
 	"t20engine/domain/board"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 func (f sceneFixture) openSecond(t *testing.T, name string) *board.BoardState {
@@ -17,35 +19,35 @@ func (f sceneFixture) openSecond(t *testing.T, name string) *board.BoardState {
 	return b
 }
 
-// A BARRA só nasce quando há o que trocar.
+// O SELETOR DO MESTRE só oferece outra cena quando há outra.
 //
-// Com uma cena aberta ela seria uma ficha só flutuando sobre o mapa. E a ATIVA é
-// o `<h2>` da região: um `<h2>` por aba faria o leitor de tela anunciar três
-// títulos para uma região que desenha uma cena.
+// Com uma cena aberta, o seletor diz qual é e oferece abrir outra; com duas, a
+// outra vira uma linha que leva a ela, e só a de agora fica marcada.
 func TestTheTabBarIsOnlyBornWithTwoScenes(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 
 	one := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(one, "board-tab") {
-		t.Error("com uma cena aberta a barra de abas apareceu — é ficha só, sobre o mapa")
+	if strings.Contains(one, "Ver o tabuleiro ") {
+		t.Error("com uma cena aberta o seletor ofereceu ir para outra")
 	}
 
 	f.openSecond(t, "Cripta")
 	two := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	if !strings.Contains(two, "Ver o tabuleiro Cripta") {
+	if !strings.Contains(two, `aria-label="Ver o tabuleiro Cripta"`) {
 		t.Fatal("com duas cenas abertas não há como chegar à segunda")
 	}
-	if n := strings.Count(two, `class="board-tab board-tab-active"`); n != 1 {
-		t.Errorf("%d abas ativas na barra, esperado exatamente 1", n)
+	doc, err := html.Parse(strings.NewReader(two))
+	if err != nil {
+		t.Fatal(err)
 	}
-	// A ativa é o cabeçalho, e as outras são botões: UM `<h2>` na barra inteira.
-	//
-	// Contar `<h2` na PÁGINA responde outra pergunta: a Mesa tem quinze, uma por
-	// região. O seletor tem de ser o da BARRA.
-	if n := strings.Count(two, `<h2 class="board-tab`); n != 1 {
-		t.Errorf("a barra tem %d abas como cabeçalho, esperado 1 (as outras são botões)", n)
+	scenes := findNode(doc, "id", "gm-scenes")
+	if scenes == nil {
+		t.Fatal("a mesa do mestre não tem o seletor de tabuleiros")
+	}
+	if n := strings.Count(renderNode(t, scenes), `aria-current="true"`); n != 1 {
+		t.Errorf("%d cenas marcadas como a de agora no seletor, esperado exatamente 1", n)
 	}
 }
 
@@ -74,7 +76,7 @@ func TestSwitchingTabsChangesOnlyTheScreenOfWhoClicked(t *testing.T) {
 	}
 
 	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(forGM, "Taverna do Javali</h2>") {
+	if !strings.Contains(gmBoardPlace(t, forGM), "Taverna do Javali") {
 		t.Error("o clique do jogador arrastou a tela do mestre junto")
 	}
 }

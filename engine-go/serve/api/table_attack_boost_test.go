@@ -60,7 +60,7 @@ func TestTheStripSaysTheBoostAndWhatConfirmingCharges(t *testing.T) {
 	f, _ := boostedProposal(t, 2)
 	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	// O CONTROLE: a faixa está na página, senão a ausência abaixo não diz nada.
-	if !strings.Contains(page, "mesa-ataque-selo") {
+	if !strings.Contains(page, `id="table-attack"`) {
 		t.Fatal("a página da mesa não desenhou a faixa do provisório")
 	}
 	if !strings.Contains(page, "Ataque Especial · 2 PM ao confirmar") {

@@ -20,7 +20,7 @@ import (
 templ draftBody(v draftView) {
 	<main
 		id="draft"
-		data-attr:style="`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
+		data-attr:style={ dragOffsetStyle }
 		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
 	>
 		@draftHeader(v)

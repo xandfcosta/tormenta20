@@ -1808,7 +1808,10 @@
     .ds-gm-board-bar {
       top: 3.25rem;
     }
-    .ds-gm-notice {
+    /* As duas classes, e não só a nossa: a `.ds-board-notice` vem depois na
+     * folha com a mesma especificidade, e ganharia — o aviso cairia em cima da
+     * barra e cobriria o botão de reabrir a cortina. */
+    .ds-board-notice.ds-gm-notice {
       top: 6.25rem;
     }
   }
@@ -1820,6 +1823,13 @@
     padding: 0.25rem;
     transform: translateX(-50%);
   }
+  /* O PINCEL veste o matiz da espécie que ele pinta, como no trilho de hoje;
+   * os tons claros de lá somem sobre a superfície clara do kit, e por isso o
+   * claro escurece aqui. */
+  .ds-gm-terrain .board-hue-difficult { color: light-dark(oklch(0.55 0.12 85), oklch(0.8 0.11 85)); }
+  .ds-gm-terrain .board-hue-cover { color: light-dark(oklch(0.5 0.13 230), oklch(0.78 0.11 230)); }
+  .ds-gm-terrain .board-hue-concealment { color: light-dark(oklch(0.45 0.06 260), oklch(0.88 0.04 260)); }
+  .ds-gm-terrain .board-hue-elevated { color: light-dark(oklch(0.5 0.14 145), oklch(0.8 0.14 145)); }
   .ds-gm-tools {
     max-width: calc(100% - 1rem);
     overflow-x: auto;
@@ -1868,6 +1878,11 @@
       width: auto;
       height: 1px;
       margin: 0.125rem 0.375rem;
+    }
+    /* No desktop as ferramentas são uma coluna à esquerda, e o aviso começa
+     * depois dela. */
+    .ds-board-notice.ds-gm-notice {
+      left: 5.5rem;
     }
     .ds-gm-terrain {
       top: 50%;
@@ -1918,6 +1933,14 @@
     padding: 0.5rem 0.75rem;
     border-top: 1px solid var(--ds-line);
     background: var(--ds-surface);
+  }
+  .ds-gm-temp {
+    margin-left: 0.25rem;
+    color: var(--ds-action);
+    font-weight: 600;
+  }
+  .ds-gm-turn > [data-bleeding] {
+    flex-basis: 100%;
   }
   .ds-gm-turn-what {
     flex: 1;
@@ -2076,6 +2099,27 @@
     display: flex;
     padding-top: 0.25rem;
   }
+  /* AS CONFIGURAÇÕES DA SESSÃO: uma decisão por linha, a frase à esquerda e
+   * o botão à direita. */
+  .ds-session-config {
+    display: grid;
+  }
+  .ds-session-config-title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+  }
+  .ds-session-config-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--ds-line);
+  }
+
   /* AS CONSULTAS DO MESTRE (ALE-522, fatia 3). A cabeça leva as abas e o
    * recolher; ela aparece nas duas larguras, ao contrário da `.ds-gm-col-head`,
    * porque no celular as abas são a única navegação entre as quatro. */
@@ -2151,7 +2195,7 @@
    * direto (`bg-background` é `var(--background)`). Remapear as variáveis aqui
    * troca a tinta inteira sem disputar com a camada das utilitárias, que vem
    * depois desta e ganharia de qualquer seletor. */
-  .ds-gm-notes-body,
+  .ds-gm-notes,
   .ds-gm-bestiary,
   .ds-gm-float {
     --background: var(--ds-surface);
@@ -2169,6 +2213,7 @@
     --grimorio-iron: var(--ds-line);
     --grimorio-iron-light: var(--ds-line-strong);
     --grimorio-gold: var(--ds-action);
+    --color-grimorio-gold: var(--ds-action);
     --grimorio-panel: var(--ds-surface);
   }
   .ds-gm-member,

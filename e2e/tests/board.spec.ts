@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
-import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/table'
+import { openTheBoard, disposableTable, pickBrush, putATokenOnTheMap, showTheBoard } from './support/table'
 
 /**
  * O TABULEIRO da Mesa em Datastar.
@@ -77,7 +77,7 @@ test('o zoom e a janela sobrevivem ao remendo do servidor', async ({ page }) => 
     expect(zoomBefore, 'o zoom não saiu do padrão — não há o que sobreviver').not.toBe('44px')
 
     // Uma mudança que vem DO SERVIDOR e redesenha a região do mapa.
-    await ferramenta(page, 'Difícil').click()
+    await pickBrush(page, 'Difícil')
     await camadaDe(page, /Pintar terreno/).click({ position: { x: 60, y: 60 } })
 
     // O CONTROLE: o remendo chegou e mudou a cena.
@@ -119,7 +119,7 @@ test('depois de aproximar, a casa pintada é a que estava sob o dedo', async ({ 
     const more = page.getByRole('button', { name: 'Aproximar o mapa' })
     while (!(await more.isDisabled())) await more.click()
 
-    await page.getByRole('button', { name: 'Camuflagem' }).click()
+    await pickBrush(page, 'Camuflagem')
     const squares = camadaDe(page, /Pintar terreno/)
     const target = { x: 150, y: 110 }
     await squares.click({ position: target })
@@ -184,7 +184,7 @@ test('depois de arrastar a vista, a casa pintada é a que estava sob o dedo', as
       .evaluate((e) => getComputedStyle(e).getPropertyValue('--vista-x').trim())
     expect(view, 'a vista não saiu do lugar — o arrasto não aconteceu e o resto não mede nada').not.toBe('0px')
 
-    await ferramenta(page, 'Camuflagem').click()
+    await pickBrush(page, 'Camuflagem')
     const squares = camadaDe(page, /Pintar terreno/)
     const target = { x: 260, y: 180 }
     await squares.click({ position: target })
@@ -332,7 +332,7 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
   const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
     await openTheBoard(page, table)
-    await ferramenta(page, 'Difícil').click()
+    await pickBrush(page, 'Difícil')
 
     const squares = camadaDe(page, /Pintar terreno/)
     const box = (await squares.boundingBox())!
@@ -488,44 +488,35 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
 })
 
 /**
- * O PAINEL DE VERBOS CABE NO TELEFONE, COM ACERVO.
+ * A BARRA DE VERBOS DO MESTRE CABE NO TELEFONE.
  *
- * Por que e2e: o que estoura é LARGURA REAL de texto renderizado. O servidor não
- * mede caixa — ele escreve "Lugares da campanha · 3" e não sabe quanto aquilo dá
- * numa janela de 390. O defeito é exatamente a soma das larguras.
- *
- * O ESTADO é o assunto, e é por isso que o caso semeia lugares: o painel sem
- * acervo não tem o botão largo, e medi-lo assim é medir outro painel — foi essa
- * a lacuna que deixou o defeito viver, com a cena nas listas dos guardas e o
- * estado que a quebra em lugar nenhum.
+ * Por que e2e: o que estoura é LARGURA REAL renderizada, e o servidor não mede
+ * caixa. No mapa estreito a barra desce para baixo do seletor de tabuleiros, e
+ * quem decide isso é uma consulta de CONTÊINER (ALE-522) — o mapa e não a
+ * janela.
  */
-test('o painel de verbos cabe a 390px com a campanha tendo acervo', async ({ page }) => {
+test('a barra de verbos do mestre cabe a 390px', async ({ page }) => {
   const { mesa: table, apagar: remove } = await disposableTable(page)
   try {
-    const campaign = table.split('/')[2]
-    // O ACERVO pela porta de verdade — a mesma que a aba de lugares usa. Três
-    // basta: o que muda a largura é o botão EXISTIR e a contagem ter dígito.
-    for (const label of ['Taverna do E2E', 'Cripta do E2E', 'Ruínas do E2E']) {
-      const created = await page.request.post(`/campanhas/${campaign}/lugares/novo`, {
-        form: { name: label, ground: 'crypt' },
-      })
-      expect(created.ok(), `semear o lugar ${label}: ${created.status()}`).toBeTruthy()
-    }
-
     await openTheBoard(page, table)
     await page.setViewportSize({ width: 390, height: 844 })
+    await showTheBoard(page)
     await page.waitForTimeout(300)
 
-    // O CONTROLE, e sem ele o caso não mede nada: se o botão do acervo não
-    // estiver na tela, o painel medido é o estreito, e o guarda passa verde
-    // sobre o painel que nunca quebrou.
-    const collection = page.locator('.board-scene-verbs button').filter({ hasText: /Lugares|3/ })
-    await expect(
-      collection.first(),
-      'o botão do acervo não está no painel — o caso mediria um painel sem o item que o estoura',
-    ).toBeVisible()
+    // O CONTROLE: a barra e o seletor estão na tela. Sem isto, o guarda abaixo
+    // passaria verde sobre um mapa que não desenhou o cromo.
+    const bar = page.getByRole('group', { name: 'Enquadrar e montar o mapa' })
+    await expect(bar).toBeVisible()
+    await expect(page.locator('[popovertarget="gm-scenes"]')).toBeVisible()
 
-    await expectDentroDaJanela(page)
+    await expectDentroDaJanela(page, '.ds-board-scene')
+    // E as duas não se sobrepõem: o seletor fica em cima, a barra embaixo dele.
+    const overlap = await page.evaluate(() => {
+      const pick = document.querySelector('[popovertarget="gm-scenes"]')!.getBoundingClientRect()
+      const verbs = document.querySelector('.ds-gm-board-bar')!.getBoundingClientRect()
+      return Math.round(pick.bottom - verbs.top)
+    })
+    expect(overlap, 'a barra de verbos cobre o seletor de tabuleiros').toBeLessThanOrEqual(0)
   } finally {
     await remove()
   }
@@ -604,6 +595,7 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
       ['em pé', 390, 844],
     ] as const) {
       await page.setViewportSize({ width: w, height: h })
+      await showTheBoard(page)
       await page.evaluate(() =>
         document.querySelectorAll('[popover]').forEach((p) => {
           try {
@@ -653,7 +645,7 @@ test('copiar guarda o modo, e cada CTRL+V põe outro igual', async ({ page }) =>
 
     // A FAIXA da área começa VAZIA, e este é o controle: sem ele, uma faixa que
     // aparecesse sempre passaria pelas asserções de baixo sem provar nada.
-    const strip = page.locator('.board-area')
+    const strip = page.getByRole('group', { name: 'Área de transferência' })
     await expect(strip, 'a faixa da área nasceu visível com a área vazia').toBeHidden()
 
     await page.locator('.board-token').first().click({ button: 'right' })

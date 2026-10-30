@@ -29,12 +29,8 @@ import (
 // uma lista própria também para PC, e o Atordoado marcado pela Mesa não
 // atordoava ninguém.
 
-// conditionEffect é o que o crachá diz ao passar o mouse.
-//
-// A lista e o NOME não moram aqui: `book.Catalogs().Condicoes` já é lida do
-// catálogo e já vem ordenada por um collator pt-BR, e o `book.ConditionName` já
-// resolve id → palavra do livro. Uma segunda cópia da tabela do livro é uma
-// cópia que desvia.
+// conditionEffect é o que o crachá da fila diz ao passar o mouse: a condição
+// é rastreio, quem aplica o efeito é o mestre, e ele precisa ler o que ela faz.
 func conditionEffect(id string) string {
 	for _, c := range book.Catalogs().Conditions {
 		if c.ID == id {

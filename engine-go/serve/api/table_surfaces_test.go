@@ -16,7 +16,7 @@ func TestThePlayerHasEveryRegionExactlyOnce(t *testing.T) {
 
 	// AS REGIÕES SÃO AS DA PRODUÇÃO, e não uma lista escrita aqui: a lista e a
 	// página não podem discordar sobre quais existem.
-	for _, region := range table.TableRegions(table.View{Tempestade: true}) {
+	for _, region := range table.TableRegions(table.View{}) {
 		id := region.ID
 		mark := `id="` + id + `"`
 		if n := strings.Count(html, mark); n != 1 {
@@ -52,9 +52,8 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	}
 }
 
-// Ele tem o PALCO — faixa, trilhos e tabuleiro ao mesmo tempo —, e é essa a
-// diferença entre as duas formas. Um seletor na tela dele esconderia atrás de uma
-// aba o que a forma do mestre existe para mostrar junto.
+// Ele tem as SUAS superfícies — Fila, Tabuleiro e Consultas —, e não o
+// seletor do jogador.
 func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
@@ -63,8 +62,8 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 
 	// O CONTROLE: a cena do mestre chegou inteira. Sem ele, "não achei o seletor"
 	// seria verdade também num 403 ou numa página vazia.
-	if !strings.Contains(html, `id="table-tracker-rail"`) {
-		t.Fatal("o mestre não recebeu o palco — a página não é o que este teste pensa que é")
+	if !strings.Contains(html, `aria-label="Superfícies do mestre"`) {
+		t.Fatal("o mestre não recebeu a mesa dele — a página não é o que este teste pensa que é")
 	}
 	if strings.Contains(html, "O que ver na sessão") {
 		t.Error("o mestre recebeu o seletor de superfícies do jogador")

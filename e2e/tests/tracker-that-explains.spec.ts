@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
-import { openTheBoard, closeTheTracker, disposableTable, putACombatantInTheTracker } from './support/table'
+import { openTheBoard, disposableTable, putACombatantInTheTracker } from './support/table'
 
 /**
  * A FILA EXPLICA O QUE MUDOU: a piscada do vital e o pulso da vez.
@@ -48,7 +48,7 @@ async function trackerAnimations(
       // DATA-ATRIBUTO: dentro da linha ele era removido pelo segundo remendo do
       // gesto (ALE-322). Casar forma de DOM aqui nos faria medir o lugar antigo.
       w.__f.veus += document.querySelectorAll('[data-vital-blink]').length
-      for (const row of document.querySelectorAll('#table-tracker li')) {
+      for (const row of document.querySelectorAll('#table-tracker .ds-row')) {
         if (row.getAnimations().length > 0) w.__f.linhas++
       }
       if (performance.now() - start < limit) requestAnimationFrame(step)
@@ -73,7 +73,7 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
   const { apagar: eraseBtn } = await aTrackerWithTwo(page)
   try {
     const hurting = await trackerAnimations(page, () =>
-      page.getByRole('button', { name: /^Ferir/ }).first().click(),
+      page.getByRole('button', { name: /^Tirar 1 PV de / }).first().click(),
     )
     expect(
       hurting.veus,
@@ -110,7 +110,7 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
       const veilsBefore = veils().length
 
       const heal = [...document.querySelectorAll('button')].find((b) =>
-        (b.getAttribute('aria-label') ?? '').startsWith('Curar'),
+        (b.getAttribute('aria-label') ?? '').startsWith('Devolver 1 PV'),
       )
       const foundButton = !!heal
       heal?.click()
@@ -131,7 +131,7 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
       healColor,
       `a cura não pintou véu nenhum em ${measurement.ms}ms — ` +
         `véus pendurados antes do gesto: ${measurement.veusAntes} (zero é o esperado), ` +
-        `botão Curar encontrado: ${measurement.achouBotao}. ` +
+        `botão Devolver encontrado: ${measurement.achouBotao}. ` +
         'Se os véus antes forem > 0, o véu do DANO não tinha sumido; se o botão for ' +
         'false, o gesto não chegou a acontecer; se os dois estiverem certos, a ' +
         'piscada não foi disparada — e aí o suspeito é o MutationObserver de ' +
@@ -178,7 +178,7 @@ test('ferir duas vezes seguidas não apaga a piscada da primeira', async ({ page
       const frame = () => new Promise((paint) => requestAnimationFrame(paint))
       const hurt = () =>
         [...document.querySelectorAll('button')].find((b) =>
-          (b.getAttribute('aria-label') ?? '').startsWith('Ferir'),
+          (b.getAttribute('aria-label') ?? '').startsWith('Tirar 1 PV'),
         )
 
       // REPOUSO PRIMEIRO: com um véu pendurado de antes, "existe" responderia
@@ -246,17 +246,13 @@ test('ferir duas vezes seguidas não apaga a piscada da primeira', async ({ page
 test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) => {
   const { apagar: remove } = await aTrackerWithTwo(page)
   try {
-    // Pelo ajudante e não pelo clique cru: ele ESPERA a gaveta fechar.
-    await closeTheTracker(page)
-
     // A CENA PRECISA COMEÇAR, senão não há vez para entrar: o `PodeAvancar` é
     // `SceneActive && len(Initiative) > 0`, e sem ele o botão de avanço nasce
     // `disabled`. O sintoma é um timeout dizendo "waiting for element to be
     // visible, enabled and stable" — e o que falha é o ENABLED, com o botão
     // parado e visível na tela o tempo todo.
-    // DOIS cliques: "Iniciar cena" abre os três tipos (p252), e a fila só
+    // Fora de cena a fila oferece as três cenas do livro (p252), e a vez só
     // existe na de AÇÃO.
-    await page.locator('summary[aria-label="Iniciar uma cena"]').click()
     await page.getByRole('button', { name: 'Iniciar uma cena de Ação' }).click()
     await expect(page.getByRole('button', { name: /^Começar:/ })).toBeEnabled()
 
@@ -297,8 +293,9 @@ test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
       requestAnimationFrame(step)
     })
 
-    await page.getByRole('button', { name: 'Condições de Ogro do E2E' }).click()
-    await page.getByRole('button', { name: 'Abalado', exact: true }).click()
+    await page.getByRole('button', { name: 'Abrir Ogro do E2E' }).click()
+    await page.locator('dialog[open]').getByRole('button', { name: '+ Aplicar condição' }).click()
+    await page.locator('#gm-conditions').getByRole('button', { name: 'Abalado', exact: true }).click()
     await page.waitForTimeout(1000)
 
     const tiles = await page.evaluate(() => (window as unknown as { __c: number }).__c)

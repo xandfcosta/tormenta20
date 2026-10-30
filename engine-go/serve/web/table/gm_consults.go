@@ -2,11 +2,6 @@ package table
 
 import (
 	"fmt"
-	"net/http"
-
-	"t20engine/serve/web/master"
-
-	"github.com/a-h/templ"
 )
 
 // As abas das Consultas do mestre (ALE-522). O valor é o do sinal
@@ -52,12 +47,15 @@ func groupAtTable(group []Member) string {
 	return fmt.Sprintf("%d de %d na mesa", here, len(group))
 }
 
-// memberMeta é a linha de baixo do nome: o nível e as classes.
+// memberMeta é a linha de baixo do nome: o nível, as classes e a Defesa —
+// partida quando o personagem está caído (p394), porque é aqui que o mestre a
+// confere para decidir se o ataque acerta.
 func memberMeta(m Member) string {
 	meta := fmt.Sprintf("Nível %d", m.Level)
 	if m.Classes != "" {
 		meta += " · " + m.Classes
 	}
+	meta += " · Defesa " + m.Defense
 	if m.Presence != nil && !m.Presence.AtTable {
 		meta += " · fora da mesa"
 	}
@@ -79,13 +77,4 @@ func npcMeta(npc castNpc) string {
 		return npc.Summary + " · cópia de " + npc.FromBook
 	}
 	return npc.Summary
-}
-
-// bestiaryPanel é o que as rotas do bestiário remendam: a aba da mesa nova
-// quando o mestre a pediu, e o diálogo do palco de hoje quando não.
-func bestiaryPanel(r *http.Request, v master.BestiaryView) templ.Component {
-	if gmTableAsked(r) {
-		return gmBestiary(v)
-	}
-	return tableBestiary(v)
 }

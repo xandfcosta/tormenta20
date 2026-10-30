@@ -238,7 +238,7 @@ func TestReopeningAddsATabAndSwapsNothing(t *testing.T) {
 	// Quem reabriu VAI para a aba nova — ele acabou de escolher aquele lugar
 	// numa lista, e ficar na cena anterior faria o gesto parecer que não pegou.
 	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(screen, "Taverna do Javali</h2>") {
+	if !strings.Contains(gmBoardPlace(t, screen), "Taverna do Javali") {
 		t.Error("o mestre reabriu a taverna e continuou olhando a cripta")
 	}
 }
@@ -351,7 +351,7 @@ func TestTheTurnStripReachesBothScreens(t *testing.T) {
 	// ANCORADO NA VIRADA DA RODADA, que é texto que SÓ a faixa escreve: o nome
 	// do Ogro aparece na lista de iniciativa de qualquer jeito, e procurá-lo
 	// mediria a lista em vez da faixa.
-	if !strings.Contains(forGM, "começa a rodada 2") {
+	if !strings.Contains(forGM, `<li class="ds-round-mark">Rodada 2</li>`) {
 		t.Errorf("a faixa do mestre não marca onde a rodada vira")
 	}
 	// E ela DÁ A VOLTA: no último da rodada, o próximo é o primeiro da fila.

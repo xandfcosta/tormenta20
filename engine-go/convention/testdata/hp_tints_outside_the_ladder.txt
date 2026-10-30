@@ -26,12 +26,7 @@ engine-go/serve/web/grimoire/scene.templ
 # PRESENÇA e confirmação, em verde: nada disso é vida.
 engine-go/serve/web/ui/invite.templ
 engine-go/serve/web/admin/scene.templ
-engine-go/serve/web/table/cast.templ
 engine-go/serve/web/campaigns/one.templ
-
-# A Mesa: o ponto do "Ao vivo", o crachá de presença e o de condição.
-engine-go/serve/web/table/table.templ
-
 
 # A dificuldade do encontro: cinco degraus do livro (p281), e eles são OUTRA
 # escada — de "calmo" a "mortal", sobre o nível do grupo e não sobre vida.

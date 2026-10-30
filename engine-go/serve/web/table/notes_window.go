@@ -65,9 +65,8 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 
 // notesWindowSignals é o estado que a JANELA tem, e ele é menor que o da Mesa.
 //
-// Fora ficam `notes_open`, `notes_width`, `notes_dragging`, `notes_floating` e
-// `notes_window`: os cinco descrevem ONDE a coluna vive ao lado do mapa, e aqui
-// não há mapa nem coluna. Declarar sinal que ninguém lê é o que o
+// Fora fica o `notes_window`: ele diz que as notas estão NUMA janela, e esta
+// é a janela. Declarar sinal que ninguém lê é o que o
 // `TestEverySignalDeclaredByValueHasAReader` recusa, e com razão — ele viaja em
 // toda requisição.
 func notesWindowSignals() string {
@@ -132,7 +131,7 @@ func givesTheNotesBack(v View) string {
 // então fechar a janela devolve a coluna sem um ramo próprio.
 func watchesTheNotesWindow(v View) string {
 	return fmt.Sprintf(
-		"if (evt.key === '%s') { $notes_window = evt.newValue === '%d'; if ($notes_window) { $notes_open = false } }",
+		"if (evt.key === '%s') { $notes_window = evt.newValue === '%d' }",
 		notesWindowKey, v.SessionID)
 }
 
@@ -147,20 +146,6 @@ func opensTheNotesWindow(v View) string {
 		"const janela = window.open('%s', '%s', 'popup,width=620,height=840'); "+
 			"if (janela) { janela.focus(); $notes_error = '' } "+
 			"else { $notes_error = 'O navegador bloqueou a janela das notas. Libere os pop-ups deste endereço.' }",
-		notesAddress(v), notesWindowName)
-}
-
-// notesButtonGesture é o botão do trilho, e ele RAMIFICA pelo lugar das notas.
-//
-// Com a janela no ar, abrir a coluna poria duas caixas sobre a mesma linha do
-// banco — então o botão vai buscar a janela. Ele a NAVEGA de novo (mesmo nome,
-// mesmo endereço), e isso é aceito de olhos abertos: o custo é a janela
-// recarregar, e o que ela poderia perder é o que ainda não passou pela pausa de
-// 1,2s do autosave — texto que só existe enquanto alguém digita NAQUELA janela,
-// que não é onde o dedo está neste clique.
-func notesButtonGesture(v View) string {
-	return fmt.Sprintf(
-		"if ($notes_window) { window.open('%s', '%s')?.focus() } else { $notes_open = !$notes_open }",
 		notesAddress(v), notesWindowName)
 }
 

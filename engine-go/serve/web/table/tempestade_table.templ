@@ -14,7 +14,7 @@ import (
 // superfícies vestem o kit; o mapa do Tabuleiro é o de hoje, porque ele é
 // conteúdo e não moldura (ver `tempestadeBoard`).
 templ tempestadeTableScene(v View) {
-	<main id="table" class="ds-session">
+	<main id="table" class="ds-session" data-attr:style={ dragOffsetStyle }>
 		@tempestadeHeader(v)
 		// O ATAQUE PROPOSTO fica acima de toda superfície, pela razão do de
 		// hoje: é o que a mesa tem de decidir agora, onde quer que se esteja.

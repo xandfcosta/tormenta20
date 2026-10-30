@@ -300,7 +300,7 @@ func gmNotes(v View) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": escolheOModo(mode.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": pickNotesMode(mode.ID)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -778,10 +778,13 @@ func gmNpcEditor(v View) templ.Component {
 }
 
 // gmBestiary é a aba Bestiário, e é a raiz que as rotas do painel remendam
-// (`table-bestiary`) quando a mesa é a nova — ver `bestiaryPanel`. Os filtros e
-// a lista são os da cena do mestre; o `data-signals` fica na raiz pela mesma
-// razão do `tableBestiary`: ele reecoa a busca e a criatura que o servidor
-// acabou de desenhar.
+// (`table-bestiary`). Os filtros e a lista são os da cena do mestre.
+//
+// O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
+// cada remendo — de propósito: a busca, os tipos e a criatura são o que o
+// servidor acabou de desenhar. Os campos do AJUSTE não estão nele: eles são
+// rascunho do mestre, nascem na página, e só o servidor os semeia ao abrir
+// OUTRA criatura (`entryDraft`).
 func gmBestiary(b master.BestiaryView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -810,7 +813,7 @@ func gmBestiary(b master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(master.BestiarySignals(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 179, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 182, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -831,7 +834,7 @@ func gmBestiary(b master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", len(b.Entries), b.Total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 181, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 184, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
@@ -891,7 +894,7 @@ func gmCreature(b master.BestiaryView, m book.Entry) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 201, Col: 116}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 204, Col: 116}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -904,7 +907,7 @@ func gmCreature(b master.BestiaryView, m book.Entry) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 203, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 206, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -917,7 +920,7 @@ func gmCreature(b master.BestiaryView, m book.Entry) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s · ND %s · p%d", book.TypeName(m.Kind), book.CRWritten(m.ND), m.BookPage))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 204, Col: 122}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_consults.templ`, Line: 207, Col: 122}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {

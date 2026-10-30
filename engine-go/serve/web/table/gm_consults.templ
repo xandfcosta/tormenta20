@@ -57,7 +57,7 @@ templ gmNotes(v View) {
 		<div class="ds-gm-notes-head">
 			@ds.Segmented("Modo de visualização das notas") {
 				for _, mode := range gmNoteModes {
-					@ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": escolheOModo(mode.ID)}) {
+					@ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": pickNotesMode(mode.ID)}) {
 						{ mode.Label }
 					}
 				}
@@ -171,10 +171,13 @@ templ gmNpcEditor(v View) {
 }
 
 // gmBestiary é a aba Bestiário, e é a raiz que as rotas do painel remendam
-// (`table-bestiary`) quando a mesa é a nova — ver `bestiaryPanel`. Os filtros e
-// a lista são os da cena do mestre; o `data-signals` fica na raiz pela mesma
-// razão do `tableBestiary`: ele reecoa a busca e a criatura que o servidor
-// acabou de desenhar.
+// (`table-bestiary`). Os filtros e a lista são os da cena do mestre.
+//
+// O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
+// cada remendo — de propósito: a busca, os tipos e a criatura são o que o
+// servidor acabou de desenhar. Os campos do AJUSTE não estão nele: eles são
+// rascunho do mestre, nascem na página, e só o servidor os semeia ao abrir
+// OUTRA criatura (`entryDraft`).
 templ gmBestiary(b master.BestiaryView) {
 	<div id="table-bestiary" class="ds-gm-bestiary" data-signals={ master.BestiarySignals(b) }>
 		@master.BestiaryFilters(b)

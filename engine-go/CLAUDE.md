@@ -2317,8 +2317,9 @@ dizer está na seção H do [GLOSSARY](../GLOSSARY.md).
   link carrega, e a do grimório fica intacta até a última parte. Parte ainda não
   migrada desenha um vazio que leva à de hoje — nunca o grimório dentro da cena
   Tempestade. Quando a última parte migra, a marca sai e a de hoje é APAGADA, e
-  os testes que liam o desenho dela são portados antes: foi assim com a ficha e
-  com a sessão do jogador.
+  os testes que liam o desenho dela são portados antes: foi assim com a ficha,
+  com a sessão do jogador e com a mesa do mestre (ALE-522, cuja marca virou um
+  cookie para não viajar em cada gesto).
 - **O fim da migração é apagar**, não converter: o `.scene-grimorio`, os
   tokens `grimorio-*`, a Cinzel, a Liberation, a JetBrains Mono e a `/grimorio`
   saem de uma vez, depois da última tela.

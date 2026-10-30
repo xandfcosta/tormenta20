@@ -101,8 +101,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
-	rememberGmTable(w, r)
-	view.dressForGm(r)
+	view.dressBoardWindow(r)
 	system, stream := pageSystemAndStream(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
@@ -218,7 +217,7 @@ func tableSignalsExpr() string {
 		"new_token_name: '', new_token_size: 'Médio', new_token_look: 'object'",
 		"new_token_material: 'madeira', new_token_hp: 0, new_token_defense: 10, new_token_rd: 5",
 		// A FILA e os verbos da linha.
-		"rest_quality: 'normal', combatant_form: false",
+		"rest_quality: 'normal'",
 		"condition_row: '', row_conditions: '', row_label: ''",
 		"new_name: '', new_initiative: 10, new_hp: 0, new_type: 'npc'",
 		"edit_row: '', edit_name: '', edit_initiative: 0, edit_hp: 0, edit_hp_max: 0",
@@ -264,7 +263,7 @@ func tableSignalsExpr() string {
 		"template_x: 0, template_y: 0, template_aim_x: 0, template_aim_y: 0, template_phase: 0",
 		fmt.Sprintf("template_path: '', template_text: %q", emptyTemplateHint),
 		// As NOTAS da sessão.
-		"notes: '', notes_saved: '', notes_mode: 'duplo', notes_open: false, notes_width: 0, notes_dragging: false, notes_floating: false",
+		"notes: '', notes_saved: '', notes_mode: 'duplo'",
 		// `notes_window` é o LUGAR das notas quando ele não é esta aba: verdadeiro
 		// enquanto a janela própria estiver com elas. Quem o escreve é o
 		// `storage`, e não o clique — ver `watchesTheNotesWindow`.
@@ -291,13 +290,10 @@ func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64
 	if view.BoardWindow {
 		return gmBoardWindow(view)
 	}
-	if view.Tempestade && view.GM != nil {
+	if view.GM != nil {
 		return gmTempestadeScene(view, s.forTableBestiary(r, campaignID, sessionID))
 	}
-	if view.Tempestade {
-		return tempestadeTableScene(view)
-	}
-	return gmStage(view, s.forTableBestiary(r, campaignID, sessionID))
+	return tempestadeTableScene(view)
 }
 
 // LoadView monta a Mesa inteira para desenhar: busca tudo o que a tela precisa
@@ -434,9 +430,6 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 		r := ofViewGm(st, members, present, true)
 		view.GM = &r
 	}
-	// O JOGADOR recebe a sessão no Tempestade, e o mestre segue com o palco de
-	// hoje até a vez dele (ALE-473).
-	view.Tempestade = view.GM == nil
 	return view, http.StatusOK, nil
 }
 

@@ -72,7 +72,7 @@ func (s Scene) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {
 	v := s.forTableBestiary(r, campaignID, sessionID)
 
 	sse := datastar.NewSSE(w, r)
-	if fragment, err := ui.RenderFragment(r.Context(), bestiaryPanel(r, v)); err == nil {
+	if fragment, err := ui.RenderFragment(r.Context(), gmBestiary(v)); err == nil {
 		_ = sse.PatchElements(fragment)
 	}
 	// O PAINEL É O DONO DO RASCUNHO: os campos de PV, iniciativa e quantas
@@ -136,7 +136,7 @@ func (s Scene) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
 	)
 
 	sse := datastar.NewSSE(w, r)
-	if fragment, err := ui.RenderFragment(r.Context(), bestiaryPanel(r, v)); err == nil {
+	if fragment, err := ui.RenderFragment(r.Context(), gmBestiary(v)); err == nil {
 		_ = sse.PatchElements(fragment)
 	}
 	// O sinal volta porque o crachá é a ÚNICA coisa que muda a lista sem passar

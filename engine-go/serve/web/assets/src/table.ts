@@ -130,7 +130,7 @@ function wireTheVitalBlink(stopped: MediaQueryList): void {
 
       // A linha é quem tem o nome. Sem ela — uma barra fora de linha nenhuma —
       // não há o que piscar, e piscar a barra seria responder outra pergunta.
-      const line = bar.closest('li')
+      const line = bar.closest('li, .ds-row')
       if (!line) continue
 
       // O QUADRO DE ESPERA PERDEU A RAZÃO QUE O TROUXE, e fica sem uma nova

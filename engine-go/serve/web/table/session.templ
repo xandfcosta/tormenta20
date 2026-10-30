@@ -2,39 +2,12 @@ package table
 
 import (
 	"fmt"
-	"t20engine/serve/web/ui"
+	"t20engine/serve/web/ds"
 )
 
 // O CICLO DA SESSÃO na tela. A DECISÃO mora no `domain/live`
 // (`ChangeToStatus`), a orquestração no `app/session` e o caminho no
 // `session.go`; aqui é o desenho.
-
-// O botão que abre as configurações, e o SAIR ao lado dele.
-//
-// Os dois no cabeçalho porque são as duas coisas que se faz com a SESSÃO, e não
-// dentro dela: o resto da tela é sobre a cena, a fila e o mapa.
-templ sessionVerbs(v View) {
-	<span class="ml-auto flex shrink-0 items-center gap-1">
-		if v.GM != nil {
-			<button
-				type="button"
-				aria-label="Configurações da sessão"
-				title="Configurações da sessão"
-				data-on:click={ openConfigSession(v) }
-				class="flex size-8 items-center justify-center rounded-sm border border-transparent text-sm text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
-			>
-			@ui.Icon("Settings2", "size-4")
-		</button>
-		}
-		// SAIR é um link e não um botão: ele navega, e navegação é do navegador.
-		// Assim o ctrl+clique e o "abrir em nova aba" continuam valendo.
-		<a
-			href={ templ.SafeURL(campaignChronicle(v)) }
-			title="Sair da sessão e voltar para a crônica da campanha"
-			class="inline-flex min-h-8 items-center rounded-sm border border-grimorio-iron px-2 text-xs outline-none transition-colors hover:bg-accent"
-		>Sair da sessão</a>
-	</span>
-}
 
 // AS CONFIGURAÇÕES DA SESSÃO — uma linha, uma decisão.
 //
@@ -46,12 +19,10 @@ templ sessionVerbs(v View) {
 // Os verbos são travados pelo ESTADO: iniciar só aparece no que ainda não
 // começou, encerrar só no que está no ar. O servidor recusa o resto, e oferecer
 // o que será recusado é desenhar um erro.
-// tableConfigSession é a REGIÃO do diálogo, pela mesma razão do `mesa-por-no-mapa`:
-// ele muda com o CICLO da sessão, que não é o ritmo do mapa nem o da fila.
-// Pendurado no cabeçalho, ele seria redesenhado a cada troca de turno.
 //
-// O `<div>` existe sempre, inclusive para o jogador: região que some do HTML é
-// região que o remendo não acha. Quem a porta do mestre esconde é o CONTEÚDO.
+// tableConfigSession é a REGIÃO do diálogo: ele muda com o CICLO da sessão, que
+// não é o ritmo do mapa nem o da fila. Quem o abre é o ⋯ do mestre
+// (`openConfigSession`).
 templ tableConfigSession(v View) {
 	<div id="table-session-config">
 		if v.GM != nil {
@@ -61,146 +32,83 @@ templ tableConfigSession(v View) {
 }
 
 templ sessionConfig(v View) {
-	<dialog
-		id="session-config"
-		data-preserve-attr="open"
-		aria-labelledby="session-config-title"
-		class="scene-grimorio m-auto w-[min(32rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
-	>
-		<h2 id="session-config-title" class="font-heading text-lg tracking-wide text-grimorio-gold">
-			Sessão { fmt.Sprint(v.SessionNum) }
-			// `font-sans` NÃO é enfeite: sem ele o crachá HERDA a Cinzel do `<h2>` e a
-			// desenha a 11px, três abaixo do piso de leitura de 14. Os dois tokens
-			// nunca estão na mesma `class=` — a receita do rótulo dá o TAMANHO e o
-			// `font-heading` do pai dá a FONTE —, e é por isso que nenhum `grep`
-			// sobre os `.templ` acha isto: herança é a regra do CSS, e só o navegador
-			// responde.
-			<span class={ ui.SectionLabelClasses("muted", "ml-2 font-normal font-sans") }>{ portugueseCycle(v.Status) }</span>
-		</h2>
-		<div class="mt-3 space-y-1 divide-y divide-grimorio-iron/60">
-			<div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 py-3">
-				// O CAMPO NÃO RECEBE `value` DO SERVIDOR, e quem o semeia é a
-				// ABERTURA — regra da casa: entrada em curso é do teclado de quem
-				// digita, não estado da aplicação. Esta região é remendada a cada
-				// troca de turno, e um `value` vindo de lá apagaria o que o mestre
-				// está escrevendo no meio da frase.
-				<div class="min-w-0 flex-1 space-y-1">
-					<label for="session-title" class="block text-sm text-foreground">Título</label>
-					<p class="text-xs text-muted-foreground">O apelido da noite. Pode ficar em branco — quem identifica a sessão é o número.</p>
-					<input
-						id="session-title"
-						type="text"
-						data-bind:session_title
-						placeholder="A cripta do rio"
-						class="mt-1 w-full rounded-sm border border-input bg-background px-2 py-1.5 text-sm outline-none"
-					/>
-				</div>
-				<button
-					type="button"
-					data-on:click={ sessionTitlePatch(v) }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-				>Salvar</button>
+	@ds.Dialog("session-config", fmt.Sprintf("Sessão %d · %s", v.SessionNum, portugueseCycle(v.Status)), nil) {
+		<div class="ds-session-config">
+			// O CAMPO NÃO RECEBE `value` DO SERVIDOR, e quem o semeia é a
+			// ABERTURA: esta região é remendada a cada troca de ciclo, e um
+			// `value` vindo de lá apagaria o que o mestre está escrevendo.
+			<div class="ds-session-config-title">
+				@ds.TextField(ds.Field{ID: "session-title", Label: "Título", Placeholder: "A cripta do rio", Help: "O apelido da noite. Pode ficar em branco — quem identifica a sessão é o número."}, templ.Attributes{"data-bind:session_title": true})
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": sessionTitlePatch(v)}) {
+					Salvar
+				}
 			</div>
 			if v.Status != "active" {
 				@adjustRow("Iniciar sessão", "A mesa passa a ver a partida ao vivo.") {
-					<button
-						type="button"
-						data-on:click={ sessionStatusPatch(v, "active") }
-						class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
-					>
+					@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": sessionStatusPatch(v, "active")}) {
 						if v.Status == "ended" {
 							Reabrir
 						} else {
 							Iniciar
 						}
-					</button>
+					}
 				}
 			}
 			if v.Status == "active" {
 				@adjustRow("Encerrar sessão", "A partida sai do ar para a mesa. A campanha e as fichas ficam como estão.") {
-					<button
-						type="button"
-						data-on:click={ "document.getElementById('session-config').close(); " + sessionStatusPatch(v, "ended") }
-						class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-					>Encerrar</button>
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('session-config').close(); " + sessionStatusPatch(v, "ended")}) {
+						Encerrar
+					}
 				}
 			}
 			// REINICIAR fica ao lado de ENCERRAR de propósito, e é por isso que as
 			// duas frases dizem o que ACONTECE: os dois verbos se parecem e fazem
 			// coisas diferentes, e é aqui que a confusão custaria a noite de alguém.
 			@adjustRow("Reiniciar o combate", "Esvazia a fila e os turnos. A partida CONTINUA no ar.") {
-				<button
-					type="button"
-					data-on:click={ restartCombatCommand(v) }
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-				>Reiniciar</button>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": restartCombatCommand(v)}) {
+					Reiniciar
+				}
 			}
-			// EXCLUIR é `form` e não `@post`: ele navega para fora da sessão, e um
-			// comando de Datastar responde com remendo, que não tem destino.
 			@adjustRow("Excluir sessão", "Apaga a sessão e o histórico dela. Não dá para desfazer.") {
-				<button
-					type="button"
-					data-on:click="document.getElementById('session-config').close(); document.getElementById('delete-session').showModal()"
-					class="inline-flex min-h-11 items-center rounded-sm border border-destructive px-3 text-sm text-destructive-ink outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground"
-				>Excluir</button>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "delete-session", "command": "show-modal", "data-on:click": "document.getElementById('session-config').close()"}) {
+					Excluir
+				}
 			}
 		</div>
-		<div class="mt-4 flex justify-end">
-			<button
-				type="button"
-				data-on:click="document.getElementById('session-config').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-			>Fechar</button>
-		</div>
-	</dialog>
+	}
 	@confirmDeleteSession(v)
 }
 
 // A CONFIRMAÇÃO de excluir, onde o vermelho pertence.
 //
-// # Ela deixou de ser um `form` na ALE-344, e o preço está escrito
-//
-// Era um `form method="post"` com `http.Redirect`, e a razão era boa: o destino
-// é outra página, e formulário navega sozinho. Com o recurso em `DELETE` isso
-// não cabe mais — o elemento `form` do HTML só faz `GET` e `POST` —, então quem
-// navega é o `sse.Redirect` do Datastar.
-//
-// **O que se perdeu é real**: o formulário funcionava com o JavaScript
-// desligado, e este botão não funciona.
+// Ela é `DELETE` com `sse.Redirect`, e não um `form`: o elemento `form` do HTML
+// só faz `GET` e `POST` (ALE-344). O preço é que o botão não funciona com o
+// JavaScript desligado.
 templ confirmDeleteSession(v View) {
-	<dialog
-		id="delete-session"
-		data-preserve-attr="open"
-		aria-labelledby="delete-session-title"
-		class="scene-grimorio m-auto w-[min(26rem,calc(100vw-2rem))] rounded-sm border border-destructive bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
-	>
-		<h2 id="delete-session-title" class="font-heading text-lg tracking-wide text-destructive-ink">Excluir a sessão { fmt.Sprint(v.SessionNum) }?</h2>
-		<p class="mt-2 text-sm text-muted-foreground">
-			A fila, o tabuleiro e o histórico desta noite vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.
-		</p>
-		<div class="mt-4 flex justify-end gap-2">
-			<button
-				type="button"
-				data-on:click="document.getElementById('delete-session').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-			>Cancelar</button>
-			<button
-				type="button"
-				data-on:click={ "document.getElementById('delete-session').close(); " + deleteSessionCommand(v) }
-				class="inline-flex min-h-11 items-center rounded-sm bg-destructive px-3 text-sm font-semibold text-destructive-foreground outline-none transition-opacity hover:opacity-90"
-			>Excluir a sessão</button>
-		</div>
-	</dialog>
+	@ds.Dialog("delete-session", fmt.Sprintf("Excluir a sessão %d?", v.SessionNum), deleteSessionFoot(v)) {
+		<p class="ds-help">A fila, o tabuleiro e o histórico desta noite vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.</p>
+	}
+}
+
+templ deleteSessionFoot(v View) {
+	<form method="dialog">
+		@ds.Button(ds.ButtonSecondary, nil) {
+			Cancelar
+		}
+	</form>
+	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('delete-session').close(); " + deleteSessionCommand(v)}) {
+		Excluir a sessão
+	}
 }
 
 // adjustRow: uma decisão por linha — o nome, o que ela faz numa frase, e o
 // botão à direita. A frase não é enfeite: é ela que deixa o botão ser curto.
 templ adjustRow(name, sentence string) {
-	<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
-		<div class="min-w-0 flex-1">
-			<p class="text-sm text-foreground">{ name }</p>
-			<p class="text-xs text-muted-foreground">{ sentence }</p>
-		</div>
+	<div class="ds-session-config-row">
+		<span class="ds-gm-member-body">
+			<span class="ds-row-title">{ name }</span>
+			<span class="ds-row-meta">{ sentence }</span>
+		</span>
 		{ children... }
 	</div>
 }

@@ -35,68 +35,6 @@ import (
 // E as notas NÃO entram no `TableRegions`: elas são de um leitor só — o mestre —
 // e nada fora desta aba as muda.
 
-// A DIVISA entre o mapa e as notas.
-//
-// Ela existe porque largura fixa é a resposta certa para uma pergunta que muda:
-// escrever uma cena longa quer mais coluna, e conduzir um combate quer mais mapa.
-//
-// `role="separator"` com `tabindex` e `aria-valuenow` é o padrão de divisa
-// redimensionável, e o teclado NÃO É ENFEITE aqui: gesto nunca é o único
-// caminho, e uma divisa que só responde a arrasto é uma preferência que quem não
-// usa ponteiro não tem. As setas andam 32px e o `Home` devolve ao padrão.
-//
-// Só a partir de `lg`: abaixo disso a coluna é uma gaveta que cobre a tela
-// inteira, e não há divisa entre duas coisas que não convivem.
-templ notesSplitter() {
-	<div
-		role="separator"
-		aria-orientation="vertical"
-		aria-label="Largura das notas"
-		tabindex="0"
-		data-show="$notes_open"
-		style="display:none"
-		data-attr:aria-valuenow={ "Math.round(" + widthRightNow() + ")" }
-		aria-valuemin="352"
-		data-attr:aria-valuemax={ "Math.round(" + widthCeiling() + ")" }
-		data-on:pointerdown={ widthDragStarts() }
-		data-on:pointermove__window={ widthFollowsPointer() }
-		data-on:pointerup__window={ widthDragDrops() }
-		data-on:keydown={ widthKeyStep() }
-		class="notes-divider hidden shrink-0 cursor-col-resize rounded-full bg-grimorio-iron outline-none transition-colors hover:bg-grimorio-gold focus-visible:bg-grimorio-gold lg:block"
-	></div>
-}
-
-templ tableNotes(v View) {
-	<section
-		id="table-notes"
-		aria-label="Notas da sessão"
-		data-init={ seedNotes(v) }
-		data-on:storage__window={ watchesTheNotesWindow(v) }
-		data-show="$notes_open"
-		style="display:none"
-		class="notes-column fixed inset-0 z-40 flex flex-col gap-2 border border-grimorio-iron bg-grimorio-panel p-2 lg:static lg:z-auto lg:shrink-0"
-	>
-		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2">
-			<h2 class={ ui.SectionLabelClasses("muted", "") }>Notas</h2>
-			<div class="flex items-center gap-2">
-				@modesRange()
-				@floatToggle()
-				@detachButton(v)
-				@autosaveState()
-				<button
-					type="button"
-					aria-label="Fechar as notas"
-					data-on:click="$notes_open = false"
-					class="flex size-8 items-center justify-center rounded-sm border border-grimorio-iron text-sm outline-none transition-colors hover:bg-accent"
-				>
-			@ui.Icon("X", "size-4")
-		</button>
-			</div>
-		</div>
-		@notesBody(v)
-	</section>
-}
-
 // O CORPO: a caixa e a prévia, lado a lado quando há largura.
 //
 // O "lado a lado" EMPILHA numa coluna estreita em vez de virar "Escrever": quem
@@ -290,37 +228,11 @@ templ modesRange() {
 	</fieldset>
 }
 
-// O DESTAQUE sai do `aria-pressed` e não de um `data-class` paralelo: eram duas
-// fontes para o mesmo estado, e `hover:bg-accent` ganha de um `bg-primary` posto
-// por classe — o modo escolhido PERDIA o dourado enquanto o ponteiro estivesse
-// em cima dele, ou seja, a tela dizia "nenhum escolhido" no instante exato em
-// que a pessoa vai escolher. Com o estilo pendurado na variante `aria-pressed:`,
-// o estado acessível é a ÚNICA fonte.
-//
-// O SEGUNDO EIXO: encostada ou flutuando. Ele é um alternador e não um par de
-// botões porque são dois estados, e porque vale para os QUATRO modos — o que se
-// mostra e onde o painel vive são perguntas independentes.
-//
-// O `title` diz o que o clique FAZ e não o que o estado é: o ícone sozinho não
-// conta a diferença entre "empurra o mapa" e "flutua sobre ele".
-templ floatToggle() {
-	<button
-		type="button"
-		data-attr:aria-pressed="$notes_floating ? 'true' : 'false'"
-		data-attr:title="$notes_floating ? 'Encostar as notas ao lado do mapa' : 'Flutuar as notas sobre o mapa'"
-		aria-label="Flutuar as notas sobre o mapa"
-		data-on:click={ toggleFloating() }
-		class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
-	>
-		@ui.Icon("PictureInPicture2", "size-3.5")
-	</button>
-}
-
 templ notesMode(value, label string) {
 	<button
 		type="button"
 		data-attr:aria-pressed={ fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", value) }
-		data-on:click={ escolheOModo(value) }
+		data-on:click={ pickNotesMode(value) }
 		class="inline-flex h-7 items-center rounded-sm border border-grimorio-iron px-2 text-2xs outline-none transition-colors hover:bg-accent aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary"
 	>{ label }</button>
 }
@@ -346,38 +258,3 @@ templ autosaveState() {
 	></span>
 }
 
-// O botão que chama as notas, no trilho das consultas.
-//
-// Ele ALTERNA em vez de só abrir, porque a coluna empurra o mapa: quem a abriu
-// precisa do mesmo gesto para devolver a largura ao tabuleiro.
-templ notesButton(v View) {
-	<button
-		type="button"
-		aria-label="Notas da sessão"
-		data-attr:title="$notes_window ? 'Notas — trazer de volta a janela delas' : 'Notas — o que aconteceu nesta sessão, ao lado do mapa'"
-		data-attr:aria-pressed="$notes_open || $notes_window ? 'true' : 'false'"
-		data-on:click={ notesButtonGesture(v) }
-		class="flex size-11 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-lg outline-none transition-colors hover:bg-accent lg:size-12"
-	>
-			@ui.Icon("NotebookPen", "size-5")
-		</button>
-}
-
-// O BOTÃO QUE DESTACA as notas numa janela.
-//
-// Ele fica ao lado do alternador de flutuar porque responde à mesma pergunta —
-// ONDE o painel vive —, e é uma AÇÃO e não um estado: depois do clique quem
-// descreve o lugar das notas é a janela, avisando pelo `storage`. Por isso não
-// há `aria-pressed` aqui; o estado "as notas estão numa janela" aparece no
-// botão do trilho, que é quem continua na tela.
-templ detachButton(v View) {
-	<button
-		type="button"
-		aria-label="Abrir as notas numa janela"
-		title="Abrir as notas numa janela — para o segundo monitor"
-		data-on:click={ opensTheNotesWindow(v) }
-		class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron outline-none transition-colors hover:bg-accent"
-	>
-		@ui.Icon("ExternalLink", "size-3.5")
-	</button>
-}

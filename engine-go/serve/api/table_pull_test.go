@@ -82,7 +82,7 @@ func TestThePlayerShowsNothingToTheTable(t *testing.T) {
 	}
 	// E a mesa não se moveu: o 403 não pode ter deixado rastro.
 	forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(forGM, "Taverna do Javali</h2>") {
+	if !strings.Contains(gmBoardPlace(t, forGM), "Taverna do Javali") {
 		t.Error("a tela do mestre saiu do lugar apesar do 403")
 	}
 	// O gesto nem aparece para ele: cortesia, não a trava.

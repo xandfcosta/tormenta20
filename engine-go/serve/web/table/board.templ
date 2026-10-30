@@ -1066,95 +1066,6 @@ func collectionLabel(v BoardView) string {
 	return fmt.Sprintf("Lugares da campanha · %d", len(v.Collection))
 }
 
-// O ACERVO de cenas guardadas.
-//
-// LISTA e não grade: o que decide entre a taverna e a cripta é o NOME, e nome é
-// texto que se lê em coluna. Uma grade de miniaturas exigiria miniatura, que o
-// servidor não tem — a cena guardada é estado, não imagem.
-//
-// A CONTAGEM de peças vai junto porque é o que separa a cena montada da cena
-// aberta e abandonada: "Cripta · 9 peças" é uma noite de trabalho e "Cena · 0
-// peças" é lixo que o mestre quer apagar.
-templ placesCollection(v BoardView) {
-	<dialog
-		id="place-archive"
-		data-preserve-attr="open"
-		aria-labelledby="archive-title"
-		class="scene-grimorio m-auto w-[min(30rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-4 text-foreground backdrop:bg-black/60"
-	>
-		<h2 id="archive-title" class="font-heading text-lg tracking-wide text-grimorio-gold">Lugares da campanha</h2>
-		<p class="mt-1 text-sm text-muted-foreground">
-			As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova, sem fechar as que já estão abertas.
-		</p>
-		<ul class="mt-3 max-h-[50vh] space-y-1 overflow-y-auto">
-			for _, l := range v.Collection {
-				<li class="flex flex-wrap items-center gap-2 border border-grimorio-iron px-2 py-1.5">
-					<span class="min-w-0 flex-1">
-						<span class="block truncate text-sm text-foreground">{ l.Name }</span>
-						<span class="block text-xs text-muted-foreground">
-							if l.OpenedAt != "" {
-								// A LINHA DIZ O ESTADO, e não só a data: numa lista
-								// longa, o que está na mesa agora se perde no meio
-								// dos outros sem nada que o distinga.
-								@ui.Icon("LayoutGrid", "mr-1 inline size-3")
-								{ "nesta mesa agora · " + ui.TokenCount(l.Tokens) }
-							} else {
-								{ fmt.Sprintf("%s · %s", ui.TokenCount(l.Tokens), l.When) }
-							}
-						</span>
-					</span>
-					if l.OpenedAt != "" {
-						// O QUE JÁ ESTÁ ABERTO NÃO SE REABRE: uma segunda aba da
-						// mesma cena seriam duas verdades sobre onde as peças
-						// estão, e a que fechasse por último apagaria a outra no
-						// acervo. O gesto que sobra é ir até ela.
-						<button
-							type="button"
-							data-on:click={ "document.getElementById('place-archive').close(); " + tabCommand(v, l.OpenedAt) }
-							class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-gold px-3 text-sm font-semibold text-grimorio-gold outline-none transition-colors hover:bg-accent"
-						>Ver</button>
-					} else {
-						<button
-							type="button"
-							data-on:click={ "document.getElementById('place-archive').close(); " + placeCommand(v, l.ID, "reabrir") }
-							class="inline-flex min-h-11 items-center rounded-sm bg-primary px-3 text-sm font-semibold text-primary-foreground outline-none transition-opacity hover:opacity-90"
-						>Reabrir</button>
-					}
-					// APAGAR não fecha o diálogo, ao contrário do reabrir: quem está
-					// limpando o acervo geralmente apaga mais de um, e reabrir o menu a
-					// cada lixeira seria cobrar um clique por item. O reabrir fecha porque
-					// ele leva para a aba nova — ficar com o menu por cima dela esconderia
-					// o que ele fez.
-					//
-					// E ele NÃO aparece para o que está aberto: apagar do acervo uma cena
-					// que está na mesa não apaga nada, porque encerrar a aba a grava de
-					// volta com o mesmo nome. A trava de verdade é do servidor
-					// (`removeOLugar`); isto é a cortesia de não oferecer o gesto que ele
-					// vai recusar.
-					if l.OpenedAt == "" {
-						<button
-							type="button"
-							aria-label={ "Apagar " + l.Name }
-							title={ "Apagar " + l.Name + " do acervo" }
-							data-on:click={ placeCommand(v, l.ID, "remover") }
-							class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:border-destructive hover:text-destructive-ink"
-						>
-							@ui.Icon("Trash2", "size-4")
-						</button>
-					}
-				</li>
-			}
-		</ul>
-		<div class="mt-4 flex justify-end">
-			<button
-				type="button"
-				data-on:click="document.getElementById('place-archive').close()"
-				class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-3 text-sm outline-none transition-colors hover:bg-accent"
-			>Fechar</button>
-		</div>
-	</dialog>
-}
-
 // O MENU DE CONTEXTO DA PEÇA.
 //
 // Clique direito na peça acende os verbos dela, ancorados na casa — o MESMO
@@ -1919,28 +1830,6 @@ templ clickLayers(v BoardView) {
 			class="board-squares"
 		></button>
 	}
-}
-
-// tableCollectionPlaces é a REGIÃO do acervo, e ela fica FORA da região do
-// tabuleiro.
-//
-// O critério é o RITMO, o mesmo que o `TableRegions` já usa: o acervo muda
-// quando uma cena é ARQUIVADA ou removida — duas vezes por sessão —, e o
-// tabuleiro muda a cada peça que anda. Pendurar um no outro faz o mais lento ser
-// remendado de graça a cada mudança do mais rápido, e numa campanha com uma
-// centena e meia de lugares guardados a lista pesa várias vezes o que pesa a
-// cena. É a mesma razão que criou a região `mesa-por-no-mapa`.
-//
-// O `<div>` existe SEMPRE: região que some do HTML é região que o remendo não
-// acha. O que a porta do mestre esconde é o CONTEÚDO — e o `<dialog>` continua
-// nascendo e morrendo com o gatilho, porque um diálogo sem botão que o abra é
-// peso morto que a busca da página ainda encontra.
-templ tableCollectionPlaces(v View) {
-	<div id="table-archive">
-		if v.Board.GM && len(v.Board.Collection) > 0 {
-			@placesCollection(v.Board)
-		}
-	</div>
 }
 
 // partyBar é o que o laço de peças deixa na tela.

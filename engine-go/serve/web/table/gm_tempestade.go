@@ -145,5 +145,5 @@ func terrainPressed() string {
 // boardWindowOpens abre o tabuleiro numa janela à parte, com o nome fixo:
 // clicar de novo traz a mesma janela em vez de abrir outra.
 func boardWindowOpens(v View) string {
-	return fmt.Sprintf("const w = window.open('%s?tempestade=1&janela=tabuleiro', 't20-tabuleiro', 'popup,width=1280,height=800'); if (w) { w.focus() }", v.SessionBase())
+	return fmt.Sprintf("const w = window.open('%s?janela=tabuleiro', 't20-tabuleiro', 'popup,width=1280,height=800'); if (w) { w.focus() }", v.SessionBase())
 }

@@ -51,7 +51,7 @@ func TestTheEndlessStripStartsNowAndMarksEveryNewRound(t *testing.T) {
 // discordar sobre quais regiões existem — um remendo para um id que não está
 // na página é escrever no vazio.
 func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
-	regions := TableRegions(View{Tempestade: true, Eu: &tableMe{}})
+	regions := TableRegions(View{Eu: &tableMe{}})
 	ids := []string{}
 	for _, r := range regions {
 		ids = append(ids, r.ID)

@@ -119,21 +119,6 @@ func combatantFor(combatants []initiative.Combatant, characterID int64) *initiat
 
 // ── as expressões que o Datastar executa ────────────────────────────────────
 
-func openSheetCast(m Member) string {
-	return fmt.Sprintf("document.getElementById('elenco-%d').showModal()", m.CharacterID)
-}
-
-func closeSheetCast(m Member) string {
-	return fmt.Sprintf("document.getElementById('elenco-%d').close();", m.CharacterID)
-}
-
-// poeNaFila fecha ANTES de postar, e isso não é arrumação: a recusa do servidor
-// acende no `$command_error`, que é do RODAPÉ — um diálogo aberto por cima dela
-// esconderia a única frase que explica o que houve.
-func poeNaFila(v View, m Member) string {
-	return fmt.Sprintf("@post('%s/elenco/%d/na-fila')", v.SessionBase(), m.CharacterID)
-}
-
 // castVital escreve o gesto com os DOIS passos já resolvidos em duas URLs, e o
 // `evt.shiftKey` escolhendo entre elas — a mesma forma do `rowVital` da fila, e
 // pela mesma razão: o número nunca viaja como dado.

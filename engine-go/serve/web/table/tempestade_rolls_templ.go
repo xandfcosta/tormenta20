@@ -15,8 +15,8 @@ import (
 )
 
 // O TESTE ROLADO DA SESSÃO DO JOGADOR (ALE-473), pelo mockup `paridade.html`:
-// o cartão do ataque SEM os verbos, pela razão do `skillTestRolled` — um teste
-// informa e não muda nada, e a CD é do mestre, em voz. O selo diz só os
+// o cartão do ataque SEM os verbos: um teste informa e não muda nada, e a CD
+// é do mestre, em voz. O selo diz só os
 // naturais (p221), e o "Rolar de novo" é de quem rolou (p226).
 func tempestadeSkillTest(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {

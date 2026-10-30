@@ -47,78 +47,30 @@ export async function disposableTable(page: Page): Promise<{ mesa: string; apaga
 }
 
 /**
- * Abre a GAVETA da fila, que é onde a lista inteira mora.
- *
- * A forma do mestre é uma SHELL: o trilho de 80px responde "de quem é a vez", e
- * dano, ordem, condição, "+ Combatente" e "Adicionar grupo" ficam numa gaveta
- * pela esquerda.
- *
- * Sem este passo os botões existem no HTML dentro de um `<dialog>` FECHADO, que
- * o navegador esconde com `display:none`. O sintoma não é "não achei o botão":
- * é um TIMEOUT de clique em cima de um seletor que casou — que foi exatamente
- * como estes três casos apareceram no CI.
- *
- * UM seletor nas duas larguras: acima de 1024 quem abre é o ⤢ do trilho, abaixo
- * é o botão da fileira de consultas, e os dois têm o mesmo prefixo de nome
- * acessível de propósito. O `visible` é o que escolhe entre eles — o outro está
- * no DOM com `display:none`, e sem o filtro o `.first()` acertaria o escondido.
- */
-export async function closeTheTracker(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
-  await expect(page.locator('#tracker-drawer'), 'a gaveta da fila não fechou').not.toHaveAttribute(
-    'open',
-    '',
-  )
-}
-
-export async function openTheTracker(page: Page): Promise<void> {
-  // IDEMPOTENTE, porque acrescentar dois combatentes é abrir a gaveta duas
-  // vezes: com ela já aberta o botão de abrir está coberto pelo próprio modal,
-  // e o sintoma é um timeout de clique num seletor que casou — o mesmo que o
-  // comentário de baixo descreve, chegando por outro caminho.
-  if (await page.locator('#tracker-drawer[open]').count()) return
-  await page
-    .getByRole('button', { name: /^Abrir a iniciativa/ })
-    .filter({ visible: true })
-    .click()
-  await expect(page.locator('#tracker-drawer'), 'a gaveta da fila não abriu').toHaveAttribute(
-    'open',
-    '',
-  )
-}
-
-/**
- * Acrescenta UM combatente à fila, com a gaveta ABERTA no fim.
+ * Acrescenta UM combatente à fila pelo Adicionar do mestre (ALE-522).
  *
  * O `pv` é opcional porque o formulário o trata assim, e a diferença importa:
- * sem ele a linha não desenha barra de vital nenhuma (`trackerBar` só desenha
- * `if b != nil`), e um guarda que precise ver o número mudar mediria uma linha
- * que não tem número.
+ * sem ele a linha não desenha barra de vital nenhuma, e um guarda que precise
+ * ver o número mudar mediria uma linha que não tem número.
+ *
+ * Os campos vão pelo ID e não pelo rótulo: "Nome" e "PV" existem em mais de um
+ * diálogo da mesa, e o `getByLabel` casaria todos.
  */
 export async function putACombatantInTheTracker(
   page: Page,
   displayName: string,
   pv?: number,
 ): Promise<void> {
-  await openTheTracker(page)
-  // O "+ Combatente" é um ALTERNADOR (`$combatant_form = !$combatant_form`),
-  // e o formulário fica aberto depois de acrescentar. Clicar sem olhar o estado
-  // FECHA o formulário no segundo combatente, e o sintoma é um timeout no campo
-  // Nome — que existe, e está escondido.
-  const openIt = page.getByRole('button', { name: '+ Combatente' })
-  if ((await openIt.getAttribute('aria-expanded')) !== 'true') {
-    await openIt.click()
-  }
-  // `exact` porque `getByLabel` casa por SUBSTRING, e a mesma cena tem "Nome do
-  // NPC": sem ele, `'Nome'` resolve para dois campos.
-  await page.getByLabel('Nome', { exact: true }).fill(displayName)
+  await page.getByRole('button', { name: 'Adicionar à fila' }).first().click()
+  const dialog = page.locator('#gm-add')
+  await expect(dialog, 'o Adicionar não abriu').toHaveAttribute('open', '')
+  await dialog.getByRole('button', { name: 'Combatente' }).click()
+  await page.locator('#gm-new-name').fill(displayName)
   if (pv !== undefined) {
-    // Pelo ID e não pelo rótulo: `PV` resolve para DOIS campos nesta cena — este
-    // e o ajuste do bestiário —, e o `exact` não desempata porque os dois se
-    // chamam exatamente "PV".
-    await page.locator('#novo-pv').fill(String(pv))
+    await page.locator('#gm-new-hp').fill(String(pv))
   }
-  await page.getByRole('button', { name: 'Acrescentar' }).click()
+  await dialog.getByRole('button', { name: 'Adicionar à fila' }).click()
+  await expect(dialog, 'o Adicionar não fechou').not.toHaveAttribute('open', '')
 }
 
 /**
@@ -130,13 +82,6 @@ export async function putACombatantInTheTracker(
  */
 export async function putATokenOnTheMap(page: Page): Promise<void> {
   await putACombatantInTheTracker(page, 'Ogro do E2E')
-  // A GAVETA FECHA ANTES de o teste voltar ao mapa, e esta ordem é a jornada de
-  // verdade: monta-se a fila na gaveta, fecha-se, e põe-se no mapa pela faixa do
-  // tabuleiro. Ela é MODAL — deixá-la aberta torna inerte tudo o que está atrás,
-  // e o `Pôr no mapa` da faixa (que vem antes no DOM, então é o que o `.first()`
-  // acha) ficaria coberto por ela. O sintoma é "dialog intercepts pointer
-  // events" num seletor que casou, e não um "não achei".
-  await closeTheTracker(page)
   await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
   // Escopado ao DIÁLOGO: o nome do combatente aparece também na fila atrás dele,
   // e um seletor de página inteira acha os dois.
@@ -162,3 +107,23 @@ export async function openTheBoard(page: Page, table: string): Promise<void> {
   await page.locator('.board-scene').waitFor({ timeout: 10_000 })
 }
 
+/**
+ * Mostra o TABULEIRO do mestre nas larguras em que as superfícies se revezam
+ * (abaixo de 1024 a mesa abre na Fila, ALE-522). No desktop as três estão à
+ * vista, e a barra das superfícies nem aparece.
+ */
+export async function showTheBoard(page: Page): Promise<void> {
+  const surface = page
+    .getByRole('navigation', { name: 'Superfícies do mestre' })
+    .getByRole('button', { name: 'Tabuleiro' })
+  if (await surface.isVisible()) await surface.click()
+}
+
+/**
+ * Escolhe um PINCEL de terreno: na mesa do mestre eles moram atrás do Terreno,
+ * numa fileira que abre e fecha (ALE-522).
+ */
+export async function pickBrush(page: Page, label: string): Promise<void> {
+  await page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: /^Terreno/ }).click()
+  await page.getByRole('group', { name: 'Espécies de terreno' }).getByRole('button', { name: label }).click()
+}
