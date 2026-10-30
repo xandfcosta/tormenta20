@@ -212,4 +212,22 @@ test.describe('A mesa do mestre', () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await expect(page.getByRole('button', { name: 'Abrir o tabuleiro numa janela' })).toBeHidden()
   })
+
+  /**
+   * A BUSCA DO GRUPO filtra no navegador, pelo sinal, sem ida ao servidor: só
+   * um navegador com o Datastar avalia o `data-show` de cada linha.
+   */
+  test('a busca do Grupo esconde quem não casa e devolve ao apagar', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(MESA)
+    await page.getByRole('navigation', { name: 'Consultas do mestre' }).getByRole('button', { name: 'Grupo' }).click()
+    const rows = page.locator('.ds-gm-member')
+    // O CONTROLE: o Grupo tem gente, senão "ninguém visível" não prova nada.
+    await expect(rows.first()).toBeVisible()
+    const search = page.getByRole('searchbox', { name: 'Buscar no grupo' })
+    await search.fill('zzz-ninguém')
+    await expect(rows.filter({ visible: true })).toHaveCount(0)
+    await search.fill('')
+    await expect(rows.first()).toBeVisible()
+  })
 })

@@ -1,6 +1,7 @@
 package table
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -77,4 +78,19 @@ func npcMeta(npc castNpc) string {
 		return npc.Summary + " · cópia de " + npc.FromBook
 	}
 	return npc.Summary
+}
+
+// storesNotesMode guarda o modo escolhido, que é preferência de trabalho e não
+// estado da sessão (`notesModeKey`).
+var storesNotesMode = fmt.Sprintf("localStorage.setItem('%s', $notes_mode)", notesModeKey)
+
+// nameMatches é o filtro de uma linha pela busca da aba: vazio mostra todos, e
+// o nome casa por pedaço, sem caixa. O nome vai como literal JSON, que é texto
+// JavaScript válido com aspas e acentos escapados.
+func nameMatches(signal, name string) string {
+	literal, err := json.Marshal(name)
+	if err != nil {
+		literal = []byte(`""`)
+	}
+	return fmt.Sprintf("$%s === '' || %s.toLowerCase().includes($%s.toLowerCase())", signal, literal, signal)
 }

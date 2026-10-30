@@ -21,17 +21,23 @@ templ gmBestiaryFilters(b master.BestiaryView) {
 			"name": "busca", "value": b.Term, "data-bind:search": true,
 			"data-on:input__debounce.250ms": fmt.Sprintf("@get('%s')", b.BestiaryBase()),
 		})
-		<div class="ds-gm-cr">
-			@gmCRField(b, "gm-cr-min", "ND mínimo", "ndMin", master.CRInBox(b.CRMin))
-			@gmCRField(b, "gm-cr-max", "ND máximo", "ndMax", master.CRInBox(b.CRMax))
-		</div>
-		<div class="ds-options" role="group" aria-label="Filtrar por tipo">
-			for _, t := range book.CreatureTypes {
-				@ds.Option(b.TypeOn(t), templ.Attributes{"data-on:click": fmt.Sprintf("@post('%s/tipo/%s')", b.BestiaryBase(), t)}) {
-					{ book.TypeName(t) }
+		// O ND e os tipos recolhem: a barra fica presa no topo de quem rola, e
+		// aberta inteira ela comia um terço da coluna. `data-preserve-attr`
+		// porque a aba é remendada a cada tecla da busca.
+		<details class="ds-gm-filters-more" data-preserve-attr="open">
+			<summary class="ds-button" data-variant="ghost">Filtros</summary>
+			<div class="ds-gm-cr">
+				@gmCRField(b, "gm-cr-min", "ND mínimo", "ndMin", master.CRInBox(b.CRMin))
+				@gmCRField(b, "gm-cr-max", "ND máximo", "ndMax", master.CRInBox(b.CRMax))
+			</div>
+			<div class="ds-options" role="group" aria-label="Filtrar por tipo">
+				for _, t := range book.CreatureTypes {
+					@ds.Option(b.TypeOn(t), templ.Attributes{"data-on:click": fmt.Sprintf("@post('%s/tipo/%s')", b.BestiaryBase(), t)}) {
+						{ book.TypeName(t) }
+					}
 				}
-			}
-		</div>
+			</div>
+		</details>
 	</div>
 }
 
@@ -76,10 +82,6 @@ templ gmEntryList(b master.BestiaryView) {
 // bestiário no meio do combate para saber o que a criatura rola AGORA.
 templ gmCreatureBlock(m book.Entry, bookRef bookui.BookAddress) {
 	<div class="ds-gm-creature">
-		<p class="ds-row-meta">
-			{ fmt.Sprintf("%s · %s · ND %s · XP %d · ", book.TypeName(m.Kind), book.SizeName(m.Size), book.CRWritten(m.ND), book.XPForCR(m.ND)) }
-			@bookui.PageSeal(bookRef, m.BookPage, m.Name)
-		</p>
 		@ds.Stats() {
 			@ds.Stat("PV", strconv.Itoa(m.HP))
 			@ds.Stat("Defesa", strconv.Itoa(m.Defense))

@@ -2158,7 +2158,11 @@
     font-weight: 600;
     border-color: var(--ds-action);
   }
+  /* A busca e os filtros de cada aba ficam presos no topo de quem rola. */
   .ds-gm-consult {
+    --ds-filter-stick: -0.75rem;
+    --ds-filter-above: 0.75rem;
+    --ds-filter-bg: var(--ds-surface);
     display: flex;
     flex: 1;
     min-height: 0;
@@ -2179,8 +2183,15 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .ds-gm-notes-head > .ds-segmented > button {
-    white-space: nowrap;
+  .ds-gm-notes-mode {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+  .ds-gm-creature-name {
+    display: grid;
+    gap: 0.125rem;
+    min-width: 0;
   }
   .ds-gm-notes-head > [aria-live] {
     margin-left: auto;
@@ -2246,7 +2257,7 @@
   }
   .ds-gm-member-vitals {
     display: grid;
-    grid-column: 2 / -1;
+    grid-column: 1 / -1;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.5rem;
@@ -2258,6 +2269,17 @@
   .ds-gm-bestiary-filters {
     display: grid;
     gap: 0.5rem;
+  }
+  .ds-gm-filters-more {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .ds-gm-filters-more[open] > summary {
+    margin-bottom: 0.5rem;
+  }
+  .ds-gm-filters-more > summary {
+    justify-self: start;
+    list-style: none;
   }
   .ds-gm-cr {
     display: grid;
@@ -2740,6 +2762,21 @@
     border-radius: var(--ds-r-control);
     background: none;
     color: var(--ds-ink-2);
+  }
+  /* O RETORNO do toque: o fundo no ponteiro em cima, o aperto no clique, e o
+   * aceso quando o verbo está ligado (a cortina fechada, a lente). */
+  .ds-board-fbtn:not(:disabled):hover,
+  .ds-board-tool:hover {
+    background: var(--ds-sunk);
+    color: var(--ds-ink);
+  }
+  .ds-board-fbtn:not(:disabled):active,
+  .ds-board-tool:active {
+    transform: scale(0.94);
+  }
+  .ds-board-fbtn[aria-pressed='true'] {
+    background: color-mix(in oklab, var(--ds-action) 14%, var(--ds-surface));
+    color: var(--ds-action);
   }
   .ds-board-fbtn:disabled {
     opacity: 0.45;

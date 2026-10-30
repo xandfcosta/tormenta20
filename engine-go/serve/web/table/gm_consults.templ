@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"t20engine/domain/book"
+	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/master"
 	"t20engine/serve/web/ui"
@@ -55,13 +56,13 @@ templ gmConsults(v View, b master.BestiaryView) {
 templ gmNotes(v View) {
 	<section class="ds-gm-notes" data-init={ seedNotes(v) } data-on:storage__window={ watchesTheNotesWindow(v) }>
 		<div class="ds-gm-notes-head">
-			@ds.Segmented("Modo de visualização das notas") {
+			// UM SELETOR e não quatro botões: na coluna de 19rem os quatro
+			// modos não cabem lado a lado, e a aba rolava de lado por causa deles.
+			<select class="ds-input ds-gm-notes-mode" aria-label="Modo de visualização das notas" data-bind:notes_mode data-on:change={ storesNotesMode }>
 				for _, mode := range gmNoteModes {
-					@ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": pickNotesMode(mode.ID)}) {
-						{ mode.Label }
-					}
+					<option value={ mode.ID }>{ mode.Label }</option>
 				}
-			}
+			</select>
 			@autosaveState()
 			@ds.IconButton(ds.ButtonGhost, "ExternalLink", "Abrir as notas numa janela", templ.Attributes{"type": "button", "title": "Abrir as notas numa janela — para o segundo monitor", "data-on:click": opensTheNotesWindow(v)})
 		</div>
@@ -79,9 +80,12 @@ templ gmGroup(v View) {
 	if len(v.Group) == 0 {
 		@ds.Empty("Nenhum personagem na campanha", "Os personagens aparecem aqui quando entram na campanha.")
 	} else {
+		@ds.FilterBar() {
+			@ds.SearchField("gm-group-search", "Buscar no grupo", templ.Attributes{"data-bind:gm_group_search": true})
+		}
 		@ds.List("Grupo", groupAtTable(v.Group)) {
 			for _, m := range v.Group {
-				<div class="ds-row ds-gm-member">
+				<div class="ds-row ds-gm-member" data-show={ nameMatches("gm_group_search", m.Name) }>
 					<span class="ds-gm-monogram" aria-hidden="true">{ m.Initials }</span>
 					<span class="ds-gm-member-body">
 						<span class="ds-row-title">
@@ -138,9 +142,12 @@ templ gmCastList(v View) {
 		if len(v.NPCs) == 0 {
 			@ds.Empty("Nenhum NPC guardado ainda", "Crie um com o Novo, ou abra uma criatura no Bestiário e guarde no elenco.")
 		} else {
+			@ds.FilterBar() {
+				@ds.SearchField("gm-cast-search", "Buscar no elenco", templ.Attributes{"data-bind:gm_cast_search": true})
+			}
 			@ds.List("Elenco da campanha", strconv.Itoa(len(v.NPCs))) {
 				for _, npc := range v.NPCs {
-					<div class="ds-row ds-gm-npc">
+					<div class="ds-row ds-gm-npc" data-show={ nameMatches("gm_cast_search", npc.Name) }>
 						<span class="ds-gm-member-body">
 							<span class="ds-row-title">{ npc.Name }</span>
 							if npc.Summary != "" {
@@ -187,7 +194,9 @@ templ gmNpcEditor(v View) {
 // OUTRA criatura (`entryDraft`).
 templ gmBestiary(b master.BestiaryView) {
 	<div id="table-bestiary" class="ds-gm-bestiary" data-signals={ master.BestiarySignals(b) }>
-		@gmBestiaryFilters(b)
+		@ds.FilterBar() {
+			@gmBestiaryFilters(b)
+		}
 		@gmEntryList(b)
 		if b.Chosen != nil {
 			@gmCreature(b, *b.Chosen)
@@ -208,8 +217,16 @@ templ gmCreature(b master.BestiaryView, m book.Entry) {
 		data-on:keydown__window="evt.key === 'Escape' && ($sheet_open = false)"
 	>
 		<div class="ds-gm-float" role="dialog" aria-modal="true" data-attr:data-expanded="$sheet_open" aria-label={ m.Name }>
+			// O TIPO, O PORTE E O ND ficam no cabeçalho, junto do nome: são
+			// curtos, e no corpo eles sumiam na primeira rolagem.
 			<div class="ds-dialog-head">
-				<span class="ds-dialog-title">{ m.Name }</span>
+				<span class="ds-gm-creature-name">
+					<span class="ds-dialog-title">{ m.Name }</span>
+					<span class="ds-row-meta">
+						{ fmt.Sprintf("%s · %s · ND %s · XP %d · ", book.TypeName(m.Kind), book.SizeName(m.Size), book.CRWritten(m.ND), book.XPForCR(m.ND)) }
+						@bookui.PageSeal(b.Book, m.BookPage, m.Name)
+					</span>
+				</span>
 				@ds.IconButton(ds.ButtonGhost, "X", "Fechar a ficha de "+m.Name, templ.Attributes{"type": "button", "data-on:click": "$sheet_open = false"})
 			</div>
 			<div class="ds-gm-creature-body">

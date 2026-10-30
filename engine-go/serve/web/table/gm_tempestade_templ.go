@@ -56,7 +56,7 @@ func gmTempestadeScene(v View, b master.BestiaryView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" data-signals=\"{gm_queue_open: true, gm_consults_open: true, gm_board_away: false, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes'}\" data-init=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" data-signals=\"{gm_queue_open: true, gm_consults_open: true, gm_board_away: false, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes', gm_group_search: '', gm_cast_search: ''}\" data-init=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
