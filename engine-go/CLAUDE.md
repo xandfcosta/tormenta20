@@ -6,7 +6,7 @@ valem; o que está aqui estende ou sobrepõe.
 `engine-go` é o app inteiro: a API HTTP na :3001, o motor de regras, e as CENAS
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
 `serve/web/assets/src`, e o kit de apresentação em `serve/web/ui`. Um processo serve tudo,
-direto na máquina, em HTTP e sem nada na frente (ALE-531) — ver "O app fala HTTP",
+direto na máquina, em HTTP e sem nada na frente — ver "O app fala HTTP",
 abaixo.
 
 ## O mapa das pastas
@@ -15,24 +15,30 @@ Cinco grupos, e a pergunta que cada um responde:
 
 ```
 engine-go/
-├── cmd/          os binários: o servidor, a seed, o gerador do oráculo, os
-│                 auditores do catálogo (`audit/`) e quem grava nele
+├── cmd/          os binários: o servidor (`api`), a seed, o gerador do oráculo,
+│                 os auditores do catálogo (`audit/`) e as ferramentas que
+│                 gravam nele — `internal/` é o que elas dividem
 ├── domain/       O QUE O JOGO É — nada aqui sabe de HTTP
 │   ├── engine/   as regras do livro, PURAS (só a stdlib)
+│   ├── ecs/      o núcleo de entidade-componente-sistema do motor (só a stdlib)
 │   ├── catalog/  o livro transcrito (`transcript/`, em Go) e quem o serve
-│   ├── book/     o catálogo tipado, lido por treze famílias
+│   ├── book/     o catálogo tipado
 │   ├── sheet/  board/  live/   o domínio COM estado
 │   └── campaign/ account/ creature/ search/ markdown/
 ├── app/          O QUE UM GESTO FAZ, do pedido à gravação
 │   ├── session/  o ciclo da sessão, a trava de acesso e o STORE da fila
 │   ├── boards/   o store dos tabuleiros abertos, com as abas e os lugares
 │   ├── initiative/ quem entra na fila, e com que números
+│   ├── combat/   o ataque e a manobra: quem pode, o que a regra decide, o
+│   │             provisório na fila
 │   ├── character/ o herói: nascer (`Births`) e jogar (`Plays`)
 │   ├── campaign/ a mesa: quem a vê, quem a abre, quem senta nela
+│   ├── accounts/ a conta: entrar, cadastrar-se com convite, trocar a senha
 │   └── rest/     o que expira e o que recupera quando a cena ou o dia acaba
 ├── serve/        O QUE RESPONDE HTTP
 │   ├── api/      a RAIZ DE COMPOSIÇÃO: monta o roteador e cumpre as portas
-│   └── web/      as quinze cenas, cada uma com a porta dela
+│   └── web/      as cenas, uma por pacote, e o que elas dividem (`ui`, `ds`,
+│       │         `routes`)
 │       └── assets/  o FRONT que não é `.templ`: a folha, as ilhas de JS,
 │                    as fontes e o favicon — e o `go:embed` deles
 ├── infra/        O QUE NÃO É DOMÍNIO
@@ -41,10 +47,12 @@ engine-go/
 │   ├── bookpdf/  a leitura do PDF do livro por coordenada, para os auditores
 │   ├── httpio/   a borda HTTP: responder, ler corpo, comprimir
 │   ├── wire/     a fronteira SEM transporte — é o que o domain alcança
-│   └── events/   o barramento tipado
+│   ├── events/   o barramento tipado
+│   └── secret/   o sorteio do token que alguém recebe por link
 ├── convention/   os guardas que não são de pacote nenhum
-├── parity/       os dezoito oráculos de ficha
-└── scripts/      a folha e as ilhas de JS
+├── parity/       os oráculos de ficha
+└── scripts/      os scripts de build: a folha, as ilhas de JS, os ícones e o
+                  Datastar vendorizado
 ```
 
 **A seta só aponta para BAIXO**: `serve` → `app` → `domain` + `infra`, e o
@@ -54,27 +62,21 @@ vez de uma lista, para o pacote que nascer amanhã já nascer medido. As listas 
 permitidos são argumentadas linha a linha: acrescentar uma entrada é decisão, não
 conveniência.
 
-### O `app/` é novo, e o que ele NÃO é (ALE-344)
+### O `app/`, e o que ele NÃO é
 
 Ele não é "a pasta para onde mudo o que estava no `api`". O que entra aqui é o
 gesto INTEIRO — quem pode, o que decide, o que grava —, e o sinal de que uma
 coisa pertence a ele é ter as três. Um repasse de uma linha não vira caso de uso
 por mudar de pasta.
 
-**A orquestração já existia, com outro nome.** O `apply` do store dos
-tabuleiros carrega o estado, chama a regra PURA do `domain/board` e devolve o
-quadro: isso é um caso de uso, e ele passou anos arquivado dentro de `domain/`.
-Os dois stores mudaram de lugar na ALE-344, e o que fecha a divisão é o
-`domain/board`: **ZERO toques de persistência**, e isso não é zelo de autor — o
-`boundary_test.go` dele proíbe o import do `sqlcgen`, então a próxima tentativa
-reprova. Aqui morava "mais de 1.800 linhas" junto: o pacote passou de 3.700 sem
-ninguém mexer nesta frase, e a contagem nunca foi a afirmação — a ausência é.
+**O `domain/board` tem ZERO toques de persistência**, e não por zelo de autor: o
+`boundary_test.go` dele proíbe o import do `sqlcgen`. O store que carrega o
+estado, chama a regra pura e grava mora em `app/boards`.
 
 **O que sobra em `domain/` é a regra, e ela é PÚBLICA.** As mutações que os
-stores chamam — `AddToken`, `AdvanceTurn`, `PatchEntryVitals` e as irmãs — eram
-privadas enquanto o chamador morava no mesmo pacote. Hoje são a API dos dois
-pacotes puros, e é assim que se reconhece um: recebe estado, devolve estado, não
-trava nada e não grava nada.
+stores chamam — `AddToken`, `AdvanceTurn`, `PatchEntryVitals` e as irmãs — são
+a API dos pacotes puros, e é assim que se reconhece um: recebe estado, devolve
+estado, não trava nada e não grava nada.
 
 **As recusas daqui são TIPADAS** (`ErrNotFound`, `ErrForbidden`, `ErrRefused`) e
 nunca um número de HTTP. Um caso de uso que devolvesse 403 não poderia ser
@@ -82,21 +84,17 @@ chamado de outro transporte — que é a única coisa que esta camada compra.
 
 **E a TRANSAÇÃO é daqui, sempre.** Ela é o contorno de um gesto — ou as
 campanhas mudam de dono e a conta some juntas, ou nada acontece —, e quem
-desenha esse contorno está decidindo o que o gesto É. O `serve/` chegou a ZERO
-`BeginTx` na ALE-349, e quem mantém é o
-`TestNoPresentationLayerOpensATransaction`: linha de base vazia, falha no
-primeiro que voltar.
+desenha esse contorno está decidindo o que o gesto É. Quem mantém o `serve/`
+sem `BeginTx` é o `TestNoPresentationLayerOpensATransaction`: linha de base
+vazia, falha no primeiro que voltar.
 
-> **O `character.Plays` é a exceção declarada, e a razão é a TELA** (ALE-347).
-> Quem embrulha uma recusa com `%w: app.ErrRefused` coloca "recusado pela regra"
-> no fim da frase que o `Error()` devolve — e a cena da ficha mostra esse texto
-> CRU ao jogador, porque o Datastar não desenha corpo de resposta 4xx e toda
-> recusa dela tem de voltar como frase na cena. Os gestos da ficha têm UM
-> transporte, e nenhum chamador lê o tipo: o embrulho custaria o sufixo na tela
-> e não compraria nada. Quando o segundo transporte chegar, é o embrulho que
-> desce — uma linha por recusa. O que NÃO pode voltar é o número de HTTP dentro
-> da regra, e esse saiu: o `applySpellBuffEffect` devolvia `(efeito, int, error)`
-> e montava um erro de campo com status 400 lá dentro.
+> **O `character.Plays` é a exceção declarada, e a razão é a TELA.** As recusas
+> dele não embrulham `app.ErrRefused`: o embrulho põe "recusado pela regra" no
+> fim do `Error()`, e a cena da ficha mostra esse texto CRU ao jogador, porque o
+> Datastar não desenha corpo de resposta 4xx e toda recusa dela volta como frase
+> na cena. Os gestos da ficha têm UM transporte e nenhum chamador lê o tipo.
+> Quando o segundo transporte chegar, o embrulho desce — uma linha por recusa. O
+> que NÃO pode entrar é número de HTTP dentro da regra.
 
 **Onde procurar:**
 
@@ -112,10 +110,7 @@ primeiro que voltar.
 | por que a suíte reprovou uma convenção | `convention` |
 
 > Os TESTES moram ao lado do código, e isso é do Go: teste de caixa branca
-> precisa do mesmo diretório para alcançar o que não é exportado. É por isso que
-> `serve/api/` é de longe o diretório mais populoso do repositório, e que a maior
-> parte das entradas dele é teste — o `ls` é a fonte, e o parágrafo abaixo diz
-> por que um número escrito aqui não sobreviveria.
+> precisa do mesmo diretório para alcançar o que não é exportado.
 
 **Cada cena é um pacote em `web/`**, e o `api` guarda a composição do roteador, as
 portas que cada cena pede e as regras que não são de tela nenhuma. Ver "Como uma
@@ -123,16 +118,16 @@ CENA é construída".
 
 **No `serve/api`, o nome do arquivo diz o ADAPTADOR que o possui**, e o assunto
 vem depois do prefixo: `table_*` é do `tableRules`, `sheet_*` do `sheetRules`,
-`campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono** (ALE-330).
+`campaign_*` e `account_*` dos outros dois. **Um arquivo, um dono.**
 
 Quem cobra é o `TestEveryAdapterFileCarriesItsPrefix`: ele lê o RECEPTOR dos
 métodos e falha com o nome do arquivo e o do dono. Duas coisas que ele NÃO
 conta, e as duas são de propósito — o `*Server`, que é fiação e está em metade
-do diretório, e os hosts de cena (`tableHost`, `hubHost`), que já têm a
+do diretório, e os hosts de cena (`tableHost`, `hubHost` e os irmãos), que já têm a
 convenção deles em `*_deps.go` e convivem com um adaptador no mesmo arquivo.
 
 **As cenas atendem na RAIZ**, sem prefixo. Duas consequências que o `git grep`
-não mostra e que já morderam:
+não mostra:
 
 - **O `alvoOriginal` lê `RequestURI` e não `URL.Path`**, porque o segundo
   descarta a QUERY.
@@ -144,20 +139,22 @@ não mostra e que já morderam:
 ## Ambientes
 
 `LoadConfig` lê `.env.<APP_ENV>` deste diretório antes do env do processo —
-**o processo vence o arquivo**, sempre (ALE-119). O `.env.development` é
-versionado porque nada nele é segredo; o `.env.production` é do dono da mesa e
-não entra no git.
+**o processo vence o arquivo**, sempre. O `.env.development` é versionado
+porque nada nele é segredo; o `.env.production` é do dono da mesa e não entra
+no git, e o molde dele é o `.env.production.example`, que entra.
 
-Configuração nova entra em `infra/config/config.go` **e** nos dois arquivos `.env` — um
-default que só existe no Go é um default que ninguém descobre. Se a variável
-puder derrubar produção em silêncio (chave de assinatura, origem liberada),
-ela também entra em `Config.Validate`, que roda antes de o servidor escutar.
+Configuração nova entra em `infra/config/config.go` **e** nos dois arquivos
+versionados (`.env.development` e `.env.production.example`) — um default que só
+existe no Go é um default que ninguém descobre. Se a variável puder derrubar
+produção em silêncio (chave de assinatura, origem liberada), ela também entra em
+`Config.Validate`, que roda antes de o servidor escutar.
 
 ## Regenerar oráculo é ato deliberado
 
 Os JSONs em `parity/` são a rede de regressão da ficha inteira e o teste mais
-valioso do repositório: um único `lenda-nv20-maximo.json` fixa `pvMax 277`, a
-carta do Machado com ataque 21 e o breakdown, as 29 perícias com composição.
+valioso do repositório: cada um fixa, de um personagem, o PV, cada carta de
+ataque com o breakdown e cada perícia com a composição, e acusa qualquer número
+que mude sem ter sido pedido.
 
 ```
 cd engine-go && go run ./cmd/genoracle
@@ -168,84 +165,60 @@ cd engine-go && go run ./cmd/genoracle
 
 **Não há segunda implementação para conferir contra**: o oráculo é o Go
 descrevendo o Go, e **um bug no motor vira a nova verdade em silêncio**. A
-mitigação não é técnica, é de processo, e é a linha acima.
-
-O que ele protege é a ficha inteira de 18 personagens, ponta a ponta, acusando
-qualquer número que mude sem ter sido pedido.
-
-E a paridade nunca teria salvado: quando havia dois motores, eles estiveram
-**perfeitamente de acordo** durante meses enquanto AMBOS erravam a RD do
-Guerreiro, que não existe no livro. Paridade prova concordância; nunca prova
-correção.
+mitigação não é técnica, é de processo, e é a linha acima. Paridade prova
+concordância; nunca prova correção.
 
 ## Regras vêm do livro, com página
 
 Todo teste de regra cita a página do [Tormenta 20](/t20-book.pdf) e, quando
-existe, o **exemplo trabalhado** do próprio livro — a Samira da p173, a Bola de
-Fogo do arcanista de 11º nível na p171, o clérigo/druida da p226. Um exemplo
-trabalhado é melhor que uma asserção inventada: ele separa leituras possíveis da
-mesma frase.
+existe, o **exemplo trabalhado** do próprio livro — a Samira da p173, por
+exemplo. Um exemplo trabalhado é melhor que uma asserção inventada: ele separa
+leituras possíveis da mesma frase.
 
 **Confira a citação antes de escrever.** O offset é `página do PDF = página do
-livro + 6`. Onze citações erradas já foram corrigidas neste repositório, três
-delas escritas no mesmo dia em que eu as "verifiquei".
+livro + 6`. Citação "verificada" de cabeça já saiu errada mais de uma vez — ver
+[APRENDIZADOS](../APRENDIZADOS.md).
 
 ## O sqlc trunca SQL por causa de comentário acentuado
 
 Comentário em `infra/db/query.sql` é **ASCII**. O sqlc mede a query em bytes e conta o
 comentário em runas, então cada letra acentuada acima de uma query corta um
-caractere do SQL gerado — **em silêncio**. Na ALE-120 um comentário com três
-acentos gerou `WHERE id = ? AND usedAt IS N`, que ainda compilava.
+caractere do SQL gerado — **em silêncio**, e o SQL truncado pode continuar
+compilando. Vale também para o comentário das migrações, que o sqlc lê.
 
 ## O sqlc não enxerga `ALTER TABLE ADD COLUMN` de outro arquivo
 
-Medido no sqlc **v1.31.1** (ALE-124): uma coluna adicionada por `ALTER TABLE …
-ADD COLUMN` num arquivo de migração NOVO não entra no catálogo — toda query que
-a cita falha com `column "x" does not exist`, e o erro aponta a *query*, não a
-migração. Dentro do MESMO arquivo (`CREATE TABLE` + `ALTER` juntos) funciona, e
-as colunas assim adicionadas na `00002` continuam valendo porque… continuam
-valendo: regenerar não as perde. Não perca tempo com a forma do comentário nem
-com a seção `Down` — foi tudo testado.
+No sqlc **v1.31.1**, uma coluna adicionada por `ALTER TABLE … ADD COLUMN` num
+arquivo de migração NOVO não entra no catálogo — toda query que a cita falha com
+`column "x" does not exist`, e o erro aponta a *query*, não a migração. O modelo
+gerado ganha o campo mesmo assim: **ver o modelo não prova nada; só escrever a
+consulta prova.** Dentro do MESMO arquivo (`CREATE TABLE` + `ALTER` juntos)
+funciona. Nem a forma do comentário nem a seção `Down` mudam isso.
 
-Saída prática: **tabela nova em vez de coluna nova**. Foi o que a `00005` fez
-com o tabuleiro, e de quebra "sessão sem tabuleiro" passou a ser dito pelo
-schema (a linha existe ou não existe) em vez de por convenção sobre um JSON
-vazio.
+- **Coluna nova → tabela nova.** De quebra, "não tem" passa a ser dito pelo
+  schema (a linha existe ou não existe) em vez de por convenção sobre um valor
+  vazio.
+- **Trocar a chave primária também não passa pelo gerador.** No SQLite é um
+  rebuild com `RENAME TO`, e o `RENAME` some do catálogo do mesmo jeito. O
+  caminho que funciona é criar a tabela NOVA com outro nome, copiar, e derrubar a
+  velha.
+- **`DROP COLUMN` funciona em minúsculas, e só assim.** Com a grafia que o
+  `CREATE` usou (`hpMax`) ele falha com `column "hpMax" … does not exist`; com
+  `hpmax` passa, e o gerador então reclama de toda query que ainda cita a coluna.
 
-E a `00010` mostrou a segunda metade da armadilha (ALE-205): **trocar a chave
-primária de uma tabela também não passa pelo gerador.** No SQLite isso é um
-rebuild com `CREATE` + `INSERT SELECT` + `RENAME TO`, e o `RENAME` some do
-catálogo do mesmo jeito que o `ADD COLUMN`. O caminho que funciona é criar a
-tabela NOVA com outro nome, copiar, e derrubar a velha — foi assim que o
-`session_boards` (1:1 com a sessão) virou `open_boards` (uma linha por tabuleiro
-aberto).
-
-E o `DROP COLUMN` funciona — **em minúsculas, e só assim**. Medido na `00015`:
-`ALTER TABLE characters DROP COLUMN hpMax`, com a grafia que a `00001` usou para
-DECLARAR a coluna, falha com `column "hpMax" of relation "characters" does not
-exist`; `DROP COLUMN hpmax` passa, e o gerador então reclama corretamente de
-toda query que ainda citava a coluna. Esta metade reclama em voz alta, ao
-contrário do `ADD COLUMN`.
-
-**E o guarda de schema precisou aprender o `DROP`**: a lista de esperadas lia só
-os `CREATE`, então toda tabela que qualquer migração já tivesse criado era
-exigida para sempre — o servidor recusaria subir sobre um banco CORRETO,
-nomeando como faltante justamente a que a migração acabou de derrubar. Ver "O
+Derrubar tabela é seguro para o boot: o guarda de schema lê o `DROP` — ver "O
 boot confere o SCHEMA".
 
 ## O que o servidor RENDERIZA sai comprimido na hora
 
 Cena renderizada não existe antes da requisição, então a escolha real para ela é
-gzip na hora ou nada — o `net/http` não comprime nada sozinho.
+gzip na hora ou nada — o `net/http` não comprime nada sozinho. E todo comando da
+ficha responde redesenhando a cena INTEIRA, então cru é caro no telefone com
+dados móveis.
 
 **`gzip;q=0` é uma RECUSA**, e um `strings.Contains` a leria como aceitação. É
 por isso que o `httpio.AcceptsEncoding` existe em vez de uma busca por
 substring.
-
-Era **nada** até a ALE-273, e a conta é maior do que parece porque todo comando
-da ficha responde redesenhando a cena INTEIRA: a aba de Combate viaja 44,7 KB
-crus, 5,6 KB em gzip, e vai de novo a cada toque no PV. Numa LAN isso não
-aparece; no telefone do jogador com dados móveis, são 44 KB por toque.
 
 Quem faz é o `httpio.Gzip`, o primeiro `Use` do `WebRouter` — e não o `cmd`, para
 o teste que bate no roteador de verdade ver o que o navegador recebe. Ele decide
@@ -267,112 +240,86 @@ middleware de compressão. Por isso o `Flush` esvazia o gzip ANTES de quem está
 embaixo, e `TestTheLiveStreamCrossesTheGzip` mede um quadro chegando com a
 conexão ainda aberta.
 
-**E há uma segunda metade, que custou 27 casos vermelhos no e2e com os
-unitários TODOS verdes.** O `datastar-go` monta o fluxo nesta ordem: escreve o
+**E o envelope tem de decidir no `Flush` também.** O `datastar-go` escreve o
 `Content-Type`, chama `Flush()` para MANDAR OS CABEÇALHOS, e só então escreve o
 primeiro remendo. Um envelope que decide comprimir apenas no `Write` chega
-tarde — os cabeçalhos já foram sem `Content-Encoding` e o corpo sai comprimido
-mesmo assim, então o navegador lê bytes de gzip como se fossem texto. Nenhuma
-requisição falha, nenhum status muda: o que se vê é que os remendos param de ser
-aplicados, e a busca não filtra, a seta não anda, o diálogo não abre.
-
-Os guardas unitários estavam verdes porque escreviam o cabeçalho ANTES de
-esvaziar, que não é o que a biblioteca faz. **Um envelope de resposta tem de
-decidir no `Flush` também**, e `TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope` repete a
-ordem do Datastar de propósito. A regra geral, que vale para qualquer middleware
-que se escreva aqui: *quem esvazia compromete os cabeçalhos*.
+tarde — os cabeçalhos já foram sem `Content-Encoding`, o corpo sai comprimido, e
+o navegador lê gzip como texto. Nenhuma requisição falha e nenhum status muda:
+os remendos só param de ser aplicados. O
+`TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope` repete a ordem do Datastar
+de propósito. A regra geral, para qualquer middleware que se escreva aqui:
+*quem esvazia compromete os cabeçalhos* — e o teste tem de esvaziar na ordem da
+biblioteca, não na que for conveniente.
 
 O envelope também expõe `Unwrap() http.ResponseWriter`, que é o contrato do
 `http.ResponseController` desde o Go 1.20 — sem ele, um `SetWriteDeadline` ou um
 `Hijack` de qualquer camada acima responde `ErrNotSupported`, e quem chamou
 conclui que o ambiente não suporta fluxo.
 
-## O `synchronous` do SQLite vale 139ms POR TOQUE
+## O `synchronous` do SQLite é `NORMAL`
 
-O padrão do SQLite é `FULL`, que faz `fsync` a cada commit, e num prato girante
-isso é uma rotação de disco por escrita. Medido (ALE-273): o comando que muda o
-PV e redevolve a cena levava **121ms** de servidor e **139ms** até o número
-mudar na tela. Com `synchronous=NORMAL`, no MESMO disco, viraram **1,7ms** e
-**12ms**.
+O banco abre com `synchronous=NORMAL`, e não com o `FULL` padrão: o `FULL` faz
+`fsync` a cada commit, e num prato girante isso custa mais de cem milissegundos
+POR TOQUE na ficha. Numa queda de energia perdem-se os commits ainda não
+sincronizados, e o banco NÃO corrompe — é a garantia do WAL, e é o que separa
+`NORMAL` de `OFF`. `OFF` é só do banco de teste, onde não há o que proteger.
 
-O controle que isolou a causa foi trocar só o LUGAR do arquivo — disco → tmpfs,
-binário idêntico —, e o número do tmpfs bateu com o do pragma. Antes disso a
-suspeita natural era o tamanho do HTML, e ela já estava descartada por outra
-medição: **o tempo do POST era o mesmo em abas de 15 KB e de 39 KB.**
-
-O que se perde numa queda de energia são os commits ainda não sincronizados. O
-banco NÃO corrompe, e essa é a garantia do WAL: o arquivo principal nunca fica
-meio-escrito, porque o conteúdo novo mora no `-wal` e a recuperação relê os
-quadros até o último commit válido, cada um com checksum. É a diferença entre
-`NORMAL` e `OFF` — e `OFF` continua sendo só do banco de teste, onde não há o
-que proteger.
-
-Para quem vem do MariaDB: `FULL` ≈ `innodb_flush_log_at_trx_commit=1`, `NORMAL`
-≈ `=2`. E o WAL do SQLite é parente do **redo log do InnoDB**, não do binlog —
-log físico de páginas, para recuperação e concorrência, e não log lógico de
-eventos para replicação.
-
-## O app fala HTTP, sem nada na frente (ALE-531)
+## O app fala HTTP, sem nada na frente
 
 O binário serve HTTP puro e não sabe servir TLS, e nada fica na frente dele: sem
-contêiner e sem proxy. Houve um nginx com HTTPS autoassinado e um compose
-(ALE-273, ALE-523), e eles saíram por decisão do dono — a infra custava mais do
-que comprava.
+contêiner e sem proxy. Houve um nginx com HTTPS e um compose, e eles saíram por
+decisão do dono — a infra custava mais do que comprava.
 
 `COOKIE_SECURE` fica DESLIGADO: em HTTP, o navegador descarta um cookie
-`Secure` e o login não conclui, sem erro visível (ALE-118). O preço de não ter
-HTTPS é o app não INSTALAR no telefone — ver o README.
+`Secure` e o login não conclui, sem erro visível. O preço de não ter HTTPS é o
+app não INSTALAR no telefone — ver o README.
 
 ## O boot confere o SCHEMA, não o `goose_db_version`
 
-A migração pode CONSTAR aplicada sem a tabela existir. Aconteceu: a tabela do
-tabuleiro (então `session_boards`) sumiu do banco de desenvolvimento com a 00005
-marcada, o goose disse "no migrations to run", e o tabuleiro passou um dia
-vivendo só em memória — cada gravação falhando numa linha de log que ninguém lê
-(ALE-154).
+A migração pode CONSTAR aplicada sem a tabela existir, e aí o goose diz "no
+migrations to run" e o servidor sobe gravando no vazio.
 
 Por isso o `db.Open` roda `assertSchema` DEPOIS de migrar e **recusa subir**
 nomeando as tabelas que faltam. A lista de esperadas é lida das próprias
-migrações embutidas, nunca escrita à mão: lista à mão envelhece em silêncio, que
-é como este repositório já perdeu o `TurnsTaken` e o `creatureId` no mesmo dia.
+migrações embutidas, nunca escrita à mão: lista à mão envelhece em silêncio.
 
 Ela lê os DOIS verbos da seção `Up`, `CREATE TABLE` e `DROP TABLE`, na ordem dos
-arquivos (ALE-205). Só com o primeiro, o schema nunca podia PERDER uma tabela — a
-derrubada legítima da `00010` virava "falta a `session_boards`" num banco que
-estava certo.
+arquivos. Só com o primeiro, o schema nunca podia PERDER uma tabela, e uma
+derrubada legítima viraria "falta a tabela" num banco certo.
 
 Consequência a saber: um banco alterado por fora (um `goose down` parcial, um
-backup anterior restaurado) agora **não sobe**. É deliberado — gravar no vazio
-em silêncio é pior.
+backup anterior restaurado) **não sobe**. É deliberado — gravar no vazio em
+silêncio é pior.
 
 ## Transação pega a trava no BEGIN (`_txlock=immediate`)
 
-A conexão abre com `_txlock=immediate`, e não com o `DEFERRED` padrão (ALE-156).
+A conexão abre com `_txlock=immediate`, e não com o `DEFERRED` padrão.
 
 O motivo: travas de unicidade decididas no CÓDIGO (pergunta ao banco, depois
 escreve) não sobrevivem a dois pedidos simultâneos, porque as duas perguntas
 acontecem antes de qualquer escrita. Quem torna o resultado **correto** é
 refazer a checagem DENTRO da transação; o `immediate` é o que o torna
-**honesto** — medido, sem ele um dos perdedores recebe 500 (o SQLite recusa a
-escrita sobre snapshot mudado, o que está certo, mas chega ao jogador como erro
-do servidor), e com ele o perdedor espera, relê e recebe o 409 que descreve o
+**honesto** — sem ele um dos perdedores recebe 500 (o SQLite recusa a escrita
+sobre snapshot mudado, o que está certo, mas chega ao jogador como erro do
+servidor), e com ele o perdedor espera, relê e recebe a recusa que descreve o
 que houve.
 
-Custo: os escritores serializam entre si. As oito transações do app são todas de
-escrita e leitura fora de transação continua livre (WAL), então numa mesa
-doméstica isso é de graça; o `busy_timeout(5000)` cobre a espera.
+Custo: os escritores serializam entre si. As transações do app são de escrita e
+a leitura fora de transação continua livre (WAL), então numa mesa doméstica isso
+é de graça; o `busy_timeout(5000)` cobre a espera.
 
 ## Timeouts, encerramento e backup
 
 O servidor tem `ReadHeaderTimeout` (5s) e `IdleTimeout` (120s), e **não tem
-`WriteTimeout` de propósito** (ALE-157): ele mataria o fluxo SSE, que é conexão
-longa por natureza, e um download grande numa rede ruim. É o timeout que parece
-obrigatório e é justamente o errado aqui — há teste afirmando a AUSÊNCIA dele.
+`WriteTimeout` de propósito**: ele mataria o fluxo SSE, que é conexão longa por
+natureza, e um download grande numa rede ruim. É o timeout que parece
+obrigatório e é justamente o errado aqui. Nenhum teste prende a ausência dele —
+quem a defende é o comentário em `cmd/api/main.go`, e é lá que se confere antes
+de "consertar".
 
-Um sinal encerra com ordem (`signal.NotifyContext` + `Shutdown`, janela de 10s).
-Antes, um Ctrl-C no meio de um `VACUUM INTO` morria no meio e o
-`defer database.Close()` nunca rodava — defer não roda quando o processo morre
-por sinal.
+Um sinal encerra com ordem (`signal.NotifyContext` + `Shutdown`, janela de 10s):
+defer não roda quando o processo morre por sinal, e um `VACUUM INTO` ou uma
+gravação no meio morreria pela metade.
 
 Corpo de requisição tem teto de 1 MB no `httpio.DecodeJSON`, com **413 próprio**: dizer
 "JSON inválido" para um JSON válido manda procurar defeito de sintaxe onde o
@@ -383,58 +330,37 @@ manual e poda os mais antigos. Zero em qualquer um dos dois desliga. A poda só
 alcança o que a listagem reconhece como backup — arquivo estranho na pasta não é
 candidato.
 
-## O tempo real é SSE, e o canal MUDOU de dono
+## O tempo real é SSE: a mutação sobe por requisição, o estado desce pelo fluxo
 
 **Bidirecional não é requisito, é hábito.** O que sobe é sempre MUTAÇÃO, e
 mutação é uma requisição; o que desce é um `text/event-stream` que fica aberto.
-Foi assim que um socket bidirecional virou uma rota por comando mais um `GET`
-longo, e o argumento continua valendo para o próximo canal. A Mesa em
-Datastar tem fluxo PRÓPRIO (`/campanhas/{campanha}/sessoes/{sessao}/fluxo`, em
-`web/table/stream.go`), ele assina o `events.Bus` e não o `SSEHub`, e os comandos
-dela são rotas da CENA. Nenhuma linha do que este arquivo descrevia como "a rota
-de eventos" existe.
+O argumento vale para o próximo canal.
 
-> **E o `SSEHub` ficou sem ouvinte.** Medido na ALE-277: em produção ninguém
-> chama `SSEHub.Add` — só testes —, porque a única rota que abria conexão era a
-> `/events`. Quem EMITE continua lá, e emitir para zero ouvinte não estoura nada.
->
-> Ele segue de pé, e o que MUDOU é que apagá-lo deixou de ser perigoso: a
-> gravação saiu de dentro do publicador na ALE-288 — ver "A gravação saiu de
-> dentro da publicação", abaixo. A `PresenceRegistry` também deixou de estar
-> vazia: quem a preenche agora é o fluxo da própria Mesa (ALE-287).
+A Mesa tem fluxo PRÓPRIO (`/campanhas/{campanha}/sessoes/{sessao}/fluxo`, em
+`serve/web/table/stream.go`): ele assina o `events.Bus`, e os comandos dela são
+rotas da CENA. Ele entra pelo mesmo `requirePage` das cenas, que lê a sessão do
+COOKIE, então o fluxo não precisa de token na query string. Queda do
+cliente se detecta pelo `r.Context()`, que é cancelado quando ele vai embora;
+nenhuma batida é para isso.
 
-Três coisas sumiram junto, e todas eram exceção:
+> **O `SSEHub` (`domain/live`) só EMITE.** Em produção ninguém chama
+> `SSEHub.Add` — só testes —, e emitir para zero ouvinte não estoura nada. O
+> laço de leitura dele (`live.StreamFrames`, com a batida `: ping` que é
+> comentário SSE para atravessar intermediário que fecha conexão ociosa) também
+> só é exercitado por teste.
 
-- **A política de origem duplicada.** O socket tinha caminho próprio no mux,
-  fora do `Router()`, e por isso precisava do `guardSocketOrigin` repetindo o
-  CORS por conta (ALE-158). O `/events` está debaixo do `cors.Handler` do
-  roteador — a política é uma só.
-- **O token na query string.** O `EventSource` não deixa pôr cabeçalho, mas manda
-  COOKIE, e o `extractToken` lê o cookie antes do header. Então o fluxo entra
-  debaixo do `requireAuth` sem gambiarra.
-- **A detecção de queda por biblioteca.** O `r.Context()` é cancelado quando o
-  cliente vai embora. A batida de 25s (`live.Heartbeat`) NÃO é para isso — é um
-  comentário SSE (`: ping`) para atravessar intermediário que fecha conexão
-  ociosa.
-
-O `emit` do hub **nunca bloqueia**: fila cheia descarta o quadro daquele leitor.
+O `Emit` do hub **nunca bloqueia**: fila cheia descarta o quadro daquele leitor.
 Quem perdeu reconecta e busca o estado por HTTP, que é o mesmo caminho da
 primeira carga — nenhum estado vive só no fio.
 
-**Uma armadilha que custou uma rodada:** o `characterChanged` era um GANCHO
-preenchido pelo `SocketHandler()`. Apagar o gateway deixou o gancho sem quem o
-ligasse, o `go test ./...` seguiu VERDE — havia até um teste afirmando que nulo
-era caminho normal — e quem acusou foi o e2e de dois clientes. Campo que precisa
-ser preenchido por outro arquivo para o recurso existir é recurso que nasce
-desligado.
+**Campo que precisa ser preenchido por outro arquivo para o recurso existir é
+recurso que nasce desligado** — e o `go test ./...` não acusa: quem acusa é o
+e2e de dois clientes.
 
 ## O barramento de eventos: o que acontece na mesa é TIPADO
 
-O `events.Bus` (ALE-279) entrega, dentro do processo, o que aconteceu numa mesa.
-Ele substituiu quatro mecanismos com a mesma forma e nenhum nome em comum, três
-deles `chan struct{}`: eles diziam QUE algo mudou e nunca O QUÊ, e o `select` do
-stream da Mesa tinha um `case` para cada um só para juntar de volta o que estava
-separado por acidente de onde o estado mora.
+O `events.Bus` entrega, dentro do processo, o que aconteceu numa mesa: O QUÊ
+mudou, e não só QUE algo mudou.
 
 **Não é event sourcing, e a diferença é a decisão inteira.** O banco continua
 sendo o estado. As regras do livro são conta e não fluxo — empilhamento de
@@ -452,14 +378,13 @@ Três coisas que este desenho pede, e uma que ele proíbe:
   publicar sob a trava faria esse leitor esperar pelo escritor no instante em que
   foi acordado para ler. Onde o método usa `defer Unlock`, o corpo vira
   `…Locked` e um invólucro fino publica.
-- **A fila cheia DESCARTA e CONTA.** `chan struct{}` colapsa — dois "mudou"
-  pendentes não dizem mais que um —, e evento tipado não colapsa, então a fila
-  tem dezesseis lugares. O contrato de quem escuta continua o mesmo: o evento é a
-  notícia, a verdade está no store. O que mudou é que o descarte deixou de ser
-  invisível (`Subscription.Dropped`), pela mesma razão que o medidor de contraste
-  devolve o denominador.
-- **`events/` não importa NADA do projeto.** Ele teve de entrar na lista de
-  permitidos do `aovivo` e do `board`, cujos guardas de fronteira avisam que
+- **A fila cheia DESCARTA e CONTA.** Evento tipado não colapsa como um "mudou"
+  colapsa, então a fila tem dezesseis lugares (`queueSize`). O contrato de quem escuta: o evento
+  é a notícia, a verdade está no store. E o descarte não é invisível
+  (`Subscription.Dropped`), pela mesma razão que o medidor de contraste devolve o
+  denominador.
+- **`events/` não importa NADA do projeto.** Ele está na lista de permitidos do
+  `domain/live` e do `domain/board`, cujos guardas de fronteira avisam que
   acrescentar import à lista transforma a porta em enfeite. O que impede a porta
   dos fundos é o `TestVocabularyImportsNothing`: enquanto o vocabulário for
   folha, depender dele não cria fronteira errada — e no dia em que alguém
@@ -474,29 +399,12 @@ porque não é de ninguém.
 
 ## A regra de EMPILHAMENTO mora onde o `targetKey` mora
 
-O `TestNoEntityStacksWithItself` prende a invariante da p226 — uma entidade não
-declara dois modificadores não-condicionais no mesmo alvo e tipo —, e a
-identidade do balde é o `targetKey`. Ele morava no `domain/catalog`, com um
-`switch` que ESPELHAVA o do motor, porque o `targetKey` é privado daqui.
-
-**O espelho divergiu em três pontos** (ALE-419): a `flag` era lida de
-`target["flag"]` e o catálogo a escreve em `name`; o `maneuver` e o
-`displacement` não separavam por escopo, quando o motor separa pelos dois.
-
-A divergência era INERTE, e medir isso foi o passo antes de consertar: ela muda
-12 baldes de 108 e **nenhum veredito**, porque os casos que colidiriam são
-condicionais e este guarda pula condicional. O que ela não era é segura — um
-segundo modificador de flag não-condicional na mesma entidade passaria
-despercebido, e nada acusaria.
-
-Hoje não há espelho: o guarda mora no `domain/engine`, o balde sai do
-`targetKey` de verdade e os modificadores são lidos no `Modifier` de verdade —
-o que faz o caso atravessar o `UnmarshalJSON` junto, que é a fronteira que a
-ALE-415 pegou quebrada.
-
-**E o denominador cresceu de graça.** O guarda antigo enumerava NOVE recursos à
-mão e via 189 entidades; o novo varre o diretório e vê 208. Enumerar era a
-armadilha de sempre — a lista que alguém esquece de aumentar.
+O `TestNoEntityStacksWithItself` (`domain/engine/modifier_stacking_rules_test.go`)
+prende a invariante da p226 — uma entidade não declara dois modificadores
+não-condicionais no mesmo alvo e tipo —, e o balde sai do `targetKey` de verdade,
+lido no `Modifier` de verdade (o que faz o caso atravessar o `UnmarshalJSON`
+junto). **Guarda que precisa de uma regra privada do motor mora no motor**: um
+`switch` espelhado noutro pacote diverge em silêncio.
 
 ## A MANOBRA é o primeiro teste OPOSTO do motor
 
@@ -504,27 +412,26 @@ Todo o resto do combate mede um total contra um número parado — a Defesa, a C
 de uma magia. A manobra (p234) manda os DOIS lados rolarem, e por isso o
 `ResolveManeuver` recebe dois `d20` por parâmetro em vez de um.
 
-Quatro regras da página, e nenhuma é opcional:
+Duas regras da página, e nenhuma é opcional:
 
 1. **oposto**, com a MARGEM viajando porque ela é regra — cinco ou mais dão
    efeito extra ao derrubar e ao desarmar, e o empurrar ganha 1,5m por cada 5;
 2. **o defensor sempre rola LUTA**, mesmo empunhando arma de disparo. A
    proibição de ataque à distância é de quem ATACA, e a página diz as duas
-   coisas na mesma frase;
-3. **empate decide pelo BÔNUS**, e não pelo dado;
-4. **bônus iguais pedem OUTRA ROLAGEM** — o resultado não é um vencedor.
-   Tratar o empate como derrota de quem ataca inventaria uma regra que favorece
-   sempre o mesmo lado.
+   coisas na mesma frase.
+
+O motor não decide quem venceu: quem decide o desfecho é o mestre — ver a
+seção abaixo.
 
 **A manobra divide o provisório com o golpe**, e não tem um irmão: ela É um
 ataque corpo a corpo, a divisa de propor e confirmar é a mesma, e dois
 provisórios simultâneos seriam duas verdades sobre a mesma cena. O
 `proposesAttack` e o `proposesManeuver` delegam ao mesmo `proposeStrike` pela
-mesma razão — as sete conferências antes da rolagem são as mesmas.
+mesma razão — as conferências antes da rolagem são as mesmas.
 
 E o BÔNUS conhece o LADO: o `Desejo de Liberdade` ajuda quem está sendo
-agarrado, não quem agarra. O escopo entrou na chave do `targetKey` na ALE-406, e
-o caso que prende os dois lados é o que impede a volta daquele defeito.
+agarrado, não quem agarra. O escopo está na chave do `targetKey`, e o caso que
+prende os dois lados é o que impede a volta do defeito.
 
 ## A MANOBRA ANUNCIA a condição; ela não a aplica
 
@@ -533,114 +440,84 @@ criatura AGARRADA fica desprevenida e imóvel"* (p234). As outras três não sã
 esquecimento: o livro lhes dá efeito de ITEM ou de MOVIMENTO, e escrever uma
 condição ali seria inventar regra.
 
-**O que o motor devolve é o embate inteiro e nada do desfecho dele:** os dois
-totais, a diferença entre eles, e a condição que o livro RESERVA à vitória. Quem
-compara os dois números e decide se a manobra passou é o mestre — ver a seção "O
-sistema INFORMA; o mestre DECIDE" do [CLAUDE.md da raiz](../CLAUDE.md), que é a
-regra que mandou isto.
+**O motor devolve o embate e nunca o vencedor:** os dois totais, a `Margin` e o
+`ConditionOnAWin`, a condição que o livro RESERVA à vitória. Quem decide se a
+manobra passou é o mestre — ver "O sistema INFORMA; o mestre DECIDE" no
+[CLAUDE.md da raiz](../CLAUDE.md).
 
 **A condição viaja mesmo quando quem tentou rolou menos.** Ela é o que o LIVRO
-prevê, não o que aconteceu, e um campo que sumisse na diferença negativa
-obrigaria a faixa a adivinhar o vencedor para saber se mostra — o veredicto
-voltando pela porta dos fundos.
+prevê, não o que aconteceu; um campo que sumisse na diferença negativa obrigaria
+a faixa a adivinhar o vencedor — o veredicto voltando pela porta dos fundos.
+Quem marca condição é o `toggleCondition` da fila, gesto do mestre.
 
-Isto já foi o contrário, e três coisas saíram juntas quando ele caiu:
+Dois guardas prendem a AUSÊNCIA do veredicto, um por metade:
 
-- O `ManeuverOutcome` tinha `Won`, `Reroll` e `Imposes`, e um `switch` que
-  desempatava pelo bônus maior. Hoje ele tem `Margin` e `ConditionOnAWin`, e o
-  `TestTheManeuverNeverDeclaresAWinner` varre os campos por reflexão: é o único
-  jeito de prender uma AUSÊNCIA, porque uma asserção sobre `Won` deixa de
-  compilar quando `Won` sai, e caso que não compila é caso que alguém apaga.
-- O `CommitAttack` chamava um `ImposeCondition` que ramificava pela ficha. Essa
-  função não existe mais, e com ela saiu o evento próprio que ela emitia — quem
-  marca condição hoje é o `toggleCondition` da fila, que é gesto do mestre e
-  sempre foi.
-- O crachá da faixa dizia "Derrubou" / "não derrubou". Hoje ele diz a manobra no
-  INFINITIVO, e o passado não volta porque o `TestNoManeuverTextDeclaresAWinner`
-  varre o TEXTO das 45 faixas possíveis procurando palavra de desfecho — a
-  metade que o guarda de forma do motor não alcança, porque uma palavra
-  reintroduzida na linha compila e chega à mesa.
+- o `TestTheManeuverNeverDeclaresAWinner` varre os campos do `ManeuverOutcome`
+  por reflexão — uma asserção sobre um campo de vencedor deixaria de compilar
+  quando ele saísse, e caso que não compila é caso que alguém apaga;
+- o `TestNoManeuverTextDeclaresAWinner` varre o TEXTO de todas as faixas
+  possíveis procurando palavra de desfecho — a metade que o guarda de forma não
+  alcança, porque uma palavra reintroduzida compila e chega à mesa. O crachá diz
+  a manobra no INFINITIVO.
 
-> **O id não vai para a tela.** A primeira versão da faixa escrevia "fica
-> caido" — o identificador vazando. Quem traduz é o `book.ConditionName`, e a
-> regra é a do `GLOSSARY.md`: id em inglês no código, texto em português na
-> tela.
+> **O id não vai para a tela.** Quem traduz o id da condição é o
+> `book.ConditionName`, e a regra é a do `GLOSSARY.md`: id em inglês no código,
+> texto em português na tela.
 
 ## O guarda de ÍCONE varre as CENAS, e o `switch` do gerado não tem `default`
 
 Um nome que ninguém gerou rende um `<svg>` VAZIO: sem erro de compilação, sem
-aviso, um buraco do tamanho do ícone. O guarda existia e passava verde com três
-quebrados — ele lia os `.templ` do próprio diretório e casava `@icone("X")`,
-enquanto as cenas moram em `serve/web/*` e escrevem `@ui.Icon("X")`.
-
-Hoje ele varre `serve/` inteiro, casa as duas grafias e tem DENOMINADOR. Quem o
-pegou foi OLHAR a tela (ALE-420) — é a fatura da ALE-319 cobrada de novo, e a
-resposta certa não foi olhar melhor: foi escrever o guarda.
+aviso, um buraco do tamanho do ícone. O `TestEveryRequestedIconExistsInTheGeneratedFile`
+varre `serve/` inteiro, casa as duas grafias (`@icone("X")` e `@ui.Icon("X")`) e
+tem DENOMINADOR. **Ícone novo entra na lista do `scripts/gen-icons-templ.mjs`, e
+o gerador roda — nunca à mão no `icons.templ` gerado.**
 
 ## Todo ALVO de modificador é declarado, e o RÓTULO não conta como leitor
 
 O `targetKey` nomeia os alvos que um modificador pode mirar, e cada um está em
-uma de duas listas do `modifier_target_rules_test.go`: os que o motor APLICA,
-com o arquivo que os lê, e os declarados INERTES, com o motivo. As duas juntas
-têm de cobrir exatamente o `switch` — alvo novo sem entrada em nenhuma reprova
-pelo nome, e alvo que sai do `switch` sem sair da lista também.
+uma de duas listas do `domain/engine/modifier_target_rules_test.go`: os que o
+motor APLICA, com o arquivo que os lê, e os declarados INERTES
+(`alvosDeclaradosInertes`), com o motivo. As duas juntas têm de cobrir
+exatamente o `switch` — alvo novo sem entrada em nenhuma reprova pelo nome, e
+alvo que sai do `switch` sem sair da lista também. A lista de inertes **só pode
+encolher**.
 
-**Por que existe:** três alvos estavam no catálogo, apareciam na aba Efeitos e
-não entravam em conta nenhuma (ALE-411). Cada um custou uma medição própria, e
-a forma dos três é a mesma — metade do caminho funciona (o rótulo) e a outra não
-existe. A varredura da ALE-418 achou mais três, somando 28 modificadores que a
-ficha mostra e a conta ignora. Hoje restam **14**, todos do `maneuver`.
+**O rótulo do `serve/web/sheetui/effects_labels.go` NÃO conta como leitor**, e
+essa é a linha que faz o guarda valer: o defeito que ele caça é o modificador que
+aparece na aba Efeitos e não entra em conta nenhuma — o rótulo é exatamente a
+metade que já funciona, e tratá-lo como prova faria o guarda aprovar o que veio
+medir.
 
-**O rótulo do `effects_labels.go` NÃO conta como leitor**, e essa é a linha que
-faz o guarda valer: ele é exatamente a metade que já funciona no defeito, e
-tratá-lo como prova faria o guarda aprovar o que veio medir.
+Três famílias de inércia, e elas pedem consertos diferentes:
 
-Duas famílias de inércia, e elas pedem consertos diferentes:
+- **o mecanismo ESQUECEU** — havia uma conta e ela não olhava o modificador. O
+  conserto é uma linha, e o teste nasce vermelho;
+- **o mecanismo NÃO EXISTE** — não há onde somar, e o conserto é construir o
+  gesto, ou declarar por escrito que ele não será construído (é o `tempMp` hoje:
+  o app não modela PM temporário, e a entrada diz por quê);
+- **o alvo não devia existir** — só aparece lendo o livro: o alvo era outro, já
+  existente, com condição, e o conserto é reescrever a entrada do catálogo.
 
-- **o mecanismo ESQUECEU** — havia uma conta e ela não olhava o modificador. Foi
-  o `critRange`: uma linha, e o teste nasce vermelho;
-- **o mecanismo NÃO EXISTE** — o `maneuver` tem 14 modificadores e o motor não
-  resolve manobra nenhuma. Não há onde somar o +2 do Derrubar Aprimorado, e o
-  conserto é construir o gesto.
-
-E há uma terceira, que só aparece quando se lê o livro: **o alvo não devia
-existir**. O `fearResistance` tinha uma entrada e nenhum leitor, e a p229 mostra
-que ele era o `resistance` com condição — *"uma criatura com resistência a magia
-+2 recebe +2 em testes de Fortitude, Reflexos ou Vontade contra habilidades
-mágicas"*. Ele não existe mais, e a entrada virou `resistance` + `against:
-medo`, que é como o catálogo já escrevia a resistência a veneno.
-
-E a lista de inertes **só pode encolher**.
-
-> Duas armadilhas de instrumento no caminho, e as duas deram número plausível.
-> Uma busca por `"armorPenaltyExpertises"` ACHA o nome no `breakdowns.go`, mas
-> ali ele é uma VARIÁVEL — a lista de perícias que a armadura penaliza —, e não
-> leitor do alvo: casar nome não é casar conceito. E somar o despejo que o motor
-> lia com os arquivos embutidos contou cada modificador DUAS vezes, porque eram
-> cópias: 28 manobras onde há 14. Desde a ALE-494 o motor lê os embutidos, e o
-> despejo não existe mais.
+**Casar nome não é casar conceito.** Achar o nome de um alvo num arquivo do
+motor não prova que ele é lido: ali ele pode ser outra coisa com a mesma grafia.
 
 ## O motor é ECS, e a ENTIDADE muda de fase para fase
 
-**REGRA NOVA NASCE EM ECS. É o default, e o critério é APRENDER** — decisão do
-dono, a mesma da ALE-378, agora valendo para frente e não só para o que já foi
-convertido. Diante de uma regra do livro a modelar, a pergunta é *"quem é a
+**REGRA NOVA NASCE EM ECS. É o default, e o critério é APRENDER** (decisão do
+dono). Diante de uma regra do livro a modelar, a pergunta é *"quem é a
 ENTIDADE, que COMPONENTES ela carrega, e que SISTEMA os lê?"* — e não "que campo
 esta struct ganha".
 
-Isso custa, e o preço está escrito duas seções abaixo: sem o compilador como
-escalonador, um sistema que não roda entrega ZERO com cara de conta. **Quem
-escolhe ECS paga o guarda de denominador junto** — o irmão do
-`TestEveryDerivationSystemWritesItsComponent`, com a lista à mão, que é o que
-transforma "o sistema não rodou" de silêncio em vermelho com nome.
+**Quem escolhe ECS paga o guarda de denominador junto**: um sistema que não roda
+entrega ZERO com cara de conta (ver a seção seguinte). O guarda é o irmão do
+`TestEveryDerivationSystemWritesItsComponent`, com a lista à mão.
 
-A saída é DECIDIR outra coisa quando a regra não tem entidade — um formatador,
-uma consulta, uma tabela fechada que só se lê. ECS para o que COMPÕE; função
-para o que calcula.
+Quando a regra não tem entidade — um formatador, uma consulta, uma tabela
+fechada que só se lê —, ela não é ECS. ECS para o que COMPÕE; função para o que
+calcula.
 
 O pipeline da ficha é coleta → resolução → derivação → decomposição, e o ataque
-é um mundo à parte. A entidade não é a mesma em nenhuma delas — porque a
-pergunta não é a mesma.
+é um mundo à parte. A entidade muda porque a pergunta muda:
 
 | fase | entidade | pergunta |
 |---|---|---|
@@ -654,262 +531,167 @@ pergunta não é a mesma.
 | **terreno sob a peça** (`situations_ecs.go`) | a PEÇA | que terreno ela está pisando, e o que ele faz com o ataque? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
-A entidade muda porque a pergunta muda, e é essa a lição das fases.
-
 ### A derivação, e o que ela CUSTOU
 
-O grafo de dependência é raso: só existe UMA aresta — a carga alimenta o
-deslocamento e as perícias. Todo o resto lê `(personagem, efeitos)`.
+O grafo é raso: uma aresta só — a carga alimenta o deslocamento e as perícias.
+Todo o resto lê `(personagem, efeitos)`.
 
-Antes, **o compilador era o escalonador**: `displacementBreakdown(base, e, load)`
-não compila sem a carga na mão. Com sistemas, um que não rode deixa o componente
-ausente, e quem o lê recebe o valor ZERO — sem erro, sem log, com a ficha
-mostrando 0 como se fosse a conta.
-
-A troca foi decisão do dono (ALE-378): o critério passou a ser aprender ECS, e
-não o que paga em manutenção. **O preço se paga com dois guardas:**
+Sem sistemas, o compilador era o escalonador. Com eles, **um sistema que não
+roda deixa o componente ausente, e quem o lê recebe ZERO** — sem erro, sem log,
+com a ficha mostrando 0 como se fosse a conta. Dois guardas pagam isso:
 
 - `TestEveryDerivationSystemWritesItsComponent` — cada sistema escreveu o
-  componente dele. A lista é à mão porque não há como perguntar ao `ecs`
-  quantos componentes uma entidade tem; o que a mantém honesta é o DENOMINADOR,
-  que exige tantas conferências quantos sistemas.
-- `TestTheLoadIsDerivedBeforeWhatReadsIt` — a única aresta do grafo, prendida
-  pela consequência. O personagem do caso é SOBRECARREGADO de propósito: sem
-  isso, a carga zerada e a de verdade dão o mesmo deslocamento.
+  componente dele. A lista é à mão porque o `ecs` não diz quantos componentes
+  uma entidade tem; o DENOMINADOR exige tantas conferências quantos sistemas.
+- `TestTheLoadIsDerivedBeforeWhatReadsIt` — a única aresta, prendida pela
+  consequência. O personagem é SOBRECARREGADO de propósito: sem isso, a carga
+  zerada e a de verdade dão o mesmo deslocamento.
 
 ### Os componentes são agrupados por PERGUNTA
 
-Sete, e não dezesseis: `derivedMagic` junta limite de PM, CD e custo porque quem
-lê um lê os outros. Agrupar pelo que se acessa junto é o critério de componente
-em ECS — um campo por componente seria a struct de volta, com cerimônia.
+Um componente junta o que se lê junto: `derivedMagic` carrega limite de PM, CD e
+custo porque quem lê um lê os outros. Um campo por componente seria a struct de
+volta, com cerimônia.
 
 ### O que a resolução em sistemas comprou
 
-O `ComputeItemEffects` DESCARTAVA: o termo que não cumpria condição, o que
-perdia o empilhamento e o que virava fator saíam da lista e sumiam. Hoje eles
-ficam no mundo com a tag `Suppressed{Why}`.
-
-A ficha existe para responder *"por que 12?"*, e ela ainda não consegue dizer
-"−2 de X, não aplicado por não empilhar" — o número que perdeu não chegava à
-tela. Agora ele está lá para quando a tela pedir.
+O termo que não cumpre condição, que perde o empilhamento ou que vira fator não
+sai do mundo: fica com a tag `Suppressed{Why}`. É o que vai deixar a ficha
+responder *"por que 12?"* com "−2 de X, não aplicado por não empilhar" — a tela
+ainda não o lê.
 
 ### O ataque em sistemas, e a única ordem que a rede NÃO pegava
 
-O `ResolveAttack` não mudou de assinatura (ALE-414): o `d20` continua entrando
-por parâmetro e os dados por função, e é isso que mantém cada caso do livro
-sendo um teste com o número escrito à mão. O que mudou é por dentro — nove
-sistemas sobre parcelas, e o `attack.go` ficou só com o vocabulário da
-fronteira e a montagem do mundo.
-
-**A rede de casos do livro já prende três das quatro arestas de ordem**, medido
-por sabotagem: trocar o crítico com o acerto, as parcelas com o descarte do
-erro, e a soma com a RD sai vermelho em quatro casos nomeados. Só o
-`TestEveryAttackSystemWritesItsComponent` é novo, e ele traz o CENÁRIO junto
-com cada sistema — três dos nove só agem numa metade do dado, e um mundo só
-mediria os seis fáceis.
-
-**Suprimir é write-once, e a PRIMEIRA razão é a que fica.** Mais de um sistema
-alcança a mesma parcela: o bônus de crítico de um ataque que ERROU saía da conta
-dizendo *"o ataque não foi um acerto crítico"* — verdade que não explica nada.
-Foi o guarda novo que pegou, nascendo vermelho.
-
-**Uma diferença de comportamento entrou de propósito:** a notação de dano é lida
-antes de se saber se o ataque acertou, porque a parcela precisa existir para ser
-suprimida. Um `"1d"` no catálogo agora falha sempre, e não só nos ataques que
-acertam.
+- **O `d20` entra por parâmetro e os dados por função** (`ResolveAttack`). É isso
+  que mantém cada caso do livro um teste com o número escrito à mão. A regra
+  mora em `attack_ecs.go`; o `attack.go` tem o vocabulário da fronteira e a
+  montagem do mundo.
+- A ordem entre os sistemas é presa, quase toda, pelos casos do livro. O que
+  eles não prendem é cada sistema ter escrito o componente dele:
+  `TestEveryAttackSystemWritesItsComponent`, que traz o CENÁRIO junto com cada
+  sistema, porque alguns só agem numa metade do dado.
+- **Suprimir é write-once, e a PRIMEIRA razão é a que fica.** Mais de um sistema
+  alcança a mesma parcela, então a ordem decide qual razão a tela mostra: o
+  bônus de crítico de um ataque que ERROU sai dizendo que o ataque errou, e não
+  que "não foi um acerto crítico".
+- **A notação de dano é lida antes de se saber se o ataque acertou**, porque a
+  parcela precisa existir para ser suprimida. Um `"1d"` no catálogo falha sempre,
+  e não só nos ataques que acertam.
 
 ### O tabuleiro entrou, e foi ele quem devolveu o `Despawn`
 
-O `domain/ecs` perdeu `Alive` e `Despawn` na ALE-381 por falta de chamador, e o
-comentário do `World` deixou escrito onde eles voltariam: *"no dia em que o
-tabuleiro entrar: lá a peça sai do mapa de verdade"*. A REDAÇÃO é esse dia, e é
-o melhor caso possível para eles — o modo de falha que o `Despawn` descreve
-(matar a entidade e deixar os componentes, com a consulta continuando a
-visitar) aqui não é um número errado: é a peça escondida chegando à tela de quem
-não devia vê-la.
-
-**Peça e marcador são a mesma espécie de entidade**, porque a pergunta da
-redação é a mesma para as duas e a resposta também: o que o mestre escondeu SOME
-INTEIRO. Uma coisa "presente porém anônima" entregaria a emboscada do mesmo
-jeito.
-
-**A ENTIDADE NÃO TROCA entre os dois gestos do tabuleiro, e isso é diferente da
-ficha.** Lá ela é a FONTE na coleta e o TERMO na resolução, porque a pergunta
-muda o sujeito. Aqui a pergunta muda e o sujeito não: a peça responde tanto
-"você é vista?" quanto "que quadrado você toma". O que muda é o COMPONENTE que
-cada pipeline escreve — o `body` só existe para quem pergunta quadrado, o
-`boundTo` só para quem pergunta fila —, e é por isso que os dois compartilham um
-construtor de mundo só.
-
-**A ORDEM passou a ser regra prendida aqui, e não era.** Invertendo a ordem em
-que a redação visita as peças, a suíte inteira ficava verde — todos os casos
-afirmavam CONTEÚDO, e conteúdo sobrevive a um embaralhamento. Mas a ordem da
-lista é a ordem de DESENHO (quem vem depois fica por cima) e é ela que decide
-qual peça a tela oferece para mover. É a propriedade em volta da qual o núcleo
-foi desenhado, e ela ganhou guarda no dia em que passou a ter consequência.
-
-**O CORPO da peça estava escrito duas vezes.** "Ela ocupa `footprint ×
-footprint` quadrados a partir da âncora" era a mesma conta no `occupied` e no
-`TokensInRectangle`, com o mesmo conserto de footprint zerado na frente de cada
-uma. Virou um componente, e a regra passou a ter um lugar.
-
-E o conserto do zero ganhou guarda, porque ele não tinha: o `AddToken` põe 1 em
-quem chega com zero, então nenhuma peça CRIADA pelo app tem tamanho zero — e
-toda fixture a cria por ele. A que chega do BANCO não passa por ali. Trocando o
-`side <= 0` por `side < 0`, a suíte inteira ficava verde, e a consequência seria
-a próxima peça nascendo em cima da antiga.
-
-**Montar o mundo UMA vez por gesto é o ponto, e não um detalhe.** O
-`PopulateBoard` põe a peça recém-criada no mundo antes de procurar o quadrado da
-seguinte — sem isso, as duas acham o mesmo lugar livre.
-
-O que NÃO precisou de guarda novo: o `Despawn` pela metade. Sabotado, ele
-reprova em TRÊS casos nomeados do `domain/board` — a peça escondida, o marcador
-escondido e o provisório dela —, que é a camada mais barata que o segura.
+- **Peça e marcador são a mesma espécie de entidade**, e o que o mestre escondeu
+  SOME INTEIRO: `Despawn` mata a entidade e apaga todo componente dela. Uma coisa
+  "presente porém anônima" entregaria a emboscada do mesmo jeito. O `Despawn`
+  pela metade é pego pelos casos de redação do `domain/board`.
+- **A ENTIDADE NÃO TROCA entre os gestos do tabuleiro**, ao contrário da ficha: a
+  peça responde tanto "você é vista?" quanto "que quadrado você toma". O que muda
+  é o COMPONENTE — o `body` só existe para quem pergunta quadrado, o `boundTo`
+  só para quem pergunta fila —, e por isso os dois pipelines compartilham um
+  construtor de mundo só.
+- **A ORDEM da redação é regra**: é a ordem de DESENHO (quem vem depois fica por
+  cima), e é ela que decide qual peça a tela oferece para mover. Asserção sobre
+  CONTEÚDO sobrevive a um embaralhamento; quem prende são o
+  `TestTheRedactionKeepsTheDrawingOrder` e o `TestTheRedactionKeepsTheMarkerOrder`.
+- **O CORPO da peça é um componente** (`body`): "ocupa `footprint × footprint`
+  quadrados a partir da âncora" mora num lugar só. O footprint zerado vira 1 ali,
+  porque a peça que chega do BANCO não passa pelo `AddToken` —
+  `TestATokenSavedWithoutASizeStillTakesItsSquare` monta a fatia direto, como o
+  banco a entrega.
+- **Montar o mundo UMA vez por gesto é o ponto.** O `PopulateBoard` põe a peça
+  recém-criada no mundo antes de procurar o quadrado da seguinte — sem isso, as
+  duas acham o mesmo lugar livre.
 
 ### A FRONTEIRA do tabuleiro abriu para o núcleo, e o preço foi um guarda
 
-O `TestTheBoardDoesNotKnowTheCharacterSheet` caiu na primeira compilação, como a
-ALE-413 previu. A lista de permitidos dele vem com um aviso — *acrescentar
-import a ela transforma a porta em enfeite* —, e o `domain/ecs` entrou pela
-MESMA razão do `infra/events`: ele não sabe o que é Tormenta, e depender de uma
-FOLHA não cria fronteira errada nenhuma porque não há para onde a dependência
-vazar.
+O `domain/ecs` está na lista de permitidos do
+`TestTheBoardDoesNotKnowTheCharacterSheet` pela mesma razão do `infra/events`:
+ele é FOLHA e não sabe o que é Tormenta, então depender dele não deixa a
+dependência vazar. A lista avisa: *acrescentar import a ela transforma a porta
+em enfeite*.
 
-A diferença é que a folha do `events` tinha guarda e a do `ecs` era só uma frase
-na docstring. Agora tem: o `TestTheCoreImportsNothingOfTheProject`, com uma
-exceção só — o `world_test.go` mora no pacote externo `ecs_test` e importa o
-`ecs` por construção. Os arquivos de teste continuam varridos de propósito: os
-componentes de mentira do núcleo se chamam `label` e `weight` porque *"se uma
-palavra do livro aparecer neste pacote, o desenho vazou"*, e um teste que
-importasse o `domain/engine` para arranjar um componente pronto seria essa
-palavra, com a suíte verde.
+A folha tem guarda: `TestTheCoreImportsNothingOfTheProject`. A única exceção é o
+`world_test.go`, do pacote externo `ecs_test`, que importa o `ecs` por
+construção. Os testes continuam varridos de propósito: os componentes de
+mentira do núcleo se chamam `label` e `weight` porque *"se uma palavra do livro
+aparecer neste pacote, o desenho vazou"*.
 
 ### A ORDEM dos sistemas é a regra, em toda fase
 
-Cada fase tem o guarda dela, e os dois primeiros nasceram de uma medição de que
-o oráculo NÃO cobre:
+O oráculo não cobre ordem: nenhuma fixture tem todas as fontes ao mesmo tempo.
+Cada fase tem o guarda dela:
 
-- **coleta**: `TestEveryCollectorLandsInTheDeclaredOrder`. Sabotando a ordem, 3
-  dos 4 pares adjacentes passavam verdes — nenhuma das 18 fixtures tem todas as
-  fontes ao mesmo tempo.
-- **resolução**: `TestAFactorWhoseConditionFailsDoesNotApply`. Colher o fator
-  antes de julgar a condição passava verde na suíte INTEIRA, porque os dois
-  fatores de hoje vêm da tabela de condições e ela os declara sem condição —
-  eles sempre valem, e a ordem nunca era exercida. Uma emenda de campanha pode
-  escrever um fator condicionado, e aí ela passa a ser.
+- **coleta**: `TestEveryCollectorLandsInTheDeclaredOrder`.
+- **resolução**: `TestAFactorWhoseConditionFailsDoesNotApply` — colher o fator
+  antes de julgar a condição. Ele prende pela CONSEQUÊNCIA, e não pela
+  sequência, e por isso sobrevive a uma reescrita dos sistemas.
+- **derivação**: `TestTheLoadIsDerivedBeforeWhatReadsIt` (acima).
+- **redação do tabuleiro**: os dois guardas de ordem de desenho (acima).
 
-O segundo prende a ordem pela CONSEQUÊNCIA e não pela sequência, que é o
-formato melhor: ele continua valendo se alguém reescrever os sistemas.
-
-E o primeiro tem uma armadilha própria, medida na ALE-397: **acrescentar uma
-fonte NÃO o faz reprovar.** A devoção entrou como sétima fonte e o guarda
-passou verde, porque o personagem dele não era devoto de ninguém — um guarda de
-ORDEM só mede os pares que o DADO dele põe na mesma ficha, e é por isso que o
+**Acrescentar uma fonte NÃO faz o guarda da coleta reprovar.** Um guarda de
+ORDEM só mede os pares que o DADO dele põe na mesma ficha, e por isso o
 `everyCollectorCharacter` cresce junto com o `collectionSystems`. O controle é
 sabotar a ordem depois de mexer: trocar duas linhas tem de sair nomeando as
 duas espécies fora de lugar.
 
 ### O PODER é uma coisa; a CONCESSÃO dele é outra
 
-O `transcript.ClassPowers` tem duas espécies de linha desde a ALE-403:
+O `transcript.ClassPowers` tem duas espécies de linha:
 
 - o **verbete**, sem `className`, com a regra — nome, descrição, página, bloco
   de escolha;
 - a **concessão**, com `className`, o nível ou a escolha que destrava, e um
   `powerUid` apontando para o verbete.
 
-Antes as duas moravam na mesma linha, e por isso a regra era COPIADA quando
-mais de uma classe concedia o mesmo poder: o "Aumento de Atributo" tinha
-quatorze cópias byte a byte iguais. Elas não tinham divergido, e nada as
-impedia — é o caminho que `general-powers` × `origins` percorreu até ter
-dezenove poderes com duas regras.
+A regra é escrita uma vez, no verbete; a concessão aponta. Copiá-la para cada
+classe que concede o poder é o caminho para duas regras com o mesmo nome.
 
-**Quem resolve são DOIS pontos, um por leitor.** O `domain/book` resolve para
-a tela, em `classPowersResolved`, e os quatro leitores dele passam por lá. O
-MOTOR resolve na carga do catálogo, em `resolveClassPowerPointers`: a concessão
-sem modificador próprio herda os do verbete. Os dois não compartilham código
-porque isso exigiria uma aresta entre `domain/engine` e `domain/catalog`, que
-não se conhecem; o que cada um faz é pouco — copiar a regra de um `uid` para
-outro do mesmo catálogo.
+**Quem resolve são DOIS pontos, um por leitor.** O `domain/book` resolve para a
+tela, em `classPowersResolved`. O MOTOR resolve na carga do catálogo, em
+`resolveClassPowerPointers`: a concessão sem nome ou sem modificador próprio
+herda os do verbete. Os dois não compartilham código porque isso exigiria uma
+aresta entre `domain/engine` e `domain/catalog`, que não se conhecem.
+`TestTheAttributeIncreaseLandsOnTheChosenAttribute` prende que o ponteiro chega
+à ficha.
 
-Até a ALE-491 o motor não resolvia, e um guarda proibia modificador em
-verbete. Ele não existe mais: caiu quando o Aumento de Atributo precisou do
-primeiro modificador. Quem prende agora que o ponteiro chega à ficha é o
-`TestTheAttributeIncreaseLandsOnTheChosenAttribute`, que passa por ele.
-
-> **O quarto leitor não estava na minha lista.** Mapeei três — o
-> `PowerCatalogs`, o `ClassPowerFlags` e o `PowersThatTeachSpells` — e o
-> `FlattenedPowers`, que monta o acervo do mestre, só apareceu quando o
-> `TestPowersComeFromTheThreeCatalogs` reprovou com "o poder não diz de onde
-> veio". E havia um QUINTO, que na época era Python: o auditor de classes
-> (hoje `cmd/audit/classes`), que estourou em `KeyError: 'name'`. A lição não é "mapear com mais cuidado": é
-> que `grep -rn '"class-powers"'` responde em um segundo o que a memória
-> responde errado.
+**Antes de mudar a forma de um recurso, ache os leitores pelo nome dele**
+(`git grep '"class-powers"'`), e não pela memória.
 
 ### O verbete tem DOIS identificadores, e eles têm papéis opostos
 
 - **`id`** é o SLUG: minúsculo, sem acento, `[a-z0-9-]`, único dentro do
-  recurso — `esquiva`, `bencao-do-mana`, `heroi-campones`. Ele é o PÚBLICO — é
-  o que a URL carrega no padrão `/<recurso>/<id>`, o que o `grep` acha, o que a
-  fixture se lê. Ele muda quando o nome muda.
-- **`uid`** é opaco e estável: `pwr_k3m9x2ft4q`. Ele é a IDENTIDADE — é o que o
-  banco guarda e o que um catálogo usa para apontar para outro. Ele **nunca**
-  muda.
+  recurso — `esquiva`, `bencao-do-mana`, `heroi-campones`. É o PÚBLICO: o que a
+  URL carrega no padrão `/<recurso>/<id>`, o que o `grep` acha, o que a fixture
+  lê. Ele muda quando o nome muda.
+- **`uid`** é opaco e estável: `pwr_k3m9x2ft4q`. É a IDENTIDADE: o que o banco
+  guarda e o que um catálogo usa para apontar para outro. Ele **nunca** muda.
 
-O `uid` é opaco de propósito. Um identificador derivável do nome volta a mudar
-no dia em que alguém "corrigir" a derivação, e aí ele não identifica nada.
+O `uid` é opaco de propósito: um identificador derivável do nome volta a mudar
+no dia em que alguém "corrigir" a derivação.
 
-Cunhar é `go run ./cmd/mintuids --aplicar` (de `engine-go/`), e ela só CRIA: um verbete
-que já tem uid nunca é tocado. O escopo — quais arquivos e quais caminhos têm
-verbete — é declarado uma vez só, lá dentro, e **não se repete em Go**: três
-guardas em `domain/catalog/uid_rules_test.go` conferem o que a cunhagem
-produziu contra uma linha de base, sem precisar saber o escopo. A primeira
-versão deles repetia o predicado e as duas cópias divergiram na hora — a
-cunhagem ainda era Python, onde lista vazia é falsa —, e 126 itens ficaram de
-fora de um lado só.
+Cunhar é `go run ./cmd/mintuids --aplicar` (de `engine-go/`; sem a flag, só
+relata), e ela só CRIA: verbete que já tem uid nunca é tocado. O escopo — quais
+arquivos e quais caminhos têm verbete — é declarado uma vez só, no
+`cmd/mintuids`, e **não se repete em Go**. Os guardas de
+`domain/catalog/uid_rules_test.go` (`TestEveryCatalogEntryCarriesAUid`,
+`TestNoUidNamesTwoDifferentThings`, `TestNoUidEverChanges`) conferem o que a
+cunhagem produziu contra a linha de base `testdata/uid_baseline.txt`, sem saber o
+escopo.
 
 Verbete NOVO nasce com uid e entra na base quando alguém a regerar. O que
-reprova é um uid EXISTENTE mudar — e a mensagem diz por que isso importa: o
-banco perde a referência e a ficha deixa de achar o verbete, sem erro nenhum.
-
-> A decisão de ter dois identificadores é do dono (ALE-402), tomada contra uma
-> recomendação medida de manter só o `id`: o catálogo tem UM renome em 1057
-> nomes de história, e ele era um hífen. O custo aceito é um campo a mais em
-> 1506 verbetes e uma segunda grafia por conceito.
->
-> O renome em massa veio dez horas depois: a ALE-404 trocou 146 ids e **nenhum
-> uid mudou**. O campo a mais pagou a primeira conta que lhe apresentaram.
+reprova é um uid EXISTENTE mudar: o banco perde a referência e a ficha deixa de
+achar o verbete, sem erro nenhum.
 
 #### Endereço não carrega RÓTULO, e a coincidência esconde isso
 
-O `TestEveryCatalogIdIsASlug` varre todo objeto com `id`, sem linha de base, e
-recusa caixa alta, acento e espaço. O ponto é namespacing e passa
-(`class.barbaro.impeto`): cada pedaço entre pontos é um slug por si.
-
-Ele existe porque `race-defs.json` guardava `{"id": "Humano", "name":
-"Humano"}` e `origins.json` guardava `{"id": "Acólito"}` — o id ERA o rótulo, e
-o `raceId` das habilidades apontava para ele. Renomear a raça na tela renomeava
-a chave.
-
-**O que torna isso difícil de ver é que a mesma string casava em DOIS índices
-por coincidência.** O motor indexava as raças duas vezes — o `racesByID`, de
-`race-defs.json`, cujo id era `Humano`, e um segundo mapa chaveado pelo NOME,
-de `races.json`, que também era `Humano` —, e a ficha guardava uma string só.
-Slugificar desfez a coincidência, e a busca por nome passou a devolver `nil` —
-que não é erro: é o humano perdendo os `+1` em três atributos, calado. Hoje o
-segundo mapa é o `raceAttrsByID`, chaveado pelo slug, e o mesmo par existia do
-lado da origem (`origensPorId` e `originItemsIndex`).
-
-Quem pegou foram as 18 fichas do oráculo, e é o controle que vale a pena
-lembrar: **a prova de que um renome de chave preservou o comportamento é o
-diff do oráculo não ter NENHUMA linha de número.** O da ALE-404 tem 760 linhas,
-todas `id`, `sourceId`, `raceId`, `race` ou `origin`.
-
-E há um canal que nenhuma varredura de campo alcança: a ficha guarda escolha
-como **JSON dentro de uma string**, e o `"race":"Lefou"` do
-`secondaryRaceChoices` não se parece com ponteiro. Quem o achou foi o Kharvos,
-cuja escolha da Deformidade deixou de ser lida — e o número do oráculo mudou.
+- O `TestEveryCatalogIdIsASlug` varre todo objeto com `id`, sem linha de base, e
+  recusa caixa alta, acento e espaço. O ponto é namespacing e passa
+  (`class.barbaro.impeto`): cada pedaço entre pontos é um slug por si.
+- **A prova de que um renome de chave preservou o comportamento é o diff do
+  oráculo não ter NENHUMA linha de número.**
+- **Escolha guardada como JSON dentro de uma string também é ponteiro** — o
+  `"race":"Lefou"` do `secondaryRaceChoices` não se parece com um, e nenhuma
+  varredura de campo o alcança. Renomeou chave? Procure ali também.
 
 ### O bônus CIRCUNSTANCIAL já tem vocabulário — não invente um
 
@@ -917,47 +699,39 @@ Antes de acrescentar forma nova ao `Modifier`, veja se o caso não é um destes:
 `context` com nota é o interruptor que a PESSOA liga, `against` com traço é
 "contra o quê", e `terrain` é o tipo de terreno. **Cada `against` é um
 interruptor**; modificadores que a pessoa liga JUNTOS dividem uma flag
-(`flagOn`), como a Marca da Presa e os acréscimos dela (ALE-509). Dos dezesseis poderes
-condicionais fechados na ALE-399, **catorze couberam sem nada novo** — o que
-faltava era o dado, não o motor.
+(`flagOn`), como a Marca da Presa e os acréscimos dela. Quase sempre o que falta
+é o dado, não o motor.
 
-Duas escolhas que valem lembrar, porque errá-las é invisível:
+Escolhas cujo erro é invisível num teste que só confere números:
 
 - **Alvo que já É o escopo dispensa condição.** "+2 em testes de ataque para
   derrubar" (p125) é `maneuver:derrubar`, sem `condition`: pedir opt-in para uma
   circunstância que a pessoa já escolheu ao usar a manobra faria o bônus valer
-  de menos. O inverso — circunstância sem interruptor — faz valer de mais. Os
-  dois erros somem num teste que só confere números.
-- **"Resistência a X +N" é bônus em TESTE**, não redução de dano, e quem decide
-  é o livro: "uma criatura com resistência a magia +2 recebe +2 em testes"
-  (p226). O alvo é `resistance`.
-- **A manobra tem DOIS lados, e o alvo diz qual.** Ela é um teste OPOSTO (p234):
-  *"Faça um teste de manobra (um teste de ataque corpo a corpo) OPOSTO com a
-  criatura […] deve fazer o teste usando seu valor de Luta."* O `maneuver:<nome>`
-  sem escopo é a rolagem de quem ATACA (o +2 do `Derrubar Aprimorado`); com
-  `scope: "defense"` é a de quem resiste (o +5 do `Desejo de Liberdade`, p89). O
-  escopo entra na CHAVE do efeito, ou os dois somam no mesmo balde.
+  de menos. O inverso — circunstância sem interruptor — faz valer de mais.
+- **"Resistência a X +N" é bônus em TESTE**, não redução de dano: "uma criatura
+  com resistência a magia +2 recebe +2 em testes" (p226). O alvo é `resistance`.
+- **A manobra tem DOIS lados, e o alvo diz qual.** Ela é um teste OPOSTO
+  (p234). O `maneuver:<nome>` sem escopo é a rolagem de quem ATACA (o +2 do
+  `Derrubar Aprimorado`); com `scope: "defense"` é a de quem resiste (o +5 do
+  `Desejo de Liberdade`, p89). O escopo entra na CHAVE do efeito, ou os dois
+  somam no mesmo balde.
 
-  **E saber QUE TESTE a pessoa rola não basta para escolher o alvo.** Este poder
-  foi modelado primeiro como `expertise:Luta`, que é literalmente o teste que a
-  p234 manda rolar — e estava errado, porque em T20 o ATAQUE também é um teste de
-  Luta: ligar o bônus defensivo subia o ataque da arma empunhada em 5. A pergunta
-  não é só "que teste ela rola?", é **"que OUTROS números saem desse mesmo
-  teste?"**. Uma perícia que alimenta combate não aceita bônus de recorte fino;
-  quem precisa de recorte precisa de alvo próprio.
-- **Número impresso SEM alvo não vira modificador**, e o motivo fica escrito.
-  Três formas apareceram nas origens (ALE-406): o poder que NEGA uma penalidade
-  que o motor não aplica (o "Água no Feijão" nega um –5 de fabricação, e um +5
-  valeria sempre para um –5 que vale raramente — o poder geral `Disparo Preciso`
-  já era assim, sem modificador); o poder cujo TESTE o livro não define (o
-  "Vendedor de Carcaças" dá "+5 no teste" de extrair recursos, e `extrair
-  recursos` aparece uma vez no PDF inteiro, no texto dele). O guarda é o
+  **Saber QUE TESTE a pessoa rola não basta para escolher o alvo**; pergunte
+  **"que OUTROS números saem desse mesmo teste?"**. A manobra é um teste de
+  Luta, e o ATAQUE também: um bônus defensivo em `expertise:Luta` sobe o ataque
+  da arma empunhada. Uma perícia que alimenta combate não aceita bônus de recorte
+  fino; quem precisa de recorte precisa de alvo próprio.
+- **Número impresso SEM alvo não vira modificador**, e o motivo fica escrito: o
+  poder que NEGA uma penalidade que o motor não aplica (o "Água no Feijão" nega
+  um –5 de fabricação; um +5 valeria sempre para um –5 que vale raramente), ou o
+  poder cujo TESTE o livro não define (o "+5 no teste" de extrair recursos do
+  "Vendedor de Carcaças"). O guarda é o
   `TestEveryBonusAnOriginUniquePowerPrintsBecomesAModifier`: lista de
   PERMITIDOS, cada linha dizendo POR QUE não há alvo.
 
 ### O DANO TEM TRÊS PARCELAS, e só uma multiplica no crítico
 
-A p231 dá o critério, e ele é o que separa as três:
+A p231 dá o critério:
 
 > "Multiplica os DADOS de dano do ataque (incluindo quaisquer aumentos por
 > passos) pelo multiplicador da arma. Bônus numéricos de dano, **assim como
@@ -971,55 +745,46 @@ A p231 dá o critério, e ele é o que separa as três:
 | o que só vale no crítico | `WeaponCard.CriticalBonus` | não, e fora do crítico nem existe |
 
 O tipo viaja com a parcela extra porque é ele que dá à resistência a fogo onde
-agir — somar o 1d6 no dano da arma apagaria a única coisa que a distingue.
+agir.
 
-**As duas formas novas do `Modifier` não são parcela da pilha**, e é por isso que
-o `harvestWeaponRiders` as tira do mundo ANTES do `deferConditionals`:
+**Estas duas formas do `Modifier` não são parcela da pilha**, e o
+`harvestWeaponRiders` as tira do mundo ANTES do `deferConditionals`:
 
 ```
 {"target": {"k": "damage", "damageType": "fogo"}, "dice": "1d6"}
 {"target": {"k": "damage"}, "amount": 10, "condition": {"c": "onCritical"}}
 ```
 
-O `onCritical` é uma condição que **não se liga**. Deixá-la chegar ao
-`deferConditionals` a ofereceria como interruptor na aba Efeitos, e crítico não
-é escolha de ninguém. E deixar o dado extra virar parcela o somaria como
-`amount` ZERO — um modificador que existe e não faz nada, que é a forma mais
-silenciosa de defeito deste motor. Os dois casos estão presos por sabotagem no
-`weapon_riders_rules_test.go`.
+O `onCritical` é condição que **não se liga**: chegando ao `deferConditionals`,
+viraria interruptor na aba Efeitos, e crítico não é escolha de ninguém. E o dado
+extra virando parcela somaria como `amount` ZERO — um modificador que existe e
+não faz nada. Os dois casos estão presos no `weapon_riders_rules_test.go`.
 
 **O que denuncia o erro aritmético é a CONTAGEM de dados, não o total.** Num
-crítico x2 com arma flamejante o certo é 2d8 + 1d6; se o extra multiplicasse
-junto seriam 2d8 + 2d6, e com dados presos os dois totais são plausíveis. Por
-isso o dublê do `attack_rules_test.go` estoura quando a regra pede um dado a
-mais do que o caso preparou.
+crítico x2 com arma flamejante o certo é 2d8 + 1d6; com o extra multiplicado
+seriam 2d8 + 2d6, e com dados presos os dois totais são plausíveis. Por isso o
+dublê do `attack_rules_test.go` estoura quando a regra pede um dado a mais do
+que o caso preparou.
 
 ### A escala por PATAMAR, e o `default` que engole o `per` desconhecido
 
-`scale.per` tem quatro valores, e `patamar` é o mais novo (ALE-406): o fator é o
-ORDINAL do patamar — 1 no iniciante, 2 no veterano, 3 no campeão, 4 no lenda —,
-o que deixa o "Coração Heroico" (p91) caber num modificador só, `maxPm 3`, dando
-3/6/9/12.
+`scale.per: patamar` multiplica pelo ORDINAL do patamar — 1 no iniciante, 2 no
+veterano, 3 no campeão, 4 no lenda —, e o "Coração Heroico" (p91) cabe num
+modificador só, `maxPm 3`, dando 3/6/9/12. O `levelStep` não serve: os
+limiares (5, 11, 17) não são um passo fixo.
 
-**O `levelStep` não serve, e isso foi medido**: com passo 6 ele erra CINCO dos
-oito níveis de fronteira. Para baixo erra justamente o 5, o 11 e o 17; para cima
-erra o 1-4 e o 18-20.
+**O `switch` do `evalModifierScale` tem `attribute` no `default`**: um `per`
+desconhecido não estoura — procura `attrTotals[""]`, acha zero, e o modificador
+some da ficha **sem erro nenhum**. Quem torna a diferença visível é o
+`TestNoCatalogScaleIsOneTheEngineCannotRead`, que varre o catálogo contra a
+lista de escalas conhecidas.
 
-E há uma armadilha na FORMA do `evalModifierScale`: o `switch` dele tem
-`attribute` no `default`, então um `per` desconhecido não estoura — ele procura
-`attrTotals[""]`, acha zero, e o modificador some da ficha **sem erro nenhum**.
-Um `per` digitado errado é indistinguível de um bônus que o livro não dá. Quem
-torna a diferença visível é o `TestNoCatalogScaleIsOneTheEngineCannotRead`, que
-varre o catálogo inteiro contra a lista de escalas conhecidas.
+Para achar um poder no PDF, case por `bookpdf.Key` e procure **dentro da página
+que o catálogo declara**: o nome vem em VERSALETE (o `pdftotext` o devolve em
+caixa baixa), e o texto do capítulo tem a TABELA de pré-requisitos antes dos
+verbetes.
 
-E uma armadilha de LEITURA do PDF: o nome do poder é impresso em VERSALETE, e o
-`pdftotext` devolve "Armas da ambição" em caixa baixa. Busca exata pelo nome do
-catálogo não acha, e "não achei" se parece com "não existe" — case por `chave()`
-como os outros auditores fazem. Pior: procurar o nome no texto do capítulo
-inteiro cai na TABELA de pré-requisitos, que vem antes dos verbetes; procure
-dentro da página que o catálogo declara, o que de quebra confere a página.
-
-### A SOMA DE ATRIBUTO: o `scale` fora dos vitais (ALE-485)
+### A SOMA DE ATRIBUTO: o `scale` fora dos vitais
 
 "Você soma seu X em Y" é um modificador com `scale: {per: attribute, attribute}`
 num alvo qualquer — Defesa, dano, perícia —, e o `cap: classLevel` o limita ao
@@ -1028,10 +793,9 @@ escreve "limitado pelo seu nível": a p226 diz que ALGUMAS habilidades são
 limitadas, e a Presença Paralisante e a Mente Criminosa não são.
 
 - **Ela se resolve numa SEGUNDA passada** (`sheetEffects`), porque o número é o
-  atributo EFETIVO, com os itens, e esse só existe depois da primeira. Por isso
-  uma soma não pode mirar um atributo (`TestNoAttributeSumTargetsAnAttribute`),
-  e por isso toda decomposição da ficha lê o `sheetEffects`, e não o
-  `ComputeItemEffects` direto.
+  atributo EFETIVO, com os itens. Por isso uma soma não pode mirar um atributo
+  (`TestNoAttributeSumTargetsAnAttribute`), e toda decomposição da ficha lê o
+  `sheetEffects`, e não o `ComputeItemEffects` direto.
 - **O atributo negativo SUBTRAI** (decisão do dono): o livro não tem regra
   própria, e o uso dele é somar o valor como é — "10 + sua Destreza" (p106).
 - **A trava que nomeia duas coisas usa `flags`**: o `flagOff` cala se QUALQUER
@@ -1039,155 +803,116 @@ limitadas, e a Presença Paralisante e a Mente Criminosa não são.
   `flagRequired` pede todas. A condição Imóvel (e quem a contém) levanta a flag
   `imovel` para isso.
 - **O dano por TIPO de arma** cai nos escopos `melee-light-or-agile` e `ranged`
-  (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`.
-  O ATAQUE por escopo de arma (o `weapon:<id>` do Foco em Arma) é o `AttackOwn`,
-  e a decomposição da tela o soma (ALE-510).
+  (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`. O
+  ATAQUE por escopo de arma (o `weapon:<id>` do Foco em Arma) é o `AttackOwn`, e
+  a decomposição da tela o soma.
 
-### A devoção só chegava ao PV e ao PM
+### A devoção é fonte da coleta, e não só de PV e PM
 
-Antes da ALE-397 o `GodPower` entrava no motor por **uma porta só** — o
-`vitalGrantMods`, que existe para PV e PM e descarta todo alvo que não seja um
-dos dois. A lista de sistemas não tinha fonte de devoção nenhuma, então o texto
-de um poder concedido aparecia na ficha e o número não mudava. A Bênção do Mana
-funcionava por ser `maxPm`, a única família que aquela porta deixa passar.
-
-A porta continua lá, e é ela que soma PV/PM: a fonte nova NÃO duplica o número,
-porque o painel de decomposição e o total vêm de caminhos diferentes. O que a
-fonte conserta, além dos bônus que faltavam, é a própria decomposição — o
-"PM máximo" de um arcanista devoto mostrava +1 e o motor dava +2.
+O poder concedido de quem é devoto é uma FONTE da coleta
+(`godPowerActiveItem`), e chega a qualquer alvo. O `vitalGrantMods` continua
+somando PV e PM, e a fonte não duplica esse número.
 
 ### Os acumuladores moram numa entidade SINGLETON
 
-As flags e os fatores são do mundo inteiro, não de uma entidade — e ficam numa
-entidade só, com dois componentes (`worldFlags`, `worldFactors`). É o idioma de
-"recurso" do ECS. Sem ele, um sistema escreveria numa variável capturada e
-deixaria de ser função do mundo, que é o contrato do `ecs.System`.
+As flags e os fatores são do mundo inteiro, e ficam numa entidade só, com dois
+componentes (`worldFlags`, `worldFactors`) — o idioma de "recurso" do ECS. Sem
+ele, um sistema escreveria numa variável capturada e deixaria de ser função do
+mundo, que é o contrato do `ecs.System`.
 
 ## O deslocamento é contado em QUADRADOS, e metro é coisa de tela
 
-O livro mede deslocamento em metros e joga num grid de 1,5m, e TODO valor que
-ele imprime é múltiplo de 1,5 — medido no catálogo: {-3, 1,5, 6, 9, 12}.
-Guardar em metros obrigava a arredondar na fronteira do JSON, e as botas
-reforçadas (+1,5m, p159) viravam **+2m**: meio metro de bônus inventado pela
-conversão (ALE-390).
-
-Em quadrados a conta fecha exata. É a MESMA decisão que o `board_movement.go` já
-tinha tomado para o mapa — *"a conta é feita em QUADRADOS inteiros, nunca em
-metros… metro é coisa de tela"* (p236) —, e agora a ficha e o tabuleiro falam a
-mesma unidade: a cena do mapa parou de converter.
-
-De quebra, a metade do Lento (p395: *"arredonde para baixo para o primeiro
-incremento de 1,5m"*) vira divisão inteira, sem regra de arredondamento escrita
-à mão.
+Todo deslocamento que o livro imprime é múltiplo de 1,5m. Guardado em metros, ele
+arredondaria na fronteira do JSON e inventaria bônus; em quadrados, a conta fecha
+exata. É a mesma unidade do tabuleiro — *"a conta é feita em QUADRADOS inteiros,
+nunca em metros… metro é coisa de tela"* (`board_movement.go`, p236) —, e a
+metade do Lento (p395: *"arredonde para baixo para o primeiro incremento de
+1,5m"*) vira divisão inteira, sem regra de arredondamento escrita à mão.
 
 ### A conversão é SIMÉTRICA, e isso não é enfeite
 
 `amountInEngineUnits` na leitura, `amountInBookUnits` na escrita
-(`Modifier.MarshalJSON`). Sem a volta, a conversão não é idempotente: ler de
-novo o que o motor escreveu converte duas vezes, e a armadura vai de −3m para
-−2 quadrados e de −2 para −1.
+(`Modifier.MarshalJSON`). Sem a volta, ler de novo o que o motor escreveu
+converte duas vezes. Quem pega a assimetria é o `roundTrip` dos casos de
+paridade, que serializa a saída do motor e a relê.
 
-**Quem denunciou foi o `roundTrip` dos casos de paridade**, que serializa a
-saída do motor e a relê. Ele não mede unidade nenhuma — ele mede FORMA, e
-tropeçou na assimetria de graça.
-
-O efeito colateral é o que se queria: **o FIO fala a unidade do LIVRO.** O
-oráculo mostra −3 e +1,5 como a página imprime, e quem revisa o diff contra o
-livro compara os mesmos números.
+**O FIO fala a unidade do LIVRO**: o oráculo mostra −3 e +1,5 como a página
+imprime, e quem revisa o diff contra o livro compara os mesmos números.
 
 ### O modificador que MULTIPLICA
 
-Quase toda regra do livro SOMA, e é por isso que o motor nasceu só com soma.
-Algumas multiplicam, e elas não cabiam em lugar nenhum — o Lento reduz o
+Quase toda regra do livro SOMA; algumas multiplicam — o Lento reduz o
 deslocamento à metade (p395), o Imóvel o reduz a 0m (p394), a Alta Arcana corta
 o custo em PM pela metade.
 
 O `engine.Ratio` é um fator racional em inteiros (`{1,2}` é metade, `{0,1}` é
-zero), e ele vive num campo PRÓPRIO do `Modifier`. Quem tem fator não é parcela
-da pilha: o `Amount` fica em zero e o valor sai do `byTarget` para o
-`ItemEffects.Factors`.
+zero), num campo PRÓPRIO do `Modifier`. Quem tem fator não é parcela da pilha: o
+`Amount` fica em zero e o valor sai do `byTarget` para o `ItemEffects.Factors`.
+Racional e não decimal porque o motor é modelado em inteiros, e a divisão
+inteira de um total em quadrados é exatamente o arredondamento que o Lento pede.
 
 **São DUAS FAMÍLIAS, e elas se distinguem pelo ALVO.**
 
-O **fator de ALVO** (`{k: displacement}`, `{k: pmCost, scope: arcana}`) age
-DEPOIS da soma, e sobre a BASE junto. Quem diz é o livro: a Alta Arcana escreve
-"reduzido à metade (APÓS aplicar aprimoramentos e outros modificadores)". O
-Lento não corta o bônus de item de ninguém — corta o quanto a pessoa anda.
+- O **fator de ALVO** (`{k: displacement}`, `{k: pmCost, scope: arcana}`) age
+  DEPOIS da soma, e sobre a BASE junto: a Alta Arcana escreve "reduzido à metade
+  (APÓS aplicar aprimoramentos e outros modificadores)". O Lento não corta o
+  bônus de item de ninguém — corta o quanto a pessoa anda.
+- O **fator de FONTE** (`{k: source, name: <id do poder>}`) age na PARCELA
+  daquela fonte, ANTES do empilhamento. A Fúria Titânica (p42) dobra "o bônus
+  que você recebe quando usa Fúria", e o exemplo trabalhado é quem separa as
+  leituras: 5 PM gastos dão +10, e não o dobro do ataque inteiro. Com o degrau
+  pago, o balde `morale` tem a base e o degrau, os dois entram dobrados, e o
+  não-empilhamento escolhe o maior.
 
-O **fator de FONTE** (`{k: source, name: <id do poder>}`, ALE-429) age na
-PARCELA daquela fonte, ANTES do empilhamento. A Fúria Titânica (p42) dobra "o
-bônus que você recebe quando usa Fúria", e o exemplo trabalhado é quem separa as
-duas leituras: 5 PM gastos dão +10, e não o dobro do ataque inteiro — dobrar o
-total levaria Luta, Força e a arma junto. Com o degrau pago, o balde `morale`
-tem a base e o degrau, os dois entram dobrados, e o não-empilhamento escolhe o
-maior.
-
-**O fator de fonte tem DOIS sítios de aplicação, e isso é da arquitetura.** O
+**O fator de fonte tem DOIS sítios de aplicação.** O
 `scaleWhatTheSourceFactorHits` cuida do caminho incondicional, no ECS; o
-`ApplyActiveConditionals` multiplica a parcela que ele dobra de volta. Um termo
-DEFERIDO não é multiplicado no ECS — ele volta pelo segundo caminho, e dobrado
-nos dois sairia dobrado duas vezes. O bônus de Fúria é condicional, então ele
-passa justamente pelo segundo.
+`ApplyActiveConditionals` multiplica a parcela DEFERIDA, que não é multiplicada
+no ECS — dobrada nos dois sairia dobrada duas vezes. O bônus de Fúria é
+condicional, então passa pelo segundo.
 
-**Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem.** É a
-regra que o livro dá para condição — "aplique apenas o mais severo" (p394) — e
-também para custo: *"reduções no custo de PM não são cumulativas"* (p226).
-Lento mais Imóvel não dá 2,25m, dá 0m.
+**Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem** — com ou
+sem condição. O livro proíbe o acúmulo nas duas famílias: "aplique apenas o mais
+severo" (p394) para condição, *"reduções no custo de PM não são cumulativas"*
+(p226) para custo. Lento mais Imóvel dá 0m.
 
 **O Foco em Magia é a exceção ESCRITA**: −1 PM na magia escolhida, *"cumulativo
 com outras reduções de custo"* (p131). Ele não é modificador `pmCost` — entraria
 na disputa da p226 —, e o `SpellPmCostFor` o soma por fora, antes do fator e do
-piso (ALE-510).
+piso.
 
-**O primeiro fator INCONDICIONAL chegou na ALE-428**, e a linha acima sobreviveu
-a ele: a Alta Arcana é passiva de 20º nível e não pende de interruptor nenhum.
-Aqui estava escrito que todo fator vinha de condição e que esse dia pediria uma
-revisão — o que sustenta o "mais severo" não era a condição, é o livro proibir o
-acúmulo nas duas famílias.
+**O fator pode ter ESCOPO.** A Alta Arcana corta "suas magias arcanas" (p39), e
+não toda habilidade que custa PM: a chave é `pmCost:arcana`, e o clérigo do
+multiclasse paga cheio pela divina dele — mesma divisa do `displacement:armor`.
+Quem responde de que lista a magia vem é a `sheet.SpellTradition`, porque **a
+tradição é da CLASSE e não da magia**: a Luz é arcana na mão do arcanista e
+divina na do clérigo.
 
-**O fator pode ter ESCOPO, e o custo de magia é o caso.** A Alta Arcana corta
-"suas magias arcanas" (p39) e não toda habilidade que custa PM, então a chave é
-`pmCost:arcana` e o clérigo do multiclasse paga cheio pela divina dele — mesma
-divisa do `displacement:armadura`. Quem responde de que lista a magia vem é a
-`sheet.SpellTradition`, porque **a tradição é da CLASSE e não da magia**: a Luz
-é arcana na mão do arcanista e divina na do clérigo.
-
-Racional e não decimal porque o motor é modelado em inteiros — e porque a
-divisão inteira de um total em QUADRADOS é exatamente o "arredonde para baixo
-para o primeiro incremento de 1,5m" que o Lento pede. Não há regra de
-arredondamento escrita à mão em lugar nenhum.
-
-> **A ISENÇÃO não é uma terceira forma do fator — ela já existe, e por FLAG.**
-> O anão "não tem o deslocamento reduzido por uso de armadura ou excesso de
-> carga" (p20), e quem responde isso são o `DisplacementIgnoresArmor` e o
-> `DisplacementIgnoresLoad`, lidos pelo `displacementBreakdown`: a isenção pula
-> a chave `displacement:armor` e a penalidade de carga, e não toca em fator
-> nenhum — uma magia de lentidão continua valendo para o anão. **São duas flags
-> porque o livro as vende separadas**: o Fanático (p128) compra só a da armadura
-> (ALE-430).
+> **A ISENÇÃO não é uma terceira forma do fator — ela é FLAG.** O anão "não tem o
+> deslocamento reduzido por uso de armadura ou excesso de carga" (p20), e quem
+> responde são o `DisplacementIgnoresArmor` e o `DisplacementIgnoresLoad`, lidos
+> pelo `displacementBreakdown`: a isenção pula a chave `displacement:armor` e a
+> penalidade de carga, e não toca em fator nenhum — uma magia de lentidão
+> continua valendo para o anão. **São duas flags porque o livro as vende
+> separadas**: o Fanático (p128) compra só a da armadura. Isenção de terreno
+> difícil (Acrobático, p129) não é da ficha: é do `PathCost` do tabuleiro.
 >
-> Aqui estava escrito que a terceira forma seria "imunidade a FATOR", pelas
-> Pernas do Mar do bucaneiro. **Era leitura da descrição do catálogo e não da
-> página**: a p48 diz *"quando está se equilibrando ou escalando […] seu
-> deslocamento não é reduzido à metade"*, e esse corte é da CIRCUNSTÂNCIA, que o
-> app não modela. Não há o que isentar. O que falta de verdade são dois poderes
-> que pedem a isenção EXISTENTE em recortes diferentes: o Fanático (p128), só
-> para armadura pesada, e o Acrobático (p129), para terreno difícil — e esse
-> segundo não é da ficha, é do `PathCost` do tabuleiro.
+> Confira na PÁGINA, e não na descrição do catálogo, antes de concluir que um
+> poder pede isenção nova: o corte pode ser da CIRCUNSTÂNCIA, que o app não
+> modela.
 
 ### Onde a unidade aparece, e onde ela não aparece
 
 | lugar | unidade |
 |---|---|
-| catálogo (`items.json`, `races.json`) | metros |
+| catálogo (os literais de `domain/catalog/transcript`) | metros |
 | `Modifier.Amount` em memória | quadrados |
 | `Modifier` no fio (JSON) | metros |
-| `ComputedSheet.displacementSquares` | quadrados — e o nome do campo diz |
-| `itemEffects.byTarget["displacement"]` | quadrados, e o nome do alvo é a única pista |
+| `ComputedSheet.Displacement` (`json:"displacementSquares"`) | quadrados — e o nome do campo diz |
+| `ItemEffects.ByTarget["displacement"]` | quadrados, e o nome do alvo é a única pista |
 | a tela (crachá da mochila, régua da Mesa) | metros |
 
-O campo do fio **mudou de nome** de propósito: `displacement` → `displacementSquares`. Trocar
-a unidade calada faria todo leitor antigo ler 6 onde lia 9, sem erro em lugar
+**Trocar a unidade de um campo do fio troca o NOME dele** (`displacementSquares`):
+trocar calado faria todo leitor antigo ler 6 onde lia 9, sem erro em lugar
 nenhum.
 
 ## Catálogos
@@ -1195,16 +920,15 @@ nenhum.
 **As cenas leem o catálogo EMBUTIDO direto** — ele não viaja por HTTP, e não há
 rota que o sirva.
 
-A regra que governa quem o lê: **uma vez e guardado**, não por requisição, porque
-o livro é compilado no binário e não muda enquanto ele for o mesmo. É o que o
-`race_traits.go` faz com `sync.Once`.
+Quem o lê lê **uma vez e guarda**, e não por requisição: o livro é compilado no
+binário e não muda enquanto ele for o mesmo. É o que o `race_traits.go` faz com
+`sync.Once`.
 
-**O LIVRO é código Go**, em `domain/catalog/transcript` (ALE-498): cada verbete é
-um literal tipado, e é ali que uma regra transcrita se edita. Ele é autorado num
-lugar só — a cena, o motor e os testes leem o mesmo valor, e o `catalog.Resource`
-o serializa para os leitores que decodificam JSON (o `transcript.ResourceJSON`).
-Era JSON até a ALE-498, e virou Go para o compilador cobrar o que o JSON deixava
-passar calado: uma chave escrita errado era ignorada por quem lia.
+**O LIVRO é código Go**, em `domain/catalog/transcript`: cada verbete é um
+literal tipado, e é ali que uma regra transcrita se edita. A cena, o motor e os
+testes leem o mesmo valor, e o `catalog.Resource` o serializa para os leitores
+que decodificam JSON (o `transcript.ResourceJSON`). É Go para o compilador
+cobrar a chave escrita errado.
 
 - **A forma dos arquivos de dados é CANÔNICA**, e quem a escreve é o emissor
   (`transcript.WriteSource`). O `TestTheTranscriptIsInCanonicalForm` reprova o
@@ -1214,15 +938,14 @@ passar calado: uma chave escrita errado era ignorada por quem lia.
   reescreverem o arquivo, sem uma cirurgia de AST por ferramenta.
 - **Comentário dentro de um literal não sobrevive à reescrita**, e isso é a
   regra: o porquê de um verbete mora no `modeled`/`unmodeled` dele, que a ficha
-  lê, ou na issue.
+  lê.
 - **Os tipos (`*_types.go`) e o registro (`layout.go`) se escrevem à mão**; o
   emissor não os toca. Recurso novo é uma linha no `layout.go`.
 - **`Modifier.Amount`, `Item.Price` e `Item.Slots` não distinguem ausente de
-  zero**: todo leitor Go já os decodificava como número simples, e a diferença
-  só existia para os scripts Python que vieram para Go junto.
+  zero.**
 
-**O que uma CAMPANHA acrescenta ao livro não mora ali, e nem podia** (ALE-387):
-ele é compilado no binário, e a mesa autora a dela em tempo de execução. A `emenda de
+**O que uma CAMPANHA acrescenta ao livro não mora ali, e nem podia**: o livro é
+compilado no binário, e a mesa autora a dela em tempo de execução. A `emenda de
 catálogo` vive em `campaign_items`, ACRESCENTA modificador a um verbete
 existente e nunca o substitui — ver a linha dela no
 [GLOSSARY.md](../GLOSSARY.md).
@@ -1236,12 +959,9 @@ Fora de campanha se escreve `engine.BookRuleset(book)`, e a linha é explícita 
 propósito — o molde do elenco, o oráculo e os fixtures estão TOMANDO essa
 decisão, e ela aparece em vez de ser o que acontece quando ninguém disse nada.
 
-> Aqui morava a versão anterior, em que a emenda viajava no `engine.Character` e
-> um `TestEvery…` varria as portas cobrando `forCharacter`. Ela foi trocada
-> porque o ESCOPO não era representável: com as emendas no personagem,
-> campanha-inteira e personagem-específico chegam ao motor já misturados pelo
-> carregamento, e a procedência — que é o que a ficha usa para dizer de onde veio
-> cada termo — morre no caminho.
+As emendas não viajam no `engine.Character`: no personagem, campanha-inteira e
+personagem-específico chegariam ao motor já misturados, e a procedência — que é
+o que a ficha usa para dizer de onde veio cada termo — morreria no caminho.
 
 Quem resolve o mundo é o carregamento da ficha (`sheet.RulesetFor`), UMA vez, e
 ele viaja no agregado (`CharacterDTO.Ruleset`, `json:"-"`) até quem computa. O
@@ -1256,71 +976,56 @@ uma por ficha.
 | **concessão** | `campaign_grants` | quem TEM as coisas | seletor |
 | **silêncio** | `campaign_silences` | o que esta mesa NÃO aplica | seletor |
 
-Elas não viram uma tabela de "regras" com um `kind` porque respondem a
-perguntas diferentes e cada uma tem a forma dela — o que as une é a campanha, e
-não o formato. A de verbete não tem escopo de propósito: um item que significa
-uma coisa para você e outra para o vizinho de mesa não é um mundo, são dois.
+Elas não viram uma tabela de "regras" com um `kind`: respondem a perguntas
+diferentes e cada uma tem a forma dela. O que as une é a campanha, não o
+formato. A de verbete não tem escopo de propósito: um item que significa uma
+coisa para você e outra para o vizinho de mesa não é um mundo, são dois.
 
-O **seletor** (`engine.Selector`) é `characterId` nulo = a mesa inteira,
-preenchido = aquela ficha, e o id é o do CLONE. Espécie desconhecida não alcança
-ninguém, e o id ZERO nunca casa — o `Character{}` dos fixtures tem id zero, e
-casá-lo faria a emenda de uma mesa aparecer no oráculo.
+O **seletor** (`engine.Selector`) tem uma espécie — `everyone`, a mesa inteira,
+ou `character`, uma ficha — e o id é o do CLONE que vive na campanha. Espécie
+desconhecida não alcança ninguém, e o id ZERO nunca casa: o `Character{}` dos
+fixtures tem id zero, e casá-lo faria a emenda de uma mesa aparecer no oráculo.
 
 ### O endereço de um termo NÃO carrega o valor
 
-`engine.TermID` é `fonte::alvo::escala::condição`. O jeito óbvio seria misturar
-o valor e o tipo de bônus, e era o que o endereço dos condicionais fazia antes
-de os dois convergirem — é justamente o que torna um endereço frágil: corrigir
-um número no livro o troca, e o que estava preso a ele evapora sem uma palavra
-em lugar nenhum.
+`engine.TermID` é `fonte::alvo::escala::condição`, mais a categoria e a peça
+(`From`) só quando existem. Valor, tipo de bônus e prosa (`note`, `label`) ficam
+de fora: corrigir um número ou uma frase no livro trocaria o endereço, e o que
+estava preso a ele evaporaria sem aviso. A escala e a condição são os
+discriminadores porque separam os pares que existem — o anão tem `maxPv +2` e
+`maxPv +1 por nível`.
 
-A escala e a condição são os discriminadores porque são eles que separam os
-pares que EXISTEM: o anão tem `maxPv +2` e `maxPv +1 por nível`, e a Força da
-Natureza do druida tem `pmCost -2` e o mesmo `-2` em terreno natural. A prosa
-(`note`, `label`) fica de fora: é texto que uma errata reescreve.
+Quem garante "é único", e não só "é único hoje", é o
+`TestEveryCatalogTermHasAUniqueAddress`. Duas sutilezas dele:
 
-Medido: 246 termos do catálogo, zero colisões. O que separa "é único hoje" de "é
-único" é o `TestEveryCatalogTermHasAUniqueAddress`, e ele tem duas sutilezas que
-custaram uma passada errada cada:
-
-- **A raça é UMA fonte**, e não uma por habilidade: o `raceActiveItems` junta os
-  modificadores de todas elas num `ActiveItem` com o `race.ID`.
-- **O mesmo benefício de origem é oferecido por VÁRIAS origens**, e o
-  `getOriginBenefit` lê o primeiro que casa o id. Medir cada cópia acusa a fonte
-  colidindo consigo mesma — foi o primeiro resultado da varredura, e ele parecia
-  uma descoberta.
+- **A raça é UMA fonte**: o `raceActiveItems` junta os modificadores de todas as
+  habilidades num `ActiveItem` com o `race.ID`.
+- **O mesmo benefício de origem é oferecido por várias origens**, e o
+  `getOriginBenefit` lê o primeiro que casa o id: medir cada cópia acusaria a
+  fonte colidindo consigo mesma.
 
 ### Um endereço só, e o opt-in do jogador usa o mesmo
 
-Havia DOIS endereços para a mesma coisa: o do jogador
-(`fonte::alvo::nota::valor::tipo`, gravado em `character_conditionals`) e o do
-mestre. Eles convergiram no `TermID` (ALE-387), e o antigo saiu — com a
-migração `00019`, que APAGA as linhas gravadas na forma velha, porque linha que
-não casa com nada é lixo invisível e a ficha mostraria o situacional desligado
-para sempre.
-
-A troca foi MEDIDA antes de ser feita: a tabela tinha zero linhas. O guarda que
-prendia a forma antiga dizia, com razão, que mudá-la exigiria uma migração — e
-o que autoriza a migração é a contagem, não a vontade.
+O opt-in do jogador (`character_conditionals`) e o silêncio do mestre gravam o
+mesmo `TermID`. **Mudar a forma do endereço é migração**: linha gravada na forma
+velha não casa com nada, e a ficha mostraria o situacional desligado para sempre.
+É por isso que a categoria e a peça só entram no endereço quando existem.
 
 ### JOGADOR NÃO MUDA REGRA — isso é do mestre (decisão do dono)
 
-É a linha que separa as duas famílias de escrita, e ela vale para toda tela que
+É a linha que separa as duas famílias de escrita, e vale para toda tela que
 vier. O jogador alterna o OPT-IN de um condicional que a ficha dele já oferece;
 quem AUTORA regra — emenda de verbete, concessão, silêncio — é o mestre, na
 campanha dele.
 
-**Quem cobra é o servidor, e a tela esconder não conta.** Medido (ALE-387): o
-`ToggleSituational` gravava a chave crua do sinal do cliente, e um POST com
-`{"conditional":"flag:furia"}` dava ao bárbaro o bônus de Fúria em ataque e dano
-com o PM INTACTO e sem linha de postura. (O número medido na época era +3,
-porque o catálogo concedia o degrau por nível; hoje são os +2 da base — ver
-`StanceDegreeModifiers`.) A lista de situacionais nunca ofereceu aquele
-interruptor — as posturas são excluídas dela, porque entrar custa PM.
+**Quem cobra é o servidor; a tela esconder não conta.** Um POST montado à mão
+com um interruptor que a tela nunca ofereceu tem de ser recusado pelo caso de
+uso. As posturas ficam fora da lista de situacionais, porque entrar nelas custa
+PM.
 
-O conjunto aceito é de PERMITIDOS (`character.SituationalGroupsOf`), e ele tem
-UM dono: a cena desenha a partir dele e o caso de uso recusa o que não estiver
-nele. Enquanto eram duas implementações, a divergência aparecia como a tela
+O conjunto aceito é uma lista de PERMITIDOS (`character.SituationalGroupsOf`), e
+ela tem UM dono: a cena desenha a partir dela e o caso de uso recusa o que não
+estiver nela. Duas implementações divergem, e a divergência aparece como a tela
 escondendo o que o servidor aceita.
 
 **`character_conditionals` FICA, e não é o mesmo que `campaign_silences`**,
@@ -1331,73 +1036,63 @@ tabela só juntaria duas permissões de escrita que não podem ser a mesma.
 ### O interruptor de GRUPO tem endereço próprio
 
 Os condicionais que dividem uma flag viram UM interruptor na tela — "um item
-caseiro com três modificadores é uma coisa só na mesa". Enquanto a chave era o
-endereço do PRIMEIRO membro, ligar o grupo dobrava um modificador e o crachá ao
-lado dizia "3 mods". Hoje a chave é o `engine.FlagGroupID`, e "metade ligada"
-deixou de ser representável — o que valia igual para a POSTURA, que gravava uma
-linha por condicional calculada no instante de entrar e recalculada no de sair.
+caseiro com três modificadores é uma coisa só na mesa". A chave do grupo é o
+`engine.FlagGroupID`, e não o endereço de um membro: assim "metade ligada" não é
+representável. Vale para a POSTURA e para as flags fora dela — o Folião, o
+terreno do Explorador e a `marca-da-presa`, que junta o dado da Marca e os
+acréscimos dela num interruptor só.
 
-Quando foi consertado não era defeito VIVO: as flags do livro eram de POSTURA,
-e a tela de situacionais exclui as posturas. Hoje há flags fora delas — o
-Folião, o terreno do Explorador (ALE-503) e a `marca-da-presa`, que junta o dado
-da Marca e os **acréscimos** dela (Espreitar, Ponto Fraco) num interruptor só
-(ALE-509).
+### O catálogo chega ao processo por dois caminhos
 
-**O `transcript.Items` chega ao processo por dois caminhos, e só um é sempre
-inteiro.** O `catalog.Resource` é `go:embed` — existe sempre que o binário
-existe. O `s.catalogs` é o mesmo arquivo indexado pelo motor
-(`book.EngineCatalogs`), mas é um CAMPO que a bancada troca: há fixture que
-prima `{"items":[]}` de propósito, e a bancada mostrou o preço na ALE-272 — um
-escudo foi VESTIDO num teste porque o catálogo do fixture estava vazio. **Validação
-de regra lê o embutido**; o `s.catalogs` fica para o motor.
+O `catalog.Resource` serve o `transcript`, que é Go compilado no binário: existe
+sempre que o binário existe. O `s.catalogs` é o mesmo livro indexado pelo motor
+(`book.EngineCatalogs`), mas é um CAMPO que a bancada troca — há fixture que
+prima `{"items":[]}` de propósito. **Validação de regra lê o embutido**; o
+`s.catalogs` fica para o motor.
 
-**Regra que só a TELA sabe é fronteira aberta, e o sintoma é sempre o mesmo: a
-tela tranca e o servidor não.** Três já morderam — a progressão de círculo (em
-que nível cada classe destrava cada círculo), a compatibilidade entre
-melhoria/material e o item que os recebe, e o limite de nome de campanha.
+### Regra que só a TELA sabe é fronteira aberta
 
-Hoje as três moram no catálogo ou no domínio: `spellcasting` em `classes.json`,
-`aceitaMelhoria` (em `web/sheetui/bag_improvements.go`), `campaign.Description`. O
-filtro que a tela aplica é conveniência sobre a mesma regra, nunca a regra.
+O sintoma é sempre o mesmo: a tela tranca e o servidor não. A progressão de
+círculo (`Spellcasting` em `transcript.Classes`), a compatibilidade entre
+melhoria/material e o item (`aceitaMelhoria`, no comando da ficha) e o limite de
+texto da campanha (`domain/campaign/rules.go`) moram no servidor. O filtro que a
+tela aplica é conveniência sobre a mesma regra, nunca a regra.
 
-E a QUARTA era a maior: as regras de ESCOLHA de poder — quantas vagas o nível
-abre (uma por nível a partir do 2º, p33), quantos benefícios a origem dá, quais
-caminhos e quais deuses cada classe aceita — só a tela sabia, e a gravação
-aceitava os cinco blobs sem conferir NADA. Um pedido montado à mão punha vinte
-poderes num personagem de nível 1, e o motor somava os modificadores de todos. A
-validação é
-`sheet.WithChoicesValid`, ela roda nos comandos de escolha da ficha
-(`saveTheChoices`), e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, e
-não só "não piorar". Desde a ALE-491 ela confere também o `powerChoices`:
-escolha só de poder que a ficha tem, só opção que o livro oferece, mais de uma
-só no poder repetível — e o repetível ocupa uma vaga por ESCOLHA
-(`sheet.UsedPowerSlots`), não uma por poder. O poder GERAL que pede escolha (Foco em
-Perícia, Foco em Arma) entra na mesma máquina pelo `book.PowerWithChoice`, e a
-escolha dele que veio da origem não ocupa vaga (`sheet.FreePicks`, ALE-510). A escolha CONTADA POR ATRIBUTO
-(`countAttribute`, as perícias do Especialista, p73, ALE-501) não ocupa vaga,
-vale em poder concedido pelo nível, e tem regra que depende da ficha — perícia
-treinada, no máximo o atributo sem temporários (`Ruleset.PermanentAttribute`),
-mínimo 1. Por isso ela é conferida também FORA do diálogo: todo gesto que mexe
-no N ou no treino (treino, ofício, guardar/vestir/remover item, distribuição da
-raça, atributo na forja) aplica a mudança numa cópia e chama
-`sheet.ChangeKeepsChosenExpertises` antes de gravar. A escolha CONTADA POR
-NÍVEL (`countLevels`, os terrenos do Explorador, p50, ALE-503) repete opção sem
-gastar vaga, e o gesto de descer o nível confere `sheet.LevelCountedChoicesFit`
-no nível novo. Decisão do dono, com a razão registrada — o projeto ainda
-não foi usado numa mesa real, então não há ficha antiga fora da conta para
-proteger. O preço apareceu na hora: dois testes tinham fixtures ilegais pelo
-livro (um poder inventado, e um personagem sem classe com um poder escolhido).
+### A validação de ESCOLHA é do servidor, e é estrita
+
+As regras de escolha de poder — quantas vagas o nível abre (uma por nível a
+partir do 2º, p33), quantos benefícios a origem dá, quais caminhos e quais deuses
+cada classe aceita — são conferidas na gravação, não só no diálogo.
+
+- **`sheet.WithChoicesValid`** roda nos comandos de escolha da ficha
+  (`saveTheChoices`) e é **estrita**: a escrita tem de deixar a ficha VÁLIDA, não
+  só "não piorar". O projeto ainda não foi usado numa mesa real, então não há
+  ficha antiga para proteger (decisão do dono).
+- **`powerChoices`**: só poder que a ficha tem, só opção que o livro oferece, mais
+  de uma só no poder repetível. O repetível ocupa uma vaga por ESCOLHA
+  (`sheet.UsedPowerSlots`), não uma por poder.
+- **Poder GERAL que pede escolha** (Foco em Perícia, Foco em Arma) entra pela
+  mesma máquina via `book.PowerWithChoice`; a escolha dele que veio da origem não
+  ocupa vaga (`sheet.FreePicks`).
+- **Escolha contada por ATRIBUTO** (`countAttribute`, as perícias do
+  Especialista, p73) não ocupa vaga e depende da ficha — perícia treinada, no
+  máximo o atributo sem temporários (`Ruleset.PermanentAttribute`), mínimo 1. Por
+  isso todo gesto que mexe no N ou no treino (treino, ofício, guardar/vestir/
+  remover item, distribuição da raça, atributo na forja) aplica a mudança numa
+  cópia e chama `sheet.ChangeKeepsChosenExpertises` antes de gravar.
+- **Escolha contada por NÍVEL** (`countLevels`, os terrenos do Explorador, p50)
+  repete opção sem gastar vaga, e descer o nível confere
+  `sheet.LevelCountedChoicesFit` no nível novo.
+
+### Schema pega FORMA, não número errado
 
 O que protege dado transcrito é **validação de schema**
-(`catalog/rules_tables_test.go`), não um `expect` por campo: o risco é typo, não
-regressão. O que ela cobre é o que quebra tela — perícia que não existe, faixa de
-rolagem com buraco, termo de devoto apontando para raça inexistente.
+(`domain/catalog/rules_tables_test.go`), não um `expect` por campo: o risco é
+typo, não regressão. Ela cobre o que quebra tela — perícia que não existe, faixa
+de rolagem com buraco, termo de devoto apontando para raça inexistente.
 
-**E o que ela NÃO cobre é número errado.** Medido na ALE-151: 44 dos 80 verbetes
-do bestiário tinham atributo ou resistência trocados, vários com o número do
-verbete VIZINHO — a Serpe carregava as resistências do Ogro, e o schema estava
-verde o tempo todo, porque um inteiro no lugar de outro inteiro é um schema
-válido. Contra isso só serve conferir contra o livro:
+**Ela não cobre número errado**: um inteiro no lugar de outro inteiro é schema
+válido. Contra isso só serve conferir contra o livro, com o auditor:
 
 ```
 cd engine-go
@@ -1405,25 +1100,16 @@ go run ./cmd/audit/bestiary            # relatório
 go run ./cmd/audit/bestiary --aplicar  # escreve as correções
 ```
 
-Cada auditor é um comando em `cmd/audit/<nome>`, e o livro (gitignorado) se
-acha sozinho — `T20_BOOK_PDF`, um `t20-book.pdf` subindo do diretório, ou o do
+### Os auditores do livro
+
+Cada auditor é um comando em `cmd/audit/<nome>`, e o livro (gitignorado) se acha
+sozinho — `T20_BOOK_PDF`, um `t20-book.pdf` subindo do diretório, ou o do
 checkout principal quando se está numa worktree. A leitura do PDF mora em
-`infra/bookpdf`, compartilhada por todos: ela nasceu no do bestiário, foi
-copiada para o de magias, e virou módulo quando o terceiro ia copiá-la
-(ALE-391) — as duas cópias já tinham divergido. Os auditores nasceram em Python
-e viraram Go na ALE-498, com a saída provada igual linha a linha; o `bookpdf`
-reproduz de propósito as classes de caractere do Python (`\s` e `\w` Unicode),
-porque o livro tem espaço não separável.
+`infra/bookpdf`, compartilhada por todos; ela usa `\s` e `\w` Unicode
+(`IsPySpace`), porque o livro tem espaço não separável.
 
-Rodar é **ato deliberado**, como o `genoracle`, e pela mesma razão: a ferramenta
-PROPÕE lendo o PDF, e é o diff revisado contra o livro que decide. Ela só aceita
-um bloco contíguo e completo cuja Defesa e Pontos de Vida já batam com o
-catálogo — essas duas âncoras é que dizem "é esta criatura".
-
-Uma armadilha que ela documenta e que vale para qualquer extração deste PDF: o
-`pdftotext -layout` junta colunas VIZINHAS na mesma linha de texto, então uma
-linha de atributos aparece colada à criatura errada. Ler por coordenada, nunca
-por layout.
+Rodar é **ato deliberado**, como o `genoracle`: a ferramenta PROPÕE lendo o PDF,
+e é o diff revisado contra o livro que decide.
 
 **Mexeu num catálogo? rode o auditor dele.** São um por seção do sumário, e o
 que muda entre eles é a ÂNCORA — o par de campos que diz "este pedaço do livro é
@@ -1432,7 +1118,7 @@ este verbete":
 | auditor | catálogo | âncora |
 |---|---|---|
 | `cmd/audit/bestiary` | `transcript.Bestiary` | Defesa + Pontos de Vida |
-| `cmd/audit/spells` | `transcript.Spells` | nome + escola, para os APRIMORAMENTOS — e, para a COBERTURA, duas âncoras de uma vez: os links em negrito do índice (p174-177) e o título do verbete, que é `Tormenta20` a 24pt. As duas fecham uma contra a outra antes de qualquer uma encostar no catálogo |
+| `cmd/audit/spells` | `transcript.Spells` | nome + escola, para os aprimoramentos; para a cobertura, os links em negrito do índice (p174-177) **e** o título do verbete (`Tormenta20` a 24pt) |
 | `cmd/audit/classes` | `transcript.Classes`, `transcript.ClassPowers` | nome na prosa, ou nível na tabela |
 | `cmd/audit/equipment` | `transcript.Items` | nome + preço na tabela |
 | `cmd/audit/races` | `transcript.Races` | linha de atributos, ligada por semântica |
@@ -1442,318 +1128,152 @@ este verbete":
 | `cmd/audit/origins` | `transcript.OriginSources`, `transcript.Origins` | Tabela 1-19 **e** o verbete, que é o título com `Benefícios.` abaixo |
 | `cmd/audit/powers` | `transcript.GeneralPowers`, `transcript.TormentaPowers` | a tabela de pré-requisitos **e** a linha `Pré-requisito:` do verbete |
 | `cmd/audit/grantedpowers` | `transcript.GrantedPowers`, `transcript.DivinePowers` | a coluna "Devoto de X" da Tabela da p127 **e** o rótulo de deus do verbete |
-| `cmd/audit/enchants` | `transcript.Items` (`weapon-enchant`, `armor-enchant`) | a Tabela 8-8 e a 8-10, que são `d%` + encanto + efeito, **e** o verbete `Nome. Regra` |
-| `cmd/audit/materials` | `transcript.Items` (`material`) | a Tabela 3-9, que é uma MATRIZ de preço **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
-| `cmd/audit/objects` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado, e `-layout` cola uma na outra |
-| `cmd/audit/specificitems` | `transcript.Items` (os de `composedOf`) | a Tabela 8-9 e a 8-11 (`d%` + nome + **preço**), o verbete `Nome. Regra`, **e o ITÁLICO dele**, que é a composição do item |
-| `cmd/audit/potions` | `transcript.Items` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + **a MAGIA** + preço), resolvida contra o catálogo de magias — a poção não tem verbete, porque a regra dela é a da magia |
-| `cmd/audit/accessories` | `transcript.Items` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15 (três tabelas, UMA lista alfabética de verbetes atravessando quatro páginas) |
-| `cmd/audit/artifacts` | `transcript.Items` (`artifact`), `transcript.GMTables` (`chaosDeck`) | NENHUMA tabela — é o único do Capítulo 8 sem o denominador de graça, porque a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção é desenhado a 22,281 pontos e o corpo a 16,2, e dentro das p346-349 não há outra seção |
+| `cmd/audit/enchants` | `transcript.Items` (`weapon-enchant`, `armor-enchant`) | as Tabelas 8-8 e 8-10 (`d%` + encanto + efeito) **e** o verbete `Nome. Regra` |
+| `cmd/audit/materials` | `transcript.Items` (`material`) | a Tabela 3-9, uma MATRIZ de preço, **e** o verbete com as metades `Arma.` / `Armadura e Escudo.` / `Esotérico.` |
+| `cmd/audit/objects` | `objectExamplesOfTheBook` + as duas escadas (Go!) | a Tabela 5-4, lida por COORDENADA — a p239 tem duas tabelas lado a lado |
+| `cmd/audit/specificitems` | `transcript.Items` (os de `composedOf`) | as Tabelas 8-9 e 8-11 (`d%` + nome + preço), o verbete `Nome. Regra` **e o ITÁLICO dele**, que é a composição do item |
+| `cmd/audit/potions` | `transcript.Items` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + a MAGIA + preço), resolvida contra o catálogo de magias — a poção não tem verbete |
+| `cmd/audit/accessories` | `transcript.Items` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15, com UMA lista alfabética de verbetes para as três |
+| `cmd/audit/artifacts` | `transcript.Items` (`artifact`), `transcript.GMTables` (`chaosDeck`) | NENHUMA tabela — a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção e o corpo têm corpos de letra diferentes, e nas p346-349 não há outra seção |
 
-**E um que não lê o livro: `cmd/audit/coverage`.** Os de cima conferem o catálogo
-contra a PÁGINA; este confere os verbetes de raça, classe e origem contra o
-MOTOR — quanto de cada um vira número, gesto ou nota do mestre. O balde é
-DECLARADO no verbete (`modeled`/`unmodeled`, como nos encantos), e a nota cita a
-issue da fatia que a resolve: `--destino` dá quantos verbetes cada fatia espera.
-Verbete de raça, classe ou origem sem efeito no motor e sem `unmodeled`
-reprova. Não tem guarda em Go, por decisão do dono (ALE-482).
+**Dois não leem o livro.** O `cmd/audit/coverage` confere os verbetes de raça,
+classe e origem contra o MOTOR — quanto de cada um vira número, gesto ou nota do
+mestre. O balde é DECLARADO no verbete (`modeled`/`unmodeled`), a nota cita a
+issue da fatia que a resolve, e `--destino` agrupa por ela. Verbete sem efeito no
+motor e sem `unmodeled` reprova. Não tem guarda em Go, por decisão do dono. O
+`cmd/audit/pointers` lista os arquivos citados em comentários de teste que não
+existem mais; a saída são candidatos, não veredito.
 
-### O auditor de materiais, e as DUAS armadilhas de ler uma página dividida
+### O que vale para todo auditor
 
-A Tabela 3-9 é uma MATRIZ — seis materiais por cinco tipos de item —, e o
-denominador dela é a contagem de células: trinta, duas em travessão. As colunas
-não se acham pelo cabeçalho, porque "Aço-Rubi Adamante" chega num `<line>` só;
-elas se acham pela linha `Arma`, que é a única sem travessão, e toda outra
-célula vai para a mais próxima.
+- **A âncora é o trabalho; o resto é regex.** Ela só aceita um bloco contíguo e
+  completo cujos campos-âncora já batam com o catálogo. O que não se liga a um
+  verbete REPROVA com nome em vez de ser adivinhado.
+- **Ler por coordenada, nunca por `-layout`.** O `pdftotext -layout` junta
+  colunas VIZINHAS na mesma linha. Quando nem a linha serve — o `<line>` junta
+  título, estado e o título da coluna vizinha na mesma altura —, leia por
+  PALAVRA (`Book.Words`).
+- **Toda tabela de rolagem dá denominador de graça: as faixas `d%` têm de
+  ladrilhar o intervalo.** Uma faixa é uma decomposição, e a soma se afirma antes
+  das parcelas (`bookpdf.RangesThatDontClose`).
+- **Duas âncoras se conferem uma contra a outra ANTES de qualquer uma encostar
+  no catálogo.** Quando o livro imprime a mesma verdade em dois lugares, uma
+  leitura errada vira discordância nomeada em vez de tabela plausível.
+- **O que o motor NÃO aplica sai com denominador, não como lista de proibidos.**
+  Todo encanto ou tem modificador, ou diz por que não — nunca os dois, porque um
+  motivo ao lado de um modificador é um motivo que envelheceu. Quem cobra sem o
+  PDF é o `TestEveryEnchantEitherAppliesOrSaysWhyNot`. Nos materiais, `modeled` e
+  `unmodeled` são PERMITIDOS por METADE do verbete, e a união tem de dar
+  exatamente as partes dele.
+- **Medidor de prosa diz onde a prosa acaba**, e o relatório imprime a cobertura
+  mínima: sem recortar por coluna, palavras de outro assunto inflam a medida.
+- **A DIREÇÃO da medida é do TERRENO.** Quando o catálogo escreve uma forma
+  EQUIVALENTE à do livro, a pergunta é "a regra do livro está aqui?". Quando ele
+  RESUME, é a inversa: "tudo o que o catálogo afirma está na página?". Vale para
+  números, perícias nomeadas e cobertura de palavras (`bookpdf.Coverage`). O
+  veredito sobre a frase continua humano, e por isso as duas saem lado a lado.
+- **Filtro de lixo é um só**: o `WithoutJunk` do `bookpdf` (marca d'água, número
+  de página, cabeçalho de capítulo).
 
-**A prosa ao lado da tabela tem duas armadilhas, e as duas dão resultado
-plausível:**
-
-1. **o BOXE.** "Fabricando Itens Superiores" divide a coluna com o Mitral e mora
-   no x da primeira linha de parágrafo — na ordem de leitura ele cai ENTRE o
-   título do material e as metades dele. O sexto material saía chamado
-   "Fabricando Itens Superiores", com as três metades certas e a contagem certa.
-   Quem denunciou foi a outra âncora. O recorte é pelo **bloco**: a prosa do
-   verbete começa em x=309 e a do boxe em x=326;
-2. **a regra que mora na ABERTURA.** *"Itens de mitral ocupam –1 espaço"* e o
-   *"–2 em perícias de Carisma"* da matéria vermelha não estão em metade
-   nenhuma — estão no parágrafo de sabor. Um leitor que só colhesse as metades
-   perderia as duas em silêncio.
-
-**E o denominador é por METADE, não por material.** Um material com modificador
-não está pronto por isso: o mitral aplica a margem de ameaça e não aplica o
-limite de Destreza da armadura pesada. As duas listas — `modeled` e `unmodeled`
-— são PERMITIDOS, a união tem de dar exatamente as partes do verbete, e uma
-parte pode estar nas duas quando metade dela entra.
-
-### A FRONTEIRA JSON do `Modifier`, e por que ela mentiu
+### A FRONTEIRA JSON do `Modifier`
 
 O `Modifier` tem `MarshalJSON` e `UnmarshalJSON` por UMA razão: o `amount` do
-catálogo está na unidade do LIVRO e o motor trabalha em inteiros de quadrado.
-Os dois eram escritos com a lista de campos à mão, e a lista ENVELHECEU — a
-ALE-412 deu `dice` ao tipo e não a elas, e **todo dado extra escrito no catálogo
-era descartado em silêncio na leitura**. Seis encantos e um material entraram
-inertes com a suíte verde.
+catálogo está na unidade do LIVRO, e o motor guarda deslocamento em quadrados.
 
-O que passou por cima disso é a lição: o `TestTheEnchantReachesTheWeaponCard`
-monta o `Modifier` em GO e nunca atravessa o JSON — ele provava a composição por
-cima da fronteira quebrada.
-
-- **na leitura o tipo é EMBUTIDO** — um alias local do próprio `Modifier`, que
+- **Na leitura o tipo é EMBUTIDO** — um alias local do próprio `Modifier`, que
   mata o método e evita a recursão —, e só o `amount` é redeclarado, porque o
   campo menos profundo vence o embutido. Campo novo atravessa sem ninguém
-  lembrar;
-- **na escrita os campos ficam à mão**, e tem de ser assim: o oráculo compara
-  byte a byte, e embutir jogaria o `amount` para o fim da linha — o campo menos
-  profundo é o último na sequência de índices. Quem cobra essa metade é o
-  `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por reflexão
-  em vez de repetir a lista num terceiro lugar.
+  lembrar.
+- **Na escrita os campos ficam à mão**, e tem de ser assim: o oráculo compara
+  byte a byte, e embutir jogaria o `amount` para o fim da linha. Quem cobra essa
+  metade é o `TestEveryModifierFieldSurvivesTheCatalogJSON`, que varre o TIPO por
+  reflexão em vez de repetir a lista num terceiro lugar.
+
+Teste que monta o `Modifier` em Go não atravessa essa fronteira, e não a prova.
 
 ### A LEITURA de tabela e de verbete mora no `bookpdf`
 
-Cinco tabelas do capítulo de Recompensas têm a mesma forma — `d%` + nome +
-preço — e três auditores as leem. Na terceira cópia, a leitura virou módulo
-(`P.linhas_de_tabela`, `P.faixas_que_nao_fecham`, `P.verbetes_por_nome`), que é a
-mesma razão que fez o `bookpdf` nascer.
+As tabelas `d%` + nome + preço do capítulo de Recompensas são lidas por vários
+auditores, e a leitura mora no `bookpdf`: `Book.LootRows`,
+`RangesThatDontClose`, `Book.EntriesByName`. As armadilhas que elas dividem —
+a linha se monta pelo Y, a última linha pode vir colapsada num `<line>` só, a
+célula do `d%` é alinhada à direita (o x é faixa), e a margem muda de página par
+para ímpar — estão lá e não em cada auditor.
 
-O que mora lá e não em cada auditor são as armadilhas que as cinco dividem: a
-linha se monta pelo **Y** (as três células são blocos diferentes), a última
-linha vem **colapsada** num `<line>` só em quatro das cinco, a célula do `d%` é
-alinhada à **direita** (então "97-100" começa dois pontos à esquerda de "80", e
-a borda de baixo do x já custou a última linha de duas tabelas), e a **margem
-muda de página par para ímpar**.
-
-> A extração foi provada sem fé: os relatórios dos dois auditores que já
-> existiam saíram BYTE A BYTE iguais antes e depois. Um refactor de leitura que
-> mude um número é indistinguível de uma correção, e o diff é o que separa os
-> dois.
+**Leitura que um segundo auditor precisaria copiar vira função do `bookpdf`.**
+Um refactor de leitura se prova com o relatório dos auditores BYTE A BYTE igual
+antes e depois: um número que muda é indistinguível de uma correção, e o diff é
+o que separa os dois.
 
 ### O ITÁLICO é dado, e ler estilo pede outro leitor
 
-O verbete de um item específico escreve a composição dele em ITÁLICO — *"este
-machado de guerra **de gelo eterno congelante formidável** fornece redução de
-fogo 10"* (p337) é a base, o material e dois encantos. São 31 verbetes com três
-a cinco peças cada, em letra miúda no meio da prosa: transcrever isso a olho é
-onde o erro entra.
-
-O `-bbox` do `pdftotext`, que é o que todo o resto do `bookpdf` usa, **não marca
-estilo nenhum**. Quem marca é o `pdftohtml -xml`, e ele responde noutra régua —
-148,2 num é 225 no outro. O `bookpdf.Italics` converte pela razão
-entre as alturas que os dois declaram para a MESMA página, e devolve na
-coordenada do resto do módulo; sem isso, quem misturasse as duas leituras
-compararia alturas de réguas diferentes.
-
-**Três coisas vêm em itálico no mesmo verbete, e só a primeira é composição:**
-ela, o nome do próprio item mais adiante (*"quando você usa o machado
-silvestre"*), e o de uma magia (*"se transforma em um Relâmpago"*) ou de um
-encanto que o verbete só concede em certa condição (o Martelo de Doherimm
-*adquire* o arremesso na mão de um anão). Duas perguntas as separam: **a frase é
-CONTÍGUA no verbete?** — o itálico do martelo e o do arremesso caem em linhas
-vizinhas, mas entre eles há meia frase de texto normal — e **ela nomeia peça que
-o catálogo conhece?**
-
-E **ausência de itálico não é ausência de base**: a azagaia dos relâmpagos e a
-espada baronial não têm encanto nenhum, então o livro não italiza nada, e elas
-continuam sendo uma azagaia e uma espada longa. Nesses dois o auditor confere a
-base contra o TEXTO do verbete e exige que o catálogo não declare sobreposição
-nenhuma.
-
-E **a página às vezes PERDE o itálico no meio da frase**: o Escudo do Conjurador
-é *"Este escudo leve defensor…"*, e o estilo não atravessa a quebra de linha —
-`font="4"` numa linha e `font="3"` na seguinte. É deslize de tipografia, não
-regra, e o que o denuncia são os doze irmãos da mesma tabela, que trazem o
-encanto dentro do itálico, e o preço, que acompanha. A exceção fica ESCRITA no
-auditor, com a prova, e sai no relatório — o que muda é de onde vem a composição
-esperada, não se ela é conferida.
-
-### O auditor de encantos, e o denominador que ele tem DE GRAÇA
-
-Ele audita as DUAS tabelas — a 8-8 das armas e a 8-10 das armaduras e escudos —
-como PERFIS do mesmo comando (`cmd/audit/enchants arma|armadura`). Uma segunda
-cópia divergiria na primeira correção de leitura, e correção de leitura é o que
-este auditor mais faz: a 8-10 entrega o nome e o efeito na MESMA célula em duas
-linhas, e a chamada de rodapé vem ora em célula própria, ora grudada no nome
-("Esmagador 1"). As duas âncoras pegaram os três casos antes de o catálogo ser
-mencionado.
-
-Os da ALE-391 tinham duas coisas para comparar — o livro e um catálogo que já
-existia. O dos encantos não: o catálogo começou VAZIO, e "transcrevi os
-encantos" e "transcrevi treze dos vinte e oito" têm a mesma cara no terminal.
-
-O que o salva é a Tabela 8-8 ser de ROLAGEM. Uma faixa de `d%` é uma
-DECOMPOSIÇÃO do intervalo, e toda decomposição afirma a SOMA antes das parcelas:
-as 29 linhas têm de ladrilhar 1..100, e as 28 do catálogo, 1..90 — de 91 a 100 a
-tabela manda rolar noutra tabela.
-
-**Foi a soma que pegou o leitor perdendo duas linhas.** O `sem_lixo` do
-`bookpdf` descarta o que casa com `^\d{1,3}$`, que é o padrão de NÚMERO DE
-PÁGINA — e comeu as faixas de um valor só, a Energética (46) e a Lancinante
-(64). Saíram 26 linhas com os nomes certos, as faixas certas e dois efeitos
-colados no vizinho de cima. Nada reclamou; a soma não fechou.
-
-O leitor de VERBETE teve o defeito irmão, e o sintoma foi o TAMANHO: sem
-recortar a prosa por coluna, a tabela inteira entrava como corpo da Magnífica e
-um título de seção como corpo da Flamejante — 939 caracteres num verbete de 370.
-Por isso o relatório imprime a cobertura mínima: **um medidor de prosa que não
-diz onde a prosa acaba infla a medida com palavras de outro assunto.**
-
-E o que o motor NÃO aplica sai com DENOMINADOR e não como lista de proibidos:
-todo encanto ou tem modificador, ou diz por que não — nunca os dois, porque um
-motivo ao lado de um modificador é um motivo que envelheceu. Quem cobra sem o
-PDF é o `TestEveryEnchantEitherAppliesOrSaysWhyNot`.
-
-Escolher a âncora é o trabalho; o resto é regex. E a do auditor de raças é a que
-explica por quê: **não serve o título nem a página.** O bloco de uma raça
-ATRAVESSA a página — o Hynne tem título e prosa na p27, o Golem inteiro vem
-depois, e a linha de atributos do Hynne só aparece no alto da p28. Ordem de
-leitura por coluna não desembaralha isso, e na p30-31 o Suraggel e o Trog saem
-alternados: a habilidade colada à linha de atributos do Suraggel é do TROG. A
-ligação linha→raça é feita em três regras semânticas, e o que sobrar REPROVA com
-nome em vez de ser adivinhado.
-
-O de condições é o único que **não lê um `.json`**: o número da condição mora em
-Go, no `conditionModifierTable`, e o que ele compara é a HERANÇA — "Enredado. O
-personagem fica lento, vulnerável e sofre –2 em testes de ataque" contra os
-`lentoMods`/`vulneravelMods` que a tabela referencia. Ler Go é o preço, e ler
-MAL inventa defeito: a primeira versão pegava uma linha por entrada e perdia a
-continuação, acusando o Cego de não ficar lento quando ele fica.
-
-Três deles têm **duas âncoras**, e são os mais baratos de validar: o livro imprime
-a mesma verdade em dois lugares, então os dois instrumentos se conferem um ao
-outro ANTES de qualquer um deles encostar no catálogo. No de perícias, trocar duas
-colunas na leitura da Tabela 2-1 produz 24 discordâncias nomeadas; com uma leitura
-só, produziria uma tabela plausível.
-
-E a segunda âncora do de ORIGENS não é conforto — é o que separa verbete de
-índice. A Tabela 1-19 lista os 35 nomes um por linha, então "Batedor" é impresso
-na p87 antes da p88: casar por título acha a linha da TABELA, e a varredura
-ingênua acusa 29 das 35 origens com `bookPage` errado. Lista plausível, nomes
-certos, zero defeitos. O verbete se reconhece por ter `Benefícios.` abaixo do
-título — e a tabela é lida PRIMEIRO, com as linhas dela retiradas da busca, ou o
-rodapé da coluna da p87 (que traz o `Benefícios.` do Artista, cujo verbete abre na
-página anterior) dá ao "Trabalhador" um verbete que não é o dele.
-
-Os de ORIGENS e de PODERES comparam PROSA, e só porque têm como: a descrição
-carrega a regra, e três dimensões mecanizáveis a cercam — os números que ela
-imprime, as perícias que ela nomeia, e a cobertura de palavras de conteúdo (o
-`bookpdf.Coverage`). As duas primeiras não bastaram: os números do "Vendedor
-de Carcaças" coincidiram por acaso e seis regras trocadas passaram verdes
-(ALE-405). O veredito sobre a frase continua humano, e é por isso que as duas
-saem impressas lado a lado.
-
-**A DIREÇÃO da medida é do TERRENO, e não da dimensão.** Nas origens o catálogo
-escrevia uma forma curta EQUIVALENTE à do livro, e a pergunta era "a regra do
-livro está aqui?". Nos poderes ele RESUME — `+2 nos ataques com a arma escolhida`
-para um parágrafo inteiro —, e essa mesma pergunta dá 20% para a `Torcida`, cuja
-regra está perfeita. Para um resumo a pergunta é a INVERSA: *tudo o que o
-catálogo afirma está na página?* Um resumo fiel só usa palavras que a página tem;
-uma regra inventada traz palavras que não estão lá. Vale para as três dimensões,
-não só para a cobertura — medir "todo número do livro está no catálogo" acusa
-todo verbete que o livro ilustra com exemplo trabalhado (ALE-407).
-
-E ele lê por PALAVRA, não por linha, porque agrupar por linha junta o que não
-tem relação: na p119 o elemento `<line>` traz `Furtividade Des • Armadura
-Iniciativa` — título, estado, e o título da perícia da COLUNA VIZINHA na mesma
-altura. O `Words` do `bookpdf` é o degrau para esses casos.
-
-O de deuses acrescenta a terceira forma de âncora, e ela vale lembrar: **um
-campo pode não morar no verbete que o declara.** O `paladinoEligible` e o
-`druidaEligible` do deus não se derivam da lista de "Devotos" dele — a Valkaria
-aceita "membros de todas as classes" e mesmo assim não serve a druidas. Quem
-restringe é a CLASSE, e ela imprime a lista inteira numa frase: *"um deus
-disponível para druidas (Allihanna, Megalokk ou Oceano)"* na p61, e a dos oito
-paladinos na p82. Derivar teria acusado a Valkaria por um defeito que não
-existe.
-
-E a marca d'água do PDF **cola no texto vizinho** em vez de ocupar linha
-própria: "Golpista Divino. Mateus Santos mateush.santos42@gmail.com" chegou como
-o nome do último poder de uma lista. O filtro é o `WithoutJunk` do `bookpdf` —
-ele morava em três auditores e as três cópias já tinham divergido.
+O `-bbox` do `pdftotext`, que é o que o resto do `bookpdf` usa, **não marca
+estilo nenhum**. Quem marca é o `pdftohtml -xml`, e ele responde noutra régua. O
+`Book.Italics` converte pela razão entre as alturas que os dois declaram para a
+MESMA página e devolve na coordenada do resto do módulo; quem misturar as duas
+leituras sem ele compara alturas de réguas diferentes.
 
 ### E o buraco INVERSO: o valor existe, mas não se confere que ele APONTA
 
-O schema pega FORMA e não VALOR — é o parágrafo acima. O `seed-data.json` tinha o
-buraco virado do avesso: os valores eram strings bem formadas, e ninguém conferia
-se elas achavam alguma coisa no catálogo. Só `create.items[].catalogId` passava
-por lookup; raça, origem, classe, deus, poder concedido, tamanho e magia entravam
-crus (ALE-226).
+O schema pega FORMA e não VALOR. No `cmd/seed/seed-data.json` os valores são
+strings bem formadas, e o que importa é se elas acham alguma coisa no catálogo:
+raça, origem, classe, deus, poder concedido, tamanho, magia e item passam por
+lookup (`cmd/seed/catalog_refs.go`).
 
-**Seed que mente é caro porque não quebra**: `machado-de-batalha` no lugar de
-`machado-batalha` produz um personagem sem a arma, com a ficha abrindo normal. E
-o e2e roda contra a seed, então o combatente sem arma vira um teste que mede o
-ambiente em vez do app.
+**Seed que mente é caro porque não quebra**: um id de arma errado produz um
+personagem sem a arma, com a ficha abrindo normal. E o e2e roda contra a seed,
+então ele passa a medir o ambiente em vez do app.
 
-Três coisas que a correção ensinou, e valem para qualquer validador de
-referência:
+O que vale para qualquer validador de referência:
 
-- **A mensagem sugere o VIZINHO**, porque errar id é erro de digitação e
-  digitação erra por pouco. O teto de distância — um terço do comprimento — é o
-  que separa sugestão de chute: sugestão errada é pior que nenhuma, porque quem
-  lê a segue.
-- **Ela junta TUDO antes de falhar.** Parar no primeiro erro faz quem escreveu
+- **A mensagem sugere o VIZINHO**, porque digitação erra por pouco. O teto de
+  distância — um terço do comprimento — separa sugestão de chute: sugestão errada
+  é pior que nenhuma, porque quem lê a segue.
+- **Ele junta TUDO antes de falhar.** Parar no primeiro erro faz quem escreveu
   cinco ids errados rodar o gerador cinco vezes.
-- **O validador afirma o próprio DENOMINADOR.** O `catalog` carrega os embeds com
-  `sync.Once` e engole erro de leitura e de parse: com o embed quebrado toda
-  lista vem vazia, e um validador ingênuo acusaria TODOS os nomes do arquivo —
-  culpando quem escreveu o seed por um defeito do build. Lista vazia é falha de
-  carga, e a mensagem diz isso.
-
-E a referência que escapou vale registro: a CHAVE do `classChoices` é um nome de
-classe (`{"Arcanista": {…}}`). Referência escondida em chave de objeto não se
-parece com referência, e ela só apareceu quando o
-`TestEveryCreateFieldOfTheSeedIsClassified` obrigou a classificar campo por
-campo. **Guarda que força a varredura acha o que a leitura não acha.**
+- **Ele afirma o próprio DENOMINADOR.** O catálogo é carregado uma vez
+  (`sync.Once`) e engole erro de carga: com a carga quebrada toda lista vem
+  vazia, e um validador ingênuo acusaria TODOS os nomes do arquivo. Lista vazia
+  é falha de carga, e a mensagem diz isso.
+- **Referência escondida em CHAVE de objeto não se parece com referência** — a
+  chave do `classChoices` é um nome de classe. O
+  `TestEveryCreateFieldOfTheSeedIsClassified` obriga a classificar campo por
+  campo, e guarda que força a varredura acha o que a leitura não acha.
 
 ## O fixture do app prima o catálogo DE VERDADE
 
-O `newSceneFixture` primava `{"items":[]}`, e isso fazia regra sumir do TESTE sem
-sumir da produção — duas vezes na mesma épica, e nenhuma delas apareceu como
-erro:
+**Catálogo vazio no fixture é validação desligada em silêncio.** Quando uma
+checagem responde "não sei" para o que não está no catálogo — e quase todas
+respondem, porque recusar o desconhecido travaria fichas antigas —, primar vazio
+é escolher que ela nunca rode, com o guarda verde afirmando o contrário do que
+mede.
 
-- a fatia 7 mediu um escudo sendo **VESTIDO**, porque o eixo de equipar não
-  achava o item no catálogo vazio e devolvia "sem opinião";
-- a fatia 8 mediu a distribuição de atributo do humano passando com **três vezes
-  o mesmo atributo**, porque a raça não estava lá e a validação tratava
-  desconhecido como completo.
-
-Nos dois casos o guarda ficou verde afirmando o contrário do que mede. O fixture
-agora prima o mesmo catálogo embutido que o servidor carrega
-(`book.EngineCatalogs`), como o `newTestServer` do `character_cast_rules_test.go`.
-
-**A regra geral: catálogo vazio no fixture é validação desligada em silêncio.**
-Quando uma checagem responde "não sei" para o que não está no catálogo — e é o
-que quase todas fazem, porque recusar o desconhecido travaria fichas antigas —,
-primar vazio é escolher que ela nunca rode.
+Por isso o `newTestServer` prima o mesmo catálogo embutido que o servidor carrega
+(`book.EngineCatalogs`). O fixture que prima `{"items":[]}` é exceção declarada
+(ver "O catálogo chega ao processo por dois caminhos").
 
 ## A bancada dos testes: um molde migrado, copiado por teste
 
-`newTestServer` abre um SQLite de VERDADE por teste — é o que faz este pacote
-provar composição em vez de mock. O caro não é o banco, é MIGRAR: `db.Open` roda
-as migrações todas, e cada `fsync` custa uma rotação de disco num prato girante.
-Medido na ALE-260: migrar do zero são 7,1 ms em tmpfs e **2.102 ms** no HD, e a
-suíte do `api/` levava 15 minutos com 10 s de CPU — 99% de espera.
+O `newTestServer` abre um SQLite de VERDADE por teste — é o que faz o `serve/api`
+provar composição em vez de mock. O caro não é o banco, é MIGRAR: o `db.Open`
+roda as migrações todas, e cada `fsync` custa o que o disco do `TMPDIR` cobra.
 
-**O molde** (`db/testdb`): o `TestMain` migra UM banco e cada teste o copia. Cada
-pacote que usa declara uma linha:
+**O molde** (`infra/db/testdb`): o `TestMain` migra UM banco e cada teste o
+copia (`testdb.Fresh`). Cada pacote que usa declara uma linha:
 
 ```go
 func TestMain(m *testing.M) { os.Exit(testdb.Run(m)) }
 ```
 
-Três regras que vieram com ele:
-
-- **`PRAGMA synchronous=OFF` fica no helper e NUNCA no `db.Open`.** Durabilidade
-  é o que um banco que morre no fim do caso não tem o que proteger; em produção
-  essa linha é perda de dados do mestre.
+- **`PRAGMA synchronous=OFF` fica no helper de teste (`newTestServer`) e NUNCA
+  no `db.Open`.** Banco que morre no fim do caso não tem o que proteger; em
+  produção essa linha é perda de dados do mestre.
 - **A cópia FALHA ALTO** — o `Close` volta o erro, o `Sync` força os bytes, e o
-  TAMANHO é comparado com o do molde. Uma cópia parcial produz um SQLite
-  truncado, que se comporta como um banco NÃO MIGRADO: o sintoma é `no such
-  table`, e quem o vir vai caçar migração. Custa ~6% da suíte, e o item acima é
-  justamente o que removeu a barreira que tornaria isso barulhento sozinho.
-- **O molde é PACOTE e não um `_test.go`.** Arquivo de teste não exporta nada
-  para fora do pacote, e a primeira cena a virar pacote própria encontraria a
-  bancada inalcançável e escreveria a dela — que é como um fixture nasce com
-  catálogo vazio e desliga validação em silêncio.
+  TAMANHO é comparado com o do molde. Uma cópia parcial se comporta como um banco
+  NÃO MIGRADO: o sintoma é `no such table`, e quem o vir vai caçar migração.
+- **O molde é PACOTE e não um `_test.go`.** Arquivo de teste não exporta nada, e
+  a cena que virasse pacote próprio acharia a bancada inalcançável e escreveria a
+  dela — que é como um fixture nasce com catálogo vazio.
 
 O que NÃO é compartilhável é a montagem do servidor: ela precisa do tipo
 `api.Server`, e um pacote de bancada que o importasse seria importado de volta
@@ -1761,250 +1281,162 @@ pelos testes dele. O molde é a parte cara; o fixture é de cada pacote.
 
 ## Testes
 
-As faixas, o vermelho antes de confiar e o que não merece teste estão no
-[CLAUDE.md da raiz](../CLAUDE.md). O que é deste pacote:
+As faixas, o vermelho antes de confiar e o que não merece teste estão na seção
+"Testes" do [CLAUDE.md da raiz](../CLAUDE.md). O que é deste pacote:
 
 - `go test ./...` — sem flag, sem setup.
-- **Teste de regra vive junto da regra e cita a página.** Ele não é a mesma coisa
-  que o ORÁCULO: o oráculo prende a ficha inteira de ponta a ponta e acusa
-  qualquer número que mude sem ter sido pedido; o teste de regra explica POR QUE
-  aquele número é aquele, com a página do livro do lado. Nenhum substitui o
-  outro.
-
-- **Sabotar é a forma barata de provar que o teste mede o que diz medir**, e no
-  Go ela é barata mesmo: inverta o operador, rode o caso, confirme o vermelho,
-  reverta. Foi assim que se descobriu que um teste de PV passava por acidente —
-  em todos os casos a primeira classe também era a maior.
-
-  > **E às vezes não é preciso sabotar: a árvore de ONTEM é o caso vermelho.** Os
-  > dois guardas do `convention` foram provados assim — `git archive` do commit
-  > anterior, o guarda copiado por cima, `go test`. Deu 775 reprovados num e 128
-  > no outro. É melhor que sabotagem por dois motivos: o caso negativo é real e
-  > não inventado, e não há como a sabotagem sair inerte — que já enganou duas
-  > vezes nesta épica.
+- **Teste de regra vive junto da regra e cita a página** — e, quando o livro tem,
+  o exemplo trabalhado (`TestBolaDeFogoWorkedExample`). Ele não substitui o
+  ORÁCULO, nem o oráculo a ele: o oráculo prende a ficha inteira e acusa qualquer
+  número que mude sem ter sido pedido; o teste de regra explica POR QUE aquele
+  número é aquele.
+- **Provar o vermelho em Go é barato**: inverta o operador, rode o caso, confirme
+  o vermelho, reverta. Para um guarda novo, a árvore de ONTEM é o caso vermelho
+  real — `git archive` do commit anterior, o guarda copiado por cima, `go test` —,
+  e não há como ela sair inerte como uma sabotagem.
 
 ## `convention`: os guardas que não são de pacote nenhum
 
-`convention/` (ALE-282) não tem código de produção. Ele existe porque duas
-frases do CLAUDE.md da raiz se contradizem quando a regra é sobre TODOS os
-pacotes: "regra mecanizável vira guarda" e "o guarda mora no pacote que a
-possui". Pôr uma regra do repositório no `api` seria escolher um dono arbitrário.
+`convention/` não tem código de produção. Ele existe porque duas frases do
+CLAUDE.md da raiz se contradizem quando a regra é sobre TODOS os pacotes: "regra
+mecanizável vira guarda" e "o guarda mora no pacote que a possui". Pôr uma regra
+do repositório no `api` seria escolher um dono arbitrário.
 
-**Quantos são se pergunta ao código**, nunca a esta linha:
+**Quantos são se pergunta ao código**:
 
 ```
 grep -h '^func Test' convention/*_test.go | wc -l
 ```
 
-**O gatilho — um guarda nasce aqui quando alguma destas três vale:** a regra é
-do REPOSITÓRIO e não de um pacote; ele varreria `.` e mediria por acaso o
-diretório em que mora; ou ele é da família das CITAÇÕES (arquivo, teste e
-símbolo citados que não existem mais).
+**Um guarda nasce aqui quando alguma destas três vale:** a regra é do
+REPOSITÓRIO e não de um pacote; ele varreria `.` e mediria por acaso o diretório
+em que mora; ou ele é da família das CITAÇÕES (arquivo, teste e símbolo citados
+que não existem mais).
 
-Três práticas que o pacote firmou, e as três são regra e não história:
-
-- **Guarda que varre `.` mede o diretório em que ele por acaso mora.** Mover o
-  arquivo encolhe a varredura sem mudar uma linha do guarda nem acender nada —
-  por isso o terreno é o DIRETÓRIO e nunca um padrão de nome.
+- **O terreno é o DIRETÓRIO, nunca um padrão de nome.** Guarda que varre `.` mede
+  o diretório em que por acaso mora, e glob de nome deixa de casar quando um
+  arquivo muda de nome — nos dois casos o guarda segue VERDE medindo menos.
 - **Guarda que proíbe a cópia porque existe o original tem de falhar quando o
-  original sumir**, senão ele passa a cobrar uma regra cuja razão morreu. O
+  original sumir**, senão cobra uma regra cuja razão morreu. O
   `TestNoHandwrittenFocusRing` lê o `index.css` e afirma que a regra global
   continua lá.
 - **A LÁPIDE é declarada, não apagada.** `// Aqui morava o TestX, que prendia…`
   diz por que uma garantia SAIU, que é o que o `git log` esconde de quem lê o
   arquivo; os guardas de citação pedem que ela entre em `tombstones`,
-  `arquivosAusentesDePROPOSITO` ou `simbolosAusentesDePROPOSITO`. Apagar um teste
-  é um ato, e o ato aparece numa linha.
+  `arquivosAusentesDePROPOSITO` ou `simbolosAusentesDePROPOSITO`.
 
-**E o idioma NÃO é guarda deste pacote, nem de nenhum.** Havia quatro aqui — nome
-de topo, nome local, nome de teste e nome de arquivo — e eles foram APAGADOS: a
-razão e a decisão estão na seção "Isto NÃO tem guarda" do
-[CLAUDE.md da raiz](../CLAUDE.md), que é o dono da regra. O que ficou desta
-passagem é a fresta, porque ela é sobre NOMEAR e não sobre medir: nome PRÓPRIO do
-livro passa, e o `TestBolaDeFogoWorkedExample` é o nome da magia, não prosa em
-português.
+**Idioma não é guarda deste pacote, nem de nenhum** — ver "Isto NÃO tem guarda,
+e é decisão do dono" no [CLAUDE.md da raiz](../CLAUDE.md). Nome PRÓPRIO do livro
+num identificador não é prosa em português: `TestBolaDeFogoWorkedExample` é o
+nome da magia.
 
 ## templ — as armadilhas que já custaram tempo
 
 As cenas são `.templ` compiladas para `.go` por `go tool templ generate`. O
-`.templ` e o `_templ.go` andam juntos, e o CI recusa o par desencontrado. O que
-segue foi todo descoberto errando — está aqui para ninguém redescobrir:
+`.templ` e o `_templ.go` andam juntos, e a CI recusa o par desencontrado.
 
 - **`else if` NÃO existe numa lista de atributos, e o templ não reclama.** Ele
-  fecha o primeiro `if`, escreve a palavra ` else` como TEXTO dentro das aspas do
-  elemento e abre um `if` INDEPENDENTE — então os DOIS ramos saem, e o HTML tem
-  um atributo chamado `else` mais o seu repetido duas vezes. Nada estoura:
-  atributo repetido não existe no DOM, o navegador guarda o PRIMEIRO e descarta o
-  resto em silêncio, e o segundo ramo fica morto sem deixar rastro. **A escolha
-  entre dois atributos volta para o Go**, onde `else if` é `else if` — exclusão
-  por CONSTRUÇÃO, e não dois blocos que se prometem exclusivos.
+  escreve ` else` como TEXTO e abre um `if` INDEPENDENTE: os DOIS ramos saem, o
+  navegador guarda o PRIMEIRO atributo repetido e descarta o resto em silêncio.
+  **A escolha entre dois atributos volta para o Go**, onde `else if` é exclusão
+  por construção.
 - **Comentário NÃO vive na lista de atributos de um elemento.** `// ...` entre
-  dois atributos derruba o parser, e a mensagem aponta OUTRA linha — nunca a do
-  comentário. Já aconteceu **oito** vezes; as três últimas foram na mesma sessão,
-  por quem não leu esta linha antes de escrever.
-  **A mensagem varia com o que envolve o elemento, e é por isso que ninguém
-  reconhece o sintoma na segunda vez:** solto dá `malformed open element` na
-  linha do `<`; dentro de um `for` dá `for: expected nodes, but none were found`;
-  dentro de um `if` dá `if: expected nodes, but none were found` — as duas
-  apontando a linha do BLOCO, dezenas de linhas acima. Se um `for`/`if` que não
-  mudou começou a reclamar de "expected nodes", procure o comentário que você
-  acabou de pôr entre dois atributos.
-  O comentário vai ACIMA do `templ`, ou acima do elemento inteiro.
-  **E o pior não é o erro: é que `go build` fica VERDE por cima dele**, porque o
-  `_templ.go` antigo continua no lugar. `templ generate && go build` numa linha
-  só esconde isso — o build sucede sobre código gerado velho, e a página serve o
-  HTML de antes. Leia a saída do `templ generate`, não a do `go build`.
+  dois atributos derruba o parser, e a mensagem aponta OUTRA linha: solto dá
+  `malformed open element`; dentro de um `for` ou `if` dá `for:`/`if: expected
+  nodes, but none were found`, apontando a linha do BLOCO. Se um `for`/`if` que
+  não mudou começou a reclamar de "expected nodes", procure o comentário entre
+  atributos. O comentário vai ACIMA do elemento. **E o `go build` fica VERDE por
+  cima do erro**, porque o `_templ.go` antigo continua no lugar: leia a saída do
+  `templ generate`, não a do `go build`.
 - **`@componente()` tem de COMEÇAR a linha.** No meio de um texto ele vira texto
-  literal, e a página mostra `@tecla("⏎")` escrito na tela — sem erro nenhum.
-- **Valor CONSTANTE de atributo sai literal; só o DINÂMICO é escapado.** Uma
-  aspa simples num literal fica aspa simples; a mesma string vinda de variável
-  vira `&#39;`. Importa quando se afirma HTML em teste.
-- **NUNCA passe formatador em arquivo GERADO** (ALE-278). `goimports -w web/x/*.go`
-  alcança os `_templ.go` e junta no bloco de imports os dois de runtime que o
-  `templ generate` emite SOLTOS no topo. São doze linhas sem uma de
-  comportamento, e a CI reprova em "Fail if the generated templates were stale"
-  com a suíte local INTEIRA verde.
-  **Gerado reformatado é gerado desencontrado por definição**, e é a metade
-  desta armadilha que o item acima NÃO cobre: lá o `_templ.go` está ATRASADO e
-  `templ generate` conserta; aqui ele está em dia no conteúdo e diferente na
-  FORMA, então regenerar e compilar não denuncia nada. Só o `git diff` DEPOIS de
-  regenerar:
+  literal, e a página mostra `@tecla("⏎")` escrito na tela.
+- **Valor CONSTANTE de atributo sai literal; só o DINÂMICO é escapado.** Uma aspa
+  simples num literal fica aspa simples; vinda de variável vira `&#39;`. Importa
+  quando se afirma HTML em teste.
+- **NUNCA passe formatador em arquivo GERADO.** `goimports -w` num glob alcança
+  os `_templ.go` e reorganiza os imports que o `templ generate` emite soltos: o
+  conteúdo está em dia e a FORMA diverge, então regenerar e compilar não denuncia
+  nada, e a CI reprova em "Fail if the generated templates were stale". Só o
+  `git diff` DEPOIS de regenerar pega — de dentro de `engine-go/`:
 
   ```
-  go tool templ generate && git diff --quiet -- 'engine-go/**/*_templ.go'
+  go tool templ generate && git diff --quiet -- '*_templ.go'
   ```
 
-  Esse é o passo da CI, e ele tem de entrar no roteiro de toda fatia que mover
-  arquivo de pacote — porque mover pacote é exatamente quando o `goimports` é
-  preciso. Se ele for, restrinja o alvo: `_templ.go` só se corrige regerando.
+  Ele entra no roteiro de toda fatia que move arquivo de pacote, que é quando o
+  `goimports` é preciso. `_templ.go` só se corrige regerando.
 - **Regenerar não basta: o servidor precisa REINICIAR.** O `go run ./cmd/api`
-  compila uma vez, então depois do `templ generate` o processo continua servindo
-  o HTML antigo. Isto já produziu uma medição de layout inteira contra a página
-  velha — 74px de deslocamento "que não sumiam" depois do conserto, porque o
-  conserto não estava no ar.
+  compila uma vez; depois do `templ generate` o processo continua servindo o HTML
+  antigo, e o que se medir nele é a página velha.
 - **Classe nova exige `scripts/build-css.sh`.** Classe que não passou pelo
-  scanner simplesmente não existe na folha, e o elemento aparece sem estilo em
-  vez de dar erro.
-  **Aqui morava "o scanner lê `../*.templ`, e só ele", e é falso** — medido na
-  ALE-278: tirar os DOIS `@source` do `app.src.css` não muda um byte da folha
-  compilada (105.328 com, 105.328 sem), porque a detecção automática do Tailwind
-  v4 varre da pasta da folha até a raiz do projeto respeitando o `.gitignore`. As
-  linhas ficaram como declaração de intenção; quem depurar "classe sumiu" não
-  deve perder tempo nelas. O suspeito é o TOKEN que não existe na paleta.
-
-  **E porque ele varre a árvore inteira, a PROSA entra na folha — então compile
-  por ÚLTIMO.** O scanner não sabe distinguir uma classe aplicada de uma classe
-  citada num `.md` ou numa docstring, e não há como pedir que ele ignore: um
-  guia que explica uma receita faz o Tailwind emitir as utilidades daquela
-  receita, mesmo sem nenhum consumidor. Isso custou uma CI vermelha na ALE-317:
-  a varredura apagou 242 sítios, a folha foi compilada, e só DEPOIS os dois
-  guias ganharam a explicação — o passo "Fail if the stylesheet was stale"
-  reprovou com uma linha de diferença. A ordem do roteiro é **código → prosa →
-  `build-css.sh` → `git add`**, e o mesmo vale quando a mudança APAGA
-  classe: o artefato guarda o estado de antes.
-
-  **E não é preciso CITAR uma classe para disparar isso: basta um IDENTIFICADOR
-  que coincida com o nome de uma utilidade.** A frase acima diz "prosa", e isso
-  fez parecer que o risco era mencionar uma classe num `.md`; não é. Na ALE-406
-  uma variável local de Go com o nome do número que ela representa acrescentou
-  uma utilidade de `font-variant-numeric` ao bundle, e a CI reprovou uma fatia
-  que não tinha encostado em tela nenhuma. Duas consequências:
-
-  - **rode o `build-css.sh` mesmo quando a mudança não é de tela** — o gatilho
-    pode ser um nome de variável em `domain/`;
-  - **o comentário que explica a armadilha não pode escrever a palavra** em
-    minúsculas. A primeira versão daquele comentário explicava o caso e o
-    disparava de novo, e foi preciso reescrevê-la nomeando o mecanismo sem
-    nomear o token.
+  scanner não existe na folha, e o elemento aparece sem estilo em vez de dar
+  erro. A detecção automática do Tailwind v4 varre a árvore por conta própria
+  (respeitando o `.gitignore`), e os `@source` positivos do
+  `serve/web/assets/app.src.css` não a limitam. **O que ela alcança entra na
+  folha — prosa de `.md`, docstring e identificador de Go incluídos**; o que o
+  `app.src.css` exclui com `@source not` (a saída `static/`, `infra/`, `cmd/`,
+  `domain/catalog/transcript/`) não entra. Daí:
+  - **compile por ÚLTIMO**: **código → prosa → `build-css.sh` → `git add`**. Vale
+    também quando a mudança APAGA classe: o artefato guarda o estado de antes, e
+    a CI reprova em "Fail if the stylesheet was stale";
+  - **rode o `build-css.sh` mesmo quando a mudança não é de tela** — um
+    identificador que coincide com o nome de uma utilidade, numa pasta que o
+    scanner alcança, acrescenta a utilidade à folha;
+  - **o comentário que explica esse risco não escreve o token** em minúsculas:
+    nomeie o mecanismo, não a utilidade.
 - **O `datastar.js` é VENDORIZADO, e quem o sobe é `scripts/vendor-datastar.sh`.**
-  Ele não passa pelo Vite — o `layout.templ` o referencia com um `<script>`
-  escrito à mão — então não há dependência no `package.json` para subir. O script
-  fixa a versão numa linha, baixa da tag e reprova se o cabeçalho do arquivo
-  baixado disser outra coisa. Ele fica FORA do `prebuild`: subir a versão é ato
+  Ele não passa pelo Vite — o `serve/web/ui/layout.templ` o referencia com um
+  `<script>` à mão —, então não há dependência no `package.json` para subir. O
+  script fixa a versão numa linha, baixa da tag e reprova se o cabeçalho do
+  arquivo disser outra coisa. Ele fica FORA do `prebuild`: subir a versão é ato
   deliberado, porque o reconciliador é o que mantém as cenas vivas. Depois de
   subir, o Playwright INTEIRO — o guarda que responde pelo morph é `ferir duas
   vezes seguidas não apaga a piscada da primeira`.
 - **Regra da casa que precisa GANHAR de um utilitário mora em `@layer utilities`,
-  e não em `components`.** No Tailwind v4 a CAMADA decide antes da
-  especificidade: `utilities` vence `components` mesmo quando o seletor de baixo
-  tem duas classes contra uma. A ALE-218 escreveu `.notas-flutuam .notas-coluna
-  { position: absolute }` em `components` e ela perdeu para o `lg:static` que a
-  coluna traz do próprio `class=` — com o sintoma pedindo a conclusão errada: o
-  mapa crescia **18px em vez de 728**, porque só a divisa (que não tinha
-  concorrente) tinha flutuado. "Cresceu um pouco" parece regra aplicada com
-  cálculo errado; era regra DESCARTADA, e a outra metade da tela mentiu por ela.
-  E o conserto tentador — tirar o `lg:static` do elemento — **troca o defeito de
-  lado**: sem ele o `fixed` da classe base passou a ganhar e a coluna virou tela
-  cheia em toda largura. Quem tem de mudar é a camada.
-- **`inset-0` põe `left: 0`, e `left` ganha de `right`.** Posicionar um painel
-  pela direita não é só escrever `right: 0`: com os dois lados definidos e a
-  largura fixa, o navegador resolve pelo `left` e o painel vai para o lado
-  errado. Toda regra que ancora à direita sobre uma classe base com `inset`
-  escreve `left: auto` junto — e o comentário fica, porque a linha parece
-  redundante para quem não viu o painel do lado errado do mapa (ALE-218).
-- **E TOKEN inventado tem o mesmo fim, com o script rodado.** `text-grimorio-ink`
-  parece irmão de `text-grimorio-gold` e não é: `grimorio-ink` não está na
-  paleta, o Tailwind não emite regra para o que não conhece, e o elemento fica
-  com a cor HERDADA — o crachá de contagem dos Efeitos saiu dourado sobre
-  dourado, 1,53:1, e atravessou uma fatia inteira. O
-  `TestEveryHouseTintExistsInTheStylesheet` cobra cada token contra a folha
-  compilada; a paleta mora no `@theme` do `serve/web/assets/src/index.css`, e é
-  lá que se confere antes de inventar um nome.
-  **Ele varre o DIRETÓRIO e não um padrão de nome, e isso custou duas vezes**: o
-  glob era um padrão de NOME, e ele deixou de casar duas vezes: quando o kit
-  mudou de arquivo, e quando os arquivos perderam um prefixo. Nas duas o guarda
-  seguiria VERDE
-  medindo menos. Padrão de nome acopla o guarda à nomenclatura; o diretório é o
-  terreno, e ele não muda de nome sozinho.
-  **E o que ele mede deixou de ser só a paleta `grimorio-*` na ALE-276**: os
-  PAPÉIS semânticos — `destructive`, `primary`, `muted`, `card`, `popover` e os
-  outros — não estavam em `asPaletasDaCasa`, então `text-destructive-foreground`
-  foi escrito em três sítios com o token nunca declarado, e o guarda passou por
-  cima. O botão "Excluir a sessão" herdou o `--foreground` do diálogo e saiu a
-  4,33:1. A varredura foi de 21 tintas para 43, e o piso do denominador subiu de
-  20 para 40 junto — um piso que o conjunto ANTIGO satisfazia não denunciaria a
-  volta dele.
-
-- **E a CLASSE DE ESCOPO não é uma tinta, então o guarda de tinta não a via.**
+  não em `components`.** No Tailwind v4 a CAMADA decide antes da especificidade:
+  `utilities` vence `components` mesmo contra um seletor de duas classes. Regra
+  descartada pode parecer regra aplicada com cálculo errado. E tirar o
+  utilitário do elemento troca o defeito de lado: quem tem de mudar é a camada.
+- **`inset-0` põe `left: 0`, e `left` ganha de `right`.** Com os dois lados
+  definidos e a largura fixa, o navegador resolve pelo `left`. Toda regra que
+  ancora à direita sobre uma classe base com `inset` escreve `left: auto` junto —
+  e o comentário fica, porque a linha parece redundante.
+- **TOKEN inventado não vira regra, nem com o script rodado.** O Tailwind não
+  emite regra para o que não está na paleta, e o elemento fica com a cor HERDADA.
+  A paleta mora no `@theme` do `serve/web/assets/src/index.css`; confira lá antes
+  de inventar um nome. O `TestEveryHouseTintExistsInTheStylesheet` cobra cada
+  token — da paleta da casa e dos papéis semânticos (`destructive`, `primary`,
+  `muted`, …, listados em `asPaletasDaCasa`) — contra a folha compilada. Ele
+  varre o DIRETÓRIO, não um padrão de nome, e tem piso de denominador que SOBE
+  quando a varredura cresce: um piso que o conjunto antigo satisfazia não
+  denunciaria a volta dele.
+- **A CLASSE DE ESCOPO não é uma tinta, e o guarda de tinta não a vê.**
   `scene-grimorio` é a condição para os tokens existirem — o `@custom-variant
-  dark` do `index.css` é `&:is(.dark *, .scene-grimorio, …)`. Sem ela, nenhum
-  token resolve e o app inteiro sai sem cor, sem contraste e com outro realce de
-  foco. Uma varredura de identificadores trocou `grimorio` por `grimoire` com
-  `\bgrimorio\b`, e **o hífen é fronteira de palavra**: `scene-grimorio` foi
-  junto (ALE-283). O `go build`, o `templ generate`, o `go vet`, a suíte Go
-  inteira e o próprio guarda de tinta ficaram VERDES; quem acusou foi o e2e, com
-  oito casos de leiaute e contraste. O `TestEveryScopeClassExistsInTheStylesheet`
-  fecha o buraco, e ele lê só o que está dentro de `class=` e de `templ.KV("…")`
-  — a primeira versão varria o arquivo inteiro e reprovava `scene-title`,
-  `scene-shell` e `scene-content`, que são valores de `data-slot` e não classes.
-  O `templ.KV` entrou com o segundo sistema (ALE-479): a casca escolhe o escopo
-  por condição, e lendo só o `class="…"` o `scene-ds` podia ser renomeado com o
-  guarda verde.
+  dark` do `index.css` é `&:is(.dark *, .scene-grimorio, …)`; sem ela o app
+  inteiro sai sem cor. O `TestEveryScopeClassExistsInTheStylesheet` cobre, e lê só
+  o que está dentro de `class=` e de `templ.KV("…")` — valores de `data-slot`
+  como `scene-title` não são classe, e a casca escolhe o escopo (`scene-ds`) por
+  condição.
 
-  > **A lição maior é sobre renome em massa, e vale para a próxima varredura:**
-  > `\bnome\b` alcança muito mais que identificador Go. Numa entrada só de mapa,
-  > `grimorio` estragou TRÊS coisas de naturezas diferentes — os tokens da
-  > paleta, a ROTA `/grimorio` (endereço que alguém favorita) e o nome do arquivo
-  > `grimorio.js` no disco. Renome de símbolo Go se faz com `gopls rename`, que é
+  > **Renome em massa:** `\bnome\b` alcança muito mais que identificador Go — o
+  > hífen é fronteira de palavra, então a classe composta, a ROTA e o nome de
+  > arquivo vão junto. Renome de símbolo Go se faz com `gopls rename`, que é
   > semântico; troca textual fica só para o que o `gopls` não alcança — o
   > componente `templ` —, e aí o alvo tem de ser um nome COMPOSTO e único.
 
 ## Como uma CENA é construída
 
-As doze cenas saíram do `api` uma a uma entre a ALE-272 e a ALE-278, e o que
-sobrou dessa travessia é um formato. A crônica de cada fatia está nas issues; o
-que vale para a próxima cena está aqui.
-
 **O formato é uma PORTA declarada pela cena.** A interface `Deps` mora em
-`web/<cena>/deps.go`, e o `*api.Server` a cumpre. A direção é o desenho inteiro:
-quem escolhe o que atravessa a fronteira é o CONSUMIDOR, não o objeto que tem
-tudo. O `api` monta com uma linha por cena — `table.Routes(r, table.New(s.tableHost(), …))` —, e é nessa linha
+`serve/web/<cena>/deps.go`, e o `*api.Server` a cumpre. Quem escolhe o que
+atravessa a fronteira é o CONSUMIDOR, não o objeto que tem tudo. O `api` monta
+com uma linha por cena (`serve/api/web_router.go`) —
+`campaigns.Routes(r, campaigns.New(s.campaignsHost(), …))` —, e é nessa linha
 que o compilador cobra quando a porta deixa de ser cumprida.
 
-**O CASO DE USO não entra pela porta: ele entra por PARÂMETRO** (ALE-344,
-ALE-347, ALE-348). Uma porta existe para desviar de um ciclo — a cena precisa do
-`api`, que importa a cena —, e o `app/` está ABAIXO das duas: não há ciclo,
-então não há interface a declarar. A assinatura do `New` diz o que a cena faz:
+**O CASO DE USO não entra pela porta: ele entra por PARÂMETRO.** Uma porta
+existe para desviar de um ciclo — a cena precisa do `api`, que importa a cena —,
+e o `app/` está ABAIXO das duas: não há ciclo, então não há interface a
+declarar. A assinatura do `New` diz o que a cena faz:
 
 ```go
 table.New(s.tableHost(), s.sessionLifecycle(), s.tableMemory, s.restParty(), s.initiativeQueue(), …)
@@ -2013,46 +1445,38 @@ campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), …)
 door.New(s.doorHost(), s.accountGate(), s.accountResets())
 ```
 
-Quantas cenas já montam assim se pergunta ao código — `grep -n "\.New(" serve/api/web_router.go` —, e não a esta linha: o número subiu a cada fatia e
-envelheceria aqui como envelheceu a contagem de métodos do `*Server`.
+Uma entrada que vira caso de uso SAI da `Deps` — ela não ganha um adaptador
+novo, e a porta encolhe.
 
-O efeito é a porta ENCOLHER em vez de crescer: a da ficha saiu de dezoito
-métodos para oito, a de campanhas de VINTE para seis, e a da porta de NOVE para
-três. Uma entrada que vira caso de uso SAI da `Deps` — ela não ganha um
-adaptador novo.
+**Estado que a CENA GUARDA e outro alcança nasce no HOSPEDEIRO, não dentro do
+`New`.** A Mesa guarda mapas por `(sessão, pessoa)` — a lente e a aba de cada
+um —, e quando a sessão é APAGADA quem os esvazia é o ciclo da sessão, montado
+ANTES da cena: ele não alcança o que ela criou por dentro. Montado no hospedeiro
+(`s.tableMemory`), o mesmo objeto vai para os dois. O sinal de que é este caso:
+"o fim de X tem de alcançar isto".
 
-**Estado que a CENA GUARDA e outro alcança nasce no HOSPEDEIRO, e não dentro do
-`New`.** A Mesa guarda dois mapas por `(sessão, pessoa)` — a lente e a aba que
-cada um escolheu —, e eles nasciam no `table.New`. O mecanismo é o que torna
-isso um defeito: quando a sessão é APAGADA, quem tem de esvaziá-los é o ciclo da
-sessão, que é montado ANTES da cena e não tem como alcançar o que ela criou por
-dentro. Montado no hospedeiro, o mesmo objeto vai para os dois (ALE-377). O
-sinal de que é este caso: "o fim de X tem de alcançar isto".
+**Recusa que vira sentinela do `app/` deixa de precisar de um tipo para
+viajar.** A cena a lê direto com `errors.Is` (`campaign.ErrNoSuchCampaign`), sem
+um enum do meio que o hospedeiro traduzisse.
 
-**E o que o `app/` habilita não é só encolher: é a cena poder LER os
-sentinelas.** A porta das campanhas dizia, por escrito, que ler um erro do
-hospedeiro "alcançaria o `api`" — e por isso o adaptador traduzia sete
-sentinelas num enum que a cena declarava só para a classificação atravessar. Com
-as recusas no `app/`, a cena as lê direto e o tipo do meio some. **Recusa que
-vira sentinela do `app/` deixa de precisar de um tipo para viajar** (ALE-348).
-
-Cada `web/*` tem um `boundary_test.go` que recusa import do hospedeiro. Ele não
-existe para pegar o ciclo — esse o compilador já pega —, existe para pegar o
-atalho: um import DIRETO de `catalog` contornando a camada tipada, que não é
-ciclo, não é erro, e é a divisão vazando por baixo.
+Cada `serve/web/*` tem um `boundary_test.go` com uma lista de imports PERMITIDOS,
+que recusa o hospedeiro. Ele não existe para pegar o ciclo — esse o compilador
+já pega —, existe para pegar o atalho: um import DIRETO de `domain/catalog`
+contornando a camada tipada do `book`, que não é ciclo, não é erro, e é a divisão
+vazando por baixo.
 
 ### As regras da porta
 
 - **Ela pede o MENOR tipo que resolve.** `CurrentUserID(r) int64`, e não o
-  usuário inteiro: o tipo do usuário é do hospedeiro, e uma porta que devolve
-  tipo do hospedeiro não é porta, é o hospedeiro com outro nome.
-- **Ela pede a PERGUNTA, não o objeto.** Foi a lição que valeu para as dez cenas
-  seguintes — `PodeEditar(...) bool` em vez de entregar o que permitiria decidir.
+  usuário inteiro: uma porta que devolve tipo do hospedeiro não é porta, é o
+  hospedeiro com outro nome.
+- **Ela pede a PERGUNTA, não o objeto** — `RequesterIsAdmin(r) bool`, em vez de
+  entregar o que permitiria decidir.
 - **Quem escolhe a FRASE é a cena, sempre.** Quem CLASSIFICA depende de onde o
   sentinela mora: enquanto ele for valor do `api`, a cena não o alcança e o
   hospedeiro classifica; quando a regra desce para o `app/`, a cena lê o
   sentinela com `errors.Is` e o classificador some junto com o tipo que ele
-  devolvia (ALE-348, ALE-349). O que NÃO muda é o texto da tela ser da cena.
+  devolvia. O texto da tela continua sendo da cena.
 - **Ela é fina quando a cena não precisa do servidor**, não quando alguém foi
   disciplinado. Porta larga é sintoma de cena fazendo trabalho de outra — a
   pergunta é essa, não "dá para cortar um método?".
@@ -2071,876 +1495,586 @@ ajudante que só fala de `sql.Null*` vai para o `dbvalue`; uma regra que lê o
 livro vai para o `book`.
 
 **A linha divisória dentro de um arquivo é a mesma que entre arquivos**, e
-**o menor não é o mais estreito, é o que não se repete**: uma cópia de sete
-linhas declarada no comentário dela custa menos que um método a mais na porta.
+**o menor não é o mais estreito, é o que não se repete**: uma cópia curta
+declarada no comentário dela custa menos que um método a mais na porta.
 
 **A cena sai; a bancada que a exercita fica.** Mover a cena não move os testes de
 integração dela — eles batem no roteador de verdade, que continua no `api`.
+
 ## Código órfão, bancada mentirosa, e raciocínio envelhecido
 
-Três famílias que apareceram juntas entre a ALE-287 e a ALE-292, e que se
-confundem porque as três produzem VERDE sobre nada. As investigações estão nas
-issues; o que se aplica está aqui.
+Três famílias que se confundem porque as três produzem VERDE sobre nada.
 
 ### Órfão é dívida OU capacidade esperando gesto
 
-Uma função sem chamador pode ser das duas coisas, e **o que as separa não é a
-contagem de chamadores — é ler o que a coisa FAZ.** Numa varredura de cinco
-órfãos, três eram dívida e dois eram funcionalidade perdida: a camada de baixo
-inteira no ar, com teste, e nenhuma rota chegando nela.
+**O que separa as duas não é a contagem de chamadores — é ler o que a coisa
+FAZ.** Uma camada inteira no ar, com teste e sem rota chegando nela, é
+funcionalidade perdida, não lixo.
 
-E a segunda metade da regra: **a capacidade esperando gesto pode NÃO precisar do
-que a esperava.** Quando o gesto finalmente chegou, ele não usou nada dos três
-órfãos guardados para ele. Guardar código por "vai ser útil" é apostar no desenho
-que você ainda não fez.
+E a outra metade: **a capacidade esperando gesto pode NÃO servir ao gesto quando
+ele chegar.** Guardar código por "vai ser útil" é apostar no desenho que você
+ainda não fez.
 
 ### A bancada que escreve o que a produção não escreve
 
-**Código alcançável por ninguém e teste que arranja o próprio estado são a mesma
+**Código que ninguém alcança e teste que arranja o próprio estado são a mesma
 doença**: os dois parecem cobertura.
 
-- **Quando o ARRANJO de um teste usa uma porta que nenhum caminho de produção
-  usa, o verde é sobre o arranjo.** Uma mesa inteira passava verde chamando um
-  `Join` que ninguém em produção chamava desde a ALE-272.
-- **Quando a bancada escreve uma coluna que a produção nunca escreve, o verde é
-  sobre a bancada.** O fixture fornecia o que a tela não fornecia, e toda mesa
-  aberta pela tela nascia com a coluna nula.
+- **Arranjo que usa uma porta que nenhum caminho de produção usa**: o verde é
+  sobre o arranjo.
+- **Bancada que escreve uma coluna que a produção nunca escreve**: o verde é
+  sobre a bancada.
 
-O controle é o mesmo nos dois casos: **percorra o caminho de produção para
-montar o estado**, e não a porta mais curta que chega ao mesmo dado.
+O controle é o mesmo nos dois casos: **monte o estado pelo caminho de
+produção**, e não pela porta mais curta que chega ao mesmo dado.
 
 ### O RACIOCÍNIO guardado envelhece como o código guardado
 
-Uma docstring **estava certa quando foi escrita, continuou plausível por duas
-épicas, e estava errada no dia em que alguém a leu para decidir.** É a mesma
-família do `.md` que apodrece, e ela é pior: ninguém relê docstring de função que
-não vai tocar.
-
-Duas armadilhas de quem constrói a sonda que caça isso:
-
-- **A leitura tem de usar a MESMA varredura que a trava.** Uma sonda que casa
-  `.Simbolo(` perde todo nome que colide com a biblioteca padrão; casando também
-  `Simbolo(`, ela mascara nome sobrecarregado. O resultado vira PISO, e o
-  silêncio dele não é evidência.
-- **Foi o controle positivo que reprovou a sonda**, não a leitura dela. Sem um
-  caso conhecido plantado, a lista curta passaria por resposta.
+Docstring envelhece como `.md`, e ninguém relê a de função que não vai tocar —
+ver "Comentários" no [CLAUDE.md da raiz](../CLAUDE.md); a sonda que caça isso
+precisa do controle positivo de "O INSTRUMENTO MENTE COM CARA DE RESULTADO".
 
 ### Guarda de leiaute precisa do ESTADO, não só da cena
 
-A cena estava na lista de visitas e o ESTADO não: nenhum guarda visitava um mapa
-COM marcador, então os ícones espremidos e o número de dois dígitos do acervo
-atravessaram todas as medições. **Visitar a cena não é visitar a tela** — é a
-mesma família que a raiz cataloga em "um guarda só mede o que ele VISITA", com o
-dado no lugar da navegação.
+Visitar a cena não é visitar o estado dela — ver "Um guarda só mede o que ele
+VISITA" no [CLAUDE.md da raiz](../CLAUDE.md).
 
-> E uma armadilha de acessibilidade que saiu daí: **esconder texto por CSS o tira
-> da árvore de acessibilidade**, então um rótulo escondido por `display:none` não
-> é lido por ninguém — nem pelo leitor de tela, nem pelo `getByLabel`.
+> **Esconder texto por CSS o tira da árvore de acessibilidade**: um rótulo
+> escondido por `display:none` não é lido por ninguém — nem pelo leitor de tela,
+> nem pelo `getByLabel`.
+
 ## Apagar código morto: as armadilhas do RECORTE
 
-A ALE-277 e a ALE-278 apagaram 104 manipuladores sem chamador e repartiram o
-`*Server`, que tinha 89 métodos exportados existindo para cumprir a UNIÃO das
-portas das onze cenas — quando **67 das 76 assinaturas tinham exatamente UMA cena
-pedindo**. Quantos sobraram se pergunta ao código, nunca a esta linha — aqui
-estava escrito "onze" e o `grep` respondeu SEIS:
+Quantos métodos exportados o `*Server` ainda tem se pergunta ao código:
 
 ```
 grep -c "^func (s \*Server) [A-Z]" serve/api/*.go
 ```
 
-A crônica está nas issues; o que morde ao recortar está aqui.
-
-**O compilador pega três das quatro**, e a quarta é a que importa:
+**O compilador pega três das quatro armadilhas**, e a quarta é a que importa:
 
 - Recortar função de UMA LINHA procurando `}` na coluna zero come as vizinhas.
 - Receptor colide com variável existente no destino.
 - `s.` dentro de uma string de formato vira recorte errado.
 - **E a que ele NÃO pega: a regra que só aquele teste guardava.** Método sem
-  chamador não quebra compilação, e teste que o exercitava some junto com ele.
+  chamador não quebra compilação, e o teste que o exercitava some junto com ele.
   Antes de apagar, pergunte o que o teste afirmava — não se alguém chama.
 
-**Cena se testa pelo `WebRouter()`**, não pelo `Router()` da API JSON. Foi o que
-sobreviveu à saída da API: dois guardas que varriam rotas de `/characters`
-morreram com o terreno, e a invariante mudou de casa para o
-`TestNoSheetWriteAcceptsAStranger`. **Guarda de varredura vale o que vale o
-terreno que ele varre.**
-## Os pacotes que saíram do `api` (ALE-278, ALE-344)
+**Cena se testa pelo `WebRouter()`**, não pelo `Router()` da API JSON. Guarda
+que varre rotas morre com o terreno dele; confira se a invariante mudou de casa
+(a escrita de ficha por estranho, por exemplo, é do
+`TestNoSheetWriteAcceptsAStranger`).
 
-`campaign`, `account`, `search`, `book`, `sheet` e `creature` deixaram de ser
-arquivos do `api` e viraram pacotes. O que a série ensinou, e que vale para a
-próxima extração, são três regras — o caso de cada uma está na issue.
+## Os pacotes que saíram do `api`
 
-**1. Função pura copiada por causa de fronteira é lugar de defeito silencioso.**
-Aconteceu TRÊS vezes na mesma série. Quando o `book` saiu, ele não podia importar
-o normalizador de acento que morava no `api`; a cópia de nove linhas chamou a
-função que só faz `ToLower`, e `KeyOfName("Atuação")` passou a devolver "atuação"
-com acento — a classe deixou de ligar a perícia que treina, sem erro, sem panic,
-sem log. No `account` a cópia divergiu na FRASE em vez da conta: a mesma regra de
-senha recusava em português pela tela e em inglês pela rota JSON, e o teste que
-existia prendia a cópia morta.
+`campaign`, `account`, `search`, `book`, `sheet` e `creature` são pacotes do
+`domain/`, e `events` da `infra/`. Três regras para a próxima extração:
+
+**1. Função pura copiada por causa de fronteira é lugar de defeito
+silencioso.**
 
 > **Quando copiar, copie o CORPO do original — nunca uma reescrita de memória.**
 > E prefira o pacote: ele apaga a cópia E a razão de haver duas.
 
-**2. O guarda de fronteira que mais importa é o do pacote MAIS IMPORTADO**, e a
-razão é aritmética: treze famílias leem o `book`, então quase toda cena que
-nascer vai importá-lo. No dia em que ele alcançar o `api`, todas as cenas
-alcançam HTTP de graça — **com o guarda de cada uma continuando VERDE, porque
-cada guarda só olha os imports dele.** Vale igual para `sheet`, `creature` e
-`events`.
+**2. O guarda de fronteira que mais importa é o do pacote MAIS IMPORTADO.** No
+dia em que o `book` alcançar o `api`, toda cena que o importa alcança HTTP de
+graça — **com o guarda de cada uma VERDE, porque cada guarda só olha os imports
+dele.** Vale igual para `sheet`, `creature` e `events`.
 
 **3. A regra de PRODUTO não desce para a infraestrutura.** "A senha tem ao menos
-8 caracteres" é regra, não encanamento, e por isso o `account` não virou
-plataforma. Do mesmo modo, uma regra com consumidor de TELA e de API tem a frase
-morando COM ela, em pt-BR e uma só: duas frases para uma regra é o que quebra
-quando alguém mexe no limite.
+8 caracteres" é regra, e por isso o `account` mora no `domain/`. Uma regra com
+consumidor de TELA e de API tem a frase morando COM ela, em pt-BR e uma só: duas
+frases para uma regra é o que quebra quando alguém mexe no limite.
 
-**O critério de mover continua sendo a DEPENDÊNCIA, medida e não suposta:** a
-pergunta é "isto carrega HTTP?", e a resposta se lê nos imports do arquivo, não
-no assunto dele.
-
+**O critério de mover é a DEPENDÊNCIA, medida e não suposta:** "isto carrega
+HTTP?" se responde nos imports do arquivo, não no assunto dele.
 
 ## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
 
 O botão, o campo, a moldura, o rótulo de seção, a caixa rolável, o ícone e a
-CASCA moram em `web/ui` desde a ALE-278 (fatia 4). Eles são o que 35 famílias de
-arquivo liam do `api`, e sair de lá é o que permite as cenas se dividirem em um
-pacote cada.
+CASCA moram em `serve/web/ui`, e é isso que permite cada cena ser um pacote.
 
-**A linha divisória não é tamanho, é DEPENDÊNCIA.** O que ficou no `api` foi o
-agrupamento do LIVRO e dos ELOS, com os dois diálogos, porque o trecho que eles
-desenham nasce de uma consulta ao catálogo de efeitos e de escolas de magia.
-Levá-los faria o pacote de apresentação importar catálogo, que é o contrário do
-que a divisão existe para conseguir.
+**A linha divisória não é tamanho, é DEPENDÊNCIA: o kit não importa catálogo.**
+O que desenha a partir do catálogo — o livro, o verbete, o buscador — mora em
+pacote próprio (`serve/web/bookui`, `serve/web/finder`).
 
-**A casca RECEBE o que não pode conhecer.** Duas dependências a prendiam ao
-`api`, e as duas viraram campo de `ui.Page`:
+**A casca RECEBE o que não pode conhecer**, como campo de `ui.Page`:
 
 - `Asset func(string) string` — o endereço versionado dos estáticos, que são
-  `go:embed` do `api`;
+  `go:embed` de outro pacote;
 - `Overlays []templ.Component` — o livro, o verbete e o buscador, que leem
-  catálogo. A casca só reserva o lugar.
+  catálogo. A casca só reserva o lugar;
 - `ColorMode` — o claro ou escuro que a pessoa escolheu, lido do cookie
   `color_mode`. A casca o escreve no `<html data-mode>`, e não sabe de cookie.
 
-Quem preenche é o `scene_core.go`, o ÚNICO lugar do projeto que monta uma
-página. Pôr esses campos em cada `ui.Page{…}` seria repetir dezoito vezes o que
-não varia.
+Quem preenche é o `WritePage` do `serve/api/scene_core.go`, o ÚNICO lugar que
+monta uma página. Não ponha esses campos em cada `ui.Page{…}`.
 
-**A armadilha desta fatia foi o renomeador, e vale para a próxima.** Exportar um
-símbolo é escrever um nome novo, então o kit inteiro passou para inglês — e um
-`re.sub` por palavra trocou 250 arquivos, inclusive um comentário que virou "o
-diálogo Int". Os nomes do kit são palavras COMUNS em português (`campo`,
-`tamanho`, `variante`, `botao`, `layout`), e elas aparecem em comentário, em
-string, em nome de parâmetro de outro componente e dentro de identificador
-hifenizado — `data-nav-layout` virou `data-nav-ui.Layout`, que o HTML aceita sem
-reclamar e que só custa a navegação por teclado daquela cena, em silêncio.
+**Renomear palavra COMUM** (`campo`, `tamanho`, `layout`) pede um renomeador que
+pule comentário e string, com o compilador como rede para o resto. O que o
+compilador não pega é o identificador hifenizado (`data-nav-layout`): esse se
+acha com `grep` depois.
 
-O que funcionou: um renomeador que pula comentário e string, mais o COMPILADOR
-como rede para o resto — em Go, `ui.Field := …` não é declaração válida, então
-todo parâmetro e toda variável local com nome colidente vira erro. O que o
-compilador não pega é o hifenizado; esse se acha com um `grep` por `-ui.` depois.
-
-### O `extra` do botão NÃO ganha da base, e quem decide é a FOLHA (ALE-316)
+### O `extra` do botão NÃO ganha da base, e quem decide é a FOLHA
 
 `ButtonClasses(v, t, extra)` concatena, e **concatenar não resolve conflito**: o
 `Join` não é `tailwind-merge`. Duas classes do mesmo eixo na mesma tag não se
-somam — vence a que a folha compilada declara por ÚLTIMO. Então um `extra` cuja utilidade venha ANTES da base perde,
-e perde calado.
+somam — vence a que a folha compilada declara por ÚLTIMO. Um `extra` cuja
+utilidade venha ANTES da base perde, e perde calado.
 
-Medido nos offsets da folha de hoje:
+**Nenhum eixo mora na BASE se um TAMANHO pode querer outro valor.** A fonte e o
+`gap` moram no mapa de tamanhos, onde não há duas classes para disputar; na base
+fica o que nenhum tamanho contradiz — forma, foco, transição, desabilitado. E
+um hover que precisa de outra cor vira VARIANTE (`VariantGhostDanger`), não
+`extra`.
 
-| eixo | ordem na folha | consequência |
-|---|---|---|
-| fonte | `.text-base 58566` · `.text-lg 58664` · `.text-sm 58756` · `.text-xs 58940` | a MENOR sempre vence |
-| `gap` | `.gap-1 41290` · `.gap-1.5 41316` · `.gap-2 41357` | o MAIOR vence |
-| hover | `.hover:text-destructive-ink 72192` · `.hover:text-foreground 72256` | o `foreground` vence |
+Para conferir um conflito: `grep -bo '\.classe'` na folha compilada, dos dois
+lados. A ordem do `class=` não decide nada — o navegador a ignora.
 
-As três linhas produziram um defeito cada. A da fonte era latente: o primeiro
-botão de ícone a pedir `text-lg` sairia pequeno. A do `gap` estava **VIVA** — o
-`gap-2` da base vencia o `gap-1.5` do `SizeSmall`, e o botão pequeno nunca teve
-o respiro que alguém escreveu para ele. A do hover é a razão de o ghost que
-apaga ser VARIANTE (`VariantGhostDanger`) e não um `extra`.
+## Dois sistemas de desenho, até a última tela migrar
 
-**O conserto geral é de forma: nenhum eixo mora na BASE se um TAMANHO pode
-querer outro valor.** A fonte e o `gap` desceram para o mapa de tamanhos, e aí
-não há duas classes para disputar. O que sobra na base é o que nenhum tamanho
-contradiz — forma, foco, transição, desabilitado.
-
-Para quem for escrever a próxima variante: o teste é `grep -bo '\.classe'` na
-folha compilada, dos dois lados do conflito. Não adianta raciocinar pela ordem
-do `class=`, que o navegador ignora.
-
-## Dois sistemas de desenho, até a última tela migrar (ALE-497)
-
-A UI está sendo refeita, e a transição é POR ESCOPO: a cena migrada veste o
-sistema **Tempestade** inteiro, e a que ainda não migrou continua no
-**grimório**. Quem escolhe é a cena, com `ui.Page.System`; o zero do tipo é o
-grimório, para nenhuma tela mudar sem alguém pedir. O que cada palavra quer
-dizer está na seção H do [GLOSSARY](../GLOSSARY.md).
+A transição é POR ESCOPO: a cena migrada veste o sistema **Tempestade** inteiro,
+e a que não migrou continua no **grimório**. Quem escolhe é a cena, com
+`ui.Page.System`; o zero do tipo é o grimório, para nenhuma tela mudar sem
+alguém pedir. O que cada palavra quer dizer está na seção H do
+[GLOSSARY](../GLOSSARY.md).
 
 - **Os tokens do Tempestade são `--ds-*` e só existem dentro de `.scene-ds`**
   (`serve/web/assets/src/ds.css`). Nada é declarado na raiz: um token com o nome
   de um do grimório repintaria as telas que ainda não migraram.
 - **Cada cor é UM token com os dois modos** (`light-dark()`), e o modo é o
-  `color-scheme` do elemento que USA o token. É por isso que a folha viva
-  desenha as duas metades lado a lado com um `data-preview` só, e por isso o
-  modo escolhido é um atributo no `<html>` e não um segundo bloco de tokens.
+  `color-scheme` do elemento que USA o token. Por isso a folha viva desenha as
+  duas metades lado a lado, e o modo escolhido é um atributo no `<html>`, não um
+  segundo bloco de tokens.
 - **A tela não escolhe cor.** Ela se monta com as peças de `serve/web/ds`, que
-  escrevem a classe e a variante; o que a tela escreve é leiaute (`grid`, `gap`,
+  escrevem a classe e a variante; a tela escreve leiaute (`grid`, `gap`,
   `px-4`), e a escala de espaço do Tailwind já é a do sistema (base 4). Peça
   nova entra no kit e na `/sistema` ANTES de entrar numa tela.
-- **Os pisos do sistema novo são outros**: 12px de texto e 44×44 de alvo no
-  toque. Quem mede é o e2e (`support/ds-floors.ts`, no laço do
-  `appearance.spec.ts`), e ele só mede a cena com `.scene-ds` — o caso anota
-  no relatório qual sistema a cena veste, e não existe lista de cenas migradas
-  para alguém esquecer. O guarda da Cinzel mede só a outra metade, pelo motivo
-  inverso.
-- **Três medidores tiveram de aprender o segundo escopo**, e os três passavam
-  VERDE sobre a cena nova sem medi-la: o de contraste varria só
-  `.scene-grimorio *` (5 textos medidos na `/sistema`, os do diálogo do livro),
-  o de face lia só o `index.css`, e o de escopo lia só o `class="…"`. Medidor
-  novo que mire um escopo pelo nome mira os DOIS até o grimório sair.
-- **A tela grande migra em PARALELO** (ALE-473, decisão do dono): a nova mora
-  no MESMO endereço atrás de uma marca (`?tempestade=1`) que todo comando e todo
-  link carrega, e a do grimório fica intacta até a última parte. Parte ainda não
-  migrada desenha um vazio que leva à de hoje — nunca o grimório dentro da cena
-  Tempestade. Quando a última parte migra, a marca sai e a de hoje é APAGADA, e
-  os testes que liam o desenho dela são portados antes: foi assim com a ficha,
-  com a sessão do jogador e com a mesa do mestre (ALE-522, cuja marca virou um
-  cookie para não viajar em cada gesto).
+- **Os pisos do Tempestade são outros**: 12px de texto e 44×44 de alvo no toque.
+  Quem mede é o e2e (`support/ds-floors.ts`, no laço do `appearance.spec.ts`),
+  só na cena com `.scene-ds`; o caso anota qual sistema a cena veste, e não
+  existe lista de cenas migradas para alguém esquecer. O guarda da Cinzel mede só
+  a outra metade.
+- **Medidor que mire um escopo pelo nome mira os DOIS** até o grimório sair. Um
+  que mira só `.scene-grimorio`, só o `index.css` ou só o `class="…"` passa
+  VERDE sobre a cena nova sem medi-la.
+- **Tela grande migra em PARALELO, no mesmo endereço.** A versão antiga fica
+  intacta até a última parte migrar; parte ainda não migrada desenha um vazio
+  que leva à antiga — nunca o grimório dentro da cena Tempestade. Quando a
+  última parte migra, a antiga é APAGADA, e os testes que liam o desenho dela são
+  portados antes.
 - **O fim da migração é apagar**, não converter: o `.scene-grimorio`, os
   tokens `grimorio-*`, a Cinzel, a Liberation, a JetBrains Mono e a `/grimorio`
   saem de uma vez, depois da última tela.
 
-## O anel de foco é UMA receita, e o repouso dela existe para não animar (ALE-318)
+## O anel de foco é UMA receita, e o repouso dela existe para não animar
 
-A regra é global, mora no `index.css` desde a ALE-173 e **não é layerada** —
-então ela ganha de todo utilitário do Tailwind, que é layerado. Consequência que
-vale saber antes de escrever qualquer botão: `focus-visible:outline-*` escrito à
-mão não faz efeito nenhum dentro de uma cena, porque a regra de cima já decidiu.
-Apagar todas as cópias dela não mudou um pixel (ALE-317), e quem impede a
-próxima é o `TestNoHandwrittenFocusRing`.
+A regra de foco de cada sistema mora na folha dele — `index.css` para
+`.scene-grimorio`, `ds.css` para `.scene-ds` — e **não é layerada**, então ganha
+de todo utilitário do Tailwind, que é layerado. `focus-visible:outline-*`
+escrito à mão numa `class=` não faz efeito nenhum dentro de uma cena, e quem
+impede a próxima cópia é o `TestNoHandwrittenFocusRing`.
 
-O que MUDA o pixel é o REPOUSO, e o mecanismo é a regra: o `@layer base` traz um
-`* { outline-color }` do shadcn, e o `transition-colors`/`transition-all` do
-Tailwind v4 **incluem `outline-*`**. Nada daquilo pinta em repouso — o
-`outline-style` é `none` —, mas os três são o ponto de PARTIDA da transição, e o
-anel passa a ser ALCANÇADO em 150ms em vez de desenhado. Quem tabula na
-autorrepetição do teclado (~33ms por parada) nunca vê o anel inteiro, e o meio do
-caminho raspa o piso de 3:1 do WCAG 1.4.11 (ALE-318).
+O que MUDA o pixel é o REPOUSO. O `@layer base` traz um `* { outline-color }`
+do shadcn, e o `transition-colors`/`transition-all` do Tailwind v4 **incluem
+`outline-*`**. Nada daquilo pinta em repouso (`outline-style: none`), mas é o
+ponto de PARTIDA da transição: o anel passa a ser ALCANÇADO em 150ms em vez de
+desenhado, e quem tabula na autorrepetição do teclado nunca o vê inteiro.
 
 **O conserto é escrever o repouso igual ao destino**, no mesmo `*`: sem
-diferença, não há o que interpolar. A duplicação do `2px`/`1px` com a regra de
-foco é deliberada, e quem cobra que os dois lados não se separem é o
-`e2e/tests/support/focus.ts`.
+diferença, não há o que interpolar. A duplicação da largura e do afastamento com
+a regra de foco é deliberada, e quem cobra que os dois lados não se separem é o
+`e2e/tests/support/focus.ts` (`expectOneFocusRing`).
 
-Três coisas que essa medição deixou, e nenhuma delas é sobre contorno:
-
-- **Ler o computado durante uma transição devolve o valor de PARTIDA**, e
-  escolher outro instante só troca o erro de lugar. O medidor da casa pergunta ao
-  navegador se existe transição (`getAnimations()` devolve uma `CSSTransition`
-  por propriedade, com o nome dela) em vez de inferir pela aparência. A história
-  inteira está na seção "O INSTRUMENTO MENTE COM CARA DE RESULTADO" do
+- **Para medir, pergunte ao navegador se há transição** (`getAnimations()`) —
+  ver "O INSTRUMENTO MENTE COM CARA DE RESULTADO" no
   [CLAUDE.md da raiz](../CLAUDE.md).
-- **A carta de rádio é a única exceção legítima, e ela é do RÓTULO.** A forja e o
-  "entrar na mesa" escondem o `<input>` com `sr-only` e desenham o realce no
-  `<label>`, com `has-[:focus-visible]:outline-*`. A regra global não alcança —
-  ela casa `:is(a, button, input, …)` —, e uma regra `label:has(:focus-visible)`
-  no lugar dela desenharia DOIS anéis concêntricos nos dez rótulos do app que
-  envolvem um campo VISÍVEL. As três plaquetas eram a segunda aparência de foco
-  do repositório (afastamento de 2px), e quem as achou foi o medidor subindo a
-  árvore a partir do rádio invisível — um sweep de focáveis nunca olha para lá.
-- **Guarda que aproxima um seletor mede outro seletor.** A primeira versão do
-  medidor isentava do anel tudo que estivesse dentro de `[data-nav-region]`,
-  porque o trilho fala por brilho; o `index.css` isenta `[data-nav-region] :is(a,
-  button, [data-nav-item])`. Os rádios `sr-only` das cartas e o contêiner rolável
-  estão dentro do trilho e não são item dele — 37 nós acusados de uma vez, na
-  folha da forja. A condição do guarda passou a COPIAR o seletor.
+- **A carta de rádio é a única exceção legítima, e ela é do RÓTULO.** A forja e
+  o "entrar na mesa" escondem o `<input>` com `sr-only` e desenham o realce no
+  `<label>` (`has-[:focus-visible]:outline-*` na forja,
+  `.ds-hero-pick:has(:focus-visible)` no `ds.css`). A regra global casa
+  `:is(a, button, input, …)` e não alcança; uma `label:has(:focus-visible)` no
+  lugar dela desenharia DOIS anéis concêntricos em todo rótulo que envolve um
+  campo VISÍVEL.
+- **Guarda que aproxima um seletor mede outro seletor.** A isenção do anel tem
+  de COPIAR o seletor da folha (`[data-nav-region] :is(a, button,
+  [data-nav-item])`), e não "tudo dentro de `[data-nav-region]`".
 
-## As notas numa janela própria, e o pacto que as torna únicas (ALE-218)
+## As notas numa janela própria, e o pacto que as torna únicas
 
-As notas da sessão têm endereço:
-`GET /campanhas/{campanha}/sessoes/{sessao}/notas` desenha o
-MESMO painel da coluna, sem o mapa em volta. É o último dos quatro lugares que a
-ALE-218 decidiu — lado a lado, empilhado, flutuando e a janela —, e o único que
-sai do leiaute da página.
+`GET /campanhas/{campanha}/sessoes/{sessao}/notas` desenha o MESMO painel das
+notas, sem o mapa em volta.
 
-**Ela é cena e não painel mudado de lugar**, e isso foi medido e não escolhido:
-o nó adotado por outro documento perde o Datastar (ver a armadilha do mesmo nome
-na seção do Datastar). O corpo é reusado — `notesBody`, `modesRange`,
-`autosaveState` são os mesmos —, e o que a cena NÃO tem diz o desenho: sem o
-alternador de flutuar (não há mapa embaixo), sem a divisa de largura (quem
-redimensiona é o sistema), sem o ✕ (fechar é a janela).
+**Ela é CENA, e não painel mudado de lugar**: o nó adotado por outro documento
+perde o Datastar (ver "O nó que muda de DOCUMENTO", abaixo). O corpo é reusado
+(`notesBody`, `modesRange`, `autosaveState`); o que a cena NÃO tem — alternador
+de flutuar, divisa de largura, ✕ — está decidido no cabeçalho do
+`notes_window.templ`.
 
 **As duas não podem estar abertas ao mesmo tempo, e a razão é o BANCO.** As duas
 escrevem `sessions.notes` com autosave de 1,2s, e as notas não são região do
-stream de propósito — são de um leitor só. Com as duas no ar, quem salva por
-último apaga o parágrafo do outro, sem aviso, com as DUAS faixas dizendo "Salvo".
+stream — são de um leitor só. Com as duas no ar, quem salva por último apaga o
+parágrafo do outro, com as DUAS faixas dizendo "Salvo".
 
-O pacto é `localStorage` mais o evento `storage`, e não um canal de difusão:
-o evento chega a toda janela da origem sem ninguém segurar um objeto vivo, e é o
-mesmo mecanismo que as outras três preferências das notas já usam. A chave
-guarda o ID DA SESSÃO, porque uma janela aberta na sessão 4 não tem o que dizer
-sobre a 7. Três detalhes que custaram pensamento:
+O pacto é `localStorage` mais o evento `storage`, não um canal de difusão: o
+evento chega a toda janela da origem sem ninguém segurar um objeto vivo. A chave
+guarda o ID DA SESSÃO, porque a janela da sessão 4 não tem o que dizer sobre a
+7.
 
-- **Quem fecha a coluna é o ANÚNCIO da janela, não o clique.** A diferença
-  aparece quando o navegador bloqueia o pop-up: ali nada foi tomado, e a coluna
-  fica onde estava em vez de sumir sobre uma janela que não abriu. O bloqueio é
-  dito em PALAVRAS — `window.open` devolvendo nulo é a única pista que existe.
+- **Quem fecha a coluna é o ANÚNCIO da janela, não o clique.** Com o pop-up
+  bloqueado, nada foi tomado e a coluna fica. O bloqueio é dito em PALAVRAS —
+  `window.open` devolvendo nulo é a única pista.
 - **`pagehide` e não `beforeunload`**: aquele pede confirmação em alguns
   caminhos, e `unload` é pulado quando a página vai para o cache de ida e volta.
-- **A chave pode ficar PRESA** se a janela morrer sem `pagehide` (uma queda do
-  navegador). O conserto é o próprio gesto: com as notas "numa janela", o botão
-  do trilho chama `window.open` com o mesmo NOME — que acha a janela viva ou
-  abre outra. O estado preso se desfaz clicando onde a pessoa já ia clicar.
+- **A chave pode ficar PRESA** se a janela morrer sem `pagehide`. O conserto é o
+  próprio gesto: o botão chama `window.open` com o mesmo NOME, que acha a janela
+  viva ou abre outra.
 
-**E o `window.open` entrou no guarda de endereço** (`TestEveryAddressAPostWritesExistsInTheRouter`,
-ALE-308) em vez de ganhar um próprio: o defeito é o mesmo que o do `@post` com
-caminho morto, e o extrator já sabia parar na primeira vírgula de topo, então o
-nome da janela e as `features` ficam de fora sozinhos. O método é GET porque é
-navegação — e isso não é detalhe: perguntar ao chi por um POST em
-`/campanhas/1/sessoes/4/notas` responderia "existe" pela rota de SALVAR, e o guarda ficaria
-verde sobre um endereço de página que não existisse.
+**O `window.open` é endereço que a cena escreve**, e o
+`TestEveryAddressAPostWritesExistsInTheRouter` o confere como GET — porque é
+navegação. Perguntar ao chi por um POST no mesmo caminho responderia "existe"
+pela rota de SALVAR, e o guarda ficaria verde sobre uma página que não existe.
 
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
-**No CORPO, e não no caminho** (ALE-305). O `@post` do Datastar aceita
-`{payload: …}`, e o payload é calculado no instante do clique — não vira sinal,
-que é estado compartilhado e viajaria em toda requisição. O formato é um só para
-o tabuleiro inteiro:
+**No CORPO, e não no caminho.** O `@post` do Datastar aceita `{payload: …}`,
+calculado no instante do clique — não vira sinal, que é estado compartilhado e
+viajaria em toda requisição. O formato é um só para o tabuleiro inteiro:
 
 ```json
-{"from":{"X":2,"Y":2},"to":{"X":8,"Y":5}}        // o traço e o retângulo
+{"from":{"x":2,"y":2},"to":{"x":8,"y":5}}        // o traço e o retângulo
 {"kind":"dificil","erase":true,"from":…,"to":…}  // com a espécie do pincel
 {"shape":"esfera","size":"6","from":…,"to":…}    // o gabarito: origem e mira
-{"from":{"X":7,"Y":3}}                           // um lugar só: parada, marcador
-{"delta":{"X":3,"Y":-2},"marked_tokens":"a,b"}   // o arrasto do grupo marcado
+{"from":{"x":7,"y":3}}                           // um lugar só: parada, marcador
+{"delta":{"x":3,"y":-2},"marked_tokens":"a,b"}   // o arrasto do grupo marcado
 ```
 
-As chaves são INGLESAS porque campo JSON é fronteira; só a ROTA saiu dessa lista
-(ver o `CLAUDE.md` da raiz). Um tipo só — o `strokeBody` — para todos os gestos,
-porque um formato só é um formato só para aprender; um por gesto é como nasce a
-terceira grafia do mesmo par de números.
+As chaves são INGLESAS porque campo JSON é fronteira (ver "Idioma" no
+[CLAUDE.md da raiz](../CLAUDE.md)). Um tipo só — o `strokeBody` — para os
+gestos de pontos: um formato por gesto é como nasce a terceira grafia do mesmo
+par de números.
 
-### O que o corpo quebrado produz, e as DUAS famílias de recusa (ALE-311)
+### O que o corpo quebrado produz, e as DUAS famílias de recusa
 
-O corpo que chega quebrado de verdade é `{"from":{"X":undefined}}` — o `payload`
-é calculado no instante do gesto, e um sinal indefinido no meio da expressão
-manda `undefined`, que não é JSON. O que não pode acontecer é o servidor decidir
-sozinho que o gesto foi na origem.
+O corpo quebrado de verdade é `{"from":{"X":undefined}}`: um sinal indefinido na
+expressão do `payload` manda `undefined`, que não é JSON. O servidor não pode
+decidir sozinho que o gesto foi na origem.
 
-**As nove rotas que lêem pontos se dividem em duas famílias, e o contrato de
-recusa é DIFERENTE em cada uma:**
+**As rotas que leem pontos têm DOIS contratos de recusa:**
 
 - as que respondem **só sinais** (`marcar-area`, `gabarito`, `regua`) recusam em
   **400**, porque não há cena para redesenhar;
 - as que são **comando** (terreno, retângulo, peça avulsa, grupo) recusam em
   **200** com a frase no `$command_error` — porque o Datastar DESCARTA o remendo
-  de toda resposta não-2xx, e uma recusa em 4xx ali não apareceria na tela.
+  de resposta não-2xx.
 
-A primeira versão do guarda reprovou quatro rotas por medir o STATUS, que é o
-contrato errado para metade delas. **O que as duas famílias têm em comum é a
-única coisa que importa para quem está na mesa: a frase CHEGA** — e é por isso
-que o `TestEveryGestureThatReadsPointsRefusesABrokenBody` prende a frase.
+O que as duas têm em comum é o que importa à mesa: **a frase CHEGA** — e é a
+frase que o `TestEveryGestureThatReadsPointsRefusesABrokenBody` prende, não o
+status.
 
 > **Corpo VAZIO não é recusa, e isso é desenho.** `{}` decodifica para (0,0) em
-> silêncio, porque `from` ausente e `from` em (0,0) são indistinguíveis num
-> struct de inteiros. Prender isso exigiria ponteiro em todo campo de coordenada.
+> silêncio; prender isso exigiria ponteiro em todo campo de coordenada.
 >
-> A consequência para quem escreve teste é a que morde: **(0,0) é o VALOR-ZERO,
-> então um caso ancorado na origem não consegue detectar um `from` que parou de
-> ser lido.** O `TestTheEraserStrokeClearsTheWholeSegment` apagava de (0,0) a
-> (6,6) e era estruturalmente incapaz de medir o que veio medir. Todo caso novo
-> sai da origem de propósito, e vários afirmam que (0,0) NÃO foi tocado.
+> Para quem escreve teste: **(0,0) é o VALOR-ZERO, então caso ancorado na origem
+> não detecta um `from` que parou de ser lido.** Todo caso sai da origem de
+> propósito, e vários afirmam que (0,0) NÃO foi tocado.
 
 ### Quando o corpo JÁ É o formulário, o payload lista os sinais
 
-O `payload` SUBSTITUI os sinais no corpo — mas ele pode CARREGÁ-los, basta
-nomeá-los:
+O `payload` SUBSTITUI os sinais no corpo — mas pode CARREGÁ-los, nomeando-os:
 
 ```js
 @post('…/pecas/nova', {payload: {from: {x: cx, y: cy},
   new_token_name: $new_token_name, new_token_size: $new_token_size}})
 ```
 
-**O corpo não se lê duas vezes.** O `ReadSignals` do datastar-go copia `r.Body`
-inteiro num buffer, então um segundo leitor pega vazio: é um struct só, lido uma
-vez, e some o leitor separado.
+**O corpo não se lê duas vezes**: o `ReadSignals` copia `r.Body` inteiro, e um
+segundo leitor pega vazio. É um struct só, lido uma vez.
 
-**O preço é uma grafia a mais** — a expressão passa a listar cada sinal pelo
-nome, num lugar que um `grep` de `$nome` não distingue de leitura qualquer.
-Quem paga é o `TestEveryPayloadKeyMatchesTheSignalItReads`: quando a chave é ela
-mesma um nome de sinal, ela tem de carregar aquele sinal
-(`new_token_size: $new_token_look` reprova; `kind: $tool` passa, porque `kind`
-não é sinal nenhum), e toda chave tem de achar uma tag `json:"chave"` do outro
-lado. Chave renomeada de um lado só chega ao servidor e cai no chão: 200 com o
-valor-zero, sem erro em lugar nenhum.
+**O preço é uma grafia a mais** de cada sinal, que um `grep` de `$nome` não
+distingue de leitura qualquer. Quem paga é o
+`TestEveryPayloadKeyMatchesTheSignalItReads`: chave que é ela mesma nome de
+sinal tem de carregar aquele sinal (`new_token_size: $new_token_look` reprova;
+`kind: $tool` passa, porque `kind` não é sinal), e toda chave tem de achar uma
+tag `json:"chave"` do outro lado. Chave renomeada de um lado só chega e cai no
+chão: 200 com o valor-zero.
 
 **E a CAIXA da chave conta.** O `encoding/json` casa campo sem diferenciar caixa
-**só quando não há correspondência exata** — então `{X: cx}` contra
-`json:"x"` funciona por ACIDENTE, e para de funcionar no dia em que o struct
-ganhar um campo que case exatamente com `X`. É a mesma tolerância de biblioteca
-que segura duas grafias para um conceito no nome de sinal. A grafia do CLIENTE é
-que muda, porque o tabuleiro gravado em `campaign_places` e `open_boards` já
-carrega `"x": 3` minúsculo; o guarda exige a grafia exata, e **a tag GANHA do
-nome do campo**, porque um campo tagueado não se lê pelo nome dele.
+**só quando não há correspondência exata** — então `{X: cx}` contra `json:"x"`
+funciona por ACIDENTE, até o struct ganhar um campo que case exatamente. A
+grafia do fio é minúscula (`x`, `y`), a mesma gravada em `campaign_places` e
+`open_boards`; o guarda exige a grafia exata, e **a tag GANHA do nome do
+campo**.
 
-> **Aqui o navegador NÃO é testemunha**, e é o inverso do caso do `from`/`origin`
-> logo acima: devolvida uma chave para `{X: …}`, o Go passa, o app FUNCIONA e o
-> Playwright passaria junto — a tolerância do `encoding/json` é exatamente o que
-> faz a grafia errada continuar funcionando. **Defeito que só existe como risco
-> latente não tem testemunha em tempo de execução**, e quem o prende é guarda de
-> TEXTO.
-
+> **Aqui o navegador NÃO é testemunha**: com a caixa errada, o app FUNCIONA e o
+> Playwright passaria junto. **Defeito que só existe como risco latente não tem
+> testemunha em tempo de execução**, e quem o prende é guarda de TEXTO.
 
 ### DESLOCAMENTO é coordenada, e o guarda não sabia disso
 
-**`/grupo/mover/{dx}/{dy}` também foi** (ALE-307), e ela é a que denuncia o
-guarda. O guarda de rota nasceu na mesma issue, para impedir que a família
-voltasse a escapar — e ele passou VERDE por cima dela, porque eu escrevi o padrão
-com os nomes que tinha na frente (`x`, `y`, `x2`, `mx`) e o arrasto do grupo chama
-os seus de `dx` e `dy`.
+**O que faz de um número "coordenada" não é ele ser absoluto — é ele vir do
+PONTEIRO.** O deslocamento do arrasto (`delta`) viaja no corpo como qualquer
+ponto, porque no caminho ele obrigaria a concatenar o endereço.
 
-É a terceira vez nesta família que uma varredura mede a grafia comum e a incomum
-sobra: a `colar` escapou de um `grep` por `base+"…"`, o `/pecas/nova` escapou por
-um argumento errado, e agora o guarda que existia para fechar as duas escapou
-pelo NOME do parâmetro. **O que faz de um número "coordenada" não é ele ser
-absoluto — é ele vir do PONTEIRO**, e por isso o endereço só se escreve
-concatenando (`'…/grupo/mover/' + dx + '/' + dy`), que é a forma que esta seção
-inteira existe para apagar.
+#### E o guarda foi REFEITO, porque ele era duas coisas estreitas
 
-A conversão levou junto **cinco leitores mortos**: `urlRect`, `tracoDaURL`,
-`quadradoDaURL`, `urlSquareSecond` e `quadradoDoCaminho` — 86 linhas lendo
-`chi.URLParam(r, "x")` com nenhuma rota registrando `{x}` desde a ALE-305, e
-nenhum chamador. Função de pacote sem uso não é erro em Go; quem as achou foi
-perguntar quem chama, e não o compilador.
+O `TestNoRouteCarriesACoordinateInThePath` pergunta ao ROTEADOR, não ao
+código-fonte: o `chi.Walk` devolve o padrão já montado — o `base :=` juntado, o
+pai do `r.Route` concatenado com o filho, o registro em duas linhas lido como
+um —, e não há linha para ler errado.
 
-#### E o guarda foi REFEITO, porque ele era duas coisas estreitas (ALE-310)
-
-Ele morava na `convention` e lia o CÓDIGO-FONTE, procurando oito literais de
-coordenada na mesma LINHA de um `r.Get|Post|…(`. As duas metades falhavam, e as
-duas falhas são reusáveis:
-
-- **Lista de PROIBIDOS subconta em silêncio.** Nove grafias alternativas
-  sabotadas passaram verdes — entre elas `{col}`/`{lin}`, que são os nomes que o
-  `board_view.go` escreve em toda peça, e `{cx}`/`{cy}`, que são os nomes que o
-  cliente usa hoje. Hoje é uma lista de PERMITIDOS em
-  `api/testdata/route_params.txt` com os 39 parâmetros da árvore, e parâmetro
-  novo REPROVA até alguém escrever a linha — que é o ato de declarar que ele não
-  vem do ponteiro.
-- **Parser que lê a LINHA não lê o ARGUMENTO.** Quatro portas ficavam de fora,
-  três delas forma que este repositório usa: a coordenada declarada no `base :=`
-  (dominante em `web/table`, 30+ rotas), o registro quebrado em duas linhas, e o
-  `r.Route`/`r.Handle`, fora do conjunto de verbos. Sabotando um `r.Route` o
-  guarda passava **e o denominador SUBIA**, porque ele contava o `r.Post` filho e
-  ignorava o pai.
-
-**O conserto não foi um parser melhor: foi perguntar ao ROTEADOR.** O `chi.Walk`
-devolve o padrão já montado — o `base :=` juntado, o pai concatenado com o filho,
-a continuação lida como uma linha só —, e não há linha para ler errado. O guarda
-mudou de casa junto, para `api/`, porque é lá que o roteador se monta.
-
-E o denominador passou a ser EXATO: **212 rotas de verdade**, contra as 193 que o
-regex estimava. Aquelas 193 incluíam dez linhas de `r.Header.Get(` — sete delas a
-MESMA linha (`if r.Header.Get("datastar-request")`) que toda cena nova copia, o
-que fazia o piso crescer a cada cena, na direção que o afrouxa.
+E ele é lista de PERMITIDOS: todo parâmetro de caminho da árvore está em
+`serve/api/testdata/route_params.txt`, e **parâmetro novo REPROVA até alguém
+escrever a linha** — que é o ato de declarar que ele não vem do ponteiro. O
+`TestNoAllowedRouteParamIsStale` cobra o lado inverso: linha que nenhuma rota
+usa mais reprova, porque permissão pendurada aprova em silêncio o próximo nome
+igual.
 
 ### O PASSO da ficha FICA no caminho, e a razão não é a que estava escrita
 
 `/personagens/{id}/vitais/{qual}/{passo}`, `/nivel/{classe}/{passo}` e
-`/poderes/classe/{classe}/{escolha}/{valor}` continuam com o dado no caminho.
-**Não por descuido — por medição.**
+`/poderes/classe/{classe}/{escolha}/{valor}` continuam com o dado no caminho, de
+propósito.
 
-A razão que estava escrita no `web/sheetui/routes.go` era *"o valor é do botão
-que foi clicado, e não de um sinal da página que quatro botões disputariam"*, e
-ela é o mesmo não-sequitur do `/pecas/nova`: o `payload` é calculado por
-chamada, então quatro botões não disputam nada — cada um escreve o seu literal.
+A razão NÃO é "quatro botões disputariam um sinal": o `payload` é calculado por
+chamada, e cada botão escreve o seu literal. **O obstáculo é o REDESENHO.** Toda
+mutação da ficha passa pelo `sheetCommand`, que lê os sinais UMA vez e os
+entrega ao `s.Load(…)` que redesenha a cena — buscas, filtros, aumentos,
+construtor de item. Como o `payload` SUBSTITUI os sinais, um `{step: -1}`
+chegaria com o resto zerado, e a tela voltaria sem o filtro que a pessoa estava
+usando.
 
-**O obstáculo real é o REDESENHO.** Toda mutação da ficha passa pelo
-`sheetCommand`, que lê os sinais UMA vez e os entrega ao `s.Load(…)` que redesenha
-a cena inteira. São 29 campos: as buscas, os filtros, os aumentos, o construtor
-de item. Como o `payload` SUBSTITUI os sinais, um `{step: -1}` chegaria com os
-outros 28 zerados — e a tela voltaria sem o filtro que a pessoa estava usando.
+**A divisão que vale não é "caminho para o que o gesto decidiu, corpo para o
+estado"**: coordenada vem do ponteiro e obrigaria a concatenar o endereço; passo
+é um literal que o `templ` escreve na renderização, num endereço constante por
+botão.
 
-Medido, postando `/vitais/pv/-1` com e sem os sinais no corpo:
+## Datastar: armadilhas que não deixam erro para trás
 
-| aba | com os sinais | só o passo |
-|---|---|---|
-| `expertises`, filtrando por "Perce" | 19.091 bytes, acha o termo | 24.122 bytes, lista inteira de volta |
-| `abilities`, filtrando por "Ataque" | 23.247 bytes, acha o termo | 23.389 bytes, filtro perdido |
-
-Converter custaria listar os 29 sinais no payload de cada botão de passo — o
-preço da seção anterior, multiplicado por vinte e nove. **A divisão que vale não
-é "caminho para o que o gesto decidiu, corpo para o estado"**: é que uma
-coordenada vem do ponteiro e obriga a concatenar o endereço, e um passo é um
-literal que o `templ` escreve na renderização, num endereço constante por botão.
-
-
-## Datastar: doze armadilhas que não deixam erro para trás
-
-As três primeiras foram descobertas na ALE-203, a quarta na ALE-205, a quinta na
-ALE-235, quatro na ALE-272, a décima na ALE-275, a décima primeira na ALE-296 e a
-décima segunda na ALE-218; nenhuma delas escreve uma linha no console — a oitava
-escreve UMA, e no lugar que ninguém olha. Estão aqui porque o sintoma de cada uma
-aponta para o lugar errado.
+Nenhuma delas escreve no console (no máximo uma linha que ninguém olha), e o
+sintoma de cada uma aponta para o lugar errado.
 
 ### `data-show` esconde TARDE: o nó pinta antes de o Datastar chegar
 
-O `data-show` só é avaliado quando o runtime carrega e processa o DOM. Até lá o
-nó está no documento com as classes que ele tem — e se elas o fazem visível, ele
-PINTA. Um diálogo com `fixed inset-0 bg-black/60` cobre a janela inteira e
+O `data-show` só é avaliado quando o runtime carrega. Até lá o nó pinta com as
+classes que tem — um diálogo com `fixed inset-0 bg-black/60` cobre a janela e
 depois some.
 
-**Medido** (ALE-296), com uma sonda de `requestAnimationFrame` instalada antes de
-qualquer script da página: 30 quadros nas Perícias, 13 na Mochila, 10 no Combate,
-9 nas Magias. A 60fps é meio segundo de pano preto, e o dono relatou como *"um
-dialog de 1 frame que some"* — a impressão de quem vê subestima, porque um
-piscar não se cronometra a olho.
+**O conserto é `style="display:none"` estático ao lado do `data-show`**: lido na
+análise do HTML, antes de qualquer script, e trocado por vazio quando o
+Datastar mostra. Não confundir com o `data-attr:style` da armadilha seguinte,
+que reescreve o atributo a cada avaliação.
 
-**O conserto é `style="display:none"` estático ao lado do `data-show`**: ele é
-lido na análise do HTML, antes de qualquer script, e o Datastar o troca por vazio
-ao mostrar. **Não confundir com o `data-attr:style` da armadilha seguinte** — a
-diferença é que aquele reescreve o atributo a cada avaliação e este é lido uma
-vez.
-
-Eram DEZESSEIS nós: seis sobreposições (uma delas o `templ overlay` da casa, com
-dez call sites) e dez conteúdos escondidos por sinal puro. O
-`TestNoDataShowNodeIsBornVisible` varre as duas formas, e a segunda é a que
-decide sozinha: `data-show="$x"` sem negação e sem operador quer dizer "escondido
-até ficar verdadeiro", e todos os sinais assim deste repositório nascem `false`.
-Ele erra para o lado seguro — nascer escondido e aparecer um quadro depois é
-sempre melhor que pintar e sumir.
+O `TestNoDataShowNodeIsBornVisible` varre todo `.templ`: sobreposição e
+conteúdo escondido por sinal puro (`data-show="$x"` sem negação nem operador
+quer dizer "escondido até ficar verdadeiro"). Ele erra para o lado seguro —
+aparecer um quadro depois é melhor que pintar e sumir.
 
 ### `ReadSignals` vem ANTES do `NewSSE`, e a ordem errada passa VERDE no teste
 
-O `NewSSE` ASSUME a resposta e fecha o corpo do pedido. Um `ReadSignals` depois
-dele encontra corpo fechado e o gesto chega sem sinal nenhum — o `datastar-go`
-chega a perguntar de volta *"are you sure you created the SSE ***AFTER*** the
-ReadSignals?"*.
+O `NewSSE` ASSUME a resposta e fecha o corpo do pedido; um `ReadSignals` depois
+dele chega sem sinal nenhum.
 
-**O que faz esta valer uma seção é como ela escapa:** o `httptest.NewRequest`
-não reproduz esse ciclo de vida, então **o teste de handler passa VERDE** e o
-defeito só aparece no navegador. E num `GET` ela não morde — o corpo é vazio dos
-dois jeitos —, o que faz o defeito nascer no dia em que alguém trocar o gesto
-para `POST`, longe de onde a ordem foi escrita.
+**O `httptest.NewRequest` não reproduz esse ciclo de vida**, então o teste de
+handler passa VERDE e o defeito só aparece no navegador. Num `GET` não morde (o
+corpo é vazio dos dois jeitos): o defeito nasce no dia em que alguém troca o
+gesto para `POST`.
 
-O corolário: **o corpo do pedido se lê UMA vez.** O `ReadSignals` copia o
-`r.Body` inteiro num buffer, e um segundo leitor pega vazio — sem erro.
+E **o corpo do pedido se lê UMA vez** — um segundo leitor pega vazio, sem erro.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 
 O `data-show` escreve `el.style.display`; o `data-attr:style` reescreve o
-atributo `style` INTEIRO, apagando o `display` que o outro acabou de pôr — que
-faz o outro pôr de novo. O renderizador entra em laço.
-
-O sintoma é o pior possível: a aba para de responder a TUDO. Sem console, sem
-exceção, sem conseguir sequer navegar para fora — a ferramenta de medir some
-junto, e o que sobra é "o navegador travou", que não aponta para nada.
+atributo `style` INTEIRO, apagando o `display` — que o outro põe de novo. O
+renderizador entra em laço, e a aba para de responder a TUDO, sem console e sem
+conseguir navegar para fora.
 
 **Quem ESCONDE é um nó, quem POSICIONA é outro.** O
-`TestNoNodeHasDataShowAndDataAttrStyleTogether` varre o HTML servido e recusa a
-combinação.
+`TestNoNodeHasDataShowAndDataAttrStyleTogether` recusa a combinação no HTML
+servido da mesa.
 
 ### O sinal é um PROXY: ler um índice que não existe o CRIA
 
 `$lista[0]` não é "o primeiro item": o Datastar registra o caminho e o cria
-vazio. Com uma reserva de doze rótulos no ar, `$reguapontos[i]` encheu o sinal
-de strings vazias entre os pontos de verdade — pingos na origem do plano e o
-servidor medindo zero.
+vazio. `$ruler_points[i]` sobre índices reservados encheu o sinal de strings
+vazias entre os pontos de verdade.
 
 **Guardar o sinal numa constante NÃO resolve** (a constante continua sendo o
-proxy). O que resolve é COPIAR: `const lista = [...$reguapontos]`. O
-`TestNoExpressionIndexesTheListSignal` afirma a regra pelo que PODE vir
-depois de `$lista` — `=` ou `]` —, e não por uma forma errada conhecida: a
-primeira versão dele procurava `$lista[` e passava verde sobre a segunda forma.
+proxy). O que resolve é COPIAR: `const p = [...$ruler_points]`. O
+`TestNoExpressionIndexesTheListSignal` afirma a regra pelo que PODE vir depois
+de `$lista` — `=` ou `]` —, e não por uma forma errada conhecida.
 
 ### Sequência de comandos NÃO cabe num ternário
 
-`evt.shiftKey ? (stmt; stmt) : (stmt; stmt)` é erro de SINTAXE em JavaScript. O
-Datastar engole o erro de parse e o handler inteiro vira nada — não só o ramo
-novo: o gesto que já funcionava para junto. Use `if (…) { … } else { … }`.
+`evt.shiftKey ? (stmt; stmt) : (stmt; stmt)` é erro de SINTAXE. O Datastar
+engole o erro e o handler inteiro vira nada — o gesto que já funcionava para
+junto. Use `if (…) { … } else { … }`.
 
 E `setPointerCapture` vai por ÚLTIMO na expressão: ele LANÇA quando o ponteiro
-não está mais ativo, e no meio ele engole o resto do gesto.
+não está mais ativo, e no meio engole o resto do gesto.
 
 ### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
 
-O stream da Mesa remenda HTML, e desde a ALE-205 ele também escreve num SINAL —
-`PatchSignals` — num caso só: o "mostrar à mesa" leva quem foi puxado para a
-superfície do Tabuleiro, porque a superfície é sinal do navegador e o servidor
-não a alcança de outro jeito.
+O stream da mesa remenda HTML, e escreve num SINAL (`PatchSignals`) onde a
+decisão é do navegador: o "mostrar à mesa" leva quem foi puxado para a
+superfície do tabuleiro (`surface`), e a ficha mudada avisa por `sheet_version`
+(abaixo).
 
-**A armadilha é a cadência, e ela não parece uma armadilha:** o estado do puxão
-vive enquanto a pessoa não escolhe outra aba, então a leitura ingênua manda o
-sinal em TODO quadro. O resultado é uma trava disfarçada — quem tenta voltar
-para a Mesa é devolvido ao mapa um segundo depois, para sempre, sem erro em
-lugar nenhum, e conclui que o botão está quebrado.
+**A armadilha é a cadência.** O estado do puxão vive até a pessoa escolher
+outra aba, então a leitura ingênua manda o sinal em TODO quadro — e quem tenta
+voltar para a Mesa é devolvido ao mapa um segundo depois, para sempre.
 
-O que resolve é a memória do que já foi empurrado ser da CONEXÃO (uma variável
-do laço do stream), e não do servidor: duas abas da mesma pessoa merecem o
-empurrão cada uma. Vale para qualquer sinal que o servidor venha a escrever
-daqui: **remendo de HTML é idempotente, remendo de sinal não é** — o HTML
-descreve o estado, o sinal muda a decisão de quem está do outro lado.
+A memória do que já foi empurrado é da CONEXÃO (uma variável do laço do
+stream), não do servidor: duas abas da mesma pessoa merecem o empurrão cada uma.
+**Remendo de HTML é idempotente, remendo de sinal não é.**
 
 ### O `@post` que redesenha a CENA precisa carregar o estado que está na URL
 
-Um comando do Datastar responde com um remendo da cena inteira, e o handler
-descobre o que desenhar lendo a própria requisição. O que está na URL da PÁGINA
-— `?tab=`, `?aba=`, `?entrada=` — **não vai junto**: o `@post` manda o endereço
-que está escrito nele, e mais nada.
+O comando responde com a cena inteira, e o handler descobre o que desenhar
+lendo a própria requisição. O que está na URL da PÁGINA (`?tab=` na ficha,
+`?aba=` e `?entrada=` no acervo do mestre) **não vai junto**: o `@post` manda o
+endereço escrito nele, e mais nada. Na ficha, mexer no PV com a Mochila aberta
+devolvia a cena na PRIMEIRA aba, sem nada falhar.
 
-O sintoma não parece um bug de estado. Na ficha, mexer no PV com a Mochila aberta
-devolvia a cena desenhada na PRIMEIRA aba, porque o resolvedor não achou `tab` na
-query e caiu no padrão — a tela parecia ter se fechado sozinha. Nada falha, nada
-loga: o servidor desenhou uma cena perfeitamente válida, só que de outra seção.
-
-**O remédio é o servidor escrever o `?` no comando**, já que é ele quem sabe o
-estado ao renderizar o botão: uma função só monta todo `@post` da cena
-(`sheetPost`), e um guarda de varredura lê o HTML de cada aba e falha se algum
-comando sair sem ele (`TestNoSheetCommandLosesTheTab`). Sinal do cliente
-resolveria também, e é pior: some no F5, que é justamente o que o endereço na URL
-existe para sobreviver.
-
-Ele ficou ESCONDIDO uma fatia inteira porque todas as abas desenhavam o mesmo
-aviso de "ainda vive na ficha antiga" — o salto não tinha aparência. O primeiro
-painel de verdade o denunciou no primeiro clique da bancada.
+**O servidor escreve o `?` no comando**, porque é ele quem sabe o estado ao
+renderizar o botão: uma função só monta todo `@post` da ficha (`sheetPost`), e o
+`TestNoSheetCommandLosesTheTab` lê o HTML de cada aba e falha no comando que
+sair sem ele. Sinal do cliente também resolveria, e some no F5 — que é o que o
+endereço existe para sobreviver.
 
 ### Dois pedidos de UM gesto: quem CHEGA por último manda
 
 O clique do mouse **também foca**. Um nó que pede ao servidor no foco e no
-clique manda dois pedidos por um gesto só, e se os dois remendam a mesma cena
-eles disputam os sinais que ela redeclara a cada remendo — a ordem de CHEGADA
-não é a de saída, e quem chega por último ganha.
-
-No bestiário o pedido do foco existe para a prévia da seta e não leva `abrir=1`.
-Chegando por último, ele fechava a ficha que o clique tinha acabado de abrir: a
-criatura ficava escolhida, o diálogo não aparecia, e nada falhava em lugar
-nenhum. **O CI pegou duas vezes seguidas o que a bancada nunca reproduziu** — a
-máquina rápida entregava as respostas na ordem de saída, e a carregada não.
-Reproduzido de propósito atrasando só a resposta do pedido sem `abrir`.
-
-É a mesma família do `data-show` com `data-attr:style`: duas escritas no mesmo
-lugar sem ordem garantida. A diferença é que esta atravessa a rede, então ela
-some da bancada e mora no CI.
+clique manda dois pedidos por um gesto, e se os dois remendam a mesma cena eles
+disputam os sinais — a ordem de CHEGADA não é a de saída. Atravessa a rede,
+então some na bancada rápida e aparece no CI.
 
 **O remédio é não mandar o segundo pedido:** pedido disparado por FOCO é
-afordância de TECLADO, e por isso ele pede `:focus-visible`
-(`el.matches(':focus-visible') && (…)`). Medido no navegador: o clique dá
-`false`, o Tab dá `true`, e o foco PROGRAMÁTICO do driver de setas também dá
-`true` — a prévia da seta fica inteira e o mouse deixa de mandar o pedido que só
-desfazia o dele. `TestNoFocusAsksTheServerWithoutAKeyboardGuard` varre a FONTE
-inteira, e não uma cena servida, porque enumerar cena por cena deixaria a
-próxima nascer sem medição.
+afordância de TECLADO, e pede `:focus-visible`
+(`el.matches(':focus-visible') && (…)`). O clique dá `false`; o Tab e o foco
+programático do driver de setas dão `true`.
 
-**E "a fonte inteira" precisou ser defendida na ALE-278**, porque ele quase
-deixou de ser verdade sem ninguém mexer numa linha dele. O guarda morava no
-pacote do bestiário e varria `*.templ` do PRÓPRIO diretório — o que era a fonte
-inteira enquanto todas as cenas eram um pacote só. Quando o bestiário virou
-`web/master`, mudá-lo de casa junto o teria deixado medindo QUATRO arquivos e
-ignorando três (campanhas, o tabuleiro da mesa e personagens), com o terminal
-dizendo verde: dos quatro `.templ` com `data-on:focus`, um foi com ele e três
-ficaram. Ele foi para o `convention/` e passou a CAMINHAR a árvore, que é o
-mesmo conserto que o guarda de tinta levou — e ganhou um piso de arquivos
-VISITADOS, porque o denominador antigo (`achados > 0`) teria passado verde na
-mudança: havia um foco com `@get` no diretório novo, e ele bastava.
+O `TestNoFocusAsksTheServerWithoutAKeyboardGuard` CAMINHA a árvore inteira de
+`.templ` (enumerar cena deixaria a próxima sem medição) e tem piso de arquivos
+VISITADOS: mudar o guarda de pacote não pode encolher o que ele varre sem
+reprovar.
 
 ### Resposta que não é 2xx: o remendo é DESCARTADO e a recusa some
 
-O cliente do Datastar não aplica o remendo de uma resposta de erro. Um handler
-que responde `http.Error(w, msg, 400)` — que é o certo numa API JSON — deixa a
-tela EXATAMENTE como estava: o gesto não acontece, nada muda, e a única marca é
-uma linha no console do navegador ("Failed to load resource: 400").
+O Datastar não aplica o remendo de resposta de erro. `http.Error(w, msg, 400)` —
+o certo numa API JSON — deixa a tela EXATAMENTE como estava, e a única marca é
+uma linha no console do navegador.
 
-Isso atravessou três fatias da ficha sem ninguém ver, porque as recusas eram
-raras e pareciam "o botão não fez nada". O caso que denunciou foi gastar mais
-dinheiro do que se tem: o diálogo fechava, o saldo continuava igual, e não havia
-uma palavra na tela.
+**Numa cena servida, a recusa é CONTEÚDO.** Ela volta 200 com a cena
+redesenhada mais a frase num `role="alert"` (`sheetCommand` +
+`sheetui.View.Refusal`). Como o status deixou de distinguir "gravou" de
+"recusou", **os testes afirmam a FRASE** (`sceneRefusal`). A API JSON continua
+com os status dela; quem desenha página responde página.
 
-**Numa cena servida, a recusa é CONTEÚDO.** Ela volta 200 com a cena inteira
-redesenhada — que é o que mostra que nada mudou — mais a frase num `role="alert"`
-(`sheetCommand` + `sheetui.View.Recusa`). A consequência para os testes é a parte
-que importa: o status deixou de distinguir "gravou" de "recusou", então **o que
-os guardas afirmam é a FRASE**, com `sceneRefusal`. A API JSON continua com os
-status dela; quem desenha página responde página.
+**O caso EXTREMO é o 404: um endereço que não existe.** O handler nunca roda, e
+o gesto simplesmente não acontece. Endereço montado em metades (`"initiative/"+
+route` no helper, o verbo no chamador) é invisível ao `grep`: **o endereço só
+existe RESOLVIDO**.
 
-**E o caso EXTREMO desta armadilha é o 404: um endereço que não existe.** O
-Datastar descarta o remendo, o handler nunca roda, e não há nem a recusa nem a
-cena redesenhada — o gesto simplesmente não acontece. Foi assim que o `‹` da
-mesa viveu morto uma issue inteira: a ALE-304 traduziu as rotas para português,
-o botão continuou postando em `initiative/previous-turn`, e ninguém viu porque
-não há o que ver.
+Quem cobra é o `TestEveryAddressAPostWritesExistsInTheRouter`, que RENDERIZA:
+tira todo `@post`/`@get`/`window.open` do HTML das cenas que visita
+(`scenesThatWriteAddresses`, cujo cabeçalho declara a enumeração como o limite
+dele) e pergunta ao chi com `Match` se a rota existe — `Match` e não um pedido,
+porque um 404 do HANDLER ("personagem não existe") pareceria rota faltando.
 
-O que tornava o defeito invisível ao `grep` é que o endereço era montado em duas
-metades — `"initiative/"+route` no helper, `"previous-turn"` no chamador —, e
-nenhuma das duas é um caminho que se possa procurar. **O endereço só existe
-RESOLVIDO**, depois que o `templ` juntou a base, o id e o verbo; ler isso do
-código-fonte é o parser que a ALE-307 já mostrou não saber ler `base :=`.
+Para quem escrever o próximo guarda de cena:
 
-Quem cobra é o `TestEveryAddressAPostWritesExistsInTheRouter` (ALE-308), e ele
-RENDERIZA: tira todo `@post`/`@get` do HTML servido das cenas que ele visita — e
-QUAIS são elas se lê no `scenesThatWriteAddresses`, cujo próprio cabeçalho declara
-a enumeração como o limite conhecido dele — e pergunta ao
-chi com `Match` se a rota existe. `Match` e não um pedido de verdade, porque um
-POST em `/personagens/spliced` levaria 404 do HANDLER ("personagem não existe")
-e o guarda leria isso como rota faltando.
-
-**Duas coisas nele valem para quem escrever o próximo guarda de cena.** A
-primeira: ele precisa da mesa VIVA. O `‹` nasce `disabled` quando `PodeAvancar`
-é falso (`st.CountsRounds() && len(st.Initiative) > 0`), então na bancada recém-montada o
-endereço morto não está no HTML — a primeira versão passou VERDE sobre o defeito
-que ela veio pegar. A segunda: expressão que o extrator não souber resolver
-REPROVA, em vez de sair da conta em silêncio.
+- **Ele precisa do ESTADO vivo.** O `‹` da mesa nasce `disabled` quando
+  `CanAdvance` é falso (`st.CountsRounds() && len(st.Initiative) > 0`), e numa
+  bancada recém-montada o endereço morto não está no HTML.
+- **Expressão que o extrator não souber resolver REPROVA**, em vez de sair da
+  conta em silêncio.
 
 ### `contentType: 'form'` valida o formulário ANTES de mandar
 
 `@post(url, {contentType: 'form'})` manda o `<form>` mais próximo em vez dos
-sinais, e é o que permite uma cena servida não ter sinal nenhum: os controles
-já são o estado, e uma segunda cópia deles num `data-signals` só cria a pergunta
-de qual das duas vale. A folha da forja (ALE-272, fatia 9) é assim inteira — o
-`@post` que redesenha o equipamento e o `submit` que forja leem o MESMO
-formulário, pelo mesmo `r.ParseForm()`.
+sinais: os controles já são o estado, e uma cópia num `data-signals` só cria a
+pergunta de qual vale. A forja é assim — o `@post` que redesenha e o `submit`
+que forja leem o MESMO formulário, pelo mesmo `r.ParseForm()`.
 
-**A armadilha é a linha `if (!form.noValidate && !form.checkValidity())`**, que
-o cliente roda antes de qualquer coisa: com um campo `required` em branco ele
-chama `reportValidity()` e **não manda o pedido**. Na forja isso apareceu como o
-primeiro clique numa carta de classe não fazendo nada além de abrir o balão
-"preencha este campo" — e a pessoa escolhe a linhagem antes de batizar o herói,
-então o balão aparecia sempre.
+**A armadilha é o `if (!form.noValidate && !form.checkValidity())`** que o
+cliente roda antes: com um campo `required` em branco ele chama
+`reportValidity()` e **não manda o pedido**.
 
-O conserto não é `novalidate`, que desligaria a validação nativa do `submit`
-também: é **o campo não ser `required` no HTML** e a recusa ser do servidor, que
-já é a autoridade. Vale a regra geral: **num formulário que também é remendado,
-validação nativa de campo brigará com o redesenho.**
+O conserto não é `novalidate`, que desligaria a validação do `submit` também: é
+**o campo não ser `required` no HTML** e a recusa ser do servidor, que já é a
+autoridade. **Num formulário que também é remendado, validação nativa de campo
+briga com o redesenho.**
 
 ### `data-on-signal-patch` SEM filtro escuta o remendo dos OUTROS sinais
 
-O stream pode acordar um pedaço da tela escrevendo um sinal, e quem reage é o
-`data-on-signal-patch`. É assim que a ficha dentro da sessão se mantém em dia
-(ALE-275): ela não é região do stream — sete painéis computados a cada tique
-seria o gasto mais caro da página —, então o servidor manda um carimbo de uma
-linha e o CLIENTE repede a ficha.
+A ficha dentro da sessão não é região do stream (recomputá-la a cada tique seria
+o gasto mais caro da página): o servidor manda um carimbo de uma linha
+(`sheet_version`) e o CLIENTE repede a ficha, pelo `data-on-signal-patch`.
 
-**A armadilha é que ele dispara em QUALQUER remendo de sinal**, e esta cena tem
-outro: o "mostrar à mesa" escreve `superficie` para levar o jogador ao mapa.
-Sem filtro, um puxão do mestre repediria a ficha — trabalho invisível, disparado
-por um gesto que não tem nada a ver, e que só aparece como tráfego.
-
-O filtro mora num atributo IRMÃO e não no valor:
+**Ele dispara em QUALQUER remendo de sinal**, e a cena tem outro (`surface`, o
+puxão). Sem filtro, um puxão do mestre repediria a ficha. O filtro mora num
+atributo IRMÃO:
 
 ```
-data-on-signal-patch-filter="{include: /^fichaversao$/}"
-data-on-signal-patch="@get('/personagens/13?tab=' + $fichatab + '&embutida=1')"
+data-on-signal-patch-filter="{include: /^sheet_version$/}"
+data-on-signal-patch="… @get('/personagens/13?tab=' + $sheet_tab + '&embutida=1')"
 ```
 
-**E o servidor precisa mandar UMA vez por mudança**, nunca por quadro — é a
-mesma regra do puxão, e pelo mesmo motivo: remendo de sinal não é idempotente. A
-memória do que já foi avisado é da CONEXÃO (`announceSheetChange`).
-
-**Quem diz "mudou" é um EVENTO, e não a comparação de um carimbo a cada tique.**
-A primeira versão lia o `updatedAt` do personagem em todo quadro do batimento —
-uma consulta por segundo por jogador conectado, quase sempre para descobrir que
-nada mudou —, e a decisão do dono foi que toda escrita dentro da sessão já é um
-evento que dá para escutar. O stream só lê o carimbo quando o evento diz que a
-ficha mexeu; ver "O barramento de eventos" acima.
-
-- **O interesse é por PERSONAGEM, não por sessão.** A pergunta é sobre uma ficha,
-  e a mesma ficha pode estar em duas mesas — pendurar isso no `session.Store`
-  obrigaria quem PUBLICA a saber em quais mesas o personagem está.
-- **Quem não tem ficha nesta mesa simplesmente não pede o interesse dela.** Aqui
-  morava "os outros recebem um canal NULO, e canal nulo num `select` nunca
-  dispara" — era o truque certo enquanto havia um canal por store, e ele deixou
-  de ser necessário na ALE-279: não pedir diz a mesma coisa sem exigir que quem
-  lê conheça o truque.
-
-Quem publica é o GATEWAY (`characterChanged`) e não cada comando: passam mais de
-trinta mutações pelo `sheetCommand`, e a linha esquecida numa delas seria uma
-ficha que não atualiza só naquele gesto. É a mesma lição do gancho que nascia
-desligado, na seção do SSE.
-
-**A segunda metade é o que o desenho quase perdeu:** o servidor NÃO sabe em que
-aba a pessoa está, porque a aba viaja na query dos comandos da ficha e o stream
-abriu antes de qualquer clique. Quem a guarda é um sinal que o clique na aba
-escreve (`$fichatab`), e o repedido a concatena. Sem isso o remendo devolve a
-aba padrão e tira o jogador de onde ele estava — provado por sabotagem, e é a
-mesma família do `?tab=` perdido logo acima.
+- **O servidor manda UMA vez por mudança**, nunca por quadro: a memória do que
+  já foi avisado é da CONEXÃO (`announceSheetChange`).
+- **Quem diz "mudou" é um EVENTO**, não a comparação de um carimbo a cada tique:
+  o stream só lê o carimbo quando o evento diz que a ficha mexeu (ver "O
+  barramento de eventos").
+- **O interesse é por PERSONAGEM, não por sessão.** A mesma ficha pode estar em
+  duas mesas, e pendurar isso no `session.Store` obrigaria quem PUBLICA a saber
+  em quais. Quem não tem ficha na mesa não pede o interesse.
+- **Quem publica é o GATEWAY** (`characterChanged`), não cada comando: a linha
+  esquecida numa mutação seria uma ficha que não atualiza só naquele gesto.
+- **O servidor NÃO sabe a aba**: o stream abriu antes de qualquer clique. Quem a
+  guarda é um sinal que o clique na aba escreve (`$sheet_tab`), e o repedido a
+  concatena — senão volta a aba padrão.
 
 ### O morph REMOVE o nó que o seu JS pendurou na linha
 
-Uma animação que precisa de um elemento próprio — um véu, um brilho, um
-espaçador — não pode ser pendurada de dentro do observador que reage ao remendo.
-**O `MutationObserver` roda como MICROTAREFA, no meio do morph**, e o morph
-reconcilia os filhos daquele nó logo em seguida: o que você acabou de criar não
-está no HTML que veio do servidor, então ele some.
+**O reconciliador remove todo filho que não veio no HTML do servidor.** Um véu,
+um brilho, um espaçador criado pelo JS dentro da subárvore remendada some — no
+morph do próprio gesto (o `MutationObserver` roda como MICROTAREFA, no meio do
+morph) ou no do remendo SEGUINTE, de qualquer gesto. Esperar um
+`requestAnimationFrame` só ganha do primeiro. O `data-ignore-morph` do bundle
+não socorre: exige o atributo nos DOIS lados, e o do servidor nunca o tem.
 
-O que torna isso caro é que a animação foi PEDIDA. Um guarda que conte chamadas
-de `el.animate` fica verde; a sonda que olhe o DOM no instante do `animate()`
-também. Medido na ALE-174, com o mesmo nó consultado em quatro instantes:
+O caro é que a animação foi PEDIDA: um guarda que conte `el.animate` fica verde,
+e a sonda que olhe o DOM no instante do `animate()` também.
 
-    ao animar: ligado · microtask: ligado · raf1: DESLIGADO · +300ms: DESLIGADO
+**O nó mora FORA da subárvore que o remendo alcança** — `position:fixed` sobre o
+retângulo do alvo, filho do `<body>` (`lib/turn-juice.ts`). O preço é a caixa
+não seguir o alvo se ele andar durante a animação.
 
-**O `requestAnimationFrame` antes de pendurar NÃO BASTA, e isto custou a ALE-322.**
-O quadro de espera ganha do morph do PRÓPRIO gesto e de mais nada: o
-reconciliador remove todo filho que não veio no HTML do servidor, então o
-remendo SEGUINTE apaga o nó de novo, seja de que gesto for. Medido na piscada do
-vital — um gesto isolado deixava o véu viver 361ms dos 380 pedidos, e **dois
-gestos a 60ms de distância matavam o primeiro véu em 17ms**. E o
-`data-ignore-morph` do bundle não socorre: ele exige o atributo nos DOIS lados, e
-o lado do servidor nunca o tem.
-
-O conserto é o nó morar FORA da subárvore que o remendo alcança — `position:fixed`
-sobre o retângulo do alvo, filho do `<body>`. Depois disso, 50 de 50 piscadas
-completam, inclusive em rajada. O preço é a caixa não seguir o alvo se ele andar
-durante a animação, que é o mesmo preço que uma animação de transformação já paga.
-
-Animação que mexe no PRÓPRIO nó (escala, sombra, opacidade do elemento que já
-existe) não precisa de nada disso: o morph reusa o nó — medido, zero
-desconexões em 50 remendos — e a animação sobrevive à reconciliação de atributos.
-
-**E a mesma reconciliação é o que dispensa guarda contra repetição**: o morph não
-toca atributo que já bate, então um observador de `aria-current` (ou de qualquer
-atributo de estado) só acorda quando o valor MUDA de verdade. Escrevi um `if
-(oldValue === 'true') continue` por medo do pisca-pisca e ele nunca foi
-verdadeiro — provado removendo-o e medindo zero disparos extras.
+Animação que mexe no PRÓPRIO nó (escala, sombra, opacidade) não precisa disso:
+o morph reusa o nó. E **o morph não toca atributo que já bate**, então um
+observador de `aria-current` (ou de qualquer atributo de estado) só acorda quando
+o valor MUDA — não escreva guarda contra repetição.
 
 ### O nó que muda de DOCUMENTO perde o Datastar, e continua desenhado
 
-Uma janela própria — Document Picture-in-Picture, um `<iframe>` de outro
-documento — pede o nó vivo emprestado, e a leitura natural é `appendChild` do
-painel lá dentro. O nó VAI: ele é adotado, aparece inteiro, com as classes, o
-texto e os `data-*` no lugar. **O que não vai é a reatividade.** O runtime do
-Datastar mora no documento de origem; o nó adotado sai da árvore que ele observa
-e nada mais o alimenta.
+Uma janela própria (Document Picture-in-Picture, um `<iframe>`) pede o nó vivo
+emprestado, e `appendChild` o leva inteiro — classes, texto, `data-*`. **O que
+não vai é a reatividade**: o runtime mora no documento de origem, e o nó
+adotado sai da árvore que ele observa. Sem exceção, sem console, tela perfeita.
 
-Medido na ALE-218, movendo a coluna das notas para uma janela de PiP, com o
-MESMO `input` sintético dos dois lados: **1 POST antes de mover e ZERO depois**,
-com a faixa de estado continuando a dizer "Salvo" — ela é escrita por sinal, e
-o sinal parou. Não há exceção, não há console, e a tela está perfeita.
-
-O controle importava aqui mais que de costume: a primeira medição comparou um
-`fill()` de verdade antes com um evento sintético depois, e responderia sobre o
-INSTRUMENTO. Com o mesmo evento nos dois lados, a diferença é a janela.
-
-**O que funciona é a janela receber um DOCUMENTO**, com o runtime dela — medido
-na mesma sessão: 18 de 19 nós com `data-show` escondidos pelo Datastar daquele
-documento. Ou seja: superfície que vai para uma janela própria é CENA com
-endereço, e não painel mudado de lugar. Ver "As notas numa janela própria".
+**A janela recebe um DOCUMENTO**, com o runtime dela: superfície que vai para
+uma janela própria é CENA com endereço. Ver "As notas numa janela própria".
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 
 `element.dispatchEvent(new PointerEvent(...))` com um `pointerId` inventado faz
-o `setPointerCapture` lançar `NotFoundError` — e a exceção leva junto as
-escritas de sinal do Datastar daquele handler. O gesto parece MORTO quando ele
-está inteiro.
-
-Aconteceu duas vezes na mesma sessão: primeiro concluí "o retângulo não
-funciona", depois "o pincel também parou". A segunda conclusão estava certa por
-outra razão (o ternário acima) e a primeira estava errada — e as duas vieram do
-mesmo probe.
+o `setPointerCapture` lançar `NotFoundError`, e a exceção leva junto as escritas
+de sinal do handler. O gesto parece MORTO quando está inteiro.
 
 **Gesto de ponteiro se mede com entrada REAL.** O Playwright (`page.mouse.down`,
 `page.keyboard.down('Shift')`) tem pointer de verdade; a automação do Chrome MCP
-NÃO aplica `modifiers` ao arrasto (medido: `shiftKey` chega `false`), então para
+NÃO aplica `modifiers` ao arrasto (`shiftKey` chega `false`), então para
 modificador o caminho é o Playwright.
 
 ## Remendo em nó COMPARTILHADO exige limpeza no gesto que troca de item
@@ -2948,16 +2082,12 @@ modificador o caminho é o Playwright.
 Uma cena em Datastar desenha **todos** os itens e alterna qual aparece com
 `data-show`. Isso é seguro enquanto o conteúdo de cada item vier inteiro do
 servidor — e deixa de ser no instante em que algo é escrito, DEPOIS da
-renderização, num nó que os itens dividem.
+renderização, num nó que os itens dividem. O diálogo de redefinição de senha é
+UM só para todas as linhas de jogador; sem limpar, o link de um aparece sob o
+nome do outro.
 
-O caso que ensinou: o diálogo de redefinição de senha é UM só, reaproveitado por
-todas as linhas de jogador, e o token chega por remendo do servidor num `<div>`
-de id fixo. Gerar o link da Ana, fechar, e abrir a caixa da Bia mostrava **o link
-da Ana sob o nome da Bia** — e quem estiver com pressa entrega a chave da conta
-errada.
-
-**A regra: quem LIMPA é o gesto que TROCA de item, não o gesto que gera.** Quem
-gera não sabe que vai haver um próximo; quem troca sabe que houve um anterior.
+**Quem LIMPA é o gesto que TROCA de item, não o gesto que gera.** Quem gera não
+sabe que vai haver um próximo; quem troca sabe que houve um anterior.
 
 ```
 data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome;
@@ -2966,7 +2096,6 @@ data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome;
                $reset_dialog.showModal()"
 ```
 
-A família é **estado de um item sobrevivendo à troca por outro**, e o `data-show`
-a multiplica. Vale conferir a cada cena nova: existe algum nó compartilhado que
-recebe escrita depois da renderização? Se existe, quem troca de item tem de
-apagá-lo.
+A família é **estado de um item sobrevivendo à troca por outro**, e o
+`data-show` a multiplica. A cada cena nova: existe nó compartilhado que recebe
+escrita depois da renderização? Se existe, quem troca de item tem de apagá-lo.

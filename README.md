@@ -12,7 +12,7 @@ A linguagem do domínio mora em **[GLOSSARY.md](GLOSSARY.md)**: uma palavra por
 conceito, os sinônimos proibidos e a regra de quando se escreve em português e
 quando em inglês. Consulte antes de nomear algo que o usuário vá ler.
 
-Houve três stacks de tela: React, depois SolidJS (ALE-76), e desde a ALE-272 as
+Houve três stacks de tela: React, depois SolidJS, e hoje as
 cenas são renderizadas pelo SERVIDOR com templ + Datastar. O backend NestJS
 também foi removido — o Go é o app, e migra o próprio banco (goose embutido) ao
 subir. O histórico das migrações vive no `git log` e nas issues do Linear.
@@ -47,12 +47,12 @@ cd engine-go && go test ./...   # a suíte inteira do app
 pnpm test:e2e                   # Playwright — sobe o próprio servidor e o próprio banco
 ```
 
-O e2e tem comando próprio e job próprio no CI (ALE-93): ele instala browser e
+O e2e tem comando próprio e job próprio no CI: ele instala browser e
 sobe a API, e disputar CPU com o resto o derruba por timeout.
 
 ## Produção (a mesa na LAN)
 
-O app roda direto na máquina, sem contêiner e sem nada na frente (ALE-531): UM
+O app roda direto na máquina, sem contêiner e sem nada na frente: UM
 binário serve as cenas, a API e o fluxo ao vivo na mesma porta, em HTTP, e
 comprime em gzip ele mesmo.
 
@@ -77,7 +77,7 @@ t20 production server listening on :3001 (http, db=./data/t20-prod.db)
 O registro **não é aberto**: quem administra gera um link de uso único (menu do
 Hub → **Convidar jogador**) e manda para o jogador, que abre e escolhe a própria
 senha. Sem isso, qualquer um que alcance `http://<ip>:3001` criaria conta —
-o preço de servir na LAN (ALE-120).
+o preço de servir na LAN.
 
 Quem administra vem do `ADMIN_EMAILS`, e **só de lá**: não existe coluna de papel
 no banco nem tela para promover alguém, então virar admin exige editar o arquivo
@@ -106,7 +106,7 @@ service worker registra, e o Chrome do Android não oferece instalar — o
 endereço. A **Tela cheia** do menu do Hub é a saída para jogar sem a barra
 (glossário, colisão C7). Instalar de verdade pediria HTTPS, que o app não serve.
 
-**Não há service worker, e a ausência é deliberada** (ALE-118, decisão 4 ainda
+**Não há service worker, e a ausência é deliberada** (decisão ainda
 aberta): ele traria cache offline junto com o problema clássico da versão velha
 grudada, sem caminho óbvio para o jogador sair dela.
 
@@ -120,8 +120,8 @@ duas fora do código**:
    minutos e não exige nada deste repositório.
 2. **Um nome** (`t20.local` por mDNS, ou o nome da reserva).
 
-Um QR code na tela do mestre resolveria o resto, e é trabalho de tela: está
-anotado na ALE-118, fora desta parte.
+Um QR code na tela do mestre resolveria o resto, e é trabalho de tela: fica
+para depois.
 
 ### Backup do banco
 
@@ -145,7 +145,7 @@ snapshot coerente das duas partes.
 ## Os dois ambientes
 
 `APP_ENV` escolhe o arquivo que o binário lê ao subir, e nada mais muda entre os
-dois — é o mesmo binário (ALE-119):
+dois — é o mesmo binário:
 
 | | dev (`pnpm dev`) | produção (`pnpm start`) |
 |---|---|---|

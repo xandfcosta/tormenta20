@@ -8,11 +8,11 @@ delas, em `serve/web/assets/src`. Ele se divide em cinco grupos — `domain/`,
 `app/`, `serve/`, `infra/` e `cmd/` —, e o mapa de onde procurar cada coisa está no
 [guia dele](engine-go/CLAUDE.md). `e2e/` é a suíte de Playwright, que dirige o app
 rodando. Um processo serve tudo, direto na máquina e em HTTP, comprimindo em
-gzip ele mesmo — sem contêiner e sem nada na frente (ALE-531). Em dev é o
+gzip ele mesmo — sem contêiner e sem nada na frente. Em dev é o
 `pnpm dev` do `engine-go/`, sobre o `data/t20-dev.db` semeado.
 
 Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
-no navegador. Os dois saíram na ALE-272: as cenas são renderizadas no servidor,
+no navegador. Os dois saíram: as cenas são renderizadas no servidor,
 e a regra tem um lugar só.
 
 ## O sistema INFORMA; o mestre DECIDE
@@ -47,9 +47,8 @@ causa, é o mestre — na voz.
 Isto cortou fatias inteiras que o livro descreve e que seriam fiéis a ele: o
 TESTE OPOSTO e o AJUDAR da p220-221, e os TESTES ESTENDIDOS da p222-223. As três
 pressupõem um turno dentro do sistema com embate de dados e um vencedor
-anunciado, e é exatamente essa a linha. Elas estão registradas como fora de
-escopo na ALE-423, com o motivo, para ninguém as reabrir achando que foram
-esquecidas.
+anunciado, e é exatamente essa a linha. Elas ficaram fora de escopo de
+propósito, e não se reabrem achando que foram esquecidas.
 
 ### A fronteira não é "rolar"; é "julgar"
 
@@ -62,16 +61,16 @@ E o app **recebe o dado da mesa** tão de primeira classe quanto rola o dele: qu
 rolou na mão digita o número e ganha a conta do mesmo jeito. Tirar o dado de
 quem gosta de rolar seria cobrar o atrito que este guia existe para remover.
 
-> **O ATAQUE FICA; A MANOBRA FOI CONSERTADA.** O ataque compara uma rolagem com
-> uma Defesa — é conta, e quem confirma o dano continua sendo o mestre. A manobra
-> era a violação: ela resolvia um teste OPOSTO, anunciava o vencedor e impunha a
-> condição sozinha. Hoje devolve os dois totais, a diferença e a condição que o
-> livro PREVÊ, e o desfecho é do mestre (ALE-423).
->
-> Ela foi o primeiro caso desta seção, e a lição é de ORDEM: a regra nasceu porque
-> uma fatia já entregue a violava, e o conserto só veio depois de o dono mandar.
-> Trabalho entregue não se desfaz por conta própria — registra-se, e espera-se a
-> decisão dele.
+### O veredito é do mestre, e só ele o vê
+
+Acertar ou errar é sempre interpretação do mestre. No ATAQUE e na MANOBRA, a
+faixa do MESTRE mostra as rolagens, o desfecho que os números sugerem — acerto
+ou erro, sucesso ou falha, crítico ou não — e a consequência que o livro prevê,
+para facilitar a leitura. A palavra final é dele, em voz.
+
+O JOGADOR não vê esse julgamento, nem a Defesa do alvo, nem a rolagem do outro
+lado: no papel do personagem, ele não conhece a ficha de outra entidade. Ele vê
+a própria rolagem e ouve o resto do mestre.
 
 ## Antes de mexer
 
@@ -80,30 +79,33 @@ quem gosta de rolar seria cobrar o atrito que este guia existe para remover.
   Adivinhar regra de T20 custa mais caro que esperar a resposta, e o erro sai na
   ficha de alguém.
 - **Regra do livro se confere no livro**, com a página citada. O offset entre PDF
-  e livro e o histórico de citações erradas são do
-  [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — é lá que as regras moram, e o
-  número não é repetido aqui de propósito (ver "Documentação").
+  e livro é do [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — é lá que as regras
+  moram, e o número não é repetido aqui de propósito (ver "Documentação").
 - **Mexeu em `.templ`?** `go tool templ generate`, e **leia a saída DELE**, não a
   do `go build`. **Classe CSS nova no app?**
-  `engine-go/scripts/build-css.sh`. As duas armadilhas — e as dez do
-  Datastar que não deixam erro para trás — estão explicadas no
+  `engine-go/scripts/build-css.sh`. As duas armadilhas — e as do Datastar,
+  que não deixam erro para trás — estão explicadas no
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
   `engine-go/` — mais `pnpm typecheck` lá, quando mexer nas ilhas de JS. Mexeu
   em gesto de ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e &&
-  npx playwright test` (~2 min, sobe o próprio servidor e o próprio banco).
+  npx playwright test` (sobe o próprio servidor e o próprio banco).
+- **`git add` antes do `go test`.** Os guardas varrem `git ls-files`, então um
+  arquivo novo fora do índice não é medido, e a suíte fica verde sem ele.
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
   `GLOSSARY.md`. Não "atualize se mudou o comportamento": **releia**. Ver
   "Documentação".
 - **Mexeu em tela? OLHE a tela** antes de fechar — é passo, não zelo, e o
   detalhe está logo abaixo.
+- **Tela refeita pede mockup em HTML aprovado antes**, uma tela por vez.
+- **Um escopo por vez.** O próximo começa depois do merge do anterior.
+- **Achou trabalho entregue contrariando uma regra, ou um defeito fora do
+  escopo?** Pergunte ao dono o que fazer antes de consertar ou registrar.
 
 ### O último passo é OLHAR
 
-A fatura está na ALE-319: a decomposição da perícia mentiu na tela por meses,
-com 193 casos verdes e 75 guardas no ar. O dado estava certo e o defeito era
-100% de APRESENTAÇÃO — e não havia, em lugar nenhum deste repositório, um passo
-que mandasse abrir a cena e julgar.
+Uma tela pode mentir com a suíte inteira verde: o dado certo e a apresentação
+errada. Por isso olhar é passo, e não zelo (ver o [APRENDIZADOS.md](APRENDIZADOS.md)).
 
 **A divisão de trabalho É a regra.** A MÁQUINA julga LIMIAR e LIGAÇÃO: contraste
 abaixo do AA, Cinzel abaixo do piso, alvo de toque, sinal escrito sem leitor, id
@@ -115,16 +117,54 @@ humano — não porque a suíte seja fraca.
 - **Quais cenas:** as que a mudança TOCA, e os endereços delas estão em
   `engine-go/serve/web/appearance_scenes.json` — o registro que o
   `TestEveryPageSceneIsMeasuredForAppearance` mantém completo. Não escreva uma
-  segunda lista aqui: ela envelheceria sozinha, que é o remendo da ALE-252.
+  segunda lista aqui: ela envelheceria sozinha.
 - **Em que larguras:** **390px e desktop, no mínimo** — a casa chaveia por
   LARGURA, então são as duas pontas que decidem. E cena que ramifica pelo DADO
   (mestre e jogador, quem conjura e quem não) pede uma passada por ramo.
 - **Sem digitar senha:** a sessão do e2e já está em `e2e/.auth/`, e um script de
   Playwright com `storageState` entra autenticado sem ninguém digitar nada.
-- **O que você viu vira o quê:** conserto, ou linha na issue. E se o olho pegar
+- **O que você viu vira o quê:** conserto no escopo em andamento, ou pergunta
+  ao dono. E se o olho pegar
   coisa de LIMIAR, o conserto não é olhar melhor da próxima vez — é escrever o
   guarda, pela mesma razão que a seção "Documentação" dá para não restaurar
   narrativa.
+
+## Ao terminar um escopo: revisar
+
+Com o escopo pronto e a suíte verde, o código que ele mudou passa por uma
+revisão antes do merge. A base são três skills de Fabio Akita
+([`simplify`](https://github.com/akitaonrails/my-skills/tree/master/simplify),
+[`improve-codebase-architecture`](https://github.com/akitaonrails/my-skills/tree/master/improve-codebase-architecture)
+e [`post-refactor`](https://github.com/akitaonrails/my-skills/blob/master/post-refactor/SKILL.md)),
+e o que vale delas aqui é isto:
+
+- **O alcance é o diff do escopo**, e não o repositório. Revisão não reabre
+  trabalho já mergeado.
+- **Primeiro o portão:** `go test`, `go vet`, `gofmt`, o `deadcode` e, se o
+  escopo tocou tela ou fluxo, o e2e. Ferramenta que não rodou é lacuna, não
+  aprovação.
+- **O que procurar no que mudou:** regressão (comportamento, padrão, migração,
+  autorização), erro engolido ou recuo silencioso, helper duplicado, abstração
+  com um chamador só, número mágico, comentário ou `.md` que deixou de ser
+  verdade, acoplamento escondido entre pacotes, e teste que afirma
+  implementação em vez de comportamento ou que depende de tempo e de ordem.
+- **Simplificar preserva o comportamento exato**, segue a convenção do
+  repositório, prefere o claro ao esperto e não troca nome que carrega sentido
+  por menos linhas. Uma simplificação por vez, com os testes rodando.
+- **Arquitetura se lê por PROFUNDIDADE.** Um módulo é fundo quando muito
+  comportamento mora atrás de uma interface pequena, e raso quando a interface
+  é quase tão complexa quanto o corpo. O **teste da deleção**: apague o módulo em
+  pensamento — se a complexidade some, ele era repasse; se reaparece nos N
+  chamadores, ele se pagava. A interface é a superfície de teste. Costura com
+  um adaptador só é hipotética; com dois, é real.
+- **O resultado é uma lista, e quem decide é o dono.** Cada achado com arquivo e
+  linha, por que importa e o que fazer, classificado em BLOQUEANTE,
+  DEVE-CORRIGIR, DETALHE ou OBSERVAÇÃO. Candidata de arquitetura vem numerada,
+  sem interface proposta, com a pergunta "qual destas explorar?". Nada é editado
+  sem o dono pedir.
+- **Candidata recusada por um motivo que vale guardar** vai para o
+  [APRENDIZADOS.md](APRENDIZADOS.md), para a próxima revisão não sugeri-la de
+  novo.
 
 ## Estilo de código
 
@@ -139,26 +179,27 @@ humano — não porque a suíte seja fraca.
   é unidade de RESPONSABILIDADE e de conflito de merge, não de leitura. Ele tem
   CATRACA (`TestNoNewFileGoesOverTheLineCeiling`): arquivo novo acima do teto
   reprova com o nome dele, e a dívida antiga mora numa linha de base que **só
-  pode encolher** — dezessete quando ela nasceu, um deles com quatro vezes o
-  teto. Arquivo baselinado que encolheu sai da lista, e não sair também reprova.
-- Uma responsabilidade por módulo. Extrair continua sendo o certo quando o
-  pedaço tem sentido sozinho: quando ele tem OUTRO chamador, outro motivo para
-  mudar, ou quando dar nome a ele explica o que o corpo não explicava.
-- Retorno cedo em vez de `if` aninhado. No máximo dois níveis de indentação.
+  pode encolher**. Arquivo baselinado que encolheu sai da lista, e não sair
+  também reprova.
+- **Extrair é certo quando o pedaço tem sentido sozinho**: quando ele tem OUTRO
+  chamador, outro motivo para mudar, ou quando dar nome a ele explica o que o
+  corpo não explicava. Picar por picar produz módulo RASO — ver o teste da
+  deleção em "Ao terminar um escopo".
+- Retorno cedo em vez de `if` aninhado.
 - **Nomes específicos e únicos.** Nada de `data`, `handler`, `Manager`. Prefira
   nomes com menos de 5 ocorrências no `grep` — um nome que já existe em cinco
   lugares não identifica coisa nenhuma.
-- Tipos explícitos. Sem `any`, sem `Dict`, sem função sem tipo.
+- **Tipos explícitos.** `any` só na fronteira JSON, onde a forma é do outro lado
+  — os sinais do Datastar, o corpo de uma API; o resto é struct. O código ainda
+  tem `any` fora dela, e isso é dívida a limpar, não exemplo.
 - Sem lógica repetida: extraia para função ou módulo.
 - **Diante de duas opções que resolvem a tarefa igualmente bem hoje, escolha a
   mais fácil de mudar depois.** Não é prever o futuro — é não pagar a mesma
   decisão duas vezes. Menos lugares para editar, menos acoplamento, decisão
   adiável em vez de decisão travada.
-- **Refatore de passagem, não só quando um renome esbarra em você.** Se a
-  tarefa já abriu o arquivo, aproveite para corrigir o que estiver tosco por
-  perto — nome ruim, duplicação, função que já devia ter sido dividida.
-  "Depois" costuma virar "nunca"; a limpeza incidental é mais barata que a
-  faxina separada.
+- **Mexa só no que o escopo toca.** O que estiver tosco por perto não entra de
+  carona: ele é achado da revisão de fim de escopo (ver "Ao terminar um
+  escopo"), e o dono decide se vira trabalho.
 - **Mensagem de exceção carrega o valor ofensor e o formato esperado.** "Caminho
   inválido" não ajuda ninguém no meio de uma sessão; "o caminho começa em (3,1) e
   a peça está em (0,0)" ajuda.
@@ -171,9 +212,10 @@ humano — não porque a suíte seja fraca.
   conteúdo que o código não diz sozinho, e é o que impede a decisão de ser
   refeita por quem chegar depois achando que foi descuido. Um cabeçalho de
   guarda longo se justifica assim — o que ele protege é o ESCOPO da varredura.
-- **A DECISÃO mora aqui; a INVESTIGAÇÃO mora na issue.** Cite `ALE-NNN` e siga.
-  Quem quiser a história tem onde buscá-la, e ela deixa de custar contexto a cada
-  leitura do arquivo.
+- **A DECISÃO mora aqui; o CASO mora no [APRENDIZADOS.md](APRENDIZADOS.md).**
+  Não cite issue do Linear para explicar o porquê: o Linear tem limite de issues,
+  elas são apagadas, e a citação vira ponteiro morto. Quem quiser a história tem
+  onde buscá-la, e ela deixa de custar contexto a cada leitura do arquivo.
 - **Explique na MENSAGEM DE FALHA antes do cabeçalho.** Um guarda que falha
   dizendo o nome do caso e o que fazer entrega a explicação no instante em que
   ela importa; o cabeçalho só alcança quem já foi abrir o arquivo.
@@ -181,25 +223,16 @@ humano — não porque a suíte seja fraca.
   ser verdade é defeito entregue, igual a um `.md` errado — e quem o pega é a
   releitura, não o compilador. O `TestNoCitationNamesAMissingSymbol` cobre uma
   fatia: citação a símbolo que não existe mais.
-- **Não repita no comentário a regra que o guia já tem.** Medido na ALE-333:
-  "uma porta que devolve tipo do hospedeiro não é porta" estava escrita por
-  extenso em QUATRO `deps.go` — e no `engine-go/CLAUDE.md`, que é o dono dela.
-  Cinco cópias envelhecem em cinco velocidades, e a do guia é a única que alguém
-  procura. No código fica o que é específico DAQUELE arquivo; a regra fica no
-  guia, e o comentário no máximo aponta para ele.
+- **Não repita no comentário a regra que o guia já tem.** Cópias envelhecem em
+  velocidades diferentes, e a do guia é a única que alguém procura. No código
+  fica o que é específico DAQUELE arquivo; a regra fica no guia, e o comentário
+  no máximo aponta para ele.
 - Docstring em função pública: intenção e um exemplo de uso.
 
-> Aqui mandava **preservar** os comentários existentes e nunca apagá-los num
-> refactor, "porque carregam intenção e procedência". Essa frase era a CATRACA:
-> somada a "cite a issue", cada conserto acrescentava prosa e nada nunca
-> removia. O resultado medido foram 766 blocos de 10+ linhas no `engine-go`,
-> 11.586 linhas ao todo, e 37% do `web/` em comentário (ALE-324). O substituto
-> não manda apagar — manda RELER, que é o que a seção "Documentação" já exige
-> dos `.md`.
->
-> **Não existe guarda de tamanho de comentário, e não deve existir**: ele
-> reprovaria justamente os cabeçalhos de guarda, que são os melhores comentários
-> do repositório. Contar linhas responderia sobre linhas.
+**Comentário não se preserva por preservar: ele se RELÊ**, como a seção
+"Documentação" exige dos `.md`. E **não existe guarda de tamanho de comentário,
+e não deve existir**: ele reprovaria os cabeçalhos de guarda, que são os
+melhores comentários do repositório.
 
 ## Testes
 
@@ -252,135 +285,72 @@ um resultado que alguém notaria quebrar. Tudo abaixo decorre disso.
 ### O INSTRUMENTO MENTE COM CARA DE RESULTADO
 
 A infraestrutura em volta da medição destrói a medição, e o que sobra parece um
-dado. Cada linha abaixo custou uma investigação inteira; a história está na
-issue, e o que fica aqui é a forma de reconhecer a armadilha na próxima vez.
+dado. **A pergunta que abre todas: "o que este instrumento DESLIGA para
+funcionar, e o que ele não mede?"** Os casos que produziram cada linha estão no
+[APRENDIZADOS.md](APRENDIZADOS.md).
 
-**A pergunta que abre todas elas: "o que este instrumento DESLIGA para
-funcionar, e o que ele não mede?"**
+- **Limpeza não fala mais alto que o defeito**: `finally` que estoura esconde o
+  erro de verdade. Limpeza ganha `catch`.
+- **Nunca rode a suíte com `| tail`**: não achar a linha no que sobrou parece
+  "não aconteceu".
+- **Sonda instalada cedo demais mede o nada**: um `MutationObserver` num
+  `addInitScript` observa um `body` que ainda é `null`.
+- **`boundingBox` devolve a caixa de um elemento coberto**, e o clique acerta
+  quem está por cima.
+- **Parser que ignora o que não entende inventa achados.** Falhe no que não
+  sabe ler.
+- **Comparar tamanho responde sobre tamanho.** A pergunta costuma ser o LIMIAR
+  da norma.
+- **Captura de tela não diz nada sobre animação**: o `screenshot()` finaliza toda
+  animação finita antes de fotografar.
+- **Sonda de vida longa mede tudo na janela dela**: armada antes do gesto, ela
+  conta a mão. A janela é parte do desenho.
+- **"Existe agora" e "existe quando importa" são perguntas diferentes.**
+- **Varredura de um nível não é varredura**: o que vale é o fecho transitivo.
+- **Leia a norma até o fim**: o WCAG tem exceções que medir tamanho não enxerga.
+- **Meça o que é DESENHADO, não o que foi escrito**: herança é a regra do CSS.
+- **Transição em curso faz o computado mentir.** Pergunte com `getAnimations()`
+  se há transição, em vez de escolher outro instante.
+- **Mostrador cujo repouso é igual ao sucesso não testemunha o sucesso.** Ele
+  mostra algo diferente antes e depois?
+- **Lista de PROIBIDOS subconta em silêncio.** Use uma de PERMITIDOS e falhe no
+  que não conhece.
+- **O medidor de contraste ignora o ALFA**: sabotar a opacidade é sabotagem
+  inerte, e não prova guarda nenhum.
 
-- **Limpeza não pode falar mais alto que o defeito** — um `finally` que estoura
-  substitui o erro de verdade. Limpeza ganha `catch`, sempre (ALE-245).
-- **Nunca rode a suíte com `| tail`** — procurar uma linha no que sobrou e não
-  achar vira "o evento não aconteceu", quando era "o canal não existe" (ALE-238).
-- **Sonda instalada cedo demais mede o nada** — `MutationObserver` num
-  `addInitScript` observa um `body` que ainda é `null` (ALE-199).
-- **`boundingBox` devolve a caixa de um elemento COBERTO sem reclamar** — e o
-  clique acerta quem está por cima (ALE-203).
-- **Ramo que ignora o que não entende produz lista de falhas com cara de
-  descoberta** — um parser que descarta o seletor desconhecido acusou 24 botões
-  vivos. Hoje ele FALHA no que não sabe ler (ALE-294).
-- **Instrumento que compara TAMANHO responde sobre tamanho** — a diferença de
-  2px era real e a pergunta era outra: o LIMITE de contraste do WCAG 1.4.11
-  (ALE-250).
-- **Captura de tela não responde nada sobre linha do tempo** — o `screenshot()`
-  do Playwright FINALIZA toda animação finita antes de fotografar (ALE-174).
-- **Sonda de vida longa mede tudo o que acontece na janela dela** — armada antes
-  do gesto, ela conta a MÃO e não a animação. A janela é parte do desenho
-  (ALE-174).
-- **"Existe agora" e "existe quando importa" são perguntas diferentes** — o nó
-  medido some no quadro seguinte, e a animação some pedida (ALE-174).
-- **Varredura de um nível não é varredura** — o defeito morava em `for` →
-  o detalhe da perícia → o overlay, e só o último tinha o atributo. O conserto é o
-  fecho transitivo (ALE-298).
-- **Ler a norma até o fim é parte de construir o medidor** — contar `< 24px`
-  inflou o defeito em 25×, porque o WCAG 2.5.8 tem duas exceções que tamanho não
-  enxerga: espaçamento e equivalente (ALE-177).
-- **Herança é a REGRA do CSS** — quem mede tipografia pelo texto do código mede
-  o que foi ESCRITO, e a pergunta é sobre o que é DESENHADO. Dois tokens em
-  `class=` diferentes, e regex nenhum os junta (ALE-252).
-- **Transição em curso faz o computado mentir, e escolher outro instante não
-  conserta** — `getAnimations()` responde SE existe transição; ler "no instante
-  certo" é trocar o erro de lugar (ALE-318).
-- **Mostrador cujo REPOUSO é igual ao sucesso não testemunha o sucesso** — a
-  faixa dizia "Salvo" antes de qualquer digitação. Pergunte sempre: *ele mostra
-  algo diferente antes e depois do que eu vim medir?* (ALE-218).
-- **Lista de PROIBIDOS subconta em silêncio** — e, ao contrário de uma
-  decomposição, não tem denominador embutido. Inverta: tenha um PERMITIDOS e
-  falhe no que não conhece (ALE-301).
-
-**O controle é barato e é obrigatório: antes de ler AUSÊNCIA como evidência,
-prove que o canal estaria lá se o evento tivesse acontecido.** Procure no mesmo
-arquivo uma linha que sai SEMPRE; confira que a sonda vê o caso positivo
-conhecido. Sem isso, "não reproduzi" não é evidência de ausência — é ausência de
-evidência, e as duas se parecem no terminal.
-
-**E o canal pode morrer DEPOIS de instalado.** Navegação descarta o documento e
-com ele o `MutationObserver`; a lista de mutações volta VAZIA, que é a mesma
-coisa que "nada mudou". O guarda `não desanexa a cena` passava no PIOR caso — a
-cena não desanexou porque deixou de existir. Não é um teste que falha em
-detectar: é um teste que **afirma o oposto do que aconteceu** (ALE-238). Vale
-para toda sonda de vida longa: **afirme o documento antes de afirmar o
-silêncio.**
+**Antes de ler AUSÊNCIA como evidência, prove que o canal estaria lá se o evento
+tivesse acontecido**: uma linha que sai sempre, ou o caso positivo conhecido. E
+o canal pode morrer depois de instalado — navegação descarta o documento e o
+observador junto, e a lista vazia diz "nada mudou". **Afirme o documento antes
+de afirmar o silêncio.**
 
 ### Instrumento que DECOMPÕE tem denominador de graça: a soma
 
-Medir "quanto cada camada come dos 390px" na ALE-230 exigiu três instrumentos, e
-**os dois primeiros produziram uma tabela plausível com o número errado**:
-
-- **792 de 390** — o instrumento subia a árvore somando os irmãos de cada
-  ancestral, e contou a textura de fundo (`absolute inset-0`, 390px) como camada
-  empilhada. O que está FORA DO FLUXO não empilha.
-- **412 de 390** — o mesmo instrumento contou o `gap` de um filho
-  `display:none`. Um filho que não desenha não separa nada de nada.
-
-Nenhum dos dois reclamou. As duas tabelas tinham nomes de camada certos, alturas
-certas para as camadas que existiam, e uma linha de total que ninguém confere
-quando a lista parece boa. O que os denunciou foi **a soma não fechar na altura
-da janela** — e é isso que faz de uma decomposição um instrumento barato de
-validar: ela já tem denominador embutido, ao contrário de uma lista de falhas,
-que precisa de um `medidos` escrito à mão.
-
-O terceiro fechou em 390 **por construção**: uma coluna de sondas
-`elementFromPoint` de y=0 a y=389, agrupada em bandas. Não há como uma camada ser
-contada duas vezes nem um overlay virar empilhamento, porque cada pixel da coluna
-tem exatamente um dono.
-
-**A regra: toda decomposição afirma a soma antes de afirmar as parcelas.** E
-quando o que se mede é o EFEITO de um corte, corte de verdade — a ALE-230 mediu
-"quanto esta camada devolve" escondendo-a com `display:none` e remedindo, em vez
-de subtrair a altura dela. Somar teria errado pelos mesmos dois motivos acima.
+**Toda decomposição afirma a soma antes das parcelas.** Uma tabela de parcelas
+com nomes e alturas certas pode somar o dobro do todo sem nada reclamar; a soma
+que não fecha é o que denuncia. Monte a medição de forma que cada parte tenha um
+dono só (uma coluna de sondas `elementFromPoint` fecha por construção). E o
+EFEITO de um corte se mede cortando de verdade (`display:none` e medir de
+novo), nunca subtraindo.
 
 ### Um guarda só mede o que ele VISITA
 
-Cobertura de contraste, de tipografia e de leiaute é função de onde o teste
-NAVEGA, não de quantas asserções ele tem. Dois defeitos de contraste
-sobreviveram anos com o guarda no ar porque ele nunca abria um popover nem
-entrava na cena de campanhas (ALE-237).
+Cobertura de contraste, tipografia e leiaute depende de onde o teste NAVEGA, não
+de quantas asserções ele tem. Quatro formas de não visitar:
 
-**Quatro formas de "não visitar", e só a primeira parece esquecimento:**
+1. **A cena não está na lista.** Enumerar é remendo. O que restaura a amostragem
+   é um guarda que force a VARREDURA ("alguém escreveu a receita à mão?"), que
+   vale para a cena que nascer amanhã.
+2. **O medidor não é importável.** Instrumento privado de um arquivo de teste
+   tem exatamente um chamador.
+3. **A tela tem UM item.** O defeito de N>1 é invisível com N=1. Quantos itens o
+   caso põe na tela, e de quantos o defeito precisa?
+4. **Todas as telas, um só DADO.** Tela que ramifica pelo dado pede um caso por
+   ramo, com o ramo nomeado e o controle afirmando que ele apareceu.
 
-1. **A cena não está na lista.** Enumerar é remendo: uma entrada por cena, para
-   sempre, e a que alguém esquecer nasce sem medição — em silêncio, que é a
-   marca desta família. **O que restaura a AMOSTRAGEM é um guarda que force a
-   varredura**, e não visitar mais cenas: o `TestNoHandwrittenLabelRecipe` não
-   pergunta "esta cena está na lista?" e sim "alguém escreveu a receita à mão?",
-   e a resposta dele vale para a cena que nascer amanhã (ALE-252, ALE-295).
-2. **O MEDIDOR não é importável.** A ficha atravessou duas fatias sem uma única
-   medição de contraste porque o medidor era função *privada* de outro arquivo
-   de teste. Ninguém a omitiu de uma lista; a lista nunca pôde existir.
-   **Instrumento que mora dentro de um chamador tem exatamente um chamador**, e
-   isso não aparece em revisão de diff (ALE-272).
-3. **O guarda visita a tela com UM ITEM.** Uma tela que desenha N nós iguais tem
-   um comportamento com N=1 e outro com N>1, e medir N=1 é medir a metade em que
-   o defeito é invisível por construção — com uma peça, o primeiro do DOM É o
-   arrastado, e o gesto certo e o errado dão o mesmo resultado. **A pergunta é
-   "quantos itens o caso põe na tela, e o defeito precisa de quantos?"**
-   (ALE-299).
-4. **O guarda visita todas as telas e um só DADO.** As sete abas da ficha, de um
-   guerreiro — e metade do painel de Combate só existe para quem conjura. Quando
-   a tela RAMIFICA pelo dado, percorrer a navegação não é cobertura: é um caso
-   por ramo, com o ramo NOMEADO e o controle afirmando que ele apareceu
-   (ALE-272).
+**O controle que fecha as quatro é o DENOMINADOR**: todo medidor devolve
+`{falhas, medidos}`. Sem isso, "verde" e "não mediu" são a mesma cor.
 
-**O controle que fecha as quatro é o DENOMINADOR.** Uma lista de reprovados
-vazia e um seletor que não casa com nada se parecem no terminal, e por isso todo
-medidor devolve `{falhas, medidos}`: quem afirma "nada reprovou" afirma junto
-quantos olhou. Sem isso, **"verde" e "não mediu" são a mesma cor**.
-
-> E saiba o que o medidor NÃO vê: ele lê `color` pelo canvas e ignora o ALFA,
-> então `text-x/50` é medido como se fosse opaco. O erro é para o lado seguro,
-> mas **sabotar a opacidade não prova guarda nenhum** — é sabotagem inerte, e
-> quase virou "o guarda está cego".
 ### O resto
 
 - **Apague teste que custa mais do que protege**: asserção sobre nome de classe e
@@ -414,19 +384,17 @@ se pergunta ao código, nunca a esta linha:
 grep -rn "func TestEvery\|func TestNo[A-Z]" --include=*_test.go .
 ```
 
-> Aqui morava a lista dos guardas, um a um, e mais o NÚMERO deles. O número ficou
-> obsoleto **três vezes** sem ninguém mexer na linha — e uma vez ele DESCEU, de
-> 46 para 44, porque o terreno que dois deles varriam foi apagado. A lição não é
-> "atualizar com mais cuidado": é que **um número escrito à mão sobre uma família
-> que cresce envelhece**, e a lista é a coisa que apodrece. O `grep` é a fonte.
+Um número escrito à mão sobre uma família que cresce envelhece; o `grep` é a
+fonte.
 
 - **Uma convenção só foi adotada depois de varrida.** Uma revisão nomeia um
   arquivo; a correção é *todo* arquivo com a mesma forma. Antes de fechar, rode a
   busca que acha os irmãos e diga no commit quantos eram.
-- **Se a regra é mecanizável com o que já roda, ela vira guarda** — um
-  `TestEvery…`/`TestNo…` no pacote que a possui, e não um parágrafo. Guarda de
-  varredura falha com o NOME do caso que faltou, que é a diferença entre
-  "conserte isto" e "procure".
+- **Se a regra é mecanizável, a primeira pergunta é se uma FERRAMENTA faz** —
+  linter, formatador, script de CI. Se faz, é configuração, não código.
+  **Guarda em Go é para REGRA**: do livro, de produto, de segurança, de quem vê
+  o quê. Ele é um `TestEvery…`/`TestNo…` no pacote que a possui, e falha com o
+  NOME do caso que faltou, que é a diferença entre "conserte isto" e "procure".
 - **Guarda vale o que vale o terreno que ele varre, e o terreno pode sumir.**
   Quando uma rota morre, o guarda que a cobria morre junto — confira se a
   invariante mudou de casa antes de dar por perdida.
@@ -439,12 +407,6 @@ grep -rn "func TestEvery\|func TestNo[A-Z]" --include=*_test.go .
 
 - Injete dependência por construtor ou parâmetro, não por global ou import.
 - Embrulhe biblioteca de terceiro atrás de uma interface fina, deste projeto.
-
-## Estrutura
-
-- Siga a convenção do framework.
-- Prefira módulos pequenos e focados a arquivos-deus.
-- Caminhos previsíveis: controller/model/view, src/lib/test.
 
 ## Formatação
 
@@ -470,8 +432,8 @@ domínio e infraestrutura.
 - **Português:** comentário, docstring, `.md`, mensagem de commit, tudo que
   aparece na tela, e o texto de erro que um humano vai ler.
 
-**A ROTA é a exceção da fronteira, e fica em PORTUGUÊS** (decisão do dono,
-ALE-303): o endereço é a única parte da fronteira que **o cliente VÊ**. Duas
+**A ROTA é a exceção da fronteira, e fica em PORTUGUÊS** (decisão do
+dono): o endereço é a única parte da fronteira que **o cliente VÊ**. Duas
 ressalva: `/health` e `/static/*` ficam em inglês — são a sonda de saúde e a
 pasta dos estáticos, convenção que ferramenta de fora reconhece.
 
@@ -569,9 +531,8 @@ para sair certo na primeira vez.
 
 ### Isto NÃO tem guarda, e é decisão do dono
 
-Havia quatro — um para declaração de topo, um para nome local, um para nome de
-teste e um para nome de arquivo —, com 1.620 linhas entre código e linhas de
-base. **Eles foram apagados.**
+Houve guardas de idioma — para declaração de topo, nome local, nome de teste e
+nome de arquivo —, e **eles foram apagados**.
 
 A razão é o que eles mediam. Idioma não é uma propriedade que um `map[string]bool`
 decida: os três primeiros perguntavam "esta palavra está numa lista de palavras
@@ -580,11 +541,9 @@ portuguesa que ainda não tinha mordido alguém. Uma lista de PROIBIDOS subconta
 silêncio — é a armadilha que a seção "O INSTRUMENTO MENTE" já nomeia —, e aqui
 ela subcontava sem nem ter um denominador para denunciar a subcontagem.
 
-O quarto invertia o erro e ficava pior de conviver: como lista de PERMITIDOS, o
-de nome de arquivo reprovava toda palavra INGLESA que ele ainda não conhecesse.
-Numa sessão só ele barrou `context`, `nested`, `request`, `read` e `swallowed` —
-cinco arquivos legítimos —, e cada um custava uma linha de manutenção numa lista
-que ninguém lê.
+O de nome de arquivo invertia o erro: como lista de PERMITIDOS, reprovava toda
+palavra INGLESA que ele ainda não conhecesse, e cada uma custava uma linha numa
+lista que ninguém lê.
 
 **A regra continua valendo inteira; o que mudou é quem a cobra.** Ela se confere
 no OLHO, na revisão, como a composição de uma tela — e pela mesma razão: a
@@ -642,6 +601,11 @@ O critério: se depois da sua mudança um `.md` afirma algo que deixou de ser
 verdade, ele é um defeito entregue igual a qualquer outro. **Documentação errada
 é pior que documentação ausente, porque a ausente ninguém segue.**
 
+**Contagem não mora em `.md`.** "Quinze cenas", "restam 14", "os 39
+parâmetros": o número envelhece no primeiro commit que mexe no terreno, e ninguém
+relê a linha. Quando a quantidade importa, o `.md` diz a pergunta (o `grep`, o
+teste) e o código responde.
+
 **Planejamento não vira `.md`**: fase, roadmap e plano de migração são issue no
 Linear (org ALE, projeto Tormenta20). Um `.md` descreve o que o sistema **faz** —
 plano executado vira mentira e fica, descrição executada vira verdade e fica
@@ -650,8 +614,8 @@ certa.
 ### Regra que tem GUARDA não precisa de história
 
 Um guia carrega a REGRA e o GATILHO: o que fazer, e quando. O CASO que a produziu
-mora na issue, que é onde ele pode ser verificado e onde não custa contexto toda
-sessão.
+mora no [APRENDIZADOS.md](APRENDIZADOS.md), que não custa contexto toda sessão e
+é revisado periodicamente com o dono.
 
 **Procedência só paga quando as duas coisas valem ao mesmo tempo:** a regra não
 tem guarda, **e** sem o mecanismo ela lê como arbitrária e vai ser derrubada pelo
@@ -665,9 +629,8 @@ tem uma direção. E ela **apodrece**: duas passagens deste arquivo viraram ment
 sem ninguém mexer nelas, e uma delas era justamente a que explicava por que duas
 grafias conviviam depois de a varredura já ter rodado.
 
-> Este arquivo tinha 847 linhas quando a regra foi escrita, e 42% delas eram duas
-> seções contando casos. O corte trocou legibilidade por memorabilidade, e essa
-> troca tem um risco que vale saber: **uma lição de uma linha pode não disparar
+> O corte da narrativa troca legibilidade por memorabilidade, e essa troca tem
+> um risco que vale saber: **uma lição de uma linha pode não disparar
 > reconhecimento no momento em que você está dentro da armadilha** — que é
 > quando ela vale. Se acontecer, o conserto não é restaurar a narrativa: é
 > escrever o guarda que torna a lição desnecessária.
@@ -682,7 +645,7 @@ grafias conviviam depois de a varredura já ter rodado.
 
 - **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
   oráculo é ato deliberado, citação de página conferida, validação de schema dos
-  catálogos, as armadilhas do `templ` e as dez do Datastar que não deixam erro
+  catálogos, as armadilhas do `templ` e as do Datastar que não deixam erro
   para trás, os dois defeitos silenciosos do `sqlc`, e por que a bancada copia um
   molde migrado.
 - **`e2e/`** (Playwright) **não tem guia próprio**: o que rege e2e está na seção
