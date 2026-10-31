@@ -58,8 +58,7 @@ func (s *Server) Router() http.Handler {
 // publicJSONRoutes é a superfície que existe para quem está FORA, e hoje ela é
 // uma rota.
 //
-// `/health` é INFRAESTRUTURA — quem bate nele é o `healthcheck` do compose e o
-// `-health` do próprio binário. É o contra-exemplo da faxina de rotas: "rota sem
+// `/health` é INFRAESTRUTURA — quem bate nele é o CI e um monitor externo. É o contra-exemplo da faxina de rotas: "rota sem
 // consumidor" se decide perguntando quem pergunta DE FORA, e não quem chama de
 // dentro do repositório.
 func (s *Server) publicJSONRoutes(r chi.Router) {

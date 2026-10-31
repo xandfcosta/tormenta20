@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"t20engine/infra/httpio"
 	"t20engine/serve/web/admin"
 	"t20engine/serve/web/assets"
 	"t20engine/serve/web/campaigns"
@@ -37,6 +38,10 @@ import (
 // depois o que exige sessão.
 func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
+	// A COMPRESSÃO mora aqui, e não no `cmd`: assim o teste que bate no
+	// roteador de verdade vê o que o navegador recebe, inclusive o fluxo ao vivo
+	// em gzip (ver `httpio.Gzip`).
+	r.Use(httpio.Gzip)
 	// Os estáticos são ANÔNIMOS: são o bundle do Datastar e a folha de estilo, e
 	// exigir sessão para eles só quebraria o cache.
 	r.Handle("/static/*", http.StripPrefix("/static/", assets.Handler()))
@@ -44,9 +49,8 @@ func (s *Server) WebRouter() http.Handler {
 	// que o layout pede. Anônimos pelo mesmo motivo dos estáticos.
 	r.Handle("/fonts/*", assets.FontsHandler())
 	r.Handle("/favicon.svg", assets.FaviconHandler())
-	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta é o
-	// `healthcheck` do compose e o `-health` do próprio binário, e infraestrutura
-	// não sabe de prefixo.
+	// A SAÚDE responde na RAIZ além de `/api/health`: quem pergunta é o CI e um
+	// monitor externo, e infraestrutura não sabe de prefixo.
 	r.Handle("/health", s.HealthProbe())
 	// A API JSON, sob `/api`. O `Mount` do chi tira o prefixo sozinho — era um
 	// `http.StripPrefix` escrito à mão no mux.

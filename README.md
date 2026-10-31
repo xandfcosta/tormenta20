@@ -52,41 +52,9 @@ sobe a API, e disputar CPU com o resto o derruba por timeout.
 
 ## Produção (a mesa na LAN)
 
-Duas formas, e as duas sobem **o mesmo binário** — ele serve as cenas, a API e o
-fluxo ao vivo na mesma porta. No contêiner há um nginx na frente, que termina o
-HTTPS e comprime (ALE-523); direto na máquina, nada é comprimido.
-
-### Por contêiner (ALE-273)
-
-É a forma recomendada: o build é reproduzível, o processo volta sozinho depois
-de um reboot e o banco fica numa pasta que dá para copiar.
-
-```bash
-cp .env.example .env         # escreva o JWT_SECRET e o ADMIN_EMAILS
-mkdir -p data backups
-scripts/make-tls-cert.sh     # o certificado da mesa, em ./tls
-docker compose up -d --build
-```
-
-A mesa abre `https://<ip-da-máquina>`. O certificado é **autoassinado**: cada
-aparelho mostra o aviso de "conexão não segura" na primeira vez, e é só aceitar.
-Ele vale para os IPs que a máquina tinha quando o script rodou — trocou de IP,
-rode de novo e `docker compose restart nginx`.
-
-O `.env` pede o `T20_UID`/`T20_GID` do dono da pasta `data/` (`id -u`, `id -g`):
-o contêiner não roda como root, e sem isso ele não consegue escrever no bind
-mount — o sintoma é `unable to open database file`, que parece banco corrompido
-e é permissão.
-
-O **backup é copiar a pasta `data/`**, e o backup automático já escreve em
-`backups/` com o mesmo `VACUUM INTO` do manual.
-
-O **livro** é o `t20-book.pdf` da raiz do projeto, montado só para leitura;
-sem ele, o botão "abrir no livro" não aparece e a mesa segue. O livro, o
-certificado (`tls/`), o banco e os backups ficam dentro do projeto e fora do
-git.
-
-### Direto na máquina
+O app roda direto na máquina, sem contêiner e sem nada na frente (ALE-531): UM
+binário serve as cenas, a API e o fluxo ao vivo na mesma porta, em HTTP, e
+comprime em gzip ele mesmo.
 
 ```bash
 cp engine-go/.env.production.example engine-go/.env.production
@@ -124,50 +92,33 @@ você nunca digita nem vê a senha de ninguém — e **apagar**, que leva as fic
 junto e passa as campanhas dela para você.
 
 **A aplicação é um processo só.** O `cmd/api` serve as cenas, os estáticos (que
-viajam DENTRO do binário) e `/api/*` na mesma porta. O nginx do compose não
-serve nada: ele cifra, comprime e repassa.
+viajam DENTRO do binário) e `/api/*` na mesma porta.
 
-### HTTPS na LAN, e o app instalado no telefone
+O **backup automático** escreve em `backups/` com o mesmo `VACUUM INTO` do
+manual. O **livro** é o PDF que o `LIVRO_PDF` aponta; sem ele, o botão "abrir no
+livro" não aparece e a mesa segue.
 
-Em `http://` o navegador não considera a página **contexto seguro**, e é daí que
-vem o buraco. Medido neste servidor, com o mesmo endereço de LAN nos dois
-esquemas:
+### O app no telefone, sem HTTPS
 
-| pelo `http://192.168.x.x:3001` | pelo `https://…` |
-|---|---|
-| `window.isSecureContext` **false** | **true** |
-| `'serviceWorker' in navigator` **false** | **true** |
-
-Sem contexto seguro nenhum service worker registra, e o Chrome do Android não
-oferece instalar: o "Adicionar à Tela de Início" devolve um **atalho**, uma aba
-comum com a barra de endereço de volta.
-
-Com HTTPS, o `manifest.webmanifest` que já está no `index.html` passa a valer e
-o app abre em janela própria nos **dois** sistemas. A **Tela cheia** do menu do
-Hub continua existindo e é outra coisa — é o gesto de quem não instalou, e é a
-saída do desktop (glossário, colisão C7).
+Em `http://` o navegador não considera a página **contexto seguro**: nenhum
+service worker registra, e o Chrome do Android não oferece instalar — o
+"Adicionar à Tela de Início" devolve um **atalho**, uma aba comum com a barra de
+endereço. A **Tela cheia** do menu do Hub é a saída para jogar sem a barra
+(glossário, colisão C7). Instalar de verdade pediria HTTPS, que o app não serve.
 
 **Não há service worker, e a ausência é deliberada** (ALE-118, decisão 4 ainda
-aberta). Ele traria cache offline e traria junto o problema clássico da versão
-velha grudada, sem caminho óbvio para o jogador sair dela — e o app depende de
-buscar catálogo por HTTP (`GET /catalog/:nome`), então a estratégia de cache não
-é detalhe. Isso se decide antes de escrever, não depois.
+aberta): ele traria cache offline junto com o problema clássico da versão velha
+grudada, sem caminho óbvio para o jogador sair dela.
 
-O TLS termina **no nginx do compose** (ALE-523), com o certificado autoassinado
-do `scripts/make-tls-cert.sh`. O binário não sabe servir TLS; rodando ele direto
-na máquina, a mesa fica em `http://` e sem contexto seguro.
+### Chegar no app sem digitar um IP
 
-#### Chegar no app sem digitar um IP
-
-Hoje o jogador digita `https://192.168.15.3`, um número que muda quando o
+Hoje o jogador digita `http://192.168.15.3:3001`, um número que muda quando o
 roteador reinicia. Duas coisas baratas, na ordem em que valem a pena, e **as
 duas fora do código**:
 
 1. **Reserva de DHCP** no roteador, para o IP parar de mudar. Custa cinco
    minutos e não exige nada deste repositório.
-2. **Um nome** (`t20.local` por mDNS, ou o nome da reserva). O
-   `scripts/make-tls-cert.sh` hoje só põe IPs no certificado; com um nome, ele
-   passa a precisar entrar lá também.
+2. **Um nome** (`t20.local` por mDNS, ou o nome da reserva).
 
 Um QR code na tela do mestre resolveria o resto, e é trabalho de tela: está
 anotado na ALE-118, fora desta parte.
@@ -217,7 +168,7 @@ Variáveis (defaults em `engine-go/infra/config/config.go`):
 | `DATABASE_URL` | `file:./data/t20-dev.db` | arquivo SQLite; migra sozinho ao abrir |
 | `JWT_SECRET` | — | assina os JWT de sessão; **obrigatório em produção** |
 | `ADMIN_EMAILS` | — | quem administra, separado por vírgula; **obrigatório em produção** |
-| `COOKIE_SECURE` | `false` | ligue quando houver TLS na frente — em HTTP na LAN, ligado, o browser descarta o cookie e o login não conclui |
+| `COOKIE_SECURE` | `false` | fica desligado: o app fala HTTP, e ligado o browser descarta o cookie e o login não conclui |
 | `CORS_ORIGIN` | vazio nos dois ambientes | as origens liberadas a chamar de fora; vazio = nenhum middleware de CORS |
 | `BACKUP_DIR` | `../backups` | onde o `pnpm db:backup` e a tela de admin escrevem |
 | `LIVRO_PDF` | vazio | o Tormenta 20 em PDF que o servidor entrega em `/livro`; vazio = não serve nada e o botão "abrir no livro" não aparece. **Linearize antes** (`qpdf --linearize`): medido, o navegador transfere o arquivo inteiro para abrir uma página nos dois casos, e o qpdf encolhe os 89,5 MB para 78,6 — o boot avisa quando não está |

@@ -2,6 +2,7 @@ package api
 
 import (
 	"bufio"
+	"compress/gzip"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -47,6 +48,7 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("montar pedido: %v", err)
 	}
+	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -75,7 +77,11 @@ func TestOpeningTheTableStreamRegistersPresence(t *testing.T) {
 
 func esperaOPrimeiroQuadro(t *testing.T, resp *http.Response) {
 	t.Helper()
-	reader := bufio.NewScanner(resp.Body)
+	zr, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		t.Fatalf("o corpo não é gzip: %v", err)
+	}
+	reader := bufio.NewScanner(zr)
 	reader.Buffer(make([]byte, 0, 64*1024), 1<<20)
 	for reader.Scan() {
 		if strings.HasPrefix(reader.Text(), "event:") {

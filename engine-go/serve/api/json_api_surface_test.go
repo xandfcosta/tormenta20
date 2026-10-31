@@ -40,7 +40,7 @@ import (
 // thePublicJSONSurface é o que existe para quem está FORA do repositório.
 //
 // UMA rota, e o número é o achado da ALE-343: o que sobrou da API JSON depois de a
-// SPA sair é bancada de teste mais a sonda do compose. Se esta lista crescer, foi
+// SPA sair é bancada de teste mais a sonda de saúde. Se esta lista crescer, foi
 // decisão de desenho — e é bom que ela custe uma linha aqui.
 var thePublicJSONSurface = map[string]bool{
 	"GET /health": true,
