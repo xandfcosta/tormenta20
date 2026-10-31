@@ -69,12 +69,16 @@ func meleeAttack(pa live.PendingAttack) bool {
 	return pa.Melee || pa.Maneuver != nil
 }
 
-// attackProposalFor é a faixa do ataque com os botões de rolar de novo de QUEM
-// OLHA, quando é ele quem rolou.
+// attackProposalFor é a faixa do ataque de QUEM OLHA: inteira para o mestre, e
+// recortada para o jogador (ver `forPlayer`), com os botões de rolar de novo
+// quando é ele quem rolou.
 func (s Scene) attackProposalFor(
-	ctx context.Context, st *live.SessionRuntimeState, userID, campaignID, sessionID int64,
+	ctx context.Context, st *live.SessionRuntimeState, userID int64, role string, campaignID, sessionID int64,
 ) *attackProposal {
 	band := attackProposalOf(st, userID)
+	if band != nil && role != "gm" {
+		band = band.forPlayer(*st.PendingAttack)
+	}
 	if band == nil || !band.Mine {
 		return band
 	}

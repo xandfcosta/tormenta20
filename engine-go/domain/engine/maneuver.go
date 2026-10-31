@@ -114,17 +114,10 @@ func ResolveManeuver(
 	}
 
 	out.Margin = out.AttackerTotal - out.DefenderTotal
-	// QUEM VENCEU NÃO SAI DAQUI. O livro tem o desempate — *"em caso de empate, o
-	// personagem com o maior bônus vence; se os bônus forem iguais, outro teste
-	// deve ser feito"* (p234) —, e ele continua sendo verdade; o que mudou é
-	// quem o aplica.
-	//
-	// Esta função já devolveu `Won`, `Reroll` e `Imposes`, e a confirmação punha
-	// a condição no alvo sozinha. Isso é um embate de dados com o sistema
-	// anunciando o vencedor e aplicando o efeito, que é a forma que o
-	// `CLAUDE.md` da raiz recusa por inteiro. O que sobra é o que a mesa precisa
-	// para decidir: os dois totais, a diferença entre eles, e o que o livro diz
-	// que a vitória deixaria.
+	// QUEM VENCEU NÃO É GUARDADO NEM APLICADO AQUI. O desempate da p234 é a
+	// LEITURA que a faixa do mestre mostra (`ReadManeuver`); o que o resultado
+	// leva é o que a mesa precisa para decidir: os dois totais, a diferença, e o
+	// que o livro diz que a vitória deixaria.
 	out.ConditionOnAWin = conditionLeftBy[kind]
 	return out
 }

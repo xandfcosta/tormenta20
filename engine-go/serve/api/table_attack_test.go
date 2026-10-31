@@ -188,7 +188,9 @@ func TestTheAttackBannerSaysTheConditionTheBookForesees(t *testing.T) {
 		t.Fatalf("o acerto com a Sanguinária anuncia %+v, e a p336 reserva sangrando",
 			pendente.Announces)
 	}
-	tela := rec.Body.String()
+	// A TELA DO MESTRE: a consequência que o livro prevê é leitura dele, e a
+	// faixa do jogador não a traz (ALE-532).
+	tela := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(tela, "o livro prevê") || !strings.Contains(tela, "Sangrando") {
 		t.Errorf("a faixa não diz a condição prevista:\n%s", recorte(tela))
 	}

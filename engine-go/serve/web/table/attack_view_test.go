@@ -158,44 +158,69 @@ func TestTheManeuverBandGivesTheWholeContestAndNoVerdict(t *testing.T) {
 	}
 }
 
-// NENHUMA PALAVRA DE DESFECHO SOBRA NA FAIXA DA MANOBRA, e este caso varre o
-// TEXTO porque é o texto que a mesa lê.
+// NENHUMA PALAVRA DE DESFECHO CHEGA AO JOGADOR, e este caso varre o TEXTO da
+// faixa recortada (`forPlayer`), porque é o texto que ele lê.
 //
-// Um campo removido do tipo não compila e o compilador avisa; uma PALAVRA
-// reintroduzida na linha ("venceu", "falhou") passa verde por toda a suíte e
-// chega à mesa como se o sistema tivesse julgado. É a metade que o guarda de
-// forma do motor não alcança.
-func TestNoManeuverTextDeclaresAWinner(t *testing.T) {
+// O desfecho é do mestre (ALE-532): a faixa DELE diz "sucesso" ou "falha" para
+// facilitar a leitura; a do jogador, nunca. Uma palavra reintroduzida na linha
+// do jogador passa verde por toda a suíte — é a metade que o guarda de forma do
+// motor não alcança.
+func TestNoManeuverTextTheTablePlayerSeesDeclaresAWinner(t *testing.T) {
 	julgamentos := []string{
 		"venceu", "vence", "perdeu", "perde", "falhou", "falha",
 		"derrubou", "agarrou", "desarmou", "empurrou", "quebrou",
-		"sucesso", "acertou", "errou", "role de novo",
+		"sucesso", "acertou", "errou", "role de novo", "vs",
 	}
 	medidas := 0
 	for _, kind := range []string{"derrubar", "agarrar", "desarmar", "empurrar", "quebrar"} {
 		for _, margin := range []int{9, 0, -11} {
-			for _, condicao := range []string{"", "caido", "agarrado"} {
-				m := live.ManeuverRoll{
-					Kind: kind, Opposed: 10, Margin: margin, ConditionOnAWin: condicao,
-				}
-				texto := strings.ToLower(
-					maneuverSeal(m) + " " + maneuverLine(live.PendingAttack{
-						Roll: 15, Total: 10 + margin, Maneuver: &m,
-					}))
+			for _, mine := range []bool{true, false} {
+				m := live.ManeuverRoll{Kind: kind, OpposedRoll: 4, Opposed: 10, Margin: margin, ConditionOnAWin: "caido"}
+				pa := live.PendingAttack{Roll: 15, Total: 10 + margin, Maneuver: &m}
+				gm := attackProposal{Maneuver: true, Mine: mine, Action: maneuverSeal(m), Verdict: "Sucesso", Tally: maneuverLine(pa)}
+				band := gm.forPlayer(pa)
+				texto := strings.ToLower(band.Action + " " + band.Verdict + " " + band.Tally + " " + strings.Join(attackNotes(band), " "))
 				medidas++
 				for _, palavra := range julgamentos {
 					if strings.Contains(texto, palavra) {
-						t.Errorf("a faixa de %q com diferença %+d escreveu %q:\n  %s\n"+
-							"Quem julga o embate é o mestre — ver \"O sistema INFORMA; o "+
-							"mestre DECIDE\" no CLAUDE.md da raiz.", kind, margin, palavra, texto)
+						t.Errorf("a faixa do jogador (dele: %v) de %q com diferença %+d escreveu %q:\n  %s\n"+
+							"Quem julga o embate é o mestre — ver \"O veredito é do mestre, e só ele o "+
+							"vê\" no CLAUDE.md da raiz.", mine, kind, margin, palavra, texto)
 					}
 				}
 			}
 		}
 	}
 	// O DENOMINADOR: uma varredura que não montasse faixa nenhuma daria verde.
-	if medidas != 45 {
-		t.Fatalf("a varredura leu %d faixas e os casos são 5 × 3 × 3 = 45", medidas)
+	if medidas != 30 {
+		t.Fatalf("a varredura leu %d faixas e os casos são 5 × 3 × 2 = 30", medidas)
+	}
+}
+
+// A FAIXA DO MESTRE lê o embate pela p234 e diz o efeito extra da margem de 5.
+func TestTheGMManeuverBandReadsTheContest(t *testing.T) {
+	cases := []struct {
+		kind                      string
+		roll, total               int
+		oppRoll, opposed          int
+		margin                    int
+		want, wantTone, wantExtra string
+	}{
+		{"derrubar", 15, 19, 4, 10, 9, "Sucesso por 5+", "good", "por 5+: também empurra 1 quadrado"},
+		{"desarmar", 12, 14, 8, 12, 2, "Sucesso", "good", ""},
+		{"empurrar", 18, 22, 2, 12, 10, "Sucesso por 5+", "good", "por 5+: empurra 4,5m"},
+		{"agarrar", 4, 18, 13, 18, 0, "Sucesso", "good", ""},
+		{"agarrar", 3, 8, 14, 19, -11, "Falha", "danger", ""},
+		{"quebrar", 7, 12, 7, 12, 0, "Empate", "", "bônus iguais: outro teste (p234)"},
+	}
+	for _, c := range cases {
+		pa := live.PendingAttack{Roll: c.roll, Total: c.total, Maneuver: &live.ManeuverRoll{
+			Kind: c.kind, OpposedRoll: c.oppRoll, Opposed: c.opposed, Margin: c.margin,
+		}}
+		if got, tone, extra := maneuverVerdict(pa); got != c.want || tone != c.wantTone || extra != c.wantExtra {
+			t.Errorf("%s %d contra %d: veredito %q (%q), extra %q; queria %q (%q), extra %q",
+				c.kind, c.total, c.opposed, got, tone, extra, c.want, c.wantTone, c.wantExtra)
+		}
 	}
 }
 

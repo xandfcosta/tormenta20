@@ -182,17 +182,26 @@ templ tempestadeAttack(v View) {
 				if v.Attack.Weapon != "" {
 					<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
 				}
+				if v.Attack.Action != "" {
+					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
+				}
 			</div>
 			// `aria-live` na conta, pela razão do de hoje: quem ouve precisa do
 			// resultado, e não dos botões.
-			<div class="ds-strike-roll" aria-live="polite">
-				<b class="ds-strike-verdict">{ v.Attack.Verdict }</b>
-				<span class="ds-strike-tally">{ v.Attack.Tally }</span>
-			</div>
+			// SEM VEREDITO: acertar ou errar é do mestre, em voz (ALE-532). Quem
+			// rolou vê a própria conta; os outros, só quem ataca quem.
+			if v.Attack.Verdict != "" || v.Attack.Tally != "" {
+				<div class="ds-strike-roll" aria-live="polite">
+					if v.Attack.Verdict != "" {
+						<b class="ds-strike-verdict">{ v.Attack.Verdict }</b>
+					}
+					<span class="ds-strike-tally">{ v.Attack.Tally }</span>
+				</div>
+			}
 			for _, line := range attackNotes(v.Attack) {
 				<p class="ds-help">{ line }</p>
 			}
-			<p class="ds-help">{ "O mestre confirma e aplica em " + v.Attack.Target + "." }</p>
+			<p class="ds-help">{ "O mestre diz o resultado e aplica em " + v.Attack.Target + "." }</p>
 			if len(v.Attack.Offers) > 0 || v.Attack.Mine {
 				<div class="ds-strike-foot">
 					for _, offer := range v.Attack.Offers {

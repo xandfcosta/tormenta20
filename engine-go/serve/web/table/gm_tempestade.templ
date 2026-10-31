@@ -309,6 +309,9 @@ templ gmAttack(v View) {
 			<div class="ds-strike-head">
 				@ds.Badge("Para confirmar", true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+				if v.Attack.Action != "" {
+					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
+				}
 				// O IMPULSO fica à vista antes do ✓: confirmar cobra o PM da ficha,
 				// e quem confirma precisa saber quanto (ALE-487).
 				if v.Attack.Boost != "" {

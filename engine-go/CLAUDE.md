@@ -291,24 +291,30 @@ rolagem são as mesmas. **O BÔNUS conhece o LADO**: o `Desejo de Liberdade`
 ajuda quem é agarrado, não quem agarra; o escopo está na chave do `targetKey`,
 e um caso prende os dois lados.
 
-## A MANOBRA ANUNCIA a condição; ela não a aplica
+## A MANOBRA ANUNCIA a condição e o desfecho ao mestre; ela não os aplica
 
 Duas das cinco manobras deixam condição — *"você deixa o alvo CAÍDO"* e *"uma
 criatura AGARRADA fica desprevenida e imóvel"* (p234). As outras três têm efeito
 de ITEM ou de MOVIMENTO, e condição ali seria inventar regra.
 
-**O motor devolve o embate e nunca o vencedor:** os dois totais, a `Margin` e o
-`ConditionOnAWin`, a condição que o livro RESERVA à vitória — mesmo quando quem
-tentou rolou menos, senão a faixa teria de adivinhar o vencedor. Quem decide é o
-mestre ("O sistema INFORMA; o mestre DECIDE", no
-[CLAUDE.md da raiz](../CLAUDE.md)), e quem marca condição é o `toggleCondition`
-da fila.
+**O resultado guardado não traz vencedor nem aplica nada:** o `ManeuverOutcome`
+tem os dois totais, a `Margin` e o `ConditionOnAWin`, a condição que o livro
+RESERVA à vitória. Quem marca condição é o mestre, pelo `toggleCondition` da
+fila.
+
+**A LEITURA do embate é só para o mestre** ("O veredito é do mestre, e só ele o
+vê", no [CLAUDE.md da raiz](../CLAUDE.md)). O `engine.ReadManeuver` aplica o
+desempate da p234 — maior total; no empate, maior bônus; bônus iguais, outro
+teste —, e a faixa do mestre diz sucesso, falha ou empate, e o efeito extra da
+margem de 5. A faixa do jogador passa pelo `forPlayer`, que tira o veredito, a
+Defesa e o lado de quem resiste.
 
 - O `TestTheManeuverNeverDeclaresAWinner` varre os campos do `ManeuverOutcome`
-  por reflexão: asserção sobre um campo de vencedor deixaria de compilar, e caso
-  que não compila se apaga.
-- O `TestNoManeuverTextDeclaresAWinner` varre o TEXTO das faixas atrás de
-  palavra de desfecho, que compila. O crachá diz a manobra no INFINITIVO.
+  por reflexão: o vencedor não é guardado nem aplicado.
+- O `TestNoManeuverTextTheTablePlayerSeesDeclaresAWinner` varre o TEXTO da
+  faixa do JOGADOR atrás de palavra de desfecho, que compila.
+- O `TestOnlyTheGMSeesTheAttackVerdict` desenha a mesma mesa para os dois
+  papéis, que é o predicado.
 - **O id não vai para a tela**: o `book.ConditionName` o traduz (regra do
   `GLOSSARY.md`: id em inglês no código, texto em português na tela).
 
