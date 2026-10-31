@@ -34,7 +34,7 @@ test.describe('Abrir e fechar uma campanha', () => {
 
     await page.getByLabel('Nome').fill(name)
     await page.getByLabel('Descrição').fill('Criada e excluída pelo E2E.')
-    await page.getByRole('button', { name: 'Abrir campanha' }).click()
+    await page.getByRole('button', { name: 'Criar campanha' }).click()
 
     await expect(page).toHaveURL(/\/campanhas\/\d+/)
     await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
@@ -46,8 +46,8 @@ test.describe('Abrir e fechar uma campanha', () => {
     // Volta para a LISTA, e o que se afirma é a LISTA e não a URL dela: prender
     // o teste ao endereço o faria quebrar num renome de rota que não muda nada
     // para quem usa.
-    await expect(page.getByRole('listbox', { name: 'Campanhas' })).toBeVisible()
-    await expect(page.getByRole('option', { name: new RegExp(name) })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Campanhas', level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: new RegExp(name) })).toHaveCount(0)
   })
 })
 
@@ -59,8 +59,8 @@ test.describe('Abrir e fechar uma campanha', () => {
  */
 const SCENES = [
   { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
-  { name: 'nova', path: '/campanhas/nova', heading: /Abrir nova campanha/i },
-  { name: 'convite', path: '/campanhas/entrar', heading: /Entrar na mesa/i },
+  { name: 'nova', path: '/campanhas/nova', heading: /Nova campanha/i },
+  { name: 'convite', path: '/campanhas/entrar', heading: /Entrar numa mesa/i },
 ]
 
 test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
@@ -109,7 +109,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
     page,
   }) => {
     await page.goto('/campanhas/nova')
-    await expect(page.getByRole('heading', { name: /Abrir nova campanha/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Nova campanha/i })).toBeVisible()
 
     // A testemunha é o RESPIRO da folha, e ele se lê no valor computado e não
     // na posição de um filho. Tentei os dois caminhos posicionais e os dois
@@ -119,8 +119,11 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
     // de rolagem — ruído da ordem do sinal, que era de 24px para 16.
     const breathingRoom = () =>
       page
-        .locator('[data-tome-root]')
-        .evaluate((el) => `${getComputedStyle(el).paddingLeft}/${getComputedStyle(el).rowGap}`)
+        .locator('.ds-camps-form')
+        .evaluate(
+          (el) =>
+            `${getComputedStyle(el).paddingLeft}/${getComputedStyle(el.firstElementChild!).rowGap}`,
+        )
 
     await page.setViewportSize({ width: 390, height: 844 })
     const noKeyboard = await breathingRoom()
@@ -136,7 +139,7 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
 
     await page.setViewportSize({ width: 844, height: 390 })
     await expect(
-      page.getByRole('button', { name: /Abrir campanha/i }),
+      page.getByRole('button', { name: /Criar campanha/i }),
       'no celular deitado o botão que fecha a tarefa saiu da tela',
     ).toBeInViewport({ ratio: 0.8 })
   })
@@ -144,41 +147,6 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
 
 test.describe('A cena de campanhas', () => {
   test.use({ storageState: '.auth/user.json' })
-
-  /**
-   * O cursor segue o FOCO, e trocar de campanha não custa requisição.
-   *
-   * É a decisão que governa a cena: o servidor manda todos os livros e o
-   * `data-show` escolhe um. Se alguém trocar isso por uma ida ao servidor por
-   * passo, navegar por teclado vira uma conversa com a rede — e este guarda é
-   * o que avisa, porque ele conta as requisições.
-   *
-   * E2E porque foco e geometria são do navegador: em jsdom todo elemento mede
-   * zero e o driver não teria como escolher o vizinho.
-   */
-  test('as setas trocam de campanha sem pedir nada ao servidor', async ({ page }) => {
-    await page.goto('/campanhas')
-    const options = page.getByRole('option')
-    await expect(options.first()).toBeVisible()
-
-    const first = (await options.first().textContent())?.trim() ?? ''
-    const second = (await options.nth(1).textContent())?.trim() ?? ''
-    expect(first, 'a seed precisa de duas campanhas para este guarda').not.toBe(second)
-
-    let requests = 0
-    page.on('request', () => {
-      requests++
-    })
-
-    await options.first().focus()
-    // Seta DIREITA e não abaixo: a listagem virou uma tira deitada no rodapé,
-    // igual à de personagens, e o driver lê `data-nav-layout="row"`.
-    await page.keyboard.press('ArrowRight')
-
-    await expect(options.nth(1)).toHaveAttribute('aria-selected', 'true')
-    await expect(options.first()).toHaveAttribute('aria-selected', 'false')
-    expect(requests, 'andar no trilho foi à rede — o cursor deixou de ser sinal').toBe(0)
-  })
 
   /**
    * A busca é do SERVIDOR, e quem prende o RESULTADO dela é o
@@ -190,18 +158,15 @@ test.describe('A cena de campanhas', () => {
    */
   test('a busca filtra a lista que o servidor desenhou', async ({ page }) => {
     await page.goto('/campanhas')
-    // A VAGA conta como opção no trilho e nunca é filtrada, então ela sai do
-    // número: contar o trilho inteiro faria o guarda medir "3 achados" onde a
-    // busca achou 2.
-    const campaigns = page.getByRole('option').filter({ hasNotText: 'Folha em branco' })
+    const campaigns = page.getByRole('article')
     expect(await campaigns.count(), 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
     await expect(campaigns).toHaveCount(3)
-    await expect(page.getByRole('option', { name: /A Queda de Tauron/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /A Queda de Tauron/ })).toBeVisible()
 
     await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('zzzzzz')
-    await expect(page.getByText(/Nenhuma campanha combina/)).toBeVisible()
+    await expect(page.getByText(/Nenhuma campanha casa com/)).toBeVisible()
   })
 })
 
@@ -213,7 +178,7 @@ test.describe('A folha em branco', () => {
   // é o primeiro a cair para fora da tela.
   test('a folha cabe nos seis formatos', async ({ page }) => {
     await page.goto('/campanhas/nova')
-    await expect(page.getByRole('button', { name: 'Abrir campanha' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Criar campanha' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
     for (const viewport of VIEWPORTS) {
@@ -241,7 +206,7 @@ test.describe('A folha em branco', () => {
     // Nome de puros espaços: o `required` não pega, o servidor pega.
     await page.getByLabel('Nome').fill('   ')
     await description.fill('A caravana parte de Valkaria ao amanhecer.')
-    await page.getByRole('button', { name: 'Abrir campanha' }).click()
+    await page.getByRole('button', { name: 'Criar campanha' }).click()
 
     await expect(page.getByText(/O nome é obrigatório/)).toBeVisible()
     await expect(description, 'a descrição sumiu na recusa').toHaveValue(

@@ -69,9 +69,10 @@ func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title: "Campanhas · Tormenta 20",
-		// `ui.ShellBare`: esta cena desenha o próprio cabeçalho, porque ele carrega a
-		// busca e os filtros. A casca densa poria um segundo `<h1>` acima.
-		Shape: ui.ShellBare,
+		// `ui.ShellBare`: esta cena desenha o próprio cabeçalho, porque ele carrega
+		// as ações. A casca densa poria um segundo `<h1>` acima.
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
 	}, SceneBody(view))
 }
 
@@ -143,12 +144,15 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 
 func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, v newView) {
 	s.deps.WritePage(w, r, status, ui.Page{
-		Title: "Abrir nova campanha",
-		// `ui.ShellDense`: o cabeçalho compacto traz o "‹ Voltar", e sem ele a
+		Title: "Nova campanha",
+		// `ui.ShellDense`: o cabeçalho compacto traz a seta de voltar, e sem ele a
 		// folha nasce sem saída visível — o Esc existe, mas atalho não é a única
 		// porta.
-		Shape: ui.ShellDense,
-		Back:  "/campanhas",
+		Shape:        ui.ShellDense,
+		System:       ui.SystemTempestade,
+		Back:         "/campanhas",
+		BackLabel:    "Campanhas",
+		VisibleTitle: "Nova campanha",
 	}, newBody(v))
 }
 
@@ -251,9 +255,12 @@ func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int,
 		v.Errors = wire.FieldErrorMap{}
 	}
 	s.deps.WritePage(w, r, status, ui.Page{
-		Title: "Entrar na mesa",
-		Shape: ui.ShellDense,
-		Back:  "/campanhas",
+		Title:        "Entrar numa mesa",
+		Shape:        ui.ShellDense,
+		System:       ui.SystemTempestade,
+		Back:         "/campanhas",
+		BackLabel:    "Campanhas",
+		VisibleTitle: "Entrar numa mesa",
 	}, JoinBody(v))
 }
 

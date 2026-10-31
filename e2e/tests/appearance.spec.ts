@@ -45,17 +45,17 @@ import { DS_TEXT_FLOOR, DS_TOUCH_FLOOR, measureDsText, measureDsTouchTargets } f
 // contados no navegador:
 //
 //   /personagens          441 textos
-//   /campanhas/nova        12 textos   ← a cena mais enxuta do app
+//   /campanhas/nova         6 textos   ← a cena mais enxuta do app
 //   qualquer 404            1 texto
 //
-// Oito fica abaixo da cena mais magra e oito vezes acima da página de erro. Um
+// Quatro fica abaixo da cena mais magra e quatro vezes acima da página de erro. Um
 // número cravado por palpite reprova cena que está perfeita, e ruído é o que faz
 // um guarda ser desligado na segunda semana.
 //
 // Ele é GLOBAL de propósito. Um número por cena seria uma segunda lista para
 // envelhecer, e o que este controle precisa pegar é a página que não carregou —
 // não "esta tela tem pouco texto".
-const MEASURED_TEXT_FLOOR = 8
+const MEASURED_TEXT_FLOOR = 4
 
 // A FACE MAIS LARGA, e o passo é MEDIDO e não escolhido.
 //
@@ -76,17 +76,13 @@ const WIDER_FACE_STEP = '0.2em'
 
 // A DÍVIDA, e ela só ENCOLHE.
 //
-// Três cenas não aguentam o passo hoje, e as duas primeiras são a mesma causa
-// que esta fatia consertou no cartão de herói: item de GRADE tem `min-width:
-// auto`, então a coluna não desce abaixo do min-content do cartão e o `truncate`
-// nunca chega a agir. A terceira é o monograma gigante do palco (`absolute
-// inset-0`, `text-[7rem]`), que transborda de propósito e o que falta a ele é a
-// marca de isenção que o guarda irmão já tem.
+// Uma cena não aguenta o passo hoje, e a causa é a que esta fatia consertou no
+// cartão de herói: item de GRADE tem `min-width: auto`, então a coluna não desce
+// abaixo do min-content do cartão e o `truncate` nunca chega a agir.
 //
 // Cena que sair da dívida e continuar na lista REPROVA, senão a lista vira
 // mentira sozinha — é a segunda direção da catraca dos arquivos longos.
 const WIDER_FACE_DEBT = new Set([
-  'campaigns · /campanhas · gm',
   'characters · /personagens · gm',
 ])
 

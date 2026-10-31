@@ -275,17 +275,24 @@ templ Layout(p Page, body templ.Component) {
 // denseHeader é o cabeçalho denso no sistema novo. Ele mora aqui, e não no kit
 // `ds`, porque é a CASCA quem o desenha e o kit importa este pacote — o
 // contrário seria um ciclo.
+//
+// A volta é SÓ a seta, e o nome do destino vai no rótulo acessível: o nome ao
+// lado da seta competia com o título da página (revisão do dono, ALE-526).
 templ denseHeader(p Page) {
 	<header class="ds-header">
-		<a href={ templ.SafeURL(p.Back) } class="ds-header-back">
-			if p.BackLabel != "" {
-				{ "‹ " + p.BackLabel }
-			} else {
-				‹ Voltar
-			}
+		<a href={ templ.SafeURL(p.Back) } class="ds-header-back" aria-label={ backLabelOf(p) } title={ backLabelOf(p) }>
+			@Icon("ChevronLeft", "ds-icon")
 		</a>
 		if p.VisibleTitle != "" {
 			<h1 class="ds-header-title">{ p.VisibleTitle }</h1>
 		}
 	</header>
+}
+
+// backLabelOf é o nome acessível da seta de voltar.
+func backLabelOf(p Page) string {
+	if p.BackLabel != "" {
+		return "Voltar para " + p.BackLabel
+	}
+	return "Voltar"
 }

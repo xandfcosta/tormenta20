@@ -7,17 +7,16 @@ import (
 	"testing"
 )
 
-// Os guardas da ENTRADA DO PALCO, nas DUAS cenas de seleção.
+// Os guardas da ENTRADA DO PALCO, nas cenas de seleção — hoje só o elenco: as
+// campanhas viraram lista na ALE-526 e saíram da família.
 //
 // A animação em si é do navegador e só o e2e a vê — linha do tempo,
 // `animationstart` e duração não existem fora dele. O que se prende AQUI é o que
 // o servidor escreve: as classes que substituem o mount e o gesto que diz o
 // sentido.
 //
-// Varrer as DUAS cenas é a regra: com uma só, um gesto sem sentido nasceria na
-// outra sem ninguém acusar. A saída aqui é ENUMERAÇÃO e ela é remendo — a
-// terceira cena de seleção precisa entrar nesta tabela à mão, porque nada a
-// impede de existir fora dela.
+// A saída aqui é ENUMERAÇÃO e ela é remendo: uma cena de seleção nova precisa
+// entrar nesta tabela à mão, porque nada a impede de existir fora dela.
 
 // stageScene é uma cena de seleção montada e pronta para ser pedida.
 type stageScene struct {
@@ -34,7 +33,7 @@ type stageScene struct {
 	railNames []string
 }
 
-// stageScenes monta as duas com TRÊS itens cada, e três não é número redondo
+// stageScenes monta cada cena com TRÊS itens, e três não é número redondo
 // escolhido por gosto: com um item só não há vizinho nenhum (as duas pontas
 // viram espaçador), e é justamente o clique no retrato vizinho que o guarda
 // precisa visitar. Com três, o do meio tem os dois.
@@ -46,17 +45,9 @@ func stageScenes(t *testing.T) []stageScene {
 	seedCharacterAtLevel(t, cast.s, cast.player, "Anã Clériga", "Clérigo", 4, 0, 0)
 	seedCharacterAtLevel(t, cast.s, cast.player, "Elfo Ladino", "Guerreiro", 2, 0, 0)
 
-	// E já semeia uma campanha para o mestre; faltam duas. A cena de campanhas é
-	// pedida pelo MESTRE, e não pelo jogador: é ele que tem mesa.
-	campaigns := newSceneFixture(t)
-	seedCampaign(t, campaigns.s, campaigns.gm)
-	seedCampaign(t, campaigns.s, campaigns.gm)
-
 	return []stageScene{
 		{name: "o elenco", route: "/personagens", items: 3, who: cast.player, f: cast,
 			railNames: []string{"Anã Clériga", "Elfo Ladino"}},
-		{name: "as campanhas", route: "/campanhas", items: 3, who: campaigns.gm, f: campaigns,
-			railNames: []string{"Mesa"}},
 	}
 }
 

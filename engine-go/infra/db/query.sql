@@ -393,7 +393,9 @@ LIMIT 1;
 -- (createActiveSession) and once in the campaign scene
 -- (createActiveSessionByCampaign). Two identical fan-outs in two screens is the
 -- sign that the hole was in the API, not in the screens.
-SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId
+-- ALE-526: the list card says WHICH session is live. SQLite takes the bare
+-- sessionNumber from the same row MIN picked.
+SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId, s.sessionNumber AS sessionNumber
 FROM sessions s
 JOIN campaigns c ON c.id = s.campaignId
 WHERE s.status = 'active'
@@ -714,3 +716,11 @@ ON CONFLICT (characterId) DO UPDATE SET amount = excluded.amount;
 
 -- name: ClearNonLethalDamage :exec
 DELETE FROM character_nonlethal_damage WHERE characterId = ?;
+
+-- name: CampaignTallies :many
+-- ALE-526: the list card counts the heroes and the sessions of every campaign
+-- in ONE query, instead of two per card.
+SELECT c.id AS campaignId,
+  (SELECT COUNT(*) FROM campaign_members m WHERE m.campaignId = c.id) AS heroes,
+  (SELECT COUNT(*) FROM sessions s WHERE s.campaignId = c.id) AS sessions
+FROM campaigns c;
