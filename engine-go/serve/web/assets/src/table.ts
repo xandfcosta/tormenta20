@@ -1,3 +1,4 @@
+import { attachFloatCard } from '@/lib/float-card'
 import { squareFromStyle, slideTheToken } from '@/lib/token-move'
 import { piscarVital, pulsarVez, emerge } from '@/lib/turn-juice'
 
@@ -296,3 +297,4 @@ wireTheVitalBlink(STILL)
 wireTheSheetBlink(STILL)
 wireTheTurnPulse(STILL)
 wireTheConditionEmerging(STILL)
+attachFloatCard()

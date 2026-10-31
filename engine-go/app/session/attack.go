@@ -130,6 +130,53 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 		})
 }
 
+// RuleAttack guarda a decisão do mestre sobre o golpe.
+//
+// O ERRO É UM DESFECHO, e por isso ele cobra: agredir é ação padrão (p233) e
+// errar não a devolve. A cobrança segue a do `CommitAttack` — de quem ataca, se
+// ele ainda está na vez, conferida antes e cobrada sob a trava. O acerto e o
+// crítico não cobram aqui: eles esperam o dano, e quem cobra é o ✓.
+//
+// O provisório do erro FICA, com a decisão, para o jogador ler "o mestre disse:
+// errou"; o próximo ataque o substitui, e quem atacou pode tirá-lo da mesa.
+func (st *Store) RuleAttack(
+	ctx context.Context, sessionID int64, who live.Attacker, ruling string, toRoll *live.DamageToRoll,
+) (*live.SessionRuntimeState, error) {
+	if ruling != live.RulingMiss {
+		return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+			func(s *live.SessionRuntimeState) error { return live.RuleAttack(s, who, ruling, toRoll) })
+	}
+	state, err := st.State(ctx, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	onTurn := state.PendingAttack != nil && attackerIsOnTurn(state, *state.PendingAttack)
+	if onTurn {
+		if err := st.ActionFits(ctx, sessionID, engine.StrikeAction(state.PendingAttack.Charge)); err != nil {
+			return nil, err
+		}
+	}
+	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error {
+			if err := live.RuleAttack(s, who, ruling, nil); err != nil {
+				return err
+			}
+			if !onTurn {
+				return nil
+			}
+			return chargeTurn(s, engine.StrikeAction(s.PendingAttack.Charge))
+		})
+}
+
+// RecordAttackDamage guarda o dano rolado depois da decisão. Ninguém perde PV
+// aqui: o dano pousa no ✓ do mestre.
+func (st *Store) RecordAttackDamage(
+	ctx context.Context, sessionID int64, who live.Attacker, rolled live.PendingAttack,
+) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { return live.RecordAttackDamage(s, who, rolled) })
+}
+
 // attackerIsOnTurn diz se quem atacou é a linha da vez em curso.
 func attackerIsOnTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bool {
 	if s == nil || s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {

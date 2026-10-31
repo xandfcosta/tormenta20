@@ -34,6 +34,11 @@ func (s Scene) AttackRoutes(r chi.Router) {
 	// peça e não uma linha da fila. Mesmo verbo, mesmo prefixo de tabuleiro que
 	// os outros gestos de peça.
 	r.Post(sessionPattern+"/tabuleiro/pecas/{tokenId}/atacar", s.tableStateCommand(proposesAttackOnObject))
+	// O SEGUNDO TEMPO DO GOLPE: a decisão é do mestre, e o dano é de quem
+	// atacou — no servidor, ou com os dados que a mesa rolou na mão.
+	r.Post(sessionPattern+"/ataque/julgar/{decisao}", s.gmCommand(rulesAttack))
+	r.Post(sessionPattern+"/ataque/dano", s.tableStateCommand(rollsAttackDamage))
+	r.Post(sessionPattern+"/ataque/dano/na-mao", s.tableStateCommand(rollsAttackDamageByHand))
 	r.Post(sessionPattern+"/ataque/confirmar", s.gmCommand(confirmsAttack))
 	r.Post(sessionPattern+"/ataque/cancelar", s.tableStateCommand(cancelsAttack))
 	// O ROLAR DE NOVO mora nas faixas do teste e do ataque (ALE-507, ALE-508).
@@ -195,13 +200,23 @@ func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, err
 	}
+	return state, st.afterTheStrike(c, state, pendente, antes)
+}
+
+// afterTheStrike é o que o golpe ENCERRADO deixa, pelo ✓ do mestre ou pelo
+// "errou" dele: o PM do impulso, a guarda da investida e os gatilhos
+// cumulativos. Nenhum deles depende de acertar — o golpe aconteceu —, e o que
+// pede acerto (`bumpsTheAttacker`) lê a decisão no provisório.
+func (st Scene) afterTheStrike(
+	c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack, antes *int64,
+) error {
 	if err := st.chargesTheBoost(c, state, pendente); err != nil {
-		return state, err
+		return err
 	}
 	if err := st.opensTheGuard(c, state, pendente); err != nil {
-		return state, err
+		return err
 	}
-	return state, st.raisesTheCumulativeBonus(c, state, pendente, antes)
+	return st.raisesTheCumulativeBonus(c, state, pendente, antes)
 }
 
 // chargesTheBoost cobra o PM do impulso que o golpe confirmado levou

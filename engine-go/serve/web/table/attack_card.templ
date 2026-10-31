@@ -1,0 +1,261 @@
+package table
+
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// O CARTÃO DO GOLPE, nos dois papéis e por TEMPO (ALE-536, mockups
+// `dois-tempos.html` e `confronto.html` opção B aprovados). O nó vazio fica
+// quando não há o que desenhar: o stream remenda POR ID. No desktop ele flutua
+// e se arrasta pela cabeça (`lib/float-card.ts`), e o `style` que guarda onde
+// ele foi posto é preservado no remendo. No celular só a cabeça fica à vista, e
+// o corpo é um diálogo que ela abre — o MESMO nó nas duas larguras, para o
+// conteúdo não ser desenhado duas vezes.
+
+// gmAttack é o cartão do MESTRE: o duelo, e o que cada tempo pede dele —
+// decidir, esperar o dano, confirmar. O erro decidido não tem mais nada a
+// pedir, e o cartão sai.
+templ gmAttack(v View) {
+	if v.Attack != nil && v.Attack.Stage != stageMiss {
+		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ gmAttackBadge(v.Attack.Stage) }>
+			<div class="ds-strike-head" data-float-handle>
+				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
+				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+				if v.Attack.Action != "" {
+					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
+				}
+				// O IMPULSO fica à vista antes do ✓: confirmar cobra o PM da ficha,
+				// e quem confirma precisa saber quanto (ALE-487).
+				if v.Attack.Boost != "" {
+					@ds.Badge(v.Attack.Boost, true)
+				}
+			</div>
+			@attackSheetOpener()
+			@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
+				@attackDuel(v.Attack.Duel)
+				if len(v.Attack.Verdicts) > 0 {
+					<div class="ds-verdicts">
+						for _, verdict := range v.Attack.Verdicts {
+							@ds.Button(verdictVariant(verdict), templ.Attributes{"type": "button", "data-on:click": attackCommand(v, verdict.Path)}) {
+								{ verdict.Label }
+							}
+						}
+					</div>
+				}
+				if v.Attack.Hint != "" {
+					<p class="ds-help">{ v.Attack.Hint }</p>
+				}
+				if v.Attack.Stage == stageDamage {
+					<p class="ds-help">{ v.Attack.Attacker + " rola o dano: " }<b>{ v.Attack.ToRoll }</b></p>
+				}
+				if len(v.Attack.Rows) > 0 {
+					<div class="ds-duel-rows">
+						for _, row := range v.Attack.Rows {
+							@duelRowView(row)
+						}
+					</div>
+				}
+				for _, note := range v.Attack.Notes {
+					<p class="ds-help">{ note }</p>
+				}
+				<div class="ds-strike-foot">
+					@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "commandfor": "gm-attack-details", "command": "show-modal"}) {
+						Detalhes
+					}
+					@ds.IconButton(ds.ButtonSecondary, "X", "Cancelar o ataque", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")})
+					if v.Attack.Stage == stageConfirm || v.Attack.Stage == stageManeuver {
+						@ds.IconButton(ds.ButtonPrimary, "Check", "Confirmar e aplicar", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "confirmar")})
+					}
+				</div>
+			}
+			@ds.Dialog("gm-attack-details", "Detalhes do ataque", nil) {
+				<p class="ds-row-meta">
+					{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b>
+					if v.Attack.Weapon != "" {
+						{ " · " + v.Attack.Weapon }
+					}
+				</p>
+				<p class="ds-help">{ v.Attack.Tally }</p>
+				for _, line := range attackNotes(v.Attack) {
+					<p class="ds-help">{ line }</p>
+				}
+			}
+		</section>
+	} else {
+		<section id="table-attack" hidden></section>
+	}
+}
+
+// attackSheetOpener abre o corpo do cartão no CELULAR, onde só a cabeça fica à
+// vista: ele cobre o cartão inteiro, e no desktop some — lá o corpo é desenhado
+// no próprio cartão flutuante (ver `.ds-strike[data-attack] > .ds-dialog`).
+templ attackSheetOpener() {
+	<button type="button" class="ds-strike-open" commandfor={ attackSheet } command="show-modal" aria-label="Abrir o ataque"></button>
+}
+
+// attackDuel é a rolagem contra o que ela enfrenta, com o "vs" e o selo da
+// decisão entre os dois.
+templ attackDuel(duel duelView) {
+	<div class="ds-duel">
+		<div class="ds-duel-side">
+			<small>{ duel.RollLabel }</small>
+			<b>{ strconv.Itoa(duel.Roll) }</b>
+			<small>{ duel.RollSum }</small>
+		</div>
+		<div class="ds-duel-mid">
+			<span class="ds-duel-vs">vs</span>
+			if duel.Seal != "" {
+				<span class="ds-seal" data-tone={ duel.Tone }>{ duel.Seal }</span>
+			}
+		</div>
+		<div class="ds-duel-side" data-against>
+			<small>{ duel.AgainstLabel }</small>
+			<b>{ strconv.Itoa(duel.Against) }</b>
+			if duel.AgainstSum != "" {
+				<small>{ duel.AgainstSum }</small>
+			}
+		</div>
+	</div>
+}
+
+// duelRowView é uma linha de conta. A FRASE (a consequência da manobra) põe o
+// rótulo em cima e ocupa a largura toda, porque é texto longo e não número.
+templ duelRowView(row duelRow) {
+	if row.Text {
+		<div class="ds-duel-row" data-sentence>
+			<span class="ds-row-meta">{ row.Label }</span>
+			<span>{ row.Value }</span>
+		</div>
+	} else if row.Final {
+		<div class="ds-duel-row" data-final>
+			<span>{ row.Label }</span>
+			<span></span>
+			<b>{ row.Value }</b>
+		</div>
+	} else {
+		<div class="ds-duel-row">
+			<span class="ds-row-meta">{ row.Label }</span>
+			<span class="ds-row-meta">{ row.Sum }</span>
+			<b>{ row.Value }</b>
+		</div>
+	}
+}
+
+// tempestadeAttack é o cartão do JOGADOR: a própria rolagem, a decisão do
+// mestre e o dano que ela pede. Nunca a Defesa do alvo, a sugestão do livro
+// nem a RD — no papel do personagem, ele não conhece a ficha de outra entidade.
+templ tempestadeAttack(v View) {
+	if v.Attack != nil {
+		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ playerAttackBadge(v.Attack) }>
+			<div class="ds-strike-head" data-float-handle>
+				@ds.Badge(playerAttackBadge(v.Attack), true)
+				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+				if v.Attack.Weapon != "" {
+					<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
+				}
+				if v.Attack.Action != "" {
+					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
+				}
+			</div>
+			if v.Attack.Mine {
+				@attackSheetOpener()
+				@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
+					@playerAttackBody(v)
+				}
+			}
+		</section>
+	} else {
+		<section id="table-attack" hidden></section>
+	}
+}
+
+// playerAttackBody é o que só quem atacou vê, por tempo.
+templ playerAttackBody(v View) {
+	switch v.Attack.Stage {
+		case stageDamage:
+			<p class="ds-help">O mestre disse: <b>{ v.Attack.Said }</b></p>
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "dano")}) {
+				{ "Rolar " + v.Attack.ToRoll }
+			}
+			@handDamageEntry(v)
+		case stageConfirm:
+			// `aria-live` na conta: quem ouve precisa do resultado, e não dos botões.
+			<div class="ds-strike-roll" aria-live="polite">
+				<b class="ds-strike-verdict">{ strconv.Itoa(v.Attack.DamageTotal) }</b>
+				<span class="ds-strike-tally">{ v.Attack.DamageLine }</span>
+			</div>
+			<p class="ds-help">{ "O mestre aplica em " + v.Attack.Target + "." }</p>
+		case stageMiss:
+			<div class="ds-strike-roll">
+				<span class="ds-strike-tally">{ v.Attack.Tally }</span>
+			</div>
+			<p class="ds-help">O mestre disse: <b>{ v.Attack.Said }</b></p>
+			<div class="ds-strike-foot">
+				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")}) {
+					Fechar
+				}
+			</div>
+		default:
+			<div class="ds-strike-roll" aria-live="polite">
+				<span class="ds-strike-tally">{ v.Attack.Tally }</span>
+			</div>
+			for _, line := range attackNotes(v.Attack) {
+				<p class="ds-help">{ line }</p>
+			}
+			<p class="ds-help">O mestre diz o resultado.</p>
+			<div class="ds-strike-foot">
+				for _, offer := range v.Attack.Offers {
+					@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
+						{ offer.Label }
+					}
+				}
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")}) {
+					Cancelar
+				}
+			</div>
+	}
+}
+
+// handDamageEntry é o "rolei na mão" escrito NA NOTAÇÃO: cada grupo é
+// `NdF ( _ _ )`, um campo por dado, e o bônus no fim. Os sinais nascem vazios a
+// cada cartão, para o dado de um ataque não vazar para o seguinte.
+templ handDamageEntry(v View) {
+	<div class="ds-hand-damage" data-signals={ handSignalsDeclaration(v.Attack.Hand) }>
+		<span class="ds-row-meta">ou rolei na mão</span>
+		<div class="ds-hand-formula">
+			for i, group := range v.Attack.Hand {
+				if i > 0 {
+					<span class="ds-hand-op">+</span>
+				}
+				<span class="ds-hand-group">
+					{ group.Label }
+					if group.Type != "" {
+						<span class="ds-row-meta">{ group.Type }</span>
+					}
+					{ "(" }
+					for n, signal := range group.Signals {
+						<input
+							class="ds-input ds-hand-die"
+							type="number"
+							min="1"
+							max={ strconv.Itoa(group.Faces) }
+							inputmode="numeric"
+							placeholder={ "d" + strconv.Itoa(group.Faces) }
+							data-bind={ signal }
+							aria-label={ handDieLabel(group, n) }
+						/>
+					}
+					{ ")" }
+				</span>
+			}
+			if v.Attack.HandBonus != "" {
+				<span class="ds-hand-op">{ v.Attack.HandBonus }</span>
+			}
+		</div>
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "dano/na-mao")}) {
+			Usar
+		}
+	</div>
+}

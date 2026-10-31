@@ -47,8 +47,8 @@ func TestTheChargeAddsTwoToTheAttackAndOpensTheGuardUntilTheChargersNextTurn(t *
 		t.Errorf("a Defesa caiu na PROPOSTA (%d → %d); a investida só acontece quando o mestre confirma", before, got)
 	}
 
-	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
-		t.Fatalf("confirmar deu %d", rec.Code)
+	if rec := settlesAsTheBookSuggests(t, f); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar o golpe deu %d", rec.Code)
 	}
 	if got := defenceOnTheSheet(t, f, barbaro); got != before-2 {
 		t.Errorf("Defesa depois da investida: %d, want %d (–2, p235)", got, before-2)
@@ -94,8 +94,8 @@ func TestTheRecklessChargeTradesFiveDefenceForOneD12(t *testing.T) {
 	if pending == nil || !strings.Contains(strings.Join(pending.Situations, ","), "imprudente") {
 		t.Fatalf("o provisório não diz que foi a Imprudente: %+v", pending)
 	}
-	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
-		t.Fatalf("confirmar deu %d", rec.Code)
+	if rec := settlesAsTheBookSuggests(t, f); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar o golpe deu %d", rec.Code)
 	}
 	if got := defenceOnTheSheet(t, f, barbaro); got != before-5 {
 		t.Errorf("Defesa depois da Imprudente: %d, want %d (–5, p42)", got, before-5)

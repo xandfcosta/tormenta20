@@ -16,14 +16,12 @@ import (
 // mesmo que seja pior que o primeiro)." O provisório é a janela: depois da
 // confirmação ele não existe mais.
 
-// resolver é o motor do golpe: o comum, ou o que conta o d20 como 20 natural.
-func (r Request) resolver() func(
-	engine.WeaponCard, engine.AttackTarget, []engine.SpecialSituation, int, func(int) (int, error),
-) (engine.AttackOutcome, error) {
+// attackDie é o d20 do golpe: o rolado, ou o que conta como 20 natural.
+func (r Request) attackDie(d20 int) engine.AttackDie {
 	if r.CountsAsNaturalTwenty {
-		return engine.ResolveAttackCountingAsNaturalTwenty
+		return engine.D20CountingAsNaturalTwenty(d20)
 	}
-	return engine.ResolveAttackUnder
+	return engine.D20(d20)
 }
 
 // replayOf é o que o provisório guarda do pedido para rolar de novo.
@@ -34,10 +32,11 @@ func (r Request) replayOf(weapon engine.WeaponCard) live.AttackReplay {
 	}
 }
 
-// RerollRequest é o pedido que refaz o provisório: o mesmo alvo, a mesma arma,
+// ReplayRequest é o pedido que REFAZ o provisório — para rolar de novo, para a
+// decisão do mestre e para o dano: o mesmo alvo, a mesma arma,
 // o mesmo impulso e a mesma investida, e o d20 do defensor da manobra intacto.
 // O que só a cena sabe — a posse e a peça atacada — vem de quem chama.
-func RerollRequest(
+func ReplayRequest(
 	campaignID, sessionID int64, pending live.PendingAttack, ownsAttacker bool, object *ObjectTarget,
 ) Request {
 	req := Request{
@@ -63,9 +62,8 @@ func RerollRequest(
 // primeiro. O d20 da mesa vem em `given`, ou o servidor rola; `naturalFrom` é
 // o "11 ou mais vale 20 natural" da Sorte de Nimb (p48), zero nos outros.
 //
-// O DANO JÁ ROLADO FICA quando o segundo dado não muda o acerto nem o crítico:
-// rolar de novo o ATAQUE não é rolar de novo o dano. Quando muda, o golpe é o
-// que o segundo dado diz, com o dano que ele pede (decisão do dono).
+// SÓ ANTES DA DECISÃO DO MESTRE (p226): depois dela, o teste já foi julgado.
+// E não há dano a guardar — ele é rolado depois da decisão.
 //
 //	pending, err := strike.Reroll(ctx, who, role, req, nil, live.DieReroll{Name: "Sortudo", PM: 3}, 0)
 func (s Strike) Reroll(
@@ -83,6 +81,10 @@ func (s Strike) Reroll(
 	if first.ByUserID != who.ID {
 		return live.PendingAttack{}, fmt.Errorf("só quem rolou o ataque rola de novo: %w", app.ErrRefused)
 	}
+	if first.Ruling != "" {
+		return live.PendingAttack{}, fmt.Errorf(
+			"o mestre já decidiu este ataque, e rolar de novo vale antes da decisão (p226): %w", app.ErrRefused)
+	}
 	d20, err := s.d20Of(given)
 	if err != nil {
 		return live.PendingAttack{}, err
@@ -92,11 +94,6 @@ func (s Strike) Reroll(
 	second, err := s.roll(ctx, who, role, req)
 	if err != nil {
 		return live.PendingAttack{}, err
-	}
-	if second.Maneuver == nil && second.Hit == first.Hit && second.Critical == first.Critical {
-		kept := first
-		kept.Roll, kept.Total = second.Roll, second.Total
-		second = kept
 	}
 	paid.Discarded, paid.Natural = first.Roll, req.CountsAsNaturalTwenty
 	second.Rerolls = append(slices.Clone(first.Rerolls), paid)

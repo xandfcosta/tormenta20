@@ -52,7 +52,7 @@ propósito, e não se reabrem achando que foram esquecidas.
 
 ### A fronteira não é "rolar"; é "julgar"
 
-Rolar um d20 e mostrar `d20 14 + 7 = 21` é dar a conta — o 7 é a soma de treino,
+Rolar um d20 e mostrar `d20 (14) + 7 = 21` é dar a conta — o 7 é a soma de treino,
 atributo e penalidade de armadura que ninguém quer fazer de cabeça. **Dizer se
 21 passou é que é do mestre**, e é por isso que o teste de perícia não tem CD nem
 veredicto: quem põe a CD a diz em voz, muitas vezes em segredo.
@@ -66,11 +66,17 @@ quem gosta de rolar seria cobrar o atrito que este guia existe para remover.
 Acertar ou errar é sempre interpretação do mestre. No ATAQUE e na MANOBRA, a
 faixa do MESTRE mostra as rolagens, o desfecho que os números sugerem — acerto
 ou erro, sucesso ou falha, crítico ou não — e a consequência que o livro prevê,
-para facilitar a leitura. A palavra final é dele, em voz.
+para facilitar a leitura. A palavra final é dele.
 
-O JOGADOR não vê esse julgamento, nem a Defesa do alvo, nem a rolagem do outro
-lado: no papel do personagem, ele não conhece a ficha de outra entidade. Ele vê
-a própria rolagem e ouve o resto do mestre.
+**No golpe, o dano só existe depois dessa palavra.** O crítico muda quantos
+dados se rolam (p231): o mestre diz errou, acertou ou crítico, e só então quem
+atacou rola o dano, na mão ou no app. Rolado junto do d20, o dano sairia da
+sugestão do livro e não da decisão de quem decide.
+
+O JOGADOR não vê a sugestão do sistema, nem a Defesa do alvo, nem a rolagem do
+outro lado: no papel do personagem, ele não conhece a ficha de outra entidade.
+Ele vê a própria rolagem e a DECISÃO do mestre — que é o que diz quantos dados
+ele pega para o dano.
 
 ## Antes de mexer
 

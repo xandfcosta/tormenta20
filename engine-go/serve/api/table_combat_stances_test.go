@@ -290,7 +290,7 @@ func TestNoBattleFocusPointGoesToTheAttacker(t *testing.T) {
 	}
 }
 
-// theGameMasterConfirmsAMissAgainst semeia um golpe que ERRA e confirma.
+// theGameMasterConfirmsAMissAgainst semeia um golpe e o mestre diz que ERROU.
 func theGameMasterConfirmsAMissAgainst(t *testing.T, f sceneFixture, attacker, target string) {
 	t.Helper()
 	if _, err := f.s.sessions.ProposeAttack(context.Background(), f.sessionID, live.PendingAttack{
@@ -300,12 +300,12 @@ func theGameMasterConfirmsAMissAgainst(t *testing.T, f sceneFixture, attacker, t
 	}); err != nil {
 		t.Fatalf("semear o provisório: %v", err)
 	}
-	rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", "")
+	rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/errou", "")
 	if rec.Code != http.StatusOK {
-		t.Fatalf("confirmar o golpe deu %d", rec.Code)
+		t.Fatalf("o mestre dizer errou deu %d", rec.Code)
 	}
 	if refusal := tableRefusal(t, rec.Body.String()); refusal != "" {
-		t.Fatalf("confirmar o golpe foi recusado: %s", refusal)
+		t.Fatalf("o mestre dizer errou foi recusado: %s", refusal)
 	}
 }
 

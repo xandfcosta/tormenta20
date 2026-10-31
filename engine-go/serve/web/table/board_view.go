@@ -248,9 +248,10 @@ type boardSquare struct {
 func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, health map[string]int, onTurn string, who board.Mover, mine map[int64]bool, campaignID, sessionID int64) BoardView {
 	// O ALVO do ataque pendurado, para a peça dele acender. Vem do ESTADO e não
 	// de um parâmetro novo porque é lá que o provisório mora — e assim a peça e
-	// a faixa não podem discordar sobre de quem se fala.
+	// a faixa não podem discordar sobre de quem se fala. O erro decidido não
+	// acende ninguém: o ataque acabou, e o provisório só fica para o jogador ler.
 	targeted := ""
-	if st != nil && st.PendingAttack != nil {
+	if st != nil && st.PendingAttack != nil && st.PendingAttack.Ruling != live.RulingMiss {
 		targeted = st.PendingAttack.TargetEntryID
 	}
 	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que sai

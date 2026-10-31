@@ -175,6 +175,7 @@ func theGameMasterConfirmsAMeleeHit(t *testing.T, f sceneFixture, attacker, targ
 		AttackerEntryID: attacker, TargetEntryID: target, TargetLabel: "Goblin",
 		Weapon: "Espada curta", Roll: 14, Total: 19, Defense: 13,
 		Hit: true, Critical: false, Melee: true, RawDamage: 1, Damage: 1,
+		Ruling: live.RulingHit, DamageRolled: true,
 	}); err != nil {
 		t.Fatalf("semear o provisório: %v", err)
 	}
@@ -222,6 +223,7 @@ func TestNoRangedHitFillsTheBardsPool(t *testing.T) {
 		AttackerEntryID: atacante, TargetEntryID: goblin, TargetLabel: "Goblin",
 		Weapon: "Arco curto", Roll: 14, Total: 19, Defense: 13,
 		Hit: true, Critical: false, Melee: false, RawDamage: 1, Damage: 1,
+		Ruling: live.RulingHit, DamageRolled: true,
 	}); err != nil {
 		t.Fatalf("semear o provisório: %v", err)
 	}

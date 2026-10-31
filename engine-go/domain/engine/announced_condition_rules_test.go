@@ -30,7 +30,7 @@ func TestTheAttackAnnouncesTheConditionTheBookForesees(t *testing.T) {
 	}
 	target := AttackTarget{Defense: 15}
 
-	acerto, err := ResolveAttack(weapon, target, 18, fixedDice(t, 8))
+	acerto, err := suggestedAttack(weapon, target, 18, fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -38,7 +38,7 @@ func TestTheAttackAnnouncesTheConditionTheBookForesees(t *testing.T) {
 		t.Errorf("o acerto normal anuncia %v, e só a Sanguinária age fora do crítico", nomes)
 	}
 
-	critico, err := ResolveAttack(weapon, target, 19, fixedDice(t, 8, 5))
+	critico, err := suggestedAttack(weapon, target, 19, fixedDice(t, 8, 5))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -46,7 +46,7 @@ func TestTheAttackAnnouncesTheConditionTheBookForesees(t *testing.T) {
 		t.Errorf("o crítico anuncia %v, e as duas condições valem nele", nomes)
 	}
 
-	erro, err := ResolveAttack(weapon, target, 2, fixedDice(t))
+	erro, err := suggestedAttack(weapon, target, 2, fixedDice(t))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}

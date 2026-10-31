@@ -3,7 +3,6 @@ package table
 import (
 	"fmt"
 
-	"t20engine/serve/web/ds"
 	"t20engine/serve/web/sheetui"
 	"t20engine/serve/web/ui"
 )
@@ -169,56 +168,3 @@ templ tempestadeTargetBar(v View) {
 	</div>
 }
 
-// tempestadeAttack é o CARTÃO DO ATAQUE proposto, para todos na mesa: quem
-// atacou quem, com o quê, a conta que o motor escreveu, e o que ainda pode ser
-// feito antes de o mestre confirmar. "Rascunho" e "o mestre confirma" explicam
-// a ausência do Confirmar, que é só do mestre.
-templ tempestadeAttack(v View) {
-	if v.Attack != nil {
-		<section id="table-attack" class="ds-strike" aria-label="Ataque proposto">
-			<div class="ds-strike-head">
-				@ds.Badge("Rascunho", true)
-				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
-				if v.Attack.Weapon != "" {
-					<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
-				}
-				if v.Attack.Action != "" {
-					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
-				}
-			</div>
-			// `aria-live` na conta, pela razão do de hoje: quem ouve precisa do
-			// resultado, e não dos botões.
-			// SEM VEREDITO: acertar ou errar é do mestre, em voz (ALE-532). Quem
-			// rolou vê a própria conta; os outros, só quem ataca quem.
-			if v.Attack.Verdict != "" || v.Attack.Tally != "" {
-				<div class="ds-strike-roll" aria-live="polite">
-					if v.Attack.Verdict != "" {
-						<b class="ds-strike-verdict">{ v.Attack.Verdict }</b>
-					}
-					<span class="ds-strike-tally">{ v.Attack.Tally }</span>
-				</div>
-			}
-			for _, line := range attackNotes(v.Attack) {
-				<p class="ds-help">{ line }</p>
-			}
-			<p class="ds-help">{ "O mestre diz o resultado e aplica em " + v.Attack.Target + "." }</p>
-			if len(v.Attack.Offers) > 0 || v.Attack.Mine {
-				<div class="ds-strike-foot">
-					for _, offer := range v.Attack.Offers {
-						@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
-							{ offer.Label }
-						}
-					}
-					if v.Attack.Mine {
-						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")}) {
-							Cancelar
-						}
-					}
-				</div>
-			}
-		</section>
-	} else {
-		// O NÓ VAZIO fica, pela razão do de hoje: o stream remenda POR ID.
-		<section id="table-attack" hidden></section>
-	}
-}

@@ -148,7 +148,7 @@ func TestTheAttackReportsHowMuchDamageWasNonLethal(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 20, 2, 5)
 	weapon.NonLethal = true
 
-	out, err := ResolveAttack(weapon, AttackTarget{Defense: 10}, 15, fixedDice(t, 6))
+	out, err := suggestedAttack(weapon, AttackTarget{Defense: 10}, 15, fixedDice(t, 6))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestTheAttackReportsHowMuchDamageWasNonLethal(t *testing.T) {
 
 	// E A ARMA COMUM não reporta nada: o campo existe para o caso raro, e um
 	// número onde não há regra faria a mesa procurar de onde ele saiu.
-	comum, err := ResolveAttack(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 10}, 15, fixedDice(t, 6))
+	comum, err := suggestedAttack(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 10}, 15, fixedDice(t, 6))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}

@@ -41,7 +41,7 @@ func TestTheAttackHitsWhenItTiesTheDefense(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 20, 2, 5)
 	target := AttackTarget{Defense: 15}
 
-	acerta, err := ResolveAttack(weapon, target, 10, fixedDice(t, 4))
+	acerta, err := suggestedAttack(weapon, target, 10, fixedDice(t, 4))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestTheAttackHitsWhenItTiesTheDefense(t *testing.T) {
 		t.Errorf("15 contra Defesa 15 tem de ACERTAR: a p230 diz igual OU maior")
 	}
 
-	erra, err := ResolveAttack(weapon, target, 9, fixedDice(t))
+	erra, err := suggestedAttack(weapon, target, 9, fixedDice(t))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestTheAttackHitsWhenItTiesTheDefense(t *testing.T) {
 func TestTheCriticalMultipliesTheDiceAndNotTheBonus(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 5)
 
-	critico, err := ResolveAttack(weapon, AttackTarget{Defense: 15}, 19, fixedDice(t, 8, 5))
+	critico, err := suggestedAttack(weapon, AttackTarget{Defense: 15}, 19, fixedDice(t, 8, 5))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestTheCriticalMultipliesTheDiceAndNotTheBonus(t *testing.T) {
 		t.Errorf("dano = %d, e 2d8+3 com os dados em 8 e 5 é 8+5+3 = 16", critico.Damage)
 	}
 
-	normal, err := ResolveAttack(weapon, AttackTarget{Defense: 15}, 18, fixedDice(t, 8))
+	normal, err := suggestedAttack(weapon, AttackTarget{Defense: 15}, 18, fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestTheCriticalMultipliesTheDiceAndNotTheBonus(t *testing.T) {
 func TestRollingTheThreatRangeIsNotACriticalWhenTheAttackMisses(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 0)
 
-	out, err := ResolveAttack(weapon, AttackTarget{Defense: 25}, 19, fixedDice(t))
+	out, err := suggestedAttack(weapon, AttackTarget{Defense: 25}, 19, fixedDice(t))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestTheNaturalTwentyAlwaysHitsAndTheNaturalOneAlwaysMisses(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 0)
 
 	// 20 + 0 é 20 contra Defesa 25: pela conta erraria, e o dado manda.
-	vinte, err := ResolveAttack(weapon, AttackTarget{Defense: 25}, 20, fixedDice(t, 8, 8))
+	vinte, err := suggestedAttack(weapon, AttackTarget{Defense: 25}, 20, fixedDice(t, 8, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -139,7 +139,7 @@ func TestTheNaturalTwentyAlwaysHitsAndTheNaturalOneAlwaysMisses(t *testing.T) {
 	}
 
 	// 1 + 50 é 51 contra Defesa 10: pela conta acertaria, e o dado manda.
-	um, err := ResolveAttack(aWeapon("1d8", 3, 19, 2, 50), AttackTarget{Defense: 10}, 1, fixedDice(t))
+	um, err := suggestedAttack(aWeapon("1d8", 3, 19, 2, 50), AttackTarget{Defense: 10}, 1, fixedDice(t))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -156,7 +156,7 @@ func TestTheNaturalTwentyAlwaysHitsAndTheNaturalOneAlwaysMisses(t *testing.T) {
 // 20 (ALE-508).
 func TestADieCountedAsANaturalTwentyHitsAndCritsWithTheRolledTotal(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 0)
-	out, err := ResolveAttackCountingAsNaturalTwenty(weapon, AttackTarget{Defense: 25}, nil, 13, fixedDice(t, 8, 8))
+	out, err := suggestedAttackOf(weapon, AttackTarget{Defense: 25}, nil, D20CountingAsNaturalTwenty(13), fixedDice(t, 8, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -175,7 +175,7 @@ func TestATargetImmuneToCriticalsStillTakesTheNormalDamage(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 5)
 	target := AttackTarget{Defense: 15, CritImmune: true}
 
-	out, err := ResolveAttack(weapon, target, 19, fixedDice(t, 8))
+	out, err := suggestedAttack(weapon, target, 19, fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestDamageReductionSubtractsFromTheDamage(t *testing.T) {
 	weapon := aWeapon("1d8", 0, 20, 2, 5)
 	target := AttackTarget{Defense: 10, DamageReduction: 5}
 
-	out, err := ResolveAttack(weapon, target, 10, fixedDice(t, 8))
+	out, err := suggestedAttack(weapon, target, 10, fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -214,7 +214,7 @@ func TestDamageReductionNeverHeals(t *testing.T) {
 	weapon := aWeapon("1d8", 0, 20, 2, 5)
 	target := AttackTarget{Defense: 10, DamageReduction: 5}
 
-	out, err := ResolveAttack(weapon, target, 10, fixedDice(t, 3))
+	out, err := suggestedAttack(weapon, target, 10, fixedDice(t, 3))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -242,7 +242,7 @@ func TestTheEnchantExtraDieDoesNotMultiplyOnACritical(t *testing.T) {
 	flamejante := aWeapon("1d8", 3, 19, 2, 5)
 	flamejante.ExtraDamage = []ExtraDamage{{Dice: "1d6", Type: "fogo"}}
 
-	critico, err := ResolveAttack(flamejante, AttackTarget{Defense: 15}, 19,
+	critico, err := suggestedAttack(flamejante, AttackTarget{Defense: 15}, 19,
 		fixedDice(t, 8, 5, 4))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
@@ -276,7 +276,7 @@ func TestTheCriticalOnlyBonusStaysOutOfTheNormalHit(t *testing.T) {
 	dilacerante := aWeapon("1d8", 3, 19, 2, 5)
 	dilacerante.CriticalBonus = 10
 
-	critico, err := ResolveAttack(dilacerante, AttackTarget{Defense: 15}, 19,
+	critico, err := suggestedAttack(dilacerante, AttackTarget{Defense: 15}, 19,
 		fixedDice(t, 8, 5))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
@@ -286,7 +286,7 @@ func TestTheCriticalOnlyBonusStaysOutOfTheNormalHit(t *testing.T) {
 			"é 8+5+3+10 = 26", critico.Damage)
 	}
 
-	normal, err := ResolveAttack(dilacerante, AttackTarget{Defense: 15}, 18,
+	normal, err := suggestedAttack(dilacerante, AttackTarget{Defense: 15}, 18,
 		fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)

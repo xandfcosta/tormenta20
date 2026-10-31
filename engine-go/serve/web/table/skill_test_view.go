@@ -19,11 +19,11 @@ import (
 type skillTestBand struct {
 	Who   string
 	Skill string
-	// Tally é a conta inteira em monoespaçado: "d20 14 + 7 = 21". A mesa
+	// Tally é a conta inteira em monoespaçado: "d20 (14) + 7 = 21". A mesa
 	// desconfia de número sem origem — "21" pede "de onde?".
 	Tally string
 	// Sum e Total são a mesma conta partida, para o cartão da sessão do
-	// jogador, que escreve o total grande e a soma ao lado: "d20 14 + 7" e 21.
+	// jogador, que escreve o total grande e a soma ao lado: "d20 (14) + 7" e 21.
 	Sum   string
 	Total int
 	// Seal e Class são o selo e a cor dele. Sem CD não há passou/falhou, então o
@@ -52,7 +52,7 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	t := st.LastSkillTest
 	band := &skillTestBand{
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
-		Sum:   fmt.Sprintf("d20 %s %s %d", writtenDice(t), signOf(t.Modifier), abs(t.Modifier)),
+		Sum:   "d20 (" + writtenDice(t) + ")" + signedTerm(t.Modifier),
 		Total: t.Total,
 		Seal:  "Teste", Class: "mesa-ataque-comum",
 		Paid: writtenPaid(t.Spends), Rerolled: writtenRerolls(t.Rerolls, t.Roll),
@@ -75,13 +75,14 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	return band
 }
 
-// writtenDice é o d20 da conta, e os DOIS quando se rolaram dois: "14 (de 14 e
-// 6)" — o melhor vale, e a mesa vê o que ficou de fora (p45).
+// writtenDice é o que o d20 tirou, na notação da mesa — entre parênteses, e os
+// DOIS quando se rolaram dois: "d20 (14, 6)". O melhor vale (p45), e a mesa vê
+// o que ficou de fora.
 func writtenDice(t *live.SkillTestRoll) string {
 	if len(t.Rolls) < 2 {
 		return strconv.Itoa(t.Roll)
 	}
-	return fmt.Sprintf("%d (de %d e %d)", t.Roll, t.Rolls[0], t.Rolls[1])
+	return fmt.Sprintf("%d, %d", t.Rolls[0], t.Rolls[1])
 }
 
 // writtenPaid escreve os gastos do teste: "Audácia +5 · 2 PM, Orgulho +4 ·
@@ -101,8 +102,8 @@ func writtenPaid(spends []live.SkillTestPaid) string {
 	return strings.Join(parts, ", ")
 }
 
-// signOf e abs escrevem o modificador como a mesa o lê — "d20 14 − 3 = 11" e
-// não "d20 14 + -3 = 11". O sinal é do LIVRO, que escreve "+3" e "−1" nas
+// signOf e abs escrevem o bônus de um gasto como a mesa o lê — "Audácia +5",
+// "Orgulho −1", e não "+-1". O sinal é do LIVRO, que escreve "+3" e "−1" nas
 // fichas, e um menos ASCII colado num número negativo lê como dois sinais.
 func signOf(n int) string {
 	if n < 0 {

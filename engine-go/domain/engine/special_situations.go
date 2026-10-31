@@ -52,7 +52,7 @@ const (
 	// alguém aplicar só a que lembrou.
 	//
 	// A TROCA DO TIPO não é mecanismo desta tabela e não entrou nela: ela é lida
-	// no `ResolveAttackUnder`, ao lado do `card.NonLethal` que já estava lá. Um
+	// no `RollAttackDamage`, ao lado do `card.NonLethal` que já estava lá. Um
 	// quinto campo no `situationRule` serviria a uma linha só.
 	AttackerSwitchesTheDamageType SpecialSituation = "switched-damage-type"
 	// AttackerCharging e AttackerChargingRecklessly são a investida (p235) e a

@@ -18,17 +18,16 @@ import "t20engine/domain/ecs"
 //
 // # A PUREZA fica, e era a condição da fatia
 //
-// O `d20` continua entrando por parâmetro e os dados por função: os sistemas se
-// fecham sobre eles, como o `explodeIntoTerms(items)` já faz. A assinatura do
-// `ResolveAttack` não mudou, e é por isso que os casos do livro que o cercam
-// continuam valendo sem uma linha tocada — eles afirmam RESULTADO.
+// O `d20` entra por parâmetro e os dados por função: os sistemas se fecham
+// sobre eles, como o `explodeIntoTerms(items)` já faz. É o que deixa cada caso
+// do livro virar um teste com o número escrito à mão.
 //
-// # Uma diferença de comportamento, e ela é deliberada
+// # Dois mundos, porque são dois tempos
 //
-// A notação de dano é lida ANTES de se saber se o ataque acertou, porque a
-// parcela precisa existir para ser suprimida. Antes ela só era lida no acerto,
-// então uma arma com `"1d"` no catálogo ficava calada em todo ataque que errava
-// e estourava nos outros. Agora o defeito do catálogo aparece sempre.
+// O TESTE (`judgeSystems` e a camuflagem) devolve a sugestão do livro e não lê
+// a notação de dano. O DANO (`damageSystems`) só roda depois da decisão do
+// mestre, e começa trocando a sugestão pela decisão — por isso não há sistema
+// que cale as parcelas de um ataque que errou: um erro não chega até aqui.
 
 // hitVerdict é o d20 julgado: a rolagem, a soma e o veredito.
 //
@@ -112,9 +111,11 @@ type absorbedTally struct{ Absorbed, Final int }
 // chama o pergunta ao mundo no fim.
 type attackFault struct{ Err error }
 
-func attackSystems(
-	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	die attackDie, rollDie func(faces int) (int, error),
+// judgeSystems são o TESTE: a Tabela 5-3, o acerto e o crítico que o livro
+// sugere. Eles rodam nos dois tempos — no do dano, para a conta ecoar o mesmo
+// total e a mesma Defesa que o mestre leu.
+func judgeSystems(
+	card WeaponCard, target AttackTarget, situations []SpecialSituation, die AttackDie,
 ) []ecs.System {
 	return []ecs.System{
 		spawnTheSituations(situations),
@@ -123,14 +124,36 @@ func attackSystems(
 		tallyTheSituations,
 		judgeTheHit(card, target, die),
 		judgeTheCritical(card, target, die.Natural),
-		undoTheHitOnConcealment(rollDie),
+	}
+}
+
+// damageSystems são o DANO, sobre a decisão do mestre.
+func damageSystems(
+	card WeaponCard, target AttackTarget, ruling Ruling, rollDie func(faces int) (int, error),
+) []ecs.System {
+	return []ecs.System{
+		applyTheRuling(card, ruling),
 		spawnTheDamageParcels(card),
-		dropEverythingIfItMissed,
 		multiplyTheWeaponDice,
 		dropWhatIsNotCritical,
 		rollTheDice(rollDie),
 		sumTheParcels(card),
 		absorbWithDamageReduction(target),
+	}
+}
+
+// applyTheRuling troca a sugestão do livro pela decisão do mestre. O total e a
+// rolagem ficam: o que muda é o que eles QUEREM DIZER.
+//
+// O crítico do mestre vale mesmo contra quem o livro diz imune (p231) e mesmo
+// fora da margem: a decisão é dele, e o app informa a sugestão antes dela.
+func applyTheRuling(card WeaponCard, ruling Ruling) ecs.System {
+	return func(w *ecs.World) {
+		verdict := resourceOf[hitVerdict](w)
+		verdict.Hit = true
+		setResource(w, verdict)
+		_, multiplier := CriticalOf(card)
+		setResource(w, criticalVerdict{Critical: ruling == RulingCritical, Multiplier: multiplier})
 	}
 }
 
@@ -150,7 +173,7 @@ func attackSystems(
 // exceção nenhuma, e ler ali a AUSÊNCIA da regra é o erro — ela mora na página
 // seguinte, em "Regras Adicionais de testes". Um 20 natural errava contra
 // Defesa alta, e nada acusava.
-func judgeTheHit(card WeaponCard, target AttackTarget, die attackDie) ecs.System {
+func judgeTheHit(card WeaponCard, target AttackTarget, die AttackDie) ecs.System {
 	return func(w *ecs.World) {
 		// A Tabela 5-3 já somou, e ela entra nos DOIS lados: a posição elevada
 		// no ataque, a cobertura na Defesa (p239).
@@ -175,19 +198,11 @@ type effectiveDefense struct{ Value int }
 //
 // "Você faz um acerto crítico quando ACERTA um ataque rolando um valor igual ou
 // maior que a margem de ameaça" (p231): são as duas condições.
-//
-// "Quando nenhuma margem aparece, será 20. Quando nenhum multiplicador aparece,
-// será x2" (p230) — por isso o zero do catálogo cai no padrão do livro em vez
-// de virar uma arma que nunca critica.
+// O zero do catálogo cai no padrão do livro (`CriticalOf`) em vez de virar uma
+// arma que nunca critica.
 func judgeTheCritical(card WeaponCard, target AttackTarget, d20 int) ecs.System {
 	return func(w *ecs.World) {
-		margin, multiplier := card.CritRange, card.CritMult
-		if margin <= 0 {
-			margin = 20
-		}
-		if multiplier <= 0 {
-			multiplier = 2
-		}
+		margin, multiplier := CriticalOf(card)
 		// "Um alvo imune a acertos críticos ainda sofre o dano de um ataque
 		// normal" (p231): a imunidade tira o crítico, nunca o ataque.
 		hit := resourceOf[hitVerdict](w).Hit
@@ -236,18 +251,6 @@ func spawnTheDamageParcels(card WeaponCard) ecs.System {
 			ecs.Set(w, parcel, criticalExtra{})
 		}
 	}
-}
-
-// dropEverythingIfItMissed: quem erra não rola dano.
-//
-// SUPRIMIR e não apagar — a parcela fica, e é o que permite à mesa ler o que o
-// ataque teria causado. Quem não rola é o `rollTheDice`, que pula o suprimido.
-func dropEverythingIfItMissed(w *ecs.World) {
-	if resourceOf[hitVerdict](w).Hit {
-		return
-	}
-	suppressEvery[damageDice](w, "o ataque errou")
-	suppressEvery[damageFlat](w, "o ataque errou")
 }
 
 // multiplyTheWeaponDice aplica o multiplicador da arma.
@@ -477,18 +480,8 @@ func faulted(w *ecs.World) bool {
 	return has
 }
 
-// suppressEvery marca com a mesma razão tudo que carrega C.
-func suppressEvery[C any](w *ecs.World, why string) {
-	ecs.Each(w, func(e ecs.Entity, _ C) { suppress(w, e, why) })
-}
-
-// suppress cala a parcela, e A PRIMEIRA RAZÃO É A QUE FICA.
-//
-// Mais de um sistema alcança a mesma parcela, e sem esta porta a razão que a
-// mesa lê é a do ÚLTIMO a passar. O bônus de crítico de um ataque que errou
-// saía dizendo "não foi um acerto crítico" — verdade que não explica nada: ele
-// não contou porque o ataque errou, e a distinção é a diferença entre "role de
-// novo" e "role melhor".
+// suppress cala a parcela, e A PRIMEIRA RAZÃO É A QUE FICA: um sistema que
+// passe depois não troca o motivo que a mesa lê pelo dele.
 func suppress(w *ecs.World, e ecs.Entity, why string) {
 	if dead(w, e) {
 		return

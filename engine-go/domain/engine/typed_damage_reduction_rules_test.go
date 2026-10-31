@@ -20,7 +20,7 @@ func TestTypedDamageReductionOnlyEatsItsOwnType(t *testing.T) {
 	flamejante.ExtraDamage = []ExtraDamage{{Dice: "1d6", Type: "fogo"}}
 	bate := func(target AttackTarget) AttackOutcome {
 		t.Helper()
-		out, err := ResolveAttack(flamejante, target, 15, fixedDice(t, 8, 6))
+		out, err := suggestedAttack(flamejante, target, 15, fixedDice(t, 8, 6))
 		if err != nil {
 			t.Fatalf("resolver: %v", err)
 		}

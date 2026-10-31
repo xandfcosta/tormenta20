@@ -18,7 +18,7 @@ import "fmt"
 //
 // # Por que os NÚMEROS chegam prontos
 //
-// Quem resolve `d20` contra Defesa é o `engine.ResolveAttack`, e este contexto
+// Quem resolve `d20` contra Defesa é o `engine.JudgeAttack`, e este contexto
 // não o alcança (ver o `boundary_test.go`): o regime fala de quem está na mesa
 // e de quanto PV cada um tem, e a regra do livro fala de dados. A tradução é da
 // camada de caso de uso, que conhece os dois — é o mesmo desenho da porta de
@@ -50,7 +50,7 @@ type PendingAttack struct {
 	Roll        int    `json:"roll"`
 	Total       int    `json:"total"`
 	// Defense é a Defesa que o ataque enfrentou. Ela viaja porque a mesa lê a
-	// COMPARAÇÃO — "24 vs 17" é o que explica o veredicto, e sem o 17 a faixa
+	// COMPARAÇÃO — "24 vs Defesa (17)" é o que explica o veredicto, e sem o 17 a faixa
 	// afirma um acerto sem dizer contra o quê.
 	Defense int `json:"defense"`
 	// NonLethal é quanto do `Damage` não conta para sangrar nem para morrer
@@ -70,8 +70,28 @@ type PendingAttack struct {
 	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
 	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.
 	Situations []string `json:"situations,omitempty"`
-	Hit        bool     `json:"hit"`
-	Critical   bool     `json:"critical"`
+	// Hit e Critical são a SUGESTÃO do livro enquanto o mestre não decide, e a
+	// decisão dele depois (`Ruling`): é a mesma pergunta — "acertou? critou?" —
+	// em dois momentos, e quem lê depois da decisão lê a palavra do mestre.
+	Hit      bool `json:"hit"`
+	Critical bool `json:"critical"`
+	// CritRange e CritMult são a margem de ameaça e o multiplicador da ARMA
+	// usada (p230): o botão do mestre diz "Crítico ×3" e a sugestão explica "20
+	// natural, na margem 20" com eles.
+	CritRange int `json:"critRange,omitempty"`
+	CritMult  int `json:"critMult,omitempty"`
+	// Ruling é a decisão do mestre: vazio enquanto ele não decide, e então
+	// `RulingMiss`, `RulingHit` ou `RulingCritical`. Só o golpe tem decisão —
+	// a manobra não rola dano, e o ✓ dela já é a decisão.
+	Ruling string `json:"ruling,omitempty"`
+	// DamageToRoll é o que o jogador rola depois de um acerto ou crítico, já
+	// com o ×N da arma no crítico (p231). Nulo antes da decisão e no erro.
+	DamageToRoll *DamageToRoll `json:"damageToRoll,omitempty"`
+	// DamageRolled diz que o dano foi rolado: só então o ✓ do mestre pousa.
+	DamageRolled bool `json:"damageRolled,omitempty"`
+	// ExtraDice são as parcelas de dado de outro tipo — o 1d6 de fogo do
+	// encanto —, discriminadas para a mesa ler a notação inteira.
+	ExtraDice []RolledGroup `json:"extraDice,omitempty"`
 	// Melee diz se o golpe foi CORPO A CORPO, e ele viaja porque há regra que
 	// depende disso DEPOIS da confirmação: o Golpe Mágico do bardo só acumula
 	// *"ao acertar um ataque corpo a corpo"* (p45). A arma não vem junto no
@@ -173,6 +193,35 @@ type ManeuverRoll struct {
 	ConditionOnAWin string `json:"conditionOnAWin,omitempty"`
 }
 
+// As três decisões do mestre sobre um golpe.
+const (
+	RulingMiss     = "miss"
+	RulingHit      = "hit"
+	RulingCritical = "critical"
+)
+
+// DamageToRoll é a fórmula do dano depois da decisão, na ordem em que os dados
+// se leem: a arma primeiro, os extras depois. Repete o `engine.DamageFormula`
+// pela razão do `ForeseenCondition`: o regime não conhece o motor.
+type DamageToRoll struct {
+	Dice  []DiceGroup `json:"dice"`
+	Bonus int         `json:"bonus"`
+}
+
+// DiceGroup são os dados de uma parcela: os 3d8 do machado, o 1d6 de fogo.
+type DiceGroup struct {
+	Count int    `json:"count"`
+	Faces int    `json:"faces"`
+	Type  string `json:"type,omitempty"`
+}
+
+// RolledGroup é uma parcela de dado extra já rolada.
+type RolledGroup struct {
+	Dice  []int  `json:"dice"`
+	Faces int    `json:"faces"`
+	Type  string `json:"type,omitempty"`
+}
+
 // Attacker descreve quem está agindo sobre o provisório.
 type Attacker struct {
 	UserID int64
@@ -229,6 +278,18 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 	if who.Role != "gm" {
 		return PendingAttack{}, fmt.Errorf("só o mestre põe o dano na ficha: o seu ataque é um rascunho para a mesa ver")
 	}
+	// O GOLPE PASSA PELOS DOIS TEMPOS antes do ✓: a decisão do mestre e o dano
+	// que ela pede. A manobra não tem dano, e o ✓ dela é a decisão.
+	if attack.Maneuver == nil {
+		switch {
+		case attack.Ruling == RulingMiss:
+			return PendingAttack{}, fmt.Errorf("o mestre já disse que este ataque errou: não há dano a aplicar")
+		case attack.Ruling == "":
+			return PendingAttack{}, fmt.Errorf("decida antes se o ataque errou, acertou ou foi crítico: o dano só existe depois")
+		case !attack.DamageRolled:
+			return PendingAttack{}, fmt.Errorf("o dano ainda não foi rolado")
+		}
+	}
 	// O ALVO É CONFERIDO DE NOVO: entre rolar e confirmar ele pode ter saído da
 	// fila, e o que vale é a mesa no instante em que o PV muda.
 	//
@@ -242,9 +303,10 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 	return *attack, nil
 }
 
-// ClearPendingAttack tira o provisório da mesa. Um ataque que ERRA também sai
-// por aqui: errar é uma coisa que acontece, e o provisório tem de sumir da tela
-// do mesmo jeito.
+// ClearPendingAttack tira o provisório da mesa depois do ✓. O ataque que o
+// mestre disse ERRADO não passa por aqui: ele fica com a decisão para o jogador
+// ler (`RuleAttack`), e sai quando o próximo ataque o substitui ou quem atacou
+// o fecha.
 func ClearPendingAttack(st *SessionRuntimeState) { st.PendingAttack = nil }
 
 // CancelAttack descarta o provisório sem mexer em ninguém. O mestre cancela por
@@ -259,5 +321,73 @@ func CancelAttack(st *SessionRuntimeState, who Attacker) error {
 		return fmt.Errorf("o ataque proposto não é seu")
 	}
 	st.PendingAttack = nil
+	return nil
+}
+
+// RuleAttack guarda a decisão do mestre sobre o golpe: erro, acerto ou crítico.
+// No acerto e no crítico, `toRoll` é o dano que o jogador vai rolar.
+//
+// Uma vez só: a decisão muda o que o jogador rola, e trocá-la depois de ele
+// pegar os dados é a mesa discordando dela mesma. Quem errou cancela e rola de
+// novo.
+func RuleAttack(st *SessionRuntimeState, who Attacker, ruling string, toRoll *DamageToRoll) error {
+	attack := st.PendingAttack
+	if attack == nil {
+		return fmt.Errorf("não há ataque na mesa para decidir")
+	}
+	if who.Role != "gm" {
+		return fmt.Errorf("quem decide se o ataque acertou é o mestre")
+	}
+	if attack.Maneuver != nil {
+		return fmt.Errorf("a manobra não rola dano: confirme ou cancele")
+	}
+	if attack.Ruling != "" {
+		return fmt.Errorf("o mestre já decidiu este ataque (%s)", attack.Ruling)
+	}
+	switch ruling {
+	case RulingMiss:
+		attack.Ruling, attack.Hit, attack.Critical = RulingMiss, false, false
+	case RulingHit, RulingCritical:
+		if toRoll == nil {
+			return fmt.Errorf("o %s veio sem o dano a rolar", ruling)
+		}
+		attack.Ruling, attack.Hit, attack.Critical = ruling, true, ruling == RulingCritical
+		attack.DamageToRoll = toRoll
+	default:
+		return fmt.Errorf("a decisão %q não existe: é %q, %q ou %q", ruling, RulingMiss, RulingHit, RulingCritical)
+	}
+	return nil
+}
+
+// AttackAwaitingDamage responde "esta pessoa pode rolar o dano agora?" e
+// devolve o provisório. Rola quem atacou, e o mestre por ele — é quem toca a
+// mesa quando o jogador caiu da rede.
+func AttackAwaitingDamage(st *SessionRuntimeState, who Attacker) (PendingAttack, error) {
+	attack := st.PendingAttack
+	if attack == nil {
+		return PendingAttack{}, fmt.Errorf("não há ataque na mesa para rolar o dano")
+	}
+	switch {
+	case attack.Ruling == RulingMiss:
+		return PendingAttack{}, fmt.Errorf("o mestre disse que o ataque errou: não há dano")
+	case attack.Ruling == "":
+		return PendingAttack{}, fmt.Errorf("o dano vem depois de o mestre dizer se o ataque acertou")
+	case attack.DamageRolled:
+		return PendingAttack{}, fmt.Errorf("o dano deste ataque já foi rolado")
+	case who.Role != "gm" && attack.ByUserID != who.UserID:
+		return PendingAttack{}, fmt.Errorf("quem rola o dano é quem atacou")
+	}
+	return *attack, nil
+}
+
+// RecordAttackDamage põe o dano rolado no provisório, conferindo DE NOVO que
+// ele ainda espera o dano: entre a leitura e a gravação, o mesmo dano pode ter
+// sido rolado por outra aba.
+func RecordAttackDamage(st *SessionRuntimeState, who Attacker, rolled PendingAttack) error {
+	if _, err := AttackAwaitingDamage(st, who); err != nil {
+		return err
+	}
+	rolled.DamageRolled = true
+	st.PendingAttack = &rolled
 	return nil
 }

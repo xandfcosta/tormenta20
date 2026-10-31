@@ -34,8 +34,38 @@ func (f *queueDouble) ProposeAttack(_ context.Context, _ int64, a live.PendingAt
 
 // CharacterActionFits deixa agir: a economia de ação é prendida pelo handler,
 // na mesa de verdade (`serve/api/table_attack_test.go`).
+func (f *queueDouble) RuleAttack(
+	_ context.Context, _ int64, who live.Attacker, ruling string, toRoll *live.DamageToRoll,
+) (*live.SessionRuntimeState, error) {
+	return f.state, live.RuleAttack(f.state, who, ruling, toRoll)
+}
+
+func (f *queueDouble) RecordAttackDamage(
+	_ context.Context, _ int64, who live.Attacker, rolled live.PendingAttack,
+) (*live.SessionRuntimeState, error) {
+	if err := live.RecordAttackDamage(f.state, who, rolled); err != nil {
+		return f.state, err
+	}
+	f.stored = f.state.PendingAttack
+	return f.state, nil
+}
+
 func (f *queueDouble) CharacterActionFits(context.Context, int64, engine.ActionCost) error {
 	return nil
+}
+
+// hitAndRoll é o segundo tempo do golpe na mesa dos casos: o mestre diz
+// acerto, e quem atacou rola o dano no dado do caso.
+func hitAndRoll(t *testing.T, strike Strike, req Request) live.PendingAttack {
+	t.Helper()
+	if _, err := strike.Rule(context.Background(), app.Caller{ID: 1}, "gm", req, live.RulingHit); err != nil {
+		t.Fatalf("o mestre dizer acerto: %v", err)
+	}
+	out, err := strike.RollDamage(context.Background(), app.Caller{ID: 7}, "player", req, nil)
+	if err != nil {
+		t.Fatalf("rolar o dano: %v", err)
+	}
+	return out
 }
 
 // sheetDouble é a porta traduzida à mão: cada linha da queueDouble vira um combatente com
@@ -347,8 +377,8 @@ func (c comTabuleiro) Between(context.Context, int64, string, board.AttackTarget
 //
 // O caso do `serve/api` prende o trajeto inteiro — o mestre pinta, a peça está
 // na casa, a conta muda. Este prende a junta: que o `Propose` PERGUNTA ao
-// tabuleiro e passa a resposta adiante. Sem ele, trocar o `ResolveAttackUnder`
-// de volta pelo `ResolveAttack` deixaria a porta ligada e inerte.
+// tabuleiro e passa a resposta adiante. Sem ele, entregar ao `JudgeAttack` uma
+// lista vazia deixaria a porta ligada e inerte.
 func TestTheBoardSituationReachesTheRoll(t *testing.T) {
 	table := aTable(t)
 	alvo := sheetDouble{

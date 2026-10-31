@@ -9,7 +9,6 @@ import (
 
 	"t20engine/app"
 	"t20engine/app/character"
-	"t20engine/app/combat"
 	"t20engine/domain/book"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
@@ -23,14 +22,10 @@ import (
 // rerollsAttack rola de novo o ataque provisório com o gasto do caminho.
 func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	ctx := c.R.Context()
-	state, err := st.deps.Sessions().State(ctx, c.SessionID)
+	state, pa, req, err := st.pendingStrike(c)
 	if err != nil {
 		return nil, err
 	}
-	if state == nil || state.PendingAttack == nil {
-		return nil, errors.New("não há ataque na mesa para rolar de novo")
-	}
-	pa := *state.PendingAttack
 	attacker := entryByID(state, pa.AttackerEntryID)
 	if attacker == nil || attacker.CharacterID == nil {
 		return nil, errors.New("quem atacou não tem ficha de onde pagar o rolar de novo")
@@ -39,14 +34,6 @@ func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("a ficha de %s não existe mais", attacker.Label)
 	}
-	var object *combat.ObjectTarget
-	if pa.TargetTokenID != "" {
-		if object, err = st.objectTokenOf(c, pa.TargetTokenID); err != nil {
-			return nil, err
-		}
-	}
-	_, mine, _ := st.tableRoster(ctx, c.User, c.CampaignID)
-	req := combat.RerollRequest(c.CampaignID, c.SessionID, pa, mine[*attacker.CharacterID], object)
 	d20, err := rerollDie(c)
 	if err != nil {
 		return nil, err

@@ -73,6 +73,8 @@ type Tables interface {
 	// para saber de quem é a vez, e rolar um ataque assim é inventar (ALE-373).
 	State(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
 	ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
+	RuleAttack(ctx context.Context, sessionID int64, who live.Attacker, ruling string, toRoll *live.DamageToRoll) (*live.SessionRuntimeState, error)
+	RecordAttackDamage(ctx context.Context, sessionID int64, who live.Attacker, rolled live.PendingAttack) (*live.SessionRuntimeState, error)
 	// CharacterActionFits diz se este personagem pode gastar o custo AGORA: se
 	// ele pode agir (o instante, pelo PV e pelas condições da ficha) e se sobrou
 	// ação no turno. Não cobra nada — quem cobra é a confirmação.
@@ -267,65 +269,107 @@ func (r Request) TargetObjectTokenID() string {
 	return r.TargetObject.TokenID
 }
 
-// rollAgainstObject resolve um golpe contra uma PEÇA DE CENÁRIO (p239).
+// strikeSetup é o que o golpe sabe antes de qualquer dado: quem ataca, com que
+// arma, contra o quê e sob quais linhas da Tabela 5-3. Os dois tempos o montam
+// do mesmo jeito — o teste a partir do pedido, o dano a partir do provisório —,
+// e montá-lo em dois lugares faria a próxima correção acertar um e esquecer o
+// outro.
+type strikeSetup struct {
+	attacker live.InitiativeEntry
+	striker  Combatant
+	weapon   engine.WeaponCard
+	boost    paidBoost
+	// victim é a CRIATURA atacada, e é vazio quando o alvo é peça: um objeto
+	// não tem ficha, bloco nem verbete (p239).
+	victim     Combatant
+	target     engine.AttackTarget
+	targetID   string
+	situations []engine.SpecialSituation
+}
+
+// setUp confere quem ataca e o alvo, e monta a arma.
 //
-// Ele é um irmão do `Propose` e não um ramo dentro dele, e a razão é o que ele
-// NÃO faz: não há linha da fila a achar, não há `CharacterID` do alvo, não há
-// condição a impor, e não há `Combatant` a montar — um objeto não tem ficha,
-// bloco nem verbete. Enfiar isso no `Propose` seria quatro `if` de "se o alvo
-// for peça, pule" espalhados por sete conferências.
-//
-// O que ele DIVIDE é o que importa dividir: a vez, a posse, a ação padrão e a
-// arma — e isso vem pelo `strikerFor`, que é o pedaço comum de verdade.
-func (s Strike) rollAgainstObject(
-	ctx context.Context, who app.Caller, role string, req Request,
-) (live.PendingAttack, error) {
+// O OBJETO é um ramo e não um caso de uso irmão pelo que ele NÃO faz: não há
+// linha da fila a achar nem `Combatant` a montar — a Defesa e a RD vêm das
+// escadas da p239. O que ele divide é a vez, a posse, a ação padrão e a arma,
+// que vêm do `strikerFor`.
+func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetup, error) {
 	attackerEntry, striker, err := s.strikerFor(ctx, role, req)
 	if err != nil {
-		return live.PendingAttack{}, err
+		return strikeSetup{}, err
 	}
-	alvo, err := engine.ObjectTarget(req.TargetObject.Size, req.TargetObject.Material)
-	if err != nil {
-		return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
-	}
-	d20, err := s.d20Of(req.D20)
-	if err != nil {
-		return live.PendingAttack{}, err
+	if req.Maneuver != "" && req.Boost.PowerID != "" {
+		// O IMPULSO É DO GOLPE: a manobra não rola dano, e o Golpe Divino e o
+		// Ataque Especial vendem bônus num ataque que fere (p65, p82).
+		return strikeSetup{}, fmt.Errorf("o impulso de PM é do golpe, e não da manobra: %w", app.ErrRefused)
 	}
 	weapon, boost, err := weaponFor(striker, req)
 	if err != nil {
-		return live.PendingAttack{}, err
+		return strikeSetup{}, err
 	}
 	if weapon, err = chargedWeapon(striker, req, weapon); err != nil {
-		return live.PendingAttack{}, err
+		return strikeSetup{}, err
 	}
-	situations, err := s.specialSituations(ctx, req)
-	if err != nil {
-		return live.PendingAttack{}, err
+	setup := strikeSetup{attacker: attackerEntry, striker: striker, weapon: weapon, boost: boost}
+	if req.TargetObject != nil {
+		if setup.target, err = engine.ObjectTarget(req.TargetObject.Size, req.TargetObject.Material); err != nil {
+			return strikeSetup{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
+		}
+	} else {
+		state, err := s.tables.State(ctx, req.SessionID)
+		if err != nil {
+			return strikeSetup{}, err
+		}
+		targetEntry, err := entryOf(state, req.TargetEntryID)
+		if err != nil {
+			return strikeSetup{}, err
+		}
+		if attackerEntry.ID == targetEntry.ID {
+			return strikeSetup{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
+		}
+		if setup.victim, err = s.combatants.Of(ctx, req.CampaignID, targetEntry); err != nil {
+			return strikeSetup{}, err
+		}
+		setup.targetID = targetEntry.ID
+		setup.target = engine.AttackTarget{
+			Defense:               setup.victim.Defense,
+			DamageReduction:       setup.victim.DamageReduction,
+			DamageReductionByType: setup.victim.DamageReductionByType,
+			CritExtraIgnoreChance: setup.victim.CritExtraIgnoreChance,
+			CritImmune:            setup.victim.CritImmune,
+		}
 	}
-	out, err := req.resolver()(weapon, alvo, situations, d20, s.rollDie)
-	if err != nil {
-		return live.PendingAttack{}, err
+	if req.Maneuver == "" {
+		if setup.situations, err = s.specialSituations(ctx, req); err != nil {
+			return strikeSetup{}, err
+		}
 	}
-	pending := live.PendingAttack{
-		AttackerEntryID: attackerEntry.ID,
-		TargetTokenID:   req.TargetObject.TokenID,
-		TargetLabel:     req.TargetObject.Label,
-		Weapon:          weapon.Name,
-		Roll:            out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
-		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
-		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
-		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
-		Announces: foreseenOf(out),
-		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
-		BoostPowerID: boost.powerID, BoostPM: boost.pm, Charge: req.Charge,
-		Replay: req.replayOf(weapon),
-	}
-	return pending, nil
+	return setup, nil
 }
 
-// Propose rola o ataque e guarda o provisório. Ninguém perde PV aqui: quem
-// confirma é o mestre, pela mesma divisa do movimento no tabuleiro.
+// pendingOf é o provisório do golpe, com o que o pedido escolheu e o teste
+// devolveu. O dano fica de fora: ele é rolado depois da decisão do mestre.
+func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.AttackOutcome) live.PendingAttack {
+	margin, multiplier := engine.CriticalOf(setup.weapon)
+	pending := live.PendingAttack{
+		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: setup.weapon.Name,
+		// A DEFESA do provisório é a que o ataque ENFRENTOU, já com a Tabela
+		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
+		// atrás da carroça" são leituras diferentes do mesmo número.
+		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
+		Hit: out.Hit, Critical: out.Critical, CritRange: margin, CritMult: multiplier,
+		Melee: setup.weapon.IsMelee(), ByUserID: who.ID,
+		BoostPowerID: setup.boost.powerID, BoostPM: setup.boost.pm, Charge: req.Charge,
+		Replay: req.replayOf(setup.weapon),
+	}
+	if req.TargetObject != nil {
+		pending.TargetTokenID, pending.TargetLabel = req.TargetObject.TokenID, req.TargetObject.Label
+	}
+	return pending
+}
+
+// Propose rola o TESTE do ataque e guarda o provisório. Ninguém perde PV aqui,
+// e o dano ainda não existe: ele vem depois da decisão do mestre.
 func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
 	pending, err := s.roll(ctx, who, role, req)
 	if err != nil {
@@ -337,81 +381,25 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 	return pending, nil
 }
 
-// roll rola o golpe ou a manobra do pedido, sem guardar: quem guarda é o
-// `Propose`, e o `Reroll` junta antes o que o primeiro dado deixou.
+// roll rola o teste do golpe ou a manobra do pedido, sem guardar: quem guarda
+// é o `Propose`, e o `Reroll` junta antes o que o primeiro dado deixou.
 func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
-	if req.TargetObject != nil {
-		return s.rollAgainstObject(ctx, who, role, req)
-	}
-	attackerEntry, striker, err := s.strikerFor(ctx, role, req)
+	setup, err := s.setUp(ctx, role, req)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	state, err := s.tables.State(ctx, req.SessionID)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-	target, err := entryOf(state, req.TargetEntryID)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-	if attackerEntry.ID == target.ID {
-		return live.PendingAttack{}, fmt.Errorf("ninguém ataca a si mesmo: %w", app.ErrRefused)
-	}
-	if req.Maneuver != "" && req.Boost.PowerID != "" {
-		// O IMPULSO É DO GOLPE: a manobra não rola dano, e o Golpe Divino e o
-		// Ataque Especial vendem bônus num ataque que fere (p65, p82).
-		return live.PendingAttack{}, fmt.Errorf("o impulso de PM é do golpe, e não da manobra: %w", app.ErrRefused)
-	}
-	weapon, boost, err := weaponFor(striker, req)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-	if weapon, err = chargedWeapon(striker, req, weapon); err != nil {
-		return live.PendingAttack{}, err
-	}
-	victim, err := s.combatants.Of(ctx, req.CampaignID, target)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-
 	d20, err := s.d20Of(req.D20)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
 	if req.Maneuver != "" {
-		return s.rollManeuver(ctx, who, req, attackerEntry, target, striker, victim, weapon, d20)
+		return s.rollManeuver(who, req, setup, d20)
 	}
-	situations, err := s.specialSituations(ctx, req)
+	out, err := engine.JudgeAttack(setup.weapon, setup.target, setup.situations, req.attackDie(d20), s.rollDie)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	out, err := req.resolver()(weapon, engine.AttackTarget{
-		Defense:               victim.Defense,
-		DamageReduction:       victim.DamageReduction,
-		DamageReductionByType: victim.DamageReductionByType,
-		CritExtraIgnoreChance: victim.CritExtraIgnoreChance,
-		CritImmune:            victim.CritImmune,
-	}, situations, d20, s.rollDie)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-
-	pending := live.PendingAttack{
-		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
-		// A DEFESA do provisório é a que o ataque ENFRENTOU, já com a Tabela
-		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
-		// atrás da carroça" são leituras diferentes do mesmo número.
-		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
-		Hit: out.Hit, Critical: out.Critical, Melee: weapon.IsMelee(),
-		Dice: out.Dice, Faces: out.Faces, RawDamage: out.RawDamage, Absorbed: out.Absorbed,
-		CriticalExtra: out.CriticalExtra, CritExtraIgnoreChance: out.CritExtraIgnoreChance,
-		Announces: foreseenOf(out),
-		Damage:    out.Damage, NonLethal: out.NonLethal, ByUserID: who.ID,
-		BoostPowerID: boost.powerID, BoostPM: boost.pm, Charge: req.Charge,
-		Replay: req.replayOf(weapon),
-	}
-	return pending, nil
+	return setup.pendingOf(who, req, out), nil
 }
 
 // rollManeuver resolve o teste OPOSTO da manobra e guarda o provisório.
@@ -419,11 +407,11 @@ func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Reque
 // Ele divide com o golpe tudo que vem antes: a vez, a posse, a ação padrão e as
 // duas pontas da fila. O que muda é só a REGRA no meio — e é por isso que ele é
 // um ramo aqui, e não um caso de uso irmão que repetiria sete conferências.
-func (s Strike) rollManeuver(
-	ctx context.Context, who app.Caller, req Request,
-	attackerEntry, target live.InitiativeEntry,
-	striker, victim Combatant, weapon engine.WeaponCard, d20 int,
-) (live.PendingAttack, error) {
+func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20 int) (live.PendingAttack, error) {
+	if req.TargetObject != nil {
+		return live.PendingAttack{}, fmt.Errorf("manobra é contra criatura, e não contra peça de cenário: %w", app.ErrRefused)
+	}
+	striker, victim, weapon := setup.striker, setup.victim, setup.weapon
 	// O LUTA DO DEFENSOR, e não a Defesa dele: "mesmo que ela esteja usando uma
 	// arma de ataque à distância, deve fazer o teste usando seu valor de Luta"
 	// (p234). Quem não tem arma empunhada não tem carta, e aí o Luta dele é
@@ -444,7 +432,7 @@ func (s Strike) rollManeuver(
 	}
 
 	pending := live.PendingAttack{
-		AttackerEntryID: attackerEntry.ID, TargetEntryID: target.ID, Weapon: weapon.Name,
+		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: weapon.Name,
 		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, Replay: req.replayOf(weapon),
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,

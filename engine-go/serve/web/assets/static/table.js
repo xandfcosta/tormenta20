@@ -1,6 +1,82 @@
 import { i as e, n as t, r as n, t as r } from "./turn-juice.js";
+//#region serve/web/assets/src/lib/float-card.ts
+var i = "t20-float-card";
+function a(e) {
+	if (!e) return null;
+	try {
+		let t = JSON.parse(e);
+		return typeof t.x != "number" || typeof t.y != "number" || !Number.isFinite(t.x) || !Number.isFinite(t.y) ? null : {
+			x: t.x,
+			y: t.y
+		};
+	} catch {
+		return null;
+	}
+}
+function o(e, t, n) {
+	return {
+		x: Math.min(Math.max(0, e.x), Math.max(0, n.width - t.width)),
+		y: Math.min(Math.max(0, e.y), Math.max(0, n.height - t.height))
+	};
+}
+function s(e) {
+	return getComputedStyle(e).position === "fixed";
+}
+function c(e, t) {
+	let n = o(t, e.getBoundingClientRect(), {
+		width: window.innerWidth,
+		height: window.innerHeight
+	});
+	e.style.setProperty("--float-x", `${n.x}px`), e.style.setProperty("--float-y", `${n.y}px`);
+}
+function l(e, t) {
+	if (e.style.getPropertyValue("--float-x") || !s(e)) return;
+	let n = a(t.getItem(i));
+	n && c(e, n);
+}
+function u(e = window.localStorage) {
+	let t = null;
+	document.addEventListener("pointerdown", (e) => {
+		let n = e.target?.closest("[data-float-handle]"), r = n?.closest("[data-float]");
+		if (!r || !s(r) || e.target.closest("button, a, input")) return;
+		let i = r.getBoundingClientRect();
+		t = {
+			card: r,
+			dx: e.clientX - i.left,
+			dy: e.clientY - i.top,
+			pointer: e.pointerId
+		}, n.setPointerCapture(e.pointerId), r.dataset.dragging = "", e.preventDefault();
+	}), document.addEventListener("pointermove", (e) => {
+		!t || e.pointerId !== t.pointer || c(t.card, {
+			x: e.clientX - t.dx,
+			y: e.clientY - t.dy
+		});
+	});
+	let n = (n) => {
+		if (!t || n.pointerId !== t.pointer) return;
+		let r = t.card.getBoundingClientRect();
+		e.setItem(i, JSON.stringify({
+			x: Math.round(r.left),
+			y: Math.round(r.top)
+		})), delete t.card.dataset.dragging, t = null;
+	};
+	document.addEventListener("pointerup", n), document.addEventListener("pointercancel", n);
+	let r = () => {
+		for (let t of document.querySelectorAll("[data-float]")) l(t, e);
+	};
+	new MutationObserver(r).observe(document.body, {
+		subtree: !0,
+		childList: !0
+	}), window.addEventListener("resize", () => {
+		for (let t of document.querySelectorAll("[data-float]")) {
+			let n = a(e.getItem(i));
+			n && s(t) && c(t, n);
+		}
+	}), r();
+}
+//#endregion
 //#region serve/web/assets/src/lib/token-move.ts
-function i(e) {
+function d(e) {
 	if (!e) return null;
 	let t = /--col:\s*(-?\d+)/.exec(e), n = /--lin:\s*(-?\d+)/.exec(e);
 	return !t || !n ? null : {
@@ -8,7 +84,7 @@ function i(e) {
 		lin: Number(n[1])
 	};
 }
-function a(e, t, r, i) {
+function f(e, t, r, i) {
 	if (!n(e)) return;
 	let a = (t.col - r.col) * i, o = (t.lin - r.lin) * i;
 	a === 0 && o === 0 || e.animate([{ transform: `translate(${a}px, ${o}px)` }, { transform: "translate(0, 0)" }], {
@@ -18,17 +94,17 @@ function a(e, t, r, i) {
 }
 //#endregion
 //#region serve/web/assets/src/table.ts
-var o = "(prefers-reduced-motion: reduce)";
-function s(e) {
+var p = "(prefers-reduced-motion: reduce)";
+function m(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) {
 			if (e.attributeName !== "style") continue;
 			let t = e.target;
 			if (!t.classList?.contains("board-token") || t.classList.contains("board-token-ghost")) continue;
-			let n = i(e.oldValue), r = i(t.getAttribute("style"));
+			let n = d(e.oldValue), r = d(t.getAttribute("style"));
 			if (!n || !r) continue;
-			let o = Number.parseFloat(getComputedStyle(t).getPropertyValue("--quadrado"));
-			!Number.isFinite(o) || o <= 0 || a(t, n, r, o);
+			let i = Number.parseFloat(getComputedStyle(t).getPropertyValue("--quadrado"));
+			!Number.isFinite(i) || i <= 0 || f(t, n, r, i);
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -37,7 +113,7 @@ function s(e) {
 		attributeFilter: ["style"]
 	});
 }
-function c(e) {
+function h(e) {
 	new MutationObserver((n) => {
 		if (!e.matches) for (let e of n) {
 			if (e.attributeName !== "aria-valuenow") continue;
@@ -53,16 +129,16 @@ function c(e) {
 		attributeFilter: ["aria-valuenow"]
 	});
 }
-function l(e) {
+function g(e) {
 	let t = /^\s*(-?\d+)\s*\//.exec(e ?? "");
 	return t ? Number(t[1]) : null;
 }
-function u(e) {
+function _(e) {
 	new MutationObserver((n) => {
 		if (!e.matches) for (let e of n) {
 			let n = e.target, r = n.parentElement;
 			if (!r?.hasAttribute("data-vital")) continue;
-			let i = l(e.oldValue), a = l(n.textContent);
+			let i = g(e.oldValue), a = g(n.textContent);
 			if (i === null || a === null || i === a) continue;
 			let o = r.parentElement;
 			o && requestAnimationFrame(() => t(o, { curou: a > i }));
@@ -73,7 +149,7 @@ function u(e) {
 		characterDataOldValue: !0
 	});
 }
-function d(t) {
+function v(t) {
 	new MutationObserver((n) => {
 		if (!t.matches) for (let t of n) {
 			if (t.attributeName !== "aria-current") continue;
@@ -86,7 +162,7 @@ function d(t) {
 		attributeFilter: ["aria-current"]
 	});
 }
-function f(e) {
+function y(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) for (let t of e.addedNodes) {
 			if (t.nodeType !== Node.ELEMENT_NODE) continue;
@@ -98,6 +174,6 @@ function f(e) {
 		childList: !0
 	});
 }
-var p = window.matchMedia(o);
-s(p), c(p), u(p), d(p), f(p);
+var b = window.matchMedia(p);
+m(b), h(b), _(b), v(b), y(b), u();
 //#endregion

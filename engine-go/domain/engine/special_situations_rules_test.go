@@ -19,7 +19,7 @@ import "testing"
 // lista de situações.
 func underCircumstances(t *testing.T, situations ...SpecialSituation) AttackOutcome {
 	t.Helper()
-	out, err := ResolveAttackUnder(
+	out, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5),
 		AttackTarget{Defense: 15},
 		situations, 10, fixedDice(t, 10, 4),
@@ -62,7 +62,7 @@ func TestLightCoverAddsFiveToTheDefense(t *testing.T) {
 // crítico natural 20 acertar por trás de uma parede, porque o 20 acerta sempre
 // (p221).
 func TestTotalCoverMakesTheTargetUnattackable(t *testing.T) {
-	_, err := ResolveAttackUnder(
+	_, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
 		[]SpecialSituation{TargetUnderTotalCover}, 20, fixedDice(t),
 	)
@@ -96,7 +96,7 @@ func TestConcealmentCanUndoAHitThatLanded(t *testing.T) {
 	// que sobra no dublê é de propósito: sem ele, um motor que NÃO desfizesse o
 	// acerto estouraria no dado que falta e a falha diria "faltou um dado" em
 	// vez de "a camuflagem não agiu".
-	falha, err := ResolveAttackUnder(
+	falha, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
 		[]SpecialSituation{TargetUnderLightConcealment}, 10, fixedDice(t, 2, 4),
 	)
@@ -116,7 +116,7 @@ func TestConcealmentCanUndoAHitThatLanded(t *testing.T) {
 	// nada vermelho. O que prende o dado é perguntar quantas faces foram
 	// pedidas, e é só aqui que isso importa.
 	pedidas := []int{}
-	if _, err := ResolveAttackUnder(
+	if _, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
 		[]SpecialSituation{TargetUnderLightConcealment}, 10,
 		func(faces int) (int, error) { pedidas = append(pedidas, faces); return 10, nil },
@@ -129,7 +129,7 @@ func TestConcealmentCanUndoAHitThatLanded(t *testing.T) {
 	}
 
 	// E a TOTAL pega até 5, onde a leve já não pegaria.
-	total, err := ResolveAttackUnder(
+	total, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
 		[]SpecialSituation{TargetUnderTotalConcealment}, 10, fixedDice(t, 5, 4),
 	)
@@ -138,21 +138,6 @@ func TestConcealmentCanUndoAHitThatLanded(t *testing.T) {
 	}
 	if total.Hit {
 		t.Errorf("a camuflagem total não desfez o acerto com d10 = 5 (faixa 1 a 5, p239)")
-	}
-}
-
-// O `ResolveAttack` de sempre é o caso SEM situação nenhuma.
-//
-// Ele fica porque é a assinatura que os casos do livro usam, e porque a
-// ausência de situação é o caso comum — a mesa sem tabuleiro ataca assim.
-func TestTheOldSignatureIsTheAttackWithoutSituations(t *testing.T) {
-	semSituacao, err := ResolveAttack(
-		aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15}, 10, fixedDice(t, 4))
-	if err != nil {
-		t.Fatalf("resolver: %v", err)
-	}
-	if semSituacao.Total != 15 || !semSituacao.Hit || semSituacao.Defense != 15 {
-		t.Errorf("o ataque sem situação mudou: %+v", semSituacao)
 	}
 }
 
@@ -172,7 +157,7 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	card := aWeapon("1d8", 3, 20, 2, 5)
 	medidos := 0
 	for _, situation := range SpecialSituationsOfTheBook() {
-		w := attackWorld(card, AttackTarget{Defense: 15},
+		w := judgeWorld(card, AttackTarget{Defense: 15},
 			[]SpecialSituation{situation}, 10, fixedDice(t, 10, 4))
 		medidos++
 

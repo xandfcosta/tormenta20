@@ -11,7 +11,7 @@ import (
 // precisa ler — não uma formatação a mais.
 func TestTheAttackLineStopsAtTheComparisonWhenItMisses(t *testing.T) {
 	line := attackLine(live.PendingAttack{Roll: 9, Total: 14, Defense: 17})
-	if line != "14 vs 17" {
+	if line != "d20 (9) + 5 = 14 vs Defesa (17)" {
 		t.Errorf("a linha = %q, e um ataque que erra para na comparação", line)
 	}
 	if strings.Contains(line, "dano") {
@@ -25,7 +25,7 @@ func TestTheAttackLineWritesTheNotationTheTableReads(t *testing.T) {
 		Roll: 19, Total: 24, Defense: 17, Hit: true, Critical: true,
 		Dice: []int{8, 5}, Faces: 8, RawDamage: 16, Damage: 16,
 	})
-	if line != "24 vs 17 · 2d8+3 (8+5) = 16 de dano" {
+	if line != "d20 (19) + 5 = 24 vs Defesa (17)"+notationStep+"2d8 (8, 5) + 3 = 16 de dano" {
 		t.Errorf("a linha = %q", line)
 	}
 }
@@ -36,7 +36,7 @@ func TestTheAttackLineNamesTheReductionOnlyWhenItBit(t *testing.T) {
 		Roll: 14, Total: 19, Defense: 17, Hit: true,
 		Dice: []int{8}, Faces: 8, RawDamage: 8, Absorbed: 5, Damage: 3,
 	})
-	if withRD != "19 vs 17 · 1d8 (8) = 8 · RD 5 → 3 de dano" {
+	if withRD != "d20 (14) + 5 = 19 vs Defesa (17)"+notationStep+"1d8 (8) = 8 vs RD (5) → 3 de dano" {
 		t.Errorf("a linha = %q, e a p229 manda 8 contra RD 5 virar 3", withRD)
 	}
 	withoutRD := attackLine(live.PendingAttack{
@@ -45,24 +45,24 @@ func TestTheAttackLineNamesTheReductionOnlyWhenItBit(t *testing.T) {
 	})
 	// SEM RD o total É o dano: repetir o número ("= 8 → 8 de dano") foi o que
 	// olhar a tela pegou, e nenhum limiar pegaria.
-	if withoutRD != "19 vs 17 · 1d8 (8) = 8 de dano" {
+	if withoutRD != "d20 (14) + 5 = 19 vs Defesa (17)"+notationStep+"1d8 (8) = 8 de dano" {
 		t.Errorf("a linha = %q: sem RD, o número aparece UMA vez", withoutRD)
 	}
 }
 
 // O DADO NATURAL que desmente a comparação é NOMEADO (p221). Sem isso a faixa
-// diz "ERROU · 14 vs 13" — a conta certa com cara de regra quebrada, que foi
+// diz "14 vs Defesa (13)" num erro — a conta certa com cara de regra quebrada, que foi
 // o que olhar a tela pegou.
 func TestTheAttackLineNamesTheNaturalRollThatOverridesTheComparison(t *testing.T) {
 	missOnOne := attackLine(live.PendingAttack{Roll: 1, Total: 14, Defense: 13})
-	if missOnOne != "14 vs 13 · 1 natural erra" {
+	if missOnOne != "d20 (1) + 13 = 14 vs Defesa (13) → 1 natural erra" {
 		t.Errorf("a linha = %q, e o 1 natural que erra contra Defesa menor tem de aparecer", missOnOne)
 	}
 	hitOnTwenty := attackLine(live.PendingAttack{
 		Roll: 20, Total: 22, Defense: 25, Hit: true, Critical: true,
 		Dice: []int{6, 3}, Faces: 8, RawDamage: 9, Damage: 9,
 	})
-	if hitOnTwenty != "22 vs 25 · 20 natural acerta · 2d8 (6+3) = 9 de dano" {
+	if hitOnTwenty != "d20 (20) + 2 = 22 vs Defesa (25) → 20 natural acerta"+notationStep+"2d8 (6, 3) = 9 de dano" {
 		t.Errorf("a linha = %q, e o 20 natural que acerta contra Defesa maior tem de aparecer", hitOnTwenty)
 	}
 	// Quando a comparação já conta a história, o natural é ruído.
@@ -70,28 +70,35 @@ func TestTheAttackLineNamesTheNaturalRollThatOverridesTheComparison(t *testing.T
 		Roll: 20, Total: 30, Defense: 25, Hit: true, Critical: true,
 		Dice: []int{6, 3}, Faces: 8, RawDamage: 9, Damage: 9,
 	})
-	if plainTwenty != "30 vs 25 · 2d8 (6+3) = 9 de dano" {
+	if plainTwenty != "d20 (20) + 10 = 30 vs Defesa (25)"+notationStep+"2d8 (6, 3) = 9 de dano" {
 		t.Errorf("a linha = %q: o 20 que acertaria de qualquer jeito não precisa de nota", plainTwenty)
 	}
 }
 
-// O VEREDICTO é uma das três palavras, e a tinta segue a palavra.
-func TestTheVerdictIsOneOfThreeWords(t *testing.T) {
+// A SUGESTÃO DO LIVRO é o botão cheio, e o crítico diz o multiplicador da arma.
+func TestTheSuggestedVerdictIsTheFilledButton(t *testing.T) {
 	st := live.EmptyRuntimeState()
 	st.Initiative = []live.InitiativeEntry{
 		{ID: "a", Label: "Arwen"}, {ID: "b", Label: "Ogro"},
 	}
 	cases := []struct {
 		hit, crit bool
+		mult      int
 		want      string
-	}{{false, false, "Errou"}, {true, false, "Acertou"}, {true, true, "Crítico"}}
+	}{{false, false, 2, "Errou"}, {true, false, 2, "Acertou"}, {true, true, 3, "Crítico ×3"}}
 	for _, tc := range cases {
 		st.PendingAttack = &live.PendingAttack{
-			AttackerEntryID: "a", TargetEntryID: "b", Hit: tc.hit, Critical: tc.crit, ByUserID: 7,
+			AttackerEntryID: "a", TargetEntryID: "b", Hit: tc.hit, Critical: tc.crit, CritMult: tc.mult, ByUserID: 7,
 		}
 		band := attackProposalOf(st, 7)
-		if band == nil || band.Verdict != tc.want {
-			t.Errorf("hit=%v crit=%v deu %v, queria %q", tc.hit, tc.crit, band, tc.want)
+		var filled []string
+		for _, verdict := range band.Verdicts {
+			if verdict.Suggested {
+				filled = append(filled, verdict.Label)
+			}
+		}
+		if len(band.Verdicts) != 3 || len(filled) != 1 || filled[0] != tc.want {
+			t.Errorf("hit=%v crit=%v ×%d encheu %v, e o esperado é só %q", tc.hit, tc.crit, tc.mult, filled, tc.want)
 		}
 		if band.Attacker != "Arwen" || band.Target != "Ogro" {
 			t.Errorf("os nomes vêm da FILA, e vieram %q → %q", band.Attacker, band.Target)
@@ -120,7 +127,7 @@ func TestTheManeuverBandGivesTheWholeContestAndNoVerdict(t *testing.T) {
 		Kind: "derrubar", Opposed: 10, Margin: 9, ConditionOnAWin: "caido",
 	}
 	linha := maneuverLine(live.PendingAttack{Roll: 15, Total: 19, Maneuver: &derrubou})
-	for _, pedaco := range []string{"19 vs 10", "diferença +9", "deixa caído"} {
+	for _, pedaco := range []string{"d20 (15) + 4 = 19 vs", "= 10 →", "diferença\u00a0+9", "| vitória deixa caído"} {
 		if !strings.Contains(linha, pedaco) {
 			t.Errorf("a linha %q não diz %q", linha, pedaco)
 		}
@@ -140,7 +147,7 @@ func TestTheManeuverBandGivesTheWholeContestAndNoVerdict(t *testing.T) {
 			Kind: "derrubar", Opposed: 18, Margin: -11, ConditionOnAWin: "caido",
 		},
 	})
-	if !strings.Contains(perdeu, "diferença -11") {
+	if !strings.Contains(perdeu, "diferença\u00a0-11") {
 		t.Errorf("a linha %q não diz a diferença negativa com sinal", perdeu)
 	}
 	if !strings.Contains(perdeu, "deixa caído") {
@@ -177,9 +184,11 @@ func TestNoManeuverTextTheTablePlayerSeesDeclaresAWinner(t *testing.T) {
 			for _, mine := range []bool{true, false} {
 				m := live.ManeuverRoll{Kind: kind, OpposedRoll: 4, Opposed: 10, Margin: margin, ConditionOnAWin: "caido"}
 				pa := live.PendingAttack{Roll: 15, Total: 10 + margin, Maneuver: &m}
-				gm := attackProposal{Maneuver: true, Mine: mine, Action: maneuverSeal(m), Verdict: "Sucesso", Tally: maneuverLine(pa)}
+				gm := attackProposal{Maneuver: true, Mine: mine, Action: maneuverSeal(m),
+					Duel: duelView{Seal: "Sucesso"}, Tally: maneuverLine(pa), Said: rulingSaid(pa)}
 				band := gm.forPlayer(pa)
-				texto := strings.ToLower(band.Action + " " + band.Verdict + " " + band.Tally + " " + strings.Join(attackNotes(band), " "))
+				texto := strings.ToLower(band.Action + " " + band.Duel.Seal + " " + band.Said + " " + band.Tally + " " +
+					strings.Join(attackNotes(band), " "))
 				medidas++
 				for _, palavra := range julgamentos {
 					if strings.Contains(texto, palavra) {
@@ -228,14 +237,14 @@ func TestTheGMManeuverBandReadsTheContest(t *testing.T) {
 //
 // É a mesma razão do "20 natural acerta" que esta linha já nomeia: um número
 // que DESMENTE o que a mesa sabe tem de vir com o motivo. O Goblin tem Defesa
-// 13 na ficha; se a faixa escreve "14 vs 18" e cala, a mesa procura o erro.
+// 13 na ficha; se a faixa escreve "vs Defesa (18)" e cala, a mesa procura o erro.
 func TestTheAttackLineNamesWhyTheDefenseChanged(t *testing.T) {
 	pa := live.PendingAttack{
 		Roll: 9, Total: 14, Defense: 18, Situations: []string{"cobertura leve"},
 	}
 	// A CONTA fica só com a aritmética — ela é monoespaçada, e prosa dentro
 	// dela parte a linha a 390px.
-	if line := attackLine(pa); line != "14 vs 18" {
+	if line := attackLine(pa); line != "d20 (9) + 5 = 14 vs Defesa (18)" {
 		t.Errorf("a conta = %q, e a prosa não entra nela", line)
 	}
 	if motivo := writtenSituations(pa); motivo != "cobertura leve" {
@@ -246,7 +255,7 @@ func TestTheAttackLineNamesWhyTheDefenseChanged(t *testing.T) {
 
 // E A CAMUFLAGEM É O CASO QUE MAIS PRECISA, porque ela desmente a COMPARAÇÃO:
 // o total bateu a Defesa e o ataque errou mesmo assim (p238). Sem o motivo, a
-// faixa escreve "18 vs 13 · ERROU" e parece defeito.
+// faixa escreve "18 vs Defesa (13)" num erro e parece defeito.
 func TestTheAttackLineNamesTheConcealmentThatUndidTheHit(t *testing.T) {
 	motivo := writtenSituations(live.PendingAttack{
 		Roll: 18, Total: 18, Defense: 13, Situations: []string{"camuflagem leve"},
@@ -259,7 +268,7 @@ func TestTheAttackLineNamesTheConcealmentThatUndidTheHit(t *testing.T) {
 // SEM SITUAÇÃO não há prosa: o separador só existe quando há o que dizer.
 func TestTheAttackLineStaysTheSameWithoutSituations(t *testing.T) {
 	pa := live.PendingAttack{Roll: 9, Total: 14, Defense: 17}
-	if line := attackLine(pa); line != "14 vs 17" {
+	if line := attackLine(pa); line != "d20 (9) + 5 = 14 vs Defesa (17)" {
 		t.Errorf("a linha = %q, e sem situação ela é a de sempre", line)
 	}
 	if motivo := writtenSituations(pa); motivo != "" {
@@ -283,7 +292,7 @@ func TestTheAttackLineSaysWhenTheDamageIsNonLethal(t *testing.T) {
 	// O ESPERADO USA A MESMA CONSTANTE porque o espaço entre as palavras é
 	// INQUEBRÁVEL — escrevê-lo à mão aqui daria um teste que passa com o espaço
 	// comum, que é exatamente o que o olho reprovou a 390px.
-	if line != "20 vs 13 · 1d8+3 (6) = 9 de dano "+nonLethalWords {
+	if line != "d20 (15) + 5 = 20 vs Defesa (13)"+notationStep+"1d8 (6) + 3 = 9 de dano "+nonLethalWords {
 		t.Errorf("a linha = %q, e a p236 faz do não letal outra coisa", line)
 	}
 	// E O DANO COMUM não ganha palavra nenhuma: "não letal" só aparece onde há
@@ -292,7 +301,7 @@ func TestTheAttackLineSaysWhenTheDamageIsNonLethal(t *testing.T) {
 		Roll: 15, Total: 20, Defense: 13, Hit: true,
 		Dice: []int{6}, Faces: 8, RawDamage: 9, Damage: 9,
 	})
-	if comum != "20 vs 13 · 1d8+3 (6) = 9 de dano" {
+	if comum != "d20 (15) + 5 = 20 vs Defesa (13)"+notationStep+"1d8 (6) + 3 = 9 de dano" {
 		t.Errorf("a linha do dano comum = %q", comum)
 	}
 }
@@ -308,7 +317,7 @@ func TestTheAttackLineTellsTheChanceToIgnoreTheCriticalExtra(t *testing.T) {
 		Dice: []int{8, 5}, Faces: 8, RawDamage: 16, Damage: 16,
 		CriticalExtra: 5, CritExtraIgnoreChance: 50,
 	})
-	if line != "24 vs 17 · 2d8+3 (8+5) = 16 de dano · 50% de ignorar os 5 do crítico" {
+	if line != "d20 (19) + 5 = 24 vs Defesa (17)"+notationStep+"2d8 (8, 5) + 3 = 16 de dano"+notationStep+"50% de ignorar os 5 do crítico" {
 		t.Errorf("a linha = %q", line)
 	}
 }
@@ -321,7 +330,7 @@ func TestTheAttackLineKeepsQuietWhenThereIsNoCriticalExtra(t *testing.T) {
 		Dice: []int{8}, Faces: 8, RawDamage: 8, Damage: 8,
 		CritExtraIgnoreChance: 50,
 	})
-	if line != "19 vs 17 · 1d8 (8) = 8 de dano" {
+	if line != "d20 (14) + 5 = 19 vs Defesa (17)"+notationStep+"1d8 (8) = 8 de dano" {
 		t.Errorf("a linha = %q: sem crítico não há extra, e sem extra não há o que rolar", line)
 	}
 }
@@ -338,7 +347,7 @@ func TestTheAttackLineSaysTheConditionTheBookForesees(t *testing.T) {
 			{Condition: "sangrando", Note: "a perda de PV desta arma é cumulativa"},
 		},
 	})
-	if line != "19 vs 17 · 1d8 (8) = 8 de dano · o livro prevê: Sangrando "+
+	if line != "d20 (14) + 5 = 19 vs Defesa (17)"+notationStep+"1d8 (8) = 8 de dano"+notationStep+"o livro prevê: Sangrando "+
 		"(a perda de PV desta arma é cumulativa)" {
 		t.Errorf("a linha = %q", line)
 	}

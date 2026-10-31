@@ -15,7 +15,7 @@ import "testing"
 func TestTheCriticalExtraTravelsAsItsOwnShare(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 5)
 
-	critico, err := ResolveAttack(weapon, AttackTarget{Defense: 15}, 19, fixedDice(t, 8, 5))
+	critico, err := suggestedAttack(weapon, AttackTarget{Defense: 15}, 19, fixedDice(t, 8, 5))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -33,7 +33,7 @@ func TestTheCriticalExtraTravelsAsItsOwnShare(t *testing.T) {
 
 	// O ACERTO NORMAL não tem extra nenhum, e sem este caso um campo que
 	// copiasse o dano inteiro passaria verde no de cima.
-	normal, err := ResolveAttack(weapon, AttackTarget{Defense: 15}, 18, fixedDice(t, 8))
+	normal, err := suggestedAttack(weapon, AttackTarget{Defense: 15}, 18, fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -46,7 +46,7 @@ func TestTheCriticalExtraTravelsAsItsOwnShare(t *testing.T) {
 func TestATripleCriticalCountsTwoAddedDiceAsExtra(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 3, 5)
 
-	out, err := ResolveAttack(weapon, AttackTarget{Defense: 15}, 20, fixedDice(t, 8, 5, 7))
+	out, err := suggestedAttack(weapon, AttackTarget{Defense: 15}, 20, fixedDice(t, 8, 5, 7))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestTheBonusThatOnlyExistsOnACriticalIsPartOfTheExtra(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 5)
 	weapon.CriticalBonus = 10
 
-	out, err := ResolveAttack(weapon, AttackTarget{Defense: 15}, 19, fixedDice(t, 8, 5))
+	out, err := suggestedAttack(weapon, AttackTarget{Defense: 15}, 19, fixedDice(t, 8, 5))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestTheTargetsChanceEchoesOnlyWhenThereIsExtraToIgnore(t *testing.T) {
 	weapon := aWeapon("1d8", 3, 19, 2, 5)
 	target := AttackTarget{Defense: 15, CritExtraIgnoreChance: 50}
 
-	critico, err := ResolveAttack(weapon, target, 19, fixedDice(t, 8, 5))
+	critico, err := suggestedAttack(weapon, target, 19, fixedDice(t, 8, 5))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestTheTargetsChanceEchoesOnlyWhenThereIsExtraToIgnore(t *testing.T) {
 		t.Errorf("o crítico devolveu %d%% de chance, e o alvo tem 50%% (p338)",
 			critico.CritExtraIgnoreChance)
 	}
-	normal, err := ResolveAttack(weapon, target, 18, fixedDice(t, 8))
+	normal, err := suggestedAttack(weapon, target, 18, fixedDice(t, 8))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
 	}
