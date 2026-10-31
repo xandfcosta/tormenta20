@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
+
+	"golang.org/x/net/html"
 )
 
 func rowConditions(t *testing.T, f sceneFixture, entryID string) []string {
@@ -45,23 +48,30 @@ func TestTheBadgeSaysTheBookWordAndNotTheId(t *testing.T) {
 
 	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 
-	// O SELETOR É O CRACHÁ (`</li>`) e não a palavra solta, e esta linha custou
+	// O SELETOR É O CRACHÁ DA FILA e não a palavra solta, e esta linha custou
 	// uma sabotagem: procurar "Caído" na página passava VERDE com o crachá
-	// imprimindo o id, porque o DIÁLOGO lista as 35 condições pelo nome — a
-	// palavra estava lá, só não no lugar medido. É a terceira vez que substring
-	// comum mente neste repositório; asserção de tela pede âncora de elemento.
-	if !strings.Contains(screen, ">Caído</li>") {
-		t.Error(`o crachá da fila não diz "Caído" — voltou a imprimir o id`)
+	// imprimindo o id, porque o DIÁLOGO lista as condições pelo nome — a
+	// palavra estava lá, só não no lugar medido. Asserção de tela pede âncora
+	// de elemento.
+	badge := queueBadge(t, screen, "Caído")
+	if badge == nil {
+		t.Fatal(`o crachá da fila não diz "Caído" — voltou a imprimir o id`)
 	}
-	// E o EFEITO viaja no `title`, porque a condição aqui é rastreio e não
-	// regra: quem aplica é o mestre, e ele precisa ler o que ela faz.
+	// E o EFEITO viaja no `title` DO CRACHÁ, porque a condição aqui é rastreio
+	// e não regra: quem aplica é o mestre, e ele precisa ler o que ela faz.
 	//
 	// O texto sai do CATÁLOGO e não é transcrito aqui: eu tinha escrito de
 	// cabeça "O personagem cai no chão" e o guarda ficou vermelho contra a
 	// descrição de verdade. Esperado escrito à mão sobre dado que existe é
 	// convite a testar a minha memória em vez do app.
-	if !strings.Contains(screen, conditionEffectOf("caido")) {
-		t.Error("o crachá não carrega o efeito da condição")
+	if attr(badge, "title") != conditionEffectOf("caido") {
+		t.Errorf("o crachá não carrega o efeito da condição: title = %q", attr(badge, "title"))
+	}
+	// E a fila do JOGADOR diz a mesma palavra: as duas filas desenham o mesmo
+	// crachá, e a do jogador já imprimiu o id cru.
+	forPlayer := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if queueBadge(t, forPlayer, "Caído") == nil {
+		t.Error(`o crachá da fila do jogador não diz "Caído" — imprime o id`)
 	}
 	// O CONTROLE: o efeito não é string vazia, senão a asserção acima é
 	// verdadeira sobre qualquer página.
@@ -188,10 +198,39 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 	}
 }
 
+// queueBadge acha, dentro da fila, o crachá que diz exatamente `word`.
+func queueBadge(t *testing.T, screen, word string) *html.Node {
+	t.Helper()
+	doc, err := html.Parse(strings.NewReader(screen))
+	if err != nil {
+		t.Fatal(err)
+	}
+	queue := findNode(doc, "id", "table-tracker")
+	if queue == nil {
+		t.Fatal("a página não tem a fila")
+	}
+	var found *html.Node
+	var visit func(n *html.Node)
+	visit = func(n *html.Node) {
+		if found != nil {
+			return
+		}
+		if n.Type == html.ElementNode && slices.Contains(strings.Fields(attr(n, "class")), "ds-badge") && strings.TrimSpace(textOf(n)) == word {
+			found = n
+			return
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			visit(c)
+		}
+	}
+	visit(queue)
+	return found
+}
+
 // conditionEffectOf lê o efeito no LIVRO, e não pelo ajudante da cena.
 //
-// A diferença importa: chamar o `conditionEffect` de `web/table` faria o
-// esperado sair do código sob teste, e os dois andariam juntos com o defeito. O
+// A diferença importa: chamar o ajudante de `web/table` faria o esperado sair
+// do código sob teste, e os dois andariam juntos com o defeito. O
 // catálogo é a fonte dos dois lados, e é dele que a asserção lê.
 func conditionEffectOf(id string) string {
 	for _, c := range book.Catalogs().Conditions {
@@ -233,7 +272,7 @@ func TestMarkingAConditionOnACharacterRowWritesTheSheet(t *testing.T) {
 		t.Errorf("a linha do PC guardou %v na fila: a condição dele mora na ficha", got)
 	}
 	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(screen, ">Atordoado</li>") {
+	if queueBadge(t, screen, "Atordoado") == nil {
 		t.Error("a fila não mostra o crachá da condição que está na ficha")
 	}
 
@@ -256,7 +295,7 @@ func TestTheTableRowShowsTheSheetConditions(t *testing.T) {
 		t.Fatalf("marcar pela ficha deu %d", rec.Code)
 	}
 	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if !strings.Contains(screen, ">Caído</li>") {
+	if queueBadge(t, screen, "Caído") == nil {
 		t.Error("a ficha está Caída e a fila da Mesa não mostra o crachá")
 	}
 }

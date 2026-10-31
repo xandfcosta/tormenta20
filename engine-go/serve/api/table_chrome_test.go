@@ -128,7 +128,7 @@ func pointerRulesOfTheMap(t *testing.T) (map[string]bool, map[string][]pointerRe
 			switch {
 			case strings.Contains(body, "pointer-events:none"):
 				name := strings.TrimPrefix(selector, ".")
-				if strings.HasPrefix(name, "board-") && !strings.ContainsAny(name, " >+~.:[") {
+				if isMapChrome(name) && !strings.ContainsAny(name, " >+~.:[") {
 					noPointer[name] = true
 				}
 			case strings.Contains(body, "pointer-events:auto"):
@@ -165,25 +165,31 @@ func splitSelectors(list string) []string {
 	return append(selectors, list[start:])
 }
 
+// isMapChrome diz se a classe é do tabuleiro: as do mapa (`board-`) e as da
+// moldura do kit em volta dele (`ds-board-`).
+func isMapChrome(class string) bool {
+	return strings.HasPrefix(class, "board-") || strings.HasPrefix(class, "ds-board-")
+}
+
 func parseRelief(t *testing.T, selector string) (string, pointerRelief, bool) {
 	t.Helper()
 	// `button.board-marker`: a folha diz que ESTA tag do painel recebe o
 	// ponteiro. O marcador é `none` para a mesa e `auto` para o mestre, e a
 	// diferença entre os dois é a tag que o servidor escreve.
 	if tag, name, found := strings.Cut(selector, "."); found && tag != "" && !strings.ContainsAny(name, " >+~.:[") {
-		if strings.HasPrefix(name, "board-") {
+		if isMapChrome(name) {
 			return name, pointerRelief{tags: map[string]bool{tag: true}, selfNode: true}, true
 		}
 		return "", pointerRelief{}, false
 	}
 	if name, found := strings.CutSuffix(strings.TrimPrefix(selector, "."), ">*"); found {
-		if !strings.HasPrefix(name, "board-") {
+		if !isMapChrome(name) {
 			return "", pointerRelief{}, false
 		}
 		return name, pointerRelief{directChild: true}, true
 	}
 	label, rest, hit := strings.Cut(strings.TrimPrefix(selector, "."), " ")
-	if !hit || !strings.HasPrefix(label, "board-") {
+	if !hit || !isMapChrome(label) {
 		// Seletor que não fala de dentro de um painel do tabuleiro — o
 		// `.board-marker-actions` é um nó solto e não um alívio.
 		return "", pointerRelief{}, false

@@ -1,4 +1,5 @@
 import { type Browser, type Page, expect, test } from '@playwright/test'
+import { putACombatantInTheTracker } from './support/table'
 
 /**
  * O REALTIME COM DOIS CLIENTES na Mesa.
@@ -26,7 +27,7 @@ async function asDuasTelas(browser: Browser) {
   // OS DOIS CONECTADOS ANTES DE AGIR. Sem isto o caso mede uma corrida: o
   // mestre agiria antes de o stream do jogador existir, e a ausência do eco
   // seria lida como "não propagou".
-  await expect(gmScreen.getByRole('button', { name: /^Abrir a iniciativa/ }).first()).toBeVisible()
+  await expect(gmScreen.getByRole('button', { name: 'Adicionar à fila' })).toBeVisible()
   await expect(playerScreen.getByRole('navigation', { name: 'Superfícies da sessão' })).toBeVisible()
   return {
     telaDoMestre: gmScreen,
@@ -40,60 +41,34 @@ async function asDuasTelas(browser: Browser) {
   }
 }
 
-/**
- * A gaveta da fila, que é onde o mestre comanda.
- *
- * IDEMPOTENTE, e não é conveniência: a gaveta é MODAL, então com ela já aberta o
- * botão que a abre fica atrás dela. O sintoma não é "não achei o botão" — é um
- * timeout de clique sobre um seletor que casou, com "subtree intercepts pointer
- * events" no log, que aponta para o lugar errado.
- */
-async function openTheTracker(page: Page) {
-  const drawer = page.locator('#tracker-drawer')
-  if (await drawer.getAttribute('open') === null) {
-    await page
-      .getByRole('button', { name: /^Abrir a iniciativa/ })
-      .filter({ visible: true })
-      .click()
-  }
-  await expect(drawer).toHaveAttribute('open', '')
-}
-
-async function closeTheTracker(page: Page) {
-  await page.getByRole('button', { name: 'Fechar a iniciativa' }).click()
-  await expect(page.locator('#tracker-drawer')).not.toHaveAttribute('open', '')
-}
-
-/** Põe um combatente na fila pelo gesto do mestre, e devolve o nome dele. */
+/** Põe um combatente na fila pelo Adicionar do mestre (ALE-522). */
 async function poeNaFila(page: Page, displayName: string) {
-  await openTheTracker(page)
-  await page.getByRole('button', { name: '+ Combatente' }).click()
-  await page.getByLabel('Nome', { exact: true }).fill(displayName)
-  await page.getByRole('button', { name: 'Acrescentar' }).click()
-  await expect(page.locator('#tracker-drawer').getByText(displayName).first()).toBeVisible()
+  await putACombatantInTheTracker(page, displayName)
+  await expect(page.locator('#table-tracker').getByText(displayName).first()).toBeVisible()
 }
 
+/** Tira pela folha do combatente, onde mora o Remover. */
 async function tiraDaFila(page: Page, displayName: string) {
-  await openTheTracker(page)
-  await page.getByRole('button', { name: `Remover ${displayName} da fila` }).click()
-  await closeTheTracker(page)
+  await page.getByRole('button', { name: `Abrir ${displayName}` }).click()
+  await page.locator('dialog[open]').getByRole('button', { name: 'Remover da fila' }).click()
+  await expect(page.locator('#table-tracker').getByText(displayName)).toHaveCount(0)
 }
 
 /**
  * A cena precisa estar EM CURSO: sem ela o servidor não manda fila à mesa.
- *
- * São DOIS cliques desde a ALE-365: "Iniciar cena" abre os três tipos do livro
- * (p252) e a fila só existe na cena de AÇÃO, que é a que este caso quer.
+ * Fora de cena, a fila do mestre oferece as três cenas do livro (p252), e a
+ * fila só anda na de AÇÃO.
  */
 async function garanteACena(page: Page) {
-  const start = page.locator('summary[aria-label="Iniciar uma cena"]').filter({ visible: true })
-  if (await start.count()) {
-    await start.first().click()
-    await page.getByRole('button', { name: 'Iniciar uma cena de Ação' }).filter({ visible: true }).first().click()
-  }
-  await expect(
-    page.getByRole('button', { name: 'Encerrar cena' }).filter({ visible: true }).first(),
-  ).toBeVisible()
+  const start = page.getByRole('button', { name: 'Iniciar uma cena de Ação' })
+  if (await start.count()) await start.click()
+  await expect(start, 'a cena não começou').toHaveCount(0)
+}
+
+/** Encerra a cena pelo ⋯ do mestre. */
+async function encerraACena(page: Page) {
+  await page.getByRole('button', { name: 'Cena, descanso e sessão' }).click()
+  await page.getByRole('button', { name: 'Encerrar a cena' }).click()
 }
 
 test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
@@ -110,15 +85,15 @@ test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
       'o mestre recebeu a cena do JOGADOR',
     ).toHaveCount(0)
 
-    // E os COMANDOS são do mestre. A trava é na view (`v.Mestre` nil), então o
+    // E os COMANDOS são do mestre. A trava é na view (`v.GM` nil), então o
     // que se afirma aqui é que ela chegou íntegra até o navegador do jogador.
     await expect(
-      gmScreen.getByRole('region', { name: 'Controles do mestre' }).first(),
-      'o mestre não recebeu os controles do mestre',
+      gmScreen.getByRole('button', { name: 'Adicionar à fila' }),
+      'o mestre não recebeu os comandos do mestre',
     ).toBeVisible()
     await expect(
-      playerScreen.getByRole('region', { name: 'Controles do mestre' }),
-      'o jogador recebeu os controles do MESTRE',
+      playerScreen.getByRole('button', { name: 'Adicionar à fila' }),
+      'o jogador recebeu os comandos do MESTRE',
     ).toHaveCount(0)
   } finally {
     await closes()
@@ -134,7 +109,6 @@ test('o que o mestre põe na fila aparece na tela do jogador', async ({ browser 
     await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
 
     await poeNaFila(gmScreen, echo)
-    await closeTheTracker(gmScreen)
 
     // A tela do jogador não recarrega: o combatente chega pelo stream.
     //
@@ -180,9 +154,10 @@ test('a condição que o mestre aplica aparece na fila do jogador', async ({ bro
     await expect(fila.getByText(target).first()).toBeVisible()
     await expect(playerScreen.getByTitle(/Abalado|-2 em testes/).first()).toHaveCount(0)
 
-    await gmScreen.getByRole('button', { name: `Condições de ${target}` }).click()
-    const dialog = gmScreen.locator('#combatant-conditions')
-    await dialog.getByRole('button', { name: 'Abalado', exact: true }).click()
+    await gmScreen.getByRole('button', { name: `Abrir ${target}` }).click()
+    await gmScreen.locator('dialog[open]').getByRole('button', { name: '+ Aplicar condição' }).click()
+    await gmScreen.locator('#gm-conditions').getByRole('button', { name: 'Abalado', exact: true }).click()
+    await gmScreen.keyboard.press('Escape')
     await gmScreen.keyboard.press('Escape')
 
     // E a tela do jogador aprende sozinha, sem recarregar. É a issue inteira.
@@ -210,24 +185,17 @@ test('encerrar a cena tira a fila da mesa sem tirá-la do mestre', async ({ brow
     await garanteACena(gmScreen)
     await playerScreen.getByRole('button', { name: 'Mesa', exact: true }).click()
     await poeNaFila(gmScreen, echo)
-    await closeTheTracker(gmScreen)
     // ESCOPADO À FILA — ver o primeiro caso deste arquivo.
     const fila = playerScreen.locator('#table-tracker')
     await expect(fila.getByText(echo).first()).toBeVisible()
 
-    await gmScreen
-      .getByRole('button', { name: 'Encerrar cena' })
-      .filter({ visible: true })
-      .first()
-      .click()
+    await encerraACena(gmScreen)
 
     await expect(fila.getByText(echo)).toHaveCount(0)
-    await openTheTracker(gmScreen)
     await expect(
-      gmScreen.locator('#tracker-drawer').getByText(echo).first(),
+      gmScreen.locator('#table-tracker').getByText(echo).first(),
       'a fila sumiu da tela do MESTRE: isso é apagar, não redigir',
     ).toBeVisible()
-    await closeTheTracker(gmScreen)
 
     // E volta pelo mesmo caminho: a fila estava guardada o tempo todo.
     await garanteACena(gmScreen)
@@ -314,8 +282,9 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
   const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
   try {
     await garanteACena(gmScreen)
-    await openTheTracker(gmScreen)
-    await gmScreen.getByRole('button', { name: 'Adicionar grupo' }).click()
+    await gmScreen.getByRole('button', { name: 'Adicionar à fila' }).click()
+    await gmScreen.locator('#gm-add').getByRole('button', { name: 'Grupo', exact: true }).click()
+    await gmScreen.locator('#gm-add').getByRole('button', { name: 'Adicionar o grupo' }).click()
 
     // OS NOMES dos personagens deste jogador, lidos na superfície MESA — as
     // linhas que dizem "você". São TODOS, e não o primeiro: o jogador da semente
@@ -347,8 +316,8 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
     // pessoa e o caso passaria a afirmar nada.
     for (const pcName of pcNames) {
       await gmScreen
-        .locator('#tracker-drawer')
-        .getByRole('button', { name: `Ferir ${pcName}` })
+        .locator('#table-tracker')
+        .getByRole('button', { name: `Tirar 1 PV de ${pcName}` })
         .first()
         .click()
     }

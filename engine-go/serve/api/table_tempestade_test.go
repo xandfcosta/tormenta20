@@ -54,15 +54,6 @@ func TestTheParallelSessionDressesThePlayerSheetInTempestade(t *testing.T) {
 	}
 }
 
-// O MESTRE segue com o palco de hoje: a sessão nova é a visão do jogador.
-func TestTheGmKeepsTodaysStageInTheParallelSession(t *testing.T) {
-	f := newSceneFixture(t)
-	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
-	if strings.Contains(page, "scene-ds") {
-		t.Error("o mestre recebeu a sessão do jogador")
-	}
-}
-
 // O STREAM MANTÉM O CABEÇALHO NOVO depois do primeiro quadro. Ele recarrega a
 // mesa a cada mudança, e a marca da sessão do jogador tem de valer em todo
 // quadro — e não só no primeiro, que é como o cabeçalho de hoje voltava dois

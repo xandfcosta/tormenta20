@@ -50,7 +50,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
-	view.dressForGm(r)
+	view.dressBoardWindow(r)
 
 	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
@@ -118,7 +118,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
-		view.dressForGm(r)
+		view.dressBoardWindow(r)
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
@@ -297,13 +297,19 @@ type tableRegion struct {
 // mudam com o turno, o grupo muda com a ficha, o mapa muda com o tabuleiro, a
 // fila muda com a fila. Cortar por assunto juntaria coisas que mudam em ritmos
 // diferentes, e a região só é útil enquanto ela é a unidade de mudança.
+// AS REGIÕES DA MESA: cada uma tem raiz com id ESTÁVEL e hash próprio, e o
+// stream manda só as que mudaram. Remendar a cena inteira a cada mudança de
+// qualquer um substituiria o elemento debaixo do dedo de quem arrasta uma peça,
+// cancelando o gesto. A raiz existe SEMPRE, com o condicional por dentro: uma
+// região que some leva o id junto, e o remendo seguinte não acha onde pousar.
+//
 // TableRegions é exportada porque a BANCADA do hospedeiro a chama: um caso
 // pergunta ao MESMO cálculo da produção quais regiões o stream mandaria para
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
-	// A SESSÃO DO JOGADOR tem as regiões das superfícies que ela desenha; a Ficha
-	// o stream nunca toca.
-	// A MESA DO MESTRE no Tempestade (ALE-522) tem as regiões da fatia da Fila.
+	// A JANELA À PARTE do tabuleiro do mestre só tem o mapa e os dois diálogos
+	// dele: mandar remendo para uma região que o documento não tem é escrever no
+	// vazio, e a lista e a página respondem à mesma `view`.
 	if v.BoardWindow {
 		return []tableRegion{
 			{"table-board", gmBoardRegion(v)},
@@ -311,61 +317,41 @@ func TableRegions(v View) []tableRegion {
 			{"table-archive", gmArchive(v)},
 		}
 	}
-	if v.Tempestade && v.GM != nil {
+	if v.GM != nil {
 		return []tableRegion{
 			{"table-header", gmHeader(v)},
+			{"table-gm-menu", gmMenu(v)},
+			// O ATAQUE PROPOSTO muda no ritmo do COMBATE, que não é o do
+			// cabeçalho nem o do mapa: ele nasce e morre várias vezes por turno.
 			{"table-attack", gmAttack(v)},
 			{"table-skill-test", tempestadeSkillTest(v)},
 			{"table-tracker", gmQueue(v)},
 			{"table-commands", gmTurnBar(v)},
 			{"table-board", gmBoardRegion(v)},
+			// O PÔR NO MAPA é região própria porque muda com a FILA (quem existe)
+			// e com o MAPA (quem já tem peça): pendurado em qualquer uma das duas,
+			// a outra seria remendada de graça — e a peça debaixo do dedo do
+			// mestre trocada no meio do arrasto (`TestATrackerChangeDoesNotPatchTheMap`).
 			{"table-populate", gmPopulate(v)},
+			// O ACERVO pela mesma razão: a lista de lugares guardados muda duas
+			// vezes por sessão, e o mapa a cada peça que anda.
 			{"table-archive", gmArchive(v)},
 			{"table-npcs", gmCastList(v)},
+			// As CONFIGURAÇÕES mudam com o CICLO da sessão, que não é o ritmo
+			// de nenhuma das outras.
+			{"table-session-config", tableConfigSession(v)},
 		}
 	}
-	if v.Tempestade {
-		return []tableRegion{
-			{"table-header", tempestadeHeader(v)},
-			{"table-attack", tempestadeAttack(v)},
-			{"table-skill-test", tempestadeSkillTest(v)},
-			{"table-turn-target", tempestadeTargetBar(v)},
-			{"table-register", tempestadeRegister(v)},
-			{"table-party", tempestadeParty(v)},
-			{"table-tracker", tempestadeTracker(v)},
-			{"table-board", tempestadeBoardRegion(v)},
-		}
+	// A SESSÃO DO JOGADOR tem as regiões das superfícies que ela desenha; a Ficha
+	// o stream nunca toca.
+	return []tableRegion{
+		{"table-header", tempestadeHeader(v)},
+		{"table-attack", tempestadeAttack(v)},
+		{"table-skill-test", tempestadeSkillTest(v)},
+		{"table-turn-target", tempestadeTargetBar(v)},
+		{"table-register", tempestadeRegister(v)},
+		{"table-party", tempestadeParty(v)},
+		{"table-tracker", tempestadeTracker(v)},
+		{"table-board", tempestadeBoardRegion(v)},
 	}
-	regions := []tableRegion{
-		{"table-header", tableHeader(v)},
-		// O ATAQUE PROPOSTO muda no ritmo do COMBATE, que não é o do cabeçalho nem
-		// o do mapa: ele nasce e morre várias vezes por turno.
-		{"table-attack", attackProposed(v)},
-		{"table-register", tableRegisterRegion(v)},
-		{"table-party", tableParty(v)},
-		{"table-board", tableBoard(v)},
-		// REGIÃO PRÓPRIA, e ela nasceu de um guarda: o diálogo de pôr no mapa muda
-		// com a FILA (quem existe) e com o MAPA (quem já tem peça), então pendurá-lo
-		// em qualquer uma das duas faz a outra ser remendada de graça. Dentro do
-		// mapa, `TestATrackerChangeDoesNotPatchTheMap` acusou na hora — a peça
-		// debaixo do dedo do mestre seria trocada no meio do arrasto.
-		{"table-populate", tableMap(v)},
-		// O ACERVO é região pela MESMA razão: a lista de lugares guardados é a maior
-		// parte dos bytes da região do tabuleiro, e ela muda duas vezes por sessão
-		// enquanto o mapa muda a cada peça que anda. Ver `tableCollectionPlaces`.
-		{"table-archive", tableCollectionPlaces(v)},
-		{"table-session-config", tableConfigSession(v)},
-		{"table-tracker", tableTracker(v)},
-		{"table-commands", tableCommands(v)},
-	}
-	// O TRILHO DA FILA só existe no palco do mestre, e por isso ele entra na lista
-	// pela MESMA condição que o desenha. Mandar um remendo para um id que não está
-	// no documento é escrever no vazio — e a lista e a página não podem discordar
-	// sobre quais regiões existem, o que só se garante fazendo as duas perguntarem
-	// à mesma `view`.
-	if v.GM != nil {
-		regions = append(regions, tableRegion{"table-tracker-rail", tableRailTracker(v)})
-		regions = append(regions, tableRegion{"table-npcs", tableListNpCs(v)})
-	}
-	return regions
 }

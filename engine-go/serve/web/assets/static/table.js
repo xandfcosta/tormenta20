@@ -43,7 +43,7 @@ function c(e) {
 			if (e.attributeName !== "aria-valuenow") continue;
 			let n = e.target, r = Number(e.oldValue), i = Number(n.getAttribute("aria-valuenow"));
 			if (!Number.isFinite(r) || !Number.isFinite(i) || r === i) continue;
-			let a = n.closest("li");
+			let a = n.closest("li, .ds-row");
 			a && requestAnimationFrame(() => t(a, { curou: i > r }));
 		}
 	}).observe(document.body, {

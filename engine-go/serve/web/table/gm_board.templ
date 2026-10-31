@@ -88,7 +88,7 @@ templ gmScenePick(b BoardView) {
 					<b>{ tab.Name }</b>
 				</span>
 			} else {
-				<button type="button" class="ds-gm-menu-row" data-on:click={ tab.Command }>
+				<button type="button" class="ds-gm-menu-row" aria-label={ "Ver o tabuleiro " + tab.Name } data-on:click={ tab.Command }>
 					if tab.Curtain {
 						@ui.Icon("Theater", "ds-icon")
 					} else {
@@ -153,7 +153,7 @@ templ gmBoardBar(b BoardView, v View) {
 			@ui.Icon("UserPlus", "ds-icon")
 		</button>
 		if !v.BoardWindow {
-			<button type="button" class="ds-board-fbtn" aria-label="Abrir o tabuleiro numa janela" title="Abrir o tabuleiro numa janela à parte — para a segunda tela ou a TV da mesa" data-on:click={ boardWindowOpens(v) }>
+			<button type="button" class="ds-board-fbtn" data-board-window-opener aria-label="Abrir o tabuleiro numa janela" title="Abrir o tabuleiro numa janela à parte — para a segunda tela ou a TV da mesa" data-on:click={ boardWindowOpens(v) }>
 				@ui.Icon("ExternalLink", "ds-icon")
 			</button>
 		}
@@ -195,7 +195,7 @@ templ gmTools(b BoardView) {
 			if isBrush(t.ID) {
 				<button
 					type="button"
-					class="ds-board-tool"
+					class={ "ds-board-tool " + t.Hue }
 					title={ t.Hint }
 					aria-label={ t.Label }
 					data-attr:aria-pressed={ onIsTool(t.ID) + " ? 'true' : 'false'" }
@@ -319,7 +319,7 @@ templ gmPartyBar() {
 
 // gmClipboard é a área de transferência das peças copiadas, com a saída.
 templ gmClipboard(b BoardView) {
-	<div class="ds-board-card" data-row data-show="$area_token !== ''" style="display:none" data-on:keydown__window={ pasteInTheMiddleOfTheView(b) }>
+	<div class="ds-board-card" role="group" aria-label="Área de transferência" data-row data-show="$area_token !== ''" style="display:none" data-on:keydown__window={ pasteInTheMiddleOfTheView(b) }>
 		@ui.Icon("Copy", "ds-icon ds-board-mark")
 		<span class="ds-board-read" aria-live="polite" data-text="$area_label + ' · ' + $area_phrase"></span>
 		<button type="button" class="ds-board-fbtn" aria-label="Esvaziar a área de transferência" data-on:click={ emptiesTheClipboard }>
@@ -408,7 +408,7 @@ templ gmPopulate(v View) {
 templ gmArchive(v View) {
 	<div id="table-archive">
 		if len(v.Board.Collection) > 0 {
-			@ds.Dialog("place-archive", "Lugares da campanha", nil) {
+			@ds.Dialog("place-archive", fmt.Sprintf("Lugares da campanha · %d", len(v.Board.Collection)), nil) {
 				<p class="ds-help">As cenas que você encerrou, com as peças onde estavam. Reabrir traz a cena numa aba nova.</p>
 				@ds.List("", "") {
 					for _, l := range v.Board.Collection {
@@ -444,7 +444,7 @@ templ gmArchive(v View) {
 // gmBoardWindow é a JANELA À PARTE: só o mapa, para a segunda tela ou a TV da
 // mesa. O fluxo dela remenda só o tabuleiro.
 templ gmBoardWindow(v View) {
-	<main id="table" class="ds-session ds-gm-window" data-signals="{gm_terrain_open: false}">
+	<main id="table" class="ds-session ds-gm-window" data-attr:style={ dragOffsetStyle } data-signals="{gm_terrain_open: false}" data-init={ takesTheBoard(v) } data-on:pagehide__window={ givesTheBoardBack(v) }>
 		@gmBoardRegion(v)
 		@gmPopulate(v)
 		@gmArchive(v)

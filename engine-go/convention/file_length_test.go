@@ -103,8 +103,7 @@ func TestNoNewFileGoesOverTheLineCeiling(t *testing.T) {
 // Seis `.templ` estão na dívida, com o `board.templ` em 2084 linhas — quatro
 // vezes o teto. Achei que o `templ` não tivesse como dividi-los por não ter
 // `include`; está errado, e conferi: ele resolve componente por PACOTE, não por
-// arquivo. O `boardTable` mora no `board.templ` e é chamado do `table.templ` e
-// do `draft.templ`, hoje. Mover componentes para um arquivo irmão do mesmo
+// arquivo — o `boardScene` mora no `board.templ` e é chamado de três outros. Mover componentes para um arquivo irmão do mesmo
 // pacote não pede nada — o que pede é a razão do corte (ALE-360).
 //
 // isHandWritten separa o que é ESCRITO à mão do que é gerado.

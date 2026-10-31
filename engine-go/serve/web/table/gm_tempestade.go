@@ -145,5 +145,32 @@ func terrainPressed() string {
 // boardWindowOpens abre o tabuleiro numa janela à parte, com o nome fixo:
 // clicar de novo traz a mesma janela em vez de abrir outra.
 func boardWindowOpens(v View) string {
-	return fmt.Sprintf("const w = window.open('%s?tempestade=1&janela=tabuleiro', 't20-tabuleiro', 'popup,width=1280,height=800'); if (w) { w.focus() }", v.SessionBase())
+	return fmt.Sprintf("const w = window.open('%s?janela=tabuleiro', '%s', 'popup,width=1280,height=800'); if (w) { w.focus() }", v.SessionBase(), boardWindowName)
+}
+
+// O TABULEIRO NUMA JANELA sai da aba original para dar a largura à fila e às
+// Consultas (decisão do dono). É o mesmo acordo das notas (`notesWindowKey`):
+// a janela anuncia por `localStorage` que tomou o tabuleiro e o devolve no
+// `pagehide`, e a aba ouve o `storage`. O valor é o ID da sessão, porque a
+// janela da sessão 4 não tem nada a dizer sobre a 7.
+const (
+	boardWindowKey  = "t20:tabuleiro-janela"
+	boardWindowName = "t20-tabuleiro"
+)
+
+func takesTheBoard(v View) string {
+	return fmt.Sprintf("localStorage.setItem('%s', '%d')", boardWindowKey, v.SessionID)
+}
+
+func givesTheBoardBack(v View) string {
+	return fmt.Sprintf("if (localStorage.getItem('%s') === '%d') { localStorage.removeItem('%s') }",
+		boardWindowKey, v.SessionID, boardWindowKey)
+}
+
+func seesTheBoardAway(v View) string {
+	return fmt.Sprintf("$gm_board_away = localStorage.getItem('%s') === '%d'", boardWindowKey, v.SessionID)
+}
+
+func watchesTheBoardWindow(v View) string {
+	return fmt.Sprintf("if (evt.key === '%s') { $gm_board_away = evt.newValue === '%d' }", boardWindowKey, v.SessionID)
 }

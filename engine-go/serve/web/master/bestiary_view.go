@@ -52,7 +52,7 @@ type BestiaryView struct {
 	CRMax   float64
 	// Open diz que ESTE pedido veio de um clique numa linha, e por isso a ficha
 	// tem de nascer aberta. Vem da URL e não de um sinal — a razão está no
-	// `openTheEntry`.
+	// `OpenTheEntry`.
 	Open bool
 }
 
@@ -93,14 +93,14 @@ func LoadBestiaryFrom(base string, bookRef bookui.BookAddress, search string, ki
 	}
 }
 
-// typeOn diz se o crachá está ligado, para a cena não precisar de `slices`.
-func (v BestiaryView) typeOn(kind string) bool {
+// TypeOn diz se o crachá está ligado, para a cena não precisar de `slices`.
+func (v BestiaryView) TypeOn(kind string) bool {
 	return slices.Contains(v.Types, kind)
 }
 
-// crInBox escreve o número do campo sem o `.0` que o float traria: a caixa
+// CRInBox escreve o número do campo sem o `.0` que o float traria: a caixa
 // diz "3", não "3.0", e o passo do livro é de um quarto.
-func crInBox(nd float64) string {
+func CRInBox(nd float64) string {
 	return strconv.FormatFloat(nd, 'g', -1, 64)
 }
 
@@ -131,7 +131,7 @@ func BestiarySignals(v BestiaryView) string {
 	// aberto chegam no MESMO remendo — atômicos, sem janela em que um esteja
 	// aplicado e o outro não.
 	return fmt.Sprintf(`{search: %s, ndMin: %s, ndMax: %s, tipos: %s, creature: %s, sheet_open: %t}`,
-		search, crInBox(v.CRMin), crInBox(v.CRMax), kinds, creature, v.Open)
+		search, CRInBox(v.CRMin), CRInBox(v.CRMax), kinds, creature, v.Open)
 }
 
 // BestiaryBase é o prefixo de rota da cena, e ele NÃO tem padrão.
@@ -164,14 +164,14 @@ func ToggleType(kinds []string, kind string) ([]string, error) {
 	return append(slices.Clone(kinds), kind), nil
 }
 
-// openTheEntry marca o pedido que deve ABRIR a ficha ao terminar.
+// OpenTheEntry marca o pedido que deve ABRIR a ficha ao terminar.
 //
 // A marca vai na URL e não num sinal porque a MESMA rota serve a busca e os
 // filtros de tipo, e os dois mandam os sinais todos — inclusive o `creature`.
 // Um sinal não distinguiria "escolhi esta criatura" de "digitei uma letra na
 // busca com uma criatura já escolhida", e a busca passaria a abrir a ficha
 // sozinha a cada tecla.
-func openTheEntry(base string) string {
+func OpenTheEntry(base string) string {
 	if strings.Contains(base, "?") {
 		return base + "&abrir=1"
 	}

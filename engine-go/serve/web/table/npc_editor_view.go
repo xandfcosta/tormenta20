@@ -228,20 +228,6 @@ func tabSummary(aba string) string {
 // de ferramentas do mapa: uma aba desligada não deixaria nada na tela.
 func pickTab(aba string) string { return fmt.Sprintf("$draft_tab = %q", aba) }
 
-// tabStyling liga UMA das duas aparências, e nunca deixa as duas na mesa.
-//
-// Os DOIS lados no `data-class`, e não a cor apagada num `class` fixo: é uma
-// armadilha de CASCATA. A marca de aberta (`.tab-on`) mora em `@layer
-// components` e o `text-muted-foreground` é utilidade do Tailwind, que vive numa
-// camada POSTERIOR — camada vence especificidade, então o dourado perde para o
-// cinza sem nada acusar, com a aba ficando com a classe certa e a cor errada.
-//
-// Alternar as duas resolve por construção e não por ordem: só uma existe no
-// elemento a cada instante.
-func tabStyling(aba string) string {
-	return fmt.Sprintf("{'tab-on': %s, 'text-muted-foreground': !(%s)}", onTabExpr(aba), onTabExpr(aba))
-}
-
 // attackName e expertiseName dizem O QUE o botão de remover vai tirar.
 //
 // Com cinco linhas na tela, cinco botões chamados "Remover" são cinco botões

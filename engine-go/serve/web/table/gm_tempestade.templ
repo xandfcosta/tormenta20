@@ -15,7 +15,14 @@ import (
 // Consultas — e a linha do turno fixa acima dela; no desktop, as três ficam à
 // vista lado a lado, e a fila e as consultas recolhem.
 templ gmTempestadeScene(v View, b master.BestiaryView) {
-	<main id="table" class="ds-session" data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes'}">
+	<main
+		id="table"
+		class="ds-session"
+		data-attr:style={ dragOffsetStyle }
+		data-signals="{gm_queue_open: true, gm_consults_open: true, gm_board_away: false, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes', gm_group_search: '', gm_cast_search: '', gm_notes_editing: false}"
+		data-init={ seesTheBoardAway(v) }
+		data-on:storage__window={ watchesTheBoardWindow(v) }
+	>
 		@gmHeader(v)
 		@gmAttack(v)
 		@tempestadeSkillTest(v)
@@ -27,7 +34,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 				</button>
 			}
 		</nav>
-		<div class="ds-gm-grid" data-class="{'ds-gm-no-queue': !$gm_queue_open, 'ds-gm-no-consults': !$gm_consults_open}">
+		<div class="ds-gm-grid" data-class="{'ds-gm-no-queue': !$gm_queue_open, 'ds-gm-no-consults': !$gm_consults_open, 'ds-gm-board-away': $gm_board_away}">
 			<div class="ds-session-surface ds-gm-col" data-gm-col="queue" data-show={ surface(superficieDaMesa) }>
 				<div class="ds-session-scroll">
 					@gmQueue(v)
@@ -40,6 +47,10 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 			<div class="ds-session-surface ds-gm-col" data-gm-col="board" data-show={ surface(superficieDoTabuleiro) }>
 				@gmBoardRegion(v)
 			</div>
+			<button type="button" class="ds-gm-rail" data-gm-rail="board" aria-label="O tabuleiro está numa janela à parte: trazê-la" data-on:click={ boardWindowOpens(v) }>
+				@ui.Icon("ExternalLink", "ds-icon")
+				<span>Tabuleiro na janela</span>
+			</button>
 			<div class="ds-session-surface ds-gm-col" data-gm-col="consults" data-show={ surface(superficieDasConsultas) }>
 				@gmConsults(v, b)
 			</div>
@@ -54,6 +65,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 		@gmConditionPicker(v)
 		@gmPopulate(v)
 		@gmArchive(v)
+		@tableConfigSession(v)
 	</main>
 }
 
@@ -76,6 +88,11 @@ templ gmHeader(v View) {
 // Próximo. Não repete quem joga — o nome já está no topo.
 templ gmTurnBar(v View) {
 	<div id="table-commands" class="ds-gm-turn">
+		// O TESTE DE QUEM SANGRA (p236) mora na linha do turno: ele chega com a
+		// vez de quem caiu, e o mestre o responde antes do Próximo.
+		if v.Bleeding != nil {
+			@tempestadeBleeding(v)
+		}
 		if v.GM != nil {
 			<span class="ds-row-meta ds-gm-turn-what" aria-live="polite">{ v.GM.Counter }</span>
 			<p class="ds-help ds-reg-error" data-show="$command_error != ''" data-text="$command_error" aria-live="assertive"></p>
@@ -131,7 +148,13 @@ templ gmQueue(v View) {
 // gmQueueRow é uma linha: o toque no corpo abre a folha, e o − e o + tiram e
 // devolvem UM PV (Shift: cinco), que é o gesto mais frequente da noite.
 templ gmQueueRow(v View, row tableRow) {
-	<div class="ds-row ds-gm-row" data-now?={ row.OnTurn }>
+	<div
+		class="ds-row ds-gm-row"
+		data-now?={ row.OnTurn }
+		if row.OnTurn {
+			aria-current="true"
+		}
+	>
 		<span class="ds-queue-ini">{ strconv.Itoa(row.Initiative) }</span>
 		<button type="button" class="ds-gm-open" aria-label={ "Abrir " + row.Label } commandfor={ combatantDialog(row) } command="show-modal">
 			<span class="ds-row-title">
@@ -148,7 +171,7 @@ templ gmQueueRow(v View, row tableRow) {
 			if len(row.Conditions) > 0 {
 				<span class="ds-badges">
 					for _, c := range row.Conditions {
-						@ds.Badge(conditionWritten(c), true)
+						@conditionBadge(c)
 					}
 				</span>
 			}
@@ -169,6 +192,11 @@ templ gmPoolLine(label, kind string, b *tableBar) {
 		<span class="ds-gm-vital">
 			<span class="ds-row-meta">
 				{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }
+				// A RESERVA de PV temporário vai escrita: é o que o dano come antes
+				// do PV (p106), e o mestre calcula o golpe contra ela.
+				if b.Temp > 0 {
+					<span class="ds-gm-temp" title="PV temporários">{ fmt.Sprintf("+%d", b.Temp) }</span>
+				}
 				if b.Down != "" {
 					<span class="ds-down">{ b.Down }</span>
 				}
@@ -281,6 +309,11 @@ templ gmAttack(v View) {
 			<div class="ds-strike-head">
 				@ds.Badge("Para confirmar", true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+				// O IMPULSO fica à vista antes do ✓: confirmar cobra o PM da ficha,
+				// e quem confirma precisa saber quanto (ALE-487).
+				if v.Attack.Boost != "" {
+					@ds.Badge(v.Attack.Boost, true)
+				}
 			</div>
 			<div class="ds-strike-short">
 				<span class="ds-seal" data-tone={ v.Attack.Tone }>{ v.Attack.Verdict }</span>
@@ -343,55 +376,58 @@ templ gmAttack(v View) {
 }
 
 // gmMenu é o ⋯: a cena, os descansos e a sessão — o que acontece poucas vezes
-// por noite.
+// por noite. É REGIÃO (`table-gm-menu`) porque muda com a cena: sem o remendo,
+// o "Encerrar a cena" só apareceria depois de recarregar a página.
 templ gmMenu(v View) {
-	@ds.Dialog("gm-menu", "Cena, descanso e sessão", nil) {
-		<div class="ds-gm-menu">
-			if v.SceneActive {
-				<span class="ds-field-label">Cena</span>
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "cena/encerrar")}) {
-					Encerrar a cena
+	<div id="table-gm-menu">
+		@ds.Dialog("gm-menu", "Cena, descanso e sessão", nil) {
+			<div class="ds-gm-menu">
+				if v.SceneActive {
+					<span class="ds-field-label">Cena</span>
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "cena/encerrar")}) {
+						Encerrar a cena
+					}
+				}
+				<span class="ds-field-label">Descanso</span>
+				<div class="ds-gm-two">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "descanso/cena")}) {
+						Expirar efeitos · cena
+					}
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "gm-day-rest", "command": "show-modal"}) {
+						Recuperar · dia
+					}
+				</div>
+				<span class="ds-field-label">Sessão</span>
+				<div class="ds-gm-two">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + openConfigSession(v)}) {
+						@ui.Icon("Settings", "ds-icon")
+						Configurações
+					}
+					@ds.LinkButton(ds.ButtonGhost, templ.SafeURL(campaignChronicle(v)), nil) {
+						@ui.Icon("LogOut", "ds-icon")
+						Sair da sessão
+					}
+				</div>
+			</div>
+		}
+		@ds.Dialog("gm-day-rest", "Descanso de dia", nil) {
+			<p class="ds-help">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p106).</p>
+			@ds.Segmented("Qualidade do descanso") {
+				for _, q := range restOptions {
+					@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$rest_quality === %q ? 'true' : 'false'", q.Value), "data-on:click": fmt.Sprintf("$rest_quality = %q", q.Value)}) {
+						{ q.Label }
+					}
 				}
 			}
-			<span class="ds-field-label">Descanso</span>
-			<div class="ds-gm-two">
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "descanso/cena")}) {
-					Expirar efeitos · cena
-				}
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "gm-day-rest", "command": "show-modal"}) {
-					Recuperar · dia
-				}
-			</div>
-			<span class="ds-field-label">Sessão</span>
-			<div class="ds-gm-two">
-				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(v.SessionBase()+"?tempestade=0"), nil) {
-					@ui.Icon("Settings", "ds-icon")
-					Configurações
-				}
-				@ds.LinkButton(ds.ButtonGhost, templ.SafeURL(campaignChronicle(v)), nil) {
-					@ui.Icon("LogOut", "ds-icon")
-					Sair da sessão
-				}
-			</div>
-		</div>
-	}
-	@ds.Dialog("gm-day-rest", "Descanso de dia", nil) {
-		<p class="ds-help">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p106).</p>
-		@ds.Segmented("Qualidade do descanso") {
-			for _, q := range restOptions {
-				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$rest_quality === %q ? 'true' : 'false'", q.Value), "data-on:click": fmt.Sprintf("$rest_quality = %q", q.Value)}) {
-					{ q.Label }
-				}
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-day-rest').close(); document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "descanso/dia")}) {
+				Descansar
 			}
 		}
-		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-day-rest').close(); document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "descanso/dia")}) {
-			Descansar
-		}
-	}
+	</div>
 }
 
-// gmAddDialog é o Adicionar único: o grupo da campanha ou um combatente. O
-// bestiário entra com as Consultas.
+// gmAddDialog é o Adicionar único: o grupo da campanha, um combatente, ou o
+// Bestiário, que leva à aba das Consultas.
 templ gmAddDialog(v View) {
 	@ds.Dialog("gm-add", "Adicionar à fila", nil) {
 		@ds.Segmented("O que adicionar") {

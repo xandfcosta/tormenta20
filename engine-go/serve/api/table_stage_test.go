@@ -6,65 +6,87 @@ import (
 	"testing"
 )
 
+// gmRegionNames são os ids que o stream remenda na mesa do MESTRE. A lista é a
+// mesma do `TableRegions`, escrita aqui de novo DE PROPÓSITO: derivá-la da
+// produção faria o teste concordar com o defeito — uma região removida sumiria
+// dos dois lados e o guarda ficaria verde sobre nada.
+var gmRegionNames = []string{
+	"table-header",
+	"table-gm-menu",
+	"table-attack",
+	"table-skill-test",
+	"table-tracker",
+	"table-commands",
+	"table-board",
+	"table-populate",
+	"table-archive",
+	"table-npcs",
+	"table-session-config",
+}
+
 // QUE REGIÕES existem no documento do mestre, e cada uma UMA VEZ SÓ.
 //
 // "Uma vez só" é a metade que pega o erro provável: mover uma região e esquecer
 // de tirá-la de onde estava deixa DUAS raízes com o mesmo id. O `PatchElements`
 // acerta a primeira, a segunda envelhece na tela, e as duas discordam sobre a
 // mesma fila.
-func TestTheGmStageHasEveryRegionExactlyOnce(t *testing.T) {
+func TestTheGmTableHasEveryRegionExactlyOnce(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	html := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	page := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
 
-	for _, id := range append(tableRegionNames, "table-tracker-rail") {
+	for _, id := range gmRegionNames {
 		mark := `id="` + id + `"`
-		if n := strings.Count(html, mark); n != 1 {
-			t.Errorf("a região %q aparece %d vezes no palco do mestre, e o remendo precisa de exatamente 1", id, n)
+		if n := strings.Count(page, mark); n != 1 {
+			t.Errorf("a região %q aparece %d vezes na mesa do mestre, e o remendo precisa de exatamente 1", id, n)
 		}
 	}
-}
-
-// O outro lado: o trilho não é do jogador.
-//
-// O trilho de 80px é do mestre, e mandá-lo ao jogador seria mandar a fila
-// inteira para quem o `redactForPlayers` acabou de esvaziá-la — a trava da cena
-// furada por leiaute.
-func TestThePlayerColumnDidNotGetTheGmRail(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-
-	html := f.requests(t, f.player, "GET", f.tableUrl(), "").Body.String()
-
-	// O CONTROLE primeiro: sem ele, "não achei o trilho" seria verdade também
-	// numa página que voltou vazia, num 403, ou num id que alguém renomeou.
-	if !strings.Contains(html, `id="table-tracker"`) {
-		t.Fatal("o jogador não recebeu nem a fila — a página não é o que este teste pensa que é")
+	// E a lista escrita à mão é a do stream, nos dois sentidos: uma região que o
+	// stream manda e a lista esqueceu é uma região que este guarda não mede.
+	streamed := idsDasRegioes(t, f, f.gm)
+	for _, id := range gmRegionNames {
+		if !streamed[id] {
+			t.Errorf("a mesa do mestre desenha %q e o stream não a remenda: ela nasce e nunca mais muda", id)
+		}
+		delete(streamed, id)
 	}
-	if strings.Contains(html, `id="table-tracker-rail"`) {
-		t.Error("o jogador recebeu o trilho do mestre")
+	for id := range streamed {
+		t.Errorf("o stream remenda %q e esta lista não a conhece: acrescente-a acima", id)
 	}
 }
 
-// As DUAS pontas juntas, que é onde a divergência nasce: a lista de regiões do stream e a página são escritas
-// em lugares diferentes e têm de concordar sobre quem existe.
-//
-// Discordar não dá erro em lugar nenhum — o remendo simplesmente não pousa —,
-// e por isso a guarda de papel do `table.TableRegions` e o `if` que desenha o trilho
-// leem a MESMA `view`. Este teste é o que afirma que continuam lendo.
+// As DUAS pontas juntas, para os dois papéis, que é onde a divergência nasce: a
+// lista de regiões do stream e a página são escritas em lugares diferentes e
+// têm de concordar sobre quem existe. Discordar não dá erro em lugar nenhum — o
+// remendo simplesmente não pousa.
 func TestTheStreamOnlySendsTheRegionTheDocumentHas(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
-	forGM := idsDasRegioes(t, f, f.gm)
-	forPlayer := idsDasRegioes(t, f, f.player)
-
-	if !forGM["table-tracker-rail"] {
-		t.Error("o palco do mestre desenha o trilho e o stream não o remenda: ele nasce e nunca mais muda")
+	for _, who := range []struct {
+		name string
+		id   int64
+	}{{"mestre", f.gm}, {"jogador", f.player}} {
+		page := f.requests(t, who.id, "GET", f.tableUrl(), "").Body.String()
+		regions := idsDasRegioes(t, f, who.id)
+		// O CONTROLE: sem região nenhuma, o laço abaixo é verde sobre nada.
+		if len(regions) < 5 {
+			t.Fatalf("o stream do %s tem só %d regiões", who.name, len(regions))
+		}
+		for id := range regions {
+			if n := strings.Count(page, `id="`+id+`"`); n != 1 {
+				t.Errorf("o stream manda %q ao %s e a página dele a tem %d vezes", id, who.name, n)
+			}
+		}
 	}
-	if forPlayer["table-tracker-rail"] {
-		t.Error("o stream manda ao jogador uma região que a coluna dele não tem — o remendo escreve no vazio")
+	// E o que é do mestre não vai ao jogador: o elenco e as configurações da
+	// sessão são dele.
+	forPlayer := idsDasRegioes(t, f, f.player)
+	for _, id := range []string{"table-npcs", "table-session-config", "table-gm-menu"} {
+		if forPlayer[id] {
+			t.Errorf("o stream manda ao jogador a região %q, do mestre", id)
+		}
 	}
 }
 

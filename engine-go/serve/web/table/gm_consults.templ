@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"t20engine/domain/book"
+	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/master"
 	"t20engine/serve/web/ui"
@@ -48,26 +49,56 @@ templ gmConsults(v View, b master.BestiaryView) {
 	@gmNpcEditor(v)
 }
 
-// gmNotes é o caderno da sessão: a mesma caixa e a mesma prévia do palco de
-// hoje (`notesBody`), e por isso a mesma regra — a caixa é semeada uma vez e
-// nunca remendada. Com as notas numa janela à parte, a aba só avisa: duas
-// caixas sobre a mesma linha do banco gravariam uma por cima da outra.
+// gmNotes é o caderno da sessão, e ele nasce LENDO (decisão do dono): o texto
+// formatado ocupa a coluna, o toque nele abre a caixa, e o Esc ou sair dela
+// volta à leitura. A caixa é a do palco de hoje — semeada uma vez e nunca
+// remendada, porque um remendo no meio da frase apagaria o que o mestre
+// escreve — e a prévia é a região `table-notes-preview`, remendada a cada
+// gravação. Com as notas numa janela à parte, a aba só avisa: duas caixas
+// sobre a mesma linha do banco gravariam uma por cima da outra.
 templ gmNotes(v View) {
 	<section class="ds-gm-notes" data-init={ seedNotes(v) } data-on:storage__window={ watchesTheNotesWindow(v) }>
 		<div class="ds-gm-notes-head">
-			@ds.Segmented("Modo de visualização das notas") {
-				for _, mode := range gmNoteModes {
-					@ds.SegmentedOption(mode.ID == "duplo", templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$notes_mode === '%s' ? 'true' : 'false'", mode.ID), "data-on:click": escolheOModo(mode.ID)}) {
-						{ mode.Label }
-					}
-				}
-			}
+			<span class="ds-row-meta" data-show="!$gm_notes_editing">Toque no texto para escrever</span>
+			<span class="ds-row-meta" data-show="$gm_notes_editing" style="display:none">Esc para voltar à leitura</span>
 			@autosaveState()
 			@ds.IconButton(ds.ButtonGhost, "ExternalLink", "Abrir as notas numa janela", templ.Attributes{"type": "button", "title": "Abrir as notas numa janela — para o segundo monitor", "data-on:click": opensTheNotesWindow(v)})
 		</div>
 		<p class="ds-help" data-show="$notes_window" style="display:none">As notas estão abertas numa janela à parte.</p>
 		<div class="ds-gm-notes-body" data-show="!$notes_window">
-			@notesBody(v)
+			// A LEITURA é um alvo de toque inteiro, e o teclado chega nela: o
+			// Enter abre a caixa como o clique. O clique numa tarefa ou num link
+			// DENTRO dela é da tarefa e do link, e não abre a edição.
+			<div
+				class="ds-gm-notes-read"
+				tabindex="0"
+				role="button"
+				aria-label="Editar as notas da sessão"
+				data-show="!$gm_notes_editing"
+				data-on:click={ "evt.target.closest('input, a, button') || (" + startsEditingNotes + ")" }
+				data-on:keydown={ "evt.key === 'Enter' && (evt.preventDefault(), " + startsEditingNotes + ")" }
+			>
+				// ENQUANTO A GRAVAÇÃO ESTÁ NO AR, a leitura mostra o texto cru que acabou
+				// de ser escrito, e não a prévia: ela só muda quando a gravação volta, e
+				// sair da escrita logo depois de digitar mostraria o texto ANTIGO.
+				<div data-show="$notes === $notes_saved">
+					@tableNotesPreview(v)
+				</div>
+				<div class="ds-gm-notes-pending" data-show="$notes !== $notes_saved" data-text="$notes" style="display:none"></div>
+			</div>
+			<textarea
+				id="gm-notes-text"
+				class="ds-input ds-gm-notes-text"
+				style="display:none"
+				data-show="$gm_notes_editing"
+				data-bind:notes
+				data-on:input__debounce.1200ms={ saveNotes(v) }
+				data-indicator:notes_saving
+				data-on:blur={ leavesNotesWriting(v) }
+				data-on:keydown="evt.key === 'Escape' && (evt.stopPropagation(), evt.preventDefault(), el.blur())"
+				aria-label="Notas da sessão"
+				placeholder={ "# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse" }
+			>{ v.Notes }</textarea>
 		</div>
 	</section>
 }
@@ -79,9 +110,12 @@ templ gmGroup(v View) {
 	if len(v.Group) == 0 {
 		@ds.Empty("Nenhum personagem na campanha", "Os personagens aparecem aqui quando entram na campanha.")
 	} else {
+		@ds.FilterBar() {
+			@ds.SearchField("gm-group-search", "Buscar no grupo", templ.Attributes{"data-bind:gm_group_search": true})
+		}
 		@ds.List("Grupo", groupAtTable(v.Group)) {
 			for _, m := range v.Group {
-				<div class="ds-row ds-gm-member">
+				<div class="ds-row ds-gm-member" data-show={ nameMatches("gm_group_search", m.Name) }>
 					<span class="ds-gm-monogram" aria-hidden="true">{ m.Initials }</span>
 					<span class="ds-gm-member-body">
 						<span class="ds-row-title">
@@ -91,15 +125,22 @@ templ gmGroup(v View) {
 							{ m.Name }
 						</span>
 						<span class="ds-row-meta">{ memberMeta(m) }</span>
-						@gmPoolLine("PV", "pv", poolOrNothing(m.PV))
-						@gmPoolLine("PM", "pm", poolOrNothing(m.PM))
 					</span>
-					<span class="ds-gm-steps">
-						@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar 1 PV de "+m.Name, templ.Attributes{"type": "button", "title": "Tirar PV de " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "ferir")})
-						@ds.IconButton(ds.ButtonSecondary, "Plus", "Devolver 1 PV a "+m.Name, templ.Attributes{"type": "button", "title": "Devolver PV a " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "curar")})
-						<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
-							@ui.Icon("ExternalLink", "ds-icon")
-						</a>
+					<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
+						@ui.Icon("ExternalLink", "ds-icon")
+					</a>
+					// AS BARRAS descem para a largura toda da linha, com o − e o +
+					// ao lado: na coluna de 19rem do desktop, nome, barras e três
+					// botões numa fileira só deixavam o texto passar por baixo deles.
+					<span class="ds-gm-member-vitals">
+						<span class="ds-gm-member-body">
+							@gmPoolLine("PV", "pv", poolOrNothing(m.PV))
+							@gmPoolLine("PM", "pm", poolOrNothing(m.PM))
+						</span>
+						<span class="ds-gm-steps">
+							@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar 1 PV de "+m.Name, templ.Attributes{"type": "button", "title": "Tirar PV de " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "ferir")})
+							@ds.IconButton(ds.ButtonSecondary, "Plus", "Devolver 1 PV a "+m.Name, templ.Attributes{"type": "button", "title": "Devolver PV a " + m.Name + " — clique 1, Shift+clique 5", "data-on:click": castVital(v, m, "hp", "curar")})
+						</span>
 					</span>
 				</div>
 			}
@@ -131,9 +172,12 @@ templ gmCastList(v View) {
 		if len(v.NPCs) == 0 {
 			@ds.Empty("Nenhum NPC guardado ainda", "Crie um com o Novo, ou abra uma criatura no Bestiário e guarde no elenco.")
 		} else {
+			@ds.FilterBar() {
+				@ds.SearchField("gm-cast-search", "Buscar no elenco", templ.Attributes{"data-bind:gm_cast_search": true})
+			}
 			@ds.List("Elenco da campanha", strconv.Itoa(len(v.NPCs))) {
 				for _, npc := range v.NPCs {
-					<div class="ds-row ds-gm-npc">
+					<div class="ds-row ds-gm-npc" data-show={ nameMatches("gm_cast_search", npc.Name) }>
 						<span class="ds-gm-member-body">
 							<span class="ds-row-title">{ npc.Name }</span>
 							if npc.Summary != "" {
@@ -171,15 +215,19 @@ templ gmNpcEditor(v View) {
 }
 
 // gmBestiary é a aba Bestiário, e é a raiz que as rotas do painel remendam
-// (`table-bestiary`) quando a mesa é a nova — ver `bestiaryPanel`. Os filtros e
-// a lista são os da cena do mestre; o `data-signals` fica na raiz pela mesma
-// razão do `tableBestiary`: ele reecoa a busca e a criatura que o servidor
-// acabou de desenhar.
+// (`table-bestiary`). Os filtros e a lista são os da cena do mestre.
+//
+// O `data-signals` fica AQUI, na raiz remendada, e por isso ele reinicializa a
+// cada remendo — de propósito: a busca, os tipos e a criatura são o que o
+// servidor acabou de desenhar. Os campos do AJUSTE não estão nele: eles são
+// rascunho do mestre, nascem na página, e só o servidor os semeia ao abrir
+// OUTRA criatura (`entryDraft`).
 templ gmBestiary(b master.BestiaryView) {
 	<div id="table-bestiary" class="ds-gm-bestiary" data-signals={ master.BestiarySignals(b) }>
-		@master.BestiaryFilters(b)
-		<p class="ds-row-meta">{ fmt.Sprintf("%d de %d", len(b.Entries), b.Total) }</p>
-		@master.EntryList(b)
+		@ds.FilterBar() {
+			@gmBestiaryFilters(b)
+		}
+		@gmEntryList(b)
 		if b.Chosen != nil {
 			@gmCreature(b, *b.Chosen)
 		}
@@ -199,13 +247,20 @@ templ gmCreature(b master.BestiaryView, m book.Entry) {
 		data-on:keydown__window="evt.key === 'Escape' && ($sheet_open = false)"
 	>
 		<div class="ds-gm-float" role="dialog" aria-modal="true" data-attr:data-expanded="$sheet_open" aria-label={ m.Name }>
+			// O TIPO, O PORTE E O ND ficam no cabeçalho, junto do nome: são
+			// curtos, e no corpo eles sumiam na primeira rolagem.
 			<div class="ds-dialog-head">
-				<span class="ds-dialog-title">{ m.Name }</span>
-				<span class="ds-row-meta">{ fmt.Sprintf("%s · ND %s · p%d", book.TypeName(m.Kind), book.CRWritten(m.ND), m.BookPage) }</span>
+				<span class="ds-gm-creature-name">
+					<span class="ds-dialog-title">{ m.Name }</span>
+					<span class="ds-row-meta">
+						{ fmt.Sprintf("%s · %s · ND %s · XP %d · ", book.TypeName(m.Kind), book.SizeName(m.Size), book.CRWritten(m.ND), book.XPForCR(m.ND)) }
+						@bookui.PageSeal(b.Book, m.BookPage, m.Name)
+					</span>
+				</span>
 				@ds.IconButton(ds.ButtonGhost, "X", "Fechar a ficha de "+m.Name, templ.Attributes{"type": "button", "data-on:click": "$sheet_open = false"})
 			</div>
 			<div class="ds-gm-creature-body">
-				@master.EntryBlock(m, b.Book)
+				@gmCreatureBlock(m, b.Book)
 			</div>
 			<div class="ds-gm-creature-foot">
 				<div class="ds-gm-edit-nums">

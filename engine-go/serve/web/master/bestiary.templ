@@ -314,8 +314,8 @@ templ BestiaryFilters(v BestiaryView) {
 		@ui.FilterDrawer("Filtros") {
 			<div class="mt-2 space-y-2">
 				<div class="flex flex-wrap items-end gap-2">
-					@crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", crInBox(v.CRMin))
-					@crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", crInBox(v.CRMax))
+					@crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", CRInBox(v.CRMin))
+					@crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", CRInBox(v.CRMax))
 				</div>
 				// `fieldset` porque é um conjunto de escolhas, e a `legend` em `sr-only`
 				// porque a tela já diz "Bestiário" logo acima — repetir "Tipo" ali só
@@ -327,9 +327,9 @@ templ BestiaryFilters(v BestiaryView) {
 					for _, t := range book.CreatureTypes {
 						<button
 							type="button"
-							aria-pressed={ ui.AriaBool(v.typeOn(t)) }
+							aria-pressed={ ui.AriaBool(v.TypeOn(t)) }
 							data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t) }
-							if v.typeOn(t) {
+							if v.TypeOn(t) {
 								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none"
 							} else {
 								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent"
@@ -418,7 +418,7 @@ templ EntryList(v BestiaryView) {
 					// deixa de mandar o pedido que só desfaz o dele.
 					<a
 						href={ templ.SafeURL(v.BestiaryBase() + "?criatura=" + m.ID) }
-						data-on:click={ fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, openTheEntry(v.BestiaryBase())) }
+						data-on:click={ fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, OpenTheEntry(v.BestiaryBase())) }
 						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("el.matches(':focus-visible') && ($creature = %q, @get('%s'))", m.ID, v.BestiaryBase()) }
 						if v.Chosen != nil && v.Chosen.ID == m.ID {
 							aria-current="true"

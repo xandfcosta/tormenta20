@@ -1,12 +1,8 @@
 package table
 
 import (
+	"encoding/json"
 	"fmt"
-	"net/http"
-
-	"t20engine/serve/web/master"
-
-	"github.com/a-h/templ"
 )
 
 // As abas das Consultas do mestre (ALE-522). O valor é o do sinal
@@ -23,14 +19,6 @@ var gmConsultTabs = []struct{ ID, Label string }{
 	{gmConsultGroup, "Grupo"},
 	{gmConsultCast, "Elenco"},
 	{gmConsultBestiary, "Bestiário"},
-}
-
-// gmNoteModes são os quatro modos do caderno, os mesmos do `modesRange`.
-var gmNoteModes = []struct{ ID, Label string }{
-	{"escrever", "Escrever"},
-	{"ler", "Ler"},
-	{"duplo", "Lado a lado"},
-	{"empilhado", "Empilhado"},
 }
 
 // consultCurrent é o `aria-current` da aba. O falso REMOVE o atributo, que é o
@@ -52,12 +40,15 @@ func groupAtTable(group []Member) string {
 	return fmt.Sprintf("%d de %d na mesa", here, len(group))
 }
 
-// memberMeta é a linha de baixo do nome: o nível e as classes.
+// memberMeta é a linha de baixo do nome: o nível, as classes e a Defesa —
+// partida quando o personagem está caído (p394), porque é aqui que o mestre a
+// confere para decidir se o ataque acerta.
 func memberMeta(m Member) string {
 	meta := fmt.Sprintf("Nível %d", m.Level)
 	if m.Classes != "" {
 		meta += " · " + m.Classes
 	}
+	meta += " · Defesa " + m.Defense
 	if m.Presence != nil && !m.Presence.AtTable {
 		meta += " · fora da mesa"
 	}
@@ -81,11 +72,25 @@ func npcMeta(npc castNpc) string {
 	return npc.Summary
 }
 
-// bestiaryPanel é o que as rotas do bestiário remendam: a aba da mesa nova
-// quando o mestre a pediu, e o diálogo do palco de hoje quando não.
-func bestiaryPanel(r *http.Request, v master.BestiaryView) templ.Component {
-	if gmTableAsked(r) {
-		return gmBestiary(v)
+// startsEditingNotes abre a caixa e põe o cursor nela. O foco espera o
+// quadro seguinte, porque a caixa só aparece quando o Datastar reavaliar o
+// `data-show` dela.
+const startsEditingNotes = "$gm_notes_editing = true, requestAnimationFrame(() => document.getElementById('gm-notes-text')?.focus())"
+
+// nameMatches é o filtro de uma linha pela busca da aba: vazio mostra todos, e
+// o nome casa por pedaço, sem caixa. O nome vai como literal JSON, que é texto
+// JavaScript válido com aspas e acentos escapados.
+func nameMatches(signal, name string) string {
+	literal, err := json.Marshal(name)
+	if err != nil {
+		literal = []byte(`""`)
 	}
-	return tableBestiary(v)
+	return fmt.Sprintf("$%s === '' || %s.toLowerCase().includes($%s.toLowerCase())", signal, literal, signal)
+}
+
+// leavesNotesWriting volta à leitura e grava NA HORA o que ainda não foi:
+// esperar a pausa da digitação deixaria a leitura com o texto cru por mais
+// de um segundo.
+func leavesNotesWriting(v View) string {
+	return "$gm_notes_editing = false; $notes !== $notes_saved && " + saveNotes(v)
 }

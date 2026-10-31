@@ -54,7 +54,7 @@ func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
 	}
 	// A cena tem de voltar já com a cena ABERTA: se ela voltasse com o estado
 	// velho, o mestre veria "Iniciar cena" depois de tê-la iniciado.
-	if !strings.Contains(rec.Body.String(), "Encerrar cena") {
+	if !strings.Contains(rec.Body.String(), "Encerrar a cena") {
 		t.Error("o remendo veio com o estado anterior")
 	}
 }
@@ -256,11 +256,11 @@ func TestAddPartyBringsEveryMemberIncludingTheGmsOwnCharacter(t *testing.T) {
 func TestThePlayerDoesNotGetAddPartyInTheHtml(t *testing.T) {
 	f := newSceneFixture(t)
 
-	if body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(body, "Adicionar grupo") {
-		t.Error("o HTML do jogador veio com o Adicionar grupo")
+	if body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(body, "Adicionar o grupo") {
+		t.Error("o HTML do jogador veio com o Adicionar o grupo")
 	}
-	if body := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(body, "Adicionar grupo") {
-		t.Error("o mestre não recebeu o Adicionar grupo")
+	if body := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(body, "Adicionar o grupo") {
+		t.Error("o mestre não recebeu o Adicionar o grupo")
 	}
 }
 
@@ -436,24 +436,29 @@ func TestWoundingARowGoesThroughTheSheet(t *testing.T) {
 	}
 }
 
-// O passo não é dado que a página manda: são duas rotas por verbo. Um passo
-// inventado não casa rota nenhuma, e a recusa nomeia o valor e a forma
-// esperada.
-func TestTheVitalStepComesFromThePathAndThereAreOnlyTwo(t *testing.T) {
+// O passo vem do ENDEREÇO, de 1 até o teto: o clique manda 1, o Shift+clique
+// 5, e a folha do combatente o valor digitado (ALE-522). Acima do teto a
+// recusa nomeia o valor e a forma esperada.
+//
+// A recusa é procurada nos SINAIS da resposta, e não no corpo inteiro: o corpo
+// é a Mesa remendada, e nela "999" ou o número pedido podem estar em qualquer
+// lugar — foi assim que a versão anterior deste caso passou verde sobre um
+// passo que já não era recusado.
+func TestTheVitalStepComesFromThePathUpToTheCeiling(t *testing.T) {
 	f := newSceneFixture(t)
 	entryID := f.tracker(t)
 	base := f.tableUrl() + "/iniciativa/" + entryID + "/vitais/hp/"
 
-	// O CONTROLE: os dois passos que existem passam. Sem ele, "o inventado
-	// falhou" também seria verdade se a rota inteira estivesse quebrada.
-	for _, step := range []string{"1", "5"} {
+	// O CONTROLE: os passos que existem passam. Sem ele, "o grande falhou"
+	// também seria verdade se a rota inteira estivesse quebrada.
+	for _, step := range []string{"1", "5", "7"} {
 		if rec := f.requests(t, f.gm, "POST", base+"curar/"+step, ""); rec.Code != http.StatusOK {
 			t.Fatalf("curar em %s deu %d", step, rec.Code)
 		}
 	}
-	rec := f.requests(t, f.gm, "POST", base+"ferir/99", "")
-	if body := rec.Body.String(); !strings.Contains(body, "99") || !strings.Contains(body, "Shift") {
-		t.Errorf("a recusa do passo 99 não citou o valor e os passos que existem; corpo = %q", body)
+	refusal := trechoDeSinais(f.requests(t, f.gm, "POST", base+"ferir/1000", "").Body.String())
+	if !strings.Contains(refusal, "1000") || !strings.Contains(refusal, "999") {
+		t.Errorf("a recusa do passo 1000 não citou o valor e o teto; sinais = %q", refusal)
 	}
 }
 
@@ -916,11 +921,11 @@ func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	}
 
 	forGM := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
-	// O verbo mora ao lado da barra que ele mexe, e o nome acessível é o que
-	// prova isso: dois olhos na mesma linha, cada um dizendo de qual pool é.
-	for _, label := range []string{"Ocultar os PV de ", "Ocultar os PM de "} {
+	// O interruptor mora na folha do combatente, um por pool, e o nome é o que
+	// prova isso: cada um diz de qual pool fala.
+	for _, label := range []string{"A mesa vê os PV", "A mesa vê os PM"} {
 		if !strings.Contains(forGM, label) {
-			t.Errorf("o mestre não recebeu o olho %q — o verbo não diz de qual pool fala", label)
+			t.Errorf("o mestre não recebeu o interruptor %q — ele não diz de qual pool fala", label)
 		}
 	}
 	if !strings.Contains(forGM, "/vitais/mp/ferir/") {
@@ -938,7 +943,7 @@ func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	}
 	// E o jogador não recebe verbo nenhum: a trava é o 403, mas o HTML também
 	// não os tem, e as duas coisas se medem juntas.
-	if strings.Contains(forPlayer, "/vitais/mp/ferir/") || strings.Contains(forPlayer, "Ocultar os PM de ") {
+	if strings.Contains(forPlayer, "/vitais/mp/ferir/") || strings.Contains(forPlayer, "A mesa vê os PM") {
 		t.Error("os verbos do mana vazaram para o HTML do jogador")
 	}
 }

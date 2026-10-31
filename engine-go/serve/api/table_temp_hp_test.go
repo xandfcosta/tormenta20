@@ -36,7 +36,7 @@ func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 	if !strings.Contains(after, sentence) {
 		t.Error("a reserva não chegou ao nome acessível da barra")
 	}
-	// E o número sai escrito onde há espaço para ele: o cartão do Grupo.
+	// E o número sai escrito ao lado do PV, na fila e no Grupo do mestre.
 	if !strings.Contains(after, ">+30</span>") {
 		t.Error("a reserva não saiu escrita em lugar nenhum da Mesa")
 	}

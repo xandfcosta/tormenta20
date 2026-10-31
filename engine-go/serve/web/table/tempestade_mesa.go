@@ -28,3 +28,14 @@ func signed(n int64) string {
 	}
 	return "+" + strconv.FormatInt(n, 10)
 }
+
+// turnStripName escreve "você" no lugar do próprio nome — quando ele é UM.
+// Com dois meus na faixa a palavra deixa de responder e passa a atrapalhar
+// ("você › Tanque › você"), e aí o nome volta. Quem decide isso é o `SaysYou`,
+// que enxerga a faixa inteira; aqui só se escreve o que ele já decidiu.
+func turnStripName(p turnAhead) string {
+	if p.SaysYou {
+		return "você"
+	}
+	return p.Label
+}

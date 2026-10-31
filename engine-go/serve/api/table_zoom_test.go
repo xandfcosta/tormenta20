@@ -22,7 +22,7 @@ func TestTheZoomIsBornAtTheDefaultAndRespectsTheLimits(t *testing.T) {
 	// O CONTROLE: a faixa está na página. Sem isto, as buscas abaixo falhariam
 	// por motivo errado e "não achei o limite" leria como "o limite sumiu"
 	// quando a verdade seria "a cena não desenhou o zoom".
-	if !strings.Contains(screen, "Enquadrar o mapa") {
+	if !strings.Contains(screen, "Enquadrar e montar o mapa") {
 		t.Fatal("a cena não desenhou os controles de enquadramento")
 	}
 

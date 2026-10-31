@@ -46,9 +46,6 @@ type View struct {
 	// Endless é a faixa SEM FIM da sessão do jogador: a fila inteira a partir de
 	// quem joga agora, e mais três da rodada seguinte (ver o GLOSSARY, "faixa").
 	Endless []turnAhead
-	// Tempestade é a sessão do JOGADOR, que a página e o stream desenham no
-	// sistema novo; o mestre segue com o palco de hoje (ALE-473).
-	Tempestade bool
 	// BoardWindow é a janela à parte do tabuleiro do mestre: a página desenha
 	// só o mapa, e o fluxo remenda só ele (ALE-522).
 	BoardWindow bool
@@ -213,39 +210,14 @@ type tableRow struct {
 	// PM é o mana da linha.
 	PM         *tableBar
 	Conditions []string
-	// Initials é o monogram do trilho de 80px. Nasce na view e não no template
-	// porque duas letras NÃO são um nome: quem desenha o retrato precisa do
-	// rótulo inteiro ao lado, no `aria-label`.
-	Initials string
-}
-
-// portraitLabel é o nome INTEIRO de um combatente do trilho, com os vitais
-// junto: o retrato de 80px desenha só o monogram, e quem usa leitor de tela —
-// ou o ponteiro parado em cima — precisa ouvir "Ogro, PV 22 de 40" e não "OG".
-//
-// PV ausente e PV OCULTO dizem coisas diferentes e a frase separa as duas: a
-// primeira é linha sem vida rastreada, a segunda é o mestre tendo escondido de
-// propósito.
-//
-// @example portraitLabel(tableRow{Rotulo: "Ogro", PV: &tableBar{Current: 22, Max: 40}}) // "Ogro — PV 22 de 40"
-func portraitLabel(l tableRow) string {
-	if l.PV == nil {
-		return l.Label
-	}
-	if l.PV.Hidden {
-		return fmt.Sprintf("%s — PV oculto", l.Label)
-	}
-	return fmt.Sprintf("%s — %s", l.Label, barLabel("PV", *l.PV))
 }
 
 // barLabel é o nome ACESSÍVEL de uma barra: "PV 22 de 40", mais a reserva
 // quando ela existe.
 //
 // O filete da reserva é COR e largura, e nenhuma das duas existe para quem usa
-// leitor de tela — o mesmo motivo que põe a presença no `castLabel` logo
-// abaixo. Aqui ela é o canal ÚNICO no trilho da fila, que não tem número
-// nenhum: sem esta frase, a reserva simplesmente não existiria para quem não vê
-// a tela.
+// leitor de tela: sem esta frase, a reserva não existiria para quem não vê a
+// tela.
 func barLabel(label string, b tableBar) string {
 	sentence := fmt.Sprintf("%s %d de %d", label, b.Current, b.Max)
 	if b.Down != "" {
@@ -255,19 +227,6 @@ func barLabel(label string, b tableBar) string {
 		sentence += fmt.Sprintf(", mais %d temporários", b.Temp)
 	}
 	return sentence
-}
-
-// castLabel é o nome de um personagem do elenco recolhido, com a presença
-// junto — porque no trilho ela é um PONTO colorido, e cor não existe para quem
-// usa leitor de tela.
-//
-// @example castLabel(Member{Nome: "Arwen", Nivel: 3}) // "Arwen, Nv 3"
-func castLabel(m Member) string {
-	label := fmt.Sprintf("%s, Nv %d", m.Name, m.Level)
-	if m.Presence == nil {
-		return label
-	}
-	return fmt.Sprintf("%s — %s", label, m.Presence.Sentence)
 }
 
 // tableMe é o personagem de quem olha, quando ele tem um nesta mesa. Nil é um
@@ -322,7 +281,6 @@ func tableTrackerOf(
 			Mine:       e.CharacterID != nil && mine[*e.CharacterID],
 			OnTurn:     i == st.TurnIndex,
 			Conditions: e.Conditions,
-			Initials:   ui.Monogram(e.Label),
 		}
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número — mas a MARCA que
@@ -509,61 +467,9 @@ func rowCommand(v View, l tableRow, action string) string {
 	return fmt.Sprintf("@post('%s/iniciativa/%s/%s')", v.SessionBase(), l.ID, action)
 }
 
-// rowVital escreve o ferir/curar com os DOIS passos já resolvidos em duas
-// URLs, e o `evt.shiftKey` escolhendo entre elas.
-//
-// O `@post` recebe uma expressão como ARGUMENTO, e não é um `@post` dentro de
-// cada braço de um ternário: a chamada é uma só, e o que varia é a string. Assim
-// o que o Datastar precisa reescrever é uma ação, não duas dentro de um desvio.
-//
-// healVerb e harmVerb dão a CADA pool o verbo da mesa, e não é enfeite: com os
-// dois passos na mesma linha, "Ferir Arwen" duas vezes são dois controles com o
-// mesmo nome acessível e destinos diferentes — quem usa leitor de tela ouve a
-// mesma frase e tira mana achando que tira vida.
-//
-// A frase é a da mesa: PV se fere e se cura, PM se gasta e se recupera. O "de"
-// mora no verbo do mana porque "Gastar PM Arwen" não é português.
-func healVerb(pool string) string {
-	if pool == "mp" {
-		return "Recuperar PM de"
-	}
-	return "Curar"
-}
-
-func harmVerb(pool string) string {
-	if pool == "mp" {
-		return "Gastar PM de"
-	}
-	return "Ferir"
-}
-
 func rowVital(v View, l tableRow, pool, verb string) string {
 	base := fmt.Sprintf("%s/iniciativa/%s/vitais/%s/%s/", v.SessionBase(), l.ID, pool, verb)
 	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
-}
-
-// openEdit semeia o diálogo com os valores de AGORA e o abre.
-//
-// Semear é obrigatório e não é conveniência: o diálogo é UM para a fila inteira,
-// então sem isto ele abriria com o que sobrou da linha anterior — e o mestre
-// salvaria o PV do Ogro em cima do Goblin sem ver nada de errado.
-func openEdit(v View, l tableRow) string {
-	pv, pvMax := int64(0), int64(0)
-	if l.PV != nil {
-		pv, pvMax = l.PV.Current, l.PV.Max
-	}
-	return fmt.Sprintf(
-		"$edit_row = '%s'; $edit_name = %s; $edit_initiative = %d; $edit_hp = %d; $edit_hp_max = %d; document.getElementById('edit-combatant').showModal()",
-		l.ID, jsTextHow(l.Label), l.Initiative, pv, pvMax,
-	)
-}
-
-// saveEdit monta o caminho com o id que o número semeou.
-func saveEdit(v View) string {
-	return fmt.Sprintf(
-		"document.getElementById('edit-combatant').close(); @post('%s/iniciativa/' + $edit_row + '/editar')",
-		v.SessionBase(),
-	)
 }
 
 // jsTextHow escreve um literal de string de JavaScript seguro.
@@ -583,18 +489,6 @@ func jsTextHow(s string) string {
 }
 
 // ── As CONDIÇÕES do combatente na tela ──────────────────────────────────────
-
-// openConditions escolhe a linha e abre o diálogo.
-//
-// Ele reescreve OS DOIS sinais, e é quem TROCA de item que limpa: quem gera
-// não sabe que haverá um próximo; quem troca sabe que houve um anterior.
-func openConditions(l tableRow) string {
-	return fmt.Sprintf(
-		"$condition_row = %q; $row_conditions = %q; $row_label = %q;"+
-			" document.getElementById('combatant-conditions').showModal()",
-		l.ID, strings.Join(l.Conditions, ","), l.Label,
-	)
-}
 
 // onCondition é a pergunta que pinta o crachá do diálogo.
 func onCondition(id string) string {
@@ -695,9 +589,9 @@ func portugueseCycle(status string) string {
 
 // openConfigSession semeia o título de AGORA e abre o diálogo.
 //
-// Quem abre é quem semeia, pela mesma razão do `openEdit`: o campo é ligado a
-// um SINAL e nunca recebe `value` do servidor, senão o remendo da próxima troca
-// de turno apagaria o que o mestre está digitando.
+// Quem abre é quem semeia: o campo é ligado a um SINAL e nunca recebe `value`
+// do servidor, senão o remendo da próxima troca de turno apagaria o que o
+// mestre está digitando.
 func openConfigSession(v View) string {
 	return fmt.Sprintf("$session_title = %q; document.getElementById('session-config').showModal()", v.Title)
 }

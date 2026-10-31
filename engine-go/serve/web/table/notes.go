@@ -183,10 +183,8 @@ func seedNotes(v View) string {
 	}
 	return fmt.Sprintf(
 		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; "+
-			"$notes_width = Number(localStorage.getItem('%s')) || 0; "+
-			"$notes_floating = localStorage.getItem('%s') === 'true'; "+
 			"$notes_window = localStorage.getItem('%s') === '%d'",
-		text, text, notesModeKey, notesWidthKey, notesFloatKey, notesWindowKey, v.SessionID,
+		text, text, notesModeKey, notesWindowKey, v.SessionID,
 	)
 }
 
@@ -194,92 +192,8 @@ func seedNotes(v View) string {
 // não deve reescolher a cada sessão.
 const notesModeKey = "t20:notas-view"
 
-func escolheOModo(value string) string {
+func pickNotesMode(value string) string {
 	return fmt.Sprintf("$notes_mode = '%s'; localStorage.setItem('%s', '%s')", value, notesModeKey, value)
-}
-
-// A LARGURA DA COLUNA, e ela GRUDA como os modos grudam: é preferência de
-// trabalho e não estado da sessão — o mestre escolhe uma vez o quanto de mapa
-// quer ver ao lado das notas. Chave própria porque é outra escolha que a do
-// arranjo.
-const notesWidthKey = "t20:notas-largura"
-
-// ONDE a coluna vive: encostada, empurrando o mapa, ou flutuando por cima dele.
-// Chave própria, e ela GRUDA como as outras duas escolhas.
-const notesFloatKey = "t20:notas-flutua"
-
-// toggleFloating é o segundo eixo da faixa, e ele é o ÚNICO que merece um
-// controle separado.
-//
-// "Escrever / Ler / Lado a lado / Empilhado" é O QUE se mostra e como as duas
-// metades se arranjam — um eixo com quatro valores. "Encostada ou flutuando" é
-// ONDE o painel inteiro vive, e isso vale para os quatro. Juntar os dois numa
-// fileira daria oito botões para descrever duas perguntas.
-func toggleFloating() string {
-	return fmt.Sprintf(
-		"$notes_floating = !$notes_floating; localStorage.setItem('%s', $notes_floating)", notesFloatKey)
-}
-
-// O PISO é o do `clamp` que a coluna tinha fixo: abaixo de 22rem o "lado a lado"
-// não cabe e a coluna vira uma tira inútil.
-const notesMinWidth = 352 // 22rem
-
-// O TETO é RELATIVO ao palco: 70% deixa o mapa com quase um terço em qualquer
-// janela, que é o que mantém as notas AO LADO do tabuleiro em vez de no lugar
-// dele.
-//
-// Um teto absoluto em rem vira PAREDE: numa janela larga a coluna já nasce nele,
-// e a divisa fica sem para onde crescer justamente na tela em que ela mais
-// serve.
-func widthCeiling() string {
-	return "(document.getElementById('table-notes').parentElement.getBoundingClientRect().width * 0.7)"
-}
-
-// widthKeyStep é a seta do teclado, e ela existe porque gesto nunca é o único
-// caminho: uma divisa que só responde a arrasto é uma preferência que quem não
-// usa ponteiro não tem. 32px por seta — grande o bastante para atravessar a
-// faixa em poucos toques, pequeno o bastante para ajustar — e o `Home` devolve
-// ao padrão.
-func widthKeyStep() string {
-	return fmt.Sprintf(
-		"if (evt.key === 'ArrowLeft' || evt.key === 'ArrowRight') { evt.preventDefault(); "+
-			"$notes_width = Math.min(%s, Math.max(%d, %s + (evt.key === 'ArrowLeft' ? 32 : -32))); %s } "+
-			"if (evt.key === 'Home') { evt.preventDefault(); $notes_width = 0; localStorage.removeItem('%s') }",
-		widthCeiling(), notesMinWidth, widthRightNow(), storeTheWidth(), notesWidthKey,
-	)
-}
-
-// widthRightNow é o valor de PARTIDA de um ajuste, e ele é medido na tela em vez
-// de cair num padrão.
-//
-// Enquanto o mestre não escolhe, `$notes_width` é zero e quem manda é o `clamp`
-// da folha, que depende da janela. Um padrão escrito aqui faria a PRIMEIRA seta
-// SALTAR, porque o piso de 22rem não é o que está na tela: a divisa tem de
-// continuar de onde a coluna está.
-func widthRightNow() string {
-	return "($notes_width || document.getElementById('table-notes').getBoundingClientRect().width)"
-}
-
-// widthDragStarts é o gesto de ponteiro. A conta é sobre a borda DIREITA da
-// coluna, que não se move: arrastar para a esquerda cresce as notas.
-func widthDragStarts() string {
-	return "evt.preventDefault(); $notes_dragging = true; el.setPointerCapture(evt.pointerId)"
-}
-
-func widthFollowsPointer() string {
-	return fmt.Sprintf(
-		"if ($notes_dragging) { const c = document.getElementById('table-notes').getBoundingClientRect(); "+
-			"$notes_width = Math.min(%s, Math.max(%d, c.right - evt.clientX)) }",
-		widthCeiling(), notesMinWidth,
-	)
-}
-
-func widthDragDrops() string {
-	return "if ($notes_dragging) { $notes_dragging = false; " + storeTheWidth() + " }"
-}
-
-func storeTheWidth() string {
-	return fmt.Sprintf("localStorage.setItem('%s', $notes_width)", notesWidthKey)
 }
 
 // notesAddress é o endereço das notas desta sessão, e ele tem UM lugar: três

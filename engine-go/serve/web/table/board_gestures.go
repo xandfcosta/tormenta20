@@ -186,15 +186,13 @@ func dropFor(v BoardView, who string, x, y int) string {
 			"if (dx || dy) %s }", who, destination)
 }
 
-// As variáveis do arrasto moram SÓ no `#table`, e descem por herança até quem
-// está sendo arrastado.
+// dragOffsetStyle são as variáveis do arrasto, e elas moram SÓ na raiz da cena
+// (`#table`, `#draft`), descendo por herança até quem está sendo arrastado.
 //
 // A razão é que o `data-attr:style` SUBSTITUI o atributo inteiro: pô-lo num
 // elemento posicionado apaga o `--col`/`--lin` que o posicionava, e a coisa vai
 // parar na quina do plano. O atributo continua lá e com cara de certo.
-//
-// A expressão ficou inline no `table.templ`, num lugar só, para não haver
-// um segundo elemento tentado a usá-la.
+const dragOffsetStyle = "`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 
 // ── QUEM RECEBE O GESTO DA PEÇA, decidido em GO ──────────────────────────────
 //
