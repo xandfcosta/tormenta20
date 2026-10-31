@@ -899,3 +899,10 @@ O diálogo de redefinição de senha é um só para todas as linhas, e o token c
 por remendo num `<div>` de id fixo. Gerar o link da Ana, fechar e abrir a caixa
 da Bia mostrava o link da Ana sob o nome da Bia — e quem estivesse com pressa
 entregaria a chave da conta errada.
+
+### O comando da ficha voltava na primeira aba (2026-10)
+
+O `@post` de cada comando da ficha mandava só o endereço escrito nele, sem o
+`?tab=` da página. Mexer no PV com a Mochila aberta devolvia a cena na PRIMEIRA
+aba, sem nada falhar. Daí o `sheetPost` escrever o `?` em todo comando, e o
+`TestNoSheetCommandLosesTheTab`.
