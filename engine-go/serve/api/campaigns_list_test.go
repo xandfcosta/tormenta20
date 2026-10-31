@@ -82,23 +82,6 @@ func TestTheSceneFiltersBySearchOverNameAndSynopsis(t *testing.T) {
 	}
 }
 
-// O cursor tem de nascer numa campanha que EXISTE na lista filtrada. Se ele
-// ficasse na primeira da lista COMPLETA, uma busca que a filtrasse fora
-// deixaria o palco vazio com o trilho cheio — e a tela pareceria quebrada.
-func TestTheCursorIsBornOnTheFirstOfTheFilteredList(t *testing.T) {
-	f := novaCena(t)
-	f.campanha(t, "A Queda de Tauron", "")
-	second := f.campanha(t, "Segredos de Wynlla", "")
-
-	v, err := campaigns.New(f.s.campaignsHost(), f.s.sessionAccess(), f.s.campaignDirectory(), f.s.campaignLifecycle(), f.s.campaignSeating(), f.s.boards).LoadList(context.Background(), f.owner, f.s.ehAdmin(t, f.owner), "wynlla", "todas")
-	if err != nil {
-		t.Fatalf("carregar: %v", err)
-	}
-	if v.CursorID != second {
-		t.Errorf("cursor = %d, queria %d (a única que sobrou)", v.CursorID, second)
-	}
-}
-
 // Buscar e não achar nada é DIFERENTE de não ter campanha nenhuma: uma pede
 // para limpar o filtro, a outra para criar a primeira.
 func TestTheSceneTellsAnEmptyListFromASearchWithNoResult(t *testing.T) {
@@ -230,5 +213,42 @@ func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 	}
 	if !strings.Contains(patch, "campaigns-scene") {
 		t.Error("o remendo não trouxe o id que o morph casa")
+	}
+}
+
+// O CARTÃO DA LISTA diz o que a campanha tem e, AO VIVO, qual sessão (ALE-526):
+// a contagem de heróis e sessões no singular certo, e "Sessão N ao vivo agora"
+// no lugar dela quando há partida rolando. E não há mais carrossel: a lista é
+// de cartões, sem o trilho de marcadores.
+func TestTheCampaignCardSaysWhatItHasAndWhichSessionIsLive(t *testing.T) {
+	f := novaCena(t)
+	quiet := f.campanha(t, "A Queda de Tauron", "")
+	live := f.campanha(t, "Segredos de Wynlla", "")
+	seedSession(t, f.s, quiet)
+	running := seedSession(t, f.s, live)
+	if _, err := f.s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
+		UpdatedAt: dbvalue.NowISO(), ID: running,
+	}); err != nil {
+		t.Fatalf("iniciar: %v", err)
+	}
+	tok, err := f.s.accountGate().SignSession(sqlcgen.User{ID: f.owner, Email: "mestre@t20.local"})
+	if err != nil {
+		t.Fatalf("assinar: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/campanhas", nil)
+	req.AddCookie(&http.Cookie{Name: f.s.cfg.CookieName, Value: tok})
+	rec := httptest.NewRecorder()
+	f.s.WebRouter().ServeHTTP(rec, req)
+	page := rec.Body.String()
+
+	// A semente das sessões é a número 1, e nenhuma das duas tem herói.
+	if !strings.Contains(page, "Mestrando · 0 heróis · 1 sessão") {
+		t.Error("o cartão parado não diz o papel e a contagem no singular certo")
+	}
+	if !strings.Contains(page, "Sessão 1 ao vivo agora") {
+		t.Error("o cartão ao vivo não diz qual sessão está rolando")
+	}
+	if strings.Contains(page, `role="listbox"`) {
+		t.Error("a lista ainda desenha o trilho do carrossel")
 	}
 }

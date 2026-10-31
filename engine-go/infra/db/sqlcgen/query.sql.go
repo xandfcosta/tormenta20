@@ -85,6 +85,44 @@ func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerChara
 	return i, err
 }
 
+const campaignTallies = `-- name: CampaignTallies :many
+SELECT c.id AS campaignId,
+  (SELECT COUNT(*) FROM campaign_members m WHERE m.campaignId = c.id) AS heroes,
+  (SELECT COUNT(*) FROM sessions s WHERE s.campaignId = c.id) AS sessions
+FROM campaigns c
+`
+
+type CampaignTalliesRow struct {
+	Campaignid int64 `json:"campaignid"`
+	Heroes     int64 `json:"heroes"`
+	Sessions   int64 `json:"sessions"`
+}
+
+// ALE-526: the list card counts the heroes and the sessions of every campaign
+// in ONE query, instead of two per card.
+func (q *Queries) CampaignTallies(ctx context.Context) ([]CampaignTalliesRow, error) {
+	rows, err := q.db.QueryContext(ctx, campaignTallies)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignTalliesRow{}
+	for rows.Next() {
+		var i CampaignTalliesRow
+		if err := rows.Scan(&i.Campaignid, &i.Heroes, &i.Sessions); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const clearCharacterConditionals = `-- name: ClearCharacterConditionals :exec
 DELETE FROM character_conditionals WHERE characterId = ?
 `
@@ -513,6 +551,39 @@ func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) (Cam
 		&i.Campaignid,
 		&i.Characterid,
 		&i.Addedat,
+	)
+	return i, err
+}
+
+const createNextSession = `-- name: CreateNextSession :one
+INSERT INTO sessions (campaignId, sessionNumber, createdAt, updatedAt)
+SELECT ?1, COALESCE(MAX(sessionNumber), 0) + 1, ?2, ?2
+FROM sessions WHERE campaignId = ?1
+RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
+`
+
+type CreateNextSessionParams struct {
+	CampaignId int64  `json:"campaignId"`
+	Now        string `json:"now"`
+}
+
+// A proxima sessao da campanha, numerada no MESMO comando que a insere: ler o
+// numero e inserir em dois passos deixaria dois cliques gerarem o mesmo (ALE-526).
+func (q *Queries) CreateNextSession(ctx context.Context, arg CreateNextSessionParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, createNextSession, arg.CampaignId, arg.Now)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
 	)
 	return i, err
 }
@@ -2583,8 +2654,10 @@ const listMembers = `-- name: ListMembers :many
 
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel
+       ch.name AS charName, ch.level AS charLevel,
+       COALESCE(u.name, '') AS playerName
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+LEFT JOIN users u ON u.id = ch.ownerId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC
 `
 
@@ -2596,12 +2669,14 @@ type ListMembersRow struct {
 	Charownerid int64  `json:"charownerid"`
 	Charname    string `json:"charname"`
 	Charlevel   int64  `json:"charlevel"`
+	Playername  string `json:"playername"`
 }
 
 // campaign members (B.4)
 // O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
 // Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
 // usa para autorizar -- ver a razao no `one_view.go`.
+// O nome do JOGADOR entra na ALE-526: a linha do grupo diz de quem e o heroi.
 func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMembersRow, error) {
 	rows, err := q.db.QueryContext(ctx, listMembers, campaignid)
 	if err != nil {
@@ -2619,6 +2694,7 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 			&i.Charownerid,
 			&i.Charname,
 			&i.Charlevel,
+			&i.Playername,
 		); err != nil {
 			return nil, err
 		}
@@ -3042,7 +3118,7 @@ func (q *Queries) ListUsersWithCounts(ctx context.Context) ([]ListUsersWithCount
 }
 
 const liveSessionsForUser = `-- name: LiveSessionsForUser :many
-SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId
+SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId, s.sessionNumber AS sessionNumber
 FROM sessions s
 JOIN campaigns c ON c.id = s.campaignId
 WHERE s.status = 'active'
@@ -3056,8 +3132,9 @@ GROUP BY s.campaignId
 `
 
 type LiveSessionsForUserRow struct {
-	Campaignid int64       `json:"campaignid"`
-	Sessionid  interface{} `json:"sessionid"`
+	Campaignid    int64       `json:"campaignid"`
+	Sessionid     interface{} `json:"sessionid"`
+	Sessionnumber int64       `json:"sessionnumber"`
 }
 
 // ALE-234: which of my campaigns have a session RUNNING, all in one query.
@@ -3065,6 +3142,8 @@ type LiveSessionsForUserRow struct {
 // (createActiveSession) and once in the campaign scene
 // (createActiveSessionByCampaign). Two identical fan-outs in two screens is the
 // sign that the hole was in the API, not in the screens.
+// ALE-526: the list card says WHICH session is live. SQLite takes the bare
+// sessionNumber from the same row MIN picked.
 func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]LiveSessionsForUserRow, error) {
 	rows, err := q.db.QueryContext(ctx, liveSessionsForUser, userid)
 	if err != nil {
@@ -3074,7 +3153,7 @@ func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]Live
 	items := []LiveSessionsForUserRow{}
 	for rows.Next() {
 		var i LiveSessionsForUserRow
-		if err := rows.Scan(&i.Campaignid, &i.Sessionid); err != nil {
+		if err := rows.Scan(&i.Campaignid, &i.Sessionid, &i.Sessionnumber); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

@@ -300,10 +300,13 @@ SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORD
 -- O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
 -- Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
 -- usa para autorizar -- ver a razao no `one_view.go`.
+-- O nome do JOGADOR entra na ALE-526: a linha do grupo diz de quem e o heroi.
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel
+       ch.name AS charName, ch.level AS charLevel,
+       COALESCE(u.name, '') AS playerName
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+LEFT JOIN users u ON u.id = ch.ownerId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC;
 
 -- name: HasPlayerPc :one
@@ -340,6 +343,14 @@ SELECT * FROM sessions WHERE id = ? LIMIT 1;
 -- name: CreateSession :one
 INSERT INTO sessions (campaignId, sessionNumber, title, notes, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: CreateNextSession :one
+-- A proxima sessao da campanha, numerada no MESMO comando que a insere: ler o
+-- numero e inserir em dois passos deixaria dois cliques gerarem o mesmo (ALE-526).
+INSERT INTO sessions (campaignId, sessionNumber, createdAt, updatedAt)
+SELECT sqlc.arg('campaignId'), COALESCE(MAX(sessionNumber), 0) + 1, sqlc.arg('now'), sqlc.arg('now')
+FROM sessions WHERE campaignId = sqlc.arg('campaignId')
 RETURNING *;
 
 -- name: DeleteSession :exec
@@ -393,7 +404,9 @@ LIMIT 1;
 -- (createActiveSession) and once in the campaign scene
 -- (createActiveSessionByCampaign). Two identical fan-outs in two screens is the
 -- sign that the hole was in the API, not in the screens.
-SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId
+-- ALE-526: the list card says WHICH session is live. SQLite takes the bare
+-- sessionNumber from the same row MIN picked.
+SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId, s.sessionNumber AS sessionNumber
 FROM sessions s
 JOIN campaigns c ON c.id = s.campaignId
 WHERE s.status = 'active'
@@ -714,3 +727,11 @@ ON CONFLICT (characterId) DO UPDATE SET amount = excluded.amount;
 
 -- name: ClearNonLethalDamage :exec
 DELETE FROM character_nonlethal_damage WHERE characterId = ?;
+
+-- name: CampaignTallies :many
+-- ALE-526: the list card counts the heroes and the sessions of every campaign
+-- in ONE query, instead of two per card.
+SELECT c.id AS campaignId,
+  (SELECT COUNT(*) FROM campaign_members m WHERE m.campaignId = c.id) AS heroes,
+  (SELECT COUNT(*) FROM sessions s WHERE s.campaignId = c.id) AS sessions
+FROM campaigns c;

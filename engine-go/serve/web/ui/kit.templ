@@ -169,14 +169,6 @@ templ TextField(c Field) {
 	</div>
 }
 
-// PanelFrame é o contêiner padrão de uma cena: borda de ferro com um filete
-// dourado por dentro.
-templ PanelFrame(extra string) {
-	<div data-slot="framed-panel" data-variant="stone" class={ Join("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
-		{ children... }
-	</div>
-}
-
 // SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
 templ SceneTitle(title, kicker string) {
@@ -193,53 +185,9 @@ templ SceneTitle(title, kicker string) {
 	</div>
 }
 
-// TextArea é o irmão do `ui.TextField` para texto de vários parágrafos. Mesma
-// gramática de rótulo, erro e dica — o que muda é só o elemento e a altura.
-//
-// O `maxlength` NATIVO faz o navegador parar a digitação no limite, e isso é
-// melhor que recusar depois: a pessoa vê que chegou ao fim enquanto escreve, em
-// vez de perder o texto ao enviar. O servidor continua sendo a autoridade —
-// `maxlength` não sobrevive a um POST feito na mão.
-//
-// A altura NÃO é fixa: com `field-sizing-content` a caixa cresce com o texto, e
-// `rows` é só o piso para quem não suporta a propriedade. Fixar a altura em
-// "3 linhas" custa 13px num telefone deitado, que é a diferença entre o botão
-// de enviar estar na tela e não estar.
-templ TextArea(c Field, rows int) {
-	<div class="space-y-2">
-		<label for={ c.Name } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
-			{ c.Label }
-		</label>
-		<textarea
-			id={ c.Name }
-			name={ c.Name }
-			rows={ Int(rows) }
-			if c.MaxSize > 0 {
-				maxlength={ Int(c.MaxSize) }
-			}
-			if len(c.Errors) > 0 {
-				aria-invalid="true"
-				aria-describedby={ c.Name + "-erro" }
-			}
-			class="field-sizing-content min-h-16 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
-		>{ c.Value }</textarea>
-		if len(c.Errors) == 0 && c.Hint != "" {
-			<p class="text-xs text-muted-foreground">{ c.Hint }</p>
-		}
-		if len(c.Errors) > 0 {
-			<div id={ c.Name + "-erro" }>
-				for _, e := range c.Errors {
-					<p class="text-sm text-destructive-ink">{ e }</p>
-				}
-			</div>
-		}
-	</div>
-}
-
 // TomeSheet é uma FOLHA do grimório aberta: a capa de couro segurando uma
-// página que preenche a cena. Toda cena de campanha é página do mesmo livro — a
-// crônica que se lê, a folha em branco que se escreve, a carta de convite
-// enfiada nela.
+// página que preenche a cena. Hoje é a folha da forja; as cenas de campanha
+// saíram dela para o Tempestade (ALE-526).
 //
 // A chave do `max-lg:landscape:` é LARGURA + ORIENTAÇÃO e não altura: um
 // telefone deitado tem ~390px de altura e o botão de enviar cai para fora da

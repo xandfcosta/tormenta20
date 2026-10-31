@@ -1,60 +1,60 @@
 package campaigns
 
 import (
+	"strconv"
+	"strings"
 	"t20engine/domain/campaign"
-	"t20engine/serve/web/ui"
+	"t20engine/serve/web/ds"
 )
 
-// A FOLHA EM BRANCO (ALE-246): abrir uma campanha nova.
-//
-// Ela é a mesma folha do grimório que a crônica que se lê — mesmo couro, mesma
-// virada de página —, só que vazia e com você segurando a pena. É por isso que
-// ela mora no `ui.TomeSheet` e não numa casca comum.
-//
-// SEM Datastar, e a ausência é a mesma decisão da porta (ALE-229): é um
-// formulário que NAVEGA ao dar certo. `<form method="post">` faz isso desde
-// sempre, sem sinal, sem estado de cliente, e continua funcionando com o
-// JavaScript desligado. Sinal aqui só serviria para reimplementar o que o
-// navegador já faz.
-
+// A NOVA CAMPANHA no kit (ALE-526): o nome e a descrição, num cartão. O
+// formulário é `<form method="post">` puro, como era, e a recusa volta com o que
+// foi digitado.
 templ newBody(v newView) {
-	@ui.TomeSheet() {
-		// `m-auto`: uma folha em branco segura pouco, então o formulário fica no
-		// MEIO da página em vez de se agarrar ao topo de um retângulo vazio
-		// enorme numa tela grande. Com conteúdo mais alto as margens somem.
-		<div class="m-auto w-full max-w-2xl space-y-6">
-			@ui.SheetTitle("Folha em branco", "Abrir nova campanha")
-			// REGIÃO de conteúdo numa FOLHA DE FORMULÁRIO, e o que ela alcança
-			// hoje são os BOTÕES — os campos de texto não são itens do driver
-			// (`input` está fora do seletor dele de propósito, porque com o foco
-			// dentro a seta edita). O caminho completo pelos campos continua
-			// sendo o TAB.
-			//
-			// Declará-la mesmo assim vale por duas razões: o Esc passa a subir
-			// para a casca em vez de morrer, e a cena deixa de ser a única sem
-			// gramática nenhuma — o que o guarda de cenas cobra.
-			<form method="post" action="/campanhas/nova" data-nav-region="content" data-nav-layout="column" class="space-y-4">
-				@ui.TextField(ui.Field{
-					Name: "name", Label: "Nome", Value: v.Name,
-					Required: true, MaxSize: campaign.MaxNameLength,
-					Errors: v.Errors["name"],
-				})
-				@ui.TextArea(ui.Field{
-					Name: "description", Label: "Descrição", Value: v.Description,
-					MaxSize: campaign.MaxDescriptionLength,
-					Errors:         v.Errors["description"],
-				}, 6)
-				if v.Notice != "" {
-					<p class="text-sm text-destructive-ink">{ v.Notice }</p>
+	<div class="ds-camps-form" data-nav-region="content" data-nav-layout="column">
+		<form method="post" action="/campanhas/nova" class="ds-camps-card">
+			@ds.TextField(ds.Field{ID: "name", Name: "name", Label: "Nome", Value: v.Name, Placeholder: "A Ponte de Pedra", Error: strings.Join(v.Errors["name"], " ")}, templ.Attributes{"required": true, "maxlength": strconv.Itoa(campaign.MaxNameLength)})
+			@textArea("description", "Descrição", v.Description, "O que esta mesa promete, em uma ou duas frases", "Opcional — aparece no cartão da campanha.", strings.Join(v.Errors["description"], " "), campaign.MaxDescriptionLength)
+			if v.Notice != "" {
+				<p class="ds-help ds-reg-error" role="alert">{ v.Notice }</p>
+			}
+			<div class="ds-camps-two">
+				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL("/campanhas"), nil) {
+					Cancelar
 				}
-				<div class="flex justify-end gap-2">
-					<a href="/campanhas" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
-					@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
-						Abrir campanha
-					}
-				</div>
-			</form>
-		</div>
-	}
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit"}) {
+					Criar campanha
+				}
+			</div>
+		</form>
+	</div>
 }
 
+// textArea é a caixa de várias linhas no desenho do campo do kit: o rótulo, a
+// dica e o erro no lugar dela.
+templ textArea(id, label, value, placeholder, help, err string, max int) {
+	<div
+		class="ds-field"
+		if err != "" {
+			data-invalid
+		}
+	>
+		<label for={ id }>{ label }</label>
+		<textarea
+			class="ds-input"
+			id={ id }
+			name={ id }
+			rows="4"
+			maxlength={ strconv.Itoa(max) }
+			placeholder={ placeholder }
+			if err != "" || help != "" {
+				aria-describedby={ id + "-help" }
+			}
+		>{ value }</textarea>
+		if err != "" {
+			<span class="ds-help" id={ id + "-help" }>{ err }</span>
+		} else if help != "" {
+			<span class="ds-help" id={ id + "-help" }>{ help }</span>
+		}
+	</div>
+}

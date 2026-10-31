@@ -53,6 +53,7 @@ var permitidos = map[string]bool{
 	"t20engine/serve/web/characters": true, // a linha de classes do herói, uma só
 	"t20engine/serve/web/routes":     true, // o endereço da Mesa, citado daqui
 	"t20engine/serve/web/ui":         true, // o kit, a casca e a identidade visual
+	"t20engine/serve/web/ds":         true, // o kit do sistema novo (ALE-526)
 }
 
 // SEM lista de recusa da biblioteca padrão, e a ausência é uma decisão.
