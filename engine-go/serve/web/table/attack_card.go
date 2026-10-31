@@ -264,7 +264,7 @@ func damageRows(pa live.PendingAttack) []duelRow {
 func damageNotes(pa live.PendingAttack) []string {
 	var notes []string
 	for _, note := range []string{writtenNonLethal(pa), writtenCritChance(pa), writtenForeseen(pa)} {
-		if note = strings.TrimPrefix(strings.TrimSpace(note), "· "); note != "" {
+		if note = strings.TrimPrefix(strings.TrimSpace(note), "| "); note != "" {
 			notes = append(notes, capitalize(note))
 		}
 	}

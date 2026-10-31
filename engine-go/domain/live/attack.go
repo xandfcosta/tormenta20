@@ -50,7 +50,7 @@ type PendingAttack struct {
 	Roll        int    `json:"roll"`
 	Total       int    `json:"total"`
 	// Defense é a Defesa que o ataque enfrentou. Ela viaja porque a mesa lê a
-	// COMPARAÇÃO — "24 vs 17" é o que explica o veredicto, e sem o 17 a faixa
+	// COMPARAÇÃO — "24 vs Defesa (17)" é o que explica o veredicto, e sem o 17 a faixa
 	// afirma um acerto sem dizer contra o quê.
 	Defense int `json:"defense"`
 	// NonLethal é quanto do `Damage` não conta para sangrar nem para morrer
