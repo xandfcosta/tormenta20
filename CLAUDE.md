@@ -10,8 +10,8 @@ delas, em `serve/web/assets/src`. Ele se divide em cinco grupos — `domain/`,
 rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
 com o banco em bind mount no hospedeiro e um nginx na frente que só termina o
 HTTPS (ALE-273, ALE-523). Esse compose é o de PRODUÇÃO; o de dev
-(`docker-compose.dev.yml`, com o `--env-file .env.dev`) herda dele e troca só o
-ambiente, o banco, que é efêmero e nasce com a semente, e as portas, :8443
+(`docker compose -f docker-compose.dev.yml up -d --build`) o inclui com as
+variáveis do `.env.dev` e troca só o banco, que é efêmero e nasce com a semente
 (ALE-529).
 
 Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
