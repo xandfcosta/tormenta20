@@ -59,6 +59,9 @@ type attackProposal struct {
 	// Action é o nome da manobra ("Derrubar"), que a cabeça das faixas mostra
 	// ao lado de quem ataca quem; vazio no golpe comum.
 	Action string
+	// RollLine é a linha dos DADOS do cartão curto do mestre, à vista sem abrir
+	// os Detalhes (pedido do dono): "d20 9 + 8 = 17 vs Defesa 13 · 1d8+3 (3)".
+	RollLine string
 }
 
 // attackProposalOf traduz o provisório do regime na faixa, ou nil quando não há
@@ -91,6 +94,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		if note != "" {
 			out.Tally += " · " + note
 		}
+		out.RollLine = gmRollLine(*pa)
 		return out
 	}
 	switch {
@@ -101,6 +105,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	default:
 		out.Verdict, out.Class, out.Tone = "Errou", "mesa-ataque-erro", "danger"
 	}
+	out.RollLine = gmRollLine(*pa)
 	return out
 }
 
@@ -181,17 +186,7 @@ func attackLine(pa live.PendingAttack) string {
 	if !pa.Hit {
 		return line
 	}
-	sum := 0
-	rolled := make([]string, 0, len(pa.Dice))
-	for _, d := range pa.Dice {
-		sum += d
-		rolled = append(rolled, fmt.Sprint(d))
-	}
-	damage := fmt.Sprintf("%dd%d", len(pa.Dice), pa.Faces)
-	if bonus := pa.RawDamage - sum; bonus != 0 {
-		damage += fmt.Sprintf("%+d", bonus)
-	}
-	line += fmt.Sprintf(" · %s (%s)", damage, strings.Join(rolled, "+"))
+	line += " · " + damageDice(pa)
 	// SEM RD AGINDO o total É o dano, e escrever os dois repete o número: a
 	// primeira versão desta linha dizia "1d4 (4) = 4 → 4 de dano", e foi olhar a
 	// tela que a pegou. A seta só existe quando há de onde para onde.
@@ -333,4 +328,20 @@ func attackNotes(a *attackProposal) []string {
 		}
 	}
 	return notes
+}
+
+// damageDice escreve os dados do dano com o bônus e cada face rolada:
+// "2d8+3 (8+5)".
+func damageDice(pa live.PendingAttack) string {
+	sum := 0
+	rolled := make([]string, 0, len(pa.Dice))
+	for _, d := range pa.Dice {
+		sum += d
+		rolled = append(rolled, fmt.Sprint(d))
+	}
+	damage := fmt.Sprintf("%dd%d", len(pa.Dice), pa.Faces)
+	if bonus := pa.RawDamage - sum; bonus != 0 {
+		damage += fmt.Sprintf("%+d", bonus)
+	}
+	return damage + " (" + strings.Join(rolled, "+") + ")"
 }

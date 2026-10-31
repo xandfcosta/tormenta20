@@ -86,3 +86,20 @@ func maneuverExtra(kind string, margin int) string {
 	}
 	return ""
 }
+
+// gmRollLine são os DADOS do cartão curto do mestre: o d20 e o bônus de quem
+// ataca contra a Defesa, e os dados do dano quando há. Na manobra, os dois
+// lados do teste oposto.
+//
+//	gmRollLine(...) // "d20 9 + 8 = 17 vs Defesa 13 · 1d8+3 (3)"
+func gmRollLine(pa live.PendingAttack) string {
+	if pa.Maneuver != nil {
+		m := *pa.Maneuver
+		return ownRollLine(pa) + " vs " + ownRollLine(live.PendingAttack{Roll: m.OpposedRoll, Total: m.Opposed})
+	}
+	line := fmt.Sprintf("%s vs Defesa %d", ownRollLine(pa), pa.Defense)
+	if !pa.Hit || len(pa.Dice) == 0 {
+		return line
+	}
+	return line + " · " + damageDice(pa)
+}

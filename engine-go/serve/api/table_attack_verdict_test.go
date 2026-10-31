@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -49,6 +50,13 @@ func TestOnlyTheGMSeesTheAttackVerdict(t *testing.T) {
 	}
 	if !strings.Contains(gm, defense) {
 		t.Errorf("o mestre não vê a conta contra a Defesa (%q):\n%s", defense, gm)
+	}
+	// OS DADOS À VISTA no cartão curto do mestre, e não só nos Detalhes: o d20
+	// natural, o bônus, o total e a Defesa numa linha (pedido do dono).
+	short := gm[:strings.Index(gm, `id="gm-attack-details"`)]
+	roll := fmt.Sprintf("d20 %d", pending.Roll)
+	if !strings.Contains(short, roll) || !strings.Contains(short, "vs Defesa "+strconv.Itoa(pending.Defense)) {
+		t.Errorf("o cartão curto do mestre não mostra os dados (%q … vs Defesa %d):\n%s", roll, pending.Defense, short)
 	}
 
 	player := attackSection(t, f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())

@@ -330,6 +330,9 @@ templ gmAttack(v View) {
 				@ds.IconButton(ds.ButtonSecondary, "X", "Cancelar o ataque", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")})
 				@ds.IconButton(ds.ButtonPrimary, "Check", "Confirmar e aplicar", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "confirmar")})
 			</div>
+			if v.Attack.RollLine != "" {
+				<p class="ds-strike-dice">{ v.Attack.RollLine }</p>
+			}
 			@ds.Dialog("gm-attack-details", "Ataque para confirmar", nil) {
 				<p class="ds-row-meta">
 					{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b>
