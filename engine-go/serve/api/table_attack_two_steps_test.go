@@ -145,3 +145,25 @@ func settlesAsTheBookSuggests(t *testing.T, f sceneFixture) *httptest.ResponseRe
 	}
 	return f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", "")
 }
+
+// O "ERROU" SAI QUANDO A VEZ PASSA: ele fica na mesa para o jogador ler a
+// decisão, e a vez seguinte já é outra conversa. O controle é o ataque AINDA
+// SEM DECISÃO, que a vez passando não pode apagar — o mestre ainda não falou.
+func TestTheGMsMissLeavesTheTableWhenTheTurnPasses(t *testing.T) {
+	f, goblin := attackOnTurn(t)
+	f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/iniciativa/"+goblin+"/atacar", "")
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	if pendingOf(t, f) == nil {
+		t.Fatal("a vez passou e levou um ataque que o mestre ainda não decidiu")
+	}
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/vez-anterior", "")
+
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/errou", "")
+	if pa := pendingOf(t, f); pa == nil || pa.Ruling != "miss" {
+		t.Fatalf("o errou do mestre não ficou na mesa para o jogador ler: %+v", pa)
+	}
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", "")
+	if pa := pendingOf(t, f); pa != nil {
+		t.Errorf("a vez passou e o errou continuou na mesa: %+v", pa)
+	}
+}

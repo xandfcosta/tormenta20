@@ -263,7 +263,12 @@ func damageRows(pa live.PendingAttack) []duelRow {
 // chance de ignorar o crítico (p166, p338) e o que o livro reserva ao golpe.
 func damageNotes(pa live.PendingAttack) []string {
 	var notes []string
-	for _, note := range []string{writtenNonLethal(pa), writtenCritChance(pa), writtenForeseen(pa)} {
+	// O NÃO LETAL diz de quê: "Não letal" sozinho embaixo das linhas do dano
+	// não diz o que deixa de matar.
+	if writtenNonLethal(pa) != "" {
+		notes = append(notes, "Dano não letal (p236)")
+	}
+	for _, note := range []string{writtenCritChance(pa), writtenForeseen(pa)} {
 		if note = strings.TrimPrefix(strings.TrimSpace(note), "| "); note != "" {
 			notes = append(notes, capitalize(note))
 		}

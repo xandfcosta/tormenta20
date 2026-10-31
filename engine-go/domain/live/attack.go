@@ -305,8 +305,8 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 
 // ClearPendingAttack tira o provisório da mesa depois do ✓. O ataque que o
 // mestre disse ERRADO não passa por aqui: ele fica com a decisão para o jogador
-// ler (`RuleAttack`), e sai quando o próximo ataque o substitui ou quem atacou
-// o fecha.
+// ler (`RuleAttack`), e sai quando a vez muda, quando o próximo ataque o
+// substitui ou quando quem atacou o fecha.
 func ClearPendingAttack(st *SessionRuntimeState) { st.PendingAttack = nil }
 
 // CancelAttack descarta o provisório sem mexer em ninguém. O mestre cancela por
