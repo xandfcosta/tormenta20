@@ -84,7 +84,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	sub, stop := s.deps.Bus().Subscribe(readerInterests(view)...)
 	defer stop()
 
-	sse := datastar.NewSSE(w, r, datastar.WithCompression())
+	sse := datastar.NewSSE(w, r)
 	last := writeTable(r.Context(), sse, view, nil)
 	// O PUXÃO já empurrado NESTA conexão. Ver `PushForMap`.
 	var pushedPull int64
