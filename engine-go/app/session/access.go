@@ -22,23 +22,40 @@ func NewAccess(q *sqlcgen.Queries) Access { return Access{queries: q} }
 
 // RoleIn diz o papel de quem pede numa campanha JÁ CARREGADA.
 //
-// O dono mestra; o admin também, e a exceção custa uma condição só porque esta
-// é a única pergunta de papel da casa. Quem não é membro não recebe "player":
-// recebe recusa, senão a cena de outra pessoa abriria vazia em vez de barrar.
+// O dono mestra; o membro joga; e o ASSENTO VENCE o admin: o admin com herói na
+// mesa de outra pessoa é jogador nela. Sem isso a página da campanha lhe abria a
+// configuração, o acervo e as sessões da mesa em que ele só joga, enquanto a
+// própria mesa o tratava como jogador (ALE-526).
+//
+// Sem assento, o admin mestra: é com as ferramentas de mestre que ele vem
+// consertar a mesa de um jogador. Quem não é membro nem admin recebe recusa,
+// senão a cena de outra pessoa abriria vazia em vez de barrar.
 func (a Access) RoleIn(ctx context.Context, who app.Caller, c sqlcgen.Campaign) (string, error) {
-	if c.Ownerid == who.ID || who.IsAdmin {
+	if c.Ownerid == who.ID {
 		return app.RoleGM, nil
 	}
-	member, err := a.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{
-		Campaignid: c.ID, Ownerid: who.ID,
-	})
+	member, err := a.isMember(ctx, who, c.ID)
 	if err != nil {
-		return "", fmt.Errorf("conferir se %d é membro da campanha %d: %w", who.ID, c.ID, err)
+		return "", err
 	}
-	if !member {
+	switch {
+	case member:
+		return app.RolePlayer, nil
+	case who.IsAdmin:
+		return app.RoleGM, nil
+	default:
 		return "", fmt.Errorf("a campanha %d não é acessível para %d: %w", c.ID, who.ID, app.ErrForbidden)
 	}
-	return app.RolePlayer, nil
+}
+
+func (a Access) isMember(ctx context.Context, who app.Caller, campaignID int64) (bool, error) {
+	member, err := a.queries.IsCampaignMember(ctx, sqlcgen.IsCampaignMemberParams{
+		Campaignid: campaignID, Ownerid: who.ID,
+	})
+	if err != nil {
+		return false, fmt.Errorf("conferir se %d é membro da campanha %d: %w", who.ID, campaignID, err)
+	}
+	return member, nil
 }
 
 // RoleInCampaign carrega a campanha e devolve o papel.
@@ -57,8 +74,7 @@ func (a Access) RoleInCampaign(ctx context.Context, who app.Caller, campaignID i
 //
 // Mais estreita que o `RoleIn`, e a diferença é o gesto: renomear, apagar,
 // convidar, abrir sessão e montar o acervo são do DONO da campanha; ver a mesa é
-// de qualquer membro. O admin passa pela mesma porta, e a exceção custa uma
-// condição só.
+// de qualquer membro. O admin passa só onde não tem assento — ver o `RoleIn`.
 func (a Access) OwnedCampaign(
 	ctx context.Context, who app.Caller, campaignID int64,
 ) (sqlcgen.Campaign, error) {
@@ -69,10 +85,19 @@ func (a Access) OwnedCampaign(
 	if err != nil {
 		return c, fmt.Errorf("carregar a campanha %d: %w", campaignID, err)
 	}
-	if c.Ownerid != who.ID && !who.IsAdmin {
-		return c, fmt.Errorf("a campanha %d é de outra pessoa: %w", campaignID, app.ErrForbidden)
+	if c.Ownerid == who.ID {
+		return c, nil
 	}
-	return c, nil
+	if who.IsAdmin {
+		seated, err := a.isMember(ctx, who, campaignID)
+		if err != nil {
+			return c, err
+		}
+		if !seated {
+			return c, nil
+		}
+	}
+	return c, fmt.Errorf("a campanha %d é de outra pessoa: %w", campaignID, app.ErrForbidden)
 }
 
 // Session resolve o papel E a linha da sessão, conferindo que ela é DESTA

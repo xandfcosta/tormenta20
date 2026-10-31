@@ -189,11 +189,11 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		IgnoredRules: s.life.IgnoredRules(ctx, c.ID),
 		Errors:       wire.FieldErrorMap{},
 	}
-	// O nome do DONO só aparece numa campanha que não é de quem está olhando, o
-	// que hoje quer dizer um admin. A pergunta "sou admin?" chega por parâmetro
-	// e não pelo usuário inteiro, pela mesma razão de sempre: o tipo do usuário
-	// é do hospedeiro.
-	if admin && c.Ownerid != euID {
+	// O nome do DONO só aparece para o admin que MESTRA uma campanha que não é
+	// dele — o que entra sem assento para consertar. Sentado como jogador, ele
+	// lê "Jogando", como qualquer jogador. A pergunta "sou admin?" chega por
+	// parâmetro e não pelo usuário inteiro: o tipo do usuário é do hospedeiro.
+	if admin && v.IsGM && c.Ownerid != euID {
 		v.OtherOwner = s.collection.OwnerNames(ctx, []sqlcgen.Campaign{c}, euID)[c.Ownerid]
 	}
 	v.Tabs = oneTabs(v.IsGM, aba)

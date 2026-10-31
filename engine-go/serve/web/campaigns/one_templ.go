@@ -320,10 +320,10 @@ func oneHeader(v oneView) templ.Component {
 // por "Mesa de Fulano".
 func roleAtTable(v oneView) string {
 	switch {
-	case v.IsGM:
-		return "Mestrando"
 	case v.OtherOwner != "":
 		return "Mesa de " + v.OtherOwner
+	case v.IsGM:
+		return "Mestrando"
 	default:
 		return "Jogando"
 	}
