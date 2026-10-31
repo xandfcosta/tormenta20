@@ -559,14 +559,12 @@ func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id 
 func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, v oneView) {
 	s.deps.WritePage(w, r, status, ui.Page{
 		Title: v.Name,
-		Shape: ui.ShellDense,
-		Back:  "/campanhas",
-		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
-		// para o livro, e "Campanhas" diz isso melhor que "Voltar".
-		BackLabel: "Campanhas",
-		// Os sinais são só de INTERAÇÃO — o diálogo de excluir e o aviso do
-		// interruptor. Nada de estado da aplicação: a aba vem da URL e o resto
-		// vem desenhado.
+		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, porque o `<h1>` é o
+		// nome da campanha, abaixo da barra.
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
+		// O sinal é só de INTERAÇÃO — o aviso do interruptor. Nada de estado da
+		// aplicação: a aba vem da URL e o resto vem desenhado.
 		Signals: "{rule_error: ''}",
 	}, oneBody(v))
 }

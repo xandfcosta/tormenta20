@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"strings"
 	"t20engine/app"
 	"t20engine/domain/board"
 	"t20engine/infra/wire"
@@ -51,6 +52,7 @@ type oneView struct {
 	// SessaoViva é a única ação de sessão que a cabeça da página oferece.
 	LiveSessionID     int64
 	LiveSessionNumber int64
+	LiveSessionTitle  string
 	// CreatedAt é "desde quando esta mesa existe", e ela fica na linha de meta
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
 	CreatedAt string
@@ -93,6 +95,8 @@ type heroAtTable struct {
 	IsGM     bool
 	Initials string
 	Gradient string
+	// Meta é a linha de baixo: as classes com nível e de quem é o herói.
+	Meta string
 }
 
 type sessionRow struct {
@@ -121,7 +125,7 @@ func oneTabs(isGM bool, requested string) []oneTab {
 		// fecha o trilho porque é o que se procura quando já se sabe o que
 		// procurar.
 		all = append(all, oneTab{ID: "lugares", Label: "Lugares"})
-		all = append(all, oneTab{ID: "config", Label: "Config"})
+		all = append(all, oneTab{ID: "config", Label: "Configurações"})
 	}
 	chosen := "visao"
 	for _, a := range all {
@@ -238,6 +242,10 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 			return 1
 		}
 	})
+	classes, err := s.classesOf(ctx, members)
+	if err != nil {
+		return oneView{}, err
+	}
 	for _, m := range members {
 		if !isGMs(m) {
 			v.TotalHeroes++
@@ -246,6 +254,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		v.Heroes = append(v.Heroes, heroAtTable{
 			Name: name, IsGM: isGMs(m),
 			Initials: ui.Monogram(name), Gradient: ui.NameGradient(name),
+			Meta: memberMeta(classes[m.Characterid], m.Charlevel, m.Playername),
 		})
 	}
 
@@ -266,7 +275,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		}
 		alive := sess.Status == "active"
 		if alive {
-			v.LiveSessionID, v.LiveSessionNumber = sess.ID, sess.Sessionnumber
+			v.LiveSessionID, v.LiveSessionNumber, v.LiveSessionTitle = sess.ID, sess.Sessionnumber, sess.Title.String
 		}
 		v.Sessions = append(v.Sessions, sessionRow{
 			ID: sess.ID, Number: sess.Sessionnumber,
@@ -276,6 +285,37 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		})
 	}
 	return v, nil
+}
+
+// classesOf lê as classes de todo o grupo numa consulta só, e não uma por
+// herói.
+func (s Scene) classesOf(ctx context.Context, members []sqlcgen.ListMembersRow) (map[int64][]string, error) {
+	ids := make([]int64, 0, len(members))
+	for _, m := range members {
+		ids = append(ids, m.Characterid)
+	}
+	rows, err := s.deps.Queries().ListClassesByCharacters(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+	byHero := map[int64][]string{}
+	for _, c := range rows {
+		byHero[c.Characterid] = append(byHero[c.Characterid], c.Classname+" "+strconv.FormatInt(c.Level, 10))
+	}
+	return byHero, nil
+}
+
+// memberMeta é "Guerreiro 10 · Alexandre": as classes (ou o nível, sem classe
+// nenhuma) e o jogador, quando a conta tem nome.
+func memberMeta(classes []string, level int64, player string) string {
+	row := strings.Join(classes, " / ")
+	if row == "" {
+		row = "Nv " + strconv.FormatInt(level, 10)
+	}
+	if player != "" {
+		row += " · " + player
+	}
+	return row
 }
 
 // memberName: personagem sem nome vira "Personagem N" e não linha em branco.
@@ -343,4 +383,10 @@ func groundOptions() []GroundOption {
 		outside = append(outside, GroundOption{ID: c.ID, Label: c.Label})
 	}
 	return outside
+}
+
+// joinErrors junta as recusas de um campo numa frase só, que é o que o campo do
+// kit desenha.
+func joinErrors(errs []string) string {
+	return strings.Join(errs, " ")
 }

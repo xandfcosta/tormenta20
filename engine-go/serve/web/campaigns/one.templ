@@ -1,18 +1,19 @@
 package campaigns
 
 import (
-	"t20engine/serve/web/routes"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"t20engine/domain/campaign"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
-// A CRÔNICA desenhada: a página de uma campanha aberta no tomo.
-//
-// Mesma folha do grimório das outras cenas de campanha — a folha em branco que
-// se escreve, a carta que se enfia nela, e esta, que é a crônica que se lê.
+// A CRÔNICA no Tempestade (ALE-526), pelo mockup aprovado `campanhas.html`: a
+// capa, o papel e o nome; a sessão ao vivo no mesmo cartão do início; e as
+// seções como abas do kit.
 //
 // A ABA é um LINK e não um botão com estado, e isso é a decisão que sustenta a
 // cena inteira: `?tab=sessoes` é endereço, então ele volta no histórico, abre em
@@ -20,16 +21,37 @@ import (
 // estado e chega junto com o pedido — não há o que espelhar.
 
 templ oneBody(v oneView) {
-	@ui.TomeSheet() {
-		@oneHeader(v)
-		<div aria-hidden="true" class="h-px w-full bg-gradient-to-r from-transparent via-grimorio-gold/40 to-transparent"></div>
-		<div class="flex min-h-0 flex-1 flex-col gap-4 sm:flex-row sm:gap-6">
-			@oneNav(v)
-			<div
-				data-nav-region="content"
-				data-nav-layout={ tabLayout(v.AbaAtiva()) }
-				class="min-h-0 flex-1"
+	<div class="ds-camps-scene">
+		// O cabeçalho é da cena, e não da casca densa, porque o `<h1>` é o nome da
+		// campanha logo abaixo, e a barra só diz onde se está.
+		<header class="ds-header">
+			<a href="/campanhas" class="ds-header-back" aria-label="Voltar para Campanhas" title="Voltar para Campanhas">
+				@ui.Icon("ChevronLeft", "ds-icon")
+			</a>
+			<p class="ds-header-title">Campanha</p>
+		</header>
+		<div class="ds-camps">
+			@oneHead(v)
+			if v.LiveSessionID > 0 {
+				@oneLiveCard(v)
+			}
+			// No celular as cinco abas do mestre não cabem e a faixa rola; a aba
+			// ATIVA é trazida para a vista, senão "Configurações" abre cortada.
+			<nav
+				class="ds-tabs"
+				aria-label="Seções da campanha"
+				data-nav-region="rail"
+				data-nav-layout="row"
+				data-nav-edge-down="content"
+				data-init="el.querySelector('[aria-current]')?.scrollIntoView({block: 'nearest', inline: 'nearest'})"
 			>
+				for _, a := range v.Tabs {
+					@ds.Tab(templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", v.ID, a.ID)), a.Active, templ.Attributes{"data-nav-item": true}) {
+						{ a.Label }
+					}
+				}
+			</nav>
+			<div class="ds-camp-pane" data-nav-region="content" data-nav-layout={ tabLayout(v.AbaAtiva()) } data-nav-edge-up="rail">
 				switch v.AbaAtiva() {
 					case "sessoes":
 						@sessionsTab(v)
@@ -44,55 +66,42 @@ templ oneBody(v oneView) {
 				}
 			</div>
 		</div>
-	}
+	</div>
 }
 
-// A cabeça iluminada: brasão, nome, quem é o dono quando não sou eu, e a ÚNICA
-// ação de sessão que cabe aqui — retomar a que está viva.
-templ oneHeader(v oneView) {
-	<header data-nav-region="header" data-nav-layout="row" class="flex flex-wrap items-center gap-3">
-		<span
-			aria-hidden="true"
-			class="flex size-12 shrink-0 items-center justify-center rounded-sm font-display text-sm text-white/85"
-			style={ "background: " + ui.NameGradient(v.Name) }
-		>{ ui.Monogram(v.Name) }</span>
-		<div class="min-w-0 flex-1">
-			// O PAPEL vem ACIMA do nome, como sobrancelha, e não misturado na
-			// linha de baixo: ele responde "o que eu sou nesta mesa", que é a
-			// primeira pergunta de quem abre a página.
-			@ui.SectionLabel("muted", "") {
-				{ roleAtTable(v) }
+// oneHead é a capa, o papel ACIMA do nome — ele responde "o que eu sou nesta
+// mesa", que é a primeira pergunta de quem abre a página — e o nome.
+templ oneHead(v oneView) {
+	<div class="ds-camp-detail-head">
+		<span class="ds-camp-cover" data-big aria-hidden="true" style={ "background: " + ui.NameGradient(v.Name) }>{ ui.Monogram(v.Name) }</span>
+		<span class="ds-camp-text">
+			<span class="ds-row-meta">{ tableMeta(v) }</span>
+			<h1 class="ds-camp-detail-name">{ v.Name }</h1>
+		</span>
+	</div>
+}
+
+// oneLiveCard é a sessão viva, no desenho do cartão do início.
+templ oneLiveCard(v oneView) {
+	<a class="ds-hub-live" href={ templ.SafeURL(routes.Session(v.ID, v.LiveSessionID)) }>
+		<span class="ds-hub-live-dot" aria-hidden="true"></span>
+		<span class="ds-hub-live-body">
+			<span class="ds-row-meta">Em andamento</span>
+			<b>{ fmt.Sprintf("Sessão %d", v.LiveSessionNumber) }</b>
+			if v.LiveSessionTitle != "" {
+				<span class="ds-row-meta">{ v.LiveSessionTitle }</span>
 			}
-			<h1 class="truncate font-display text-2xl uppercase tracking-[0.05em] text-grimorio-gold sm:text-3xl">
-				{ v.Name }
-			</h1>
-			<p class="text-xs text-muted-foreground">{ tableMeta(v) }</p>
-		</div>
-		if v.LiveSessionID > 0 {
-			// `w-full sm:w-auto` é o que faz o `flex-wrap` do cabeçalho FUNCIONAR.
-			// Sem ele o bloco da sessão viva fica `shrink-0` com 185px numa linha de
-			// 288, e quem encolhe é o vizinho do nome — que tem `min-w-0` e vai a
-			// 31px, deixando o `truncate` do `<h1>` desenhar a campanha como "S ..".
-			// Envolver nunca acontecia porque um item que pode chegar a zero nunca
-			// força a quebra (ALE-342).
-			<div class="flex w-full shrink-0 flex-col items-end gap-1 sm:w-auto">
-				@ui.SectionLabel("gold", "") {
-					{ fmt.Sprintf("Sessão %d em andamento", v.LiveSessionNumber) }
-				}
-				<a
-					href={ templ.SafeURL(routes.Session(v.ID, v.LiveSessionID)) }
-					class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
-				>
-					Continuar a sessão
-				</a>
-			</div>
-		}
-	</header>
+		</span>
+		<span class="ds-button">
+			Voltar à mesa
+			@ui.Icon("ChevronRight", "ds-icon")
+		</span>
+	</a>
 }
 
-// roleAtTable é a sobrancelha: o que EU sou aqui. O nome do dono só aparece para
-// ADMIN que não é dono — para o jogador, marcar a mesa trocaria o "Jogando" dele
-// por "Mesa de Fulano".
+// roleAtTable é o que EU sou aqui. O nome do dono só aparece para ADMIN que não
+// é dono — para o jogador, marcar a mesa trocaria o "Jogando" dele por "Mesa de
+// Fulano".
 func roleAtTable(v oneView) string {
 	switch {
 	case v.IsGM:
@@ -104,208 +113,109 @@ func roleAtTable(v oneView) string {
 	}
 }
 
-// tableMeta é a linha de baixo: o tamanho do grupo e desde quando ela existe.
+// tableMeta é a linha acima do nome: o papel e desde quando a mesa existe.
 func tableMeta(v oneView) string {
-	row := ui.Plural(int64(v.TotalHeroes), "herói", "heróis")
+	row := roleAtTable(v)
 	if v.CreatedAt != "" {
-		row += " · Criada em " + v.CreatedAt
+		row += " · criada em " + v.CreatedAt
 	}
 	return row
 }
 
-// tabLayout: o painel e o elenco são grades; a linha do tempo e o formulário
-// são listas. É o que faz a seta andar como o olho vê.
+// tabLayout: o elenco é grade; o resto são listas. É o que faz a seta andar
+// como o olho vê.
 func tabLayout(aba string) string {
-	if aba == "visao" || aba == "membros" {
+	if aba == "membros" {
 		return "grid"
 	}
 	return "column"
 }
 
-// A trilha é de LINKS. Um botão com sinal precisaria reimplementar histórico,
-// nova aba e link colável — três coisas que o `<a>` faz sem pedir.
-templ oneNav(v oneView) {
-	<nav
-		aria-label="Seções da crônica"
-		data-nav-region="rail"
-		data-nav-layout="column"
-		data-nav-edge-right="content"
-		data-nav-edge-up="header"
-		class="flex shrink-0 gap-1 overflow-x-auto sm:w-44 sm:flex-col sm:overflow-visible"
-	>
-		for _, a := range v.Tabs {
-			<a
-				href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", v.ID, a.ID)) }
-				data-nav-item
-				aria-current={ ariaCurrent(a.Active) }
-				class={ "shrink-0 justify-start gap-2 rounded-none px-3 py-2 text-left text-sm outline-none transition-colors",
-					templ.KV("bg-grimorio-panel-raised text-grimorio-gold sm:border-l-2 sm:border-grimorio-gold", a.Active),
-					templ.KV("text-muted-foreground hover:text-grimorio-gold sm:border-l-2 sm:border-transparent", !a.Active) }
-			>{ a.Label }</a>
-		}
-		// A dica de teclado vive AQUI e não numa camada de ajuda: ela é a única
-		// coisa que conta que a cena tem gramática de setas, e uma gramática
-		// que ninguém descobre é uma gramática que não existe.
-		<p class={ ui.FieldLabelClasses("herda", "hidden pt-2 text-muted-foreground/70 sm:block") }>
-			↑↓←→ navegar · PgUp/PgDn seção · Esc voltar
-		</p>
-	</nav>
-}
-
-// `aria-current="page"` e não `aria-selected`: estes são LINKS de navegação, e
-// o leitor de tela anuncia "página atual". `aria-selected` é de opção dentro de
-// um listbox, e usá-lo aqui mentiria sobre o que a peça é.
-func ariaCurrent(active bool) string {
-	if active {
-		return "page"
-	}
-	return "false"
-}
-
 // ── as seções ────────────────────────────────────────────────────────────────
 
-// A visão geral: três sinetes e os dois painéis que resumem a mesa.
+// A visão geral: a sinopse, os números, o grupo e as sessões recentes.
 //
 // Os números vêm CONTADOS do servidor. Calculados na tela a partir de duas
 // consultas com estados de carregamento próprios, há um instante em que a página
 // diz "0 heróis" porque uma das duas ainda não voltou.
 templ overviewTab(v oneView) {
-	<div class="space-y-6">
-		// DUAS colunas no telefone, e o terceiro selo ocupa a linha inteira: a 390px
-		// a trilha de três dá 86px, e "ENCERRADAS" — dez letras em versal com
-		// `tracking` largo — mede 94. O rótulo é uma palavra só, então não há quebra
-		// que o salve (ALE-342).
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 [&>*]:min-w-0 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
-			@oneSeal("Users2", v.TotalHeroes, "Heróis")
-			@oneSeal("Scroll", v.TotalSessions, "Sessões")
-			@oneSeal("ShieldCheck", v.EndedSessions, "Encerradas")
-		</div>
-		// `[&>*]:min-w-0` não é enfeite: item de grade tem `min-width: auto`, e
-		// sem isto a trilha é dimensionada pelo MIN-CONTENT dos painéis. A 390px
-		// isso dá uma coluna de 457px numa caixa de 288 e põe o botão de convite
-		// em x=392 numa tela de 390 — inalcançável, e sem estouro visível porque
-		// o `overflow-x-hidden` da cena absorve o sintoma.
-		<div class="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
-			@onePanel("A mesa", "Grupo") {
-				if len(v.Heroes) == 0 {
-					<p class="text-sm text-muted-foreground">Nenhum personagem inscrito ainda.</p>
-				} else {
-					<ul class="space-y-2">
-						for _, h := range firstHeroes(v.Heroes, 6) {
-							@heroRow(h)
-						}
-					</ul>
-					if len(v.Heroes) > 4 {
-						@seeAll(v.ID, "membros", fmt.Sprintf("Ver %d membros →", len(v.Heroes)))
-					}
-				}
+	if v.Description != "" {
+		<p class="ds-camp-detail-syn">{ v.Description }</p>
+	}
+	<div class="ds-stats ds-camp-stats">
+		@ds.Stat("Heróis", strconv.Itoa(v.TotalHeroes))
+		@ds.Stat("Sessões", strconv.Itoa(v.TotalSessions))
+		@ds.Stat("Encerradas", strconv.Itoa(v.EndedSessions))
+	</div>
+	<div class="ds-camp-two">
+		@ds.List("Grupo", countOf(int64(v.TotalHeroes), "herói", "heróis")) {
+			if len(v.Heroes) == 0 {
+				<p class="ds-row ds-row-meta">Nenhum personagem inscrito ainda.</p>
 			}
-			@onePanel("Campanha", "Sessões recentes") {
-				if len(v.Sessions) == 0 {
-					<p class="text-sm text-muted-foreground">Nenhuma sessão ainda.</p>
-				} else {
-					<ul class="space-y-2">
-						for _, sess := range firstSessions(v.Sessions, 3) {
-							@sessionLine(v.ID, sess)
-						}
-					</ul>
-					if len(v.Sessions) > 3 {
-						@seeAll(v.ID, "sessoes", "Ver todas →")
-					}
-				}
+			for _, h := range firstHeroes(v.Heroes, 6) {
+				@heroRow(h)
 			}
-		</div>
-		if v.Description != "" {
-			@onePanel("Campanha", "Sinopse") {
-				<p class="text-sm whitespace-pre-line text-muted-foreground">{ v.Description }</p>
+			if len(v.Heroes) > 6 {
+				@seeAll(v.ID, "membros", fmt.Sprintf("Ver os %d membros", len(v.Heroes)))
+			}
+		}
+		@ds.List("Sessões", strconv.Itoa(v.TotalSessions)) {
+			if len(v.Sessions) == 0 {
+				<p class="ds-row ds-row-meta">Nenhuma sessão ainda.</p>
+			}
+			for _, sess := range firstSessions(v.Sessions, 3) {
+				@sessionLine(v.ID, sess)
+			}
+			if len(v.Sessions) > 3 {
+				@seeAll(v.ID, "sessoes", "Ver todas as sessões")
 			}
 		}
 	</div>
-}
-
-templ oneSeal(iconName string, value int, label string) {
-	<div class="flex flex-col items-center gap-1 border border-grimorio-iron bg-grimorio-panel px-3 py-4 text-center">
-		<span aria-hidden="true" class="text-grimorio-gold/70">
-			@ui.Icon(iconName, "size-4")
-		</span>
-		<span class="font-mono text-xl font-semibold tabular-nums text-foreground">{ strconv.Itoa(value) }</span>
-		@ui.SectionLabel("muted", "") {
-			{ label }
-		}
-	</div>
-}
-
-templ onePanel(eyebrow, title string) {
-	<section class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
-		<header class="space-y-0.5">
-			@ui.SectionLabel("muted", "") {
-				{ eyebrow }
-			}
-			<h2 class="font-heading text-base tracking-wide text-foreground">{ title }</h2>
-		</header>
-		{ children... }
-	</section>
 }
 
 templ seeAll(campaignID int64, aba, text string) {
-	<a
-		href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", campaignID, aba)) }
-		class="inline-flex min-h-11 items-center text-xs text-muted-foreground underline-offset-4 outline-none hover:text-grimorio-gold hover:underline"
-	>{ text }</a>
+	<a class="ds-row ds-camp-more" href={ templ.SafeURL(fmt.Sprintf("/campanhas/%d?tab=%s", campaignID, aba)) }>
+		{ text }
+		@ui.Icon("ChevronRight", "ds-icon")
+	</a>
 }
 
+// heroRow é um herói do grupo. Quem mestra leva a COROA e não a palavra
+// "mestre": o crachá de texto competia com o nome pela mesma largura.
 templ heroRow(h heroAtTable) {
-	<li class="flex items-center gap-3">
-		<span
-			aria-hidden="true"
-			class="monogram size-8 rounded-sm text-2xs"
-			style={ "background: " + h.Gradient }
-		>{ h.Initials }</span>
-		<span class="min-w-0 flex-1 truncate text-sm text-foreground">{ h.Name }</span>
+	<div class="ds-row ds-camp-row">
+		<span class="ds-camp-hero-mark" aria-hidden="true" style={ "background: " + h.Gradient }>{ h.Initials }</span>
+		<span class="ds-camp-text">
+			<span class="ds-row-title">{ h.Name }</span>
+			<span class="ds-row-meta">{ h.Meta }</span>
+		</span>
 		if h.IsGM {
-			// COROA e não a palavra "mestre": o crachá de texto compete com o
-			// nome pela mesma largura, e numa lista de seis ele empurra os
-			// nomes para o truncamento. O ícone é `aria-hidden` e quem o
-			// anuncia é o rótulo ao lado.
-			<span aria-label="mestre da mesa" class="shrink-0 text-grimorio-gold">
-				@ui.Icon("Crown", "size-3.5")
+			<span class="ds-camp-crown" role="img" aria-label="mestre da mesa">
+				@ui.Icon("Crown", "ds-icon")
 			</span>
 		}
-	</li>
+	</div>
 }
 
-// A linha da sessão é uma LINHA DO TEMPO: número, título, data e estado. Sem a
-// data, "Sessão 4" não diz se foi ontem ou em março; sem o número, duas sessões
-// sem título viram a mesma linha.
+// A linha da sessão é uma LINHA DO TEMPO: número, título, estado e data. Sem a
+// data, "Sessão 4" não diz se foi ontem ou em março. A AO VIVO é destaque da
+// própria linha, como no cartão da lista, e não crachá.
 templ sessionLine(campaignID int64, sess sessionRow) {
-	<li>
-		<a
-			href={ templ.SafeURL(routes.Session(campaignID, sess.ID)) }
-			data-nav-item
-			class="flex min-h-11 items-center gap-3 px-1 text-sm outline-none transition-colors hover:text-grimorio-gold"
-		>
-			<span class="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{ strconv.FormatInt(sess.Number, 10) }</span>
-			<span class="min-w-0 flex-1 truncate text-foreground">{ sessionName(sess) }</span>
-			<span class="hidden shrink-0 font-mono text-3xs text-muted-foreground sm:inline">{ sess.Data }</span>
-			@stateBadge(sess.State)
-		</a>
-	</li>
-}
-
-// O crachá do estado, com as TRÊS cores da casa — e elas não são escolha de
-// gosto: a tinta do PERGAMINHO no "ao vivo" rende 2,59:1 sobre o painel escuro,
-// que é uma tinta verificada contra uma superfície e usada noutra. O vivo é
-// `--hp-full` (4,66:1), o planejado é o dourado e o encerrado é o texto
-// apagado.
-templ stateBadge(state string) {
-	switch state {
-		case "Ao vivo":
-			<span class="shrink-0 rounded-none border border-[color:var(--hp-full)]/70 bg-[color:var(--hp-full)]/12 px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-widest text-[color:var(--hp-full)]">{ state }</span>
-		case "Planejada":
-			<span class="shrink-0 rounded-none border border-grimorio-gold/50 bg-grimorio-gold/10 px-1.5 py-0.5 text-2xs uppercase tracking-widest text-grimorio-gold">{ state }</span>
-		default:
-			<span class="shrink-0 rounded-none border border-grimorio-iron px-1.5 py-0.5 text-2xs uppercase tracking-widest text-muted-foreground">{ state }</span>
-	}
+	<a
+		class="ds-row ds-camp-row"
+		href={ templ.SafeURL(routes.Session(campaignID, sess.ID)) }
+		data-nav-item
+		if sess.Alive {
+			data-live
+		}
+	>
+		<span class="ds-camp-num">{ strconv.FormatInt(sess.Number, 10) }</span>
+		<span class="ds-camp-text">
+			<span class="ds-row-title">{ sessionName(sess) }</span>
+			<span class="ds-row-meta">{ sessionMeta(sess) }</span>
+		</span>
+		@ui.Icon("ChevronRight", "ds-icon")
+	</a>
 }
 
 // Sessão sem título vira "Sessão N" e não uma linha em branco — linha vazia
@@ -314,114 +224,98 @@ func sessionName(sess sessionRow) string {
 	if sess.Title == "" {
 		return "Sessão " + strconv.FormatInt(sess.Number, 10)
 	}
-	return "Sessão " + strconv.FormatInt(sess.Number, 10) + " — " + sess.Title
+	return sess.Title
+}
+
+// sessionMeta é o estado e a data: "ao vivo agora", "encerrada · 12/10/2026".
+func sessionMeta(sess sessionRow) string {
+	if sess.Alive {
+		return "ao vivo agora"
+	}
+	state := strings.ToLower(sess.State)
+	if sess.Data == "" {
+		return state
+	}
+	return state + " · " + sess.Data
 }
 
 templ sessionsTab(v oneView) {
-	<div class="space-y-3">
+	@ds.List("Sessões", strconv.Itoa(v.TotalSessions)) {
 		if len(v.Sessions) == 0 {
-			<p class="text-sm text-muted-foreground">Nenhuma sessão ainda.</p>
-		} else {
-			<ul class="divide-y divide-grimorio-iron/60">
-				for _, sess := range v.Sessions {
-					@sessionLine(v.ID, sess)
-				}
-			</ul>
+			<p class="ds-row ds-row-meta">Nenhuma sessão ainda.</p>
 		}
-	</div>
+		for _, sess := range v.Sessions {
+			@sessionLine(v.ID, sess)
+		}
+	}
 }
 
 templ membersTab(v oneView) {
-	<div class="space-y-3">
+	@ds.List("Grupo", countOf(int64(v.TotalHeroes), "herói", "heróis")) {
 		if len(v.Heroes) == 0 {
-			<p class="text-sm text-muted-foreground">Nenhum personagem inscrito ainda.</p>
-		} else {
-			<ul class="grid gap-2 sm:grid-cols-2">
-				for _, h := range v.Heroes {
-					@heroRow(h)
-				}
-			</ul>
+			<p class="ds-row ds-row-meta">Nenhum personagem inscrito ainda.</p>
 		}
-	</div>
+		for _, h := range v.Heroes {
+			@heroRow(h)
+		}
+	}
 }
 
-// A aba de CONFIGURAÇÃO: o cadastro da crônica, as regras opcionais, e a zona de
-// perigo — nesta ordem, e a do meio não é acidente. Regra opcional é ajuste
-// CORRIQUEIRO e não destruição, então ela fica entre o cadastro e o que apaga;
-// posta depois da zona de perigo, ela herdaria o tom de risco.
+// A aba de CONFIGURAÇÕES: o cadastro, o link, as regras opcionais e o excluir —
+// nesta ordem. Regra opcional é ajuste CORRIQUEIRO e não destruição, então ela
+// fica antes do que apaga; posta depois, herdaria o tom de risco.
 templ configTab(v oneView) {
-	<div class="space-y-6">
-		@ui.SectionLabel("muted", "") {
-			Ajustes do tomo
-		}
-		@campaignForm(v)
-		@invitePanel(v)
-		@rulesPanel(v)
-		@dangerZone(v)
-	</div>
+	@campaignForm(v)
+	@invitePanel(v)
+	@rulesPanel(v)
+	@dangerZone(v)
 }
 
-// O cadastro é o MESMO formulário da folha em branco, com outro verbo. Os dois
-// gravam pela mesma regra (`campaign.Name` / `campaign.Description`), então
-// "salvar" e "abrir" não podem discordar sobre o que é um nome válido.
+// O cadastro grava pela mesma regra da nova campanha (`campaign.Name` /
+// `campaign.Description`), então "salvar" e "criar" não discordam sobre o que é
+// um nome válido.
 templ campaignForm(v oneView) {
-	<section class="space-y-4 border border-grimorio-iron bg-grimorio-panel p-4">
-		<h2 class="font-heading text-base tracking-wide text-foreground">Editar campanha</h2>
-		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="space-y-4">
-			@ui.TextField(ui.Field{
-				Name: "name", Label: "Nome", Value: v.Name,
-				Required: true, MaxSize: campaign.MaxNameLength,
-				Errors: v.Errors["name"],
-			})
-			@ui.TextArea(ui.Field{
-				Name: "description", Label: "Descrição", Value: v.Description,
-				MaxSize: campaign.MaxDescriptionLength,
-				Errors:         v.Errors["description"],
-			}, 6)
+	@ds.Card("Editar campanha", nil) {
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/editar", v.ID)) } class="ds-camp-form">
+			@ds.TextField(ds.Field{ID: "name", Name: "name", Label: "Nome", Value: v.Name, Error: joinErrors(v.Errors["name"])}, templ.Attributes{"required": true, "maxlength": strconv.Itoa(campaign.MaxNameLength)})
+			@textArea("description", "Descrição", v.Description, "", "", joinErrors(v.Errors["description"]), campaign.MaxDescriptionLength)
 			if v.Notice != "" {
-				<p class="text-sm text-destructive-ink">{ v.Notice }</p>
+				<p class="ds-help ds-reg-error" role="alert">{ v.Notice }</p>
 			}
-			<div class="flex justify-end">
-				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
-					Salvar
-				}
-			</div>
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit"}) {
+				Salvar
+			}
 		</form>
-	</section>
+	}
 }
 
 // O LINK DA MESA. Sem ele ninguém entra — e por isso ele fica na configuração,
 // ao lado do nome, e não escondido atrás de um diálogo.
 //
-// Duas situações e o mesmo painel, porque para quem lê elas são a mesma
-// pergunta ("qual é o link desta mesa?"):
+// A mesa sem link é uma campanha antiga, e o que cabe é o botão de gerar. Não
+// há migração de dados por causa dela: um `UPDATE` varrendo o banco escreveria
+// token para mesas que o dono talvez nem use mais.
 //
-//   - A mesa TEM link: mostra, oferece copiar, e oferece gerar outro.
-//   - A mesa NÃO tem: é uma campanha antiga, e só o que cabe é o botão de
-//     gerar. A frase diz por que ele está ali, senão parece um botão que faz o
-//     que o de cima faria.
-//
-// Não há migração de dados justamente por causa do segundo caso: um `UPDATE`
-// varrendo o banco escreveria token para mesas que o dono talvez nem use mais, e
-// o botão custa uma linha e resolve na hora em que alguém precisa.
+// Só o CAMINHO viaja: quem prefixa a origem é o navegador — ver a razão em
+// `ui.MintedInvite`.
 templ invitePanel(v oneView) {
-	<section id="invite-panel" aria-label="Link da mesa" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
-		<header class="space-y-0.5">
-			@ui.SectionLabel("muted", "") {
-				Campanha
-			}
-			<h2 class="font-heading text-base tracking-wide text-foreground">Link da mesa</h2>
-		</header>
+	<section id="invite-panel" class="ds-card" aria-labelledby="invite-panel-title" data-signals="{copied: false}">
+		<h3 class="ds-card-title" id="invite-panel-title">Link da mesa</h3>
 		if v.InviteLink != "" {
-			@ui.MintedInvite(v.InviteLink,
-				"Quem abrir este link entra com um herói do elenco. Ele vale até você gerar outro.")
+			<div class="ds-hub-invite">
+				<input id="invite-url" class="ds-input" readonly aria-label="Link da mesa" data-path={ v.InviteLink } data-init="el.value = location.origin + el.dataset.path"/>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "navigator.clipboard.writeText(document.getElementById('invite-url').value); $copied = true"}) {
+					@ui.Icon("Copy", "ds-icon")
+					Copiar
+				}
+			</div>
+			<p class="ds-help" aria-live="polite" data-show="$copied" style="display:none">Link copiado.</p>
+			<p class="ds-help">Quem abrir este link entra com um herói. Gerar outro derruba o atual: quem ainda não entrou vai precisar do novo.</p>
 		} else {
-			<p class="text-sm text-muted-foreground">
-				Esta mesa não tem link. Sem um, só você entra nela.
-			</p>
+			<p class="ds-help">Esta mesa não tem link. Sem um, só você entra nela.</p>
 		}
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/convite", v.ID)) }>
-			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
+			@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "submit"}) {
 				if v.InviteLink != "" {
 					Gerar novo link
 				} else {
@@ -429,125 +323,76 @@ templ invitePanel(v oneView) {
 				}
 			}
 		</form>
-		if v.InviteLink != "" {
-			<p class="text-xs text-muted-foreground">
-				Gerar outro derruba o link atual: quem ainda não entrou vai precisar do novo.
-			</p>
-		}
 	</section>
 }
 
-// As regras opcionais são o único lugar da crônica com Datastar, e a razão é
-// que aqui NÃO se navega: alternar um interruptor e recarregar a página inteira
-// perderia a posição de quem está no fim de uma lista de ajustes. O remendo
-// volta só este painel.
-//
-// A falha aparece INLINE e não por aviso flutuante: este mesmo painel é montado
-// dentro de um overlay na cena da sessão, e aviso disparado de dentro de modal
-// não é anunciado.
+// As regras opcionais são o único lugar da crônica com Datastar: alternar um
+// interruptor e recarregar a página perderia a posição de quem lê. O remendo
+// volta só este painel, e a falha aparece INLINE nele.
 templ rulesPanel(v oneView) {
-	<section id="rules-panel" aria-label="Regras da campanha" class="space-y-3 border border-grimorio-iron bg-grimorio-panel p-4">
-		<header class="space-y-0.5">
-			@ui.SectionLabel("muted", "") {
-				Campanha
-			}
-			<h2 class="font-heading text-base tracking-wide text-foreground">Regras opcionais</h2>
-		</header>
+	<section id="rules-panel" class="ds-card" aria-labelledby="rules-panel-title">
+		<h3 class="ds-card-title" id="rules-panel-title">Regras opcionais</h3>
 		for _, rule := range optionalRules {
-			<div class="flex items-start justify-between gap-4">
-				<div class="min-w-0 flex-1 space-y-0.5">
-					<p class="text-sm text-foreground">{ rule.Title }</p>
-					<p class="text-xs text-muted-foreground">{ rule.Description }</p>
-				</div>
-				@ruleSwitch(v, rule)
-			</div>
+			@ruleSwitch(v, rule)
 		}
-		<p class="text-sm text-destructive-ink" data-show="$rule_error != ''" data-text="$rule_error"></p>
+		<p class="ds-help ds-reg-error" data-show="$rule_error != ''" data-text="$rule_error"></p>
 	</section>
 }
 
-// O interruptor é um `button` com `aria-pressed`, e não um `checkbox`: ele não
-// vive num formulário e não tem valor a enviar — o que ele faz é DISPARAR uma
-// ação. `aria-pressed` é o que diz "ligado" para o leitor de tela sem mentir
-// sobre o elemento ser um campo.
+// O interruptor é o do kit, com o título como nome e a explicação como
+// descrição: o leitor de tela anuncia "Limites de carga, interruptor, ligado" e
+// lê a página do livro em seguida.
 templ ruleSwitch(v oneView, rule optionalRule) {
-	<button
-		type="button"
-		role="switch"
-		aria-checked={ ui.AriaBool(v.RegraEmVigor(rule.ID)) }
-		aria-label={ rule.Title }
-		data-indicator:saving
-		data-attr:disabled="$saving"
-		data-on:click={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, rule.ID) }
-		class={ "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors outline-none disabled:opacity-50",
-			templ.KV("border-grimorio-gold bg-grimorio-gold/80", v.RegraEmVigor(rule.ID)),
-			templ.KV("border-grimorio-iron-light bg-grimorio-panel-raised", !v.RegraEmVigor(rule.ID)) }
-	>
-		<span
-			aria-hidden="true"
-			class={ "size-4 rounded-full bg-white transition-transform",
-				templ.KV("translate-x-6", v.RegraEmVigor(rule.ID)),
-				templ.KV("translate-x-1", !v.RegraEmVigor(rule.ID)) }
-		></span>
-	</button>
+	<label class="ds-switch ds-camp-rule">
+		<span class="ds-camp-text">
+			<span class="ds-row-title">{ rule.Title }</span>
+			<span class="ds-row-meta" id={ "rule-" + rule.ID + "-help" }>{ rule.Description }</span>
+		</span>
+		<input
+			type="checkbox"
+			role="switch"
+			aria-label={ rule.Title }
+			aria-describedby={ "rule-" + rule.ID + "-help" }
+			checked?={ v.RegraEmVigor(rule.ID) }
+			data-indicator:saving
+			data-attr:disabled="$saving"
+			data-on:change={ fmt.Sprintf("@post('/campanhas/%d/regras/%s')", v.ID, rule.ID) }
+		/>
+	</label>
 }
 
-
-// A zona de perigo é selada em crimson porque excluir é irreversível, e o texto
-// diz o PREÇO — "todas as sessões e membros" — em vez de um genérico "não pode
-// ser desfeito", que não distingue apagar uma mesa vazia de apagar a de dois
-// anos de crônica.
+// Excluir diz o PREÇO — o que some e o que fica —, em vez de um genérico "não
+// pode ser desfeito", que não distingue apagar uma mesa vazia de apagar a de dois
+// anos de crônica. Os heróis DA MESA são cópias (ALE-33) e vão junto; a ficha de
+// onde cada um saiu fica com o jogador.
 templ dangerZone(v oneView) {
-	<div class="flex flex-wrap items-center justify-between gap-3 rounded-none border border-[color:var(--grimorio-crimson)]/50 bg-[color:var(--grimorio-crimson)]/[0.06] p-4">
-		<div class="space-y-1">
-			<p class="flex items-center gap-1.5 font-heading text-sm tracking-wide text-[color:var(--grimorio-crimson-bright)]">
-				@ui.Icon("Flame", "size-4")
-				Zona de perigo
-			</p>
-			<p class="text-xs text-muted-foreground">
-				Excluir a campanha remove todas as sessões e membros. Não pode ser desfeito.
-			</p>
-		</div>
-		// O primeiro clique ABRE o diálogo; quem apaga é o botão de dentro. É a
-		// mesma propriedade do apagar conta da administração, e pelo mesmo
-		// motivo: primeiro clique não pode ser irreversível.
-		@ui.Button(ui.VariantDestructive, ui.SizeSmall, "shrink-0", templ.Attributes{
-			"type": "button", "data-on:click": "$delete_dialog.showModal()",
-		}) {
-			@ui.Icon("Trash2", "mr-1 size-3.5")
+	<section class="ds-card" data-danger aria-labelledby="danger-title">
+		<h3 class="ds-card-title" id="danger-title">Excluir campanha</h3>
+		<p class="ds-help">Apaga as sessões, o acervo e os heróis desta mesa. As fichas de onde eles saíram ficam com os jogadores.</p>
+		// O primeiro clique ABRE o diálogo; quem apaga é o botão de dentro.
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-danger": true, "data-on:click": "document.getElementById('delete').showModal()"}) {
+			@ui.Icon("Trash2", "ds-icon")
 			Excluir campanha
 		}
-		@deleteDialog(v)
-	</div>
+		@ds.Dialog("delete", fmt.Sprintf("Excluir \"%s\"?", v.Name), deleteFoot(v)) {
+			<p class="ds-help">Isto não pode ser desfeito.</p>
+		}
+	</section>
 }
 
-templ deleteDialog(v oneView) {
-	<dialog
-		id="delete"
-		data-ref="delete_dialog"
-		aria-labelledby="delete-title"
-		class="m-auto w-[min(28rem,92vw)] border border-grimorio-iron bg-grimorio-panel-raised p-4 text-left text-foreground backdrop:bg-black/60"
-	>
-		<h2 id="delete-title" class="font-heading text-base">Excluir "{ v.Name }"?</h2>
-		<p class="mt-2 text-sm text-muted-foreground">
-			Todas as sessões e membros da campanha serão removidos. Esta ação não pode ser desfeita.
-		</p>
-		<div class="mt-4 flex justify-end gap-2">
-			<form method="dialog">
-				@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
-					Cancelar
-				}
-			</form>
-			// Formulário de VERDADE e não `@post`: apagar leva embora a página,
-			// e o que vem depois é uma navegação para o livro. Remendo não
-			// navega.
-			<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/excluir", v.ID)) }>
-				@ui.Button(ui.VariantDestructive, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
-					Excluir
-				}
-			</form>
-		</div>
-	</dialog>
+// deleteFoot: apagar é formulário de VERDADE e não `@post` — ele leva embora a
+// página, e o que vem depois é uma navegação para a lista.
+templ deleteFoot(v oneView) {
+	<form method="dialog">
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit"}) {
+			Cancelar
+		}
+	</form>
+	<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/excluir", v.ID)) }>
+		@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "submit"}) {
+			Excluir
+		}
+	</form>
 }
 
 func firstHeroes(hs []heroAtTable, n int) []heroAtTable {

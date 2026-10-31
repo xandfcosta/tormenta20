@@ -2621,8 +2621,10 @@ const listMembers = `-- name: ListMembers :many
 
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel
+       ch.name AS charName, ch.level AS charLevel,
+       COALESCE(u.name, '') AS playerName
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+LEFT JOIN users u ON u.id = ch.ownerId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC
 `
 
@@ -2634,12 +2636,14 @@ type ListMembersRow struct {
 	Charownerid int64  `json:"charownerid"`
 	Charname    string `json:"charname"`
 	Charlevel   int64  `json:"charlevel"`
+	Playername  string `json:"playername"`
 }
 
 // campaign members (B.4)
 // O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
 // Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
 // usa para autorizar -- ver a razao no `one_view.go`.
+// O nome do JOGADOR entra na ALE-526: a linha do grupo diz de quem e o heroi.
 func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMembersRow, error) {
 	rows, err := q.db.QueryContext(ctx, listMembers, campaignid)
 	if err != nil {
@@ -2657,6 +2661,7 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 			&i.Charownerid,
 			&i.Charname,
 			&i.Charlevel,
+			&i.Playername,
 		); err != nil {
 			return nil, err
 		}
