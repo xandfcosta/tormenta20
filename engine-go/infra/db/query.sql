@@ -373,7 +373,8 @@ SELECT EXISTS (
 -- createActiveSession). Campaign order is the SAME as ListCampaignsForUser --
 -- most recently touched first -- because that is the order the Hub walked, and
 -- changing it would change which session "Continuar" resumes.
-SELECT s.id AS sessionId, s.campaignId AS campaignId
+-- ALE-525: the Hub card names the campaign and the session number too.
+SELECT s.id AS sessionId, s.campaignId AS campaignId, c.name AS campaignName, s.sessionNumber AS sessionNumber
 FROM sessions s
 JOIN campaigns c ON c.id = s.campaignId
 WHERE s.status = 'active'

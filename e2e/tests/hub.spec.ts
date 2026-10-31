@@ -11,10 +11,10 @@ import { expect, test } from '@playwright/test'
  */
 test('o Hub sobe autenticado e o menu leva ao elenco', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: /Tormenta 20/i })).toBeVisible()
-  await expect(page.getByText('Ferramentas do Mestre')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^Olá, / })).toBeVisible()
+  await expect(page.getByText('Ferramentas do mestre')).toBeVisible()
 
-  await page.getByText('Meus Heróis').click()
+  await page.getByText('Meus heróis').click()
   await expect(page).toHaveURL(/\/personagens$/)
   await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
 })
@@ -86,13 +86,13 @@ test.describe('O Hub e as cenas dividem a preferência de som', () => {
     await page.goto('/')
 
     await page.getByRole('button', { name: /^Menu de / }).click()
-    const toggler = page.locator('#player-menu button').first()
-    await expect(toggler).toHaveText(/Som desligado/)
+    const toggler = page.getByRole('switch', { name: 'Efeitos sonoros' })
+    await expect(toggler).not.toBeChecked()
 
     await toggler.click()
-    await expect(toggler).toHaveText(/Som ligado/)
+    await expect(toggler).toBeChecked()
     // O slider só existe com o som ligado: controle sobre o mudo é controle morto.
-    await expect(page.locator('#volume')).toBeVisible()
+    await expect(page.locator('#player-menu input[type="range"]')).toBeVisible()
 
     expect(await page.evaluate(() => localStorage.getItem('t20-ui'))).toBe(
       '{"state":{"sfx":true,"volume":100}}',

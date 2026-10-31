@@ -114,8 +114,12 @@ export async function measureFocusRing(page: Page): Promise<FocusRingMeasurement
       // rádios `sr-only` das cartas e o contêiner rolável estão dentro do trilho
       // mas não são item dele, e recebem o anel normal. Guarda que aproxima um
       // seletor mede outro seletor.
+      //
+      // No sistema novo (`.scene-ds`) o item de trilho não tem brilho próprio:
+      // ele acende o MESMO anel de todo foco do kit, e é isso que se aceita.
       if (target.closest('[data-nav-region]') && target.matches('a, button, [data-nav-item]')) {
-        if (getComputedStyle(target).boxShadow === 'none') {
+        const cs = getComputedStyle(target)
+        if (cs.boxShadow === 'none' && !(target.closest('.scene-ds') && isPainted(cs))) {
           failures.push(`${describe(target)} está num trilho de navegação e não acende nem anel nem brilho`)
         }
         continue

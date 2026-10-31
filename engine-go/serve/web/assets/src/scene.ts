@@ -60,6 +60,10 @@ function cue(label: SfxName): void {
  * `Esc` e camada vêm do navegador. Era isso que o Popover do Kobalte trazia.
  */
 function ancora(panel: HTMLElement): void {
+  // O PAINEL QUE SE POSICIONA SOZINHO declara `data-sheet` e fica de fora: o
+  // menu do jogador no início sobe de baixo no celular (ALE-525), e o estilo
+  // inline daqui ganharia do CSS dele.
+  if (panel.hasAttribute('data-sheet')) return
   const trigger = document.querySelector<HTMLElement>(`[popovertarget="${panel.id}"]`)
   if (!trigger) return
   const g = trigger.getBoundingClientRect()

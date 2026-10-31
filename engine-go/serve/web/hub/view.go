@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"t20engine/serve/web/ui"
 	"unicode"
 )
 
@@ -17,19 +18,27 @@ type hubView struct {
 	// regra de apresentação (maiúscula, e "?" quando não sobra letra), e regra
 	// em template é regra escondida onde ninguém a testa.
 	Initial string
+	// Email aparece no topo do menu do jogador, embaixo do nome: é como ele
+	// sabe com qual conta entrou.
+	Email   string
 	EhAdmin bool
-	// Alive é a sessão que "Continuar sessão" retoma, ou nil. Uma consulta, não
-	// N+1 — ver `liveSession`.
+	// Alive é a sessão que o cartão "Voltar à mesa" retoma, ou nil. Uma
+	// consulta, não N+1 — ver `liveSession`.
 	Alive *hubLiveSession
+	// ColorMode é a aparência escolhida, que o menu do jogador marca.
+	ColorMode ui.ColorMode
 }
 
 type hubLiveSession struct {
 	CampaignID int64
 	SessionID  int64
-	// Route é PARA ONDE o "Continuar sessão" leva, resolvido por quem hospeda a
-	// cena (`Deps.MesaRoute`). Ela é campo da view e não uma chamada no
-	// template pela mesma razão da `Inicial` acima.
+	// Route é PARA ONDE o "Voltar à mesa" leva, resolvido por quem hospeda a
+	// cena (`Deps.TableRoute`). Ela é campo da view e não uma chamada no
+	// template pela mesma razão da `Initial` acima.
 	Route string
+	// CampaignName e SessionNumber dizem QUAL mesa o cartão retoma (ALE-525).
+	CampaignName  string
+	SessionNumber int64
 }
 
 // loadHub monta a tela inteira.
@@ -42,6 +51,7 @@ func (s Scene) loadHub(ctx context.Context, eu Viewer) (hubView, error) {
 	return hubView{
 		Name:    name,
 		Initial: initialOf(name),
+		Email:   eu.Email,
 		EhAdmin: eu.IsAdmin,
 		Alive:   alive,
 	}, nil
@@ -64,9 +74,11 @@ func (s Scene) liveSession(ctx context.Context, userID int64) (*hubLiveSession, 
 		return nil, err
 	}
 	return &hubLiveSession{
-		CampaignID: row.Campaignid,
-		SessionID:  row.Sessionid,
-		Route:      s.deps.TableRoute(row.Campaignid, row.Sessionid),
+		CampaignID:    row.Campaignid,
+		SessionID:     row.Sessionid,
+		Route:         s.deps.TableRoute(row.Campaignid, row.Sessionid),
+		CampaignName:  row.Campaignname,
+		SessionNumber: row.Sessionnumber,
 	}, nil
 }
 

@@ -45,16 +45,17 @@ func pedeHub(t *testing.T, s *Server, userID int64, method, path string) *httpte
 
 // ── "Continuar sessão" ───────────────────────────────────────────────────────
 
-// A entrada só existe com partida rolando — é o "Continue" de um jogo, e um
-// item que leva a uma sessão encerrada é pior que item nenhum.
+// O CARTÃO DA SESSÃO AO VIVO só existe com partida rolando — é o "Continue"
+// de um jogo, e um cartão que leva a uma sessão encerrada é pior que nenhum. Ele
+// diz QUAL é a mesa, pelo nome da campanha e pelo número da sessão (ALE-525).
 func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
 	s, owner := hubFixture(t)
 	campaign := seedCampaign(t, s, owner)
 	session := seedSession(t, s, campaign)
 
 	noLive := pedeHub(t, s, owner, http.MethodGet, "/").Body.String()
-	if strings.Contains(noLive, "Continuar sessão") {
-		t.Error("ofereceu continuar sem sessão ativa")
+	if strings.Contains(noLive, "Voltar à mesa") {
+		t.Error("ofereceu voltar à mesa sem sessão ativa")
 	}
 
 	if _, err := s.queries.StartSessionFresh(context.Background(), sqlcgen.StartSessionFreshParams{
@@ -64,8 +65,14 @@ func TestTheHubOnlyOffersResumeWithALiveSession(t *testing.T) {
 	}
 
 	withLive := pedeHub(t, s, owner, http.MethodGet, "/").Body.String()
-	if !strings.Contains(withLive, "Continuar sessão") {
-		t.Fatal("não ofereceu continuar com sessão ativa")
+	if !strings.Contains(withLive, "Voltar à mesa") {
+		t.Fatal("não ofereceu voltar à mesa com sessão ativa")
+	}
+	// "Mesa" é o nome da campanha da semente, e a sessão é a 1.
+	for _, want := range []string{">Mesa<", "Sessão 1 · ao vivo agora"} {
+		if !strings.Contains(withLive, want) {
+			t.Errorf("o cartão da sessão ao vivo não diz %q", want)
+		}
 	}
 	if !strings.Contains(withLive, routes.Session(campaign, session)) {
 		t.Errorf("o link não aponta para a sessão viva (%s)", routes.Session(campaign, session))

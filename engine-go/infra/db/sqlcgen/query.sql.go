@@ -985,7 +985,7 @@ func (q *Queries) FindCampaignPlaceByName(ctx context.Context, arg FindCampaignP
 }
 
 const firstLiveSessionForUser = `-- name: FirstLiveSessionForUser :one
-SELECT s.id AS sessionId, s.campaignId AS campaignId
+SELECT s.id AS sessionId, s.campaignId AS campaignId, c.name AS campaignName, s.sessionNumber AS sessionNumber
 FROM sessions s
 JOIN campaigns c ON c.id = s.campaignId
 WHERE s.status = 'active'
@@ -1000,8 +1000,10 @@ LIMIT 1
 `
 
 type FirstLiveSessionForUserRow struct {
-	Sessionid  int64 `json:"sessionid"`
-	Campaignid int64 `json:"campaignid"`
+	Sessionid     int64  `json:"sessionid"`
+	Campaignid    int64  `json:"campaignid"`
+	Campaignname  string `json:"campaignname"`
+	Sessionnumber int64  `json:"sessionnumber"`
 }
 
 // ALE-231: the Hub's "Continuar sessao" answered in ONE query.
@@ -1010,10 +1012,16 @@ type FirstLiveSessionForUserRow struct {
 // createActiveSession). Campaign order is the SAME as ListCampaignsForUser --
 // most recently touched first -- because that is the order the Hub walked, and
 // changing it would change which session "Continuar" resumes.
+// ALE-525: the Hub card names the campaign and the session number too.
 func (q *Queries) FirstLiveSessionForUser(ctx context.Context, userid int64) (FirstLiveSessionForUserRow, error) {
 	row := q.db.QueryRowContext(ctx, firstLiveSessionForUser, userid)
 	var i FirstLiveSessionForUserRow
-	err := row.Scan(&i.Sessionid, &i.Campaignid)
+	err := row.Scan(
+		&i.Sessionid,
+		&i.Campaignid,
+		&i.Campaignname,
+		&i.Sessionnumber,
+	)
 	return i, err
 }
 
