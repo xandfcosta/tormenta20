@@ -65,8 +65,8 @@ var simbolosAusentesDePROPOSITO = map[string]bool{
 	// A coleta é do repositório: ela não conhece a biblioteca padrão do Go nem o
 	// navegador. Um comentário que explica POR QUE uma opção não foi usada tem de
 	// nomeá-la, e o caso mais claro é o `WriteTimeout` — o servidor não o define
-	// DE PROPÓSITO, porque ele mataria o fluxo SSE, e há teste afirmando a
-	// ausência. Um guarda que proibisse nomeá-lo apagaria a razão.
+	// DE PROPÓSITO, porque ele mataria o fluxo SSE, e quem guarda a ausência é o
+	// comentário do `cmd/api`. Um guarda que proibisse nomeá-lo apagaria a razão.
 	"WriteTimeout":        true,
 	"ReadHeaderTimeout":   true,
 	"ErrNotSupported":     true,
