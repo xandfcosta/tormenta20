@@ -5,9 +5,8 @@
 #   docker compose up -d --build
 #
 # DOIS serviços: o binário serve as cenas, a API e o fluxo ao vivo, e o nginx
-# na frente termina o HTTPS (decisão do dono, ALE-523). O Go continua
-# comprimindo o que renderiza; o nginx só cifra e repassa, sem buffer — ver
-# `nginx/t20.conf`.
+# na frente termina o HTTPS e comprime (decisão do dono, ALE-523). Ele repassa
+# sem buffer, por causa do SSE — ver `nginx/t20.conf`.
 #
 # Tudo o que é da máquina mora DENTRO do projeto e fora do git: o banco em
 # `data/`, os backups em `backups/`, o livro em `t20-book.pdf` e o

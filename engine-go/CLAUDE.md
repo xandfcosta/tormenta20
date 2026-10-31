@@ -7,10 +7,9 @@ valem; o que está aqui estende ou sobrepõe.
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
 `serve/web/assets/src`, e o kit de apresentação em `serve/web/ui`. Um processo serve tudo, e
 desde a ALE-273 ele também sobe por `docker compose up -d --build`, com o banco
-em bind mount. **Na frente dele há um nginx desde a ALE-523**, e ele faz uma
-coisa só: termina o HTTPS. A compressão continua em `httpio.Gzip`, e o nginx
-repassa sem buffer, porque o fluxo ao vivo é SSE — ver "O HTTPS termina no
-nginx", abaixo.
+em bind mount. **Na frente dele há um nginx desde a ALE-523**, que termina o
+HTTPS e comprime, e repassa sem buffer porque o fluxo ao vivo é SSE — ver "O
+HTTPS e a compressão moram no nginx", abaixo.
 
 ## O mapa das pastas
 
@@ -42,7 +41,7 @@ engine-go/
 │   ├── db/       migrações e as consultas do sqlc
 │   ├── config/   o que o ambiente diz, lido no boot
 │   ├── bookpdf/  a leitura do PDF do livro por coordenada, para os auditores
-│   ├── httpio/   a borda HTTP: responder, ler corpo, comprimir
+│   ├── httpio/   a borda HTTP: responder, ler corpo
 │   ├── wire/     a fronteira SEM transporte — é o que o domain alcança
 │   └── events/   o barramento tipado
 ├── convention/   os guardas que não são de pacote nenhum
@@ -236,53 +235,23 @@ exigida para sempre — o servidor recusaria subir sobre um banco CORRETO,
 nomeando como faltante justamente a que a migração acabou de derrubar. Ver "O
 boot confere o SCHEMA".
 
-## O que o servidor RENDERIZA sai comprimido na hora
+## O que o servidor RENDERIZA sai comprimido pelo nginx
 
-Cena renderizada não existe antes da requisição, então a escolha real para ela é
-gzip na hora ou nada — o `net/http` não comprime nada sozinho.
-
-**`gzip;q=0` é uma RECUSA**, e um `strings.Contains` a leria como aceitação. É
-por isso que o `httpio.AcceptsEncoding` existe em vez de uma busca por
-substring.
-
-Era **nada** até a ALE-273, e a conta é maior do que parece porque todo comando
-da ficha responde redesenhando a cena INTEIRA: a aba de Combate viaja 44,7 KB
-crus, 5,6 KB em gzip, e vai de novo a cada toque no PV. Numa LAN isso não
-aparece; no telefone do jogador com dados móveis, são 44 KB por toque.
-
-Quem faz é o `httpio.Gzip`, montado na borda do mux em `cmd/api`. Ele decide
-pelo `Content-Type` que o handler escreveu, e pula o que já chega com
-`Content-Encoding`: recomprimir produz bytes maiores gastando CPU.
+Cena renderizada não existe antes da requisição, e todo comando da ficha
+responde redesenhando a cena INTEIRA: a aba de Combate viaja 44,7 KB crus e 5,6
+KB em gzip, a cada toque no PV. Quem comprime é o nginx do compose (ALE-523); o
+binário responde cru. Rodando o binário sem o compose, nada é comprimido.
 
 **A armadilha mora no SSE, e ela não deixa erro para trás.** A resposta de todo
-comando do Datastar é `text/event-stream` — ela usa o envelope de SSE para
-mandar UM remendo e fechar. Então "não comprimir SSE" pularia justamente o que
-se quer comprimir; e comprimir SEM repassar o `Flush` prende o quadro no buffer
-interno do `gzip.Writer`, e o fluxo AO VIVO da Mesa para de atualizar. Nada
-falha, nada loga, e o sintoma — "o tempo real quebrou" — não aponta para um
-middleware de compressão. Por isso o `Flush` esvazia o gzip ANTES de quem está
-embaixo, e `TestTheLiveStreamCrossesTheGzip` mede um quadro chegando com a
-conexão ainda aberta.
+comando do Datastar é `text/event-stream`, e o fluxo AO VIVO também: por isso o
+`gzip_types` do nginx inclui o `text/event-stream`, e o repasse é SEM buffer. É
+a combinação que funciona — cada pedaço que o Go esvazia chega ao nginx com a
+marca de `flush`, e o gzip o despeja na hora. Bufferizado, o quadro fica preso
+até o buffer encher, e a Mesa para de atualizar: nada falha, nada loga.
+Medido na ALE-523: um comando aparece no fluxo comprimido 21ms depois.
 
-**E há uma segunda metade, que custou 27 casos vermelhos no e2e com os
-unitários TODOS verdes.** O `datastar-go` monta o fluxo nesta ordem: escreve o
-`Content-Type`, chama `Flush()` para MANDAR OS CABEÇALHOS, e só então escreve o
-primeiro remendo. Um envelope que decide comprimir apenas no `Write` chega
-tarde — os cabeçalhos já foram sem `Content-Encoding` e o corpo sai comprimido
-mesmo assim, então o navegador lê bytes de gzip como se fossem texto. Nenhuma
-requisição falha, nenhum status muda: o que se vê é que os remendos param de ser
-aplicados, e a busca não filtra, a seta não anda, o diálogo não abre.
-
-Os guardas unitários estavam verdes porque escreviam o cabeçalho ANTES de
-esvaziar, que não é o que a biblioteca faz. **Um envelope de resposta tem de
-decidir no `Flush` também**, e `TestAFlushBeforeTheWriteAlreadyDecidesTheEnvelope` repete a
-ordem do Datastar de propósito. A regra geral, que vale para qualquer middleware
-que se escreva aqui: *quem esvazia compromete os cabeçalhos*.
-
-O envelope também expõe `Unwrap() http.ResponseWriter`, que é o contrato do
-`http.ResponseController` desde o Go 1.20 — sem ele, um `SetWriteDeadline` ou um
-`Hijack` de qualquer camada acima responde `ErrNotSupported`, e quem chamou
-conclui que o ambiente não suporta fluxo.
+O brotli que o SDK do Datastar fazia no fluxo (1.827 bytes contra 2.513 em
+gzip, em três remendos) saiu junto: o nginx da imagem oficial não tem o módulo.
 
 ## O `synchronous` do SQLite vale 139ms POR TOQUE
 
@@ -309,7 +278,7 @@ Para quem vem do MariaDB: `FULL` ≈ `innodb_flush_log_at_trx_commit=1`, `NORMAL
 log físico de páginas, para recuperação e concorrência, e não log lógico de
 eventos para replicação.
 
-## O HTTPS termina no nginx (ALE-523)
+## O HTTPS e a compressão moram no nginx (ALE-523)
 
 O binário fala **HTTP puro** e não sabe servir TLS: o `docker-compose.yml` põe
 um nginx na frente (`nginx/t20.conf`) e é ele quem cifra, com o certificado que
@@ -318,11 +287,9 @@ rede de casa — decisão do dono). Antes o TLS terminava aqui, com
 `TLS_CERT_FILE`/`TLS_KEY_FILE` (ALE-118); os dois saíram, para haver UM lugar
 de TLS.
 
-O nginx **não comprime e não bufferiza**, e as duas ausências são o desenho:
-o Go já comprime o que renderiza, e o fluxo ao vivo é SSE — um proxy que
-acumula a resposta segura o quadro até o buffer encher, e a mesa para de
-atualizar sem erro em lugar nenhum. O `proxy_read_timeout` é longo pelo mesmo
-motivo: o fluxo fica aberto a sessão inteira.
+O nginx **comprime e não bufferiza** — ver "O que o servidor RENDERIZA sai
+comprimido pelo nginx". O `proxy_read_timeout` é longo porque o fluxo ao vivo
+fica aberto a sessão inteira.
 
 `COOKIE_SECURE` nasce LIGADO no compose, porque a mesa chega pelo HTTPS. Quem
 rodar o binário sem o compose, em HTTP, o desliga: ligado em HTTP, o navegador

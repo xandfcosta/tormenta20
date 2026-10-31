@@ -23,7 +23,6 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/infra/config"
 	"t20engine/infra/db"
-	"t20engine/infra/httpio"
 	"t20engine/serve/api"
 )
 
@@ -73,8 +72,9 @@ func main() {
 	srv := api.NewServer(cfg, database, primeCatalogs())
 	// UM roteador: as cenas, os estáticos, as fontes, a saúde e a API em `/api`
 	// saem todos do `WebRouter`. O `cmd` não monta rota nenhuma — ele abre o
-	// banco, prima os catálogos e escuta.
-	mux := httpio.Gzip(srv.WebRouter())
+	// banco, prima os catálogos e escuta. Ele não comprime: quem comprime é o
+	// nginx da frente (ALE-523).
+	mux := srv.WebRouter()
 
 	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação: sem
 	// isto, um Ctrl-C durante um `VACUUM INTO` ou um persist do rastreador morre

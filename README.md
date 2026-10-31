@@ -53,8 +53,8 @@ sobe a API, e disputar CPU com o resto o derruba por timeout.
 ## Produção (a mesa na LAN)
 
 Duas formas, e as duas sobem **o mesmo binário** — ele serve as cenas, a API e o
-fluxo ao vivo na mesma porta, com tudo comprimido por ele mesmo. No contêiner há
-um nginx na frente, e ele só termina o HTTPS (ALE-523).
+fluxo ao vivo na mesma porta. No contêiner há um nginx na frente, que termina o
+HTTPS e comprime (ALE-523); direto na máquina, nada é comprimido.
 
 ### Por contêiner (ALE-273)
 
@@ -125,7 +125,7 @@ junto e passa as campanhas dela para você.
 
 **A aplicação é um processo só.** O `cmd/api` serve as cenas, os estáticos (que
 viajam DENTRO do binário) e `/api/*` na mesma porta. O nginx do compose não
-serve nada: ele cifra e repassa.
+serve nada: ele cifra, comprime e repassa.
 
 ### HTTPS na LAN, e o app instalado no telefone
 
