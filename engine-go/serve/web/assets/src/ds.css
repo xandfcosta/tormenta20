@@ -2089,7 +2089,7 @@
   }
   .ds-forge-pick {
     width: 100%;
-    grid-template-columns: 4.5rem minmax(0, 1fr) 1rem;
+    grid-template-columns: 6.5rem minmax(0, 1fr) 1rem;
     min-height: 3.5rem;
     border: 0;
     border-top: 1px solid var(--ds-line);

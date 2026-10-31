@@ -197,7 +197,7 @@ func TestTheRefusalGivesBackWhatWasAnswered(t *testing.T) {
 	if !strings.Contains(body, `value="elfo" checked`) {
 		t.Error("a raça respondida não voltou marcada")
 	}
-	if !strings.Contains(body, `value="couro-batido" selected`) {
+	if !strings.Contains(body, `value="couro-batido" checked`) {
 		t.Error("a armadura respondida não voltou escolhida")
 	}
 }

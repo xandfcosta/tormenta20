@@ -65,21 +65,31 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   // O CONTROLE do caso: antes da classe não há kit para oferecer, e é essa
   // ausência que o clique tem de desfazer. Sem ela, um seletor de arma que já
   // estivesse na página passaria como se o remendo tivesse chegado.
-  await expect(page.locator('#weaponSimple')).toHaveCount(0)
+  await expect(page.locator('#forge-pick-weaponSimple')).toHaveCount(0)
 
   await escolhe(page, 'class', 'Guerreiro')
   // Pelo `id` e não por `getByLabel`: o nome acessível de uma opção de raça
   // carrega as habilidades dela, e "Armadura de Allihanna" (dahllan) casa com
   // um rótulo de "Armadura" — três elementos, e o modo estrito reprova.
-  await expect(page.locator('#weaponMartial')).toBeVisible()
-  await expect(page.locator('#armor')).toContainText('Brunea')
+  await expect(page.locator('#forge-pick-weaponMartial')).toBeVisible()
+  await expect(page.locator('#forge-armor')).toContainText('Brunea')
+
+  // A BUSCA da folha é do navegador (`data-show` sobre o texto dobrado em
+  // `data-find`): com "LONGA" maiúsculo, só a espada longa fica.
+  await page.locator('#forge-pick-weaponMartial').click()
+  const sheet = page.locator('dialog[open]')
+  await sheet.getByRole('searchbox').fill('LONGA')
+  await expect(sheet.getByText('Espada longa', { exact: true })).toBeVisible()
+  await expect(sheet.getByText('Alabarda', { exact: true })).toBeHidden()
+  await sheet.getByRole('button', { name: 'Fechar' }).click()
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
 
   // O nome digitado ANTES do remendo sobrevive a ele: quem carrega o estado é o
   // formulário, e o servidor o devolve preenchido.
   await page.getByLabel('Nome').fill('Thessa de Valkaria')
   await escolhe(page, 'class', 'Arcanista')
   await expect(page.getByText('Arcanistas começam sem armadura')).toBeVisible()
-  await expect(page.locator('#weaponMartial')).toHaveCount(0)
+  await expect(page.locator('#forge-pick-weaponMartial')).toHaveCount(0)
   await expect(page.getByLabel('Nome')).toHaveValue('Thessa de Valkaria')
 
   const ratio = await medeOContraste(page)
@@ -104,9 +114,9 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await escolhe(page, 'race', 'Humano')
   await escolhe(page, 'class', 'Guerreiro')
   await escolhe(page, 'origin', 'Acólito')
-  await page.selectOption('#weaponSimple', { label: 'Adaga' })
-  await page.selectOption('#weaponMartial', { label: 'Espada longa' })
-  await page.selectOption('#armor', { label: 'Couro batido' })
+  await escolhe(page, 'weaponSimple', 'Adaga')
+  await escolhe(page, 'weaponMartial', 'Espada longa')
+  await escolhe(page, 'armor', 'Couro batido')
   await page.getByRole('button', { name: 'Forjar' }).click()
 
   await page.waitForURL(/\/atributos$/)

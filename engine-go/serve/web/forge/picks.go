@@ -60,3 +60,13 @@ func pickFilter(signal string) string {
 func pickChosen() string {
 	return "el.closest('dialog').close(); " + forgeRedraw()
 }
+
+// itemPick é o que a linha de um item do kit mostra.
+func itemPick(options []itemOption) pickSummary {
+	for _, o := range options {
+		if o.Chosen {
+			return pickSummary{Title: o.Label, Meta: o.Meta}
+		}
+	}
+	return pickSummary{}
+}

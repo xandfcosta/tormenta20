@@ -30,7 +30,7 @@ templ forgeSheet(v forgeView) {
 
 // forgeBody é o que o Datastar remenda quando uma escolha muda — daí o `id`.
 templ forgeBody(v forgeView) {
-	<div id="forge" class="ds-forge" data-signals="{race_query: '', class_query: '', origin_query: ''}">
+	<div id="forge" class="ds-forge" data-signals="{race_query: '', class_query: '', origin_query: '', weapon_simple_query: '', weapon_martial_query: '', armor_query: ''}">
 		<form id="forge-form" method="post" action="/personagens/nova" class="ds-forge-form" data-nav-region="content" data-nav-layout="column">
 			@fieldRefusals(v.OrphanRefusals)
 			@ds.TextField(ds.Field{ID: "forge-name", Name: "name", Label: "Nome", Value: v.Name, Placeholder: "Como a mesa vai chamar o herói", Error: strings.Join(v.Errors["name"], " ")}, templ.Attributes{"maxlength": strconv.Itoa(heroNameMax)})
@@ -91,6 +91,15 @@ templ forgeBody(v forgeView) {
 						@originPickOption(o)
 					}
 				</div>
+			}
+		}
+		if v.Gear != nil {
+			@gearSheet("weaponSimple", "Arma simples", "weapon_simple_query", v.Gear.SimpleWeapons)
+			if len(v.Gear.MartialWeapons) > 0 {
+				@gearSheet("weaponMartial", "Arma marcial", "weapon_martial_query", v.Gear.MartialWeapons)
+			}
+			if len(v.Gear.Armors) > 0 {
+				@gearSheet("armor", "Armadura", "armor_query", v.Gear.Armors)
 			}
 		}
 	</div>
@@ -171,13 +180,19 @@ templ gearChoice(g startingGear, errs map[string][]string) {
 			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6
 			rolados na hora (p140).
 		</p>
-		@itemSelect("weaponSimple", "Arma simples", g.SimpleWeapons, errs["weaponSimple"])
-		if len(g.MartialWeapons) > 0 {
-			@itemSelect("weaponMartial", "Arma marcial", g.MartialWeapons, errs["weaponMartial"])
-		}
-		if len(g.Armors) > 0 {
-			@itemSelect("armor", "Armadura", g.Armors, errs["armor"])
-		} else {
+		<div class="ds-list">
+			@pickRow("weaponSimple", "Arma simples", "forge-weaponSimple", itemPick(g.SimpleWeapons))
+			if len(g.MartialWeapons) > 0 {
+				@pickRow("weaponMartial", "Arma marcial", "forge-weaponMartial", itemPick(g.MartialWeapons))
+			}
+			if len(g.Armors) > 0 {
+				@pickRow("armor", "Armadura", "forge-armor", itemPick(g.Armors))
+			}
+		</div>
+		@fieldRefusals(errs["weaponSimple"])
+		@fieldRefusals(errs["weaponMartial"])
+		@fieldRefusals(errs["armor"])
+		if len(g.Armors) == 0 {
 			<p class="ds-card-text">Arcanistas começam sem armadura.</p>
 		}
 		if g.Shield != "" {
@@ -194,22 +209,27 @@ templ gearChoice(g startingGear, errs map[string][]string) {
 	}
 }
 
-templ itemSelect(name, label string, options []itemOption, errs []string) {
-	<div
-		class="ds-field"
-		if len(errs) > 0 {
-			data-invalid
+// gearSheet é a folha com busca de um item do kit: as listas de arma passam de
+// vinte, e um seletor nativo sem busca obrigava a rolar até achar.
+templ gearSheet(field, label, signal string, options []itemOption) {
+	@ds.Dialog("forge-"+field, label, nil) {
+		@ds.FilterBar() {
+			@pickSearch(signal, "Buscar "+strings.ToLower(label))
 		}
-	>
-		<label for={ name }>{ label }</label>
-		<select class="ds-input" id={ name } name={ name }>
-			<option value="">Escolha…</option>
-			for _, o := range options {
-				<option value={ o.ID } selected?={ o.Chosen }>{ o.Label }</option>
-			}
-		</select>
-		@fieldRefusals(errs)
-	</div>
+		@ds.DialogScroll() {
+			<div class="ds-forge-options">
+				for _, o := range options {
+					<label class="ds-pick ds-forge-option" data-find={ o.Find } data-show={ pickFilter(signal) }>
+						<input type="radio" name={ field } form="forge-form" value={ o.ID } checked?={ o.Chosen } data-on:change={ pickChosen() }/>
+						<span class="ds-row-title">{ o.Label }</span>
+						if o.Meta != "" {
+							<span class="ds-row-meta">{ o.Meta }</span>
+						}
+					</label>
+				}
+			</div>
+		}
+	}
 }
 
 templ fieldRefusals(messages []string) {

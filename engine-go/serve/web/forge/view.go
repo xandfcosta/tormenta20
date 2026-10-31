@@ -93,9 +93,13 @@ type startingGear struct {
 
 // itemOption é uma entrada de um dos seletores do equipamento.
 type itemOption struct {
-	ID     string
-	Label  string
+	ID    string
+	Label string
+	// Meta é a linha do que o item é: o dano e o crítico da arma, a Defesa e a
+	// penalidade da armadura.
+	Meta   string
 	Chosen bool
+	Find   string
 }
 
 // blankForgeSheet monta a cena a partir das respostas que já existem.
@@ -259,7 +263,29 @@ func itemOptionsByID(ids []string, chosen string) []itemOption {
 }
 
 func itemOptionOf(item book.Item, chosen string) itemOption {
-	return itemOption{ID: item.ID, Label: item.Name, Chosen: item.ID == chosen}
+	option := itemOption{ID: item.ID, Label: item.Name, Meta: itemMeta(item), Chosen: item.ID == chosen}
+	option.Find = search.Fold(option.Label + " " + option.Meta)
+	return option
+}
+
+// itemMeta escreve o que a opção do equipamento é, na grafia da ficha:
+// "1d8 · 19/×2" para a arma, "Defesa +2 · penalidade −1" para a armadura.
+func itemMeta(item book.Item) string {
+	switch {
+	case item.Weapon != nil:
+		crit := fmt.Sprintf("×%d", item.Weapon.CritMult)
+		if item.Weapon.CritRange > 0 && item.Weapon.CritRange < 20 {
+			crit = fmt.Sprintf("%d/%s", item.Weapon.CritRange, crit)
+		}
+		return item.Weapon.Damage + " · " + crit
+	case item.Armor != nil:
+		// A penalidade já vem NEGATIVA do catálogo.
+		if item.Armor.Penalty == 0 {
+			return "Defesa " + book.WithSign(item.Armor.Defense) + " · sem penalidade"
+		}
+		return "Defesa " + book.WithSign(item.Armor.Defense) + " · penalidade " + book.WithSign(item.Armor.Penalty)
+	}
+	return ""
 }
 
 // grantsToResolve são as linhas "Itens" da origem que pedem uma decisão —

@@ -52,7 +52,9 @@ func TestEachPickRowSaysWhatWasChosen(t *testing.T) {
 // fora, e cada rádio se liga ao formulário pelo atributo `form`.
 func TestThePickSheetsLiveOutsideTheForgeForm(t *testing.T) {
 	f := newSceneFixture(t)
-	body := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
+	// Com a classe, para o equipamento entrar: arma e armadura também são folhas.
+	body := postaAForja(t, f, f.player, "/personagens/nova/esboco",
+		url.Values{"class": {"Guerreiro"}}).Body.String()
 
 	start := strings.Index(body, `id="forge-form"`)
 	if start < 0 {
@@ -64,10 +66,16 @@ func TestThePickSheetsLiveOutsideTheForgeForm(t *testing.T) {
 		t.Error("há uma folha dentro do formulário da forja: o fechar dela enviaria a forja")
 	}
 
-	radio := regexp.MustCompile(`<input[^>]*type="radio"[^>]*name="(race|class|origin)"[^>]*>`)
+	radio := regexp.MustCompile(`<input[^>]*type="radio"[^>]*name="(race|class|origin|weaponSimple|weaponMartial|armor)"[^>]*>`)
 	found := radio.FindAllString(body, -1)
-	if len(found) < 3 {
-		t.Fatalf("achei %d rádios de escolha; a folha não carregou as listas", len(found))
+	names := map[string]bool{}
+	for _, m := range radio.FindAllStringSubmatch(body, -1) {
+		names[m[1]] = true
+	}
+	for _, field := range []string{"race", "class", "origin", "weaponSimple", "weaponMartial", "armor"} {
+		if !names[field] {
+			t.Errorf("a escolha %q não tem rádio na folha", field)
+		}
 	}
 	for _, tag := range found {
 		if !strings.Contains(tag, `form="forge-form"`) {
