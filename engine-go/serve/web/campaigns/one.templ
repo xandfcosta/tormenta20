@@ -239,7 +239,17 @@ func sessionMeta(sess sessionRow) string {
 	return state + " · " + sess.Data
 }
 
+// O Nova sessão é do MESTRE, e a trava é do caso de uso; para o jogador a aba é
+// só a linha do tempo.
 templ sessionsTab(v oneView) {
+	if v.IsGM {
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/nova-sessao", v.ID)) }>
+			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit"}) {
+				@ui.Icon("Plus", "ds-icon")
+				Nova sessão
+			}
+		</form>
+	}
 	@ds.List("Sessões", strconv.Itoa(v.TotalSessions)) {
 		if len(v.Sessions) == 0 {
 			<p class="ds-row ds-row-meta">Nenhuma sessão ainda.</p>

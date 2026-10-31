@@ -38,6 +38,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/campanhas/{id}/editar", s.handleEdit)
 	r.Post("/campanhas/{id}/excluir", s.handleDelete)
 	r.Post("/campanhas/{id}/convite", s.handleRotateInvite)
+	r.Post("/campanhas/{id}/nova-sessao", s.handleNewSession)
 	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
 	// O ACERVO DE LUGARES. A cena LISTA, CRIA e APAGA; quem MONTA a cena
 	// guardada é o tabuleiro, num endereço vizinho
@@ -315,6 +316,22 @@ func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
+}
+
+// handleNewSession abre a próxima sessão e leva o mestre à mesa dela, onde
+// mora o "Iniciar sessão". Formulário e 303, como o convite: o gesto troca de
+// página.
+func (s Scene) handleNewSession(w http.ResponseWriter, r *http.Request) {
+	id, who, ok := s.requesterOf(w, r)
+	if !ok {
+		return
+	}
+	sessionID, err := s.life.NewSession(r.Context(), who, id)
+	if err != nil {
+		refuse(w, err)
+		return
+	}
+	http.Redirect(w, r, routes.Session(id, sessionID), http.StatusSeeOther)
 }
 
 // handleEdit grava nome e descrição.

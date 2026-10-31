@@ -240,6 +240,23 @@ func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID int64)
 	return nil
 }
 
+// NewSession abre a PRÓXIMA sessão da campanha, planejada: o número sai do
+// banco no mesmo comando que a insere, e quem a inicia é o mestre, na mesa dela.
+//
+// A trava é a do dono, a mesma de renomear: sessão é a agenda da mesa.
+func (l Lifecycle) NewSession(ctx context.Context, who app.Caller, campaignID int64) (int64, error) {
+	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
+		return 0, err
+	}
+	sess, err := l.queries.CreateNextSession(ctx, sqlcgen.CreateNextSessionParams{
+		CampaignId: campaignID, Now: dbvalue.NowISO(),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("abrir a próxima sessão da campanha %d: %w", campaignID, err)
+	}
+	return sess.ID, nil
+}
+
 // forgetSessionsInMemory tira do mapa o estado vivo de toda sessão da campanha.
 func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campaignID int64) {
 	sessions, err := l.queries.ListSessions(ctx, campaignID)
