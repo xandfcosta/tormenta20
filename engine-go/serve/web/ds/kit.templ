@@ -53,52 +53,6 @@ templ IconButton(v ButtonVariant, icon, label string, attrs templ.Attributes) {
 	</button>
 }
 
-// TextField é o campo com rótulo, ajuda e erro.
-// Os atributos do `<input>` usam dois `if` e não um `else if`: na lista de
-// atributos o templ escreve o `else` como um atributo
-// (`TestNoElementRepeatsAnAttribute`).
-templ TextField(f Field, attrs templ.Attributes) {
-	<div
-		class="ds-field"
-		if f.Error != "" {
-			data-invalid
-		}
-	>
-		<label for={ f.ID }>{ f.Label }</label>
-		<input
-			class="ds-input"
-			id={ f.ID }
-			name={ f.Name }
-			type={ ui.InputType(f.Type) }
-			value={ f.Value }
-			if f.Placeholder != "" {
-				placeholder={ f.Placeholder }
-			}
-			if f.Error != "" {
-				aria-invalid="true"
-			}
-			if f.Error != "" || f.Help != "" {
-				aria-describedby={ f.ID + "-help" }
-			}
-			{ attrs... }
-		/>
-		if f.Error != "" {
-			<span class="ds-help" id={ f.ID + "-help" }>{ f.Error }</span>
-		} else if f.Help != "" {
-			<span class="ds-help" id={ f.ID + "-help" }>{ f.Help }</span>
-		}
-	</div>
-}
-
-// SearchField é a busca: o ícone desenha, e o `label` é o nome acessível —
-// uma busca não tem rótulo visível, e o placeholder não é rótulo.
-templ SearchField(id, label string, attrs templ.Attributes) {
-	<div class="ds-search">
-		@ui.Icon("Search", "ds-icon")
-		<input class="ds-input" id={ id } type="search" aria-label={ label } placeholder={ label } { attrs... }/>
-	</div>
-}
-
 // Segmented é o filtro da MESMA lista (todas, treinadas, com bônus). Navegar
 // para outra tela é aba; trocar o recorte do que está na tela é isto.
 templ Segmented(label string) {

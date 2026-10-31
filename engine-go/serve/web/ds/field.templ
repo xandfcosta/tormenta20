@@ -1,0 +1,100 @@
+package ds
+
+import "t20engine/serve/web/ui"
+
+// OS CAMPOS do kit: o de texto, o de senha e o de busca.
+
+// TextField é o campo com rótulo, ajuda e erro.
+// Os atributos do `<input>` usam dois `if` e não um `else if`: na lista de
+// atributos o templ escreve o `else` como um atributo
+// (`TestNoElementRepeatsAnAttribute`).
+templ TextField(f Field, attrs templ.Attributes) {
+	<div
+		class="ds-field"
+		if f.Error != "" {
+			data-invalid
+		}
+	>
+		<label for={ f.ID }>{ f.Label }</label>
+		<input
+			class="ds-input"
+			id={ f.ID }
+			name={ f.Name }
+			type={ ui.InputType(f.Type) }
+			value={ f.Value }
+			if f.Placeholder != "" {
+				placeholder={ f.Placeholder }
+			}
+			if f.Error != "" {
+				aria-invalid="true"
+			}
+			if f.Error != "" || f.Help != "" {
+				aria-describedby={ f.ID + "-help" }
+			}
+			{ attrs... }
+		/>
+		if f.Error != "" {
+			<span class="ds-help" id={ f.ID + "-help" }>{ f.Error }</span>
+		} else if f.Help != "" {
+			<span class="ds-help" id={ f.ID + "-help" }>{ f.Help }</span>
+		}
+	</div>
+}
+
+// PasswordField é o campo de senha com o OLHO, que mostra o que foi digitado
+// enquanto está ligado. Ele troca o `type` do `<input>` no próprio navegador,
+// sem sinal: a senha não pode virar estado de cliente, que o Datastar
+// serializaria em todo pedido seguinte.
+//
+// O nome do olho não diz "senha" de propósito: um `getByLabel('Senha')` — e um
+// leitor de tela procurando o campo — casaria os dois.
+//
+//	@ds.PasswordField(ds.Field{ID: "senha", Name: "senha", Label: "Senha"}, templ.Attributes{"required": true})
+templ PasswordField(f Field, attrs templ.Attributes) {
+	<div
+		class="ds-field"
+		if f.Error != "" {
+			data-invalid
+		}
+	>
+		<label for={ f.ID }>{ f.Label }</label>
+		<span class="ds-password">
+			<input
+				class="ds-input"
+				id={ f.ID }
+				name={ f.Name }
+				type="password"
+				if f.Error != "" {
+					aria-invalid="true"
+				}
+				if f.Error != "" || f.Help != "" {
+					aria-describedby={ f.ID + "-help" }
+				}
+				{ attrs... }
+			/>
+			<button
+				type="button"
+				class="ds-password-eye"
+				aria-label="Mostrar o texto digitado"
+				aria-pressed="false"
+				data-on:click="const box = el.previousElementSibling, on = box.type === 'password'; box.type = on ? 'text' : 'password'; el.setAttribute('aria-pressed', String(on))"
+			>
+				@ui.Icon("Eye", "ds-icon")
+			</button>
+		</span>
+		if f.Error != "" {
+			<span class="ds-help" id={ f.ID + "-help" }>{ f.Error }</span>
+		} else if f.Help != "" {
+			<span class="ds-help" id={ f.ID + "-help" }>{ f.Help }</span>
+		}
+	</div>
+}
+
+// SearchField é a busca: o ícone desenha, e o `label` é o nome acessível —
+// uma busca não tem rótulo visível, e o placeholder não é rótulo.
+templ SearchField(id, label string, attrs templ.Attributes) {
+	<div class="ds-search">
+		@ui.Icon("Search", "ds-icon")
+		<input class="ds-input" id={ id } type="search" aria-label={ label } placeholder={ label } { attrs... }/>
+	</div>
+}

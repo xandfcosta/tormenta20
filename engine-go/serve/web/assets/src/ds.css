@@ -1337,6 +1337,143 @@
     border-color: color-mix(in srgb, var(--ds-toast-ink) 35%, transparent);
   }
 
+  /* O CAMPO DE SENHA com o olho por dentro, à direita. */
+  .ds-password {
+    position: relative;
+    display: block;
+  }
+  .ds-password > .ds-input {
+    padding-right: 2.75rem;
+  }
+  .ds-password-eye {
+    position: absolute;
+    top: 50%;
+    right: 0.25rem;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    border-radius: var(--ds-r-control);
+    background: none;
+    color: var(--ds-ink-2);
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+  .ds-password-eye[aria-pressed='true'] {
+    color: var(--ds-action);
+  }
+  .ds-field[data-invalid] .ds-password > .ds-input {
+    border-color: var(--ds-danger);
+  }
+  .ds-button[data-wide] {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* A PORTA (ALE-524): a marca, o cartão do kit no meio da tela, o rodapé e o
+   * aviso legal. No desktop, um brilho leve da cor da ação no topo do fundo. */
+  .ds-door {
+    display: grid;
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 24rem;
+    margin: auto;
+    padding: 2rem 1rem;
+  }
+  .ds-door-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .ds-door-seal {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 14px;
+    background: var(--ds-action);
+    color: var(--ds-action-ink);
+    font-size: var(--ds-t-lg);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .ds-door-name {
+    display: grid;
+    font-size: var(--ds-t-lg);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .ds-door-name > small {
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    font-weight: 400;
+  }
+  .ds-door-card {
+    display: grid;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-door-title > h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: var(--ds-t-xl);
+    line-height: var(--ds-lh-xl);
+  }
+  .ds-door-title > p {
+    margin: 0.25rem 0 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+  }
+  .ds-door-form {
+    display: grid;
+    gap: 1rem;
+  }
+  .ds-door-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--ds-r-control);
+    background: color-mix(in oklab, var(--ds-danger) 12%, var(--ds-surface));
+    color: var(--ds-danger);
+    font-size: var(--ds-t-sm);
+    font-weight: 600;
+  }
+  .ds-door-alert > .ds-icon {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .ds-door-foot {
+    margin: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    text-align: center;
+  }
+  .ds-door-foot > a {
+    color: var(--ds-action);
+    font-weight: 600;
+  }
+  .ds-door-fine {
+    margin: 0;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    text-align: center;
+  }
+  /* No CONTEÚDO da cena e não na casca: o fundo da `.scene-ds` é declarado fora
+   * de camada, e ganharia de qualquer regra daqui. */
+  @media (min-width: 64rem) {
+    [data-slot='scene-content']:has(> .ds-door) {
+      background: radial-gradient(75rem 37rem at 50% -10%, color-mix(in oklab, var(--ds-action) 10%, var(--ds-bg)), var(--ds-bg));
+    }
+  }
+
   .ds-empty {
     padding: 2rem 1rem;
     border: 1px dashed var(--ds-line-strong);

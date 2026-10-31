@@ -57,8 +57,11 @@ const (
 	noticeBadCredentials = "E-mail ou senha incorretos."
 	// O servidor recusa convite inexistente, gasto e vencido com o mesmo 403,
 	// pelo mesmo motivo. O jogador lê isto em vez do inglês da API.
-	noticeBadInvite  = "Convite inválido ou expirado. Peça um link novo a quem administra a mesa."
-	noticeDeadLink   = "Este link não vale mais — ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa."
+	noticeBadInvite = "Convite inválido ou expirado. Peça um link novo a quem administra a mesa."
+	// O link morto é um vazio do kit: o título diz o que houve, e o texto o
+	// porquê e o que fazer — sem repetir o título.
+	deadLinkTitle    = "Este link não vale mais"
+	noticeDeadLink   = "Ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa."
 	noticeEmailTaken = "Já existe uma conta com este e-mail."
 	// A confirmação de senha é do FORMULÁRIO e não da API: o `confirmar` não
 	// existe no corpo JSON, existe para pegar o typo antes de uma senha que o

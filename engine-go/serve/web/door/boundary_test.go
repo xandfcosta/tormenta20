@@ -32,6 +32,7 @@ var permitidos = map[string]bool{
 	"t20engine/app/accounts":     true,
 	"t20engine/domain/account":   true, // o que uma conta aceita: e-mail, senha, a forma do pedido
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
+	"t20engine/serve/web/ds":     true, // o kit do sistema novo, que a porta veste (ALE-524)
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco, que atravessam a porta
 	"t20engine/infra/wire":       true,
 }
