@@ -147,8 +147,7 @@ func TestEverySelectionSceneDeclaresTheSignalsTheGestureWrites(t *testing.T) {
 // escrito de novo não desenharia livro nenhum — desenharia uma caixa sem estilo,
 // em silêncio.
 //
-// O `ui.TomeSheet` NÃO é isto e continua de pé: ele é a folha das telas de
-// FORMULÁRIO (abrir campanha, entrar, forjar, a ficha), e é a identidade delas.
+// O `ui.TomeSheet` NÃO é isto e continua de pé: ele é a folha da forja.
 func TestNoSelectionSceneDrawsTheLeatherBook(t *testing.T) {
 	for _, scene := range stageScenes(t) {
 		screen := scene.screen(t)

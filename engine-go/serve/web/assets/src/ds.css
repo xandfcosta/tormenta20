@@ -1793,10 +1793,151 @@
     outline: 2px solid var(--ds-focus);
     outline-offset: 2px;
   }
+  /* A CRÔNICA (ALE-526, fatia 2): a capa grande e o nome, as abas do kit e as
+   * seções em listas e cartões. */
+  .ds-camp-detail-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.875rem;
+  }
+  .ds-camp-cover[data-big] {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 14px;
+    font-size: var(--ds-t-lg);
+  }
+  .ds-camp-detail-name {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: var(--ds-t-xl);
+    line-height: var(--ds-lh-xl);
+    font-weight: 700;
+  }
+  .ds-camp-pane {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+  }
+  .ds-camp-pane > form > .ds-button,
+  .ds-camp-pane > .ds-button {
+    justify-self: start;
+  }
+  .ds-camp-detail-syn {
+    margin: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    line-height: var(--ds-lh-sm);
+    white-space: pre-line;
+  }
+  .ds-camp-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ds-camp-two {
+    display: grid;
+    align-items: start;
+    gap: 0.75rem;
+  }
+  .ds-camp-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .ds-camp-row > .ds-icon {
+    color: var(--ds-ink-3);
+  }
+  /* A sessão AO VIVO é destaque da própria linha, como o cartão da lista. */
+  .ds-camp-row[data-live] {
+    background: color-mix(in oklab, var(--ds-good) 7%, var(--ds-surface));
+    box-shadow: inset 4px 0 0 var(--ds-good);
+  }
+  .ds-camp-row[data-live] .ds-row-meta {
+    color: var(--ds-good);
+    font-weight: 600;
+  }
+  .ds-camp-num {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--ds-r-control);
+    background: var(--ds-sunk);
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-camp-crown {
+    color: var(--ds-action);
+  }
+  .ds-camp-more {
+    grid-template-columns: minmax(0, 1fr) auto;
+    color: var(--ds-action);
+    font-size: var(--ds-t-sm);
+    font-weight: 600;
+  }
+  .ds-camp-form {
+    display: grid;
+    gap: 1rem;
+  }
+  .ds-camp-form > .ds-button {
+    justify-self: start;
+  }
+  .ds-card > form > .ds-button {
+    justify-self: start;
+  }
+  .ds-card[data-danger] {
+    border-color: color-mix(in oklab, var(--ds-danger) 45%, var(--ds-line));
+  }
+  .ds-button[data-danger] {
+    justify-self: start;
+    color: var(--ds-danger);
+  }
+  .ds-camp-rule {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+  }
+  .ds-camp-session {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding-right: 0.5rem;
+  }
+  .ds-camp-session-link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    min-height: var(--ds-h-row);
+    color: inherit;
+    text-decoration: none;
+  }
+  .ds-camp-ground {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ds-camp-ground-swatch {
+    width: var(--ds-h-control);
+    height: var(--ds-h-control);
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-control);
+  }
+  .ds-camp-place {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ds-camp-place-acts {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
   @media (min-width: 64rem) {
     .ds-camps {
       padding: 1.5rem 2rem;
     }
+    .ds-camp-two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .ds-camps-tools {
       grid-template-columns: minmax(0, 1fr) 22rem;
     }

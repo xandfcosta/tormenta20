@@ -267,7 +267,7 @@ test.describe('A crônica', () => {
   test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
     await page.goto('/campanhas/1?tab=config')
     const key = page.getByRole('switch', { name: 'Limites de carga' })
-    const before = await key.getAttribute('aria-checked')
+    const before = await key.isChecked()
 
     // A navegação NÃO pode acontecer: se acontecesse, este marcador sumiria.
     await page.evaluate(() => {
@@ -275,20 +275,14 @@ test.describe('A crônica', () => {
     })
 
     await key.click()
-    await expect(key, 'o interruptor não trocou de estado').not.toHaveAttribute(
-      'aria-checked',
-      before ?? '',
-    )
+    await expect(key, 'o interruptor não trocou de estado').toBeChecked({ checked: !before })
     expect(
       await page.evaluate(() => (window as unknown as { __mesmaPagina?: boolean }).__mesmaPagina),
       'a página recarregou — o remendo virou navegação',
     ).toBe(true)
 
     await key.click()
-    await expect(key, 'o teste não devolveu a regra ao estado original').toHaveAttribute(
-      'aria-checked',
-      before ?? '',
-    )
+    await expect(key, 'o teste não devolveu a regra ao estado original').toBeChecked({ checked: before })
   })
 
 })

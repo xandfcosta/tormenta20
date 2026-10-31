@@ -555,6 +555,40 @@ func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) (Cam
 	return i, err
 }
 
+const createNextSession = `-- name: CreateNextSession :one
+INSERT INTO sessions (campaignId, sessionNumber, title, createdAt, updatedAt)
+SELECT ?1, COALESCE(MAX(sessionNumber), 0) + 1, ?2, ?3, ?3
+FROM sessions WHERE campaignId = ?1
+RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
+`
+
+type CreateNextSessionParams struct {
+	CampaignId int64          `json:"campaignId"`
+	Title      sql.NullString `json:"title"`
+	Now        string         `json:"now"`
+}
+
+// A proxima sessao da campanha, numerada no MESMO comando que a insere: ler o
+// numero e inserir em dois passos deixaria dois cliques gerarem o mesmo (ALE-526).
+func (q *Queries) CreateNextSession(ctx context.Context, arg CreateNextSessionParams) (Session, error) {
+	row := q.db.QueryRowContext(ctx, createNextSession, arg.CampaignId, arg.Title, arg.Now)
+	var i Session
+	err := row.Scan(
+		&i.ID,
+		&i.Campaignid,
+		&i.Title,
+		&i.Sessionnumber,
+		&i.Notes,
+		&i.Status,
+		&i.Startedat,
+		&i.Endedat,
+		&i.Createdat,
+		&i.Updatedat,
+		&i.Runtimestate,
+	)
+	return i, err
+}
+
 const createPasswordReset = `-- name: CreatePasswordReset :one
 
 INSERT INTO password_resets (token, userId, createdBy, createdAt, expiresAt)
@@ -2621,8 +2655,10 @@ const listMembers = `-- name: ListMembers :many
 
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel
+       ch.name AS charName, ch.level AS charLevel,
+       COALESCE(u.name, '') AS playerName
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+LEFT JOIN users u ON u.id = ch.ownerId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC
 `
 
@@ -2634,12 +2670,14 @@ type ListMembersRow struct {
 	Charownerid int64  `json:"charownerid"`
 	Charname    string `json:"charname"`
 	Charlevel   int64  `json:"charlevel"`
+	Playername  string `json:"playername"`
 }
 
 // campaign members (B.4)
 // O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
 // Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
 // usa para autorizar -- ver a razao no `one_view.go`.
+// O nome do JOGADOR entra na ALE-526: a linha do grupo diz de quem e o heroi.
 func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMembersRow, error) {
 	rows, err := q.db.QueryContext(ctx, listMembers, campaignid)
 	if err != nil {
@@ -2657,6 +2695,7 @@ func (q *Queries) ListMembers(ctx context.Context, campaignid int64) ([]ListMemb
 			&i.Charownerid,
 			&i.Charname,
 			&i.Charlevel,
+			&i.Playername,
 		); err != nil {
 			return nil, err
 		}

@@ -38,6 +38,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/campanhas/{id}/editar", s.handleEdit)
 	r.Post("/campanhas/{id}/excluir", s.handleDelete)
 	r.Post("/campanhas/{id}/convite", s.handleRotateInvite)
+	r.Post("/campanhas/{id}/nova-sessao", s.handleNewSession)
 	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
 	// O ACERVO DE LUGARES. A cena LISTA, CRIA e APAGA; quem MONTA a cena
 	// guardada é o tabuleiro, num endereço vizinho
@@ -317,6 +318,22 @@ func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
 }
 
+// handleNewSession abre a próxima sessão, com o nome do diálogo, e leva o mestre
+// à mesa dela, onde mora o "Iniciar sessão". Formulário e 303, como o convite: o
+// gesto troca de página.
+func (s Scene) handleNewSession(w http.ResponseWriter, r *http.Request) {
+	id, who, ok := s.requesterOf(w, r)
+	if !ok {
+		return
+	}
+	sessionID, err := s.life.NewSession(r.Context(), who, id, r.PostFormValue("title"))
+	if err != nil {
+		refuse(w, err)
+		return
+	}
+	http.Redirect(w, r, routes.Session(id, sessionID), http.StatusSeeOther)
+}
+
 // handleEdit grava nome e descrição.
 //
 // A recusa REDESENHA a aba de configuração com o que foi digitado, como a folha
@@ -559,14 +576,12 @@ func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id 
 func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, v oneView) {
 	s.deps.WritePage(w, r, status, ui.Page{
 		Title: v.Name,
-		Shape: ui.ShellDense,
-		Back:  "/campanhas",
-		// O rótulo nomeia o destino em vez da seta genérica: daqui se volta
-		// para o livro, e "Campanhas" diz isso melhor que "Voltar".
-		BackLabel: "Campanhas",
-		// Os sinais são só de INTERAÇÃO — o diálogo de excluir e o aviso do
-		// interruptor. Nada de estado da aplicação: a aba vem da URL e o resto
-		// vem desenhado.
+		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, porque o `<h1>` é o
+		// nome da campanha, abaixo da barra.
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
+		// O sinal é só de INTERAÇÃO — o aviso do interruptor. Nada de estado da
+		// aplicação: a aba vem da URL e o resto vem desenhado.
 		Signals: "{rule_error: ''}",
 	}, oneBody(v))
 }

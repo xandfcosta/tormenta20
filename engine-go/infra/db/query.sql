@@ -300,10 +300,13 @@ SELECT id, email, name, createdAt FROM users WHERE id IN (sqlc.slice('ids')) ORD
 -- O ownerId do PERSONAGEM entra na ALE-287, e ele substitui a coluna `role`.
 -- Quem mestra e o DONO da campanha, e essa e a mesma verdade que o `roleIn`
 -- usa para autorizar -- ver a razao no `one_view.go`.
+-- O nome do JOGADOR entra na ALE-526: a linha do grupo diz de quem e o heroi.
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,
        ch.ownerId AS charOwnerId,
-       ch.name AS charName, ch.level AS charLevel
+       ch.name AS charName, ch.level AS charLevel,
+       COALESCE(u.name, '') AS playerName
 FROM campaign_members m JOIN characters ch ON ch.id = m.characterId
+LEFT JOIN users u ON u.id = ch.ownerId
 WHERE m.campaignId = ? ORDER BY m.addedAt ASC;
 
 -- name: HasPlayerPc :one
@@ -340,6 +343,14 @@ SELECT * FROM sessions WHERE id = ? LIMIT 1;
 -- name: CreateSession :one
 INSERT INTO sessions (campaignId, sessionNumber, title, notes, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+-- name: CreateNextSession :one
+-- A proxima sessao da campanha, numerada no MESMO comando que a insere: ler o
+-- numero e inserir em dois passos deixaria dois cliques gerarem o mesmo (ALE-526).
+INSERT INTO sessions (campaignId, sessionNumber, title, createdAt, updatedAt)
+SELECT sqlc.arg('campaignId'), COALESCE(MAX(sessionNumber), 0) + 1, sqlc.narg('title'), sqlc.arg('now'), sqlc.arg('now')
+FROM sessions WHERE campaignId = sqlc.arg('campaignId')
 RETURNING *;
 
 -- name: DeleteSession :exec
