@@ -9,7 +9,10 @@ delas, em `serve/web/assets/src`. Ele se divide em cinco grupos — `domain/`,
 [guia dele](engine-go/CLAUDE.md). `e2e/` é a suíte de Playwright, que dirige o app
 rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
 com o banco em bind mount no hospedeiro e um nginx na frente que só termina o
-HTTPS (ALE-273, ALE-523).
+HTTPS (ALE-273, ALE-523). Esse compose é o de PRODUÇÃO; o de dev
+(`docker compose -f docker-compose.dev.yml up -d --build`) o inclui com as
+variáveis do `.env.dev` e troca só o banco, que é efêmero e nasce com a semente
+(ALE-529).
 
 Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
 no navegador. Os dois saíram na ALE-272: as cenas são renderizadas no servidor,
