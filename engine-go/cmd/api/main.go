@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"log"
@@ -26,36 +25,10 @@ import (
 	"t20engine/serve/api"
 )
 
-// SONDA DE SAÚDE: a imagem é `distroless` e não tem shell, `curl` nem `wget`,
-// então o `HEALTHCHECK` do compose chama o próprio binário com `-health`.
-//
-// Ela lê a MESMA `PORT` que o servidor escuta — uma porta escrita à mão daria
-// uma sonda que reprova servidor saudável no dia em que a porta mudasse.
-func healthProbe(cfg config.Config) int {
-	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%s/health", cfg.Port))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "health: %v\n", err)
-		return 1
-	}
-	defer func() { _ = resp.Body.Close() }()
-	if resp.StatusCode != http.StatusOK {
-		fmt.Fprintf(os.Stderr, "health: %s\n", resp.Status)
-		return 1
-	}
-	return 0
-}
-
 func main() {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("config: %v", err)
-	}
-	// A sonda sai ANTES de abrir o banco: ela é um cliente do servidor que já
-	// está de pé, e abrir o SQLite de novo aqui poria um segundo escritor no
-	// mesmo arquivo a cada 30 segundos.
-	if len(os.Args) > 1 && os.Args[1] == "-health" {
-		os.Exit(healthProbe(cfg))
 	}
 	// Fatal e não aviso: subir em produção com chave de assinatura forjável é
 	// pior que não subir, e aviso rola para fora da tela.
@@ -71,9 +44,8 @@ func main() {
 
 	srv := api.NewServer(cfg, database, primeCatalogs())
 	// UM roteador: as cenas, os estáticos, as fontes, a saúde e a API em `/api`
-	// saem todos do `WebRouter`. O `cmd` não monta rota nenhuma — ele abre o
-	// banco, prima os catálogos e escuta. Ele não comprime: quem comprime é o
-	// nginx da frente (ALE-523).
+	// saem todos do `WebRouter`, já comprimidos. O `cmd` não monta rota nenhuma —
+	// ele abre o banco, prima os catálogos e escuta.
 	mux := srv.WebRouter()
 
 	// Um sinal encerra a mesa com ordem, em vez de no meio de uma gravação: sem
@@ -104,10 +76,6 @@ func httpServerFor(cfg config.Config, mux http.Handler) *http.Server {
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       120 * time.Second,
-		// Dito com todas as letras porque o padrão do Go pode mudar de versão, e
-		// porque um telefone antigo na mesa negociando TLS 1.0 seria uma queda
-		// silenciosa de segurança. Ignorado quando não há TLS.
-		TLSConfig: &tls.Config{MinVersion: tls.VersionTLS12},
 	}
 }
 
@@ -186,8 +154,8 @@ func announce(cfg config.Config) {
 }
 
 // lanURLs lista os IPv4 não-loopback desta máquina. O servidor já escuta em
-// todas as interfaces; o que falta é serem descobríveis. São os endereços do
-// PROCESSO, em HTTP: no compose quem a mesa abre é o nginx, em HTTPS (ALE-523).
+// todas as interfaces; o que falta é serem descobríveis. São os endereços que a
+// mesa abre, em HTTP: não há nada na frente do processo (ALE-531).
 func lanURLs(cfg config.Config) []string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

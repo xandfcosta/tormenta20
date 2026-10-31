@@ -116,8 +116,8 @@ func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {
 func TestProtectedRoutesRejectAnonymous(t *testing.T) {
 	s := newTestServer(t)
 
-	// O `/health` fica de fora de propósito: ele é anônimo por desenho, e é o
-	// `healthcheck` do compose que bate nele.
+	// O `/health` fica de fora de propósito: ele é anônimo por desenho, e é o CI
+	// e um monitor externo que batem nele.
 	protected := []struct{ method, path string }{
 		{http.MethodGet, "/campanhas"},
 		{http.MethodPost, "/campanhas"},

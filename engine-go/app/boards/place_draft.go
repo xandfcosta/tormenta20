@@ -94,7 +94,7 @@ func (bs *Store) NewID() string { return bs.newID() }
 // DAS DUAS FONTES, e nenhuma delas basta sozinha — foi medido nas duas direções:
 //
 //   - só a MEMÓRIA não vê o tabuleiro aberto ontem, numa sessão que este
-//     processo nunca hidratou. Depois de um `docker compose up` o mapa está
+//     processo nunca hidratou. Depois de reiniciar o servidor o mapa está
 //     vazio e a trava passaria a deixar tudo montar.
 //   - só o BANCO nunca deixou de ver o tabuleiro recém-aberto, e desde a
 //     ALE-375 isso é garantido em vez de provável: a gravação acontece DENTRO

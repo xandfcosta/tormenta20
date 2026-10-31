@@ -122,8 +122,7 @@ func LoadConfig() (Config, error) {
 // disso o desenvolvimento segue permissivo de propósito: é o que o faz
 // desenvolvimento.
 //
-// O TLS não é deste processo: ele termina no nginx do compose (ALE-523), e o
-// binário fala HTTP puro atrás dele.
+// O app fala HTTP puro e não serve TLS (ALE-531).
 func (c Config) Validate() error {
 	if c.AppEnv != EnvProduction {
 		return nil

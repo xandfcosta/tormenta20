@@ -1,8 +1,11 @@
 package api
 
 import (
+	"bufio"
+	"compress/gzip"
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"t20engine/domain/live"
@@ -122,6 +125,79 @@ func TestTheTableRecordsInitiativeWithTheServerTotal(t *testing.T) {
 		}
 	}
 	t.Fatal("a linha do jogador não entrou na fila")
+}
+
+// A COMPRESSÃO do stream — o passo (a) da ordem combinada, e o ganho que domina
+// todos os outros: medido, 52.332 bytes crus de três remendos viram 2.513 em
+// gzip. Ela é invisível na tela, então quem tirar o `httpio.Gzip` do roteador
+// multiplica a banda por vinte sem nada parecer errado — é exatamente por isso
+// que ela precisa de guarda. E o fluxo NÃO termina: o caso só passa se cada
+// quadro sair do gzip na hora, que é o `Flush` do envelope.
+//
+// Servidor de verdade e `Accept-Encoding` escrito à mão de propósito: o
+// `http.Client` do Go põe o cabeçalho sozinho e descomprime por baixo do pano,
+// escondendo o `Content-Encoding` que este teste existe para ver.
+func TestTheTableStreamCompresses(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	srv := httptest.NewServer(f.s.WebRouter())
+	defer srv.Close()
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL+f.tableUrl()+"/fluxo", nil)
+	if err != nil {
+		t.Fatalf("montar pedido: %v", err)
+	}
+	req.Header.Set("Accept-Encoding", "gzip")
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
+	// O stream não termina sozinho; o contexto é o que devolve o controle depois
+	// do primeiro quadro.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	if err != nil {
+		t.Fatalf("abrir stream: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if got := resp.Header.Get("Content-Encoding"); got != "gzip" {
+		t.Fatalf("Content-Encoding = %q, queria gzip — o stream saiu cru", got)
+	}
+	zr, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		t.Fatalf("o corpo não é gzip: %v", err)
+	}
+	// PROCURA a fila entre os quadros em vez de assumi-la no primeiro: a carga
+	// fria manda um quadro por REGIÃO, e ler só o primeiro afirmaria a ordem
+	// interna do render, que não é promessa nenhuma. O que o teste quer saber é
+	// que ela CHEGA comprimida.
+	//
+	// Ler um buffer de tamanho fixo continua não servindo: um buffer curto corta
+	// o fragmento no meio, e um longo bloquearia esperando quadros que só o
+	// batimento traria.
+	reader := bufio.NewScanner(zr)
+	reader.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	var all strings.Builder
+	var foundPatch, foundQueue bool
+	for reader.Scan() && !foundQueue {
+		row := reader.Text()
+		all.WriteString(row)
+		all.WriteString("\n")
+		if strings.Contains(row, "datastar-patch-elements") {
+			foundPatch = true
+		}
+		if strings.Contains(row, "Ogro cansado") {
+			foundQueue = true
+		}
+	}
+
+	// As duas metades: veio no evento do Datastar E carrega a fila de verdade.
+	// Só a primeira passaria verde com um stream que comprime silêncio.
+	if !foundPatch {
+		t.Errorf("nenhum quadro é um patch do Datastar:\n%.600s", all.String())
+	}
+	if !foundQueue {
+		t.Errorf("a fila não chegou em quadro nenhum:\n%.600s", all.String())
+	}
 }
 
 // O aviso do store — o passo (b). O que este teste afirma é a INVARIANTE que

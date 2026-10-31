@@ -88,7 +88,7 @@ func TestTheProcessServesEverythingFromOneRouter(t *testing.T) {
 		want   int
 		reason string
 	}{
-		{"/health", http.StatusOK, "a sonda do compose e o `-health` do binário perguntam na RAIZ"},
+		{"/health", http.StatusOK, "o CI e um monitor externo perguntam na RAIZ"},
 		{"/api/health", http.StatusOK, "a mesma saúde sob o prefixo da API"},
 		{"/favicon.svg", http.StatusOK, "o layout pede o ícone por caminho absoluto"},
 		{"/fonts/cinzel-latin.woff2", http.StatusOK, "a folha pede a Cinzel por caminho absoluto"},

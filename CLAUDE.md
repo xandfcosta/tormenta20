@@ -7,12 +7,9 @@ e as CENAS em `.templ` servidas com Datastar — mais a folha e as ilhas de JS
 delas, em `serve/web/assets/src`. Ele se divide em cinco grupos — `domain/`,
 `app/`, `serve/`, `infra/` e `cmd/` —, e o mapa de onde procurar cada coisa está no
 [guia dele](engine-go/CLAUDE.md). `e2e/` é a suíte de Playwright, que dirige o app
-rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
-com o banco em bind mount no hospedeiro e um nginx na frente que só termina o
-HTTPS (ALE-273, ALE-523). Esse compose é o de PRODUÇÃO; o de dev
-(`docker compose -f docker-compose.dev.yml up -d --build`) o inclui com as
-variáveis do `.env.dev` e troca só o banco, que é efêmero e nasce com a semente
-(ALE-529).
+rodando. Um processo serve tudo, direto na máquina e em HTTP, comprimindo em
+gzip ele mesmo — sem contêiner e sem nada na frente (ALE-531). Em dev é o
+`pnpm dev` do `engine-go/`, sobre o `data/t20-dev.db` semeado.
 
 Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
 no navegador. Os dois saíram na ALE-272: as cenas são renderizadas no servidor,
@@ -475,7 +472,7 @@ domínio e infraestrutura.
 
 **A ROTA é a exceção da fronteira, e fica em PORTUGUÊS** (decisão do dono,
 ALE-303): o endereço é a única parte da fronteira que **o cliente VÊ**. Duas
-ressalva: `/health` e `/static/*` ficam em inglês — são a sonda do compose e a
+ressalva: `/health` e `/static/*` ficam em inglês — são a sonda de saúde e a
 pasta dos estáticos, convenção que ferramenta de fora reconhece.
 
 Os quatro casos que ficavam de fora da lista, e cada um já foi decidido por

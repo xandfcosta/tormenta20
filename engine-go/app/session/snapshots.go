@@ -47,7 +47,7 @@ type SessionSnapshots interface {
 	//     "transação é lenta".
 	//
 	// O que serializa as mutações é a trava do store, que é do PROCESSO — e o
-	// app é um processo só, um serviço no compose. Ler aqui, e não do cache, é o
+	// app é um processo só. Ler aqui, e não do cache, é o
 	// que garante que a mudança parta do que está gravado.
 	Mutate(ctx context.Context, sessionID int64,
 		change func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error)

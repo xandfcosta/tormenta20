@@ -18,10 +18,6 @@ engine-go/test-results/
 *.log
 
 t20-book.pdf
-# O certificado da mesa (ALE-523): a chave privada é da máquina, e o
-# `scripts/make-tls-cert.sh` gera um novo a qualquer hora.
-/tls/
-
 # Runtime SQLite data + backups (host-stored, never commit)
 /data/
 /backups/
