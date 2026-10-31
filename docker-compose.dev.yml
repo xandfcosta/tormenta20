@@ -1,0 +1,73 @@
+# A MESA DE DEV, com paridade de produção (ALE-529).
+#
+#   docker compose --env-file .env.dev -f docker-compose.dev.yml up -d --build
+#   docker compose --env-file .env.dev -f docker-compose.dev.yml down
+#
+# O `docker-compose.yml` é o padrão e é o de PRODUÇÃO. Este arquivo herda dele
+# (`extends`) a imagem, o healthcheck, o nginx e o HTTPS; as variáveis de dev
+# chegam pelo `.env.dev`, no lugar do `.env` de produção. O que muda aqui é só
+# estrutura: o banco EFÊMERO e a semente aplicada nele a cada subida.
+#
+# A pilha é outra e não toca a de produção: projeto, containers, imagem e portas
+# próprios, e nada do `data/` nem do `backups/` do hospedeiro é montado. Ela abre
+# em `https://<ip>:8443`, e as credenciais são as da semente
+# (`engine-go/cmd/seed/seed-data.json`).
+
+name: tormenta20-dev
+
+services:
+  t20:
+    extends:
+      file: docker-compose.yml
+      service: t20
+    # Tag própria: com a de produção, um `--build` daqui trocaria a imagem que a
+    # mesa de verdade sobe no próximo `up`.
+    image: tormenta20:dev
+    container_name: tormenta20-dev
+    environment:
+      APP_ENV: development
+    volumes: !override
+      - dev-data:/app/data
+      - ./t20-book.pdf:/app/livro/t20.pdf:ro
+
+  # A SEMENTE. O `seed.sql` é só DADO — o esquema vem das migrações que o app
+  # roda ao subir —, então ela espera o app ficar saudável e escreve no mesmo
+  # volume. A imagem do app é distroless e não tem `sqlite3`; esta tem.
+  seed:
+    build:
+      dockerfile_inline: |
+        FROM alpine:3.20
+        RUN apk add --no-cache sqlite
+    image: tormenta20-seed:dev
+    # O mesmo dono do app: um arquivo de WAL criado por outro uid trava a
+    # escrita dele.
+    user: "${T20_UID:-65532}:${T20_GID:-65532}"
+    depends_on:
+      t20:
+        condition: service_healthy
+    volumes:
+      - dev-data:/app/data
+      - ./engine-go/seed.sql:/seed.sql:ro
+    command: ["sh", "-c", "sqlite3 /app/data/t20.db < /seed.sql"]
+
+  nginx:
+    extends:
+      file: docker-compose.yml
+      service: nginx
+    container_name: tormenta20-dev-nginx
+    # A porta só abre com a semente no banco: antes disso o login do mestre não
+    # existiria.
+    depends_on: !override
+      t20:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+
+volumes:
+  # EFÊMERO de verdade: um tmpfs, em memória, que some quando o último container
+  # que o monta para. O dono é o uid do app, senão ele não cria o banco.
+  dev-data:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "uid=${T20_UID:-65532},gid=${T20_GID:-65532},mode=0700"
