@@ -71,15 +71,6 @@ type Config struct {
 	// automático — a mesa é do dono, e ele pode não querer.
 	BackupEvery time.Duration
 	BackupKeep  int
-	// TLSCertFile e TLSKeyFile ligam o HTTPS NESTE processo. Vazios nos dois — o
-	// padrão — o servidor fala HTTP puro.
-	//
-	// O TLS termina aqui e não num nginx/Caddy na frente porque a decisão da casa
-	// é um processo só, sem proxy; pôr um na frente contraria isso e precisa ser
-	// deliberado. Isto NÃO exclui o outro arranjo: quem terminar TLS fora deixa
-	// estes dois vazios, mantém `COOKIE_SECURE=true` e continua funcionando.
-	TLSCertFile string
-	TLSKeyFile  string
 	// BookPDF é o caminho do Tormenta 20 em PDF que o servidor entrega em
 	// `/livro`, e VAZIO é o padrão: sem ele o botão "abrir no livro"
 	// simplesmente não existe, e nada é servido.
@@ -120,8 +111,6 @@ func LoadConfig() (Config, error) {
 		BackupDir:      env("BACKUP_DIR", "../backups"),
 		BackupEvery:    envDuration("BACKUP_EVERY", 24*time.Hour),
 		BackupKeep:     envInt("BACKUP_KEEP", 7),
-		TLSCertFile:    os.Getenv("TLS_CERT_FILE"),
-		TLSKeyFile:     os.Getenv("TLS_KEY_FILE"),
 		BookPDF:        env("LIVRO_PDF", ""),
 		BookPageOffset: envInt("LIVRO_ABERTURA", 6),
 	}, nil
@@ -129,16 +118,13 @@ func LoadConfig() (Config, error) {
 
 // Validate recusa uma subida que se comportaria mal em silêncio. Em produção é
 // a chave de assinatura (vazia ou pública, qualquer um que alcance o servidor
-// emite o próprio cookie, e é todo mundo de uma vez) e a lista de admins. Em
-// QUALQUER ambiente é o par de TLS pela metade — ver `validateTLS`. Fora disso o
-// desenvolvimento segue permissivo de propósito: é o que o faz desenvolvimento.
+// emite o próprio cookie, e é todo mundo de uma vez) e a lista de admins. Fora
+// disso o desenvolvimento segue permissivo de propósito: é o que o faz
+// desenvolvimento.
+//
+// O TLS não é deste processo: ele termina no nginx do compose (ALE-523), e o
+// binário fala HTTP puro atrás dele.
 func (c Config) Validate() error {
-	// ANTES do desvio de desenvolvimento: um par de TLS pela metade é erro de
-	// digitação em qualquer ambiente, e é justamente em desenvolvimento que
-	// alguém experimenta o HTTPS pela primeira vez.
-	if err := c.validateTLS(); err != nil {
-		return err
-	}
 	if c.AppEnv != EnvProduction {
 		return nil
 	}
@@ -155,39 +141,6 @@ func (c Config) Validate() error {
 		return fmt.Errorf("ADMIN_EMAILS is empty in %s — nobody could invite the players in", c.AppEnv)
 	}
 	return nil
-}
-
-// TLSEnabled diz se é este processo que termina o TLS.
-func (c Config) TLSEnabled() bool {
-	return c.TLSCertFile != "" && c.TLSKeyFile != ""
-}
-
-// Scheme é o que vem antes do endereço que os jogadores digitam. Ele existe para
-// a linha de log e a URL serem a mesma decisão: um servidor em HTTPS anunciando
-// `http://` manda a mesa inteira para um endereço que responde 400.
-func (c Config) Scheme() string {
-	if c.TLSEnabled() {
-		return "https"
-	}
-	return "http"
-}
-
-// validateTLS recusa um par de TLS pela metade. Cair para HTTP em silêncio seria
-// o pior dos mundos: quem escreveu meio par ligou `COOKIE_SECURE=true` junto, e
-// aí o navegador DESCARTA o cookie de sessão — o login não conclui, sem erro em
-// lugar nenhum, e a tela só volta para o início.
-func (c Config) validateTLS() error {
-	if (c.TLSCertFile == "") == (c.TLSKeyFile == "") {
-		return nil
-	}
-	missing, present, value := "TLS_KEY_FILE", "TLS_CERT_FILE", c.TLSCertFile
-	if c.TLSCertFile == "" {
-		missing, present, value = "TLS_CERT_FILE", "TLS_KEY_FILE", c.TLSKeyFile
-	}
-	return fmt.Errorf(
-		"%s está vazio e %s=%q — o HTTPS precisa dos DOIS caminhos; deixe os dois vazios para servir HTTP",
-		missing, present, value,
-	)
 }
 
 // IsAdmin diz se o e-mail administra a mesa. Ignora a caixa, o que só é seguro

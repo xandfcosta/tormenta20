@@ -125,7 +125,7 @@ func serve(ctx context.Context, cfg config.Config, mux http.Handler) error {
 	server := httpServerFor(cfg, mux)
 	failed := make(chan error, 1)
 	go func() {
-		if err := escutar(server, cfg); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			failed <- err
 		}
 	}()
@@ -146,20 +146,6 @@ func serve(ctx context.Context, cfg config.Config, mux http.Handler) error {
 		log.Printf("encerramento forçado: %v", err)
 	}
 	return nil
-}
-
-// escutar sobe o listener: HTTPS quando há par de certificados, HTTP puro
-// quando não. Um pedido `http://` numa porta com TLS recebe "Client sent an
-// HTTP request to an HTTPS server" do próprio net/http — feio, mas VISÍVEL, que
-// é o oposto de cair para HTTP em silêncio.
-func escutar(server *http.Server, cfg config.Config) error {
-	if !cfg.TLSEnabled() {
-		return server.ListenAndServe()
-	}
-	// Os caminhos vão aqui, e não pré-carregados no `TLSConfig`: assim o erro
-	// de um arquivo ausente ou ilegível NOMEIA o arquivo, e ele sobe pelo
-	// `log.Fatalf("listen: …")` do main.
-	return server.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
 }
 
 // primeCatalogs carrega os catálogos de regra, e DERRUBA o processo sem eles.
@@ -193,20 +179,15 @@ func primeCatalogs() *engine.Catalogs {
 }
 
 func announce(cfg config.Config) {
-	log.Printf("t20 %s server listening on :%s (%s, db=%s)", cfg.AppEnv, cfg.Port, cfg.Scheme(), cfg.DatabasePath)
-	if cfg.TLSEnabled() && !cfg.CookieSecure {
-		log.Print("  aviso: há TLS e COOKIE_SECURE=false — o cookie de sessão viaja sem a marca Secure")
-	}
+	log.Printf("t20 %s server listening on :%s (http, db=%s)", cfg.AppEnv, cfg.Port, cfg.DatabasePath)
 	for _, url := range lanURLs(cfg) {
 		log.Printf("  players can open %s", url)
 	}
 }
 
 // lanURLs lista os IPv4 não-loopback desta máquina. O servidor já escuta em
-// todas as interfaces; o que falta é serem descobríveis.
-//
-// O ESQUEMA vem da config, e não é detalhe: com TLS ligado e `http://`
-// impresso, os telefones da mesa batem num 400 e o sintoma parece do app.
+// todas as interfaces; o que falta é serem descobríveis. São os endereços do
+// PROCESSO, em HTTP: no compose quem a mesa abre é o nginx, em HTTPS (ALE-523).
 func lanURLs(cfg config.Config) []string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -219,7 +200,7 @@ func lanURLs(cfg config.Config) []string {
 		if !ok || ipNet.IP.IsLoopback() || ipNet.IP.To4() == nil {
 			continue
 		}
-		urls = append(urls, fmt.Sprintf("%s://%s:%s", cfg.Scheme(), ipNet.IP, cfg.Port))
+		urls = append(urls, fmt.Sprintf("%s://%s:%s", "http", ipNet.IP, cfg.Port))
 	}
 	return urls
 }
