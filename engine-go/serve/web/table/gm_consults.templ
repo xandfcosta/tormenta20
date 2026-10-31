@@ -49,26 +49,50 @@ templ gmConsults(v View, b master.BestiaryView) {
 	@gmNpcEditor(v)
 }
 
-// gmNotes é o caderno da sessão: a mesma caixa e a mesma prévia do palco de
-// hoje (`notesBody`), e por isso a mesma regra — a caixa é semeada uma vez e
-// nunca remendada. Com as notas numa janela à parte, a aba só avisa: duas
-// caixas sobre a mesma linha do banco gravariam uma por cima da outra.
+// gmNotes é o caderno da sessão, e ele nasce LENDO (decisão do dono): o texto
+// formatado ocupa a coluna, o toque nele abre a caixa, e o Esc ou sair dela
+// volta à leitura. A caixa é a do palco de hoje — semeada uma vez e nunca
+// remendada, porque um remendo no meio da frase apagaria o que o mestre
+// escreve — e a prévia é a região `table-notes-preview`, remendada a cada
+// gravação. Com as notas numa janela à parte, a aba só avisa: duas caixas
+// sobre a mesma linha do banco gravariam uma por cima da outra.
 templ gmNotes(v View) {
 	<section class="ds-gm-notes" data-init={ seedNotes(v) } data-on:storage__window={ watchesTheNotesWindow(v) }>
 		<div class="ds-gm-notes-head">
-			// UM SELETOR e não quatro botões: na coluna de 19rem os quatro
-			// modos não cabem lado a lado, e a aba rolava de lado por causa deles.
-			<select class="ds-input ds-gm-notes-mode" aria-label="Modo de visualização das notas" data-bind:notes_mode data-on:change={ storesNotesMode }>
-				for _, mode := range gmNoteModes {
-					<option value={ mode.ID }>{ mode.Label }</option>
-				}
-			</select>
+			<span class="ds-row-meta" data-show="!$gm_notes_editing">Toque no texto para escrever</span>
+			<span class="ds-row-meta" data-show="$gm_notes_editing" style="display:none">Esc para voltar à leitura</span>
 			@autosaveState()
 			@ds.IconButton(ds.ButtonGhost, "ExternalLink", "Abrir as notas numa janela", templ.Attributes{"type": "button", "title": "Abrir as notas numa janela — para o segundo monitor", "data-on:click": opensTheNotesWindow(v)})
 		</div>
 		<p class="ds-help" data-show="$notes_window" style="display:none">As notas estão abertas numa janela à parte.</p>
 		<div class="ds-gm-notes-body" data-show="!$notes_window">
-			@notesBody(v)
+			// A LEITURA é um alvo de toque inteiro, e o teclado chega nela: o
+			// Enter abre a caixa como o clique. O clique numa tarefa ou num link
+			// DENTRO dela é da tarefa e do link, e não abre a edição.
+			<div
+				class="ds-gm-notes-read"
+				tabindex="0"
+				role="button"
+				aria-label="Editar as notas da sessão"
+				data-show="!$gm_notes_editing"
+				data-on:click={ "evt.target.closest('input, a, button') || (" + startsEditingNotes + ")" }
+				data-on:keydown={ "evt.key === 'Enter' && (evt.preventDefault(), " + startsEditingNotes + ")" }
+			>
+				@tableNotesPreview(v)
+			</div>
+			<textarea
+				id="gm-notes-text"
+				class="ds-input ds-gm-notes-text"
+				style="display:none"
+				data-show="$gm_notes_editing"
+				data-bind:notes
+				data-on:input__debounce.1200ms={ saveNotes(v) }
+				data-indicator:notes_saving
+				data-on:blur="$gm_notes_editing = false"
+				data-on:keydown="evt.key === 'Escape' && (evt.stopPropagation(), evt.preventDefault(), el.blur())"
+				aria-label="Notas da sessão"
+				placeholder={ "# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse" }
+			>{ v.Notes }</textarea>
 		</div>
 	</section>
 }

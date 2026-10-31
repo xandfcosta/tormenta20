@@ -230,4 +230,33 @@ test.describe('A mesa do mestre', () => {
     await search.fill('')
     await expect(rows.first()).toBeVisible()
   })
+
+  /**
+   * O CADERNO LÊ POR PADRÃO e escreve ao toque; o Esc e sair da caixa voltam à
+   * leitura. Só o navegador mede: é foco, `blur` e a tecla — e o Esc tem de
+   * ficar com o caderno, sem chegar ao "voltar" do documento.
+   */
+  test('as notas leem por padrão, escrevem ao toque e voltam à leitura com o Esc', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto(MESA)
+    const reading = page.getByRole('button', { name: 'Editar as notas da sessão' })
+    const box = page.getByRole('textbox', { name: 'Notas da sessão' })
+    // O CONTROLE: abre lendo, sem a caixa.
+    await expect(reading).toBeVisible()
+    await expect(box).toBeHidden()
+
+    await reading.click()
+    await expect(box, 'o toque não abriu a caixa').toBeVisible()
+    await expect(box, 'a caixa abriu sem o cursor').toBeFocused()
+
+    await page.keyboard.press('Escape')
+    await expect(box, 'o Esc não voltou à leitura').toBeHidden()
+    await expect(reading).toBeVisible()
+    await expect(page, 'o Esc escapou do caderno e saiu da mesa').toHaveURL(new RegExp(`${MESA}$`))
+
+    await reading.click()
+    await expect(box).toBeFocused()
+    await page.getByRole('navigation', { name: 'Consultas do mestre' }).getByRole('button', { name: 'Notas' }).click()
+    await expect(box, 'sair da caixa não voltou à leitura').toBeHidden()
+  })
 })

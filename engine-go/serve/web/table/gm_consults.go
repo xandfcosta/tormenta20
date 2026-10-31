@@ -21,14 +21,6 @@ var gmConsultTabs = []struct{ ID, Label string }{
 	{gmConsultBestiary, "Bestiário"},
 }
 
-// gmNoteModes são os quatro modos do caderno, os mesmos do `modesRange`.
-var gmNoteModes = []struct{ ID, Label string }{
-	{"escrever", "Escrever"},
-	{"ler", "Ler"},
-	{"duplo", "Lado a lado"},
-	{"empilhado", "Empilhado"},
-}
-
 // consultCurrent é o `aria-current` da aba. O falso REMOVE o atributo, que é o
 // que o `.ds-tabs` lê.
 func consultCurrent(id string) string {
@@ -80,9 +72,10 @@ func npcMeta(npc castNpc) string {
 	return npc.Summary
 }
 
-// storesNotesMode guarda o modo escolhido, que é preferência de trabalho e não
-// estado da sessão (`notesModeKey`).
-var storesNotesMode = fmt.Sprintf("localStorage.setItem('%s', $notes_mode)", notesModeKey)
+// startsEditingNotes abre a caixa e põe o cursor nela. O foco espera o
+// quadro seguinte, porque a caixa só aparece quando o Datastar reavaliar o
+// `data-show` dela.
+const startsEditingNotes = "$gm_notes_editing = true, requestAnimationFrame(() => document.getElementById('gm-notes-text')?.focus())"
 
 // nameMatches é o filtro de uma linha pela busca da aba: vazio mostra todos, e
 // o nome casa por pedaço, sem caixa. O nome vai como literal JSON, que é texto

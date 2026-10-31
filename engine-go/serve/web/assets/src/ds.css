@@ -2183,10 +2183,28 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .ds-gm-notes-mode {
-    width: auto;
+  /* O CADERNO lê por padrão e escreve ao toque: as duas metades ocupam a
+   * coluna inteira, uma de cada vez. */
+  .ds-gm-notes-read {
     flex: 1;
-    min-width: 0;
+    min-height: 16rem;
+    padding: 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--ds-r-control);
+    cursor: text;
+  }
+  .ds-gm-notes-read:hover {
+    border-color: var(--ds-line);
+  }
+  .ds-gm-notes-text {
+    flex: 1;
+    height: auto;
+    min-height: 16rem;
+    padding: 0.75rem;
+    font-family: var(--font-mono, monospace);
+    font-size: var(--ds-t-sm);
+    line-height: 1.5;
+    resize: none;
   }
   .ds-gm-creature-name {
     display: grid;
