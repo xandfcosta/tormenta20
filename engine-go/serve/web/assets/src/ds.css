@@ -1910,6 +1910,18 @@
     color: inherit;
     text-decoration: none;
   }
+  .ds-camp-ground {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ds-camp-ground-swatch {
+    width: var(--ds-h-control);
+    height: var(--ds-h-control);
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-control);
+  }
   .ds-camp-place {
     grid-template-columns: minmax(0, 1fr) auto;
   }

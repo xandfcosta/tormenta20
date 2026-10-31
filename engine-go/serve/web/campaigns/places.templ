@@ -100,17 +100,32 @@ templ newPlaceDialog(v oneView) {
 		<p class="ds-help">A cena que você vai montar. Um nome que já existe no acervo abre aquele lugar, em vez de criar outro.</p>
 		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/lugares/novo", v.ID)) } class="ds-camp-form">
 			@ds.TextField(ds.Field{ID: "place-name", Name: "name", Label: "Nome do lugar", Error: joinErrors(v.Errors["place"])}, templ.Attributes{"required": true})
-			<div class="ds-field">
+			// A AMOSTRA ao lado do seletor é o chão do tabuleiro — a mesma classe
+			// `ground-*` que a mesa pinta —, para o nome "Ermo" não ser escolhido às
+			// cegas.
+			<div class="ds-field" data-signals={ fmt.Sprintf("{place_ground: %q}", firstGround(v.Chaos)) }>
 				<label for="place-ground">Chão</label>
-				<select class="ds-input ds-select" id="place-ground" name="ground">
-					for _, c := range v.Chaos {
-						<option value={ c.ID }>{ c.Label }</option>
-					}
-				</select>
+				<span class="ds-camp-ground">
+					<select class="ds-input ds-select" id="place-ground" name="ground" data-bind:place_ground>
+						for _, c := range v.Chaos {
+							<option value={ c.ID }>{ c.Label }</option>
+						}
+					</select>
+					<span class={ "ds-camp-ground-swatch ground-" + firstGround(v.Chaos) } aria-hidden="true" data-attr:class="'ds-camp-ground-swatch ground-' + $place_ground"></span>
+				</span>
 			</div>
 			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit"}) {
 				Montar
 			}
 		</form>
 	}
+}
+
+// firstGround é o chão que o seletor mostra antes de alguém mexer nele — o
+// PRIMEIRO da lista, que é o padrão do servidor.
+func firstGround(options []GroundOption) string {
+	if len(options) == 0 {
+		return ""
+	}
+	return options[0].ID
 }
