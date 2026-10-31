@@ -2196,6 +2196,11 @@
   .ds-gm-notes-read:hover {
     border-color: var(--ds-line);
   }
+  .ds-gm-notes-pending {
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    white-space: pre-wrap;
+  }
   .ds-gm-notes-text {
     flex: 1;
     height: auto;

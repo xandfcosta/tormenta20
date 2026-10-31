@@ -78,7 +78,13 @@ templ gmNotes(v View) {
 				data-on:click={ "evt.target.closest('input, a, button') || (" + startsEditingNotes + ")" }
 				data-on:keydown={ "evt.key === 'Enter' && (evt.preventDefault(), " + startsEditingNotes + ")" }
 			>
-				@tableNotesPreview(v)
+				// ENQUANTO A GRAVAÇÃO ESTÁ NO AR, a leitura mostra o texto cru que acabou
+				// de ser escrito, e não a prévia: ela só muda quando a gravação volta, e
+				// sair da escrita logo depois de digitar mostraria o texto ANTIGO.
+				<div data-show="$notes === $notes_saved">
+					@tableNotesPreview(v)
+				</div>
+				<div class="ds-gm-notes-pending" data-show="$notes !== $notes_saved" data-text="$notes" style="display:none"></div>
 			</div>
 			<textarea
 				id="gm-notes-text"
@@ -88,7 +94,7 @@ templ gmNotes(v View) {
 				data-bind:notes
 				data-on:input__debounce.1200ms={ saveNotes(v) }
 				data-indicator:notes_saving
-				data-on:blur="$gm_notes_editing = false"
+				data-on:blur={ leavesNotesWriting(v) }
 				data-on:keydown="evt.key === 'Escape' && (evt.stopPropagation(), evt.preventDefault(), el.blur())"
 				aria-label="Notas da sessão"
 				placeholder={ "# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse" }

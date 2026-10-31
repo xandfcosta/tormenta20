@@ -87,3 +87,10 @@ func nameMatches(signal, name string) string {
 	}
 	return fmt.Sprintf("$%s === '' || %s.toLowerCase().includes($%s.toLowerCase())", signal, literal, signal)
 }
+
+// leavesNotesWriting volta à leitura e grava NA HORA o que ainda não foi:
+// esperar a pausa da digitação deixaria a leitura com o texto cru por mais
+// de um segundo.
+func leavesNotesWriting(v View) string {
+	return "$gm_notes_editing = false; $notes !== $notes_saved && " + saveNotes(v)
+}
