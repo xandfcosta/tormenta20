@@ -34,6 +34,15 @@ const SAIDA = resolve(AQUI, '../serve/web/ui/icons.templ')
 
 /** Os ícones que as cenas pedem. Acrescentar aqui e rodar o gerador. */
 const QUERIDOS = [
+  // A porta (ALE-524) e a mesa do mestre no Tempestade (ALE-522). Estes sete
+  // entraram à mão no `icons.templ`, e o gerador os apagava a cada rodada.
+  'CircleAlert',
+  'BookOpen',
+  'Paintbrush',
+  'ListOrdered',
+  'PanelLeftClose',
+  'PanelRightOpen',
+  'PanelRightClose',
   'ArrowLeftRight',
   'Wind',
   'Users2',
