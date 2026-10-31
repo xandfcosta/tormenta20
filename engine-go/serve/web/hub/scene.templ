@@ -1,194 +1,159 @@
 package hub
 
-import "t20engine/serve/web/ui"
+import (
+	"fmt"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
 
-// O HUB desenhado.
-//
-// Três coisas desta tela valem dizer:
-//
-//  1. O TECLADO. As setas andam no menu, e nada aqui as implementa: o menu só
-//     DECLARA a forma dele (`data-nav-region`, `data-nav-layout`) e o driver,
-//     servido por `scene.js`, lê isso do DOM.
-//  2. O POPOVER do rodapé é a Popover API NATIVA. Foco, dispensa por clique
-//     fora, `Esc` e camada de topo vêm do navegador; o que sobra de JavaScript é
-//     posicionar, porque a top layer sai do fluxo.
-//  3. O SLIDER de volume é `<input type="range">`: teclado e leitor de tela de
-//     graça, e melhores.
-
+// O INÍCIO no sistema Tempestade (ALE-525), pelo mockup aprovado
+// `inicio.html`: a marca e o avatar no topo, a saudação, a sessão ao vivo num
+// cartão — é o gesto mais comum da noite, e por isso ele vem primeiro —, e os
+// três destinos em linhas que dizem o que há dentro de cada um.
 templ hub(v hubView) {
-	@hubMenu(v)
-	@hubFooter(v)
+	<header class="ds-hub-top">
+		<span class="ds-hub-brand"><span class="ds-hub-seal" aria-hidden="true">T20</span>Tormenta 20</span>
+		<button type="button" class="ds-hub-me" popovertarget="player-menu" aria-label={ "Menu de " + v.Name }>
+			<span class="ds-hub-avatar" aria-hidden="true">{ v.Initial }</span>
+		</button>
+	</header>
+	<div class="ds-hub">
+		<div class="ds-hub-hello">
+			<h1>{ "Olá, " + v.Name }</h1>
+			<p class="ds-row-meta">O que vai ser hoje?</p>
+		</div>
+		if v.Alive != nil {
+			@liveCard(*v.Alive)
+		}
+		@hubMenu()
+	</div>
+	@playerMenu(v)
 	if v.EhAdmin {
-		// O diálogo acompanha a ENTRADA que o abre. Desenhá-lo sempre punha o
-		// título "Convidar jogador" e um botão de cunhar no HTML de quem não
-		// administra — marcação morta, e uma tela dizendo o que ela não faz. O
-		// servidor recusaria de todo jeito; o que se conserta aqui é a tela.
-		@ui.InviteDialog("/convites")
+		@inviteDialog()
 	}
 }
 
-// hubMenu é o menu principal. `data-nav-region` + `data-nav-layout` são o
-// contrato com o driver de teclado: o menu declara a forma e nunca importa o
-// driver.
-templ hubMenu(v hubView) {
-	<nav
-		aria-label="Menu principal"
-		data-nav-region="menu"
-		data-nav-layout="column"
-		class="mx-auto mt-10 flex w-full max-w-md flex-col gap-2.5"
-	>
-		@menuItem("Users2", "Meus Heróis", "/personagens", false)
-		@menuItem("Scroll", "Campanhas", "/campanhas", false)
-		@menuItem("Wand2", "Ferramentas do Mestre", "/mestre/bestiario", false)
-		if v.Alive != nil {
-			// Só aparece com partida rolando — o "Continue" de um jogo. Mestre e
-			// jogador retomam a MESMA tela.
-			@menuItem("PlayCircle", "Continuar sessão",
-				v.Alive.Route, true)
-		}
-	</nav>
-}
-
-// menuItem é um `<a>` de verdade e não um `<button>` com JavaScript: cada
-// entrada é NAVEGAÇÃO, e um botão perderia o clique do meio, o "abrir em nova
-// aba" e o menu de contexto que o navegador já dá.
-//
-// Os `data-cue-*` são o gancho dos sons: o `scene.js` escuta por DELEGAÇÃO num
-// ouvinte só, porque o HTML pode ser remendado a qualquer tique e ouvinte preso
-// a nó morre no remendo.
-templ menuItem(icon_, label, destination string, hasNext bool) {
-	<a
-		href={ templ.SafeURL(destination) }
-		data-nav-item
-		data-cue-hover
-		data-cue-select
-		class="grimorio-menu-item group flex min-h-11 w-full items-center gap-3 rounded-none px-4 py-3 text-left font-heading text-lg tracking-wide text-foreground outline-none"
-	>
-		<span aria-hidden="true" class="text-sm text-grimorio-crimson-bright">▸</span>
-		@ui.Icon(icon_, "size-5 text-grimorio-gold")
-		<span class="flex-1">{ label }</span>
-		if hasNext {
-			<span aria-hidden="true" class="text-sm text-grimorio-gold">►</span>
-		}
+// liveCard é a sessão AO VIVO: qual mesa (a campanha e o número da sessão) e o
+// caminho de volta para ela.
+templ liveCard(a hubLiveSession) {
+	<a class="ds-hub-live" href={ templ.SafeURL(a.Route) }>
+		<span class="ds-hub-live-dot" aria-hidden="true"></span>
+		<span class="ds-hub-live-body">
+			<span class="ds-row-meta">Continuar de onde parou</span>
+			<b>{ a.CampaignName }</b>
+			<span class="ds-row-meta">{ fmt.Sprintf("Sessão %d · ao vivo agora", a.SessionNumber) }</span>
+		</span>
+		<span class="ds-button">
+			Voltar à mesa
+			@ui.Icon("ChevronRight", "ds-icon")
+		</span>
 	</a>
 }
 
-// hubFooter é a tira de identidade, com o menu rápido do jogador.
-templ hubFooter(v hubView) {
-	<footer class="mx-auto mt-auto flex w-full max-w-md border-t border-grimorio-iron pt-4">
-		<button
-			type="button"
-			popovertarget="player-menu"
-			aria-label={ "Menu de " + v.Name }
-			data-cue-hover
-			class="group flex flex-1 items-center gap-3 rounded-none p-1 text-left outline-none"
-		>
-			<span
-				aria-hidden="true"
-				class="grid size-10 place-items-center rounded-full border-2 border-grimorio-iron-light font-heading font-bold text-grimorio-gold transition-colors group-hover:border-grimorio-gold"
-			>
-				{ v.Initial }
-			</span>
-			<span class="min-w-0 flex-1 truncate font-heading tracking-wide text-foreground">{ v.Name }</span>
-			@ui.Icon("Settings", "size-4 text-muted-foreground transition-colors group-hover:text-grimorio-gold")
-		</button>
-		@playerMenu(v)
-	</footer>
+// hubMenu são os três destinos. A frase de cada um diz o que há dentro: a
+// palavra sozinha ("Ferramentas do mestre") não dizia que o bestiário mora lá.
+templ hubMenu() {
+	<nav class="ds-list" aria-label="Menu principal" data-nav-region="menu" data-nav-layout="column">
+		@menuItem("Users2", "Meus heróis", "As suas fichas, e a forja de um novo", "/personagens")
+		@menuItem("Scroll", "Campanhas", "As mesas que você joga ou mestra", "/campanhas")
+		@menuItem("Wand2", "Ferramentas do mestre", "Bestiário, condições, encontros e improviso", "/mestre/bestiario")
+	</nav>
 }
 
-// playerMenu é o popover NATIVO.
+templ menuItem(icon, label, meta, destination string) {
+	<a href={ templ.SafeURL(destination) } class="ds-row ds-hub-row" data-nav-item data-cue-hover data-cue-select>
+		<span class="ds-hub-icon" aria-hidden="true">
+			@ui.Icon(icon, "ds-icon")
+		</span>
+		<span class="ds-hub-text">
+			<span class="ds-row-title">{ label }</span>
+			<span class="ds-row-meta">{ meta }</span>
+		</span>
+		@ui.Icon("ChevronRight", "ds-icon")
+	</a>
+}
+
+// playerMenu é o menu do jogador, aberto pelo avatar: um popover nativo, que
+// no celular sobe de baixo e no desktop fica preso ao canto. O que muda a
+// preferência do aparelho (som, volume, tela cheia) é do `scene.ts`, e o modo
+// de cor é o formulário do kit.
 //
-// O `position: fixed` com `margin: 0` é obrigatório: a top layer ignora o
-// contexto de posicionamento do pai, e o preflight do Tailwind não zera a
-// margem do popover como zera a do `<dialog>`. Quem escreve as coordenadas é o
-// `scene.js`, no `beforetoggle`.
-//
-// Os sinais aqui são estado de INTERAÇÃO (o rótulo do som, a visibilidade do
-// slider), não da aplicação — e nascem no `data-init` lendo a preferência deste
-// aparelho. Não há lampejo de rótulo errado porque o menu começa FECHADO.
+// O "Configurações" que existia aqui desativado saiu: um item que não faz nada
+// é um item a menos de confiança no menu (ALE-525).
 templ playerMenu(v hubView) {
 	<div
 		id="player-menu"
 		popover
-		data-signals="{sound: false, volume: 100}"
+		data-sheet
+		class="ds-hub-menu"
+		data-signals="{sound: false, volume: 100, fullscreen: false}"
 		data-init="const p = cena.preferencias(); $sound = p.som; $volume = p.volume"
-		class="fixed m-0 w-56 border border-grimorio-iron bg-grimorio-panel-raised p-1.5 text-foreground shadow-lg"
 	>
-		<button type="button" data-on:click="$sound = cena.som()" class={ quickItemClass(false) }>
-			<span style="display:none" data-show="$sound">@ui.Icon("Volume2", "size-4")</span>
-			<span data-show="!$sound">@ui.Icon("VolumeX", "size-4")</span>
-			<span data-text="$sound ? 'Som ligado' : 'Som desligado'"></span>
-		</button>
-		// O slider só existe com o som ligado: slider sobre o mudo é controle
-		// morto, e o que ele resolve é o sino do "Sua vez" alto demais.
-		<div style="display:none" data-show="$sound" class="px-2 pb-2 pt-1">
-			<label for="volume" class="flex justify-between text-xs text-muted-foreground">
-				Volume
-				<span data-text="$volume + '%'"></span>
-			</label>
-			<input
-				id="volume"
-				type="range"
-				min="0"
-				max="100"
-				data-bind:volume
-				data-on:input="cena.volume($volume)"
-				class="mt-1 w-full accent-grimorio-gold"
-			/>
+		<div class="ds-hub-menu-head">
+			<span class="ds-hub-avatar" data-large aria-hidden="true">{ v.Initial }</span>
+			<span class="ds-hub-text">
+				<b>{ v.Name }</b>
+				if v.Email != "" && v.Email != v.Name {
+					<span class="ds-row-meta">{ v.Email }</span>
+				}
+			</span>
+			@ds.IconButton(ds.ButtonGhost, "X", "Fechar o menu", templ.Attributes{"type": "button", "popovertarget": "player-menu", "popovertargetaction": "hide"})
 		</div>
-		// Tela cheia some onde o navegador não tem a API — o iPhone é o caso, e
-		// item morto é pior que item ausente. Quem responde é o navegador, então
-		// quem esconde é o cliente: `data-show`, e não um `if` no servidor.
-		<button
-			type="button"
-			data-show="cena.temTelaCheia()"
-			data-on:click="$fullscreen = cena.telaCheia()"
-			data-signals="{fullscreen: false}"
-			class={ quickItemClass(false) }
-		>
-			<span data-show="!$fullscreen">@ui.Icon("Maximize", "size-4")</span>
-			<span style="display:none" data-show="$fullscreen">@ui.Icon("Minimize", "size-4")</span>
-			<span data-text="$fullscreen ? 'Sair da tela cheia' : 'Tela cheia'"></span>
+		<span class="ds-field-label">Aparência</span>
+		@ds.ColorModeSwitch(v.ColorMode, "/")
+		<span class="ds-field-label">Som</span>
+		@ds.Switch("Efeitos sonoros", false, templ.Attributes{"data-bind:sound": true, "data-on:change": "cena.som()"})
+		<label class="ds-hub-volume" data-show="$sound" style="display:none">
+			<span class="ds-row-meta">Volume <span data-text="$volume + '%'"></span></span>
+			<input type="range" min="0" max="100" data-bind:volume data-on:input="cena.volume($volume)"/>
+		</label>
+		<button type="button" class="ds-hub-menu-row" data-show="cena.temTelaCheia()" data-on:click="$fullscreen = cena.telaCheia()">
+			@ui.Icon("Maximize", "ds-icon")
+			<span data-text="$fullscreen ? 'Sair da tela cheia' : 'Tela cheia'">Tela cheia</span>
 		</button>
 		if v.EhAdmin {
-			// Desenhado só para admin, e isso é UX: quem chegar na mão leva 403 do
-			// servidor, que é onde a fronteira mora.
-			<button
-				type="button"
-				data-on:click="$invite_dialog.showModal()"
-				class={ quickItemClass(false) }
-			>
-				@ui.Icon("UserPlus", "size-4")
+			<span class="ds-field-label">Mesa</span>
+			<button type="button" class="ds-hub-menu-row" commandfor="hub-invite" command="show-modal">
+				@ui.Icon("UserPlus", "ds-icon")
 				<span>Convidar jogador</span>
 			</button>
-			<a href="/admin" class={ quickItemClass(false) }>
-				@ui.Icon("ShieldCheck", "size-4")
+			<a href="/admin" class="ds-hub-menu-row">
+				@ui.Icon("ShieldCheck", "ds-icon")
 				<span>Administração</span>
 			</a>
 		}
-		// Placeholder até existir tela de configurações, e DESABILITADO em vez de
-		// ausente: ele diz que o lugar existe e ainda não abriu.
-		<button type="button" disabled class={ quickItemClass(false) }>
-			@ui.Icon("Settings", "size-4")
-			<span>Configurações</span>
-		</button>
 		<form method="post" action="/sair">
-			<button type="submit" class={ quickItemClass(true) }>
-				@ui.Icon("LogOut", "size-4")
+			<button type="submit" class="ds-hub-menu-row" data-danger>
+				@ui.Icon("LogOut", "ds-icon")
 				<span>Sair</span>
 			</button>
 		</form>
 	</div>
 }
 
-// quickItemClass: uma linha do menu rápido. Em função e não repetida sete
-// vezes porque a lista de classes é longa e uma cópia divergente é invisível.
-func quickItemClass(danger bool) string {
-	base := "flex w-full items-center gap-2.5 rounded-none px-2.5 py-2 text-left font-heading text-sm tracking-wide transition-colors hover:bg-accent focus-visible:bg-accent outline-none"
-	if danger {
-		return ui.Join(base, "text-grimorio-crimson-bright")
+// inviteDialog é o convite, no kit: o servidor devolve o link pronto
+// (`mintedInvite`), e o gerar de novo é o mesmo gesto.
+templ inviteDialog() {
+	@ds.Dialog("hub-invite", "Convidar jogador", nil) {
+		<p class="ds-help" data-signals="{error: '', copied: false}">Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.</p>
+		<div id="invite-link"></div>
+		<p class="ds-help ds-reg-error" data-show="$error" data-text="$error" style="display:none"></p>
+		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "@post('/convites')", "data-indicator:generating": true, "data-attr:disabled": "$generating"}) {
+			Gerar convite
+		}
 	}
-	return ui.Join(base, "text-foreground")
 }
 
-
+// mintedInvite é o link cunhado. Só o CAMINHO viaja: quem prefixa a origem é o
+// navegador, porque o servidor não sabe por qual endereço a mesa o alcança.
+templ mintedInvite(path string) {
+	<div id="invite-link" class="ds-hub-invite">
+		<input id="invite-url" class="ds-input" readonly aria-label="Link de convite" data-path={ path } data-init="el.value = location.origin + el.dataset.path"/>
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "navigator.clipboard.writeText(document.getElementById('invite-url').value); $copied = true"}) {
+			@ui.Icon("Copy", "ds-icon")
+			Copiar
+		}
+		<p class="ds-help" aria-live="polite" data-show="$copied" style="display:none">Link copiado.</p>
+		<p class="ds-help">Cada convite serve para UMA conta. Gere outro para o próximo jogador.</p>
+	</div>
+}

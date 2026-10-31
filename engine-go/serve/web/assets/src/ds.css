@@ -1371,6 +1371,226 @@
     justify-content: center;
   }
 
+  /* O INÍCIO (ALE-525): a marca e o avatar no topo, a saudação, o cartão da
+   * sessão ao vivo e os três destinos, numa coluna centrada. */
+  .ds-hub-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    border-bottom: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+  }
+  .ds-hub-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+  }
+  .ds-hub-seal {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    background: var(--ds-action);
+    color: var(--ds-action-ink);
+    font-size: var(--ds-t-xs);
+    font-weight: 800;
+  }
+  .ds-hub-me {
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    cursor: pointer;
+  }
+  .ds-hub-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    background: linear-gradient(160deg, #7c3aed, #4c1d95);
+    color: #fff;
+    font-weight: 700;
+  }
+  .ds-hub-avatar[data-large] {
+    width: 3rem;
+    height: 3rem;
+    font-size: var(--ds-t-lg);
+  }
+  .ds-hub {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    width: 100%;
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 2rem;
+  }
+  .ds-hub-hello > h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: var(--ds-t-2xl);
+    line-height: var(--ds-lh-2xl);
+  }
+  .ds-hub-hello > p {
+    margin: 0.25rem 0 0;
+  }
+  .ds-hub-live {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem 1rem;
+    padding: 1rem;
+    border: 1px solid color-mix(in oklab, var(--ds-action) 40%, var(--ds-line));
+    border-radius: var(--ds-r-surface);
+    background: color-mix(in oklab, var(--ds-action) 8%, var(--ds-surface));
+    color: inherit;
+    text-decoration: none;
+  }
+  .ds-hub-live > .ds-button {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+  .ds-hub-live-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 999px;
+    background: var(--ds-good);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--ds-good) 25%, transparent);
+  }
+  .ds-hub-live-body {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ds-hub-live-body > b {
+    font-size: var(--ds-t-lg);
+  }
+  .ds-hub-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-height: 4.5rem;
+  }
+  .ds-hub-row > .ds-icon {
+    color: var(--ds-ink-3);
+  }
+  .ds-hub-icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--ds-r-control);
+    background: color-mix(in oklab, var(--ds-action) 12%, var(--ds-surface));
+    color: var(--ds-action);
+  }
+  .ds-hub-text {
+    display: grid;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  /* O MENU DO JOGADOR: no celular sobe de baixo; no desktop, preso ao canto. */
+  .ds-hub-menu {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: auto;
+    max-height: 85dvh;
+    margin: 0;
+    padding: 1rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border: 0;
+    border-radius: var(--ds-r-surface) var(--ds-r-surface) 0 0;
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    box-shadow: 0 -8px 32px rgb(0 0 0 / 0.25);
+  }
+  .ds-hub-menu:popover-open {
+    display: grid;
+    gap: 0.625rem;
+  }
+  .ds-hub-menu::backdrop {
+    background: rgb(0 0 0 / 0.45);
+  }
+  .ds-hub-menu-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-hub-menu-head > .ds-button {
+    margin-left: auto;
+  }
+  .ds-hub-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: var(--ds-r-control);
+    background: none;
+    color: var(--ds-ink);
+    font: inherit;
+    font-size: var(--ds-t-sm);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .ds-hub-menu-row:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-hub-menu-row > .ds-icon {
+    color: var(--ds-ink-2);
+  }
+  .ds-hub-menu-row[data-danger],
+  .ds-hub-menu-row[data-danger] > .ds-icon {
+    color: var(--ds-danger);
+  }
+  .ds-hub-menu .ds-segmented {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ds-hub-menu .ds-segmented > button {
+    white-space: nowrap;
+  }
+  .ds-hub-volume {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .ds-hub-volume > input {
+    width: 100%;
+    accent-color: var(--ds-action);
+  }
+  .ds-hub-invite {
+    display: grid;
+    gap: 0.5rem;
+  }
+  @media (min-width: 64rem) {
+    .ds-hub {
+      padding-top: 3rem;
+    }
+    .ds-hub-live {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+    .ds-hub-live > .ds-button {
+      grid-column: auto;
+    }
+    .ds-hub-menu {
+      inset: 4.25rem 1rem auto auto;
+      width: 20rem;
+      border-radius: var(--ds-r-surface);
+      box-shadow: 0 12px 32px rgb(0 0 0 / 0.2);
+    }
+    .ds-hub-menu::backdrop {
+      background: none;
+    }
+  }
+
   /* A PORTA (ALE-524): a marca, o cartão do kit no meio da tela, o rodapé e o
    * aviso legal. No desktop, um brilho leve da cor da ação no topo do fundo. */
   .ds-door {

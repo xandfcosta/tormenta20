@@ -152,8 +152,8 @@ func TestOnlyTheMigratedSceneWearsTheNewSystem(t *testing.T) {
 	if tag := scopeOf("/sistema"); !strings.Contains(tag, "scene-ds") || strings.Contains(tag, "scene-grimorio") {
 		t.Errorf("a folha viva não saiu só no escopo scene-ds: %s", tag)
 	}
-	if tag := scopeOf("/"); strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
-		t.Errorf("o hub, que ainda não migrou, não saiu no grimório: %s", tag)
+	if tag := scopeOf("/campanhas"); strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
+		t.Errorf("as campanhas, que ainda não migraram, não saíram no grimório: %s", tag)
 	}
 }
 

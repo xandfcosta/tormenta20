@@ -3,9 +3,10 @@ package hub
 import (
 	"net/http"
 
+	"t20engine/serve/web/ui"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
-	"t20engine/serve/web/ui"
 )
 
 // As rotas do HUB (ALE-231). Atrás de `requireAuth`: o menu principal é de quem
@@ -26,10 +27,11 @@ func (s Scene) handleHub(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	view.ColorMode = ui.ColorModeOf(r)
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:  "Tormenta 20",
 		Shape:  ui.ShellTitled,
-		Kicker: "— Grimório de Arton —",
+		System: ui.SystemTempestade,
 		// Sem `data-voltar`: o Hub é a cena raiz e o Esc não tem para onde ir.
 	}, hub(view))
 }
@@ -61,9 +63,8 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return
 	}
-	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ui.MintedInvite`.
-	fragment, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+invite.Token,
-		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
+	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `mintedInvite`.
+	fragment, err := ui.RenderFragment(r.Context(), mintedInvite("/register?convite="+invite.Token))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return

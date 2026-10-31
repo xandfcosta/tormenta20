@@ -424,6 +424,7 @@ function Q(e) {
 	Z.som && (e === "hover" && window.matchMedia?.("(pointer: coarse)").matches || ie.play(e, Z.volume / 100));
 }
 function ae(e) {
+	if (e.hasAttribute("data-sheet")) return;
 	let t = document.querySelector(`[popovertarget="${e.id}"]`);
 	if (!t) return;
 	let n = t.getBoundingClientRect(), r = n.top - 16, i = window.innerHeight - n.bottom - 16, a = r > i;
