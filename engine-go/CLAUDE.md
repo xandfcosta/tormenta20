@@ -314,7 +314,8 @@ mão não saberia quantos dados pegar.
 - **O erro ENCERRA o golpe**: cobra a ação padrão (`session.Store.RuleAttack`)
   e deixa o que o ✓ deixaria — PM do impulso, guarda da investida, gatilhos
   cumulativos (`afterTheStrike`). O provisório fica com a decisão, para o
-  jogador ler "o mestre disse: errou", até o próximo ataque o substituir.
+  jogador ler "o mestre disse: errou", até a vez mudar (`dropTheSettledMiss`)
+  ou o próximo ataque o substituir.
 - **Rolar de novo vale antes da decisão** (p226): o `Reroll` recusa depois dela.
 - **Os campos da mão são sinais NUMERADOS** (`damage_die_1`…), montados em Go
   (`handDamageSignal`) e declarados vazios a cada cartão

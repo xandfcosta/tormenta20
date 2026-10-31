@@ -377,3 +377,15 @@ func TestTheAttackLineNamesEveryForeseenConditionInPortuguese(t *testing.T) {
 		}
 	}
 }
+
+// O NÃO LETAL NO CARTÃO DO MESTRE diz o que é não letal: "Não letal" sozinho
+// numa linha embaixo do dano não diz de quê.
+func TestTheNonLethalNoteNamesTheDamage(t *testing.T) {
+	notes := damageNotes(live.PendingAttack{
+		Roll: 15, Total: 20, Defense: 13, Hit: true,
+		Dice: []int{6}, Faces: 8, RawDamage: 9, Damage: 9, NonLethal: 9,
+	})
+	if len(notes) != 1 || notes[0] != "Dano não letal (p236)" {
+		t.Errorf("as notas do dano não letal saíram %q", notes)
+	}
+}

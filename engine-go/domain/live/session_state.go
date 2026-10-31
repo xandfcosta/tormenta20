@@ -354,6 +354,7 @@ func AdvanceTurn(st *SessionRuntimeState) {
 	if !st.CountsRounds() || len(st.Initiative) == 0 {
 		return
 	}
+	dropTheSettledMiss(st)
 	if st.TurnIndex < 0 {
 		st.TurnIndex = 0
 		if st.Round < 1 {
@@ -371,6 +372,15 @@ func AdvanceTurn(st *SessionRuntimeState) {
 	RefreshTurn(st)
 }
 
+// dropTheSettledMiss tira da mesa o ataque que o mestre já disse que ERROU. Ele
+// fica para o jogador ler a decisão, e a vez mudando é o fim dessa leitura. O
+// ataque ainda sem decisão fica: o mestre não falou, e mudar a vez não é falar.
+func dropTheSettledMiss(st *SessionRuntimeState) {
+	if st.PendingAttack != nil && st.PendingAttack.Ruling == RulingMiss {
+		st.PendingAttack = nil
+	}
+}
+
 // RewindTurn desfaz um "Próximo turno". Cruzar a virada de volta devolve a
 // rodada; desfazer o primeiro turno devolve ao pré-combate (turnIndex -1) sem
 // zerar a rodada, porque a rodada 1 JÁ começou e voltar não desfaz isso.
@@ -378,6 +388,7 @@ func RewindTurn(st *SessionRuntimeState) {
 	if len(st.Initiative) == 0 || st.TurnIndex < 0 {
 		return
 	}
+	dropTheSettledMiss(st)
 	// Desfazer um turno desconta um turno: o contador é o que JÁ aconteceu, e
 	// voltar diz que não aconteceu.
 	if st.TurnsTaken > 0 {
