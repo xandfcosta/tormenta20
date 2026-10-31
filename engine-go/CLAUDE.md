@@ -1263,10 +1263,9 @@ duplicação é deliberada, e o `e2e/tests/support/focus.ts`
 
 - **Para medir, pergunte se há transição** (`getAnimations()`) — ver "O
   INSTRUMENTO MENTE COM CARA DE RESULTADO" no [CLAUDE.md da raiz](../CLAUDE.md).
-- **A carta de rádio é a única exceção, e é do RÓTULO.** A forja e o "entrar na
-  mesa" escondem o `<input>` com `sr-only` e realçam o `<label>`
-  (`has-[:focus-visible]:outline-*` na forja,
-  `.ds-hero-pick:has(:focus-visible)` no `ds.css`), que a regra global
+- **A opção de rádio é a única exceção, e é do RÓTULO.** A peça `ds-pick` (a
+  forja e o "entrar na mesa") esconde o `<input>` e realça o `<label>` pela
+  folha (`.ds-pick:has(:focus-visible)` no `ds.css`), que a regra global
   (`:is(a, button, input, …)`) não alcança. Uma `label:has(:focus-visible)`
   global desenharia DOIS anéis em todo rótulo que envolve campo VISÍVEL.
 - **Guarda que aproxima um seletor mede outro seletor**: a isenção do anel

@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/search"
 	"t20engine/infra/wire"
 )
 
@@ -53,6 +54,8 @@ type raceCard struct {
 	Displacement int
 	Abilities    string
 	Chosen       bool
+	// Find é o texto que a busca da folha casa, já dobrado (`search.Fold`).
+	Find string
 }
 
 // classCard é uma das 14 cartas do ofício.
@@ -62,6 +65,7 @@ type classCard struct {
 	PM         int
 	Expertises string
 	Chosen     bool
+	Find       string
 }
 
 // originOption é uma linha da lista de origens.
@@ -70,6 +74,7 @@ type originOption struct {
 	Name    string
 	Benefit string
 	Chosen  bool
+	Find    string
 }
 
 // startingGear é o kit de p140 já reduzido ao que ESTA classe recebe.
@@ -143,19 +148,23 @@ func raceCardOf(race book.Race, chosen string) raceCard {
 		}
 		names = append(names, ability.Name)
 	}
-	return raceCard{
+	card := raceCard{
 		ID: race.ID, Name: race.Name, Attributes: race.AttributeMod.Escrito(),
 		Size: race.Size, Displacement: race.Speed,
 		Abilities: strings.Join(names, ", "), Chosen: race.ID == chosen,
 	}
+	card.Find = search.Fold(card.Name + " " + card.Attributes + " " + card.Abilities)
+	return card
 }
 
 func classCardOf(class book.Class, chosen string) classCard {
 	pv, pm, _ := engine.ClassStartingVitals(class.Name)
-	return classCard{
+	card := classCard{
 		Name: class.Name, PV: pv, PM: pm,
 		Expertises: cardExpertisesLine(class), Chosen: class.Name == chosen,
 	}
+	card.Find = search.Fold(card.Name + " " + card.Expertises)
+	return card
 }
 
 // cardExpertisesLine escreve a linha "Perícias" do bloco da classe: as que vêm
@@ -189,9 +198,10 @@ func originOptions(chosen string) []originOption {
 
 	list := make([]originOption, 0, len(ids))
 	for _, id := range ids {
+		benefit := benefitsLine(origins[id])
 		list = append(list, originOption{
-			ID: id, Name: origins[id].Name, Benefit: benefitsLine(origins[id]),
-			Chosen: id == chosen,
+			ID: id, Name: origins[id].Name, Benefit: benefit,
+			Chosen: id == chosen, Find: search.Fold(origins[id].Name + " " + benefit),
 		})
 	}
 	return list

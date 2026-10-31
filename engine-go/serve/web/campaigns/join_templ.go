@@ -213,7 +213,7 @@ func heroChoice(v joinView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		for _, h := range v.Heroes {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<label class=\"ds-hero-pick\"><input type=\"radio\" name=\"characterId\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<label class=\"ds-pick\"><input type=\"radio\" name=\"characterId\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

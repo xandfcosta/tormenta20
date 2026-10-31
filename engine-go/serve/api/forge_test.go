@@ -73,14 +73,16 @@ func TestEveryBookRaceAndClassHasACardInTheForge(t *testing.T) {
 // O kit de p140 se conhece pela classe, e antes dela a seção não existe.
 func TestTheFormOnlyOffersEquipmentAfterTheClass(t *testing.T) {
 	f := newSceneFixture(t)
+	// O seletor, e não o título: a folha vazia diz "Equipamento inicial" no
+	// aviso de que ele aparece com a classe, e oferecer é ter o que escolher.
 	empty := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
-	if strings.Contains(empty, "Equipamento inicial") {
+	if strings.Contains(empty, `name="weaponSimple"`) {
 		t.Error("a folha vazia já oferece equipamento, sem saber a classe")
 	}
 
 	withClass := postaAForja(t, f, f.player, "/personagens/nova/esboco",
 		url.Values{"class": {"Guerreiro"}}).Body.String()
-	if !strings.Contains(withClass, "Equipamento inicial") {
+	if !strings.Contains(withClass, `name="weaponSimple"`) {
 		t.Fatal("o esboço com classe não trouxe o equipamento")
 	}
 }

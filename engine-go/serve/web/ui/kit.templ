@@ -185,30 +185,6 @@ templ SceneTitle(title, kicker string) {
 	</div>
 }
 
-// TomeSheet é uma FOLHA do grimório aberta: a capa de couro segurando uma
-// página que preenche a cena. Hoje é a folha da forja; as cenas de campanha
-// saíram dela para o Tempestade (ALE-526).
-//
-// A chave do `max-lg:landscape:` é LARGURA + ORIENTAÇÃO e não altura: um
-// telefone deitado tem ~390px de altura e o botão de enviar cai para fora da
-// tela com o espaçamento cheio, mas uma consulta por `max-height` casaria
-// também com o telefone EM PÉ e o teclado virtual aberto (390x494) — e estas
-// folhas hospedam campos de texto, então o espaçamento encolheria debaixo do
-// dedo no meio da digitação.
-templ TomeSheet() {
-	<div class="w-full">
-		<div class="grimorio-leather grimorio-page-in p-2.5 sm:p-3">
-			// `data-tome-root` é CONTRATO e não decoração: é a testemunha que o
-			// e2e mede para provar que o respiro da folha chaveia por
-			// ORIENTAÇÃO e não por altura. Sem ele o teste espera por um
-			// seletor que não existe.
-			<div data-tome-root class="grimorio-frame--stone flex min-h-[calc(100dvh-7rem)] flex-col gap-6 rounded-none p-6 sm:p-10 max-lg:landscape:gap-3 max-lg:landscape:p-4">
-				{ children... }
-			</div>
-		</div>
-	</div>
-}
-
 // SectionLabel é o cabeçalho de um bloco. NÃO é Cinzel: ela é serifada de
 // display e abaixo de 14px vira desenho antes de virar texto, e esta receita é
 // de 10px.

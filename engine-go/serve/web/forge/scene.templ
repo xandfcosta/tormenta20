@@ -2,198 +2,172 @@ package forge
 
 import (
 	"strconv"
+	"strings"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 
-// A FORJA — a folha em branco de um herói.
+// A FORJA no Tempestade (ALE-535), pelo mockup aprovado `forja.html`: o nome,
+// raça, classe e origem como linhas que abrem uma folha com busca, o
+// equipamento num cartão e Forjar preso embaixo.
 //
-// Ela é a mesma folha do tomo da campanha nova, e por isso mora no
-// `ui.TomeSheet`: mesmo couro, mesma virada de página, com você segurando a pena.
+// O ESTADO TEM UMA CASA SÓ: o próprio formulário. O que precisa do servidor é o
+// EQUIPAMENTO, que muda com a classe, e a linha que diz o que foi escolhido; o
+// `@post` do Datastar manda o formulário inteiro (`contentType: 'form'`) e a
+// folha volta redesenhada.
 //
-// O ESTADO TEM UMA CASA SÓ: o próprio formulário. Não há `data-signals` aqui, e
-// isso é decisão — o único pedaço que precisa do servidor é o EQUIPAMENTO, que
-// muda com a classe, e o `@post` do Datastar sabe mandar o formulário inteiro
-// (`contentType: 'form'`). Guardar as mesmas respostas num sinal criaria uma
-// segunda cópia do que os controles já sabem, com a pergunta de qual das duas
-// vale quando divergirem.
+// AS FOLHAS MORAM FORA DO FORMULÁRIO. O `ds.Dialog` traz o próprio `<form
+// method="dialog">` para o fechar, e um formulário dentro de outro o HTML
+// ignora — o fechar passaria a ENVIAR a forja. Cada rádio se liga ao formulário
+// pelo atributo `form`, e o `@post` acha o formulário pelo `selector`.
 //
-// O NOME NÃO É `required` no navegador de propósito. Com ele, o `@post` do
-// Datastar chamaria `checkValidity()` antes de redesenhar e o primeiro clique
-// numa carta de classe viraria um "preencha este campo" — a pessoa escolhe a
-// linhagem antes de batizar o herói, e a tela não deve brigar com isso. Quem
-// recusa nome vazio é o servidor, que é a autoridade de qualquer jeito.
-
+// O NOME NÃO É `required` no navegador de propósito: o `@post` chamaria
+// `checkValidity()` antes de redesenhar, e a primeira escolha antes do batismo
+// viraria um "preencha este campo". Quem recusa nome vazio é o servidor.
 templ forgeSheet(v forgeView) {
-	@ui.TomeSheet() {
-		@forgeBody(v)
-	}
+	@forgeBody(v)
 }
 
-// forgeBody é o que o Datastar remenda quando a classe ou a origem muda — daí
-// o `id`, que é por onde o remendo acha o lugar.
+// forgeBody é o que o Datastar remenda quando uma escolha muda — daí o `id`.
 templ forgeBody(v forgeView) {
-	<div id="forge" class="m-auto w-full max-w-3xl space-y-6">
-		@ui.SheetTitle("Forja", "A folha em branco")
-		<form
-			method="post"
-			action="/personagens/nova"
-			data-nav-region="content"
-			data-nav-layout="column"
-			class="space-y-6"
-		>
+	<div id="forge" class="ds-forge" data-signals="{race_query: '', class_query: '', origin_query: ''}">
+		<form id="forge-form" method="post" action="/personagens/nova" class="ds-forge-form" data-nav-region="content" data-nav-layout="column">
 			@fieldRefusals(v.OrphanRefusals)
-			@ui.TextField(ui.Field{
-				Name: "name", Label: "Nome", Value: v.Name,
-				MaxSize: heroNameMax, Errors: v.Errors["name"],
-			})
-			@raceChoice(v)
-			@classChoice(v)
-			@originChoice(v)
+			@ds.TextField(ds.Field{ID: "forge-name", Name: "name", Label: "Nome", Value: v.Name, Placeholder: "Como a mesa vai chamar o herói", Error: strings.Join(v.Errors["name"], " ")}, templ.Attributes{"maxlength": strconv.Itoa(heroNameMax)})
+			<div class="ds-list">
+				@pickRow("race", "Raça", "forge-race", v.racePick())
+				@pickRow("class", "Classe", "forge-class", v.classPick())
+				@pickRow("origin", "Origem", "forge-origin", v.originPick())
+			</div>
+			@fieldRefusals(v.Errors["race"])
+			@fieldRefusals(v.Errors["class"])
+			@fieldRefusals(v.Errors["origin"])
 			if v.Gear != nil {
 				@gearChoice(*v.Gear, v.Errors)
+			} else {
+				@ds.Empty("Equipamento inicial", "Ele aparece com a classe: é ela que diz que armas e armaduras o kit oferece.")
 			}
-			<p class="text-xs text-muted-foreground">
-				Poderes, benefícios de origem, treino de perícia e as escolhas da raça
-				se terminam na ficha.
-			</p>
-			<div class="flex justify-end gap-2">
-				<a href="/personagens" class={ ui.ButtonClasses(ui.VariantSecondary, ui.SizeDefault, "") }>Cancelar</a>
-				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "", templ.Attributes{"type": "submit"}) {
+			<p class="ds-help">Poderes, benefícios de origem, treino de perícia e as escolhas da raça se terminam na ficha.</p>
+			<div class="ds-forge-foot">
+				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL("/personagens"), nil) {
+					Cancelar
+				}
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit"}) {
 					Forjar
 				}
 			</div>
 		</form>
+		@ds.Dialog("forge-race", "Raça", nil) {
+			@ds.FilterBar() {
+				@pickSearch("race_query", "Buscar raça")
+			}
+			@ds.DialogScroll() {
+				<div class="ds-forge-options">
+					for _, c := range v.Races {
+						@racePickOption(c)
+					}
+				</div>
+			}
+		}
+		@ds.Dialog("forge-class", "Classe", nil) {
+			@ds.FilterBar() {
+				@pickSearch("class_query", "Buscar classe")
+			}
+			@ds.DialogScroll() {
+				<div class="ds-forge-options">
+					for _, c := range v.Classes {
+						@classPickOption(c)
+					}
+				</div>
+			}
+		}
+		@ds.Dialog("forge-origin", "Origem", nil) {
+			@ds.FilterBar() {
+				@pickSearch("origin_query", "Buscar origem")
+			}
+			@ds.DialogScroll() {
+				<div class="ds-forge-options">
+					for _, o := range v.Origins {
+						@originPickOption(o)
+					}
+				</div>
+			}
+		}
 	</div>
 }
 
 // forgeRedraw é o comando que redesenha a folha com o formulário do jeito que
 // ele está agora. Ele NÃO grava nada — quem cria o herói é o `submit`.
 func forgeRedraw() string {
-	return "@post('/personagens/nova/esboco', {contentType: 'form'})"
+	return "@post('/personagens/nova/esboco', {contentType: 'form', selector: '#forge-form'})"
 }
 
-templ raceChoice(v forgeView) {
-	<fieldset class="space-y-2">
-		@ui.SectionCaption("gold", "") {
-			Linhagem
+// pickRow é a linha que abre a folha de uma escolha: o rótulo, o que foi
+// escolhido (ou o convite) e a seta.
+templ pickRow(field, label, dialogID string, chosen pickSummary) {
+	<button type="button" class="ds-row ds-forge-pick" id={ "forge-pick-" + field } commandfor={ dialogID } command="show-modal">
+		<span class="ds-forge-pick-key">{ label }</span>
+		if chosen.Title != "" {
+			<span class="ds-forge-pick-value">
+				<span class="ds-row-title">{ chosen.Title }</span>
+				<span class="ds-row-meta">{ chosen.Meta }</span>
+			</span>
+		} else {
+			<span class="ds-row-title ds-forge-pick-empty">Escolher</span>
 		}
-		// A altura é limitada e a lista rola: são 17 raças, e uma grade inteira
-		// empurraria a classe e o equipamento para muito abaixo da dobra num
-		// telefone. Quem rola passa pelo `caixaRolavel` da casa, e não por um
-		// `overflow-y-auto` escrito à mão — é o que mantém o alcance por teclado
-		// em regime de amostragem.
-		@ui.ScrollBox("Raças do livro", "max-h-64 pr-1") {
-			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-				for _, c := range v.Races {
-					@raceTile(c)
-				}
-			</div>
-		}
-		@fieldRefusals(v.Errors["race"])
-	</fieldset>
+		@ui.Icon("ChevronRight", "ds-icon")
+	</button>
 }
 
-// raceTile: o rádio é INVISÍVEL mas real, e o rótulo inteiro é a área de clique
-// — a mesma plaqueta do "entrar na mesa", pela mesma razão: o estado visual
-// segue o estado REAL do controle, e não uma segunda cópia dele.
-//
-// Daí o `has-[:focus-visible]:outline-*` escrito à mão, que é a ÚNICA receita de
-// foco do repositório que a regra global do `index.css` não alcança: ela casa
-// `:is(a, button, input, …)`, e aqui quem tem de acender é o RÓTULO. Uma regra
-// global `label:has(:focus-visible)` não serve — dez rótulos do app envolvem um
-// campo VISÍVEL, e ali ela desenharia dois anéis concêntricos.
-//
-// O afastamento é 1px e não 2px porque a casa tem UM: com 2px estas plaquetas
-// viram uma segunda aparência de foco no app.
-templ raceTile(c raceCard) {
-	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
-		<input type="radio" name="race" value={ c.ID } checked?={ c.Chosen } class="sr-only"/>
-		<span class="truncate text-sm font-medium text-foreground">{ c.Name }</span>
-		<span class="text-xs text-grimorio-gold">{ c.Attributes }</span>
-		<span class="text-2xs text-muted-foreground">
+templ pickSearch(signal, label string) {
+	@ds.SearchField("forge-"+signal, label, templ.Attributes{"data-bind:" + signal: true})
+}
+
+// As OPÇÕES de cada folha: o rádio cobre a linha inteira (`ds-pick`), e ele
+// pertence ao formulário da forja pelo atributo `form`.
+templ racePickOption(c raceCard) {
+	<label class="ds-pick ds-forge-option" data-find={ c.Find } data-show={ pickFilter("race_query") }>
+		<input type="radio" name="race" form="forge-form" value={ c.ID } checked?={ c.Chosen } data-on:change={ pickChosen() }/>
+		<span class="ds-row-title">{ c.Name }</span>
+		if c.Attributes != "" {
+			<span class="ds-forge-option-accent">{ c.Attributes }</span>
+		}
+		<span class="ds-row-meta">
 			{ c.Size + " · " + strconv.Itoa(c.Displacement) + "m" }
+			if c.Abilities != "" {
+				{ " · " + c.Abilities }
+			}
 		</span>
-		if c.Abilities != "" {
-			<span class="line-clamp-2 text-2xs text-muted-foreground">{ c.Abilities }</span>
-		}
 	</label>
 }
 
-templ classChoice(v forgeView) {
-	<fieldset class="space-y-2">
-		@ui.SectionCaption("gold", "") {
-			Ofício
-		}
-		@ui.ScrollBox("Classes do livro", "max-h-64 pr-1") {
-			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-				for _, c := range v.Classes {
-					@classTile(c)
-				}
-			</div>
-		}
-		@fieldRefusals(v.Errors["class"])
-	</fieldset>
-}
-
-// classTile pede ao servidor a cada troca: é a classe que diz o que o kit de
-// p140 oferece — arma marcial, brunea, escudo —, e essa regra não é copiada
-// para dentro de uma expressão do navegador.
-templ classTile(c classCard) {
-	<label class="flex cursor-pointer flex-col gap-0.5 rounded-none border border-grimorio-iron bg-grimorio-panel p-2 text-left transition-colors hover:border-grimorio-gold/60 has-[:checked]:border-grimorio-gold has-[:checked]:bg-grimorio-panel-raised has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring">
-		<input
-			type="radio"
-			name="class"
-			value={ c.Name }
-			checked?={ c.Chosen }
-			data-on:change={ forgeRedraw() }
-			class="sr-only"
-		/>
-		<span class="truncate text-sm font-medium text-foreground">{ c.Name }</span>
-		<span class="text-xs text-grimorio-gold">
-			{ "PV " + strconv.Itoa(c.PV) + " · PM " + strconv.Itoa(c.PM) }
-		</span>
-		<span class="line-clamp-2 text-2xs text-muted-foreground">{ c.Expertises }</span>
+// A classe pede ao servidor a cada troca: é ela que diz o que o kit de p140
+// oferece, e essa regra não é copiada para uma expressão do navegador.
+templ classPickOption(c classCard) {
+	<label class="ds-pick ds-forge-option" data-find={ c.Find } data-show={ pickFilter("class_query") }>
+		<input type="radio" name="class" form="forge-form" value={ c.Name } checked?={ c.Chosen } data-on:change={ pickChosen() }/>
+		<span class="ds-row-title">{ c.Name }</span>
+		<span class="ds-forge-option-accent">{ "PV " + strconv.Itoa(c.PV) + " · PM " + strconv.Itoa(c.PM) }</span>
+		<span class="ds-row-meta">{ c.Expertises }</span>
 	</label>
 }
 
-// originChoice é uma lista de seleção e não uma grade: são 35 origens, a escolha
-// é uma só, e trinta e cinco cartas afogariam a folha.
-templ originChoice(v forgeView) {
-	<div class="space-y-2">
-		<label for="origin" class={ ui.SectionLabelClasses("gold", "block") }>Origem</label>
-		<select
-			id="origin"
-			name="origin"
-			data-on:change={ forgeRedraw() }
-			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
-		>
-			<option value="">Escolha uma origem…</option>
-			for _, o := range v.Origins {
-				<option value={ o.ID } selected?={ o.Chosen }>{ o.Name }</option>
-			}
-		</select>
-		for _, o := range v.Origins {
-			if o.Chosen && o.Benefit != "" {
-				<p class="text-xs text-muted-foreground">
-					<span class="text-grimorio-gold">Benefícios:</span>
-					{ o.Benefit }
-					<span class="text-2xs">— dois deles se escolhem na ficha.</span>
-				</p>
-			}
+templ originPickOption(o originOption) {
+	<label class="ds-pick ds-forge-option" data-find={ o.Find } data-show={ pickFilter("origin_query") }>
+		<input type="radio" name="origin" form="forge-form" value={ o.ID } checked?={ o.Chosen } data-on:change={ pickChosen() }/>
+		<span class="ds-row-title">{ o.Name }</span>
+		if o.Benefit != "" {
+			<span class="ds-row-meta">{ o.Benefit }</span>
 		}
-		@fieldRefusals(v.Errors["origin"])
-	</div>
+	</label>
 }
 
 // gearChoice é o Equipamento Inicial de p140, já estreitado pela classe. Ele só
 // aparece depois da classe escolhida porque antes disso não existe kit para
 // oferecer — e oferecer o errado é pior que não oferecer.
 templ gearChoice(g startingGear, errs map[string][]string) {
-	<fieldset class="space-y-3 border-t border-grimorio-iron pt-4">
-		@ui.SectionCaption("gold", "") {
-			Equipamento inicial
-		}
-		<p class="text-xs text-muted-foreground">
+	@ds.Card("Equipamento inicial", nil) {
+		<p class="ds-card-text">
 			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6
 			rolados na hora (p140).
 		</p>
@@ -204,35 +178,31 @@ templ gearChoice(g startingGear, errs map[string][]string) {
 		if len(g.Armors) > 0 {
 			@itemSelect("armor", "Armadura", g.Armors, errs["armor"])
 		} else {
-			<p class="text-xs text-muted-foreground">Arcanistas começam sem armadura.</p>
+			<p class="ds-card-text">Arcanistas começam sem armadura.</p>
 		}
 		if g.Shield != "" {
-			<label class="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-				<input type="checkbox" name="shield" value="1" checked?={ g.ShieldChosen } class="size-4"/>
-				{ g.Shield }
-			</label>
+			@ds.Switch(g.Shield, g.ShieldChosen, templ.Attributes{"name": "shield", "value": "1"})
 		}
 		if len(g.ToResolve) > 0 {
-			<div class="space-y-1 border-l-2 border-grimorio-iron pl-3">
-				<p class={ ui.SectionLabelClasses("muted", "") }>
-					A origem ainda dá, e isto se escolhe na Mochila
-				</p>
+			<div class="ds-forge-still">
+				<span class="ds-field-label">A origem ainda dá, e isto se escolhe na Mochila</span>
 				for _, label := range g.ToResolve {
-					<p class="text-xs text-muted-foreground">{ label }</p>
+					<span class="ds-row-meta">{ label }</span>
 				}
 			</div>
 		}
-	</fieldset>
+	}
 }
 
 templ itemSelect(name, label string, options []itemOption, errs []string) {
-	<div class="space-y-1">
-		<label for={ name } class="block text-sm text-foreground">{ label }</label>
-		<select
-			id={ name }
-			name={ name }
-			class="h-9 w-full rounded-sm border border-grimorio-iron bg-background px-2 text-sm text-foreground outline-none"
-		>
+	<div
+		class="ds-field"
+		if len(errs) > 0 {
+			data-invalid
+		}
+	>
+		<label for={ name }>{ label }</label>
+		<select class="ds-input" id={ name } name={ name }>
 			<option value="">Escolha…</option>
 			for _, o := range options {
 				<option value={ o.ID } selected?={ o.Chosen }>{ o.Label }</option>
@@ -243,11 +213,7 @@ templ itemSelect(name, label string, options []itemOption, errs []string) {
 }
 
 templ fieldRefusals(messages []string) {
-	if len(messages) > 0 {
-		<div role="alert">
-			for _, m := range messages {
-				<p class="text-sm text-destructive-ink">{ m }</p>
-			}
-		</div>
+	for _, m := range messages {
+		<p class="ds-forge-refusal" role="alert">{ m }</p>
 	}
 }

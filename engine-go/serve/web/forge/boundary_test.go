@@ -39,7 +39,9 @@ var permitidos = map[string]bool{
 	"t20engine/domain/sheet":     true, // a forma e a construção da ficha
 	"t20engine/domain/book":      true, // o catálogo tipado: raça, classe, item
 	"t20engine/domain/engine":    true, // as regras do livro
-	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
+	"t20engine/serve/web/ui":     true, // a casca e os ícones
+	"t20engine/serve/web/ds":     true, // as peças do Tempestade
+	"t20engine/domain/search":    true, // a dobra de acento da busca das folhas
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
 	"t20engine/infra/db/dbvalue": true,
 	"t20engine/infra/wire":       true,

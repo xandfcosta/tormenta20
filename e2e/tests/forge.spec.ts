@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { medeOContraste } from './support/contrast'
 import { expectOneFocusRing } from './support/focus'
-import { expectCinzelAcimaDoPiso } from './support/typography'
+import { measureDsText, measureDsTouchTargets } from './support/ds-floors'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 /**
@@ -9,11 +9,12 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  *
  * Dois casos, e os dois se justificam com mecanismo que só um navegador tem.
  *
- * O primeiro é o REDESENHO PELO FORMULÁRIO. Esta cena não tem sinal nenhum: o
- * `@post` do Datastar manda o `<form>` inteiro (`contentType: 'form'`) e o
- * servidor devolve a folha com o equipamento da classe escolhida. O teste de
- * handler prova que o servidor responde certo ao formulário; ele NÃO prova que
- * o Datastar coleta os controles e aplica o remendo.
+ * O primeiro é o REDESENHO PELO FORMULÁRIO. O `@post` do Datastar manda o
+ * `<form>` inteiro (`contentType: 'form'`, achado pelo `selector`) e o servidor
+ * devolve a folha com o equipamento da classe escolhida. As escolhas moram em
+ * folhas FORA do formulário, e os rádios se ligam a ele pelo atributo `form`: o
+ * teste de handler prova o HTML, e só o navegador prova que o `FormData` leva
+ * esses rádios e que o remendo chega.
  *
  * O segundo é o de sempre nesta casa: CONTRASTE e LEIAUTE reais — uma cena nova
  * que não entra numa lista de visitas nasce sem medição, em silêncio, que é a
@@ -24,33 +25,50 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
  * SERVIDOR e está preso em `api/forge_test.go`, que é a camada mais barata que
  * a segura.
  */
-test.use({ storageState: '.auth/user.json' })
+// COMO CELULAR (`hasTouch`), que é como o piso de toque se mede: com ponteiro
+// fino o kit encolhe os controles, e o piso de 44px não vale.
+test.use({ storageState: '.auth/user.json', hasTouch: true, isMobile: true })
 
-/** O rádio é `sr-only`: quem recebe o clique é o rótulo inteiro, a carta. */
-// Pelo RÓTULO e não pelo `value` do rádio. Eram a mesma string até a ALE-404,
-// quando a carta passou a submeter o slug (`humano`) e a mostrar o nome
-// (`Humano`) — e um spec que casa pelo `value` mede o identificador, que é
-// justamente a metade que uma pessoa nunca vê.
-async function escolheACarta(page: import('@playwright/test').Page, group: string, rotulo: string) {
-  await page
+/** Os pisos do Tempestade (12px de texto, 44px de alvo), com o denominador. */
+async function expectDsFloors(page: import('@playwright/test').Page, where: string) {
+  for (const measure of [measureDsText, measureDsTouchTargets]) {
+    const report = await measure(page)
+    expect(report.medidos, `${where}: o medidor não mediu nada`).toBeGreaterThan(0)
+    expect(report.falhas, `pisos do Tempestade ${where}`).toEqual([])
+  }
+}
+
+/**
+ * Abre a folha da escolha pela linha e toca a opção. A escolha fecha a folha e
+ * redesenha a forja, e a linha passa a dizer o que foi escolhido.
+ *
+ * Pelo RÓTULO e não pelo `value` do rádio: a opção submete o slug (`humano`) e
+ * mostra o nome (`Humano`), e um spec que casa pelo `value` mede o
+ * identificador, que é a metade que uma pessoa nunca vê.
+ */
+async function escolhe(page: import('@playwright/test').Page, group: string, rotulo: string) {
+  await page.locator(`#forge-pick-${group}`).click()
+  const sheet = page.locator('dialog[open]')
+  await expect(sheet).toBeVisible()
+  await sheet
     .locator(`label:has(input[name="${group}"])`)
     .filter({ has: page.getByText(rotulo, { exact: true }) })
     .click()
+  await expect(page.locator(`#forge-pick-${group}`)).toContainText(rotulo)
 }
 
 test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/personagens/nova')
-  await expect(page.getByRole('heading', { name: 'A folha em branco' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Forjar um herói' })).toBeVisible()
 
   // O CONTROLE do caso: antes da classe não há kit para oferecer, e é essa
-  // ausência que o clique tem de desfazer. Sem ela, um "Equipamento inicial"
-  // que já estivesse na página passaria como se o remendo tivesse chegado.
-  await expect(page.getByText('Equipamento inicial')).toHaveCount(0)
+  // ausência que o clique tem de desfazer. Sem ela, um seletor de arma que já
+  // estivesse na página passaria como se o remendo tivesse chegado.
+  await expect(page.locator('#weaponSimple')).toHaveCount(0)
 
-  await escolheACarta(page, 'class', 'Guerreiro')
-  await expect(page.getByText('Equipamento inicial')).toBeVisible()
-  // Pelo `id` e não por `getByLabel`: o nome acessível de uma carta de raça
+  await escolhe(page, 'class', 'Guerreiro')
+  // Pelo `id` e não por `getByLabel`: o nome acessível de uma opção de raça
   // carrega as habilidades dela, e "Armadura de Allihanna" (dahllan) casa com
   // um rótulo de "Armadura" — três elementos, e o modo estrito reprova.
   await expect(page.locator('#weaponMartial')).toBeVisible()
@@ -59,7 +77,7 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   // O nome digitado ANTES do remendo sobrevive a ele: quem carrega o estado é o
   // formulário, e o servidor o devolve preenchido.
   await page.getByLabel('Nome').fill('Thessa de Valkaria')
-  await escolheACarta(page, 'class', 'Arcanista')
+  await escolhe(page, 'class', 'Arcanista')
   await expect(page.getByText('Arcanistas começam sem armadura')).toBeVisible()
   await expect(page.locator('#weaponMartial')).toHaveCount(0)
   await expect(page.getByLabel('Nome')).toHaveValue('Thessa de Valkaria')
@@ -67,26 +85,25 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   const ratio = await medeOContraste(page)
   expect(ratio.medidos, 'o medidor não achou texto: a folha não carregou').toBeGreaterThan(100)
   expect(ratio.falhas, 'texto abaixo do AA na folha da forja').toEqual([])
-  await expectCinzelAcimaDoPiso(page, 'na folha da forja')
-  // O ANEL DE FOCO entra aqui e não numa lista própria, e a forja é a cena que
-  // o medidor precisa visitar: as cartas de raça e de classe escondem o
-  // `<input>` com `sr-only` e desenham o realce no `<label>`, por
-  // `has-[:focus-visible]:outline-*`. É a ÚNICA receita de foco escrita à mão
-  // que o `index.css` não alcança — a regra global casa `:is(a, button, input,
-  // …)`, e este anel mora no rótulo. Nenhum sweep de focáveis olha para lá.
-  await expectOneFocusRing(page, 'na folha da forja', 10)
+  await expectDsFloors(page, 'na folha da forja')
+  await expectOneFocusRing(page, 'na folha da forja', 5)
   await expectNoHorizontalOverflow(page, VIEWPORTS)
+
+  // O ANEL DE FOCO das OPÇÕES é medido com a folha ABERTA: o rádio fica
+  // invisível e quem acende é o rótulo (`.ds-pick:has(:focus-visible)`), que a
+  // regra global não alcança. Fechada, a folha não tem nada focável.
+  await page.locator('#forge-pick-race').click()
+  await expect(page.locator('dialog[open]')).toBeVisible()
+  await expectOneFocusRing(page, 'na folha de raça da forja', 10)
 })
 
 test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/personagens/nova')
   await page.getByLabel('Nome').fill('Herói do Guarda da Forja')
-  await escolheACarta(page, 'race', 'Humano')
-  await escolheACarta(page, 'class', 'Guerreiro')
-  await expect(page.getByText('Equipamento inicial')).toBeVisible()
-  await page.selectOption('#origin', { label: 'Acólito' })
-  await expect(page.getByText('Equipamento inicial')).toBeVisible()
+  await escolhe(page, 'race', 'Humano')
+  await escolhe(page, 'class', 'Guerreiro')
+  await escolhe(page, 'origin', 'Acólito')
   await page.selectOption('#weaponSimple', { label: 'Adaga' })
   await page.selectOption('#weaponMartial', { label: 'Espada longa' })
   await page.selectOption('#armor', { label: 'Couro batido' })
@@ -101,7 +118,7 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   const contrast = await medeOContraste(page)
   expect(contrast.medidos, 'o medidor não achou texto: a cena não carregou').toBeGreaterThan(20)
   expect(contrast.falhas, 'texto abaixo do AA nos atributos da forja').toEqual([])
-  await expectCinzelAcimaDoPiso(page, 'nos atributos da forja')
+  await expectDsFloors(page, 'nos atributos da forja')
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 
   // A GRAMÁTICA DE TECLADO, medida aqui e não na lista do
