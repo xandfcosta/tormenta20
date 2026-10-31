@@ -53,6 +53,9 @@ type oneView struct {
 	LiveSessionID     int64
 	LiveSessionNumber int64
 	LiveSessionTitle  string
+	// NextSessionNumber é o número que o Nova sessão vai dar — o diálogo o diz
+	// antes, para o nome não ser digitado às cegas.
+	NextSessionNumber int64
 	// CreatedAt é "desde quando esta mesa existe", e ela fica na linha de meta
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
 	CreatedAt string
@@ -263,6 +266,10 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 		return oneView{}, err
 	}
 	v.TotalSessions = len(sessions)
+	v.NextSessionNumber = 1
+	if len(sessions) > 0 {
+		v.NextSessionNumber = sessions[len(sessions)-1].Sessionnumber + 1
+	}
 	// DA MAIS NOVA PARA A MAIS VELHA, e por isso o laço é de trás para a frente:
 	// o `ListSessions` ordena por número CRESCENTE, então "as recentes" são as
 	// ÚLTIMAS. Tomar as primeiras mostraria as mais antigas — o que não aparece

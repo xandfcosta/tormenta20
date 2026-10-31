@@ -318,15 +318,15 @@ func (s Scene) handleRotateInvite(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/campanhas/%d?tab=config", id), http.StatusSeeOther)
 }
 
-// handleNewSession abre a próxima sessão e leva o mestre à mesa dela, onde
-// mora o "Iniciar sessão". Formulário e 303, como o convite: o gesto troca de
-// página.
+// handleNewSession abre a próxima sessão, com o nome do diálogo, e leva o mestre
+// à mesa dela, onde mora o "Iniciar sessão". Formulário e 303, como o convite: o
+// gesto troca de página.
 func (s Scene) handleNewSession(w http.ResponseWriter, r *http.Request) {
 	id, who, ok := s.requesterOf(w, r)
 	if !ok {
 		return
 	}
-	sessionID, err := s.life.NewSession(r.Context(), who, id)
+	sessionID, err := s.life.NewSession(r.Context(), who, id, r.PostFormValue("title"))
 	if err != nil {
 		refuse(w, err)
 		return

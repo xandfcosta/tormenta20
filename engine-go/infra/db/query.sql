@@ -348,8 +348,8 @@ RETURNING *;
 -- name: CreateNextSession :one
 -- A proxima sessao da campanha, numerada no MESMO comando que a insere: ler o
 -- numero e inserir em dois passos deixaria dois cliques gerarem o mesmo (ALE-526).
-INSERT INTO sessions (campaignId, sessionNumber, createdAt, updatedAt)
-SELECT sqlc.arg('campaignId'), COALESCE(MAX(sessionNumber), 0) + 1, sqlc.arg('now'), sqlc.arg('now')
+INSERT INTO sessions (campaignId, sessionNumber, title, createdAt, updatedAt)
+SELECT sqlc.arg('campaignId'), COALESCE(MAX(sessionNumber), 0) + 1, sqlc.narg('title'), sqlc.arg('now'), sqlc.arg('now')
 FROM sessions WHERE campaignId = sqlc.arg('campaignId')
 RETURNING *;
 

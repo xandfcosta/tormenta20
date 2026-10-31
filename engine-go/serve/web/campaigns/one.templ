@@ -240,23 +240,81 @@ func sessionMeta(sess sessionRow) string {
 }
 
 // O Nova sessão é do MESTRE, e a trava é do caso de uso; para o jogador a aba é
-// só a linha do tempo.
+// só a linha do tempo. Ele abre um DIÁLOGO e não cria direto: um clique solto
+// criaria uma sessão que ninguém pediu (revisão do dono).
 templ sessionsTab(v oneView) {
 	if v.IsGM {
-		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/nova-sessao", v.ID)) }>
-			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit"}) {
-				@ui.Icon("Plus", "ds-icon")
-				Nova sessão
-			}
-		</form>
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('new-session').showModal()"}) {
+			@ui.Icon("Plus", "ds-icon")
+			Nova sessão
+		}
+		@newSessionDialog(v)
 	}
 	@ds.List("Sessões", strconv.Itoa(v.TotalSessions)) {
 		if len(v.Sessions) == 0 {
 			<p class="ds-row ds-row-meta">Nenhuma sessão ainda.</p>
 		}
 		for _, sess := range v.Sessions {
-			@sessionLine(v.ID, sess)
+			if v.IsGM {
+				@sessionLineWithDelete(v.ID, sess)
+			} else {
+				@sessionLine(v.ID, sess)
+			}
 		}
+	}
+}
+
+// newSessionDialog: o nome é opcional, e o número já vem dito — sem nome, ela é
+// a "Sessão N" que o diálogo anuncia.
+templ newSessionDialog(v oneView) {
+	@ds.Dialog("new-session", "Nova sessão", nil) {
+		<form method="post" action={ templ.SafeURL(fmt.Sprintf("/campanhas/%d/nova-sessao", v.ID)) } class="ds-camp-form">
+			@ds.TextField(ds.Field{ID: "session-title", Name: "title", Label: "Nome (opcional)", Placeholder: "A caçada ao Bicho-papão", Help: fmt.Sprintf("Ela será a sessão %d, planejada. Você a inicia na mesa.", v.NextSessionNumber)}, nil)
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit"}) {
+				Criar sessão
+			}
+		</form>
+	}
+}
+
+// sessionLineWithDelete é a linha do mestre: o link para a mesa e, ao lado, o
+// apagar. O apagar é a MESMA rota da mesa (`DELETE` no endereço da sessão), com
+// a mesma trava e a mesma limpeza de memória — uma regra, um lugar.
+templ sessionLineWithDelete(campaignID int64, sess sessionRow) {
+	<div
+		class="ds-row ds-camp-row ds-camp-session"
+		if sess.Alive {
+			data-live
+		}
+	>
+		<a class="ds-camp-session-link" href={ templ.SafeURL(routes.Session(campaignID, sess.ID)) } data-nav-item>
+			<span class="ds-camp-num">{ strconv.FormatInt(sess.Number, 10) }</span>
+			<span class="ds-camp-text">
+				<span class="ds-row-title">{ sessionName(sess) }</span>
+				<span class="ds-row-meta">{ sessionMeta(sess) }</span>
+			</span>
+		</a>
+		@ds.IconButton(ds.ButtonGhost, "Trash2", "Apagar "+sessionName(sess), templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf("document.getElementById('%s').showModal()", deleteSessionDialogID(sess))})
+		@ds.Dialog(deleteSessionDialogID(sess), fmt.Sprintf("Apagar a sessão %d?", sess.Number), deleteSessionFoot(campaignID, sess)) {
+			<p class="ds-help">A fila, o tabuleiro e o histórico desta sessão vão junto. As fichas e a campanha ficam como estão. Não dá para desfazer.</p>
+		}
+	</div>
+}
+
+func deleteSessionDialogID(sess sessionRow) string {
+	return "delete-session-" + strconv.FormatInt(sess.ID, 10)
+}
+
+// deleteSessionFoot: `DELETE` com Datastar, e não `form` — o `form` do HTML só
+// faz `GET` e `POST` (ALE-344). Quem navega depois é o `sse.Redirect` da rota.
+templ deleteSessionFoot(campaignID int64, sess sessionRow) {
+	<form method="dialog">
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit"}) {
+			Cancelar
+		}
+	</form>
+	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf("document.getElementById('%s').close(); @delete('%s')", deleteSessionDialogID(sess), routes.Session(campaignID, sess.ID))}) {
+		Apagar a sessão
 	}
 }
 

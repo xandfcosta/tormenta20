@@ -556,21 +556,22 @@ func (q *Queries) CreateMember(ctx context.Context, arg CreateMemberParams) (Cam
 }
 
 const createNextSession = `-- name: CreateNextSession :one
-INSERT INTO sessions (campaignId, sessionNumber, createdAt, updatedAt)
-SELECT ?1, COALESCE(MAX(sessionNumber), 0) + 1, ?2, ?2
+INSERT INTO sessions (campaignId, sessionNumber, title, createdAt, updatedAt)
+SELECT ?1, COALESCE(MAX(sessionNumber), 0) + 1, ?2, ?3, ?3
 FROM sessions WHERE campaignId = ?1
 RETURNING id, campaignid, title, sessionnumber, notes, status, startedat, endedat, createdat, updatedat, runtimestate
 `
 
 type CreateNextSessionParams struct {
-	CampaignId int64  `json:"campaignId"`
-	Now        string `json:"now"`
+	CampaignId int64          `json:"campaignId"`
+	Title      sql.NullString `json:"title"`
+	Now        string         `json:"now"`
 }
 
 // A proxima sessao da campanha, numerada no MESMO comando que a insere: ler o
 // numero e inserir em dois passos deixaria dois cliques gerarem o mesmo (ALE-526).
 func (q *Queries) CreateNextSession(ctx context.Context, arg CreateNextSessionParams) (Session, error) {
-	row := q.db.QueryRowContext(ctx, createNextSession, arg.CampaignId, arg.Now)
+	row := q.db.QueryRowContext(ctx, createNextSession, arg.CampaignId, arg.Title, arg.Now)
 	var i Session
 	err := row.Scan(
 		&i.ID,

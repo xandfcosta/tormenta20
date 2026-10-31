@@ -142,7 +142,8 @@ func TestRestartingFromTheScreenEmptiesTheLiveTracker(t *testing.T) {
 }
 
 // O destino importa: voltar para a mesa apagada seria mandar o mestre para uma
-// porta que não existe mais.
+// porta que não existe mais. Ele cai na aba SESSÕES, que é onde se confere que
+// ela saiu — e de onde a página da campanha também a apaga (ALE-526).
 //
 // A navegação vem pelo FIO e não num cabeçalho `Location`: com `DELETE` não há
 // formulário para navegar sozinho, e quem leva o mestre é o `sse.Redirect`.
@@ -155,7 +156,7 @@ func TestDeletingErasesAndSendsTheGmToTheCampaign(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("excluir deu %d", rec.Code)
 	}
-	destination := "/campanhas/" + strconv.FormatInt(f.campaignID, 10)
+	destination := "/campanhas/" + strconv.FormatInt(f.campaignID, 10) + "?tab=sessoes"
 	if !strings.Contains(rec.Body.String(), destination) {
 		t.Errorf("a resposta não manda o mestre para %q:\n%s", destination, rec.Body.String())
 	}

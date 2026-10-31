@@ -129,7 +129,7 @@ func (s Scene) deletesTheSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sse := datastar.NewSSE(w, r)
-	_ = sse.Redirect(routes.CampaignTab(campaignID, ""))
+	_ = sse.Redirect(routes.CampaignTab(campaignID, "sessoes"))
 }
 
 // sceneCommand é o caminho dos gestos cuja autorização mora no CASO DE USO.
