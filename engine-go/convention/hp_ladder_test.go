@@ -21,7 +21,7 @@ import (
 //
 // Nenhum guarda podia pegar. Os casos de vital afirmavam o NÚMERO, que sempre
 // esteve certo, e a largura também — o que estava errado era a única coisa que
-// ninguém media. O conserto (a escada em `ui.HpFillTone`/`ui.HpInkTone`) não
+// ninguém media. O conserto (a escada em `ui.HpFillTone`/`ui.HpTone`) não
 // impede a próxima tela de escrever a tinta à mão outra vez; quem impede é este.
 //
 // # Por que uma lista de PERMITIDOS
@@ -111,9 +111,9 @@ func TestNoSurfacePaintsAVitalTintOutsideTheLadder(t *testing.T) {
 
 	for _, rel := range failed {
 		t.Errorf("%s escreve uma tinta vital à mão.\n"+
-			"    A COR de um vital é da escada: `ui.HpFillTone` pinta a faixa e\n"+
-			"    `ui.HpInkTone` escreve o número. Se esta tinta NÃO está dizendo\n"+
-			"    quanto de vida sobrou, declare o arquivo em\n"+
+			"    A COR de um vital é da escada: `ui.HpFillTone` pinta a faixa do\n"+
+			"    grimório e `ui.HpTone` dá o degrau ao Tempestade. Se esta tinta\n"+
+			"    NÃO está dizendo quanto de vida sobrou, declare o arquivo em\n"+
 			"    `convention/testdata/hp_tints_outside_the_ladder.txt`, com a razão.", rel)
 	}
 }

@@ -74,17 +74,13 @@ const MEASURED_TEXT_FLOOR = 4
 // os 27 a exatamente 37 (ALE-362).
 const WIDER_FACE_STEP = '0.2em'
 
-// A DÍVIDA, e ela só ENCOLHE.
-//
-// Uma cena não aguenta o passo hoje, e a causa é a que esta fatia consertou no
-// cartão de herói: item de GRADE tem `min-width: auto`, então a coluna não desce
-// abaixo do min-content do cartão e o `truncate` nunca chega a agir.
+// A DÍVIDA, e ela só ENCOLHE. Está vazia desde que o elenco virou cartões
+// (ALE-528); a causa que a enchia era item de GRADE com `min-width: auto`, que
+// não deixa a coluna descer abaixo do min-content e o `truncate` agir.
 //
 // Cena que sair da dívida e continuar na lista REPROVA, senão a lista vira
 // mentira sozinha — é a segunda direção da catraca dos arquivos longos.
-const WIDER_FACE_DEBT = new Set([
-  'characters · /personagens · gm',
-])
+const WIDER_FACE_DEBT = new Set<string>([])
 
 /**
  * Roda os medidores de UMA navegação, um `test.step` cada, e reprova no fim com

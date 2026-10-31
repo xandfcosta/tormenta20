@@ -3,357 +3,121 @@ package characters
 import (
 	"fmt"
 	"strconv"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 
-// A cena de PERSONAGENS desenhada — "palco + dossiê".
+// O ELENCO no sistema Tempestade (ALE-528), pelo mockup aprovado
+// `personagens.html`: o cabeçalho com a forja no +, a busca presa no topo e um
+// cartão por herói. O carrossel com palco, trilho e dossiê saiu — tudo o que o
+// dossiê mostrava está na ficha, a um toque (decisão do dono).
 //
-// Mesma mecânica da cena de campanhas: todos os palcos desenhados, o cursor é
-// sinal, e ele segue o FOCO do filme. A diferença de forma é a VAGA DE CRIAR:
-// ela é a última posição do cursor e não um link solto. Um `<a>` no fim da fita
-// pareceria igual e quebraria a gramática — as setas o pulariam, porque elas
-// andam entre itens do trilho e não entre links da página.
-//
-// A ANIMAÇÃO DE ENTRADA do palco: `animate-in` dispara no MOUNT, e uma cena
-// inteira desenhada com `data-show` nunca monta. **O que substitui o mount é a
-// CLASSE entrando num nó que não a tinha** — o palco que sai perde a classe, o
-// que entra ganha, e são elementos diferentes, então nunca há o caso que não
-// replica ("a mesma animação, já concluída, no mesmo nó"). Nem morph, nem
-// reflow forçado, nem id que muda a cada troca. Ver `ui.EnteringStage` e a
-// folha.
+// A capa e o texto do cartão são as peças do cartão de campanha; o cartão em
+// si é próprio porque o link dele cobre o cartão inteiro.
 
-templ charactersBody(v View) {
-	@charactersBar(v)
-	if !v.HasAny {
-		@createStage(true, nil)
-		@characterFilm(v)
-	} else if v.FilteredAll {
-		@searchWithoutHero()
-	} else {
-		<div class="flex min-h-0 flex-1 flex-col">
-			<div class="relative flex min-h-0 flex-1 items-center justify-center">
-				for i, h := range v.Heroes {
-					@heroStage(h, ui.NeighborAt(v.Neighbors, i-1), ui.NeighborAt(v.Neighbors, i+1))
-				}
-				// A vaga de criar é um palco como os outros, e o cursor pousa
-				// nela: `$cursor == 0` é a posição dela, porque nenhum id de
-				// personagem é zero. O vizinho da esquerda é o ÚLTIMO herói,
-				// que é o caminho de volta para o elenco.
-				@createStage(false, ui.NeighborAt(v.Neighbors, len(v.Neighbors)-1))
-			</div>
-			@characterFilm(v)
-		</div>
-		for _, h := range v.Heroes {
-			@heroDossier(h)
-		}
-	}
-}
-
-templ charactersBar(v View) {
-	<div
-		class="flex w-full flex-wrap items-center gap-2 border-b border-grimorio-iron px-4 py-3"
-		data-signals={ fmt.Sprintf("{search: %q, dossier: false, %s}", v.Search, ui.StageSignals(v.CursorID)) }
-		data-on:keydown__window="(evt.key === 'd' || evt.key === 'D') && !/^(INPUT|TEXTAREA)$/.test(evt.target.tagName) && ($dossier = !$dossier)"
-	>
-		<a
-			href="/"
-			class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
-		>‹ Voltar</a>
-		<h1 class="font-heading text-xl tracking-wide text-foreground">Personagens</h1>
-		if v.HasAny {
-			<span class="text-sm text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Heroes), v.Total) }</span>
-			<div class="relative ml-auto w-full sm:w-56 md:w-64">
-				@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
-				<input
-					type="search"
-					name="busca"
-					data-busca
-					data-bind:search
-					data-on:input__debounce.250ms="@get('/personagens')"
-					value={ v.Search }
-					placeholder="Buscar personagem"
-					aria-label="Buscar personagem"
-					class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
-				/>
-			</div>
-		}
-	</div>
-}
-
-// ── o palco ──────────────────────────────────────────────────────────────────
-
-templ heroStage(h HeroCard, anterior, next *ui.Neighbor) {
-	<div
-		data-show={ fmt.Sprintf("$cursor == %d", h.ID) }
-		data-class={ ui.EnteringStage(h.ID) }
-		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
-	>
-		// A lavagem de luz no matiz do herói. Decorativa, e por isso fora da
-		// árvore de acessibilidade.
-		<div
-			aria-hidden="true"
-			class="pointer-events-none absolute inset-0 -z-10"
-			style={ "background: " + ui.StageWash(h.Name) }
-		></div>
-		<div class="stage-portrait flex items-center justify-center gap-4 sm:gap-8">
-			@ui.NeighborPortrait(anterior, "Anterior")
-			<a
-				href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) }
-				aria-label={ "Abrir ficha de " + h.Name }
-				class="relative aspect-[3/4] w-44 overflow-hidden rounded-sm border-2 border-grimorio-iron outline-none transition-transform hover:scale-[1.01] sm:w-56 lg:w-64"
-				style={ "background: " + h.Gradient }
-			>
-				<span aria-hidden="true" class="absolute inset-0 flex select-none items-center justify-center font-display text-[7rem] leading-none text-white/20 sm:text-[9rem]">
-					{ h.Monogram }
-				</span>
-				<span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-black/50 to-transparent"></span>
-			</a>
-			@ui.NeighborPortrait(next, "Próximo")
-		</div>
-		// `min-h-[2lh]` reserva SEMPRE duas linhas para o nome, e a unidade é
-		// `lh` para acompanhar o tamanho responsivo da fonte. Sem isso, um nome
-		// que quebra em duas linhas empurra a fileira do retrato para cima e os
-		// cartões dançam ao percorrer o elenco.
-		<div class="stage-plate max-w-2xl px-4 text-center">
-			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">{ h.Name }</h2>
-			@ui.SectionLabel("gold", "mt-1") {
-				{ h.Role }
-			}
-		</div>
-		@heroVitals(h)
-		<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">{ h.Summary }</p>
-		<div class="flex flex-wrap items-center justify-center gap-2">
-			<a href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) } class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }>
-				Abrir ficha
-				@ui.Key("⏎")
-			</a>
-			// O dossiê é do CLIENTE: ele já está desenhado, e abrir é revelar.
-			@ui.Button(ui.VariantSecondary, ui.SizeDefault, "", templ.Attributes{
-				"type": "button", "data-on:click": "$dossier = !$dossier",
-				"data-attr:aria-pressed": "$dossier",
-			}) {
-				Dossiê
-				@ui.Key("D")
-			}
-		</div>
-	</div>
-}
-
-// heroVitals: DEF, PV e PM, nesta ordem.
-//
-// A Defesa vem PRIMEIRO e nunca some: quando não há motor ela é um travessão.
-// Uma coluna que aparece e desaparece faz o palco dançar ao trocar de herói.
-//
-// PV e PM levam as cores da casa; o PM fica apagado quando o máximo é zero,
-// porque quem não tem mana não tem por que ler um "0/0" em destaque.
-//
-// O PV segue a ESCADA e o PM não, e a assimetria é do livro: mana acabando é um
-// recurso no fim, vida acabando é um herói morrendo. Com uma cor fixa, o trilho
-// mostraria o elenco inteiro com a mesma saúde — e esta é a tela em que se
-// ESCOLHE quem jogar.
-templ heroVitals(h HeroCard) {
-	<dl class="flex items-center justify-center gap-5 text-sm">
-		@oneVital("DEF", h.Defense, "", false)
-		// O PV não passa pelo `oneVital` porque carrega uma segunda parte: a
-		// palavra de quem caiu, DENTRO do mesmo `<dd>` (p236, ALE-366).
-		<div class="flex items-baseline gap-1.5">
-			<dt class={ ui.FieldLabelClasses("muted", "") }>PV</dt>
-			<dd class={ "font-mono text-lg font-semibold tabular-nums", h.PVInk }>
-				{ h.PV }
-				if h.PVDown != "" {
-					<span class={ "ml-1 font-sans text-xs", ui.DownedInk(h.PVDown) }>{ h.PVDown }</span>
-				}
-			</dd>
-		</div>
-		@oneVital("PM", h.PM, "text-[color:var(--mp-arcane)]", h.NoMana)
-	</dl>
-}
-
-templ oneVital(label, value, tom string, dimmed bool) {
-	<div class={ "flex items-baseline gap-1.5", templ.KV("opacity-50", dimmed) }>
-		<dt class={ ui.FieldLabelClasses("muted", "") }>{ label }</dt>
-		<dd class={ "font-mono text-lg font-semibold tabular-nums", tom }>{ value }</dd>
-	</div>
-}
-
-// createStage é a vaga do fim — e ela existe TAMBÉM com o elenco vazio, porque
-// aí ela é a única coisa que dá o que fazer.
-templ createStage(alone bool, anterior *ui.Neighbor) {
-	<div
-		if !alone {
-			data-show="$cursor == 0"
-			data-class={ ui.EnteringStage(0) }
-		}
-		class="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-4 py-2"
-	>
-		<div class="stage-portrait flex items-center justify-center gap-4 sm:gap-8">
-			@ui.NeighborPortrait(anterior, "Anterior")
-			<a
-				href="/personagens/nova"
-				aria-label="Forjar um novo herói"
-				class="flex aspect-[3/4] w-44 items-center justify-center rounded-sm border-2 border-dashed border-grimorio-iron-light text-muted-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold sm:w-56 lg:w-64"
-			>
-				@ui.Icon("Plus", "size-16")
-			</a>
-			// À direita da vaga não há vizinho: ela é o fim do trilho. O
-			// espaçador entra do mesmo jeito, senão o retrato desliza para a
-			// direita ao chegar aqui.
-			@ui.NeighborPortrait(nil, "Próximo")
-		</div>
-		<div class="stage-plate max-w-2xl px-4 text-center">
-			<h2 class="min-h-[2lh] font-display text-2xl uppercase tracking-[0.12em] text-foreground sm:text-4xl">Forjar um herói</h2>
-			@ui.SectionLabel("muted", "mt-1") {
-					Uma vaga vazia no grupo
-				}
-		</div>
-		// A vaga não tem vitais nem resumo, mas precisa da ALTURA deles: sem
-		// essas duas fileiras invisíveis a coluna centralizada puxa o retrato
-		// para cima ao chegar aqui, e o palco DANÇA na última posição do trilho.
-		// Elas espelham a escala de `heroVitals` e da linha de resumo — mudou
-		// lá, muda aqui.
-		<div aria-hidden="true" class="invisible flex items-center justify-center gap-5 text-sm">
-			<span class="font-mono text-lg font-semibold tabular-nums">0</span>
-		</div>
-		<p aria-hidden="true" class="invisible max-w-xl px-4 text-center text-sm">.</p>
-		if alone {
-			<p class="max-w-xl px-4 text-center text-sm text-muted-foreground">
-				Seu elenco está vazio. O primeiro herói começa aqui.
-			</p>
-		}
-		<a href="/personagens/nova" class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeLarge, "") }>
-			Abrir a Forja
-			@ui.Key("⏎")
-		</a>
-	</div>
-}
-
-// ── o filme ──────────────────────────────────────────────────────────────────
-
-// characterFilm é o índice: um salto direto para qualquer herói, que é o
-// que salva um elenco longo do "aperta a seta trinta vezes".
-//
-// A REGIÃO se chama `rail` e não `filme`, e o nome é CONTRATO e não gosto: o
-// driver do `scene.js` procura literalmente `[data-nav-region="rail"]` para o
-// Esc subir um nível e para escolher onde o foco pousa ao entrar na cena. Com um
-// nome próprio, a cena cai no ramo "a primeira região que houver" — que acerta
-// enquanto ela for a única.
-templ characterFilm(v View) {
-	<div
-		role="listbox"
-		aria-label="Personagens"
-		aria-orientation="horizontal"
-		data-nav-region="rail"
-		data-nav-layout="row"
-		class="flex shrink-0 items-center gap-2 overflow-x-auto border-t border-grimorio-iron px-4 py-3"
-	>
-		for i, h := range v.Heroes {
-			@filmFrame(h, i)
-		}
-		@createFrame(len(v.Heroes))
-	</div>
-}
-
-templ filmFrame(h HeroCard, i int) {
-	@ui.Marker(ui.RailMarker{
-		ID: h.ID, Index: i, Monogram: h.Monogram, Gradient: h.Gradient,
-		// Nome E papel, como o marcador de campanhas. Sem `aria-label`: o
-		// conteúdo já diz quem é, e um nome acessível escrito à mão por cima
-		// seriam duas fontes para a mesma frase.
-		Name: h.Name, Sub: h.Role,
-		Destination: "/personagens/" + strconv.FormatInt(h.ID, 10),
-	}) {
-	}
-}
-
-// O ⏎ daqui leva à Forja, como o ⏎ de um herói leva à ficha. Sem ele a gramática
-// do teclado morre na última posição do trilho: a seta chega na vaga e a tecla
-// que abriu tudo até ali não faz nada. (Ele mora aqui fora porque o `templ` NÃO
-// aceita comentário dentro de uma lista de atributos — o `generate` cai.)
-templ createFrame(index int) {
-	@ui.BlankMarker(index, "Forjar um herói", "/personagens/nova")
-}
-
-// ── o dossiê ─────────────────────────────────────────────────────────────────
-
-// heroDossier é a gaveta de detalhe. Ela é desenhada para todos e revelada
-// pelo par cursor+`$dossier`: abrir não pede nada ao servidor.
-//
-// As habilidades de raça vêm do catálogo EMBUTIDO (ver `book/race_traits.go`) e
-// não de uma consulta: são quatro linhas, e elas já estão na memória do servidor.
-templ heroDossier(h HeroCard) {
-	// NASCE ESCONDIDO, e o `style` estático é o conserto inteiro.
-	//
-	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até
-	// lá esta sobreposição está no documento com `inset-0` e fundo preto, e
-	// PINTA — dezenas de quadros de pano preto sobre a cena.
-	//
-	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
-	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
-	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
-	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
-	<aside
-		data-show={ fmt.Sprintf("$dossier && $cursor == %d", h.ID) }
-		style="display:none"
-		aria-label={ "Dossiê de " + h.Name }
-		class="fixed inset-y-0 right-0 z-20 w-full max-w-sm overflow-y-auto border-l border-grimorio-iron bg-grimorio-panel-raised p-5 shadow-2xl"
-	>
-		<div class="flex items-start justify-between gap-3">
-			<h2 class="font-heading text-lg tracking-wide text-grimorio-gold">{ h.Name }</h2>
-			@ui.Button(ui.VariantSecondary, ui.SizeTiny, "", templ.Attributes{
-				"type": "button", "data-on:click": "$dossier = false", "aria-label": "Fechar o dossiê",
-			}) {
-				✕
-			}
-		</div>
-		<dl class="mt-4 space-y-2 text-sm">
-			@dossierRow("Raça", h.Race)
-			@dossierRow("Origem", h.Origin)
-			@dossierRow("Classes", h.Classes)
-			@dossierRow("Nível", strconv.FormatInt(h.Level, 10))
-		</dl>
-		if len(h.Dossier) > 0 {
-			<h3 class={ ui.SectionLabelClasses("muted", "mt-6") }>
-				Habilidades de { h.Race }
-			</h3>
-			<ul class="mt-2 space-y-3">
-				for _, ability := range h.Dossier {
-					<li>
-						<p class="font-heading text-sm tracking-wide text-foreground">{ ability.Name }</p>
-						<p class="text-xs leading-relaxed text-muted-foreground">{ ability.Description }</p>
-					</li>
-				}
-			</ul>
-		}
-	</aside>
-}
-
-templ dossierRow(label, value string) {
-	if value != "" {
-		<div class="flex justify-between gap-3">
-			<dt class="shrink-0 text-muted-foreground">{ label }</dt>
-			<dd class="text-right text-foreground">{ value }</dd>
-		</div>
-	}
-}
-
-templ searchWithoutHero() {
-	<div class="flex flex-1 items-center justify-center p-8">
-		<div class="max-w-md space-y-3 text-center">
-			<p class="text-sm text-muted-foreground">Nenhum herói combina com o que você buscou.</p>
-			@ui.Button(ui.VariantSecondary, ui.SizeSmall, "", templ.Attributes{
-				"type": "button", "data-on:click": "$search = ''; @get('/personagens')",
-			}) {
-				Limpar a busca
-			}
-		</div>
-	</div>
-}
-
-// SceneBody embrulha a cena no elemento que o remendo da busca
-// substitui — o `id` é o que o morph casa.
+// SceneBody embrulha a cena no elemento que o remendo da busca substitui — o
+// `id` é o que o morph casa.
 templ SceneBody(v View) {
-	<div id="characters-scene" class="flex min-h-0 flex-1 flex-col">
-		@charactersBody(v)
+	<div id="characters-scene" class="ds-cast-scene">
+		@castBar(v)
+		<div class="ds-cast">
+			if !v.HasAny {
+				@ds.Empty("Seu elenco está vazio", "O primeiro herói começa na forja.") {
+					<div class="ds-camps-empty-acts">
+						@ds.LinkButton(ds.ButtonPrimary, templ.SafeURL("/personagens/nova"), nil) {
+							Forjar um herói
+						}
+					</div>
+				}
+			} else {
+				// A BUSCA NÃO ROLA COM A LISTA (revisão do dono): ela fica presa no
+				// topo de quem rola, e só os cartões passam por baixo dela.
+				@ds.FilterBar() {
+					@ds.SearchField("characters-search", "Buscar personagem", templ.Attributes{
+						"name": "busca", "value": v.Search, "data-busca": true, "data-bind:search": true,
+						"data-on:input__debounce.250ms": "@get('/personagens')",
+					})
+				}
+				if v.FilteredAll {
+					@ds.Empty(fmt.Sprintf("Nenhum herói casa com %q", v.Search), "Tente outro nome, classe, origem ou raça — ou limpe a busca.") {
+						<div class="ds-camps-empty-acts">
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "$search = ''; @get('/personagens')"}) {
+								Limpar a busca
+							}
+						</div>
+					}
+				} else {
+					<div class="ds-cast-grid" data-nav-region="personagens" data-nav-layout="grid">
+						for _, h := range v.Heroes {
+							@heroCardView(h)
+						}
+					</div>
+				}
+			}
+		</div>
 	</div>
 }
 
+// castBar é o cabeçalho: a seta para o início, o título e a forja no +. Com o
+// elenco vazio o + não sai, porque o próprio vazio já leva à forja.
+templ castBar(v View) {
+	<header class="ds-header" data-signals={ fmt.Sprintf("{search: %q}", v.Search) }>
+		<a href="/" class="ds-header-back" aria-label="Voltar para o início">
+			@ui.Icon("ChevronLeft", "ds-icon")
+		</a>
+		<h1 class="ds-header-title">Personagens</h1>
+		if v.HasAny {
+			<span class="ds-header-acts">
+				<a href="/personagens/nova" class="ds-button" data-icon aria-label="Forjar um herói" title="Forjar um herói">
+					@ui.Icon("Plus", "ds-icon")
+				</a>
+			</span>
+		}
+	</header>
+}
+
+// heroCardView é o cartão: a capa de iniciais, o nome e a placa, DEF/PV/PM em
+// três blocos iguais e a linha de devoção, origem e tamanho.
+//
+// A Defesa nunca some — sem motor ela é um travessão —, e o PM fica apagado em
+// quem não tem mana: um "0/0" em destaque não diz nada a quem não conjura.
+templ heroCardView(h HeroCard) {
+	<article class="ds-cast-card">
+		<a class="ds-cast-head" href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) } aria-label={ "Abrir ficha de " + h.Name }>
+			<span class="ds-camp-cover" aria-hidden="true" style={ "background: " + h.Gradient }>{ h.Monogram }</span>
+			<span class="ds-camp-text">
+				<b>{ h.Name }</b>
+				<span class="ds-row-meta">{ h.Role }</span>
+			</span>
+		</a>
+		<dl class="ds-cast-vitals">
+			<div>
+				<dt>DEF</dt>
+				<dd>{ h.Defense }</dd>
+			</div>
+			// A PALAVRA DE QUEM CAIU (p236) vai na linha do rótulo, como na ficha:
+			// ao lado do número, "0/51 estável" vazava do bloco a 390px.
+			<div data-tone={ h.PVTone }>
+				<dt>
+					PV
+					if h.PVDown != "" {
+						<span class="ds-cast-down">{ h.PVDown }</span>
+					}
+				</dt>
+				<dd>{ h.PV }</dd>
+			</div>
+			<div
+				data-kind="pm"
+				if h.NoMana {
+					data-dim
+				}
+			>
+				<dt>PM</dt>
+				<dd>{ h.PM }</dd>
+			</div>
+		</dl>
+		if h.Summary != "" {
+			<p class="ds-cast-line">{ h.Summary }</p>
+		}
+	</article>
+}

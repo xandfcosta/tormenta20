@@ -12,25 +12,8 @@ import (
 	"testing"
 )
 
-// corpoDoBotao é uma CÓPIA do helper do `web/characters`, e não um símbolo
-// exportado de lá: importar do que está sendo testado faz o teste andar junto
-// com o defeito. São nove linhas de parse.
-func corpoDoBotao(t *testing.T, html, label string) string {
-	t.Helper()
-	i := strings.Index(html, `aria-label="`+label+`"`)
-	if i < 0 {
-		return ""
-	}
-	rest := html[i:]
-	j := strings.Index(rest, "</button>")
-	if j < 0 {
-		return rest
-	}
-	return rest[:j]
-}
-
-// Os guardas da cena de PERSONAGENS: a Defesa saindo da mesma conta da ficha, os
-// textos de raça saindo do catálogo embutido, e a gramática do cursor.
+// Os guardas da cena de PERSONAGENS: a Defesa saindo da mesma conta da ficha, a
+// busca, a forja e a escada do PV no cartão.
 
 func novaCenaDeHerois(t *testing.T) (*Server, AuthUser) {
 	t.Helper()
@@ -60,10 +43,10 @@ func seedRaca(t *testing.T, s *Server, characterID int64, race string) {
 
 // ── a Defesa ─────────────────────────────────────────────────────────────────
 
-// A Defesa do palco tem de ser a MESMA que a ficha mostra. Duas contas
+// A Defesa do cartão tem de ser a MESMA que a ficha mostra. Duas contas
 // diferentes para o mesmo número é o defeito que ninguém reporta: a pessoa vê
 // 18 na lista e 17 na ficha e conclui que o app é aproximado.
-func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
+func TestTheCardDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	id := seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", "Guerreiro", 5, -4, 5)
 
@@ -84,14 +67,13 @@ func TestTheStageDefenseIsTheSameAsTheSheetOne(t *testing.T) {
 		t.Fatalf("ficha: %v", err)
 	}
 	if v.Heroes[0].Defense != strconv.Itoa(sheet.Defense.Total) {
-		t.Errorf("Defesa do palco = %q, a da ficha = %d", v.Heroes[0].Defense, sheet.Defense.Total)
+		t.Errorf("Defesa do cartão = %q, a da ficha = %d", v.Heroes[0].Defense, sheet.Defense.Total)
 	}
 }
 
 // Defesa que o motor não soube dar vira TRAVESSÃO, e nunca zero: zero é um valor
 // plausível de Defesa, então mostrá-lo seria mentir com um número redondo. E
-// travessão em vez de omitir porque uma coluna que some faz o palco dançar ao
-// trocar de herói.
+// travessão em vez de omitir porque um bloco que some desalinha os cartões.
 //
 // # Por que ele chama o `HeroCardOf` e não a cena
 //
@@ -112,23 +94,23 @@ func TestADefenseTheEngineCannotGiveBecomesAnEmDash(t *testing.T) {
 			card.Defense, card.DefenseVs)
 	}
 	html, err := ui.RenderFragment(t.Context(),
-		characters.SceneBody(characters.View{Heroes: []characters.HeroCard{card}, Total: 1, HasAny: true}))
+		characters.SceneBody(characters.View{Heroes: []characters.HeroCard{card}, HasAny: true}))
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
 	if !strings.Contains(html, ">DEF</dt>") {
-		t.Error("a coluna da Defesa sumiu — a fileira muda de tamanho e o palco dança")
+		t.Error("o bloco da Defesa sumiu — o cartão perde o alinhamento com os outros")
 	}
 	if strings.Contains(html, ">0</dd>") {
 		t.Error("a Defesa saiu como ZERO, que é um valor plausível e errado")
 	}
 }
 
-// ── o catálogo que deixou de ir ao navegador ─────────────────────────────────
+// ── a forja ──────────────────────────────────────────────────────────────────
 
-// A vaga de criar existe COM O ELENCO VAZIO, e é ela que dá o que fazer. Uma
-// tela vazia que não oferece o primeiro passo é uma tela que não ajuda.
-func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
+// Com o ELENCO VAZIO, o vazio é que leva à forja. Uma tela vazia que não
+// oferece o primeiro passo é uma tela que não ajuda.
+func TestWithAnEmptyCastTheEmptyStateLeadsToTheForge(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -146,12 +128,11 @@ func TestWithAnEmptyCastTheCreateSlotIsWhatIsLeft(t *testing.T) {
 	}
 }
 
-// A vaga é POSIÇÃO DE CURSOR e não um link solto: ela declara
-// `role=option` e escreve o cursor no foco, como qualquer herói. Um `<a>` no
-// fim da fita pareceria igual e as setas o pulariam.
-func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
+// Com heróis, a forja é o + do cabeçalho — e ele é um link de verdade, que o
+// clique do meio e o "abrir em nova aba" alcançam.
+func TestWithHeroesTheHeaderPlusLeadsToTheForge(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Guerreiro", "Guerreiro", 5, -4, 5)
+	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
 
 	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
 	if err != nil {
@@ -161,12 +142,8 @@ func TestTheCreateSlotIsACursorPositionAndNotALooseLink(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if !strings.Contains(html, `aria-label="Forjar um novo herói"`) {
-		t.Fatal("a vaga sumiu do filme")
-	}
-	// Ela pousa em `$cursor == 0`, que é a posição dela porque nenhum id é zero.
-	if !strings.Contains(html, "$cursor = 0") {
-		t.Error("a vaga não escreve o cursor no foco — as setas passariam por cima dela")
+	if !strings.Contains(html, `<a href="/personagens/nova" class="ds-button" data-icon aria-label="Forjar um herói"`) {
+		t.Error("o cabeçalho não traz o + que leva à forja")
 	}
 }
 
@@ -207,67 +184,13 @@ func TestTheCharacterSearchLooksAtTheFourFields(t *testing.T) {
 	}
 }
 
-// A contagem diz FILTRADOS de TOTAL. Dizer "3 de 3" com sete escondidos pela
-// busca esconde justamente o que a pessoa precisa saber para limpar o filtro.
-func TestTheCountSaysFilteredOutOfTotal(t *testing.T) {
+// A busca sem resultado diz O QUE se procurou, e o campo continua lá para
+// corrigir o termo — sumir com ele obrigaria a limpar para tentar de novo.
+func TestASearchWithoutHeroSaysWhatWasSoughtAndKeepsTheField(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
-	seedCharacterAtLevel(t, s, eu.ID, "Yrla", "Arcanista", 4, 4, 4)
 
-	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "thalen")
-	if err != nil {
-		t.Fatalf("carregar: %v", err)
-	}
-	if len(v.Heroes) != 1 || v.Total != 2 {
-		t.Errorf("filtrados=%d total=%d, queria 1 de 2", len(v.Heroes), v.Total)
-	}
-}
-
-// ── os vizinhos que ladeiam o palco ──────────────────────────────────────────
-
-// O que os vizinhos carregam de regra: o nome legível e o caminho de volta.
-func TestTheNeighborsFlankTheStageWithAReadableName(t *testing.T) {
-	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
-	seedCharacterAtLevel(t, s, eu.ID, "Yrla", "Arcanista", 4, 4, 4)
-
-	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
-	if err != nil {
-		t.Fatalf("carregar: %v", err)
-	}
-	if len(v.Heroes) != 2 {
-		t.Fatalf("esperava 2 heróis, veio %d", len(v.Heroes))
-	}
-	first, segundo := v.Heroes[0].Name, v.Heroes[1].Name
-
-	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
-	if err != nil {
-		t.Fatalf("render: %v", err)
-	}
-	// O primeiro palco olha para a frente, o segundo para trás.
-	if !strings.Contains(html, `aria-label="Próximo: `+segundo+`"`) {
-		t.Errorf("o palco de %q não mostra %q como próximo", first, segundo)
-	}
-	if !strings.Contains(html, `aria-label="Anterior: `+first+`"`) {
-		t.Errorf("o palco de %q não mostra %q como anterior", segundo, first)
-	}
-	// O NOME vai no CORPO do botão, e não só no rótulo: duas iniciais não dizem
-	// quem vem a seguir, e é para os olhos que ele existe. Procurá-lo no HTML
-	// INTEIRO sobrevive à sabotagem — o nome também está no `title`, no `h2` do
-	// palco e no rótulo do filme.
-	if body := corpoDoBotao(t, html, "Próximo: "+segundo); !strings.Contains(body, segundo) {
-		t.Errorf("o peek de %q não mostra o nome na tela, só em atributo: %q", segundo, body)
-	}
-}
-
-// A vaga de criar tem o ÚLTIMO herói à esquerda: é o caminho de volta para o
-// elenco, e sem ele quem anda até o fim do trilho fica sem pista de retorno.
-func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
-	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
-	seedCharacterAtLevel(t, s, eu.ID, "Yrla", "Arcanista", 4, 4, 4)
-
-	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
+	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "minotauro")
 	if err != nil {
 		t.Fatalf("carregar: %v", err)
 	}
@@ -275,47 +198,20 @@ func TestTheCreateSlotShowsTheLastHeroAsTheWayBack(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	last := v.Heroes[len(v.Heroes)-1].Name
-	// UMA vez, e é isso que prova que veio da vaga: "Anterior: X" só aparece no
-	// palco de quem vem DEPOIS de X, e depois do último herói não há palco de
-	// herói nenhum. A única coisa à direita dele no trilho é a vaga.
-	if got := strings.Count(html, `aria-label="Anterior: `+last+`"`); got != 1 {
-		t.Errorf("o último herói aparece como anterior %d vez(es), queria 1 (a vaga de criar)", got)
+	if !strings.Contains(html, "Nenhum herói casa com &#34;minotauro&#34;") {
+		t.Error("a busca sem resultado não diz o termo que procurou")
+	}
+	if !strings.Contains(html, `aria-label="Buscar personagem"`) {
+		t.Error("a busca sem resultado tirou o campo da tela")
 	}
 }
 
-// Nas PONTAS não há vizinho, e o palco não pode inventar um. Que a CAIXA vazia
-// continue ocupando a largura — para o retrato não escorregar ao chegar no
-// primeiro herói — é garantia de LAYOUT, e layout só existe num navegador: está
-// no `characters.spec.ts`. Aqui fica só o que é verdade de dado.
-func TestALoneHeroGetsNoInventedNeighbor(t *testing.T) {
-	s, eu := novaCenaDeHerois(t)
-	seedCharacterAtLevel(t, s, eu.ID, "Thalen", "Guerreiro", 5, -4, 5)
-
-	v, err := characters.New(s.sceneCore()).Load(context.Background(), eu.ID, "")
-	if err != nil {
-		t.Fatalf("carregar: %v", err)
-	}
-	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
-	if err != nil {
-		t.Fatalf("render: %v", err)
-	}
-	if strings.Contains(html, `aria-label="Próximo: `) {
-		t.Error("herói único ganhou um próximo que não existe")
-	}
-}
-
-// O TRILHO mostra quem está mal, e não o elenco inteiro com cara de saudável.
-//
-// A escada aqui é a de ESCREVER, e ela diverge da de preencher: na ficha o vital
-// é uma FAIXA, aqui ele é um NÚMERO, e o crítico não pode usar `--hp-critical`,
-// que dá 4,11:1 como letra pequena. Por isso o caso afirma a tinta de perigo da
-// casa e não o vermelho da barra — um guarda que aceitasse `text-hp-critical`
-// estaria prendendo o defeito.
+// O ELENCO mostra quem está mal, e não todos com cara de saudável: cada cartão
+// leva o degrau da escada do PV, e a folha pinta o número por ele.
 //
 // Os três heróis vão num elenco SÓ, e de propósito: com um por vez, um cartão
 // que ignorasse o herói e lesse o primeiro do elenco passaria nos três.
-func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
+func TestTheCastPaintsEachHeroByHowBadlyHurtTheyAre(t *testing.T) {
 	s, eu := novaCenaDeHerois(t)
 	// O dano sai da FRAÇÃO do poço e não de um número escolhido: o que este caso
 	// afirma são as três faixas de tinta, e um dano absoluto mudaria de faixa no
@@ -333,16 +229,29 @@ func TestTheCastPaintsEachHeroByHowBadlyHurtHeIs(t *testing.T) {
 		t.Fatalf("o elenco veio com %d heróis, e o caso precisa dos três", len(v.Heroes))
 	}
 
-	// As tintas escritas à mão: derivá-las de `ui.HpInkTone` faria a asserção
-	// andar junto com o defeito.
-	wanted := map[string]string{
-		"Inteiro":   "text-hp-full",                 // 100%
-		"Machucado": "text-hp-hurt",                 // 40%
-		"Morrendo":  "text-grimorio-crimson-bright", // 10%
+	html, err := ui.RenderFragment(t.Context(), characters.SceneBody(v))
+	if err != nil {
+		t.Fatalf("render: %v", err)
 	}
-	for _, h := range v.Heroes {
-		if paint, ok := wanted[h.Name]; ok && h.PVInk != paint {
-			t.Errorf("%s (PV %s) escreve com %q, e o esperado é %q", h.Name, h.PV, h.PVInk, paint)
+	// Os degraus escritos à mão: derivá-los de `ui.HpTone` faria a asserção
+	// andar junto com o defeito. O caso olha o HTML de CADA cartão, recortado
+	// pelo nome, para um cartão que lesse o herói errado não passar.
+	wanted := map[string]string{
+		"Inteiro":   "full",     // 100%
+		"Machucado": "hurt",     // 40%
+		"Morrendo":  "critical", // 10%
+	}
+	for name, tone := range wanted {
+		start := strings.Index(html, "Abrir ficha de "+name)
+		if start < 0 {
+			t.Fatalf("o cartão de %s não saiu", name)
+		}
+		card := html[start:]
+		if end := strings.Index(card, "</article>"); end >= 0 {
+			card = card[:end]
+		}
+		if !strings.Contains(card, `data-tone="`+tone+`"`) {
+			t.Errorf("o PV de %s não leva o degrau %q", name, tone)
 		}
 	}
 }

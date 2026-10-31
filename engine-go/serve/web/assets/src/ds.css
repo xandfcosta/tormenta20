@@ -1946,6 +1946,126 @@
     }
   }
 
+  /* O ELENCO (ALE-528): a busca presa no topo de quem rola — o `scene-content`
+   * da casca, que não tem padding, então ela prende no zero e devolve o padding
+   * de cima da lista — e um cartão por herói, cujo link cobre o cartão inteiro. */
+  .ds-cast-scene {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+  .ds-cast {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 1rem;
+    --ds-filter-stick: 0;
+    --ds-filter-above: 1rem;
+    --ds-filter-bg: var(--ds-bg);
+  }
+  .ds-cast-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .ds-cast-card {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: 0.625rem;
+    padding: 1rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-cast-card:hover {
+    border-color: var(--ds-line-strong);
+  }
+  .ds-cast-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .ds-cast-head::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  .ds-cast-vitals {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+  }
+  .ds-cast-vitals > div {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--ds-r-control);
+    background: var(--ds-sunk);
+  }
+  .ds-cast-vitals dt {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.25rem;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .ds-cast-vitals dd {
+    margin: 0;
+    font-size: var(--ds-t-md);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ds-cast-down {
+    color: var(--ds-danger);
+    letter-spacing: 0;
+  }
+  /* A ESCADA DO PV escreve o número (`ui.HpTone`): o elenco é onde se escolhe
+   * quem jogar, e com uma cor só todos teriam a mesma saúde. */
+  .ds-cast-vitals > [data-tone='hurt'] > dd {
+    color: var(--ds-warn);
+  }
+  .ds-cast-vitals > [data-tone='critical'] > dd {
+    color: var(--ds-danger);
+  }
+  .ds-cast-vitals > [data-kind='pm'] > dd {
+    color: var(--ds-action);
+  }
+  .ds-cast-vitals > [data-dim] {
+    opacity: 0.5;
+  }
+  .ds-cast-line {
+    margin: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    line-height: var(--ds-lh-sm);
+  }
+  @media (min-width: 64rem) {
+    .ds-cast {
+      padding: 1.5rem 2rem;
+      --ds-filter-above: 1.5rem;
+    }
+    /* A barra fica da largura da lista, senão os cartões passariam visíveis
+     * ao lado da busca presa; quem encolhe é o campo. */
+    .ds-cast > .ds-filter-bar > .ds-search {
+      max-width: 22rem;
+    }
+    .ds-cast-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
   /* A PORTA (ALE-524): a marca, o cartão do kit no meio da tela, o rodapé e o
    * aviso legal. No desktop, um brilho leve da cor da ação no topo do fundo. */
   .ds-door {

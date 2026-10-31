@@ -15,32 +15,19 @@ import "testing"
 // afirmado dos dois lados.
 func TestTheHpLadderTurnsAtTheThresholds(t *testing.T) {
 	for _, c := range []struct {
-		pct   int
-		tom   string
-		paint string
+		pct int
+		tom string
 	}{
-		{0, "bg-hp-critical", "text-grimorio-crimson-bright"},
-		{25, "bg-hp-critical", "text-grimorio-crimson-bright"},
-		{26, "bg-hp-hurt", "text-hp-hurt"},
-		{50, "bg-hp-hurt", "text-hp-hurt"},
-		{51, "bg-hp-full", "text-hp-full"},
-		{100, "bg-hp-full", "text-hp-full"},
+		{0, "bg-hp-critical"},
+		{25, "bg-hp-critical"},
+		{26, "bg-hp-hurt"},
+		{50, "bg-hp-hurt"},
+		{51, "bg-hp-full"},
+		{100, "bg-hp-full"},
 	} {
 		if got := HpFillTone(c.pct); got != c.tom {
 			t.Errorf("HpFillTone(%d) = %q, queria %q", c.pct, got, c.tom)
 		}
-		// A TINTA é outra escada, e ela diverge da de preencher em UM degrau: o
-		// crítico escreve com a tinta de perigo da casa, porque o `--hp-critical`
-		// dá 4,11:1 como letra pequena.
-		if got := HpInkTone(c.pct); got != c.paint {
-			t.Errorf("HpInkTone(%d) = %q, queria %q", c.pct, got, c.paint)
-		}
-	}
-	// E o degrau em que as duas escadas DIVERGEM, afirmado sozinho: sem isto,
-	// uma `HpInkTone` que devolvesse a classe de preencher com outro prefixo
-	// passaria na tabela acima inteira.
-	if HpInkTone(10) == "text-hp-critical" {
-		t.Error("a tinta do crítico é a de preencher com outro prefixo, e ela dá 4,11:1 como letra")
 	}
 }
 

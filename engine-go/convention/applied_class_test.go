@@ -41,9 +41,9 @@ import (
 //     (`"ground-" + v.Chao`). Quem cobra essas é o guarda da família — o
 //     `TestEveryOfferedGroundCanBePainted` para o chão, e o do terreno para os
 //     pincéis —, e é lá que elas têm o denominador certo.
-//   - ARQUIVO DE TESTE fica fora porque ele cita classe MORTA de propósito: o
-//     `stage_entry_test.go` afirma que `grimorio-book` NÃO existe, e um guarda
-//     que lesse aquilo acusaria o teste que protege a ausência.
+//   - ARQUIVO DE TESTE fica fora porque ele cita classe MORTA de propósito: um
+//     teste que afirma que uma classe NÃO existe seria acusado pelo guarda que
+//     lesse aquilo.
 var (
 	classAttribute = regexp.MustCompile(`class=[{"]([^"}]*"[^"}]*)?`)
 	classLiteral   = regexp.MustCompile(`"([^"]*)"`)

@@ -502,8 +502,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **acervo** (de poderes, de catálogo) | `collection` | `TestTheCollectionJoinsTheProvenances` |
 | **cortina** | `curtain` | `curtained` já existia no fio |
 | **lente** | `lens` | `TestTheLensSaysHowManyVanished` |
-| **palco** | `stage` | `TestTheStageHasTheTwoPartsThatAnimate` |
-| **vizinho** (o retrato apagado ao lado do palco) | `neighbor` | `ui.NeighborPortrait` (ALE-297). **Não é qualquer elemento ao lado**: é a peça que mostra QUEM vem antes e depois no trilho e que, clicada, anda o cursor para lá. Ela virou componente da casa quando a SEGUNDA cena de seleção passou a usá-la, e o nome é o que o rótulo acessível já dizia (`Anterior: …` / `Próximo: …`) |
+| **palco** | `stage` | a área da cena da sessão, que o mapa ocupa. O palco do elenco, com o retrato e o trilho, saiu na ALE-528 |
 | **trilho** | `rail` | `TestTheRailOffersEveryStop` |
 | **trilha** | `trail` | `TestTheTrailSlugsAreUnique` |
 | **régua** | `ruler` | `TestTheRulerHasNoDirection` |
@@ -524,12 +523,11 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating`, e a receita `ui.BadgeClasses` desde a ALE-177. **A grafia é `badge` e não `chip`**: a folha de especificação do grimório chamava o bloco de "Chip" enquanto o servidor já escrevia `badgeOn`/`toggleBadge` para a mesma pílula — dois nomes para um conceito, que é o que esta coluna existe para impedir |
 | **gaveta** | `drawer` | e2e `a recuperação sai da fileira quando o palco é baixo` (a do palco), e2e `deitado os filtros viram gaveta` (a dos filtros) |
 | **área** (de transferência) | `clipboard` | e2e `colar põe outro igual no centro da vista` |
-| **dossiê** | `dossier` | `TestTheDossierRespectsTheLimit` |
 | **monograma** | `monogram`, `.monograma` | `TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal` |
 | **matiz** | `hue` | `TestTheNameHueMatchesTheJs` |
 | **sobrecarga** | `overload` | `TestOverloadPenalizesDisplacementAndArmorExpertises` |
 | **mesa** (as pessoas conectadas) | `table` | `TableMember`, `TableRoute`, `TestTheTableDoesNotLeakHiddenHp` |
-| **bolsa inicial** | `purse` (na frase) | `startingMoney` continua sendo o campo |
+| **bolsa inicial** | `purse` (na frase) | a Tabela 3-1 mora em `startingMoneyByLevel` |
 | **fronteira** (do pacote) | `boundary` | os 25 `boundary_test.go`, um por pacote (ALE-301). É a porta que uma cena declara para o hospedeiro — **não confundir com `port`**, que é o TIPO da porta; `boundary` é o guarda que prova que ninguém a contorna |
 | **sinal** (do Datastar) | `signal` | `web/sheetui/signals.go` (ALE-301). A palavra já era a da FRONTEIRA — o `$arrastando` do CLAUDE.md — e o que faltava era a grafia do arquivo que os lê |
 | **dinheiro** | `money` | `web/sheetui/money.go` (ALE-301). **Não é `tibar`**, que é a MOEDA de Arton e é nome próprio: `money.go` é o painel dos três gestos (receber, gastar, corrigir), `tibar` é a unidade que eles movem |

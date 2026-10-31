@@ -2655,40 +2655,6 @@ empurrão cada uma. Vale para qualquer sinal que o servidor venha a escrever
 daqui: **remendo de HTML é idempotente, remendo de sinal não é** — o HTML
 descreve o estado, o sinal muda a decisão de quem está do outro lado.
 
-### Animação de ENTRADA numa cena que nunca monta: a classe substitui o mount
-
-Nas cenas desenhadas pelo servidor — campanhas, personagens, e toda cena com
-cursor — **nada nunca monta**: o servidor manda todos os itens e o cursor só
-alterna `data-show`. Então não há remontagem de nó para disparar `animate-in`.
-
-**O que substitui o mount é a CLASSE entrando num nó que não a tinha** (ALE-235).
-O item que sai perde a classe, o que entra ganha, e são elementos DIFERENTES —
-então não existe o caso que não replica, que é "a mesma animação, já concluída,
-no mesmo nó". Dispensa morph, reflow forçado e id que muda a cada troca, que são
-as saídas que a issue previa e que ninguém precisou escrever.
-
-Duas coisas para quem repetir a receita:
-
-- **O gesto que move o cursor tem de ser IDEMPOTENTE.** Um clique num item do
-  trilho dispara `focusin` E `click`, os dois com a mesma expressão. Se ela
-  calcula alguma coisa a partir do estado que ela mesma escreve (a DIREÇÃO, a
-  partir do índice anterior), a segunda passagem lê o valor já atualizado e
-  produz o resultado errado — sempre o mesmo, silenciosamente. A guarda é um
-  `if` no começo da expressão.
-- **E isso não aparece numa sonda que clica por `element.click()`**, porque ela
-  não move o foco: só o gesto de verdade dispara os dois eventos. Mesma família
-  do evento de ponteiro sintético, logo abaixo.
-
-**Que a receita é GERAL, e não um remendo de uma cena, foi medido na ALE-297**:
-as campanhas largaram o livro de couro, viraram palco e herdaram a entrada
-inteira — as duas classes, o atraso da placa e o movimento reduzido — **sem uma
-linha nova de CSS**. O que a segunda cena custou foi outra coisa, e ela vale
-mais que a receita: enquanto o vizinho, o facho, a entrada e o gesto eram
-privados de `web/characters`, eles tinham exatamente um chamador POSSÍVEL.
-Copiá-los seria a saída óbvia e teria produzido duas gramáticas de cursor
-divergindo em silêncio; hoje moram em `web/ui/stage.go` e o guarda de gesto
-varre as duas cenas.
-
 ### O `@post` que redesenha a CENA precisa carregar o estado que está na URL
 
 Um comando do Datastar responde com um remendo da cena inteira, e o handler
