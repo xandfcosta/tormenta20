@@ -271,9 +271,10 @@ func TestTheRoleInACampaignIsOwnerGmMemberPlayerAndNobodyElse(t *testing.T) {
 		{"o dono mestra", app.Caller{ID: gm}, app.RoleGM, nil},
 		{"o membro joga", app.Caller{ID: player}, app.RolePlayer, nil},
 		{"o estranho não entra", app.Caller{ID: stranger}, "", app.ErrForbidden},
-		// O administrador entra em qualquer mesa como mestre: é o que o deixa
-		// participar de uma sessão ao vivo.
-		{"o admin mestra em qualquer mesa", app.Caller{ID: stranger, IsAdmin: true}, app.RoleGM, nil},
+		// O administrador SEM ASSENTO entra como mestre: é o que o deixa consertar
+		// a mesa de um jogador. Sentado, o assento vence e ele joga (ALE-527).
+		{"o admin sem assento mestra", app.Caller{ID: stranger, IsAdmin: true}, app.RoleGM, nil},
+		{"o admin sentado joga", app.Caller{ID: player, IsAdmin: true}, app.RolePlayer, nil},
 	}
 	for _, c := range cases {
 		role, err := s.sessionAccess().RoleInCampaign(ctx, c.who, campaignID)

@@ -75,16 +75,18 @@ func (d Directory) Visible(ctx context.Context, who app.Caller) ([]Seen, error) 
 			CreatedAt:   c.Createdat, UpdatedAt: c.Updatedat,
 			Role: app.RolePlayer,
 		}
+		view.Character = d.characterOf(ctx, c.ID, who.ID)
 		switch {
 		case c.Ownerid == who.ID:
 			view.Role = app.RoleGM
-		case who.IsAdmin:
+		case who.IsAdmin && view.Character == nil:
 			// A condição é `IsAdmin` e NÃO "o mapa de donos tem um nome": um
 			// jogador também não é dono aqui, e apoiar-se no mapa faria uma
 			// edição futura no `OwnerNames` entregar "gm" a ele em silêncio.
+			// E o ASSENTO vence: com herói na mesa, o admin joga — a mesma regra
+			// do `session.Access.RoleIn` (ALE-526).
 			view.Role, view.OwnerName = app.RoleGM, owners[c.Ownerid]
 		}
-		view.Character = d.characterOf(ctx, c.ID, who.ID)
 		outside = append(outside, view)
 	}
 	return outside, nil

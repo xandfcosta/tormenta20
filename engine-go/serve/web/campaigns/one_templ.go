@@ -330,10 +330,10 @@ func oneLiveCard(v oneView) templ.Component {
 // Fulano".
 func roleAtTable(v oneView) string {
 	switch {
-	case v.IsGM:
-		return "Mestrando"
 	case v.OtherOwner != "":
 		return "Mesa de " + v.OtherOwner
+	case v.IsGM:
+		return "Mestrando"
 	default:
 		return "Jogando"
 	}
