@@ -185,7 +185,7 @@ func TestAnUnknownSizeOrMaterialIsRefusedWithTheOffendingValue(t *testing.T) {
 // objeto poria o mesmo mecanismo em dois lugares, e só um deles apareceria na
 // decomposição que a mesa lê.
 func TestAMovingObjectIsFivePointsHarderToHit(t *testing.T) {
-	parado, err := ResolveAttackUnder(
+	parado, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5),
 		AttackTarget{Defense: 10}, // um barril: Médio, Defesa 10
 		nil, 5, fixedDice(t, 10, 4),
@@ -199,7 +199,7 @@ func TestAMovingObjectIsFivePointsHarderToHit(t *testing.T) {
 		t.Fatalf("o controle já estava errado: total %d contra Defesa %d, acerto %v",
 			parado.Total, parado.Defense, parado.Hit)
 	}
-	rolando, err := ResolveAttackUnder(
+	rolando, err := suggestedAttackUnder(
 		aWeapon("1d8", 3, 20, 2, 5),
 		AttackTarget{Defense: 10},
 		[]SpecialSituation{TargetObjectInMotion}, 5, fixedDice(t, 10, 4),

@@ -8,10 +8,9 @@ import (
 	"testing"
 )
 
-// O VEREDITO DO ATAQUE É SÓ DO MESTRE (ALE-532, decisão do dono): acertar ou
-// errar é interpretação dele, e o app a mostra ao mestre para facilitar a
-// leitura dos números. O jogador vê a própria rolagem e ouve o resto em voz —
-// no papel do personagem, ele não conhece a Defesa do alvo.
+// O VEREDITO DO ATAQUE É SÓ DO MESTRE (ALE-532, ALE-536): ele decide com o
+// duelo à vista e a sugestão do livro, e o jogador vê a própria rolagem — no
+// papel do personagem, ele não conhece a Defesa do alvo.
 //
 // O predicado é o PAPEL de quem olha, e por isso o caso desenha a MESMA mesa,
 // com o MESMO provisório, para o mestre e para o jogador.
@@ -38,39 +37,29 @@ func TestOnlyTheGMSeesTheAttackVerdict(t *testing.T) {
 		t.Fatalf("o ataque não virou provisório: %q", tableRefusal(t, rec.Body.String()))
 	}
 	verdicts := []string{"Acertou", "Errou", "Crítico"}
-	defense := "vs " + strconv.Itoa(pending.Defense)
+	roll := fmt.Sprintf("d20 (%d)", pending.Roll)
 
+	// O MESTRE vê o duelo — a rolagem na notação contra a Defesa — e decide.
 	gm := attackSection(t, f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String())
-	sawVerdict := false
 	for _, word := range verdicts {
-		sawVerdict = sawVerdict || strings.Contains(gm, word)
-	}
-	if !sawVerdict {
-		t.Errorf("o mestre não vê o veredito do ataque:\n%s", gm)
-	}
-	if !strings.Contains(gm, defense) {
-		t.Errorf("o mestre não vê a conta contra a Defesa (%q):\n%s", defense, gm)
-	}
-	// OS DADOS À VISTA no cartão curto do mestre, e não só nos Detalhes: o d20
-	// natural, o bônus, o total e a Defesa numa linha (pedido do dono).
-	short := gm[:strings.Index(gm, `id="gm-attack-details"`)]
-	roll := fmt.Sprintf("d20 %d", pending.Roll)
-	if !strings.Contains(short, roll) || !strings.Contains(short, "vs Defesa "+strconv.Itoa(pending.Defense)) {
-		t.Errorf("o cartão curto do mestre não mostra os dados (%q … vs Defesa %d):\n%s", roll, pending.Defense, short)
-	}
-
-	player := attackSection(t, f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())
-	for _, word := range verdicts {
-		if strings.Contains(player, word) {
-			t.Errorf("o jogador vê o veredito %q — ele é do mestre:\n%s", word, player)
+		if !strings.Contains(gm, word) {
+			t.Errorf("o mestre não tem o botão %q para decidir:\n%s", word, gm)
 		}
 	}
-	if strings.Contains(player, defense) {
-		t.Errorf("o jogador vê a Defesa do alvo (%q):\n%s", defense, player)
+	if !strings.Contains(gm, roll) || !strings.Contains(gm, "Defesa") ||
+		!strings.Contains(gm, "<b>"+strconv.Itoa(pending.Defense)+"</b>") {
+		t.Errorf("o duelo do mestre não mostra %q contra a Defesa %d:\n%s", roll, pending.Defense, gm)
+	}
+
+	// O JOGADOR vê a própria rolagem, e nada que julgue o golpe.
+	player := attackSection(t, f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())
+	for _, word := range append(verdicts, "Defesa", "sugere") {
+		if strings.Contains(player, word) {
+			t.Errorf("o jogador vê %q — o julgamento é do mestre:\n%s", word, player)
+		}
 	}
 	// O CONTROLE: a faixa do jogador não ficou vazia — ela diz a rolagem dele.
-	own := "= " + strconv.Itoa(pending.Total)
-	if !strings.Contains(player, own) {
-		t.Errorf("o jogador não vê a própria rolagem (%q):\n%s", own, player)
+	if !strings.Contains(player, roll) || !strings.Contains(player, "= "+strconv.Itoa(pending.Total)) {
+		t.Errorf("o jogador não vê a própria rolagem (%s … = %d):\n%s", roll, pending.Total, player)
 	}
 }

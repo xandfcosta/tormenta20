@@ -2596,13 +2596,6 @@
   .ds-strike-tally {
     font-variant-numeric: tabular-nums;
   }
-  /* OS DADOS do cartão curto do mestre, à vista sem abrir os Detalhes. */
-  .ds-strike-dice {
-    margin: 0;
-    color: var(--ds-ink-2);
-    font-size: var(--ds-t-sm);
-    font-variant-numeric: tabular-nums;
-  }
   .ds-strike-foot {
     display: flex;
     flex-wrap: wrap;
@@ -2661,6 +2654,124 @@
   }
   .ds-strike-hand > .ds-input {
     width: 4rem;
+  }
+  /* O DUELO do cartão do golpe (ALE-536): a rolagem e o que ela enfrenta frente
+   * a frente, o "vs" e a decisão no meio. O lado CONTRA é tracejado: é o valor
+   * que a rolagem tem de bater, e não um número rolado agora. O cartão tem
+   * largura de LEITURA: esticado no desktop, os dois números ficavam a meia
+   * tela um do outro. */
+  .ds-strike[data-attack] {
+    max-width: 32rem;
+  }
+  .ds-duel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .ds-duel-side {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    padding: 0.375rem;
+    border-radius: var(--ds-r-control);
+    background: var(--ds-sunk);
+    line-height: 1.15;
+  }
+  .ds-duel-side[data-against] {
+    border: 1px dashed var(--ds-line-strong);
+    background: none;
+  }
+  .ds-duel-side > b {
+    font-size: var(--ds-t-2xl);
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-duel-side > small {
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-xs);
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-duel-mid {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.25rem;
+  }
+  .ds-duel-vs {
+    color: var(--ds-ink-2);
+    font-weight: 700;
+    line-height: 1;
+  }
+  /* As linhas de conta do que decorre: rótulo, a conta na notação e o valor. */
+  .ds-duel-rows {
+    display: grid;
+    gap: 2px;
+  }
+  .ds-duel-row {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--ds-r-control);
+    background: var(--ds-sunk);
+    font-size: var(--ds-t-sm);
+  }
+  .ds-duel-row > b {
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-duel-row[data-final] {
+    border-top: 1px solid var(--ds-line);
+    border-radius: 0;
+    background: none;
+    font-weight: 700;
+  }
+  /* A FRASE (a consequência da manobra) põe o rótulo em cima e ocupa a largura. */
+  .ds-duel-row[data-text] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    line-height: 1.35;
+  }
+  .ds-duel-row[data-text] > .ds-row-meta {
+    font-size: var(--ds-t-xs);
+  }
+  /* OS TRÊS BOTÕES do mestre, do mesmo tamanho: a sugestão do livro é o cheio. */
+  .ds-verdicts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.375rem;
+  }
+  .ds-verdicts > .ds-button {
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+  }
+  /* O "ROLEI NA MÃO" escrito na notação: `2d8 ( _ _ ) + 3`, um campo por dado. */
+  .ds-hand-damage {
+    display: grid;
+    justify-items: start;
+    gap: 0.375rem;
+  }
+  .ds-hand-formula {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-hand-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+  .ds-hand-op {
+    color: var(--ds-ink-2);
+  }
+  .ds-hand-die {
+    width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+    text-align: center;
   }
   /* O TABULEIRO DO MESTRE (ALE-522, fatia 2). O menu da peça, o de copiar e as
    * ações do marcador moram DENTRO do mapa e são do `boardScene`, que o palco
@@ -3519,48 +3630,6 @@
   .ds-gm-cond > .ds-icon {
     width: 0.875rem;
     height: 0.875rem;
-  }
-  .ds-strike-short {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .ds-strike-dmg {
-    white-space: nowrap;
-  }
-  .ds-strike-dmg > b {
-    font-size: var(--ds-t-lg);
-  }
-  .ds-gm-dmg {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 0.25rem 0.75rem;
-    margin: 0;
-    padding: 0.625rem 0.75rem;
-    border-radius: var(--ds-r-control);
-    background: var(--ds-sunk);
-    font-size: var(--ds-t-sm);
-  }
-  .ds-gm-dmg > dt {
-    color: var(--ds-ink-2);
-  }
-  .ds-gm-dmg > dd {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.25rem;
-    margin: 0;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .ds-die {
-    display: grid;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    border: 1px solid var(--ds-line-strong);
-    border-radius: 0.375rem;
-    background: var(--ds-surface);
-    font-size: var(--ds-t-xs);
   }
   /* A JANELA À PARTE é para a segunda tela ou a TV da mesa: no celular não
    * há segunda tela, e o botão some (decisão do dono). */

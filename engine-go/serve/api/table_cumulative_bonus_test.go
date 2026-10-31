@@ -127,6 +127,7 @@ func theGameMasterConfirmsACriticalHit(t *testing.T, f sceneFixture, attacker, t
 		AttackerEntryID: attacker, TargetEntryID: target, TargetLabel: "Goblin",
 		Weapon: "Machado de batalha", Roll: 20, Total: 28, Defense: 13,
 		Hit: true, Critical: true, RawDamage: 1, Damage: 1,
+		Ruling: live.RulingCritical, DamageRolled: true,
 	}); err != nil {
 		t.Fatalf("semear o provisório crítico: %v", err)
 	}
@@ -259,6 +260,7 @@ func theGameMasterConfirmsAPlainHit(t *testing.T, f sceneFixture, attacker, targ
 		AttackerEntryID: attacker, TargetEntryID: target, TargetLabel: "Bicho",
 		Weapon: "Machado de batalha", Roll: 11, Total: 19, Defense: 13,
 		Hit: true, Critical: false, RawDamage: damage, Damage: damage,
+		Ruling: live.RulingHit, DamageRolled: true,
 	}); err != nil {
 		t.Fatalf("semear o provisório: %v", err)
 	}

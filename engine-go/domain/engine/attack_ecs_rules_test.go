@@ -7,38 +7,36 @@ import (
 	"t20engine/domain/ecs"
 )
 
-// noDice é o sorteio de quem não vai sortear: o mundo do erro não rola nada, e
+// noDice é o sorteio de quem não vai sortear: julgar o teste não rola dano, e
 // um dublê que devolvesse zero calado esconderia uma rolagem indevida.
 func noDice(t *testing.T) func(int) (int, error) {
 	t.Helper()
 	return func(faces int) (int, error) {
-		t.Fatalf("o ataque errou e alguém pediu um d%d mesmo assim", faces)
+		t.Fatalf("ninguém devia rolar dado aqui, e alguém pediu um d%d", faces)
 		return 0, nil
 	}
 }
 
-// TODO SISTEMA DO ATAQUE DEIXA A MARCA DELE NO MUNDO (ALE-414).
+// TODO SISTEMA DO ATAQUE DEIXA A MARCA DELE NO MUNDO.
 //
 // # Ele repõe o que a função sequencial dava
 //
-// Antes, tirar um passo do `ResolveAttack` apagava uma linha que o compilador
+// Tirar um passo de uma função sequencial apagava uma linha que o compilador
 // via: as variáveis seguintes deixavam de existir. Com sistemas, um que não
 // rode deixa o componente ausente e quem o lê recebe o valor ZERO — um ataque
 // que causa 0 de dano, sem erro e sem log.
 //
 // # Por que cada sistema traz o CENÁRIO dele
 //
-// Três dos nove só agem numa metade do dado: o que cala tudo no erro não roda
-// no acerto, e o que multiplica e o que descarta o só-em-crítico são
-// mutuamente exclusivos por construção. Um mundo só mediria os seis fáceis e
-// daria verde sobre os três que importam.
+// Vários só agem numa metade do dado ou da decisão: o que multiplica e o que
+// descarta o só-em-crítico são mutuamente exclusivos por construção, e os da
+// Tabela 5-3 dormem num ataque sem situação. Um mundo só mediria os fáceis.
 //
 // # O DENOMINADOR é o que impede a lista de apodrecer
 //
-// Não há como perguntar ao `ecs` quantos componentes uma entidade tem sem
-// inventar API para isto, então a lista é escrita à mão. O que a mantém honesta
-// é a contagem bater com o número de sistemas: acrescentar um sistema sem
-// acrescentar a conferência dele reprova aqui, com o número.
+// A lista é escrita à mão, e o que a mantém honesta é a contagem bater com o
+// número de sistemas dos DOIS tempos: acrescentar um sistema sem a conferência
+// dele reprova aqui, com o número.
 func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 	// A espada do `aWeapon` mais um bônus que só existe no crítico: é ele que
 	// dá ao `dropWhatIsNotCritical` o que descartar.
@@ -46,22 +44,18 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 	card.CriticalBonus = 10
 	target := AttackTarget{Defense: 15, DamageReduction: 2}
 
-	acerto := attackWorld(card, target, nil, 12, fixedDice(t, 8))
-	erro := attackWorld(card, target, nil, 2, noDice(t))
-	critico := attackWorld(card, target, nil, 19, fixedDice(t, 8, 5))
+	julgado := judgeWorld(card, target, nil, 12, noDice(t))
+	acerto := damageWorld(card, target, 12, RulingHit, fixedDice(t, 8))
+	critico := damageWorld(card, target, 12, RulingCritical, fixedDice(t, 8, 5))
 
-	// OS QUATRO MUNDOS DA TABELA 5-3, e eles são cenário próprio pela mesma
-	// razão dos três de cima: os sistemas da p239 não agem num ataque sem
-	// situação nenhuma, e o `acerto` mediria quatro sistemas dormindo.
-	//
 	// A arma de PONTARIA é o que dá ao `dropWhatDoesNotReachThisWeapon` o que
 	// matar — com a espada do caso, o flanqueio vale e nada é despachado.
 	arco := aWeapon("1d6", 2, 20, 3, 5)
 	arco.Skill = "Pontaria"
-	elevado := attackWorld(card, target, []SpecialSituation{AttackerOnHigherGround}, 12, fixedDice(t, 8))
-	disparo := attackWorld(arco, target, []SpecialSituation{AttackerFlanking}, 12, fixedDice(t, 8))
-	proibido := attackWorld(card, target, []SpecialSituation{TargetUnderTotalCover}, 20, noDice(t))
-	camuflado := attackWorld(card, target, []SpecialSituation{TargetUnderTotalConcealment}, 12, fixedDice(t, 3))
+	elevado := judgeWorld(card, target, []SpecialSituation{AttackerOnHigherGround}, 12, noDice(t))
+	disparo := judgeWorld(arco, target, []SpecialSituation{AttackerFlanking}, 12, noDice(t))
+	proibido := judgeWorld(card, target, []SpecialSituation{TargetUnderTotalCover}, 20, noDice(t))
+	camuflado := judgeWorld(card, target, []SpecialSituation{TargetUnderTotalConcealment}, 12, fixedDice(t, 3))
 
 	conferencias := []struct {
 		sistema string
@@ -83,11 +77,11 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 		{"tallyTheSituations", elevado, func(w *ecs.World) bool {
 			return resourceOf[situationTally](w).Attack == 2
 		}},
-		{"judgeTheHit", acerto, func(w *ecs.World) bool {
+		{"judgeTheHit", julgado, func(w *ecs.World) bool {
 			_, has := ecs.Get[hitVerdict](w, theResource(w))
 			return has
 		}},
-		{"judgeTheCritical", acerto, func(w *ecs.World) bool {
+		{"judgeTheCritical", julgado, func(w *ecs.World) bool {
 			_, has := ecs.Get[criticalVerdict](w, theResource(w))
 			return has
 		}},
@@ -96,11 +90,12 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 			// havia é DESFEITO, e é o único sistema do ataque que faz isso.
 			return !resourceOf[hitVerdict](w).Hit
 		}},
+		{"applyTheRuling", critico, func(w *ecs.World) bool {
+			// O 12 está fora da margem 19, e o crítico do mestre vale assim mesmo.
+			return resourceOf[criticalVerdict](w).Critical
+		}},
 		{"spawnTheDamageParcels", acerto, func(w *ecs.World) bool {
 			return countOf[damageDice](w) == 1 && countOf[damageFlat](w) == 2
-		}},
-		{"dropEverythingIfItMissed", erro, func(w *ecs.World) bool {
-			return len(suppressionReasons(w)) == 3
 		}},
 		{"multiplyTheWeaponDice", critico, func(w *ecs.World) bool {
 			return weaponDiceOf(w).Count == 2
@@ -121,13 +116,14 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 		}},
 	}
 
-	sistemas := attackSystems(card, target, nil, attackDie{Rolled: 12, Natural: 12}, fixedDice(t, 8))
-	if len(conferencias) != len(sistemas) {
+	sistemas := len(judgeSystems(card, target, nil, D20(12))) + 1 + // a camuflagem
+		len(damageSystems(card, target, RulingHit, fixedDice(t)))
+	if len(conferencias) != sistemas {
 		t.Fatalf("são %d sistemas de ataque e %d conferências.\n"+
 			"Sistema novo entra nesta lista JUNTO, com o CENÁRIO em que ele age — "+
 			"senão ele pode parar de rodar e ninguém fica sabendo: o componente "+
 			"ausente vira valor zero, e num ataque isso é dano que não aplica.",
-			len(sistemas), len(conferencias))
+			sistemas, len(conferencias))
 	}
 
 	for _, c := range conferencias {
@@ -141,53 +137,38 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 
 // A PARCELA QUE NÃO CONTOU CONTINUA NO MUNDO, E DIZ POR QUÊ.
 //
-// É o que a fatia comprou, e ela não aparece na saída: o `AttackOutcome` de um
-// acerto normal é byte a byte o mesmo de antes, com ou sem a tag. Medir a conta
-// não diria nada sobre isto.
-//
-// Sem a razão escrita, a tela que um dia mostrar "+10 do Dilacerante, não
-// aplicado" teria de redescobrir o motivo — e redescobrir é reimplementar a
-// regra numa segunda camada.
+// Ela não aparece na saída: o `AttackOutcome` de um acerto normal é o mesmo com
+// ou sem a marca. Sem a razão escrita, a tela que um dia mostrar "+10 do
+// Dilacerante, não aplicado" teria de redescobrir o motivo — e redescobrir é
+// reimplementar a regra numa segunda camada.
 func TestTheParcelThatDidNotCountSaysWhy(t *testing.T) {
 	card := aWeapon("1d8", 3, 19, 2, 5)
 	card.CriticalBonus = 10
 
-	// 12+5 = 17 contra Defesa 15: acerta, e não critica.
-	acerto := attackWorld(card, AttackTarget{Defense: 15}, nil, 12, fixedDice(t, 8))
+	acerto := damageWorld(card, AttackTarget{Defense: 15}, 12, RulingHit, fixedDice(t, 8))
 	razoes := suppressionReasons(acerto)
 	if len(razoes) != 1 || !strings.Contains(razoes[0], "crítico") {
 		t.Fatalf("as parcelas caladas do acerto normal disseram %q, e o esperado é uma só, "+
 			"dizendo que o ataque não foi crítico", razoes)
 	}
-
-	erro := attackWorld(card, AttackTarget{Defense: 30}, nil, 12, noDice(t))
-	for _, razao := range suppressionReasons(erro) {
-		if !strings.Contains(razao, "errou") {
-			t.Errorf("uma parcela do ataque que ERROU foi calada dizendo %q, e a razão "+
-				"do erro é a que a mesa vai ler", razao)
-		}
-	}
-	if len(suppressionReasons(erro)) != 3 {
-		t.Errorf("o ataque que errou calou %d parcelas, e a arma tem 3 (1d8, o +3 e o +10 "+
-			"do crítico). Parcela que some da lista some da tela", len(suppressionReasons(erro)))
-	}
 }
 
-// NOTAÇÃO QUEBRADA NO CATÁLOGO FALHA MESMO QUANDO O ATAQUE ERRA.
+// JULGAR NÃO LÊ A NOTAÇÃO DE DANO, e o dano falha nela.
 //
-// É uma mudança de comportamento da ALE-414, e ela é deliberada. Antes a
-// notação só era lida depois do acerto, então um `"1d"` no catálogo ficava
-// calado em todo ataque que errava — o defeito aparecia numa fração das
-// rolagens, que é a pior maneira de um defeito aparecer.
-func TestABrokenDamageNotationFailsEvenOnAMiss(t *testing.T) {
+// O teste do ataque não sabe de dados de dano: um `"1d"` no catálogo não
+// impede o mestre de ler o d20 contra a Defesa. Quem tropeça nele é o tempo do
+// dano — e tropeça sempre, porque um golpe sem dano não chega até lá.
+func TestABrokenDamageNotationFailsWhenTheDamageIsRolled(t *testing.T) {
 	quebrada := aWeapon("1d", 0, 20, 2, 0)
 
-	if _, err := ResolveAttack(quebrada, AttackTarget{Defense: 30}, 2, noDice(t)); err == nil {
-		t.Error("a arma com notação de dano inválida errou o ataque e não reclamou — " +
-			"o defeito do catálogo só apareceria quando alguém acertasse")
+	if _, err := JudgeAttack(quebrada, AttackTarget{Defense: 1}, nil, D20(15), noDice(t)); err != nil {
+		t.Errorf("julgar o teste reclamou da notação de dano, que ele não lê: %v", err)
 	}
-	if _, err := ResolveAttack(quebrada, AttackTarget{Defense: 1}, 20, noDice(t)); err == nil {
-		t.Error("a arma com notação de dano inválida acertou e não reclamou")
+	if _, err := RollAttackDamage(quebrada, AttackTarget{Defense: 1}, nil, D20(15), RulingHit, noDice(t)); err == nil {
+		t.Error("a arma com notação de dano inválida rolou o dano e não reclamou")
+	}
+	if _, err := DamageToRoll(quebrada, RulingHit); err == nil {
+		t.Error("a arma com notação de dano inválida disse o que rolar e não reclamou")
 	}
 }
 

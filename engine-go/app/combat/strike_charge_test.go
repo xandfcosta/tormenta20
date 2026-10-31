@@ -18,15 +18,31 @@ import (
 
 func chargeOn(t *testing.T, hero Combatant, charge string) (live.PendingAttack, error) {
 	t.Helper()
+	strike, req := chargeStrike(t, hero, charge)
+	return strike.Propose(context.Background(), app.Caller{ID: 7}, "player", req)
+}
+
+func chargeStrike(t *testing.T, hero Combatant, charge string) (Strike, Request) {
+	t.Helper()
 	strike := NewStrike(sheetDouble{
 		"heroi": hero,
 		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10},
 	}, aTable(t), semTabuleiro{}, fixedDie(4))
 	d20 := 10
-	return strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+	return strike, Request{
 		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
 		Charge: charge,
-	})
+	}
+}
+
+// chargeDamage é a investida inteira: o teste, o acerto do mestre e o dano.
+func chargeDamage(t *testing.T, hero Combatant, charge string) live.PendingAttack {
+	t.Helper()
+	strike, req := chargeStrike(t, hero, charge)
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", req); err != nil {
+		t.Fatalf("investida %q: %v", charge, err)
+	}
+	return hitAndRoll(t, strike, req)
 }
 
 func aSwordsman() Combatant {
@@ -60,14 +76,8 @@ func TestTheRecklessChargeNeedsThePowerAndAddsOneD12(t *testing.T) {
 	}
 	barbarian := aSwordsman()
 	barbarian.ChargesRecklessly = true
-	plain, err := chargeOn(t, barbarian, ChargePlain)
-	if err != nil {
-		t.Fatalf("investida: %v", err)
-	}
-	reckless, err := chargeOn(t, barbarian, ChargeReckless)
-	if err != nil {
-		t.Fatalf("Imprudente: %v", err)
-	}
+	plain := chargeDamage(t, barbarian, ChargePlain)
+	reckless := chargeDamage(t, barbarian, ChargeReckless)
 	// O dado fixo é 4: o +1d12 rola 4.
 	if reckless.RawDamage-plain.RawDamage != 4 {
 		t.Errorf("dano bruto %d na Imprudente e %d na investida; want +4 (o 1d12 do dado fixo, p42)",

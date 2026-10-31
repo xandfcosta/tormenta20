@@ -14,7 +14,7 @@ import (
 // INTEGRAÇÃO porque o que pode quebrar é a COMPOSIÇÃO: o botão do menu bate numa
 // rota irmã, a cena põe uma flag no pedido, o `Strike` a junta às situações que
 // vêm do TABULEIRO, e o motor lê a lista para duas coisas diferentes — o −5 e o
-// tipo do dano. Um teste do `ResolveAttackUnder` prova a regra e nada sobre o
+// tipo do dano. Um teste do `RollAttackDamage` prova a regra e nada sobre o
 // gesto chegar nela.
 
 // propoeGolpe rola um golpe pela rota pedida e devolve o provisório, cancelando

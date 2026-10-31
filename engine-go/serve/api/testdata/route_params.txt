@@ -28,6 +28,9 @@
 #   arma    — QUAL das empunhadas, por índice. O `Propose` escolhe por índice e
 #             já recusa o que não existe; um nome no endereço obrigaria o
 #             servidor a casar texto para achar de volta a mesma arma (ALE-423)
+#   decisao — a DECISÃO do mestre sobre o golpe (errou, acertou, critico): três
+#             botões de um gesto só, e um corpo JSON pediria uma ilha de JS onde
+#             há um `@post`, pelo motivo da `manobra`
 arma
 ascendencia
 atributo
@@ -39,6 +42,7 @@ characterId
 classe
 cond
 cor
+decisao
 die
 efeito
 entryId

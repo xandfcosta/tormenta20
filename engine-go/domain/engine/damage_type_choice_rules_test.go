@@ -31,7 +31,7 @@ func umaArmaPiedosa() WeaponCard {
 
 // COM ARMA COMUM, escolher o não letal custa −5.
 func TestChoosingNonLethalWithALethalWeaponCostsFive(t *testing.T) {
-	nua, err := ResolveAttack(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
+	nua, err := suggestedAttack(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
 		10, fixedDice(t, 4))
 	if err != nil {
 		t.Fatalf("resolver o golpe comum: %v", err)
@@ -45,7 +45,7 @@ func TestChoosingNonLethalWithALethalWeaponCostsFive(t *testing.T) {
 			nua.NonLethal)
 	}
 
-	trocado, err := ResolveAttackUnder(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
+	trocado, err := suggestedAttackUnder(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 15},
 		[]SpecialSituation{AttackerSwitchesTheDamageType}, 10, fixedDice(t, 4))
 	if err != nil {
 		t.Fatalf("resolver o golpe trocado: %v", err)
@@ -65,7 +65,7 @@ func TestChoosingNonLethalWithALethalWeaponCostsFive(t *testing.T) {
 func TestChoosingNonLethalMakesTheDamageNonLethal(t *testing.T) {
 	// Defesa 1 para o golpe de total 10 acertar mesmo com os −5: o que se mede
 	// aqui é o TIPO do dano, e um ataque que erra não tem dano para tipar.
-	trocado, err := ResolveAttackUnder(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 1},
+	trocado, err := suggestedAttackUnder(aWeapon("1d8", 3, 20, 2, 5), AttackTarget{Defense: 1},
 		[]SpecialSituation{AttackerSwitchesTheDamageType}, 10, fixedDice(t, 4))
 	if err != nil {
 		t.Fatalf("resolver: %v", err)
@@ -84,7 +84,7 @@ func TestChoosingNonLethalMakesTheDamageNonLethal(t *testing.T) {
 // causa não letal por natureza, escolher o LETAL custa os mesmos −5.
 func TestChoosingLethalWithANonLethalWeaponCostsTheSameFive(t *testing.T) {
 	// O CONTROLE: a Piedosa sem escolha nenhuma não paga nada.
-	natural, err := ResolveAttack(umaArmaPiedosa(), AttackTarget{Defense: 15}, 10, fixedDice(t, 4))
+	natural, err := suggestedAttack(umaArmaPiedosa(), AttackTarget{Defense: 15}, 10, fixedDice(t, 4))
 	if err != nil {
 		t.Fatalf("resolver o golpe da Piedosa: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestChoosingLethalWithANonLethalWeaponCostsTheSameFive(t *testing.T) {
 			natural.NonLethal, natural.Damage)
 	}
 
-	trocado, err := ResolveAttackUnder(umaArmaPiedosa(), AttackTarget{Defense: 1},
+	trocado, err := suggestedAttackUnder(umaArmaPiedosa(), AttackTarget{Defense: 1},
 		[]SpecialSituation{AttackerSwitchesTheDamageType}, 10, fixedDice(t, 4))
 	if err != nil {
 		t.Fatalf("resolver a Piedosa trocada: %v", err)

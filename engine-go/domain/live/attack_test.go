@@ -24,7 +24,7 @@ func umGolpe() PendingAttack {
 	return PendingAttack{
 		AttackerEntryID: "heroi", TargetEntryID: "ogro", Weapon: "Espada longa",
 		Roll: 14, Total: 19, Hit: true, Dice: []int{8}, RawDamage: 11, Damage: 11,
-		ByUserID: 7,
+		Ruling: RulingHit, DamageRolled: true, ByUserID: 7,
 	}
 }
 
@@ -77,28 +77,6 @@ func TestTheGameMasterGetsTheAttackToApply(t *testing.T) {
 	ClearPendingAttack(st)
 	if st.PendingAttack != nil {
 		t.Error("limpo, o provisório some — senão ele seria confirmado duas vezes")
-	}
-}
-
-// UM ATAQUE QUE ERRA TAMBÉM SE CONFIRMA, e não mexe em PV nenhum. Confirmar é o
-// mestre dizendo "aconteceu", e errar é uma coisa que acontece.
-func TestConfirmingAMissChangesNoVitals(t *testing.T) {
-	st := aQueue(t)
-	errou := umGolpe()
-	errou.Hit, errou.Dice, errou.RawDamage, errou.Damage = false, nil, 0, 0
-	if err := ProposeAttack(st, errou); err != nil {
-		t.Fatalf("propor: %v", err)
-	}
-	attack, err := AttackToCommit(st, Attacker{UserID: 1, Role: "gm"})
-	if err != nil {
-		t.Fatalf("confirmar: %v", err)
-	}
-	if attack.Damage != 0 {
-		t.Errorf("o dano = %d, e um ataque que erra não tira nada", attack.Damage)
-	}
-	ClearPendingAttack(st)
-	if st.PendingAttack != nil {
-		t.Error("o provisório some mesmo quando o ataque errou")
 	}
 }
 

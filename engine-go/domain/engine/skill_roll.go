@@ -63,7 +63,7 @@ type SkillTestSpend struct {
 
 // ResolveSkillTest resolve um teste de 1d20 + modificador (p220).
 //
-// O d20 ENTRA por parâmetro, como no `ResolveAttack`: a regra não sorteia, ela
+// O d20 ENTRA por parâmetro, como no `JudgeAttack`: a regra não sorteia, ela
 // decide o que se faz COM a rolagem. É o que deixa cada caso do livro ser um
 // teste com o número escrito à mão, e é o que permite a mesa rolar na mão e
 // informar.

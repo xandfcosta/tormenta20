@@ -22,7 +22,7 @@ engine-go/
 │   ├── session/    o ciclo da sessão, a trava de acesso e o STORE da fila
 │   ├── boards/     o store dos tabuleiros abertos, com as abas e os lugares
 │   ├── initiative/ quem entra na fila, e com que números
-│   ├── combat/     ataque e manobra: quem pode, o que decide, o provisório
+│   ├── combat/     ataque e manobra: quem pode, o teste, a decisão e o dano
 │   ├── character/  o herói: nascer (`Births`) e jogar (`Plays`)
 │   ├── campaign/   a mesa: quem a vê, quem a abre, quem senta nela
 │   ├── accounts/   a conta: entrar, cadastrar-se com convite, trocar a senha
@@ -291,6 +291,42 @@ rolagem são as mesmas. **O BÔNUS conhece o LADO**: o `Desejo de Liberdade`
 ajuda quem é agarrado, não quem agarra; o escopo está na chave do `targetKey`,
 e um caso prende os dois lados.
 
+## O GOLPE EM DOIS TEMPOS: o dano só existe depois da decisão do mestre
+
+O crítico muda QUANTOS dados se rolam (p231), e quem diz se houve crítico é o
+mestre ("O veredito é do mestre", no [CLAUDE.md da raiz](../CLAUDE.md)). Rolado
+junto do d20, o dano sairia multiplicado pela SUGESTÃO do livro, e quem rola na
+mão não saberia quantos dados pegar.
+
+- **O teste**: o `JudgeAttack` devolve a rolagem, a Defesa e a sugestão
+  (`Hit`, `Critical`), sem dano. O provisório leva a margem e o multiplicador da
+  ARMA (`CritRange`, `CritMult`), que o botão "Crítico ×N" escreve.
+- **A decisão** (`Ruling`: `miss`, `hit`, `critical`) é do mestre, UMA vez
+  (`live.RuleAttack`). No acerto e no crítico ela já guarda o que rolar
+  (`DamageToRoll`, do `engine.DamageToRoll`), na ordem em que os dados se leem:
+  a arma primeiro, os extras depois.
+- **O dano** é de quem atacou, ou do mestre por ele (`live.AttackAwaitingDamage`):
+  o `RollAttackDamage` troca a sugestão pela decisão (`applyTheRuling`) e rola.
+  Na mão, o `DiceRolledByHand` entrega os dados na mesma ordem, confere cada um
+  contra as faces e o caso de uso recusa os que sobram.
+- **O ✓ exige decisão e dano** (`AttackToCommit`); a manobra não rola dano, e
+  o ✓ dela é a decisão.
+- **O erro ENCERRA o golpe**: cobra a ação padrão (`session.Store.RuleAttack`)
+  e deixa o que o ✓ deixaria — PM do impulso, guarda da investida, gatilhos
+  cumulativos (`afterTheStrike`). O provisório fica com a decisão, para o
+  jogador ler "o mestre disse: errou", até o próximo ataque o substituir.
+- **Rolar de novo vale antes da decisão** (p226): o `Reroll` recusa depois dela.
+- **Os campos da mão são sinais NUMERADOS** (`damage_die_1`…), montados em Go
+  (`handDamageSignal`) e declarados vazios a cada cartão
+  (`handSignalsDeclaration`), para o dado de um ataque não vazar para o
+  seguinte. Um campo vazio recusa o gesto: misturar o dado da mesa com o do
+  servidor seria pior que pedir o que falta.
+
+A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
+e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
+decisão, no `attack_ruling_rules_test.go`. Os casos de regra do livro decidem
+como ele sugere (`suggestedAttack`), porque é assim que os exemplos se escrevem.
+
 ## A MANOBRA ANUNCIA a condição e o desfecho ao mestre; ela não os aplica
 
 Duas das cinco manobras deixam condição — *"você deixa o alvo CAÍDO"* e *"uma
@@ -395,17 +431,16 @@ com "−2 de X, não aplicado por não empilhar". A tela ainda não o lê.
 
 ### O ataque em sistemas, e a única ordem que a rede NÃO pegava
 
-- **O `d20` entra por parâmetro e os dados por função** (`ResolveAttack`), para
+- **O `d20` entra por parâmetro e os dados por função** (`JudgeAttack`, `RollAttackDamage`), para
   cada caso do livro ser um teste com o número escrito à mão. O `attack.go` só
   tem o vocabulário da fronteira e a montagem do mundo.
 - Os casos do livro prendem quase toda a ordem; que cada sistema escreveu o
   componente dele prende o `TestEveryAttackSystemWritesItsComponent`, com um
   CENÁRIO por sistema, porque alguns só agem numa metade do dado.
-- **Suprimir é write-once, e a PRIMEIRA razão é a que fica**: o bônus de crítico
-  de um ataque que ERROU diz que o ataque errou, e não "não foi um acerto
-  crítico".
-- **A notação de dano é lida antes de se saber se o ataque acertou** (a parcela
-  precisa existir para ser suprimida): um `"1d"` no catálogo falha sempre.
+- **Suprimir é write-once, e a PRIMEIRA razão é a que fica**: um sistema que
+  passe depois não troca o motivo que a mesa lê pelo dele.
+- **A notação de dano só é lida no tempo do dano**: julgar o teste não a lê, e o
+  `RollAttackDamage` e o `DamageToRoll` falham num `"1d"` do catálogo sempre.
 
 ### O tabuleiro entrou, e foi ele quem devolveu o `Despawn`
 

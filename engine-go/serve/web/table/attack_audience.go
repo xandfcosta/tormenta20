@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"t20engine/domain/engine"
@@ -17,33 +18,22 @@ import (
 // no papel do personagem, ele não conhece a ficha de outra entidade.
 
 // forPlayer recorta a faixa para quem não é o mestre. Quem rolou fica com a
-// própria conta; os outros jogadores, só com quem ataca quem.
-//
-// O DANO sai junto: hoje ele só é rolado quando o ataque acerta, e a presença
-// dele entregaria o veredito. Na mesa física o jogador rola o dano depois que o
-// mestre fala.
+// própria rolagem, a decisão do mestre e o dano que ela pede; os outros
+// jogadores, só com quem ataca quem.
 func (a attackProposal) forPlayer(pa live.PendingAttack) *attackProposal {
 	out := attackProposal{
+		Stage:    a.Stage,
 		Attacker: a.Attacker, Target: a.Target, TargetEntryID: a.TargetEntryID,
 		Weapon: a.Weapon, Mine: a.Mine, Maneuver: a.Maneuver, Action: a.Action,
-		Class: "mesa-ataque-comum",
 	}
 	if !a.Mine {
 		return &out
 	}
-	out.Tally = ownRollLine(pa)
+	out.Tally = rollNotation(pa.Roll, pa.Total) + " = " + strconv.Itoa(pa.Total)
 	out.Boost, out.Guard, out.Rerolled = a.Boost, a.Guard, a.Rerolled
+	out.Said, out.ToRoll, out.Hand, out.HandBonus = a.Said, a.ToRoll, a.Hand, a.HandBonus
+	out.DamageLine, out.DamageTotal = a.DamageLine, a.DamageTotal
 	return &out
-}
-
-// ownRollLine é a conta de quem rolou, sem o outro lado: "d20 14 + 7 = 21".
-func ownRollLine(pa live.PendingAttack) string {
-	bonus := pa.Total - pa.Roll
-	sign := "+"
-	if bonus < 0 {
-		sign, bonus = "−", -bonus
-	}
-	return fmt.Sprintf("d20 %d %s %d = %d", pa.Roll, sign, bonus, pa.Total)
 }
 
 // maneuverVerdict é a leitura do embate para o MESTRE, pela regra da p234
@@ -85,21 +75,4 @@ func maneuverExtra(kind string, margin int) string {
 		return "empurra " + strings.Replace(fmt.Sprintf("%.1fm", metres), ".", ",", 1)
 	}
 	return ""
-}
-
-// gmRollLine são os DADOS do cartão curto do mestre: o d20 e o bônus de quem
-// ataca contra a Defesa, e os dados do dano quando há. Na manobra, os dois
-// lados do teste oposto.
-//
-//	gmRollLine(...) // "d20 9 + 8 = 17 vs Defesa 13 · 1d8+3 (3)"
-func gmRollLine(pa live.PendingAttack) string {
-	if pa.Maneuver != nil {
-		m := *pa.Maneuver
-		return ownRollLine(pa) + " vs " + ownRollLine(live.PendingAttack{Roll: m.OpposedRoll, Total: m.Opposed})
-	}
-	line := fmt.Sprintf("%s vs Defesa %d", ownRollLine(pa), pa.Defense)
-	if !pa.Hit || len(pa.Dice) == 0 {
-		return line
-	}
-	return line + " · " + damageDice(pa)
 }

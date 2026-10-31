@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"t20engine/domain/engine"
 
@@ -11,61 +12,62 @@ import (
 
 // O ATAQUE PROPOSTO, como a mesa o lê.
 //
-// A faixa é irmã da do movimento (`moveProposed`) e o desenho é o mesmo: o que
-// DECIDE o clique primeiro, os dois verbos à direita, e o selo "Rascunho" do
-// lado de quem não confirma. O que muda é o que decide — no movimento é o
-// custo, aqui é o VEREDICTO: acertar ou não muda o que a mesa faz em seguida, e
-// o dano só importa depois dessa resposta.
+// O cartão do MESTRE é o duelo — a rolagem contra o que ela enfrenta — e muda
+// por TEMPO (`stageOf`): julgar, esperar o dano, confirmar. O do JOGADOR é
+// recortado (`forPlayer`): a própria rolagem, a decisão do mestre e o dano que
+// ela pede, nunca a Defesa nem a sugestão do livro.
 type attackProposal struct {
-	// Veredicto é a palavra do crachá: CRÍTICO, ACERTOU ou ERROU.
-	Verdict string
-	// Classe é a tinta do crachá, e ela segue o veredicto.
-	Class         string
+	Stage         string
 	Attacker      string
 	Target        string
 	TargetEntryID string
 	Weapon        string
-	// Conta é a aritmética inteira numa linha. Ela existe porque a mesa
-	// desconfia de número sem origem — "11 de dano" pede "de onde?", e
-	// "24 vs 17 · 2d8+3 (8+5) · RD 5 → 11" não pede nada.
+	// Action é o nome da manobra ("Derrubar"), que a cabeça das faixas mostra
+	// ao lado de quem ataca quem; vazio no golpe comum.
+	Action   string
+	Maneuver bool
+	// Tally é a conta inteira numa linha, para os Detalhes do mestre — "24 vs 17
+	// · 2d8+3 (8+5) · RD 5 → 11" — e, no cartão do jogador, a rolagem dele.
+	Tally string
 	// Situations são os motivos da Tabela 5-3, em prosa e FORA da conta.
 	Situations string
-	Tally      string
 	// Boost é o impulso de PM que o golpe leva e o que a confirmação cobra —
 	// "Golpe Divino · 3 PM ao confirmar" (ALE-487).
 	Boost string
-	// Guard é a guarda que a investida abre em quem investiu — "Furioso: –2 na
-	// Defesa até a próxima vez" (p235, ALE-499). Para o NPC, que não tem ficha
-	// onde a penalidade more, a frase é o que o mestre aplica.
+	// Guard é a guarda que a investida abre em quem investiu (p235). Para o
+	// NPC, que não tem ficha onde a penalidade more, a frase é o que o mestre
+	// aplica.
 	Guard string
-	// Meu diz se quem olha foi quem rolou: só ele cancela o que é dele. O mestre
-	// cancela por qualquer um, e isso é decidido na tela pelo `Mestre` da view.
+	// Mine diz se quem olha foi quem rolou: só ele cancela e rola o dano do que
+	// é dele. O mestre faz os dois por qualquer um.
 	Mine bool
 	// Rerolled diz os "rolar de novo" pagos, e Offers são os botões de quem
-	// rolou (p226, ALE-508).
+	// rolou (p226, ALE-508) — só antes da decisão.
 	Rerolled string
 	Offers   []rerollOffer
-	// O CARTÃO CURTO do mestre (ALE-522) diz o resultado em três números, e o
-	// diálogo dos Detalhes decompõe: o total contra a Defesa, cada dado do dano
-	// e o que a RD absorveu. Tone é o tom do veredito no kit.
-	Tone     string
-	Total    int
-	Defense  int
-	Damage   int
-	Dice     []int
-	Faces    int
-	Absorbed int
-	Maneuver bool
-	// Action é o nome da manobra ("Derrubar"), que a cabeça das faixas mostra
-	// ao lado de quem ataca quem; vazio no golpe comum.
-	Action string
-	// RollLine é a linha dos DADOS do cartão curto do mestre, à vista sem abrir
-	// os Detalhes (pedido do dono): "d20 9 + 8 = 17 vs Defesa 13 · 1d8+3 (3)".
-	RollLine string
+
+	// O MESTRE: o duelo, os três botões e a razão da sugestão, e as linhas do
+	// dano rolado.
+	Duel     duelView
+	Verdicts []verdictButton
+	Hint     string
+	Rows     []duelRow
+	Notes    []string
+	// ToRoll é o dano que a decisão pede ("2d8 + 3"); Hand são os campos da
+	// mão, um por dado.
+	ToRoll    string
+	Hand      []handGroup
+	HandBonus string
+	// Said é a decisão do mestre como o jogador a lê ("crítico ×2").
+	Said string
+	// DamageLine é o dano rolado na notação, e DamageTotal o cru: o jogador não
+	// vê a RD do alvo.
+	DamageLine  string
+	DamageTotal int
 }
 
-// attackProposalOf traduz o provisório do regime na faixa, ou nil quando não há
-// ataque pendurado.
+// attackProposalOf traduz o provisório do regime no cartão do MESTRE, ou nil
+// quando não há ataque pendurado.
 //
 // Os NOMES vêm da fila e não do provisório: a linha pode ter sido renomeada
 // entre a rolagem e o desenho, e o nome que a mesa lê é o de agora.
@@ -75,6 +77,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	}
 	pa := st.PendingAttack
 	out := &attackProposal{
+		Stage:    stageOf(*pa),
 		Attacker: entryLabel(st, pa.AttackerEntryID), Target: targetLabel(*pa, st),
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
@@ -82,30 +85,34 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:     pa.ByUserID == userID,
 		Rerolled: writtenRerolls(pa.Rerolls, pa.Roll),
-		Total:    pa.Total, Defense: pa.Defense, Dice: pa.Dice, Faces: pa.Faces, Absorbed: pa.Absorbed,
+		Said:     rulingSaid(*pa),
+	}
+	if pa.DamageToRoll != nil {
+		out.ToRoll, out.Hand = toRollLine(*pa.DamageToRoll), handGroupsOf(*pa.DamageToRoll)
+		out.HandBonus = strings.TrimSpace(signedTerm(pa.DamageToRoll.Bonus))
 	}
 	if pa.Maneuver != nil {
-		out.Maneuver = true
-		out.Action = maneuverSeal(*pa.Maneuver)
 		var note string
-		out.Verdict, out.Tone, note = maneuverVerdict(*pa)
-		out.Class = "mesa-ataque-comum"
+		out.Maneuver, out.Action = true, maneuverSeal(*pa.Maneuver)
+		out.Duel, note = maneuverDuel(*pa)
 		out.Tally = maneuverLine(*pa)
-		if note != "" {
-			out.Tally += " · " + note
+		out.Rows = maneuverConsequence(*pa)
+		// O EFEITO DA MARGEM DE 5 já está na consequência; a nota só fala
+		// sozinha no empate, que é o "outro teste" da p234.
+		if note != "" && pa.Maneuver.Margin < 5 {
+			out.Hint = capitalize(note) + "."
 		}
-		out.RollLine = gmRollLine(*pa)
 		return out
 	}
-	switch {
-	case pa.Critical:
-		out.Verdict, out.Class, out.Tone, out.Damage = "Crítico", "mesa-ataque-critico", "good", pa.Damage
-	case pa.Hit:
-		out.Verdict, out.Class, out.Tone, out.Damage = "Acertou", "mesa-ataque-acerto", "good", pa.Damage
-	default:
-		out.Verdict, out.Class, out.Tone = "Errou", "mesa-ataque-erro", "danger"
+	out.Duel = strikeDuel(*pa)
+	switch out.Stage {
+	case stageJudge:
+		out.Verdicts, out.Hint = verdictsOf(*pa), suggestionHint(*pa)
+	case stageConfirm:
+		out.Rows, out.Notes = damageRows(*pa), damageNotes(*pa)
+		out.DamageLine = damageSum(*pa) + " = " + strconv.Itoa(pa.RawDamage)
+		out.DamageTotal = pa.RawDamage
 	}
-	out.RollLine = gmRollLine(*pa)
 	return out
 }
 
@@ -183,7 +190,7 @@ func attackLine(pa live.PendingAttack) string {
 	case pa.Roll == 20 && pa.Total < pa.Defense:
 		line += " · 20 natural acerta"
 	}
-	if !pa.Hit {
+	if !pa.Hit || len(pa.Dice) == 0 {
 		return line
 	}
 	line += " · " + damageDice(pa)

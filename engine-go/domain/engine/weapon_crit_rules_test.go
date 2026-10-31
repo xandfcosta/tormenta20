@@ -15,7 +15,7 @@ import (
 //
 // Ninguém tinha notado porque até a ALE-364 não havia resolução de ataque: o
 // `critRange` era um número impresso na carta e nada o consumia. Hoje o
-// `ResolveAttack` o lê, e o número inerte virou regra errada.
+// `JudgeAttack` o lê, e o número inerte virou regra errada.
 func TestTheThreatRangeImprovementReachesTheWeaponCard(t *testing.T) {
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
 	catalogs := primeBook(t)

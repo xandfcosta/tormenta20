@@ -24,13 +24,12 @@ func pendingWithANaturalOne(t *testing.T, f sceneFixture, path string) live.Pend
 	if state.PendingAttack == nil {
 		t.Fatalf("%s não virou provisório", path)
 	}
-	// O 1 NATURAL ERRA (p221), e quem erra não rola dano: o provisório
-	// semeado é o erro inteiro, e não só o dado.
+	// O 1 NATURAL ERRA (p221): o provisório semeado é a sugestão inteira, e
+	// não só o dado.
 	seeded := *state.PendingAttack
 	seeded.Total += 1 - seeded.Roll
 	seeded.Roll = 1
-	seeded.Hit, seeded.Critical, seeded.Dice = false, false, nil
-	seeded.RawDamage, seeded.Absorbed, seeded.Damage, seeded.NonLethal, seeded.CriticalExtra = 0, 0, 0, 0, 0
+	seeded.Hit, seeded.Critical = false, false
 	if seeded.Maneuver != nil {
 		seeded.Maneuver.Margin = seeded.Total - seeded.Maneuver.Opposed
 	}
@@ -83,8 +82,8 @@ func TestLuckyRerollsTheAttackAndTheSecondDieStands(t *testing.T) {
 		t.Errorf("depois de rolar de novo com 20: d20 %d, acertou %v, crítico %v; o 20 natural acerta e critica (p221, p231)",
 			got.Roll, got.Hit, got.Critical)
 	}
-	if len(got.Dice) == 0 {
-		t.Error("o golpe passou a acertar e não rolou dano")
+	if len(got.Dice) != 0 {
+		t.Errorf("rolar de novo o teste rolou dano (%v): o dano vem depois da decisão do mestre", got.Dice)
 	}
 	if len(got.Rerolls) != 1 || got.Rerolls[0].Discarded != 1 || got.Rerolls[0].Name != "Sortudo" {
 		t.Errorf("o provisório não guarda o dado que saiu: %+v", got.Rerolls)
@@ -107,29 +106,22 @@ func TestOnlyWhoRolledRerollsTheAttack(t *testing.T) {
 	}
 }
 
-// O DANO JÁ ROLADO FICA quando o segundo dado não muda o acerto nem o crítico:
-// rolar de novo o ATAQUE não é rolar de novo o dano (decisão do dono).
-//
-// O primeiro dado é um 20 natural com um dano MARCADOR, 77, que dado nenhum
-// da espada longa tira: o 20 de novo continua crítico, e só o 77 mantido o
-// mostra.
-func TestARerollThatKeepsTheCriticalKeepsTheDamage(t *testing.T) {
+// ROLAR DE NOVO VALE ANTES DA DECISÃO (p226): *"devem ser usados antes de o
+// mestre declarar se você passou ou não no teste"*. Depois do "errou" do
+// mestre, o teste já foi julgado.
+func TestNoRerollAfterTheGMRules(t *testing.T) {
 	f, goblin := attackOnTurn(t)
 	withPowers(t, f, `["sortudo"]`, "{}")
-	seeded := pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
-	seeded.Total += 19
-	seeded.Roll, seeded.Hit, seeded.Critical = 20, true, true
-	seeded.Dice, seeded.RawDamage, seeded.Damage = []int{7, 7}, 77, 77
-	if _, err := f.s.sessions.ProposeAttack(t.Context(), f.sessionID, seeded); err != nil {
-		t.Fatalf("semear o crítico: %v", err)
+	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/errou", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o mestre dizer errou deu %d", rec.Code)
 	}
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":20}`)
-	if !got.Critical || got.Damage != 77 || got.RawDamage != 77 {
-		t.Errorf("o 20 de novo continua crítico e o dano fica: crítico %v, dano %d (cru %d); esperava 77",
-			got.Critical, got.Damage, got.RawDamage)
+	before := mpOf(t, f.s, f.charID)
+	if got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":20}`); got.Roll != 1 || len(got.Rerolls) != 0 {
+		t.Errorf("o jogador rolou de novo depois de o mestre decidir: d20 %d, %+v", got.Roll, got.Rerolls)
 	}
-	if len(got.Rerolls) != 1 || got.Rerolls[0].Discarded != 20 {
-		t.Errorf("o rolar de novo que deu o mesmo não ficou registrado: %+v", got.Rerolls)
+	if spent := before - mpOf(t, f.s, f.charID); spent != 0 {
+		t.Errorf("o rolar de novo recusado cobrou %d PM", spent)
 	}
 }
 

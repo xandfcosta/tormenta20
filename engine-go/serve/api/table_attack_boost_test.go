@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"t20engine/domain/live"
 )
 
 // O PM DO IMPULSO SAI NA CONFIRMAÇÃO (ALE-487). O jogador propõe o golpe com o
@@ -23,8 +25,12 @@ func boostedProposal(t *testing.T, pm int) (sceneFixture, int64) {
 	if state.PendingAttack == nil {
 		t.Fatal("o ataque não virou provisório")
 	}
+	// JÁ DECIDIDO E ROLADO: o impulso é semeado, e o personagem do caso não
+	// tem o poder — refazer a arma para o dano o recusaria. O que se prende é
+	// o ✓.
 	boosted := *state.PendingAttack
 	boosted.BoostPowerID, boosted.BoostPM = "class.guerreiro.ataque-especial-4", pm
+	boosted.Ruling, boosted.Hit, boosted.DamageRolled = live.RulingHit, true, true
 	if _, err := f.s.sessions.ProposeAttack(t.Context(), f.sessionID, boosted); err != nil {
 		t.Fatalf("pôr o impulso no provisório: %v", err)
 	}

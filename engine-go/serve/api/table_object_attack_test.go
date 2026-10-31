@@ -93,6 +93,14 @@ func TestAttackingALooseObjectSpendsItsHitPointsAfterTheDamageReduction(t *testi
 		t.Errorf("o provisório não levou o nome do alvo: %q", pendente.TargetLabel)
 	}
 
+	// O MESTRE DIZ ACERTOU, qualquer que seja o d20: a decisão é dele, e o que
+	// se prende aqui é onde o dano pousa.
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/acertou", "")
+	f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/ataque/dano", "")
+	pendente = stateOf(t, f.s.sessions, f.sessionID).PendingAttack
+	if pendente == nil || !pendente.DamageRolled {
+		t.Fatalf("o dano contra a porta não foi rolado: %+v", pendente)
+	}
 	dano := pendente.Damage
 	// O CÓDIGO NÃO BASTA: o comando da mesa responde 200 com a recusa no corpo,
 	// então confirmar o código seria o mesmo guarda cego do `placed.ok()` do e2e.

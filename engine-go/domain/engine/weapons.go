@@ -381,7 +381,7 @@ func threatRangeOf(base int, effects ItemEffects, scopes []string) int {
 	// O PISO É 2, e não é arbitrário: "um 1 natural sempre é uma falha" (p221),
 	// então um resultado 1 na faixa é um número que nunca pode ameaçar. Sem o
 	// piso, margem suficiente faria a carta anunciar uma faixa que inclui o
-	// natural 1 — e o `ResolveAttack` a recusaria em silêncio.
+	// natural 1 — e o `JudgeAttack` a recusaria em silêncio.
 	if width > 19 {
 		width = 19
 	}

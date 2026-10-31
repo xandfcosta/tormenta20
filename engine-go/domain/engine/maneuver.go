@@ -14,7 +14,7 @@ import (
 //
 // # O que entra pronto, e por quê
 //
-// Os DOIS `d20` chegam por parâmetro, pela mesma razão do `ResolveAttack`: a
+// Os DOIS `d20` chegam por parâmetro, pela mesma razão do `JudgeAttack`: a
 // regra não sorteia, ela decide o que se faz COM a rolagem. É o que deixa o
 // empate — que é o caso interessante desta página — virar um teste com o número
 // escrito à mão em vez de mil execuções esperando coincidência.

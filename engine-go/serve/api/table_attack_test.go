@@ -93,8 +93,8 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	if scene := stateOf(t, f.s.sessions, f.sessionID).Scene; !scene.StandardLeft {
 		t.Fatal("propor o ataque já gastou a ação padrão, antes de o mestre confirmar")
 	}
-	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
-		t.Fatalf("confirmar o ataque deu %d", rec.Code)
+	if rec := settlesAsTheBookSuggests(t, f); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar o ataque deu %d", rec.Code)
 	}
 	scene := stateOf(t, f.s.sessions, f.sessionID).Scene
 	if scene.StandardLeft {
@@ -108,7 +108,9 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	// única — movimento não vira padrão. O que se prende é o PROVISÓRIO, que
 	// não pode nascer.
 	rec = f.requests(t, f.player, http.MethodPost, attack, "")
-	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack != nil {
+	// O ERRO DECIDIDO fica na mesa para o jogador ler; um segundo ataque seria
+	// um provisório NOVO, ainda sem decisão.
+	if pa := stateOf(t, f.s.sessions, f.sessionID).PendingAttack; pa != nil && pa.Ruling == "" {
 		t.Error("sem ação padrão no turno, um segundo ataque foi rolado")
 	}
 	if refusal := tableRefusal(t, rec.Body.String()); !strings.Contains(refusal, "não sobrou ação neste turno") {
@@ -175,15 +177,15 @@ func TestTheAttackBannerSaysTheConditionTheBookForesees(t *testing.T) {
 	if pendente == nil {
 		t.Fatalf("o ataque não virou provisório: %q", tableRefusal(t, rec.Body.String()))
 	}
-	// O ATAQUE PODE TER ERRADO — o d20 é de verdade —, e o anúncio só sai no
-	// acerto. Ler o provisório em vez de insistir no sorteio é o que mantém
-	// este caso determinístico.
-	if !pendente.Hit {
-		if len(pendente.Announces) != 0 {
-			t.Errorf("o ataque errou e a faixa anuncia %+v", pendente.Announces)
-		}
-		return
+	// O ANÚNCIO SAI COM O DANO, depois de o mestre dizer acertou — e é ele quem
+	// diz, qualquer que seja o d20. Decidir aqui é o que mantém o caso
+	// determinístico.
+	if len(pendente.Announces) != 0 {
+		t.Errorf("o teste do ataque já anuncia %+v, antes da decisão do mestre", pendente.Announces)
 	}
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/acertou", "")
+	f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/ataque/dano", "")
+	pendente = stateOf(t, f.s.sessions, f.sessionID).PendingAttack
 	if len(pendente.Announces) != 1 || pendente.Announces[0].Condition != "sangrando" {
 		t.Fatalf("o acerto com a Sanguinária anuncia %+v, e a p336 reserva sangrando",
 			pendente.Announces)

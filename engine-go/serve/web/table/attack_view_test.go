@@ -75,23 +75,30 @@ func TestTheAttackLineNamesTheNaturalRollThatOverridesTheComparison(t *testing.T
 	}
 }
 
-// O VEREDICTO é uma das três palavras, e a tinta segue a palavra.
-func TestTheVerdictIsOneOfThreeWords(t *testing.T) {
+// A SUGESTÃO DO LIVRO é o botão cheio, e o crítico diz o multiplicador da arma.
+func TestTheSuggestedVerdictIsTheFilledButton(t *testing.T) {
 	st := live.EmptyRuntimeState()
 	st.Initiative = []live.InitiativeEntry{
 		{ID: "a", Label: "Arwen"}, {ID: "b", Label: "Ogro"},
 	}
 	cases := []struct {
 		hit, crit bool
+		mult      int
 		want      string
-	}{{false, false, "Errou"}, {true, false, "Acertou"}, {true, true, "Crítico"}}
+	}{{false, false, 2, "Errou"}, {true, false, 2, "Acertou"}, {true, true, 3, "Crítico ×3"}}
 	for _, tc := range cases {
 		st.PendingAttack = &live.PendingAttack{
-			AttackerEntryID: "a", TargetEntryID: "b", Hit: tc.hit, Critical: tc.crit, ByUserID: 7,
+			AttackerEntryID: "a", TargetEntryID: "b", Hit: tc.hit, Critical: tc.crit, CritMult: tc.mult, ByUserID: 7,
 		}
 		band := attackProposalOf(st, 7)
-		if band == nil || band.Verdict != tc.want {
-			t.Errorf("hit=%v crit=%v deu %v, queria %q", tc.hit, tc.crit, band, tc.want)
+		var filled []string
+		for _, verdict := range band.Verdicts {
+			if verdict.Suggested {
+				filled = append(filled, verdict.Label)
+			}
+		}
+		if len(band.Verdicts) != 3 || len(filled) != 1 || filled[0] != tc.want {
+			t.Errorf("hit=%v crit=%v ×%d encheu %v, e o esperado é só %q", tc.hit, tc.crit, tc.mult, filled, tc.want)
 		}
 		if band.Attacker != "Arwen" || band.Target != "Ogro" {
 			t.Errorf("os nomes vêm da FILA, e vieram %q → %q", band.Attacker, band.Target)
@@ -177,9 +184,11 @@ func TestNoManeuverTextTheTablePlayerSeesDeclaresAWinner(t *testing.T) {
 			for _, mine := range []bool{true, false} {
 				m := live.ManeuverRoll{Kind: kind, OpposedRoll: 4, Opposed: 10, Margin: margin, ConditionOnAWin: "caido"}
 				pa := live.PendingAttack{Roll: 15, Total: 10 + margin, Maneuver: &m}
-				gm := attackProposal{Maneuver: true, Mine: mine, Action: maneuverSeal(m), Verdict: "Sucesso", Tally: maneuverLine(pa)}
+				gm := attackProposal{Maneuver: true, Mine: mine, Action: maneuverSeal(m),
+					Duel: duelView{Seal: "Sucesso"}, Tally: maneuverLine(pa), Said: rulingSaid(pa)}
 				band := gm.forPlayer(pa)
-				texto := strings.ToLower(band.Action + " " + band.Verdict + " " + band.Tally + " " + strings.Join(attackNotes(band), " "))
+				texto := strings.ToLower(band.Action + " " + band.Duel.Seal + " " + band.Said + " " + band.Tally + " " +
+					strings.Join(attackNotes(band), " "))
 				medidas++
 				for _, palavra := range julgamentos {
 					if strings.Contains(texto, palavra) {

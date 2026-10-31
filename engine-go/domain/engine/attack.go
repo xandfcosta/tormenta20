@@ -154,56 +154,63 @@ type AnnouncedCondition struct {
 	Note string `json:"note,omitempty"`
 }
 
-// ResolveAttack rola um ataque contra um alvo e devolve a conta inteira.
-//
-//	fora, err := ResolveAttack(carta, AttackTarget{Defense: 15}, 19, rolar)
-//	// fora.Critical == true, fora.Damage == 16 para 1d8+3 com x2
-func ResolveAttack(
-	card WeaponCard, target AttackTarget, d20 int, rollDie func(faces int) (int, error),
-) (AttackOutcome, error) {
-	return ResolveAttackUnder(card, target, nil, d20, rollDie)
-}
+// O ATAQUE EM DOIS TEMPOS: `JudgeAttack` é o teste, e `RollAttackDamage` é o
+// dano, rolado DEPOIS da decisão do mestre. O crítico muda quantos dados se
+// rolam (p231), e quem diz se houve crítico é o mestre — rolado junto do d20, o
+// dano sairia multiplicado pela sugestão do livro e não pela palavra dele.
 
-// ResolveAttackUnder é o ataque com as SITUAÇÕES ESPECIAIS da Tabela 5-3 (p239)
-// que valem agora — a cobertura do alvo, a posição elevada do atacante, o
-// flanqueio.
-//
-// Ela é a função de verdade e o `ResolveAttack` é o caso sem situação nenhuma,
-// que continua existindo porque é o caso COMUM: uma mesa sem tabuleiro ataca
-// assim, e os casos do livro são escritos assim.
-//
-// @example ResolveAttackUnder(carta, AttackTarget{Defense: 15},
-//
-//	[]SpecialSituation{TargetUnderLightCover}, 19, rolar)
-func ResolveAttackUnder(
-	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	d20 int, rollDie func(faces int) (int, error),
-) (AttackOutcome, error) {
-	return resolveAttack(card, target, situations, attackDie{Rolled: d20, Natural: d20}, rollDie)
-}
+// Ruling é a decisão do mestre sobre um golpe que pede dano: acerto ou crítico.
+// O erro não tem dano a rolar, e por isso não é uma decisão que chega aqui.
+type Ruling string
 
-// ResolveAttackCountingAsNaturalTwenty é o ataque cujo d20 "será considerado
-// um 20 natural" (Sorte de Nimb, p48, ALE-508): o dado ROLADO soma no total, e
-// o 20 decide o acerto e o crítico (p221, p231).
-//
-// @example ResolveAttackCountingAsNaturalTwenty(carta, alvo, nil, 13, rolar)
-func ResolveAttackCountingAsNaturalTwenty(
-	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	d20 int, rollDie func(faces int) (int, error),
-) (AttackOutcome, error) {
-	return resolveAttack(card, target, situations, attackDie{Rolled: d20, Natural: 20}, rollDie)
-}
+const (
+	RulingHit      Ruling = "hit"
+	RulingCritical Ruling = "critical"
+)
 
-// attackDie é o d20 do ataque em suas duas leituras: o que SOMA no total e o
+// AttackDie é o d20 do ataque em suas duas leituras: o que SOMA no total e o
 // que as pontas da p221 e a margem de ameaça leem. São o mesmo número, menos
 // quando um poder manda contar o dado como 20 natural.
-type attackDie struct{ Rolled, Natural int }
+type AttackDie struct{ Rolled, Natural int }
 
-func resolveAttack(
+// D20 é o dado rolado, lido como ele é.
+func D20(rolled int) AttackDie { return AttackDie{Rolled: rolled, Natural: rolled} }
+
+// D20CountingAsNaturalTwenty é o d20 que "será considerado um 20 natural"
+// (Sorte de Nimb, p48, ALE-508): o ROLADO soma no total, e o 20 decide o acerto
+// e o crítico (p221, p231).
+func D20CountingAsNaturalTwenty(rolled int) AttackDie {
+	return AttackDie{Rolled: rolled, Natural: 20}
+}
+
+// JudgeAttack rola o TESTE de ataque e devolve a sugestão do livro — acerto,
+// crítico — sem dano nenhum. As situações são as da Tabela 5-3 (p239) que valem
+// agora; o `rollDie` só é pedido pelo d10 da camuflagem (p238).
+//
+//	out, err := JudgeAttack(carta, AttackTarget{Defense: 13}, nil, D20(19), rolar)
+//	// out.Hit && out.Critical na espada longa (margem 19); out.Damage == 0
+func JudgeAttack(
 	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	die attackDie, rollDie func(faces int) (int, error),
+	die AttackDie, rollDie func(faces int) (int, error),
 ) (AttackOutcome, error) {
-	w := attackWorldOf(card, target, situations, die, rollDie)
+	w := runAttackWorld(append(judgeSystems(card, target, situations, die),
+		undoTheHitOnConcealment(rollDie)))
+	return outcomeFromWorld(w), faultOf(w)
+}
+
+// RollAttackDamage rola o dano de um golpe que o mestre JÁ decidiu: o crítico
+// multiplica os dados da arma porque ele disse crítico, e não porque o d20
+// caiu na margem. O `rollDie` é o servidor, ou os dados que a mesa rolou na mão
+// (`DiceRolledByHand`).
+//
+//	out, err := RollAttackDamage(carta, alvo, nil, D20(12), RulingCritical, rolar)
+//	// 2d8 + 3 numa espada longa, mesmo com o 12 fora da margem
+func RollAttackDamage(
+	card WeaponCard, target AttackTarget, situations []SpecialSituation,
+	die AttackDie, ruling Ruling, rollDie func(faces int) (int, error),
+) (AttackOutcome, error) {
+	w := runAttackWorld(append(judgeSystems(card, target, situations, die),
+		damageSystems(card, target, ruling, rollDie)...))
 	out := outcomeFromWorld(w)
 	// A CHANCE DO ALVO ecoa no resultado, e só quando há extra para ela
 	// alcançar: anunciar "25% de ignorar o extra" num acerto normal mandaria a
@@ -211,54 +218,90 @@ func resolveAttack(
 	if out.CriticalExtra > 0 {
 		out.CritExtraIgnoreChance = target.CritExtraIgnoreChance
 	}
-	// O ANÚNCIO SAI QUANDO O GATILHO ACONTECEU, e a escolha é consciente: a
-	// manobra anuncia SEMPRE porque lá quem decide o vencedor é o mestre, e o
-	// motor não tem como saber se a condição vale. Aqui ele sabe — o acerto é a
-	// comparação que ele mesmo faz —, e anunciar atordoamento num golpe que
-	// errou mandaria o mestre arbitrar sobre coisa nenhuma.
 	out.Announces = announcedBy(card, out)
-	// O NÃO LETAL NÃO É SISTEMA, e a escolha é a que o guia manda fazer: ECS
-	// para o que COMPÕE, função para o que calcula. Aqui não há o que compor —
-	// a propriedade é da ARMA e vale para o dano inteiro, depois da RD. Um
-	// sistema leria um recurso para copiar um número, que é cerimônia.
-	//
-	// DEPOIS da RD de propósito: o alvo perde o que o `Damage` diz, e é esse o
-	// número que não pode fazer sangrar nem matar (p236).
-	// O TIPO DO DANO É UM OU-EXCLUSIVO entre a NATUREZA da arma e a ESCOLHA de
-	// quem ataca (p236): a espada comum mata, a Piedosa não (p336), e trocar
-	// inverte os dois — a espada que derruba e a Piedosa que mata.
-	//
-	// Os −5 da escolha NÃO estão aqui: eles são a linha
-	// `AttackerSwitchesTheDamageType`, porque deslocar o teste de ataque é o
-	// mecanismo da Tabela 5-3 e a mesa lê a situação na decomposição. Aqui fica
-	// só o que a tabela não sabe fazer, que é dizer de que TIPO é o dano.
+	// O NÃO LETAL NÃO É SISTEMA: a propriedade é da ARMA e vale para o dano
+	// inteiro, depois da RD — é esse o número que não pode fazer sangrar nem
+	// matar (p236). O TIPO é um OU-EXCLUSIVO entre a natureza da arma e a
+	// ESCOLHA de quem ataca: a espada comum mata, a Piedosa não (p336), e trocar
+	// inverte os dois. Os −5 da escolha são a linha
+	// `AttackerSwitchesTheDamageType` da Tabela 5-3, que desloca o teste.
 	if card.NonLethal != hasSituation(situations, AttackerSwitchesTheDamageType) {
 		out.NonLethal = out.Damage
 	}
-	if fault, has := ecs.Get[attackFault](w, theResource(w)); has {
-		return out, fault.Err
+	return out, faultOf(w)
+}
+
+// DiceGroup é um grupo de dados da mesma parcela: os 3d8 do machado, o 1d6 de
+// fogo do encanto. Type vazio é o tipo da própria arma.
+type DiceGroup struct {
+	Count int    `json:"count"`
+	Faces int    `json:"faces"`
+	Type  string `json:"type,omitempty"`
+}
+
+// DamageFormula é o que se rola de dano depois da decisão, na ORDEM em que os
+// dados são lidos: a arma primeiro, os extras depois. É a ordem em que a mão
+// digita e em que o `DiceRolledByHand` os entrega.
+type DamageFormula struct {
+	Dice  []DiceGroup `json:"dice"`
+	Bonus int         `json:"bonus"`
+}
+
+// DamageToRoll diz o que rolar de dano depois da decisão do mestre: o ×N da
+// ARMA no crítico, e os extras fora dele (p231).
+//
+//	f, _ := DamageToRoll(machadoFlamejante, RulingCritical)
+//	// f.Dice == [{3 8 ""} {1 6 "fogo"}]
+func DamageToRoll(card WeaponCard, ruling Ruling) (DamageFormula, error) {
+	w := runAttackWorld([]ecs.System{
+		applyTheRuling(card, ruling), spawnTheDamageParcels(card),
+		multiplyTheWeaponDice, dropWhatIsNotCritical,
+	})
+	formula := DamageFormula{}
+	ecs.Each(w, func(e ecs.Entity, parcel damageDice) {
+		if dead(w, e) {
+			return
+		}
+		group := DiceGroup{Count: parcel.Count, Faces: parcel.Faces}
+		if kind, has := ecs.Get[damageTypeOf](w, e); has {
+			group.Type = kind.Name
+		}
+		formula.Dice = append(formula.Dice, group)
+	})
+	ecs.Each(w, func(e ecs.Entity, parcel damageFlat) {
+		if !dead(w, e) {
+			formula.Bonus += parcel.Amount
+		}
+	})
+	return formula, faultOf(w)
+}
+
+// CriticalOf é a margem de ameaça e o multiplicador da arma, com o padrão do
+// livro: "Quando nenhuma margem aparece, será 20. Quando nenhum multiplicador
+// aparece, será x2" (p230). É o que o botão do mestre escreve ("Crítico ×3").
+func CriticalOf(card WeaponCard) (margin, multiplier int) {
+	margin, multiplier = card.CritRange, card.CritMult
+	if margin <= 0 {
+		margin = 20
 	}
-	return out, nil
+	if multiplier <= 0 {
+		multiplier = 2
+	}
+	return margin, multiplier
 }
 
-// attackWorld monta o mundo e roda os sistemas. Separado do `ResolveAttack`
-// porque os guardas precisam do MUNDO e não da conta: o que a fatia comprou —
-// a parcela suprimida que continua lá — não aparece na saída.
-func attackWorld(
-	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	d20 int, rollDie func(faces int) (int, error),
-) *ecs.World {
-	return attackWorldOf(card, target, situations, attackDie{Rolled: d20, Natural: d20}, rollDie)
-}
-
-func attackWorldOf(
-	card WeaponCard, target AttackTarget, situations []SpecialSituation,
-	die attackDie, rollDie func(faces int) (int, error),
-) *ecs.World {
+func runAttackWorld(systems []ecs.System) *ecs.World {
 	w := ecs.NewWorld()
 	ecs.Set(w, w.Spawn(), theAttackResource{})
-	ecs.Run(w, attackSystems(card, target, situations, die, rollDie)...)
+	ecs.Run(w, systems...)
 	return w
+}
+
+func faultOf(w *ecs.World) error {
+	if fault, has := ecs.Get[attackFault](w, theResource(w)); has {
+		return fault.Err
+	}
+	return nil
 }
 
 // hasSituation diz se esta linha da Tabela 5-3 vale neste ataque.
