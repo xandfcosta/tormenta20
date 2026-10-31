@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * A ENTRADA DO PALCO nas DUAS cenas de seleção.
+ * A ENTRADA DO PALCO na cena de seleção de personagens. A de campanhas virou
+ * grade de cartões no Tempestade e saiu daqui (ALE-526).
  *
  * E2E, e só e2e: linha do tempo de animação é coisa que só o navegador tem —
  * em jsdom não há `animationstart`, nem duração, nem atraso. O que o servidor
@@ -19,13 +20,10 @@ import { expect, test } from '@playwright/test'
  * índice já atualizado e o palco entra sempre "adiante" — que foi o defeito de
  * direção que a medição por JS não viu.
  *
- * # POR QUE DUAS CENAS, E POR QUE NÃO A MESMA COISA DUAS VEZES
- *
  * O mecanismo é UM só e ele é prendido UMA vez — o caso da direção e o do
- * atraso medem o CSS, e o CSS é o mesmo para as duas. O que cada cena tem de
- * provar separado é a LIGAÇÃO: que ela escreve a classe no nó certo e que o
- * cursor de verdade a faz tocar. Por isso o primeiro caso varre as duas e o
- * segundo, que mede os 80ms e a opacidade final, roda numa só.
+ * atraso medem o CSS. O que cada cena com palco tem de provar separado é a
+ * LIGAÇÃO: que ela escreve a classe no nó certo e que o cursor de verdade a faz
+ * tocar. Por isso os casos de ligação varrem a lista abaixo.
  */
 test.use({ storageState: '.auth/user.json' })
 
@@ -45,13 +43,10 @@ async function animacoesDoGesto(page: import('@playwright/test').Page, action: (
   return page.evaluate(() => (window as unknown as { __anim: string[] }).__anim)
 }
 
-// As duas cenas que têm palco. Cena nova entra aqui e nasce medida — é a mesma
+// As cenas que têm palco. Cena nova entra aqui e nasce medida — é a mesma
 // enumeração do guarda de Go, e ela é remendo pelo mesmo motivo: nada IMPEDE uma
-// terceira cena de nascer fora da lista.
-const SCENES_WITH_A_STAGE = [
-  { nome: 'personagens', url: '/personagens' },
-  { nome: 'campanhas', url: '/campanhas' },
-]
+// outra cena de nascer fora da lista.
+const SCENES_WITH_A_STAGE = [{ nome: 'personagens', url: '/personagens' }]
 
 for (const scene of SCENES_WITH_A_STAGE) {
   test(`o palco de ${scene.nome} entra pelo lado para onde o cursor foi`, async ({ page }) => {
@@ -90,8 +85,8 @@ for (const scene of SCENES_WITH_A_STAGE) {
  * O GUARDA NASCEU VERMELHO contra a seed de verdade: a sinopse é texto do
  * mestre, de altura livre, num palco que é coluna centralizada, e cada linha a
  * mais empurrava a capa 10px. Quem segura é a caixa de duas linhas fixas
- * (`synopsisBox`), e o guarda varre as DUAS cenas porque qualquer campo de
- * altura livre entre a capa e as ações reabre o defeito.
+ * (`synopsisBox`), e o guarda varre toda cena com palco porque qualquer campo
+ * de altura livre entre a capa e as ações reabre o defeito.
  *
  * E2E porque a pergunta é sobre LEIAUTE REAL — quantas linhas um texto ocupa
  * numa largura, e onde isso põe os irmãos. Em jsdom todo elemento mede zero e a
@@ -137,7 +132,7 @@ for (const scene of SCENES_WITH_A_STAGE) {
  * QUEM PEDE MENOS MOVIMENTO NÃO RECEBE NENHUM.
  *
  * A regra é declarativa (`@media (prefers-reduced-motion: reduce)` sobre as
- * mesmas classes), então ela vale para as duas cenas de uma vez e é medida numa.
+ * mesmas classes), então ela vale para toda cena com palco e é medida numa.
  *
  * O CONTROLE é a metade que importa: o mesmo gesto, no mesmo endereço, SEM a
  * preferência, tem de tocar. Sem ele, "nada animou" é indistinguível de "o

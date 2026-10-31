@@ -10,19 +10,13 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de CAMPANHAS como dado — uma cena de SELEÇÃO: um cursor que anda, um
-// palco que muda com ele, um trilho e uma busca.
+// A cena de CAMPANHAS como dado: uma lista de cartões com a busca e o filtro de
+// papel (ALE-526). Ela foi um carrossel — uma capa por vez, com cursor e trilho
+// —, e virou lista porque ver todas de uma vez é o que a pessoa quer quando
+// escolhe a mesa (decisão do dono).
 //
-// A decisão que governa o formato: o servidor entrega TODOS os palcos já
-// desenhados e o cursor é um sinal do cliente. Com uma dúzia de campanhas numa
-// mesa doméstica isso custa alguns kilobytes e faz ←/→ serem instantâneos, sem
-// requisição. O contrário — uma ida ao servidor por passo do cursor —
-// transformaria navegar por teclado numa conversa com a rede, e teclado é onde
-// a latência mais aparece.
-//
-// A BUSCA, essa sim, vai ao servidor. Filtrar no cliente obrigaria o cursor, o
-// índice e o primeiro/último a serem do cliente também, e aí a cena viraria
-// ilha por acidente.
+// A BUSCA vai ao servidor: a regra de casar nome e sinopse é a do
+// `search.Matches`, e uma segunda cópia no cliente divergiria dela.
 
 type listView struct {
 	Search string
@@ -30,13 +24,8 @@ type listView struct {
 	// tela filtrada ser um endereço que se guarda e se recarrega.
 	Role        string
 	Campaigns   []campaignCard
-	CursorID    int64
 	HasAny      bool
 	FilteredAll bool
-	// Neighbors espelha `Campanhas` na ordem do trilho — ver `ui.NeighborAt`.
-	// Montado uma vez aqui em vez de dois por palco desenhado, e no tipo
-	// compartilhado porque o vizinho é a MESMA peça da cena do elenco.
-	Neighbors []ui.Neighbor
 }
 
 type campaignCard struct {
@@ -49,7 +38,13 @@ type campaignCard struct {
 	Gradient  string
 	Live      bool
 	SessionID int64
-	Mine      *myCharacter
+	// SessionNumber é o número da sessão AO VIVO, que o cartão diz no lugar da
+	// contagem (ALE-526).
+	SessionNumber int64
+	// Heroes e Sessions são a contagem que o cartão parado diz.
+	Heroes   int64
+	Sessions int64
+	Mine     *myCharacter
 }
 
 type myCharacter struct {
@@ -69,6 +64,10 @@ func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, query, role
 	if err != nil {
 		return listView{}, err
 	}
+	tallies, err := s.tallies(ctx)
+	if err != nil {
+		return listView{}, err
+	}
 
 	v := listView{Search: query, Role: knownRole(role), HasAny: len(list) > 0}
 	for _, c := range list {
@@ -79,24 +78,16 @@ func (s Scene) LoadList(ctx context.Context, euID int64, admin bool, query, role
 		if !search.Matches([]string{c.Name, textOrEmpty(c.Description)}, query) {
 			continue
 		}
-		v.Campaigns = append(v.Campaigns, cardOf(c, alive))
+		card := cardOf(c, alive)
+		count := tallies[c.ID]
+		card.Heroes, card.Sessions = count.Heroes, count.Sessions
+		v.Campaigns = append(v.Campaigns, card)
 	}
 	v.FilteredAll = v.HasAny && len(v.Campaigns) == 0
-	if len(v.Campaigns) > 0 {
-		// O cursor nasce na primeira, e é sempre uma que EXISTE na lista
-		// filtrada: um cursor apontando para campanha filtrada fora deixaria o
-		// palco vazio com o trilho cheio.
-		v.CursorID = v.Campaigns[0].ID
-	}
-	for i, c := range v.Campaigns {
-		v.Neighbors = append(v.Neighbors, ui.Neighbor{
-			ID: c.ID, Name: c.Name, Monogram: c.Initials, Gradient: c.Gradient, Index: i,
-		})
-	}
 	return v, nil
 }
 
-func cardOf(c campaign.Seen, alive map[int64]int64) campaignCard {
+func cardOf(c campaign.Seen, alive map[int64]liveSession) campaignCard {
 	card := campaignCard{
 		ID:       c.ID,
 		Name:     c.Name,
@@ -105,8 +96,8 @@ func cardOf(c campaign.Seen, alive map[int64]int64) campaignCard {
 		Initials: ui.Monogram(c.Name),
 		Gradient: ui.NameGradient(c.Name),
 	}
-	if sid, ok := alive[c.ID]; ok {
-		card.Live, card.SessionID = true, sid
+	if l, ok := alive[c.ID]; ok {
+		card.Live, card.SessionID, card.SessionNumber = true, l.ID, l.Number
 	}
 	if c.Character != nil {
 		card.Mine = &myCharacter{
@@ -124,21 +115,57 @@ func cardOf(c campaign.Seen, alive map[int64]int64) campaignCard {
 // UMA consulta e não N+1, uma por campanha: a fan-out do cliente é o remendo
 // que aparece quando a resposta não existe no servidor, e ela já apareceu em
 // duas telas.
-func (s Scene) liveSessions(ctx context.Context, userID int64) (map[int64]int64, error) {
+// liveSession é a sessão ao vivo de uma campanha: o id para o caminho e o
+// número para o cartão.
+type liveSession struct {
+	ID, Number int64
+}
+
+func (s Scene) liveSessions(ctx context.Context, userID int64) (map[int64]liveSession, error) {
 	rows, err := s.deps.Queries().LiveSessionsForUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	alive := make(map[int64]int64, len(rows))
+	alive := make(map[int64]liveSession, len(rows))
 	for _, l := range rows {
-		// O sqlc tipa o `MIN(s.id)` de um GROUP BY como `interface{}`, porque
-		// agregação pode devolver NULL. Aqui nunca devolve — o grupo só existe
-		// se houver linha —, mas o tipo é o que é.
 		if id, ok := asInt64(l.Sessionid); ok {
-			alive[l.Campaignid] = id
+			alive[l.Campaignid] = liveSession{ID: id, Number: l.Sessionnumber}
 		}
 	}
 	return alive, nil
+}
+
+// tallies é a contagem de heróis e sessões de cada campanha, numa consulta só.
+func (s Scene) tallies(ctx context.Context) (map[int64]campaignTally, error) {
+	rows, err := s.deps.Queries().CampaignTallies(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[int64]campaignTally, len(rows))
+	for _, r := range rows {
+		out[r.Campaignid] = campaignTally{Heroes: r.Heroes, Sessions: r.Sessions}
+	}
+	return out, nil
+}
+
+type campaignTally struct {
+	Heroes, Sessions int64
+}
+
+// cardMeta é a linha de baixo do nome: a sessão ao vivo, ou o papel e a
+// contagem no singular certo.
+func cardMeta(c campaignCard) string {
+	if c.Live {
+		return "Sessão " + strconv.FormatInt(c.SessionNumber, 10) + " ao vivo agora"
+	}
+	return c.Role + " · " + countOf(c.Heroes, "herói", "heróis") + " · " + countOf(c.Sessions, "sessão", "sessões")
+}
+
+func countOf(n int64, one, many string) string {
+	if n == 1 {
+		return "1 " + one
+	}
+	return strconv.FormatInt(n, 10) + " " + many
 }
 
 func asInt64(v any) (int64, bool) {

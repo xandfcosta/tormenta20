@@ -85,6 +85,44 @@ func (q *Queries) CallerCharacterInCampaign(ctx context.Context, arg CallerChara
 	return i, err
 }
 
+const campaignTallies = `-- name: CampaignTallies :many
+SELECT c.id AS campaignId,
+  (SELECT COUNT(*) FROM campaign_members m WHERE m.campaignId = c.id) AS heroes,
+  (SELECT COUNT(*) FROM sessions s WHERE s.campaignId = c.id) AS sessions
+FROM campaigns c
+`
+
+type CampaignTalliesRow struct {
+	Campaignid int64 `json:"campaignid"`
+	Heroes     int64 `json:"heroes"`
+	Sessions   int64 `json:"sessions"`
+}
+
+// ALE-526: the list card counts the heroes and the sessions of every campaign
+// in ONE query, instead of two per card.
+func (q *Queries) CampaignTallies(ctx context.Context) ([]CampaignTalliesRow, error) {
+	rows, err := q.db.QueryContext(ctx, campaignTallies)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CampaignTalliesRow{}
+	for rows.Next() {
+		var i CampaignTalliesRow
+		if err := rows.Scan(&i.Campaignid, &i.Heroes, &i.Sessions); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const clearCharacterConditionals = `-- name: ClearCharacterConditionals :exec
 DELETE FROM character_conditionals WHERE characterId = ?
 `
@@ -3042,7 +3080,7 @@ func (q *Queries) ListUsersWithCounts(ctx context.Context) ([]ListUsersWithCount
 }
 
 const liveSessionsForUser = `-- name: LiveSessionsForUser :many
-SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId
+SELECT s.campaignId AS campaignId, MIN(s.id) AS sessionId, s.sessionNumber AS sessionNumber
 FROM sessions s
 JOIN campaigns c ON c.id = s.campaignId
 WHERE s.status = 'active'
@@ -3056,8 +3094,9 @@ GROUP BY s.campaignId
 `
 
 type LiveSessionsForUserRow struct {
-	Campaignid int64       `json:"campaignid"`
-	Sessionid  interface{} `json:"sessionid"`
+	Campaignid    int64       `json:"campaignid"`
+	Sessionid     interface{} `json:"sessionid"`
+	Sessionnumber int64       `json:"sessionnumber"`
 }
 
 // ALE-234: which of my campaigns have a session RUNNING, all in one query.
@@ -3065,6 +3104,8 @@ type LiveSessionsForUserRow struct {
 // (createActiveSession) and once in the campaign scene
 // (createActiveSessionByCampaign). Two identical fan-outs in two screens is the
 // sign that the hole was in the API, not in the screens.
+// ALE-526: the list card says WHICH session is live. SQLite takes the bare
+// sessionNumber from the same row MIN picked.
 func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]LiveSessionsForUserRow, error) {
 	rows, err := q.db.QueryContext(ctx, liveSessionsForUser, userid)
 	if err != nil {
@@ -3074,7 +3115,7 @@ func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]Live
 	items := []LiveSessionsForUserRow{}
 	for rows.Next() {
 		var i LiveSessionsForUserRow
-		if err := rows.Scan(&i.Campaignid, &i.Sessionid); err != nil {
+		if err := rows.Scan(&i.Campaignid, &i.Sessionid, &i.Sessionnumber); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

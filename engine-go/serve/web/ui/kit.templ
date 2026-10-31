@@ -169,14 +169,6 @@ templ TextField(c Field) {
 	</div>
 }
 
-// PanelFrame é o contêiner padrão de uma cena: borda de ferro com um filete
-// dourado por dentro.
-templ PanelFrame(extra string) {
-	<div data-slot="framed-panel" data-variant="stone" class={ Join("grimorio-frame grimorio-frame--stone p-5 text-foreground", extra) }>
-		{ children... }
-	</div>
-}
-
 // SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
 templ SceneTitle(title, kicker string) {

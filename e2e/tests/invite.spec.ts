@@ -7,7 +7,7 @@ test.describe('A carta de convite', () => {
 
   test('a carta cabe nos seis formatos', async ({ page }) => {
     await page.goto('/campanhas/entrar')
-    await expect(page.getByRole('group', { name: /Qual herói/ })).toBeVisible()
+    await expect(page.getByRole('group', { name: /qual herói/i })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
     for (const viewport of VIEWPORTS) {
