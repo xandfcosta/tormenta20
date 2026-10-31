@@ -41,7 +41,7 @@ type View struct {
 	// cartão da campanha: o app não guarda imagem de personagem.
 	Initials string
 	Gradient string
-	// Role é "GUERREIRO 10" — a mesma placa do palco de personagens.
+	// Role é "Guerreiro 10 · Anão" — a mesma linha do cartão do elenco.
 	Role    string
 	Summary string
 	Level   int64

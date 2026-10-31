@@ -79,32 +79,6 @@ func HpTone(pct int) string {
 	return "full"
 }
 
-// HpInkTone é a classe que ESCREVE o PV, e ela NÃO é a de preencher.
-//
-// Os três tons foram escolhidos como cor de BARRA, e dois deles servem de texto
-// por acaso: sobre o painel o verde dá 5,34:1 e o âmbar 6,25:1, mas o
-// `--hp-critical` dá 4,11:1 — abaixo do mínimo de texto pequeno. Exatamente na
-// hora em que a barra grita "este aqui está morrendo", o número ao lado dela
-// seria o menos legível da tela.
-//
-// O crítico escreve com a tinta de perigo da casa, que dá 5,21:1 sobre o painel.
-// Tinta própria seria um segundo vermelho quase idêntico ao lado do primeiro, e
-// a casa tem uma palavra por conceito. É a mesma divisão que o marcador do
-// tabuleiro faz, pela mesma razão e com o mesmo número.
-//
-// Exemplo:
-//
-//	class={ "font-mono", ui.HpInkTone(pct) } // → "font-mono text-grimorio-crimson-bright"
-func HpInkTone(pct int) string {
-	switch HpFillTone(pct) {
-	case "bg-hp-critical":
-		return "text-grimorio-crimson-bright"
-	case "bg-hp-hurt":
-		return "text-hp-hurt"
-	}
-	return "text-hp-full"
-}
-
 // ── abaixo de 1 PV (T20 p236, ALE-366) ─────────────────────────────────────
 
 // DownedWord é a palavra do estado de quem está a 0 PV ou menos — "morrendo",
@@ -128,22 +102,6 @@ func DownedWord(hp, hpMax int64, bleeding bool) string {
 		return "morto"
 	}
 	return ""
-}
-
-// DownedInk é a tinta da palavra, e ela separa o que pede AÇÃO do que é fato.
-// Morrendo é o único que o mestre ainda muda — cura, teste de Cura, o d20 da vez
-// —, e leva a tinta de perigo da casa (a do número crítico, pelo contraste que o
-// `HpInkTone` explica). Morto é final e sai na tinta de texto: com o mesmo
-// vermelho, a fila gritava "urgente" sobre quem não tem mais o que fazer.
-// Estável é informação e sai apagado.
-func DownedInk(word string) string {
-	switch word {
-	case "morrendo":
-		return "text-grimorio-crimson-bright"
-	case "morto":
-		return "text-foreground"
-	}
-	return "text-muted-foreground"
 }
 
 // HitPoints escreve o PV com o SINAL DE MENOS tipográfico (U+2212), o mesmo

@@ -16,7 +16,7 @@ test('o Hub sobe autenticado e o menu leva ao elenco', async ({ page }) => {
 
   await page.getByText('Meus heróis').click()
   await expect(page).toHaveURL(/\/personagens$/)
-  await expect(page.getByRole('listbox', { name: 'Personagens' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Personagens', level: 1 })).toBeVisible()
 })
 
 test.describe('O Hub', () => {

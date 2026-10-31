@@ -12,30 +12,14 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A cena de PERSONAGENS como dado. A forma é a de campanhas: o cursor é sinal,
-// todos os palcos são desenhados, e a busca vai ao servidor.
-//
-// A DEFESA sai da `ComputeSheet`, a mesma da ficha, e todas saem juntas; os
-// TEXTOS das habilidades de raça vêm do catálogo embutido; e a vaga de CRIAR é
-// posição de cursor e não link — ver `scene.templ`.
+// A cena de PERSONAGENS como dado: um cartão por herói, e a busca vai ao
+// servidor. A DEFESA sai da `ComputeSheet`, a mesma da ficha.
 
 type View struct {
-	Search string
-	// Herois já vem na ordem do trilho. A vaga de criar é a posição seguinte, e
-	// não entra nesta lista: ela não é um herói e tratá-la como um faria toda
-	// contagem da tela ficar um a mais.
-	Heroes   []HeroCard
-	CursorID int64
-	// Total é o elenco INTEIRO, e a contagem da barra diz "3 de 10" com filtro
-	// — dizer "3 de 3" esconderia que há sete escondidos pela busca.
-	Total       int
+	Search      string
+	Heroes      []HeroCard
 	HasAny      bool
 	FilteredAll bool
-	// Neighbors espelha `Heroes` na ordem do trilho, e existe porque o vizinho é
-	// COMPARTILHADO com a cena de campanhas: o `ui.NeighborAt` só indexa, e quem
-	// sabe traduzir um cartão de herói em vizinho é quem tem o cartão. Montar aqui,
-	// uma vez, também evita reconstruir dois vizinhos por palco desenhado.
-	Neighbors []ui.Neighbor
 }
 
 type HeroCard struct {
@@ -44,27 +28,23 @@ type HeroCard struct {
 	Monogram string
 	// Gradiente é o retrato derivado do nome, como a capa da campanha.
 	Gradient string
-	// Papel é "GUERREIRO 10" — classe primária em caixa alta, ou a origem
-	// quando o personagem ainda não tem classe.
+	// Papel é "Guerreiro 10 · Anão" — classe primária, ou a origem quando o
+	// personagem ainda não tem classe.
 	Role string
 	// Resumo é a linha de sabor montada dos campos estruturados, porque o app
-	// não tem campo de biografia: raças • origem • devoto • tamanho • nível.
+	// não tem campo de biografia: devoto · origem · tamanho.
 	Summary string
-	Level   int64
 	PV      string
-	// PVInk é a TINTA do PV, e não a cor de preencher uma barra: aqui o vital é um
-	// número e não uma faixa, então ele segue a escada de ESCREVER. Ela vive no
-	// cartão e não no `templ` porque quem decide é a view — o componente só pinta o
-	// que recebe.
-	PVInk string
+	// PVTone é o degrau da escada do PV (`ui.HpTone`): o elenco é a tela em que
+	// se ESCOLHE quem jogar, e com uma cor só ele mostraria todos com a mesma
+	// saúde.
+	PVTone string
 	// PVDown é a palavra de quem caiu — morrendo, estável, morto (p236) —, que
 	// segue o número; vazia de pé.
 	PVDown string
 	PM     string
 	// Defesa é TEXTO e não número porque ela pode ser desconhecida, e aí é um
-	// travessão: nunca um zero, que é um valor de Defesa plausível e errado. O
-	// travessão também mantém a fileira do mesmo tamanho — uma coluna que some faz
-	// o palco dançar ao trocar de herói.
+	// travessão: nunca um zero, que é um valor de Defesa plausível e errado.
 	Defense string
 	// DefenseVs é a MESMA Defesa dita para quem vai resolver um ataque: um número
 	// quando nada é direcional, e os dois quando algo é — hoje só o Caído (p394).
@@ -80,18 +60,14 @@ type HeroCard struct {
 	// podem divergir sobre o que os números significam.
 	DefenseVs string
 	NoMana    bool
-	Race      string
-	Origin    string
 	Classes   string
-	Dossier   []book.RaceAbility
 }
 
 // Load monta a cena para um dono. Ela é EXPORTADA porque o consumidor hoje é
 // uma bancada e não uma tela.
 //
-// O que os nove casos do `api/characters_scene_test.go` prendem é o caminho
-// BANCO → PALCO: personagens gravados de verdade saem na lista, com a contagem,
-// os vizinhos e a Defesa que a ficha mostra. Este pacote não pode provar isso —
+// O que o `api/characters_scene_test.go` prende é o caminho BANCO → CARTÃO:
+// personagens gravados de verdade saem na lista, com a Defesa que a ficha mostra. Este pacote não pode provar isso —
 // ele não tem banco, e importar o `db/testdb` junto com um `*api.Server` seria o
 // ciclo que a divisão inteira existe para evitar.
 //
@@ -103,7 +79,7 @@ func (s Scene) Load(ctx context.Context, ownerID int64, query string) (View, err
 		return View{}, err
 	}
 
-	v := View{Search: query, Total: len(cast), HasAny: len(cast) > 0}
+	v := View{Search: query, HasAny: len(cast) > 0}
 	for _, c := range cast {
 		if !search.Matches(searchFields(c), query) {
 			continue
@@ -111,14 +87,6 @@ func (s Scene) Load(ctx context.Context, ownerID int64, query string) (View, err
 		v.Heroes = append(v.Heroes, HeroCardOf(s.deps.Catalogs(), c))
 	}
 	v.FilteredAll = v.HasAny && len(v.Heroes) == 0
-	if len(v.Heroes) > 0 {
-		v.CursorID = v.Heroes[0].ID
-	}
-	for i, h := range v.Heroes {
-		v.Neighbors = append(v.Neighbors, ui.Neighbor{
-			ID: h.ID, Name: h.Name, Monogram: h.Monogram, Gradient: h.Gradient, Index: i,
-		})
-	}
 	return v, nil
 }
 
@@ -131,7 +99,7 @@ func searchFields(c sheet.CharacterDTO) []string {
 
 // HeroCardOf é função LIVRE e não método da cena, e a razão é a regra da menor
 // pergunta: de tudo que a `Deps` oferece, o cartão usa só o motor. Deixá-lo
-// método obrigaria quem o chama de fora — a ficha, que reaproveita quatro campos
+// método obrigaria quem o chama de fora — a ficha, que reaproveita seis campos
 // dele — a montar uma `Scene` inteira para pedir um cartão.
 func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 	card := HeroCard{
@@ -141,15 +109,12 @@ func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 		Gradient: ui.NameGradient(c.Name),
 		Role:     heroPlate(c),
 		Summary:  stageLine(c),
-		Level:    c.Level,
 		PV:       vital(c.HpCurrent, c.HpMax),
-		PVInk:    ui.HpInkTone(ui.VitalPercent(c.HpCurrent, c.HpMax)),
+		PVTone:   ui.HpTone(ui.VitalPercent(c.HpCurrent, c.HpMax)),
 		PVDown: ui.DownedWord(c.HpCurrent, c.HpMax,
 			slices.Contains(sheet.UnmarshalStrings(c.ActiveConditions), engine.ConditionBleeding)),
 		PM:      vital(c.MpCurrent, c.MpMax),
 		NoMana:  c.MpMax == 0,
-		Race:    mainRace(c),
-		Origin:  book.OriginLabel(c.Origin),
 		Classes: ClassesOf(c),
 	}
 	// A DEFESA vem da mesma `ComputeSheet` que a ficha usa, e do agregado JÁ
@@ -164,13 +129,10 @@ func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 			card.DefenseVs = book.DefenseLabel(character.Defense)
 		}
 	}
-	card.Dossier = book.RaceAbilities(card.Race, 8)
 	return card
 }
 
 // stageLine é o resumo curto sob os vitais: "Devoto de X · origem · tamanho".
-//
-// Não confundir com o resumo do DOSSIÊ, que é mais longo e separa com ` • `.
 //
 // `god` é opcional e some quando ausente, em vez de virar "Devoto de ".
 func stageLine(c sheet.CharacterDTO) string {
@@ -191,12 +153,12 @@ func stageLine(c sheet.CharacterDTO) string {
 	return strings.Join(present, " · ")
 }
 
-// heroPlate é o subtítulo da placa: "GUERREIRO 10 · ANÃO". A raça entra
-// junto, e não é enfeite — num elenco de dez, classe sozinha repete.
+// heroPlate é a linha sob o nome: "Guerreiro 10 · Anão". A raça entra junto,
+// e não é enfeite — num elenco de dez, classe sozinha repete.
 func heroPlate(c sheet.CharacterDTO) string {
-	plate := strings.ToUpper(classOrOrigin(c))
+	plate := classOrOrigin(c)
 	if race := mainRace(c); race != "" {
-		plate += " · " + strings.ToUpper(race)
+		plate += " · " + race
 	}
 	return plate
 }

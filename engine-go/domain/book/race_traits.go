@@ -27,7 +27,7 @@ import (
 // fontes de verdade: o `transcript.RaceDefinitions` continua autorado num lugar
 // só.
 
-// RaceAbility é o que o dossiê mostra: nome e uma linha.
+// RaceAbility é uma habilidade da raça como a tela a lê: nome e uma linha.
 type RaceAbility struct {
 	ID          string           `json:"id"`
 	Name        string           `json:"name"`
@@ -75,9 +75,8 @@ func RaceTraitsByKey() map[string]RaceForScreen {
 		raceTraitsByID = map[string]RaceForScreen{}
 		raw, ok := catalog.Resource("race-defs")
 		if !ok {
-			// Catálogo ausente é caso NORMAL de degradação: o dossiê fica sem a
-			// lista de habilidades e o resto da cena continua de pé. Derrubar a
-			// tela inteira por causa de quatro linhas de texto seria pior.
+			// Catálogo ausente é caso NORMAL de degradação: a raça sai pelo slug
+			// e o resto da cena continua de pé (ver `RaceLabel`).
 			return
 		}
 		var list []RaceForScreen
@@ -93,22 +92,6 @@ func RaceTraitsByKey() map[string]RaceForScreen {
 		}
 	})
 	return raceTraitsByID
-}
-
-// RaceAbilities são as primeiras `limite` habilidades da raça, para o
-// dossiê.
-//
-// Raça desconhecida devolve lista vazia, não erro: um personagem com raça
-// que saiu do catálogo continua abrindo, só sem as linhas de sabor.
-func RaceAbilities(raceKey string, limit int) []RaceAbility {
-	race, ok := RaceTraitsByKey()[raceKey]
-	if !ok {
-		return nil
-	}
-	if len(race.Abilities) > limit {
-		return race.Abilities[:limit]
-	}
-	return race.Abilities
 }
 
 // RaceLabel devolve o rótulo da raça a partir do que a ficha guarda.
