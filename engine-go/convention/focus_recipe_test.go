@@ -42,17 +42,10 @@ import (
 //
 // # O que este guarda NÃO recusa, e não é fresta
 //
-// `has-[:focus-visible]:outline-*` fica, e é a única receita de foco legítima
-// fora do `index.css`: as três plaquetas de rádio (as duas da forja e a de
-// entrar na mesa) escondem o `<input>` com `sr-only`, e quem tem de acender é o
-// `<label>`. A regra global casa `:is(a, button, input, …)` e não o alcança;
-// uma regra `label:has(:focus-visible)` no lugar dela desenharia dois anéis
-// concêntricos nos dez rótulos do app que envolvem um campo VISÍVEL.
-//
-// Elas são o DENOMINADOR deste guarda, e por isso não estão numa lista de
-// permitidos: o padrão que as acha é o mesmo que acha a violação, então achá-las
-// prova que o scanner enxerga o token. Uma lista vazia de falhas e um regex que
-// parou de casar se parecem no terminal.
+// `has-[:focus-visible]:outline-*` não é receita: é o realce de um RÓTULO cujo
+// `<input>` está escondido, que a regra global não alcança. No Tempestade ele
+// mora na folha (`.ds-pick:has(:focus-visible)`, no `ds.css`), e não sobrou
+// nenhum escrito à mão.
 //
 // As outras variantes de `focus-visible:` — `opacity-80`, `bg-accent`,
 // `bg-grimorio-gold` — não são deste guarda: elas mudam a PEÇA no foco, não o
@@ -61,9 +54,17 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 	// O token só é receita quando começa a classe. `has-[:focus-visible]:…` é
 	// precedido por `]` e cai fora, que é exatamente a intenção.
 	recipe := regexp.MustCompile(`(^|[\s"'` + "`" + `])(focus-visible:outline-[a-z0-9-]+)`)
-	exception := regexp.MustCompile(`has-\[:focus-visible\]:outline-[a-z0-9-]+`)
+	// O CONTROLE POSITIVO do padrão, sem depender de existir violação na árvore:
+	// uma lista vazia de falhas e um regex que parou de casar se parecem no
+	// terminal.
+	if !recipe.MatchString(`class="focus-visible:outline-2"`) {
+		t.Fatal("o padrão não casa a receita que este guarda existe para recusar")
+	}
+	if recipe.MatchString(`class="has-[:focus-visible]:outline-2"`) {
+		t.Fatal("o padrão casa o realce do rótulo, que não é receita")
+	}
 
-	var filesRead, exceptions int
+	var filesRead int
 	err := filepath.WalkDir("..", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -89,7 +90,6 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 		// registram: o comentário que explica a receita cita a grafia que ela
 		// substitui, e um guarda que lê a fonte crua acusa a explicação.
 		for i, row := range semComentario(strings.Split(string(raw), "\n")) {
-			exceptions += len(exception.FindAllString(row, -1))
 			for _, found := range recipe.FindAllStringSubmatch(row, -1) {
 				t.Errorf("%s:%d — `%s` escrito à mão, e ele não faz efeito nenhum.\n"+
 					"    O realce de foco é GLOBAL e mora no `serve/web/assets/src/index.css`; a regra de lá não é layerada,\n"+
@@ -105,24 +105,14 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 		t.Fatalf("caminhar a árvore: %v", err)
 	}
 
-	// O DENOMINADOR, em três metades, e nenhuma é enfeite.
+	// O DENOMINADOR, em duas metades, e nenhuma é enfeite.
 	//
 	// A primeira: sem arquivo lido, tudo acima é verde sobre nada — foi assim que
 	// um guarda irmão quase passou medindo um diretório que tinha esvaziado.
 	if filesRead < 200 {
 		t.Fatalf("o guarda leu só %d arquivos `.templ`/`.go`: a caminhada parou de achar as cenas", filesRead)
 	}
-	// A segunda: as três plaquetas de rádio são o controle POSITIVO do padrão. Se
-	// o regex parar de casar `focus-visible:outline-…`, elas somem primeiro — e a
-	// ausência delas denuncia antes que a ausência de falhas engane.
-	// São nove classes hoje — três plaquetas escrevendo `outline-2`,
-	// `outline-offset-1` e `outline-ring` cada uma. O piso é três e não nove
-	// porque o número é de DESENHO e pode mudar; o que não pode é ir a zero.
-	if exceptions < 3 {
-		t.Fatalf("o guarda achou só %d classes `has-[:focus-visible]:outline-…`, e as três plaquetas de rádio "+
-			"escrevem nove: o padrão parou de casar e a lista de falhas vazia não é evidência de nada", exceptions)
-	}
-	// A terceira, e a mais importante: este guarda proíbe a receita à mão porque
+	// A segunda, e a mais importante: este guarda proíbe a receita à mão porque
 	// existe uma GLOBAL. No dia em que alguém apagar a global, proibir a cópia
 	// deixa o app inteiro sem realce — e o guarda precisa falhar junto, em vez de
 	// seguir cobrando uma regra cuja razão sumiu.
@@ -138,5 +128,5 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 		t.Fatalf("a receita GLOBAL de foco sumiu do `index.css`: sem ela, proibir a receita à mão " +
 			"deixa o app sem realce nenhum, e este guarda estaria cobrando uma regra sem razão")
 	}
-	t.Logf("%d arquivos lidos, %d classes de plaqueta de rádio com receita própria e declarada", filesRead, exceptions)
+	t.Logf("%d arquivos lidos", filesRead)
 }

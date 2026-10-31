@@ -9,4 +9,3 @@ serve/web/table/commands.go
 serve/web/table/routes.go
 serve/web/table/token_actions.go
 serve/web/table/view.go
-serve/web/ui/kit.templ

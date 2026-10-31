@@ -94,11 +94,13 @@ func answersFromForm(r *http.Request) (forgeAnswers, error) {
 func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
 	s.deps.WritePage(w, r, status, ui.Page{
 		Title: "Forja · Tormenta 20",
-		// `ui.ShellDense`: o cabeçalho compacto com o "‹ Voltar", como a folha em
-		// branco da campanha. Sem ele a folha nasce sem saída visível.
-		Shape:     ui.ShellDense,
-		Back:      "/personagens",
-		BackLabel: "Personagens",
+		// `ui.ShellDense`: o cabeçalho compacto com a seta de voltar, como a
+		// campanha nova. Sem ele a folha nasce sem saída visível.
+		Shape:        ui.ShellDense,
+		System:       ui.SystemTempestade,
+		Back:         "/personagens",
+		BackLabel:    "Personagens",
+		VisibleTitle: "Forjar um herói",
 	}, forgeSheet(v))
 }
 

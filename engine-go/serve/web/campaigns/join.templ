@@ -50,7 +50,7 @@ templ heroChoice(v joinView) {
 	<fieldset class="ds-camps-heroes">
 		<legend class="ds-field-label">Com qual herói você entra?</legend>
 		for _, h := range v.Heroes {
-			<label class="ds-hero-pick">
+			<label class="ds-pick">
 				<input type="radio" name="characterId" value={ strconv.FormatInt(h.ID, 10) } checked?={ h.ID == v.ChosenID } required/>
 				<span class="ds-camp-hero-mark" aria-hidden="true" style={ "background: " + h.Gradient }>{ h.Initials }</span>
 				<span class="ds-camp-text">

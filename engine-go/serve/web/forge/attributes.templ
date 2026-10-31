@@ -1,92 +1,76 @@
 package forge
 
 import (
-	"t20engine/domain/book"
 	"fmt"
 	"strconv"
-	"t20engine/serve/web/ui"
+	"t20engine/domain/book"
+	"t20engine/serve/web/ds"
 )
 
-// OS ATRIBUTOS DA FORJA (ALE-272, fatia 9) — a segunda e última tela.
+// OS ATRIBUTOS DA FORJA — a segunda tela, no Tempestade (ALE-535).
 //
 // Ela é uma cena de comandos, e não um formulário: o herói já existe, então
 // cada `+` e cada `−` grava. Por isso ela é Datastar de ponta a ponta, e a
 // recusa volta desenhada aqui dentro em vez de num status.
-
 templ attributesScene(v attributesView) {
-	@ui.TomeSheet() {
-		@attributesBody(v)
-	}
+	@attributesBody(v)
 }
 
 templ attributesBody(v attributesView) {
-	<div id="forge-attributes" class="m-auto w-full max-w-xl space-y-6">
-		@ui.SheetTitle(v.HeroName, "Distribua os atributos")
-		<p class="text-center text-xs text-muted-foreground">
-			Dez pontos para gastar (p17). Um único atributo pode descer a −1 e devolver
-			um ponto.
-		</p>
+	<div id="forge-attributes" class="ds-forge">
 		@pointCount(v)
 		if v.Refusal != "" {
-			<p role="alert" class="text-center text-sm text-destructive-ink">{ v.Refusal }</p>
+			<p class="ds-forge-refusal" role="alert">{ v.Refusal }</p>
 		}
-		<div data-nav-region="content" data-nav-layout="column" class="space-y-2">
+		<div class="ds-list" data-nav-region="content" data-nav-layout="column">
 			for _, row := range v.Rows {
 				@attributeStepper(v.ID, row)
 			}
 		</div>
-		<p class="text-xs text-muted-foreground">
+		<p class="ds-help">
 			O total já traz o modificador da raça. A raça que ESCOLHE onde pôr o bônus
 			— o humano e os meio-elfos — se resolve na ficha, na aba Poderes.
 		</p>
-		<div class="flex justify-end">
-			<a
-				href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", v.ID)) }
-				class={ ui.ButtonClasses(ui.VariantPrimary, ui.SizeDefault, "") }
-			>Abrir a ficha</a>
-		</div>
+		@ds.LinkButton(ds.ButtonPrimary, templ.SafeURL(fmt.Sprintf("/personagens/%d", v.ID)), templ.Attributes{"data-wide": true}) {
+			Abrir a ficha
+		}
 	</div>
 }
 
-// pointCount é o placar do orçamento. Ele fica ACIMA das linhas porque
-// é o que decide o próximo clique.
+// pointCount é o placar do orçamento. Ele fica ACIMA das linhas porque é o que
+// decide o próximo toque.
 templ pointCount(v attributesView) {
-	<p class="text-center font-display text-lg text-grimorio-gold">
-		{ strconv.Itoa(v.Budget - v.Spent) + " de " + strconv.Itoa(v.Budget) + " pontos" }
-	</p>
+	<div class="ds-forge-points">
+		<span class="ds-forge-points-left">{ strconv.Itoa(v.Budget - v.Spent) + " de " + strconv.Itoa(v.Budget) + " pontos" }</span>
+		<span class="ds-help">
+			para gastar (p17). Um único atributo pode descer a −1 e devolver um ponto.
+		</span>
+	</div>
 }
 
 // attributeStepper é uma linha: o nome, o `−`, o valor base, o `+` e o total.
 //
 // O botão desligado é conveniência sobre a MESMA regra do servidor — ele é
-// desligado com a resposta que o motor daria ao clique, e não com uma segunda
+// desligado com a resposta que o motor daria ao toque, e não com uma segunda
 // conta escrita aqui.
 templ attributeStepper(id int64, row attributeRow) {
-	// As folgas e a coluna do total são apertadas de propósito: com `gap-3` e
-	// `w-16`, "Constituição" e "Inteligência" truncavam a 390px — medido na
-	// bancada. O nome do atributo é a única coisa desta linha que não se deduz
-	// do resto.
-	<div class="flex items-center gap-2 rounded-none border border-grimorio-iron bg-grimorio-panel p-2">
-		<span class="min-w-0 flex-1 text-sm text-foreground">{ row.Label }</span>
-		@attributeStepCmd(id, row, -1, "−", "Diminuir "+row.Label)
-		<span class="w-8 text-center font-mono text-base text-foreground">
-			{ book.WithSign(row.Base) }
+	<div class="ds-row ds-forge-attr">
+		<span class="ds-row-title">{ row.Label }</span>
+		<span class="ds-forge-stepper">
+			@ds.IconButton(ds.ButtonSecondary, "Minus", "Diminuir "+row.Label, stepAttrs(id, row, -1))
+			<b>{ book.WithSign(row.Base) }</b>
+			@ds.IconButton(ds.ButtonSecondary, "Plus", "Aumentar "+row.Label, stepAttrs(id, row, 1))
 		</span>
-		@attributeStepCmd(id, row, 1, "+", "Aumentar "+row.Label)
-		<span class="w-14 shrink-0 text-right text-xs text-muted-foreground">
-			{ "total " + book.WithSign(row.Total) }
-		</span>
+		<span class="ds-forge-total"><small>total</small>{ book.WithSign(row.Total) }</span>
 	</div>
 }
 
-templ attributeStepCmd(id int64, row attributeRow, step int, symbol, label string) {
-	<button
-		type="button"
-		aria-label={ label }
-		disabled?={ !buttonFits(row, step) }
-		data-on:click={ attributePost(id, row.Key, step) }
-		class="inline-flex size-9 shrink-0 items-center justify-center rounded-sm border border-grimorio-iron text-base text-foreground outline-none transition-colors hover:border-grimorio-gold hover:text-grimorio-gold disabled:cursor-not-allowed disabled:opacity-40"
-	>{ symbol }</button>
+func stepAttrs(id int64, row attributeRow, step int) templ.Attributes {
+	attrs := templ.Attributes{"type": "button", "data-on:click": attributePost(id, row.Key, step)}
+	if !buttonFits(row, step) {
+		attrs["disabled"] = true
+	}
+	return attrs
 }
 
 func buttonFits(row attributeRow, step int) bool {

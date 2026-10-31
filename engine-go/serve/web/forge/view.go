@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/search"
 	"t20engine/infra/wire"
 )
 
@@ -53,6 +54,8 @@ type raceCard struct {
 	Displacement int
 	Abilities    string
 	Chosen       bool
+	// Find é o texto que a busca da folha casa, já dobrado (`search.Fold`).
+	Find string
 }
 
 // classCard é uma das 14 cartas do ofício.
@@ -62,6 +65,7 @@ type classCard struct {
 	PM         int
 	Expertises string
 	Chosen     bool
+	Find       string
 }
 
 // originOption é uma linha da lista de origens.
@@ -70,6 +74,7 @@ type originOption struct {
 	Name    string
 	Benefit string
 	Chosen  bool
+	Find    string
 }
 
 // startingGear é o kit de p140 já reduzido ao que ESTA classe recebe.
@@ -88,9 +93,13 @@ type startingGear struct {
 
 // itemOption é uma entrada de um dos seletores do equipamento.
 type itemOption struct {
-	ID     string
-	Label  string
+	ID    string
+	Label string
+	// Meta é a linha do que o item é: o dano e o crítico da arma, a Defesa e a
+	// penalidade da armadura.
+	Meta   string
 	Chosen bool
+	Find   string
 }
 
 // blankForgeSheet monta a cena a partir das respostas que já existem.
@@ -143,19 +152,23 @@ func raceCardOf(race book.Race, chosen string) raceCard {
 		}
 		names = append(names, ability.Name)
 	}
-	return raceCard{
+	card := raceCard{
 		ID: race.ID, Name: race.Name, Attributes: race.AttributeMod.Escrito(),
 		Size: race.Size, Displacement: race.Speed,
 		Abilities: strings.Join(names, ", "), Chosen: race.ID == chosen,
 	}
+	card.Find = search.Fold(card.Name + " " + card.Attributes + " " + card.Abilities)
+	return card
 }
 
 func classCardOf(class book.Class, chosen string) classCard {
 	pv, pm, _ := engine.ClassStartingVitals(class.Name)
-	return classCard{
+	card := classCard{
 		Name: class.Name, PV: pv, PM: pm,
 		Expertises: cardExpertisesLine(class), Chosen: class.Name == chosen,
 	}
+	card.Find = search.Fold(card.Name + " " + card.Expertises)
+	return card
 }
 
 // cardExpertisesLine escreve a linha "Perícias" do bloco da classe: as que vêm
@@ -189,9 +202,10 @@ func originOptions(chosen string) []originOption {
 
 	list := make([]originOption, 0, len(ids))
 	for _, id := range ids {
+		benefit := benefitsLine(origins[id])
 		list = append(list, originOption{
-			ID: id, Name: origins[id].Name, Benefit: benefitsLine(origins[id]),
-			Chosen: id == chosen,
+			ID: id, Name: origins[id].Name, Benefit: benefit,
+			Chosen: id == chosen, Find: search.Fold(origins[id].Name + " " + benefit),
 		})
 	}
 	return list
@@ -249,7 +263,29 @@ func itemOptionsByID(ids []string, chosen string) []itemOption {
 }
 
 func itemOptionOf(item book.Item, chosen string) itemOption {
-	return itemOption{ID: item.ID, Label: item.Name, Chosen: item.ID == chosen}
+	option := itemOption{ID: item.ID, Label: item.Name, Meta: itemMeta(item), Chosen: item.ID == chosen}
+	option.Find = search.Fold(option.Label + " " + option.Meta)
+	return option
+}
+
+// itemMeta escreve o que a opção do equipamento é, na grafia da ficha:
+// "1d8 · 19/×2" para a arma, "Defesa +2 · penalidade −1" para a armadura.
+func itemMeta(item book.Item) string {
+	switch {
+	case item.Weapon != nil:
+		crit := fmt.Sprintf("×%d", item.Weapon.CritMult)
+		if item.Weapon.CritRange > 0 && item.Weapon.CritRange < 20 {
+			crit = fmt.Sprintf("%d/%s", item.Weapon.CritRange, crit)
+		}
+		return item.Weapon.Damage + " · " + crit
+	case item.Armor != nil:
+		// A penalidade já vem NEGATIVA do catálogo.
+		if item.Armor.Penalty == 0 {
+			return "Defesa " + book.WithSign(item.Armor.Defense) + " · sem penalidade"
+		}
+		return "Defesa " + book.WithSign(item.Armor.Defense) + " · penalidade " + book.WithSign(item.Armor.Penalty)
+	}
+	return ""
 }
 
 // grantsToResolve são as linhas "Itens" da origem que pedem uma decisão —
