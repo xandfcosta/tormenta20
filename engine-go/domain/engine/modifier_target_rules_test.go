@@ -82,9 +82,9 @@ var alvosQueOMotorAplica = map[string]string{
 // alvosDeclaradosInertes é a LINHA DE BASE: o motor conhece o alvo e não o
 // aplica. Cada um diz por quê, e a lista só pode encolher.
 //
-// Os três primeiros são DEFEITO — há modificador escrito no catálogo que a
-// ficha mostra e a conta ignora. O quarto não é: ele está declarado por escrito
-// no `withTempPool`, e a decisão de não desenhar é deliberada.
+// Uma entrada aqui é DEFEITO quando há modificador escrito no catálogo que a
+// ficha mostra e a conta ignora, e DELIBERADA quando a decisão de não aplicar
+// está escrita no código — como a do `tempMp`, no `withTempPool`.
 var alvosDeclaradosInertes = map[string]string{
 	"tempMp": "DELIBERADO, e escrito no `withTempPool`: o livro tem PM temporário " +
 		"(p106) e este app não o modela — nada os gasta, e desenhar um número " +

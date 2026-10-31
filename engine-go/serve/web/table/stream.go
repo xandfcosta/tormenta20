@@ -19,14 +19,14 @@ import (
 // O stream da Mesa.
 //
 // Quem embala os eventos é o SDK oficial (`datastar-go`), e não uma cópia do
-// formato escrita aqui: o `data: elements ` por linha, os dois "\n" finais e a
-// negociação de compressão são contrato do FRAMEWORK, e contrato copiado é
+// formato escrita aqui: o `data: elements ` por linha e os dois "\n" finais são
+// contrato do FRAMEWORK, e contrato copiado é
 // contrato que envelhece calado — um `data:` com quebra de linha chega truncado
 // sem erro em lugar nenhum.
 //
-// COMPRESSÃO é o ganho dominante e ela é uma opção do SDK: quadros sucessivos
-// são quase idênticos, e essa redundância é exatamente o que um compressor de
-// stream come.
+// COMPRESSÃO é o ganho dominante, e quem comprime é o `httpio.Gzip` do
+// roteador, não o SDK: quadros sucessivos são quase idênticos, e essa
+// redundância é exatamente o que um compressor de stream come.
 //
 // A CADÊNCIA não é só relógio: os stores avisam quem escuta a cada mutação,
 // então o caminho comum acorda na hora em vez de esperar o próximo tique. O

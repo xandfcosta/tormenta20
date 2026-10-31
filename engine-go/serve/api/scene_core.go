@@ -79,7 +79,7 @@ func (c sceneCore) WritePage(
 	// A CASCA RECEBE o que ela não pode conhecer: o endereço dos estáticos, as
 	// três sobreposições e o modo de cor que o cookie traz. Este é o único
 	// lugar que monta uma página, e pôr os campos em cada `ui.Page{…}` seria
-	// repetir dezoito vezes o que não varia.
+	// repetir em toda cena o que não varia.
 	p.Asset = assets.URL
 	p.Overlays = []templ.Component{finder.Dialog(), bookui.BookDialog(), bookui.EntryDialog()}
 	p.ColorMode = ui.ColorModeOf(r)
