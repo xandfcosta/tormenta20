@@ -271,6 +271,9 @@ func damageNotes(pa live.PendingAttack) []string {
 	return notes
 }
 
+// attackSheet é o diálogo do corpo do cartão, que a cabeça abre no celular.
+const attackSheet = "attack-sheet"
+
 // gmAttackBadge é o crachá do cartão do mestre, que diz o que o tempo pede dele.
 func gmAttackBadge(stage string) string {
 	switch stage {

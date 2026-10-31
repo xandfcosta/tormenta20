@@ -8,15 +8,19 @@ import (
 
 // O CARTÃO DO GOLPE, nos dois papéis e por TEMPO (ALE-536, mockups
 // `dois-tempos.html` e `confronto.html` opção B aprovados). O nó vazio fica
-// quando não há o que desenhar: o stream remenda POR ID.
+// quando não há o que desenhar: o stream remenda POR ID. No desktop ele flutua
+// e se arrasta pela cabeça (`lib/float-card.ts`), e o `style` que guarda onde
+// ele foi posto é preservado no remendo. No celular só a cabeça fica à vista, e
+// o corpo é um diálogo que ela abre — o MESMO nó nas duas larguras, para o
+// conteúdo não ser desenhado duas vezes.
 
 // gmAttack é o cartão do MESTRE: o duelo, e o que cada tempo pede dele —
 // decidir, esperar o dano, confirmar. O erro decidido não tem mais nada a
 // pedir, e o cartão sai.
 templ gmAttack(v View) {
 	if v.Attack != nil && v.Attack.Stage != stageMiss {
-		<section id="table-attack" class="ds-strike" data-attack aria-label={ gmAttackBadge(v.Attack.Stage) }>
-			<div class="ds-strike-head">
+		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ gmAttackBadge(v.Attack.Stage) }>
+			<div class="ds-strike-head" data-float-handle>
 				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
 				if v.Attack.Action != "" {
@@ -28,41 +32,44 @@ templ gmAttack(v View) {
 					@ds.Badge(v.Attack.Boost, true)
 				}
 			</div>
-			@attackDuel(v.Attack.Duel)
-			if len(v.Attack.Verdicts) > 0 {
-				<div class="ds-verdicts">
-					for _, verdict := range v.Attack.Verdicts {
-						@ds.Button(verdictVariant(verdict), templ.Attributes{"type": "button", "data-on:click": attackCommand(v, verdict.Path)}) {
-							{ verdict.Label }
+			@attackSheetOpener()
+			@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
+				@attackDuel(v.Attack.Duel)
+				if len(v.Attack.Verdicts) > 0 {
+					<div class="ds-verdicts">
+						for _, verdict := range v.Attack.Verdicts {
+							@ds.Button(verdictVariant(verdict), templ.Attributes{"type": "button", "data-on:click": attackCommand(v, verdict.Path)}) {
+								{ verdict.Label }
+							}
 						}
+					</div>
+				}
+				if v.Attack.Hint != "" {
+					<p class="ds-help">{ v.Attack.Hint }</p>
+				}
+				if v.Attack.Stage == stageDamage {
+					<p class="ds-help">{ v.Attack.Attacker + " rola o dano: " }<b>{ v.Attack.ToRoll }</b></p>
+				}
+				if len(v.Attack.Rows) > 0 {
+					<div class="ds-duel-rows">
+						for _, row := range v.Attack.Rows {
+							@duelRowView(row)
+						}
+					</div>
+				}
+				for _, note := range v.Attack.Notes {
+					<p class="ds-help">{ note }</p>
+				}
+				<div class="ds-strike-foot">
+					@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "commandfor": "gm-attack-details", "command": "show-modal"}) {
+						Detalhes
+					}
+					@ds.IconButton(ds.ButtonSecondary, "X", "Cancelar o ataque", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")})
+					if v.Attack.Stage == stageConfirm || v.Attack.Stage == stageManeuver {
+						@ds.IconButton(ds.ButtonPrimary, "Check", "Confirmar e aplicar", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "confirmar")})
 					}
 				</div>
 			}
-			if v.Attack.Hint != "" {
-				<p class="ds-help">{ v.Attack.Hint }</p>
-			}
-			if v.Attack.Stage == stageDamage {
-				<p class="ds-help">{ v.Attack.Attacker + " rola o dano: " }<b>{ v.Attack.ToRoll }</b></p>
-			}
-			if len(v.Attack.Rows) > 0 {
-				<div class="ds-duel-rows">
-					for _, row := range v.Attack.Rows {
-						@duelRowView(row)
-					}
-				</div>
-			}
-			for _, note := range v.Attack.Notes {
-				<p class="ds-help">{ note }</p>
-			}
-			<div class="ds-strike-foot">
-				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "commandfor": "gm-attack-details", "command": "show-modal"}) {
-					Detalhes
-				}
-				@ds.IconButton(ds.ButtonSecondary, "X", "Cancelar o ataque", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")})
-				if v.Attack.Stage == stageConfirm || v.Attack.Stage == stageManeuver {
-					@ds.IconButton(ds.ButtonPrimary, "Check", "Confirmar e aplicar", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "confirmar")})
-				}
-			</div>
 			@ds.Dialog("gm-attack-details", "Detalhes do ataque", nil) {
 				<p class="ds-row-meta">
 					{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b>
@@ -79,6 +86,13 @@ templ gmAttack(v View) {
 	} else {
 		<section id="table-attack" hidden></section>
 	}
+}
+
+// attackSheetOpener abre o corpo do cartão no CELULAR, onde só a cabeça fica à
+// vista: ele cobre o cartão inteiro, e no desktop some — lá o corpo é desenhado
+// no próprio cartão flutuante (ver `.ds-strike[data-attack] > .ds-dialog`).
+templ attackSheetOpener() {
+	<button type="button" class="ds-strike-open" commandfor={ attackSheet } command="show-modal" aria-label="Abrir o ataque"></button>
 }
 
 // attackDuel é a rolagem contra o que ela enfrenta, com o "vs" e o selo da
@@ -134,8 +148,8 @@ templ duelRowView(row duelRow) {
 // nem a RD — no papel do personagem, ele não conhece a ficha de outra entidade.
 templ tempestadeAttack(v View) {
 	if v.Attack != nil {
-		<section id="table-attack" class="ds-strike" data-attack aria-label={ playerAttackBadge(v.Attack) }>
-			<div class="ds-strike-head">
+		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ playerAttackBadge(v.Attack) }>
+			<div class="ds-strike-head" data-float-handle>
 				@ds.Badge(playerAttackBadge(v.Attack), true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
 				if v.Attack.Weapon != "" {
@@ -146,7 +160,10 @@ templ tempestadeAttack(v View) {
 				}
 			</div>
 			if v.Attack.Mine {
-				@playerAttackBody(v)
+				@attackSheetOpener()
+				@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
+					@playerAttackBody(v)
+				}
 			}
 		</section>
 	} else {

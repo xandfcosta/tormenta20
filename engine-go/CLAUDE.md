@@ -322,6 +322,16 @@ mão não saberia quantos dados pegar.
   seguinte. Um campo vazio recusa o gesto: misturar o dado da mesa com o do
   servidor seria pior que pedir o que falta.
 
+- **No desktop o cartão FLUTUA** e se arrasta pela cabeça (`lib/float-card.ts`,
+  `data-float` e `data-float-handle`); no celular fica no fluxo e mostra SÓ A
+  CABEÇA, e o corpo é o diálogo `attack-sheet` que ela abre. É o mesmo nó nas
+  duas larguras: no desktop o diálogo é desenhado dentro do cartão
+  (`display: contents`), para o conteúdo não existir duas vezes. A posição vive
+  no `style`, e o cartão declara `data-preserve-attr="style"`: sem isso o
+  remendo do servidor o devolve ao lugar padrão no primeiro toque do mestre. O
+  `attack-card-float.spec.ts` prova com um remendo que muda o PRÓPRIO cartão —
+  passar a vez não o remenda, e "ficou no lugar" mediria o nada.
+
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
 decisão, no `attack_ruling_rules_test.go`. Os casos de regra do livro decidem

@@ -2663,6 +2663,64 @@
   .ds-strike[data-attack] {
     max-width: 32rem;
   }
+  /* NO CELULAR SÓ A CABEÇA fica à vista, e o corpo é o diálogo `#attack-sheet`
+   * que ela abre: o botão cobre o cartão inteiro. No desktop o mesmo diálogo é
+   * desenhado DENTRO do cartão (`display: contents`), sem a cabeça dele — um
+   * nó só para as duas larguras, e o conteúdo não se desenha duas vezes. */
+  .ds-strike[data-attack] {
+    position: relative;
+  }
+  .ds-strike-open {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    cursor: pointer;
+  }
+  .ds-strike-open:focus-visible {
+    outline: 2px solid var(--ds-action);
+    outline-offset: 2px;
+  }
+  @media (min-width: 64rem) {
+    .ds-strike-open {
+      display: none;
+    }
+    .ds-strike[data-attack] > #attack-sheet {
+      display: contents;
+    }
+    .ds-strike[data-attack] > #attack-sheet > .ds-dialog-head {
+      display: none;
+    }
+    .ds-strike[data-attack] > #attack-sheet > .ds-dialog-body {
+      display: grid;
+      gap: 0.375rem;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+  /* NO DESKTOP O CARTÃO FLUTUA sobre a mesa, e não empurra as superfícies para
+   * baixo; a cabeça é a alça de arrastar (`lib/float-card.ts`). No celular ele
+   * fica no fluxo, porque não há mesa sobrando para ele pairar em cima. */
+  @media (min-width: 64rem) {
+    .ds-strike[data-float] {
+      position: fixed;
+      top: var(--float-y, 6.5rem);
+      left: var(--float-x, calc(50% - 16rem));
+      z-index: 40;
+      width: min(32rem, 100vw - 2rem);
+      margin: 0;
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+    }
+    .ds-strike[data-float] [data-float-handle] {
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+    .ds-strike[data-float][data-dragging] [data-float-handle] {
+      cursor: grabbing;
+    }
+  }
   .ds-duel {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
