@@ -2726,12 +2726,12 @@
     font-weight: 700;
   }
   /* A FRASE (a consequência da manobra) põe o rótulo em cima e ocupa a largura. */
-  .ds-duel-row[data-text] {
+  .ds-duel-row[data-sentence] {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     line-height: 1.35;
   }
-  .ds-duel-row[data-text] > .ds-row-meta {
+  .ds-duel-row[data-sentence] > .ds-row-meta {
     font-size: var(--ds-t-xs);
   }
   /* OS TRÊS BOTÕES do mestre, do mesmo tamanho: a sugestão do livro é o cheio. */

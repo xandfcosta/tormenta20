@@ -580,7 +580,7 @@ func duelRowView(row duelRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if row.Text {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<div class=\"ds-duel-row\" data-text><span class=\"ds-row-meta\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<div class=\"ds-duel-row\" data-sentence><span class=\"ds-row-meta\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
