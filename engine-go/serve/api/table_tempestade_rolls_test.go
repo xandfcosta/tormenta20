@@ -15,7 +15,7 @@ func TestTheParallelSessionShowsTheRolledTest(t *testing.T) {
 	rolaPericia(t, f, "Iniciativa", 20)
 	card := rolledTestCard(t, f)
 	text := textOf(card)
-	for _, want := range []string{"Teste", "20 natural", "Iniciativa", "d20 20"} {
+	for _, want := range []string{"Teste", "20 natural", "Iniciativa", "d20 (20)"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("o cartão do teste rolado não mostra %q: %q", want, text)
 		}
