@@ -2596,6 +2596,13 @@
   .ds-strike-tally {
     font-variant-numeric: tabular-nums;
   }
+  /* OS DADOS do cartão curto do mestre, à vista sem abrir os Detalhes. */
+  .ds-strike-dice {
+    margin: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    font-variant-numeric: tabular-nums;
+  }
   .ds-strike-foot {
     display: flex;
     flex-wrap: wrap;

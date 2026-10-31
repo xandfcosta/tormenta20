@@ -18,10 +18,10 @@ import (
 // DECIDE** (ver o `CLAUDE.md` da raiz), e um motor que anuncia o vencedor de um
 // embate e aplica o efeito é a forma exata que aquela seção recusa.
 //
-// O desempate do livro continua verdadeiro — *"em caso de empate, o personagem
-// com o maior bônus vence; se os bônus forem iguais, outro teste deve ser
-// feito"* —, e continua sendo do mestre. O que o motor devolve são os dois
-// totais, a diferença, e a condição que o livro PREVÊ para a vitória.
+// O desempate do livro voltou como LEITURA para o mestre (`ReadManeuver`, e o
+// caso dele no fim deste arquivo): a faixa dele diz o desfecho que os números
+// sugerem, e a palavra final é dele. O que o resultado GUARDA continua sem
+// vencedor: os dois totais, a diferença e a condição que o livro PREVÊ.
 //
 // O caso que fecha isso é o `TestTheManeuverNeverDeclaresAWinner`, no fim: ele
 // existe para que reintroduzir o veredicto reprove com nome.
@@ -173,8 +173,9 @@ func TestTheForeseenConditionTravelsEvenWhenTheAttackerRolledLower(t *testing.T)
 	}
 }
 
-// O MOTOR NÃO DIZ QUEM VENCEU, e este caso existe para que reintroduzir o
-// veredicto reprove com nome.
+// O RESULTADO NÃO GUARDA QUEM VENCEU, e este caso existe para que reintroduzir
+// o veredicto no que é guardado e aplicado reprove com nome. A leitura para o
+// mestre é o `ReadManeuver`, que não grava nada.
 //
 // Ele é um guarda de FORMA e não de valor: varre os campos do resultado por
 // reflexão e recusa qualquer um que decida o embate. É o único jeito de prender
@@ -209,5 +210,31 @@ func TestTheManeuverNeverDeclaresAWinner(t *testing.T) {
 	// como vazio daria verde sem olhar nada.
 	if medidos == 0 {
 		t.Fatalf("a varredura não leu campo nenhum do `ManeuverOutcome`")
+	}
+}
+
+// A LEITURA DO EMBATE PARA O MESTRE (ALE-532, p234). O motor não APLICA nada —
+// o `ManeuverOutcome` continua sem vencedor —, mas a faixa do mestre mostra o
+// desfecho que os números sugerem, para facilitar a leitura; a palavra final é
+// dele. A regra do desempate é do livro: *"Em caso de empate, o personagem com
+// o maior bônus vence. Se os bônus forem iguais, outro teste deve ser feito."*
+func TestTheManeuverReadingFollowsTheTieRuleOfTheBook(t *testing.T) {
+	cases := []struct {
+		name              string
+		atkRoll, atkTotal int
+		defRoll, defTotal int
+		want              ManeuverReading
+	}{
+		{"o maior total vence", 12, 19, 6, 10, ManeuverSucceeds},
+		{"o menor total perde", 4, 9, 11, 15, ManeuverFails},
+		{"empate: o maior bônus de quem tenta vence", 5, 12, 8, 12, ManeuverSucceeds},
+		{"empate: o maior bônus de quem resiste vence", 9, 12, 4, 12, ManeuverFails},
+		{"empate e bônus iguais: outro teste", 7, 12, 7, 12, ManeuverRollAgain},
+	}
+	for _, c := range cases {
+		if got := ReadManeuver(c.atkRoll, c.atkTotal, c.defRoll, c.defTotal); got != c.want {
+			t.Errorf("%s: %d (d20 %d) contra %d (d20 %d) deu %q, o livro dá %q",
+				c.name, c.atkTotal, c.atkRoll, c.defTotal, c.defRoll, got, c.want)
+		}
 	}
 }

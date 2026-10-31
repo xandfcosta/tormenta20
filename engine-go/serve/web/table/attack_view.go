@@ -56,6 +56,12 @@ type attackProposal struct {
 	Faces    int
 	Absorbed int
 	Maneuver bool
+	// Action é o nome da manobra ("Derrubar"), que a cabeça das faixas mostra
+	// ao lado de quem ataca quem; vazio no golpe comum.
+	Action string
+	// RollLine é a linha dos DADOS do cartão curto do mestre, à vista sem abrir
+	// os Detalhes (pedido do dono): "d20 9 + 8 = 17 vs Defesa 13 · 1d8+3 (3)".
+	RollLine string
 }
 
 // attackProposalOf traduz o provisório do regime na faixa, ou nil quando não há
@@ -80,11 +86,15 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	}
 	if pa.Maneuver != nil {
 		out.Maneuver = true
-		// A TINTA DO CRACHÁ É NEUTRA, e é a única que pode ser: as outras três
-		// desta faixa — crítico, acerto, erro — são cor de DESFECHO, e a manobra
-		// não tem um para colorir.
-		out.Verdict, out.Class = maneuverSeal(*pa.Maneuver), "mesa-ataque-comum"
+		out.Action = maneuverSeal(*pa.Maneuver)
+		var note string
+		out.Verdict, out.Tone, note = maneuverVerdict(*pa)
+		out.Class = "mesa-ataque-comum"
 		out.Tally = maneuverLine(*pa)
+		if note != "" {
+			out.Tally += " · " + note
+		}
+		out.RollLine = gmRollLine(*pa)
 		return out
 	}
 	switch {
@@ -95,19 +105,13 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	default:
 		out.Verdict, out.Class, out.Tone = "Errou", "mesa-ataque-erro", "danger"
 	}
+	out.RollLine = gmRollLine(*pa)
 	return out
 }
 
-// maneuverSeal é o crachá de uma manobra, e ele diz QUAL manobra — nunca quem
-// venceu.
-//
-// Ele já disse "Derrubou" e "não derrubou", lendo um `Won` que o motor calculava.
-// Isso saiu: o sistema INFORMA, o mestre DECIDE (ver o `CLAUDE.md` da raiz), e um
-// crachá que anuncia o resultado de um embate é exatamente a forma recusada.
-//
-// O que sobra é o NOME da manobra em curso, que é o que a mesa precisa para ler
-// a linha de baixo — "Derrubar · 19 vs 10" se lê sozinho, e "Manobra · 19 vs 10"
-// faria perguntar qual.
+// maneuverSeal é o NOME da manobra em curso ("Derrubar"), que a cabeça das
+// duas faixas mostra. O desfecho não mora aqui: para o mestre ele é o
+// `maneuverVerdict`, e o jogador não o vê (ALE-532).
 func maneuverSeal(m live.ManeuverRoll) string {
 	if nome, conhecida := maneuverNames[m.Kind]; conhecida {
 		return nome
@@ -131,8 +135,9 @@ var maneuverNames = map[string]string{
 // maneuverLine escreve a conta do teste OPOSTO, e ela é a resposta inteira: dois
 // totais e a diferença entre eles.
 //
-// SEM VEREDICTO. Quem compara os dois números é o mestre — e a diferença aparece
-// porque é a subtração que ele faria de cabeça, não porque alguém venceu.
+// A linha é a CONTA, e ela é do mestre: o selo ao lado diz o desfecho que os
+// números sugerem (`maneuverVerdict`), e a diferença aparece porque é a
+// subtração que ele faria de cabeça.
 //
 //	maneuverLine(...) // "19 vs 10 · diferença +9 · vitória deixa caído"
 func maneuverLine(pa live.PendingAttack) string {
@@ -181,17 +186,7 @@ func attackLine(pa live.PendingAttack) string {
 	if !pa.Hit {
 		return line
 	}
-	sum := 0
-	rolled := make([]string, 0, len(pa.Dice))
-	for _, d := range pa.Dice {
-		sum += d
-		rolled = append(rolled, fmt.Sprint(d))
-	}
-	damage := fmt.Sprintf("%dd%d", len(pa.Dice), pa.Faces)
-	if bonus := pa.RawDamage - sum; bonus != 0 {
-		damage += fmt.Sprintf("%+d", bonus)
-	}
-	line += fmt.Sprintf(" · %s (%s)", damage, strings.Join(rolled, "+"))
+	line += " · " + damageDice(pa)
 	// SEM RD AGINDO o total É o dano, e escrever os dois repete o número: a
 	// primeira versão desta linha dizia "1d4 (4) = 4 → 4 de dano", e foi olhar a
 	// tela que a pegou. A seta só existe quando há de onde para onde.
@@ -333,4 +328,20 @@ func attackNotes(a *attackProposal) []string {
 		}
 	}
 	return notes
+}
+
+// damageDice escreve os dados do dano com o bônus e cada face rolada:
+// "2d8+3 (8+5)".
+func damageDice(pa live.PendingAttack) string {
+	sum := 0
+	rolled := make([]string, 0, len(pa.Dice))
+	for _, d := range pa.Dice {
+		sum += d
+		rolled = append(rolled, fmt.Sprint(d))
+	}
+	damage := fmt.Sprintf("%dd%d", len(pa.Dice), pa.Faces)
+	if bonus := pa.RawDamage - sum; bonus != 0 {
+		damage += fmt.Sprintf("%+d", bonus)
+	}
+	return damage + " (" + strings.Join(rolled, "+") + ")"
 }
