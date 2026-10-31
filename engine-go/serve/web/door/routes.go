@@ -234,11 +234,11 @@ func (s Scene) writeDoor(
 	w http.ResponseWriter, r *http.Request, status int, body templ.Component,
 ) {
 	s.deps.WritePage(w, r, status, ui.Page{
-		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e o
-		// nome dela já está desenhado em Cinzel no meio da página.
+		// O `<title>` é o do JOGO e não o da tela: a porta é a tela-título, e a
+		// marca está desenhada no meio da página (ALE-524).
 		Title:  "Tormenta 20",
 		Shape:  ui.ShellTitled,
-		Kicker: "— Grimório de Arton —",
+		System: ui.SystemTempestade,
 		// Sem `Sinais` e sem `Init`: esta superfície não tem estado de cliente
 		// nenhum, e é isso que mantém a senha fora dele. O campo abaixo DIZ isso
 		// para a casca, que de outro modo acrescentaria o `data-init` da

@@ -1,73 +1,87 @@
 package door
 
-import "t20engine/serve/web/ui"
+import (
+	"strings"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
 
-// A PORTA desenhada: entrar, criar conta e redefinir senha.
+// A PORTA desenhada: entrar, criar conta e redefinir senha, no sistema
+// Tempestade (ALE-524), pelo mockup aprovado `porta.html`.
 //
 // A decisão que governa este arquivo: aqui NÃO se usa sinal do Datastar.
 //
 // O jeito idiomático seria `data-bind:senha` + `@post`. Um sinal, porém, é
 // estado do CLIENTE, e o Datastar serializa os sinais em TODA requisição
 // seguinte — pôr uma senha ali é a senha viajando de novo a cada `@get`/`@post`
-// da página, para sempre. Então a porta é `<form method="post">` puro.
+// da página, para sempre. Então a porta é `<form method="post">` puro, e o olho
+// que mostra a senha troca o `type` do campo no próprio navegador.
 //
 // O que se ganha junto não é consolo: funciona sem JavaScript nenhum, o
 // gerenciador de senha do navegador funciona porque este é o caminho que ele
 // conhece, e a validação de formato ganha as mensagens NATIVAS — já localizadas
 // e já acessíveis — via `required`, `type="email"` e `minlength`.
 
-// doorFrame é a moldura de ferro no meio da tela-título, com o rodapé embaixo e
-// o aviso legal por último.
+// doorFrame é a marca, o cartão do kit, o rodapé e o aviso legal. A marca é
+// tipográfica — o selo "T20" na cor da ação —, sem brasão: a direção da
+// ALE-497 é sair da fantasia.
 templ doorFrame(title, subtitle string, footer templ.Component) {
-	<div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
-		@ui.PanelFrame("space-y-5") {
-			<div class="space-y-1.5">
-				<h2 class={ ui.SectionTitleClasses("cena", "", "") }>{ title }</h2>
+	<div class="ds-door">
+		<div class="ds-door-brand">
+			<span class="ds-door-seal" aria-hidden="true">T20</span>
+			<span class="ds-door-name">
+				Tormenta 20
+				<small>Gerenciador de mesa</small>
+			</span>
+		</div>
+		<section class="ds-door-card">
+			<div class="ds-door-title">
+				<h1>{ title }</h1>
 				if subtitle != "" {
-					<p class="text-sm text-muted-foreground">{ subtitle }</p>
+					<p>{ subtitle }</p>
 				}
 			</div>
 			{ children... }
-		}
+		</section>
 		if footer != nil {
-			<p class="text-center text-sm text-muted-foreground">
+			<p class="ds-door-foot">
 				@footer
 			</p>
 		}
-		<p class="text-center text-xs text-muted-foreground">
-			Gerenciador não-oficial de Tormenta 20.
-		</p>
+		<p class="ds-door-fine">Gerenciador não-oficial de Tormenta 20.</p>
 	</div>
 }
 
-// formNotice é a recusa que não pertence a nenhum campo.
+// formNotice é a recusa que não pertence a nenhum campo, numa faixa logo acima
+// do botão, onde o olho está.
 //
 // `role="alert"` porque ela aparece DEPOIS de um envio, sem navegação e sem
 // mover o foco: quem não vê a tela não teria como saber que a tentativa falhou.
 templ formNotice(notice string) {
 	if notice != "" {
-		<p role="alert" class="text-sm text-destructive-ink">{ notice }</p>
+		<p role="alert" class="ds-door-alert">
+			@ui.Icon("CircleAlert", "ds-icon")
+			<span>{ notice }</span>
+		</p>
 	}
 }
+
+// fieldError junta os erros de um campo numa frase, que o kit desenha no
+// lugar da dica.
+func fieldError(errs []string) string { return strings.Join(errs, " ") }
 
 // ── entrar ───────────────────────────────────────────────────────────────────
 
 templ signInPage(v signInView) {
 	@doorFrame("Entrar", "Bem-vindo de volta, aventureiro.", signInFooter()) {
-		<form method="post" action="/entrar" class="space-y-4">
+		<form method="post" action="/entrar" class="ds-door-form">
 			if v.Destination != "" {
 				<input type="hidden" name="destino" value={ v.Destination }/>
 			}
-			@ui.TextField(ui.Field{
-				Name: "email", Label: "E-mail", Kind: "email", Autocomplete: "email",
-				Value: v.Email, Errors: v.Errors["email"], Required: true,
-			})
-			@ui.TextField(ui.Field{
-				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "current-password",
-				Errors: v.Errors["senha"], Required: true,
-			})
+			@ds.TextField(ds.Field{ID: "email", Name: "email", Label: "E-mail", Type: "email", Value: v.Email, Placeholder: "voce@exemplo.com", Error: fieldError(v.Errors["email"])}, templ.Attributes{"autocomplete": "email", "required": true})
+			@ds.PasswordField(ds.Field{ID: "senha", Name: "senha", Label: "Senha", Error: fieldError(v.Errors["senha"])}, templ.Attributes{"autocomplete": "current-password", "required": true})
 			@formNotice(v.Notice)
-			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit", "data-wide": true}) {
 				Entrar
 			}
 		</form>
@@ -83,25 +97,15 @@ templ signInFooter() {
 // ── criar conta ──────────────────────────────────────────────────────────────
 
 templ signUpPage(v signUpView) {
-	@doorFrame("Criar conta", "Junte-se à mesa.", footerWithSignIn()) {
-		<form method="post" action="/criar-conta" class="space-y-4">
+	@doorFrame("Criar conta", "Você foi convidado para a mesa.", footerWithSignIn()) {
+		<form method="post" action="/criar-conta" class="ds-door-form">
 			<input type="hidden" name="convite" value={ v.Invite }/>
-			@ui.TextField(ui.Field{
-				Name: "email", Label: "E-mail", Kind: "email", Autocomplete: "email",
-				Value: v.Email, Errors: v.Errors["email"], Required: true,
-			})
-			@ui.TextField(ui.Field{
-				Name: "nome", Label: "Nome (opcional)", Autocomplete: "name",
-				Value: v.Name, Errors: v.Errors["nome"], MaxSize: 80,
-			})
-			@ui.TextField(ui.Field{
-				Name: "senha", Label: "Senha", Kind: "password", Autocomplete: "new-password",
-				Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
-				Required: true, MinSize: 8, MaxSize: 128,
-			})
+			@ds.TextField(ds.Field{ID: "email", Name: "email", Label: "E-mail", Type: "email", Value: v.Email, Placeholder: "voce@exemplo.com", Error: fieldError(v.Errors["email"])}, templ.Attributes{"autocomplete": "email", "required": true})
+			@ds.TextField(ds.Field{ID: "nome", Name: "nome", Label: "Nome", Value: v.Name, Help: "Opcional — é como a mesa te chama.", Error: fieldError(v.Errors["nome"])}, templ.Attributes{"autocomplete": "name", "maxlength": "80"})
+			@ds.PasswordField(ds.Field{ID: "senha", Name: "senha", Label: "Senha", Help: "Ao menos 8 caracteres.", Error: fieldError(v.Errors["senha"])}, templ.Attributes{"autocomplete": "new-password", "required": true, "minlength": "8", "maxlength": "128"})
 			@passwordConfirmation(v.Errors["confirmar"])
 			@formNotice(v.Notice)
-			@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit", "data-wide": true}) {
 				Criar conta
 			}
 		</form>
@@ -109,40 +113,39 @@ templ signUpPage(v signUpView) {
 }
 
 templ footerWithSignIn() {
-	Já tem conta?&nbsp;
-	<a href="/entrar" class="underline underline-offset-4 outline-none">Entrar</a>
+	Já tem conta?&nbsp;<a href="/entrar">Entrar</a>
 }
 
 // ── redefinir senha ──────────────────────────────────────────────────────────
 
 templ resetPage(v resetView) {
-	@doorFrame("Escolher nova senha", linkSubtitle(v), footerWithSignIn()) {
-		if v.LinkIsValid {
-			<form method="post" action="/redefinir-senha" class="space-y-4">
+	if v.LinkIsValid {
+		@doorFrame("Escolher nova senha", linkSubtitle(v), footerWithSignIn()) {
+			<form method="post" action="/redefinir-senha" class="ds-door-form">
 				<input type="hidden" name="token" value={ v.Token }/>
-				@ui.TextField(ui.Field{
-					Name: "senha", Label: "Nova senha", Kind: "password", Autocomplete: "new-password",
-					Hint: "Ao menos 8 caracteres.", Errors: v.Errors["senha"],
-					Required: true, MinSize: 8, MaxSize: 128,
-				})
+				@ds.PasswordField(ds.Field{ID: "senha", Name: "senha", Label: "Nova senha", Help: "Ao menos 8 caracteres.", Error: fieldError(v.Errors["senha"])}, templ.Attributes{"autocomplete": "new-password", "required": true, "minlength": "8", "maxlength": "128"})
 				@passwordConfirmation(v.Errors["confirmar"])
 				@formNotice(v.Notice)
-				@ui.Button(ui.VariantPrimary, ui.SizeDefault, "w-full", templ.Attributes{"type": "submit"}) {
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "submit", "data-wide": true}) {
 					Salvar nova senha
 				}
 			</form>
-		} else {
-			// O link é conferido ANTES de desenhar o formulário: um link vencido
-			// dizer isso de cara é melhor que falhar no envio com a senha já
-			// digitada duas vezes.
-			<p class="text-sm text-muted-foreground">{ noticeDeadLink }</p>
+		}
+	} else {
+		// O LINK QUE NÃO VALE não tem formulário: um vazio do kit diz o que houve
+		// e o que fazer, com o caminho para Entrar.
+		@doorFrame("Escolher nova senha", "", nil) {
+			@ds.Empty(deadLinkTitle, noticeDeadLink)
+			@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL("/entrar"), templ.Attributes{"data-wide": true}) {
+				Ir para Entrar
+			}
 		}
 	}
 }
 
 func linkSubtitle(v resetView) string {
 	if v.AccountEmail != "" {
-		return v.AccountEmail
+		return "Para " + v.AccountEmail
 	}
 	return "Um link de redefinição foi usado para chegar aqui."
 }
@@ -156,29 +159,9 @@ func linkSubtitle(v resetView) string {
 // A comparação lê o campo irmão pelo DOM (`el.form.senha.value`) em vez de por
 // um sinal, e isso é o ponto: a senha não entra em estado de cliente nenhum.
 templ passwordConfirmation(errs []string) {
-	<div class="space-y-2">
-		<label for="confirm" class="flex items-center gap-2 text-sm leading-none font-medium select-none">
-			Confirmar senha
-		</label>
-		<input
-			id="confirm"
-			name="confirmar"
-			type="password"
-			autocomplete="new-password"
-			required
-			data-on:input={ "el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + noticePasswordMismatch + "')" }
-			if len(errs) > 0 {
-				aria-invalid="true"
-				aria-describedby="confirm-error"
-			}
-			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
-		/>
-		if len(errs) > 0 {
-			<div id="confirm-error">
-				for _, e := range errs {
-					<p class="text-sm text-destructive-ink">{ e }</p>
-				}
-			</div>
-		}
-	</div>
+	@ds.PasswordField(ds.Field{ID: "confirm", Name: "confirmar", Label: "Confirmar senha", Error: fieldError(errs)}, templ.Attributes{
+		"autocomplete":  "new-password",
+		"required":      true,
+		"data-on:input": "el.setCustomValidity(el.value === el.form.senha.value ? '' : '" + noticePasswordMismatch + "')",
+	})
 }

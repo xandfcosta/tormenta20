@@ -271,7 +271,7 @@ func TestTheDoorShowsNoFormWithAnExpiredLink(t *testing.T) {
 	rec := f.bate(t, "/redefinir-senha?token="+token, nil, "")
 	body := rec.Body.String()
 
-	if !strings.Contains(body, "Este link não vale mais — ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa.") {
+	if !strings.Contains(body, "Este link não vale mais") || !strings.Contains(body, "Ele serve uma vez só e expira em 24 horas. Peça outro a quem administra a mesa.") {
 		t.Error("o link vencido não disse que não vale mais")
 	}
 	if strings.Contains(body, `name="senha"`) {

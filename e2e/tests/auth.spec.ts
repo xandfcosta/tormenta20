@@ -3,42 +3,42 @@ import { expectDentroDaJanela } from './support/geometry'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
 /**
- * A porta do jogo fala a língua da casa.
+ * A porta do jogo SEGUE O TEMA DO APARELHO (decisão do dono, ALE-524): ela
+ * veste o sistema novo, e o modo claro ou escuro é o do sistema operacional —
+ * não há seletor antes do login.
  *
- * O que se afirma é o que o jogador VÊ: a porta é escura como a mesa. Não é
- * afirmação de classe: é a cor que o navegador pintou, e o defeito que ela
- * impede é o template genérico voltar por cima.
+ * O que se afirma é o que o jogador VÊ: a luminância do fundo que o navegador
+ * pintou, nos dois modos. Não é afirmação de classe.
  *
- * Por que e2e: cor computada de token que depende de escopo. Em jsdom nenhuma
- * variável CSS resolve e toda superfície mede transparente.
+ * Por que e2e: `prefers-color-scheme` e o `light-dark()` dos tokens só
+ * resolvem num navegador. Em jsdom toda superfície mede transparente.
  */
 test.describe('A porta do jogo', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  for (const route of ['/entrar', '/redefinir-senha']) {
-    test(`${route} é escura como a mesa`, async ({ page }) => {
+  for (const [route, heading] of [
+    ['/entrar', 'Entrar'],
+    ['/redefinir-senha', 'Escolher nova senha'],
+  ] as const) {
+    test(`${route} segue o tema do aparelho`, async ({ page }) => {
+      const luminance = async () =>
+        page.evaluate(() => {
+          const scene = document.querySelector('[data-slot=scene-shell].scene-ds')
+          if (!scene) return null
+          const [r, g, b] = getComputedStyle(scene).backgroundColor.match(/\d+(\.\d+)?/g)!.map(Number)
+          return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+        })
+
+      await page.emulateMedia({ colorScheme: 'light' })
       await page.goto(route)
-      await expect(page.getByRole('heading', { name: 'Tormenta 20' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: heading })).toBeVisible()
+      const light = await luminance()
+      expect(light, 'a porta não montou dentro de uma cena do sistema novo').not.toBeNull()
+      expect(light!, 'com o aparelho no claro, a porta não ficou clara').toBeGreaterThan(0.7)
 
-      // Compara token com token, lidos do mesmo nó: prender o oklch literal
-      // seria prender uma decisão de paleta que pode mudar sem que a porta
-      // deixe de ser a mesa.
-      const colors = await page.evaluate(() => {
-        const scene = document.querySelector('[data-slot=scene-shell]')
-        if (!scene) return null
-        const cs = getComputedStyle(scene)
-        return {
-          fundo: cs.getPropertyValue('--background').trim(),
-          mesa: cs.getPropertyValue('--grimorio-bg').trim(),
-          painel: cs.getPropertyValue('--popover').trim(),
-        }
-      })
-
-      expect(colors, 'a porta não montou dentro de uma cena').not.toBeNull()
-      expect(
-        colors?.fundo,
-        'a porta não pinta a cor da mesa — voltou a resolver o tema claro do template',
-      ).toBe(colors?.mesa)
+      await page.emulateMedia({ colorScheme: 'dark' })
+      await page.goto(route)
+      expect(await luminance(), 'com o aparelho no escuro, a porta não ficou escura').toBeLessThan(0.2)
     })
   }
 
@@ -50,7 +50,7 @@ test.describe('A porta do jogo', () => {
 
   test('a porta cabe nos seis formatos', async ({ page }) => {
     await page.goto('/entrar')
-    await expect(page.getByRole('heading', { name: 'Tormenta 20' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Entrar' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
     for (const viewport of VIEWPORTS) {

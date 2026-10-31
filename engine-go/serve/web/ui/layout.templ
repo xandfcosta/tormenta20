@@ -244,9 +244,11 @@ templ Layout(p Page, body templ.Component) {
 					data-slot="scene-content"
 					class={ "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
 						templ.KV("px-4 py-4", p.Shape == ShellDense),
-						templ.KV("px-5 py-14", p.Shape == ShellTitled) }
+						templ.KV("px-5 py-14", p.Shape == ShellTitled && p.System == SystemGrimoire) }
 				>
-					if p.Shape == ShellTitled {
+					// No Tempestade a tela-título desenha a própria marca (a porta,
+					// ALE-524); o título em Cinzel é do grimório.
+					if p.Shape == ShellTitled && p.System == SystemGrimoire {
 						@SceneTitle(p.Title, p.Kicker)
 					}
 					@body
