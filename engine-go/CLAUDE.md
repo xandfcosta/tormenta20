@@ -7,10 +7,10 @@ valem; o que está aqui estende ou sobrepõe.
 em `.templ` servidas com Datastar — mais a folha e as ilhas de JS delas, em
 `serve/web/assets/src`, e o kit de apresentação em `serve/web/ui`. Um processo serve tudo, e
 desde a ALE-273 ele também sobe por `docker compose up -d --build`, com o banco
-em bind mount. **O compose não trouxe um segundo runtime**: continua sendo UM
-serviço. O proxy que normalmente viria junto foi considerado e recusado — ele
-compraria só a compressão, que mora em `httpio.Gzip`, e traria um segundo lugar
-onde o SSE pode ser bufferizado por engano.
+em bind mount. **Na frente dele há um nginx desde a ALE-523**, e ele faz uma
+coisa só: termina o HTTPS. A compressão continua em `httpio.Gzip`, e o nginx
+repassa sem buffer, porque o fluxo ao vivo é SSE — ver "O HTTPS termina no
+nginx", abaixo.
 
 ## O mapa das pastas
 
@@ -309,30 +309,24 @@ Para quem vem do MariaDB: `FULL` ≈ `innodb_flush_log_at_trx_commit=1`, `NORMAL
 log físico de páginas, para recuperação e concorrência, e não log lógico de
 eventos para replicação.
 
-## HTTPS termina NESTE processo (opcional)
+## O HTTPS termina no nginx (ALE-523)
 
-`TLS_CERT_FILE` + `TLS_KEY_FILE` preenchidos e o `ListenAndServeTLS` entra no
-lugar do `ListenAndServe` (ALE-118). Vazios nos dois — o padrão — nada muda.
-**Meio par derruba o boot** (`Config.validateTLS`, e ele roda em desenvolvimento
-também): cair para HTTP em silêncio é o pior dos mundos, porque quem escreve
-meio par liga `COOKIE_SECURE=true` junto e aí o navegador descarta o cookie de
-sessão — o login não conclui e não há erro em lugar nenhum.
+O binário fala **HTTP puro** e não sabe servir TLS: o `docker-compose.yml` põe
+um nginx na frente (`nginx/t20.conf`) e é ele quem cifra, com o certificado que
+o `scripts/make-tls-cert.sh` gera em `tls/` (autoassinado, para os IPs da
+rede de casa — decisão do dono). Antes o TLS terminava aqui, com
+`TLS_CERT_FILE`/`TLS_KEY_FILE` (ALE-118); os dois saíram, para haver UM lugar
+de TLS.
 
-Terminar aqui, e não num proxy na frente, é o que mantém a decisão de um
-processo só. Quem terminar TLS fora deixa os dois caminhos vazios.
+O nginx **não comprime e não bufferiza**, e as duas ausências são o desenho:
+o Go já comprime o que renderiza, e o fluxo ao vivo é SSE — um proxy que
+acumula a resposta segura o quadro até o buffer encher, e a mesa para de
+atualizar sem erro em lugar nenhum. O `proxy_read_timeout` é longo pelo mesmo
+motivo: o fluxo fica aberto a sessão inteira.
 
-O esquema do log vem da config (`Config.Scheme`), e isso não é cosmético: aquela
-linha É o endereço que o mestre repassa para a mesa.
-
-**Medido, não suposto (ALE-118):** com TLS o Chrome negocia **h2** para a
-página. A pré-compressão (`.br`) atravessa o TLS e o h2 intacta.
-
-O tempo real é SSE, então ele é um `GET` como qualquer outro e viaja pelo mesmo
-h2 — sem conexão à parte e sem exceção para lembrar.
-
-O que este repositório **não** decide é de onde vem o certificado — as duas
-saídas e o preço de cada uma estão no README, e nenhuma delas se executa de
-dentro do repositório.
+`COOKIE_SECURE` nasce LIGADO no compose, porque a mesa chega pelo HTTPS. Quem
+rodar o binário sem o compose, em HTTP, o desliga: ligado em HTTP, o navegador
+descarta o cookie de sessão e o login não conclui (ALE-118).
 
 ## O boot confere o SCHEMA, não o `goose_db_version`
 

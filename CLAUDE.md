@@ -8,8 +8,8 @@ delas, em `serve/web/assets/src`. Ele se divide em cinco grupos — `domain/`,
 `app/`, `serve/`, `infra/` e `cmd/` —, e o mapa de onde procurar cada coisa está no
 [guia dele](engine-go/CLAUDE.md). `e2e/` é a suíte de Playwright, que dirige o app
 rodando. Um processo serve tudo, e ele sobe por `docker compose up -d --build`
-com o banco em bind mount no hospedeiro — um serviço só, sem proxy na frente
-(ALE-273).
+com o banco em bind mount no hospedeiro e um nginx na frente que só termina o
+HTTPS (ALE-273, ALE-523).
 
 Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
 no navegador. Os dois saíram na ALE-272: as cenas são renderizadas no servidor,

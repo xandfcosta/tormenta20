@@ -10,12 +10,11 @@ import (
 
 // COMPRIMIR O QUE O SERVIDOR RENDERIZA.
 //
-// # Por que não um proxy na frente
+// # Por que aqui e não no nginx da frente
 //
-// Porque a decisão da casa é um processo só, e comprimir aqui custa este
-// arquivo. Um nginx compraria exatamente esta função e traria um segundo
-// runtime, um segundo lugar para configurar TLS e um segundo lugar onde o SSE
-// pode ser bufferizado por engano.
+// O nginx do compose só termina o HTTPS (ALE-523), e não comprime: comprimir
+// aqui vale também para quem roda o binário sem ele, e é um lugar só onde o
+// SSE pode ser bufferizado por engano.
 //
 // # A ARMADILHA, e ela é a razão de este arquivo ter cuidado
 //

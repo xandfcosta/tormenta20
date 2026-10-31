@@ -1,13 +1,17 @@
-# A MESA, DE PÉ (ALE-273).
+# A MESA, DE PÉ (ALE-273, ALE-523).
 #
-#   cp .env.example .env    # e escreva o JWT_SECRET e o ADMIN_EMAILS
+#   cp .env.example .env         # e escreva o JWT_SECRET e o ADMIN_EMAILS
+#   scripts/make-tls-cert.sh     # o certificado em ./tls
 #   docker compose up -d --build
 #
-# UM serviço, e é deliberado: o binário serve as cenas, a API e o fluxo ao vivo na
-# mesma porta desde a ALE-101, e as cenas saem comprimidas de dentro do próprio
-# Go (`plataforma.Gzip`). Um proxy na frente compraria só a compressão, e traria
-# um segundo runtime, um segundo lugar para configurar TLS e um segundo lugar
-# onde o SSE pode ser bufferizado por engano.
+# DOIS serviços: o binário serve as cenas, a API e o fluxo ao vivo, e o nginx
+# na frente termina o HTTPS (decisão do dono, ALE-523). O Go continua
+# comprimindo o que renderiza; o nginx só cifra e repassa, sem buffer — ver
+# `nginx/t20.conf`.
+#
+# Tudo o que é da máquina mora DENTRO do projeto e fora do git: o banco em
+# `data/`, os backups em `backups/`, o livro em `t20-book.pdf` e o
+# certificado em `tls/`.
 
 services:
   t20:
@@ -31,8 +35,10 @@ services:
     #
     # ou escreva os dois no `.env`.
     user: "${T20_UID:-65532}:${T20_GID:-65532}"
-    ports:
-      - "${T20_PORT:-3001}:3001"
+    # SEM `ports`: quem fala com a mesa é o nginx, pela rede interna do compose.
+    # Uma porta HTTP aberta ao lado do HTTPS seria um segundo endereço, sem TLS.
+    expose:
+      - "3001"
     environment:
       # A configuração chega por AMBIENTE e não por `.env.production` dentro da
       # imagem: o `LoadConfig` já prefere o processo ao arquivo (ALE-119), e
@@ -43,10 +49,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:?defina o JWT_SECRET no .env — openssl rand -hex 32}
       ADMIN_EMAILS: ${ADMIN_EMAILS:?defina o ADMIN_EMAILS no .env — sem admin ninguém convida a mesa}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      # `COOKIE_SECURE=true` só com HTTPS na frente: com ele em HTTP o navegador
-      # DESCARTA o cookie e o login não conclui, sem erro em lugar nenhum
-      # (ALE-118).
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # LIGADO, porque a mesa chega pelo HTTPS do nginx. Desligar só faz
+      # sentido rodando o binário sem o compose, em HTTP: aí o navegador
+      # DESCARTARIA o cookie marcado `Secure` e o login não concluiria (ALE-118).
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      # O LIVRO: o PDF da raiz do projeto, montado abaixo. Sem o arquivo, o
+      # botão "abrir no livro" não aparece e a mesa segue (ALE-264).
+      LIVRO_PDF: /app/livro/t20.pdf
       BACKUP_EVERY: ${BACKUP_EVERY:-24h}
       BACKUP_KEEP: ${BACKUP_KEEP:-7}
     volumes:
@@ -58,6 +67,9 @@ services:
       #   mkdir -p data backups && sudo chown -R 65532:65532 data backups
       - ./data:/app/data
       - ./backups:/app/backups
+      # O livro é só de leitura. Ele fica na raiz porque as auditorias e as
+      # citações de página também o leem de lá (`t20-book.pdf`).
+      - ./t20-book.pdf:/app/livro/t20.pdf:ro
     healthcheck:
       # A imagem é distroless — sem shell, sem `curl`, sem `wget` —, então quem
       # sonda é o PRÓPRIO binário com `-health`: ele bate no `/health` de si
@@ -68,23 +80,19 @@ services:
       retries: 3
       start_period: 10s
 
-# O LIVRO e o TLS ficam FORA daqui de propósito, num arquivo de sobreposição.
-#
-# Os dois apontam para caminhos que só existem na máquina do dono da mesa, e um
-# `volumes:` com variável vazia não degrada — ele quebra o `up` inteiro com um
-# erro de sintaxe de montagem. Quem tem o PDF ou o certificado escreve um
-# `docker-compose.override.yml` ao lado, que o compose lê sozinho:
-#
-#   services:
-#     t20:
-#       environment:
-#         LIVRO_PDF: /app/livro/t20.pdf
-#         TLS_CERT_FILE: /app/tls/cert.pem
-#         TLS_KEY_FILE: /app/tls/key.pem
-#       volumes:
-#         - /caminho/no/host/t20-book.pdf:/app/livro/t20.pdf:ro
-#         - /caminho/no/host/tls:/app/tls:ro
-#
-# Sem o PDF, o botão "abrir no livro" simplesmente não aparece — ausência é
-# caminho normal, não erro. Meio par de TLS, ao contrário, DERRUBA o boot de
-# propósito (ALE-118).
+  # O HTTPS DA MESA. O certificado é o de `scripts/make-tls-cert.sh`, e sem ele
+  # o nginx não sobe — de propósito: uma mesa em HTTP com `COOKIE_SECURE`
+  # ligado não deixaria ninguém entrar.
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: tormenta20-nginx
+    restart: unless-stopped
+    depends_on:
+      t20:
+        condition: service_healthy
+    ports:
+      - "${T20_HTTP_PORT:-80}:80"
+      - "${T20_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/t20.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./tls:/etc/nginx/tls:ro
