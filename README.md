@@ -72,6 +72,24 @@ t20 production server listening on :3001 (http, db=./data/t20-prod.db)
   players can open http://192.168.15.12:3001
 ```
 
+### Atualizar a produção
+
+```bash
+pnpm deploy:prod
+```
+
+Roda da `main`, sem mudança pendente. Antes de encostar na mesa ele atualiza o
+checkout, roda os testes e compila: se algo falhar, ela segue no ar. Depois encerra o
+servidor com ordem, faz o backup, troca o binário e sobe de novo. Quem está na mesa vê
+a conexão cair por alguns segundos, e o navegador reconecta sozinho.
+
+Se a versão nova não responder, a anterior volta a subir. O banco não volta sozinho: o
+caminho do backup sai na mensagem, e restaurar é decisão de quem administra. O comando
+também se recusa a derrubar um processo na porta que não seja a produção, como um dev.
+
+Depois de reiniciar a máquina a produção não volta sozinha. Suba com `pnpm deploy:prod`,
+ou com `pnpm start` num terminal.
+
 ### Quem entra na mesa
 
 O registro **não é aberto**: quem administra gera um link de uso único (menu do

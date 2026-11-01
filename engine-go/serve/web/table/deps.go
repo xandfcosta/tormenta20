@@ -47,6 +47,9 @@ type Deps interface {
 	Presence() *live.PresenceRegistry
 	SSE() *live.SSEHub
 	Bus() *events.Bus
+	// LiveStreamsClosing fecha quando o processo vai encerrar: é a deixa para o
+	// fluxo sair e não prender o desligamento.
+	LiveStreamsClosing() <-chan struct{}
 	// CurrentUserID é quem está pedindo, pelo ID e não pelo usuário inteiro —
 	// o tipo do usuário é do hospedeiro, e uma porta que o devolvesse não é
 	// porta.

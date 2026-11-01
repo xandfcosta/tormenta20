@@ -40,8 +40,10 @@ type tableRules struct {
 	presence *live.PresenceRegistry
 	sse      *live.SSEHub
 	bus      *events.Bus
-	campaign campaignRules
-	sheet    sheetRules
+	// liveStreamsClosing fecha quando o processo vai encerrar.
+	liveStreamsClosing <-chan struct{}
+	campaign           campaignRules
+	sheet              sheetRules
 	// sheetScene é o adaptador da FICHA, e a Mesa o carrega por uma razão só: o
 	// painel da ficha embutida. Ela pede a cena PRONTA em vez de montá-la — ver
 	// o `PlayerSheet`.
@@ -57,7 +59,7 @@ func (s *Server) tableRules() tableRules {
 		db:      s.db,
 		queries: s.queries, catalogs: s.catalogs,
 		boards: s.boards, sessions: s.sessions, presence: s.presence,
-		sse: s.sse, bus: s.bus,
+		sse: s.sse, bus: s.bus, liveStreamsClosing: s.liveStreamsClosing,
 		campaign: s.campaignRules(), sheet: s.sheetRules(),
 		sheetScene: s.sheetHost(), sheetPlays: s.characterPlays(),
 	}
