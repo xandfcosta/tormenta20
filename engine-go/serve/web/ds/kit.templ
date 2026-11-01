@@ -328,6 +328,36 @@ templ Card(title string, aside templ.Component) {
 	</article>
 }
 
+// EntryCard é o VERBETE do livro em cartão: o nome, os crachás, a página à direita e
+// o corpo. `badges` e `page` são opcionais. O corpo usa `ds-entry-body` no texto,
+// `ds-entry-fields` numa `<dl>` e `ds-entry-more` no que leva a outro lugar.
+//
+// `page` é um componente porque o selo da página conhece o endereço do livro, que é
+// de quem chama, e o kit não conhece o livro.
+//
+// `overflow-wrap: anywhere` no CARTÃO (`.ds-entry-card`) porque a BARRA não é
+// oportunidade de quebra para o navegador: "Sopro da Salvação" lista as condições que
+// remove como UM token de 100 caracteres (`abalado/atordoado/apavorado/…`), que dá
+// 1.343px de conteúdo numa coluna de 540 e pinta por cima dos cartões vizinhos.
+// `anywhere` e não `break-word`: só o `anywhere` entra na conta do tamanho MÍNIMO do
+// conteúdo, e os cartões vivem numa grade.
+templ EntryCard(name string, badges, page templ.Component) {
+	<article class="ds-entry-card">
+		<header class="ds-entry-head">
+			<span class="ds-entry-title">{ name }</span>
+			if badges != nil {
+				@badges
+			}
+			if page != nil {
+				<span class="ds-row-meta ds-entry-page">
+					@page
+				</span>
+			}
+		</header>
+		{ children... }
+	</article>
+}
+
 templ RollView(r Roll) {
 	<div class="ds-roll">
 		<span class="ds-roll-what">{ r.What }</span>

@@ -74,7 +74,7 @@ templ collectionResults(v collectionView) {
 			// link colado): a cena mostra UM verbete, e sem esta linha a pessoa fica
 			// sem entender por que o catálogo tem uma entrada só.
 			if v.Entry != "" {
-				<p class="ds-catalog-more">
+				<p class="ds-entry-more">
 					<a href={ templ.SafeURL("/mestre/" + v.Aba) } data-nav-skip>{ "‹ ver " + tabLabel(v.Aba) + " inteiro" }</a>
 				</p>
 			}

@@ -48,30 +48,12 @@ templ groupCards(g collectionGroup, bookRef bookui.BookAddress) {
 	}
 }
 
-// catalogCard é a moldura e a cabeça: o nome, os crachás que quem chama põe e a
-// página do livro à direita.
-//
-// `overflow-wrap: anywhere` no CARTÃO (`.ds-catalog-card`) porque a BARRA não é
-// oportunidade de quebra para o navegador: "Sopro da Salvação" lista as condições
-// que remove como UM token de 100 caracteres (`abalado/atordoado/apavorado/…`), que
-// dá 1.343px de conteúdo numa coluna de 540 e pinta por cima dos cartões vizinhos.
-// `anywhere` e não `break-word`: só o `anywhere` entra na conta do tamanho MÍNIMO
-// do conteúdo, e os cartões vivem numa grade.
-//
-// `badges` é o que vai ao lado do nome, e o corpo é filho.
+// catalogCard é o cartão do kit com a página do livro à direita. `badges` é o que vai
+// ao lado do nome, e o corpo é filho.
 templ catalogCard(name string, page int, bookRef bookui.BookAddress, badges templ.Component) {
-	<article class="ds-catalog-card">
-		<header class="ds-catalog-head">
-			<span class="ds-catalog-title">{ name }</span>
-			if badges != nil {
-				@badges
-			}
-			<span class="ds-row-meta ds-catalog-page">
-				@bookui.PageSealInMeta(bookRef, page, name)
-			</span>
-		</header>
+	@ds.EntryCard(name, badges, bookui.PageSealInMeta(bookRef, page, name)) {
 		{ children... }
-	</article>
+	}
 }
 
 // plainBadges são crachás só de texto.
@@ -93,7 +75,7 @@ templ linkedBadge(tab, id, name string) {
 
 // describedText é uma descrição do livro com os elos que ela cita.
 templ describedText(text string, bookRef bookui.BookAddress) {
-	<p class="ds-catalog-body">
+	<p class="ds-entry-body">
 		for _, chunk := range book.WithLinks(text) {
 			@bookui.Chunk(chunk, bookRef)
 		}
@@ -123,13 +105,13 @@ templ linkedNames(names []string, target func(string) (string, string)) {
 // varrer o texto.
 templ conditionCard(c book.Condition, bookRef bookui.BookAddress) {
 	@catalogCard(c.Name, c.BookPage, bookRef, conditionBadges(c)) {
-		<p class="ds-catalog-body">
+		<p class="ds-entry-body">
 			for _, chunk := range book.WithConditionLinks(c.Description, c.Name) {
 				@bookui.Chunk(chunk, bookRef)
 			}
 		</p>
 		if c.UpgradesTo != "" {
-			<p class="ds-catalog-more">
+			<p class="ds-entry-more">
 				@bookui.CrossRef("condicoes", c.UpgradesTo, book.ConditionName(c.UpgradesTo)) {
 					{ "Agrava para " + book.ConditionName(c.UpgradesTo) }
 				}
@@ -187,7 +169,7 @@ templ spellCard(m book.Spell, bookRef bookui.BookAddress) {
 		// Os APRIMORAMENTOS abrem numa caixa e não no cartão: são três a cinco
 		// linhas por magia, que empurrariam a lista inteira para baixo.
 		if len(m.Augments) > 0 {
-			<p class="ds-catalog-more">
+			<p class="ds-entry-more">
 				<button type="button" data-nav-skip data-on:click={ bookui.OpensAugments(m.ID) }>
 					{ augmentsWritten(len(m.Augments)) }
 				</button>
@@ -220,7 +202,7 @@ templ raceCard(r book.Race, bookRef bookui.BookAddress) {
 	@catalogCard(r.Name, r.BookPage, bookRef, plainBadges(r.AttributeMod.Escrito())) {
 		<p class="ds-row-meta">{ raceMeta(r) }</p>
 		if len(r.Abilities) > 0 {
-			<div class="ds-catalog-abilities">
+			<div class="ds-entry-abilities">
 				for _, h := range r.Abilities {
 					<p><b>{ h.Name }</b>{ " · " + h.Summary }</p>
 				}
@@ -244,7 +226,7 @@ templ classCard(c book.Class, bookRef bookui.BookAddress) {
 				}
 			</p>
 		}
-		<p class="ds-catalog-more">
+		<p class="ds-entry-more">
 			<a href={ templ.SafeURL("/mestre/poderes?fonte=" + c.Name) } data-nav-skip>{ fmt.Sprintf("%d poderes de classe", c.Powers) }</a>
 		</p>
 	}
@@ -260,8 +242,8 @@ templ classCard(c book.Class, bookRef bookui.BookAddress) {
 // dado perdido em vez de ausência com significado.
 templ godCard(d book.God, bookRef bookui.BookAddress) {
 	@catalogCard(d.Name, d.BookPage, bookRef, plainBadges(nonEmpty(energyWritten(d.Energy))...)) {
-		<p class="ds-catalog-body">{ d.Portfolio }</p>
-		<dl class="ds-catalog-fields">
+		<p class="ds-entry-body">{ d.Portfolio }</p>
+		<dl class="ds-entry-fields">
 			if d.Symbol != "" {
 				<dt>Símbolo</dt>
 				<dd>{ d.Symbol }</dd>
@@ -293,13 +275,13 @@ templ godCard(d book.God, bookRef bookui.BookAddress) {
 // quem decide é a rota.
 templ SpellAugments(m book.Spell, bookRef bookui.BookAddress) {
 	<div id="crossref-entry">
-		<div class="ds-catalog-card">
-			<header class="ds-catalog-head">
-				<span class="ds-row-meta ds-catalog-page">
+		<div class="ds-entry-card">
+			<header class="ds-entry-head">
+				<span class="ds-row-meta ds-entry-page">
 					@bookui.PageSealInMeta(bookRef, m.BookPage, m.Name)
 				</span>
 			</header>
-			<ul class="ds-catalog-augments">
+			<ul class="ds-entry-augments">
 				for _, a := range m.Augments {
 					// O CUSTO na frente e em coluna: é por ele que o mestre varre a
 					// lista ("o que dá para fazer com 2 PM?"), e com a grade todo o

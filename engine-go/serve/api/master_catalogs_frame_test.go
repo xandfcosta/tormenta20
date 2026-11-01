@@ -33,7 +33,7 @@ func TestEveryCatalogWearsTheMasterFrame(t *testing.T) {
 			if !strings.Contains(current, `aria-current="page"`) {
 				t.Errorf("o menu não marca %s como a tela atual: %s", slug, current)
 			}
-			if !strings.Contains(body, `class="ds-catalog-card"`) {
+			if !strings.Contains(body, `class="ds-entry-card"`) {
 				t.Error("o catálogo não desenha o verbete em cartão")
 			}
 		})

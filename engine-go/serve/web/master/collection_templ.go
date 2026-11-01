@@ -206,7 +206,7 @@ func collectionResults(v collectionView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if v.Entry != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<p class=\"ds-catalog-more\"><a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<p class=\"ds-entry-more\"><a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
