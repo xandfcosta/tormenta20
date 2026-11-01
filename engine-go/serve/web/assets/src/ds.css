@@ -106,22 +106,6 @@
 :root[data-mode='dark'] .scene-ds {
   color-scheme: dark;
 }
-/* A METADE FORÇADA da folha viva: ela desenha as mesmas peças num modo fixo,
- * e é por isso que os tokens são `light-dark()` — eles se resolvem no elemento
- * que os USA, então um `color-scheme` aqui dentro basta para a metade inteira
- * trocar de modo sem um segundo bloco de tokens. */
-.ds-preview {
-  background: var(--ds-bg);
-  color: var(--ds-ink);
-  border: 1px solid var(--ds-line);
-}
-.ds-preview[data-preview='light'] {
-  color-scheme: light;
-}
-.ds-preview[data-preview='dark'] {
-  color-scheme: dark;
-}
-
 @media (pointer: coarse) {
   .scene-ds {
     --ds-h-control: 2.75rem;
@@ -3854,14 +3838,6 @@
       padding: 1rem 1.25rem;
     }
   }
-  /* Na folha viva o menu aparece em toda largura: ela mostra a peça, e num quadro
-   * dela a borda e o recuo de quem encosta na lateral da tela não têm sentido. */
-  .ds-preview .ds-side-menu {
-    display: grid;
-    gap: 2px;
-    padding: 0;
-    border-right: 0;
-  }
   /* AS DUAS COLUNAS do catálogo são CONSULTA DE CONTÊINER, e não de mídia: a
    * pergunta é "cabe o verbete ao lado da lista?", que é sobre o espaço da área
    * principal. Por mídia ela não era monotônica — a 1000px de janela, sem o
@@ -4133,6 +4109,119 @@
     }
     .ds-entry-page > a {
       justify-content: flex-end;
+    }
+  }
+
+  /* A FOLHA VIVA (ALE-541, mockup `sistema.html`): uma amostra de cada peça, dividida
+   * em seções, com um índice à esquerda no desktop e numa fileira no celular. */
+  .ds-specimen {
+    display: grid;
+    flex: 1;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    min-height: 0;
+  }
+  .ds-specimen-body {
+    display: grid;
+    min-height: 0;
+  }
+  .ds-specimen-main {
+    min-height: 0;
+    padding: 1rem;
+    overflow: auto;
+  }
+  .ds-specimen-content {
+    display: grid;
+    gap: 2rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+  }
+  .ds-specimen > .ds-section-nav {
+    border-top: 0;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-specimen > .ds-section-nav > a {
+    align-content: center;
+    min-height: var(--ds-h-control);
+    font-size: var(--ds-t-sm);
+  }
+  .ds-specimen-section {
+    display: grid;
+    gap: 1rem;
+    scroll-margin-top: 1rem;
+  }
+  .ds-specimen-section + .ds-specimen-section {
+    padding-top: 2rem;
+    border-top: 1px solid var(--ds-line);
+  }
+  .ds-specimen-section-head {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ds-specimen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+    align-items: start;
+    gap: 1.5rem;
+  }
+  .ds-specimen-piece {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .ds-specimen-piece[data-wide] {
+    grid-column: 1 / -1;
+  }
+  .ds-specimen-name {
+    margin: 0;
+    font-size: var(--ds-t-md);
+    line-height: var(--ds-lh-md);
+    font-weight: 600;
+  }
+  .ds-specimen-why {
+    margin: 0 0 0.375rem;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+  }
+  .ds-specimen-stage {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-specimen-stage[data-bare] {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  /* A amostra do menu aparece em toda largura: a folha mostra a peça, e numa moldura
+   * a borda e o recuo de quem encosta na lateral da tela não têm sentido. */
+  .ds-specimen-stage > .ds-side-menu {
+    display: grid;
+    gap: 2px;
+    max-width: 15rem;
+    padding: 0;
+    border-right: 0;
+  }
+  @media (min-width: 64rem) {
+    .ds-specimen {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .ds-specimen-body {
+      grid-template-columns: 15rem minmax(0, 1fr);
+    }
+    .ds-specimen-main {
+      padding: 1.5rem 2rem;
+    }
+  }
+  @media (max-width: 40rem) {
+    .ds-specimen > .ds-header > .ds-header-acts {
+      width: 100%;
+      margin-left: 0;
     }
   }
 

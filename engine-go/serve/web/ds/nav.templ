@@ -74,20 +74,24 @@ templ SideMenuHead(title string) {
 	<p class="ds-list-head">{ title }</p>
 }
 
-// SideMenuLink é uma tela do menu. É LINK e não botão: trocar de tela é navegar, e o
+// SideMenuLink é uma tela do menu, e o ícone e a dica são opcionais. É LINK e não botão: trocar de tela é navegar, e o
 // botão perde o clique do meio, o "abrir em nova aba" e o endereço que se cola no
 // chat.
 templ SideMenuLink(href templ.SafeURL, icon, hint string, current bool, attrs templ.Attributes) {
 	<a
 		href={ href }
 		class="ds-side-menu-link"
-		title={ hint }
+		if hint != "" {
+			title={ hint }
+		}
 		if current {
 			aria-current="page"
 		}
 		{ attrs... }
 	>
-		@ui.Icon(icon, "ds-icon")
+		if icon != "" {
+			@ui.Icon(icon, "ds-icon")
+		}
 		<span>
 			{ children... }
 		</span>

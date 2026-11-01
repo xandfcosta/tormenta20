@@ -47,6 +47,11 @@ export type MeasuredVisit = {
    * aparece no relatório — que é o contrário de um verde silencioso.
    */
   mayBeAbsent?: boolean
+  /**
+   * o modo em que a visita mede; sem ele, o claro. A folha viva tem uma visita por
+   * modo, e é ali que o kit é medido no escuro.
+   */
+  colorScheme?: 'dark'
 }
 
 export type MeasuredScene = {

@@ -107,7 +107,7 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
     // O papel entra no NOME porque a Mesa aparece duas vezes: o mestre e o
     // jogador recebem metades diferentes do mesmo endereço, e um relatório com
     // dois casos de nome igual não diz qual reprovou.
-    const where = `${label} · ${visit.address} · ${visit.session}`
+    const where = `${label} · ${visit.address} · ${visit.session}${visit.colorScheme ? ` · ${visit.colorScheme}` : ''}`
 
     // DUAS NAVEGAÇÕES POR CENA, e não uma por medidor (ALE-322). Cada caso
     // custava 1,1–1,5s quase todo de abrir contexto e navegar, e a cena rodava
@@ -115,7 +115,7 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
     // medidores que olham a MESMA página dividem a navegação; o que muda a
     // página (a face mais larga injeta estilo) vem por último.
     test.describe(`aparência: ${where}`, () => {
-      test.use({ storageState: SESSION_FILE[visit.session] })
+      test.use({ storageState: SESSION_FILE[visit.session], colorScheme: visit.colorScheme ?? 'light' })
 
       test(`no desktop: contraste, Cinzel, piso de texto e fonte em ${where}`, async ({ page }) => {
         const response = await page.goto(visit.address)
@@ -131,6 +131,12 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
         test.info().annotations.push({ type: 'sistema', description: migrated ? 'Tempestade' : 'grimório' })
 
         await runMeasures(where, [
+          // O CONTROLE do modo: sem ele, uma visita "escura" que abrisse em claro
+          // mediria o claro duas vezes, com a mesma cor de verde.
+          ['modo pedido', async () => {
+            const dark = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches)
+            expect(dark, `${where}: a visita não abriu no modo pedido`).toBe(visit.colorScheme === 'dark')
+          }],
           ['contraste AA', async () => {
             const contrast = await medeOContraste(page)
             expect(
@@ -213,17 +219,32 @@ test.describe('os pisos do sistema Tempestade', () => {
 
   // O FOCO do sistema novo é UMA cara POR MODO, e é desenhado e não aceso: a
   // folha viva tem toda peça do kit, então é onde uma segunda cara apareceria
-  // primeiro. Uma metade por vez, porque as duas lado a lado têm de fato dois
-  // roxos — o claro e o escuro —, e o medidor contaria o modo como defeito.
-  for (const [shown, hidden] of [['light', 'dark'], ['dark', 'light']]) {
-    test(`o realce de foco é um só na metade ${shown} da folha viva`, async ({ page }) => {
+  // primeiro. O cabeçalho sai da medição porque leva o seletor, que recarrega a página.
+  for (const colorScheme of ['light', 'dark'] as const) {
+    test(`o realce de foco é um só na folha viva em ${colorScheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme })
       await page.goto('/sistema')
-      await page.addStyleTag({
-        content: `.ds-preview[data-preview='${hidden}'], [data-slot='scene-shell'] > header, form[action='/modo'] { display: none }`,
-      })
-      await expectOneFocusRing(page, `na metade ${shown} da folha viva`, 20)
+      await page.addStyleTag({ content: '.ds-specimen > .ds-header { display: none }' })
+      await expectOneFocusRing(page, `na folha viva em ${colorScheme}`, 20)
     })
   }
+
+  /**
+   * O seletor troca a amostra, e isso é o motivo de existir um seletor na folha. A cor
+   * do fundo é a testemunha: um mostrador que não muda não testemunha o clique.
+   */
+  test('o seletor de modo troca a amostra da folha viva', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' })
+    await page.goto('/sistema')
+    const stageBackground = () =>
+      page.locator('.ds-specimen-stage').first().evaluate((e) => getComputedStyle(e).backgroundColor)
+    const light = await stageBackground()
+
+    await page.getByRole('button', { name: 'Escuro', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Escuro', exact: true })).toHaveAttribute('aria-pressed', 'true')
+
+    expect(await stageBackground(), 'o fundo da amostra não mudou com o modo').not.toBe(light)
+  })
 
   test('os medidores acusam um texto e um alvo que reprovam', async ({ page }) => {
     await page.goto('/sistema')
