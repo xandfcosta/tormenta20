@@ -175,29 +175,6 @@ alguém já usou e que não voltam.
 
 ---
 
-## D-bis. A família de rótulos em CAIXA ALTA
-
-**São TRÊS papéis, e não três tamanhos do mesmo.** As grafias espalhadas não
-eram variação — eram três coisas diferentes sem lugar de onde copiar. **Um
-componente só para os três seria pior que as grafias soltas**, porque
-esconderia que são coisas diferentes.
-
-| Canônico | Identificador | Proibidos | O que é |
-|---|---|---|---|
-| **título de seção** | `SectionTitleClasses` | ~~cabeçalho~~ (é o de bloco), ~~título de cena~~ (é o `SceneTitle`) | O título de uma SEÇÃO da cena: Cinzel 18px dourada. `Mochila`, `Combate`, `Perícias`. **18px e não 14**, e os dois foram medidos: 14px é a medida do CORPO deste app, e um cabeçalho do tamanho do texto perde a hierarquia que ele existe para criar. O `contexto` muda só a entreletra — `painel` aperta (`tracking-wide`) porque disputa espaço com nove vizinhos, `cena` respira (`[0.16em]`) porque é o único assunto da tela. **Não é o `SceneTitle`**, que é a tela-título inteira com o brilho arcano e o kicker. |
-| **rótulo de bloco** | `SectionLabel`, `SectionLabelClasses` | ~~rótulo de seção~~ (colide com o de cima) | O cabeçalho de um BLOCO dentro da cena: 11px, sem Cinzel, entreletra `[0.16em]`. É o que estava no kit. **Cuidado com o `SectionLabel` templ**, que embrulha num `<p>` e expulsa um `<h4>` passado como filho — para um cabeçalho, use o `…Classes` direto no elemento. |
-| **rótulo de campo** | `FieldLabelClasses` | ~~rótulo~~ sozinho, ~~legenda~~ | O rótulo colado num VALOR — o "FOR" ao lado do 16. 10px, entreletra `widest`, **nunca Cinzel**: em 10px ela vira desenho antes de virar texto, e este papel é o degrau que já estava certo quando o cabeçalho de bloco ainda era a exceção solta. Ele **não é cabeçalho de nada**, e a distinção tem consequência: o `<span>` do "FOR" e o `<h3>` de "Poderes" pediram o mesmo desenho por acidente de aparência. |
-
-O ELEMENTO é escolha de quem chama e não do papel, porque a semântica é do
-SÍTIO: o mesmo desenho é `<legend>` num `<fieldset>`, `<label>` ao lado de um
-campo e `<span>` ao lado de um número. O `tom` é `gold`, `muted` ou `herda` — o
-último para o rótulo cuja cor o CSS não sabe de antemão, como o da barra vital,
-que se pinta com a mesma variável do preenchimento.
-
-**O CRACHÁ não é da família** (ver a linha dele na seção A): ele tem caixa —
-borda, fundo, canto — e a caixa é o que ele diz. Nove sítios ainda escrevem a
-tipografia dele à mão, e eles estão FORA das três receitas de propósito.
-
 ## E. Colisões abertas — NÃO conserte por palpite
 
 Estão aqui para que ninguém as "arrume" escolhendo sozinho. Cada uma precisa de
@@ -554,10 +531,9 @@ resolvidas por palpite:**
 
 ## H. O sistema Tempestade
 
-A UI está sendo refeita do zero, e as telas migram uma a uma. Até a última, o
-app veste DOIS sistemas de desenho, e é a CENA quem diz qual. Os termos abaixo
-são os que a migração precisou nomear. O que ainda é do grimório (a seção D-bis)
-continua valendo nas telas que não migraram.
+A UI foi refeita do zero, e toda tela já veste o Tempestade. Os termos abaixo são
+os que a migração precisou nomear. Do grimório restam os tokens e as fontes, que
+ainda saem.
 
 | Canônico | Identificador | Proibidos | O que é |
 |---|---|---|---|

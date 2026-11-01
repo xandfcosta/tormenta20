@@ -8,7 +8,7 @@ import (
 
 // TODA FERRAMENTA DESENHADA NO RASCUNHO TEM ROTA NELE.
 //
-// O rascunho reusa o `boardTable` inteiro, e com ele o TRILHO inteiro: as
+// O rascunho reusa o `gmTools` inteiro, e com ele o TRILHO inteiro: as
 // ferramentas que não são `GMOnly` aparecem lá numeradas e com atalho de
 // teclado, sem ninguém as ter escolhido para aquela tela.
 //
@@ -58,7 +58,7 @@ func TestEveryDraftToolHasARoute(t *testing.T) {
 				f.Label, f.ID, path)
 		}
 	}
-	// A peça avulsa fica FORA da fileira numerada (ver `toolsRail`), então o
+	// A peça avulsa fica FORA da fileira numerada (ver `gmTools`), então o
 	// `rail` não a devolve — e ela é desenhada no rascunho do mesmo jeito.
 	measured++
 	if !rotaExiste(router, placed[NewPieceTool]) {

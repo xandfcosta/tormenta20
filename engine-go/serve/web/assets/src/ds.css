@@ -2985,6 +2985,29 @@
   .ds-board-scene {
     container-type: inline-size;
   }
+  .ds-draft-head {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+  }
+  .ds-draft-title {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+  .ds-draft-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    margin: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+  }
   .ds-gm-board-bar {
     top: 0.5rem;
     right: 0.5rem;
@@ -2998,7 +3021,7 @@
   /* O MAPA ESTREITO põe a barra embaixo do seletor, em vez de disputar a linha
    * com ele (decisão do dono: os controles se ajustam ao tamanho do mapa). */
   @container (max-width: 40rem) {
-    .ds-gm-board-bar {
+    .ds-gm-board-bar:not([data-alone]) {
       top: 3.25rem;
     }
     /* As duas classes, e não só a nossa: a `.ds-board-notice` vem depois na
@@ -3369,6 +3392,75 @@
     min-height: 0;
     flex-direction: column;
     gap: 0.5rem;
+  }
+  .ds-notes-window {
+    gap: 0.75rem;
+    padding: 0.75rem;
+    container-type: inline-size;
+  }
+  .ds-notes-head {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+  .ds-notes-head > h1 {
+    flex: 1 1 10rem;
+  }
+  .ds-notes-layout {
+    display: grid;
+    flex: 1;
+    min-height: 0;
+    gap: 0.75rem;
+    grid-auto-rows: minmax(0, 1fr);
+  }
+  @container (min-width: 40rem) {
+    .ds-notes-layout[data-mode="duplo"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .ds-notes-read {
+    overflow-y: auto;
+    align-content: start;
+  }
+  .ds-note-title {
+    margin: 0;
+    color: var(--ds-ink);
+    font-size: var(--ds-t-md);
+    font-weight: 800;
+  }
+  .ds-note-title[data-small] {
+    font-size: var(--ds-t-sm);
+  }
+  .ds-note-quote {
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--ds-line);
+    color: var(--ds-ink-2);
+  }
+  .ds-note-rule {
+    border-color: var(--ds-line);
+  }
+  .ds-note-faint {
+    color: var(--ds-ink-2);
+  }
+  .ds-note-check,
+  .ds-note-link {
+    color: var(--ds-action);
+  }
+  .ds-note-link {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ds-note-code {
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+    background: var(--ds-bg);
+    font-family: var(--font-mono, monospace);
+    font-size: var(--ds-t-xs);
+  }
+  .ds-note-error {
+    color: var(--ds-danger);
   }
   .ds-gm-notes-head {
     display: flex;

@@ -542,7 +542,7 @@ func TestTheNewPieceModeBelongsToTheGmAndHasNoNumber(t *testing.T) {
 		// satisfeitas por marcação ALHEIA: o primeiro é o `data-signals` da
 		// PÁGINA (o caso diz isso dezoito linhas abaixo, sobre o jogador), e o
 		// segundo vem do menu de tamanho da peça no `token_actions.go`. O caso
-		// ficou VERDE enquanto a `newPieceBar` não tinha chamador nenhum e nunca
+		// ficou VERDE enquanto a barra de peça nova não tinha chamador nenhum e nunca
 		// chegava à tela — o mestre ligava o modo, clicava numa casa, e o
 		// servidor recusava com "dê um nome à peça" porque o nome vinha vazio.
 		//

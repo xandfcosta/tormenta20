@@ -2,7 +2,6 @@ package table
 
 import (
 	"fmt"
-	"t20engine/serve/web/ui"
 )
 
 // A JANELA DAS NOTAS (ALE-218) — a mesma superfície, sem o mapa em volta.
@@ -25,17 +24,13 @@ templ notesWindow(v View) {
 		aria-label="Notas da sessão"
 		data-init={ seedNotesWindow(v) }
 		data-on:pagehide__window={ givesTheNotesBack(v) }
-		class="flex min-h-0 flex-1 flex-col gap-2 p-3"
+		class="ds-session ds-notes-window"
 	>
-		<div class="flex shrink-0 flex-wrap items-center justify-between gap-2">
-			<h1 class={ ui.SectionTitleClasses("painel", "gold", "") }>
-				{ fmt.Sprintf("Notas · Sessão %d", v.SessionNum) }
-			</h1>
-			<div class="flex items-center gap-2">
-				@modesRange()
-				@autosaveState()
-			</div>
-		</div>
+		<header class="ds-notes-head">
+			<h1 class="ds-sheet-name">{ fmt.Sprintf("Notas · Sessão %d", v.SessionNum) }</h1>
+			@modesRange()
+			@autosaveState()
+		</header>
 		@notesBody(v)
 	</section>
 }

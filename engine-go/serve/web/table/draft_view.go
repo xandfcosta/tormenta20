@@ -23,7 +23,7 @@ import (
 //
 // Ela mora no pacote da Mesa e não num pacote próprio porque é o TABULEIRO que
 // ela reusa, e o tabuleiro é daqui: um pacote separado precisaria exportar o
-// `boardTable`, o `boardViewOf` e a dúzia de decisões que os dois carregam — e
+// `boardScene`, o `boardViewOf` e a dúzia de decisões que os dois carregam — e
 // duas cópias do `BoardView` é como as duas superfícies divergem em silêncio.
 
 // draftView é a página do rascunho.

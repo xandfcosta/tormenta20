@@ -79,15 +79,6 @@ func SceneTitle(title, kicker string) templ.Component {
 	})
 }
 
-// SectionLabelClasses é o cabeçalho de um bloco. NÃO é Cinzel: ela é serifada de
-// display e abaixo de 14px vira desenho antes de virar texto, e esta receita é de 10px.
-//
-// `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem duas, e uma
-// terceira nasceria como cor solta.
-func SectionLabelClasses(tom, extra string) string {
-	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
-}
-
 // ── OS OUTROS DOIS PAPÉIS DA FAMÍLIA ────────────────────────────────────────
 //
 // A família de rótulos em CAIXA ALTA tem TRÊS papéis, e **um componente só para
@@ -95,55 +86,6 @@ func SectionLabelClasses(tom, extra string) string {
 // coisas diferentes. O rótulo de campo não é cabeçalho de nada, e vesti-lo de
 // Cinzel mudaria a cara da ficha em dezenas de lugares. Eles compartilham a
 // família e nada mais.
-
-// SectionTitleClasses é o título de uma SEÇÃO DA CENA: Cinzel grande e dourada.
-//
-// 18px e não 14: **14px é a medida do CORPO do texto neste app**, e um cabeçalho
-// do mesmo tamanho do texto perde a hierarquia que ele existe para criar.
-//
-// O CONTEXTO muda só a entreletra, e a divisão não é deriva: `tracking-wide` é
-// de painel de tela densa — Mochila, Perícias, Grimório — e `[0.16em]` é de
-// passo de forja e ferramenta do mestre. Um passo de cena é o único assunto da
-// tela e o título pode respirar; um cabeçalho de painel disputa espaço com nove
-// outros, e apertar é o que o mantém legível ao lado dos vizinhos.
-func SectionTitleClasses(context, tom, extra string) string {
-	tracking := "tracking-[0.16em]"
-	if context == "painel" {
-		tracking = "tracking-wide"
-	}
-	if tom == "" {
-		tom = "gold"
-	}
-	return Join("font-heading text-lg uppercase "+tracking+" "+SectionLabelTone(tom), extra)
-}
-
-// FieldLabelClasses é o rótulo colado num VALOR — o "FOR" ao lado do 16.
-//
-// SEM Cinzel: neste tamanho ela vira desenho antes de virar texto.
-//
-// Ele NÃO é cabeçalho de nada, e a distinção tem consequência: o `<span>` do
-// "FOR" ao lado do 16 e o `<h3>` de "Poderes" pedem o mesmo desenho por
-// acidente de aparência, e trocá-los de papel muda o que a tela diz.
-func FieldLabelClasses(tom, extra string) string {
-	return Join("text-3xs uppercase tracking-widest "+SectionLabelTone(tom), extra)
-}
-
-// SectionLabelTone é a cor dos três papéis, e o `herda` não é conveniência.
-//
-// Ele existe porque há rótulo cuja cor o CSS não sabe de antemão: a barra vital
-// pinta o rótulo com a mesma variável do preenchimento, que muda com o valor, e
-// o crachá de penalidade tem tinta própria. Sem um tom que não escreve cor
-// nenhuma, esses sítios teriam de ficar fora da receita — e ficar fora da
-// receita é exatamente o que esta issue veio desfazer.
-func SectionLabelTone(tom string) string {
-	switch tom {
-	case "gold":
-		return "text-grimorio-gold"
-	case "herda":
-		return ""
-	}
-	return "text-muted-foreground"
-}
 
 // ScrollBox é uma região que ROLA e que o TECLADO alcança.
 //
@@ -201,7 +143,7 @@ func ScrollBox(label string, extra string) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 116, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 58, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {

@@ -129,15 +129,7 @@ templ gmScenePick(b BoardView) {
 // para baixo do seletor quando o mapa é estreito (o CSS mede o mapa).
 templ gmBoardBar(b BoardView, v View) {
 	<div class="ds-board-float ds-gm-board-bar" role="group" aria-label="Enquadrar e montar o mapa">
-		<button type="button" class="ds-board-fbtn" aria-label={ CenterTarget(b) } title={ CenterTarget(b) } data-on:click={ centerTokens(b) }>
-			@ui.Icon("Crosshair", "ds-icon")
-		</button>
-		<button type="button" class="ds-board-fbtn" aria-label="Afastar o mapa" data-attr:disabled={ ZoomAtLimit(-ZoomStep) } data-on:click={ zoomMidScene(step(-ZoomStep)) }>
-			@ui.Icon("Minus", "ds-icon")
-		</button>
-		<button type="button" class="ds-board-fbtn" aria-label="Aproximar o mapa" data-attr:disabled={ ZoomAtLimit(ZoomStep) } data-on:click={ zoomMidScene(step(ZoomStep)) }>
-			@ui.Icon("Plus", "ds-icon")
-		</button>
+		@gmFraming(b)
 		<span class="ds-board-fsep" aria-hidden="true"></span>
 		<button type="button" class="ds-board-fbtn" aria-pressed={ fmt.Sprint(b.CurtainNotice) } aria-label={ gmCurtainLabel(b) } title={ gmCurtainLabel(b) } data-on:click={ curtainCommand(b, curtainTarget(b.CurtainNotice)) }>
 			@ui.Icon("Theater", "ds-icon")
@@ -161,6 +153,20 @@ templ gmBoardBar(b BoardView, v View) {
 			@ui.Icon("X", "ds-icon")
 		</button>
 	</div>
+}
+
+// gmFraming é o enquadrar: centralizar e o zoom. É o que a barra da Mesa e a do
+// rascunho têm em comum.
+templ gmFraming(b BoardView) {
+	<button type="button" class="ds-board-fbtn" aria-label={ CenterTarget(b) } title={ CenterTarget(b) } data-on:click={ centerTokens(b) }>
+		@ui.Icon("Crosshair", "ds-icon")
+	</button>
+	<button type="button" class="ds-board-fbtn" aria-label="Afastar o mapa" data-attr:disabled={ ZoomAtLimit(-ZoomStep) } data-on:click={ zoomMidScene(step(-ZoomStep)) }>
+		@ui.Icon("Minus", "ds-icon")
+	</button>
+	<button type="button" class="ds-board-fbtn" aria-label="Aproximar o mapa" data-attr:disabled={ ZoomAtLimit(ZoomStep) } data-on:click={ zoomMidScene(step(ZoomStep)) }>
+		@ui.Icon("Plus", "ds-icon")
+	</button>
 }
 
 // gmNotices são os avisos do mestre: a cortina fechada e a lente acesa, cada um

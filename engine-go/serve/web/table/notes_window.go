@@ -60,6 +60,7 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   fmt.Sprintf("Notas · Sessão %d", v.SessionNum),
 		Signals: notesWindowSignals(),
+		System:  ui.SystemTempestade,
 	}, notesWindow(v))
 }
 

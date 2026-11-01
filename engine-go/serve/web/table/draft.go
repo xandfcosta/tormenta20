@@ -63,7 +63,7 @@ func (s Scene) DraftRoutes(r chi.Router) {
 // ── MEDIR o rascunho ─────────────────────────────────────────────────────────
 //
 // A régua e o gabarito são desenhados no rascunho porque não são `GMOnly` e o
-// trilho inteiro veio junto com o `boardTable`. As rotas PRECISAM vir junto: sem
+// trilho inteiro veio junto com o `gmTools`. As rotas PRECISAM vir junto: sem
 // elas o trilho oferece um gesto que o servidor não atende — 404, tela que não
 // muda, e nada explicando por quê. Quem varre isso é o
 // `TestEveryDraftToolHasARoute`.
@@ -161,6 +161,7 @@ func (s Scene) handleDraftPage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   "Rascunho · " + view.Place,
 		Signals: tableSignalsExpr(s.deps.BuildRevision()),
+		System:  ui.SystemTempestade,
 	}, draftBody(view))
 }
 

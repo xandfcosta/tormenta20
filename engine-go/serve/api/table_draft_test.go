@@ -516,3 +516,27 @@ func TestTheDraftMarkerLandsWhereTheBodySaysAndIsBornHidden(t *testing.T) {
 		t.Error("o marcador do rascunho nasceu VISÍVEL — marcar a armadilha na frente da mesa a entrega")
 	}
 }
+
+// O rascunho veste o Tempestade com as peças do tabuleiro do mestre, e a hora da gravação fica
+// dentro da região que o gesto remenda: fora dela, ela nunca mudaria depois de gravar.
+func TestTheDraftWearsTheBoardOfTheMaster(t *testing.T) {
+	f := newSceneFixture(t)
+	place := f.draftPlace(t, "Cripta de Thwor", "crypt")
+
+	body := f.requests(t, f.gm, http.MethodGet, f.draftUrl(place), "").Body.String()
+
+	for _, want := range []string{"scene-ds", "ds-board-scene", "ds-gm-tools", `aria-label="Afastar o mapa"`, ">rascunho<"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("o rascunho não traz %q", want)
+		}
+	}
+	for _, gone := range []string{"grimorio-frame", "mesa-palco", `aria-label="Pôr no mapa"`, `aria-label="Encerrar o tabuleiro"`, "ds-gm-pick"} {
+		if strings.Contains(body, gone) {
+			t.Errorf("o rascunho ainda traz %q", gone)
+		}
+	}
+	region := body[strings.Index(body, `id="draft-board"`):]
+	if !strings.Contains(region, "gravado às") {
+		t.Error("a hora da gravação ficou fora da região que o gesto remenda")
+	}
+}

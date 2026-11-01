@@ -45,8 +45,8 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	// um piso que o conjunto ANTIGO já satisfazia faria a volta acidental à
 	// lista curta passar verde. Ele DESCE quando o terreno encolhe: cada tela
 	// que migra para o Tempestade leva tintas do grimório junto (a administração
-	// deixou 18, ALE-546).
-	if len(used) < 15 {
+	// deixou 18, ALE-546, e o rascunho de lugar e as notas deixaram 11, ALE-565).
+	if len(used) < 8 {
 		t.Fatalf("a varredura achou %d tintas da casa, e são dezenas: o padrão parou de casar", len(used))
 	}
 

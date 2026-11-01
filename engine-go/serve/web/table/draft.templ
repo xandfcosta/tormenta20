@@ -1,8 +1,8 @@
 package table
 
 import (
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/routes"
-
 	"t20engine/serve/web/ui"
 )
 
@@ -14,49 +14,40 @@ import (
 // aqui não há partida — há uma pessoa desenhando.
 //
 // O que sobra da moldura é o mínimo que responde três perguntas que a pessoa faz
-// sem perceber: ONDE estou (o nome do lugar), QUEM vê isto (ninguém, e a tarja
+// sem perceber: ONDE estou (o nome do lugar), QUEM vê isto (ninguém, e a etiqueta
 // diz), e o que acontece com o meu trabalho (grava sozinho, a cada gesto).
-
 templ draftBody(v draftView) {
-	<main
-		id="draft"
-		data-attr:style={ dragOffsetStyle }
-		class="mesa-palco flex min-h-0 w-full flex-1 flex-col"
-	>
-		@draftHeader(v)
-		<div class="flex min-h-0 flex-1 flex-col gap-1.5 p-1.5">
-			@draftBoardRegion(v)
-		</div>
+	<main id="draft" class="ds-session ds-gm-window" data-attr:style={ dragOffsetStyle } data-signals="{gm_terrain_open: false}">
+		@draftBoardRegion(v)
 	</main>
 }
 
-// A CABEÇA do rascunho, e a tarja é a peça que importa.
+// A CABEÇA do rascunho, e a etiqueta é a peça que importa.
 //
 // Ela existe pela mesma razão que o aviso da cortina: **um modo que se esquece é
 // pior que nenhum**. O mapa do rascunho é IGUALZINHO ao da mesa — mesmo trilho,
 // mesmos pincéis, mesmas peças —, e sem uma linha dizendo o contrário o mestre
 // pode montar a emboscada inteira acreditando que a mesa está vendo, ou pior,
 // acreditando que ela NÃO está enquanto joga.
+//
+// A HORA da gravação é o par da frase: uma diz que grava sozinho, a outra prova que
+// gravou. Sem a prova, a promessa é exatamente tão confiável quanto a memória de
+// quem lê.
 templ draftHeader(v draftView) {
-	<header class="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-grimorio-iron bg-grimorio-panel px-2 py-1 sm:px-3">
-		<div class="flex min-w-0 items-center gap-2">
-			<a
-				href={ templ.SafeURL(routes.CampaignTab(v.CampaignID, "lugares")) }
-				title={ "Voltar para " + v.CampaignName }
-				class="inline-flex min-h-11 items-center gap-1 rounded-sm px-1 text-sm text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
-			>
-				@ui.Icon("ChevronLeft", "size-4")
-				<span class="max-w-40 truncate">{ v.CampaignName }</span>
-			</a>
-			<span aria-hidden="true" class="text-muted-foreground">·</span>
-			<h1 class="min-w-0 truncate font-heading text-base tracking-wide text-foreground">{ v.Place }</h1>
+	<header class="ds-draft-head">
+		@ds.LinkButton(ds.ButtonGhost, templ.SafeURL(routes.CampaignTab(v.CampaignID, "lugares")), templ.Attributes{"data-icon": true, "aria-label": "Voltar para " + v.CampaignName, "title": "Voltar para " + v.CampaignName}) {
+			@ui.Icon("ChevronLeft", "ds-icon")
+		}
+		<div class="ds-draft-title">
+			<h1 class="ds-sheet-name">{ v.Place }</h1>
+			<p class="ds-row-meta">{ v.CampaignName }</p>
 		</div>
-		<p class="flex items-center gap-2">
-			@ui.Icon("EyeOff", "size-4 text-grimorio-gold/70")
-			<span class={ ui.SectionLabelClasses("gold", "") }>Rascunho</span>
+		<p class="ds-draft-state">
+			<span class="ds-badge" data-variant="outline">rascunho</span>
 			// A FRASE diz o que a palavra não diz. "Rascunho" sozinho pode ser
 			// lido como "não gravei ainda", que é o oposto do que acontece aqui.
-			<span class="text-sm text-muted-foreground">· a mesa não vê, e cada gesto já fica gravado</span>
+			<span>a mesa não vê, e cada gesto já fica gravado</span>
+			<span class="ds-row-meta">{ v.SavedAt }</span>
 		</p>
 	</header>
 }
@@ -65,28 +56,35 @@ templ draftHeader(v draftView) {
 //
 // UMA região e não várias, ao contrário da Mesa, e o motivo é o que a tela É:
 // aqui não há fila que mude com o turno nem elenco que mude com a ficha. O que
-// muda é o mapa, e o `command_error` viaja como SINAL.
+// muda é o mapa e a hora da gravação, e o `command_error` viaja como SINAL.
 //
 // O id é o do rascunho e NÃO o da Mesa: os dois nunca estão no mesmo documento,
 // mas um remendo mandado para o id errado é escrito no vazio e some SEM ERRO.
+//
+// As peças são as do tabuleiro do mestre, menos o que é de uma sessão: o seletor
+// de tabuleiros, a cortina, ver como a mesa vê, pôr no mapa, a janela à parte e
+// encerrar. Não há mesa para nada disso.
 templ draftBoardRegion(v draftView) {
-	<div id="draft-board" class="flex min-h-0 flex-1 flex-col">
-		@boardTable(v.Board)
-		<div class="flex items-center justify-between gap-2 px-1 pt-1">
-			// A RECUSA do gesto, no mesmo sinal que o rodapé do mestre usa na
-			// Mesa: é a mesma pergunta ("o servidor não aceitou o quê?") e um
-			// sinal novo faria a recusa acender em dois lugares que podem
-			// discordar.
-			<p
-				data-show="$command_error != ''"
-				data-text="$command_error"
-				aria-live="assertive"
-				class="text-xs text-destructive-ink"
-			></p>
-			// A HORA da gravação, e ela é o par da tarja: uma diz que grava
-			// sozinho, a outra prova que gravou. Sem a prova, a promessa é
-			// exatamente tão confiável quanto a memória de quem lê.
-			<p class="ml-auto shrink-0 text-xs text-muted-foreground">{ v.SavedAt }</p>
-		</div>
+	<div id="draft-board" class="ds-board-region">
+		@draftHeader(v)
+		<section class="ds-board" aria-label={ "Tabuleiro · " + v.Place }>
+			@boardScene(v.Board, "ds-board-scene") {
+				<div class="ds-board-float ds-gm-board-bar" data-alone role="group" aria-label="Enquadrar o mapa">
+					@gmFraming(v.Board)
+				</div>
+				<div class="ds-board-foot">
+					@gmNewPieceBar(v.Board)
+					@gmPartyBar()
+					@gmClipboard(v.Board)
+					@tempestadeHelpers(v.Board)
+				</div>
+				@gmTools(v.Board)
+			}
+		</section>
+		@gmTokenEdit(v.Board)
+		// A RECUSA do gesto, no mesmo sinal que o rodapé do mestre usa na Mesa: é a
+		// mesma pergunta ("o servidor não aceitou o quê?") e um sinal novo faria a
+		// recusa acender em dois lugares que podem discordar.
+		<p class="ds-help ds-board-refusal" data-show="$command_error != ''" data-text="$command_error" aria-live="assertive"></p>
 	</div>
 }
