@@ -2985,6 +2985,29 @@
   .ds-board-scene {
     container-type: inline-size;
   }
+  .ds-draft-head {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+  }
+  .ds-draft-title {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+  .ds-draft-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    margin: 0;
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+  }
   .ds-gm-board-bar {
     top: 0.5rem;
     right: 0.5rem;
@@ -2998,7 +3021,7 @@
   /* O MAPA ESTREITO põe a barra embaixo do seletor, em vez de disputar a linha
    * com ele (decisão do dono: os controles se ajustam ao tamanho do mapa). */
   @container (max-width: 40rem) {
-    .ds-gm-board-bar {
+    .ds-gm-board-bar:not([data-alone]) {
       top: 3.25rem;
     }
     /* As duas classes, e não só a nossa: a `.ds-board-notice` vem depois na

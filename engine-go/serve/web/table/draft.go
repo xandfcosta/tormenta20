@@ -161,6 +161,7 @@ func (s Scene) handleDraftPage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   "Rascunho · " + view.Place,
 		Signals: tableSignalsExpr(s.deps.BuildRevision()),
+		System:  ui.SystemTempestade,
 	}, draftBody(view))
 }
 
