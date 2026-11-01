@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -243,5 +244,41 @@ func TestTheReaderPageRefusesGarbage(t *testing.T) {
 		if !strings.Contains(body, `data-page="1"`) {
 			t.Errorf("%s não caiu na primeira página — a cena aceitou lixo", target)
 		}
+	}
+}
+
+// O leitor veste o Tempestade, e em aba própria a volta é a seta, com "Voltar" no nome
+// acessível. Antes ela dizia "‹ Back", resto de um renome automático.
+func TestTheReaderWearsTheNewSystem(t *testing.T) {
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
+	eu := seedUser(t, s, "mestre@t20.local")
+	body := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
+
+	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`).FindString(body)
+	if !strings.Contains(shell, "scene-ds") || strings.Contains(shell, "scene-grimorio") {
+		t.Errorf("o leitor não saiu no escopo do Tempestade: %s", shell)
+	}
+	if strings.Contains(body, "Back") {
+		t.Error("o leitor ainda escreve \"Back\" na tela")
+	}
+	if !strings.Contains(body, `aria-label="Voltar"`) {
+		t.Error("o leitor em aba própria não oferece a volta")
+	}
+	if !strings.Contains(body, `<h1 class="ds-header-title">Lobo</h1>`) {
+		t.Error("a barra não diz o nome do que se abriu")
+	}
+	inDialog := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo&dialogo=1", "").Body.String()
+	if strings.Contains(inDialog, `aria-label="Voltar"`) {
+		t.Error("dentro da caixa a volta levaria o iframe para a cena anterior")
+	}
+}
+
+// Sem nome para mostrar, a barra diz que é o livro, e não fica sem título.
+func TestTheReaderWithoutATermSaysItIsTheBook(t *testing.T) {
+	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
+	eu := seedUser(t, s, "mestre@t20.local")
+	body := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290", "").Body.String()
+	if !strings.Contains(body, `<h1 class="ds-header-title">O livro</h1>`) {
+		t.Error("a barra ficou sem título")
 	}
 }

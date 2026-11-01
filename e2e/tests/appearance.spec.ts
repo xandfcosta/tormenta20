@@ -48,14 +48,15 @@ import { DS_TEXT_FLOOR, DS_TOUCH_FLOOR, measureDsText, measureDsTouchTargets } f
 //   /campanhas/nova         6 textos   ← a cena mais enxuta do app
 //   qualquer 404            1 texto
 //
-// Quatro fica abaixo da cena mais magra e quatro vezes acima da página de erro. Um
-// número cravado por palpite reprova cena que está perfeita, e ruído é o que faz
-// um guarda ser desligado na segunda semana.
+// Dois fica abaixo da cena mais magra, o leitor do livro, que tem três textos e é só a
+// barra e a página, e acima da página de erro, que tem um. Um número cravado por palpite
+// reprova cena que está perfeita, e ruído é o que faz um guarda ser desligado na segunda
+// semana.
 //
 // Ele é GLOBAL de propósito. Um número por cena seria uma segunda lista para
 // envelhecer, e o que este controle precisa pegar é a página que não carregou —
 // não "esta tela tem pouco texto".
-const MEASURED_TEXT_FLOOR = 4
+const MEASURED_TEXT_FLOOR = 2
 
 // A FACE MAIS LARGA, e o passo é MEDIDO e não escolhido.
 //

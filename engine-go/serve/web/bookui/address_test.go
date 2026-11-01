@@ -54,4 +54,12 @@ func TestTheBookDialogWearsItsOwnSystemScope(t *testing.T) {
 	if !strings.Contains(box, "scene-ds") || strings.Contains(box, "grimorio") {
 		t.Errorf("a caixa do livro não saiu só no Tempestade: %s", box)
 	}
+	// O título é o da barra do leitor, dentro do `iframe`. Um segundo aqui eram dois
+	// cabeçalhos seguidos, roubando altura da página.
+	if strings.Contains(box, "ds-dialog-head") {
+		t.Error("a caixa do livro voltou a ter cabeçalho próprio")
+	}
+	if !strings.Contains(box, `aria-label="O livro"`) || !strings.Contains(box, `aria-label="Fechar o livro"`) {
+		t.Errorf("a caixa perdeu o nome ou o botão de fechar: %s", box)
+	}
 }

@@ -22,6 +22,7 @@ import (
 var permitidos = map[string]bool{
 	"t20engine/serve/web/bookui": true, // o endereço do livro e a abertura dele
 	"t20engine/serve/web/ui":     true, // o kit e a casca
+	"t20engine/serve/web/ds":     true, // o kit do Tempestade
 	"t20engine/serve/web/routes": true, // o endereço desta cena, que o `bookui` cita
 }
 

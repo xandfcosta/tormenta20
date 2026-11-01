@@ -92,23 +92,22 @@ templ Chunk(chunk book.Chunk, bookRef BookAddress) {
 // procura `dialog[open]` — as setas passam a ser do livro, que é o que se quer
 // com o livro aberto na frente.
 //
-// O `scene-ds` vai NA CAIXA, porque ela abre por cima das telas que ainda não migraram. Não
-// é um `ds.Dialog` porque o miolo é o `<iframe>`, sem o recuo do corpo, e o `close` tem
-// trabalho a fazer.
+// O `scene-ds` vai NA CAIXA, porque ela abre por cima das telas que ainda não migraram.
+//
+// SEM cabeçalho: a barra é a do leitor, dentro do `iframe`, e o X fica por cima dela, no
+// espaço que ela reserva. Um título aqui seriam dois cabeçalhos seguidos, roubando altura da
+// página. Por isso também não é um `ds.Dialog`.
 templ BookDialog() {
 	<dialog
 		id="book-in-dialog"
 		class="scene-ds ds-dialog ds-book"
 		data-preserve-attr="open"
-		aria-labelledby="book-in-dialog-title"
+		aria-label="O livro"
 		data-on:close="el.querySelector('iframe').src = 'about:blank'"
 	>
-		<div class="ds-dialog-head">
-			<h2 class="ds-dialog-title" id="book-in-dialog-title">O livro</h2>
-			<form method="dialog">
-				@ds.IconButton(ds.ButtonGhost, "X", "Fechar o livro", nil)
-			</form>
-		</div>
+		<form method="dialog" class="ds-book-close">
+			@ds.IconButton(ds.ButtonGhost, "X", "Fechar o livro", nil)
+		</form>
 		<iframe title="O livro"></iframe>
 	</dialog>
 }
