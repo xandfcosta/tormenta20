@@ -243,6 +243,9 @@ INSERT INTO character_races (characterId, race) VALUES (?, ?);
 -- name: CreateClass :exec
 INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?);
 
+-- name: DeleteClass :exec
+DELETE FROM character_classes WHERE characterId = ? AND className = ?;
+
 -- name: GetActiveEffectMeta :one
 SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1;
 

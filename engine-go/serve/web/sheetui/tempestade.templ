@@ -156,13 +156,12 @@ templ levelControl(v View) {
 	</div>
 }
 
-// tempestadeLevelStep age direto com UMA classe elegível e pergunta com mais
-// de uma: adivinhar a classe poria um nível de Bardo no Guerreiro em silêncio.
-// Sem classe elegível, desabilitado e não escondido.
+// tempestadeLevelStep pergunta quando há o que escolher (ver `directStep`). Sem classe
+// elegível, desabilitado e não escondido.
 templ tempestadeLevelStep(v View, step int, label, icon string) {
 	if directStep(v, step) != "" {
 		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "data-on:click": directStep(v, step)})
-	} else if len(thatCan(v.AsClasses, step)) > 1 {
+	} else if len(thatCan(v.AsClasses, step)) > 0 {
 		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "commandfor": stepDialog(step), "command": "show-modal"})
 	} else {
 		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "disabled": true})
@@ -170,7 +169,7 @@ templ tempestadeLevelStep(v View, step int, label, icon string) {
 }
 
 templ tempestadeClassChoice(v View, step int, title string) {
-	if len(thatCan(v.AsClasses, step)) > 1 {
+	if directStep(v, step) == "" && len(thatCan(v.AsClasses, step)) > 0 {
 		@ds.Dialog(stepDialog(step), title, nil) {
 			<p class="ds-card-text">O nível do personagem é a soma dos níveis de classe, então o nível é sempre de UMA delas.</p>
 			@ds.List("", "") {
@@ -181,8 +180,26 @@ templ tempestadeClassChoice(v View, step int, title string) {
 						data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + stepCommand(v, class.Name, step) }
 					>
 						<span class="ds-row-title">{ class.Name }</span>
-						<span class="ds-row-value">{ strconv.FormatInt(class.Level, 10) }</span>
+						if step < 0 && class.Leaves {
+							<span class="ds-row-value">sai da ficha</span>
+						} else {
+							<span class="ds-row-value">{ strconv.FormatInt(class.Level, 10) }</span>
+						}
 					</button>
+				}
+			}
+			if step > 0 && len(v.OtherClasses) > 0 {
+				<p class="ds-card-text">Entrar em outra classe dá os PV de um nível seguinte, e não dá as perícias nem as proficiências dela (p35).</p>
+				@ds.List("Outra classe", "") {
+					for _, class := range v.OtherClasses {
+						<button
+							type="button"
+							class="ds-row w-full text-left"
+							data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + enterClassCommand(v, class) }
+						>
+							<span class="ds-row-title">{ class }</span>
+						</button>
+					}
 				}
 			}
 		}

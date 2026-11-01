@@ -773,6 +773,20 @@ func (q *Queries) DeleteCampaignPlace(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteClass = `-- name: DeleteClass :exec
+DELETE FROM character_classes WHERE characterId = ? AND className = ?
+`
+
+type DeleteClassParams struct {
+	Characterid int64  `json:"characterid"`
+	Classname   string `json:"classname"`
+}
+
+func (q *Queries) DeleteClass(ctx context.Context, arg DeleteClassParams) error {
+	_, err := q.db.ExecContext(ctx, deleteClass, arg.Characterid, arg.Classname)
+	return err
+}
+
 const deleteEffectByID = `-- name: DeleteEffectByID :exec
 DELETE FROM active_effects WHERE id = ?
 `

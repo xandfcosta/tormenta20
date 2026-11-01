@@ -32,6 +32,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.sheetCommand(touchesVital))
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.sheetCommand(mudaONivel))
+	r.Post("/personagens/{id}/classes/{classe}/entra", s.sheetCommand(enterClass))
 	// DOIS caminhos e não um com "padrao" no lugar da categoria: aí o dia em que
 	// uma proficiência se chamasse `padrao` calaria o restaurar, e o `alterna`
 	// no meio é o que impede a colisão de existir.
@@ -264,6 +265,15 @@ func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 	return s.plays.TouchVital(r.Context(), row, chi.URLParam(r, "qual"), step)
 }
 
+// enterClass dá o 1º nível numa classe que o personagem ainda não tem (p35).
+func enterClass(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	class, err := url.PathUnescape(chi.URLParam(r, "classe"))
+	if err != nil {
+		return fmt.Errorf("classe %q não é um nome válido", chi.URLParam(r, "classe"))
+	}
+	return s.plays.EnterClass(r.Context(), row, class)
+}
+
 // mudaONivel sobe ou desce UMA CLASSE, e o nível do personagem acompanha.
 //
 // NUNCA escreva o nível do personagem direto: ele é a SOMA dos níveis de classe,
@@ -292,7 +302,7 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		}
 		target := cl.Level + int64(step)
 		if target < 1 {
-			return fmt.Errorf("%s está no nível 1: descer apagaria a classe", class)
+			return s.plays.LeaveClass(r.Context(), row, class)
 		}
 		// A escolha contada por NÍVEL (os terrenos do Explorador) tem de caber
 		// no nível novo: descer com escolha a mais é recusado (ALE-503).
