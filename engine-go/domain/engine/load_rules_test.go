@@ -134,3 +134,23 @@ func periciaTotal(t *testing.T, sheet ComputedSheet, name string) int {
 	t.Fatalf("perícia %q não saiu na ficha", name)
 	return 0
 }
+
+// p141: "Você não pode carregar mais do que o dobro do seu limite". Quem já passou ainda
+// consegue tirar, e a mesa que desligou a regra não tem teto.
+func TestAddingFitsUpToTheDoubleOfTheLimit(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		load LoadBreakdown
+		add  float64
+		want bool
+	}{
+		{"chega exatamente ao dobro", LoadBreakdown{Used: 13, Max: 20, Enforced: true}, 7, true},
+		{"passa do dobro", LoadBreakdown{Used: 13, Max: 20, Enforced: true}, 8, false},
+		{"acima do dobro, tirar cabe", LoadBreakdown{Used: 25, Max: 20, Enforced: true}, -1, true},
+		{"regra desligada não tem teto", LoadBreakdown{Used: 25, Max: 20}, 8, true},
+	} {
+		if got := c.load.FitsAdding(c.add); got != c.want {
+			t.Errorf("%s: %v, esperava %v", c.name, got, c.want)
+		}
+	}
+}

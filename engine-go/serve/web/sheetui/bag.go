@@ -84,6 +84,9 @@ type loadMeter struct {
 	Enforced            bool
 	ArmorPenalty        string
 	DisplacementPenalty string
+	// DisplacementExemptBy é a habilidade que poupa o personagem do redutor de
+	// deslocamento da carga, ou vazio quando ele vale.
+	DisplacementExemptBy string
 	// LimitLabel é a conta que produziu o limite, e não a notação: "limite 18 ·
 	// 10 + 2×For +4" em vez de "10 + 2×|FOR|".
 	LimitLabel string
@@ -144,6 +147,7 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	panel.Sheets = itemSheetsOf(dto, proficiencies)
 	if sheet, _, ok := s.sheetForPanels(dto); ok {
 		panel.Load = loadMeterOf(sheet)
+		panel.Load.DisplacementExemptBy = exempt[engine.DisplacementIgnoresLoad]
 	}
 	return panel
 }
@@ -341,12 +345,18 @@ func writtenItems(n int) string {
 // motor já aplicou — e não uma frase decorada que pode divergir deles.
 //
 // A segunda metade só aparece acima do DOBRO do limite, que é o outro teto da
-// p141: "você não pode carregar mais do que o dobro do seu limite". O motor não
-// recusa a linha, porque o próprio livro deixa a carga a critério do mestre —
-// então quem diz que passou é a tela.
+// p141: "você não pode carregar mais do que o dobro do seu limite". O gesto de item recusa
+// passar disso (`refusePastTheDouble`), mas o dinheiro e um limite que encolheu ainda
+// levam a carga até lá, e quem diz que passou é a tela.
 func overloadNotice(load loadMeter) string {
+	displacement := load.DisplacementPenalty + "m de deslocamento"
+	if load.DisplacementExemptBy != "" {
+		// Diz a isenção em vez de só calar o redutor, como o crachá riscado da armadura:
+		// quem lê a ficha quer saber por que não perdeu deslocamento.
+		displacement = "deslocamento sem redução (" + load.DisplacementExemptBy + ")"
+	}
 	notice := "Sobrecarregado (p141): " + load.ArmorPenalty +
-		" em Acrobacia, Furtividade e Ladinagem · " + load.DisplacementPenalty + "m de deslocamento"
+		" em Acrobacia, Furtividade e Ladinagem · " + displacement
 	if load.OverMax {
 		notice += " · acima de " + strconv.Itoa(load.Max) + " espaços o livro diz que não dá para carregar"
 	}
