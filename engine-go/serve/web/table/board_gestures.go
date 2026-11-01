@@ -99,13 +99,14 @@ func startsTheDrag(who string) string {
 // identifica um nó, e é por isso que ele tem nome.
 const dragsTheParty = "grupo"
 
-// dragsItself responde se o `pointerdown` DESTA peça move ELA, e não o grupo.
+// dragsItself responde se esta peça escuta o ponteiro: no mestre, todas; no jogador, só a
+// dele na vez dele.
 //
 // Os quatro pedaços do gesto — pegar, seguir, soltar e deslocar na tela — têm de
 // concordar sobre isso, e por isso a divisa mora aqui numa vez só. Cada um com a
 // sua pergunta dá a classe de arrasto a UMA peça e o gesto a todas.
 func dragsItself(v BoardView, id string) bool {
-	return v.Draft || v.DragsToken == id
+	return v.Draft || v.GM || v.DragsToken == id
 }
 
 // followsFinger escreve o `pointermove`. Só mexe nos sinais se for ESTE que está
@@ -162,28 +163,14 @@ const erasePreview = "$preview_arrow_fits = ''; $preview_arrow_second = ''; $pre
 // propor ali gastaria uma parada no lugar onde a peça já está. Os sinais são
 // limpos NOS DOIS caminhos, senão o `transform` fica pendurado e a peça não
 // volta para o lugar.
-//
-// A PEÇA MARCADA move o GRUPO, e não propõe. A decisão fica AQUI, num lugar só,
-// porque ela é sobre o que o gesto SIGNIFICA: arrastar a peça da vez propõe um
-// movimento com custo, e arrastar uma peça marcada reposiciona o grupo. Sem
-// esta linha, a peça que é as duas coisas — marcada E alvo do turno — proporia,
-// e o mesmo arrasto significaria coisas diferentes conforme um estado que não
-// está na ponta do dedo.
-//
-// MARCADA VENCE porque marcar é deliberado: ninguém marca sem querer.
 func dropFor(v BoardView, who string, x, y int) string {
 	stop := fmt.Sprintf("'%s', {payload: {from: {x: %d + dx, y: %d + dy}}}",
 		v.gesture(v.MoveTarget+"/parada"), x, y)
-	destination := "@post(" + stop + ")"
-	if who == "peca" && v.GM && v.MoveTarget != "" {
-		group := fmt.Sprintf("@post('%s/grupo/mover', {payload: {delta: {x: dx, y: dy}, marked_tokens: $marked_tokens}})", v.Base)
-		destination = fmt.Sprintf("%s ? %s : %s", markedIsToken(v.MoveTarget), group, destination)
-	}
 	return fmt.Sprintf(
 		"if ($dragging === '%s') { "+
 			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
 			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
-			"if (dx || dy) %s }", who, destination)
+			"if (dx || dy) @post(%s) }", who, stop)
 }
 
 // dragOffsetStyle são as variáveis do arrasto, e elas moram SÓ na raiz da cena
@@ -196,7 +183,7 @@ const dragOffsetStyle = "`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 
 // ── QUEM RECEBE O GESTO DA PEÇA, decidido em GO ──────────────────────────────
 //
-// As três funções abaixo existem porque **o templ não aceita `else if` numa
+// As funções abaixo existem porque **o templ não aceita `else if` numa
 // lista de atributos** e não reclama: os dois ramos saem, o navegador guarda o
 // primeiro e o outro morre em silêncio. A armadilha está no `engine-go/CLAUDE.md`,
 // seção "templ".
@@ -204,24 +191,20 @@ const dragOffsetStyle = "`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 // A escolha entre os dois gestos volta para o Go, e o elemento passa a ter UMA
 // lista de atributos: exclusão por CONSTRUÇÃO.
 
-// tokenReceivesGesture diz se ela escuta o ponteiro.
-//
-// O mestre entra sempre porque marcar é gesto dele: uma peça que não é alvo do
-// movimento ainda pode estar num grupo marcado, e o `partyTakes` é quem checa a
-// marca. Para o jogador só a peça dele responde.
-func tokenReceivesGesture(v BoardView, id string) bool {
-	return v.DragsToken == id || v.GM
-}
-
 // takeToken escolhe entre começar o arrasto DA PEÇA e o DO GRUPO.
+//
+// MARCADA VENCE, inclusive na peça da vez: marcar é deliberado, e o mesmo arrasto não
+// pode significar coisas diferentes conforme um estado que não está na ponta do dedo. A
+// peça sem marca move só ela: mover um grupo marcado em outro canto do mapa agiria sobre
+// o que a pessoa não está olhando.
 func takeToken(v BoardView, id string) string {
-	// No RASCUNHO toda peça se arrasta sozinha: não há grupo marcado nem alvo do
-	// turno, e a única coisa que o mestre quer fazer com uma peça guardada é
-	// mudá-la de lugar.
-	if dragsItself(v, id) {
+	// No RASCUNHO não há grupo marcado nem alvo do turno, e a única coisa que o mestre
+	// quer fazer com uma peça guardada é mudá-la de lugar. O jogador nunca marca.
+	if v.Draft || !v.GM {
 		return startsTheDrag(id)
 	}
-	return partyTakes(id)
+	return fmt.Sprintf("if (%s) { %s } else { %s }",
+		markedIsToken(id), startsTheDrag(dragsTheParty), startsTheDrag(id))
 }
 
 // dropToken é o par do `takeToken`, e os dois têm de concordar: um
@@ -232,13 +215,29 @@ func takeToken(v BoardView, id string) string {
 // o fim do caminho — é o que faz a próxima parada contar do lugar onde a peça
 // está.
 func dropToken(v BoardView, p boardToken) string {
-	if !dragsItself(v, p.ID) {
-		return dropParty(v)
-	}
 	if v.Draft {
 		return draftMoveDrop(v, p)
 	}
-	return erasePreview + "; " + dropFor(v, p.ID, p.X, p.Y)
+	own := freeDrop(v, p)
+	if v.DragsToken == p.ID {
+		own = erasePreview + "; " + dropFor(v, p.ID, p.X, p.Y)
+	}
+	if !v.GM {
+		return own
+	}
+	return dropParty(v) + "; " + own
+}
+
+// freeDrop é a peça que o mestre arrasta fora da vez: ela pousa na hora e não custa
+// turno de ninguém (decisão do dono). É o `grupo/mover` com uma peça só, porque a regra é
+// a mesma: o mestre reposiciona, e a regra de deslocamento protege o turno de quem joga.
+func freeDrop(v BoardView, p boardToken) string {
+	return fmt.Sprintf(
+		"if ($dragging === '%s') { "+
+			"const dx = Math.round($drag_x / $square), dy = Math.round($drag_y / $square); "+
+			"$dragging = ''; $drag_x = 0; $drag_y = 0; "+
+			"if (dx || dy) @post('%s/grupo/mover', {payload: {delta: {x: dx, y: dy}, marked_tokens: '%s'}}) }",
+		p.ID, v.Base, p.ID)
 }
 
 // draftMoveDrop põe a peça ONDE ELA FOI SOLTA, e acabou.
@@ -272,14 +271,20 @@ func followToken(v BoardView, p boardToken) string {
 	// A PRÉVIA fica de fora do rascunho, e não por economia: ela pergunta ao
 	// servidor quanto o caminho CUSTA, e custo de deslocamento é conta de turno.
 	// Fora da sessão não há turno, então a seta desenharia um orçamento que não
-	// existe — a peça só está sendo posta no lugar.
-	if !dragsItself(v, p.ID) {
-		return followsFinger(dragsTheParty)
-	}
+	// existe — a peça só está sendo posta no lugar. Pela mesma razão, a peça que o
+	// mestre arrasta fora da vez também não pede prévia.
 	if v.Draft {
 		return followsFinger(p.ID)
 	}
-	return fingerFollowsWithPreview(v, p)
+	own := followsFinger(p.ID)
+	if v.DragsToken == p.ID {
+		own = fingerFollowsWithPreview(v, p)
+	}
+	if !v.GM {
+		return own
+	}
+	// O grupo vem primeiro porque a prévia sai da expressão com `return`.
+	return followsFinger(dragsTheParty) + "; " + own
 }
 
 // sceneBoardCommand escreve a chamada de abrir ou encerrar.

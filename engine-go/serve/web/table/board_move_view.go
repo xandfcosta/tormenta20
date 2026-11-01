@@ -188,6 +188,13 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board
 	}
 	if target == "" && b.Pending == nil {
 		for i := range b.Tokens {
+			// Com a iniciativa rodando, o alvo do mestre é a peça DA VEZ, a única que
+			// propõe movimento com custo. O `CanMoveWith` deixa o mestre mover qualquer
+			// uma, e parar na primeira prendia o gesto nela quando a vez passava. As
+			// outras ele arrasta de graça (ver `dropToken`).
+			if who.Role == "gm" && st != nil && st.TurnIndex >= 0 && !board.IsTokenOnTurn(&b.Tokens[i], st) {
+				continue
+			}
 			// A POSSE é por PEÇA e não por pessoa: o `Mover` carrega um booleano
 			// só, e deixá-lo em falso aqui tira o alcance do jogador NA VEZ dele
 			// — a tela diria que ele não pode mover a própria peça.
