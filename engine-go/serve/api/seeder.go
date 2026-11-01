@@ -82,7 +82,9 @@ func (sd Seeder) CreateCharacter(
 	}
 	// O poder Proficiência (p129) grava a escolhida na coluna, como a classe
 	// (ALE-510): a ficha da semente nasce como nasceria pelo gesto.
-	proficiencies := book.GrantedProficiencies(classes, body.Races)
+	//
+	// Só a primeira classe, como no gesto: a nova não dá as proficiências dela (p35).
+	proficiencies := book.GrantedProficiencies(classes[:min(1, len(classes))], body.Races)
 	if body.PowerChoices != nil {
 		for _, key := range sheet.PowerProficiencies(string(*body.PowerChoices)) {
 			if !slices.Contains(proficiencies, key) {

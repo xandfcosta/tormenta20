@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"t20engine/domain/sheet"
 	"testing"
 )
 
@@ -29,5 +30,24 @@ func TestRestoringTheDefaultProficienciesCountsOnlyTheFirstClass(t *testing.T) {
 		if strings.Contains(row.Proficiencies, category) {
 			t.Errorf("o padrão deu %q, que é da segunda classe: %s", category, row.Proficiencies)
 		}
+	}
+}
+
+// A ficha da semente nasce como nasceria pelo gesto, e a p35 vale para ela também.
+func TestTheSeededMulticlassGetsOnlyTheFirstClassProficiencies(t *testing.T) {
+	f := newSceneFixture(t)
+	id, err := f.s.Seeder().CreateCharacter(context.Background(), f.player, sheet.CreateBody{
+		Name: "Zaled", Origin: "soldado",
+		Classes: []sheet.ClassEntry{{ClassName: "Arcanista", Level: 3}, {ClassName: "Guerreiro", Level: 1}},
+	})
+	if err != nil {
+		t.Fatalf("semear: %v", err)
+	}
+	row, err := f.s.queries.GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ficha: %v", err)
+	}
+	if strings.Contains(row.Proficiencies, "armaduras-pesadas") {
+		t.Errorf("a semente deu as proficiências da segunda classe: %s", row.Proficiencies)
 	}
 }
