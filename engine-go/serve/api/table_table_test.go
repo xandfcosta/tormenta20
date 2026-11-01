@@ -13,22 +13,22 @@ import (
 	"testing"
 )
 
-var assetStamp = regexp.MustCompile(`\?v=[0-9a-f]+`)
+// hiddenHpAsANumber é o PV máximo do ogro como NÚMERO INTEIRO. Procurar o texto "130"
+// reprovava de vez em quando sem vazamento nenhum: ele aparece dentro de id aleatório,
+// de horário (`52.130Z`) e do carimbo dos estáticos. Um vazamento de verdade sai como
+// `PV 12/130` e `aria-valuemax="130"`, e os dois casam.
+var hiddenHpAsANumber = regexp.MustCompile(`\b130\b`)
 
 func TestTheTableDoesNotLeakHiddenHp(t *testing.T) {
 	f := newSceneFixture(t)
 	f.scene(t)
 
 	body := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
-	// O CARIMBO DOS ESTÁTICOS sai antes da busca: é um hash hexadecimal, e o
-	// `app.css?v=03951307386e` de uma folha reconstruída tinha "130" dentro —
-	// o caso acusou vazamento num número que não era PV (ALE-487).
-	body = assetStamp.ReplaceAllString(body, "")
 
 	if !strings.Contains(body, "Ogro cansado") {
 		t.Fatal("o ogro sumiu da fila do jogador — ele deve ver QUEM está lá")
 	}
-	if strings.Contains(body, "130") {
+	if hiddenHpAsANumber.MatchString(body) {
 		t.Errorf("os PV ocultos do mestre vazaram para o HTML do jogador")
 	}
 	// A flag sobrevive à redação de propósito: "sem barra" e "escondido" são
