@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+	"os"
 	"strings"
 	"testing"
 )
@@ -224,5 +226,30 @@ func TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes(t *testing.T) {
 	}
 	if !strings.Contains(table, "storage") || !strings.Contains(table, "t20:notas-janela") {
 		t.Errorf("a Mesa não escuta o anúncio da janela: as duas caixas ficariam vivas juntas")
+	}
+}
+
+// A janela veste o Tempestade, e o Lado a lado precisa da regra que abre as duas colunas: a folha
+// antiga não a tinha mais, e o modo empilhava sem nada acusar.
+func TestTheNotesWindowWearsTheNewSystem(t *testing.T) {
+	f := newSceneFixture(t)
+	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\n- [x] O ogro **fugiu**\n> voltarei"}`)
+
+	page := f.requests(t, f.gm, http.MethodGet, f.tableUrl()+"/notas", "").Body.String()
+
+	for _, want := range []string{"scene-ds", "ds-segmented", "ds-notes-layout", "ds-note-title", "ds-note-quote", "ds-gm-notes-text"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("a janela de notas não traz %q", want)
+		}
+	}
+	if strings.Contains(page, "grimorio-") {
+		t.Error("a janela de notas ainda usa cor do grimório")
+	}
+	css, err := os.ReadFile("../web/assets/src/ds.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(css), `.ds-notes-layout[data-mode="duplo"]`) {
+		t.Error("a folha não tem a regra que abre as duas colunas do Lado a lado")
 	}
 }

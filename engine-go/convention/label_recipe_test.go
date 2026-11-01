@@ -151,8 +151,9 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	// (ALE-526), para 40 com o elenco (ALE-528), para 35 com a forja (ALE-535,
 	// 37 medidos), para 30 com o Bestiário da Mesa do Mestre (ALE-538, 34
 	// medidos), para 20 com os Encontros (ALE-542, 25 medidos) e para 15 com o
-	// Improviso (ALE-544, 19 medidos) e para 10 com a administração (ALE-546, 12 medidos).
-	if byRecipe < 10 {
+	// Improviso (ALE-544, 19 medidos), para 10 com a administração (ALE-546, 12
+	// medidos) e para 5 com o rascunho de lugar e as notas (ALE-565, 9 medidos).
+	if byRecipe < 5 {
 		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", byRecipe)
 	}
 	// A terceira: se o casamento do `class="…"` parar, o laço acima nunca entra e
