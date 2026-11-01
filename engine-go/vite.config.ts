@@ -18,7 +18,13 @@ export default defineConfig({
   // folha pede em `/fonts/…` já vivem embutidas em `serve/web/assets/static/fonts`
   // (ver `FontsHandler`).
   publicDir: false,
-  resolve: { alias: { '@': resolve(import.meta.dirname, 'serve/web/assets/src') } },
+  resolve: {
+    alias: { '@': resolve(import.meta.dirname, 'serve/web/assets/src') },
+    // O bundle grava num comentário o caminho até cada dependência, e seguir o link gravaria
+    // onde o `node_modules` mora nesta máquina: numa worktree ele é um link para o checkout
+    // principal, e o `reader.js` sairia diferente do que a CI regenera e exige igual.
+    preserveSymlinks: true,
+  },
   build: {
     outDir: resolve(import.meta.dirname, 'serve/web/assets/static'),
     // A pasta guarda o `datastar.js` e a folha compilada; limpá-la apagaria os
