@@ -249,14 +249,6 @@ func FieldLabelClasses(tom, extra string) string {
 	return Join("text-3xs uppercase tracking-widest "+SectionLabelTone(tom), extra)
 }
 
-// A mesma receita como LEGENDA de um `fieldset`, que é o elemento certo para a
-// pergunta de um grupo de escolhas.
-templ SectionCaption(tom string, extra string) {
-	<legend class={ SectionLabelClasses(tom, extra) }>
-		{ children... }
-	</legend>
-}
-
 // SectionLabelTone é a cor dos três papéis, e o `herda` não é conveniência.
 //
 // Ele existe porque há rótulo cuja cor o CSS não sabe de antemão: a barra vital

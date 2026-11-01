@@ -116,11 +116,24 @@ templ BookDialog() {
 // alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
 // papel na mesa usa exatamente isso.
 templ PageSeal(book BookAddress, page int, term string) {
+	@pageSeal(book, page, term, "font-mono text-3xs text-muted-foreground")
+}
+
+// PageSealInMeta é o selo numa linha de meta do Tempestade (`ds-row-meta`): o
+// número puro HERDA o tamanho e a tinta da linha. As classes do grimório que o
+// `PageSeal` põe dariam 10px e um cinza abaixo do AA dentro da cena nova.
+templ PageSealInMeta(book BookAddress, page int, term string) {
+	@pageSeal(book, page, term, "")
+}
+
+templ pageSeal(book BookAddress, page int, term, plainClass string) {
 	if page > 0 {
 		if book.AtPage(page, term) != "" {
 			@pageLink(book, page, term)
+		} else if plainClass != "" {
+			<span class={ plainClass }>{ fmt.Sprintf("p%d", page) }</span>
 		} else {
-			<span class="font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", page) }</span>
+			<span>{ fmt.Sprintf("p%d", page) }</span>
 		}
 	}
 }

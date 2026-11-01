@@ -104,26 +104,23 @@ test('o elo mostra o conceito por cima, sem tirar a pessoa da regra que lia', as
 test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quando não', async ({
   page,
 }) => {
-  // O defeito, visto pelo dono na tela: a ficha parava numa coluna de 56rem com
+  // O defeito, visto pelo dono na tela: a ficha parava numa coluna estreita com
   // meia tela vazia ao lado, e as habilidades especiais ficavam abaixo da dobra.
   //
   // E2E porque a decisão é de `@container`: a pergunta é quanto o BLOCO recebe,
-  // e o bloco é desenhado em três larguras diferentes (painel do mestre, diálogo
-  // da Mesa, ficha em diálogo do telefone). Em jsdom todo elemento mede zero e a
-  // consulta de contêiner nunca dispara.
+  // e o mesmo bloco é desenhado no painel da Mesa do Mestre e na folha da mesa.
+  // Em jsdom todo elemento mede zero e a consulta de contêiner nunca dispara.
   await page.setViewportSize({ width: 1500, height: 900 })
   await page.goto('/mestre/bestiario?criatura=dragao-adulto')
 
-  // O bloco é desenhado DUAS vezes na cena — no painel e na ficha em diálogo do
-  // telefone, que o CSS esconde nesta largura. Medir o do painel é medir o que
-  // está na tela; o outro tem largura zero, e medir caixa escondida é medir
-  // nada com cara de medição.
-  const columns = page.locator('.mesa-painel .entry-block-columns')
-  await expect(columns).toBeVisible()
+  // O bloco é desenhado DUAS vezes na cena — no painel e na folha do telefone,
+  // que o CSS esconde nesta largura. Medir o do painel é medir o que está na
+  // tela; o outro tem largura zero.
+  const block = page.locator('[data-nav-region="ficha"] .ds-gm-creature')
+  await expect(block).toBeVisible()
 
-  const wide = await columns.evaluate((el) => ({
+  const wide = await block.evaluate((el) => ({
     colunas: getComputedStyle(el).gridTemplateColumns.split(' ').length,
-    // Os dois filhos lado a lado: mesma linha significa mesmo topo.
     mesmoTopo:
       el.children[0].getBoundingClientRect().top === el.children[1].getBoundingClientRect().top,
     sobra: el.parentElement!.getBoundingClientRect().width - el.getBoundingClientRect().width,
@@ -133,15 +130,12 @@ test('a ficha do monstro usa a largura: duas colunas quando cabe, empilhada quan
   // E ela USA a largura: o bloco não pode parar muito antes do painel.
   expect(wide.sobra, 'a ficha deixou meia tela vazia ao lado').toBeLessThan(40)
 
-  // Num painel ESTREITO volta a empilhar — a mesma árvore, sem segundo desenho:
-  // duas árvores para o mesmo bloco se desencontram.
-  //
-  // 1000px e não 420: a esta largura o painel ainda existe (o palco passa dos
-  // 50rem que a `.mesa-duas-colunas` pede) mas dá ao bloco menos que 46rem. A
-  // 420 o painel some inteiro, e a asserção mediria um elemento escondido.
-  await page.setViewportSize({ width: 1000, height: 900 })
-  await expect(columns).toBeVisible()
-  const narrow = await columns.evaluate((el) => ({
+  // Num painel ESTREITO volta a empilhar — a mesma árvore, sem segundo desenho.
+  // 1100 e não menos: abaixo de 50rem de área principal o painel some inteiro,
+  // e a asserção mediria um elemento escondido.
+  await page.setViewportSize({ width: 1100, height: 900 })
+  await expect(block).toBeVisible()
+  const narrow = await block.evaluate((el) => ({
     colunas: getComputedStyle(el).gridTemplateColumns.split(' ').length,
     largura: el.getBoundingClientRect().width,
   }))

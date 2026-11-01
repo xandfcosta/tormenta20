@@ -178,6 +178,18 @@ func OpenTheEntry(base string) string {
 	return base + "?abrir=1"
 }
 
+// joinAttrs junta conjuntos de atributos, e o que vem depois vence: é como a
+// tela acrescenta o que é dela a uma peça compartilhada sem a peça saber.
+func joinAttrs(sets ...templ.Attributes) templ.Attributes {
+	joined := templ.Attributes{}
+	for _, set := range sets {
+		for key, value := range set {
+			joined[key] = value
+		}
+	}
+	return joined
+}
+
 // ── campos alcançáveis pela SETA ─────────────────────────────────────────────
 
 // navigableField são os atributos que põem um `<input>` na navegação por setas.

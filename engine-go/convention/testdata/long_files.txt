@@ -2,7 +2,6 @@ app/boards/store.go
 domain/book/catalogs.go
 domain/engine/itemeffects.go
 serve/web/campaigns/routes.go
-serve/web/master/bestiary.templ
 serve/web/master/collection.templ
 serve/web/table/board.templ
 serve/web/table/commands.go

@@ -44,18 +44,12 @@ func (s Scene) handleBestiary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title: "Bestiário · Mesa do Mestre · Tormenta 20",
-		Shape: ui.ShellDense,
-		Back:  "/",
-		// "Hub" e não a seta genérica: a Mesa do Mestre não é filha óbvia de
-		// nenhuma tela, e nomear o destino é o que a folha de especificação pede.
-		BackLabel: "Hub",
-		// O título VISÍVEL é o da TELA, e a cena desenha o próprio "Bestiário"
-		// como `h2` — a trilha troca a ferramenta, não a tela. É por isso que o
-		// `<title>` carrega os dois: quem tem seis abas abertas precisa saber
-		// qual ferramenta está em cada uma.
-		VisibleTitle: "Mesa do Mestre",
-	}, masterBody("bestiario", bestiaryScene(v)))
+		// O `<title>` carrega a tela e a ferramenta: quem tem seis abas abertas
+		// precisa saber qual ferramenta está em cada uma.
+		Title:  "Bestiário · Mesa do Mestre · Tormenta 20",
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
+	}, masterFrame("bestiario", "Bestiário", bestiaryScene(v)))
 }
 
 // handleBestiaryType liga ou desliga UM crachá de tipo.

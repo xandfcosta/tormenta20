@@ -1,0 +1,109 @@
+package master
+
+import (
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// A MOLDURA DA MESA DO MESTRE no Tempestade (ALE-538, mockup `ferramentas.html`
+// aprovado). No desktop, o menu das treze telas fica à esquerda, em duas seções;
+// no celular, a barra de baixo leva às duas ferramentas e aos Catálogos, que
+// abrem numa folha — onze destinos não cabem numa barra.
+//
+// As telas que ainda vestem o grimório usam o `masterBody`; cada uma passa para
+// esta moldura quando o conteúdo dela migra.
+
+// masterFrame é a moldura: o cabeçalho com a volta ao início e o nome da tela, o
+// menu e a cena.
+templ masterFrame(current, title string, scene templ.Component) {
+	<div class="ds-master">
+		<header class="ds-header">
+			<a href="/" class="ds-header-back" aria-label="Voltar para o início">
+				@ui.Icon("ChevronLeft", "ds-icon")
+			</a>
+			<h1 class="ds-header-title">{ title }</h1>
+		</header>
+		<div class="ds-master-body">
+			@masterMenu(current)
+			<main class="ds-master-main">
+				@scene
+			</main>
+		</div>
+		@ds.BottomNav("Ferramentas do mestre") {
+			for _, stop := range masterRail[0].Stops {
+				@ds.BottomNavItem(templ.SafeURL("/mestre/"+stop.Slug), stop.Icon, stop.Slug == current, nil) {
+					{ stop.Label }
+				}
+			}
+			<button
+				type="button"
+				commandfor="master-catalogs"
+				command="show-modal"
+				if isCatalog(current) {
+					aria-current="page"
+				}
+			>
+				@ui.Icon("Library", "ds-icon")
+				Catálogos
+			</button>
+		}
+		@ds.Dialog("master-catalogs", "Catálogos", nil) {
+			<div class="ds-list">
+				for _, stop := range masterRail[1].Stops {
+					<a
+						href={ templ.SafeURL("/mestre/" + stop.Slug) }
+						class="ds-row ds-master-catalog"
+						if stop.Slug == current {
+							aria-current="page"
+						}
+					>
+						@ui.Icon(stop.Icon, "ds-icon")
+						<span class="ds-row-title">{ stop.Label }</span>
+						@ui.Icon("ChevronRight", "ds-icon")
+					</a>
+				}
+			</div>
+		}
+	</div>
+}
+
+// masterMenu é o menu do desktop. O contrato com o driver de teclado é o mesmo do
+// trilho antigo, e o nome `rail` é RESERVADO: o Esc sobe procurando literalmente
+// `[data-nav-region="rail"]`, e com outro nome ele sai direto da página.
+//
+// São LINKS e não botões: trocar de ferramenta é navegar, e o botão perde o
+// clique do meio, o "abrir em nova aba" e o endereço que se cola no chat.
+templ masterMenu(current string) {
+	<nav class="ds-master-menu" aria-label="Ferramentas do mestre" data-nav-region="rail" data-nav-layout="column">
+		for _, section := range masterRail {
+			// `<p>` e não título: a `<nav>` já tem nome, e as duas seções são
+			// separadores visuais dentro dela.
+			<p class="ds-list-head">{ section.Label }</p>
+			for _, stop := range section.Stops {
+				<a
+					href={ templ.SafeURL("/mestre/" + stop.Slug) }
+					class="ds-master-link"
+					title={ stop.Hint }
+					data-on:keydown={ ui.KeyboardSwapMark }
+					if stop.Slug == current {
+						aria-current="page"
+					}
+				>
+					@ui.Icon(stop.Icon, "ds-icon")
+					<span>{ stop.Label }</span>
+				</a>
+			}
+		}
+	</nav>
+}
+
+// isCatalog diz se a tela é um dos catálogos, e não uma das ferramentas: é o que
+// acende "Catálogos" na barra de baixo.
+func isCatalog(slug string) bool {
+	for _, stop := range masterRail[1].Stops {
+		if stop.Slug == slug {
+			return true
+		}
+	}
+	return false
+}

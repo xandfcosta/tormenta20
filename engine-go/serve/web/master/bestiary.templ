@@ -1,10 +1,11 @@
 package master
 
 import (
-	"t20engine/serve/web/bookui"
 	"fmt"
-	"t20engine/serve/web/ui"
+
 	"t20engine/domain/book"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
 )
 
 // A MESA DO MESTRE: as ferramentas do mestre, em `/mestre/`.
@@ -39,7 +40,7 @@ type railSection struct {
 // A ordem dentro de CATÁLOGOS é alfabética, com o bestiário na frente — é o
 // mais consultado no meio do combate. Nas FERRAMENTAS a ordem é a de sempre.
 var masterRail = []railSection{
-	{"Ferramentas", []railStop{
+	{"Na mesa", []railStop{
 		{"encontros", "Encontros", "Swords", "ND do combate e XP do grupo, combinando criaturas."},
 		{"improviso", "Improviso", "Dices", "Tabelas do Cap 6 e estrutura de masmorra na hora."},
 	}},
@@ -154,459 +155,89 @@ templ railNav(current string) {
 
 // ── o bestiário ──────────────────────────────────────────────────────────────
 
+// bestiaryScene é o catálogo de criaturas: a lista à esquerda e a criatura
+// escolhida ao lado, no desktop; no celular só a lista, e a criatura abre por
+// cima (`CreatureSheet`). O que é desta tela e não da mesa é a gramática de
+// teclado: as três regiões, e o foco da seta que já mostra a criatura.
 templ bestiaryScene(v BestiaryView) {
-	<section
-		id="bestiary"
-		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
-		aria-labelledby="table-bestiary-panel"
-		data-signals={ BestiarySignals(v) }
-	>
-		<div class="flex flex-wrap items-baseline gap-x-3">
-			<h2 id="table-bestiary-panel" class="font-heading text-lg tracking-wide text-foreground">Bestiário</h2>
-			<p class="text-xs text-muted-foreground">{ fmt.Sprintf("%d de %d", len(v.Entries), v.Total) }</p>
+	<section id="bestiary" class="ds-master-catalog-scene" aria-label="Bestiário" data-signals={ BestiarySignals(v) }>
+		<div class="ds-master-list">
+			// Os filtros são uma REGIÃO, e `grid` porque o bloco é bidimensional:
+			// os dois campos de ND lado a lado. A busca é campo de texto, e ali a
+			// seta edita em vez de navegar — sai-se pelo TAB ou pelo Esc.
+			@ds.FilterBar() {
+				@CreatureFilters(v, "bestiario",
+					templ.Attributes{"data-nav-region": "filtros", "data-nav-layout": "grid"},
+					templ.Attributes{"data-busca-da-cena": true}, navigableField())
+			}
+			@creatureList(v)
 		</div>
-		// A grade é `@container` e não `lg:`: a pergunta é "cabe painel ao lado da
-		// lista?", que é sobre o espaço que ESTA grade recebe, não sobre a janela.
-		// Com o `lg:` a resposta era não-monotônica — um contêiner de 800px dava
-		// DUAS colunas e um de 968px dava UMA, porque a coluna de ferramentas
-		// devolve largura conforme a janela encolhe. Crescer o espaço custava uma
-		// coluna.
-		<div class="mesa-duas-colunas grid min-h-0 flex-1 gap-4">
-			<div class="flex min-h-0 flex-col gap-2">
-				@BestiaryFilters(v)
-				@EntryList(v)
+		// A FICHA é região, e o alvo do foco é o miolo: o driver só considera
+		// item o que é focável DENTRO da região. As bordas verticais apontam para
+		// ela mesma para a seta ROLAR a ficha em vez de saltar para a lista — a
+		// busca por vizinho exclui a própria região, devolve nulo e deixa a tecla
+		// para a rolagem nativa. Horizontal troca de painel; vertical rola.
+		<section
+			class="ds-master-entry"
+			data-nav-region="ficha"
+			data-nav-layout="column"
+			data-nav-edge-up="ficha"
+			data-nav-edge-down="ficha"
+			aria-label="Criatura escolhida"
+		>
+			<div tabindex="0" data-nav-item class="ds-master-entry-body">
+				if v.Chosen != nil {
+					<div class="ds-dialog-head">
+						@CreatureHead(*v.Chosen, v.Book)
+					</div>
+					@CreatureBlock(*v.Chosen, v.Book)
+				} else {
+					@ds.Empty("Nenhuma criatura escolhida", "Escolha uma criatura na lista.")
+				}
 			</div>
-			// A ficha é REGIÃO e o alvo do foco é o miolo, não a `<section>`.
-			//
-			// Duas exigências que brigam. (a) chegar na ficha SÓ COM SETAS, sem TAB:
-			// região resolve, porque o driver cruza para o vizinho pela geometria. Mas
-			// o driver só considera ITEM o que é focável DENTRO da região — uma região
-			// cujo único focável é ela mesma nasce vazia e continua inalcançável. Daí o
-			// `tabindex` ter descido para o miolo.
-			//
-			// (b) uma vez nela, rolar com as setas: exigiu as bordas VERTICAIS
-			// apontarem para a própria ficha. Sem elas a seta para baixo saltava para a
-			// `lista`, porque a coluna da lista é alta e a busca por vizinho a encontra
-			// "abaixo" — e o driver escuta na CAPTURA, então nenhum handler da cena
-			// chegaria antes para impedir. A busca EXCLUI a própria região: apontar
-			// para si mesma devolve nulo, o `handleMove` não chama `stop(e)`, e a tecla
-			// cai para o navegador — rolagem nativa rola o ancestral rolável, que é
-			// esta `<section>`.
-			//
-			// Lido como gramática: HORIZONTAL troca de painel, VERTICAL rola o que está
-			// aberto. A esquerda continua voltando para a lista pela geometria.
-			<section
-				data-nav-region="ficha"
-				data-nav-layout="column"
-				data-nav-edge-up="ficha"
-				data-nav-edge-down="ficha"
-				aria-label="Criatura escolhida"
-				class="mesa-painel"
-			>
-				<div tabindex="0" data-nav-item class="outline-none">
-					if v.Chosen != nil {
-						@EntryBlock(*v.Chosen, v.Book)
-					} else {
-						<p class="text-xs text-muted-foreground">Escolha uma criatura na lista.</p>
-					}
-				</div>
-			</section>
-		</div>
+		</section>
 		if v.Chosen != nil {
-			@CreatureDialog(*v.Chosen, v.Book)
+			@CreatureSheet(*v.Chosen, v.Book, nil)
 		}
 	</section>
 }
 
-// CreatureDialog é a MESMA ficha, para a largura em que o painel não cabe.
+// creatureList é a lista, sem virtualização: são 80 criaturas, e virtualizar é
+// maquinaria para lista que não cabe.
 //
-// Abaixo de 50rem de contêiner o painel some, e a lista ficaria sem detalhe
-// nenhum. A troca é do CSS (`.table-sheet-in-dialog`, na folha da casa) e não
-// de uma consulta de mídia em JS, e ela compõe com o `data-show`: numa tela
-// larga o diálogo fica escondido mesmo com o sinal ligado, porque lá o painel
-// já mostra a ficha.
+// FOCO ATIVA, como em jogo: a seta anda na lista e a criatura ao lado segue
+// junto, sem Enter. O foco NÃO abre a folha e o clique abre (`abrir=1`): no
+// celular a folha é um `role=dialog` que prende o driver, e abri-la no foco
+// prenderia a pessoa no primeiro passo da seta.
 //
-// `role="dialog"` com `aria-modal` e `aria-label` no NOME da criatura: sem nome
-// acessível, um diálogo é uma caixa anônima para quem usa leitor de tela.
-//
-// O nome vem por `aria-label` e não por um `<h3>` próprio de propósito: o
-// `EntryBlock` já desenha o dele, e um segundo cabeçalho aqui faria o leitor de
-// tela anunciar a criatura duas vezes seguidas.
-//
-// O Esc e o clique fora fecham, porque diálogo sem saída é tela travada — e o
-// botão de fechar existe além dos dois, para quem navega por teclado não
-// depender de descobrir o Esc.
-templ CreatureDialog(m book.Entry, bookRef bookui.BookAddress) {
-	// NASCE ESCONDIDO, e o `style` estático é o conserto inteiro.
-	//
-	// O `data-show` só é avaliado quando o Datastar chega e processa o DOM. Até lá
-	// esta sobreposição está no documento com `inset-0` e fundo preto, e PINTA —
-	// dezenas de quadros de pano preto sobre a cena.
-	//
-	// O `style` é lido na análise do HTML, antes de qualquer script, e o Datastar o
-	// troca por vazio ao mostrar. Não confundir com `data-attr:style`, que o
-	// `TestNoNodeHasDataShowAndDataAttrStyleTogether` proíbe junto do `data-show`:
-	// aquele reescreve o atributo inteiro e apagaria o display a cada avaliação.
-	<div
-		class="table-sheet-in-dialog fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
-		data-show="$sheet_open"
-		style="display:none"
-		data-on:click="evt.target === el && ($sheet_open = false)"
-		data-on:keydown__window="evt.key === 'Escape' && ($sheet_open = false)"
-	>
-		// `data-expanded` é o que faz o DRIVER DE TECLADO se recolher: ele procura
-		// `[role="dialog"][data-expanded]`, e sem isto as setas continuariam andando
-		// na lista ATRÁS do modal.
-		//
-		// Aqui o `data-attr` com BOOLEANO é o certo, ao contrário do que vale para
-		// `aria-*`: o Datastar trata valor booleano como atributo booleano, então
-		// verdadeiro põe `data-expanded=""` e falso REMOVE — e é a PRESENÇA que o
-		// seletor procura. Para ARIA isso seria defeito (um `aria-pressed=""` não
-		// anuncia estado); para um atributo de presença é a semântica desejada.
-		<div
-			role="dialog"
-			aria-modal="true"
-			data-attr:data-expanded="$sheet_open"
-			aria-label={ m.Name }
-			class="relative max-h-[85vh] w-full overflow-y-auto rounded-t-md border border-grimorio-iron bg-background p-4 sm:max-w-2xl sm:rounded-md"
-		>
-			@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar a ficha de " + m.Name, "data-on:click": "$sheet_open = false"}) {
-				×
-			}
-			@EntryBlock(m, bookRef)
-		</div>
-	</div>
-}
-
-// Os filtros são uma REGIÃO, e declará-los foi conserto: sem isso a seta que
-// entra na lista não tem vizinho para cruzar e fica presa lá dentro. O TAB
-// sempre chegou; o que faltava era a outra metade da gramática.
-//
-// `grid` e não `column`: o bloco é bidimensional de verdade — busca ocupando a
-// linha inteira, dois campos de ND lado a lado, sete crachás que quebram linha.
-// Com `column` a seta para a direita não teria para onde ir entre ND mínimo e
-// ND máximo.
-//
-// A BUSCA é campo de texto, e ali a seta continua editando em vez de navegar: o
-// driver se recolhe em alvo de digitação, o que é a regra certa e não um buraco
-// — quem está escrevendo "ogro" espera que a seta ande no texto. Sai de lá pelo
-// TAB, como em qualquer formulário.
-templ BestiaryFilters(v BestiaryView) {
-	<div data-nav-region="filtros" data-nav-layout="grid" class="space-y-2">
-		<div class="relative">
-			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
-			<input
-				type="search"
-				name="busca"
-				data-busca-da-cena
-				{ navigableField()... }
-				data-bind:search
-				data-on:input__debounce.250ms={ fmt.Sprintf("@get('%s')", v.BestiaryBase()) }
-				value={ v.Term }
-				placeholder="Buscar criatura"
-				aria-label="Buscar criatura"
-				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
-			/>
-		</div>
-		// A BUSCA fica FORA da gaveta e o ND e os tipos dentro: achar uma criatura
-		// pelo nome é o gesto do meio do combate, e recolher a busca junto trocaria
-		// um problema por outro.
-		@ui.FilterDrawer("Filtros") {
-			<div class="mt-2 space-y-2">
-				<div class="flex flex-wrap items-end gap-2">
-					@crBox(v.BestiaryBase(), "nd-min", "ND mínimo", "ndMin", CRInBox(v.CRMin))
-					@crBox(v.BestiaryBase(), "nd-max", "ND máximo", "ndMax", CRInBox(v.CRMax))
-				</div>
-				// `fieldset` porque é um conjunto de escolhas, e a `legend` em `sr-only`
-				// porque a tela já diz "Bestiário" logo acima — repetir "Tipo" ali só
-				// tira espaço de sete crachás que precisam caber numa linha.
-				<fieldset class="flex flex-wrap gap-1.5 border-0 p-0">
-					@ui.SectionCaption("muted", "sr-only") {
-						Filtrar por tipo
-					}
-					for _, t := range book.CreatureTypes {
-						<button
-							type="button"
-							aria-pressed={ ui.AriaBool(v.TypeOn(t)) }
-							data-on:click={ fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t) }
-							if v.TypeOn(t) {
-								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none"
-							} else {
-								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent"
-							}
-						>{ book.TypeName(t) }</button>
-					}
-				</fieldset>
-			</div>
-		}
-	</div>
-}
-
-// crBox é um campo numérico simples.
-//
-// O `step` de 0,25 é do livro: o ND anda em quartos abaixo de 1 (ND 1/4, 1/2).
-// O `min`/`max` nativos NÃO são a trava — o servidor aperta a faixa de novo,
-// porque o número chega pela URL e qualquer um a edita à mão.
-templ crBox(base, id, label, signal, value string) {
-	<div class="space-y-1">
-		@ui.SectionLabel("muted", "block") {
-			<label for={ "bestiario-" + id }>{ label }</label>
-		}
-		<input
-			id={ "bestiario-" + id }
-			{ navigableField()... }
-			type="number"
-			min="0"
-			max="20"
-			step="0.25"
-			value={ value }
-			data-bind={ signal }
-			data-on:input__debounce.400ms={ fmt.Sprintf("@get('%s')", base) }
-			aria-label={ label }
-			class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
-		/>
-	</div>
-}
-
-// EntryList: uma lista de verdade, sem virtualização.
-//
-// São 80 criaturas, e virtualizar é maquinaria para lista que não cabe: a esse
-// tamanho ela cobra o custo (medir, janela, espaçador) sem cobrir problema
-// nenhum, e ainda obriga um e2e, porque lista virtualizada mede zero no jsdom.
-//
-// Sem tampa de altura: a lista é o ÚLTIMO elemento da coluna, e quem a limita é
-// a caixa. Uma tampa de 45vh deixava 243px mortos em 768×1024 protegendo
-// conteúdo que naquele formato está `hidden`.
-templ EntryList(v BestiaryView) {
+// O `:focus-visible` guarda o pedido do foco porque o clique TAMBÉM foca: sem o
+// guarda, uma linha tocada mandaria dois pedidos, e quem chegasse por último
+// decidiria se a folha fica aberta. O `__throttle` segura a seta presa, que de
+// outro jeito pediria as 80 fichas.
+templ creatureList(v BestiaryView) {
 	if len(v.Entries) == 0 {
-		<p class="p-4 text-center text-xs text-muted-foreground">Nenhuma criatura casa com os filtros.</p>
+		@ds.Empty("Nenhuma criatura", "Nenhuma criatura casa com os filtros.")
 	} else {
-		<ul
-			data-nav-region="lista"
-			data-nav-layout="column"
-			class="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-sm border border-grimorio-iron p-1"
-		>
-			for _, m := range v.Entries {
-				<li>
-					// FOCO ATIVA, como em jogo: a seta anda na lista e a ficha
-					// segue junto, sem exigir um Enter para ver.
-					//
-					// O foco NÃO abre o modal, e o clique abre — a divisão não
-					// é detalhe. Numa largura estreita a ficha é um `role=dialog`
-					// que o driver de teclado respeita se recolhendo; abrir no
-					// FOCO prenderia a pessoa dentro dele no primeiro passo da
-					// seta, e a saída seria um Esc que ela não pediu. Por isso
-					// só o gesto deliberado (clique ou Enter) leva o `abrir=1`.
-					//
-					// `__debounce`: segurar a seta atravessa a lista inteira, e
-					// sem isto seriam 80 idas ao servidor para ver UMA ficha.
-					// 120ms é abaixo do que se percebe como espera e acima do
-					// intervalo de repetição da tecla.
-					//
-					// `:focus-visible` GUARDA o pedido do foco, porque o clique
-					// do mouse TAMBÉM foca: sem o guarda, uma linha tocada sai
-					// com DOIS pedidos — o do foco, sem `abrir=1`, e o do
-					// clique, com. Os dois remendam o `#bestiary`, que redeclara
-					// `fichaAberta`, e QUEM CHEGA POR ÚLTIMO MANDA: numa máquina
-					// carregada a ordem inverte e a criatura fica escolhida com
-					// a ficha FECHADA.
-					//
-					// O guarda é a resposta da própria plataforma para "este
-					// foco veio do teclado?": o clique dá `false`, o Tab dá
-					// `true`, e o foco PROGRAMÁTICO do driver de setas também
-					// dá `true` — a prévia da seta continua inteira e o mouse
-					// deixa de mandar o pedido que só desfaz o dele.
+		@ds.List("Criaturas", fmt.Sprintf("%d de %d", len(v.Entries), v.Total)) {
+			<div class="ds-master-rows" data-nav-region="lista" data-nav-layout="column">
+				for _, m := range v.Entries {
 					<a
+						class="ds-row ds-gm-entry"
 						href={ templ.SafeURL(v.BestiaryBase() + "?criatura=" + m.ID) }
 						data-on:click={ fmt.Sprintf("evt.preventDefault(); $creature = %q; @get('%s')", m.ID, OpenTheEntry(v.BestiaryBase())) }
 						data-on:focus__throttle.100ms.leading={ fmt.Sprintf("el.matches(':focus-visible') && ($creature = %q, @get('%s'))", m.ID, v.BestiaryBase()) }
 						if v.Chosen != nil && v.Chosen.ID == m.ID {
 							aria-current="true"
-							class="block w-full rounded-sm border border-grimorio-gold bg-accent p-2 text-left transition-colors outline-none"
-						} else {
-							class="block w-full rounded-sm border border-grimorio-iron p-2 text-left transition-colors outline-none hover:bg-accent"
 						}
 					>
-						<p class="flex flex-wrap items-baseline gap-x-1.5 text-xs font-semibold">
-							{ m.Name }
-							<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(m.ND) }</span>
-							<span class="text-3xs font-normal text-muted-foreground">
-								{ book.TypeName(m.Kind) + " · " + book.SizeName(m.Size) }
-							</span>
-						</p>
-						<p class="font-mono text-3xs text-muted-foreground">
-							{ fmt.Sprintf("PV %d · DEF %d · p%d", m.HP, m.Defense, m.BookPage) }
-						</p>
+						<span class="ds-gm-member-body">
+							<span class="ds-row-title">{ m.Name }</span>
+							<span class="ds-row-meta">{ book.TypeName(m.Kind) + " · " + book.SizeName(m.Size) + " · ND " + book.CRWritten(m.ND) }</span>
+						</span>
+						<span class="ds-row-meta ds-gm-entry-nums">{ fmt.Sprintf("PV %d · Def %d", m.HP, m.Defense) }</span>
 					</a>
-				</li>
-			}
-		</ul>
-	}
-}
-
-// ── o bloco de estatísticas ──────────────────────────────────────────────────
-
-// EntryBlock é a ficha da criatura como o livro a imprime.
-//
-// A ORDEM é regra: Ataques e Habilidades vêm ANTES de Atributos e Resistências.
-// O mestre abre o bestiário no meio do combate para saber o que a criatura rola
-// AGORA, e não para atravessar doze estatísticas até chegar nos ataques.
-templ EntryBlock(m book.Entry, bookRef bookui.BookAddress) {
-	// O TETO de 56rem é da COLUNA dos números e não do bloco inteiro: a 1920 as
-	// caixas de atributo esticam para ~220px só para segurar dois caracteres, mas
-	// limitar o bloco todo parava a ficha numa coluna estreita com meia tela vazia
-	// ao lado, e o mestre rolava para ver as habilidades.
-	//
-	// O contêiner é o PRÓPRIO bloco e não o painel, porque a pergunta é "quanto
-	// ESTE bloco recebe": ele é desenhado no painel do mestre, no diálogo da Mesa e
-	// na ficha em diálogo do telefone, e as três larguras são diferentes. Consulta
-	// de viewport aqui erraria nas três.
-	<div class="entry-block space-y-4 text-sm">
-		<div class="space-y-0.5">
-			<h3 class="font-heading text-lg tracking-wide text-foreground">{ m.Name }</h3>
-			<p class="text-xs text-muted-foreground">
-				{ fmt.Sprintf("ND %s · %s · %s · ", book.CRWritten(m.ND), book.TypeName(m.Kind), book.SizeName(m.Size)) }
-				@bookui.PageSeal(bookRef, m.BookPage, m.Name)
-				{ fmt.Sprintf(" · XP %d", book.XPForCR(m.ND)) }
-			</p>
-		</div>
-		// DUAS COLUNAS quando o bloco tem largura: os NÚMEROS de um lado e o
-		// TEXTO do outro. É como o livro imprime — o bloco de estatísticas e a
-		// prosa ao lado —, e é o que tira a rolagem: as habilidades especiais
-		// ficavam abaixo da dobra com meia tela vazia à direita.
-		//
-		// A ORDEM DO DOM é a dos números primeiro, e ela importa além do
-		// desenho: numa coluna só (telefone, diálogo estreito) é nessa ordem que
-		// tudo empilha, e é a ordem em que o leitor de tela lê. Ataque antes de
-		// PV leria a ficha de trás para a frente.
-		<div class="entry-block-columns">
-			<div class="space-y-4">
-				// Iniciativa e Percepção são a PRIMEIRA linha do bloco impresso
-				// (p289), e o mestre rola as duas antes de qualquer outra coisa
-				// no combate.
-				<div class="grid grid-cols-2 gap-2">
-					@stat("Iniciativa", book.WithSign(m.Initiative))
-					@stat("Percepção", book.WithSign(m.Perception))
-					@stat("PV", fmt.Sprintf("%d", m.HP))
-					@stat("Defesa", fmt.Sprintf("%d", m.Defense))
-					@stat("Deslocamento", m.Speed)
-					if m.PM != nil {
-						@stat("PM", fmt.Sprintf("%d", *m.PM))
-					}
-				</div>
-				@blockSection("Atributos") {
-					<div class="entry-attributes grid gap-1">
-						@stat("For", book.WithSignPtr(m.Strength))
-						@stat("Des", book.WithSignPtr(m.Dexterity))
-						@stat("Con", book.WithSignPtr(m.Constitution))
-						@stat("Int", book.WithSignPtr(m.Intelligence))
-						@stat("Sab", book.WithSignPtr(m.Wisdom))
-						@stat("Car", book.WithSignPtr(m.Charisma))
-					</div>
-				}
-				@blockSection("Resistências") {
-					<div class="grid grid-cols-3 gap-1">
-						@stat("Fortitude", book.WithSign(m.Fortitude))
-						@stat("Reflexos", book.WithSign(m.Reflex))
-						@stat("Vontade", book.WithSign(m.Will))
-					</div>
 				}
 			</div>
-			<div class="space-y-4">
-				if len(m.Attacks) > 0 {
-					@blockSection("Ataques") {
-						<div class="space-y-1">
-							for _, a := range m.Attacks {
-								<div class="rounded-sm border border-grimorio-iron p-2">
-									<p class="text-xs font-semibold">
-										{ a.Name + " " }
-										<span class="font-mono text-muted-foreground">{ book.WithSign(a.AttackBonus) + " · " + a.Damage }</span>
-									</p>
-									if a.Special != "" {
-										<p class="text-2xs text-muted-foreground">{ a.Special }</p>
-									}
-								</div>
-							}
-						</div>
-					}
-				}
-				if len(m.SpecialAbilities) > 0 {
-					@blockSection("Habilidades especiais") {
-						<ul class="list-disc space-y-1 pl-5 text-xs">
-							for _, h := range m.SpecialAbilities {
-								<li>
-									for _, chunk := range book.WithLinks(h) {
-										@bookui.Chunk(chunk, bookRef)
-									}
-								</li>
-							}
-						</ul>
-					}
-				}
-				if len(m.Skills) > 0 {
-					@blockSection("Perícias") {
-						<p class="text-xs">
-							for i, p := range m.Skills {
-								if i > 0 {
-									{ " · " }
-								}
-								// A perícia da criatura leva ao verbete dela: o
-								// mestre lê "Furtividade +5" e pode querer saber
-								// se ela sofre penalidade de armadura.
-								@bookui.CrossRef("pericias", book.KeyOfName(p.Name), p.Name) {
-									{ p.Name }
-								}
-								{ " " }
-								<span class="font-mono">{ book.WithSign(p.Bonus) }</span>
-								if p.Note != "" {
-									<span class="text-muted-foreground">{ " (" + p.Note + ")" }</span>
-								}
-							}
-						</p>
-					}
-				}
-				// Equipamento e Tesouro fecham o bloco impresso, e é onde o livro os
-				// põe. As duas passam pela varredura pelo mesmo motivo das habilidades:
-				// o tesouro do dragão diz "veja o quadro na página 312", e sem ela o
-				// número fica texto morto no meio da frase.
-				if m.Equipment != "" {
-					@blockSection("Equipamento") {
-						<p class="text-xs">
-							for _, chunk := range book.WithLinks(m.Equipment) {
-								@bookui.Chunk(chunk, bookRef)
-							}
-						</p>
-					}
-				}
-				if m.Treasure != "" {
-					@blockSection("Tesouro") {
-						<p class="text-xs">
-							for _, chunk := range book.WithLinks(m.Treasure) {
-								@bookui.Chunk(chunk, bookRef)
-							}
-						</p>
-					}
-				}
-			</div>
-		</div>
-	</div>
-}
-
-// blockSection leva `aria-label` além do `h4`: uma `<section>` SEM nome
-// acessível não é uma região para o leitor de tela — vira caixa anônima, e o
-// mestre que navega por regiões não consegue pular para Ataques.
-templ blockSection(title string) {
-	<section aria-label={ title }>
-		<h4 class={ ui.SectionLabelClasses("muted", "mb-1") }>{ title }</h4>
-		{ children... }
-	</section>
-}
-
-templ stat(label, value string) {
-	<div class="rounded-sm border border-grimorio-iron p-2 text-center">
-		@ui.SectionLabel("muted", "") {
-			{ label }
 		}
-		<p class="text-sm font-semibold tabular-nums">{ value }</p>
-	</div>
+	}
 }

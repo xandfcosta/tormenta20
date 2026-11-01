@@ -183,8 +183,10 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 	if strings.Contains(without, "/livro/ler") {
 		t.Error("sem LIVRO_PDF a cena desenhou um link para um livro que não é servido")
 	}
-	if !strings.Contains(without, "p289") {
-		t.Error("sem livro a página impressa devia continuar escrita na ficha")
+	// A PÁGINA DO LOBO, e não qualquer página: o "p289" daqui antes casava com a
+	// linha do Bandido na lista, e o caso passava sem olhar a ficha.
+	if !strings.Contains(without, ">p290<") {
+		t.Error("sem livro a página impressa do Lobo devia continuar escrita na ficha")
 	}
 }
 

@@ -58,7 +58,7 @@ import (
 func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	class := regexp.MustCompile(`class="([^"]*)"`)
 	opening := regexp.MustCompile(`^<([a-zA-Z][a-zA-Z0-9]*)`)
-	recipe := regexp.MustCompile(`ui\.(SectionTitle|SectionLabel|FieldLabel)Classes\(|@ui\.(SectionLabel|SectionCaption)\(`)
+	recipe := regexp.MustCompile(`ui\.(SectionTitle|SectionLabel|FieldLabel)Classes\(|@ui\.SectionLabel\(`)
 
 	// Os elementos cujo papel TEM receita. O `<span>`/`<p>` entra pelo que ele
 	// NÃO tem: sem caixa, ele é rótulo; com caixa, é crachá.
@@ -153,9 +153,10 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	// procurar" se parecem no terminal.
 	// O piso caiu de 100 para 80 quando a ficha do grimório saiu (ALE-473), para
 	// 60 quando o palco do mestre saiu (ALE-522), para 45 com as campanhas
-	// (ALE-526), para 40 com o elenco (ALE-528) e para 35 com a forja (ALE-535,
-	// 37 medidos).
-	if byRecipe < 35 {
+	// (ALE-526), para 40 com o elenco (ALE-528), para 35 com a forja (ALE-535,
+	// 37 medidos) e para 30 com o Bestiário da Mesa do Mestre (ALE-538, 34
+	// medidos).
+	if byRecipe < 30 {
 		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", byRecipe)
 	}
 	// A terceira: se o casamento do `class="…"` parar, o laço acima nunca entra e
