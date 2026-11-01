@@ -83,3 +83,20 @@ func TestTheDifficultySealHasTheToneOfItsBand(t *testing.T) {
 		}
 	}
 }
+
+// Sem criatura não há o que julgar: o encontro vazio não ganha selo de dificuldade,
+// embora a conta dê "Fácil" para ND 0 contra um grupo de nível 1.
+func TestAnEmptyEncounterHasNoDifficultySeal(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+
+	body := pedeNoMestre(t, s, eu, "GET", "/mestre/encontros", "").Body.String()
+	if strings.Contains(body, `class="ds-seal"`) {
+		t.Error("o encontro vazio saiu com selo de dificuldade")
+	}
+	// O CONTROLE: com criatura o selo sai, senão a ausência não diria nada.
+	full := pedeNoMestre(t, s, eu, "GET", "/mestre/encontros?c=ogro:1", "").Body.String()
+	if !strings.Contains(full, `class="ds-seal"`) {
+		t.Error("o encontro com criatura perdeu o selo")
+	}
+}

@@ -293,9 +293,11 @@ func verdict(v encountersView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ds.Seal(v.Difficulty().Label, difficultyTone(v.Difficulty().Tom)).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if !v.Empty() {
+			templ_7745c5c3_Err = ds.Seal(v.Difficulty().Label, difficultyTone(v.Difficulty().Tom)).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span class=\"ds-row-meta\"><b>")
 		if templ_7745c5c3_Err != nil {
@@ -304,7 +306,7 @@ func verdict(v encountersView) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(xpWritten(v.XPPerCharacter()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 89, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 92, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -446,7 +448,7 @@ func composition(v encountersView) templ.Component {
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(l.Entry.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 121, Col: 47}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 124, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -459,7 +461,7 @@ func composition(v encountersView) templ.Component {
 					var templ_7745c5c3_Var17 string
 					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(rowWorthWritten(l))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 122, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 125, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 					if templ_7745c5c3_Err != nil {
@@ -480,7 +482,7 @@ func composition(v encountersView) templ.Component {
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(ui.Int(l.Count))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 126, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 129, Col: 27}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
@@ -650,7 +652,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 					var templ_7745c5c3_Var23 string
 					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue("Acrescentar " + m.Name + " ao encontro")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 170, Col: 59}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 173, Col: 59}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 					if templ_7745c5c3_Err != nil {
@@ -663,7 +665,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 					var templ_7745c5c3_Var24 string
 					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("@post('/mestre/encontros/adicionar/%s')", m.ID))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 171, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 174, Col: 82}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 					if templ_7745c5c3_Err != nil {
@@ -676,7 +678,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 					var templ_7745c5c3_Var25 string
 					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 174, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 177, Col: 41}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 					if templ_7745c5c3_Err != nil {
@@ -689,7 +691,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 					var templ_7745c5c3_Var26 string
 					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s · %s · ND %s", book.TypeName(m.Kind), book.SizeName(m.Size), book.CRWritten(m.ND)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 175, Col: 134}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 178, Col: 134}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 					if templ_7745c5c3_Err != nil {
@@ -707,7 +709,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 						var templ_7745c5c3_Var27 string
 						templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("%d no encontro", n))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 179, Col: 94}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 182, Col: 94}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 						if templ_7745c5c3_Err != nil {
@@ -720,7 +722,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 						var templ_7745c5c3_Var28 string
 						templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d×", n))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 179, Col: 121}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 182, Col: 121}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 						if templ_7745c5c3_Err != nil {
@@ -738,7 +740,7 @@ func encounterCreatureList(v encountersView, region templ.Attributes) templ.Comp
 					var templ_7745c5c3_Var29 string
 					templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("PV %d · Def %d", m.HP, m.Defense))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 181, Col: 82}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/encounters.templ`, Line: 184, Col: 82}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 					if templ_7745c5c3_Err != nil {

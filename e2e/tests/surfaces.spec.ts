@@ -30,8 +30,8 @@ const HOUSE_SURFACES = [
   {
     where: 'no veredito do encontro',
     visit: async (page: Page) => {
-      // Ele mede o tom que estiver na tela: com o rascunho vazio, "Fácil". Os outros
-      // tons do selo são medidos pelas visitas do `appearance_scenes.json`.
+      // Com o rascunho vazio não há selo: os tons dele são medidos pelas visitas do
+      // `appearance_scenes.json`.
       await page.goto('/mestre/encontros')
       await expect(page.getByRole('heading', { name: 'Encontros' })).toBeVisible()
     },

@@ -85,7 +85,10 @@ templ verdict(v encountersView) {
 			<b>{ roundedCR(v.ND()) }</b>
 		</div>
 		<div class="ds-encounter-says">
-			@ds.Seal(v.Difficulty().Label, difficultyTone(v.Difficulty().Tom))
+			// Sem criatura não há o que julgar, embora a conta dê uma faixa para ND 0.
+			if !v.Empty() {
+				@ds.Seal(v.Difficulty().Label, difficultyTone(v.Difficulty().Tom))
+			}
 			<span class="ds-row-meta"><b>{ xpWritten(v.XPPerCharacter()) }</b> XP por personagem</span>
 		</div>
 	</section>
