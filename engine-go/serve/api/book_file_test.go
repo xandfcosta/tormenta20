@@ -196,7 +196,7 @@ func TestTheBestiarySceneOpensTheBookAtTheCreaturePage(t *testing.T) {
 // marcas. Nada disso cabe num teste de handler, e é o `e2e/tests/book-reader.spec.ts`
 // que mede. O que cabe AQUI é o contrato entre os dois — os cinco dados que o
 // servidor escreve no `<div id="reader">`. Errar um deles quebra o leitor em
-// silêncio: sem `data-abertura` ele abre seis páginas antes, sem `data-worker` o
+// silêncio: sem `data-opening` ele abre seis páginas antes, sem `data-worker` o
 // pdf.js cai no modo sem worker e trava a aba.
 func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
 	s := serverWithBook(t, newTestServer(t), "%PDF-1.6")
@@ -204,11 +204,11 @@ func TestTheBookReaderLoadsWhatTheSceneNeeds(t *testing.T) {
 
 	body := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
 	for _, data := range []string{
-		`data-pagina="290"`,
-		`data-termo="Lobo"`,
-		`data-abertura="6"`,
+		`data-page="290"`,
+		`data-term="Lobo"`,
+		`data-opening="6"`,
 		`data-worker="/static/pdf.worker.js`,
-		`data-livro="/livro?v=`,
+		`data-book="/livro?v=`,
 	} {
 		if !strings.Contains(body, data) {
 			t.Errorf("a cena do leitor não escreveu %s", data)
@@ -240,7 +240,7 @@ func TestTheReaderPageRefusesGarbage(t *testing.T) {
 
 	for _, target := range []string{"/livro/ler?p=abacaxi", "/livro/ler?p=-3", "/livro/ler"} {
 		body := pedeNoMestre(t, s, eu, "GET", target, "").Body.String()
-		if !strings.Contains(body, `data-pagina="1"`) {
+		if !strings.Contains(body, `data-page="1"`) {
 			t.Errorf("%s não caiu na primeira página — a cena aceitou lixo", target)
 		}
 	}

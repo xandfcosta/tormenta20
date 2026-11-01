@@ -44,10 +44,10 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
 
   // O CONTROLE de que o pdf.js de fato desenhou: um canvas com área. Sem ele,
   // "achei a marca" poderia ser verdade sobre uma página em branco.
-  // Esperar o `data-pronto` e não só a visibilidade: um `<canvas>` sem desenhar
+  // Esperar o `data-ready` e não só a visibilidade: um `<canvas>` sem desenhar
   // mede 300×150 (o default do elemento) e passa por "visível" — o instrumento
   // chega antes do render e reprova uma página que está certa.
-  const reader = page.locator('#reader[data-pronto]')
+  const reader = page.locator('#reader[data-ready]')
   await expect(reader).toBeAttached({ timeout: 30_000 })
 
   const canvasEl = page.locator('#reader canvas')
@@ -76,14 +76,14 @@ test('as setas andam pelo livro e a barra diz a página impressa', async ({ page
     return
   }
 
-  await expect(page.locator('#reader[data-pronto]')).toBeAttached({ timeout: 30_000 })
-  const caption = page.locator('[data-pagina-atual]')
+  await expect(page.locator('#reader[data-ready]')).toBeAttached({ timeout: 30_000 })
+  const caption = page.locator('[data-current-page]')
   await expect(caption).toHaveText(/p290 de \d+/)
 
-  await page.locator('[data-acao="proxima"]').click()
+  await page.locator('[data-action="next"]').click()
   await expect(caption).toHaveText(/p291 de \d+/)
 
-  await page.locator('[data-acao="anterior"]').click()
+  await page.locator('[data-action="previous"]').click()
   await expect(caption).toHaveText(/p290 de \d+/)
 })
 
@@ -113,7 +113,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
     await expect(page.locator('[data-slot="scene-content"]')).toBeVisible()
 
     const inside = dialog.frameLocator('iframe')
-    await expect(inside.locator('#reader[data-pronto]')).toBeAttached({ timeout: 30_000 })
+    await expect(inside.locator('#reader[data-ready]')).toBeAttached({ timeout: 30_000 })
     await expect(inside.locator('.reader-mark').first()).toBeAttached()
 
     await dialog.locator('button[aria-label="Fechar o livro"]').click()

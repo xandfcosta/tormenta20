@@ -55,11 +55,11 @@ const DENSIDADE_MAXIMA = 2
 
 function leOCartaz(root: HTMLElement): Cartaz {
   return {
-    livro: root.dataset.livro ?? '',
+    livro: root.dataset.book ?? '',
     worker: root.dataset.worker ?? '',
-    pagina: Number(root.dataset.pagina ?? '1'),
-    abertura: Number(root.dataset.abertura ?? '0'),
-    termo: root.dataset.termo ?? '',
+    pagina: Number(root.dataset.page ?? '1'),
+    abertura: Number(root.dataset.opening ?? '0'),
+    termo: root.dataset.term ?? '',
   }
 }
 
@@ -139,8 +139,8 @@ class Leitor {
       rangeChunkSize: 262144,
     }).promise
     await this.desenha()
-    this.root.dataset.pronto = ''
-    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-acao]')) {
+    this.root.dataset.ready = ''
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-action]')) {
       button.disabled = false
     }
   }
@@ -210,17 +210,17 @@ export function montaOLeitor(): void {
   const root = document.getElementById('reader')
   if (!root) return
   const page = root.querySelector<HTMLCanvasElement>('canvas')
-  const layer = root.querySelector<HTMLElement>('[data-marcas]')
-  const label = document.querySelector<HTMLElement>('[data-pagina-atual]')
+  const layer = root.querySelector<HTMLElement>('[data-marks]')
+  const label = document.querySelector<HTMLElement>('[data-current-page]')
   if (!page || !layer || !label) return
 
   const reader = new Leitor(root, leOCartaz(root), page, layer, label)
   const onClick = (action: string, make: () => void) =>
-    document.querySelector(`[data-acao="${action}"]`)?.addEventListener('click', make)
-  onClick('anterior', () => reader.vai(-1))
-  onClick('proxima', () => reader.vai(1))
-  onClick('mais', () => reader.aproxima(1.25))
-  onClick('menos', () => reader.aproxima(0.8))
+    document.querySelector(`[data-action="${action}"]`)?.addEventListener('click', make)
+  onClick('previous', () => reader.vai(-1))
+  onClick('next', () => reader.vai(1))
+  onClick('more', () => reader.aproxima(1.25))
+  onClick('less', () => reader.aproxima(0.8))
   // As setas leem o livro; o guarda de digitação não é preciso porque esta cena
   // não tem campo nenhum — mas o `dialog[open]` do buscador tem, e ele fica por
   // cima. Sem isto, ⌃K e as setas disputariam a mesma tecla.

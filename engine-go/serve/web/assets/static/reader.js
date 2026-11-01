@@ -1,4 +1,4 @@
-//#region ../node_modules/.pnpm/pdfjs-dist@6.2.108/node_modules/pdfjs-dist/build/pdf.mjs
+//#region ../../../tormenta20/node_modules/.pnpm/pdfjs-dist@6.2.108/node_modules/pdfjs-dist/build/pdf.mjs
 var e = typeof process == "object" && process + "" == "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser"), t = [
 	Infinity,
 	Infinity,
@@ -16388,11 +16388,11 @@ globalThis._pdfjsTestingUtils = { HighlightOutliner: ki }, globalThis.pdfjsLib =
 var na = .5, ra = 3, ia = 1100, aa = 2;
 function oa(e) {
 	return {
-		livro: e.dataset.livro ?? "",
+		livro: e.dataset.book ?? "",
 		worker: e.dataset.worker ?? "",
-		pagina: Number(e.dataset.pagina ?? "1"),
-		abertura: Number(e.dataset.abertura ?? "0"),
-		termo: e.dataset.termo ?? ""
+		pagina: Number(e.dataset.page ?? "1"),
+		abertura: Number(e.dataset.opening ?? "0"),
+		termo: e.dataset.term ?? ""
 	};
 }
 function sa(e) {
@@ -16429,8 +16429,8 @@ var la = class {
 		gr.workerSrc = this.poster.worker, this.doc = await kr({
 			url: this.poster.livro,
 			rangeChunkSize: 262144
-		}).promise, await this.desenha(), this.root.dataset.pronto = "";
-		for (let e of document.querySelectorAll("[data-acao]")) e.disabled = !1;
+		}).promise, await this.desenha(), this.root.dataset.ready = "";
+		for (let e of document.querySelectorAll("[data-action]")) e.disabled = !1;
 	}
 	vai(e) {
 		if (!this.doc) return;
@@ -16464,10 +16464,10 @@ var la = class {
 function ua() {
 	let e = document.getElementById("reader");
 	if (!e) return;
-	let t = e.querySelector("canvas"), n = e.querySelector("[data-marcas]"), r = document.querySelector("[data-pagina-atual]");
+	let t = e.querySelector("canvas"), n = e.querySelector("[data-marks]"), r = document.querySelector("[data-current-page]");
 	if (!t || !n || !r) return;
-	let i = new la(e, oa(e), t, n, r), a = (e, t) => document.querySelector(`[data-acao="${e}"]`)?.addEventListener("click", t);
-	a("anterior", () => i.vai(-1)), a("proxima", () => i.vai(1)), a("mais", () => i.aproxima(1.25)), a("menos", () => i.aproxima(.8)), window.addEventListener("keydown", (e) => {
+	let i = new la(e, oa(e), t, n, r), a = (e, t) => document.querySelector(`[data-action="${e}"]`)?.addEventListener("click", t);
+	a("previous", () => i.vai(-1)), a("next", () => i.vai(1)), a("more", () => i.aproxima(1.25)), a("less", () => i.aproxima(.8)), window.addEventListener("keydown", (e) => {
 		if (!document.querySelector("dialog[open]") && (e.key === "ArrowRight" && i.vai(1), e.key === "ArrowLeft" && i.vai(-1), e.key === "Escape" && window.parent !== window)) try {
 			window.parent.document.querySelector("#book-in-dialog")?.close();
 		} catch {}
