@@ -998,6 +998,15 @@
     background: var(--ds-surface);
     text-align: center;
   }
+  button.ds-stat {
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  button.ds-stat:hover {
+    border-color: var(--ds-ink-3);
+  }
   .ds-stat-key {
     color: var(--ds-ink-3);
     font-size: var(--ds-t-xs);

@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"fmt"
 	"strconv"
 
 	"t20engine/serve/web/ds"
@@ -58,6 +59,9 @@ templ tempestadeSheet(v View) {
 		}
 		@sheetMenuDialog(v)
 		@sheetMoreDialog(v)
+		for _, attr := range v.Combat.Attributes {
+			@attributeDialog(v, attr)
+		}
 		@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV)
 		if !v.NoMana {
 			@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM)
@@ -112,10 +116,7 @@ templ sheetRail(v View) {
 		</div>
 		<div class="ds-stats">
 			for _, attr := range v.Combat.Attributes {
-				<div class="ds-stat">
-					<span class="ds-stat-key">{ attr.Abbr }</span>
-					<span class="ds-stat-value">{ attr.Value }</span>
-				</div>
+				@attributeStat(attr)
 			}
 		</div>
 		@levelControl(v)
@@ -330,6 +331,27 @@ templ sheetMoreDialog(v View) {
 			for _, tab := range moreTabs(v) {
 				@ds.Row(tab.Label, "", "", templ.SafeURL(sheetRoute(v.ID, tab.Value)))
 			}
+		}
+	}
+}
+
+// attributeStat é o quadro do atributo: o total, e o toque abre de onde ele vem.
+templ attributeStat(attr attributeTile) {
+	@ds.StatButton(attr.Abbr, attr.Value, templ.Attributes{
+		"commandfor": attributeDialogID(attr.Key),
+		"command":    "show-modal",
+		"aria-label": attr.Label + " " + attr.Value + ": ver a soma",
+	})
+}
+
+// attributeDialog é a soma do atributo e o caminho para mudar o valor livre. A parte que veio
+// de nível se muda na aba Poderes, e por isso o botão não promete mexer nela.
+templ attributeDialog(v View, attr attributeTile) {
+	@ds.Dialog(attributeDialogID(attr.Key), attr.Label+" "+attr.Value, nil) {
+		<p><b>{ attr.Sum }</b></p>
+		<p class="ds-card-text">O Aumento de Atributo se escolhe na aba Poderes.</p>
+		@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(fmt.Sprintf("/personagens/%d/atributos", v.ID)), templ.Attributes{"data-wide": true}) {
+			Mudar o valor livre
 		}
 	}
 }

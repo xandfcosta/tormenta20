@@ -52,7 +52,7 @@ func tempestadeCombat(v View) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			for _, attr := range v.Combat.Attributes {
-				templ_7745c5c3_Err = ds.Stat(attr.Abbr, attr.Value).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = attributeStat(attr).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

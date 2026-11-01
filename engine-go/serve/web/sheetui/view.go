@@ -230,7 +230,7 @@ func (s Scene) Load(
 	})
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
-		v.Combat = panelForCombat(sheet, cards, isCaster(sheet))
+		v.Combat = panelForCombat(sheet, cards, isCaster(sheet), dto)
 		v.SpellCasting = spellCastingOf(sheet)
 		v.Expertises = expertisePanelFor(dto, sheet, search)
 		// DEPOIS dos três, e não ao lado: o painel de Ações não computa nada —
@@ -428,6 +428,11 @@ func sheetPostWith(v View, path, value string) string {
 // quebra no dia em que uma classe nova chegar.
 func stepCommand(v View, class string, step int) string {
 	return sheetPost(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(class), step))
+}
+
+// attributeDialogID é o diálogo da soma de um atributo.
+func attributeDialogID(key string) string {
+	return "attribute-" + key
 }
 
 // enterClassCommand escreve o `@post` de entrar numa classe nova.

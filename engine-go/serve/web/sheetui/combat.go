@@ -89,8 +89,12 @@ type extraBlock struct {
 
 // attributeTile é um dos seis quadrados, sem diálogo.
 type attributeTile struct {
+	Key   string
 	Abbr  string
+	Label string
 	Value string
+	// Sum é de onde vem o total: "+1 livre +2 Aumento de Atributo".
+	Sum string
 }
 
 // weaponTile é uma arma empunhada como fórmula pronta de rolar.
@@ -173,7 +177,7 @@ func (s Scene) panelOfCombat(dto sheet.CharacterDTO) panelCombat {
 	if !ok {
 		return panelCombat{}
 	}
-	return panelForCombat(sheet, cards, isCaster(sheet))
+	return panelForCombat(sheet, cards, isCaster(sheet), dto)
 }
 
 // panelForCombat monta a aba inteira.
@@ -181,11 +185,11 @@ func (s Scene) panelOfCombat(dto sheet.CharacterDTO) panelCombat {
 // Ela recebe a ficha JÁ computada em vez de computar: o `Load` chama o
 // motor uma vez e reparte, e computar de novo aqui daria duas contas que podem
 // divergir no dia em que uma delas passar condicional diferente.
-func panelForCombat(sheet engine.ComputedSheet, cards []engine.WeaponCard, caster bool) panelCombat {
+func panelForCombat(sheet engine.ComputedSheet, cards []engine.WeaponCard, caster bool, dto sheet.CharacterDTO) panelCombat {
 	return panelCombat{
 		Tiles:       defenseAndAttackTiles(sheet),
 		Saves:       saveTiles(sheet),
-		Attributes:  attributeTiles(sheet),
+		Attributes:  attributeTiles(sheet, dto),
 		ShowWeapons: len(cards) > 0 || !caster,
 		Weapons:     weaponTiles(cards),
 		MagicTiles:  magicTiles(sheet, caster),
@@ -337,12 +341,19 @@ func shortSaveLabel(name string) string {
 }
 
 // attributeTiles são os seis, na ordem do livro.
-func attributeTiles(sheet engine.ComputedSheet) []attributeTile {
+func attributeTiles(computed engine.ComputedSheet, dto sheet.CharacterDTO) []attributeTile {
+	bases := map[string]int64{
+		"strength": dto.Strength, "dexterity": dto.Dexterity, "constitution": dto.Constitution,
+		"intelligence": dto.Intelligence, "wisdom": dto.Wisdom, "charisma": dto.Charisma,
+	}
 	tiles := make([]attributeTile, 0, len(engine.AttributeKeys))
 	for _, key := range engine.AttributeKeys {
 		tiles = append(tiles, attributeTile{
+			Key:   key,
 			Abbr:  attributeAbbr[key],
-			Value: book.WithSign(sheet.Attributes[key].Total),
+			Label: book.AttributeLabel(key),
+			Value: book.WithSign(computed.Attributes[key].Total),
+			Sum:   sheet.AttributeSum(int(bases[key]), computed.Attributes[key].Contributions),
 		})
 	}
 	return tiles

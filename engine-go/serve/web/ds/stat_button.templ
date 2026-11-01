@@ -1,0 +1,10 @@
+package ds
+
+// StatButton é o Stat que se toca: abre a conta do número, e os atributos do gesto entram
+// pelo `attrs`.
+templ StatButton(key, value string, attrs templ.Attributes) {
+	<button type="button" class="ds-stat" { attrs... }>
+		<span class="ds-stat-key">{ key }</span>
+		<span class="ds-stat-value">{ value }</span>
+	</button>
+}

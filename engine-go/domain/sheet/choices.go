@@ -156,6 +156,9 @@ func chosenFitPowers(dto CharacterDTO) error {
 	if err := powerPicksFit(dto); err != nil {
 		return err
 	}
+	if err := AttributeIncreasesFit(dto); err != nil {
+		return err
+	}
 	if err := ChosenExpertisesFit(dto); err != nil {
 		return err
 	}

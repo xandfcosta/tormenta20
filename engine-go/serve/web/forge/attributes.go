@@ -192,21 +192,17 @@ func attributeRowOf(key string, spread map[string]int, sheet engine.ComputedShee
 		Key: key, Label: book.AttributeLabel(key),
 		Base:  spread[key],
 		Total: computed.Total,
-		Sum:   attributeSum(spread[key], computed.Contributions),
+		Sum:   sumWhenThereIsOne(spread[key], computed.Contributions),
 	}
 }
 
-// attributeSum escreve a conta do total: "+1 escolhido +2 Raça: Elfo". Sem nada a somar
-// ela é vazia, porque o escolhido já é o total e a linha só repetiria o número.
-func attributeSum(base int, contributions []engine.SourceAmount) string {
+// sumWhenThereIsOne é vazia quando nada soma ao valor livre: ele já é o total, e a linha só
+// repetiria o número.
+func sumWhenThereIsOne(base int, contributions []engine.SourceAmount) string {
 	if len(contributions) == 0 {
 		return ""
 	}
-	sum := book.WithSign(base) + " escolhido"
-	for _, part := range contributions {
-		sum += " " + book.WithSign(part.Amount) + " " + part.Source
-	}
-	return sum
+	return sheet.AttributeSum(base, contributions)
 }
 
 // pointsLine diz onde o espalhamento está em relação aos pontos do livro (p17).

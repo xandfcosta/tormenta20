@@ -11,7 +11,7 @@ templ tempestadeCombat(v View) {
 		<div class="ds-sheet-phone-only">
 			@ds.Stats() {
 				for _, attr := range v.Combat.Attributes {
-					@ds.Stat(attr.Abbr, attr.Value)
+					@attributeStat(attr)
 				}
 			}
 		</div>

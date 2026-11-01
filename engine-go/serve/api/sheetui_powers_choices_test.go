@@ -328,7 +328,8 @@ func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
 // que já foi escolhido diz quantas vezes e oferece o de tirar. Sem isto a
 // regra existia no motor e nenhuma tela a alcançava.
 func TestTheDialogOffersTheOptionsOfAPowerThatAsksForAChoice(t *testing.T) {
-	f, id := barbaro(t, 3)
+	// Nível 5: duas vezes o mesmo atributo pede dois patamares (p38).
+	f, id := barbaro(t, 5)
 	const poder = "class.barbaro.aumento-de-atributo"
 
 	screen := powerScreen(t, f, id)

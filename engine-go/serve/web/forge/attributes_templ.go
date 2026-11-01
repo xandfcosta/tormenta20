@@ -106,7 +106,7 @@ func attributesBody(v attributesView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><p class=\"ds-help\">O total já traz o modificador da raça. A raça que ESCOLHE onde pôr o bônus — o humano e os meio-elfos — se resolve na ficha, na aba Poderes.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><p class=\"ds-help\">Aqui se muda só o valor livre, e o total já soma o resto. O Aumento de Atributo e a raça que ESCOLHE onde pôr o bônus — o humano e os meio-elfos — se resolvem na ficha, na aba Poderes.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -316,6 +316,9 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		if err := sheet.LevelCountedChoicesFit(lowered); err != nil {
 			return err
 		}
+		if err := sheet.AttributeIncreasesFit(lowered); err != nil {
+			return err
+		}
 		return s.plays.LevelClass(r.Context(), row, class, target)
 	}
 	return fmt.Errorf("%s não é uma classe deste personagem", class)

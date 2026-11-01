@@ -374,7 +374,7 @@ func TestTheForgeRowShowsTheSumWithTheRace(t *testing.T) {
 
 	postaAForja(t, f, f.player, attributes+"/intelligence/1", nil)
 	body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String()
-	if !strings.Contains(body, "+1 escolhido +2 Raça: Elfo") {
+	if !strings.Contains(body, "+1 livre +2 Raça: Elfo") {
 		t.Errorf("a linha de Inteligência não mostrou a soma; somas na cena: %q",
 			regexp.MustCompile(`ds-forge-sum[^<]*<?[^<]*`).FindAllString(body, -1))
 	}
