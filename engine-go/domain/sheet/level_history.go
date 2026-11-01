@@ -24,6 +24,8 @@ type LevelLine struct {
 	Detail    string
 	Automatic bool
 	Estimated bool
+	// Freeable diz que, além de trocar, esta escolha se libera.
+	Freeable bool
 }
 
 // LevelHistory são os níveis do mais recente para o mais antigo, porque quem sobe de nível
@@ -80,7 +82,7 @@ func levelLineOf(dto CharacterDTO, row LevelChoiceDTO) (LevelLine, bool) {
 				label = option.Name
 			}
 		}
-		return LevelLine{RowID: row.ID, Name: name, Detail: label, Estimated: row.Estimated}, true
+		return LevelLine{RowID: row.ID, Name: name, Detail: label, Estimated: row.Estimated, Freeable: pickCanBeFreed(dto, row)}, true
 	case LevelKindPower:
 		if len(PowerPicks(dto.PowerChoices)[row.Ref]) > 0 {
 			return LevelLine{}, false

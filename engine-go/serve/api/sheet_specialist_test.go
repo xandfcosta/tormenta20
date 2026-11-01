@@ -215,3 +215,60 @@ func TestTheChoicesDialogShowsTheSpecialist(t *testing.T) {
 		t.Error("Diplomacia não é treinada e aparece como opção do Especialista")
 	}
 }
+
+// A saída da recusa de baixar a Inteligência: a escolha contada por atributo não ocupa vaga, então
+// ela se libera. A ficha continua recusando enquanto a conta não fecha.
+func TestFreeingASpecialistSkillLetsTheIntelligenceGoDown(t *testing.T) {
+	f, id := specialist(t, 2)
+	picksSpecialist(t, f, id, "Ladinagem", "Furtividade")
+	lower := fmt.Sprintf("/personagens/%d/atributos/intelligence/-1", id)
+
+	refused := f.requests(t, f.player, http.MethodPost, lower, "").Body.String()
+	if !strings.Contains(refused, "libere 1") {
+		t.Fatalf("a recusa de baixar a Inteligência não aponta a saída: %s", refused)
+	}
+	page := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=abilities&visao=nivel", id), "").Body.String()
+	if !strings.Contains(page, "Liberar") {
+		t.Error("com o Especialista cheio, a seção não oferece Liberar")
+	}
+
+	row := levelPickRow(t, f, id, "Furtividade")
+	if refusal := sheetPost(t, f, id, fmt.Sprintf("/escolhas/%d/libera", row.ID), ""); refusal != "" {
+		t.Fatalf("liberar foi recusado: %q", refusal)
+	}
+	if picks := storedPowerChoices(t, f, id); strings.Contains(picks, "Furtividade") || !strings.Contains(picks, "Ladinagem") {
+		t.Errorf("devia sair só a liberada, e ficou %s", picks)
+	}
+	f.requests(t, f.player, http.MethodPost, lower, "")
+	stored, err := f.s.queries.GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Intelligence != 1 {
+		t.Errorf("com a perícia liberada, a Inteligência devia baixar para 1, e ficou %d", stored.Intelligence)
+	}
+}
+
+// Liberar existe para quando a conta está cheia. Fora disso a escolha só se troca, e a vaga de um
+// poder nunca fica vazia.
+func TestOnlyAFullAttributeCountedChoiceCanBeFreed(t *testing.T) {
+	f, id := specialist(t, 3)
+	picksSpecialist(t, f, id, "Ladinagem", "Furtividade")
+	page := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=abilities&visao=nivel", id), "").Body.String()
+	if strings.Contains(page, "Liberar") {
+		t.Error("com a conta sobrando, a seção ofereceu Liberar")
+	}
+	row := levelPickRow(t, f, id, "Furtividade")
+	if refusal := sheetPost(t, f, id, fmt.Sprintf("/escolhas/%d/libera", row.ID), ""); !strings.Contains(refusal, "Trocar") {
+		t.Errorf("liberar com a conta sobrando devia apontar o Trocar, e a recusa foi %q", refusal)
+	}
+
+	barbarian, barbarianID := barbaro(t, 3)
+	if refusal := powerCommand(t, barbarian, barbarianID, barbarianIncrease+"strength", ""); refusal != "" {
+		t.Fatalf("escolher: %q", refusal)
+	}
+	slot := levelPickRow(t, barbarian, barbarianID, "strength")
+	if refusal := sheetPost(t, barbarian, barbarianID, fmt.Sprintf("/escolhas/%d/libera", slot.ID), ""); !strings.Contains(refusal, "Trocar") {
+		t.Errorf("a escolha que ocupa vaga não se libera, e a recusa foi %q", refusal)
+	}
+}

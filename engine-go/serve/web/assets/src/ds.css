@@ -1000,9 +1000,16 @@
   }
   .ds-level-line {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
+  }
+  /* A base curta é o que decide a quebra: pela largura do texto, a descrição longa de uma
+     automática jogaria a etiqueta sempre para a linha de baixo. */
+  .ds-level-text {
+    flex: 1 1 8rem;
+    min-width: 0;
   }
   .ds-level-line[data-automatic] .ds-row-title {
     color: var(--ds-ink-2);
@@ -1016,6 +1023,7 @@
     flex: none;
     align-items: center;
     gap: 0.375rem;
+    margin-left: auto;
   }
   button.ds-stat {
     width: 100%;

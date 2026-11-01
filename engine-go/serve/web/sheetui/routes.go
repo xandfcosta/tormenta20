@@ -97,6 +97,7 @@ func Routes(r chi.Router, s Scene) {
 	// TROCAR é o único jeito de mudar uma escolha feita: ela nunca fica vazia.
 	r.Post("/personagens/{id}/escolhas/{escolha}/troca/{poder}", s.sheetCommand(swapChoice))
 	r.Post("/personagens/{id}/escolhas/{escolha}/troca/{poder}/{opcao}", s.sheetCommand(swapChoice))
+	r.Post("/personagens/{id}/escolhas/{escolha}/libera", s.sheetCommand(freeChoice))
 	r.Post("/personagens/{id}/poderes/origem/{beneficio}", s.sheetCommand(pickOriginBenefit))
 	r.Post("/personagens/{id}/poderes/raca/{habilidade}/{opcao}", s.sheetCommand(pickRaceAbility))
 	r.Post("/personagens/{id}/poderes/variante/{variante}", s.sheetCommand(pickRaceVariant))
