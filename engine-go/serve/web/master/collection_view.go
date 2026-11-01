@@ -361,7 +361,9 @@ func spellMeta(m book.Spell) string {
 	parts := []string{
 		"Execução: " + book.CastingName(m.Execution),
 		"Alcance: " + book.RangeName(m.Range),
-		"Duração: " + m.Duration,
+	}
+	if duration := book.DurationName(m.Duration); duration != "" {
+		parts = append(parts, "Duração: "+duration)
 	}
 	if m.Resistance != "" {
 		parts = append(parts, "Resistência: "+m.Resistance)

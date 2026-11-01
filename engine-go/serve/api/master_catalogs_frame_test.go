@@ -98,3 +98,22 @@ func TestTheClassPowerCountLeadsToThatManyPowers(t *testing.T) {
 		}
 	}
 }
+
+// A duração da magia é escrita como o livro escreve, e não como a chave que o motor
+// lê. "definida" não sai: é a magia cuja duração o próprio texto diz.
+func TestTheSpellDurationComesOutWrittenAndNotAsAKey(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t20.local")
+
+	body := pedeNoMestre(t, s, gm, "GET", "/mestre/magias", "").Body.String()
+	for _, written := range []string{"Duração: instantânea", "Duração: 1 dia", "Duração: cena"} {
+		if !strings.Contains(body, written) {
+			t.Errorf("nenhuma magia diz %q", written)
+		}
+	}
+	for _, key := range []string{"Duração: instantanea", "Duração: dia", "Duração: definida"} {
+		if strings.Contains(body, key) {
+			t.Errorf("a tela escreveu a chave: %q", key)
+		}
+	}
+}
