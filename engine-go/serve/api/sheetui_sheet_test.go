@@ -89,21 +89,16 @@ func TestTheLevelStepRaisesTheClassAndNotOnlyTheTotal(t *testing.T) {
 	}
 }
 
-// DESCER uma classe de nível 1 é recusado: levá-la a zero apagaria a classe, e
-// apagar classe é outra coisa — não tem gesto nesta tela e não pode acontecer
-// por acidente num botão de menos.
-func TestTheLevelStepDoesNotEraseALevelOneClass(t *testing.T) {
+// A primeira classe não sai: foi ela que deu os PV iniciais, as perícias e as proficiências.
+func TestTheLevelStepDoesNotEraseTheFirstClass(t *testing.T) {
 	f, id := sheetOf(t, "Aprendiz", 1)
 
 	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/Arcanista/-1", id), "")
 
 	refusal := sceneRefusal(rec.Body.String())
-	if refusal == "" {
-		t.Fatal("desceu uma classe de nível 1: a classe teria sumido da ficha")
-	}
-	if !strings.Contains(refusal, "apagaria a classe") {
-		t.Errorf("a recusa não diz o que ia acontecer: %q", refusal)
+	if !strings.Contains(refusal, "primeira classe") {
+		t.Errorf("a recusa não diz por que a classe fica: %q", refusal)
 	}
 }
 

@@ -90,11 +90,11 @@ func (s Scene) Load(ctx context.Context, ownerID int64, query string) (View, err
 	return v, nil
 }
 
-// searchFields são os quatro campos que a busca indexa: nome, classe primária,
+// searchFields são os quatro campos que a busca indexa: nome, classes,
 // origem e raças. Buscar por RAÇA é o que faz "anao" achar o anão, e é o caso
 // que a regra de acento existe para servir.
 func searchFields(c sheet.CharacterDTO) []string {
-	return []string{c.Name, primaryClass(c), book.OriginLabel(c.Origin), racesInLine(c)}
+	return []string{c.Name, ClassesOf(c), book.OriginLabel(c.Origin), racesInLine(c)}
 }
 
 // HeroCardOf é função LIVRE e não método da cena, e a razão é a regra da menor
@@ -163,20 +163,13 @@ func heroPlate(c sheet.CharacterDTO) string {
 	return plate
 }
 
-// classOrOrigin: a classe primária com o nível, ou a origem para quem ainda
-// não tem classe. É o "cargo" do herói na lista.
+// classOrOrigin: as classes com o nível, ou a origem para quem ainda não tem classe. É o
+// "cargo" do herói na lista.
 func classOrOrigin(c sheet.CharacterDTO) string {
 	if len(c.Classes) == 0 {
 		return book.OriginLabel(c.Origin)
 	}
-	return c.Classes[0].ClassName + " " + strconv.FormatInt(c.Classes[0].Level, 10)
-}
-
-func primaryClass(c sheet.CharacterDTO) string {
-	if len(c.Classes) == 0 {
-		return ""
-	}
-	return c.Classes[0].ClassName
+	return ClassesOf(c)
 }
 
 func ClassesOf(c sheet.CharacterDTO) string {

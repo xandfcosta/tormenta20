@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
 	"t20engine/serve/web/ui"
@@ -59,6 +60,8 @@ type View struct {
 	// DEGRAU DE NÍVEL: o nível de um personagem é a SOMA dos níveis de classe, e
 	// subir um nível é escolher QUAL classe o recebe.
 	AsClasses []sheetClass
+	// OtherClasses são as classes do livro em que ele ainda pode entrar (p35).
+	OtherClasses []string
 	// Identity é quem o personagem é, linha a linha, para o ⋯ da ficha.
 	Identity []identityLine
 	// Tabs são as sete da ficha, com a ativa marcada. Ver `Tabs`.
@@ -116,10 +119,13 @@ type sheetClass struct {
 	Name  string
 	Level int64
 	// CanRaise e CanLower são a elegibilidade do livro, e elas são POR CLASSE
-	// e não do personagem: descer uma classe de nível 1 a apagaria, e subir com
+	// e não do personagem: a primeira classe não desce do 1º nível, e subir com
 	// o total em 20 (p32) passaria do teto.
 	CanRaise bool
 	CanLower bool
+	// Leaves diz que descer tira a classe da ficha: ela não é a primeira e está no 1º
+	// nível. O gesto pergunta antes, porque um toque não apaga uma classe.
+	Leaves bool
 }
 
 // Tab é uma das sete seções da ficha.
@@ -192,22 +198,23 @@ func (s Scene) Load(
 	}
 	card := characters.HeroCardOf(s.deps.Catalogs(), dto)
 	v := View{
-		ID:        dto.ID,
-		Name:      dto.Name,
-		Version:   row.Updatedat,
-		Initials:  card.Monogram,
-		Gradient:  card.Gradient,
-		Role:      card.Role,
-		Summary:   card.Summary,
-		Level:     dto.Level,
-		Defense:   card.DefenseVs,
-		PV:        withTempPool(downed(vital(dto.HpCurrent, dto.HpMax), dto.ActiveConditions), sheet.TempHpTarget, dto.ActiveEffects),
-		PM:        withTempPool(vital(dto.MpCurrent, dto.MpMax), sheet.TempMpTarget, dto.ActiveEffects),
-		NoMana:    dto.MpMax == 0,
-		Classes:   card.Classes,
-		AsClasses: stepClasses(dto),
-		Identity:  identityOf(dto, card.Classes),
-		ActiveTab: aba,
+		ID:           dto.ID,
+		Name:         dto.Name,
+		Version:      row.Updatedat,
+		Initials:     card.Monogram,
+		Gradient:     card.Gradient,
+		Role:         card.Role,
+		Summary:      card.Summary,
+		Level:        dto.Level,
+		Defense:      card.DefenseVs,
+		PV:           withTempPool(downed(vital(dto.HpCurrent, dto.HpMax), dto.ActiveConditions), sheet.TempHpTarget, dto.ActiveEffects),
+		PM:           withTempPool(vital(dto.MpCurrent, dto.MpMax), sheet.TempMpTarget, dto.ActiveEffects),
+		NoMana:       dto.MpMax == 0,
+		Classes:      card.Classes,
+		AsClasses:    stepClasses(dto),
+		OtherClasses: otherClasses(dto),
+		Identity:     identityOf(dto, card.Classes),
+		ActiveTab:    aba,
 
 		Proficiencies: proficiencyGroupsOf(dto),
 	}
@@ -257,23 +264,46 @@ func sheetRoute(id int64, aba string) string {
 // errado na classe, e só aparece quando alguém for usar um poder que não veio.
 //
 // SUBIR exige que o TOTAL caiba em 20 (p32) — o teto é do personagem, não da
-// classe. DESCER exige que a classe tenha mais de um nível: levá-la a zero
-// apagaria a classe, que é outra coisa e não tem gesto nesta tela.
+// classe. DESCER do 1º nível tira a classe da ficha, e a primeira nunca sai.
 func stepClasses(dto sheet.CharacterDTO) []sheetClass {
 	var total int64
 	for _, cl := range dto.Classes {
 		total += cl.Level
 	}
 	classes := make([]sheetClass, 0, len(dto.Classes))
-	for _, cl := range dto.Classes {
+	for i, cl := range dto.Classes {
+		leaves := i > 0 && cl.Level == 1
 		classes = append(classes, sheetClass{
 			Name:     cl.ClassName,
 			Level:    cl.Level,
 			CanRaise: total < 20,
-			CanLower: cl.Level > 1,
+			CanLower: cl.Level > 1 || leaves,
+			Leaves:   leaves,
 		})
 	}
 	return classes
+}
+
+// otherClasses são as classes do livro que a ficha ainda não tem. Vazio no teto, porque a
+// classe nova contaria o 21º nível.
+func otherClasses(dto sheet.CharacterDTO) []string {
+	var total int64
+	owned := map[string]bool{}
+	for _, cl := range dto.Classes {
+		total += cl.Level
+		owned[cl.ClassName] = true
+	}
+	if total >= 20 {
+		return nil
+	}
+	_, classes, _ := book.CharacterCatalogs()
+	names := make([]string, 0, len(classes))
+	for _, class := range classes {
+		if !owned[class.Name] {
+			names = append(names, class.Name)
+		}
+	}
+	return names
 }
 
 // thatCan filtra as classes elegíveis para um sentido do degrau.
@@ -287,13 +317,14 @@ func thatCan(classes []sheetClass, step int) []sheetClass {
 	return eligible
 }
 
-// directStep é o comando de quem só tem UMA classe elegível — o caso comum.
+// directStep é o comando do `−` de quem só tem UMA classe que desce, sem apagá-la.
 //
-// Vazio quando há mais de uma: aí o gesto abre a escolha, porque adivinhar qual
-// classe recebe o nível é o defeito que o `stepClasses` descreve.
+// Vazio no resto, e aí o gesto abre a escolha. O `+` nunca é direto: subir de nível é onde
+// se escolhe outra classe (p35), e adivinhar qual classe recebe o nível é o defeito que o
+// `stepClasses` descreve.
 func directStep(v View, step int) string {
 	eligible := thatCan(v.AsClasses, step)
-	if len(eligible) != 1 {
+	if step > 0 || len(eligible) != 1 || eligible[0].Leaves {
 		return ""
 	}
 	return stepCommand(v, eligible[0].Name, step)
@@ -397,6 +428,11 @@ func sheetPostWith(v View, path, value string) string {
 // quebra no dia em que uma classe nova chegar.
 func stepCommand(v View, class string, step int) string {
 	return sheetPost(v, fmt.Sprintf("/nivel/%s/%d", url.PathEscape(class), step))
+}
+
+// enterClassCommand escreve o `@post` de entrar numa classe nova.
+func enterClassCommand(v View, class string) string {
+	return sheetPost(v, fmt.Sprintf("/classes/%s/entra", url.PathEscape(class)))
 }
 
 // proficiencyCommand escreve o `@post` de ligar ou desligar uma categoria.

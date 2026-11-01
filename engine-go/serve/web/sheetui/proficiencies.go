@@ -136,7 +136,9 @@ func savedProficiencies(blob string) map[string]bool {
 func proficiencySources(dto sheet.CharacterDTO) map[string][]string {
 	ofClass := book.ProficienciesByClass()
 	sources := map[string][]string{everyoneStartsWith: {everyoneSourceLabel}}
-	for _, cl := range dto.Classes {
+	// SÓ A PRIMEIRA CLASSE: "não ganha as perícias treinadas ou proficiências da nova classe"
+	// (p35). As outras não entram no padrão, e por isso o "Restaurar" não as dá.
+	for _, cl := range dto.Classes[:min(1, len(dto.Classes))] {
 		concede := ofClass[cl.ClassName]
 		for _, key := range concede {
 			sources[key] = append(sources[key], cl.ClassName)
