@@ -64,11 +64,7 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 		t.Fatalf("semear personagem: %v", err)
 	}
 	seedPowerChoices(t, s, id, classPowers, "{}")
-	if err := s.queries.CreateClass(ctx, sqlcgen.CreateClassParams{
-		Characterid: id, Classname: className, Level: int64(classLevel),
-	}); err != nil {
-		t.Fatalf("semear classe: %v", err)
-	}
+	seedClasse(t, s, id, className, int64(classLevel))
 	if _, err := s.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
 		Characterid: id, Catalogspellid: spellID, Prepared: 1, Learnedat: dbvalue.NowISO(),
 	}); err != nil {

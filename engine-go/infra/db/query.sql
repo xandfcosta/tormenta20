@@ -46,7 +46,9 @@ SELECT EXISTS (
 SELECT race FROM character_races WHERE characterId = ? ORDER BY id ASC;
 
 -- name: ListClassesByCharacter :many
-SELECT className, level FROM character_classes WHERE characterId = ? ORDER BY id ASC;
+SELECT CAST(ref AS TEXT) AS className, COUNT(*) AS level FROM character_level_choices
+WHERE characterId = ? AND kind = 'class'
+GROUP BY ref ORDER BY MIN(COALESCE(level, 1000000)), MIN(id);
 
 -- name: ListExpertisesByCharacter :many
 SELECT name, attribute, trained, custom FROM character_expertises WHERE characterId = ? ORDER BY name ASC;
@@ -117,8 +119,9 @@ SELECT characterId, race FROM character_races
 WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
 
 -- name: ListClassesByCharacters :many
-SELECT characterId, className, level FROM character_classes
-WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
+SELECT characterId, CAST(ref AS TEXT) AS className, COUNT(*) AS level FROM character_level_choices
+WHERE characterId IN (sqlc.slice('ids')) AND kind = 'class'
+GROUP BY characterId, ref ORDER BY characterId, MIN(COALESCE(level, 1000000)), MIN(id);
 
 -- name: ListItemsByCharacters :many
 SELECT characterId, id, catalogId, name, quantity, slots, equipped, improvements, material
@@ -198,10 +201,6 @@ UPDATE characters SET updatedAt = sqlc.arg('updatedAt') WHERE id = sqlc.arg('id'
 UPDATE characters SET level = sqlc.arg('level'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 
--- name: SetCharacterClassLevel :execrows
-UPDATE character_classes SET level = sqlc.arg('level')
-WHERE characterId = sqlc.arg('characterId') AND className = sqlc.arg('className');
-
 -- name: SetCharacterAttributes :exec
 -- The six base attributes, written together: point-buy (book p17) is one
 -- spread and not six numbers, so a partial write would be a spread nobody chose.
@@ -240,9 +239,6 @@ RETURNING id;
 -- name: CreateRace :exec
 INSERT INTO character_races (characterId, race) VALUES (?, ?);
 
--- name: CreateClass :exec
-INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?);
-
 -- name: SetCharacterChoices :exec
 UPDATE characters SET
   originChoices        = COALESCE(sqlc.narg('originChoices'), originChoices),
@@ -272,8 +268,15 @@ DELETE FROM character_level_choices WHERE id = ?;
 -- name: ListCharacterIDs :many
 SELECT id FROM characters ORDER BY id ASC;
 
--- name: DeleteClass :exec
-DELETE FROM character_classes WHERE characterId = ? AND className = ?;
+-- name: AddClassLevel :exec
+INSERT INTO character_level_choices (characterId, kind, ref) VALUES (?, 'class', ?);
+
+-- name: DeleteLastClassLevel :exec
+DELETE FROM character_level_choices WHERE id = (
+  SELECT last.id FROM character_level_choices last
+  WHERE last.characterId = ? AND last.kind = 'class' AND last.ref = ?
+  ORDER BY COALESCE(last.level, 1000000) DESC, last.id DESC LIMIT 1
+);
 
 -- name: GetActiveEffectMeta :one
 SELECT id, characterId FROM active_effects WHERE id = ? LIMIT 1;

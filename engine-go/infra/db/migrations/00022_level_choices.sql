@@ -25,6 +25,20 @@ CREATE TABLE character_level_choices (
 );
 CREATE INDEX idx_character_level_choices_characterId ON character_level_choices(characterId);
 
+-- Um nivel por linha, e a primeira classe recebe os primeiros, porque foi ela que deu os PV
+-- iniciais (p35). A ordem de quem tem mais de uma classe nao esta registrada, e por isso a
+-- linha tambem e estimada. `character_classes` sai: o nivel de uma classe e a contagem delas.
+WITH RECURSIVE levels(rowId, characterId, className, level, nth) AS (
+  SELECT id, characterId, className, level, 1 FROM character_classes WHERE level >= 1
+  UNION ALL
+  SELECT rowId, characterId, className, level, nth + 1 FROM levels WHERE nth < level
+)
+INSERT INTO character_level_choices (characterId, level, kind, ref, estimated)
+SELECT characterId, ROW_NUMBER() OVER (PARTITION BY characterId ORDER BY rowId, nth), 'class', className, 1
+FROM levels ORDER BY characterId, rowId, nth;
+
+DROP TABLE character_classes;
+
 INSERT INTO character_level_choices (characterId, kind, ref, estimated)
 SELECT c.id, 'power', power.value, 1
 FROM characters c, json_each(c.classPowers) power
@@ -43,6 +57,17 @@ ALTER TABLE characters DROP COLUMN powerchoices;
 
 -- +goose Down
 -- +goose StatementBegin
+CREATE TABLE character_classes (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  characterId INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  className   TEXT NOT NULL,
+  level       INTEGER NOT NULL,
+  UNIQUE (characterId, className)
+);
+INSERT INTO character_classes (characterId, className, level)
+SELECT characterId, ref, COUNT(*) FROM character_level_choices
+WHERE kind = 'class' GROUP BY characterId, ref ORDER BY characterId, MIN(COALESCE(level, 1000000)), MIN(id);
+
 ALTER TABLE characters ADD COLUMN classPowers TEXT NOT NULL DEFAULT '[]';
 ALTER TABLE characters ADD COLUMN powerChoices TEXT NOT NULL DEFAULT '{}';
 

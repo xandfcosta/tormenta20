@@ -38,9 +38,10 @@ func (p Plays) LevelClass(
 		return err
 	}
 	found := false
-	var total int64
+	var total, currentLevel int64
 	for i := range dto.Classes {
 		if dto.Classes[i].ClassName == class {
+			currentLevel = dto.Classes[i].Level
 			dto.Classes[i].Level = level
 			found = true
 		}
@@ -53,10 +54,15 @@ func (p Plays) LevelClass(
 		return fmt.Errorf("as classes somariam o nível %d, e o 20º é o último (p35)", total)
 	}
 	return p.inTx(ctx, "mudar o nível de "+class, func(q *sqlcgen.Queries) error {
-		if _, err := q.SetCharacterClassLevel(ctx, sqlcgen.SetCharacterClassLevelParams{
-			Level: level, CharacterId: row.ID, ClassName: class,
-		}); err != nil {
-			return fmt.Errorf("gravar o nível %d de %s: %w", level, class, err)
+		for ; currentLevel < level; currentLevel++ {
+			if err := q.AddClassLevel(ctx, sqlcgen.AddClassLevelParams{Characterid: row.ID, Ref: class}); err != nil {
+				return fmt.Errorf("gravar um nível de %s: %w", class, err)
+			}
+		}
+		for ; currentLevel > level; currentLevel-- {
+			if err := q.DeleteLastClassLevel(ctx, sqlcgen.DeleteLastClassLevelParams{Characterid: row.ID, Ref: class}); err != nil {
+				return fmt.Errorf("tirar um nível de %s: %w", class, err)
+			}
 		}
 		if err := q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
 			Level: total, UpdatedAt: dbvalue.NowISO(), ID: row.ID,

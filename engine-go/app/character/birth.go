@@ -64,10 +64,10 @@ func (b Births) Create(
 		}
 	}
 	for _, c := range body.Classes {
-		if err := q.CreateClass(ctx, sqlcgen.CreateClassParams{
-			Characterid: id, Classname: c.ClassName, Level: c.Level,
-		}); err != nil {
-			return 0, fmt.Errorf("gravar a classe %q: %w", c.ClassName, err)
+		for range c.Level {
+			if err := q.AddClassLevel(ctx, sqlcgen.AddClassLevelParams{Characterid: id, Ref: c.ClassName}); err != nil {
+				return 0, fmt.Errorf("gravar a classe %q: %w", c.ClassName, err)
+			}
 		}
 	}
 	// TODA ficha nasce com as vinte e nove perícias do livro, treinadas ou não:

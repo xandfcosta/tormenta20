@@ -38,7 +38,6 @@ var dumpTables = []string{
 	"users",
 	"campaigns",
 	"characters",
-	"character_classes",
 	"character_races",
 	"character_expertises",
 	"character_items",

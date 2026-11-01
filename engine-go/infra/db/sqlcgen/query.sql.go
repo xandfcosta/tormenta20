@@ -26,6 +26,20 @@ func (q *Queries) AddCharacterConditional(ctx context.Context, arg AddCharacterC
 	return err
 }
 
+const addClassLevel = `-- name: AddClassLevel :exec
+INSERT INTO character_level_choices (characterId, kind, ref) VALUES (?, 'class', ?)
+`
+
+type AddClassLevelParams struct {
+	Characterid int64  `json:"characterid"`
+	Ref         string `json:"ref"`
+}
+
+func (q *Queries) AddClassLevel(ctx context.Context, arg AddClassLevelParams) error {
+	_, err := q.db.ExecContext(ctx, addClassLevel, arg.Characterid, arg.Ref)
+	return err
+}
+
 const addItemEnchant = `-- name: AddItemEnchant :exec
 INSERT INTO character_item_enchants (itemId, enchantId) VALUES (?, ?)
 `
@@ -418,21 +432,6 @@ func (q *Queries) CreateCharacter(ctx context.Context, arg CreateCharacterParams
 	return id, err
 }
 
-const createClass = `-- name: CreateClass :exec
-INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?)
-`
-
-type CreateClassParams struct {
-	Characterid int64  `json:"characterid"`
-	Classname   string `json:"classname"`
-	Level       int64  `json:"level"`
-}
-
-func (q *Queries) CreateClass(ctx context.Context, arg CreateClassParams) error {
-	_, err := q.db.ExecContext(ctx, createClass, arg.Characterid, arg.Classname, arg.Level)
-	return err
-}
-
 const createExpertise = `-- name: CreateExpertise :one
 INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
 VALUES (?, ?, ?, ?, ?)
@@ -795,20 +794,6 @@ func (q *Queries) DeleteCampaignPlace(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteClass = `-- name: DeleteClass :exec
-DELETE FROM character_classes WHERE characterId = ? AND className = ?
-`
-
-type DeleteClassParams struct {
-	Characterid int64  `json:"characterid"`
-	Classname   string `json:"classname"`
-}
-
-func (q *Queries) DeleteClass(ctx context.Context, arg DeleteClassParams) error {
-	_, err := q.db.ExecContext(ctx, deleteClass, arg.Characterid, arg.Classname)
-	return err
-}
-
 const deleteEffectByID = `-- name: DeleteEffectByID :exec
 DELETE FROM active_effects WHERE id = ?
 `
@@ -861,6 +846,24 @@ DELETE FROM character_items WHERE id = ?
 
 func (q *Queries) DeleteItem(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteItem, id)
+	return err
+}
+
+const deleteLastClassLevel = `-- name: DeleteLastClassLevel :exec
+DELETE FROM character_level_choices WHERE id = (
+  SELECT last.id FROM character_level_choices last
+  WHERE last.characterId = ? AND last.kind = 'class' AND last.ref = ?
+  ORDER BY COALESCE(last.level, 1000000) DESC, last.id DESC LIMIT 1
+)
+`
+
+type DeleteLastClassLevelParams struct {
+	Characterid int64  `json:"characterid"`
+	Ref         string `json:"ref"`
+}
+
+func (q *Queries) DeleteLastClassLevel(ctx context.Context, arg DeleteLastClassLevelParams) error {
+	_, err := q.db.ExecContext(ctx, deleteLastClassLevel, arg.Characterid, arg.Ref)
 	return err
 }
 
@@ -2366,7 +2369,9 @@ func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]C
 }
 
 const listClassesByCharacter = `-- name: ListClassesByCharacter :many
-SELECT className, level FROM character_classes WHERE characterId = ? ORDER BY id ASC
+SELECT CAST(ref AS TEXT) AS className, COUNT(*) AS level FROM character_level_choices
+WHERE characterId = ? AND kind = 'class'
+GROUP BY ref ORDER BY MIN(COALESCE(level, 1000000)), MIN(id)
 `
 
 type ListClassesByCharacterRow struct {
@@ -2398,8 +2403,9 @@ func (q *Queries) ListClassesByCharacter(ctx context.Context, characterid int64)
 }
 
 const listClassesByCharacters = `-- name: ListClassesByCharacters :many
-SELECT characterId, className, level FROM character_classes
-WHERE characterId IN (/*SLICE:ids*/?) ORDER BY id ASC
+SELECT characterId, CAST(ref AS TEXT) AS className, COUNT(*) AS level FROM character_level_choices
+WHERE characterId IN (/*SLICE:ids*/?) AND kind = 'class'
+GROUP BY characterId, ref ORDER BY characterId, MIN(COALESCE(level, 1000000)), MIN(id)
 `
 
 type ListClassesByCharactersRow struct {
@@ -3563,25 +3569,6 @@ func (q *Queries) SetCharacterChoices(ctx context.Context, arg SetCharacterChoic
 		arg.ID,
 	)
 	return err
-}
-
-const setCharacterClassLevel = `-- name: SetCharacterClassLevel :execrows
-UPDATE character_classes SET level = ?1
-WHERE characterId = ?2 AND className = ?3
-`
-
-type SetCharacterClassLevelParams struct {
-	Level       int64  `json:"level"`
-	CharacterId int64  `json:"characterId"`
-	ClassName   string `json:"className"`
-}
-
-func (q *Queries) SetCharacterClassLevel(ctx context.Context, arg SetCharacterClassLevelParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, setCharacterClassLevel, arg.Level, arg.CharacterId, arg.ClassName)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected()
 }
 
 const setCharacterLevel = `-- name: SetCharacterLevel :exec

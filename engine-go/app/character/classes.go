@@ -14,7 +14,7 @@ import (
 
 // EnterClass dá ao personagem o 1º nível numa classe nova (multiclasse, p35).
 //
-// Grava só a linha da classe, e é isso que a regra pede: PV e PM derivam dos níveis de
+// Grava só a linha do nível, e é isso que a regra pede: PV e PM derivam dos níveis de
 // classe, e "não ganha as perícias treinadas ou proficiências da nova classe".
 func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class string) error {
 	_, classes, _ := book.CharacterCatalogs()
@@ -36,9 +36,7 @@ func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class stri
 		return fmt.Errorf("as classes somariam o nível %d, e o 20º é o último (p35)", total+1)
 	}
 	return p.inTx(ctx, "entrar em "+class, func(q *sqlcgen.Queries) error {
-		if err := q.CreateClass(ctx, sqlcgen.CreateClassParams{
-			Characterid: row.ID, Classname: class, Level: 1,
-		}); err != nil {
+		if err := q.AddClassLevel(ctx, sqlcgen.AddClassLevelParams{Characterid: row.ID, Ref: class}); err != nil {
 			return fmt.Errorf("gravar a classe %s: %w", class, err)
 		}
 		if err := q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
@@ -76,7 +74,7 @@ func (p Plays) LeaveClass(ctx context.Context, row sqlcgen.Character, class stri
 		}
 	}
 	return p.inTx(ctx, "tirar "+class, func(q *sqlcgen.Queries) error {
-		if err := q.DeleteClass(ctx, sqlcgen.DeleteClassParams{Characterid: row.ID, Classname: class}); err != nil {
+		if err := q.DeleteLastClassLevel(ctx, sqlcgen.DeleteLastClassLevelParams{Characterid: row.ID, Ref: class}); err != nil {
 			return fmt.Errorf("apagar a classe %s: %w", class, err)
 		}
 		if err := q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{

@@ -51,8 +51,6 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	}{
 		{"races", `INSERT INTO character_races (characterId, race)
 			SELECT ?, race FROM character_races WHERE characterId = ?`, []any{destID, sourceID}},
-		{"classes", `INSERT INTO character_classes (characterId, className, level)
-			SELECT ?, className, level FROM character_classes WHERE characterId = ?`, []any{destID, sourceID}},
 		{"expertises", `INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
 			SELECT ?, name, attribute, trained, custom FROM character_expertises WHERE characterId = ?`, []any{destID, sourceID}},
 		{"items", `INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)

@@ -163,11 +163,12 @@ func storedChoices(t *testing.T, s *Server, id int64) (string, string) {
 
 func seedClasse(t *testing.T, s *Server, characterID int64, name string, level int64) {
 	t.Helper()
-	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
-		Characterid: characterID, Classname: name, Level: level,
-	})
-	if err != nil {
-		t.Fatalf("seed classe %q: %v", name, err)
+	for range level {
+		if err := s.queries.AddClassLevel(context.Background(), sqlcgen.AddClassLevelParams{
+			Characterid: characterID, Ref: name,
+		}); err != nil {
+			t.Fatalf("seed classe %q: %v", name, err)
+		}
 	}
 }
 

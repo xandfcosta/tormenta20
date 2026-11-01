@@ -146,7 +146,7 @@ func DiffChoiceBlobs(rows []LevelChoiceDTO, classPowers, powerChoices *string) L
 	return diff
 }
 
-// PlanLevelRows devolve as linhas como elas têm de ficar: a classe de cada nível, as
+// PlanLevelRows devolve as linhas como elas têm de ficar: os níveis em sequência, as
 // habilidades automáticas, e toda escolha situada num nível.
 //
 // A conta é idempotente, e por isso serve para tudo: subir, descer, escolher, e preencher as
@@ -179,54 +179,31 @@ func PlanLevelRows(dto CharacterDTO) []LevelChoiceDTO {
 	return append(out, situate(pending, levels, automatic)...)
 }
 
-// classLevelsOf acerta a sequência de níveis com as classes da ficha: nível que falta entra no
-// fim, e nível que sobrou sai do fim daquela classe. Devolve também para onde foi cada nível
-// antigo, porque tirar um nível do meio desce os seguintes; o que estava no nível que saiu
-// fica sem nível.
+// classLevelsOf põe os níveis em sequência: a linha de classe que ainda não tem nível vai para
+// o fim, e o buraco de um nível que saiu fecha. Devolve também para onde foi cada nível antigo,
+// e o que estava num nível que saiu fica sem nível.
 func classLevelsOf(dto CharacterDTO) ([]LevelChoiceDTO, map[int64]int64) {
-	remaining := map[string]int64{}
-	for _, class := range dto.Classes {
-		remaining[class.ClassName] = class.Level
-	}
-	byLevel := []LevelChoiceDTO{}
+	rows := []LevelChoiceDTO{}
 	for _, row := range dto.LevelChoices {
 		if row.Kind == LevelKindClass {
-			byLevel = append(byLevel, row)
+			rows = append(rows, row)
 		}
 	}
-	sort.SliceStable(byLevel, func(i, j int) bool { return byLevel[i].Level < byLevel[j].Level })
-
-	// Os primeiros níveis de cada classe ficam, para o que sobra sair do fim dela.
-	seen := map[string]int64{}
-	keep := make([]bool, len(byLevel))
-	for i, row := range byLevel {
-		seen[row.Ref]++
-		keep[i] = seen[row.Ref] <= remaining[row.Ref]
-	}
-
+	sort.SliceStable(rows, func(i, j int) bool {
+		if (rows[i].Level == 0) != (rows[j].Level == 0) {
+			return rows[j].Level == 0
+		}
+		return rows[i].Level < rows[j].Level
+	})
 	moved := map[int64]int64{}
-	out := make([]LevelChoiceDTO, 0, len(byLevel))
-	for i, row := range byLevel {
-		if !keep[i] {
-			continue
+	for i := range rows {
+		next := int64(i + 1)
+		if rows[i].Level > 0 {
+			moved[rows[i].Level] = next
 		}
-		next := int64(len(out) + 1)
-		moved[row.Level] = next
-		row.Level = next
-		out = append(out, row)
-		remaining[row.Ref]--
+		rows[i].Level = next
 	}
-	// A ORDEM DA FICHA para o que falta, e é o que preenche as fichas antigas: a primeira
-	// classe recebe os primeiros níveis, porque foi ela que deu os PV iniciais (p35).
-	for _, class := range dto.Classes {
-		for remaining[class.ClassName] > 0 {
-			out = append(out, LevelChoiceDTO{
-				Level: int64(len(out) + 1), Kind: LevelKindClass, Ref: class.ClassName,
-			})
-			remaining[class.ClassName]--
-		}
-	}
-	return out, moved
+	return rows, moved
 }
 
 // automaticLevelRows são as habilidades automáticas, no nível do personagem em que a classe

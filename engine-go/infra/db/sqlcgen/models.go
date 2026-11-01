@@ -122,13 +122,6 @@ type Character struct {
 	CampaignId           sql.NullInt64  `json:"campaignId"`
 }
 
-type CharacterClass struct {
-	ID          int64  `json:"id"`
-	Characterid int64  `json:"characterid"`
-	Classname   string `json:"classname"`
-	Level       int64  `json:"level"`
-}
-
 type CharacterConditional struct {
 	Characterid   int64  `json:"characterid"`
 	Conditionalid string `json:"conditionalid"`
