@@ -43,6 +43,10 @@ func main() {
 	defer func() { _ = database.Close() }()
 
 	srv := api.NewServer(cfg, database, primeCatalogs())
+	// Situa as escolhas por nível de toda ficha: a migração não tem o catálogo para isso.
+	if err := srv.SyncLevelChoices(context.Background()); err != nil {
+		log.Fatalf("escolhas por nível: %v", err)
+	}
 	// UM roteador: as cenas, os estáticos, as fontes, a saúde e a API em `/api`
 	// saem todos do `WebRouter`, já comprimidos. O `cmd` não monta rota nenhuma —
 	// ele abre o banco, prima os catálogos e escuta.

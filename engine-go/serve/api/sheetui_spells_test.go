@@ -24,8 +24,8 @@ func arcanistaDeNivel(t *testing.T, level int64) (sceneFixture, int64) {
 		Strength: 0, Dexterity: 2, Constitution: 2, Intelligence: 4, Wisdom: 1, Charisma: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: `{"Arcanista":{"caminho":"bruxo"}}`,
-		PowerChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: `{"Arcanista":{"caminho":"bruxo"}}`,
+		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear a conjuradora: %v", err)
@@ -207,13 +207,13 @@ func TestASpellGrantedByAPowerShowsForWhoDoesNotCast(t *testing.T) {
 		Strength: 4, Dexterity: 1, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}",
-		PowerChoices: `{"class.barbaro.totem-espiritual":["corvo"]}`,
-		CreatedAt:    dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}",
+		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o totemista: %v", err)
 	}
+	seedPowerChoices(t, f.s, id, "[]", `{"class.barbaro.totem-espiritual":["corvo"]}`)
 	seedClasse(t, f.s, id, "Bárbaro", 3)
 
 	screen := spellScreen(t, f, id)

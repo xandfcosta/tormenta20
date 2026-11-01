@@ -37,8 +37,7 @@ func focusedAtTheTable(t *testing.T, origin, originChoices string) (sceneFixture
 		OwnerId: f.player, Name: "Focada", Origin: origin, Level: 5,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: originChoices, ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: originChoices, ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear a ficha: %v", err)
@@ -57,11 +56,8 @@ func focusedAtTheTable(t *testing.T, origin, originChoices string) (sceneFixture
 
 func storedClassPowers(t *testing.T, f sceneFixture, id int64) []string {
 	t.Helper()
-	row, err := f.s.queries.GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler a ficha: %v", err)
-	}
-	return sheet.UnmarshalStrings(row.Classpowers)
+	powers, _ := storedChoices(t, f.s, id)
+	return sheet.UnmarshalStrings(powers)
 }
 
 // rollsTwoDice diz se o teste com o Foco em Perícia rolou os dois d20.

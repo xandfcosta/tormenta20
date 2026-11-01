@@ -49,8 +49,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o combatente: %v", err)

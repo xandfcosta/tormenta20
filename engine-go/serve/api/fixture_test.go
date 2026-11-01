@@ -7,8 +7,10 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"t20engine/app/character"
 	"t20engine/app/session"
 	"t20engine/domain/live"
+	"t20engine/domain/sheet"
 	"testing"
 
 	"t20engine/infra/db/sqlcgen"
@@ -138,13 +140,35 @@ func (f sceneFixture) scene(t *testing.T) {
 // seedClasse põe uma classe na ficha, e ela é a bancada de SEIS arquivos — por
 // isso mora aqui. Ajudante compartilhado hospedado no arquivo de UM caso só
 // aparece quando esse caso morre.
+// seedPowerChoices grava os poderes e as escolhas pelo mesmo caminho do gesto.
+func seedPowerChoices(t *testing.T, s *Server, id int64, powers, choices string) {
+	t.Helper()
+	if err := s.characterPlays().SaveChoices(context.Background(), id, character.ChoiceWrite{
+		ClassPowers: &powers, PowerChoices: &choices,
+	}); err != nil {
+		t.Fatalf("semear os poderes da ficha %d: %v", id, err)
+	}
+}
+
+// storedChoices devolve os poderes e as escolhas como a ficha os lê.
+func storedChoices(t *testing.T, s *Server, id int64) (string, string) {
+	t.Helper()
+	rows, err := s.queries.ListLevelChoicesByCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatalf("ler as escolhas da ficha %d: %v", id, err)
+	}
+	dto := sheet.WithLevelChoices(sheet.CharacterDTO{}, sheet.LevelChoicesFrom(rows))
+	return dto.ClassPowers, dto.PowerChoices
+}
+
 func seedClasse(t *testing.T, s *Server, characterID int64, name string, level int64) {
 	t.Helper()
-	err := s.queries.CreateClass(context.Background(), sqlcgen.CreateClassParams{
-		Characterid: characterID, Classname: name, Level: level,
-	})
-	if err != nil {
-		t.Fatalf("seed classe %q: %v", name, err)
+	for range level {
+		if err := s.queries.AddClassLevel(context.Background(), sqlcgen.AddClassLevelParams{
+			Characterid: characterID, Ref: name,
+		}); err != nil {
+			t.Fatalf("seed classe %q: %v", name, err)
+		}
 	}
 }
 

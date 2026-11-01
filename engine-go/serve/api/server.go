@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -73,6 +74,11 @@ type Server struct {
 // é pior de ler — o `t.TempDir()` falha com "directory not empty", porque o
 // SQLite recria `-wal`/`-shm` depois do `RemoveAll`, e a mensagem fala da
 // LIMPEZA e não do defeito. Trabalho novo em goroutine traz o contador de volta.
+
+// SyncLevelChoices situa as escolhas por nível de toda ficha. Ver `character.SyncAllLevelChoices`.
+func (s *Server) SyncLevelChoices(ctx context.Context) error {
+	return s.characterPlays().SyncAllLevelChoices(ctx)
+}
 
 // CloseLiveStreams encerra os fluxos da mesa, e é o que deixa o `Shutdown` terminar.
 //

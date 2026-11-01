@@ -169,11 +169,8 @@ func TestTheDialogOffersWhatFitsInEachTab(t *testing.T) {
 }
 func chosen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
-	}
-	return row.Classpowers
+	powers, _ := storedChoices(t, f.s, id)
+	return powers
 }
 
 // AS VAGAS DE PODER são uma por nível a partir do 2º (p33).
@@ -266,8 +263,9 @@ func TestWritingOneChoiceDoesNotEraseTheOthers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ler o personagem: %v", err)
 	}
-	if !strings.Contains(row.Classpowers, "ataque-poderoso") {
-		t.Errorf("o poder escolhido sumiu quando a distribuição foi gravada: %s", row.Classpowers)
+	powers, _ := storedChoices(t, f.s, id)
+	if !strings.Contains(powers, "ataque-poderoso") {
+		t.Errorf("o poder escolhido sumiu quando a distribuição foi gravada: %s", powers)
 	}
 	if !strings.Contains(row.Raceattributechoices, "strength") {
 		t.Errorf("a distribuição não foi gravada: %s", row.Raceattributechoices)
@@ -290,15 +288,12 @@ func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
 			t.Fatalf("escolher Aumento de Atributo em %s foi recusado: %q", opcao, refusal)
 		}
 	}
-	row, err := f.s.sceneCore().Queries().GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler o personagem: %v", err)
+	powers, picks := storedChoices(t, f.s, id)
+	if powers != `["`+poder+`"]` {
+		t.Errorf("o poder repetível devia entrar UMA vez na lista de poderes, e ficou %s", powers)
 	}
-	if row.Classpowers != `["`+poder+`"]` {
-		t.Errorf("o poder repetível devia entrar UMA vez em classPowers, e ficou %s", row.Classpowers)
-	}
-	if row.Powerchoices != `{"`+poder+`":["strength","wisdom"]}` {
-		t.Errorf("as duas escolhas deviam estar em powerChoices, e ficou %s", row.Powerchoices)
+	if picks != `{"`+poder+`":["strength","wisdom"]}` {
+		t.Errorf("as duas escolhas deviam estar nas escolhas do poder, e ficou %s", picks)
 	}
 
 	// As duas escolhas ocupam as duas vagas: o terceiro poder não cabe.

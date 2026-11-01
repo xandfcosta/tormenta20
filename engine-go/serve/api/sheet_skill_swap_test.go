@@ -19,8 +19,7 @@ func swapperAtTheTable(t *testing.T, class, origin, originChoices string) (scene
 		OwnerId: f.player, Name: "Trocadora", Origin: origin, Level: 5, Charisma: 3, Wisdom: 1,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: originChoices, ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: originChoices, ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear a ficha: %v", err)

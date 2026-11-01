@@ -63,8 +63,7 @@ func bardOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 		Strength: 2, Dexterity: 3, Constitution: 2, Intelligence: 1, Wisdom: 0, Charisma: 4,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o bardo: %v", err)

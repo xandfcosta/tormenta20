@@ -23,13 +23,13 @@ INSERT INTO characters (
   ownerId, name, origin, god, godPower, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
-  secondaryRaceChoices, originChoices, classPowers, classChoices, powerChoices,
+  secondaryRaceChoices, originChoices, classChoices,
   activeConditions, sourceCharacterId, campaignId, createdAt, updatedAt)
 SELECT
   ownerId, name, origin, god, godPower, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
-  secondaryRaceChoices, originChoices, classPowers, classChoices, powerChoices,
+  secondaryRaceChoices, originChoices, classChoices,
   activeConditions, ?, ?, ?, ?
 FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	if err != nil {
@@ -51,8 +51,6 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	}{
 		{"races", `INSERT INTO character_races (characterId, race)
 			SELECT ?, race FROM character_races WHERE characterId = ?`, []any{destID, sourceID}},
-		{"classes", `INSERT INTO character_classes (characterId, className, level)
-			SELECT ?, className, level FROM character_classes WHERE characterId = ?`, []any{destID, sourceID}},
 		{"expertises", `INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
 			SELECT ?, name, attribute, trained, custom FROM character_expertises WHERE characterId = ?`, []any{destID, sourceID}},
 		{"items", `INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
@@ -61,6 +59,11 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 			SELECT ?, source, catalogId, scope, modifiers, ? FROM active_effects WHERE characterId = ?`, []any{destID, now, sourceID}},
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
+		// O HISTÓRICO POR NÍVEL vem junto: é daqui que saem os poderes da ficha, e a cópia
+		// tem de poder trocar a escolha de um nível como o original.
+		{"level choices", `INSERT INTO character_level_choices (characterId, level, kind, ref, pick, estimated)
+			SELECT ?, level, kind, ref, pick, estimated FROM character_level_choices WHERE characterId = ? ORDER BY id`,
+			[]any{destID, sourceID}},
 		// O DANO vem junto, e é o que faz um herói ferido entrar na mesa ferido.
 		// Ele era copiado nas colunas `hpCurrent`/`mpCurrent` do INSERT acima,
 		// que saíram na 00015: o poço é derivado e o que se guarda é a dívida.

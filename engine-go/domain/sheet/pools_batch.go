@@ -111,6 +111,18 @@ func partialSheetsForPools(
 		partials[c.ID] = CharacterScalarsFrom(c)
 	}
 
+	levelChoices, err := q.ListLevelChoicesByCharacters(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("ler as escolhas de %d fichas: %w", len(ids), err)
+	}
+	rowsByCharacter := map[int64][]LevelChoiceDTO{}
+	for _, row := range levelChoices {
+		rowsByCharacter[row.Characterid] = append(rowsByCharacter[row.Characterid], levelChoiceFrom(row))
+	}
+	for id, dto := range partials {
+		partials[id] = WithLevelChoices(dto, rowsByCharacter[id])
+	}
+
 	races, err := q.ListRacesByCharacters(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("ler as raças de %d fichas: %w", len(ids), err)
