@@ -160,7 +160,7 @@ func (s Scene) handleDraftPage(w http.ResponseWriter, r *http.Request) {
 	// conexão SSE aberta aqui ficaria esperando um evento que ninguém publica.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   "Rascunho · " + view.Place,
-		Signals: tableSignalsExpr(),
+		Signals: tableSignalsExpr(s.deps.BuildRevision()),
 	}, draftBody(view))
 }
 

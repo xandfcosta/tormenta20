@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"runtime/debug"
 	"t20engine/infra/httpio"
 
 	"t20engine/domain/catalog"
@@ -35,10 +36,27 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 		degraded = append(degraded, "activations")
 	}
 	if len(degraded) == 0 {
-		httpio.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+		httpio.WriteJSON(w, http.StatusOK, map[string]any{"status": "ok", "version": s.revision})
 		return
 	}
-	httpio.WriteJSON(w, http.StatusOK, map[string]any{"status": "degraded", "degraded": degraded})
+	httpio.WriteJSON(w, http.StatusOK, map[string]any{
+		"status": "degraded", "degraded": degraded, "version": s.revision,
+	})
+}
+
+// buildRevision é o commit que o `go build` carimbou no binário. Vazio em teste e no
+// `go run`, que não carimbam, e aí o aviso de versão nova simplesmente não acende.
+func buildRevision() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	for _, setting := range info.Settings {
+		if setting.Key == "vcs.revision" {
+			return setting.Value
+		}
+	}
+	return ""
 }
 
 // HealthProbe é o `/health` na RAIZ, ao lado do `/api/health`.

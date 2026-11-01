@@ -23,6 +23,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 		data-init={ seesTheBoardAway(v) }
 		data-on:storage__window={ watchesTheBoardWindow(v) }
 	>
+		@newVersionNotice()
 		@gmHeader(v)
 		@gmAttack(v)
 		@tempestadeSkillTest(v)

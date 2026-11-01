@@ -42,6 +42,7 @@ type tableRules struct {
 	bus      *events.Bus
 	// liveStreamsClosing fecha quando o processo vai encerrar.
 	liveStreamsClosing <-chan struct{}
+	revision           func() string
 	campaign           campaignRules
 	sheet              sheetRules
 	// sheetScene é o adaptador da FICHA, e a Mesa o carrega por uma razão só: o
@@ -59,7 +60,7 @@ func (s *Server) tableRules() tableRules {
 		db:      s.db,
 		queries: s.queries, catalogs: s.catalogs,
 		boards: s.boards, sessions: s.sessions, presence: s.presence,
-		sse: s.sse, bus: s.bus, liveStreamsClosing: s.liveStreamsClosing,
+		sse: s.sse, bus: s.bus, liveStreamsClosing: s.liveStreamsClosing, revision: func() string { return s.revision },
 		campaign: s.campaignRules(), sheet: s.sheetRules(),
 		sheetScene: s.sheetHost(), sheetPlays: s.characterPlays(),
 	}

@@ -60,6 +60,9 @@ func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 // LiveStreamsClosing fecha quando o processo vai encerrar.
 func (h tableHost) LiveStreamsClosing() <-chan struct{} { return h.rules.liveStreamsClosing }
 
+// BuildRevision é o commit deste binário.
+func (h tableHost) BuildRevision() string { return h.rules.revision() }
+
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────

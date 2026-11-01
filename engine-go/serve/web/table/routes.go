@@ -107,7 +107,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
-		Signals: tableSignalsExpr(),
+		Signals: tableSignalsExpr(s.deps.BuildRevision()),
 		System:  system,
 		// O FLUXO LEVA A MARCA: é ele que redesenha o cabeçalho a cada tique, e
 		// sem ela o stream mandaria o cabeçalho de hoje para a sessão do jogador.
@@ -131,7 +131,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 // `data-signals`): o HTML minuscula a chave, e um `data-bind="gabaritoTamanho"`
 // liga um sinal NOVO, vazio, ao lado do que se queria. Os que só vivem dentro de
 // expressão (`$command_error`) mantêm a caixa.
-func tableSignalsExpr() string {
+func tableSignalsExpr(revision string) string {
 	return "{" + strings.Join([]string{
 		// `error` e `command_error` são DOIS sinais e não um. Um só faria a
 		// recusa de "Adicionar grupo" acender a frase vermelha dentro da caixa
@@ -268,6 +268,8 @@ func tableSignalsExpr() string {
 		// enquanto a janela própria estiver com elas. Quem o escreve é o
 		// `storage`, e não o clique — ver `watchesTheNotesWindow`.
 		"notes_saving: false, notes_error: '', notes_window: false",
+		// A versão com que a página nasceu, e a que o fluxo diz. Ver `new_version.go`.
+		buildSignals(revision),
 	}, ", ") + "}"
 }
 

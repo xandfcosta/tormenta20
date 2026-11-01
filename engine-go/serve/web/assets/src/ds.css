@@ -5423,6 +5423,18 @@
   .ds-sheet-tabs {
     display: none;
   }
+  .ds-new-version {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--ds-r-control);
+    background: var(--ds-sunk);
+    font-size: var(--ds-t-sm);
+    font-weight: 600;
+  }
   .ds-alert {
     margin: 0;
     padding: 0.5rem 0.75rem;

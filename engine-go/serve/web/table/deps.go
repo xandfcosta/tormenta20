@@ -50,6 +50,8 @@ type Deps interface {
 	// LiveStreamsClosing fecha quando o processo vai encerrar: é a deixa para o
 	// fluxo sair e não prender o desligamento.
 	LiveStreamsClosing() <-chan struct{}
+	// BuildRevision é o commit deste binário, para a página aberta saber que ficou velha.
+	BuildRevision() string
 	// CurrentUserID é quem está pedindo, pelo ID e não pelo usuário inteiro —
 	// o tipo do usuário é do hospedeiro, e uma porta que o devolvesse não é
 	// porta.
