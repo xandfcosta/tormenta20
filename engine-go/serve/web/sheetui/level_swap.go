@@ -35,6 +35,24 @@ func swapChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 	return s.settlePickEffects(r, row, dto, swap.Removed, swap.Added)
 }
 
+// freeChoice libera a escolha que impede o atributo de baixar. A perícia continua treinada: o
+// Especialista escolhe entre as treinadas, e não as treina (p73).
+func freeChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	rowID, err := strconv.ParseInt(chi.URLParam(r, "escolha"), 10, 64)
+	if err != nil {
+		return fmt.Errorf("escolha %q não é um número", chi.URLParam(r, "escolha"))
+	}
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	freed, err := sheet.FreeLevelChoice(dto, rowID)
+	if err != nil {
+		return err
+	}
+	return s.plays.ApplyLevelSwap(r.Context(), row, freed)
+}
+
 // settlePickEffects leva ao treino e às proficiências o que entrou e saiu. A proficiência marcada à
 // mão fica: só sai a que o poder dava e que nada mais concede (ALE-510).
 func (s Scene) settlePickEffects(
@@ -177,6 +195,10 @@ func swapGet(v View, rowID int64) string {
 
 func swapPost(v View, rowID int64, target string) string {
 	return sheetPost(v, fmt.Sprintf("/escolhas/%d/troca/%s", rowID, target))
+}
+
+func freePost(v View, rowID int64) string {
+	return sheetPost(v, fmt.Sprintf("/escolhas/%d/libera", rowID))
 }
 
 // byLevelGet troca entre as duas vistas da aba.

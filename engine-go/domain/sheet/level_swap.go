@@ -192,3 +192,30 @@ func refuseOwnedOption(dto CharacterDTO, power, option string, target LevelChoic
 	}
 	return nil
 }
+
+// pickCanBeFreed é a exceção ao "só se troca" (decisão do dono): a escolha contada por atributo não
+// ocupa vaga, e com a conta cheia ela é o que impede o atributo de baixar. Uma escolha só nunca
+// impede, porque o mínimo é 1 (p73).
+func pickCanBeFreed(dto CharacterDTO, row LevelChoiceDTO) bool {
+	power, chooses := book.PowerWithChoice(row.Ref)
+	if row.Kind != LevelKindPick || !chooses || power.Choice.CountAttribute == "" {
+		return false
+	}
+	limit, err := ChoiceLimit(dto, *power.Choice)
+	picks := len(PowerPicks(dto.PowerChoices)[row.Ref])
+	return err == nil && picks > 1 && picks >= limit
+}
+
+// FreeLevelChoice planeja liberar uma escolha, e recusa a que não se libera.
+func FreeLevelChoice(dto CharacterDTO, rowID int64) (LevelSwap, error) {
+	for _, row := range dto.LevelChoices {
+		if row.ID != rowID {
+			continue
+		}
+		if !pickCanBeFreed(dto, row) {
+			return LevelSwap{}, fmt.Errorf("%s (%s) não se libera, porque não impede nada: para mudar, use Trocar, em Por nível", row.Ref, row.Pick)
+		}
+		return LevelSwap{RemoveIDs: []int64{rowID}, Removed: []LevelChoiceDTO{row}}, nil
+	}
+	return LevelSwap{}, fmt.Errorf("a escolha %d não é uma escolha desta ficha", rowID)
+}

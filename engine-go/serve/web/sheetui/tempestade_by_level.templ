@@ -14,7 +14,7 @@ templ tempestadeByLevel(v View) {
 		@ds.List(levelEntryTitle(entry), entry.Tier) {
 			for _, line := range entry.Lines {
 				<div class="ds-row ds-level-line" data-automatic?={ line.Automatic }>
-					<span class="min-w-0">
+					<span class="ds-level-text">
 						<span class="ds-row-title">{ line.Name }</span>
 						if line.Detail != "" {
 							<span class="ds-row-meta ds-level-detail">{ line.Detail }</span>
@@ -29,6 +29,11 @@ templ tempestadeByLevel(v View) {
 							}
 							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": swapGet(v, line.RowID)}) {
 								Trocar
+							}
+							if line.Freeable {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": freePost(v, line.RowID)}) {
+									Liberar
+								}
 							}
 						}
 					</span>

@@ -85,8 +85,8 @@ func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) 
 		return err
 	}
 	if len(picks) > limit {
-		return fmt.Errorf("%s escolhe %s (%s sem bônus temporários, mínimo 1), e ficariam %d: para mudar, use Trocar, em Por nível",
-			power.Name, writtenSkills(limit), book.AttributeLabel(power.Choice.CountAttribute), len(picks))
+		return fmt.Errorf("%s escolhe %s (%s sem bônus temporários, mínimo 1), e ficariam %d: libere %d, em Por nível",
+			power.Name, writtenSkills(limit), book.AttributeLabel(power.Choice.CountAttribute), len(picks), len(picks)-limit)
 	}
 	return nil
 }
