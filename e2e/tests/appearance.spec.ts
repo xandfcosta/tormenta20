@@ -45,7 +45,8 @@ import { DS_TEXT_FLOOR, DS_TOUCH_FLOOR, measureDsText, measureDsTouchTargets } f
 // contados no navegador:
 //
 //   /personagens          441 textos
-//   /campanhas/nova         6 textos   ← a cena mais enxuta do app
+//   /campanhas/nova         6 textos
+//   /livro/ler              3 textos   ← a cena mais enxuta do app
 //   qualquer 404            1 texto
 //
 // Dois fica abaixo da cena mais magra, o leitor do livro, que tem três textos e é só a
