@@ -91,6 +91,18 @@ export async function putATokenOnTheMap(page: Page): Promise<void> {
   await expect(page.locator('.board-token'), 'a peça não entrou no mapa').toHaveCount(1)
 }
 
+/**
+ * Põe a primeira linha da fila na vez dela. É só na iniciativa que o mestre propõe
+ * movimento com custo: fora dela, toda peça pousa direto.
+ */
+export async function putTheTokenOnTurn(page: Page, table: string): Promise<void> {
+  for (const path of ['/cena/iniciar/acao', '/iniciativa/proxima-vez']) {
+    const reply = await page.request.post(table + path, { headers: { 'datastar-request': 'true' }, data: {} })
+    expect(reply.ok(), `${path} respondeu ${reply.status()}`).toBeTruthy()
+  }
+  await expect(page.locator('.board-token-on-turn'), 'nenhuma peça entrou na vez').toHaveCount(1)
+}
+
 /** Abre o tabuleiro pela TELA, que é o gesto de verdade. */
 export async function openTheBoard(page: Page, table: string): Promise<void> {
   await page.goto(table, { waitUntil: 'domcontentloaded' })
