@@ -169,6 +169,9 @@ templ powerPickRow(v View, power powerChoice, filtered bool) {
 		<div class="min-w-0">
 			<div class="ds-row-title">{ power.Name }</div>
 			<div class="ds-row-meta">{ power.Source }</div>
+			if power.Requires != "" {
+				<div class="ds-pick-detail">{ "Pré-requisito: " + power.Requires }</div>
+			}
 			<div class="ds-pick-detail">{ power.Detail }</div>
 			if len(power.Options) > 0 {
 				<div class="ds-options ds-pick-options">

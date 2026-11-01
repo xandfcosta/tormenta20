@@ -51,7 +51,9 @@ type powerRow struct {
 	Name   string
 	Source string
 	Detail string
-	Page   int
+	// Requires é o pré-requisito por extenso, vazio quando não há.
+	Requires string
+	Page     int
 	// Kind é `instant`, `stance`, `passive`, `triggered-passive` ou "" para o
 	// poder que não tem entrada no registro de ativações.
 	Kind  string
@@ -140,7 +142,7 @@ func powerRowFor(
 ) powerRow {
 	row := powerRow{
 		ID: power.ID, Name: power.Name, Source: shortSource(power.Source),
-		Detail: power.Detail, Page: power.Page, Glyph: "BookOpen", Command: power.ID,
+		Detail: power.Detail, Requires: book.PowerRequirements(power.ID), Page: power.Page, Glyph: "BookOpen", Command: power.ID,
 	}
 	spec := book.ActivationOf(power.ID, power.Name)
 	if spec == nil {

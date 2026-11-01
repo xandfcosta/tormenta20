@@ -261,3 +261,21 @@ func TestEveryCollectionTabOffersTheBook(t *testing.T) {
 		t.Error("sem livro a página impressa sumiu do cartão — ela não depende do PDF")
 	}
 }
+
+// O cartão mostra o que o catálogo sabe: o que se testa para resistir (Relâmpago, p203) e o
+// pré-requisito do poder (Acuidade com Arma, p124).
+func TestTheCatalogCardsSayWhatTheBookSays(t *testing.T) {
+	spells := pedeNaCenaComLivro(t, "/mestre/magias").Body.String()
+	if !strings.Contains(spells, "Resistência: Reflexos reduz à metade") {
+		t.Error("o cartão da magia não diz o que se testa para resistir")
+	}
+	powers := pedeNaCenaComLivro(t, "/mestre/poderes").Body.String()
+	_, card, found := strings.Cut(powers, ">Acuidade com Arma<")
+	if !found {
+		t.Fatal("o cartão da Acuidade com Arma não apareceu")
+	}
+	card, _, _ = strings.Cut(card, "</article>")
+	if !strings.Contains(card, "Pré-requisito: Des 1") {
+		t.Errorf("o cartão do poder não diz o pré-requisito: %s", card)
+	}
+}

@@ -55,6 +55,7 @@ type Spell struct {
 	Execution  string         `json:"execution"`
 	Range      string         `json:"range"`
 	Duration   string         `json:"duration"`
+	SaveType   string         `json:"saveType"`
 	Resistance string         `json:"resistance,omitempty"`
 	BaseEffect string         `json:"baseEffect"`
 	Augments   []SpellAugment `json:"augments"`
@@ -71,7 +72,9 @@ type Power struct {
 	Name        string
 	Source      string
 	Description string
-	BookPage    int
+	// Requires é o pré-requisito por extenso, vazio quando não há.
+	Requires string
+	BookPage int
 }
 
 // Item é a entrada do catálogo de itens — o que a vitrine do mestre mostra E o
@@ -260,7 +263,8 @@ func FlattenedPowers() []Power {
 	}
 	for _, p := range poderesDeClasse {
 		outside = append(outside, Power{
-			ID: p.ID, Name: p.Name, Source: p.ClassName, Description: p.Description, BookPage: p.BookPage,
+			ID: p.ID, Name: p.Name, Source: p.ClassName, Description: p.Description,
+			Requires: PowerRequirements(p.ID), BookPage: p.BookPage,
 		})
 	}
 
@@ -273,7 +277,7 @@ func FlattenedPowers() []Power {
 	}]("general-powers") {
 		outside = append(outside, Power{
 			ID: "general." + p.ID, Name: p.Name, Source: "Geral · " + p.Kind,
-			Description: p.Description, BookPage: p.BookPage,
+			Description: p.Description, Requires: PowerRequirements(p.ID), BookPage: p.BookPage,
 		})
 	}
 

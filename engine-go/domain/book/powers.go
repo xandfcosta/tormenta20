@@ -49,9 +49,14 @@ type ClassPower struct {
 
 // PowerPrerequisite é um pré-requisito. `IDs` é "um destes" (o `ID` é um só).
 type PowerPrerequisite struct {
-	Kind string   `json:"kind"`
-	ID   string   `json:"id"`
-	IDs  []string `json:"ids"`
+	Kind        string   `json:"kind"`
+	ID          string   `json:"id"`
+	IDs         []string `json:"ids"`
+	Expertise   string   `json:"expertise"`
+	Attr        string   `json:"attr"`
+	Min         int      `json:"min"`
+	Label       string   `json:"label"`
+	Description string   `json:"description"`
 }
 
 // PowerChoice é a escolha de um poder, como o catálogo a escreve.

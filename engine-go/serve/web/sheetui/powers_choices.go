@@ -163,6 +163,8 @@ type powerChoice struct {
 	ID     string
 	Name   string
 	Detail string
+	// Requires é o pré-requisito por extenso. Ele informa e não trava: quem decide é a mesa.
+	Requires string
 	// Source é "Classe" ou "Geral", para a lista dizer de onde o poder vem.
 	Source string
 	Chosen bool
@@ -356,7 +358,7 @@ func thatChoosePowers(
 			continue
 		}
 		outside = append(outside, powerChoice{
-			ID: p.ID, Name: p.Name, Detail: p.Description, Source: "Classe",
+			ID: p.ID, Name: p.Name, Detail: p.Description, Requires: book.PowerRequirements(p.ID), Source: "Classe",
 			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID], owned),
 		})
 	}
@@ -365,7 +367,7 @@ func thatChoosePowers(
 			continue
 		}
 		choice := powerChoice{
-			ID: p.ID, Name: p.Name, Detail: p.Description, Source: powerGeneralSource(p),
+			ID: p.ID, Name: p.Name, Detail: p.Description, Requires: book.PowerRequirements(p.ID), Source: powerGeneralSource(p),
 			Chosen: contemTraco(chosen, p.ID) || len(picks[p.ID]) > 0,
 		}
 		// O poder geral que pede escolha (Foco em Perícia, Foco em Arma) se

@@ -106,6 +106,9 @@ templ castGesture(v View, spell learnedSpellRow) {
 templ spellSheet(v View, spell learnedSpellRow) {
 	@ds.Dialog(spellSheetID(spell), spell.Name, spellSheetFoot(v, spell)) {
 		<p class="ds-row-meta">{ spellSheetMeta(spell) }</p>
+		if spell.Resistance != "" {
+			<p class="ds-row-meta">{ "Resistência: " + spell.Resistance }</p>
+		}
 		<p class="ds-card-text">{ spell.Effect }</p>
 		if v.Spells.RequiresPrep {
 			@ds.Switch("Preparada", spell.Prepared, templ.Attributes{"data-on:change": sheetPost(v, "/magias/prepara/"+spell.Command)})

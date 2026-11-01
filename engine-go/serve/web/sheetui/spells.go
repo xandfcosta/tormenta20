@@ -73,9 +73,11 @@ type learnedSpellRow struct {
 	Execution string
 	Range     string
 	Duration  string
-	Effect    string
-	Page      int
-	Command   string
+	// Resistance é o que se testa para resistir, vazio na magia sem resistência.
+	Resistance string
+	Effect     string
+	Page       int
+	Command    string
 	// CostCut avisa que este custo vai sair cortado, e por quem — ver
 	// `costCutNote`. Vazio quando nada corta.
 	CostCut string
@@ -179,7 +181,8 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			CD:        s.spellCdOf(dto, spell),
 			Augments:  augmentRowsOf(learned.CatalogSpellID, spell, castable),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
-			Effect: fromBook.BaseEffect, Page: fromBook.BookPage,
+			Resistance: book.SpellResistanceWritten(fromBook),
+			Effect:     fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:  learned.CatalogSpellID,
 			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
