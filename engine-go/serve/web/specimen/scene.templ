@@ -5,41 +5,94 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A FOLHA VIVA desenha o kit inteiro DUAS vezes, uma por modo, lado a lado.
+// A FOLHA VIVA desenha o kit inteiro uma vez, no modo que o seletor escolhe, dividido
+// em seções: cada peça com o nome, quando usar e a amostra.
 //
-// Lado a lado, e não só o seletor: assim uma visita mede os dois modos — o
-// guarda de contraste lê o que está desenhado, e com um modo por vez ele mediria
-// metade do sistema em cada execução. O seletor continua aqui porque é ele que
-// prova o caminho de verdade, o do cookie.
+// Uma visita mede um modo só, e por isso o registro `appearance_scenes.json` tem esta
+// página duas vezes, uma por modo. É ali que o kit é medido no escuro, e tirar a
+// segunda linha deixaria o escuro sem guarda, sem nada avisar.
 templ specimen(mode ui.ColorMode) {
-	<div class="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6">
-		<div class="grid gap-2">
-			<p class="ds-card-text">
-				O kit do sistema Tempestade. Toda tela migrada se monta com estas peças, e peça nova entra aqui antes de entrar numa tela.
-			</p>
-			@colorModeRow(mode)
-		</div>
-		<div class="grid gap-6 lg:grid-cols-2">
-			@modePanel("light", "Claro")
-			@modePanel("dark", "Escuro")
+	<div class="ds-specimen">
+		<header class="ds-header">
+			<a href="/" class="ds-header-back" aria-label="Voltar para o início">
+				@ui.Icon("ChevronLeft", "ds-icon")
+			</a>
+			<h1 class="ds-header-title">Sistema</h1>
+			<div class="ds-header-acts">
+				@ds.ColorModeSwitch(mode, "/sistema")
+			</div>
+		</header>
+		@ds.SectionNav("Seções do kit") {
+			for _, section := range specimenSections {
+				@ds.BottomNavItem(templ.SafeURL("#"+section.ID), "", false, nil) {
+					{ section.Title }
+				}
+			}
+		}
+		<div class="ds-specimen-body">
+			@ds.SideMenu("Seções do kit", nil) {
+				@ds.SideMenuHead("O kit")
+				for _, section := range specimenSections {
+					@ds.SideMenuLink(templ.SafeURL("#"+section.ID), "", "", false, nil) {
+						{ section.Title }
+					}
+				}
+			}
+			<main class="ds-specimen-main">
+				<div class="ds-specimen-content">
+					@actionsSection()
+					@fieldsSection()
+					@navigationSection()
+					@listsSection()
+					@numbersSection()
+					@cardsSection()
+					@feedbackSection()
+				</div>
+			</main>
 		</div>
 	</div>
 }
 
-templ colorModeRow(mode ui.ColorMode) {
-	<div class="flex flex-wrap items-center gap-2">
-		<span class="ds-row-meta">Modo desta página</span>
-		@ds.ColorModeSwitch(mode, "/sistema")
-	</div>
+// specimenSection é uma divisão do kit. O título e o id vêm de `specimenSections`, a
+// mesma lista dos dois índices.
+templ specimenSection(id string) {
+	<section class="ds-specimen-section" id={ id } aria-labelledby={ id + "-title" }>
+		<header class="ds-specimen-section-head">
+			<h2 class="ds-dialog-title" id={ id + "-title" }>{ sectionTitle(id) }</h2>
+			<p class="ds-card-text">{ sectionLede(id) }</p>
+		</header>
+		<div class="ds-specimen-grid">
+			{ children... }
+		</div>
+	</section>
 }
 
-// modePanel força um modo num pedaço da página. O `id` de cada campo leva o
-// modo, porque as duas metades desenham as mesmas peças e um `id` repetido
-// quebraria o `for=` do rótulo.
-templ modePanel(mode, title string) {
-	<section class="ds-preview grid content-start gap-4 rounded-xl p-4" data-preview={ mode } aria-label={ "Modo " + title }>
-		<h2 class="ds-dialog-title">{ title }</h2>
-		@specimenBlock("Botão") {
+// specimenPiece é uma peça: o nome, quando usar e a amostra numa moldura. `wide` ocupa
+// a linha inteira, para a peça que é larga por natureza. `bare` tira a moldura, para a
+// peça que já tem a dela.
+templ specimenPiece(name, why string, wide, bare bool) {
+	<section
+		class="ds-specimen-piece"
+		if wide {
+			data-wide
+		}
+	>
+		<h3 class="ds-specimen-name">{ name }</h3>
+		<p class="ds-specimen-why">{ why }</p>
+		<div
+			class="ds-specimen-stage"
+			if bare {
+				data-bare
+			}
+		>
+			{ children... }
+		</div>
+	</section>
+}
+
+templ actionsSection() {
+	@specimenSection("acoes") {
+		@specimenPiece("Botão", "Um primário por região; o resto é secundário ou fantasma. O destrutivo é o único vermelho preenchido.", true, false) {
 			<div class="flex flex-wrap items-center gap-2">
 				@ds.Button(ds.ButtonPrimary, nil) {
 					Rolar ataque
@@ -59,59 +112,129 @@ templ modePanel(mode, title string) {
 				}
 			</div>
 		}
-		@specimenBlock("Campo, busca e erro") {
-			<div class="grid gap-3">
-				@ds.TextField(ds.Field{ID: mode + "-name", Name: "nome", Label: "Nome do personagem", Value: "Lia Ventobravo"}, nil)
-				@ds.SearchField(mode+"-search", "Buscar poder", nil)
-				@ds.TextField(ds.Field{ID: mode + "-email", Name: "email", Label: "E-mail", Type: "email", Value: "lia@", Error: "O e-mail precisa de domínio, como lia@mesa.com"}, nil)
-			</div>
-		}
-		@specimenBlock("Abas e segmentado") {
-			<div class="grid gap-3">
-				@ds.Tabs("Abas da ficha") {
-					@ds.Tab("#", true, nil) {
-						Ficha
-					}
-					@ds.Tab("#", false, nil) {
-						Combate
-					}
-					@ds.Tab("#", false, nil) {
-						Poderes
-					}
-					@ds.Tab("#", false, nil) {
-						Magias
-					}
-				}
-				@ds.Segmented("Filtro de perícias") {
-					@ds.SegmentedOption(true, nil) {
-						Todas
-					}
-					@ds.SegmentedOption(false, nil) {
-						Treinadas
-					}
-					@ds.SegmentedOption(false, nil) {
-						Com bônus
-					}
-				}
-			</div>
-		}
-		@specimenBlock("Interruptor") {
+		@specimenPiece("Interruptor", "Liga e desliga uma coisa só, e o rótulo diz qual.", false, false) {
 			<div class="flex flex-wrap items-center gap-4">
 				@ds.Switch("Treinada", true, nil)
 				@ds.Switch("Em vigor", false, nil)
 			</div>
 		}
-		@specimenBlock("Crachá e crachá removível") {
-			<div class="flex flex-wrap items-center gap-2">
-				@ds.Badge("poder", false)
-				@ds.Badge("classe", false)
-				@ds.Badge("2 PM", true)
-				@ds.Badge("p. 128", true)
-				@ds.RemovableBadge("Abalado", "", nil)
-				@ds.RemovableBadge("Caído", "", nil)
+		@specimenPiece("Segmentado", "Uma escolha entre poucas opções, sempre à vista.", false, false) {
+			@ds.Segmented("Filtro de perícias") {
+				@ds.SegmentedOption(true, nil) {
+					Todas
+				}
+				@ds.SegmentedOption(false, nil) {
+					Treinadas
+				}
+				@ds.SegmentedOption(false, nil) {
+					Com bônus
+				}
+			}
+		}
+		@specimenPiece("Opção", "O botão que marca um valor curto: nos filtros, liga vários. Com rótulo na linha quando há mais de um grupo.", true, false) {
+			<div class="ds-catalog-filter" role="group" aria-label="Filtrar por círculo">
+				<span class="ds-field-label" aria-hidden="true">Círculo</span>
+				<div class="ds-options">
+					@ds.Option(true, nil) {
+						1º
+					}
+					@ds.Option(false, nil) {
+						2º
+					}
+					@ds.Option(false, nil) {
+						3º
+					}
+				</div>
 			</div>
 		}
-		@specimenBlock("Linha e linha da conta") {
+		@specimenPiece("Botão de filtros", "Abaixo do desktop, abre os filtros num diálogo. O número diz quantos estão ligados.", false, false) {
+			<div>
+				@ds.Button(ds.ButtonGhost, nil) {
+					Filtros · 2
+				}
+			</div>
+		}
+	}
+}
+
+templ fieldsSection() {
+	@specimenSection("campos") {
+		@specimenPiece("Campo de texto", "Com rótulo sempre visível.", false, false) {
+			@ds.TextField(ds.Field{ID: "specimen-name", Name: "nome", Label: "Nome do personagem", Value: "Lia Ventobravo"}, nil)
+		}
+		@specimenPiece("Campo com erro", "A frase troca a ajuda e diz o valor e o formato esperado.", false, false) {
+			@ds.TextField(ds.Field{ID: "specimen-email", Name: "email", Label: "E-mail", Type: "email", Value: "lia@", Error: "O e-mail precisa de domínio, como lia@mesa.com"}, nil)
+		}
+		@specimenPiece("Busca", "Campo sem rótulo visível: o ícone e o texto de exemplo dizem o que ele faz.", false, false) {
+			@ds.SearchField("specimen-search", "Buscar poder", nil)
+		}
+	}
+}
+
+templ navigationSection() {
+	@specimenSection("navegacao") {
+		@specimenPiece("Abas", "Dentro de uma tela, no desktop.", true, false) {
+			@ds.Tabs("Abas da ficha") {
+				@ds.Tab("#", true, nil) {
+					Ficha
+				}
+				@ds.Tab("#", false, nil) {
+					Combate
+				}
+				@ds.Tab("#", false, nil) {
+					Poderes
+				}
+				@ds.Tab("#", false, nil) {
+					Magias
+				}
+			}
+		}
+		@specimenPiece("Barra de baixo", "A mesma navegação no celular, fixa embaixo.", true, false) {
+			@ds.BottomNav("Abas da ficha, no celular") {
+				@ds.BottomNavItem("#", "", true, nil) {
+					Ficha
+				}
+				@ds.BottomNavItem("#", "", false, nil) {
+					Combate
+				}
+				@ds.BottomNavItem("#", "", false, nil) {
+					Poderes
+				}
+				@ds.BottomNavItem("#", "", false, nil) {
+					Magias
+				}
+			}
+		}
+		@specimenPiece("Menu lateral", "As telas de uma área, em seções, à esquerda no desktop.", false, false) {
+			@ds.SideMenu("Menu lateral de exemplo", nil) {
+				@ds.SideMenuHead("Na mesa")
+				@ds.SideMenuLink("#", "Swords", "ND do combate e XP do grupo", false, nil) {
+					Encontros
+				}
+				@ds.SideMenuHead("Catálogos")
+				@ds.SideMenuLink("#", "Skull", "Criaturas por ND, tipo e tamanho", true, nil) {
+					Bestiário
+				}
+				@ds.SideMenuLink("#", "Wand2", "As magias do livro", false, nil) {
+					Magias
+				}
+			}
+		}
+	}
+}
+
+templ listsSection() {
+	@specimenSection("listas") {
+		@specimenPiece("Lista com seções", "Cabeçalho de seção e linhas na mesma moldura.", false, true) {
+			@ds.List("", "") {
+				@ds.ListHead("1º círculo", "2")
+				@ds.Row("Armadura Arcana", "Padrão · pessoal", "", "")
+				@ds.Row("Luz", "Padrão · curto", "", "")
+				@ds.ListHead("2º círculo", "1")
+				@ds.Row("Bola de Fogo", "Padrão · médio", "", "")
+			}
+		}
+		@specimenPiece("Linha da conta", "A linha abre e mostra de onde o número vem.", false, true) {
 			@ds.List("Perícias", "total") {
 				@ds.SumRow("Acrobacia", "com poder e item", "+16", []ds.SumTerm{
 					{Label: "Destreza", Value: "+4"},
@@ -128,95 +251,137 @@ templ modePanel(mode, title string) {
 				@ds.Row("Conhecimento", "só treinada", "—", "")
 			}
 		}
-		@specimenBlock("Lista com seções") {
-			@ds.List("", "") {
-				@ds.ListHead("1º círculo", "2")
-				@ds.Row("Armadura Arcana", "Padrão · pessoal", "", "")
-				@ds.Row("Luz", "Padrão · curto", "", "")
-				@ds.ListHead("2º círculo", "1")
-				@ds.Row("Bola de Fogo", "Padrão · médio", "", "")
+	}
+}
+
+templ numbersSection() {
+	@specimenSection("numeros") {
+		@specimenPiece("Crachá", "Um dado curto. O removível é o que está ativo e pode sair.", false, false) {
+			<div class="flex flex-wrap items-center gap-2">
+				@ds.Badge("poder", false)
+				@ds.Badge("classe", false)
+				@ds.Badge("2 PM", true)
+				@ds.Badge("p. 128", true)
+				@ds.RemovableBadge("Abalado", "", nil)
+				@ds.RemovableBadge("Caído", "", nil)
+			</div>
+		}
+		@specimenPiece("Atributo", "Os seis atributos: três colunas no celular, seis no resto.", false, false) {
+			@ds.Stats() {
+				@ds.Stat("FOR", "+1")
+				@ds.Stat("DES", "+4")
+				@ds.Stat("CON", "+2")
+				@ds.Stat("INT", "+0")
+				@ds.Stat("SAB", "+1")
+				@ds.Stat("CAR", "+3")
 			}
 		}
-		@specimenBlock("Atributo e medidor") {
+		@specimenPiece("Medidor", "PV, PM e valores com ou sem máximo.", true, false) {
 			<div class="grid gap-4">
-				@ds.Stats() {
-					@ds.Stat("FOR", "+1")
-					@ds.Stat("DES", "+4")
-					@ds.Stat("CON", "+2")
-					@ds.Stat("INT", "+0")
-					@ds.Stat("SAB", "+1")
-					@ds.Stat("CAR", "+3")
-				}
 				@ds.MeterView(ds.Meter{Label: "PV", Value: 38, Max: 52, Temp: 6, Kind: ds.MeterPV})
 				@ds.MeterView(ds.Meter{Label: "PM", Value: 11, Max: 24, Kind: ds.MeterPM})
 				@ds.MeterView(ds.Meter{Label: "Deslocamento", Value: 9, Unit: "m"})
 			</div>
 		}
-		@specimenBlock("Cartão e rolagem") {
-			<div class="grid gap-3">
-				@ds.Card("Foco em Arma", ds.Badge("passivo", true)) {
-					<p class="ds-card-text">+2 nos testes de ataque com a arma escolhida.</p>
-					<div class="flex items-center justify-between gap-2">
-						@ds.Badge("Florete", false)
-						@ds.Button(ds.ButtonGhost, nil) {
-							Trocar arma
-						}
-					</div>
-				}
-				@ds.RollView(ds.Roll{
-					What:    "Ataque · Florete",
-					Total:   27,
-					Die:     "d20",
-					Natural: 12,
-					Terms:   []ds.RollTerm{{Label: "Luta", Value: 12}, {Label: "Foco em Arma", Value: 2}, {Label: "arma mágica", Value: 1}},
-					Lines:   []string{"Dano: 1d6+4 → 9 · crítico 18/×2"},
-				})
-			</div>
+	}
+}
+
+templ cardsSection() {
+	@specimenSection("cartoes") {
+		@specimenPiece("Cartão", "O bloco de uso geral.", false, true) {
+			@ds.Card("Foco em Arma", ds.Badge("passivo", true)) {
+				<p class="ds-card-text">+2 nos testes de ataque com a arma escolhida.</p>
+				<div class="flex items-center justify-between gap-2">
+					@ds.Badge("Florete", false)
+					@ds.Button(ds.ButtonGhost, nil) {
+						Trocar arma
+					}
+				</div>
+			}
 		}
-		@specimenBlock("Diálogo, aviso e vazio") {
-			<div class="grid gap-3">
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": mode + "-dialog", "command": "show-modal"}) {
+		@specimenPiece("Resultado de rolagem", "O total é o maior número da tela, e a conta vem embaixo.", false, true) {
+			@ds.RollView(ds.Roll{
+				What:    "Ataque · Florete",
+				Total:   27,
+				Die:     "d20",
+				Natural: 12,
+				Terms:   []ds.RollTerm{{Label: "Luta", Value: 12}, {Label: "Foco em Arma", Value: 2}, {Label: "arma mágica", Value: 1}},
+				Lines:   []string{"Dano: 1d6+4 → 9 · crítico 18/×2"},
+			})
+		}
+		@specimenPiece("Verbete: condição", "O verbete do livro: nome, crachás, página e corpo.", false, true) {
+			@ds.EntryCard("Abalado", sampleLinkedBadges("Medo"), samplePage("p394 ↗")) {
+				<p class="ds-entry-body">-2 em testes de perícia.</p>
+				<p class="ds-entry-more"><a href="#">Agrava para Apavorado</a></p>
+			}
+		}
+		@specimenPiece("Verbete: magia", "Com a linha de meta e o que leva a outro lugar.", false, true) {
+			@ds.EntryCard("Bola de Fogo", sampleLinkedBadges("2º círculo", "Evocação"), samplePage("p182 ↗")) {
+				<p class="ds-row-meta">Execução: Padrão · Alcance: Médio · Duração: instantânea · Resistência: metade</p>
+				<p class="ds-entry-body">Explosão de 6d6 de dano de <a class="ds-crossref" href="#">fogo</a> em todas as criaturas e objetos numa esfera de 6m de raio.</p>
+				<p class="ds-entry-more"><a href="#">3 aprimoramentos</a></p>
+			}
+		}
+		@specimenPiece("Verbete: raça", "Com as habilidades em linhas.", false, true) {
+			@ds.EntryCard("Anão", sampleBadges("-1 Des, +2 Con, +1 Sab"), samplePage("p20 ↗")) {
+				<p class="ds-row-meta">Comum · Médio · Deslocamento: 6m · Visão no escuro</p>
+				<div class="ds-entry-abilities">
+					<p><b>Devagar e Sempre</b> · Deslocamento 6m, imune a redução por armadura ou carga.</p>
+					<p><b>Duro como Pedra</b> · +3 PV no 1º nível e +1 PV por nível seguinte.</p>
+				</div>
+			}
+		}
+		@specimenPiece("Verbete: deus", "Com os campos em duas colunas.", false, true) {
+			@ds.EntryCard("Lena", sampleBadges("Positiva"), samplePage("p99 ↗")) {
+				<p class="ds-entry-body">Vida, cura, fertilidade</p>
+				<dl class="ds-entry-fields">
+					<dt>Símbolo</dt>
+					<dd>Lua crescente prateada</dd>
+					<dt>Concede</dt>
+					<dd><a class="ds-crossref" href="#">Ataque Piedoso</a>, <a class="ds-crossref" href="#">Aura Restauradora</a></dd>
+				</dl>
+			}
+		}
+	}
+}
+
+templ feedbackSection() {
+	@specimenSection("retorno") {
+		@specimenPiece("Diálogo", "Por cima da tela, com foco preso. No celular, desce até a borda de baixo.", false, false) {
+			<div>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "specimen-dialog", "command": "show-modal"}) {
 					Abrir diálogo
 				}
-				@ds.Dialog(mode+"-dialog", "Escolher poder", dialogFoot()) {
-					@ds.SearchField(mode+"-dialog-search", "Buscar", nil)
-				}
-				@ds.Toast("PM gasto: 2 (Foco em Magia)", undoButton())
-				@ds.Empty("Nenhuma magia preparada", "Escolha magias na aba Magias.")
 			</div>
-		}
-		@specimenBlock("Menu lateral") {
-			@ds.SideMenu("Menu lateral de exemplo", nil) {
-				@ds.SideMenuHead("Na mesa")
-				@ds.SideMenuLink("#", "Swords", "ND do combate e XP do grupo", false, nil) {
-					Encontros
-				}
-				@ds.SideMenuHead("Catálogos")
-				@ds.SideMenuLink("#", "Skull", "Criaturas por ND, tipo e tamanho", true, nil) {
-					Bestiário
-				}
-				@ds.SideMenuLink("#", "Wand2", "As magias do livro", false, nil) {
-					Magias
-				}
+			@ds.Dialog("specimen-dialog", "Escolher poder", dialogFoot()) {
+				@ds.SearchField("specimen-dialog-search", "Buscar", nil)
 			}
 		}
-		@specimenBlock("Barra de baixo") {
-			@ds.BottomNav("Abas da ficha, no celular") {
-				@ds.BottomNavItem("#", "", true, nil) {
-					Ficha
-				}
-				@ds.BottomNavItem("#", "", false, nil) {
-					Combate
-				}
-				@ds.BottomNavItem("#", "", false, nil) {
-					Poderes
-				}
-				@ds.BottomNavItem("#", "", false, nil) {
-					Magias
-				}
-			}
+		@specimenPiece("Aviso", "Confirma um gesto e oferece desfazer.", false, false) {
+			@ds.Toast("PM gasto: 2 (Foco em Magia)", undoButton())
 		}
-	</section>
+		@specimenPiece("Vazio", "Diz que não há nada e o que fazer.", true, false) {
+			@ds.Empty("Nenhuma magia preparada", "Escolha magias na aba Magias.")
+		}
+	}
+}
+
+// sampleBadges são crachás de texto, para os verbetes de exemplo.
+templ sampleBadges(texts ...string) {
+	for _, text := range texts {
+		@ds.Badge(text, true)
+	}
+}
+
+// sampleLinkedBadges são crachás que são elo, como a escola da magia.
+templ sampleLinkedBadges(texts ...string) {
+	for _, text := range texts {
+		<span class="ds-badge" data-variant="outline"><a class="ds-crossref" href="#">{ text }</a></span>
+	}
+}
+
+templ samplePage(text string) {
+	<a href="#">{ text }</a>
 }
 
 templ undoButton() {
@@ -234,11 +399,4 @@ templ dialogFoot() {
 			Escolher
 		}
 	</form>
-}
-
-templ specimenBlock(title string) {
-	<div class="grid gap-2">
-		<h3 class="ds-list-head px-0">{ title }</h3>
-		{ children... }
-	</div>
 }

@@ -69,6 +69,8 @@ type appearanceVisit struct {
 	// legítima: sem `LIVRO_PDF` o leitor devolve 404 de propósito. O spec PULA
 	// com motivo visível, que é diferente de medir e diferente de reprovar.
 	MayBeAbsent bool `json:"mayBeAbsent,omitempty"`
+	// ColorScheme mede a visita num modo: vazio é o claro, e `dark` é o escuro.
+	ColorScheme string `json:"colorScheme,omitempty"`
 }
 
 func TestEveryPageSceneIsMeasuredForAppearance(t *testing.T) {

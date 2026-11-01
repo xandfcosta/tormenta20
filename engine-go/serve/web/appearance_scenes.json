@@ -50,5 +50,10 @@
     ]
   },
   "admin": { "visits": [{ "address": "/admin", "session": "gm" }] },
-  "specimen": { "visits": [{ "address": "/sistema", "session": "gm" }] }
+  "specimen": {
+    "visits": [
+      { "address": "/sistema", "session": "gm" },
+      { "address": "/sistema", "session": "gm", "colorScheme": "dark" }
+    ]
+  }
 }

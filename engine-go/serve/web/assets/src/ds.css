@@ -106,22 +106,6 @@
 :root[data-mode='dark'] .scene-ds {
   color-scheme: dark;
 }
-/* A METADE FORÇADA da folha viva: ela desenha as mesmas peças num modo fixo,
- * e é por isso que os tokens são `light-dark()` — eles se resolvem no elemento
- * que os USA, então um `color-scheme` aqui dentro basta para a metade inteira
- * trocar de modo sem um segundo bloco de tokens. */
-.ds-preview {
-  background: var(--ds-bg);
-  color: var(--ds-ink);
-  border: 1px solid var(--ds-line);
-}
-.ds-preview[data-preview='light'] {
-  color-scheme: light;
-}
-.ds-preview[data-preview='dark'] {
-  color-scheme: dark;
-}
-
 @media (pointer: coarse) {
   .scene-ds {
     --ds-h-control: 2.75rem;
@@ -3854,14 +3838,6 @@
       padding: 1rem 1.25rem;
     }
   }
-  /* Na folha viva o menu aparece em toda largura: ela mostra a peça, e num quadro
-   * dela a borda e o recuo de quem encosta na lateral da tela não têm sentido. */
-  .ds-preview .ds-side-menu {
-    display: grid;
-    gap: 2px;
-    padding: 0;
-    border-right: 0;
-  }
   /* AS DUAS COLUNAS do catálogo são CONSULTA DE CONTÊINER, e não de mídia: a
    * pergunta é "cabe o verbete ao lado da lista?", que é sobre o espaço da área
    * principal. Por mídia ela não era monotônica — a 1000px de janela, sem o
@@ -4004,7 +3980,7 @@
     gap: 0.75rem;
     align-items: start;
   }
-  .ds-catalog-card {
+  .ds-entry-card {
     display: grid;
     gap: 0.375rem;
     min-width: 0;
@@ -4017,75 +3993,75 @@
   /* Dentro da caixa do elo o cartão perde a moldura: a caixa já é a moldura, e
    * seriam duas bordas concêntricas com três milímetros entre elas. E perde o nome,
    * que está no título da caixa. */
-  #entry-in-dialog .ds-catalog-card {
+  #entry-in-dialog .ds-entry-card {
     padding: 0;
     border: 0;
     background: none;
   }
-  #entry-in-dialog .ds-catalog-title {
+  #entry-in-dialog .ds-entry-title {
     display: none;
   }
-  .ds-catalog-head {
+  .ds-entry-head {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.375rem 0.5rem;
   }
-  .ds-catalog-title {
+  .ds-entry-title {
     font-weight: 700;
   }
-  .ds-catalog-page {
+  .ds-entry-page {
     margin-left: auto;
   }
-  .ds-catalog-body,
-  .ds-catalog-abilities,
-  .ds-catalog-fields,
-  .ds-catalog-augments {
+  .ds-entry-body,
+  .ds-entry-abilities,
+  .ds-entry-fields,
+  .ds-entry-augments {
     margin: 0;
     font-size: var(--ds-t-sm);
     line-height: var(--ds-lh-sm);
   }
-  .ds-catalog-abilities {
+  .ds-entry-abilities {
     display: grid;
     gap: 0.25rem;
     color: var(--ds-ink-2);
   }
-  .ds-catalog-abilities b {
+  .ds-entry-abilities b {
     color: var(--ds-ink);
     font-weight: 600;
   }
-  .ds-catalog-fields {
+  .ds-entry-fields {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr);
     gap: 0.25rem 0.75rem;
   }
-  .ds-catalog-fields dt {
+  .ds-entry-fields dt {
     color: var(--ds-ink-2);
   }
-  .ds-catalog-augments {
+  .ds-entry-augments {
     display: grid;
     gap: 0.5rem;
     padding: 0;
     list-style: none;
   }
-  .ds-catalog-augments > li {
+  .ds-entry-augments > li {
     display: grid;
     grid-template-columns: 3.5rem minmax(0, 1fr);
     align-items: baseline;
     gap: 0.75rem;
   }
-  .ds-catalog-augments b {
+  .ds-entry-augments b {
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
   /* O que leva a outro lugar a partir do cartão: os aprimoramentos, "Agrava para",
    * os poderes da classe. */
-  .ds-catalog-more {
+  .ds-entry-more {
     margin: 0;
     font-size: var(--ds-t-sm);
     line-height: var(--ds-lh-sm);
   }
-  .ds-catalog-more > :is(a, button) {
+  .ds-entry-more > :is(a, button) {
     padding: 0;
     border: 0;
     background: none;
@@ -4095,7 +4071,7 @@
     text-decoration: none;
     cursor: pointer;
   }
-  .ds-catalog-more > :is(a, button):hover {
+  .ds-entry-more > :is(a, button):hover {
     text-decoration: underline;
   }
   /* O ELO para outro verbete: o sublinhado é PONTILHADO como o do selo de página,
@@ -4109,7 +4085,7 @@
   .ds-crossref:hover {
     color: var(--ds-action);
   }
-  .ds-catalog-more > .ds-crossref {
+  .ds-entry-more > .ds-crossref {
     color: var(--ds-action);
   }
   /* NO TOQUE, o que está sozinho numa linha é alvo de 44×44 de verdade (o elo
@@ -4117,12 +4093,12 @@
    * devolvem à cabeça do cartão a altura que o alvo tomou: o crachá e a página
    * continuam do tamanho deles, e a área a mais cai no espaço vazio em volta. */
   @media (pointer: coarse) {
-    .ds-catalog-more > :is(a, button) {
+    .ds-entry-more > :is(a, button) {
       display: inline-flex;
       align-items: center;
       min-height: var(--ds-h-control);
     }
-    .ds-catalog-page > a,
+    .ds-entry-page > a,
     .ds-badge > .ds-crossref {
       display: inline-flex;
       align-items: center;
@@ -4131,8 +4107,121 @@
       min-height: var(--ds-h-control);
       margin-block: -0.75rem;
     }
-    .ds-catalog-page > a {
+    .ds-entry-page > a {
       justify-content: flex-end;
+    }
+  }
+
+  /* A FOLHA VIVA (ALE-541, mockup `sistema.html`): uma amostra de cada peça, dividida
+   * em seções, com um índice à esquerda no desktop e numa fileira no celular. */
+  .ds-specimen {
+    display: grid;
+    flex: 1;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    min-height: 0;
+  }
+  .ds-specimen-body {
+    display: grid;
+    min-height: 0;
+  }
+  .ds-specimen-main {
+    min-height: 0;
+    padding: 1rem;
+    overflow: auto;
+  }
+  .ds-specimen-content {
+    display: grid;
+    gap: 2rem;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+  }
+  .ds-specimen > .ds-section-nav {
+    border-top: 0;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-specimen > .ds-section-nav > a {
+    align-content: center;
+    min-height: var(--ds-h-control);
+    font-size: var(--ds-t-sm);
+  }
+  .ds-specimen-section {
+    display: grid;
+    gap: 1rem;
+    scroll-margin-top: 1rem;
+  }
+  .ds-specimen-section + .ds-specimen-section {
+    padding-top: 2rem;
+    border-top: 1px solid var(--ds-line);
+  }
+  .ds-specimen-section-head {
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ds-specimen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+    align-items: start;
+    gap: 1.5rem;
+  }
+  .ds-specimen-piece {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .ds-specimen-piece[data-wide] {
+    grid-column: 1 / -1;
+  }
+  .ds-specimen-name {
+    margin: 0;
+    font-size: var(--ds-t-md);
+    line-height: var(--ds-lh-md);
+    font-weight: 600;
+  }
+  .ds-specimen-why {
+    margin: 0 0 0.375rem;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+  }
+  .ds-specimen-stage {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-specimen-stage[data-bare] {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  /* A amostra do menu aparece em toda largura: a folha mostra a peça, e numa moldura
+   * a borda e o recuo de quem encosta na lateral da tela não têm sentido. */
+  .ds-specimen-stage > .ds-side-menu {
+    display: grid;
+    gap: 2px;
+    max-width: 15rem;
+    padding: 0;
+    border-right: 0;
+  }
+  @media (min-width: 64rem) {
+    .ds-specimen {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .ds-specimen-body {
+      grid-template-columns: 15rem minmax(0, 1fr);
+    }
+    .ds-specimen-main {
+      padding: 1.5rem 2rem;
+    }
+  }
+  @media (max-width: 40rem) {
+    .ds-specimen > .ds-header > .ds-header-acts {
+      width: 100%;
+      margin-left: 0;
     }
   }
 

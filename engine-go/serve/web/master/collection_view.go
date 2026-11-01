@@ -177,6 +177,24 @@ type collectionView struct {
 
 func (v collectionView) Searching() bool { return strings.TrimSpace(v.Term) != "" }
 
+// litCount é quantos crachás da cena estão ligados.
+func (v collectionView) litCount() int {
+	lit := 0
+	for _, f := range v.Filters {
+		lit += len(v.Lit[f.Key])
+	}
+	return lit
+}
+
+// filtersWritten é o rótulo do botão dos filtros. O número é o único sinal de relance
+// de que a lista está filtrada, com o diálogo fechado.
+func filtersWritten(lit int) string {
+	if lit == 0 {
+		return "Filtros"
+	}
+	return fmt.Sprintf("Filtros · %d", lit)
+}
+
 // offersFilters diz se a cena desenha os filtros: o catálogo tem de ter algum, e com
 // termo digitado eles somem.
 func (v collectionView) offersFilters() bool { return !v.Searching() && len(v.Filters) > 0 }
