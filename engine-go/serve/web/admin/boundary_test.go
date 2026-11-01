@@ -27,6 +27,8 @@ var permitidos = map[string]bool{
 	// deixou de existir, porque `accounts.ErrUnknownAccount` é valor exportado.
 	"t20engine/app/accounts":     true,
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
+	"t20engine/serve/web/ds":     true, // o kit do Tempestade
+	"t20engine/serve/web/routes": true, // os endereços que esta cena entrega em link
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
 	"t20engine/infra/db/dbvalue": true,
 }

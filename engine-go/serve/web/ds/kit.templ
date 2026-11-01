@@ -334,6 +334,42 @@ templ Card(title string, aside templ.Component) {
 	</article>
 }
 
+// InviteBody é o miolo do diálogo de convite de conta: quem chama põe o `ds.Dialog` em
+// volta, e a ROTA é dele porque as telas precisam de remendos diferentes. No início só
+// volta o link; na administração volta o link e a lista de convites abertos.
+//
+// O link chega por remendo do servidor (`#invite-link`) e NÃO passa por sinal: um token
+// de uso único em estado de cliente viajaria de volta em toda requisição seguinte.
+templ InviteBody(route string) {
+	<p class="ds-help" data-signals="{error: '', copied: false}">Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.</p>
+	<div id="invite-link"></div>
+	<p class="ds-help ds-reg-error" data-show="$error" data-text="$error" style="display:none"></p>
+	@Button(ButtonPrimary, templ.Attributes{
+		"type": "button", "data-on:click": "@post('" + route + "')",
+		"data-indicator:generating": true, "data-attr:disabled": "$generating",
+	}) {
+		Gerar convite
+	}
+}
+
+// MintedInvite é o link de conta cunhado, que o POST devolve. Só o CAMINHO viaja: quem
+// prefixa a origem é o navegador, porque o servidor não sabe por qual endereço a mesa o
+// alcança, e convite existe para ser MANDADO, então host errado é link morto.
+//
+// `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no "copiar"
+// do teclado, e copiar é a única coisa que se faz com ele.
+templ MintedInvite(path string) {
+	<div id="invite-link" class="ds-hub-invite">
+		<input id="invite-url" class="ds-input" readonly aria-label="Link de convite" data-path={ path } data-init="el.value = location.origin + el.dataset.path"/>
+		@Button(ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": ui.CopyThen("document.getElementById('invite-url').value", "$copied = true")}) {
+			@ui.Icon("Copy", "ds-icon")
+			Copiar
+		}
+		<p class="ds-help" aria-live="polite" data-show="$copied" style="display:none">Link copiado.</p>
+		<p class="ds-help">Cada convite serve para UMA conta. Gere outro para o próximo jogador.</p>
+	</div>
+}
+
 // EntryCard é o VERBETE do livro em cartão: o nome, os crachás, a página à direita e
 // o corpo. `badges` e `page` são opcionais. O corpo usa `ds-entry-body` no texto,
 // `ds-entry-fields` numa `<dl>` e `ds-entry-more` no que leva a outro lugar.

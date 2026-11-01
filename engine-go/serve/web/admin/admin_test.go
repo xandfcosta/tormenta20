@@ -189,8 +189,8 @@ func TestTheResetPatchCarriesNoOrigin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if strings.Contains(html, "http://") || strings.Contains(html, "https://") {
-		t.Error("o remendo trouxe origem — o link nasceria apontando para a máquina errada")
+	if !strings.Contains(html, `data-path="/redefinir-senha?token=abc"`) {
+		t.Error("o remendo não traz só o caminho — o link nasceria apontando para a máquina errada")
 	}
 	if !strings.Contains(html, "location.origin") {
 		t.Error("ninguém prefixa a origem no navegador — o campo ficaria com um caminho solto")

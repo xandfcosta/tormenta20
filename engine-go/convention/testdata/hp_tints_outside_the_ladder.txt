@@ -23,5 +23,3 @@
 engine-go/serve/web/ui/vitals.go
 
 # PRESENÇA e confirmação, em verde: nada disso é vida.
-engine-go/serve/web/ui/invite.templ
-engine-go/serve/web/admin/scene.templ

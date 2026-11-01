@@ -3,8 +3,12 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"t20engine/app/accounts"
 	"testing"
@@ -69,9 +73,8 @@ func TestMintingForAMissingAccountSaysItIsMissing(t *testing.T) {
 // tela diz "Convites abertos (0)" logo depois de a pessoa abrir um. No Hub não
 // existe essa lista, e por isso lá basta o link.
 //
-// O guarda é em Go e não no navegador de propósito: cunhar grava uma linha que
-// a TELA não sabe revogar, então um e2e desta garantia deixaria lixo permanente
-// no banco a cada corrida. Aqui o banco é descartável.
+// O guarda é em Go e não no navegador de propósito: é regra de handler, e a camada
+// mais barata que a segura é esta.
 func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	boss := seedUser(t, s, "chefe@t20.local")
@@ -85,7 +88,7 @@ func TestMintingFromAdminPatchesThePanelToo(t *testing.T) {
 	if !strings.Contains(body, `id="invites-panel"`) {
 		t.Error("o painel de convites não foi remendado — a contagem ao lado do botão fica velha")
 	}
-	if !strings.Contains(body, "Convites abertos (1)") {
+	if !strings.Contains(body, "Convites abertos · 1") {
 		t.Errorf("o painel voltou sem contar o convite recém-cunhado:\n%s", body)
 	}
 }
@@ -130,4 +133,165 @@ func askScene(t *testing.T, s *Server, userID int64, method, path string) *httpt
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)
 	return rec
+}
+
+// A administração veste o Tempestade.
+func TestTheAdminWearsTheNewSystem(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	body := askScene(t, s, boss, http.MethodGet, "/admin").Body.String()
+
+	// A CASCA e não a página inteira: os diálogos do livro, que a casca desenha em toda
+	// tela, ainda vestem o grimório, e têm a fatia deles.
+	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`).FindString(body)
+	if !strings.Contains(shell, "scene-ds") || strings.Contains(shell, "scene-grimorio") {
+		t.Errorf("a administração não saiu no escopo do Tempestade: %s", shell)
+	}
+	if !strings.Contains(body, `<h1 class="ds-header-title">Administração</h1>`) {
+		t.Error("o cabeçalho não diz Administração")
+	}
+}
+
+// revokeAddress é a rota de revogar o convite daquele token.
+func revokeAddress(t *testing.T, s *Server, token string) string {
+	t.Helper()
+	invite, err := s.queries.GetAccountInvite(context.Background(), token)
+	if err != nil {
+		t.Fatalf("achar o convite: %v", err)
+	}
+	return fmt.Sprintf("/admin/convites/%d/revogar", invite.ID)
+}
+
+// Revogar vale no CADASTRO, e não só na tela: quem já recebeu o link não entra mais.
+func TestARevokedInviteNoLongerOpensAnAccount(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	token := inviteFrom(t, s, boss)
+
+	page := askScene(t, s, boss, http.MethodGet, "/admin").Body.String()
+	label := "Revogar o Link de convite " + token[:6]
+	if !strings.Contains(page, label) {
+		t.Fatalf("o convite aberto não oferece %q", label)
+	}
+
+	rec := askScene(t, s, boss, http.MethodPost, revokeAddress(t, s, token))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), `id="invites-panel"`) {
+		t.Error("o painel de convites não foi remendado")
+	}
+	if strings.Contains(rec.Body.String(), label) {
+		t.Error("o remendo ainda lista o convite revogado")
+	}
+	if err := registra(t, s, "revogado@t20.local", token); !errors.Is(err, accounts.ErrBadInvite) {
+		t.Errorf("o link revogado tinha de ser recusado no cadastro, veio %v", err)
+	}
+}
+
+// Só se revoga o que está aberto: o convite gasto continua no registro de quem entrou
+// por ele, e a tela diz que não deu em vez de fingir que revogou.
+func TestAUsedInviteCannotBeRevoked(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	token := inviteFrom(t, s, boss)
+	address := revokeAddress(t, s, token)
+	if err := registra(t, s, "usado@t20.local", token); err != nil {
+		t.Fatalf("o cadastro com o convite novo falhou: %v", err)
+	}
+
+	rec := askScene(t, s, boss, http.MethodPost, address)
+	if !strings.Contains(rec.Body.String(), "não está mais aberto") {
+		t.Errorf("revogar o convite gasto não disse que ele não está aberto: %s", rec.Body.String())
+	}
+	if _, err := s.queries.GetAccountInvite(context.Background(), token); err != nil {
+		t.Errorf("revogar apagou o registro do convite gasto: %v", err)
+	}
+}
+
+// Quem não administra não revoga: a trava é do servidor, não do botão.
+func TestANonAdminDoesNotRevoke(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	token := inviteFrom(t, s, seedUser(t, s, "chefe@t20.local"))
+	outsider := seedUser(t, s, "jogador@t20.local")
+
+	rec := askScene(t, s, outsider, http.MethodPost, revokeAddress(t, s, token))
+	if rec.Code != http.StatusForbidden {
+		t.Errorf("status %d, quero 403", rec.Code)
+	}
+	if err := registra(t, s, "ainda-vale@t20.local", token); err != nil {
+		t.Errorf("quem não administra derrubou o convite: %v", err)
+	}
+}
+
+// A lista traz todo backup, do mais novo para o mais velho, e diz quantos ficam guardados.
+func TestTheAdminListsEveryBackup(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	s.cfg.BackupDir = t.TempDir()
+	s.cfg.BackupKeep = 7
+	for name, at := range map[string]time.Time{
+		"t20--velho.db": time.Date(2026, 10, 30, 3, 0, 0, 0, time.Local),
+		"t20--novo.db":  time.Date(2026, 11, 1, 3, 0, 0, 0, time.Local),
+	} {
+		path := filepath.Join(s.cfg.BackupDir, name)
+		if err := os.WriteFile(path, []byte("sqlite"), 0o600); err != nil {
+			t.Fatalf("escrever %s: %v", name, err)
+		}
+		if err := os.Chtimes(path, at, at); err != nil {
+			t.Fatalf("datar %s: %v", name, err)
+		}
+	}
+
+	body := askScene(t, s, boss, http.MethodGet, "/admin").Body.String()
+	if !strings.Contains(body, "2 de 7") {
+		t.Error("a seção não diz quantos backups ficam guardados")
+	}
+	if !strings.Contains(body, "01/11/2026, 03:00") || !strings.Contains(body, "30/10/2026, 03:00") {
+		t.Error("a lista não traz a data de cada backup")
+	}
+	novo, velho := strings.Index(body, "t20--novo.db"), strings.Index(body, "t20--velho.db")
+	if novo < 0 || velho < 0 || novo > velho {
+		t.Errorf("a ordem não é do mais novo para o mais velho (novo em %d, velho em %d)", novo, velho)
+	}
+}
+
+// Sem backup, a seção diz isso, e o botão de fazer um continua lá.
+func TestWithoutBackupsTheAdminSaysSo(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	s.cfg.BackupDir = t.TempDir()
+
+	body := askScene(t, s, boss, http.MethodGet, "/admin").Body.String()
+	if !strings.Contains(body, "Nenhum backup ainda.") || !strings.Contains(body, "Fazer backup") {
+		t.Error("a seção vazia não diz que não há backup, ou perdeu o botão")
+	}
+}
+
+// O link do convite LEVA à porta de cadastro. Os dois lugares que cunham e a lista são
+// seguidos até o fim: o caminho sai do que a tela entrega, e não é escrito aqui.
+func TestTheInviteLinkOpensTheSignUp(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	path := regexp.MustCompile(`data-path="([^"]+)"`)
+	listed := regexp.MustCompile(`data-url="([^"]+)"`)
+
+	fromAdmin := path.FindStringSubmatch(askScene(t, s, boss, http.MethodPost, "/admin/convites").Body.String())
+	fromHub := path.FindStringSubmatch(askScene(t, s, boss, http.MethodPost, "/convites").Body.String())
+	fromList := listed.FindStringSubmatch(askScene(t, s, boss, http.MethodGet, "/admin").Body.String())
+	for name, found := range map[string][]string{"administração": fromAdmin, "início": fromHub, "lista": fromList} {
+		if found == nil {
+			t.Fatalf("%s: a tela não entregou caminho nenhum", name)
+		}
+		address := strings.ReplaceAll(found[1], "&amp;", "&")
+		rec := httptest.NewRecorder()
+		s.WebRouter().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, address, nil))
+		if rec.Code != http.StatusOK {
+			t.Errorf("%s: o link %s deu status %d", name, address, rec.Code)
+			continue
+		}
+		if !strings.Contains(rec.Body.String(), `action="/criar-conta"`) {
+			t.Errorf("%s: o link %s não abriu o cadastro", name, address)
+		}
+	}
 }

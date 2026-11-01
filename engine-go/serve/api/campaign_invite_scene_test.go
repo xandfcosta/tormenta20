@@ -33,7 +33,7 @@ func TestTheConfigTabShowsTheTableLink(t *testing.T) {
 	}
 	// O CAMINHO e não a URL: quem prefixa a origem é o navegador, e um `r.Host`
 	// aqui daria um link morto quando houver proxy na frente (ver
-	// `ui.MintedInvite`).
+	// `ds.MintedInvite`).
 	if !strings.Contains(body, `data-path="/campanhas/entrar?token=`) {
 		t.Errorf("o painel não trouxe o caminho do convite:\n%s", primeiros(body, 600))
 	}

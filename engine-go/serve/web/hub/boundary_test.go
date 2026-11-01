@@ -32,6 +32,7 @@ var permitidos = map[string]bool{
 	"t20engine/app/accounts":     true,
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
 	"t20engine/serve/web/ds":     true, // o kit do sistema novo (ALE-525)
+	"t20engine/serve/web/routes": true, // o endereço do convite que esta cena entrega
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
 }
 

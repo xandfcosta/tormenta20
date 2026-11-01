@@ -757,9 +757,10 @@ Medida a ordem na folha compilada, a fonte MENOR sempre vencia (`text-base` ante
 de `text-sm`), o `gap` MAIOR vencia, e `hover:text-foreground` vinha depois de
 `hover:text-destructive-ink`. A da fonte era latente (o primeiro botão de ícone
 a pedir `text-lg` sairia pequeno); a do `gap` estava viva — o `gap-2` da base
-vencia o `gap-1.5` do `SizeSmall`, e o botão pequeno nunca teve o respiro
-escrito para ele; a do hover é por que o ghost que apaga virou
-`VariantGhostDanger`.
+vencia o `gap-1.5` do tamanho pequeno, e o botão pequeno nunca teve o respiro
+escrito para ele; a do hover é por que o ghost que apaga virou uma variante própria.
+Esse botão saiu com a última tela que o usava (ALE-546), e a lição vale para qualquer
+receita de classes concatenadas.
 
 ### Os medidores que não viam o Tempestade (2026-10)
 

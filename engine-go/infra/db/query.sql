@@ -489,6 +489,10 @@ SELECT u.id, u.email, u.name, u.createdAt,
   (SELECT COUNT(*) FROM characters ch WHERE ch.ownerId = u.id) AS characters
 FROM users u ORDER BY u.createdAt;
 
+-- Only what is still open: a spent invite stays as the record of who came in by it.
+-- name: RevokeAccountInvite :execrows
+DELETE FROM account_invites WHERE id = ? AND usedAt IS NULL;
+
 -- name: ListOpenAccountInvites :many
 SELECT * FROM account_invites
 WHERE usedAt IS NULL AND expiresAt > sqlc.arg('now')

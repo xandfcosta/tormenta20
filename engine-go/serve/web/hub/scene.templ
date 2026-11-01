@@ -131,29 +131,9 @@ templ playerMenu(v hubView) {
 	</div>
 }
 
-// inviteDialog é o convite, no kit: o servidor devolve o link pronto
-// (`mintedInvite`), e o gerar de novo é o mesmo gesto.
+// inviteDialog é o convite, no kit.
 templ inviteDialog() {
 	@ds.Dialog("hub-invite", "Convidar jogador", nil) {
-		<p class="ds-help" data-signals="{error: '', copied: false}">Gere um link e envie para quem vai entrar. Ele vale uma vez só, expira em 7 dias, e a pessoa escolhe a própria senha.</p>
-		<div id="invite-link"></div>
-		<p class="ds-help ds-reg-error" data-show="$error" data-text="$error" style="display:none"></p>
-		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "@post('/convites')", "data-indicator:generating": true, "data-attr:disabled": "$generating"}) {
-			Gerar convite
-		}
+		@ds.InviteBody("/convites")
 	}
-}
-
-// mintedInvite é o link cunhado. Só o CAMINHO viaja: quem prefixa a origem é o
-// navegador, porque o servidor não sabe por qual endereço a mesa o alcança.
-templ mintedInvite(path string) {
-	<div id="invite-link" class="ds-hub-invite">
-		<input id="invite-url" class="ds-input" readonly aria-label="Link de convite" data-path={ path } data-init="el.value = location.origin + el.dataset.path"/>
-		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": ui.CopyThen("document.getElementById('invite-url').value", "$copied = true")}) {
-			@ui.Icon("Copy", "ds-icon")
-			Copiar
-		}
-		<p class="ds-help" aria-live="polite" data-show="$copied" style="display:none">Link copiado.</p>
-		<p class="ds-help">Cada convite serve para UMA conta. Gere outro para o próximo jogador.</p>
-	</div>
 }

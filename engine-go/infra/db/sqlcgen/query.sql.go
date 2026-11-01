@@ -3241,6 +3241,19 @@ func (q *Queries) ResetSessionTracker(ctx context.Context, arg ResetSessionTrack
 	return err
 }
 
+const revokeAccountInvite = `-- name: RevokeAccountInvite :execrows
+DELETE FROM account_invites WHERE id = ? AND usedAt IS NULL
+`
+
+// Only what is still open: a spent invite stays as the record of who came in by it.
+func (q *Queries) RevokeAccountInvite(ctx context.Context, id int64) (int64, error) {
+	result, err := q.db.ExecContext(ctx, revokeAccountInvite, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const saveCampaignPlace = `-- name: SaveCampaignPlace :one
 INSERT INTO campaign_places (campaignId, name, state, createdAt, updatedAt)
 VALUES (?, ?, ?, ?, ?)

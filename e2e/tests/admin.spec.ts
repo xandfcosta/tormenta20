@@ -20,9 +20,8 @@ test.describe('Administração', () => {
    * acontece.
    *
    * Ele grava uma linha em `password_resets`, e isso é aceitável: nenhuma tela
-   * a lista e nenhuma asserção a conta. Cunhar CONVITE seria diferente — aquilo
-   * aparece num painel e a tela não sabe revogar —, e por isso aquela garantia
-   * ficou em Go.
+   * a lista e nenhuma asserção a conta. A garantia de cunhar CONVITE ficou em Go,
+   * porque é regra de handler.
    */
   test('o link de redefinição não vaza para a caixa do jogador seguinte', async ({ page }) => {
     await page.goto('/admin')
