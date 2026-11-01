@@ -94,9 +94,7 @@ templ tempestadePowers(v View) {
 // powerLine é um poder: o nome abre a folha, e a ponta tem o gesto.
 templ powerLine(v View, row powerRow) {
 	@ds.ActionRow(row.Name, powerMeta(row), powerSheetID(row)) {
-		if !v.Draft {
-			@powerGesture(v, row)
-		}
+		@powerGesture(v, row)
 	}
 }
 
@@ -148,9 +146,7 @@ templ powerSheet(v View, row powerRow, id string) {
 }
 
 templ powerSheetFootBody(v View, row powerRow) {
-	if !v.Draft {
-		@powerGesture(v, row)
-	}
+	@powerGesture(v, row)
 }
 
 // useStepsDialog escolhe quantos degraus pagar num USO — a Marca da Presa,

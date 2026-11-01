@@ -53,9 +53,7 @@ templ tempestadeSpells(v View) {
 					@ds.ListHead(group.Title, strconv.Itoa(len(group.Spells)))
 					for _, spell := range group.Spells {
 						@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
-							if !v.Draft {
-								@castGesture(v, spell)
-							}
+							@castGesture(v, spell)
 						}
 					}
 				}
@@ -133,10 +131,8 @@ templ spellSheetFootBody(v View, spell learnedSpellRow) {
 	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "aria-label": "Esquecer " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/esquece/"+spell.Command)}) {
 		Esquecer
 	}
-	if !v.Draft {
-		@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command)}) {
-			<span data-text={ "'Conjurar · ' + " + costPreview(spell) }>Conjurar</span>
-		}
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command)}) {
+		<span data-text={ "'Conjurar · ' + " + costPreview(spell) }>Conjurar</span>
 	}
 }
 

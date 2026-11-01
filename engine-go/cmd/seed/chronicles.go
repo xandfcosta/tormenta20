@@ -282,8 +282,8 @@ func seedMembers(database *sql.DB, campID int64, dc demoCampaign) error {
 			campID, chID, seedChronicleDate); err != nil {
 			return fmt.Errorf("campaign %q membership: %w", dc.name, err)
 		}
-		// Quem está em campanha joga: o elenco da semente não passa pela cópia, para os endereços
-		// dele ficarem fixos, mas tem de dizer de que campanha é. Quem vem depois não muda a dele.
+		// O elenco da semente não passa pela cópia, para os endereços dele ficarem fixos, mas tem
+		// de dizer de que campanha é. Quem vem depois não muda a dele.
 		if _, err := database.Exec(
 			`UPDATE characters SET campaignId = COALESCE(campaignId, ?) WHERE id = ?`, campID, chID); err != nil {
 			return fmt.Errorf("campaign %q member %d: %w", dc.name, chID, err)

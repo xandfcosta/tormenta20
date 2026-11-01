@@ -830,13 +830,11 @@ em `transcript.Classes`), melhoria/material × item (`aceitaMelhoria`, no comand
 da ficha) e limite de texto da campanha (`domain/campaign/rules.go`) moram no
 servidor; o filtro da tela é só conveniência.
 
-### O rascunho só monta
+### O rascunho e a cópia
 
-A ficha sem `campaignId` é o **rascunho**, e quem joga é a cópia da campanha. O gesto de JOGAR
-(gastar PV e PM, rolar, atacar, efeitos, conjurar, usar item ou poder) entra na rota por
-`onlyInPlay`; o de MONTAR, não. **Gesto novo: decida qual dos dois ele é**, porque nada obriga a
-marcar, e o `TestADraftDoesNotPlay` só cobra os que estão na lista dele. A cópia nasce inteira: dano,
-efeitos e condições não atravessam o `cloneCharacterTx`.
+A ficha sem `campaignId` é o **rascunho**, e ele aceita os mesmos gestos da cópia da campanha. O que
+muda é a entrada: a cópia nasce inteira, porque dano, efeitos e condições não atravessam o
+`cloneCharacterTx`.
 
 ### A validação de ESCOLHA é do servidor, e é estrita
 

@@ -46,15 +46,12 @@ type bottomNavPlace struct {
 // Magias à mão, e quem não conjura tem a Mochila — e o que sai vai para o Mais,
 // porque as concedidas por poder também moram em Magias.
 func bottomNavPlaces(v View) []bottomNavPlace {
-	order := []string{"expertises", "combat", effectsTab, "abilities", fifthPlace(v)}
-	if v.Draft {
-		order = []string{"expertises", "combat", "abilities", fifthPlace(v)}
-	}
+	order := []string{"expertises", "combat", "conditionals", "abilities", fifthPlace(v)}
 	places := make([]bottomNavPlace, 0, len(order))
 	for _, value := range order {
 		tab := tabByValue(v, value)
 		place := bottomNavPlace{Tab: tab, Href: sheetRoute(v.ID, value), Current: tab.Active}
-		if value == effectsTab {
+		if value == "conditionals" {
 			place.Count = v.Effects.Count
 		}
 		places = append(places, place)
@@ -64,7 +61,7 @@ func bottomNavPlaces(v View) []bottomNavPlace {
 
 // moreTabs são as que moram no "Mais", na ordem das sete.
 func moreTabs(v View) []Tab {
-	inBar := map[string]bool{"expertises": true, "combat": true, effectsTab: true, "abilities": true, fifthPlace(v): true}
+	inBar := map[string]bool{"expertises": true, "combat": true, "conditionals": true, "abilities": true, fifthPlace(v): true}
 	var more []Tab
 	for _, tab := range v.Tabs {
 		if !inBar[tab.Value] {
