@@ -243,3 +243,28 @@ test('deitado, a lista do bestiário mostra uma criatura inteira', async ({ page
     `a lista recebe ${measure.caixa}px e uma criatura mede ${measure.linha}px`,
   ).toBeGreaterThanOrEqual(measure.linha)
 })
+
+/**
+ * OS FILTROS DO BESTIÁRIO no celular abrem num diálogo, e no desktop seguem numa
+ * gaveta: a coluna da lista é estreita, e os filtros à vista empurrariam a lista.
+ * O número de trás é a testemunha de que o remendo chegou, senão "continuou aberto"
+ * seria verdade sobre um clique que não fez nada.
+ */
+test('no celular os filtros do Bestiário abrem num diálogo que fica aberto ao filtrar', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/mestre/bestiario')
+  const opener = page.locator('#bestiary').getByRole('button', { name: 'Filtros' })
+  const dialog = page.getByRole('dialog', { name: 'Filtros' })
+  await expect(page.locator('#bestiary summary', { hasText: 'Filtros' })).toBeHidden()
+
+  await opener.click()
+  await dialog.getByRole('button', { name: 'Monstro' }).click()
+
+  await expect(page.locator('#bestiary .ds-list-head').first()).not.toContainText('80 de 80')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Monstro' })).toHaveAttribute('aria-pressed', 'true')
+
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await expect(opener).toBeHidden()
+  await expect(page.locator('#bestiary summary', { hasText: 'Filtros' })).toBeVisible()
+})

@@ -44,7 +44,7 @@ func TestTheMasterFrameReachesEveryTool(t *testing.T) {
 	if !strings.Contains(body, "scene-ds") {
 		t.Fatal("o Bestiário não veste o Tempestade")
 	}
-	menu := sliceBetween(t, body, `class="ds-master-menu"`, "</nav>")
+	menu := sliceBetween(t, body, `class="ds-side-menu"`, "</nav>")
 	for _, slug := range append(append([]string{}, masterTools...), masterCatalogs...) {
 		if !strings.Contains(menu, `href="/mestre/`+slug+`"`) {
 			t.Errorf("o menu do desktop não leva a /mestre/%s", slug)
