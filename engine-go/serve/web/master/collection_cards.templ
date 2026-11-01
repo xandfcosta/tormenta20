@@ -9,8 +9,8 @@ import (
 
 // OS CARTÕES DOS VERBETES: um desenho só, na lista e na caixa do elo — um segundo
 // desenho "para a caixa" divergiria do primeiro na terceira issue. Dentro da caixa
-// o cartão perde a moldura, porque lá a caixa já é a moldura (`#entry-in-dialog`,
-// no `ds.css`).
+// o cartão perde a moldura e o nome, porque lá a caixa já tem os dois
+// (`#entry-in-dialog`, no `ds.css`).
 
 // groupCards desenha os verbetes de um grupo. Um lugar só para os dez catálogos:
 // quando a lista e a caixa tinham cada uma a sua, a da caixa ficou sem Escolas e
@@ -295,7 +295,6 @@ templ SpellAugments(m book.Spell, bookRef bookui.BookAddress) {
 	<div id="crossref-entry">
 		<div class="ds-catalog-card">
 			<header class="ds-catalog-head">
-				<span class="ds-catalog-title">{ m.Name }</span>
 				<span class="ds-row-meta ds-catalog-page">
 					@bookui.PageSealInMeta(bookRef, m.BookPage, m.Name)
 				</span>

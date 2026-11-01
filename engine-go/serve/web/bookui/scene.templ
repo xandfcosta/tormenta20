@@ -175,11 +175,21 @@ templ CrossRef(aba, id, name string) {
 // `ds.Dialog` e não a moldura do grimório: os verbetes são cartões do Tempestade, e
 // todo elo mora em cena que já migrou.
 templ EntryDialog() {
-	@ds.Dialog("entry-in-dialog", "Verbete", nil) {
+	@ds.Dialog("entry-in-dialog", EntryDialogTitle, nil) {
 		<div id="crossref-entry">
 			<p class="ds-row-meta">Carregando…</p>
 		</div>
 	}
+}
+
+// EntryDialogTitle é o título da caixa antes de o verbete chegar, e quando o id não
+// acha verbete nenhum.
+const EntryDialogTitle = "Verbete"
+
+// EntryTitle é o título da caixa como REMENDO: o nome do verbete que chegou. O id é
+// o que o `ds.Dialog` escreve a partir do id da caixa.
+templ EntryTitle(title string) {
+	<h2 class="ds-dialog-title" id="entry-in-dialog-title">{ title }</h2>
 }
 
 // openEntryOver mostra o verbete do elo numa caixa sobre a cena.

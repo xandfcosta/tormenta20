@@ -107,6 +107,34 @@ type collectionGroup struct {
 	Gods       []book.God
 }
 
+// entryName é o nome do primeiro verbete do grupo, ou vazio. Quem o chama é a caixa
+// do elo, em que o grupo tem um verbete só.
+func (g collectionGroup) entryName() string {
+	switch {
+	case len(g.Conditions) > 0:
+		return g.Conditions[0].Name
+	case len(g.Spells) > 0:
+		return g.Spells[0].Name
+	case len(g.Powers) > 0:
+		return g.Powers[0].Name
+	case len(g.Items) > 0:
+		return g.Items[0].Name
+	case len(g.Effects) > 0:
+		return g.Effects[0].Name
+	case len(g.Schools) > 0:
+		return g.Schools[0].Name
+	case len(g.Expertises) > 0:
+		return g.Expertises[0].Name
+	case len(g.Races) > 0:
+		return g.Races[0].Name
+	case len(g.Classes) > 0:
+		return g.Classes[0].Name
+	case len(g.Gods) > 0:
+		return g.Gods[0].Name
+	}
+	return ""
+}
+
 func (g collectionGroup) Count() int {
 	return len(g.Conditions) + len(g.Spells) + len(g.Powers) + len(g.Items) +
 		len(g.Effects) + len(g.Schools) + len(g.Expertises) + len(g.Races) + len(g.Classes) + len(g.Gods)

@@ -117,3 +117,25 @@ func TestTheSpellDurationComesOutWrittenAndNotAsAKey(t *testing.T) {
 		}
 	}
 }
+
+// O título da caixa diz o que ela mostra: o verbete pelo nome, e os aprimoramentos
+// como aprimoramentos. O título vem no mesmo remendo do miolo.
+func TestTheEntryBoxTitleSaysWhatItShows(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t20.local")
+
+	for address, want := range map[string]string{
+		"/verbete?aba=condicoes&entrada=abalado":                        ">Abalado</h2>",
+		"/verbete?aba=escolas&entrada=evocacao":                         ">Evocação</h2>",
+		"/verbete?aba=magias&parte=aprimoramentos&entrada=bola-de-fogo": ">Aprimoramentos de Bola de Fogo</h2>",
+		"/verbete?aba=efeitos&entrada=nao-existe":                       ">Verbete</h2>",
+	} {
+		body := pedeNoMestre(t, s, gm, "GET", address, "").Body.String()
+		if !strings.Contains(body, `id="entry-in-dialog-title"`) {
+			t.Errorf("%s: o remendo não traz o título da caixa", address)
+		}
+		if !strings.Contains(body, want) {
+			t.Errorf("%s: o título não diz %q", address, want)
+		}
+	}
+}

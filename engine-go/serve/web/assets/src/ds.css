@@ -3985,11 +3985,15 @@
     overflow-wrap: anywhere;
   }
   /* Dentro da caixa do elo o cartão perde a moldura: a caixa já é a moldura, e
-   * seriam duas bordas concêntricas com três milímetros entre elas. */
+   * seriam duas bordas concêntricas com três milímetros entre elas. E perde o nome,
+   * que está no título da caixa. */
   #entry-in-dialog .ds-catalog-card {
     padding: 0;
     border: 0;
     background: none;
+  }
+  #entry-in-dialog .ds-catalog-title {
+    display: none;
   }
   .ds-catalog-head {
     display: flex;
