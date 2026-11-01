@@ -220,7 +220,7 @@ function D(e) {
 }
 function O(e) {
 	let t = e.getBoundingClientRect();
-	return t.width > 0 && t.height > 0;
+	return t.width > 0 && t.height > 0 && e.checkVisibility();
 }
 function k() {
 	let e = document.activeElement;

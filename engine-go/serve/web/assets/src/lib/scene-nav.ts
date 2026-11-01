@@ -330,9 +330,13 @@ function rectOf(el: HTMLElement): NavRect {
   return { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
 }
 
+/** Um item só conta se tem caixa E se vê. O conteúdo de um `<details>` FECHADO
+ *  mantém a caixa e fica invisível (`content-visibility`): sem o
+ *  `checkVisibility`, a seta escolhia um botão da gaveta fechada, o `focus()`
+ *  falhava calado e o cursor ficava onde estava — a seta "presa" na região. */
 function hasArea(el: HTMLElement): boolean {
   const r = el.getBoundingClientRect()
-  return r.width > 0 && r.height > 0
+  return r.width > 0 && r.height > 0 && el.checkVisibility()
 }
 
 function isTypingTarget(): boolean {
