@@ -3459,6 +3459,22 @@
     justify-self: start;
     list-style: none;
   }
+  /* Os filtros da criatura: a gaveta a partir da largura do menu lateral, e o botão
+   * do diálogo abaixo dela. */
+  .ds-gm-filters-wide {
+    display: none;
+  }
+  .ds-gm-filters-open {
+    justify-self: start;
+  }
+  @media (min-width: 64rem) {
+    .ds-gm-filters-wide {
+      display: grid;
+    }
+    .ds-gm-filters-open {
+      display: none;
+    }
+  }
   .ds-gm-cr {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

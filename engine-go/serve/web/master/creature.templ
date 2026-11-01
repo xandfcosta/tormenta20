@@ -15,9 +15,12 @@ import (
 // teclado aqui, o ajuste de PV e a fila lá.
 
 // CreatureFilters é a busca, a faixa de ND e os tipos. A busca é o gesto do meio
-// do combate e fica à vista; o ND e os tipos recolhem, e o `data-preserve-attr`
-// segura a gaveta aberta porque a cena é remendada a cada tecla da busca.
-// `region` vai no contêiner, `search` na busca e `field` em todo campo.
+// do combate e fica à vista; o ND e os tipos ficam numa gaveta no desktop e num
+// diálogo abaixo dele. A troca é do CSS, na largura em que o menu lateral aparece, e
+// o `data-preserve-attr` segura a gaveta aberta porque a cena é remendada a cada
+// tecla da busca (o `ds.Dialog` faz o mesmo por ele).
+// `region` vai no contêiner, `search` na busca e `field` em todo campo da gaveta. No
+// diálogo a seta é dele, e `field` não vale.
 //
 //	@CreatureFilters(v, "bestiario", templ.Attributes{"data-nav-region": "filtros"}, nil, nil)
 templ CreatureFilters(v BestiaryView, idPrefix string, region, search, field templ.Attributes) {
@@ -26,20 +29,37 @@ templ CreatureFilters(v BestiaryView, idPrefix string, region, search, field tem
 			"name": "busca", "value": v.Term, "data-bind:search": true,
 			"data-on:input__debounce.250ms": fmt.Sprintf("@get('%s')", v.BestiaryBase()),
 		}, search, field))
-		<details class="ds-gm-filters-more" data-preserve-attr="open">
+		<details class="ds-gm-filters-more ds-gm-filters-wide" data-preserve-attr="open">
 			<summary class="ds-button" data-variant="ghost" { field... }>Filtros</summary>
-			<div class="ds-gm-cr">
-				@crField(v, idPrefix+"-cr-min", "ND mínimo", "ndMin", CRInBox(v.CRMin), field)
-				@crField(v, idPrefix+"-cr-max", "ND máximo", "ndMax", CRInBox(v.CRMax), field)
-			</div>
-			<div class="ds-options" role="group" aria-label="Filtrar por tipo">
-				for _, t := range book.CreatureTypes {
-					@ds.Option(v.TypeOn(t), templ.Attributes{"data-on:click": fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t)}) {
-						{ book.TypeName(t) }
-					}
-				}
-			</div>
+			@creatureFilterFields(v, idPrefix, field)
 		</details>
+		<button
+			type="button"
+			class="ds-button ds-gm-filters-open"
+			data-variant="ghost"
+			commandfor={ idPrefix + "-filters" }
+			command="show-modal"
+		>Filtros</button>
+	</div>
+	@ds.Dialog(idPrefix+"-filters", "Filtros", nil) {
+		@creatureFilterFields(v, idPrefix+"-sheet", nil)
+	}
+}
+
+// creatureFilterFields é o ND e os tipos, desenhados na gaveta e no diálogo: dois
+// desenhos do mesmo filtro seriam dois lugares para consertar. O `idPrefix` é o que
+// separa os dois, porque id repetido faz o rótulo de um focar o campo do outro.
+templ creatureFilterFields(v BestiaryView, idPrefix string, field templ.Attributes) {
+	<div class="ds-gm-cr">
+		@crField(v, idPrefix+"-cr-min", "ND mínimo", "ndMin", CRInBox(v.CRMin), field)
+		@crField(v, idPrefix+"-cr-max", "ND máximo", "ndMax", CRInBox(v.CRMax), field)
+	</div>
+	<div class="ds-options" role="group" aria-label="Filtrar por tipo">
+		for _, t := range book.CreatureTypes {
+			@ds.Option(v.TypeOn(t), templ.Attributes{"data-on:click": fmt.Sprintf("@post('%s/tipo/%s')", v.BestiaryBase(), t)}) {
+				{ book.TypeName(t) }
+			}
+		}
 	</div>
 }
 
