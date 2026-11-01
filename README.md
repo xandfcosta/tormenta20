@@ -83,9 +83,22 @@ checkout, roda os testes e compila: se algo falhar, ela segue no ar. Depois ence
 servidor com ordem, faz o backup, troca o binário e sobe de novo. Quem está na mesa vê
 a conexão cair por alguns segundos, e o navegador reconecta sozinho.
 
-Se a versão nova não responder, a anterior volta a subir. O banco não volta sozinho: o
-caminho do backup sai na mensagem, e restaurar é decisão de quem administra. O comando
-também se recusa a derrubar um processo na porta que não seja a produção, como um dev.
+Depois de subir, ele confere que a versão nova é quem responde e que uma cena abre. Se
+não for, a anterior volta a subir. O banco não volta sozinho: o caminho do backup sai na
+mensagem, e restaurar é decisão de quem administra. O comando também se recusa a derrubar
+um processo na porta que não seja a produção, como um dev.
+
+Durante o jogo, quem está com a mesa aberta vê a conexão voltar sozinha e um aviso com o
+botão **Recarregar**, porque a página segue com o CSS e o JS da versão anterior. A vez e o
+ataque pendente são gravados; a lente e a aba escolhida moram em memória e se perdem.
+
+```bash
+pnpm deploy:prod --voltar        # volta à versão anterior, sem rodar testes
+pnpm deploy:prod --com-migracao  # aceita migração nova, que não volta atrás
+```
+
+Por padrão, uma versão com migração nova é recusada, com a mesa intacta. O `--voltar`
+também recusa quando a versão atual trouxe migração.
 
 Depois de reiniciar a máquina a produção não volta sozinha. Suba com `pnpm deploy:prod`,
 ou com `pnpm start` num terminal.
