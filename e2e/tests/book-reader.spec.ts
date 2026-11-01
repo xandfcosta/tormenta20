@@ -22,20 +22,8 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
   // O endereço vem da CENA e não é escrito aqui: se a página do Lobo mudar no
   // catálogo, este guarda continua medindo o que a tela oferece — e não um
   // número que eu teria de lembrar de atualizar.
-  // `count()` ANTES de `getAttribute`, e a ordem é o conserto: `getAttribute`
-  // ESPERA o elemento aparecer, então numa bancada sem `LIVRO_PDF` — onde o
-  // botão não existe e nunca vai existir — ele consome os 30s e estoura por
-  // timeout, deixando o `test.skip` abaixo INALCANÇÁVEL. E o modo de falhar
-  // mente sobre a causa: parece leitor quebrado, é bancada sem livro.
   const button = page.locator('a[href*="/livro/ler"]').first()
-
-  if ((await button.count()) === 0) {
-    // Sem `LIVRO_PDF` configurado não há botão, e isso é estado LEGÍTIMO. O que
-    // não pode existir é meio caminho: link sem livro ou livro sem link.
-    expect(await page.locator('a[href*="/livro"]').count()).toBe(0)
-    test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
-    return
-  }
+  await expect(button, 'a bancada não serve o livro: o `cmd/testbook` rodou?').toBeAttached()
 
   const address = await button.getAttribute('href')
 
@@ -71,10 +59,7 @@ test('o botão do bestiário abre o livro na página do verbete, com o nome marc
 test('as setas andam pelo livro e a barra diz a página impressa', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
   const response = await page.goto('/livro/ler?p=290&t=Lobo')
-  if (response?.status() === 404) {
-    test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
-    return
-  }
+  expect(response?.status(), 'a bancada não serve o livro: o `cmd/testbook` rodou?').toBe(200)
 
   await expect(page.locator('#reader[data-ready]')).toBeAttached({ timeout: 30_000 })
   const caption = page.locator('[data-current-page]')
@@ -92,10 +77,7 @@ test('o livro abre POR CIMA da cena e o fechar devolve a memória', async ({ pag
   await page.goto('/mestre/condicoes')
 
   const button = page.locator('a[href*="/livro/ler"]').first()
-  if ((await button.count()) === 0) {
-    test.skip(true, 'esta bancada não serve o livro (LIVRO_PDF vazio)')
-    return
-  }
+  await expect(button, 'a bancada não serve o livro: o `cmd/testbook` rodou?').toBeAttached()
 
   const dialog = page.locator('#book-in-dialog')
   // O CONTROLE: a moldura existe e nasce VAZIA. É isso que faz uma cena que

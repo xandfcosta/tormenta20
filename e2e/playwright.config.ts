@@ -39,6 +39,7 @@ const PORTA_DO_BUILD = process.env.E2E_PORT ?? '3010'
 // irmãos `-wal` e `-shm` vão junto: deixá-los faz o SQLite reconstruir o banco
 // velho por cima do novo, e o "banco limpo" seria o sujo com outro nome.
 const BANCO_DO_E2E = 'data/e2e.db'
+const LIVRO_DO_E2E = 'data/e2e-book.pdf'
 const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${PORTA_DO_BUILD}`
 
 export default defineConfig({
@@ -156,7 +157,10 @@ export default defineConfig({
         command:
           'cd engine-go && ' +
           `rm -f ${BANCO_DO_E2E} ${BANCO_DO_E2E}-wal ${BANCO_DO_E2E}-shm && ` +
-          `PORT=${PORTA_DO_BUILD} DATABASE_URL=file:./${BANCO_DO_E2E} go run ./cmd/api`,
+          // O LIVRO DE TESTE: sem ele os casos do leitor não têm o que medir. O `cmd/testbook`
+          // explica por que ele não é o livro de verdade.
+          `go run ./cmd/testbook ${LIVRO_DO_E2E} && ` +
+          `LIVRO_PDF=${LIVRO_DO_E2E} PORT=${PORTA_DO_BUILD} DATABASE_URL=file:./${BANCO_DO_E2E} go run ./cmd/api`,
         url: BASE_URL,
         cwd: '..',
         reuseExistingServer: false,

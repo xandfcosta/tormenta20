@@ -44,7 +44,7 @@
     ]
   },
   "reader": {
-    "visits": [{ "address": "/livro/ler?p=290&t=Lobo", "session": "gm", "mayBeAbsent": true }]
+    "visits": [{ "address": "/livro/ler?p=290&t=Lobo", "session": "gm" }]
   },
   "table": {
     "visits": [
