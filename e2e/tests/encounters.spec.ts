@@ -127,4 +127,30 @@ test.describe('O construtor de encontros', () => {
 
     await expect(page.getByLabel('Nível do grupo')).toHaveValue('3')
   })
+
+  /**
+   * NO ENDEREÇO DA REDE não existe `navigator.clipboard`: ele só vale em HTTPS e
+   * `localhost`, e o app é servido em HTTP na mesa. Esta suíte roda em `localhost`, onde
+   * a API existe, e por isso o botão passou verde quebrado para quem abria pelo IP.
+   *
+   * O instrumento apaga a API antes da página carregar, e é isso que ele desliga: o
+   * contexto da página continua seguro. O `copy` é a testemunha de que a cópia
+   * aconteceu, com o texto que o navegador recebeu para copiar.
+   */
+  test('sem a API da área de transferência, o botão copia do mesmo jeito', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, 'clipboard', { get: () => undefined })
+      document.addEventListener('copy', () => {
+        const field = document.activeElement as HTMLTextAreaElement
+        ;(window as unknown as { copied: string }).copied = field.value
+      })
+    })
+    await page.goto(`${ENCOUNTERS}?nivel=3&grupo=4&c=ogro:2`)
+
+    await page.getByRole('button', { name: 'Copiar link' }).click()
+
+    await expect(page.getByRole('button', { name: 'Link copiado' })).toBeVisible()
+    const copied = await page.evaluate(() => (window as unknown as { copied: string }).copied)
+    expect(decodeURIComponent(copied), 'o texto copiado não é o link do encontro').toContain('c=ogro:2')
+  })
 })

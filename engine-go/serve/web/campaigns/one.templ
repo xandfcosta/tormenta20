@@ -372,7 +372,7 @@ templ invitePanel(v oneView) {
 		if v.InviteLink != "" {
 			<div class="ds-hub-invite">
 				<input id="invite-url" class="ds-input" readonly aria-label="Link da mesa" data-path={ v.InviteLink } data-init="el.value = location.origin + el.dataset.path"/>
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "navigator.clipboard.writeText(document.getElementById('invite-url').value); $copied = true"}) {
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": ui.CopyThen("document.getElementById('invite-url').value", "$copied = true")}) {
 					@ui.Icon("Copy", "ds-icon")
 					Copiar
 				}

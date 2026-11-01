@@ -904,6 +904,16 @@ const SearchShortcut = `(evt.key === 'k' || evt.key === 'K') && (evt.ctrlKey || 
 	`document.getElementById('finder').open || document.getElementById('finder').showModal(), ` +
 	`document.getElementById('finder-field').select())`
 
+// CopyThen é a expressão de um botão de copiar: copia o texto e roda `then` só se
+// copiou. Passa pelo `window.cena` porque `navigator.clipboard` não existe em HTTP fora
+// de `localhost`, que é como o app é servido na rede da mesa (ver `lib/copy-text.ts`).
+// Chamado direto, ele estoura no clique e a tela não muda.
+//
+//	"data-on:click": ui.CopyThen("el.dataset.url", "$copied = true")
+func CopyThen(text, then string) string {
+	return "window.cena.copyText(" + text + ").then((ok) => { if (ok) { " + then + " } })"
+}
+
 // OpenBookOverlay troca a ida para outra aba por um diálogo sobre a cena.
 //
 // Ele DEIXA PASSAR o clique modificado (Ctrl, ⌘, Shift, botão do meio) e o
@@ -999,7 +1009,7 @@ func Key(label string) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 465, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 475, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {

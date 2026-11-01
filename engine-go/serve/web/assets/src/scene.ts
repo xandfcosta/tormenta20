@@ -19,6 +19,7 @@
  * Nada de estado da aplicação passa por aqui: som e volume são preferência
  * DESTE aparelho, e tela cheia é do navegador.
  */
+import { copyText } from '@/lib/copy-text'
 import { attachFetchBusy } from '@/lib/fetch-busy'
 import { attachSceneNav } from '@/lib/scene-nav'
 import { type SfxName, createSfxPlayer } from '@/lib/sfx-player'
@@ -153,6 +154,7 @@ const cena = {
     return { ...prefs }
   },
   cue,
+  copyText,
 }
 
 declare global {

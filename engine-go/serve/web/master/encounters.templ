@@ -70,7 +70,7 @@ templ encountersScene(v encountersView) {
 templ copyEncounterButton() {
 	@ds.Button(ds.ButtonGhost, templ.Attributes{
 		"type":          "button",
-		"data-on:click": "navigator.clipboard.writeText(location.origin + document.getElementById('encounters').dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)",
+		"data-on:click": ui.CopyThen("location.origin + document.getElementById('encounters').dataset.url", "$copied = true; setTimeout(() => $copied = false, 2000)"),
 	}) {
 		@ui.Icon("Copy", "ds-icon")
 		<span data-show="!$copied">Copiar link</span>
