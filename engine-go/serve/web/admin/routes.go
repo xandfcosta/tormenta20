@@ -13,6 +13,7 @@ import (
 
 	"t20engine/app/accounts"
 	"t20engine/serve/web/ds"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
@@ -163,7 +164,7 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite("/register?convite="+url.QueryEscape(invite.Token)))
+	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite(routes.AccountInvite(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return

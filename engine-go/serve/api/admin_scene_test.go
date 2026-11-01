@@ -267,3 +267,31 @@ func TestWithoutBackupsTheAdminSaysSo(t *testing.T) {
 		t.Error("a seção vazia não diz que não há backup, ou perdeu o botão")
 	}
 }
+
+// O link do convite LEVA à porta de cadastro. Os dois lugares que cunham e a lista são
+// seguidos até o fim: o caminho sai do que a tela entrega, e não é escrito aqui.
+func TestTheInviteLinkOpensTheSignUp(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	path := regexp.MustCompile(`data-path="([^"]+)"`)
+	listed := regexp.MustCompile(`data-url="([^"]+)"`)
+
+	fromAdmin := path.FindStringSubmatch(askScene(t, s, boss, http.MethodPost, "/admin/convites").Body.String())
+	fromHub := path.FindStringSubmatch(askScene(t, s, boss, http.MethodPost, "/convites").Body.String())
+	fromList := listed.FindStringSubmatch(askScene(t, s, boss, http.MethodGet, "/admin").Body.String())
+	for name, found := range map[string][]string{"administração": fromAdmin, "início": fromHub, "lista": fromList} {
+		if found == nil {
+			t.Fatalf("%s: a tela não entregou caminho nenhum", name)
+		}
+		address := strings.ReplaceAll(found[1], "&amp;", "&")
+		rec := httptest.NewRecorder()
+		s.WebRouter().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, address, nil))
+		if rec.Code != http.StatusOK {
+			t.Errorf("%s: o link %s deu status %d", name, address, rec.Code)
+			continue
+		}
+		if !strings.Contains(rec.Body.String(), `action="/criar-conta"`) {
+			t.Errorf("%s: o link %s não abriu o cadastro", name, address)
+		}
+	}
+}

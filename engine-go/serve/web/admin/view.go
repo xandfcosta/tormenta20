@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"t20engine/infra/db/dbvalue"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 	"time"
 )
@@ -97,7 +98,7 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 			Token:   c.Token,
 			Label:   "Link de convite " + firstChars(c.Token, 6),
 			Expires: expiryLabel(c.Expiresat, time.Now()),
-			URL:     "/register?convite=" + c.Token,
+			URL:     routes.AccountInvite(c.Token),
 		})
 	}
 

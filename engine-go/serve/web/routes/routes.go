@@ -73,6 +73,13 @@ const Entry = "/verbete"
 // é exatamente o que este pacote veio impedir.
 const masterRail = "/mestre/"
 
+// AccountInvite é o endereço de um convite de conta, a porta de cadastro. Mora aqui porque
+// duas telas o cunham e a da administração o lista, e cada uma escrevendo o seu foi como
+// todos ficaram apontando para uma rota que não existe mais.
+func AccountInvite(token string) string {
+	return "/criar-conta?convite=" + url.QueryEscape(token)
+}
+
 // MasterEntry é o endereço de UM verbete: a aba do trilho mostrando só ele.
 //
 //	routes.MasterEntry("condicoes", "abalado")  // "/mestre/condicoes?entrada=abalado"

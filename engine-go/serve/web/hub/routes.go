@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"t20engine/serve/web/ds"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -65,7 +66,7 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ds.MintedInvite`.
-	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite("/register?convite="+invite.Token))
+	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite(routes.AccountInvite(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return
