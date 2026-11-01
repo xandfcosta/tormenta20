@@ -2,6 +2,7 @@ package finder
 
 import (
 	"fmt"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 import "strconv"
@@ -14,8 +15,9 @@ import "strconv"
 // `scene-nav.ts` procura `dialog[open]`. Sem isso as setas continuariam andando
 // na lista ATRÁS da caixa.
 //
-// `m-auto` é obrigatório: o preflight do Tailwind zera a margem de todo
-// elemento, e a centralização de um modal nativo é justamente a `margin: auto`.
+// O `scene-ds` vai NA CAIXA, porque ela abre por cima das telas que ainda não migraram,
+// e os tokens do Tempestade só valem dentro desse escopo. Não é um `ds.Dialog` porque o
+// campo mora na cabeça, no lugar do título.
 //
 // A caixa mora na CASCA e é desenhada UMA vez por página. Ela não é remendada —
 // só o `#finder-found` de dentro é —, e essa divisão importa: o
@@ -24,14 +26,13 @@ import "strconv"
 templ Dialog() {
 	<dialog
 		id="finder"
+		class="scene-ds ds-dialog ds-finder"
 		data-preserve-attr="open"
 		aria-labelledby="finder-title"
 		data-on:keydown={ ui.WalkTheSearch }
-		class="scene-grimorio m-auto w-[min(42rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/60"
 	>
 		<h2 id="finder-title" class="sr-only">Buscar no livro</h2>
-		<div class="finder-row flex items-center gap-2 border-b border-grimorio-iron px-3 transition-colors">
-			<span aria-hidden="true" class="text-sm text-muted-foreground">⌕</span>
+		<div class="ds-finder-field">
 			// O NOME DO SINAL É MINÚSCULO porque o analisador de HTML minuscula
 			// nome de atributo: um `data-bind:buscaDoLivro` ligaria um sinal
 			// `buscadolivro` e deixaria o declarado intocado.
@@ -40,26 +41,18 @@ templ Dialog() {
 			// MESMO documento. Duas ligações no mesmo sinal fariam digitar aqui
 			// reescrever o filtro da tela atrás — e o `@get` da cena mandaria o
 			// texto do buscador.
-			<input
-				id="finder-field"
-				type="text"
-				data-bind:finder
-				data-on:input__debounce.200ms={ "@get('" + finderRoute + "')" }
-				autocomplete="off"
-				placeholder="Buscar no livro"
-				aria-label="Buscar no livro"
-				class="min-h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-			/>
+			@ds.SearchField("finder-field", "Buscar no livro", templ.Attributes{
+				"data-bind:finder": true, "autocomplete": "off",
+				// No `type=search` o Esc limpa o campo e a caixa fica aberta. Aqui ele fecha, que
+				// é o que ele faz em toda caixa do app.
+				"data-on:keydown": "evt.key === 'Escape' && (evt.preventDefault(), el.closest('dialog').close())",
+				"data-on:input__debounce.200ms": "@get('" + finderRoute + "')",
+			})
+			<form method="dialog">
+				@ds.IconButton(ds.ButtonGhost, "X", "Fechar", nil)
+			</form>
 		</div>
 		@finderResults(finderView{})
-		<p aria-hidden="true" class="flex items-center justify-end gap-1 border-t border-grimorio-iron px-3 py-1.5 text-3xs text-muted-foreground">
-			@ui.Key("↑↓")
-			{ " navegar" }
-			@ui.Key("⏎")
-			{ " abrir" }
-			@ui.Key("Esc")
-			{ " fechar" }
-		</p>
 	</dialog>
 }
 
@@ -69,58 +62,46 @@ templ Dialog() {
 // resultado chega 200ms depois da tecla, e sem o anúncio quem usa leitor de tela
 // digita no escuro.
 templ finderResults(v finderView) {
-	<div id="finder-found" aria-live="polite" class="max-h-[60vh] overflow-y-auto p-2">
+	<div id="finder-found" class="ds-finder-found" aria-live="polite">
 		if !v.Buscando() {
-			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
-				Procura em criaturas, condições, magias, poderes e itens do livro.
-			</p>
+			@ds.Empty("Buscar no livro", "Procura em criaturas, condições, magias, poderes e itens.")
 		} else if v.Findings == 0 {
-			<p class="px-2 py-8 text-center text-xs text-muted-foreground">
-				{ "Nada no livro casa com “" + v.Search + "”." }
-			</p>
+			@ds.Empty("Nada encontrado", "Nada no livro casa com “"+v.Search+"”.")
 		} else {
 			// O AVISO da segunda passada: sem ele, uma lista em que o termo não
 			// aparece em nome nenhum parece a lista errada. Ver `searchTheBook`.
 			if v.ByText {
-				<p class="px-2 pt-2 text-3xs text-muted-foreground">
-					{ "Nenhum nome casa — estes mencionam “" + v.Search + "” no texto da regra." }
-				</p>
+				<p class="ds-row-meta">{ "Nenhum nome casa — estes mencionam “" + v.Search + "” no texto da regra." }</p>
 			}
 			for _, g := range v.Groups {
-				<p class={ ui.FieldLabelClasses("gold", "px-2 pt-2 pb-1") }>{ g.Label }</p>
-				<ul>
+				<section class="ds-finder-group" aria-label={ g.Label }>
+					<h3 class="ds-list-head">{ g.Label }</h3>
 					for _, a := range g.Findings {
-						<li>
-							// `<a>` de verdade: abrir é NAVEGAR, e um botão com
-							// JavaScript perderia o clique do meio, o "abrir em
-							// nova aba" e o Enter que o navegador já dá de graça.
-							// O `data-resultado` é o que as setas percorrem.
-							<a
-								href={ templ.SafeURL(a.Destination) }
-								data-resultado
-								class="flex min-h-11 items-center gap-2 rounded-sm px-2 text-sm outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
-							>
-								<span class="shrink-0 font-semibold">{ a.Name }</span>
-								<span class="truncate text-3xs text-muted-foreground">{ a.Detail }</span>
-								if a.Page > 0 {
-									<span class="ml-auto shrink-0 font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("p%d", a.Page) }</span>
+						// `<a>` de verdade: abrir é NAVEGAR, e um botão com
+						// JavaScript perderia o clique do meio, o "abrir em
+						// nova aba" e o Enter que o navegador já dá de graça.
+						// O `data-resultado` é o que as setas percorrem.
+						<a href={ templ.SafeURL(a.Destination) } class="ds-row ds-finder-row" data-resultado>
+							<div>
+								<div class="ds-row-title">{ a.Name }</div>
+								if a.Detail != "" {
+									<div class="ds-row-meta">{ a.Detail }</div>
 								}
-							</a>
-						</li>
+							</div>
+							if a.Page > 0 {
+								<span class="ds-row-meta">{ fmt.Sprintf("p%d", a.Page) }</span>
+							}
+						</a>
 					}
 					// O CORTE é dito e tem saída: um "+12" que não leva a lugar
 					// nenhum informa e abandona. Este leva à cena da ferramenta
 					// com a mesma busca, que é onde os doze estão.
 					if g.Cortados() > 0 {
-						<li>
-							<a
-								href={ templ.SafeURL(g.More) }
-								data-resultado
-								class="flex min-h-11 items-center rounded-sm px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
-							>{ "+" + strconv.Itoa(g.Cortados()) + " em " + g.Label }</a>
-						</li>
+						<a href={ templ.SafeURL(g.More) } class="ds-row ds-finder-row ds-finder-more" data-resultado>
+							{ "+" + strconv.Itoa(g.Cortados()) + " em " + g.Label }
+						</a>
 					}
-				</ul>
+				</section>
 			}
 		}
 	</div>

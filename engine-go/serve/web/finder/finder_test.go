@@ -5,6 +5,7 @@ import (
 	"strings"
 	"t20engine/domain/search"
 	"t20engine/serve/web/routes"
+	"t20engine/serve/web/ui"
 	"testing"
 )
 
@@ -176,5 +177,27 @@ func TestATieKeepsTheOrderOfTheRow(t *testing.T) {
 	}
 	if groups[1].Label != "Condições" || groups[2].Label != "Magias" {
 		t.Errorf("o empate não manteve a ordem da fileira: %q, %q", groups[1].Label, groups[2].Label)
+	}
+}
+
+// A busca veste o Tempestade por conta própria: ela abre por cima das telas que ainda não
+// migraram, e o escopo dos tokens tem de ir com ela.
+func TestTheFinderWearsItsOwnSystemScope(t *testing.T) {
+	box, err := ui.RenderFragment(t.Context(), Dialog())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if !strings.Contains(box, "scene-ds") || strings.Contains(box, "grimorio") {
+		t.Errorf("a caixa não saiu só no Tempestade: %s", box[:min(len(box), 300)])
+	}
+	found, err := ui.RenderFragment(t.Context(), finderResults(searchTheBook("fogo")))
+	if err != nil {
+		t.Fatalf("render dos achados: %v", err)
+	}
+	if !strings.Contains(found, "data-resultado") {
+		t.Fatal("a busca por fogo não achou nada, e este caso não mediria nada")
+	}
+	if strings.Contains(found, "grimorio") {
+		t.Error("os achados ainda desenham classe do grimório")
 	}
 }

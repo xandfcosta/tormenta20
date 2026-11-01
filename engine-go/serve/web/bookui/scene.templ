@@ -91,21 +91,25 @@ templ Chunk(chunk book.Chunk, bookRef BookAddress) {
 // e camada de topo. E o driver de teclado da cena se recolhe sozinho, porque ele
 // procura `dialog[open]` — as setas passam a ser do livro, que é o que se quer
 // com o livro aberto na frente.
+//
+// O `scene-ds` vai NA CAIXA, porque ela abre por cima das telas que ainda não migraram. Não
+// é um `ds.Dialog` porque o miolo é o `<iframe>`, sem o recuo do corpo, e o `close` tem
+// trabalho a fazer.
 templ BookDialog() {
 	<dialog
 		id="book-in-dialog"
+		class="scene-ds ds-dialog ds-book"
 		data-preserve-attr="open"
-		aria-label="O livro"
+		aria-labelledby="book-in-dialog-title"
 		data-on:close="el.querySelector('iframe').src = 'about:blank'"
-		class="scene-grimorio m-auto h-[min(92vh,60rem)] w-[min(72rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-0 text-foreground backdrop:bg-black/70"
 	>
-		<button
-			type="button"
-			aria-label="Fechar o livro"
-			data-on:click="el.closest('dialog').close()"
-			class="absolute right-2 top-2 z-10 flex size-11 items-center justify-center rounded-sm border border-grimorio-iron bg-grimorio-panel text-lg text-muted-foreground outline-none transition-colors hover:text-foreground"
-		>×</button>
-		<iframe title="O livro" class="size-full border-0"></iframe>
+		<div class="ds-dialog-head">
+			<h2 class="ds-dialog-title" id="book-in-dialog-title">O livro</h2>
+			<form method="dialog">
+				@ds.IconButton(ds.ButtonGhost, "X", "Fechar o livro", nil)
+			</form>
+		</div>
+		<iframe title="O livro"></iframe>
 	</dialog>
 }
 

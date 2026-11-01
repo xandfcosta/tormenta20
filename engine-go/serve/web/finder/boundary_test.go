@@ -24,6 +24,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/book":      true, // o catálogo TIPADO, e não o `catalog` cru
 	"t20engine/domain/search":    true, // o casamento e a pontuação
 	"t20engine/serve/web/ui":     true, // o kit de apresentação
+	"t20engine/serve/web/ds":     true, // o kit do Tempestade
 	"t20engine/serve/web/routes": true, // os endereços que ela cita das vizinhas
 }
 

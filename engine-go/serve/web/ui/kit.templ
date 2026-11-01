@@ -248,22 +248,3 @@ const WalkTheSearch = `['ArrowDown', 'ArrowUp'].includes(evt.key) && (evt.preven
 	`evt.key === 'Enter' && document.activeElement?.id === 'finder-field' && ` +
 	`(evt.preventDefault(), el.querySelector('[data-resultado]')?.click())`
 
-// Key é a dica de atalho. Ela só é escrita onde a tecla FUNCIONA de verdade:
-// uma dica que anuncia um atalho morto é pior que dica nenhuma, porque ensina
-// errado.
-//
-// A chamada tem de começar a LINHA. Escrita no meio de um texto
-// (`Abrir ficha @Key("⏎")`), o templ a trata como texto literal e a página
-// mostra `@Key("⏎")` na tela.
-//
-// Ela NÃO define cor: herda a de quem a contém, com `opacity-70`. Uma dica de
-// tecla aparece dentro de botões de cores diferentes, então cor própria é cor
-// errada em algum deles — `text-muted-foreground` dá 1,22:1 dentro do botão
-// dourado.
-//
-// E some abaixo de `xl`: a tecla não existe no toque, e anunciar atalho para
-// quem não tem teclado é ruído.
-templ Key(label string) {
-	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ label }</kbd>
-}
-

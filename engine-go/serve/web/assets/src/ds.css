@@ -4407,6 +4407,78 @@
     }
   }
 
+  /* A BUSCA DO LIVRO (ALE-549, mockup `busca.html`). A altura é fixa para o diálogo não
+   * pular de tamanho enquanto a lista encolhe a cada tecla. */
+  .ds-finder {
+    width: min(42rem, calc(100vw - 2rem));
+  }
+  .ds-finder[open] {
+    height: min(36rem, 85dvh);
+  }
+  .ds-finder-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-finder-found {
+    display: grid;
+    flex: 1;
+    grid-auto-rows: max-content;
+    gap: 1rem;
+    min-height: 0;
+    padding: 0.75rem 1rem;
+    overflow: auto;
+  }
+  .ds-finder-group {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .ds-finder-group > .ds-list-head {
+    margin: 0;
+    padding: 0;
+  }
+  .ds-finder-row {
+    padding-inline: 0.5rem;
+    border-top: 0;
+    border-radius: var(--ds-r-control);
+  }
+  .ds-finder-more {
+    color: var(--ds-action);
+    font-size: var(--ds-t-sm);
+  }
+  /* O SELECIONADO é só o fundo, decisão do dono: a borda ficava estranha. O primeiro
+   * achado acende enquanto o foco está no campo, porque é ele que o Enter abre. */
+  .ds-finder-row:is(:hover, :focus),
+  .ds-finder:has(#finder-field:focus) .ds-finder-group:first-of-type > .ds-finder-row:first-of-type {
+    background: var(--ds-sunk);
+  }
+  /* O livro é um documento: o `iframe` ocupa todo o resto, sem o recuo do corpo. */
+  .ds-book {
+    width: min(72rem, calc(100vw - 2rem));
+  }
+  .ds-book[open] {
+    height: min(92dvh, 60rem);
+  }
+  .ds-book > iframe {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+  }
+  @media (max-width: 40rem) {
+    .ds-finder,
+    .ds-book {
+      width: 100vw;
+    }
+    .ds-finder[open],
+    .ds-book[open] {
+      height: 92dvh;
+    }
+  }
+
   /* A FOLHA VIVA (ALE-541, mockup `sistema.html`): uma amostra de cada peça, dividida
    * em seções, com um índice à esquerda no desktop e numa fileira no celular. */
   .ds-specimen {
@@ -5419,4 +5491,11 @@
       display: none;
     }
   }
+}
+
+/* O ACHADO SELECIONADO não desenha contorno, decisão do dono: quem marca é o fundo. Fora de
+ * `@layer` para disputar com a regra global do foco, que também está fora, e com a mesma
+ * especificidade dela: o `[tabindex]` do `:is()` lá pesa, e ganha quem vem depois. */
+.scene-ds.ds-finder .ds-finder-row:focus-visible {
+  outline: none;
 }

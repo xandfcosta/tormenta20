@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { medeOContraste } from './support/contrast'
+import { measureDsTouchTargets } from './support/ds-floors'
 
 /**
  * O BUSCADOR DO LIVRO: ⌃K abre uma caixa que procura nas 1.072 entradas do
@@ -94,30 +96,53 @@ test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
   expect(page.url()).toContain('/mestre/bestiario')
 })
 
-test('o campo do buscador acende a linha, e não um retângulo colado na caixa', async ({ page }) => {
+test('o achado selecionado é só o fundo, sem contorno', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/mestre/condicoes')
+  await page.goto('/')
   await page.keyboard.press('Control+k')
-  await expect(page.locator(CAMPO)).toBeFocused()
+  await page.keyboard.type('abalado')
+  const first = page.locator(ACHADO).first()
+  await expect(first).toHaveText(/Abalado/)
 
-  // O defeito, visto pelo dono na tela: a regra global da casa dá anel dourado a
-  // qualquer `input` da cena e VENCE o `outline-none` do utilitário. Num campo
-  // com borda isso fica certo; aqui o campo é a linha inteira do diálogo, e o
-  // anel saía como um retângulo colado nas bordas.
-  //
-  // E2E porque a pergunta é de CASCATA: quem ganha entre duas folhas, e um
-  // `:has()` que acende o pai. Só o navegador resolve isso.
-  const measure = await page.evaluate(() => {
-    const field = document.getElementById('finder-field')!
-    const row = field.closest('.finder-row')!
-    return {
-      anelDoCampo: getComputedStyle(field).outlineStyle,
-      bordaDaLinha: getComputedStyle(row).borderBottomColor,
-      bordaDeFora: getComputedStyle(document.getElementById('finder')!).borderTopColor,
-    }
-  })
-  expect(measure.anelDoCampo, 'o campo ainda desenha o anel do navegador').toBe('none')
-  // O CONTROLE: a linha acende com uma cor DIFERENTE da borda da caixa. Sem ele,
-  // "tem borda" seria verdade sobre a borda de sempre.
-  expect(measure.bordaDaLinha).not.toBe(measure.bordaDeFora)
+  // O CONTROLE é o fundo da caixa: sem ele, "tem fundo" seria verdade sobre o de sempre, e o
+  // mostrador não testemunharia a seleção.
+  const resting = await page.locator(CAIXA).evaluate((e) => getComputedStyle(e).backgroundColor)
+
+  await page.keyboard.press('ArrowDown')
+  await expect(first).toBeFocused()
+  const measure = await first.evaluate((e) => ({
+    outline: getComputedStyle(e).outlineStyle,
+    shadow: getComputedStyle(e).boxShadow,
+    background: getComputedStyle(e).backgroundColor,
+  }))
+  expect(measure.outline, 'o selecionado desenhou contorno').toBe('none')
+  expect(measure.shadow, 'o selecionado desenhou borda por sombra').toBe('none')
+  expect(measure.background, 'o selecionado não muda de fundo').not.toBe(resting)
+})
+
+/**
+ * Com a busca aberta, o que ela desenha passa nos pisos do Tempestade. O laço de aparência
+ * só mede a página com a caixa FECHADA, e um guarda só mede o que ele visita.
+ */
+test.describe('os pisos com a busca aberta', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  for (const colorScheme of ['light', 'dark'] as const) {
+    test(`a busca aberta passa nos pisos em ${colorScheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme })
+      await page.goto('/')
+      await page.waitForLoadState('networkidle')
+      await page.evaluate(() => {
+        ;(document.getElementById('finder') as HTMLDialogElement).showModal()
+      })
+      await page.locator(CAMPO).fill('fogo')
+      await expect(page.locator(ACHADO).first()).toBeVisible()
+
+      const contrast = await medeOContraste(page)
+      expect(contrast.medidos, 'o medidor quase não achou texto').toBeGreaterThan(10)
+      expect(contrast.falhas, 'texto abaixo do AA com a busca aberta').toEqual([])
+      const touch = await measureDsTouchTargets(page)
+      expect(touch.falhas, 'alvo menor que 44×44 na busca').toEqual([])
+    })
+  }
 })
