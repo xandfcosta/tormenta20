@@ -226,59 +226,38 @@ func TestSimultaneousJoinsCreateOneMember(t *testing.T) {
 // do `httpio.DecodeJSON`, chamado por todo comando de cena. É lá que ela deve ser
 // presa se alguém quiser um guarda dela.
 
-// A CÓPIA DE MESA ENTRA FERIDA se o herói estava ferido.
-//
-// A entrada numa campanha clona a ficha, e o clone copiava PV e PM atuais nas
-// colunas de `characters`. Elas saíram na 00015: o poço é derivado e o que se
-// guarda é a DÍVIDA, numa tabela à parte. Um clone que não a copiasse não
-// falharia nada — a cópia simplesmente entraria CHEIA, e entrar numa mesa
-// viraria uma cura de sessão inteira (ALE-355).
-//
-// O CONTROLE vem primeiro e é obrigatório: um herói cheio entra cheio de
-// qualquer jeito, então o caso mediria o repouso. Aqui ele é ferido ANTES, e a
-// asserção compara com o dano semeado — não com "está menos que o máximo", que
-// um clone pela metade também satisfaria.
-func TestTheTableCopyEntersAsWoundedAsTheHero(t *testing.T) {
-	f := newMemberFixture(t)
-	hero := seedCharacterAtLevel(t, f.s, f.owner, "Ferido", "Guerreiro", 5, 12, 4)
-	otherTable := seedCampaign(t, f.s, f.owner)
-
-	original := poolsOf(t, f.s, hero)
-	if original.HpCurrent == original.HpMax || original.MpCurrent == original.MpMax {
-		t.Fatalf("o herói entrou CHEIO em %d/%d PV e %d/%d PM — o caso mediria o repouso",
-			original.HpCurrent, original.HpMax, original.MpCurrent, original.MpMax)
+// A cópia nasce inteira: o que o rascunho tinha de jogo, de ficha antiga, não entra na campanha.
+func TestTheCopyIsBornWithoutPlayState(t *testing.T) {
+	s := newTestServer(t)
+	ctx := context.Background()
+	owner := seedUser(t, s, "dono@t20.local")
+	campaignID := seedCampaign(t, s, owner)
+	draftID := seedCharacterAtLevel(t, s, owner, "Ferida", "Guerreiro", 3, 7, 2)
+	if _, err := s.db.ExecContext(ctx, `UPDATE characters SET activeConditions = '["caido"]' WHERE id = ?`, draftID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.db.ExecContext(ctx, `INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt)
+		VALUES (?, 'spell', 'armadura-arcana', 'scene', '[]', '2026-11-01')`, draftID); err != nil {
+		t.Fatal(err)
 	}
 
-	if err := f.addMember(t, f.owner, otherTable, hero); err != nil {
-		t.Fatalf("entrada legítima foi recusada: %v", err)
+	if err := s.campaignSeating().Seat(ctx, owner, campaignID, draftID, ""); err != nil {
+		t.Fatalf("sentar: %v", err)
 	}
-
-	dup := poolsOf(t, f.s, onlyCopyOf(t, f.s, hero))
-	if dup != original {
-		t.Errorf("a cópia entrou em %+v e o original está em %+v — a dívida não veio junto",
-			dup, original)
+	var copyID int64
+	if err := s.db.QueryRowContext(ctx, `SELECT id FROM characters WHERE sourceCharacterId = ?`, draftID).Scan(&copyID); err != nil {
+		t.Fatal(err)
 	}
-}
-
-// onlyCopyOf devolve o id da única cópia de mesa do molde, e FALHA se houver
-// outro número: com duas, "a cópia" não identifica nada.
-func onlyCopyOf(t *testing.T, s *Server, sourceID int64) int64 {
-	t.Helper()
-	var id int64
-	rows, err := s.db.Query(`SELECT id FROM characters WHERE sourceCharacterId = ?`, sourceID)
-	if err != nil {
-		t.Fatalf("achar a cópia: %v", err)
+	if pools := poolsOf(t, s, copyID); pools.HpCurrent != pools.HpMax || pools.MpCurrent != pools.MpMax {
+		t.Errorf("a cópia nasceu com PV %d de %d e PM %d de %d", pools.HpCurrent, pools.HpMax, pools.MpCurrent, pools.MpMax)
 	}
-	defer rows.Close()
-	found := 0
-	for rows.Next() {
-		if err := rows.Scan(&id); err != nil {
-			t.Fatalf("ler a cópia: %v", err)
-		}
-		found++
+	var effects int
+	var conditions string
+	if err := s.db.QueryRowContext(ctx, `SELECT activeConditions, (SELECT COUNT(*) FROM active_effects WHERE characterId = ?) FROM characters WHERE id = ?`,
+		copyID, copyID).Scan(&conditions, &effects); err != nil {
+		t.Fatal(err)
 	}
-	if found != 1 {
-		t.Fatalf("o molde %d tem %d cópias, e o caso precisa de exatamente uma", sourceID, found)
+	if conditions != "[]" || effects != 0 {
+		t.Errorf("a cópia nasceu com condições %s e %d efeitos", conditions, effects)
 	}
-	return id
 }

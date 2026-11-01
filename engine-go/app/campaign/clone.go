@@ -30,7 +30,7 @@ SELECT
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
   secondaryRaceChoices, originChoices, classChoices,
-  activeConditions, ?, ?, ?, ?
+  '[]', ?, ?, ?, ?
 FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	if err != nil {
 		return 0, fmt.Errorf("clonar a ficha do molde %d: %w", sourceID, err)
@@ -40,8 +40,9 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		return 0, err
 	}
 
-	// AS TABELAS FILHAS, uma por `INSERT…SELECT` sob o id novo. As que têm
-	// carimbo próprio — itens, efeitos, magias — levam um `now` fresco: a cópia
+	// AS TABELAS FILHAS, uma por `INSERT…SELECT` sob o id novo. Dano, efeitos e condições NÃO
+	// vêm: quem joga é a cópia, e ela nasce inteira (ALE-564). As que têm
+	// carimbo próprio — itens, magias — levam um `now` fresco: a cópia
 	// nasce agora, e herdar o carimbo do molde faria a mesa dizer que o item
 	// entrou na mochila antes de o herói existir nela.
 	steps := []struct {
@@ -55,8 +56,6 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 			SELECT ?, name, attribute, trained, custom FROM character_expertises WHERE characterId = ?`, []any{destID, sourceID}},
 		{"items", `INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
 			SELECT ?, catalogId, name, quantity, slots, equipped, improvements, material, ? FROM character_items WHERE characterId = ?`, []any{destID, now, sourceID}},
-		{"effects", `INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt)
-			SELECT ?, source, catalogId, scope, modifiers, ? FROM active_effects WHERE characterId = ?`, []any{destID, now, sourceID}},
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
 		// O HISTÓRICO POR NÍVEL vem junto: é daqui que saem os poderes da ficha, e a cópia
@@ -64,12 +63,6 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"level choices", `INSERT INTO character_level_choices (characterId, level, kind, ref, pick, estimated)
 			SELECT ?, level, kind, ref, pick, estimated FROM character_level_choices WHERE characterId = ? ORDER BY id`,
 			[]any{destID, sourceID}},
-		// O DANO vem junto, e é o que faz um herói ferido entrar na mesa ferido.
-		// Ele era copiado nas colunas `hpCurrent`/`mpCurrent` do INSERT acima,
-		// que saíram na 00015: o poço é derivado e o que se guarda é a dívida.
-		// Sem esta linha, entrar numa campanha viraria uma cura (ALE-355).
-		{"damage", `INSERT INTO character_damage (characterId, hpDamage, mpSpent)
-			SELECT ?, hpDamage, mpSpent FROM character_damage WHERE characterId = ?`, []any{destID, sourceID}},
 	}
 	for _, step := range steps {
 		if _, err := tx.ExecContext(ctx, step.sql, step.args...); err != nil {

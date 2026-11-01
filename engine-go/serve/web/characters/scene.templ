@@ -47,6 +47,7 @@ templ SceneBody(v View) {
 						</div>
 					}
 				} else {
+					<h2 class="ds-field-label">Rascunhos</h2>
 					<div class="ds-cast-grid" data-nav-region="personagens" data-nav-layout="grid">
 						for _, h := range v.Heroes {
 							@heroCardView(h)

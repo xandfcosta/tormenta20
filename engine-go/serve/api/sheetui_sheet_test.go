@@ -29,6 +29,7 @@ func sheetOf(t *testing.T, name string, level int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, name, "Arcanista", level, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	return f, id
 }
 

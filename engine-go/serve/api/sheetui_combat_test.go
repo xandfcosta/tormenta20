@@ -64,6 +64,7 @@ func fighterFixture(t *testing.T) (sceneFixture, int64) {
 	seedPericia(t, f.s, id, "Fortitude", "constitution", false)
 	seedPericia(t, f.s, id, "Reflexos", "dexterity", false)
 	seedPericia(t, f.s, id, "Vontade", "wisdom", false)
+	seedMember(t, f.s, f.campaignID, id)
 	return f, id
 }
 

@@ -14,6 +14,7 @@ import (
 func TestTheToughWarriorPaysThreePmToHalveTheDamage(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Durona", "Guerreiro", 3, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
 
 	if !strings.Contains(powerScreen(t, f, id), `aria-label="Usar Durão"`) {
 		t.Fatal("a guerreira de nível 3 não tem o gesto do Durão")
@@ -31,6 +32,7 @@ func TestTheToughWarriorPaysThreePmToHalveTheDamage(t *testing.T) {
 func TestAGeneralPowerThatSpendsPmHasAGesture(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lâmina", "Guerreiro", 3, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	choiceCom(t, f, id, `["trespassar"]`, "[]")
 
 	before := pm(t, f, id)
@@ -48,6 +50,7 @@ func TestAGeneralPowerThatSpendsPmHasAGesture(t *testing.T) {
 func TestShoutingOrdersPaysUpToTheCharisma(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Generala", "Nobre", 4, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	if _, err := f.s.db.ExecContext(context.Background(), "UPDATE characters SET charisma = 3 WHERE id = ?", id); err != nil {
 		t.Fatal(err)
 	}

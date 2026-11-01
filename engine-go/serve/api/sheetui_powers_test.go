@@ -44,6 +44,7 @@ func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int
 		pools.HpCurrent, pools.MpCurrent = pools.HpMax, pools.MpMax-pmSpent
 		return pools, nil
 	})
+	seedMember(t, f.s, f.campaignID, id)
 	return f, id
 }
 

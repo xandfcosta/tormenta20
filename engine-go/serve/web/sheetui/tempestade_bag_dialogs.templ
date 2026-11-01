@@ -29,7 +29,7 @@ templ itemSheetDs(v View, s itemSheet) {
 				</div>
 			</div>
 		}
-		if s.Consumable != nil {
+		if s.Consumable != nil && !v.Draft {
 			// O DADO É DA MESA: quem rola é a pessoa, e o servidor aceita o
 			// número que ela mandar (ver `consumeBlock`).
 			<div class="ds-field">

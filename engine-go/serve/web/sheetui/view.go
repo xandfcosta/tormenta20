@@ -28,6 +28,9 @@ type View struct {
 	// jogador produz DOIS pedidos — o dele e o do aviso que a escrita dele
 	// acabou de provocar.
 	Version string
+	// Draft diz que esta ficha é um rascunho: ela só monta o personagem, e os gestos de jogar não
+	// aparecem (ver `onlyInPlay`).
+	Draft bool
 	// Embedded diz que esta ficha está sendo desenhada DENTRO da sessão.
 	//
 	// Ela muda duas coisas na tela, e as duas são sobre NAVEGAÇÃO: a barra com
@@ -143,6 +146,9 @@ type Tab struct {
 	Active bool
 }
 
+// effectsTab é a aba que só a cópia da campanha tem.
+const effectsTab = "conditionals"
+
 // Tabs são as sete seções, na ordem em que aparecem.
 //
 // OS VALORES SÃO ENDEREÇO GUARDADO, e não se "arrumam": `?tab=abilities`
@@ -158,7 +164,7 @@ func Tabs() []Tab {
 		{Value: "combat", Label: "Combate", Icon: "Swords"},
 		{Value: "bag", Label: "Mochila", Icon: "Backpack"},
 		{Value: "proficiencies", Label: "Proficiências", Icon: "ShieldCheck"},
-		{Value: "conditionals", Label: "Efeitos", Icon: "Zap"},
+		{Value: effectsTab, Label: "Efeitos", Icon: "Zap"},
 		{Value: "abilities", Label: "Poderes", Icon: "Star"},
 		{Value: "spells", Label: "Magias", Icon: "BookMarked"},
 	}
@@ -202,9 +208,15 @@ func (s Scene) Load(
 	if err != nil {
 		return View{}, 500, err
 	}
+	// O rascunho não tem a aba Efeitos, e o endereço dela cai na primeira, como um valor errado.
+	isDraft := !dto.CampaignID.Valid
+	if isDraft && aba == effectsTab {
+		aba = Tabs()[0].Value
+	}
 	card := characters.HeroCardOf(s.deps.Catalogs(), dto)
 	v := View{
 		ID:           dto.ID,
+		Draft:        isDraft,
 		Name:         dto.Name,
 		Version:      row.Updatedat,
 		Initials:     card.Monogram,
@@ -250,6 +262,9 @@ func (s Scene) Load(
 			attackBoostsFor(dto, cards))
 	}
 	for _, item := range Tabs() {
+		if isDraft && item.Value == effectsTab {
+			continue
+		}
 		item.Active = item.Value == aba
 		v.Tabs = append(v.Tabs, item)
 	}

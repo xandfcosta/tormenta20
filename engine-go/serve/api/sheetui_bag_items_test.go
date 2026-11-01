@@ -170,6 +170,7 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Ferido", "Guerreiro", 3, 20, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	if refusal := use(t, f, id, item, `{"item_roll_hp":7}`); refusal != "" {
@@ -192,6 +193,7 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 func TestUsingDoesNotGoPastMaximumHp(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Quase cheio", "Guerreiro", 3, 2, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	item := itemSemeia(t, f, id, "balsamo-restaurador", "Bálsamo restaurador", "")
 
 	if refusal := use(t, f, id, item, `{"item_roll_hp":8}`); refusal != "" {

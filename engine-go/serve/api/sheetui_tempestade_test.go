@@ -109,6 +109,7 @@ func TestTheSheetMenuSaysWhoTheCharacterIs(t *testing.T) {
 func TestAnActiveEffectInTheRailOpensItsDescription(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	if rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/efeitos/condicao/caido?tab=expertises", id), ""); rec.Code != http.StatusOK {
 		t.Fatalf("pôr Caído respondeu %d", rec.Code)

@@ -74,7 +74,6 @@ func TestThePreyMarkBuysTheTableDieAndAddsItAgainstTheMarkedCreature(t *testing.
 // instantâneo pergunta e cobra a ação como a postura já fazia.
 func TestThePreyMarkSpendsTheMovementAction(t *testing.T) {
 	f, id := hunterFixture(t, 1)
-	seedMember(t, f.s, f.campaignID, id)
 	f.charID = id
 	startActionSceneOnTurnOf(t, f, "Caçadora")
 
@@ -110,6 +109,7 @@ func hunterFixture(t *testing.T, level int64) (sceneFixture, int64) {
 		return pools, nil
 	})
 	seedPericia(t, f.s, id, "Luta", "strength", true)
+	seedMember(t, f.s, f.campaignID, id)
 	return f, id
 }
 
