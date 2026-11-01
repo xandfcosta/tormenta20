@@ -23,7 +23,16 @@ import { expectEveryToggleDrawsItsState } from './support/geometry'
 type Screen = { nome: string; rota: string; raiz?: string; abre?: (page: Page) => Promise<void> }
 
 const THE_SCREENS: Screen[] = [
-  { nome: 'o bestiário do mestre', rota: '/mestre/bestiario' },
+  // OS TIPOS moram na gaveta "Filtros", fechada de início: sem abri-la, a
+  // varredura não alcança controle nenhum.
+  {
+    nome: 'o bestiário do mestre',
+    rota: '/mestre/bestiario',
+    abre: async (page) => {
+      await page.locator('#bestiary summary', { hasText: 'Filtros' }).click()
+      await expect(page.getByRole('group', { name: 'Filtrar por tipo' })).toBeVisible()
+    },
+  },
   { nome: 'o acervo de condições', rota: '/mestre/condicoes' },
   // O NECROMANTE tem oito magias no grimório, e o "preparada" de cada uma é um
   // switch. Uma ficha SEM magia desenharia zero controles, e o caso passaria

@@ -202,7 +202,7 @@ func improvScene(v improvView) templ.Component {
 //
 // `<section aria-label>` e não `<div>`: um cartão com cabeçalho próprio É uma
 // região, e sem nome acessível ele vira caixa anônima para quem navega por
-// regiões — a mesma razão do `blockSection` no bestiário. De quebra, é o que
+// regiões. De quebra, é o que
 // deixa o teste apontar para UM cartão em vez de contar filhos de `div`, que é
 // o acoplamento a formato de DOM que o guia manda não escrever.
 func rollingTable(id, title, data, source string, history []roll) templ.Component {

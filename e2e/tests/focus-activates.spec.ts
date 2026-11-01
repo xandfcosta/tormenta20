@@ -21,7 +21,7 @@ test('a seta anda na lista e a ficha segue junto', async ({ page }) => {
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const sideSheet = page.locator('.mesa-painel')
+  const sideSheet = page.locator('[data-nav-region="ficha"]')
   const first = page.locator('a[href*="criatura="]').first()
   await first.focus()
   await expect(sideSheet).toContainText(/\S/)
@@ -43,7 +43,7 @@ test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const sheet = page.locator('.mesa-painel')
+  const sheet = page.locator('[data-nav-region="ficha"]')
   await page.locator('a[href*="criatura="]').first().focus()
 
   // PASSO DELIBERADO custa uma ida ao servidor por linha, e isso é o CERTO: quem
@@ -99,7 +99,7 @@ test('depois de uma travessia rápida a ficha é a da linha onde o foco PAROU', 
   const caption = (await focused.innerText()).split('\n')[0].trim()
 
   await expect
-    .poll(async () => (await page.locator('.mesa-painel').innerText()).includes(caption), {
+    .poll(async () => (await page.locator('[data-nav-region="ficha"]').innerText()).includes(caption), {
       timeout: 4000,
       intervals: [16],
     })
@@ -124,21 +124,14 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
   // Janela baixa de propósito: é o que faz a ficha transbordar. Numa tela alta a
   // ficha inteira cabe, nada rola, e o guarda passaria verde sem medir nada.
   //
-  // 680 e não 620, e a diferença é MEDIDA: a consulta de contêiner que decide
-  // entre painel lateral e diálogo pede 30rem (480px) de ALTURA do palco, e a
-  // 620px de janela o palco mede 476 — quatro abaixo. Lá o painel nem existe, e
-  // o controle abaixo acusa "não transborda" quando a verdade é "não está na
-  // tela". A 680 o palco mede 536 e a ficha esconde 111px.
-  //
-  // 1200 de LARGURA e não 1400, e este número também é medido: a ficha do
-  // monstro ganha DUAS COLUNAS quando o bloco passa de 46rem, e duas colunas
-  // cabem sem rolar — a 1400 o bloco mede 750px e esconde 0. A 1200 ele mede
-  // 550, empilha, e esconde 211px.
+  // 1200 de LARGURA e não 1400, e o número é medido: o painel da criatura
+  // recebe ~520px a 1200 e o bloco fica numa coluna só, que transborda. Mais
+  // largo, o bloco abre em DUAS colunas (46rem) e a ficha pode caber sem rolar.
   await page.setViewportSize({ width: 1200, height: 680 })
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
-  const panel = page.locator('.mesa-painel')
+  const panel = page.locator('[data-nav-region="ficha"]')
 
   // O CONTROLE, e ele é duplo: o painel precisa ROLAR (senão a asserção final é
   // vazia) e precisa ser FOCÁVEL (senão o teclado nunca chega lá).
@@ -260,8 +253,11 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
  * razão de o Esc não estar na legenda (medido: não faz nada nesta cena).
  */
 test('a legenda de teclado aparece no laptop e some no telefone', async ({ page }) => {
+  // NUMA TELA DO GRIMÓRIO: o Bestiário migrou para o Tempestade sem a legenda
+  // (decisão do dono, ALE-538) — os atalhos continuam, a faixa saiu. A legenda
+  // mora na casca das telas que ainda não migraram, e é numa delas que se mede.
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/mestre/bestiario')
+  await page.goto('/mestre/condicoes')
   await page.waitForLoadState('networkidle')
 
   const caption = page.getByText('trocar de painel')
@@ -277,12 +273,11 @@ test('a legenda de teclado aparece no laptop e some no telefone', async ({ page 
  * UM cursor só, e ele fica na MOLDURA da ficha — não por dentro do que rola.
  *
  * Anel no miolo desenha por dentro do scroll: acompanha a rolagem e some no
- * corte. E a convenção da casa é que item dentro de `[data-nav-region]` não usa
- * anel de navegador e sim a linguagem de "selecionado" (borda dourada e brilho)
- * — mas o seletor dela pede `a`, `button` ou `data-nav-item`, então um
- * `[tabindex]` puro cai na regra global de foco e acendem DOIS cursores.
+ * corte. No Tempestade o cursor é o anel do sistema, e quem o acende é a moldura
+ * (`.ds-master-entry:has(> [data-nav-item]:focus-visible)`); o miolo, que é quem
+ * recebe o foco, não desenha.
  *
- * E2E porque cascata com `:has()`, camadas e duas folhas só o navegador resolve.
+ * E2E porque cascata com `:has()` e a regra global de foco só o navegador resolve.
  */
 test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 760 })
@@ -297,25 +292,19 @@ test('a ficha focada acende UM cursor, e na moldura', async ({ page }) => {
       const cs = getComputedStyle(e)
       return cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0
     }
-    const panel = document.querySelector('.mesa-painel') as HTMLElement
+    const panel = document.querySelector('[data-nav-region="ficha"]') as HTMLElement
+    const rings = [...document.querySelectorAll('*')].filter(draws)
     return {
       focoNaFicha: !!document.activeElement?.closest('[data-nav-region="ficha"]'),
-      comAnel: [...document.querySelectorAll('*')].filter(draws).map((e) =>
-        String((e as HTMLElement).className).slice(0, 30),
-      ),
-      molduraAcesa: getComputedStyle(panel).boxShadow !== 'none',
-      mioloComBrilho:
-        getComputedStyle(document.activeElement as HTMLElement).boxShadow !== 'none',
+      aneis: rings.map((e) => String((e as HTMLElement).className).slice(0, 30)),
+      naMoldura: rings.length === 1 && rings[0] === panel,
     }
   })
 
-  // O CONTROLE: o foco está na ficha. Sem ele, "nenhum anel" seria verdade sobre
+  // O CONTROLE: o foco está na ficha. Sem ele, "um anel só" seria verdade sobre
   // uma tela em que nada está focado.
   expect(measure.focoNaFicha, 'o guarda não chegou na ficha').toBe(true)
-
-  expect(measure.comAnel, `anéis de contorno desenhados: ${measure.comAnel.join(' / ')}`).toEqual([])
-  expect(measure.molduraAcesa, 'a moldura da ficha não acendeu').toBe(true)
-  expect(measure.mioloComBrilho, 'o miolo acendeu por dentro do que rola').toBe(false)
+  expect(measure.naMoldura, `anéis desenhados: ${measure.aneis.join(' / ')} — o esperado é um só, na moldura`).toBe(true)
 })
 
 /**

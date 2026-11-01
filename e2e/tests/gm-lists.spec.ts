@@ -39,7 +39,7 @@ test('no tablet em pé, a lista do bestiário não deixa faixa morta', async ({ 
   // fica ~11px acima do fim do contêiner. Não cega o guarda — a banda morta que
   // ele caça mede centenas de pixels, e recolocar uma tampa de altura na lista
   // o deixa VERMELHO com a tolerância em 12.
-  await expectSemFaixaMorta(page, '[aria-labelledby=table-bestiary-panel]', 12)
+  await expectSemFaixaMorta(page, '#bestiary', 12)
 })
 
 /**
@@ -58,7 +58,7 @@ test('alargar a janela nunca tira uma coluna do bestiário', async ({ page }) =>
 
   await expectColunasMonotonicas(
     page,
-    '[aria-labelledby=table-bestiary-panel] div.grid',
+    '#bestiary',
     [1920, 1440, 1200, 1100, 1040, 1024, 1000, 950, 900, 860, 844, 830, 812, 800, 768, 390],
   )
 })
@@ -227,13 +227,20 @@ test('deitado os filtros viram gaveta, e em toda outra forma eles ficam abertos'
 test('deitado, a lista do bestiário mostra uma criatura inteira', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await page.goto('/mestre/bestiario')
-  const list = page.locator('#bestiary ul')
-  await expect(list, 'sem a lista não há medição').toBeVisible()
+  const first = page.locator('#bestiary a[href*="criatura="]').first()
+  await expect(first, 'sem a lista não há medição').toBeVisible()
 
-  const measure = await list.evaluate((ul) => ({
-    caixa: Math.round(ul.getBoundingClientRect().height),
-    linha: Math.round(ul.firstElementChild!.getBoundingClientRect().height),
-  }))
+  // O QUE SOBRA PARA A LISTA é a área que rola menos a barra de filtros presa no
+  // alto dela: no celular quem rola é a área principal da moldura, entre o
+  // cabeçalho e a barra de baixo, e não a lista sozinha.
+  const measure = await first.evaluate((row) => {
+    const main = row.closest('main') as HTMLElement
+    const bar = main.querySelector('.ds-filter-bar') as HTMLElement
+    return {
+      caixa: Math.round(main.clientHeight - bar.getBoundingClientRect().height),
+      linha: Math.round(row.getBoundingClientRect().height),
+    }
+  })
   expect(measure.linha, 'uma linha de zero passaria em qualquer teto').toBeGreaterThan(20)
   expect(
     measure.caixa,

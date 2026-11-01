@@ -29,6 +29,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/engine":    true, // as contas do encontro e a rolagem do improviso
 	"t20engine/domain/search":    true, // o casamento e a pontuação da busca do acervo
 	"t20engine/serve/web/ui":     true, // o kit de apresentação e a casca
+	"t20engine/serve/web/ds":     true, // o kit do Tempestade, para as telas que já migraram
 	"t20engine/serve/web/bookui": true, // o que sabe desenhar verbete, elo e selo de página
 	"t20engine/serve/web/routes": true, // os endereços que outra cena cita desta
 }

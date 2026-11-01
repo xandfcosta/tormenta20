@@ -35,7 +35,7 @@ import (
 // O conserto é o mesmo do guarda de tinta: caminhada, não lista — nem lista de
 // cenas, nem o diretório em que o arquivo por acaso mora.
 //
-// Medido: o `blockSection` do bestiário punha um `<h4>` dentro do
+// Medido: o bloco de criatura do bestiário antigo punha um `<h4>` dentro do
 // `@ui.SectionLabel`. Resultado na página — o `h4` virou filho da `<section>`,
 // `text-transform: none`, e VINTE E QUATRO parágrafos vazios na árvore de
 // acessibilidade.

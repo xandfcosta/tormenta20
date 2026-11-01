@@ -146,6 +146,17 @@
   outline: 2px solid var(--ds-focus);
   outline-offset: 2px;
 }
+/* A FICHA DA MESA DO MESTRE acende UM anel, e na MOLDURA. Quem recebe o foco é
+ * o miolo (`[data-nav-item]`, é como a seta chega), mas o anel dele seria
+ * desenhado por dentro do que rola — acompanharia a rolagem e sumiria no corte.
+ * A especificidade passa a da regra de cima pelo `[tabindex]`. */
+.scene-ds .ds-master-entry > [data-nav-item][tabindex]:focus-visible {
+  outline: none;
+}
+.scene-ds .ds-master-entry:has(> [data-nav-item]:focus-visible) {
+  outline: 2px solid var(--ds-focus);
+  outline-offset: 2px;
+}
 
 /* O KIT. Uma classe por peça, e a variante num atributo `data-*` — a peça
  * escreve a classe uma vez, e a tela não escolhe cor nenhuma por conta própria.
@@ -3464,9 +3475,26 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .ds-gm-creature {
+  .ds-gm-creature,
+  .ds-gm-creature-now,
+  .ds-gm-creature-rest {
     display: grid;
+    align-content: start;
     gap: 0.75rem;
+  }
+  /* DUAS COLUNAS quando o BLOCO cabe — consulta de contêiner, e não de mídia,
+   * porque o mesmo bloco é desenhado no painel largo da Mesa do Mestre e na
+   * folha estreita da mesa. */
+  .ds-master-entry-body,
+  .ds-gm-creature-body {
+    container-type: inline-size;
+  }
+  @container (min-width: 46rem) {
+    .ds-gm-creature {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: 1rem;
+    }
   }
   .ds-gm-creature .ds-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3689,6 +3717,187 @@
     width: 0.875rem;
     height: 0.875rem;
   }
+  /* A MESA DO MESTRE (ALE-538, mockup `ferramentas.html`). A moldura é uma grade
+   * de três linhas — cabeçalho, corpo, barra de baixo —, e no desktop o corpo
+   * ganha o menu à esquerda e a barra some. */
+  .ds-master {
+    display: grid;
+    flex: 1;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+  .ds-master-body {
+    display: grid;
+    min-height: 0;
+  }
+  .ds-master-menu {
+    display: none;
+  }
+  .ds-master-main {
+    min-height: 0;
+    padding: 0.75rem 1rem;
+    overflow: auto;
+  }
+  .ds-master-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: var(--ds-h-control);
+    padding: 0 0.625rem;
+    border-radius: var(--ds-r-control);
+    color: var(--ds-ink-2);
+    font-size: var(--ds-t-sm);
+    text-decoration: none;
+  }
+  .ds-master-link:hover {
+    background: var(--ds-sunk);
+    color: var(--ds-ink);
+  }
+  .ds-master-link[aria-current] {
+    background: color-mix(in oklab, var(--ds-action) 14%, transparent);
+    color: var(--ds-ink);
+    font-weight: 600;
+  }
+  .ds-master-link > .ds-icon,
+  .ds-master-catalog > .ds-icon {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .ds-master-link[aria-current] > .ds-icon {
+    color: var(--ds-action);
+  }
+  /* A FOLHA DOS CATÁLOGOS, no celular: uma linha por catálogo. */
+  .ds-master-catalog {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ds-ink);
+    text-decoration: none;
+  }
+  .ds-master-catalog > .ds-icon:last-child {
+    color: var(--ds-ink-3);
+  }
+  .ds-master-catalog[aria-current] {
+    background: color-mix(in oklab, var(--ds-action) 14%, transparent);
+    font-weight: 600;
+  }
+  /* O CATÁLOGO: no celular só a lista, e o verbete abre por cima; no desktop a
+   * lista e o verbete lado a lado, cada um rolando o seu. */
+  .ds-master-catalog-scene {
+    display: grid;
+    gap: 1rem;
+  }
+  .ds-master-list {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    min-height: 0;
+  }
+  .ds-master-entry {
+    display: none;
+  }
+  /* As linhas numa caixa própria porque ela é a REGIÃO "lista" do driver de
+   * teclado, e região precisa de caixa para a geometria dos vizinhos. */
+  .ds-master-rows {
+    display: grid;
+    grid-auto-rows: max-content;
+    align-content: start;
+  }
+  /* O cabeçalho da criatura vai de ponta a ponta do painel. FORA do `@container`
+   * de propósito: o contêiner mais perto dele é o próprio miolo (que mede para
+   * as duas colunas do bloco), e lá dentro a regra nunca pegaria. */
+  .ds-master-entry-body > .ds-dialog-head {
+    margin: -1rem -1rem 0;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  @media (min-width: 64rem) {
+    .ds-master > .ds-bottom-nav {
+      display: none;
+    }
+    .ds-master-body {
+      grid-template-columns: 15rem minmax(0, 1fr);
+    }
+    .ds-master-menu {
+      display: grid;
+      align-content: start;
+      gap: 2px;
+      padding: 1rem 0.75rem;
+      border-right: 1px solid var(--ds-line);
+      overflow: auto;
+    }
+    .ds-master-menu > .ds-list-head {
+      padding: 0 0.625rem;
+    }
+    .ds-master-menu > .ds-list-head ~ .ds-list-head {
+      margin-top: 0.75rem;
+    }
+    .ds-master-main {
+      padding: 1rem 1.25rem;
+    }
+  }
+  /* AS DUAS COLUNAS do catálogo são CONSULTA DE CONTÊINER, e não de mídia: a
+   * pergunta é "cabe o verbete ao lado da lista?", que é sobre o espaço da área
+   * principal. Por mídia ela não era monotônica — a 1000px de janela, sem o
+   * menu, o catálogo tem mais largura do que a 1024px, com ele. */
+  .ds-master-main {
+    container-type: inline-size;
+  }
+  @container (min-width: 50rem) {
+    .ds-master-catalog-scene {
+      grid-template-columns: 24rem minmax(0, 1fr);
+      height: 100%;
+      min-height: 0;
+    }
+    /* QUEM ROLA É A REGIÃO "lista", e não a coluna: o driver de teclado acha o
+     * vizinho pelo centro da caixa da região, e uma região da altura da lista
+     * inteira tinha o centro milhares de pixels abaixo — a seta descia dos
+     * filtros para o menu lateral, que ficava "mais perto". */
+    .ds-master-list {
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+    .ds-master-list > .ds-list {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+    }
+    .ds-master-rows {
+      min-height: 0;
+      overflow: auto;
+    }
+    .ds-master-entry {
+      display: block;
+      min-height: 0;
+      border: 1px solid var(--ds-line);
+      border-radius: var(--ds-r-surface);
+      background: var(--ds-surface);
+      overflow: auto;
+    }
+    .ds-master-entry-body {
+      display: grid;
+      gap: 0.75rem;
+      padding: 1rem;
+      outline: none;
+    }
+    /* Com o verbete JÁ ao lado, a folha por cima não sai, mesmo com o sinal
+     * ligado pelo clique. O `!important` vence o `display` que o `data-show`
+     * escreve no `style`. */
+    .ds-master-main .ds-gm-overlay {
+      display: none !important;
+    }
+  }
+  /* O "FILTROS" é ITEM da navegação por setas e ocupa a largura da coluna: a
+   * busca é campo de digitação, onde a seta edita em vez de navegar, e quem
+   * subisse da lista para ela não voltaria. Largo, ele é o vizinho mais perto
+   * da lista. */
+  .ds-master-list .ds-gm-filters-more > summary {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   /* A JANELA À PARTE é para a segunda tela ou a TV da mesa: no celular não
    * há segunda tela, e o botão some (decisão do dono). */
   [data-board-window-opener] {

@@ -21,11 +21,12 @@ test.describe('O bestiário', () => {
   /**
    * A METADE ESTREITA, e é o único teste desta cena que precisa mesmo de browser.
    *
-   * O `.mesa-painel` só existe a partir de 50rem de CONTÊINER — consulta de
-   * contêiner, não de mídia, e nem o jsdom nem uma asserção de classe sabem
-   * resolver isso. Abaixo do ponto de troca a ficha tem de estar no diálogo, e
-   * acima dela tem de estar no painel; a faixa em que as duas somem, ou em que
-   * as duas aparecem, é o defeito que este teste existe para pegar.
+   * O painel da criatura só existe a partir de 50rem de CONTÊINER — a área
+   * principal da moldura —, e nem o jsdom nem uma asserção de classe resolvem
+   * consulta de contêiner. Abaixo do ponto de
+   * troca a ficha tem de estar no diálogo, e acima dela tem de estar no painel;
+   * a faixa em que as duas somem, ou em que as duas aparecem, é o defeito que
+   * este teste existe para pegar.
    *
    * Ele mede VISIBILIDADE REAL (`toBeVisible`), que é o que resolve a cascata
    * inteira — a consulta de contêiner, o `display:none` da folha e o
@@ -46,7 +47,7 @@ test.describe('O bestiário', () => {
     await expect(panel, 'o painel ficou visível onde não cabe').toBeHidden()
     await expect(dialog, 'o diálogo abriu sozinho').toBeHidden()
 
-    await page.getByRole('listitem').first().getByRole('link').click()
+    await page.locator('#bestiary a[href*="criatura="]').first().click()
     await expect(dialog, 'tocar na linha não abriu a ficha no telefone').toBeVisible()
 
     await page.keyboard.press('Escape')
@@ -73,7 +74,7 @@ test.describe('O bestiário', () => {
   test('a ficha abre no clique mesmo se a resposta do foco chegar depois', async ({ page }) => {
     await page.goto(BESTIARY)
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(page.getByRole('listitem').first()).toBeVisible()
+    await expect(page.locator('#bestiary a[href*="criatura="]').first()).toBeVisible()
 
     // Só o pedido SEM `abrir=1` é atrasado: é o do foco, e é ele que chegaria
     // por último para redeclarar `sheet_open: false` por cima do clique.
@@ -86,7 +87,7 @@ test.describe('O bestiário', () => {
       await route.continue()
     })
 
-    await page.getByRole('listitem').first().getByRole('link').click()
+    await page.locator('#bestiary a[href*="criatura="]').first().click()
 
     // O ESTADO ASSENTADO, e não o primeiro quadro: com o defeito no lugar a ficha
     // ABRE com a resposta do clique e só fecha 600ms depois, quando a do foco
@@ -101,7 +102,7 @@ test.describe('O bestiário', () => {
     // no lugar esta asserção passa e a de baixo falha, e é esse par que
     // distingue "a ficha não abriu" de "o gesto não aconteceu".
     await expect(
-      page.getByRole('listitem').first().getByRole('link'),
+      page.locator('#bestiary a[href*="criatura="]').first(),
       'o clique não escolheu a criatura: o gesto não aconteceu',
     ).toHaveAttribute('aria-current', 'true')
 
