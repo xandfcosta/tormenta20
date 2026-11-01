@@ -14,6 +14,11 @@ import type { Page } from '@playwright/test'
  * novo. Por isso este medidor é outro, e não um parâmetro daquele — a regra do
  * espaçamento de lá não existe aqui.
  *
+ * A EXCEÇÃO `Inline` da 2.5.5 vale, porque a norma que o dono escolheu a tem: o elo
+ * citado no meio de uma frase do livro não pode medir 44 sem desmontar o parágrafo.
+ * "Texto corrido" é, mecanicamente, elemento `display: inline` cujo PAI tem texto
+ * próprio ao lado dele. Alvo sozinho numa linha não entra, por mais que seja elo.
+ *
  * Os dois devolvem `{falhas, medidos}`: uma cena que não carregou e uma cena
  * perfeita devolvem a mesma lista vazia.
  */
@@ -65,6 +70,12 @@ export async function measureDsTouchTargets(page: Page): Promise<FloorReport> {
         const r = el.getBoundingClientRect()
         if (r.width === 0 || r.height === 0 || getComputedStyle(el).visibility === 'hidden') continue
         measured++
+        const runsInText =
+          getComputedStyle(el).display === 'inline' &&
+          [...(el.parentElement?.childNodes ?? [])].some(
+            (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim() !== '',
+          )
+        if (runsInText) continue
         // Meio pixel de folga: o arredondamento de `rem` e de borda produz
         // 43,99, e um guarda que reprova arredondamento é desligado na semana
         // seguinte.
