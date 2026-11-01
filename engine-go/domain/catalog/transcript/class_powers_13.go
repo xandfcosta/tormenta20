@@ -361,8 +361,11 @@ var classPowersPart13 = []ClassPower{
 		UID:         "pwr_cq2yqbaoiy",
 	},
 	{
-		ID:          "poder.aumento-de-atributo",
-		Modeled:     []string{"o +1 em cada atributo escolhido, uma cópia por escolha (`fromChoice`)"},
+		ID: "poder.aumento-de-atributo",
+		Modeled: []string{
+			"o +1 em cada atributo escolhido, uma cópia por escolha (`fromChoice`)",
+			"uma vez por patamar para o mesmo atributo (`sheet.AttributeIncreasesFit`)",
+		},
 		Name:        "Aumento de Atributo",
 		Description: "+1 em um atributo. Apenas uma vez por patamar para um mesmo atributo. Pode ser escolhido várias vezes.",
 		BookPage:    38,
@@ -370,7 +373,6 @@ var classPowersPart13 = []ClassPower{
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "attribute"}, Amount: 1, BonusType: "untyped", FromChoice: "name"},
 		},
-		Unmodeled: "\"apenas uma vez por patamar para um mesmo atributo\": o motor não confere, sem fatia",
 		Choice: &PowerChoice{
 			Kind:       "attribute",
 			Label:      "Atributo",
