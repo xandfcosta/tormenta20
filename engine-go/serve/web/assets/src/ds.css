@@ -4449,11 +4449,15 @@
     color: var(--ds-action);
     font-size: var(--ds-t-sm);
   }
-  /* O SELECIONADO é só o fundo, decisão do dono: a borda ficava estranha. O primeiro
-   * achado acende enquanto o foco está no campo, porque é ele que o Enter abre. */
-  .ds-finder-row:is(:hover, :focus),
-  .ds-finder:has(#finder-field:focus) .ds-finder-group:first-of-type > .ds-finder-row:first-of-type {
+  .ds-finder-row:hover {
     background: var(--ds-sunk);
+  }
+  /* O SELECIONADO é só o fundo, decisão do dono: a borda ficava estranha. A cor de ação
+   * suave, a mesma do item atual do menu, porque o cinza do `hover` mal se via. O primeiro
+   * achado acende enquanto o foco está no campo, porque é ele que o Enter abre. */
+  .ds-finder-row:focus,
+  .ds-finder:has(#finder-field:focus) .ds-finder-group:first-of-type > .ds-finder-row:first-of-type {
+    background: color-mix(in oklab, var(--ds-action) 14%, transparent);
   }
   /* O livro é um documento: o `iframe` ocupa todo o resto, sem o recuo do corpo. */
   .ds-book {
