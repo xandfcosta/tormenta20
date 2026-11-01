@@ -17,9 +17,60 @@ import (
 // aprovado). No desktop, o menu das treze telas fica à esquerda, em duas seções;
 // no celular, a barra de baixo leva às duas ferramentas e aos Catálogos, que
 // abrem numa folha — onze destinos não cabem numa barra.
+
+// railStop é uma parada da trilha.
+type railStop struct {
+	Slug  string
+	Label string
+	Icon  string
+	Hint  string
+}
+
+// railSection separa o que o mestre FAZ do que ele CONSULTA — bestiário,
+// condições e magias são a mesma coisa (verbetes do livro) e estavam em níveis
+// diferentes, um como ferramenta e os outros escondidos dentro dela.
 //
-// As telas que ainda vestem o grimório usam o `masterBody`; cada uma passa para
-// esta moldura quando o conteúdo dela migra.
+// Com a divisão, a fileira de abas de dentro da cena SUMIU: quem diz onde se
+// está é o menu, e ter as duas coisas seria o mesmo estado desenhado em dois
+// lugares.
+type railSection struct {
+	Label string
+	Stops []railStop
+}
+
+// A ordem dentro de CATÁLOGOS é alfabética, com o bestiário na frente — é o
+// mais consultado no meio do combate. Nas FERRAMENTAS a ordem é a de sempre.
+var masterRail = []railSection{
+	{"Na mesa", []railStop{
+		{"encontros", "Encontros", "Swords", "ND do combate e XP do grupo, combinando criaturas."},
+		{"improviso", "Improviso", "Dices", "Tabelas do Cap 6 e estrutura de masmorra na hora."},
+	}},
+	{"Catálogos", []railStop{
+		{"bestiario", "Bestiário", "Skull", "Criaturas por ND, tipo e tamanho, com ataques e habilidades."},
+		{"classes", "Classes", "Shield", "As 14 classes, com perícias treinadas e poderes."},
+		{"condicoes", "Condições", "HeartPulse", "As 35 condições do livro e o que cada uma faz."},
+		{"deuses", "Deuses", "Church", "Os 20 deuses, com símbolo, devotos e poderes concedidos."},
+		{"efeitos", "Efeitos", "Zap", "Os tipos de efeito (p228): medo, mental, metabolismo…"},
+		{"escolas", "Escolas", "Wand2", "As oito escolas de magia (p172), com o que cada uma faz."},
+		{"itens", "Itens", "Backpack", "Armas, armaduras e equipamento, com preço e espaços."},
+		{"magias", "Magias", "Wand2", "As 198 magias, por círculo, com aprimoramentos."},
+		{"pericias", "Perícias", "Dices", "As 29 perícias, com atributo e as regras de treino."},
+		{"poderes", "Poderes", "Star", "Poderes de classe, gerais e divinos numa lista só."},
+		{"racas", "Raças", "Users2", "As 17 raças, com modificadores e habilidades."},
+	}},
+}
+
+// railStops é o menu ACHATADO, para quem precisa da lista e não das
+// seções — as rotas e os guardas.
+var railStops = flattenRail()
+
+func flattenRail() []railStop {
+	var outside []railStop
+	for _, section := range masterRail {
+		outside = append(outside, section.Stops...)
+	}
+	return outside
+}
 
 // masterFrame é a moldura: o cabeçalho com a volta ao início e o nome da tela, o
 // menu e a cena. `acts` é a ação da tela inteira no cabeçalho, e nulo não desenha nada.
@@ -59,7 +110,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 24, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 75, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -131,7 +182,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 40, Col: 17}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 91, Col: 17}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -196,7 +247,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 				var templ_7745c5c3_Var7 templ.SafeURL
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/mestre/" + stop.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 59, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 110, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -227,7 +278,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 66, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 117, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -264,8 +315,8 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 	})
 }
 
-// masterMenu é o menu do desktop. O contrato com o driver de teclado é o mesmo do
-// trilho antigo, e o nome `rail` é RESERVADO: o Esc sobe procurando literalmente
+// masterMenu é o menu do desktop. O nome `rail` da região é RESERVADO pelo driver de
+// teclado: o Esc sobe procurando literalmente
 // `[data-nav-region="rail"]`, e com outro nome ele sai direto da página.
 func masterMenu(current string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -321,7 +372,7 @@ func masterMenu(current string) templ.Component {
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 84, Col: 17}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 135, Col: 17}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {

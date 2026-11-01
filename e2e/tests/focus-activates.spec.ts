@@ -246,31 +246,6 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
 })
 
 /**
- * A legenda de teclado aparece onde a tecla EXISTE, e some onde não existe.
- *
- * O driver só liga em `≥xl` com ponteiro fino. Anunciar seta para quem está no
- * toque é ensinar um atalho que não está lá — a mesma regra do `@tecla`, e a
- * razão de o Esc não estar na legenda (medido: não faz nada nesta cena).
- */
-test('a legenda de teclado aparece no laptop e some no telefone', async ({ page }) => {
-  // NUMA TELA DO GRIMÓRIO: o Bestiário, os catálogos e os Encontros migraram para o
-  // Tempestade sem a legenda (decisão do dono, ALE-538) — os atalhos continuam, a faixa saiu.
-  // A legenda mora na casca das telas que ainda não migraram, e é numa delas que
-  // se mede.
-  await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/mestre/improviso')
-  await page.waitForLoadState('networkidle')
-
-  const caption = page.getByText('trocar de painel')
-  await expect(caption).toBeVisible()
-  // Só o que funciona: o Esc está morto nesta cena e não pode ser anunciado.
-  await expect(page.locator('body')).not.toContainText('Esc voltar')
-
-  await page.setViewportSize({ width: 640, height: 900 })
-  await expect(caption).toBeHidden()
-})
-
-/**
  * UM cursor só, e ele fica na MOLDURA da ficha — não por dentro do que rola.
  *
  * Anel no miolo desenha por dentro do scroll: acompanha a rolagem e some no

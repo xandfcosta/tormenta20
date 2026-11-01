@@ -92,46 +92,26 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
 })
 
 /**
- * `expectNadaEscapa` NÃO reproduz um defeito de hoje: junto de `flex-1` o
- * `min-w-0` é obrigatório, porque um item flex não encolhe abaixo do conteúdo e
- * o rótulo mais longo empurra a última parada para FORA do trilho. Ela protege
- * o próximo rótulo mais longo.
- *
- * Por que e2e: é caixa contra caixa. Em jsdom todo elemento mede zero e
- * `expectNadaEscapa` passaria verde sobre qualquer arranjo.
+ * O menu lateral aparece a partir de 1024px e segura todas as telas, por mais longo
+ * que seja o rótulo. Por que e2e: é caixa contra caixa. Abaixo dessa largura quem leva
+ * às telas é a barra de baixo, e os destinos dela estão em
+ * `TestTheMasterFrameReachesEveryTool`, que é a camada mais barata para isso.
  */
-test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ page }) => {
-  // Uma navegação só, redimensionando depois: recarregar por largura paga o
-  // portão dos catálogos (18 buscas antes da primeira tela) a cada volta, e foi
-  // assim que a versão anterior deste teste estourou o timeout sem que nada
-  // estivesse errado.
-  //
-  // NUMA TELA DO GRIMÓRIO: é nelas que o trilho ainda existe. A moldura nova tem o
-  // menu no desktop e a folha dos Catálogos no celular, e os destinos dela estão
-  // em `TestTheMasterFrameReachesEveryTool`.
+test('o menu do mestre segura todas as paradas nas larguras em que aparece', async ({ page }) => {
   await page.goto('/mestre/improviso')
-  const rail = 'nav[aria-label="Ferramentas do mestre"]'
-  await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
-
-  // A CONTAGEM de paradas não mora aqui: ela é `TestTheRailHasOneStopPerCatalog`
-  // no Go, por amostragem sobre `abasDoAcervo`. Escrita aqui como número, ela
-  // ficava vermelha por parada nova sem proteger nada. Aqui fica só a geometria,
-  // que é o que o navegador testemunha.
+  const menu = '.ds-side-menu'
   let reference = 0
 
-  for (const width of [1920, 1024, 768, 390]) {
+  for (const width of [1920, 1280, 1024]) {
     await page.setViewportSize({ width: width, height: 900 })
     await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
+    await expectNadaEscapa(page, menu)
 
-    // Nenhuma parada escapa do trilho.
-    await expectNadaEscapa(page, rail)
-
-    // E TODAS continuam alcançáveis: uma parada que some da tela é uma
-    // ferramenta que deixou de existir para quem está naquela largura.
-    const reachable = await page.locator(`${rail} a`).count()
+    const reachable = await page.locator(`${menu} a`).count()
     if (width === 1920) reference = reachable
-    expect(reachable, `a ${width}px o trilho perdeu paradas`).toBe(reference)
+    expect(reachable, `a ${width}px o menu perdeu paradas`).toBe(reference)
   }
+  expect(reference, 'o menu veio vazio: este caso não mediria nada').toBeGreaterThan(10)
 })
 })
 

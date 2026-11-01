@@ -4272,6 +4272,90 @@
     }
   }
 
+  /* O IMPROVISO (ALE-544, mockup `improviso.html`). */
+  .ds-improv {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 80rem;
+  }
+  .ds-improv-section {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .ds-improv-section + .ds-improv-section {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--ds-line);
+  }
+  .ds-improv-section > .ds-list-head {
+    margin: 0;
+    padding: 0;
+  }
+  /* O `max()` é o teto de três colunas, como na grade dos verbetes: uma coluna nunca
+   * fica menor que um terço do contêiner. O `1.5rem` são os dois vãos. */
+  .ds-improv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(20rem, (100% - 1.5rem) / 3)), 1fr));
+    align-items: start;
+    gap: 0.75rem;
+  }
+  .ds-improv-table {
+    min-width: 0;
+  }
+  .ds-improv-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-block: 0.25rem;
+  }
+  /* O número e o texto em duas colunas, as mesmas das anteriores, para todo o texto
+   * começar na mesma vertical. */
+  .ds-improv-last,
+  .ds-improv-older > li {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    column-gap: 0.5rem;
+    align-items: baseline;
+  }
+  .ds-improv-last > b {
+    font-size: var(--ds-t-xl);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .ds-improv-last > p {
+    margin: 0;
+    font-size: var(--ds-t-sm);
+    line-height: var(--ds-lh-sm);
+  }
+  .ds-improv-last > .ds-improv-detail {
+    grid-column: 2;
+    margin-top: 0.125rem;
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+  }
+  .ds-improv-older {
+    display: grid;
+    gap: 0.125rem;
+    margin: 0.25rem 0 0;
+    padding: 0.5rem 0 0;
+    border-top: 1px solid var(--ds-line);
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+    list-style: none;
+  }
+  .ds-improv-older b {
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .ds-improv-rooms {
+    max-width: 8rem;
+  }
+
   /* A FOLHA VIVA (ALE-541, mockup `sistema.html`): uma amostra de cada peça, dividida
    * em seções, com um índice à esquerda no desktop e numa fileira no celular. */
   .ds-specimen {

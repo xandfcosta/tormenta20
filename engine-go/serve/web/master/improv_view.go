@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/serve/web/bookui"
 )
 
 // O IMPROVISO: as tabelas do Cap 6 e o esqueleto de masmorra na hora, numa tela
@@ -39,6 +40,9 @@ const historyDepth = 5
 // tabelas são independentes — rolar ruína não pode empurrar o evento de
 // perseguição para fora da tela.
 type improvView struct {
+	// Book é o endereço do PDF servido, para a página de cada tabela ser um elo. Zero
+	// valor é não ter livro configurado, e aí a página sai em texto.
+	Book   bookui.BookAddress
 	Ruin   []roll
 	Chase  []roll
 	Reward []roll

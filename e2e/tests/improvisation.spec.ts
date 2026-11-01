@@ -60,4 +60,25 @@ test.describe('O improviso', () => {
     // Uma manchete + quatro anteriores = os cinco que o fundo permite.
     await expect(card.locator('li'), 'o histórico passou do fundo de cinco').toHaveCount(4)
   })
+
+  /**
+   * A SETA chega aos botões dos cartões e não mexe no campo de salas: num campo de número
+   * ela mudaria o valor. E2E porque a escolha do vizinho é geometria real, e só existe com
+   * o driver ligado.
+   */
+  test('a seta anda pelos botões e não mexe nas salas', async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 900 })
+    await page.goto(IMPROV)
+    await page.waitForLoadState('networkidle')
+    const region = () =>
+      page.evaluate(() => document.activeElement?.closest('[data-nav-region]')?.getAttribute('data-nav-region'))
+    const rooms = await page.getByLabel('Salas').inputValue()
+
+    await page.locator('.ds-side-menu-link[aria-current]').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(region).toBe('tabelas')
+    for (const key of ['ArrowDown', 'ArrowDown', 'ArrowRight', 'ArrowDown']) await page.keyboard.press(key)
+
+    await expect(page.getByLabel('Salas'), 'a seta mexeu no número de salas').toHaveValue(rooms)
+  })
 })

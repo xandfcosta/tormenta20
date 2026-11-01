@@ -27,7 +27,7 @@ func Routes(r chi.Router, s Scene) {
 	})
 	r.Get(routes.MasterBestiary, s.handleBestiary)
 	r.Post("/mestre/bestiario/tipo/{tipo}", s.handleBestiaryType)
-	// Cada catálogo é uma parada do trilho, e parada de trilho é uma cena: a aba
+	// Cada catálogo é uma parada do menu, e parada do menu é uma cena: a aba
 	// vem do CAMINHO. O laço, e não dez linhas escritas, para o catálogo que
 	// entrar amanhã ganhar rota sozinho.
 	for _, aba := range collectionTabs {

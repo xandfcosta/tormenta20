@@ -71,6 +71,7 @@ func (s Scene) respondImprov(w http.ResponseWriter, r *http.Request, table strin
 	}
 
 	ready := loadImprov(v)
+	ready.Book = s.deps.BookAddress()
 
 	if r.Header.Get("datastar-request") != "" {
 		sse := datastar.NewSSE(w, r)
@@ -83,12 +84,10 @@ func (s Scene) respondImprov(w http.ResponseWriter, r *http.Request, table strin
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:        "Improviso · Mesa do Mestre · Tormenta 20",
-		Shape:        ui.ShellDense,
-		Back:         "/",
-		BackLabel:    "Hub",
-		VisibleTitle: "Mesa do Mestre",
-	}, masterBody("improviso", improvScene(ready)))
+		Title:  "Improviso · Mesa do Mestre · Tormenta 20",
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
+	}, masterFrame("improviso", "Improviso", nil, improvScene(ready)))
 }
 
 // improvRolls liga o nome da rota à função que rola. A tela e a rota leem a
