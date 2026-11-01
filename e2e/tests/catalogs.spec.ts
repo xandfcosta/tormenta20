@@ -40,7 +40,7 @@ test.describe('Os catálogos', () => {
     // O DENOMINADOR desta cena: Poderes é o maior acervo do livro, e é dele que
     // o defeito precisa — com uma fração das entradas a corrente aguenta e o
     // caso fica verde sem ter medido nada.
-    const drawn = await page.locator('.collection-in-columns > *').count()
+    const drawn = await page.locator('.ds-catalog-grid > *').count()
     expect(
       drawn,
       `a cena desenhou ${drawn} verbetes, e Poderes tem centenas — este caso não está medindo o acervo que ele diz medir`,
@@ -76,12 +76,30 @@ test.describe('Os catálogos', () => {
       await page.setViewportSize({ width: width, height: height })
       await page.goto(CONDITIONS)
       const columns = await page.evaluate(() => {
-        const grade = document.querySelector('.collection-in-columns')
+        const grade = document.querySelector('.ds-catalog-grid')
         if (!grade) return 0
         return getComputedStyle(grade).gridTemplateColumns.split(' ').length
       })
       expect(columns, `${width}px devia dar ${want} coluna(s)`).toBe(want)
     }
+  })
+
+  /**
+   * Da última fileira de filtros a seta desce para os verbetes. O driver acha o
+   * vizinho pelo centro da caixa da região, e a dos verbetes é alta: sem a borda
+   * declarada, o menu lateral "ficava mais perto" e a seta saía da cena.
+   *
+   * E2E porque a escolha é geometria real e só existe com o driver ligado.
+   */
+  test('a seta desce dos filtros para os verbetes, e não para o menu', async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 800 })
+    await page.goto('/mestre/magias')
+    await page.waitForLoadState('networkidle')
+
+    await page.getByRole('button', { name: 'Arcanista' }).focus()
+    await page.keyboard.press('ArrowDown')
+
+    await expect(page.locator(SCROLLER)).toBeFocused()
   })
 
   /**
@@ -94,7 +112,7 @@ test.describe('Os catálogos', () => {
     await page.goto(CONDITIONS)
     await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
 
-    await page.getByRole('searchbox', { name: 'Buscar nos catálogos' }).fill('fogo')
+    await page.getByRole('searchbox', { name: 'Buscar em todos os catálogos' }).fill('fogo')
 
     await expect(
       page.getByRole('region', { name: 'Magias' }),

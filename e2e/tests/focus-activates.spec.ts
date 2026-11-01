@@ -253,11 +253,12 @@ test('a seta chega na ficha sem nenhum TAB', async ({ page }) => {
  * razão de o Esc não estar na legenda (medido: não faz nada nesta cena).
  */
 test('a legenda de teclado aparece no laptop e some no telefone', async ({ page }) => {
-  // NUMA TELA DO GRIMÓRIO: o Bestiário migrou para o Tempestade sem a legenda
-  // (decisão do dono, ALE-538) — os atalhos continuam, a faixa saiu. A legenda
-  // mora na casca das telas que ainda não migraram, e é numa delas que se mede.
+  // NUMA TELA DO GRIMÓRIO: o Bestiário e os catálogos migraram para o Tempestade
+  // sem a legenda (decisão do dono, ALE-538) — os atalhos continuam, a faixa saiu.
+  // A legenda mora na casca das telas que ainda não migraram, e é numa delas que
+  // se mede.
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/mestre/condicoes')
+  await page.goto('/mestre/encontros')
   await page.waitForLoadState('networkidle')
 
   const caption = page.getByText('trocar de painel')

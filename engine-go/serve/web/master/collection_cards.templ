@@ -1,0 +1,331 @@
+package master
+
+import (
+	"fmt"
+	"t20engine/domain/book"
+	"t20engine/serve/web/bookui"
+	"t20engine/serve/web/ds"
+)
+
+// OS CARTÕES DOS VERBETES: um desenho só, na lista e na caixa do elo — um segundo
+// desenho "para a caixa" divergiria do primeiro na terceira issue. Dentro da caixa
+// o cartão perde a moldura, porque lá a caixa já é a moldura (`#entry-in-dialog`,
+// no `ds.css`).
+
+// groupCards desenha os verbetes de um grupo. Um lugar só para os dez catálogos:
+// quando a lista e a caixa tinham cada uma a sua, a da caixa ficou sem Escolas e
+// sem Perícias, e o elo para elas abria uma caixa vazia.
+templ groupCards(g collectionGroup, bookRef bookui.BookAddress) {
+	for _, c := range g.Conditions {
+		@conditionCard(c, bookRef)
+	}
+	for _, m := range g.Spells {
+		@spellCard(m, bookRef)
+	}
+	for _, p := range g.Powers {
+		@powerCard(p, bookRef)
+	}
+	for _, i := range g.Items {
+		@itemCard(i, bookRef)
+	}
+	for _, e := range g.Effects {
+		@effectCard(e, bookRef)
+	}
+	for _, e := range g.Schools {
+		@schoolCard(e, bookRef)
+	}
+	for _, p := range g.Expertises {
+		@expertiseCard(p, bookRef)
+	}
+	for _, r := range g.Races {
+		@raceCard(r, bookRef)
+	}
+	for _, c := range g.Classes {
+		@classCard(c, bookRef)
+	}
+	for _, d := range g.Gods {
+		@godCard(d, bookRef)
+	}
+}
+
+// catalogCard é a moldura e a cabeça: o nome, os crachás que quem chama põe e a
+// página do livro à direita.
+//
+// `overflow-wrap: anywhere` no CARTÃO (`.ds-catalog-card`) porque a BARRA não é
+// oportunidade de quebra para o navegador: "Sopro da Salvação" lista as condições
+// que remove como UM token de 100 caracteres (`abalado/atordoado/apavorado/…`), que
+// dá 1.343px de conteúdo numa coluna de 540 e pinta por cima dos cartões vizinhos.
+// `anywhere` e não `break-word`: só o `anywhere` entra na conta do tamanho MÍNIMO
+// do conteúdo, e os cartões vivem numa grade.
+//
+// `badges` é o que vai ao lado do nome, e o corpo é filho.
+templ catalogCard(name string, page int, bookRef bookui.BookAddress, badges templ.Component) {
+	<article class="ds-catalog-card">
+		<header class="ds-catalog-head">
+			<span class="ds-catalog-title">{ name }</span>
+			if badges != nil {
+				@badges
+			}
+			<span class="ds-row-meta ds-catalog-page">
+				@bookui.PageSealInMeta(bookRef, page, name)
+			</span>
+		</header>
+		{ children... }
+	</article>
+}
+
+// plainBadges são crachás só de texto.
+templ plainBadges(texts ...string) {
+	for _, text := range texts {
+		@ds.Badge(text, true)
+	}
+}
+
+// linkedBadge é o crachá que é elo: a escola da magia e o tipo de efeito da
+// condição têm verbete próprio.
+templ linkedBadge(tab, id, name string) {
+	<span class="ds-badge" data-variant="outline">
+		@bookui.CrossRef(tab, id, name) {
+			{ name }
+		}
+	</span>
+}
+
+// describedText é uma descrição do livro com os elos que ela cita.
+templ describedText(text string, bookRef bookui.BookAddress) {
+	<p class="ds-catalog-body">
+		for _, chunk := range book.WithLinks(text) {
+			@bookui.Chunk(chunk, bookRef)
+		}
+	</p>
+}
+
+// linkedNames é a lista de nomes de quem tem verbete: cada um vira o elo dele, e o
+// que não tem verbete (o "Quaisquer" de Aharadak) fica texto. `target` responde
+// para onde o nome leva.
+templ linkedNames(names []string, target func(string) (string, string)) {
+	for i, name := range names {
+		if i > 0 {
+			{ ", " }
+		}
+		if tab, id := target(name); tab != "" {
+			@bookui.CrossRef(tab, id, name) {
+				{ name }
+			}
+		} else {
+			{ name }
+		}
+	}
+}
+
+// O TIPO DE EFEITO é o crachá da condição, e a descrição CITA outras condições
+// ("Desprevenido e imóvel"): são 11 citações nas 35, a densidade que justifica
+// varrer o texto.
+templ conditionCard(c book.Condition, bookRef bookui.BookAddress) {
+	@catalogCard(c.Name, c.BookPage, bookRef, conditionBadges(c)) {
+		<p class="ds-catalog-body">
+			for _, chunk := range book.WithConditionLinks(c.Description, c.Name) {
+				@bookui.Chunk(chunk, bookRef)
+			}
+		</p>
+		if c.UpgradesTo != "" {
+			<p class="ds-catalog-more">
+				@bookui.CrossRef("condicoes", c.UpgradesTo, book.ConditionName(c.UpgradesTo)) {
+					{ "Agrava para " + book.ConditionName(c.UpgradesTo) }
+				}
+			</p>
+		}
+	}
+}
+
+templ conditionBadges(c book.Condition) {
+	for _, t := range c.Tags {
+		@linkedBadge("efeitos", t, book.EffectName(t))
+	}
+}
+
+// As duas marcas do livro viram crachá porque elas mudam COMO a perícia se usa —
+// "só treinada" decide se dá para rolar, e a penalidade decide se a armadura
+// atrapalha. Ficam ao lado do atributo, que é a terceira coisa que se olha antes
+// de rolar.
+//
+// "Treinada por" são só as classes que a treinam DE SAÍDA. Ver o comentário do
+// carregador: a piscina de escolha tem quase tudo em quase toda classe.
+templ expertiseCard(p book.Expertise, bookRef bookui.BookAddress) {
+	@catalogCard(p.Name, p.BookPage, bookRef, plainBadges(expertiseMarks(p)...)) {
+		if len(p.Classes) > 0 {
+			<p class="ds-row-meta">
+				Treinada de saída por:
+				@linkedNames(p.Classes, classTarget)
+			</p>
+		}
+	}
+}
+
+// A ABREVIATURA é o crachá porque é o que as tabelas do livro imprimem — quem lê
+// "Evoc" numa ficha precisa poder achar aqui. Ilusão não tem, e ele não sai.
+templ schoolCard(e book.SpellSchool, bookRef bookui.BookAddress) {
+	@catalogCard(e.Name, e.BookPage, bookRef, plainBadges(nonEmpty(e.Abbrev)...)) {
+		@describedText(e.Description, bookRef)
+	}
+}
+
+// O TIPO DE EFEITO é o destino dos elos que saem das condições, e o livro o define
+// em uma frase na p228.
+templ effectCard(e book.EffectKind, bookRef bookui.BookAddress) {
+	@catalogCard(e.Name, e.BookPage, bookRef, nil) {
+		@describedText(e.Description, bookRef)
+	}
+}
+
+// A ESCOLA aparece no cartão, e como ELO: ela decide o filtro, e sem estar escrita
+// o mestre filtra por evocação e as magias não dizem que são de evocação.
+templ spellCard(m book.Spell, bookRef bookui.BookAddress) {
+	@catalogCard(m.Name, m.BookPage, bookRef, spellBadges(m)) {
+		<p class="ds-row-meta">{ spellMeta(m) }</p>
+		@describedText(m.BaseEffect, bookRef)
+		// Os APRIMORAMENTOS abrem numa caixa e não no cartão: são três a cinco
+		// linhas por magia, que empurrariam a lista inteira para baixo.
+		if len(m.Augments) > 0 {
+			<p class="ds-catalog-more">
+				<button type="button" data-nav-skip data-on:click={ bookui.OpensAugments(m.ID) }>
+					{ augmentsWritten(len(m.Augments)) }
+				</button>
+			</p>
+		}
+	}
+}
+
+templ spellBadges(m book.Spell) {
+	@ds.Badge(fmt.Sprintf("%dº círculo", m.Circle), true)
+	@linkedBadge("escolas", m.School, book.SchoolName(m.School))
+}
+
+templ powerCard(p book.Power, bookRef bookui.BookAddress) {
+	@catalogCard(p.Name, p.BookPage, bookRef, plainBadges(p.Source)) {
+		@describedText(p.Description, bookRef)
+	}
+}
+
+templ itemCard(i book.Item, bookRef bookui.BookAddress) {
+	@catalogCard(i.Name, i.BookPage, bookRef, plainBadges(book.CategoryName(i.Category))) {
+		<p class="ds-row-meta">{ "Preço: " + priceWritten(i.Price) + " · Espaços: " + slotsWritten(i.Slots) }</p>
+	}
+}
+
+// A RAÇA diz o que muda numa ficha: os modificadores, o tamanho, o deslocamento e
+// a visão. As habilidades vêm com o resumo de uma linha que o catálogo já guarda —
+// o texto inteiro está no livro, a um clique de distância.
+templ raceCard(r book.Race, bookRef bookui.BookAddress) {
+	@catalogCard(r.Name, r.BookPage, bookRef, plainBadges(r.AttributeMod.Escrito())) {
+		<p class="ds-row-meta">{ raceMeta(r) }</p>
+		if len(r.Abilities) > 0 {
+			<div class="ds-catalog-abilities">
+				for _, h := range r.Abilities {
+					<p><b>{ h.Name }</b>{ " · " + h.Summary }</p>
+				}
+			</div>
+		}
+	}
+}
+
+// A CLASSE mostra só o que se DERIVA do repositório, cujos leitores moram em
+// `book/character.go`. É pouco de propósito: o bloco da classe é uma tabela de
+// vinte níveis, e transcrevê-la à mão é a fonte de erro que o catálogo existe para
+// evitar. As perícias treinadas viram ELOS: citação sem destino é texto morto.
+templ classCard(c book.Class, bookRef bookui.BookAddress) {
+	@catalogCard(c.Name, c.BookPage, bookRef, nil) {
+		if len(c.Expertises) > 0 {
+			<p class="ds-row-meta">
+				Treinado em:
+				@linkedNames(c.Expertises, expertiseTarget)
+				if c.Chooses > 0 {
+					{ fmt.Sprintf(" + %d à escolha", c.Chooses) }
+				}
+			</p>
+		}
+		<p class="ds-catalog-more">
+			<a href={ templ.SafeURL("/mestre/poderes?fonte=" + c.Name) } data-nav-skip>{ fmt.Sprintf("%d poderes de classe", c.Powers) }</a>
+		</p>
+	}
+}
+
+// O DEUS traz o que o mestre consulta na hora: o que ele cobra dos devotos e o que
+// concede. O símbolo e a arma preferida entram porque são o que aparece na cena —
+// o clérigo saca a arma preferida, o símbolo está no altar.
+//
+// SEM crachá "Maior/Menor": `major` é verdadeiro nos vinte deuses do catálogo,
+// então ele diria a mesma coisa em todos. Campo VAZIO não vira rótulo órfão: Lena e
+// Marah não têm arma preferida no livro, e "Arma preferida:" seguido de nada parece
+// dado perdido em vez de ausência com significado.
+templ godCard(d book.God, bookRef bookui.BookAddress) {
+	@catalogCard(d.Name, d.BookPage, bookRef, plainBadges(nonEmpty(energyWritten(d.Energy))...)) {
+		<p class="ds-catalog-body">{ d.Portfolio }</p>
+		<dl class="ds-catalog-fields">
+			if d.Symbol != "" {
+				<dt>Símbolo</dt>
+				<dd>{ d.Symbol }</dd>
+			}
+			if d.PreferredWeapon != "" {
+				<dt>Arma preferida</dt>
+				<dd>{ d.PreferredWeapon }</dd>
+			}
+			if len(d.GrantedPowers) > 0 {
+				<dt>Concede</dt>
+				<dd>
+					@linkedNames(d.GrantedPowers, powerTarget)
+				</dd>
+			}
+			if len(d.Devotees) > 0 {
+				<dt>Devotos</dt>
+				<dd>
+					@linkedNames(d.Devotees, book.DevoteeLink)
+				</dd>
+			}
+		</dl>
+	}
+}
+
+// SpellAugments é a outra coisa que a caixa mostra: o que a magia ganha quando se
+// gasta mais mana.
+//
+// O mesmo id (`#crossref-entry`) porque é a mesma caixa — o que muda é o miolo, e
+// quem decide é a rota.
+templ SpellAugments(m book.Spell, bookRef bookui.BookAddress) {
+	<div id="crossref-entry">
+		<div class="ds-catalog-card">
+			<header class="ds-catalog-head">
+				<span class="ds-catalog-title">{ m.Name }</span>
+				<span class="ds-row-meta ds-catalog-page">
+					@bookui.PageSealInMeta(bookRef, m.BookPage, m.Name)
+				</span>
+			</header>
+			<ul class="ds-catalog-augments">
+				for _, a := range m.Augments {
+					// O CUSTO na frente e em coluna: é por ele que o mestre varre a
+					// lista ("o que dá para fazer com 2 PM?"), e com a grade todo o
+					// texto começa na mesma vertical.
+					<li>
+						<b>{ a.Escrito() }</b>
+						<span>
+							<span class="ds-row-meta">{ book.AugmentKindName(a.Kind) + " · " }</span>
+							for _, chunk := range book.WithLinks(a.Description) {
+								@bookui.Chunk(chunk, bookRef)
+							}
+						</span>
+					</li>
+				}
+			</ul>
+		</div>
+	</div>
+}
+
+// CrossRefEntry é o miolo da caixa: os cartões do grupo, sem a moldura da cena.
+templ CrossRefEntry(g collectionGroup, bookRef bookui.BookAddress) {
+	<div id="crossref-entry">
+		if g.Count() == 0 {
+			<p class="ds-row-meta">Este verbete não está no acervo.</p>
+		}
+		@groupCards(g, bookRef)
+	</div>
+}

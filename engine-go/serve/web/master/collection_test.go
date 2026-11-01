@@ -215,21 +215,21 @@ func TestTheSearchInTheUrlHoldsOnAColdLoad(t *testing.T) {
 // Preso AQUI e não num navegador: é regra de handler, e a camada mais barata que
 // a segura é esta.
 func TestTheTabComesFromThePathAndTheQueryDoesNotMoveIt(t *testing.T) {
-	// O `</h2>` é parte da agulha porque "Poderes" também é o texto de uma parada
-	// do trilho, que a casca desenha em toda cena do mestre: procurar a palavra
+	// O `</h1>` é parte da agulha porque "Poderes" também é o texto de uma parada
+	// do menu, que a moldura desenha em toda cena do mestre: procurar a palavra
 	// solta acharia o link e diria que a aba mudou.
 	body := pedeNaCena(t, "/mestre/condicoes?aba=poderes").Body.String()
-	if !strings.Contains(body, ">Condições</h2>") {
+	if !strings.Contains(body, ">Condições</h1>") {
 		t.Error("`?aba=poderes` levou a cena das condições para outra aba: a consulta voltou a ter leitor")
 	}
-	if strings.Contains(body, ">Poderes</h2>") {
+	if strings.Contains(body, ">Poderes</h1>") {
 		t.Error("`?aba=poderes` desenhou Poderes num endereço de Condições")
 	}
 
 	// O CONTROLE, senão "não virou Poderes" também seria verdade numa cena que
 	// não sabe desenhar Poderes em endereço nenhum.
 	requested := pedeNaCena(t, "/mestre/poderes").Body.String()
-	if !strings.Contains(requested, ">Poderes</h2>") {
+	if !strings.Contains(requested, ">Poderes</h1>") {
 		t.Error("/mestre/poderes não abriu na aba de Poderes — o caminho é o único canal da aba")
 	}
 }

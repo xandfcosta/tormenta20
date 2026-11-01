@@ -31,6 +31,9 @@
   "master": {
     "visits": [
       { "address": "/mestre/condicoes", "session": "gm" },
+      { "address": "/mestre/condicoes?busca=fogo", "session": "gm" },
+      { "address": "/mestre/magias?circulo=1", "session": "gm" },
+      { "address": "/mestre/deuses", "session": "gm" },
       { "address": "/mestre/bestiario", "session": "gm" },
       { "address": "/mestre/encontros?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4", "session": "gm" },
       { "address": "/mestre/improviso", "session": "gm" }

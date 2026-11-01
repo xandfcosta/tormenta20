@@ -42,11 +42,11 @@ func TestAnEmptyLabelDoesNotComeOutAlone(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	body := pedeNoMestre(t, s, eu, "GET", "/mestre/deuses", "").Body.String()
-	if strings.Contains(body, "Arma preferida: </span>") {
+	if strings.Contains(body, "<dd></dd>") {
 		t.Error("um rótulo saiu sem valor — Lena e Marah não têm arma preferida")
 	}
 	// O CONTROLE: quem TEM arma preferida continua mostrando.
-	if !strings.Contains(body, "Arma preferida: Martelo de guerra") {
+	if !strings.Contains(body, "<dt>Arma preferida</dt><dd>Martelo de guerra</dd>") {
 		t.Error("o rótulo sumiu de quem tem valor — o guarda acima passaria por ausência de tudo")
 	}
 }

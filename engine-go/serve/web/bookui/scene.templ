@@ -5,6 +5,7 @@ import (
 	"t20engine/domain/book"
 	"fmt"
 	"net/url"
+	"t20engine/serve/web/ds"
 )
 
 import "t20engine/serve/web/ui"
@@ -108,30 +109,18 @@ templ BookDialog() {
 	</dialog>
 }
 
-// PageSeal é o que as CENAS chamam: o link quando há livro servido, o número
-// puro quando não há, e nada quando o catálogo não sabe a página.
+// PageSealInMeta é o que as CENAS chamam: o link quando há livro servido, o número
+// puro quando não há, e nada quando o catálogo não sabe a página. O número puro NÃO
+// é consolo: o mestre com o livro de papel na mesa usa exatamente isso.
 //
-// Um componente e não um `if` em cada cartão porque são sete catálogos hoje — e
-// a regra "zero significa que o catálogo não sabe" escrita sete vezes é a que
-// alguém esquece no oitavo. O número puro NÃO é consolo: o mestre com o livro de
-// papel na mesa usa exatamente isso.
-templ PageSeal(book BookAddress, page int, term string) {
-	@pageSeal(book, page, term, "font-mono text-3xs text-muted-foreground")
-}
-
-// PageSealInMeta é o selo numa linha de meta do Tempestade (`ds-row-meta`): o
-// número puro HERDA o tamanho e a tinta da linha. As classes do grimório que o
-// `PageSeal` põe dariam 10px e um cinza abaixo do AA dentro da cena nova.
+// Um componente e não um `if` em cada cartão porque são dez catálogos — e a regra
+// "zero significa que o catálogo não sabe" escrita dez vezes é a que alguém esquece
+// na décima primeira. O número HERDA o tamanho e a tinta da linha de meta
+// (`ds-row-meta`) em que ele mora.
 templ PageSealInMeta(book BookAddress, page int, term string) {
-	@pageSeal(book, page, term, "")
-}
-
-templ pageSeal(book BookAddress, page int, term, plainClass string) {
 	if page > 0 {
 		if book.AtPage(page, term) != "" {
 			@pageLink(book, page, term)
-		} else if plainClass != "" {
-			<span class={ plainClass }>{ fmt.Sprintf("p%d", page) }</span>
 		} else {
 			<span>{ fmt.Sprintf("p%d", page) }</span>
 		}
@@ -166,7 +155,7 @@ templ CrossRef(aba, id, name string) {
 		data-on:click={ openEntryOver }
 		data-nav-skip
 		title={ "Ver " + name }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
+		class="ds-crossref"
 	>{ children... }</a>
 }
 
@@ -182,20 +171,15 @@ templ CrossRef(aba, id, name string) {
 // `#catalogs` é REMENDADO a cada tecla da busca, e um diálogo lá dentro seria
 // redesenhado junto — perdendo o conteúdo que o elo acabou de trazer. A casca
 // nunca é remendada.
+//
+// `ds.Dialog` e não a moldura do grimório: os verbetes são cartões do Tempestade, e
+// todo elo mora em cena que já migrou.
 templ EntryDialog() {
-	<dialog
-		id="entry-in-dialog"
-		data-preserve-attr="open"
-		aria-label="Verbete citado"
-		class="scene-grimorio m-auto w-[min(34rem,calc(100vw-2rem))] rounded-sm border border-grimorio-iron bg-grimorio-panel p-3 text-foreground backdrop:bg-black/60"
-	>
-		@ui.Button(ui.VariantGhost, ui.SizeIcon, "absolute right-2 top-2", templ.Attributes{"type": "button", "aria-label": "Fechar o verbete", "data-on:click": "el.closest('dialog').close()"}) {
-			×
-		}
-		<div id="crossref-entry" class="pr-8">
-			<p class="text-xs text-muted-foreground">Carregando…</p>
+	@ds.Dialog("entry-in-dialog", "Verbete", nil) {
+		<div id="crossref-entry">
+			<p class="ds-row-meta">Carregando…</p>
 		</div>
-	</dialog>
+	}
 }
 
 // openEntryOver mostra o verbete do elo numa caixa sobre a cena.
