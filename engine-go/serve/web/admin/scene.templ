@@ -125,7 +125,7 @@ templ invitesPanel(v adminView) {
 						<button
 							type="button"
 							data-url={ c.URL }
-							data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = el.dataset.url"
+							data-on:click={ ui.CopyThen("location.origin + el.dataset.url", "$copied = el.dataset.url") }
 							aria-label={ "Copiar o " + c.Label }
 							class="shrink-0 border border-grimorio-iron-light bg-secondary px-2 py-1 text-xs text-secondary-foreground outline-none hover:bg-accent"
 						>
@@ -292,7 +292,7 @@ templ mintedReset(path string) {
 			/>
 			<button
 				type="button"
-				data-on:click="navigator.clipboard.writeText(document.getElementById('reset-url').value); $copied = true"
+				data-on:click={ ui.CopyThen("document.getElementById('reset-url').value", "$copied = true") }
 				class="shrink-0 border border-grimorio-iron-light bg-secondary px-3 py-1.5 text-sm text-secondary-foreground outline-none hover:bg-accent"
 			>
 				Copiar

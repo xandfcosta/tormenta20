@@ -86,7 +86,7 @@ func MintedInvite(path, note string) templ.Component {
 		})
 		templ_7745c5c3_Err = Button(VariantSecondary, SizeDefault, "shrink-0", templ.Attributes{
 			"type":          "button",
-			"data-on:click": "navigator.clipboard.writeText(document.getElementById('invite-url').value); $copied = true",
+			"data-on:click": CopyThen("document.getElementById('invite-url').value", "$copied = true"),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

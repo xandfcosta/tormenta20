@@ -1283,6 +1283,9 @@ do [GLOSSARY](../GLOSSARY.md).
 - **A tela não escolhe cor**: monta-se com as peças de `serve/web/ds` e escreve
   só leiaute (`grid`, `gap`, `px-4`; a escala do Tailwind já é a do sistema,
   base 4). Peça nova entra no kit e na `/sistema` ANTES de entrar numa tela.
+- **Botão de copiar passa por `ui.CopyThen`**, nunca por `navigator.clipboard`: a API
+  só existe em HTTPS e `localhost`, e o app é servido em HTTP na rede da mesa. O e2e
+  roda em `localhost`, onde ela existe, e por isso não vê a chamada direta quebrar.
 - **Pisos do Tempestade: 12px de texto e 44×44 de alvo no toque**, medidos pelo
   e2e (`support/ds-floors.ts`, no laço do `appearance.spec.ts`) só na cena com
   `.scene-ds` — o caso anota o sistema, sem lista de cenas migradas. O guarda

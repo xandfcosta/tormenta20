@@ -149,7 +149,7 @@ templ inviteDialog() {
 templ mintedInvite(path string) {
 	<div id="invite-link" class="ds-hub-invite">
 		<input id="invite-url" class="ds-input" readonly aria-label="Link de convite" data-path={ path } data-init="el.value = location.origin + el.dataset.path"/>
-		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "navigator.clipboard.writeText(document.getElementById('invite-url').value); $copied = true"}) {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": ui.CopyThen("document.getElementById('invite-url').value", "$copied = true")}) {
 			@ui.Icon("Copy", "ds-icon")
 			Copiar
 		}

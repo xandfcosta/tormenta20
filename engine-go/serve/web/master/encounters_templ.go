@@ -246,7 +246,7 @@ func copyEncounterButton() templ.Component {
 		})
 		templ_7745c5c3_Err = ds.Button(ds.ButtonGhost, templ.Attributes{
 			"type":          "button",
-			"data-on:click": "navigator.clipboard.writeText(location.origin + document.getElementById('encounters').dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)",
+			"data-on:click": ui.CopyThen("location.origin + document.getElementById('encounters').dataset.url", "$copied = true; setTimeout(() => $copied = false, 2000)"),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
