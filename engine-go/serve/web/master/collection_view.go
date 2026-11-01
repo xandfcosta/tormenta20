@@ -177,6 +177,10 @@ type collectionView struct {
 
 func (v collectionView) Searching() bool { return strings.TrimSpace(v.Term) != "" }
 
+// offersFilters diz se a cena desenha os filtros: o catálogo tem de ter algum, e com
+// termo digitado eles somem.
+func (v collectionView) offersFilters() bool { return !v.Searching() && len(v.Filters) > 0 }
+
 // groupCount é o que o cabeçalho do grupo diz: na busca, quantos achados; no
 // catálogo, quanto dele sobrou dos filtros.
 func (v collectionView) groupCount(g collectionGroup) string {

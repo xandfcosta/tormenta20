@@ -136,24 +136,19 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
 })
 
 /**
- * A GAVETA DE FILTROS dos catálogos.
+ * OS FILTROS DOS CATÁLOGOS: à vista no desktop, e num diálogo abaixo dele.
  *
- * O CASO MEDE OS DOIS LADOS, e o segundo não é redundância — é o CONTROLE. Uma
- * gaveta que se fecha em toda forma passaria com folga numa asserção só de
- * altura, e o custo seria os filtros sumirem da tela larga, que é onde eles mais
- * servem. A folha escreve DUAS regras de abertura (`display` e
- * `::details-content`) porque os motores escondem o miolo de um `<details>`
- * fechado de dois jeitos diferentes e um deles pode não existir.
+ * O CASO MEDE OS DOIS LADOS, e o segundo não é redundância — é o CONTROLE. Filtros
+ * que se escondem em toda largura passariam com folga numa asserção só do celular,
+ * e o custo seria eles sumirem da tela larga, que é onde mais servem.
  *
- * Só um browser testemunha: o miolo de um `<details>` FECHADO ainda devolve
- * `boundingClientRect` — o navegador o esconde por `content-visibility` —, então a
- * medição é da CAIXA e a visibilidade vem de `checkVisibility`. Medir o filho foi
- * o que mentiu na primeira sonda.
+ * Só um browser testemunha: a troca é de CSS por largura, e o mesmo HTML sai nas
+ * duas. O visível vem de `toBeVisible`, porque os dois desenhos estão no documento.
  *
  * Ele CAMINHA pelo menu em vez de trazer uma lista de paradas: a parada que entrar
  * amanhã já nasce medida.
  */
-test('abaixo do desktop os filtros viram gaveta, e no desktop eles ficam abertos', async ({ page }) => {
+test('abaixo do desktop os filtros abrem num diálogo, e no desktop ficam à vista', async ({ page }) => {
   await page.goto('/mestre/bestiario')
   const stops = await page
     .getByRole('navigation', { name: 'Ferramentas do mestre' })
@@ -161,55 +156,60 @@ test('abaixo do desktop os filtros viram gaveta, e no desktop eles ficam abertos
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href))
   expect(stops.length, 'o menu veio vazio: este caso não mediria nada').toBeGreaterThan(10)
 
-  // A CAIXA da gaveta fechada é o resumo e mais nada: 44px de alvo de toque.
-  const CLOSED_CEILING = 44 + 12
-
-  let withDrawer = 0
-  let noDrawer = 0
+  let withFilters = 0
+  let noFilters = 0
   for (const waypoint of stops) {
-    // ── no celular, em pé e deitado: a gaveta existe e está recolhida ─────
-    await page.setViewportSize({ width: 844, height: 390 })
+    await page.setViewportSize({ width: 390, height: 844 })
     await page.goto(waypoint)
-    const drawer = page.locator('.ds-catalog-filters')
-    if ((await drawer.count()) === 0) {
-      noDrawer++
+    const opener = page.locator('[commandfor="catalog-filters"]')
+    if ((await opener.count()) === 0) {
+      noFilters++
       continue
     }
-    withDrawer++
+    withFilters++
+    const dialog = page.locator('#catalog-filters')
+    const inline = page.locator('.ds-catalog-filters-inline')
 
     for (const form of [
-      { width: 844, height: 390 },
       { width: 390, height: 844 },
+      { width: 844, height: 390 },
     ]) {
       await page.setViewportSize(form)
-      const measurement = await drawer.first().evaluate((d: HTMLDetailsElement) => ({
-        // A CAIXA, e nunca o filho: fechado, o miolo devolve retângulo mesmo.
-        alta: Math.round(d.getBoundingClientRect().height),
-        aberta: d.open,
-        resumoAparece: d.querySelector('summary')!.checkVisibility(),
-        filtroAparece: !!d.querySelector('button')?.checkVisibility(),
-      }))
       const where = `${waypoint} a ${form.width}×${form.height}`
-      expect(measurement.aberta, `a gaveta de ${where} nasce aberta`).toBe(false)
-      expect(measurement.resumoAparece, `sem o resumo, os filtros de ${where} ficam inalcançáveis`).toBe(true)
-      expect(measurement.filtroAparece, `os filtros de ${where} não recolheram`).toBe(false)
-      expect(measurement.alta, `a gaveta de ${where} recolhida ocupa ${measurement.alta}px`).toBeLessThanOrEqual(CLOSED_CEILING)
+      await expect(opener, `sem o botão, os filtros de ${where} ficam inalcançáveis`).toBeVisible()
+      await expect(inline, `os filtros de ${where} ainda ocupam a cena`).toBeHidden()
+      await opener.click()
+      await expect(dialog.getByRole('button').nth(1), `o diálogo de ${where} não mostrou os filtros`).toBeVisible()
+      await dialog.getByRole('button', { name: 'Fechar' }).click()
+      await expect(dialog).toBeHidden()
     }
 
-    // ── no desktop: a gaveta não existe como gaveta ───────────────────────
     await page.setViewportSize({ width: 1280, height: 720 })
-    const wide = await drawer.first().evaluate((d: HTMLDetailsElement) => ({
-      resumoAparece: d.querySelector('summary')!.checkVisibility(),
-      filtroAparece: !!d.querySelector('button')?.checkVisibility(),
-    }))
-    expect(wide.filtroAparece, `no desktop os filtros de ${waypoint} continuam escondidos: a regra de abertura caiu`).toBe(true)
-    expect(wide.resumoAparece, `no desktop a gaveta de ${waypoint} ainda mostra o resumo`).toBe(false)
+    await expect(inline, `no desktop os filtros de ${waypoint} sumiram`).toBeVisible()
+    await expect(opener, `no desktop ${waypoint} ainda mostra o botão`).toBeHidden()
   }
 
   // O DENOMINADOR: sem ele, um seletor que parou de casar dá o mesmo verde que
   // uma tela em ordem. Medido: sete paradas filtram.
-  expect(withDrawer, 'nenhuma parada tinha gaveta: o seletor `.ds-catalog-filters` parou de casar').toBeGreaterThanOrEqual(7)
-  expect(withDrawer + noDrawer).toBe(stops.length)
+  expect(withFilters, 'nenhuma parada tinha filtros: o seletor `commandfor` parou de casar').toBeGreaterThanOrEqual(7)
+  expect(withFilters + noFilters).toBe(stops.length)
+})
+
+/**
+ * O CRACHÁ remenda a cena por baixo do diálogo, e o diálogo continua aberto: quem
+ * filtra costuma ligar mais de um. O número de trás é a testemunha de que o remendo
+ * chegou, senão "continuou aberto" seria verdade sobre um clique que não fez nada.
+ */
+test('ligar um filtro no diálogo não fecha o diálogo', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/mestre/magias')
+  await page.locator('[commandfor="catalog-filters"]').click()
+  const dialog = page.locator('#catalog-filters')
+  await dialog.getByRole('button', { name: '2º' }).click()
+
+  await expect(page.locator('.ds-catalog-group > .ds-list-head')).toContainText(' de ')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('button', { name: '2º' })).toHaveAttribute('aria-pressed', 'true')
 })
 
 /**

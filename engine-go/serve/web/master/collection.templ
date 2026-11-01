@@ -33,11 +33,29 @@ templ collectionScene(v collectionView) {
 			// outra pergunta — todos os catálogos, não este —, e um crachá de círculo
 			// aceso sobre uma lista que tem itens e condições diria que ele está
 			// filtrando o que não filtra.
-			if !v.Searching() && len(v.Filters) > 0 {
-				@collectionFilters(v)
+			if v.offersFilters() {
+				<div class="ds-catalog-filter-rows ds-catalog-filters-inline">
+					@collectionFilters(v)
+				</div>
+				<button
+					type="button"
+					class="ds-button ds-catalog-filters-open"
+					data-variant="ghost"
+					commandfor="catalog-filters"
+					command="show-modal"
+				>Filtros</button>
 			}
 		</div>
 		@collectionResults(v)
+		// Dentro da cena, e o remendo passa por baixo dele: o `ds.Dialog` preserva o
+		// `open`, e cada crachá ligado redesenha o estado dos outros aqui dentro.
+		if v.offersFilters() {
+			@ds.Dialog("catalog-filters", "Filtros", nil) {
+				<div class="ds-catalog-filter-rows">
+					@collectionFilters(v)
+				</div>
+			}
+		}
 	</section>
 }
 
@@ -79,31 +97,26 @@ templ collectionResults(v collectionView) {
 	</div>
 }
 
-// collectionFilters são as linhas de crachá do catálogo da cena: à vista no
-// desktop, e recolhidas em "Filtros" abaixo dele. A troca é do CSS, na mesma
-// largura em que o menu lateral aparece, e o `data-preserve-attr` segura a gaveta
-// aberta porque a cena é remendada a cada crachá.
+// collectionFilters são as linhas de crachá do catálogo da cena, à vista no desktop
+// e num diálogo abaixo dele. A troca é do CSS, na largura em que o menu lateral
+// aparece, e o mesmo componente desenha os dois: dois desenhos do mesmo filtro seriam
+// dois lugares para consertar.
 //
 // O rótulo da linha é VISÍVEL: são até três linhas, e sem ele ninguém sabe se
 // "Evocação" é escola ou classe.
 templ collectionFilters(v collectionView) {
-	<details class="ds-gm-filters-more ds-catalog-filters" data-preserve-attr="open">
-		<summary class="ds-button" data-variant="ghost">Filtros</summary>
-		<div class="ds-catalog-filter-rows">
-			for _, f := range v.Filters {
-				<div class="ds-catalog-filter" role="group" aria-label={ "Filtrar por " + f.Label }>
-					<span class="ds-field-label" aria-hidden="true">{ f.Label }</span>
-					<div class="ds-options">
-						for _, o := range f.Options {
-							@ds.Option(v.badgeOn(f.Key, o.Value), templ.Attributes{"data-on:click": toggleBadge(v.Aba, f.Key, o.Value)}) {
-								{ o.Label }
-							}
-						}
-					</div>
-				</div>
-			}
+	for _, f := range v.Filters {
+		<div class="ds-catalog-filter" role="group" aria-label={ "Filtrar por " + f.Label }>
+			<span class="ds-field-label" aria-hidden="true">{ f.Label }</span>
+			<div class="ds-options">
+				for _, o := range f.Options {
+					@ds.Option(v.badgeOn(f.Key, o.Value), templ.Attributes{"data-on:click": toggleBadge(v.Aba, f.Key, o.Value)}) {
+						{ o.Label }
+					}
+				}
+			</div>
 		</div>
-	</details>
+	}
 }
 
 // findingsWritten concorda em número.

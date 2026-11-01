@@ -139,3 +139,19 @@ func TestTheEntryBoxTitleSaysWhatItShows(t *testing.T) {
 		}
 	}
 }
+
+// Quem filtra ganha o botão e o diálogo, e o catálogo sem filtro (Classes) não
+// ganha botão que abre o nada.
+func TestTheCatalogFiltersOpenInADialog(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t20.local")
+
+	spells := pedeNoMestre(t, s, gm, "GET", "/mestre/magias", "").Body.String()
+	if !strings.Contains(spells, `commandfor="catalog-filters"`) || !strings.Contains(spells, `id="catalog-filters"`) {
+		t.Error("Magias não oferece os filtros num diálogo")
+	}
+	classes := pedeNoMestre(t, s, gm, "GET", "/mestre/classes", "").Body.String()
+	if strings.Contains(classes, `commandfor="catalog-filters"`) {
+		t.Error("Classes não tem filtro, e ofereceu o botão mesmo assim")
+	}
+}

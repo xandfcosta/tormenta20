@@ -3914,10 +3914,12 @@
     display: grid;
     gap: 0.5rem;
   }
+  /* O rótulo fica na altura da PRIMEIRA linha de opções: centrado, ele boiava no
+   * meio do bloco quando as opções quebram. */
   .ds-catalog-filter {
     display: grid;
     grid-template-columns: 5.5rem minmax(0, 1fr);
-    align-items: center;
+    align-items: start;
     gap: 0.5rem;
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
@@ -3927,20 +3929,24 @@
   .ds-catalog-filter .ds-option {
     font-weight: 400;
   }
-  /* Os filtros à vista a partir da largura do menu lateral, e recolhidos abaixo
-   * dela. AS DUAS REGRAS DE ABERTURA existem porque os motores escondem o miolo de
-   * um `<details>` fechado de dois jeitos diferentes, e a falha aqui precisa ser
-   * SEGURA: com uma só, um motor que não a conhecesse esconderia o resumo E o miolo,
-   * e os filtros sumiriam da tela larga. */
+  .ds-catalog-filter > .ds-field-label {
+    align-self: start;
+    padding-top: calc((var(--ds-h-control) - var(--ds-lh-xs)) / 2);
+  }
+  /* Os filtros à vista a partir da largura do menu lateral, e num diálogo abaixo
+   * dela (decisão do dono). */
+  .ds-catalog-filters-inline {
+    display: none;
+  }
+  .ds-catalog-filters-open {
+    justify-self: start;
+  }
   @media (min-width: 64rem) {
-    .ds-catalog-filters > summary {
-      display: none;
-    }
-    .ds-catalog-filters:not([open]) > .ds-catalog-filter-rows {
+    .ds-catalog-filters-inline {
       display: grid;
     }
-    .ds-catalog-filters:not([open])::details-content {
-      content-visibility: visible;
+    .ds-catalog-filters-open {
+      display: none;
     }
   }
   /* A região tem caixa própria porque o driver de teclado acha o vizinho pelo
