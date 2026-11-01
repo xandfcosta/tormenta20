@@ -38,9 +38,17 @@ type readerView struct {
 	// InDialog diz que esta cena está dentro do `<iframe>` do diálogo que a
 	// casca desenha, e não numa aba própria. A diferença na tela é o link de
 	// VOLTAR: dentro do diálogo ele levaria o iframe para a cena anterior, com a
-	// mesa aparecendo miniaturizada dentro de uma caixa — quem fecha é o ✕ do
+	// mesa aparecendo miniaturizada dentro de uma caixa — quem fecha é o X do
 	// diálogo, que é do lado de fora.
 	InDialog bool
+}
+
+// title é o que a barra diz: o nome do que se abriu, ou que aquilo é o livro.
+func (v readerView) title() string {
+	if v.Term != "" {
+		return v.Term
+	}
+	return "O livro"
 }
 
 // readerFromRequest lê a URL e recusa o que não faz sentido.
@@ -89,9 +97,10 @@ func (s Scene) handleReader(w http.ResponseWriter, r *http.Request) {
 		title = v.Term + " · Livro · Tormenta 20"
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title: title,
-		Shape: ui.ShellBare,
-		Back:  v.Back,
+		Title:  title,
+		Shape:  ui.ShellBare,
+		Back:   v.Back,
+		System: ui.SystemTempestade,
 		// O módulo do leitor só entra AQUI: são 540 KB de pdf.js, e mandá-los em
 		// toda cena seria pôr um visualizador de PDF no caminho de quem abriu a
 		// ficha de um personagem.

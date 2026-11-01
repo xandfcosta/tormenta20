@@ -4459,6 +4459,12 @@
   .ds-finder:has(#finder-field:focus) .ds-finder-group:first-of-type > .ds-finder-row:first-of-type {
     background: color-mix(in oklab, var(--ds-action) 14%, transparent);
   }
+  .ds-book-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    z-index: 1;
+  }
   /* O livro é um documento: o `iframe` ocupa todo o resto, sem o recuo do corpo. */
   .ds-book {
     width: min(72rem, calc(100vw - 2rem));
@@ -4480,6 +4486,63 @@
     .ds-finder[open],
     .ds-book[open] {
       height: 92dvh;
+    }
+  }
+
+  /* O LEITOR DO LIVRO (ALE-551, mockup `leitor.html`). A barra e a página, e nada mais: é
+   * para LER. */
+  .ds-reader {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+  }
+  .ds-reader-bar {
+    row-gap: 0.25rem;
+  }
+  /* O espaço do X da caixa, que é desenhado por cima da barra. */
+  .ds-reader-bar[data-in-dialog] {
+    padding-right: 4rem;
+  }
+  .ds-reader-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    margin-left: auto;
+  }
+  .ds-reader-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .ds-reader-page {
+    min-width: 5.5rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+  .ds-reader-sheet {
+    position: relative;
+    min-height: 0;
+    padding: 1rem;
+    background: var(--ds-sunk);
+    overflow: auto;
+  }
+  @media (max-width: 40rem) {
+    .ds-reader-tools {
+      justify-content: space-between;
+      gap: 0.25rem;
+      width: 100%;
+      margin-left: 0;
+    }
+    .ds-reader-page {
+      min-width: 4.75rem;
+    }
+    .ds-reader-out {
+      display: none;
+    }
+    .ds-reader-sheet {
+      padding: 0.5rem;
     }
   }
 

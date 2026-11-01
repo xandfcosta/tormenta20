@@ -1,6 +1,10 @@
 package reader
 
-import "fmt"
+import (
+	"fmt"
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
 
 // A CENA DO LEITOR: o livro aberto na página do verbete.
 //
@@ -13,63 +17,63 @@ import "fmt"
 // `reader.js`, um módulo próprio que roda uma vez na carga. Sinal seria estado
 // de cliente viajando em toda requisição seguinte para nada.
 templ readerScene(v readerView) {
-	<div class="flex h-full min-h-0 flex-col">
-		// `pr-16` dentro do diálogo: o ✕ que fecha é da MOLDURA, desenhado por cima
-		// no canto direito, e sem esta folga ele cobre o "abrir fora". A barra não
-		// pode reservar o espaço sempre: na aba própria não há ✕ nenhum, e o
-		// buraco ficaria à toa.
-		<div
-			class={ "flex flex-wrap items-center gap-2 border-b border-grimorio-iron px-3 py-2",
-				templ.KV("pr-16", v.InDialog) }
+	<div class="ds-reader">
+		// A mesma barra nos dois lugares. Dentro da caixa do livro não há volta, que levaria
+		// o iframe para a cena anterior, e o X é da caixa, desenhado por cima no canto: o
+		// `data-in-dialog` reserva o espaço dele.
+		<header
+			class="ds-header ds-reader-bar"
+			if v.InDialog {
+				data-in-dialog
+			}
 		>
 			if !v.InDialog {
-				<a
-					href={ templ.SafeURL(v.Back) }
-					class="inline-flex min-h-11 items-center px-2 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
-				>‹ Back</a>
+				<a href={ templ.SafeURL(v.Back) } class="ds-header-back" aria-label="Voltar">
+					@ui.Icon("ChevronLeft", "ds-icon")
+				</a>
 			}
-			if v.Term != "" {
-				<p class="font-heading text-base tracking-wide text-grimorio-gold">{ v.Term }</p>
-			}
-			<div class="ml-auto flex items-center gap-1">
-				@readerButton("anterior", "Página anterior") {
-					‹
-				}
-				<span data-pagina-atual class="min-w-24 text-center font-mono text-xs text-muted-foreground">
-					{ fmt.Sprintf("p%d", v.Page) }
-				</span>
-				@readerButton("proxima", "Próxima página") {
-					›
-				}
-				@readerButton("menos", "Diminuir") {
-					−
-				}
-				@readerButton("mais", "Aumentar") {
-					+
-				}
-				// A SAÍDA para o visualizador do navegador, e ela não é enfeite:
-				// este leitor mostra uma página por vez e destaca um termo. Busca,
-				// miniaturas e impressão são do visualizador de verdade, e mandar
-				// para lá é melhor que reimplementá-lo pela metade.
+			<h1 class="ds-header-title">{ v.title() }</h1>
+			<div class="ds-reader-tools">
+				<div class="ds-reader-group">
+					@readerButton("previous", "ChevronLeft", "Página anterior")
+					<span data-current-page class="ds-row-meta ds-reader-page">
+						{ fmt.Sprintf("p%d", v.Page) }
+					</span>
+					@readerButton("next", "ChevronRight", "Próxima página")
+				</div>
+				<div class="ds-reader-group">
+					@readerButton("less", "Minus", "Diminuir")
+					@readerButton("more", "Plus", "Aumentar")
+				</div>
+				// A SAÍDA para o visualizador do navegador, e ela não é enfeite: este leitor
+				// mostra uma página por vez e destaca um termo. Busca, miniaturas e impressão
+				// são do visualizador de verdade, e mandar para lá é melhor que reimplementá-lo
+				// pela metade. No celular só o ícone cabe, e o nome fica no `aria-label`.
 				<a
 					href={ templ.SafeURL(v.PDF) }
 					target="_blank"
 					rel="noopener"
-					class="inline-flex min-h-11 items-center rounded-sm border border-grimorio-iron px-2 text-3xs text-muted-foreground outline-none transition-colors hover:bg-accent"
-				>abrir fora ↗</a>
+					class="ds-button"
+					data-variant="ghost"
+					aria-label="Abrir fora"
+					title="Abrir no visualizador do navegador"
+				>
+					@ui.Icon("ExternalLink", "ds-icon")
+					<span class="ds-reader-out">Abrir fora</span>
+				</a>
 			</div>
-		</div>
-		// `overflow-auto` no CONTÊINER e não no documento: a casca do app é
-		// `h-dvh` com o conteúdo rolando por dentro, e deixar o documento rolar
-		// faria a barra de cima sair da tela junto com a página.
+		</header>
+		// `overflow` no CONTÊINER e não no documento: a casca do app é `h-dvh` com o conteúdo
+		// rolando por dentro, e deixar o documento rolar faria a barra sair da tela junto com
+		// a página.
 		<div
 			id="reader"
-			data-livro={ v.PDF }
+			class="ds-reader-sheet"
+			data-book={ v.PDF }
 			data-worker={ v.Worker }
-			data-pagina={ fmt.Sprintf("%d", v.Page) }
-			data-abertura={ fmt.Sprintf("%d", v.Opening) }
-			data-termo={ v.Term }
-			class="relative min-h-0 flex-1 overflow-auto p-4"
+			data-page={ fmt.Sprintf("%d", v.Page) }
+			data-opening={ fmt.Sprintf("%d", v.Opening) }
+			data-term={ v.Term }
 		>
 			<div class="relative mx-auto w-fit">
 				// Sem `max-w-full`: a largura é decidida no `reader.ts` (ver
@@ -81,25 +85,16 @@ templ readerScene(v readerView) {
 				// pintar o destaque no bitmap obrigaria a redesenhar a página
 				// inteira para tirá-lo, e o texto por baixo continuaria coberto de
 				// tinta em vez de realçado.
-				<div data-marcas aria-hidden="true" class="pointer-events-none absolute left-0 top-0"></div>
+				<div data-marks aria-hidden="true" class="pointer-events-none absolute left-0 top-0"></div>
 			</div>
 		</div>
 	</div>
 }
 
-// readerButton é o botão quadrado da barra. Um componente porque são quatro, e
-// quatro cópias de nove classes divergem na primeira que alguém ajustar.
-//
-// UMA marca (`data-acao`) e não uma por família: o `reader.js` procura pelo que
-// o botão FAZ, e dois atributos diferentes obrigariam o componente a saber qual
-// dos dois escrever — decisão de leiaute virando decisão de comportamento.
-templ readerButton(action, label string) {
-	<button
-		type="button"
-		aria-label={ label }
-		title={ label }
-		data-acao={ action }
-		disabled
-		class="inline-flex size-11 items-center justify-center rounded-sm border border-grimorio-iron text-sm text-muted-foreground outline-none transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
-	>{ children... }</button>
+// readerButton é um botão da barra. UMA marca (`data-action`) e não uma por família: o
+// `reader.js` procura pelo que o botão FAZ, e dois atributos diferentes obrigariam o
+// componente a saber qual dos dois escrever. Nasce desligado, e o `reader.js` o liga quando
+// a página fica pronta.
+templ readerButton(action, icon, label string) {
+	@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "data-action": action, "disabled": true})
 }
