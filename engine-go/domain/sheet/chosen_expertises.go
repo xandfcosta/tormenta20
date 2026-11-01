@@ -76,8 +76,8 @@ func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) 
 			return fmt.Errorf("%s escolheu %s duas vezes", power.Name, pick)
 		}
 		if !trainedIn(dto, pick) {
-			return fmt.Errorf("%s escolheu %s, e ela não seria perícia treinada desta ficha: tire-a do %s antes",
-				power.Name, pick, power.Name)
+			return fmt.Errorf("%s escolheu %s, e ela não seria perícia treinada desta ficha: troque a escolha antes, em Por nível",
+				power.Name, pick)
 		}
 	}
 	limit, err := ChoiceLimit(dto, *power.Choice)
@@ -85,8 +85,8 @@ func expertisePicksFit(dto CharacterDTO, power book.ClassPower, picks []string) 
 		return err
 	}
 	if len(picks) > limit {
-		return fmt.Errorf("%s escolhe %s (%s sem bônus temporários, mínimo 1), e ficariam %d: tire %d do %s antes",
-			power.Name, writtenSkills(limit), book.AttributeLabel(power.Choice.CountAttribute), len(picks), len(picks)-limit, power.Name)
+		return fmt.Errorf("%s escolhe %s (%s sem bônus temporários, mínimo 1), e ficariam %d: para mudar, use Trocar, em Por nível",
+			power.Name, writtenSkills(limit), book.AttributeLabel(power.Choice.CountAttribute), len(picks))
 	}
 	return nil
 }
@@ -100,8 +100,8 @@ func trainedPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) er
 			return fmt.Errorf("%s já escolheu %s; cada vez é uma perícia diferente", power.Name, pick)
 		}
 		if !trainedIn(dto, pick) {
-			return fmt.Errorf("%s escolheu %s, e ela não seria treinada nesta ficha: tire-a do %s antes",
-				power.Name, pick, power.Name)
+			return fmt.Errorf("%s escolheu %s, e ela não seria treinada nesta ficha: troque a escolha antes, em Por nível",
+				power.Name, pick)
 		}
 	}
 	return nil

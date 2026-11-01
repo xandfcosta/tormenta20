@@ -62,6 +62,12 @@ type View struct {
 	AsClasses []sheetClass
 	// OtherClasses são as classes do livro em que ele ainda pode entrar (p35).
 	OtherClasses []string
+	// ByLevel é a vista "Por nível" da aba Poderes, LevelHistory o que ela mostra, e SwapDialog a
+	// troca aberta. LastLevel é o que o `−` tira.
+	ByLevel      bool
+	LevelHistory []sheet.LevelEntry
+	SwapDialog   *swapDialogView
+	LastLevel    *sheet.LastLevelLoss
 	// Identity é quem o personagem é, linha a linha, para o ⋯ da ficha.
 	Identity []identityLine
 	// Tabs são as sete da ficha, com a ativa marcada. Ver `Tabs`.
@@ -213,6 +219,10 @@ func (s Scene) Load(
 		Classes:      card.Classes,
 		AsClasses:    stepClasses(dto),
 		OtherClasses: otherClasses(dto),
+		ByLevel:      signals.ByLevel,
+		LevelHistory: sheet.LevelHistory(dto),
+		SwapDialog:   swapDialogOf(dto, signals.SwapRow),
+		LastLevel:    lastLevelOf(dto),
 		Identity:     identityOf(dto, card.Classes),
 		ActiveTab:    aba,
 
@@ -270,6 +280,7 @@ func stepClasses(dto sheet.CharacterDTO) []sheetClass {
 	for _, cl := range dto.Classes {
 		total += cl.Level
 	}
+	last := lastLevelOf(dto)
 	classes := make([]sheetClass, 0, len(dto.Classes))
 	for i, cl := range dto.Classes {
 		leaves := i > 0 && cl.Level == 1
@@ -277,7 +288,7 @@ func stepClasses(dto sheet.CharacterDTO) []sheetClass {
 			Name:     cl.ClassName,
 			Level:    cl.Level,
 			CanRaise: total < 20,
-			CanLower: cl.Level > 1 || leaves,
+			CanLower: last != nil && last.ClassName == cl.ClassName && (leaves || cl.Level > 1),
 			Leaves:   leaves,
 		})
 	}
@@ -317,17 +328,14 @@ func thatCan(classes []sheetClass, step int) []sheetClass {
 	return eligible
 }
 
-// directStep é o comando do `−` de quem só tem UMA classe que desce, sem apagá-la.
-//
-// Vazio no resto, e aí o gesto abre a escolha. O `+` nunca é direto: subir de nível é onde
-// se escolhe outra classe (p35), e adivinhar qual classe recebe o nível é o defeito que o
-// `stepClasses` descreve.
-func directStep(v View, step int) string {
-	eligible := thatCan(v.AsClasses, step)
-	if step > 0 || len(eligible) != 1 || eligible[0].Leaves {
-		return ""
+// lastLevelOf é o que o `−` tira. Nulo quando não há o que descer: a primeira classe não sai do 1º
+// nível.
+func lastLevelOf(dto sheet.CharacterDTO) *sheet.LastLevelLoss {
+	loss, known := sheet.LastLevelOf(dto)
+	if !known || loss.Level <= 1 {
+		return nil
 	}
-	return stepCommand(v, eligible[0].Name, step)
+	return &loss
 }
 
 // sheetPost escreve o `@post` de um gesto da ficha, CARREGANDO A ABA ABERTA.
@@ -349,6 +357,9 @@ func sheetPost(v View, path string) string {
 // — com a barra do "‹ Voltar" e as abas navegando — dentro da sessão.
 func commandRoute(v View, path string) string {
 	route := fmt.Sprintf("/personagens/%d%s?tab=%s", v.ID, path, v.ActiveTab)
+	if v.ByLevel {
+		route += "&visao=nivel"
+	}
 	if v.Embedded {
 		route += "&embutida=1"
 	}

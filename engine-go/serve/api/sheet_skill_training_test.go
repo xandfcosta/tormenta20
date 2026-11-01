@@ -76,3 +76,28 @@ func TestSkillTrainingOffersOnlyTheUntrainedSkills(t *testing.T) {
 		t.Error("a lista oferece Enganação, já treinada, ao Treinamento em Perícia")
 	}
 }
+
+// Trocar o Treinamento em Perícia leva o treino junto, e a perícia já treinada não entra.
+func TestSwappingSkillTrainingMovesTheTraining(t *testing.T) {
+	f, id := focusedAtTheTable(t, "soldado", "[]")
+	seedPericia(t, f.s, id, "Sobrevivência", "wisdom", false)
+	if refusal := powerCommand(t, f, id, skillTrainingPath+url.PathEscape("Percepção"), ""); refusal != "" {
+		t.Fatalf("escolher Percepção: %q", refusal)
+	}
+	row := levelPickRow(t, f, id, "Percepção")
+	if refusal := swapRow(t, f, id, row.ID, "treinamento-em-pericia/"+url.PathEscape("Percepção")); refusal != "" {
+		t.Errorf("trocar pela mesma perícia não tem o que recusar, e a recusa foi %q", refusal)
+	}
+	if !trainedOn(t, f, id, "Percepção") {
+		t.Fatal("trocar pela mesma perícia tirou o treino dela")
+	}
+	if refusal := swapRow(t, f, id, levelPickRow(t, f, id, "Percepção").ID, "treinamento-em-pericia/"+url.PathEscape("Sobrevivência")); refusal != "" {
+		t.Fatalf("trocar: %q", refusal)
+	}
+	if trainedOn(t, f, id, "Percepção") {
+		t.Error("a perícia que saiu da escolha continuou treinada")
+	}
+	if !trainedOn(t, f, id, "Sobrevivência") {
+		t.Error("a perícia que entrou na escolha não ficou treinada")
+	}
+}

@@ -103,20 +103,23 @@ func stanceActionCost(flag string) engine.ActionCost {
 
 // ── AS ESCOLHAS, e a validação que virou fronteira ───────────────────────────
 
-// pickPower liga ou desliga um poder eletivo.
+// pickPower escolhe um poder eletivo.
 //
 // O comando manda o PODER e não a lista inteira, pela razão de sempre: mandar a
 // lista perde para o clique repetido e para a segunda aba aberta. Quem decide o
 // estado final é o servidor, que sabe o que está gravado.
 func pickPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	id := chi.URLParam(r, "poder")
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	// Só se troca, e não se remove (decisão do dono): a vaga nunca fica vazia.
+	if slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
+		return fmt.Errorf("este poder já foi escolhido: para mudar, use Trocar, em Por nível")
+	}
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
 		dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
-		// O poder que SAI leva as escolhas dele: escolha de poder que a ficha
-		// não tem é recusada pelo `WithChoicesValid`.
-		if !slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
-			dto.PowerChoices = sheet.WithoutPowerPicksOf(dto.PowerChoices, id)
-		}
 	})
 }
 
@@ -178,35 +181,6 @@ func pickPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 		return nil
 	}
 	return s.plays.ToggleTraining(r.Context(), row.ID, toTrain)
-}
-
-// dropPowerOption tira UMA escolha do poder; sem nenhuma, o poder sai da ficha.
-//
-// A proficiência que o poder Proficiência dava SAI junto, se nenhuma outra
-// origem a conceder: ela não se desmarca na mão (ALE-510).
-func dropPowerOption(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	id, option := chi.URLParam(r, "poder"), pathParam(r, "opcao")
-	var before, after sheet.CharacterDTO
-	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
-		before = *dto
-		picks, left := sheet.WithoutPowerPick(dto.PowerChoices, id, option)
-		dto.PowerChoices = picks
-		if left == 0 && slices.Contains(sheet.UnmarshalStrings(dto.ClassPowers), id) {
-			dto.ClassPowers = idToggledCom(dto.ClassPowers, id)
-		}
-		after = *dto
-	})
-	if err != nil || slices.Equal(sheet.PowerProficiencies(before.PowerChoices), sheet.PowerProficiencies(after.PowerChoices)) {
-		return err
-	}
-	kept := []string{}
-	for _, key := range sheet.UnmarshalStrings(after.Proficiencies) {
-		lost := slices.Contains(sheet.PowerProficiencies(before.PowerChoices), key)
-		if !lost || len(grantersOf(after, key)) > 0 {
-			kept = append(kept, key)
-		}
-	}
-	return s.plays.SaveProficiencies(r.Context(), row.ID, kept)
 }
 
 // pickRaceAbility liga ou desliga uma opção da escolha de uma habilidade de

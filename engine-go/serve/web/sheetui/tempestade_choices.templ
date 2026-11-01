@@ -176,9 +176,6 @@ templ powerPickRow(v View, power powerChoice, filtered bool) {
 						@ds.Option(o.Count > 0, templ.Attributes{"aria-label": power.Name + ": " + o.Label, "data-on:click": sheetPost(v, "/poderes/escolha/"+power.ID+"/"+o.Value)}) {
 							{ o.Written() }
 						}
-						if o.Count > 0 {
-							@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar "+o.Label+" de "+power.Name, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/poderes/escolha/"+power.ID+"/"+o.Value+"/tira")})
-						}
 					}
 				</div>
 			}
@@ -214,14 +211,11 @@ templ countedChoiceDs(v View, counted countedChoice) {
 		<div class="ds-options">
 			for _, o := range counted.Options {
 				if counted.Repeats {
-					@ds.Option(o.Count > 0, templ.Attributes{"aria-label": counted.Name + ": " + o.Label, "data-on:click": countedPost(v, counted.ID, o.Value, false)}) {
+					@ds.Option(o.Count > 0, templ.Attributes{"aria-label": counted.Name + ": " + o.Label, "data-on:click": countedPost(v, counted.ID, o.Value)}) {
 						{ o.Written() }
 					}
-					if o.Count > 0 {
-						@ds.IconButton(ds.ButtonSecondary, "Minus", "Tirar "+o.Label+" de "+counted.Name, templ.Attributes{"type": "button", "data-on:click": countedPost(v, counted.ID, o.Value, true)})
-					}
 				} else {
-					@ds.Option(o.Count > 0, templ.Attributes{"aria-label": counted.Name + ": " + o.Label, "data-on:click": countedPost(v, counted.ID, o.Value, o.Count > 0)}) {
+					@ds.Option(o.Count > 0, templ.Attributes{"aria-label": counted.Name + ": " + o.Label, "data-on:click": countedPost(v, counted.ID, o.Value)}) {
 						{ o.Label }
 					}
 				}

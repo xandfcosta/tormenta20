@@ -37,3 +37,21 @@ func TestACountedPickIsSituatedAtTheLevelThatGaveIt(t *testing.T) {
 		t.Errorf("os terrenos ficaram nos níveis %v, e o livro os dá no 3º e no 7º", levels)
 	}
 }
+
+// A ficha antiga guardou os dois terrenos no 3º nível: descer do 7º leva o mais novo, e avisa.
+func TestLoweringTakesTheCountedPickTheNewLevelNoLongerGives(t *testing.T) {
+	dto := hunter(7,
+		LevelChoiceDTO{ID: 100, Level: 3, Kind: LevelKindPick, Ref: explorerPower, Pick: "floresta"},
+		LevelChoiceDTO{ID: 101, Level: 3, Kind: LevelKindPick, Ref: explorerPower, Pick: "urbano"},
+	)
+	loss, known := LastLevelOf(dto)
+	if !known {
+		t.Fatal("o caçador 7 não tem último nível")
+	}
+	if !slices.Contains(loss.RemoveIDs, 101) || slices.Contains(loss.RemoveIDs, 100) {
+		t.Errorf("devia sair o terreno mais novo, e saíram as linhas %v", loss.RemoveIDs)
+	}
+	if !slices.Contains(loss.Lines, "Explorador, Urbano") {
+		t.Errorf("o aviso não diz o que some: %v", loss.Lines)
+	}
+}

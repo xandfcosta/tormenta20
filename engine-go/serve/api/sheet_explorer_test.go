@@ -37,7 +37,7 @@ func TestTheExplorerPicksATerrainPerFourLevels(t *testing.T) {
 		t.Errorf("a terceira escolha no nível 7 foi aceita: %q", refusal)
 	}
 	screen := powerScreen(t, f, id)
-	for _, want := range []string{"2 de 2 · nível 7", "Floresta ×2", `aria-label="Tirar Floresta de Explorador"`} {
+	for _, want := range []string{"2 de 2 · nível 7", "Floresta ×2"} {
 		if !strings.Contains(screen, want) {
 			t.Errorf("a tela não tem %q", want)
 		}
@@ -47,10 +47,13 @@ func TestTheExplorerPicksATerrainPerFourLevels(t *testing.T) {
 		t.Error("a aba Efeitos não tem o interruptor da floresta")
 	}
 
-	// DESCER O NÍVEL que deixaria terreno a mais é recusado (decisão do dono).
+	// O segundo terreno veio do 7º nível, e sai com ele (p50).
 	rec := f.requests(t, f.player, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/nivel/%s/-1", id, url.PathEscape("Caçador")), "")
-	if refusal := sceneRefusal(rec.Body.String()); !strings.Contains(refusal, "Explorador") {
-		t.Errorf("descer para o nível 6 com dois terrenos não foi recusado: %q", refusal)
+	if refusal := sceneRefusal(rec.Body.String()); refusal != "" {
+		t.Fatalf("descer para o nível 6 foi recusado: %q", refusal)
+	}
+	if _, picks := storedChoices(t, f.s, id); strings.Count(picks, "floresta") != 1 {
+		t.Errorf("no nível 6 fica um terreno, e ficou %s", picks)
 	}
 }

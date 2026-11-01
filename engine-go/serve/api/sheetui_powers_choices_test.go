@@ -308,19 +308,12 @@ func TestARepeatablePowerTakesOneSlotPerChoice(t *testing.T) {
 	if refused := powerCommand(t, f, id, "escolha/"+poder+"/sorte", ""); !strings.Contains(refused, "Força") {
 		t.Errorf("um atributo inventado não foi recusado com as opções: %q", refused)
 	}
-
-	// TIRAR uma escolha devolve a vaga; tirar a última tira o poder.
-	powerCommand(t, f, id, "escolha/"+poder+"/strength/tira", "")
-	powerCommand(t, f, id, "escolha/"+poder+"/wisdom/tira", "")
-	if saved := chosen(t, f, id); strings.Contains(saved, "aumento") {
-		t.Errorf("sem nenhuma escolha, o Aumento continuou em classPowers: %s", saved)
-	}
 }
 
 // O DIÁLOGO OFERECE AS OPÇÕES DO PODER QUE PEDE ESCOLHA (ALE-491).
 //
 // O Aumento de Atributo não é um interruptor: cada atributo é um gesto, e o
-// que já foi escolhido diz quantas vezes e oferece o de tirar. Sem isto a
+// que já foi escolhido diz quantas vezes. Sem isto a
 // regra existia no motor e nenhuma tela a alcançava.
 func TestTheDialogOffersTheOptionsOfAPowerThatAsksForAChoice(t *testing.T) {
 	// Nível 5: duas vezes o mesmo atributo pede dois patamares (p38).
@@ -333,16 +326,10 @@ func TestTheDialogOffersTheOptionsOfAPowerThatAsksForAChoice(t *testing.T) {
 			t.Errorf("o diálogo não oferece o Aumento de Atributo em %s", opcao)
 		}
 	}
-	if strings.Contains(screen, "/poderes/escolha/"+poder+"/strength/tira") {
-		t.Fatal("o controle já estava errado: sem escolha, o diálogo oferece tirar Força")
-	}
 
 	powerCommand(t, f, id, "escolha/"+poder+"/strength", "")
 	powerCommand(t, f, id, "escolha/"+poder+"/strength", "")
 	screen = powerScreen(t, f, id)
-	if !strings.Contains(screen, "/poderes/escolha/"+poder+"/strength/tira") {
-		t.Error("com Força escolhida, o diálogo não oferece tirá-la")
-	}
 	if !strings.Contains(screen, "Força ×2") {
 		t.Error("Força escolhida duas vezes não diz ×2 no diálogo")
 	}

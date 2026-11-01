@@ -53,17 +53,3 @@ func TestTheTierLimitCountsEveryClass(t *testing.T) {
 		t.Errorf("a Força do guerreiro no mesmo patamar devia ser recusada, e a recusa foi %q", refusal)
 	}
 }
-
-// Descer de patamar com a escolha a mais é recusado, como as outras escolhas contadas por nível.
-func TestLoweringOutOfATierKeepsTheLimit(t *testing.T) {
-	f, id := barbaro(t, 5)
-	for i := 0; i < 2; i++ {
-		if refusal := powerCommand(t, f, id, barbarianIncrease+"strength", ""); refusal != "" {
-			t.Fatalf("Força: %q", refusal)
-		}
-	}
-	refusal := stepClass(t, f, id, "Bárbaro", -1)
-	if !strings.Contains(refusal, "patamar") {
-		t.Errorf("descer para o 4º nível com duas Forças devia ser recusado, e a recusa foi %q", refusal)
-	}
-}

@@ -3,6 +3,7 @@ package sheetui
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"t20engine/domain/sheet"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -27,7 +28,11 @@ import (
 // busca é gesto legítimo, e tratá-lo como ausência ressuscitaria o termo
 // anterior — é a mesma decisão do `finderTerm`.
 type Signals struct {
-	Search *string `json:"search"`
+	// ByLevel e SwapRow vêm da query: a vista "Por nível" da aba Poderes e a escolha que se
+	// está trocando. São estado de endereço, e não sinal do navegador.
+	ByLevel bool    `json:"-"`
+	SwapRow int64   `json:"-"`
+	Search  *string `json:"search"`
 	// NewExpertise e NovoAtributo são os dois campos do diálogo de ofício novo.
 	NewExpertise *string `json:"new_expertise"`
 	NewAttribute *string `json:"new_attribute"`
@@ -141,6 +146,10 @@ func sheetSignals(r *http.Request) Signals {
 	signals := Signals{}
 	if err := datastar.ReadSignals(r, &signals); err != nil {
 		signals = Signals{}
+	}
+	signals.ByLevel = r.URL.Query().Get("visao") == "nivel"
+	if swap, err := strconv.ParseInt(r.URL.Query().Get("trocar"), 10, 64); err == nil {
+		signals.ByLevel, signals.SwapRow = true, swap
 	}
 	if signals.Search == nil {
 		fromURL := r.URL.Query().Get("busca")

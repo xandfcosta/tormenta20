@@ -998,6 +998,25 @@
     background: var(--ds-surface);
     text-align: center;
   }
+  .ds-level-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .ds-level-line[data-automatic] .ds-row-title {
+    color: var(--ds-ink-2);
+    font-weight: 500;
+  }
+  .ds-level-detail {
+    display: block;
+  }
+  .ds-level-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+  }
   button.ds-stat {
     width: 100%;
     color: inherit;
