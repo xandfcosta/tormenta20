@@ -98,6 +98,15 @@ func (v BestiaryView) TypeOn(kind string) bool {
 	return slices.Contains(v.Types, kind)
 }
 
+// litCount é quantos filtros estão ligados: cada tipo, e a faixa de ND como um só.
+func (v BestiaryView) litCount() int {
+	lit := len(v.Types)
+	if v.CRMin != book.CRMin || v.CRMax != book.CRMax {
+		lit++
+	}
+	return lit
+}
+
 // CRInBox escreve o número do campo sem o `.0` que o float traria: a caixa
 // diz "3", não "3.0", e o passo do livro é de um quarto.
 func CRInBox(nd float64) string {

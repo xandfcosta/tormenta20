@@ -155,3 +155,26 @@ func TestTheCatalogFiltersOpenInADialog(t *testing.T) {
 		t.Error("Classes não tem filtro, e ofereceu o botão mesmo assim")
 	}
 }
+
+// O botão "Filtros" diz quantos estão ligados: no celular, com o diálogo fechado, é o
+// único sinal de relance de que a lista está filtrada. No Bestiário a faixa de ND
+// conta como um filtro só, por mais que os dois campos tenham mudado.
+func TestTheFiltersButtonSaysHowManyAreOn(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t20.local")
+
+	for address, want := range map[string]string{
+		"/mestre/condicoes":                                  ">Filtros</button>",
+		"/mestre/condicoes?efeito=medo":                      ">Filtros · 1</button>",
+		"/mestre/magias?circulo=1&circulo=2&escola=evocacao": ">Filtros · 3</button>",
+		"/mestre/bestiario":                                  ">Filtros</button>",
+		"/mestre/bestiario?tipos=animal,planar":              ">Filtros · 2</button>",
+		"/mestre/bestiario?nd-min=5&nd-max=10":               ">Filtros · 1</button>",
+		"/mestre/bestiario?tipos=animal&nd-min=5":            ">Filtros · 2</button>",
+	} {
+		body := pedeNoMestre(t, s, gm, "GET", address, "").Body.String()
+		if !strings.Contains(body, want) {
+			t.Errorf("%s: o botão não diz %q", address, want)
+		}
+	}
+}

@@ -43,7 +43,7 @@ templ collectionScene(v collectionView) {
 					data-variant="ghost"
 					commandfor="catalog-filters"
 					command="show-modal"
-				>Filtros</button>
+				>{ filtersWritten(v.litCount()) }</button>
 			}
 		</div>
 		@collectionResults(v)

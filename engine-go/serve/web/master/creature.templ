@@ -30,7 +30,7 @@ templ CreatureFilters(v BestiaryView, idPrefix string, region, search, field tem
 			"data-on:input__debounce.250ms": fmt.Sprintf("@get('%s')", v.BestiaryBase()),
 		}, search, field))
 		<details class="ds-gm-filters-more ds-gm-filters-wide" data-preserve-attr="open">
-			<summary class="ds-button" data-variant="ghost" { field... }>Filtros</summary>
+			<summary class="ds-button" data-variant="ghost" { field... }>{ filtersWritten(v.litCount()) }</summary>
 			@creatureFilterFields(v, idPrefix, field)
 		</details>
 		<button
@@ -39,7 +39,7 @@ templ CreatureFilters(v BestiaryView, idPrefix string, region, search, field tem
 			data-variant="ghost"
 			commandfor={ idPrefix + "-filters" }
 			command="show-modal"
-		>Filtros</button>
+		>{ filtersWritten(v.litCount()) }</button>
 	</div>
 	@ds.Dialog(idPrefix+"-filters", "Filtros", nil) {
 		@creatureFilterFields(v, idPrefix+"-sheet", nil)
