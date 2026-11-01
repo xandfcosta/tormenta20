@@ -18,8 +18,8 @@ import (
 	"t20engine/domain/book"
 )
 
-// pagesInFile cobre a última página impressa mais a abertura do arquivo.
-const pagesInFile = 410
+// pagesInFile é o total de páginas do arquivo do livro, abertura incluída, medido com `pdfinfo`.
+const pagesInFile = 407
 
 // openingPages é quantas páginas do arquivo vêm antes da página 1 impressa, o padrão de
 // `LIVRO_ABERTURA`.
