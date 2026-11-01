@@ -15,6 +15,25 @@ import (
 
 // OS COMANDOS DA ABA MOCHILA.
 
+// refusePastTheDouble recusa o item que levaria a carga além do dobro do limite (p141).
+//
+// Só os gestos de item passam por aqui. O dinheiro também é carga, mas o mestre entrega o
+// tesouro na voz, e recusá-lo deixaria a ficha mentindo sobre o que a mesa decidiu; a
+// mochila mostra o excesso no aviso. A pergunta usa a mesma ficha da aba, para a recusa
+// e a barra não discordarem do limite.
+func (s Scene) refusePastTheDouble(r *http.Request, row sqlcgen.Character, added float64) error {
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	computed, _, ok := s.sheetForPanels(dto)
+	if !ok || computed.Load.FitsAdding(added) {
+		return nil
+	}
+	return fmt.Errorf("não cabe na mochila (p141): ficaria com %s espaços, e o máximo é o dobro do limite, %d",
+		sheet.WithComma(computed.Load.Used+added), computed.Load.Max)
+}
+
 // addCatalogItem põe na mochila um item do Capítulo 3.
 //
 // O NOME e os ESPAÇOS vêm do catálogo, e não do cliente: são dado transcrito do
@@ -29,6 +48,9 @@ func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, signals Sig
 	if err != nil {
 		return err
 	}
+	if err := s.refusePastTheDouble(r, row, float64(amount)*catalog.Slots); err != nil {
+		return err
+	}
 	return s.plays.AddCatalogItem(r.Context(), row.ID, catalog.ID, amount)
 }
 
@@ -37,6 +59,9 @@ func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, signals Sig
 func addCustomItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	name, amount, spaces, err := customRequestItem(signals)
 	if err != nil {
+		return err
+	}
+	if err := s.refusePastTheDouble(r, row, float64(amount)*spaces); err != nil {
 		return err
 	}
 	return s.plays.AddCustomItem(r.Context(), row.ID, name, amount, spaces)
@@ -55,6 +80,10 @@ func editItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) 
 	// A gravação é do CASO DE USO e não um SQL montado aqui: quem sabe o nome
 	// das colunas é ele. Mesma decisão que o `campaign.Lifecycle` tomou com o
 	// texto da campanha.
+	added := float64(amount)*spaces - float64(item.Quantity)*item.Slots
+	if err := s.refusePastTheDouble(r, row, added); err != nil {
+		return err
+	}
 	return s.plays.SaveCustomItem(r.Context(), item.ID, name, amount, spaces)
 }
 

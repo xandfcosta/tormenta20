@@ -24,8 +24,7 @@ const (
 // LoadBreakdown é a carga resolvida: o que ocupa espaço, o teto, e a
 // consequência de estourá-lo. `Max` é o segundo teto da p141 — "Você não pode
 // carregar mais do que o dobro do seu limite" —, exposto para a mochila poder
-// DIZER que o personagem passou dele; o motor não recusa a linha, porque o
-// próprio livro deixa a regra de carga a critério do mestre.
+// DIZER que o personagem passou dele. A recusa de adicionar é o `FitsAdding`.
 type LoadBreakdown struct {
 	// Items é quantidade × espaços de cada linha do inventário.
 	Items float64 `json:"items"`
@@ -47,6 +46,14 @@ type LoadBreakdown struct {
 	OverMax             bool `json:"overMax"`
 	ArmorPenalty        int  `json:"armorPenalty"`
 	DisplacementPenalty int  `json:"displacementPenalty"`
+}
+
+// FitsAdding diz se mais estes espaços cabem no dobro do limite (p141). Tirar sempre cabe,
+// mesmo acima do dobro, e com a regra desligada pela mesa não há teto.
+//
+// @example LoadBreakdown{Used: 13, Max: 20, Enforced: true}.FitsAdding(8) // false
+func (l LoadBreakdown) FitsAdding(slots float64) bool {
+	return !l.Enforced || slots <= 0 || l.Used+slots <= float64(l.Max)
 }
 
 // loadBreakdownOf resolve a carga contra um limite já calculado — quem calcula o

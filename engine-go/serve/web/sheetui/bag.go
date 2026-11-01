@@ -345,9 +345,9 @@ func writtenItems(n int) string {
 // motor já aplicou — e não uma frase decorada que pode divergir deles.
 //
 // A segunda metade só aparece acima do DOBRO do limite, que é o outro teto da
-// p141: "você não pode carregar mais do que o dobro do seu limite". O motor não
-// recusa a linha, porque o próprio livro deixa a carga a critério do mestre —
-// então quem diz que passou é a tela.
+// p141: "você não pode carregar mais do que o dobro do seu limite". O gesto de item recusa
+// passar disso (`refusePastTheDouble`), mas o dinheiro e um limite que encolheu ainda
+// levam a carga até lá, e quem diz que passou é a tela.
 func overloadNotice(load loadMeter) string {
 	displacement := load.DisplacementPenalty + "m de deslocamento"
 	if load.DisplacementExemptBy != "" {
