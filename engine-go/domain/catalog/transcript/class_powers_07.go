@@ -37,6 +37,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (1° círculo)",
 		Description:    "Pode lançar magias divinas de 1° círculo. Soma Sabedoria no PM total.",
 		GrantedAtLevel: 1,
+		BookPage:       57,
 		UID:            "pwr_xlx5zcqffp",
 		Modifiers: []Modifier{
 			{
@@ -54,6 +55,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (2° círculo)",
 		Description:    "Pode lançar magias divinas de 2° círculo.",
 		GrantedAtLevel: 5,
+		BookPage:       57,
 		UID:            "pwr_yw3jxpfgtv",
 	},
 	{
@@ -63,6 +65,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (3° círculo)",
 		Description:    "Pode lançar magias divinas de 3° círculo.",
 		GrantedAtLevel: 9,
+		BookPage:       57,
 		UID:            "pwr_35tw2hgqqm",
 	},
 	{
@@ -72,6 +75,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (4° círculo)",
 		Description:    "Pode lançar magias divinas de 4° círculo.",
 		GrantedAtLevel: 13,
+		BookPage:       57,
 		UID:            "pwr_kounx6eb4p",
 	},
 	{
@@ -81,6 +85,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (5° círculo)",
 		Description:    "Pode lançar magias divinas de 5° círculo.",
 		GrantedAtLevel: 17,
+		BookPage:       57,
 		UID:            "pwr_wftoi4kvvn",
 	},
 	{
@@ -338,6 +343,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (1° círculo)",
 		Description:    "Escolha 3 escolas de magia (permanente). Pode lançar magias divinas de 1° círculo pertencentes a essas escolas. Atributo-chave: Sabedoria. Soma Sabedoria no PM total.",
 		GrantedAtLevel: 1,
+		BookPage:       61,
 		UID:            "pwr_djv4npe35r",
 		Modifiers: []Modifier{
 			{
@@ -365,6 +371,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (2° círculo)",
 		Description:    "Pode lançar magias divinas de 2° círculo das escolas escolhidas.",
 		GrantedAtLevel: 6,
+		BookPage:       61,
 		UID:            "pwr_gc4sdnszo5",
 	},
 	{
@@ -374,6 +381,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (3° círculo)",
 		Description:    "Pode lançar magias divinas de 3° círculo das escolas escolhidas.",
 		GrantedAtLevel: 10,
+		BookPage:       61,
 		UID:            "pwr_cji55kilz5",
 	},
 	{
@@ -383,6 +391,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Magias (4° círculo)",
 		Description:    "Pode lançar magias divinas de 4° círculo das escolas escolhidas.",
 		GrantedAtLevel: 14,
+		BookPage:       61,
 		UID:            "pwr_astp7xjvhz",
 	},
 	{

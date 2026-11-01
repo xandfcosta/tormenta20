@@ -109,6 +109,7 @@ var classPowersPart12 = []ClassPower{
 		Name:           "Riqueza",
 		Description:    "Uma vez por aventura, teste Carisma com bônus = nível de nobre. Recebe TO igual ao resultado. Condicionado à família/patrono.",
 		GrantedAtLevel: 3,
+		BookPage:       80,
 		UID:            "pwr_jrhelrjisp",
 		Unmodeled:      "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
