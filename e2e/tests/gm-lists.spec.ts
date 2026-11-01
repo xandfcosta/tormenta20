@@ -109,7 +109,7 @@ test('o trilho do mestre segura todas as paradas em qualquer largura', async ({ 
   // NUMA TELA DO GRIMÓRIO: é nelas que o trilho ainda existe. A moldura nova tem o
   // menu no desktop e a folha dos Catálogos no celular, e os destinos dela estão
   // em `TestTheMasterFrameReachesEveryTool`.
-  await page.goto('/mestre/encontros')
+  await page.goto('/mestre/improviso')
   const rail = 'nav[aria-label="Ferramentas do mestre"]'
   await expect(page.getByRole('link', { name: 'Condições' })).toBeVisible()
 

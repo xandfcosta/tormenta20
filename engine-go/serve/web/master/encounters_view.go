@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/serve/web/ds"
 
 	"t20engine/domain/engine"
 )
@@ -59,8 +60,8 @@ type encountersView struct {
 	Level int
 	Group int
 	Rows  []encounterParty
-	// Busca e Achados são do painel de adicionar criatura, que reusa o filtro
-	// do bestiário — o mestre que aprendeu a buscar lá não reaprende aqui.
+	// Term e Findings são da lista de acrescentar criatura, que reusa o filtro do
+	// bestiário — o mestre que aprendeu a buscar lá não reaprende aqui.
 	Term     string
 	Findings []book.Entry
 }
@@ -87,6 +88,25 @@ func (v encountersView) XPPerCharacter() int {
 }
 
 func (v encountersView) Empty() bool { return len(v.Rows) == 0 }
+
+// CreatureCount é quantas criaturas há no encontro, somando as linhas.
+func (v encountersView) CreatureCount() int {
+	total := 0
+	for _, l := range v.Rows {
+		total += l.Count
+	}
+	return total
+}
+
+// CountOf é quantas daquela criatura já estão no encontro.
+func (v encountersView) CountOf(id string) int {
+	for _, l := range v.Rows {
+		if l.Entry.ID == id {
+			return l.Count
+		}
+	}
+	return 0
+}
 
 // loadEncounters resolve as linhas em verbetes e faz as contas.
 //
@@ -115,14 +135,11 @@ func loadEncounters(level, group int, rows []encounterRow, search string) encoun
 			ND:    engine.PartyChallengeLevel(m.ND, count),
 		})
 	}
-	// A busca do painel de adicionar só corre quando há termo: mostrar as 80
-	// criaturas abaixo do encontro empurraria a conta para fora da tela, e a
-	// conta é o assunto desta ferramenta.
-	if strings.TrimSpace(search) != "" {
-		v.Findings = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
-			Search: search, NDMin: book.CRMin, NDMax: book.CRMax,
-		})
-	}
+	// A busca vazia traz todas: a lista rola na coluna dela, ou mora no diálogo, então
+	// não empurra a conta para fora da tela.
+	v.Findings = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
+		Search: search, NDMin: book.CRMin, NDMax: book.CRMax,
+	})
 	return v
 }
 
@@ -247,20 +264,36 @@ func roundedCR(nd float64) string {
 	return book.CRWritten(math.Round(nd*100) / 100)
 }
 
-// A cor da dificuldade sai do TOM, nunca do rótulo: o texto é o que o leitor de
-// tela anuncia, e a cor é enfeite por cima dele.
-var toneTint = map[string]string{
-	"calmo":   "var(--hp-full)",
-	"parelho": "var(--grimorio-gold)",
-	"duro":    "var(--hp-hurt)",
-	"mortal":  "var(--grimorio-crimson-bright)",
+// difficultyTone é o tom do selo. A cor sai do TOM, nunca do rótulo: o texto é o que o
+// leitor de tela anuncia, e a cor é enfeite por cima dele.
+func difficultyTone(tom string) ds.SealTone {
+	switch tom {
+	case "calmo":
+		return ds.SealGood
+	case "duro":
+		return ds.SealWarn
+	case "mortal":
+		return ds.SealDanger
+	}
+	return ds.SealNeutral
 }
 
-func difficultyColor(tom string) string {
-	if c, ok := toneTint[tom]; ok {
-		return "color: " + c
+// creaturesWritten concorda em número: "1 criatura" e "6 criaturas".
+func creaturesWritten(n int) string {
+	if n == 1 {
+		return "1 criatura"
 	}
-	return "color: var(--grimorio-gold)"
+	return fmt.Sprintf("%d criaturas", n)
+}
+
+// rowWorthWritten é a meta da linha: o ND da criatura e o que o grupo dela vale. Uma
+// criatura só vale o próprio ND, e dizer "vale" repetiria o número.
+func rowWorthWritten(l encounterParty) string {
+	written := "ND " + book.CRWritten(l.Entry.ND)
+	if l.Count == 1 {
+		return written
+	}
+	return fmt.Sprintf("%s · os %d valem ND %s", written, l.Count, roundedCR(l.ND))
 }
 
 // xpWritten com separador de milhar pt-BR: 1000 vira "1.000".

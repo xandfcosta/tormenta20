@@ -136,14 +136,16 @@ func TestAnAbsurdLevelAndSizeFallBackToTheDefault(t *testing.T) {
 	}
 }
 
-// Mostrar as 80 criaturas abaixo da composição empurraria o VEREDITO para fora
-// da tela, e o veredito é o assunto da ferramenta.
-func TestTheSearchPanelOnlyShowsWithATerm(t *testing.T) {
-	if got := loadEncounters(1, 4, nil, "").Findings; len(got) != 0 {
-		t.Errorf("sem termo vieram %d criaturas", len(got))
+// Sem termo a lista traz todas as criaturas, e com termo ela estreita: a conta fica à
+// vista porque a lista rola na coluna dela, ou mora no diálogo.
+func TestTheCreatureListNarrowsWithATerm(t *testing.T) {
+	all := loadEncounters(1, 4, nil, "").Findings
+	narrowed := loadEncounters(1, 4, nil, "ogro").Findings
+	if len(all) != 80 {
+		t.Errorf("sem termo vieram %d criaturas, quero as 80 do livro", len(all))
 	}
-	if got := loadEncounters(1, 4, nil, "ogro").Findings; len(got) == 0 {
-		t.Error("com termo não veio criatura nenhuma")
+	if len(narrowed) == 0 || len(narrowed) >= len(all) {
+		t.Errorf("com termo vieram %d de %d", len(narrowed), len(all))
 	}
 }
 

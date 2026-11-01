@@ -68,12 +68,10 @@ func (s Scene) respondEncounter(
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:        "Encontros · Mesa do Mestre · Tormenta 20",
-		Shape:        ui.ShellDense,
-		Back:         "/",
-		BackLabel:    "Hub",
-		VisibleTitle: "Mesa do Mestre",
-	}, masterBody("encontros", encountersScene(v)))
+		Title:  "Encontros · Mesa do Mestre · Tormenta 20",
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
+	}, masterFrame("encontros", "Encontros", copyEncounterButton(), encountersScene(v)))
 }
 
 // draftFromRequest lê o encontro da URL na carga fria e dos SINAIS no remendo.

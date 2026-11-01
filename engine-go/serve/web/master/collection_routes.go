@@ -39,7 +39,7 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 		Title:  tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
 		Shape:  ui.ShellBare,
 		System: ui.SystemTempestade,
-	}, masterFrame(v.Aba, tabLabel(v.Aba), collectionScene(v)))
+	}, masterFrame(v.Aba, tabLabel(v.Aba), nil, collectionScene(v)))
 }
 
 // filtersFromURL lê os crachás que a consulta pede, só os DA ABA: `?circulo=2&circulo=3`

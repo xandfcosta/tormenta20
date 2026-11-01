@@ -14,14 +14,19 @@ import (
 // esta moldura quando o conteúdo dela migra.
 
 // masterFrame é a moldura: o cabeçalho com a volta ao início e o nome da tela, o
-// menu e a cena.
-templ masterFrame(current, title string, scene templ.Component) {
+// menu e a cena. `acts` é a ação da tela inteira no cabeçalho, e nulo não desenha nada.
+templ masterFrame(current, title string, acts, scene templ.Component) {
 	<div class="ds-master">
 		<header class="ds-header">
 			<a href="/" class="ds-header-back" aria-label="Voltar para o início">
 				@ui.Icon("ChevronLeft", "ds-icon")
 			</a>
 			<h1 class="ds-header-title">{ title }</h1>
+			if acts != nil {
+				<div class="ds-header-acts">
+					@acts
+				</div>
+			}
 		</header>
 		<div class="ds-master-body">
 			@masterMenu(current)

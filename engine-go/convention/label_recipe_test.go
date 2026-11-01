@@ -154,9 +154,9 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	// O piso caiu de 100 para 80 quando a ficha do grimório saiu (ALE-473), para
 	// 60 quando o palco do mestre saiu (ALE-522), para 45 com as campanhas
 	// (ALE-526), para 40 com o elenco (ALE-528), para 35 com a forja (ALE-535,
-	// 37 medidos) e para 30 com o Bestiário da Mesa do Mestre (ALE-538, 34
-	// medidos).
-	if byRecipe < 30 {
+	// 37 medidos), para 30 com o Bestiário da Mesa do Mestre (ALE-538, 34
+	// medidos) e para 20 com os Encontros (ALE-542, 25 medidos).
+	if byRecipe < 20 {
 		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", byRecipe)
 	}
 	// A terceira: se o casamento do `class="…"` parar, o laço acima nunca entra e

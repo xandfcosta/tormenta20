@@ -30,13 +30,8 @@ const HOUSE_SURFACES = [
   {
     where: 'no veredito do encontro',
     visit: async (page: Page) => {
-      // O veredito do encontro escreve com a família VITAL, e é a única tela
-      // fora da folha onde ela vira texto grande.
-      //
-      // Ele mede o tom que estiver na tela — com o rascunho vazio, "Trivial" — e
-      // NÃO exercita o "Mortal" de propósito: montar um encontro mortal custaria
-      // semear criaturas, e o token daquele tom já é medido nas outras cenas por
-      // identidade.
+      // Ele mede o tom que estiver na tela: com o rascunho vazio, "Fácil". Os outros
+      // tons do selo são medidos pelas visitas do `appearance_scenes.json`.
       await page.goto('/mestre/encontros')
       await expect(page.getByRole('heading', { name: 'Encontros' })).toBeVisible()
     },

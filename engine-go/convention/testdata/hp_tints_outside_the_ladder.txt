@@ -26,7 +26,3 @@ engine-go/serve/web/grimoire/scene.templ
 # PRESENÇA e confirmação, em verde: nada disso é vida.
 engine-go/serve/web/ui/invite.templ
 engine-go/serve/web/admin/scene.templ
-
-# A dificuldade do encontro: cinco degraus do livro (p281), e eles são OUTRA
-# escada — de "calmo" a "mortal", sobre o nível do grupo e não sobre vida.
-engine-go/serve/web/master/encounters_view.go

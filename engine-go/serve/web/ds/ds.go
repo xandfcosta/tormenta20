@@ -28,6 +28,16 @@ const (
 	ButtonDanger    ButtonVariant = "danger"
 )
 
+// SealTone é o tom do selo: o que o valor sugere, de bom a perigoso.
+type SealTone string
+
+const (
+	SealNeutral SealTone = "neutral"
+	SealGood    SealTone = "good"
+	SealWarn    SealTone = "warn"
+	SealDanger  SealTone = "danger"
+)
+
 // Field é um campo de texto com rótulo. `Error` vazio é o campo válido; cheio,
 // ele troca a ajuda pela frase do erro, que diz o valor e o formato esperado.
 type Field struct {
