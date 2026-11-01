@@ -11,13 +11,6 @@ import { expectOneFocusRing } from './support/focus'
  */
 const HOUSE_SURFACES = [
   {
-    where: 'na folha do grimório',
-    visit: async (page: Page) => {
-      await page.goto('/grimorio')
-      await expect(page.getByRole('heading', { name: 'Grimório' })).toBeVisible()
-    },
-  },
-  {
     where: 'no menu do jogador',
     visit: async (page: Page) => {
       // O PAINEL ELEVADO, que é o `--popover`. Ele só existe depois do clique,
@@ -191,7 +184,7 @@ test.describe('As superfícies da casa', () => {
   /**
    * O CRIMSON É LEGÍVEL EM TODA SUPERFÍCIE ONDE ELE POUSA.
    *
-   * UM TESTE POR SUPERFÍCIE, e isso não é estilo: visitar `/grimorio` e depois
+   * UM TESTE POR SUPERFÍCIE, e isso não é estilo: visitar uma superfície e depois
    * navegar mais duas vezes no MESMO contexto derruba a terceira página em
    * branco, com `net::ERR_INSUFFICIENT_RESOURCES` no console — o Chromium
    * estoura o limite de recursos por página. Um `expect` cansado dentro de um

@@ -138,7 +138,7 @@ func TestThePageComesBackInTheChosenMode(t *testing.T) {
 // A folha viva veste o sistema novo, e o resto do app continua no grimório até
 // a vez de cada tela: é a transição POR ESCOPO da ALE-497.
 func TestOnlyTheMigratedSceneWearsTheNewSystem(t *testing.T) {
-	s, owner := hubFixture(t)
+	s, owner := hubFixture(t, "mestre@t20.local")
 
 	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`)
 	scopeOf := func(path string) string {
@@ -152,8 +152,8 @@ func TestOnlyTheMigratedSceneWearsTheNewSystem(t *testing.T) {
 	if tag := scopeOf("/sistema"); !strings.Contains(tag, "scene-ds") || strings.Contains(tag, "scene-grimorio") {
 		t.Errorf("a folha viva não saiu só no escopo scene-ds: %s", tag)
 	}
-	if tag := scopeOf("/grimorio"); strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
-		t.Errorf("o grimório, que ainda não migrou, não saiu no grimório: %s", tag)
+	if tag := scopeOf("/admin"); strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
+		t.Errorf("a administração, que ainda não migrou, não saiu no grimório: %s", tag)
 	}
 }
 

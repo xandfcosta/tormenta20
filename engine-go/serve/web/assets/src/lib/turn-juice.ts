@@ -5,7 +5,7 @@
  * (fatia 10c), quando o piloto passou a ter as próprias fontes. O que ficou
  * para trás foi o `createTurnJuice`, que ligava as duas a uma lista REATIVA do
  * Solid: a fila do piloto é remendada pelo servidor, e quem chama estas duas
- * aqui é o `grimorio.ts` lendo o DOM.
+ * aqui é o `table.ts` lendo o DOM.
  *
  * As duas animações que EXPLICAM o que chegou pelo socket (ALE-174).
  *

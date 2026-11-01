@@ -43,7 +43,6 @@
       { "address": "/mestre/improviso", "session": "gm" }
     ]
   },
-  "grimoire": { "visits": [{ "address": "/grimorio", "session": "gm" }] },
   "reader": {
     "visits": [{ "address": "/livro/ler?p=290&t=Lobo", "session": "gm", "mayBeAbsent": true }]
   },

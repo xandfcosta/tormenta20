@@ -23,7 +23,6 @@ const CENAS = [
   { nome: 'hub', url: '/' },
   { nome: 'campanhas', url: '/campanhas' },
   { nome: 'personagens', url: '/personagens' },
-  { nome: 'grimório', url: '/grimorio' },
   { nome: 'bestiário', url: '/mestre/bestiario' },
   // Os catálogos são nove cenas, uma por parada do trilho, e duas amostram as
   // nove: elas passam pelos mesmos componentes, e a que fugir disso é a que este

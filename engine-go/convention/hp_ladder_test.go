@@ -52,8 +52,9 @@ func TestNoSurfacePaintsAVitalTintOutsideTheLadder(t *testing.T) {
 	// O DENOMINADOR DA LISTA: um arquivo vazio — ou um caminho que o `ReadFile`
 	// achou pela metade — faria todo sítio da árvore reprovar de uma vez, com
 	// cara de descoberta. O piso cai quando uma tela migrada deixa de usar a escada:
-	// para 4 com os Encontros (ALE-542, 4 medidos).
-	if len(allowed) < 4 {
+	// para 4 com os Encontros (ALE-542, 4 medidos) e para 3 com a folha do grimório
+	// (ALE-545, 3 medidos).
+	if len(allowed) < 3 {
 		t.Fatalf("a lista de permitidos tem %d entradas, e ela é o denominador", len(allowed))
 	}
 

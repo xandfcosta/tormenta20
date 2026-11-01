@@ -14,11 +14,8 @@ import { piscarVital, pulsarVez, emerge } from '@/lib/turn-juice'
  * e **ninguém viu quem sangrou**; uma peça é confirmada e ela TELEPORTA.
  *
  * As duas primeiras respostas (a piscada do vital e o pulso de quem entra na
- * vez) já estavam escritas em `lib/turn-juice`, com testes de olho na folha de
- * especificação... e **um importador só: o `grimorio.ts`**. Elas eram
- * demonstráveis por botão e não aconteciam na sessão, porque a Mesa não tinha
- * módulo próprio — o `vite.config.ts` tinha quatro entradas e nenhuma
- * era esta. Isto é a quinta, e hoje ela liga as TRÊS.
+ * vez) já estavam escritas em `lib/turn-juice`, e não aconteciam na sessão, porque a
+ * Mesa não tinha módulo próprio. Este é o módulo, e ele liga as TRÊS.
  *
  * **Entrada própria e não `scene.ts`**, pela mesma razão escrita naquele arquivo:
  * o `scene.js` carrega em TODA página, e pôr observador de tabuleiro nele seria

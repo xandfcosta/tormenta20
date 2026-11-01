@@ -10,7 +10,6 @@ import (
 	"t20engine/serve/web/door"
 	"t20engine/serve/web/finder"
 	"t20engine/serve/web/forge"
-	"t20engine/serve/web/grimoire"
 	"t20engine/serve/web/hub"
 	"t20engine/serve/web/master"
 	"t20engine/serve/web/reader"
@@ -74,7 +73,6 @@ func (s *Server) WebRouter() http.Handler {
 		forge.Routes(r, forge.New(s.sceneCore(), s.characterBirths()))
 		// A FICHA é filha do endereço do elenco: `/personagens/{id}`.
 		sheetui.Routes(r, sheetui.New(s.sheetHost(), s.characterPlays()))
-		grimoire.Routes(r, grimoire.New(s.sceneCore()))
 		specimen.Routes(r, specimen.New(s.sceneCore()))
 		// A MESA DO MESTRE: o trilho, os catálogos, o bestiário, os encontros e o
 		// improviso.

@@ -37,11 +37,7 @@ import (
 // `ui.FieldLabelClasses`) e são cobrados aqui. Ficam de fora:
 //
 //   - o CRACHÁ — `<span>` com caixa (borda, fundo ou canto). Ele não é da
-//     família: a caixa é o que ele diz, e a SPA nunca teve receita para ele.
-//     **Ele ganhou a própria na ALE-177** (`ui.BadgeClasses`, cobrada pelo
-//     `TestNoHandwrittenBadgeRecipe`), e ela é de GEOMETRIA e não de tipografia:
-//     o piso de 24px do WCAG 2.5.8. As duas convivem sem sobrepor — um crachá
-//     que também escreve rótulo em caixa alta continua fora desta família.
+//     família: a caixa é o que ele diz. No Tempestade ele é `ds.Badge`.
 //   - o CONTROLE — `<button>`/`<summary>`, cuja tipografia é do `ui.Button`.
 //   - a NAVEGAÇÃO — `<a>`, um sítio só.
 //   - o TÍTULO DE PALCO — o que declara tamanho RESPONSIVO (`sm:text-*`). São
@@ -66,7 +62,7 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 	field := map[string]bool{"label": true, "legend": true, "dt": true}
 	loose := map[string]bool{"span": true, "p": true, "li": true, "div": true}
 
-	var aMao, byRecipe, filesRead int
+	var byRecipe, filesRead, classesRead int
 	err := filepath.WalkDir("..", func(name string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -93,6 +89,7 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 		text := strings.Join(semComentario(strings.Split(string(raw), "\n")), "\n")
 		byRecipe += len(recipe.FindAllString(text, -1))
 		for _, found := range class.FindAllStringSubmatchIndex(text, -1) {
+			classesRead++
 			tokens := strings.Fields(text[found[2]:found[3]])
 			if !contem(tokens, "uppercase") || !comPrefixo(tokens, "tracking-") {
 				continue
@@ -119,14 +116,12 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 			var role string
 			switch {
 			case responsive:
-				aMao++
 				continue
 			case title[tag]:
 				role = "ui.SectionTitleClasses(contexto, tom, extra)"
 			case field[tag] || (loose[tag] && !hasBox):
 				role = "ui.FieldLabelClasses(tom, extra)"
 			default:
-				aMao++ // crachá, controle e navegação: fora da família, ver a docstring.
 				continue
 			}
 			row := strings.Count(text[:found[0]], "\n") + 1
@@ -161,15 +156,12 @@ func TestNoHandwrittenLabelRecipe(t *testing.T) {
 		t.Fatalf("só %d sítios chamam uma das três receitas: ou elas foram desfeitas, ou o padrão parou de casar", byRecipe)
 	}
 	// A terceira: se o casamento do `class="…"` parar, o laço acima nunca entra e
-	// nada é cobrado. Os de fora da família são a prova de que ele entra — eles
-	// TÊM de continuar sendo achados. O piso caiu de 10 para 6 quando o palco do
-	// mestre saiu (ALE-522), para 3 quando a crônica saiu do grimório (ALE-526)
-	// e para 1 com o elenco (ALE-528, 1 medido). Um basta para provar que o
-	// padrão casa; quando o último sair do grimório, o controle precisa de outro
-	// canal.
-	if aMao < 1 {
-		t.Fatalf("o guarda achou só %d rótulos escritos à mão fora da família: o padrão de `class=` parou de casar "+
-			"e este guarda deixou de cobrar qualquer coisa", aMao)
+	// nada é cobrado. A prova eram os rótulos escritos à mão fora da família, e o
+	// último saiu com a folha do grimório (ALE-545): agora é o número de atributos
+	// lidos, que é o outro canal que este guarda previa precisar.
+	if classesRead < 100 {
+		t.Fatalf("o guarda leu só %d atributos `class`: o padrão parou de casar "+
+			"e este guarda deixou de cobrar qualquer coisa", classesRead)
 	}
 }
 
@@ -189,4 +181,19 @@ func comPrefixo(tokens []string, prefix string) bool {
 		}
 	}
 	return false
+}
+
+// semComentario corta o que vier depois de `//` em cada linha. Grosseiro de
+// propósito: `//` dentro de string literal viraria corte indevido, mas em
+// template isso é raro e o custo do erro é um falso NEGATIVO — o guarda deixa
+// passar —, não um falso positivo que faz alguém desligá-lo.
+func semComentario(rows []string) []string {
+	outside := make([]string, len(rows))
+	for i, l := range rows {
+		if j := strings.Index(l, "//"); j >= 0 {
+			l = l[:j]
+		}
+		outside[i] = l
+	}
+	return outside
 }

@@ -21,8 +21,8 @@ import { expect, test } from '@playwright/test'
  * é medida sem tocar no arquivo.
  */
 
-// O estado de login é o do MESTRE: quatro das seis cenas são da Mesa do Mestre e
-// as outras duas ele também alcança.
+// O estado de login é o do MESTRE: quase todas as cenas são da Mesa do Mestre, e a
+// outra ele também alcança.
 test.use({ storageState: '.auth/user.json' })
 
 const CENAS = [
@@ -30,7 +30,6 @@ const CENAS = [
   { nome: 'bestiário do mestre', url: '/mestre/bestiario' },
   { nome: 'encontros', url: '/mestre/encontros' },
   { nome: 'improviso', url: '/mestre/improviso' },
-  { nome: 'grimório', url: '/grimorio' },
   { nome: 'personagens', url: '/personagens' },
 ]
 
