@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
-import { openTheBoard, disposableTable, pickBrush, putACombatantInTheTracker, putATokenOnTheMap, showTheBoard } from './support/table'
+import { openTheBoard, disposableTable, pickBrush, putACombatantInTheTracker, putATokenOnTheMap, putTheTokenOnTurn, showTheBoard } from './support/table'
 
 /**
  * O TABULEIRO da Mesa em Datastar.
@@ -399,7 +399,7 @@ test('o marcador continua clicável por baixo da camada de mover', async ({ page
     // AR. Sem ele, "o clique chegou" é verdade num palco onde nada cobria nada —
     // e o caso passa verde até com o `z-index` removido.
     await expect(
-      camadaDe(page, /Mover/),
+      camadaDe(page, /Marcar peças/),
       'a camada de mover não está no ar — o caso não enfrenta o empilhamento que veio medir',
     ).toBeVisible()
 
@@ -439,6 +439,7 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
   try {
     await openTheBoard(page, table)
     await putATokenOnTheMap(page)
+    await putTheTokenOnTurn(page, table)
     await page.getByLabel('Centralizar nas peças').click()
 
     const token = page.locator('.board-token').first()
@@ -515,18 +516,7 @@ test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ 
     await dialog.getByRole('button', { name: 'Pôr no mapa', exact: true }).click()
     await expect(page.locator('.board-token')).toHaveCount(3)
 
-    const command = (path: string) =>
-      page.request.post(mesa + path, { headers: { 'datastar-request': 'true' }, data: {} })
-    expect((await command('/cena/iniciar/acao')).ok()).toBeTruthy()
-    expect((await command('/iniciativa/proxima-vez')).ok()).toBeTruthy()
-    await page.goto(mesa, { waitUntil: 'domcontentloaded' })
-    await page.locator('.board-scene').waitFor()
-
-    const onTurn = page.locator('.board-token-on-turn')
-    await expect(onTurn, 'ninguém está na vez: o caso não mediria a diferença').toHaveCount(1)
-    const other = page.locator('.board-token:not(.board-token-on-turn)').first()
-
-    const dragBy = async (token: typeof onTurn, dx: number) => {
+    const dragBy = async (token: Locator, dx: number) => {
       const box = await token.boundingBox()
       if (!box) throw new Error('a peça não tem caixa')
       const posts: string[] = []
@@ -543,6 +533,23 @@ test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ 
       page.off('request', listen)
       return posts.join(' ')
     }
+
+    // FORA DA INICIATIVA não há vez nem custo: a primeira peça da lista também pousa direto.
+    const outside = await dragBy(page.locator('.board-token').first(), 170)
+    expect(outside, 'fora da iniciativa a peça não moveu direto').toContain('/grupo/mover')
+    expect(outside, 'fora da iniciativa a peça propôs parada').not.toContain('/parada')
+    await expect(page.locator('.board-token-ghost')).toHaveCount(0)
+
+    const command = (path: string) =>
+      page.request.post(mesa + path, { headers: { 'datastar-request': 'true' }, data: {} })
+    expect((await command('/cena/iniciar/acao')).ok()).toBeTruthy()
+    expect((await command('/iniciativa/proxima-vez')).ok()).toBeTruthy()
+    await page.goto(mesa, { waitUntil: 'domcontentloaded' })
+    await page.locator('.board-scene').waitFor()
+
+    const onTurn = page.locator('.board-token-on-turn')
+    await expect(onTurn, 'ninguém está na vez: o caso não mediria a diferença').toHaveCount(1)
+    const other = page.locator('.board-token:not(.board-token-on-turn)').first()
 
     // A OUTRA: move na hora, sem proposta para confirmar.
     const otherName = await other.getAttribute('aria-label')

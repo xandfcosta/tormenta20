@@ -40,9 +40,9 @@ func TestTheGMTargetFollowsTheTurn(t *testing.T) {
 		}
 	}
 
-	// Fora da iniciativa não há vez para seguir, e a regra de antes continua.
+	// Fora da iniciativa não há vez para seguir: nenhuma peça propõe, e todas pousam direto.
 	outside := &live.SessionRuntimeState{TurnIndex: -1}
-	if got := reachAndTarget(tokens, outside, gm, nil).Target; got != "alfa" {
-		t.Errorf("fora da iniciativa o alvo é %q, esperava a primeira peça", got)
+	if got := reachAndTarget(tokens, outside, gm, nil).Target; got != "" {
+		t.Errorf("fora da iniciativa o alvo é %q, esperava nenhum", got)
 	}
 }

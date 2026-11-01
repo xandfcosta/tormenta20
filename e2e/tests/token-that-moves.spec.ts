@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
-import { openTheBoard, disposableTable, putATokenOnTheMap } from './support/table'
+import { openTheBoard, disposableTable, putATokenOnTheMap, putTheTokenOnTurn } from './support/table'
 
 /**
  * A PEÇA QUE MOVEU DESLIZA, em vez de teleportar.
@@ -81,6 +81,7 @@ async function aBoardWithOneToken(page: Page) {
   const tableState = await disposableTable(page)
   await openTheBoard(page, tableState.mesa)
   await putATokenOnTheMap(page)
+  await putTheTokenOnTurn(page, tableState.mesa)
   await page.getByLabel('Centralizar nas peças').click()
   return tableState
 }

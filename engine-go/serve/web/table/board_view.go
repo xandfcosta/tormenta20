@@ -56,9 +56,10 @@ type BoardView struct {
 	// Movement é o proposto e ainda não confirmado, ou nil.
 	Movement *moveView
 	// MoveTarget é a peça que o clique numa casa vai mover: a que já tem
-	// movimento proposto, ou a que quem olha pode COMEÇAR a mover agora. Vazio
-	// quando não há o que mover — e aí a camada de casas nem existe, porque um
-	// alvo que não faz nada é pior que a ausência dele.
+	// movimento proposto, ou a que quem olha pode COMEÇAR a mover agora: a da vez
+	// para o mestre, a dele para o jogador. Vazio quando não há o que mover, e aí a
+	// camada de casas só existe para o laço do mestre, porque um alvo que não faz
+	// nada é pior que a ausência dele.
 	MoveTarget  string
 	TargetLabel string
 	// Range são as casas que cabem na AÇÃO DE MOVIMENTO. Vazio fora de
