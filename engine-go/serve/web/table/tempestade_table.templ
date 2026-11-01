@@ -14,6 +14,7 @@ import (
 // conteúdo e não moldura (ver `tempestadeBoard`).
 templ tempestadeTableScene(v View) {
 	<main id="table" class="ds-session" data-attr:style={ dragOffsetStyle }>
+		@newVersionNotice()
 		@tempestadeHeader(v)
 		// O ATAQUE PROPOSTO fica acima de toda superfície, pela razão do de
 		// hoje: é o que a mesa tem de decidir agora, onde quer que se esteja.

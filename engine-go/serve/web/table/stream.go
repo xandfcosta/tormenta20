@@ -85,6 +85,9 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	defer stop()
 
 	sse := datastar.NewSSE(w, r)
+	// A VERSÃO DO SERVIDOR, uma vez por conexão: o fluxo reconecta sozinho depois de um
+	// deploy, e é assim que a página aberta descobre que ficou velha.
+	_ = sse.MarshalAndPatchSignals(map[string]string{serverBuildSignal: s.deps.BuildRevision()})
 	last := writeTable(r.Context(), sse, view, nil)
 	// O PUXÃO já empurrado NESTA conexão. Ver `PushForMap`.
 	var pushedPull int64

@@ -24,7 +24,7 @@ func TestNoTableSignalIsDeclaredTwice(t *testing.T) {
 	names := regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9_]*)\s*:`)
 	seen := map[string]bool{}
 	measured := 0
-	for _, found := range names.FindAllStringSubmatch(tableSignalsExpr(), -1) {
+	for _, found := range names.FindAllStringSubmatch(tableSignalsExpr(""), -1) {
 		name := found[1]
 		measured++
 		if seen[name] {
@@ -98,7 +98,7 @@ func topLevelSignals(expr string) []string {
 }
 
 func TestEverySignalTheTableDeclaresHasAReader(t *testing.T) {
-	declared := topLevelSignals(tableSignalsExpr())
+	declared := topLevelSignals(tableSignalsExpr(""))
 
 	root := filepath.Join("..", "..", "..", "..")
 	output, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached",

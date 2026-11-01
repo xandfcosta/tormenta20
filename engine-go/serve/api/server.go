@@ -27,6 +27,9 @@ type Server struct {
 	// liveStreamsClosing fecha quando o processo vai encerrar. Ver `CloseLiveStreams`.
 	liveStreamsClosing chan struct{}
 	closeStreamsOnce   sync.Once
+	// revision é o commit deste binário, ou vazio quando ele não foi compilado de um
+	// checkout. Ver `buildRevision`.
+	revision string
 
 	cfg      config.Config
 	db       *sql.DB
@@ -171,6 +174,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 	})
 	srv = &Server{
 		liveStreamsClosing: make(chan struct{}),
+		revision:           buildRevision(),
 		cfg:                cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.

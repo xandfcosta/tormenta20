@@ -445,6 +445,7 @@ templ gmArchive(v View) {
 // mesa. O fluxo dela remenda só o tabuleiro.
 templ gmBoardWindow(v View) {
 	<main id="table" class="ds-session ds-gm-window" data-attr:style={ dragOffsetStyle } data-signals="{gm_terrain_open: false}" data-init={ takesTheBoard(v) } data-on:pagehide__window={ givesTheBoardBack(v) }>
+		@newVersionNotice()
 		@gmBoardRegion(v)
 		@gmPopulate(v)
 		@gmArchive(v)

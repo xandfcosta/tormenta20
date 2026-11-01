@@ -1,0 +1,14 @@
+package table
+
+import "t20engine/serve/web/ds"
+
+// newVersionNotice é o aviso e o botão. Nasce escondido pelo `style`, porque o `data-show`
+// só age depois que o Datastar carrega, e até lá ele piscaria para todo mundo.
+templ newVersionNotice() {
+	<div id="new-version" class="ds-new-version" role="status" style="display: none" data-show={ pageIsOutdated }>
+		<span>Há uma versão nova do app.</span>
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "location.reload()"}) {
+			Recarregar
+		}
+	</div>
+}
