@@ -266,6 +266,14 @@ templ numbersSection() {
 				@ds.RemovableBadge("Caído", "", nil)
 			</div>
 		}
+		@specimenPiece("Selo", "Um veredito curto, com a cor do que ele sugere.", false, false) {
+			<div class="flex flex-wrap items-center gap-2">
+				@ds.Seal("Fácil", ds.SealGood)
+				@ds.Seal("Médio", ds.SealNeutral)
+				@ds.Seal("Difícil", ds.SealWarn)
+				@ds.Seal("Mortal", ds.SealDanger)
+			</div>
+		}
 		@specimenPiece("Atributo", "Os seis atributos: três colunas no celular, seis no resto.", false, false) {
 			@ds.Stats() {
 				@ds.Stat("FOR", "+1")

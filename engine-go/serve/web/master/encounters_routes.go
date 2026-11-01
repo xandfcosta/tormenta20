@@ -26,7 +26,7 @@ func (s Scene) handleEncounters(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleEncounterAdd serve o "acrescentar" do painel de busca E o `[+]` da
-// linha, porque a álgebra é a MESMA: `acrescenta` sobe a contagem quando a
+// linha, porque a álgebra é a MESMA: `addRow` sobe a contagem quando a
 // criatura já está no encontro. Duas rotas para uma função é o que evita a
 // tela ter dois caminhos que podem divergir.
 func (s Scene) handleEncounterAdd(w http.ResponseWriter, r *http.Request) {
@@ -68,12 +68,10 @@ func (s Scene) respondEncounter(
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:        "Encontros · Mesa do Mestre · Tormenta 20",
-		Shape:        ui.ShellDense,
-		Back:         "/",
-		BackLabel:    "Hub",
-		VisibleTitle: "Mesa do Mestre",
-	}, masterBody("encontros", encountersScene(v)))
+		Title:  "Encontros · Mesa do Mestre · Tormenta 20",
+		Shape:  ui.ShellBare,
+		System: ui.SystemTempestade,
+	}, masterFrame("encontros", "Encontros", copyEncounterButton(), encountersScene(v)))
 }
 
 // draftFromRequest lê o encontro da URL na carga fria e dos SINAIS no remendo.
@@ -83,15 +81,15 @@ func (s Scene) respondEncounter(
 // que o mestre acabou de clicar.
 func draftFromRequest(r *http.Request) (int, int, []encounterRow, string) {
 	q := r.URL.Query()
-	level := numberFromURL(q.Get("nivel"), nivelPadrao)
-	group := numberFromURL(q.Get("grupo"), grupoPadrao)
+	level := numberFromURL(q.Get("nivel"), partyLevelDefault)
+	group := numberFromURL(q.Get("grupo"), partySizeDefault)
 	rows := rowsFromURL(q.Get("c"))
 	search := q.Get("busca")
 
 	signals := struct {
-		Level          *int            `json:"nivel"`
-		Group          *int            `json:"grupo"`
-		Encounter      *[]encounterRow `json:"encontro"`
+		Level          *int            `json:"party_level"`
+		Group          *int            `json:"party_size"`
+		Encounter      *[]encounterRow `json:"encounter_rows"`
 		CreatureSearch *string         `json:"creature_search"`
 	}{}
 	if err := datastar.ReadSignals(r, &signals); err != nil {

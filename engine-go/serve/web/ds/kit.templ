@@ -78,6 +78,12 @@ templ Badge(text string, outline bool) {
 	>{ text }</span>
 }
 
+// Seal é o selo: um veredito curto com a cor do que ele sugere, como a dificuldade de
+// um encontro. O texto é o que se lê, e a cor é reforço.
+templ Seal(text string, tone SealTone) {
+	<span class="ds-seal" data-tone={ string(tone) }>{ text }</span>
+}
+
 // RemovableBadge é o crachá do que está ATIVO e pode sair: uma condição na
 // ficha. O `removeAttrs` leva o gesto de tirar.
 templ RemovableBadge(label, dialogID string, removeAttrs templ.Attributes) {

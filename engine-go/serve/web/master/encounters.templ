@@ -1,197 +1,192 @@
 package master
 
 import (
-	"t20engine/domain/book"
 	"fmt"
+	"t20engine/domain/book"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 
-// O CONSTRUTOR DE ENCONTROS.
+// O CONSTRUTOR DE ENCONTROS (mockup `encontros.html`).
 //
-// O VEREDITO é o bloco principal: a ferramenta existe para responder "esse
-// encontro é duro demais?". O ND é o número grande, a dificuldade vem ao lado com
-// o peso que merece, e o XP fica secundário porque ele é consequência, não
-// decisão.
+// O VEREDITO fica sempre à vista: a ferramenta existe para responder "esse encontro é
+// duro demais?". O ND é o número grande, a dificuldade vem ao lado com o peso que
+// merece, e o XP fica secundário porque ele é consequência, não decisão.
+//
+// As 80 criaturas não empurram o veredito: no desktop elas rolam na coluna delas, e no
+// celular moram num diálogo que fica aberto a cada criatura acrescentada, porque quem
+// monta um encontro costuma acrescentar várias.
 
+// O `data-url` mora na cena porque é ela que o remendo atualiza. O botão de copiar fica
+// no cabeçalho, que o remendo não alcança, e lê o endereço daqui.
 templ encountersScene(v encountersView) {
 	<section
 		id="encounters"
-		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
-		aria-labelledby="table-encounters"
+		class="ds-encounter"
+		aria-label="Construtor de encontros"
+		data-url={ encounterAddress(v) }
 		data-signals={ encounterSignals(v) }
 	>
-		<h2 id="table-encounters" class="font-heading text-lg tracking-wide text-foreground">
-			Construtor de encontros
-		</h2>
-		@encounterPartyPanel(v)
-		@verdict(v)
-		@composition(v)
-		@addPanel(v)
+		<div class="ds-encounter-left">
+			@verdict(v)
+			<div class="ds-encounter-build">
+				@encounterPartyPanel(v)
+				@composition(v)
+				<button
+					type="button"
+					class="ds-button ds-encounter-add"
+					commandfor="encounter-add"
+					command="show-modal"
+				>
+					@ui.Icon("Plus", "ds-icon")
+					Acrescentar criatura
+				</button>
+			</div>
+		</div>
+		<aside class="ds-encounter-side" aria-label="Acrescentar criatura">
+			@creatureSearch(v, "encounter-side-search", templ.Attributes{"data-busca-da-cena": true})
+			@encounterCreatureList(v, templ.Attributes{"data-nav-region": "criaturas", "data-nav-layout": "column"})
+		</aside>
+		@ds.Dialog("encounter-add", "Acrescentar criatura", nil) {
+			@ds.FilterBar() {
+				@creatureSearch(v, "encounter-add-search", nil)
+			}
+			@ds.DialogScroll() {
+				@encounterCreatureList(v, nil)
+			}
+		}
 	</section>
-}
-
-templ encounterPartyPanel(v encountersView) {
-	<div class="flex shrink-0 flex-wrap items-end gap-3 rounded-sm border border-grimorio-iron p-3">
-		@ui.SectionLabel("muted", "self-center") {
-			O grupo
-		}
-		@partyField("nivel", "Nível", v.Level, nivelMinimo, nivelMaximo)
-		@partyField("grupo", "Personagens", v.Group, grupoMinimo, grupoMaximo)
-	</div>
-}
-
-// partyField: `aria-label` diz "<rótulo> do grupo" e não só o rótulo, porque
-// "Nível" sozinho, numa tela que também tem ND de criatura, não diz nível DE
-// QUÊ para quem ouve a página em vez de vê-la.
-templ partyField(signal, label string, value, min, max int) {
-	<div class="space-y-1">
-		@ui.SectionLabel("muted", "block") {
-			<label for={ "encontro-" + signal }>{ label }</label>
-		}
-		<input
-			id={ "encontro-" + signal }
-			type="number"
-			min={ ui.Int(min) }
-			max={ ui.Int(max) }
-			value={ ui.Int(value) }
-			data-bind={ signal }
-			data-on:input__debounce.300ms="@get('/mestre/encontros')"
-			aria-label={ label + " do grupo" }
-			class="h-9 w-20 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
-		/>
-	</div>
-}
-
-templ verdict(v encountersView) {
-	<div class="flex shrink-0 flex-wrap items-center gap-x-8 gap-y-3 rounded-sm border border-grimorio-iron bg-muted/20 px-4 py-3">
-		<div class="flex items-baseline gap-3">
-			@ui.SectionLabel("muted", "") {
-				ND do encontro
-			}
-			<span class="font-mono text-4xl leading-none tabular-nums text-grimorio-gold">
-				{ roundedCR(v.ND()) }
-			</span>
-		</div>
-		<div class="flex items-baseline gap-2">
-			@ui.SectionLabel("muted", "") {
-				Dificuldade
-			}
-			<span class="font-mono text-xl leading-none" style={ difficultyColor(v.Difficulty().Tom) }>
-				{ v.Difficulty().Label }
-			</span>
-		</div>
-		<div class="flex items-baseline gap-2">
-			@ui.SectionLabel("muted", "") {
-				XP por personagem
-			}
-			<span class="font-mono text-sm tabular-nums text-foreground">{ xpWritten(v.XPPerCharacter()) }</span>
-		</div>
-		@copyEncounterButton(v)
-	</div>
 }
 
 // copyEncounterButton entrega o encontro como ENDEREÇO, sob demanda.
 //
-// O link é montado no servidor e viaja pronto no `data-url`: montá-lo no
-// cliente exigiria repetir ali a codificação do formato `id:qtd`, e formato
-// escrito em dois lugares é formato que diverge.
+// O link é montado no servidor e viaja pronto no `data-url` da cena: montá-lo no
+// cliente exigiria repetir ali a codificação do formato `id:count`, e formato escrito
+// em dois lugares é formato que diverge.
 //
-// O aviso troca o texto do próprio botão por dois segundos em vez de abrir um
-// balão: quem clicou está olhando para ele, e uma confirmação que aparece em
-// outro canto da tela é uma confirmação que se perde.
-templ copyEncounterButton(v encountersView) {
-	<button
-		type="button"
-		data-url={ encounterAddress(v) }
-		data-on:click="navigator.clipboard.writeText(location.origin + el.dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)"
-		class="ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
-	>
-		<span data-show="!$copied">Copiar link do encontro</span>
-		<span style="display:none" data-show="$copied" class="text-grimorio-gold">Link copiado</span>
-	</button>
-}
-
-templ composition(v encountersView) {
-	if v.Empty() {
-		<p class="shrink-0 rounded-sm border border-dashed border-grimorio-iron p-4 text-center text-xs text-muted-foreground">
-			Nenhuma criatura no encontro. Busque abaixo para acrescentar.
-		</p>
-	} else {
-		<ul class="min-h-0 shrink-0 space-y-1 overflow-y-auto">
-			for _, l := range v.Rows {
-				<li class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-grimorio-iron p-2">
-					<span class="text-sm font-medium">{ l.Entry.Name }</span>
-					<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(l.Entry.ND) }</span>
-					<span class="font-mono text-3xs text-muted-foreground">{ "grupo ND " + roundedCR(l.ND) }</span>
-					<div class="ml-auto flex items-center gap-1">
-						@quantityStep(l.Entry, "menos", "−")
-						<span class="w-8 text-center font-mono text-sm tabular-nums">{ ui.Int(l.Qtd) }</span>
-						@quantityStep(l.Entry, "mais", "+")
-						@ui.Button(ui.VariantGhostDanger, ui.SizeIcon, "", templ.Attributes{"type": "button", "aria-label": "Remover " + l.Entry.Name + " do encontro", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Entry.ID)}) {
-							✕
-						}
-					</div>
-				</li>
-			}
-		</ul>
+// O aviso troca o texto do próprio botão por dois segundos em vez de abrir um balão:
+// quem clicou está olhando para ele, e uma confirmação que aparece em outro canto da
+// tela é uma confirmação que se perde.
+templ copyEncounterButton() {
+	@ds.Button(ds.ButtonGhost, templ.Attributes{
+		"type":          "button",
+		"data-on:click": "navigator.clipboard.writeText(location.origin + document.getElementById('encounters').dataset.url); $copied = true; setTimeout(() => $copied = false, 2000)",
+	}) {
+		@ui.Icon("Copy", "ds-icon")
+		<span data-show="!$copied">Copiar link</span>
+		<span style="display:none" data-show="$copied">Link copiado</span>
 	}
 }
 
-// quantityStep: o nome acessível diz o VERBO e a criatura, porque numa
-// lista de seis linhas "mais" sozinho não distingue os seis botões iguais — e
-// nem o `getByRole` nem um leitor de tela separam homônimos.
-templ quantityStep(m book.Entry, step, signal string) {
-	<button
-		type="button"
-		aria-label={ stepLabel(step, m.Name) }
-		data-on:click={ fmt.Sprintf("@post('/mestre/encontros/%s/%s')", step, m.ID) }
-		class="flex size-11 items-center justify-center rounded-sm border border-grimorio-iron font-mono text-sm outline-none transition-colors hover:bg-accent"
-	>{ signal }</button>
+templ verdict(v encountersView) {
+	<section class="ds-encounter-verdict" aria-label="O veredito">
+		<div class="ds-encounter-nd">
+			<span class="ds-row-meta">ND do encontro</span>
+			<b>{ roundedCR(v.ND()) }</b>
+		</div>
+		<div class="ds-encounter-says">
+			// Sem criatura não há o que julgar, embora a conta dê uma faixa para ND 0.
+			if !v.Empty() {
+				@ds.Seal(v.Difficulty().Label, difficultyTone(v.Difficulty().Tom))
+			}
+			<span class="ds-row-meta"><b>{ xpWritten(v.XPPerCharacter()) }</b> XP por personagem</span>
+		</div>
+	</section>
 }
 
-// addPanel reusa a busca do bestiário: o mestre que aprendeu a
-// procurar criatura lá não reaprende aqui.
-//
-// A lista só aparece com termo digitado. Mostrar as 80 abaixo da composição
-// empurraria o VEREDITO para fora da tela, e o veredito é o assunto da
-// ferramenta — a mesma razão pela qual ele é o bloco grande.
-templ addPanel(v encountersView) {
-	<div class="flex min-h-0 flex-1 flex-col gap-2">
-		<div class="relative shrink-0">
-			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
-			<input
-				type="search"
-				name="creature_search"
-				data-bind:creature_search
-				data-on:input__debounce.250ms="@get('/mestre/encontros')"
-				value={ v.Term }
-				placeholder="Buscar criatura para acrescentar"
-				aria-label="Buscar criatura para acrescentar"
-				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
-			/>
-		</div>
-		if v.Term != "" {
-			if len(v.Findings) == 0 {
-				<p class="p-3 text-center text-xs text-muted-foreground">Nenhuma criatura com esse nome.</p>
-			} else {
-				<ul class="min-h-0 flex-1 space-y-1 overflow-y-auto rounded-sm border border-grimorio-iron p-1">
-					for _, m := range v.Findings {
-						<li>
-							<button
-								type="button"
-								aria-label={ "Acrescentar " + m.Name + " ao encontro" }
-								data-on:click={ fmt.Sprintf("@post('/mestre/encontros/adicionar/%s')", m.ID) }
-								class="flex min-h-11 w-full flex-wrap items-baseline gap-x-2 rounded-sm border border-grimorio-iron p-2 text-left outline-none transition-colors hover:bg-accent"
-							>
-								<span class="text-xs font-semibold">{ m.Name }</span>
-								<span class="font-mono text-3xs text-grimorio-gold">{ "ND " + book.CRWritten(m.ND) }</span>
-								<span class="text-3xs text-muted-foreground">{ book.TypeName(m.Kind) }</span>
-								<span class="ml-auto font-mono text-3xs text-muted-foreground">{ fmt.Sprintf("PV %d", m.HP) }</span>
-							</button>
-						</li>
-					}
-				</ul>
-			}
+templ encounterPartyPanel(v encountersView) {
+	<section class="ds-encounter-party" aria-label="O grupo">
+		@partyField("party_level", "encounter-level", "Nível do grupo", v.Level, partyLevelMin, partyLevelMax)
+		@partyField("party_size", "encounter-size", "Personagens", v.Group, partySizeMin, partySizeMax)
+	</section>
+}
+
+// partyField fica fora da navegação por setas: no campo de número a seta muda o valor,
+// e quem passasse por ali trocaria o nível do grupo sem querer. Chega-se pelo TAB.
+templ partyField(signal, id, label string, value, min, max int) {
+	@ds.TextField(ds.Field{ID: id, Label: label, Type: "number", Value: ui.Int(value)}, templ.Attributes{
+		"min": ui.Int(min), "max": ui.Int(max), "inputmode": "numeric", "data-bind": signal,
+		"data-on:input__debounce.300ms": "@get('/mestre/encontros')",
+	})
+}
+
+// composition: a região só existe com criatura, porque região sem item deixa o driver
+// de teclado tentar entrar e o foco sumir.
+templ composition(v encountersView) {
+	if v.Empty() {
+		@ds.Empty("Nenhuma criatura no encontro", "Escolha uma criatura para acrescentar.")
+	} else {
+		@ds.List("No encontro", creaturesWritten(v.CreatureCount())) {
+			<div class="ds-encounter-rows" data-nav-region="composicao" data-nav-layout="grid">
+				for _, l := range v.Rows {
+					<div class="ds-row">
+						<div>
+							<div class="ds-row-title">{ l.Entry.Name }</div>
+							<div class="ds-row-meta">{ rowWorthWritten(l) }</div>
+						</div>
+						<div class="ds-encounter-steps">
+							@quantityStep(l.Entry, "menos", "Minus")
+							<b>{ ui.Int(l.Count) }</b>
+							@quantityStep(l.Entry, "mais", "Plus")
+							@ds.IconButton(ds.ButtonGhost, "X", "Remover "+l.Entry.Name+" do encontro", templ.Attributes{
+								"type": "button", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Entry.ID),
+							})
+						</div>
+					</div>
+				}
+			</div>
 		}
-	</div>
+	}
+}
+
+// quantityStep: o nome acessível diz o VERBO e a criatura, porque numa lista de seis
+// linhas "mais" sozinho não distingue os seis botões iguais — e nem o `getByRole` nem
+// um leitor de tela separam homônimos.
+templ quantityStep(m book.Entry, step, icon string) {
+	@ds.IconButton(ds.ButtonSecondary, icon, stepLabel(step, m.Name), templ.Attributes{
+		"type": "button", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/%s/%s')", step, m.ID),
+	})
+}
+
+// creatureSearch reusa a busca do bestiário: o mestre que aprendeu a procurar criatura
+// lá não reaprende aqui.
+templ creatureSearch(v encountersView, id string, field templ.Attributes) {
+	@ds.SearchField(id, "Buscar criatura", joinAttrs(templ.Attributes{
+		"name": "creature_search", "value": v.Term, "data-bind:creature_search": true,
+		"data-on:input__debounce.250ms": "@get('/mestre/encontros')",
+	}, field))
+}
+
+// encounterCreatureList são as criaturas para acrescentar, na coluna do desktop e no diálogo.
+// `region` vai só na da coluna: no diálogo a seta é dele. O crachá diz quantas já estão
+// no encontro, para o mestre não precisar olhar para o outro lado.
+templ encounterCreatureList(v encountersView, region templ.Attributes) {
+	if len(v.Findings) == 0 {
+		@ds.Empty("Nenhuma criatura", "Nenhuma criatura com esse nome.")
+	} else {
+		@ds.List("Criaturas", ui.Int(len(v.Findings))) {
+			<div class="ds-encounter-rows" { region... }>
+				for _, m := range v.Findings {
+					<button
+						type="button"
+						class="ds-row ds-encounter-pick"
+						aria-label={ "Acrescentar " + m.Name + " ao encontro" }
+						data-on:click={ fmt.Sprintf("@post('/mestre/encontros/adicionar/%s')", m.ID) }
+					>
+						<div>
+							<div class="ds-row-title">{ m.Name }</div>
+							<div class="ds-row-meta">{ fmt.Sprintf("%s · %s · ND %s", book.TypeName(m.Kind), book.SizeName(m.Size), book.CRWritten(m.ND)) }</div>
+						</div>
+						<div class="ds-encounter-pick-end">
+							if n := v.CountOf(m.ID); n > 0 {
+								<span class="ds-badge" data-variant="outline" title={ fmt.Sprintf("%d no encontro", n) }>{ fmt.Sprintf("%d×", n) }</span>
+							}
+							<span class="ds-row-meta">{ fmt.Sprintf("PV %d · Def %d", m.HP, m.Defense) }</span>
+							@ui.Icon("Plus", "ds-icon")
+						</div>
+					</button>
+				}
+			</div>
+		}
+	}
 }

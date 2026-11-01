@@ -56,7 +56,7 @@ func sceneAddresses(t *testing.T) map[string]string {
 		return ui.RenderFragment(ctx, collectionScene(loadCollection(collectionCriteria{Term: "fogo", Aba: ""}, bookui.BookAddress{})))
 	})
 	builds("encontros", func() (string, error) {
-		v := loadEncounters(3, 4, []encounterRow{{ID: "ogro", Qtd: 2}}, "ogro")
+		v := loadEncounters(3, 4, []encounterRow{{ID: "ogro", Count: 2}}, "ogro")
 		return ui.RenderFragment(ctx, encountersScene(v))
 	})
 	builds("improviso", func() (string, error) {

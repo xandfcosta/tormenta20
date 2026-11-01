@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/serve/web/ds"
 
 	"t20engine/domain/engine"
 )
@@ -29,38 +30,38 @@ import (
 
 // encounterRow é uma linha da composição: um verbete e quantos dele.
 type encounterRow struct {
-	ID  string `json:"id"`
-	Qtd int    `json:"qtd"`
+	ID    string `json:"id"`
+	Count int    `json:"count"`
 }
 
 // encounterParty é a linha já resolvida, com o ND que ela vale.
 type encounterParty struct {
 	Entry book.Entry
-	Qtd   int
+	Count int
 	ND    float64
 }
 
 const (
-	nivelMinimo   = 1
-	nivelMaximo   = 20
-	grupoMinimo   = 1
-	grupoMaximo   = 8
-	quantidadeMax = 99
+	partyLevelMin    = 1
+	partyLevelMax    = 20
+	partySizeMin     = 1
+	partySizeMax     = 8
+	creatureCountMax = 99
 )
 
 // Sem campanha por perto — a Mesa do Mestre monta encontro no vazio —, o grupo
 // padrão é o do livro: quatro personagens de 1º (p282).
 const (
-	nivelPadrao = 1
-	grupoPadrao = 4
+	partyLevelDefault = 1
+	partySizeDefault  = 4
 )
 
 type encountersView struct {
 	Level int
 	Group int
 	Rows  []encounterParty
-	// Busca e Achados são do painel de adicionar criatura, que reusa o filtro
-	// do bestiário — o mestre que aprendeu a buscar lá não reaprende aqui.
+	// Term e Findings são da lista de acrescentar criatura, que reusa o filtro do
+	// bestiário — o mestre que aprendeu a buscar lá não reaprende aqui.
 	Term     string
 	Findings []book.Entry
 }
@@ -88,6 +89,25 @@ func (v encountersView) XPPerCharacter() int {
 
 func (v encountersView) Empty() bool { return len(v.Rows) == 0 }
 
+// CreatureCount é quantas criaturas há no encontro, somando as linhas.
+func (v encountersView) CreatureCount() int {
+	total := 0
+	for _, l := range v.Rows {
+		total += l.Count
+	}
+	return total
+}
+
+// CountOf é quantas daquela criatura já estão no encontro.
+func (v encountersView) CountOf(id string) int {
+	for _, l := range v.Rows {
+		if l.Entry.ID == id {
+			return l.Count
+		}
+	}
+	return 0
+}
+
 // loadEncounters resolve as linhas em verbetes e faz as contas.
 //
 // Linha cujo verbete sumiu do bestiário é DESCARTADA, e não desenhada vazia:
@@ -95,8 +115,8 @@ func (v encountersView) Empty() bool { return len(v.Rows) == 0 }
 // viva, que é pior que não existir.
 func loadEncounters(level, group int, rows []encounterRow, search string) encountersView {
 	v := encountersView{
-		Level: clamp(level, nivelMinimo, nivelMaximo, nivelPadrao),
-		Group: clamp(group, grupoMinimo, grupoMaximo, grupoPadrao),
+		Level: clamp(level, partyLevelMin, partyLevelMax, partyLevelDefault),
+		Group: clamp(group, partySizeMin, partySizeMax, partySizeDefault),
 		Term:  search,
 	}
 	byID := map[string]book.Entry{}
@@ -108,25 +128,22 @@ func loadEncounters(level, group int, rows []encounterRow, search string) encoun
 		if !ok {
 			continue
 		}
-		qtd := clamp(l.Qtd, 1, quantidadeMax, 1)
+		count := clamp(l.Count, 1, creatureCountMax, 1)
 		v.Rows = append(v.Rows, encounterParty{
 			Entry: m,
-			Qtd:   qtd,
-			ND:    engine.PartyChallengeLevel(m.ND, qtd),
+			Count: count,
+			ND:    engine.PartyChallengeLevel(m.ND, count),
 		})
 	}
-	// A busca do painel de adicionar só corre quando há termo: mostrar as 80
-	// criaturas abaixo do encontro empurraria a conta para fora da tela, e a
-	// conta é o assunto desta ferramenta.
-	if strings.TrimSpace(search) != "" {
-		v.Findings = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
-			Search: search, NDMin: book.CRMin, NDMax: book.CRMax,
-		})
-	}
+	// A busca vazia traz todas: a lista rola na coluna dela, ou mora no diálogo, então
+	// não empurra a conta para fora da tela.
+	v.Findings = book.FilterCreatures(book.Creatures(), book.CreatureFilter{
+		Search: search, NDMin: book.CRMin, NDMax: book.CRMax,
+	})
 	return v
 }
 
-// aperta prende um número na faixa; fora dela ou ausente, cai no padrão.
+// clamp prende um número na faixa; fora dela ou ausente, cai no padrão.
 func clamp(v, min, max, standard int) int {
 	if v < min || v > max {
 		return standard
@@ -136,7 +153,7 @@ func clamp(v, min, max, standard int) int {
 
 // ── a álgebra do rascunho ────────────────────────────────────────────────────
 
-// acrescenta põe uma criatura no encontro, ou SOBE a contagem se ela já está.
+// addRow põe uma criatura no encontro, ou SOBE a contagem se ela já está.
 //
 // Duas linhas do mesmo verbete calculariam cada uma o próprio ND de grupo, e a
 // regra da dobra (p282) só significa alguma coisa sobre UM grupo — dois grupos
@@ -144,16 +161,16 @@ func clamp(v, min, max, standard int) int {
 func addRow(rows []encounterRow, id string) []encounterRow {
 	for i := range rows {
 		if rows[i].ID == id {
-			if rows[i].Qtd < quantidadeMax {
-				rows[i].Qtd++
+			if rows[i].Count < creatureCountMax {
+				rows[i].Count++
 			}
 			return rows
 		}
 	}
-	return append(rows, encounterRow{ID: id, Qtd: 1})
+	return append(rows, encounterRow{ID: id, Count: 1})
 }
 
-// diminui tira um da contagem, e a última unidade TIRA A LINHA: um grupo de
+// lessRow tira um da contagem, e a última unidade TIRA A LINHA: um grupo de
 // zero criaturas não é um grupo, e deixar a linha com 0 mostraria "ND 0" numa
 // linha que ainda parece parte do encontro.
 func lessRow(rows []encounterRow, id string) []encounterRow {
@@ -163,8 +180,8 @@ func lessRow(rows []encounterRow, id string) []encounterRow {
 			outside = append(outside, l)
 			continue
 		}
-		if l.Qtd > 1 {
-			l.Qtd--
+		if l.Count > 1 {
+			l.Count--
 			outside = append(outside, l)
 		}
 	}
@@ -196,7 +213,7 @@ func encounterAddress(v encountersView) string {
 	if len(v.Rows) > 0 {
 		var parts []string
 		for _, l := range v.Rows {
-			parts = append(parts, fmt.Sprintf("%s:%d", l.Entry.ID, l.Qtd))
+			parts = append(parts, fmt.Sprintf("%s:%d", l.Entry.ID, l.Count))
 		}
 		q.Set("c", strings.Join(parts, ","))
 	}
@@ -213,15 +230,15 @@ func rowsFromURL(raw string) []encounterRow {
 	}
 	var outside []encounterRow
 	for _, part := range strings.Split(raw, ",") {
-		id, qtd, found := strings.Cut(strings.TrimSpace(part), ":")
+		id, count, found := strings.Cut(strings.TrimSpace(part), ":")
 		if !found || id == "" {
 			continue
 		}
-		n, err := strconv.Atoi(qtd)
+		n, err := strconv.Atoi(count)
 		if err != nil || n < 1 {
 			continue
 		}
-		outside = append(outside, encounterRow{ID: id, Qtd: min(n, quantidadeMax)})
+		outside = append(outside, encounterRow{ID: id, Count: min(n, creatureCountMax)})
 	}
 	return outside
 }
@@ -233,11 +250,11 @@ func rowsFromURL(raw string) []encounterRow {
 func encounterSignals(v encountersView) string {
 	rows := make([]encounterRow, 0, len(v.Rows))
 	for _, l := range v.Rows {
-		rows = append(rows, encounterRow{ID: l.Entry.ID, Qtd: l.Qtd})
+		rows = append(rows, encounterRow{ID: l.Entry.ID, Count: l.Count})
 	}
 	encounter, _ := json.Marshal(rows)
 	search, _ := json.Marshal(v.Term)
-	return fmt.Sprintf(`{nivel: %d, grupo: %d, encontro: %s, creature_search: %s, copied: false}`,
+	return fmt.Sprintf(`{party_level: %d, party_size: %d, encounter_rows: %s, creature_search: %s, copied: false}`,
 		v.Level, v.Group, encounter, search)
 }
 
@@ -247,20 +264,36 @@ func roundedCR(nd float64) string {
 	return book.CRWritten(math.Round(nd*100) / 100)
 }
 
-// A cor da dificuldade sai do TOM, nunca do rótulo: o texto é o que o leitor de
-// tela anuncia, e a cor é enfeite por cima dele.
-var toneTint = map[string]string{
-	"calmo":   "var(--hp-full)",
-	"parelho": "var(--grimorio-gold)",
-	"duro":    "var(--hp-hurt)",
-	"mortal":  "var(--grimorio-crimson-bright)",
+// difficultyTone é o tom do selo. A cor sai do TOM, nunca do rótulo: o texto é o que o
+// leitor de tela anuncia, e a cor é enfeite por cima dele.
+func difficultyTone(tom string) ds.SealTone {
+	switch tom {
+	case "calmo":
+		return ds.SealGood
+	case "duro":
+		return ds.SealWarn
+	case "mortal":
+		return ds.SealDanger
+	}
+	return ds.SealNeutral
 }
 
-func difficultyColor(tom string) string {
-	if c, ok := toneTint[tom]; ok {
-		return "color: " + c
+// creaturesWritten concorda em número: "1 criatura" e "6 criaturas".
+func creaturesWritten(n int) string {
+	if n == 1 {
+		return "1 criatura"
 	}
-	return "color: var(--grimorio-gold)"
+	return fmt.Sprintf("%d criaturas", n)
+}
+
+// rowWorthWritten é a meta da linha: o ND da criatura e o que o grupo dela vale. Uma
+// criatura só vale o próprio ND, e dizer "vale" repetiria o número.
+func rowWorthWritten(l encounterParty) string {
+	written := "ND " + book.CRWritten(l.Entry.ND)
+	if l.Count == 1 {
+		return written
+	}
+	return fmt.Sprintf("%s · os %d valem ND %s", written, l.Count, roundedCR(l.ND))
 }
 
 // xpWritten com separador de milhar pt-BR: 1000 vira "1.000".

@@ -36,6 +36,10 @@
       { "address": "/mestre/deuses", "session": "gm" },
       { "address": "/mestre/bestiario", "session": "gm" },
       { "address": "/mestre/encontros?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4", "session": "gm" },
+      { "address": "/mestre/encontros?nivel=5&grupo=4&c=ogro:2", "session": "gm" },
+      { "address": "/mestre/encontros?nivel=6&grupo=4&c=ogro:2", "session": "gm" },
+      { "address": "/mestre/encontros?nivel=8&grupo=4&c=ogro:2", "session": "gm" },
+      { "address": "/mestre/encontros", "session": "gm" },
       { "address": "/mestre/improviso", "session": "gm" }
     ]
   },

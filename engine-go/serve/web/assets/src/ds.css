@@ -2625,6 +2625,14 @@
     background: color-mix(in oklab, var(--ds-good) 16%, var(--ds-surface));
     color: var(--ds-good);
   }
+  .ds-seal[data-tone='neutral'] {
+    background: var(--ds-sunk);
+    color: var(--ds-ink-2);
+  }
+  .ds-seal[data-tone='warn'] {
+    background: color-mix(in oklab, var(--ds-warn) 16%, var(--ds-surface));
+    color: var(--ds-warn);
+  }
   .ds-seal[data-tone='danger'] {
     background: color-mix(in oklab, var(--ds-danger) 14%, var(--ds-surface));
     color: var(--ds-danger);
@@ -4109,6 +4117,158 @@
     }
     .ds-entry-page > a {
       justify-content: flex-end;
+    }
+  }
+
+  /* O CONSTRUTOR DE ENCONTROS (ALE-542, mockup `encontros.html`). No celular o veredito
+   * é uma faixa fixa de ponta a ponta, e por isso a área principal perde o recuo. As
+   * duas colunas são CONSULTA DE CONTÊINER, como as do catálogo: a pergunta é quanto
+   * espaço a área principal tem, e por mídia ela não era monotônica. */
+  .ds-master-main:has(> .ds-encounter) {
+    padding: 0;
+    overflow: hidden;
+  }
+  .ds-encounter {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+  }
+  .ds-encounter-left {
+    display: contents;
+  }
+  .ds-encounter-verdict {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+  }
+  .ds-encounter-nd {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .ds-encounter-nd > b {
+    font-size: var(--ds-t-2xl);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-encounter-says {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+  }
+  .ds-encounter-says b {
+    color: var(--ds-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-encounter-build {
+    display: grid;
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 0.75rem;
+    min-height: 0;
+    padding: 0.75rem 1rem;
+    overflow: auto;
+  }
+  .ds-encounter-party {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .ds-encounter-steps {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .ds-encounter-steps > b {
+    min-width: 1.75rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-encounter-add {
+    width: 100%;
+    justify-content: center;
+  }
+  .ds-encounter-side {
+    display: none;
+  }
+  /* A linha da lista como botão: o reset do navegador devolve borda e fundo, e a linha
+   * só desenha a de cima. */
+  .ds-encounter-pick {
+    width: 100%;
+    border-inline: 0;
+    border-bottom: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ds-encounter-pick:hover {
+    background: var(--ds-sunk);
+  }
+  .ds-encounter-pick-end {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    white-space: nowrap;
+  }
+  .ds-encounter-pick-end > .ds-icon {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--ds-action);
+  }
+  /* A altura é fixa para o diálogo não pular de tamanho enquanto a busca estreita. */
+  #encounter-add[open] {
+    height: min(85dvh, 44rem);
+  }
+  @container (min-width: 50rem) {
+    .ds-encounter {
+      grid-template-columns: minmax(0, 1fr) 26rem;
+      grid-template-rows: minmax(0, 1fr);
+      gap: 1.25rem;
+      padding: 1rem 1.25rem;
+    }
+    .ds-encounter-left {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 0.75rem;
+      min-height: 0;
+    }
+    .ds-encounter-verdict {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--ds-line);
+      border-radius: var(--ds-r-surface);
+    }
+    .ds-encounter-nd > b {
+      font-size: 2.5rem;
+    }
+    .ds-encounter-build {
+      padding: 0;
+    }
+    .ds-encounter-add {
+      display: none;
+    }
+    .ds-encounter-side {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 0.75rem;
+      min-height: 0;
+    }
+    .ds-encounter-side > .ds-list {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+    }
+    .ds-encounter-side .ds-encounter-rows {
+      min-height: 0;
+      overflow: auto;
     }
   }
 

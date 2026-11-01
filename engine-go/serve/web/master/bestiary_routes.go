@@ -49,7 +49,7 @@ func (s Scene) handleBestiary(w http.ResponseWriter, r *http.Request) {
 		Title:  "Bestiário · Mesa do Mestre · Tormenta 20",
 		Shape:  ui.ShellBare,
 		System: ui.SystemTempestade,
-	}, masterFrame("bestiario", "Bestiário", bestiaryScene(v)))
+	}, masterFrame("bestiario", "Bestiário", nil, bestiaryScene(v)))
 }
 
 // handleBestiaryType liga ou desliga UM crachá de tipo.
