@@ -43,6 +43,7 @@ var (
 	idDeclarations = []*regexp.Regexp{
 		regexp.MustCompile(`(?:^|\s)id="([a-zA-Z][\w-]*)"`),
 		regexp.MustCompile(`ds\.Dialog\("([a-zA-Z][\w-]*)"`),
+		regexp.MustCompile(`ds\.SearchField\("([a-zA-Z][\w-]*)"`),
 	}
 	idReferences = []*regexp.Regexp{
 		regexp.MustCompile(`getElementById\(['"]([a-zA-Z][\w-]*)['"]\)`),

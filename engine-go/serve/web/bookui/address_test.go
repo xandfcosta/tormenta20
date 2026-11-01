@@ -1,6 +1,10 @@
 package bookui
 
-import "testing"
+import (
+	"strings"
+	"t20engine/serve/web/ui"
+	"testing"
+)
 
 // O ENDEREÇO DO LEITOR, provado onde ele é montado. Servir o PDF de verdade por
 // HTTP é outra camada e outra pergunta, e continua no `api`.
@@ -37,5 +41,17 @@ func TestWithoutAConfiguredBookThereIsNoAddress(t *testing.T) {
 	}
 	if got := (BookAddress{Base: "/livro"}).AtPage(0, "Lobo"); got != "" {
 		t.Errorf("criatura sem página no livro devia ficar sem endereço, e ficou %q", got)
+	}
+}
+
+// A caixa do livro veste o Tempestade por conta própria: ela abre por cima das telas que
+// ainda não migraram, e o escopo dos tokens tem de ir com ela.
+func TestTheBookDialogWearsItsOwnSystemScope(t *testing.T) {
+	box, err := ui.RenderFragment(t.Context(), BookDialog())
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if !strings.Contains(box, "scene-ds") || strings.Contains(box, "grimorio") {
+		t.Errorf("a caixa do livro não saiu só no Tempestade: %s", box)
 	}
 }
