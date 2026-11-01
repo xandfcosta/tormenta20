@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"t20engine/infra/config"
+	"t20engine/serve/web/admin"
 	"time"
 )
 
@@ -46,13 +47,16 @@ func (h adminHost) DatabaseSize() int64  { return fileSize(h.cfg.DatabasePath) }
 
 // LastBackup é o backup mais recente. `ok` em falso é "nenhum ainda", que é
 // estado normal — a lista vazia não é erro.
-func (h adminHost) LastBackup() (string, int64, bool) {
+func (h adminHost) Backups() []admin.BackupFile {
 	list := h.listBackups()
-	if len(list) == 0 {
-		return "", 0, false
+	out := make([]admin.BackupFile, 0, len(list))
+	for _, b := range list {
+		out = append(out, admin.BackupFile{Name: b.Name, Size: b.Size, CreatedAt: b.CreatedAt})
 	}
-	return list[0].Name, list[0].Size, true
+	return out
 }
+
+func (h adminHost) BackupsKept() int { return h.cfg.BackupKeep }
 
 func (h adminHost) BackupNow(ctx context.Context, at time.Time) error {
 	_, err := h.backupDatabase(ctx, at)

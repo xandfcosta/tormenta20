@@ -19,6 +19,16 @@ type adminView struct {
 	Players []playerRow
 	Invites []inviteRow
 	Machine serverInfo
+	Backups []backupRow
+	// BackupsKept é quantos a política guarda, ou 0 se ela não apaga nenhum.
+	BackupsKept int
+}
+
+// backupRow é um backup na lista, já escrito como a tela o mostra.
+type backupRow struct {
+	When string
+	Name string
+	Size string
 }
 
 type playerRow struct {
@@ -38,6 +48,7 @@ type playerRow struct {
 }
 
 type inviteRow struct {
+	ID      int64
 	Token   string
 	Label   string
 	Expires string
@@ -49,7 +60,6 @@ type serverInfo struct {
 	Database     string
 	DatabaseSize string
 	Contents     string
-	LastBackup   string
 }
 
 // loadAdmin busca tudo o que a tela mostra.
@@ -83,6 +93,7 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 	open := make([]inviteRow, 0, len(invites))
 	for _, c := range invites {
 		open = append(open, inviteRow{
+			ID:      c.ID,
 			Token:   c.Token,
 			Label:   "Link de convite " + firstChars(c.Token, 6),
 			Expires: expiryLabel(c.Expiresat, time.Now()),
@@ -100,13 +111,34 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 		DatabaseSize: inBytes(s.deps.DatabaseSize()),
 		Contents: fmt.Sprintf("%d contas · %d campanhas · %d fichas",
 			count.Users, count.Campaigns, count.Characters),
-		LastBackup: "Nenhum backup ainda.",
 	}
-	if name, size, ok := s.deps.LastBackup(); ok {
-		server.LastBackup = fmt.Sprintf("Último: %s · %s", name, inBytes(size))
+	var backups []backupRow
+	for _, b := range s.deps.Backups() {
+		backups = append(backups, backupRow{When: backupWhen(b.CreatedAt), Name: b.Name, Size: inBytes(b.Size)})
 	}
 
-	return adminView{Players: players, Invites: open, Machine: server}, nil
+	return adminView{
+		Players: players, Invites: open, Machine: server,
+		Backups: backups, BackupsKept: s.deps.BackupsKept(),
+	}, nil
+}
+
+// backupWhen escreve a data do backup no fuso de quem administra. Data que não se lê sai
+// como veio, porque o arquivo continua existindo e o nome dele ainda diz algo.
+func backupWhen(iso string) string {
+	at, err := time.Parse(time.RFC3339, iso)
+	if err != nil {
+		return iso
+	}
+	return at.In(time.Local).Format("02/01/2006, 15:04")
+}
+
+// backupsHeading diz quantos há e, se a política apaga os velhos, de quantos.
+func backupsHeading(v adminView) string {
+	if v.BackupsKept > 0 {
+		return fmt.Sprintf("Backups · %d de %d", len(v.Backups), v.BackupsKept)
+	}
+	return fmt.Sprintf("Backups · %d", len(v.Backups))
 }
 
 // posses é a frase de quanto a conta tem — mesas e fichas, com o plural certo.

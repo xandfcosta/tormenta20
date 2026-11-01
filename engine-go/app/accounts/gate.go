@@ -139,6 +139,22 @@ func (g Gate) MintInvite(ctx context.Context, createdBy int64) (sqlcgen.AccountI
 	})
 }
 
+// ErrInviteNotOpen diz que o convite já foi gasto, ou já foi revogado.
+var ErrInviteNotOpen = errors.New("o convite não está mais aberto")
+
+// RevokeInvite derruba um convite aberto: quem já recebeu o link deixa de conseguir
+// entrar por ele. O convite gasto fica, porque ele é o registro de quem entrou.
+func (g Gate) RevokeInvite(ctx context.Context, id int64) error {
+	removed, err := g.queries.RevokeAccountInvite(ctx, id)
+	if err != nil {
+		return err
+	}
+	if removed == 0 {
+		return ErrInviteNotOpen
+	}
+	return nil
+}
+
 // registrationInvite resolve o convite que este cadastro tem de gastar.
 //
 // Os endereços do `ADMIN_EMAILS` são a exceção, e a única: o dono precisa

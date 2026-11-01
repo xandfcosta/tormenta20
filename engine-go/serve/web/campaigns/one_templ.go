@@ -1418,7 +1418,7 @@ func campaignForm(v oneView) templ.Component {
 // token para mesas que o dono talvez nem use mais.
 //
 // Só o CAMINHO viaja: quem prefixa a origem é o navegador — ver a razão em
-// `ui.MintedInvite`.
+// `ds.MintedInvite`.
 func invitePanel(v oneView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

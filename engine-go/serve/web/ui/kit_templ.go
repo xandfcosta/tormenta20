@@ -12,98 +12,9 @@ import templruntime "github.com/a-h/templ/runtime"
 // vez. Token inventado à mão em cinco telas diverge em silêncio, e ninguém
 // compara duas telas lado a lado.
 
-// Só as variantes que o app usa hoje: variante que ninguém pede é classe que o
-// Tailwind emite para ninguém.
-type Variant string
-
-const (
-	// Entre clicáveis, o dourado FAZ e o crimson DESTRÓI. Não há terceira cor
-	// de ação.
-	VariantPrimary     Variant = "default"
-	VariantSecondary   Variant = "secondary"
-	VariantDestructive Variant = "destructive"
-	// O GHOST não tem caixa até o ponteiro chegar: o ✕ do diálogo, o 🗑 da
-	// linha, o passo do contador. Ele não é uma terceira cor de AÇÃO, é a
-	// ausência de cor até o hover.
-	VariantGhost Variant = "ghost"
-	// O GHOST QUE DESTRÓI é variante PRÓPRIA e não um `extra`: passado como
-	// extra, o `hover:text-destructive-ink` PERDE para o `hover:text-foreground`
-	// do ghost, porque a folha compilada declara o primeiro antes. O botão de
-	// apagar deixaria de ficar vermelho no hover, e nada falharia.
-	VariantGhostDanger Variant = "ghost-danger"
-	// O LINK é o nome clicável DENTRO de uma linha — o da perícia, o da magia,
-	// o do efeito. Ele não é um `<a>`: o gesto abre um diálogo na mesma página,
-	// e um `<a href>` que não navega mente para quem usa teclado.
-	VariantLink Variant = "link"
-)
-
-type Size string
-
-const (
-	SizeDefault Size = "default"
-	SizeLarge   Size = "lg"
-	SizeSmall   Size = "sm"
-	SizeTiny    Size = "xs"
-	// Os QUADRADOS. O grande é **44px e não 40**: botão de ícone não tem rótulo
-	// ao lado, então não tem o EQUIVALENTE que o WCAG 2.5.8 aceita e paga o
-	// piso de toque inteiro.
-	SizeIcon      Size = "icon"
-	SizeIconSmall Size = "icon-sm"
-	SizeIconTiny  Size = "icon-xs"
-	// SizeInline não traz geometria NENHUMA, e existe para o botão que vive
-	// DENTRO de uma linha: o nome da perícia, o da magia, o do efeito. Eles
-	// medem o que a linha der, e qualquer `h-*`/`px-*` do kit quebraria o
-	// leiaute da fileira. O que eles ganham daqui é a receita de foco e a de
-	// hover.
-	SizeInline Size = "inline"
-)
-
-// ButtonClasses é a receita do botão da casa — base, variante e tamanho numa
-// string só —, para quem precisa das classes fora do componente.
-func ButtonClasses(v Variant, t Size, extra string) string {
-	// A FONTE mora no TAMANHO e não aqui na base, e o `gap` também: duas classes
-	// de fonte na mesma tag não se somam — vence a que a FOLHA COMPILADA declara
-	// por último, e o Tailwind v4 as emite da maior para a menor. Com `text-sm`
-	// na base, todo `extra` MAIOR perderia em silêncio, sem nada falhar. Com uma
-	// fonte por TAMANHO não há duas para disputar.
-	base := "inline-flex shrink-0 items-center justify-center rounded-sm font-medium whitespace-nowrap transition-all outline-none disabled:pointer-events-none disabled:opacity-50"
-	// A BORDA DO `secondary` é conserto, não enfeite. Não tire: o preenchimento
-	// dá 1,30:1 contra o fundo da cena e a borda dá 3,57:1, e o mínimo do WCAG
-	// 1.4.11 para LIMITE de componente é 3:1. Sem ela não se vê onde o botão
-	// começa — e o guarda de contraste não acusa, porque ele mede a tinta do
-	// TEXTO, que continua legível.
-	byVariant := map[Variant]string{
-		VariantPrimary:     "bg-primary text-primary-foreground hover:bg-primary/90",
-		VariantSecondary:   "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-grimorio-iron-light",
-		VariantDestructive: "bg-destructive text-white hover:bg-destructive/90",
-		// Sem `bg-` nenhum: o ghost é forma e foco, e a cor só chega no hover.
-		VariantGhost:       "text-muted-foreground hover:bg-accent hover:text-foreground",
-		VariantGhostDanger: "text-muted-foreground hover:text-destructive-ink",
-		// `underline-offset-2` e não o 4 da SPA: aqui o sublinhado corre debaixo
-		// de uma linha de lista densa, e 4px encostam na linha de baixo.
-		VariantLink: "text-foreground underline-offset-2 hover:underline",
-	}
-	bySize := map[Size]string{
-		SizeDefault:   "h-9 gap-2 px-4 py-2 text-sm",
-		SizeLarge:     "h-10 gap-2 rounded-sm px-6 text-sm",
-		SizeSmall:     "h-8 gap-1.5 rounded-sm px-3 text-sm",
-		SizeTiny:      "h-6 gap-1 rounded-sm px-2 text-xs",
-		SizeIcon:      "size-11 text-lg",
-		SizeIconSmall: "size-8 text-sm",
-		SizeIconTiny:  "size-6 text-xs",
-		SizeInline:    "",
-	}
-	return Join(base, byVariant[v], bySize[t], extra)
-}
-
-// Button é o botão da casa. Os atributos chegam como mapa e são espalhados, e é
-// isso que deixa um só componente servir o `type="submit"` do formulário, o
-// `data-on:click` do Datastar e o `aria-label` da linha de lista.
-//
-// `extra` é um parâmetro e NÃO uma chave `class` dentro de `attrs`: duas
-// `class` na mesma tag não se somam — o navegador fica com a primeira e a outra
-// é ignorada em silêncio, que é como um `w-full` some sem ninguém notar.
-func Button(v Variant, t Size, extra string, attrs templ.Attributes) templ.Component {
+// SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
+// entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
+func SceneTitle(title, kicker string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -124,108 +35,43 @@ func Button(v Variant, t Size, extra string, attrs templ.Attributes) templ.Compo
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{ButtonClasses(v, t, extra)}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div data-slot=\"scene-title\" class=\"flex flex-col items-center gap-1 text-center\"><h1 class=\"scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<button class=\"")
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 12, Col: 10}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var2).String())
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 1, Col: 0}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templ.RenderAttributes(ctx, templ_7745c5c3_Buffer, attrs)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templ_7745c5c3_Var1.Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</button>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		return nil
-	})
-}
-
-// SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
-// entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
-func SceneTitle(title, kicker string) templ.Component {
-	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
-		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
-		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
-			return templ_7745c5c3_CtxErr
-		}
-		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
-		if !templ_7745c5c3_IsBuffer {
-			defer func() {
-				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err == nil {
-					templ_7745c5c3_Err = templ_7745c5c3_BufErr
-				}
-			}()
-		}
-		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var4 == nil {
-			templ_7745c5c3_Var4 = templ.NopComponent
-		}
-		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div data-slot=\"scene-title\" class=\"flex flex-col items-center gap-1 text-center\"><h1 class=\"scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(title)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 109, Col: 10}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</h1>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if kicker != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "   <p class=\"font-heading text-sm uppercase tracking-[0.3em] text-grimorio-gold\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "   <p class=\"font-heading text-sm uppercase tracking-[0.3em] text-grimorio-gold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var6 string
-			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(kicker)
+			var templ_7745c5c3_Var3 string
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(kicker)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 115, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 18, Col: 89}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -237,7 +83,7 @@ func SceneTitle(title, kicker string) templ.Component {
 // display e abaixo de 14px vira desenho antes de virar texto, e esta receita é de 10px.
 //
 // `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem duas, e uma
-// terceira nasceria como cor solta. Mesma forma do `ui.ButtonClasses`.
+// terceira nasceria como cor solta.
 func SectionLabelClasses(tom, extra string) string {
 	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
 }
@@ -338,51 +184,51 @@ func ScrollBox(label string, extra string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var7 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var7 == nil {
-			templ_7745c5c3_Var7 = templ.NopComponent
+		templ_7745c5c3_Var4 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var4 == nil {
+			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var8 = []any{Join("min-h-0 flex-1 overflow-y-auto outline-none", extra)}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
+		var templ_7745c5c3_Var5 = []any{Join("min-h-0 flex-1 overflow-y-auto outline-none", extra)}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div role=\"region\" data-nav-item aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div role=\"region\" data-nav-item aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
+		var templ_7745c5c3_Var6 string
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 213, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 116, Col: 20}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" tabindex=\"0\" class=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var8).String())
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" tabindex=\"0\" class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var5).String())
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 1, Col: 0}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ_7745c5c3_Var7.Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templ_7745c5c3_Var4.Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -548,25 +394,25 @@ func Key(label string) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var11 == nil {
-			templ_7745c5c3_Var11 = templ.NopComponent
+		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var8 == nil {
+			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<kbd class=\"ml-1 hidden text-3xs opacity-70 xl:inline\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<kbd class=\"ml-1 hidden text-3xs opacity-70 xl:inline\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(label)
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 364, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ui/kit.templ`, Line: 267, Col: 63}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</kbd>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</kbd>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

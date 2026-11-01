@@ -38,14 +38,24 @@ type Deps interface {
 	Environment() string
 	DatabasePath() string
 	DatabaseSize() int64
-	// LastBackup: `ok` falso é "nenhum backup ainda", que é estado normal.
-	LastBackup() (name string, size int64, ok bool)
+	// Backups é a lista guardada, do mais novo para o mais velho. Vazia é "nenhum backup
+	// ainda", que é estado normal.
+	Backups() []BackupFile
+	// BackupsKept é quantos a política guarda, ou 0 se ela não apaga nenhum.
+	BackupsKept() int
 
 	// BackupNow fica na PORTA, e é deliberado: copiar o arquivo do banco é
 	// serviço do hospedeiro — sistema de arquivos e política de retenção —, e
 	// não caso de uso de conta nenhuma. A ALE-349 mudou de lado o que era regra
 	// de CONTA, e só isso.
 	BackupNow(ctx context.Context, at time.Time) error
+}
+
+// BackupFile é um backup como o hospedeiro o conhece. `CreatedAt` é RFC 3339.
+type BackupFile struct {
+	Name      string
+	Size      int64
+	CreatedAt string
 }
 
 // Scene é a administração montada com as dependências dela.

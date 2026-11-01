@@ -4356,6 +4356,57 @@
     max-width: 8rem;
   }
 
+  /* A ADMINISTRAÇÃO (ALE-546, mockup `admin.html`): os jogadores, a lista que cresce, na
+   * coluna maior. */
+  .ds-admin {
+    display: grid;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+  .ds-admin-grid,
+  .ds-admin-side {
+    display: grid;
+    align-items: start;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+  .ds-admin-panel {
+    display: grid;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .ds-admin-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: var(--ds-h-control);
+  }
+  .ds-admin-head > .ds-list-head {
+    margin: 0;
+    padding: 0;
+  }
+  .ds-admin-acts {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .ds-admin .ds-entry-fields dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .ds-admin .ds-row-title > .ds-badge {
+    margin-left: 0.25rem;
+  }
+  @media (min-width: 64rem) {
+    .ds-admin-grid {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+  }
+
   /* A FOLHA VIVA (ALE-541, mockup `sistema.html`): uma amostra de cada peça, dividida
    * em seções, com um índice à esquerda no desktop e numa fileira no celular. */
   .ds-specimen {

@@ -12,6 +12,7 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/app/accounts"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 
@@ -34,10 +35,11 @@ func (s Scene) handleAdmin(w http.ResponseWriter, r *http.Request) {
 		Shape:        ui.ShellDense,
 		VisibleTitle: "Administração",
 		Back:         "/",
+		System:       ui.SystemTempestade,
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só
 		// para o diálogo e para os avisos — estado de INTERAÇÃO, não da
 		// aplicação.
-		Signals: "{target_id: 0, target_name: '', target_cost: '', copied: '', error: ''}",
+		Signals: "{target_id: 0, target_name: '', target_cost: '', copied: false, error: ''}",
 	}, adminScene(view))
 }
 
@@ -83,7 +85,7 @@ func (s Scene) handleBackup(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Não consegui fazer o backup: " + err.Error()})
 		return
 	}
-	s.patchPanels(sse, r, serverPanel)
+	s.patchPanels(sse, r, backupsPanel)
 }
 
 // adminPanel é um painel da tela como FUNÇÃO, e não como nome.
@@ -161,13 +163,33 @@ func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	fragment, err := ui.RenderFragment(r.Context(), ui.MintedInvite("/register?convite="+url.QueryEscape(invite.Token),
-		"Cada convite serve para UMA conta. Gere outro para o próximo jogador."))
+	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite("/register?convite="+url.QueryEscape(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
 	_ = sse.PatchElements(fragment)
+	s.patchPanels(sse, r, invitesPanel)
+}
+
+// handleRevokeInvite derruba um convite aberto e devolve a lista sem ele. A REGRA de que
+// só o aberto se revoga mora no `accounts.Gate`.
+func (s Scene) handleRevokeInvite(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		http.Error(w, "id inválido", http.StatusBadRequest)
+		return
+	}
+	sse := datastar.NewSSE(w, r)
+	err = s.gate.RevokeInvite(r.Context(), id)
+	if errors.Is(err, accounts.ErrInviteNotOpen) {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Esse convite não está mais aberto."})
+		return
+	}
+	if err != nil {
+		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
+		return
+	}
 	s.patchPanels(sse, r, invitesPanel)
 }
 
@@ -182,4 +204,5 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/admin/backup", s.handleBackup)
 	r.Post("/admin/usuarios/{id}/redefinir", s.handleMintReset)
 	r.Post("/admin/convites", s.handleMintInvite)
+	r.Post("/admin/convites/{id}/revogar", s.handleRevokeInvite)
 }

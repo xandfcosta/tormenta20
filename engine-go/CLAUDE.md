@@ -1237,8 +1237,8 @@ responde nos imports do arquivo, não no assunto dele.
 
 ## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
 
-Botão, campo, moldura, rótulo de seção, caixa rolável, ícone e CASCA moram em
-`serve/web/ui`, e é isso que permite cada cena ser um pacote. **O kit não
+Rótulo de seção, caixa rolável, ícone e CASCA moram em `serve/web/ui`, e é isso que
+permite cada cena ser um pacote. As peças de tela são do Tempestade, em `serve/web/ds`. **O kit não
 importa catálogo**: o livro, o verbete e o buscador moram em pacote próprio
 (`serve/web/bookui`, `serve/web/finder`). **A casca RECEBE o que não pode
 conhecer**, como campo de `ui.Page`:
@@ -1256,16 +1256,6 @@ monta página. Não ponha esses campos em cada `ui.Page{…}`.
 **Renomear palavra COMUM** (`campo`, `tamanho`, `layout`) pede renomeador que
 pule comentário e string, com o compilador de rede; o identificador hifenizado
 (`data-nav-layout`) ele não pega — ache-o com `grep` depois.
-
-### O `extra` do botão NÃO ganha da base, e quem decide é a FOLHA
-
-`ButtonClasses(v, t, extra)` concatena, e o `Join` não é `tailwind-merge`: de
-duas classes do mesmo eixo, vence a que a folha compilada declara por ÚLTIMO, e
-um `extra` declarado ANTES da base perde calado. **Nenhum eixo mora na BASE se
-um TAMANHO pode querer outro valor**: fonte e `gap` ficam no mapa de tamanhos;
-a base tem forma, foco, transição, desabilitado. Hover de outra cor é VARIANTE
-(`VariantGhostDanger`), não `extra`. Para conferir: `grep -bo '\.classe'` na
-folha compilada, dos dois lados — a ordem do `class=` o navegador ignora.
 
 ## Dois sistemas de desenho, até a última tela migrar
 
