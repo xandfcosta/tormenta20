@@ -213,7 +213,7 @@
           ]
         },
         {
-          "sceneEffect": true,
+          "sceneEffect": false,
           "create": {
             "name": "Druida Natureza Nv9",
             "races": [

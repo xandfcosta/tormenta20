@@ -39,6 +39,11 @@ templ tempestadeSheet(v View) {
 						}
 					}
 				</div>
+				if v.Draft {
+					<div class="ds-card">
+						<p class="ds-card-text"><b>Rascunho:</b> aqui se monta o personagem. Para jogar, entre com ele numa campanha.</p>
+					</div>
+				}
 				if v.Refusal != "" {
 					<p role="alert" class="ds-alert">{ v.Refusal }</p>
 				}
@@ -62,9 +67,11 @@ templ tempestadeSheet(v View) {
 		for _, attr := range v.Combat.Attributes {
 			@attributeDialog(v, attr)
 		}
-		@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV)
-		if !v.NoMana {
-			@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM)
+		if !v.Draft {
+			@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV)
+			if !v.NoMana {
+				@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM)
+			}
 		}
 		@tempestadeClassChoice(v, +1, "Qual classe sobe de nível?")
 		@lastLevelDialog(v)
@@ -83,7 +90,12 @@ templ sheetHeader(v View) {
 		<div class="ds-avatar" aria-hidden="true" style={ "background: " + v.Gradient }>{ v.Initials }</div>
 		<div class="min-w-0">
 			<h1 class="ds-sheet-name">{ v.Name }</h1>
-			<p class="ds-sheet-who">{ whoLine(v) }</p>
+			<p class="ds-sheet-who">
+				if v.Draft {
+					<span class="ds-badge" data-variant="outline">rascunho</span>
+				}
+				{ whoLine(v) }
+			</p>
 		</div>
 		<div class="ds-def">
 			<b>{ v.Defense }</b>
@@ -96,9 +108,16 @@ templ sheetHeader(v View) {
 // sheetRail é a coluna da ficha, no desktop.
 templ sheetRail(v View) {
 	<aside class="ds-sheet-rail" aria-label="Personagem">
-		@railVital(v, "pv", meterOf("PV", v.PV, ds.MeterPV), "Dano ou cura…")
-		if !v.NoMana {
-			@railVital(v, "pm", meterOf("PM", v.PM, ds.MeterPM), "Gastar…")
+		if v.Draft {
+			@draftPool("PV", v.PV)
+			if !v.NoMana {
+				@draftPool("PM", v.PM)
+			}
+		} else {
+			@railVital(v, "pv", meterOf("PV", v.PV, ds.MeterPV), "Dano ou cura…")
+			if !v.NoMana {
+				@railVital(v, "pm", meterOf("PM", v.PM, ds.MeterPM), "Gastar…")
+			}
 		}
 		if effects := activeEffects(v); len(effects) > 0 {
 			<div class="ds-field">
@@ -121,6 +140,14 @@ templ sheetRail(v View) {
 		</div>
 		@levelControl(v)
 	</aside>
+}
+
+// draftPool é o PV e o PM do rascunho: só o máximo, que é dado, porque ele não se gasta.
+templ draftPool(label string, vital sheetVital) {
+	<div class="ds-def" data-wide>
+		<span>{ label }</span>
+		<b>{ strconv.FormatInt(vital.Max, 10) }</b>
+	</div>
 }
 
 templ railVital(v View, which string, m ds.Meter, more string) {
@@ -228,11 +255,25 @@ templ tempestadePanel(v View) {
 // o diálogo de dano ou cura.
 templ vitalStrip(v View) {
 	<div class="ds-vitals">
-		@stripVital(v, "pv", "PV", v.PV, ds.MeterPV)
-		if !v.NoMana {
-			@stripVital(v, "pm", "PM", v.PM, ds.MeterPM)
+		if v.Draft {
+			@draftStripPool("PV", v.PV)
+			if !v.NoMana {
+				@draftStripPool("PM", v.PM)
+			}
+		} else {
+			@stripVital(v, "pv", "PV", v.PV, ds.MeterPV)
+			if !v.NoMana {
+				@stripVital(v, "pm", "PM", v.PM, ds.MeterPM)
+			}
 		}
 	</div>
+}
+
+templ draftStripPool(label string, vital sheetVital) {
+	<span class="ds-vital-line">
+		<span class="ds-vital-key">{ label }</span>
+		<span class="ds-vital-value">{ strconv.FormatInt(vital.Max, 10) }</span>
+	</span>
 }
 
 templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKind) {

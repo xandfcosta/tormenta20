@@ -20,6 +20,7 @@ func guerreiro(t *testing.T) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Guerreiro", "Guerreiro", 3, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
 	return f, id
 }
 

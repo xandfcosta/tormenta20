@@ -122,7 +122,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if s.Consumable != nil {
+			if s.Consumable != nil && !v.Draft {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "  <div class=\"ds-field\"><span class=\"ds-field-label\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

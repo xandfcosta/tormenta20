@@ -28,7 +28,7 @@ func Routes(r chi.Router, s Scene) {
 	// `s.Load`, que redesenha a cena INTEIRA. Como o `payload` do Datastar
 	// SUBSTITUI os sinais, um corpo com o passo chegaria com os outros campos
 	// zerados e a tela voltaria sem o filtro que a pessoa usava.
-	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.sheetCommand(touchesVital))
+	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.sheetCommand(onlyInPlay(touchesVital)))
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.sheetCommand(mudaONivel))
 	r.Post("/personagens/{id}/classes/{classe}/entra", s.sheetCommand(enterClass))
@@ -40,7 +40,7 @@ func Routes(r chi.Router, s Scene) {
 	// AS PERÍCIAS. O NOME vai no CAMINHO, escapado, e não num sinal: um sinal
 	// aqui seria disputado por uma dezena de botões idênticos.
 	r.Post("/personagens/{id}/pericias/treino/{nome}", s.sheetCommand(toggleTraining))
-	r.Post("/personagens/{id}/pericias/rolar/{nome}", s.sheetCommand(rollExpertise))
+	r.Post("/personagens/{id}/pericias/rolar/{nome}", s.sheetCommand(onlyInPlay(rollExpertise)))
 	r.Post("/personagens/{id}/pericias/atributo/{nome}/{atributo}", s.sheetCommand(swapAttribute))
 	r.Post("/personagens/{id}/pericias/remover/{nome}", s.sheetCommand(removeCraft))
 	// A CRIAÇÃO é a única que lê SINAL, porque o nome é texto que a pessoa acabou
@@ -53,28 +53,28 @@ func Routes(r chi.Router, s Scene) {
 	// um endereço com campanha e sessão dentro obrigaria a ficha a carregar
 	// coordenada de mesa só para se redesenhar. Quem sabe em que sessão este
 	// personagem está é o hospedeiro, pela porta, como no teste de perícia.
-	r.Post("/personagens/{id}/acoes/atacar/{arma}", s.sheetCommand(rollsAttackOnTheTarget))
-	r.Post("/personagens/{id}/acoes/manobra/{manobra}", s.sheetCommand(rollsManeuverOnTheTarget))
-	r.Post("/personagens/{id}/acoes/investida/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargePlain)))
-	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargeReckless)))
+	r.Post("/personagens/{id}/acoes/atacar/{arma}", s.sheetCommand(onlyInPlay(rollsAttackOnTheTarget)))
+	r.Post("/personagens/{id}/acoes/manobra/{manobra}", s.sheetCommand(onlyInPlay(rollsManeuverOnTheTarget)))
+	r.Post("/personagens/{id}/acoes/investida/{arma}", s.sheetCommand(onlyInPlay(chargesTheTarget(engine.ChargePlain))))
+	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(onlyInPlay(chargesTheTarget(engine.ChargeReckless))))
 	// OS EFEITOS: quatro donos de estado, quatro caminhos.
-	r.Post("/personagens/{id}/efeitos/condicao/{cond}", s.sheetCommand(toggleBookCondition))
-	r.Post("/personagens/{id}/efeitos/aplica/{magia}", s.sheetCommand(applySpellBuff))
-	r.Post("/personagens/{id}/efeitos/encerra/{efeito}", s.sheetCommand(endAppliedEffect))
-	r.Post("/personagens/{id}/efeitos/postura/{flag}", s.sheetCommand(endStance))
+	r.Post("/personagens/{id}/efeitos/condicao/{cond}", s.sheetCommand(onlyInPlay(toggleBookCondition)))
+	r.Post("/personagens/{id}/efeitos/aplica/{magia}", s.sheetCommand(onlyInPlay(applySpellBuff)))
+	r.Post("/personagens/{id}/efeitos/encerra/{efeito}", s.sheetCommand(onlyInPlay(endAppliedEffect)))
+	r.Post("/personagens/{id}/efeitos/postura/{flag}", s.sheetCommand(onlyInPlay(endStance)))
 	// O SITUACIONAL manda a CHAVE do condicional, que é um encadeado com `::` e
 	// texto livre do catálogo dentro — por isso ela vai por SINAL e não no
 	// caminho. É a exceção da ficha, e a razão dela é o formato da chave.
-	r.Post("/personagens/{id}/efeitos/situacao", s.sheetCommand(toggleSituational))
+	r.Post("/personagens/{id}/efeitos/situacao", s.sheetCommand(onlyInPlay(toggleSituational)))
 	// O DEGRAU tem rota PRÓPRIA, e não é o mesmo gesto com um sinal a mais:
 	// aquele ALTERNA, e escolher "+6" num Baluarte já ligado o desligaria. Aqui
 	// a semântica é "ligue com estes degraus", que é o que o seletor diz.
-	r.Post("/personagens/{id}/efeitos/situacao/degraus", s.sheetCommand(setSituationalDegrees))
+	r.Post("/personagens/{id}/efeitos/situacao/degraus", s.sheetCommand(onlyInPlay(setSituationalDegrees)))
 	// AS MAGIAS.
 	r.Post("/personagens/{id}/magias/aprende/{magia}", s.sheetCommand(learnSpell))
 	r.Post("/personagens/{id}/magias/esquece/{magia}", s.sheetCommand(forgetSpell))
 	r.Post("/personagens/{id}/magias/prepara/{magia}", s.sheetCommand(togglePrepared))
-	r.Post("/personagens/{id}/magias/conjura/{magia}", s.sheetCommand(castSpellFromSheet))
+	r.Post("/personagens/{id}/magias/conjura/{magia}", s.sheetCommand(onlyInPlay(castSpellFromSheet)))
 	// A MOCHILA.
 	r.Post("/personagens/{id}/itens/{item}/guarda", s.sheetCommand(stowItem))
 	r.Post("/personagens/{id}/itens/{item}/equipa/{slot}", s.sheetCommand(equipItemFromSheet))
@@ -86,11 +86,11 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/itens/custom", s.sheetCommand(addCustomItem))
 	r.Post("/personagens/{id}/itens/{item}/edita", s.sheetCommand(editItem))
 	r.Post("/personagens/{id}/itens/{item}/remover", s.sheetCommand(removeItemFromSheet))
-	r.Post("/personagens/{id}/itens/{item}/usa", s.sheetCommand(useItem))
+	r.Post("/personagens/{id}/itens/{item}/usa", s.sheetCommand(onlyInPlay(useItem)))
 	r.Post("/personagens/{id}/itens/{item}/melhorias", s.sheetCommand(applyOverlays))
 	// OS PODERES.
-	r.Post("/personagens/{id}/poderes/usa/{poder}", s.sheetCommand(usePower))
-	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(enterStance))
+	r.Post("/personagens/{id}/poderes/usa/{poder}", s.sheetCommand(onlyInPlay(usePower)))
+	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(onlyInPlay(enterStance)))
 	// AS ESCOLHAS do diálogo.
 	r.Post("/personagens/{id}/poderes/escolhe/{poder}", s.sheetCommand(pickPower))
 	r.Post("/personagens/{id}/poderes/escolha/{poder}/{opcao}", s.sheetCommand(pickPowerOption))
@@ -175,7 +175,7 @@ func insideSessionAsked(r *http.Request) bool {
 // A POSSE é conferida aqui, uma vez. A ficha é do dono e de mais ninguém: a
 // regra é a mesma da API JSON (`characterFor`), e a cena não ganha uma segunda.
 func (s Scene) sheetCommand(
-	mutate func(Scene, *http.Request, sqlcgen.Character, Signals) error,
+	mutate sheetMutation,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, ok := uRLCharacter(w, r)

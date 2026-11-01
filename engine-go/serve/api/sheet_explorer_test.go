@@ -16,7 +16,9 @@ const explorerPath = "escolha/class.cacador.explorador/"
 func hunter(t *testing.T, level int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
-	return f, seedCharacterAtLevel(t, f.s, f.player, "Caçadora", "Caçador", level, 0, 0)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Caçadora", "Caçador", level, 0, 0)
+	seedMember(t, f.s, f.campaignID, id)
+	return f, id
 }
 
 func TestTheExplorerPicksATerrainPerFourLevels(t *testing.T) {

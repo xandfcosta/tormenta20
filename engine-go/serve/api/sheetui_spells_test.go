@@ -38,6 +38,7 @@ func arcanistaDeNivel(t *testing.T, level int64) (sceneFixture, int64) {
 		pools.HpCurrent, pools.MpCurrent = pools.HpMax, pools.MpMax
 		return pools, nil
 	})
+	seedMember(t, f.s, f.campaignID, id)
 	return f, id
 }
 

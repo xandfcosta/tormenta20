@@ -238,6 +238,11 @@ func seedMember(t *testing.T, s *Server, campaignID, characterID int64) {
 	}); err != nil {
 		t.Fatalf("seed member: %v", err)
 	}
+	// Quem está em campanha joga: é o `campaignId` que separa a ficha do rascunho.
+	if _, err := s.db.ExecContext(context.Background(),
+		`UPDATE characters SET campaignId = COALESCE(campaignId, ?) WHERE id = ?`, campaignID, characterID); err != nil {
+		t.Fatalf("seed member: %v", err)
+	}
 }
 
 // O PAPEL NUMA CAMPANHA: o dono mestra, o membro joga, e o resto não entra.
