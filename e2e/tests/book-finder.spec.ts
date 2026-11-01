@@ -96,6 +96,20 @@ test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
   expect(page.url()).toContain('/mestre/bestiario')
 })
 
+/**
+ * A caixa da busca tem o fundo de diálogo, e não o da página: o `scene-ds` que ela leva para
+ * valer nas telas não migradas também traz o fundo da página, e venceria o dela.
+ */
+test('a busca tem o fundo de diálogo, como as outras caixas', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/')
+  const dialogPaint = (id: string) =>
+    page.locator(`#${id}`).evaluate((e) => getComputedStyle(e).backgroundColor)
+  // O CONTROLE é o diálogo do kit na mesma tela, escrito sem o `scene-ds` próprio.
+  expect(await dialogPaint('finder')).toBe(await dialogPaint('entry-in-dialog'))
+  expect(await dialogPaint('book-in-dialog')).toBe(await dialogPaint('entry-in-dialog'))
+})
+
 test('o achado selecionado é só o fundo, sem contorno', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto('/')

@@ -5493,6 +5493,12 @@
   }
 }
 
+/* As caixas que levam o `scene-ds` nelas mesmas, para valer nas telas não migradas: o fundo da
+ * página vem junto e, por estar fora de `@layer`, venceria o do diálogo. */
+.scene-ds.ds-finder,
+.scene-ds.ds-book {
+  background: var(--ds-surface);
+}
 /* O ACHADO SELECIONADO não desenha contorno, decisão do dono: quem marca é o fundo. Fora de
  * `@layer` para disputar com a regra global do foco, que também está fora, e com a mesma
  * especificidade dela: o `[tabindex]` do `:is()` lá pesa, e ganha quem vem depois. */
