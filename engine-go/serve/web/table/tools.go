@@ -180,17 +180,6 @@ func onIsTool(id string) string {
 	return fmt.Sprintf("$tool === %q", id)
 }
 
-// toolStyling liga UMA das duas aparências, e nunca deixa as duas.
-//
-// Os dois lados no `data-class` pela armadilha de CASCATA que o editor de bloco
-// documenta: a marca de ligada mora em `@layer components` e as cores do
-// Tailwind são utilidades, numa camada POSTERIOR — camada vence especificidade,
-// e o dourado perderia para o cinza sem nada acusar.
-func toolStyling(id string) string {
-	return fmt.Sprintf("{'brush-on': %s, 'text-muted-foreground': !(%s)}",
-		onIsTool(id), onIsTool(id))
-}
-
 // shortcutName é o que o leitor de tela e o `title` recebem.
 //
 // A tecla vai no NOME ACESSÍVEL e não só no `title`: um atalho que só existe no

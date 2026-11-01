@@ -28,8 +28,7 @@ import (
 //
 // # Por que um guarda, e não só a varredura
 //
-// Este é o irmão do `TestNoHandwrittenLabelRecipe`, e existe pela mesma razão
-// que o `CLAUDE.md` da raiz chama de "o molde de como esta família se conserta":
+// Ele existe pela razão que o `CLAUDE.md` da raiz chama de "o molde de como esta família se conserta":
 // visitar mais cenas é ENUMERAÇÃO, e a cena que nascer amanhã nasce sem medição.
 // Um guarda que pergunta "alguém escreveu a receita à mão?" vale para ela.
 //

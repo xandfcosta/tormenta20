@@ -20,10 +20,8 @@ import (
 // no meio do combate e não vai lembrar de confirmar; salvam sozinhas depois da
 // pausa.
 //
-// ELAS ABREM COLUNA E EMPURRAM O MAPA, em vez de cobri-lo — é a única exceção
-// aos overlays da cena: escreve-se enquanto se narra OLHANDO o tabuleiro, e um
-// painel por cima do mapa não serve a esse gesto. Abaixo de 1024 não há espaço
-// para duas, e elas viram gaveta como as outras consultas.
+// ELAS MORAM EM DOIS LUGARES: nas consultas do mestre (`gmNotes`) e na janela à
+// parte (`notesWindow`), e uma só escreve de cada vez.
 //
 // ── A ARMADILHA QUE GOVERNA ESTE ARQUIVO ────────────────────────────────────
 //
@@ -79,7 +77,7 @@ func notesBody(v View) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveNotes(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 51, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 49, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -92,7 +90,7 @@ func notesBody(v View) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("# Cena 1\n- O ogro **fugiu** pela ponte\n> \"voltarei\", ele disse")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 54, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 52, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -105,7 +103,7 @@ func notesBody(v View) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.Notes)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 56, Col: 12}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 54, Col: 12}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -442,7 +440,7 @@ func noteItem(v View, it markdown.Item) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(marked(it.Task.Marked))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 160, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 158, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
@@ -455,7 +453,7 @@ func noteItem(v View, it markdown.Item) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(toggleTaskNote(v, *it.Task))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 161, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 159, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
@@ -557,7 +555,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 186, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 184, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
@@ -575,7 +573,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 188, Col: 16}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 186, Col: 16}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -593,7 +591,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 190, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 188, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -611,7 +609,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var18 templ.SafeURL
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 193, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 191, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -624,7 +622,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 197, Col: 13}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 195, Col: 13}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -638,7 +636,7 @@ func noteSpans(spans []markdown.Span) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(s.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 199, Col: 12}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 197, Col: 12}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -761,7 +759,7 @@ func notesMode(value, label string) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 231, Col: 9}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes.templ`, Line: 229, Col: 9}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {

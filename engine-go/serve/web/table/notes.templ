@@ -12,10 +12,8 @@ import (
 // no meio do combate e não vai lembrar de confirmar; salvam sozinhas depois da
 // pausa.
 //
-// ELAS ABREM COLUNA E EMPURRAM O MAPA, em vez de cobri-lo — é a única exceção
-// aos overlays da cena: escreve-se enquanto se narra OLHANDO o tabuleiro, e um
-// painel por cima do mapa não serve a esse gesto. Abaixo de 1024 não há espaço
-// para duas, e elas viram gaveta como as outras consultas.
+// ELAS MORAM EM DOIS LUGARES: nas consultas do mestre (`gmNotes`) e na janela à
+// parte (`notesWindow`), e uma só escreve de cada vez.
 //
 // ── A ARMADILHA QUE GOVERNA ESTE ARQUIVO ────────────────────────────────────
 //

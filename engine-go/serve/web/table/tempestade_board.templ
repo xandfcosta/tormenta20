@@ -55,7 +55,7 @@ templ tempestadeBoard(v BoardView) {
 }
 
 // tempestadePlace é o nome do lugar, e as abas quando há mais de um aberto. É
-// o `<h2>` da região, pela razão do `sceneName`.
+// o `<h2>` da região: quem navega por cabeçalho precisa achar a cena onde ela está.
 templ tempestadePlace(v BoardView) {
 	if len(v.Tabs) == 0 {
 		<h2 class="ds-board-float ds-board-place">{ v.Place }</h2>
@@ -78,7 +78,8 @@ templ tempestadePlace(v BoardView) {
 }
 
 // tempestadeFraming é centralizar e o zoom, os gestos da JANELA de quem olha.
-// Os do zoom desabilitam no limite em vez de sumir, pela razão do `planFraming`.
+// Os do zoom desabilitam no limite em vez de sumir: um botão que some move os
+// vizinhos debaixo do dedo de quem está clicando repetido para aproximar.
 templ tempestadeFraming(v BoardView) {
 	<div class="ds-board-float ds-board-zoom" role="group" aria-label="Enquadrar o mapa">
 		<button type="button" class="ds-board-fbtn" aria-label={ CenterTarget(v) } title={ CenterTarget(v) } data-on:click={ centerTokens(v) }>

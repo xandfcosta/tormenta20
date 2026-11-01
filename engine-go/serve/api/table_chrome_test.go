@@ -223,7 +223,7 @@ func reachedByRelief(no *html.Node, isThePanel bool, reliefs []pointerRelief) bo
 // ponteiro escrito nele.
 //
 // O `__window` e o `__document` ficam de FORA, e a distinção não é sutileza: o
-// `clipboardStrip` carrega um `data-on:keydown__window` e o ouvinte dele mora na
+// `gmClipboard` carrega um `data-on:keydown__window` e o ouvinte dele mora na
 // janela — aquele `<div>` não precisa receber clique nenhum para o CTRL+V
 // funcionar, e cobrá-lo mataria justamente os vãos que a issue vem devolver.
 func needsThePointer(no *html.Node) bool {

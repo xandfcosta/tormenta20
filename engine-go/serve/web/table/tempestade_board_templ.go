@@ -191,7 +191,7 @@ func tempestadeBoard(v BoardView) templ.Component {
 }
 
 // tempestadePlace é o nome do lugar, e as abas quando há mais de um aberto. É
-// o `<h2>` da região, pela razão do `sceneName`.
+// o `<h2>` da região: quem navega por cabeçalho precisa achar a cena onde ela está.
 func tempestadePlace(v BoardView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -317,7 +317,8 @@ func tempestadePlace(v BoardView) templ.Component {
 }
 
 // tempestadeFraming é centralizar e o zoom, os gestos da JANELA de quem olha.
-// Os do zoom desabilitam no limite em vez de sumir, pela razão do `planFraming`.
+// Os do zoom desabilitam no limite em vez de sumir: um botão que some move os
+// vizinhos debaixo do dedo de quem está clicando repetido para aproximar.
 func tempestadeFraming(v BoardView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -346,7 +347,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(CenterTarget(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 84, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 85, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -359,7 +360,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(CenterTarget(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 84, Col: 100}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 85, Col: 100}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -372,7 +373,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(centerTokens(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 84, Col: 134}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 85, Col: 134}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -393,7 +394,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(ZoomAtLimit(-ZoomStep))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 88, Col: 117}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 89, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -406,7 +407,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomMidScene(step(-ZoomStep)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 88, Col: 165}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 89, Col: 165}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -427,7 +428,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(ZoomAtLimit(ZoomStep))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 91, Col: 118}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 92, Col: 118}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -440,7 +441,7 @@ func tempestadeFraming(v BoardView) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomMidScene(step(ZoomStep)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 91, Col: 165}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 92, Col: 165}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -501,7 +502,7 @@ func tempestadeNotice(v BoardView) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("O mestre trouxe a mesa para " + v.Pulled.Scene + ".")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 103, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 104, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -527,7 +528,7 @@ func tempestadeNotice(v BoardView) templ.Component {
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs("Voltar para " + v.Pulled.Back)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 106, Col: 37}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 107, Col: 37}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -584,7 +585,7 @@ func tempestadeTools(v BoardView) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(railKeyboard(v.GM))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 118, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 119, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -602,7 +603,7 @@ func tempestadeTools(v BoardView) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(tool.Hint + " (tecla " + tool.Shortcut + ")")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 123, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 124, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 			if templ_7745c5c3_Err != nil {
@@ -615,7 +616,7 @@ func tempestadeTools(v BoardView) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(shortcutName(tool))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 124, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 125, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 			if templ_7745c5c3_Err != nil {
@@ -628,7 +629,7 @@ func tempestadeTools(v BoardView) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(onIsTool(tool.ID) + " ? 'true' : 'false'")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 125, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 126, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 			if templ_7745c5c3_Err != nil {
@@ -641,7 +642,7 @@ func tempestadeTools(v BoardView) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickTool(tool.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 126, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 127, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 			if templ_7745c5c3_Err != nil {
@@ -662,7 +663,7 @@ func tempestadeTools(v BoardView) templ.Component {
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(tool.Short)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 129, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 130, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
@@ -675,7 +676,7 @@ func tempestadeTools(v BoardView) templ.Component {
 			var templ_7745c5c3_Var30 string
 			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(tool.Shortcut)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 130, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 131, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 			if templ_7745c5c3_Err != nil {
@@ -724,7 +725,7 @@ func tempestadeHelpers(v BoardView) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue("$ruler_text !== '' && $tool === '" + FerramentaDaRegua + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 139, Col: 122}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 140, Col: 122}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
@@ -745,7 +746,7 @@ func tempestadeHelpers(v BoardView) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveRuler)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 145, Col: 101}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 146, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -815,7 +816,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue("$tool === '" + FerramentaDoGabarito + "'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 162, Col: 96}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 163, Col: 96}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
@@ -836,7 +837,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(saveTemplate)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 166, Col: 107}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 167, Col: 107}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 		if templ_7745c5c3_Err != nil {
@@ -862,7 +863,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(shapeLabel(form) + ": o " + shapeMeasure(form) + " em quadrados (p225)")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 174, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 175, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 			if templ_7745c5c3_Err != nil {
@@ -875,7 +876,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$template === %q ? 'true' : 'false'", string(form)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 175, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 176, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 			if templ_7745c5c3_Err != nil {
@@ -888,7 +889,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickShape(form))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 176, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 177, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 			if templ_7745c5c3_Err != nil {
@@ -901,7 +902,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(shapeLabel(form))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 177, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 178, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
@@ -924,7 +925,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("$template === %q", string(form)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 182, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 183, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 			if templ_7745c5c3_Err != nil {
@@ -937,7 +938,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(shapeMeasure(form))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 182, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 183, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -955,7 +956,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue(templateBiggest())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 189, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 190, Col: 27}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 		if templ_7745c5c3_Err != nil {
@@ -968,7 +969,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(repatchTemplate(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 192, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 193, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 		if templ_7745c5c3_Err != nil {
@@ -981,7 +982,7 @@ func tempestadeTemplate(v BoardView) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(metersSize())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 195, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 196, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 		if templ_7745c5c3_Err != nil {
@@ -1040,7 +1041,7 @@ func tempestadeMove(v BoardView) templ.Component {
 		var templ_7745c5c3_Var47 string
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(v.Movement.Label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 214, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 215, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {
@@ -1058,7 +1059,7 @@ func tempestadeMove(v BoardView) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(v.Movement.Cost))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 216, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 217, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 			if templ_7745c5c3_Err != nil {
@@ -1076,7 +1077,7 @@ func tempestadeMove(v BoardView) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d", v.Movement.Cost, v.Movement.Budget))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 218, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 219, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
@@ -1090,7 +1091,7 @@ func tempestadeMove(v BoardView) templ.Component {
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(" · " + balance)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 220, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 221, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -1115,7 +1116,7 @@ func tempestadeMove(v BoardView) templ.Component {
 				var templ_7745c5c3_Var51 string
 				templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(strings.TrimPrefix(band.Class, "board-band-"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 227, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 228, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 				if templ_7745c5c3_Err != nil {
@@ -1128,7 +1129,7 @@ func tempestadeMove(v BoardView) templ.Component {
 				var templ_7745c5c3_Var52 string
 				templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(band.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 227, Col: 86}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 228, Col: 86}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 				if templ_7745c5c3_Err != nil {
@@ -1151,7 +1152,7 @@ func tempestadeMove(v BoardView) templ.Component {
 				var templ_7745c5c3_Var53 string
 				templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(band.Short)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 227, Col: 130}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_board.templ`, Line: 228, Col: 130}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 				if templ_7745c5c3_Err != nil {
