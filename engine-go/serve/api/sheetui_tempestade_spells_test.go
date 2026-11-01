@@ -161,3 +161,17 @@ func TestTheParallelLearnDialogIsOnlyForCasters(t *testing.T) {
 		t.Error("o guerreiro recebeu o diálogo Aprender")
 	}
 }
+
+// A folha da magia diz o que se testa para resistir, e a magia sem resistência não diz nada.
+func TestTheSpellSheetSaysWhatResists(t *testing.T) {
+	f, id := arcanista(t)
+	for _, learned := range []string{"bola-de-fogo", "armadura-arcana"} {
+		if got := spell(t, f, id, "aprende/"+learned); got != http.StatusOK {
+			t.Fatalf("aprender %s: status %d", learned, got)
+		}
+	}
+	page := parallelSheet(t, f, id, "spells")
+	if strings.Count(page, "Resistência: ") != 1 || !strings.Contains(page, "Resistência: Reflexos reduz à metade") {
+		t.Errorf("a folha devia dizer a resistência só da Bola de Fogo: %d ocorrências", strings.Count(page, "Resistência: "))
+	}
+}

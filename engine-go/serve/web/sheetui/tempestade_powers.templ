@@ -135,6 +135,9 @@ templ powerGesture(v View, row powerRow) {
 templ powerSheet(v View, row powerRow, id string) {
 	@ds.Dialog(id, row.Name, powerSheetFoot(v, row)) {
 		<p class="ds-row-meta">{ powerSheetMeta(row) }</p>
+		if row.Requires != "" {
+			<p class="ds-row-meta">{ "Pré-requisito: " + row.Requires }</p>
+		}
 		<p class="ds-card-text">{ row.Detail }</p>
 		if row.InEffect != "" {
 			<p class="ds-help">{ "Em curso: " + row.InEffect }</p>

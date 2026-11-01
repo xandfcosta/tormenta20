@@ -342,6 +342,7 @@ var classPowersPart02 = []ClassPower{
 		Name:           "Magias (1° círculo)",
 		Description:    "Pode lançar magias arcanas de 3 escolas escolhidas. Atributo-chave: Carisma. Soma Carisma no PM total. Pode lançar com armaduras leves sem teste de Misticismo.",
 		GrantedAtLevel: 1,
+		BookPage:       44,
 		UID:            "pwr_ut3t43qdg4",
 		Modifiers: []Modifier{
 			{
@@ -368,6 +369,7 @@ var classPowersPart02 = []ClassPower{
 		ID:             "class.bardo.magias-2-circulo",
 		ClassName:      "Bardo",
 		GrantedAtLevel: 6,
+		BookPage:       44,
 		UID:            "pwr_izytohq7cz",
 		PowerUID:       "pwr_3mprtzixls",
 	},
@@ -375,6 +377,7 @@ var classPowersPart02 = []ClassPower{
 		ID:             "class.bardo.magias-3-circulo",
 		ClassName:      "Bardo",
 		GrantedAtLevel: 10,
+		BookPage:       44,
 		UID:            "pwr_m4noumr2qv",
 		PowerUID:       "pwr_v22gvkya4o",
 	},
@@ -382,6 +385,7 @@ var classPowersPart02 = []ClassPower{
 		ID:             "class.bardo.magias-4-circulo",
 		ClassName:      "Bardo",
 		GrantedAtLevel: 14,
+		BookPage:       44,
 		UID:            "pwr_z4kcokw2ac",
 		PowerUID:       "pwr_cq2yqbaoiy",
 	},

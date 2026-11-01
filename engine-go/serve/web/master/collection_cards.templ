@@ -185,6 +185,9 @@ templ spellBadges(m book.Spell) {
 
 templ powerCard(p book.Power, bookRef bookui.BookAddress) {
 	@catalogCard(p.Name, p.BookPage, bookRef, plainBadges(p.Source)) {
+		if p.Requires != "" {
+			<p class="ds-row-meta">{ "Pré-requisito: " + p.Requires }</p>
+		}
 		@describedText(p.Description, bookRef)
 	}
 }
