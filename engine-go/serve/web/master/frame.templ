@@ -70,31 +70,17 @@ templ masterFrame(current, title string, scene templ.Component) {
 // masterMenu é o menu do desktop. O contrato com o driver de teclado é o mesmo do
 // trilho antigo, e o nome `rail` é RESERVADO: o Esc sobe procurando literalmente
 // `[data-nav-region="rail"]`, e com outro nome ele sai direto da página.
-//
-// São LINKS e não botões: trocar de ferramenta é navegar, e o botão perde o
-// clique do meio, o "abrir em nova aba" e o endereço que se cola no chat.
 templ masterMenu(current string) {
-	<nav class="ds-master-menu" aria-label="Ferramentas do mestre" data-nav-region="rail" data-nav-layout="column">
+	@ds.SideMenu("Ferramentas do mestre", templ.Attributes{"data-nav-region": "rail", "data-nav-layout": "column"}) {
 		for _, section := range masterRail {
-			// `<p>` e não título: a `<nav>` já tem nome, e as duas seções são
-			// separadores visuais dentro dela.
-			<p class="ds-list-head">{ section.Label }</p>
+			@ds.SideMenuHead(section.Label)
 			for _, stop := range section.Stops {
-				<a
-					href={ templ.SafeURL("/mestre/" + stop.Slug) }
-					class="ds-master-link"
-					title={ stop.Hint }
-					data-on:keydown={ ui.KeyboardSwapMark }
-					if stop.Slug == current {
-						aria-current="page"
-					}
-				>
-					@ui.Icon(stop.Icon, "ds-icon")
-					<span>{ stop.Label }</span>
-				</a>
+				@ds.SideMenuLink(templ.SafeURL("/mestre/"+stop.Slug), stop.Icon, stop.Hint, stop.Slug == current, templ.Attributes{"data-on:keydown": ui.KeyboardSwapMark}) {
+					{ stop.Label }
+				}
 			}
 		}
-	</nav>
+	}
 }
 
 // isCatalog diz se a tela é um dos catálogos, e não uma das ferramentas: é o que

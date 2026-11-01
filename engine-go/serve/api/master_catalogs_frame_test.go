@@ -28,7 +28,7 @@ func TestEveryCatalogWearsTheMasterFrame(t *testing.T) {
 			if !strings.Contains(body, `<h1 class="ds-header-title">`+title+`</h1>`) {
 				t.Errorf("o cabeçalho não diz %q", title)
 			}
-			menu := sliceBetween(t, body, `class="ds-master-menu"`, "</nav>")
+			menu := sliceBetween(t, body, `class="ds-side-menu"`, "</nav>")
 			current := sliceBetween(t, menu, `href="/mestre/`+slug+`"`, ">")
 			if !strings.Contains(current, `aria-current="page"`) {
 				t.Errorf("o menu não marca %s como a tela atual: %s", slug, current)

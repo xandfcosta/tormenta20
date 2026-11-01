@@ -185,6 +185,21 @@ templ modePanel(mode, title string) {
 				@ds.Empty("Nenhuma magia preparada", "Escolha magias na aba Magias.")
 			</div>
 		}
+		@specimenBlock("Menu lateral") {
+			@ds.SideMenu("Menu lateral de exemplo", nil) {
+				@ds.SideMenuHead("Na mesa")
+				@ds.SideMenuLink("#", "Swords", "ND do combate e XP do grupo", false, nil) {
+					Encontros
+				}
+				@ds.SideMenuHead("Catálogos")
+				@ds.SideMenuLink("#", "Skull", "Criaturas por ND, tipo e tamanho", true, nil) {
+					Bestiário
+				}
+				@ds.SideMenuLink("#", "Wand2", "As magias do livro", false, nil) {
+					Magias
+				}
+			}
+		}
 		@specimenBlock("Barra de baixo") {
 			@ds.BottomNav("Abas da ficha, no celular") {
 				@ds.BottomNavItem("#", "", true, nil) {

@@ -3746,7 +3746,7 @@
     display: grid;
     min-height: 0;
   }
-  .ds-master-menu {
+  .ds-side-menu {
     display: none;
   }
   .ds-master-main {
@@ -3754,7 +3754,7 @@
     padding: 0.75rem 1rem;
     overflow: auto;
   }
-  .ds-master-link {
+  .ds-side-menu-link {
     display: flex;
     align-items: center;
     gap: 0.625rem;
@@ -3765,22 +3765,22 @@
     font-size: var(--ds-t-sm);
     text-decoration: none;
   }
-  .ds-master-link:hover {
+  .ds-side-menu-link:hover {
     background: var(--ds-sunk);
     color: var(--ds-ink);
   }
-  .ds-master-link[aria-current] {
+  .ds-side-menu-link[aria-current] {
     background: color-mix(in oklab, var(--ds-action) 14%, transparent);
     color: var(--ds-ink);
     font-weight: 600;
   }
-  .ds-master-link > .ds-icon,
+  .ds-side-menu-link > .ds-icon,
   .ds-master-catalog > .ds-icon {
     flex: none;
     width: 1.125rem;
     height: 1.125rem;
   }
-  .ds-master-link[aria-current] > .ds-icon {
+  .ds-side-menu-link[aria-current] > .ds-icon {
     color: var(--ds-action);
   }
   /* A FOLHA DOS CATÁLOGOS, no celular: uma linha por catálogo. */
@@ -3836,7 +3836,7 @@
     .ds-master-body {
       grid-template-columns: 15rem minmax(0, 1fr);
     }
-    .ds-master-menu {
+    .ds-side-menu {
       display: grid;
       align-content: start;
       gap: 2px;
@@ -3844,15 +3844,23 @@
       border-right: 1px solid var(--ds-line);
       overflow: auto;
     }
-    .ds-master-menu > .ds-list-head {
+    .ds-side-menu > .ds-list-head {
       padding: 0 0.625rem;
     }
-    .ds-master-menu > .ds-list-head ~ .ds-list-head {
+    .ds-side-menu > .ds-list-head ~ .ds-list-head {
       margin-top: 0.75rem;
     }
     .ds-master-main {
       padding: 1rem 1.25rem;
     }
+  }
+  /* Na folha viva o menu aparece em toda largura: ela mostra a peça, e num quadro
+   * dela a borda e o recuo de quem encosta na lateral da tela não têm sentido. */
+  .ds-preview .ds-side-menu {
+    display: grid;
+    gap: 2px;
+    padding: 0;
+    border-right: 0;
   }
   /* AS DUAS COLUNAS do catálogo são CONSULTA DE CONTÊINER, e não de mídia: a
    * pergunta é "cabe o verbete ao lado da lista?", que é sobre o espaço da área
