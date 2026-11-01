@@ -101,74 +101,6 @@ templ Button(v Variant, t Size, extra string, attrs templ.Attributes) {
 	</button>
 }
 
-// Field é um input rotulado com as mensagens de validação embaixo — a forma que
-// TODO campo de formulário deste app tem.
-//
-// O `Nome` é o `id` E o `name`, porque é ele que liga o `<label for>` ao
-// controle; um rótulo sem controle é o defeito que essa amarração previne.
-type Field struct {
-	Name  string
-	Label string
-	Kind  string
-	// Value volta preenchido quando o servidor rejeita, para o jogador não
-	// redigitar o que estava certo. Campo de SENHA nunca volta: o navegador não
-	// deve receber de volta o que ele mandou, e redigitar é o comportamento
-	// esperado depois de uma recusa.
-	Value        string
-	Autocomplete string
-	Hint         string
-	// Errors vem do `FieldErrorMap` do servidor: a porta não tem validação
-	// própria.
-	Errors []string
-	// Viram validação NATIVA do navegador, que não substitui o servidor: ele
-	// continua sendo a autoridade. O que se ganha é a mensagem localizada e
-	// acessível de graça, antes da ida à rede.
-	Required   bool
-	MinSize int
-	MaxSize int
-}
-
-templ TextField(c Field) {
-	<div class="space-y-2">
-		<label for={ c.Name } class="flex items-center gap-2 text-sm leading-none font-medium select-none">
-			{ c.Label }
-		</label>
-		<input
-			id={ c.Name }
-			name={ c.Name }
-			type={ InputType(c.Kind) }
-			value={ c.Value }
-			if c.Autocomplete != "" {
-				autocomplete={ c.Autocomplete }
-			}
-			if c.Required {
-				required
-			}
-			if c.MinSize > 0 {
-				minlength={ Int(c.MinSize) }
-			}
-			if c.MaxSize > 0 {
-				maxlength={ Int(c.MaxSize) }
-			}
-			if len(c.Errors) > 0 {
-				aria-invalid="true"
-				aria-describedby={ c.Name + "-erro" }
-			}
-			class="h-9 w-full min-w-0 rounded-sm border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm aria-invalid:border-destructive aria-invalid:ring-destructive/20"
-		/>
-		if len(c.Errors) == 0 && c.Hint != "" {
-			<p class="text-xs text-muted-foreground">{ c.Hint }</p>
-		}
-		if len(c.Errors) > 0 {
-			<div id={ c.Name + "-erro" }>
-				for _, e := range c.Errors {
-					<p class="text-sm text-destructive-ink">{ e }</p>
-				}
-			</div>
-		}
-	</div>
-}
-
 // SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
 // entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
 templ SceneTitle(title, kicker string) {
@@ -185,26 +117,11 @@ templ SceneTitle(title, kicker string) {
 	</div>
 }
 
-// SectionLabel é o cabeçalho de um bloco. NÃO é Cinzel: ela é serifada de
-// display e abaixo de 14px vira desenho antes de virar texto, e esta receita é
-// de 10px.
+// SectionLabelClasses é o cabeçalho de um bloco. NÃO é Cinzel: ela é serifada de
+// display e abaixo de 14px vira desenho antes de virar texto, e esta receita é de 10px.
 //
-// `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem
-// duas, e uma terceira nasceria como cor solta.
-//
-// CUIDADO: ele envolve o conteúdo num `<p>`, que só aceita conteúdo de FRASE.
-// Passar um `<h4>` aqui é HTML inválido, e o navegador não reclama — ele
-// EXPULSA o cabeçalho do parágrafo e deixa um `<p>` vazio para trás, com a
-// classe presa no parágrafo abandonado e o cabeçalho sem estilo nenhum. Para
-// pôr a receita num cabeçalho, use `ui.SectionLabelClasses` direto no elemento.
-templ SectionLabel(tom string, extra string) {
-	<p class={ SectionLabelClasses(tom, extra) }>
-		{ children... }
-	</p>
-}
-
-// SectionLabelClasses é a mesma receita para quem precisa dela no PRÓPRIO elemento —
-// um `<h4>`, um `<caption>`, um `<summary>`. Mesma forma do `ui.ButtonClasses`.
+// `tom` é "muted" ou "gold". Não há terceira opção de propósito: a casa tem duas, e uma
+// terceira nasceria como cor solta. Mesma forma do `ui.ButtonClasses`.
 func SectionLabelClasses(tom, extra string) string {
 	return Join("text-2xs font-semibold uppercase tracking-[0.16em] "+SectionLabelTone(tom), extra)
 }

@@ -26,8 +26,7 @@ import (
 // correção do navegador: se a árvore que ele monta não é a que o template
 // descreve, o navegador também vai discordar.
 //
-// Ele é mais largo que o guarda de grep do `@ui.SectionLabel`: aquele conhece um
-// componente, este mede o RESULTADO de qualquer cena.
+// Ele mede o RESULTADO de qualquer cena, e não um componente.
 
 // sceneAddresses são as cenas que este guarda visita.
 //
@@ -75,8 +74,8 @@ func sceneAddresses(t *testing.T) map[string]string {
 // vazio não existe em nenhuma cena da casa; se um dia existir, ele terá de
 // ganhar uma exceção nomeada aqui, e essa conversa é melhor que o silêncio.
 //
-// Provado VERMELHO pondo o `<h4>` de volta dentro do `@ui.SectionLabel`: acusa o
-// bestiário com 24 parágrafos vazios.
+// Provado VERMELHO pondo um `<h4>` dentro de um `<p>`: acusou o bestiário com 24
+// parágrafos vazios.
 func TestTheBrowserDoesNotHaveToFixTheMarkup(t *testing.T) {
 	scenes := sceneAddresses(t)
 	if len(scenes) == 0 {

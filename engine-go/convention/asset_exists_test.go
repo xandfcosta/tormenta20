@@ -71,9 +71,7 @@ func TestEveryAssetAskedForExists(t *testing.T) {
 	}
 
 	// O DENOMINADOR, porque "nenhum pedido quebrado" e "nenhum pedido achado"
-	// são a mesma cor no terminal. São seis hoje — a folha, o Datastar, o
-	// `scene.js`, o `reader.js`, o `table.js`, o `tokens-solid.js`, o
-	// `grimorio.js` e o `pdf.worker.js` —, e o piso é folgado de propósito.
+	// são a mesma cor no terminal. O piso é folgado de propósito.
 	if filesRead < 300 || len(asked) < 5 {
 		t.Fatalf("a varredura leu %d arquivos e achou %d estáticos pedidos — a raiz é o primeiro suspeito",
 			filesRead, len(asked))

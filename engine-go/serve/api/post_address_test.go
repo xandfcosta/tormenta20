@@ -337,7 +337,6 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 		{"forja", "/personagens/nova", f.gm},
 		{"campanhas", "/campanhas", f.gm},
 		{"campanha nova", "/campanhas/nova", f.gm},
-		{"grimorio", "/grimorio", f.gm},
 		{"buscador", "/buscador?q=fogo", f.gm},
 		{"bestiario", "/mestre/bestiario", f.gm},
 		{"catalogo", "/mestre/condicoes", f.gm},

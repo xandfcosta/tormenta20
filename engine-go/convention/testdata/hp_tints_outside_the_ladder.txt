@@ -19,9 +19,8 @@
 # arquivo e não a linha de propósito: número de linha envelhece a cada edição, e
 # uma lista que envelhece sozinha é a que alguém apaga.
 
-# A ESCADA em pessoa, mais a folha que a demonstra.
+# A ESCADA em pessoa.
 engine-go/serve/web/ui/vitals.go
-engine-go/serve/web/grimoire/scene.templ
 
 # PRESENÇA e confirmação, em verde: nada disso é vida.
 engine-go/serve/web/ui/invite.templ

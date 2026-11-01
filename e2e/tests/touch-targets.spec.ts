@@ -13,11 +13,6 @@ import { touchTargets } from './support/touch-targets'
  * quando a pergunta é "quantos reprovam", e infla o resultado em ordens de
  * grandeza. A norma tem duas exceções — espaçamento e equivalente —, e quem as
  * mede é o `support/touch-targets.ts`.
- *
- * Quem impede a receita de crachá de ser reescrita à mão é o
- * `TestNoHandwrittenBadgeRecipe`, em Go, que é mais barato. **Este guarda
- * responde a outra pergunta**: que o piso de fato DESENHA. Um `min-h-6` que não
- * chegasse à folha compilada passaria naquele e reprovaria neste.
  */
 test.use({ storageState: '.auth/user.json' })
 

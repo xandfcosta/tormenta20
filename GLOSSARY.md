@@ -503,7 +503,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **perna** (do caminho) | `leg` | `TestEachLegGetsItsOwnLabel` |
 | **laço** | `lasso` | `TestTheLassoCatchesTheTokenByItsBody` |
 | **porta** (a cena de entrar) | `door` | `TestTheDoorRefusesAWrongPasswordWithoutOpeningASession` |
-| **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating`, e a receita `ui.BadgeClasses`. **A grafia é `badge` e não `chip`**: a folha de especificação do grimório chamava o bloco de "Chip" enquanto o servidor já escrevia `badgeOn`/`toggleBadge` para a mesma pílula — dois nomes para um conceito, que é o que esta coluna existe para impedir |
+| **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating`, e o `ds.Badge`. **A grafia é `badge` e não `chip`**: a folha de especificação do grimório chamava o bloco de "Chip" enquanto o servidor já escrevia `badgeOn`/`toggleBadge` para a mesma pílula — dois nomes para um conceito, que é o que esta coluna existe para impedir |
 | **gaveta** | `drawer` | e2e `a recuperação sai da fileira quando o palco é baixo` (a do palco), `CreatureFilters` (a dos filtros do Bestiário) |
 | **área** (de transferência) | `clipboard` | e2e `colar põe outro igual no centro da vista` |
 | **monograma** | `monogram`, `.monograma` | `TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal` |
@@ -549,8 +549,8 @@ resolvidas por palpite:**
 
 A UI está sendo refeita do zero, e as telas migram uma a uma. Até a última, o
 app veste DOIS sistemas de desenho, e é a CENA quem diz qual. Os termos abaixo
-são os que a migração precisou nomear. O que ainda é do grimório (a seção D-bis,
-o **crachá** de `ui.BadgeClasses`) continua valendo nas telas que não migraram.
+são os que a migração precisou nomear. O que ainda é do grimório (a seção D-bis)
+continua valendo nas telas que não migraram.
 
 | Canônico | Identificador | Proibidos | O que é |
 |---|---|---|---|
@@ -558,7 +558,7 @@ o **crachá** de `ui.BadgeClasses`) continua valendo nas telas que não migraram
 | **Tempestade** | `SystemTempestade`, `.scene-ds`, `--ds-*` | ~~ds novo~~, ~~v2~~ | O sistema novo: uma face só (Atkinson Hyperlegible Next), seis tamanhos de texto com piso de 12px, alvo de 44px no toque e a paleta neutra-violeta com a ação em roxo. O nome é o da paleta escolhida, e é o que distingue as duas metades da migração sem dizer qual é a "nova" — que deixa de ser nova no dia seguinte. |
 | **modo de cor** | `ui.ColorMode`, cookie `color_mode`, `<html data-mode>`, `POST /modo` | ~~tema~~, ~~dark mode~~ | Claro, escuro ou o do sistema operacional, escolhido pela PESSOA e válido em toda cena Tempestade. Quem não escolheu não tem modo, e o CSS segue o `prefers-color-scheme`. É cookie e não `localStorage` porque o servidor entrega o `<html>` já no modo certo, sem o quadro no modo errado. |
 | **kit** | `serve/web/ds` | ~~componentes~~ sozinho | As peças com que toda tela Tempestade se monta. A tela não escolhe cor: a peça escreve a classe e a variante. Peça nova entra no kit e na **folha viva** antes de entrar numa tela. |
-| **folha viva** | `serve/web/specimen`, `/sistema` | ~~storybook~~, ~~catálogo~~ (é do mestre) | A tela que desenha cada peça do kit, dividida em seções, no modo que o seletor escolhe, para o olho conferir e o guarda de aparência medir. Ela substitui a folha de especificação do grimório (`/grimorio`) quando o grimório for apagado. |
+| **folha viva** | `serve/web/specimen`, `/sistema` | ~~storybook~~, ~~catálogo~~ (é do mestre) | A tela que desenha cada peça do kit, dividida em seções, no modo que o seletor escolhe, para o olho conferir e o guarda de aparência medir. |
 | **selo** | `ds.Seal`, `SealTone` | ~~tag~~, ~~chip~~ | Um veredito curto com a cor do que ele sugere, como a dificuldade de um encontro. O **crachá** é dado neutro; o selo é julgamento, e por isso tem tom. O texto é o que se lê, e a cor é reforço. |
 | **menu lateral** | `ds.SideMenu` | ~~sidebar~~, ~~trilho~~ (é o do grimório) | As telas de uma área, em seções, à esquerda no desktop: as treze da Mesa do Mestre. Abaixo do desktop ele some, e quem leva às telas é a barra de baixo. |
 | **crachá removível** | `ds.RemovableBadge` | ~~chip~~, ~~ficha~~ | O crachá do que está ATIVO e pode sair — uma condição na ficha —, com o botão de tirar dentro. ~~ficha~~ está proibido pelo motivo óbvio: a ficha é a do personagem. O crachá que só informa é o `ds.Badge`, mesma palavra da linha da seção G. |

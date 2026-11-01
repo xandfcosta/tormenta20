@@ -1299,7 +1299,7 @@ do [GLOSSARY](../GLOSSARY.md).
   Tempestade. Migrada a última, a antiga é APAGADA, com os testes portados
   antes.
 - **O fim da migração é apagar**, não converter: `.scene-grimorio`, tokens
-  `grimorio-*`, Cinzel, Liberation, JetBrains Mono e `/grimorio` saem juntos.
+  `grimorio-*`, Cinzel, Liberation e JetBrains Mono saem juntos.
 
 ## O anel de foco é UMA receita, e o repouso dela existe para não animar
 

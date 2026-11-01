@@ -28,7 +28,7 @@ func TestTheOldPilotPrefixIsGone(t *testing.T) {
 	router := s.WebRouter()
 
 	scenes := []string{
-		"/", "/campanhas", "/personagens", "/grimorio", "/admin",
+		"/", "/campanhas", "/personagens", "/admin",
 		"/mestre/bestiario", "/entrar", "/criar-conta", "/campanhas/1/sessoes/4",
 	}
 	for _, scene := range scenes {

@@ -26,20 +26,16 @@ export default defineConfig({
     emptyOutDir: false,
     target: 'es2022',
     lib: {
-      // QUATRO entradas e não quatro configs. Cada uma existe porque carrega
-      // peso que as outras cenas não devem pagar — o `grimorio` põe canvas e
-      // medição de contraste, o `reader` põe 448 KB de pdf.js, e a `table`
+      // Entradas e não configs separadas. Cada uma existe porque carrega peso que as
+      // outras cenas não devem pagar: o `reader` põe 448 KB de pdf.js, e a `table`
       // instala observador de mutação sobre o tabuleiro.
       entry: {
         scene: resolve(import.meta.dirname, 'serve/web/assets/src/scene.ts'),
-        grimorio: resolve(import.meta.dirname, 'serve/web/assets/src/grimorio.ts'),
-        // O leitor do livro (ALE-264) é a terceira entrada com o mesmo motivo
-        // das duas anteriores: ele carrega o pdf.js, que são 448 KB, e só a
+        // O leitor do livro (ALE-264): ele carrega o pdf.js, que são 448 KB, e só a
         // cena `/livro/ler` o pede. Pô-lo no `scene.js` seria mandar um
         // visualizador de PDF para quem abriu a ficha de um personagem.
         reader: resolve(import.meta.dirname, 'serve/web/assets/src/reader.ts'),
-        // A MESA (ALE-174) é a quarta entrada com o mesmo motivo das outras:
-        // ela instala um observador de mutação sobre o tabuleiro, e pô-la no
+        // A MESA (ALE-174): ela instala um observador de mutação sobre o tabuleiro, e pô-la no
         // `scene.js` seria pendurar isso na ficha, na porta e no grimório —
         // páginas que não têm peça nenhuma para animar.
         table: resolve(import.meta.dirname, 'serve/web/assets/src/table.ts'),
