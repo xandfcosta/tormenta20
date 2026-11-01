@@ -40,7 +40,7 @@ func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 // há como haver, porque a tabela `characters` não guarda esse estado.
 //
 // O caminho do abuso são DOIS CLIQUES que não mudam nada na ficha: o `−` num
-// atributo é sempre aceito dentro da faixa (gasta MENOS pontos), o `+` devolve
+// atributo é sempre aceito, o `+` devolve
 // o ponto, o espalhamento volta ao que era — e os dois passos enchiam os poços.
 // Uma Lenda de nível 20 com 3 de 180 PV no meio de um combate saía com 180.
 //

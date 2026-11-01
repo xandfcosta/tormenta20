@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
@@ -303,35 +304,41 @@ func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
 	}
 }
 
-// p17, Tabela 1-1.
-func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
+// A escolha é LIVRE (p17): quem rolou na mesa põe o que saiu, e a Tabela 1-1 dá
+// mais de um negativo e dá −2. A compra de pontos só informa.
+func TestTheForgeAttributesAreAFreeChoice(t *testing.T) {
 	f := newSceneFixture(t)
 	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
 	id := oIDDoDestino(t, rec.Header().Get("Location"))
 	attributes := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 
-	// Quatro em Força custa 7 e cabe.
-	for i := 0; i < 4; i++ {
-		if code := postaAForja(t, f, f.player, attributes+"/strength/1", nil).Code; code != http.StatusOK {
-			t.Fatalf("subir Força %d: status %d", i+1, code)
+	steps := []string{
+		"/strength/1", "/strength/1", "/strength/1", "/strength/1", "/strength/1",
+		"/dexterity/1", "/dexterity/1", "/dexterity/1", "/dexterity/1",
+		"/wisdom/-1", "/charisma/-1", "/charisma/-1",
+	}
+	for _, step := range steps {
+		answer := postaAForja(t, f, f.player, attributes+step, nil)
+		if answer.Code != http.StatusOK {
+			t.Fatalf("%s: status %d", step, answer.Code)
 		}
-	}
-	// O quinto passa do máximo de +4, e a recusa é CONTEÚDO em 200.
-	refused := postaAForja(t, f, f.player, attributes+"/strength/1", nil)
-	if refused.Code != http.StatusOK {
-		t.Fatalf("a recusa veio em %d — o Datastar descarta remendo que não é 2xx", refused.Code)
-	}
-	if sentence := sceneRefusal(refused.Body.String()); !strings.Contains(sentence, "compra de pontos") {
-		t.Errorf("a cena não disse por que recusou: %q", sentence)
+		if sentence := sceneRefusal(answer.Body.String()); sentence != "" {
+			t.Fatalf("%s foi recusado: %q", step, sentence)
+		}
 	}
 
 	row, err := f.s.queries.GetCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("herói: %v", err)
 	}
-	if row.Strength != 4 {
-		t.Errorf("Força ficou em %d — a recusa gravou mesmo assim", row.Strength)
+	if row.Strength != 5 || row.Dexterity != 4 || row.Wisdom != -1 || row.Charisma != -2 {
+		t.Errorf("For %d, Des %d, Sab %d, Car %d: esperava 5, 4, -1 e -2",
+			row.Strength, row.Dexterity, row.Wisdom, row.Charisma)
 	}
+	if body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String(); !strings.Contains(body, "Fora da tabela de pontos") {
+		t.Error("com Força 5 a cena não disse que saiu da tabela de pontos")
+	}
+
 	// E a Constituição mexe no PV: subir um ponto sobe o poço, e ele fica cheio.
 	if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
 		t.Fatalf("subir Constituição: status %d", code)
@@ -339,6 +346,37 @@ func TestTheForgePointBuyRefusesWhatTheBookForbids(t *testing.T) {
 	// Con base +1 com a Constituição −1 do elfo dá Con 0: o poço volta a 20.
 	if pool := poolsOf(t, f.s, id); pool.HpMax != 20 || pool.HpCurrent != 20 {
 		t.Errorf("PV %d/%d, esperado 20/20 com Con base +1 num elfo", pool.HpCurrent, pool.HpMax)
+	}
+}
+
+// O contador informa o que passou dos 10 pontos (p17), sem recusar.
+func TestTheForgePointCountSaysHowFarPastTheBudget(t *testing.T) {
+	f := newSceneFixture(t)
+	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
+	id := oIDDoDestino(t, rec.Header().Get("Location"))
+	attributes := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
+
+	for _, step := range []string{"/strength/1", "/strength/1", "/strength/1", "/strength/1", "/dexterity/1", "/dexterity/1", "/dexterity/1", "/dexterity/1"} {
+		postaAForja(t, f, f.player, attributes+step, nil)
+	}
+	// 7 + 7 = 14 pontos.
+	if body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String(); !strings.Contains(body, "4 pontos além dos 10") {
+		t.Error("com 14 pontos gastos a cena não disse quanto passou dos 10")
+	}
+}
+
+// Cada linha mostra de onde vem o total: o elfo dá Inteligência +2 (p22).
+func TestTheForgeRowShowsTheSumWithTheRace(t *testing.T) {
+	f := newSceneFixture(t)
+	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
+	id := oIDDoDestino(t, rec.Header().Get("Location"))
+	attributes := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
+
+	postaAForja(t, f, f.player, attributes+"/intelligence/1", nil)
+	body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String()
+	if !strings.Contains(body, "+1 escolhido +2 Raça: Elfo") {
+		t.Errorf("a linha de Inteligência não mostrou a soma; somas na cena: %q",
+			regexp.MustCompile(`ds-forge-sum[^<]*<?[^<]*`).FindAllString(body, -1))
 	}
 }
 
