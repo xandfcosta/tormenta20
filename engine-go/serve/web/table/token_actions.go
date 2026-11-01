@@ -467,8 +467,11 @@ func chosenToken(id string) string {
 // `preventDefault` porque o menu do navegador cobriria o nosso; e o gesto NUNCA
 // é o único caminho — a peça continua tendo o clique esquerdo para mover, o
 // teclado para focar e o `Enter` para abrir o mesmo menu.
+//
+// Zera o `$dragging` porque o `pointerdown` já começou o arrasto: no toque longo o
+// `pointerup` pode nunca vir, e a peça ficaria presa ao próximo movimento do dedo.
 func openMenuToken(id string) string {
-	return fmt.Sprintf("evt.preventDefault(); $token_chosen = %q", id)
+	return fmt.Sprintf("evt.preventDefault(); $dragging = ''; $token_chosen = %q", id)
 }
 
 // closeMenuToken é a saída, e ela existe em DOIS lugares: o ✕ do menu e o gesto

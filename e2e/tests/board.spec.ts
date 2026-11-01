@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
-import { openTheBoard, disposableTable, pickBrush, putATokenOnTheMap, showTheBoard } from './support/table'
+import { openTheBoard, disposableTable, pickBrush, putACombatantInTheTracker, putATokenOnTheMap, showTheBoard } from './support/table'
 
 /**
  * O TABULEIRO da Mesa em Datastar.
@@ -495,6 +495,92 @@ test('a seta e a distância aparecem durante o arrasto da peça', async ({ page 
  * quem decide isso é uma consulta de CONTÊINER (ALE-522) — o mapa e não a
  * janela.
  */
+/**
+ * COM A INICIATIVA RODANDO, o mestre arrasta qualquer peça, e só a da vez propõe parada.
+ *
+ * E2E porque são dois mecanismos de navegador: o gesto de ponteiro, e o REMENDO trocando
+ * os ouvintes da peça quando a vez passa, sem recarregar. Uma asserção sobre o HTML
+ * servido não diz se o ouvinte novo é o que responde.
+ */
+test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const { mesa, apagar } = await disposableTable(page)
+  try {
+    await openTheBoard(page, mesa)
+    const names = ['Ogro', 'Anao', 'Elfo']
+    for (const name of names) await putACombatantInTheTracker(page, name, 30)
+    await page.getByRole('button', { name: 'Pôr no mapa', exact: true }).first().click()
+    const dialog = page.locator('#populate')
+    for (const name of names) await dialog.getByRole('button', { name: new RegExp(name) }).click()
+    await dialog.getByRole('button', { name: 'Pôr no mapa', exact: true }).click()
+    await expect(page.locator('.board-token')).toHaveCount(3)
+
+    const command = (path: string) =>
+      page.request.post(mesa + path, { headers: { 'datastar-request': 'true' }, data: {} })
+    expect((await command('/cena/iniciar/acao')).ok()).toBeTruthy()
+    expect((await command('/iniciativa/proxima-vez')).ok()).toBeTruthy()
+    await page.goto(mesa, { waitUntil: 'domcontentloaded' })
+    await page.locator('.board-scene').waitFor()
+
+    const onTurn = page.locator('.board-token-on-turn')
+    await expect(onTurn, 'ninguém está na vez: o caso não mediria a diferença').toHaveCount(1)
+    const other = page.locator('.board-token:not(.board-token-on-turn)').first()
+
+    const dragBy = async (token: typeof onTurn, dx: number) => {
+      const box = await token.boundingBox()
+      if (!box) throw new Error('a peça não tem caixa')
+      const posts: string[] = []
+      const listen = (r: import('@playwright/test').Request) => {
+        if (r.method() === 'POST') posts.push(r.url())
+      }
+      page.on('request', listen)
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.down()
+      await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2, { steps: 8 })
+      await expect(page.locator('#table'), 'a peça não seguiu o dedo').not.toHaveAttribute('style', /--arrasto-x:0px/)
+      await page.mouse.up()
+      await page.waitForTimeout(400)
+      page.off('request', listen)
+      return posts.join(' ')
+    }
+
+    // A OUTRA: move na hora, sem proposta para confirmar.
+    const otherName = await other.getAttribute('aria-label')
+    expect(await dragBy(other, 170), 'a peça fora da vez não moveu direto').toContain('/grupo/mover')
+    await expect(page.getByRole('button', { name: otherName ?? '', exact: true })).toHaveCount(0)
+    await expect(page.locator('.board-token-ghost'), 'a peça fora da vez abriu proposta').toHaveCount(0)
+
+    // A DA VEZ: propõe a parada, e o movimento só existe depois de confirmar.
+    const firstTurn = await onTurn.getAttribute('aria-label')
+    expect(await dragBy(onTurn, 120), 'a peça da vez não propôs parada').toContain('/parada')
+    await page.getByRole('button', { name: /cancelar/i }).first().click()
+    await expect(page.locator('.board-token-ghost')).toHaveCount(0)
+
+    // MARCADA VENCE, inclusive na da vez: o arrasto leva o grupo, e não propõe parada.
+    const box = await onTurn.boundingBox()
+    if (!box) throw new Error('a peça da vez não tem caixa')
+    await page.mouse.move(box.x - 40, box.y + 130)
+    await page.mouse.down()
+    await page.mouse.move(box.x + 420, box.y - 60, { steps: 8 })
+    await page.mouse.up()
+    await expect(onTurn, 'o laço não marcou a peça da vez').toHaveClass(/board-token-marked/)
+    const markedDrag = await dragBy(onTurn, 90)
+    expect(markedDrag, 'a peça da vez marcada não levou o grupo').toContain('/grupo/mover')
+    expect(markedDrag, 'a peça da vez marcada propôs parada').not.toContain('/parada')
+    await page.getByRole('button', { name: /desmarcar/i }).first().click()
+    await expect(page.locator('.board-token-marked')).toHaveCount(0)
+
+    // PASSAR A VEZ SEM RECARREGAR: quem propõe agora é a peça nova.
+    expect((await command('/iniciativa/proxima-vez')).ok()).toBeTruthy()
+    await expect(onTurn, 'a vez não passou no remendo').not.toHaveAttribute('aria-label', firstTurn ?? '')
+    const posts = await dragBy(onTurn, 120)
+    expect(posts, 'o arrasto continuou preso à peça antiga').toContain('/parada')
+    await expect(page.locator('.board-token-ghost')).toHaveCount(1)
+  } finally {
+    await apagar()
+  }
+})
+
 test('a barra de verbos do mestre cabe a 390px', async ({ page }) => {
   const { mesa: table, apagar: remove } = await disposableTable(page)
   try {

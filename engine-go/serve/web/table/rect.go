@@ -160,15 +160,6 @@ var unmarkParty = fmt.Sprintf("$%s = ''", markedTokensSignal)
 // É o gesto que todo editor faz e o motivo inteiro de marcar: chegou uma horda
 // de seis zumbis e reposicioná-los hoje custa seis arrastos.
 
-// partyTakes começa o arrasto, e SÓ se a peça estiver marcada.
-//
-// Sem a guarda, arrastar uma peça qualquer com um grupo marcado em outro canto
-// do mapa moveria o grupo distante — o gesto agiria sobre o que a pessoa não
-// está olhando, que é a pior classe de surpresa num tabuleiro.
-func partyTakes(id string) string {
-	return fmt.Sprintf("if (!(%s)) return; %s", markedIsToken(id), startsTheDrag(dragsTheParty))
-}
-
 // dropParty converte o deslocamento em QUADRADOS e move todas.
 //
 // O arredondamento é o mesmo do arrasto de uma peça só (para o quadrado mais

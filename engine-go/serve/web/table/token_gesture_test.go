@@ -43,9 +43,9 @@ func TestNoTokenGestureAnswersForAnotherToken(t *testing.T) {
 		{ID: "beta-2222", Label: "Beta", X: 8, Y: 3, Where: "8, 3"},
 		{ID: "gama-3333", Label: "Gama", X: 8, Y: 9, Where: "8, 9"},
 	}
-	// AS DUAS SUPERFÍCIES, e uma por vez não basta: o rascunho dá o gesto a TODAS
-	// as peças, e a mesa dá a uma só e o do grupo às outras. O defeito morava no
-	// primeiro e o segundo é onde ele seria mais caro.
+	// AS DUAS SUPERFÍCIES, e uma por vez não basta: nas duas o mestre arrasta todas
+	// as peças, mas só a mesa tem o alvo do turno e o grupo. O defeito morava na
+	// primeira e a segunda é onde ele seria mais caro.
 	//
 	// Na mesa o alvo é a peça do MEIO de propósito. Com o alvo em primeiro lugar,
 	// a ordem do DOM esconde a mistura sozinha — que é exatamente por que a mesa

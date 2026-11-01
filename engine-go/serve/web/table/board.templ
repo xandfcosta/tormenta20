@@ -674,7 +674,7 @@ templ planToken(v BoardView, p boardToken) {
 		title={ tokenName(p) }
 		style={ posicaoNoPlano(p.X, p.Y, p.Footprint) + fmt.Sprintf("--matiz:%d;", p.Hue) }
 		data-class={ tokenStyling(p.ID, dragsItself(v, p.ID)) }
-		if tokenReceivesGesture(v, p.ID) {
+		if dragsItself(v, p.ID) {
 			data-on:pointerdown={ takeToken(v, p.ID) }
 			data-on:pointermove__window={ followToken(v, p) }
 			data-on:pointerup__window={ dropToken(v, p) }

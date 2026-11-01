@@ -119,7 +119,7 @@ func assertMovable(b *BoardState, st *live.SessionRuntimeState, tokenID string, 
 	if st == nil || st.TurnIndex < 0 {
 		return token, -1, nil
 	}
-	if !isTokenOnTurn(token, st) {
+	if !IsTokenOnTurn(token, st) {
 		return nil, 0, fmt.Errorf("não é a vez de %s", token.Label)
 	}
 	return token, speedOf(*token), nil
@@ -142,10 +142,10 @@ func drawingBudget(token BoardToken, st *live.SessionRuntimeState) int {
 	return speedOf(token)
 }
 
-// isTokenOnTurn amarra a peça à LINHA da iniciativa: a vez não é copiada para o
+// IsTokenOnTurn amarra a peça à LINHA da iniciativa: a vez não é copiada para o
 // tabuleiro, ela é perguntada ao rastreador — duas cópias da vez divergiriam no
 // primeiro turno passado com o tabuleiro fechado.
-func isTokenOnTurn(token *BoardToken, st *live.SessionRuntimeState) bool {
+func IsTokenOnTurn(token *BoardToken, st *live.SessionRuntimeState) bool {
 	if token.EntryID == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return false
 	}
