@@ -1,600 +1,128 @@
 package master
 
 import (
-	"t20engine/serve/web/bookui"
 	"fmt"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
-	"t20engine/domain/book"
 )
 
-// OS CATÁLOGOS, segunda ferramenta da Mesa do Mestre.
+// OS CATÁLOGOS da Mesa do Mestre: a busca, os filtros e os verbetes inteiros em
+// cartões. Os cartões moram em `collection_cards.templ`, porque a caixa do elo
+// desenha os mesmos.
 //
 // A cena manda as 992 entradas — decisão do dono, e o custo aceito é DOM. O que
 // esse custo exige em troca é que a lista ROLE DENTRO DA CAIXA: deixada crescer
-// até a altura do conteúdo ela vaza milhares de pixels para fora do cartão SEM a
+// até a altura do conteúdo ela vaza milhares de pixels para fora dela SEM a
 // página rolar, e uma asserção "a cena não rola" fica VERDE por cima do defeito.
-//
-// Por isso o `min-h-0` aparece em cada elo da corrente até a lista, e o e2e mede
-// a altura do documento em vez de confiar em classe.
-
+// Por isso o e2e mede quem rola em vez de confiar em classe.
 templ collectionScene(v collectionView) {
-	<section
-		id="catalogs"
-		class="mesa-palco flex min-h-0 flex-1 flex-col gap-3"
-		aria-labelledby="table-catalogs"
-		data-signals={ collectionSignals(v) }
-	>
-		<div class="flex flex-wrap items-baseline gap-x-3">
-			// O título é o da ABA, e não "Catálogos": desde que cada catálogo
-			// virou uma parada do trilho, a cena é a das Condições — e repetir a
-			// palavra genérica aqui deixaria a tela sem dizer onde se está.
-			<h2 id="table-catalogs" class="font-heading text-lg tracking-wide text-foreground">{ tabLabel(v.Aba) }</h2>
-			<p class="text-xs text-muted-foreground">{ collectionCount(v) }</p>
+	// O título é o da ABA, e não "Catálogos", e mora no cabeçalho da moldura: quem
+	// diz onde se está é o menu, e repetir a palavra aqui seria o mesmo estado
+	// desenhado em dois lugares.
+	<section id="catalogs" class="ds-catalog" aria-label={ tabLabel(v.Aba) } data-signals={ collectionSignals(v) }>
+		// A busca é campo de texto, e ali a seta edita em vez de navegar — sai-se
+		// pelo TAB ou pelo Esc. Os crachás andam pela seta, em grade, e a borda de
+		// baixo aponta para os verbetes: o driver acha o vizinho pelo centro da caixa,
+		// e o da região dos verbetes fica mais longe que o do menu lateral.
+		<div class="ds-catalog-tools" data-nav-region="filtros" data-nav-layout="grid" data-nav-edge-down="verbetes">
+			@ds.SearchField("catalog-search", "Buscar em todos os catálogos", joinAttrs(templ.Attributes{
+				"name": "busca", "value": v.Term, "data-bind:search": true, "data-busca-da-cena": true,
+				"data-on:input__debounce.250ms": "@get('/mestre/" + v.Aba + "')",
+			}, navigableField()))
+			// Os FILTROS somem durante a busca: com termo digitado a cena responde
+			// outra pergunta — todos os catálogos, não este —, e um crachá de círculo
+			// aceso sobre uma lista que tem itens e condições diria que ele está
+			// filtrando o que não filtra.
+			if v.offersFilters() {
+				<div class="ds-catalog-filter-rows ds-catalog-filters-inline">
+					@collectionFilters(v)
+				</div>
+				<button
+					type="button"
+					class="ds-button ds-catalog-filters-open"
+					data-variant="ghost"
+					commandfor="catalog-filters"
+					command="show-modal"
+				>Filtros</button>
+			}
 		</div>
-		<div class="relative shrink-0">
-			@ui.Icon("Search", "pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground")
-			<input
-				type="search"
-				data-busca-da-cena
-				name="busca"
-				data-bind:search
-				data-on:input__debounce.250ms={ "@get('/mestre/" + v.Aba + "')" }
-				value={ v.Term }
-				placeholder="Buscar em todos os catálogos"
-				aria-label="Buscar nos catálogos"
-				class="h-9 w-full rounded-sm border border-input bg-transparent pl-8 pr-3 text-base outline-none md:text-sm"
-			/>
-		</div>
-		// Os FILTROS somem durante a busca: com termo digitado a cena responde
-		// outra pergunta — os oito catálogos, não este —, e um crachá de círculo
-		// aceso sobre uma lista que tem itens e condições diria que ele está
-		// filtrando o que não filtra.
-		if !v.Searching() && len(v.Filters) > 0 {
-			@collectionFilters(v)
-		}
-		// NÃO há fileira de abas: cada catálogo é uma parada do trilho, e ter as
-		// duas coisas seria o mesmo estado desenhado em dois lugares.
-		//
-		// Com termo digitado a busca varre os OITO catálogos e mostra os grupos,
-		// não só o da cena — senão "bola de fogo" digitado em Condições acha
-		// "nada encontrado" com a magia existindo.
-		// A saída de quem chegou por um ELO com o endereço na barra (ctrl+clique,
-		// link colado): a cena mostra UM verbete, e sem esta linha a pessoa fica
-		// sem entender por que a aba tem uma entrada só.
-		if v.Entry != "" {
-			<p class="shrink-0 text-xs text-muted-foreground">
-				<a
-					href={ templ.SafeURL("/mestre/" + v.Aba) }
-					class="underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
-				>{ "‹ ver " + tabLabel(v.Aba) + " inteiro" }</a>
-			</p>
-		}
 		@collectionResults(v)
+		// Dentro da cena, e o remendo passa por baixo dele: o `ds.Dialog` preserva o
+		// `open`, e cada crachá ligado redesenha o estado dos outros aqui dentro.
+		if v.offersFilters() {
+			@ds.Dialog("catalog-filters", "Filtros", nil) {
+				<div class="ds-catalog-filter-rows">
+					@collectionFilters(v)
+				</div>
+			}
+		}
 	</section>
 }
 
-func collectionCount(v collectionView) string {
-	if v.Searching() {
-		return fmt.Sprintf("%d achados", v.Findings)
-	}
-	return fmt.Sprintf("%d entradas", v.Findings)
-}
-
-
-// collectionResults é a caixa que ROLA. Ver o cabeçalho do arquivo.
+// collectionResults é a caixa que ROLA, e a região é a casca dela: o driver só
+// considera item o que é focável DENTRO da região. As bordas verticais apontam
+// para ela mesma para a seta ROLAR os verbetes em vez de saltar para os filtros,
+// como na ficha do Bestiário.
 //
-// As colunas são CSS (`.collection-in-columns`) e não um número calculado em JS:
-// sem virtualização a grade nativa mede o contêiner de graça.
-//
-// O `max()` no piso é o que impõe o TETO de três colunas, que é medida de
-// leitura e não gosto: `auto-fill minmax(22rem, 1fr)` puro dá QUATRO a 1920.
+// Com termo digitado a busca varre TODOS os catálogos e mostra os grupos, não só o
+// da cena — senão "bola de fogo" digitado em Condições acha "nada encontrado" com
+// a magia existindo.
 templ collectionResults(v collectionView) {
-	if v.Findings == 0 {
-		<p class="p-4 text-center text-xs text-muted-foreground">Nada nos catálogos casa com essa busca.</p>
-	} else {
-		@ui.ScrollBox("Resultados dos catálogos", "space-y-4 rounded-sm border border-grimorio-iron p-2") {
-			for _, g := range v.Groups {
-				<section aria-label={ g.Label }>
-					if v.Searching() {
-						// O cabeçalho de grupo só existe na busca unificada: sem
-						// termo há um catálogo só na tela, e nomeá-lo duas vezes
-						// (na aba e aqui) é repetição.
-						@ui.SectionLabel("gold", "mb-1.5") {
-							{ fmt.Sprintf("%s · %d", g.Label, g.Count()) }
-						}
-					}
-					<div class="collection-in-columns">
-						for _, c := range g.Conditions {
-							@conditionCard(c, v.Book)
-						}
-						for _, m := range g.Spells {
-							@spellCard(m, v.Book)
-						}
-						for _, p := range g.Powers {
-							@powerCard(p, v.Book)
-						}
-						for _, i := range g.Items {
-							@itemCard(i, v.Book)
-						}
-						for _, e := range g.Effects {
-							@effectCard(e, v.Book)
-						}
-						for _, e := range g.Schools {
-							@schoolCard(e, v.Book)
-						}
-						for _, p := range g.Expertises {
-							@expertiseCard(p, v.Book)
-						}
-						for _, r := range g.Races {
-							@raceCard(r, v.Book)
-						}
-						for _, c := range g.Classes {
-							@classCard(c, v.Book)
-						}
-						for _, d := range g.Gods {
-							@godCard(d, v.Book)
-						}
-					</div>
-				</section>
+	<div class="ds-catalog-region" data-nav-region="verbetes" data-nav-layout="column" data-nav-edge-up="verbetes" data-nav-edge-down="verbetes">
+		@ui.ScrollBox("Resultados dos catálogos", "ds-catalog-results") {
+			// A saída de quem chegou por um ELO com o endereço na barra (ctrl+clique,
+			// link colado): a cena mostra UM verbete, e sem esta linha a pessoa fica
+			// sem entender por que o catálogo tem uma entrada só.
+			if v.Entry != "" {
+				<p class="ds-catalog-more">
+					<a href={ templ.SafeURL("/mestre/" + v.Aba) } data-nav-skip>{ "‹ ver " + tabLabel(v.Aba) + " inteiro" }</a>
+				</p>
 			}
-		}
-	}
-}
-
-// ── os quatro cartões ────────────────────────────────────────────────────────
-
-// A classe `collection-card` é ANCORAGEM e não estilo: dentro da caixa do elo o
-// cartão perde a moldura, porque lá a caixa já é a moldura — duas bordas
-// concêntricas com três milímetros entre elas. A regra vive no `app.src.css`,
-// fora de `@layer`.
-//
-// `wrap-anywhere` (`overflow-wrap: anywhere`) no CARTÃO porque a BARRA não é
-// oportunidade de quebra para o navegador: "Sopro da Salvação" lista as
-// condições que remove como UM token de 100 caracteres
-// (`abalado/atordoado/apavorado/…`), que dá 1.343px de conteúdo numa coluna de
-// 540 e pinta por cima dos cartões vizinhos.
-//
-// `anywhere` e não `break-word`: os cartões vivem numa grade, e só o `anywhere`
-// entra na conta do tamanho MÍNIMO do conteúdo. Com `break-word` a coluna ainda
-// pediria a largura do token inteiro.
-//
-// No cartão e não em cada descrição: são oito abas, e a nona nasce protegida.
-templ collectionCard() {
-	<div class="collection-card wrap-anywhere rounded-sm border border-grimorio-iron p-2.5 text-sm">
-		{ children... }
-	</div>
-}
-
-templ conditionCard(c book.Condition, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ c.Name }
-			@bookui.PageSeal(bookRef, c.BookPage, c.Name)
-		</p>
-		<p class="mt-1 text-muted-foreground">
-			// A descrição CITA outras condições ("Desprevenido e imóvel"), e são
-			// 11 citações nas 35 — a densidade que justifica varrer o texto.
-			for _, chunk := range book.WithConditionLinks(c.Description, c.Name) {
-				@bookui.Chunk(chunk, bookRef)
-			}
-			// O TIPO DE EFEITO fecha a descrição, em itálico, exatamente onde o
-			// livro o imprime: "Abalado. O personagem sofre –2 … *Medo.*". Colado
-			// no NOME ele se lê como "Abalado Medo", uma palavra só; depois da
-			// explicação e como elo, ele se anuncia pelo que é.
-			for _, t := range c.Tags {
-				{ " " }
-				// `<em>` com o itálico do livro: ele é o que separa o TIPO da
-				// frase que acabou de terminar, e é o desenho que o mestre já
-				// conhece da página impressa.
-				<em>
-					@bookui.CrossRef("efeitos", t, book.EffectName(t)) {
-						{ book.EffectName(t) + "." }
-					}
-				</em>
-			}
-		</p>
-		if c.UpgradesTo != "" {
-			<p class="mt-1 text-xs text-muted-foreground">
-				Agrava para 
-				@bookui.CrossRef("condicoes", c.UpgradesTo, book.ConditionName(c.UpgradesTo)) {
-					{ book.ConditionName(c.UpgradesTo) }
+			if v.Findings == 0 {
+				@ds.Empty("Nada encontrado", "Nada nos catálogos casa com essa busca.")
+			} else {
+				if v.Searching() {
+					<p class="ds-row-meta">{ findingsWritten(v.Findings) }</p>
 				}
-			</p>
-		}
-	}
-}
-
-// O cartão da PERÍCIA.
-//
-// As duas marcas do livro viram crachá porque elas mudam COMO a perícia se usa —
-// "só treinada" decide se dá para rolar, e a penalidade decide se a armadura
-// atrapalha. Ficam ao lado do atributo, que é a terceira coisa que se olha antes
-// de rolar.
-//
-// "Treinada por" são só as classes que a treinam DE SAÍDA. Ver o comentário do
-// carregador: a piscina de escolha tem quase tudo em quase toda classe.
-templ expertiseCard(p book.Expertise, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ p.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 font-mono text-3xs text-muted-foreground">{ book.AttributeAbbrev(p.Attribute) }</span>
-			if p.TrainedOnly {
-				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Só treinada</span>
-			}
-			if p.ArmorPenalty {
-				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">Penalidade de armadura</span>
-			}
-			@bookui.PageSeal(bookRef, p.BookPage, p.Name)
-		</p>
-		if len(p.Classes) > 0 {
-			<p class="mt-1 text-xs text-muted-foreground">
-				Treinada de saída por: 
-				for i, class := range p.Classes {
-					if i > 0 {
-						{ ", " }
-					}
-					@bookui.CrossRef("classes", book.KeyOfName(class), class) {
-						{ class }
-					}
+				for _, g := range v.Groups {
+					<section class="ds-catalog-group" aria-label={ g.Label }>
+						@ds.ListHead(g.Label, v.groupCount(g))
+						<div class="ds-catalog-grid">
+							@groupCards(g, v.Book)
+						</div>
+					</section>
 				}
-			</p>
-		}
-	}
-}
-
-// O cartão da ESCOLA DE MAGIA: o destino dos elos que saem das magias.
-//
-// A ABREVIATURA fica ao lado do nome porque é o que as tabelas do livro imprimem
-// — quem lê "Evoc" numa ficha precisa poder achar aqui. Ilusão não tem, e o
-// crachá simplesmente não sai.
-templ schoolCard(e book.SpellSchool, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ e.Name }
-			if e.Abbrev != "" {
-				<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ e.Abbrev }</span>
 			}
-			@bookui.PageSeal(bookRef, e.BookPage, e.Name)
-		</p>
-		<p class="mt-1 text-muted-foreground">
-			for _, chunk := range book.WithLinks(e.Description) {
-				@bookui.Chunk(chunk, bookRef)
-			}
-		</p>
-	}
-}
-
-// O cartão do TIPO DE EFEITO. Ele é o destino dos elos que saem das condições, e
-// o livro o define em uma frase na p228.
-templ effectCard(e book.EffectKind, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ e.Name }
-			@bookui.PageSeal(bookRef, e.BookPage, e.Name)
-		</p>
-		<p class="mt-1 text-muted-foreground">
-			for _, chunk := range book.WithLinks(e.Description) {
-				@bookui.Chunk(chunk, bookRef)
-			}
-		</p>
-	}
-}
-
-templ spellCard(m book.Spell, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ m.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">
-				{ fmt.Sprintf("%dº círculo", m.Circle) }
-			</span>
-			// A ESCOLA aparece no cartão, e como ELO: ela decide o filtro, e sem
-			// estar escrita o mestre filtra por evocação e as magias não dizem que
-			// são de evocação.
-			@bookui.CrossRef("escolas", m.School, book.SchoolName(m.School)) {
-				{ book.SchoolName(m.School) }
-			}
-			@bookui.PageSeal(bookRef, m.BookPage, m.Name)
-		</p>
-		<p class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-			<span>{ "Execução: " + book.CastingName(m.Execution) }</span>
-			<span>{ "Alcance: " + book.RangeName(m.Range) }</span>
-			<span>{ "Duração: " + m.Duration }</span>
-			if m.Resistance != "" {
-				<span>{ "Resistência: " + m.Resistance }</span>
-			}
-		</p>
-		<p class="mt-1 text-muted-foreground">
-			for _, chunk := range book.WithLinks(m.BaseEffect) {
-				@bookui.Chunk(chunk, bookRef)
-			}
-		</p>
-		// Os APRIMORAMENTOS abrem numa caixa e não no cartão: são três a cinco
-		// linhas por magia, que empurrariam a lista inteira para baixo. Uma
-		// CONTAGEM ("3 disponíveis") diria que existe algo sem deixar lê-lo.
-		if len(m.Augments) > 0 {
-			<button
-				type="button"
-				data-nav-skip
-				data-on:click={ bookui.OpensAugments(m.ID) }
-				class="mt-1 rounded-sm text-left text-xs text-muted-foreground underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
-			>{ augmentsWritten(len(m.Augments)) }</button>
-		}
-	}
-}
-
-templ powerCard(p book.Power, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ p.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ p.Source }</span>
-			@bookui.PageSeal(bookRef, p.BookPage, p.Name)
-		</p>
-		<p class="mt-1 text-muted-foreground">
-			for _, chunk := range book.WithLinks(p.Description) {
-				@bookui.Chunk(chunk, bookRef)
-			}
-		</p>
-	}
-}
-
-templ itemCard(i book.Item, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ i.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ book.CategoryName(i.Category) }</span>
-			@bookui.PageSeal(bookRef, i.BookPage, i.Name)
-		</p>
-		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-			<span>{ "Preço: " + priceWritten(i.Price) }</span>
-			<span>{ fmt.Sprintf("Espaços: %s", slotsWritten(i.Slots)) }</span>
-		</p>
-	}
-}
-
-// ── os três cartões do personagem ────────────────────────────────────────────
-
-// O cartão da RAÇA diz o que muda numa ficha: os modificadores, o tamanho, o
-// deslocamento e a visão. As habilidades vêm com o resumo de uma linha que o
-// catálogo já guarda — o texto inteiro está no livro, a um clique de distância.
-templ raceCard(r book.Race, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ r.Name }
-			<span class="rounded-sm border border-grimorio-iron px-1.5 text-3xs text-muted-foreground">{ r.AttributeMod.Escrito() }</span>
-			@bookui.PageSeal(bookRef, r.BookPage, r.Name)
-		</p>
-		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-			<span>{ book.TierName(r.Tier) }</span>
-			<span>{ r.Size }</span>
-			<span>{ fmt.Sprintf("Deslocamento: %dm", r.Speed) }</span>
-			if r.Darkvision {
-				<span>Visão no escuro</span>
-			} else if r.LowLightVision {
-				<span>Visão na penumbra</span>
-			}
-		</p>
-		for _, h := range r.Abilities {
-			<p class="mt-1 text-xs text-muted-foreground">
-				<span class="font-medium text-foreground">{ h.Name }</span>
-				{ " · " + h.Summary }
-			</p>
-		}
-	}
-}
-
-// O cartão da CLASSE mostra só o que se DERIVA do repositório, cujos leitores
-// moram em `book/character.go`. É pouco de propósito: o bloco da classe é uma
-// tabela de vinte níveis, e transcrevê-la à mão é a fonte de erro que o catálogo
-// existe para evitar.
-templ classCard(c book.Class, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ c.Name }
-			@bookui.PageSeal(bookRef, c.BookPage, c.Name)
-		</p>
-		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-			<span>{ fmt.Sprintf("%d poderes de classe", c.Powers) }</span>
-			// As perícias treinadas viram ELOS: a classe cita a perícia, e
-			// citação sem destino é texto morto — o mesmo que valia para o
-			// poder concedido do deus.
-			if len(c.Expertises) > 0 {
-				<span>
-					Treinado em: 
-					for i, expertise := range c.Expertises {
-						if i > 0 {
-							{ ", " }
-						}
-						@bookui.CrossRef("pericias", book.KeyOfName(expertise), expertise) {
-							{ expertise }
-						}
-					}
-				</span>
-			}
-			if c.Chooses > 0 {
-				<span>{ fmt.Sprintf("+ %d à escolha", c.Chooses) }</span>
-			}
-		</p>
-	}
-}
-
-// O cartão do DEUS traz o que o mestre consulta na hora: o que o deus cobra dos
-// devotos e o que ele concede. O símbolo e a arma preferida entram porque são o
-// que aparece na cena — o clérigo saca a arma preferida, o símbolo está no altar.
-templ godCard(d book.God, bookRef bookui.BookAddress) {
-	@collectionCard() {
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ d.Name }
-			// SEM crachá "Maior/Menor": `major` é verdadeiro nos vinte deuses do
-			// catálogo, então ele diria a mesma coisa em todos. Volta no dia em
-			// que existir um deus menor.
-			@bookui.PageSeal(bookRef, d.BookPage, d.Name)
-		</p>
-		<p class="mt-1 text-muted-foreground">{ d.Portfolio }</p>
-		// Campo VAZIO não vira rótulo órfão: Lena e Marah não têm arma preferida
-		// no livro (são deusas de paz e cura), e "Arma preferida:" seguido de
-		// nada parece dado perdido em vez de ausência com significado.
-		<p class="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-			if d.Energy != "" {
-				<span>{ "Energia: " + d.Energy }</span>
-			}
-			if d.Symbol != "" {
-				<span>{ "Símbolo: " + d.Symbol }</span>
-			}
-			if d.PreferredWeapon != "" {
-				<span>{ "Arma preferida: " + d.PreferredWeapon }</span>
-			}
-		</p>
-		// Concedidos e devotos são LISTAS DE NOMES de coisas que têm verbete —
-		// o poder está em Poderes, o devoto é raça ou classe. Cada nome vira o
-		// elo dele; o que não tem verbete (o "Quaisquer" de Aharadak) fica texto.
-		if len(d.GrantedPowers) > 0 {
-			<p class="mt-1 text-xs text-muted-foreground">
-				Concede: 
-				for i, power := range d.GrantedPowers {
-					if i > 0 {
-						{ ", " }
-					}
-					if id := bookui.PowerID(power); id != "" {
-						@bookui.CrossRef("poderes", id, power) {
-							{ power }
-						}
-					} else {
-						{ power }
-					}
-				}
-			</p>
-		}
-		if len(d.Devotees) > 0 {
-			<p class="mt-1 text-xs text-muted-foreground">
-				Devotos: 
-				for i, devotee := range d.Devotees {
-					if i > 0 {
-						{ ", " }
-					}
-					if aba, id := book.DevoteeLink(devotee); aba != "" {
-						@bookui.CrossRef(aba, id, devotee) {
-							{ devotee }
-						}
-					} else {
-						{ devotee }
-					}
-				}
-			</p>
-		}
-	}
-}
-
-// SpellAugments é a outra coisa que a caixa mostra: o que a magia ganha quando
-// se gasta mais mana.
-//
-// O mesmo id (`#crossref-entry`) porque é a mesma caixa — o que muda é o miolo,
-// e quem decide é a rota.
-templ SpellAugments(m book.Spell, bookRef bookui.BookAddress) {
-	<div id="crossref-entry" class="space-y-2 pr-8">
-		<p class="flex flex-wrap items-center gap-1.5 font-medium">
-			{ m.Name }
-			@bookui.PageSeal(bookRef, m.BookPage, m.Name)
-		</p>
-		<ul class="space-y-1.5">
-			for _, a := range m.Augments {
-				// GRADE de duas colunas e não uma fileira: o texto do
-				// aprimoramento tem três linhas, e numa fileira a segunda linha
-				// volta para debaixo do custo. Com a grade, a coluna do texto é
-				// uma caixa — tudo o que é texto começa na mesma vertical.
-				//
-				// `items-baseline` porque o custo é `text-xs` mono e o texto é
-				// `text-sm`: alinhados pelo TOPO, o número flutua acima da
-				// primeira linha.
-				<li class="grid grid-cols-[3.5rem_1fr] items-baseline gap-x-3 text-sm">
-					// O CUSTO na frente e alinhado à DIREITA: é por ele que o
-					// mestre varre a lista ("o que dá para fazer com 2 PM?"), e
-					// número em coluna se lê pela unidade.
-					<span class="text-right font-mono text-xs text-grimorio-gold">{ a.Escrito() }</span>
-					<span class="text-muted-foreground">
-						<span class={ ui.FieldLabelClasses("herda", "mr-1 opacity-70") }>{ book.AugmentKindName(a.Kind) }</span>
-						for _, chunk := range book.WithLinks(a.Description) {
-							@bookui.Chunk(chunk, bookRef)
-						}
-					</span>
-				</li>
-			}
-		</ul>
-	</div>
-}
-
-// CrossRefEntry é o miolo da caixa: os cartões do grupo, sem a moldura da cena.
-//
-// Reusa os MESMOS cartões da aba — o verbete tem um desenho só, e um segundo
-// desenho "para a caixa" divergiria do primeiro na terceira issue.
-templ CrossRefEntry(g collectionGroup, book bookui.BookAddress) {
-	<div id="crossref-entry" class="pr-8">
-		if g.Count() == 0 {
-			<p class="text-xs text-muted-foreground">Este verbete não está no acervo.</p>
-		}
-		for _, c := range g.Conditions {
-			@conditionCard(c, book)
-		}
-		for _, m := range g.Spells {
-			@spellCard(m, book)
-		}
-		for _, p := range g.Powers {
-			@powerCard(p, book)
-		}
-		for _, i := range g.Items {
-			@itemCard(i, book)
-		}
-		for _, e := range g.Effects {
-			@effectCard(e, book)
-		}
-		for _, r := range g.Races {
-			@raceCard(r, book)
-		}
-		for _, c := range g.Classes {
-			@classCard(c, book)
-		}
-		for _, d := range g.Gods {
-			@godCard(d, book)
 		}
 	</div>
 }
 
-// collectionFilters são as linhas de crachá do catálogo da cena.
+// collectionFilters são as linhas de crachá do catálogo da cena, à vista no desktop
+// e num diálogo abaixo dele. A troca é do CSS, na largura em que o menu lateral
+// aparece, e o mesmo componente desenha os dois: dois desenhos do mesmo filtro seriam
+// dois lugares para consertar.
 //
-// Mesmo desenho dos tipos do bestiário — crachá que liga e desliga —, porque o
-// mestre já aprendeu esse gesto lá. `fieldset` porque é conjunto de escolhas.
-//
-// O rótulo da linha é VISÍVEL aqui, e no bestiário ele é `sr-only`: lá há uma
-// linha só e o contexto basta; aqui são até três, e sem o rótulo ninguém sabe
-// se "Evocação" é escola ou classe.
+// O rótulo da linha é VISÍVEL: são até três linhas, e sem ele ninguém sabe se
+// "Evocação" é escola ou classe.
 templ collectionFilters(v collectionView) {
-	// Deitado eles viram gaveta. Aqui não há busca a preservar dentro da caixa —
-	// ela mora na cena, acima —, então a gaveta leva as três linhas de crachá
-	// inteiras.
-	@ui.FilterDrawer("Filtros") {
-		<div class="mt-2 flex shrink-0 flex-col gap-1.5">
-			for _, f := range v.Filters {
-				<fieldset class="flex flex-wrap items-center gap-1.5 border-0 p-0">
-					<legend class="sr-only">{ "Filtrar por " + f.Label }</legend>
-					<span aria-hidden="true" class={ ui.SectionLabelClasses("muted", "w-24 shrink-0") }>
-						{ f.Label }
-					</span>
-					for _, o := range f.Options {
-						// `aria-pressed` com a STRING e não com booleano: o Datastar
-						// trata valor booleano como atributo de PRESENÇA, e um
-						// `aria-pressed=""` não anuncia estado nenhum.
-						<button
-							type="button"
-							aria-pressed={ ui.AriaBool(v.badgeOn(f.Key, o.Value)) }
-							data-on:click={ toggleBadge(v.Aba, f.Key, o.Value) }
-							if v.badgeOn(f.Key, o.Value) {
-								class="min-h-11 rounded-sm border border-grimorio-gold bg-accent px-2 py-0.5 text-2xs font-medium text-grimorio-gold transition-colors outline-none"
-							} else {
-								class="min-h-11 rounded-sm border border-grimorio-iron px-2 py-0.5 text-2xs text-muted-foreground transition-colors outline-none hover:bg-accent"
-							}
-						>{ o.Label }</button>
+	for _, f := range v.Filters {
+		<div class="ds-catalog-filter" role="group" aria-label={ "Filtrar por " + f.Label }>
+			<span class="ds-field-label" aria-hidden="true">{ f.Label }</span>
+			<div class="ds-options">
+				for _, o := range f.Options {
+					@ds.Option(v.badgeOn(f.Key, o.Value), templ.Attributes{"data-on:click": toggleBadge(v.Aba, f.Key, o.Value)}) {
+						{ o.Label }
 					}
-				</fieldset>
-			}
+				}
+			</div>
 		</div>
 	}
+}
+
+// findingsWritten concorda em número.
+func findingsWritten(n int) string {
+	if n == 1 {
+		return "1 achado em todos os catálogos"
+	}
+	return fmt.Sprintf("%d achados em todos os catálogos", n)
 }

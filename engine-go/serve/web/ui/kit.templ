@@ -286,9 +286,13 @@ func SectionLabelTone(tom string) string {
 // Existir como COMPONENTE é o ponto: enquanto cada cena escrever `overflow-y-auto`
 // à mão, cobrir isto é ENUMERAÇÃO — uma entrada por tela, para sempre, e a que
 // alguém esquecer nasce sem alcance. Passando por aqui, volta a ser amostragem.
+//
+// `data-nav-item` é o que deixa a seta chegar nela, numa região do driver de
+// teclado; fora de uma região ele não faz nada.
 templ ScrollBox(label string, extra string) {
 	<div
 		role="region"
+		data-nav-item
 		aria-label={ label }
 		tabindex="0"
 		class={ Join("min-h-0 flex-1 overflow-y-auto outline-none", extra) }
@@ -461,31 +465,3 @@ templ Key(label string) {
 	<kbd class="ml-1 hidden text-3xs opacity-70 xl:inline">{ label }</kbd>
 }
 
-// FilterDrawer recolhe os filtros de uma cena de lista no celular DEITADO, e em
-// nenhuma outra forma: a 844×390 os filtros comem 124px e a lista fica com 11 —
-// menos de uma criatura.
-//
-// A troca é do CSS (`.filters-in-drawer`, na folha da casa) e NÃO de uma
-// consulta de mídia em JS nem de um segundo bloco condicional no `.templ`: são
-// os mesmos nós nas seis formas, e o que muda é se o `<details>` se comporta
-// como gaveta. Dois desenhos do mesmo filtro seriam dois lugares para consertar.
-//
-// A BUSCA fica de fora, e quem a chama é que decide isso — achar uma criatura
-// pelo nome é o gesto do meio do combate, e recolher a busca junto trocaria um
-// problema por outro.
-//
-// O rótulo vem por parâmetro porque as duas cenas filtram coisas diferentes, e
-// "Filtros" sozinho num leitor de tela não diz filtros de quê.
-templ FilterDrawer(label string) {
-	<details class="filters-in-drawer shrink-0">
-		// `min-h-11` porque no deitado ele é um alvo de toque de verdade, e é a
-		// única porta para os filtros ali dentro.
-		<summary
-			class="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-grimorio-iron px-3 text-xs text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground"
-		>
-			@Icon("SlidersHorizontal", "size-4 shrink-0")
-			{ label }
-		</summary>
-		{ children... }
-	</details>
-}

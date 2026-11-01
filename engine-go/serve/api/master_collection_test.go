@@ -20,7 +20,7 @@ func TestACatalogSceneDrawsTheWholeCatalog(t *testing.T) {
 	}
 	body := rec.Body.String()
 	a := book.Catalogs()
-	if !strings.Contains(body, fmt.Sprintf("%d entradas", len(a.Conditions))) {
+	if !strings.Contains(body, fmt.Sprintf("<span>Condições</span><span>%d</span>", len(a.Conditions))) {
 		t.Errorf("a contagem não é a das %d condições", len(a.Conditions))
 	}
 	// Uma condição de verdade, e o texto dela: sem isso o teste passaria com a
@@ -41,7 +41,7 @@ func TestTheWholeCollectionComesOutInThePowersTab(t *testing.T) {
 
 	rec := pedeNoMestre(t, s, eu, "GET", "/mestre/poderes", "")
 	powers := book.Catalogs().Powers
-	if !strings.Contains(rec.Body.String(), fmt.Sprintf("%d entradas", len(powers))) {
+	if !strings.Contains(rec.Body.String(), fmt.Sprintf("<span>Poderes</span><span>%d</span>", len(powers))) {
 		t.Fatalf("a contagem não é a dos %d poderes", len(powers))
 	}
 	// O ÚLTIMO da lista, e não o primeiro: um teto cortaria pelo fim.

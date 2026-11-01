@@ -42,9 +42,9 @@ test('nenhum cartão do acervo transborda a coluna, em nenhuma cena', async ({ p
     await page.goto(scene)
 
     const measurement = await page.evaluate(() => {
-      const cards = [...document.querySelectorAll('.collection-in-columns > div')]
+      const cards = [...document.querySelectorAll('.ds-catalog-grid > article')]
       return {
-        temGrade: !!document.querySelector('.collection-in-columns'),
+        temGrade: !!document.querySelector('.ds-catalog-grid'),
         quantos: cards.length,
         estouram: cards
           .filter((c) => c.scrollWidth > c.clientWidth + 1)

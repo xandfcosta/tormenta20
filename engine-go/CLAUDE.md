@@ -1286,7 +1286,8 @@ do [GLOSSARY](../GLOSSARY.md).
 - **Pisos do Tempestade: 12px de texto e 44×44 de alvo no toque**, medidos pelo
   e2e (`support/ds-floors.ts`, no laço do `appearance.spec.ts`) só na cena com
   `.scene-ds` — o caso anota o sistema, sem lista de cenas migradas. O guarda
-  da Cinzel mede a outra metade.
+  da Cinzel mede a outra metade. O elo citado no meio de uma frase é a exceção
+  `Inline` da 2.5.5, e não conta; alvo sozinho numa linha conta, mesmo sendo elo.
 - **Medidor que mire um escopo pelo nome mira os DOIS** até o grimório sair: só
   `.scene-grimorio`, só o `index.css` ou só o `class="…"` passa VERDE sem medir
   a cena nova.

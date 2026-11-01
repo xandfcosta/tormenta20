@@ -3898,6 +3898,220 @@
     justify-content: flex-start;
   }
 
+  /* OS CATÁLOGOS (ALE-539, mockup `catalogos.html`): as ferramentas em cima e os
+   * verbetes embaixo, rolando na caixa deles. O piso da caixa é o que devolve a
+   * rolagem à área principal quando os filtros abertos não deixam espaço, no
+   * celular deitado: sem ele, os verbetes sumiriam com a gaveta aberta. */
+  .ds-catalog {
+    display: grid;
+    grid-template-rows: auto minmax(7rem, 1fr);
+    gap: 0.75rem;
+    height: 100%;
+    min-height: 0;
+  }
+  .ds-catalog-tools,
+  .ds-catalog-filter-rows {
+    display: grid;
+    gap: 0.5rem;
+  }
+  /* O rótulo fica na altura da PRIMEIRA linha de opções: centrado, ele boiava no
+   * meio do bloco quando as opções quebram. */
+  .ds-catalog-filter {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.5rem;
+    font-size: var(--ds-t-xs);
+    line-height: var(--ds-lh-xs);
+    font-weight: 600;
+    color: var(--ds-ink-2);
+  }
+  .ds-catalog-filter .ds-option {
+    font-weight: 400;
+  }
+  .ds-catalog-filter > .ds-field-label {
+    align-self: start;
+    padding-top: calc((var(--ds-h-control) - var(--ds-lh-xs)) / 2);
+  }
+  /* Os filtros à vista a partir da largura do menu lateral, e num diálogo abaixo
+   * dela (decisão do dono). */
+  .ds-catalog-filters-inline {
+    display: none;
+  }
+  .ds-catalog-filters-open {
+    justify-self: start;
+  }
+  @media (min-width: 64rem) {
+    .ds-catalog-filters-inline {
+      display: grid;
+    }
+    .ds-catalog-filters-open {
+      display: none;
+    }
+  }
+  /* A região tem caixa própria porque o driver de teclado acha o vizinho pelo
+   * centro dela, e `min-height: 0` porque quem rola é o miolo. */
+  .ds-catalog-region {
+    display: grid;
+    min-height: 0;
+  }
+  .ds-catalog-results {
+    display: grid;
+    grid-auto-rows: max-content;
+    gap: 1rem;
+  }
+  .ds-catalog-group {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .ds-catalog-group > .ds-list-head {
+    padding: 0;
+  }
+  /* A grade dos verbetes. Duas travas, e as duas são MEDIDA DE LEITURA: piso de
+   * 22rem por cartão, porque abaixo disso a prosa de uma magia vira uma fita de
+   * duas palavras por linha, e teto de TRÊS colunas, porque acima disso a linha
+   * fica curta demais para descrição de regra. O `max()` no piso é o que impõe o
+   * teto: `auto-fill` sozinho não tem teto, e medido a 1920 ele dava QUATRO. Uma
+   * coluna nunca fica menor que um terço do contêiner, então nunca cabem quatro.
+   * O `1.5rem` são os dois vãos. */
+  .ds-catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(22rem, (100% - 1.5rem) / 3)), 1fr));
+    gap: 0.75rem;
+    align-items: start;
+  }
+  .ds-catalog-card {
+    display: grid;
+    gap: 0.375rem;
+    min-width: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+    overflow-wrap: anywhere;
+  }
+  /* Dentro da caixa do elo o cartão perde a moldura: a caixa já é a moldura, e
+   * seriam duas bordas concêntricas com três milímetros entre elas. E perde o nome,
+   * que está no título da caixa. */
+  #entry-in-dialog .ds-catalog-card {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  #entry-in-dialog .ds-catalog-title {
+    display: none;
+  }
+  .ds-catalog-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem 0.5rem;
+  }
+  .ds-catalog-title {
+    font-weight: 700;
+  }
+  .ds-catalog-page {
+    margin-left: auto;
+  }
+  .ds-catalog-body,
+  .ds-catalog-abilities,
+  .ds-catalog-fields,
+  .ds-catalog-augments {
+    margin: 0;
+    font-size: var(--ds-t-sm);
+    line-height: var(--ds-lh-sm);
+  }
+  .ds-catalog-abilities {
+    display: grid;
+    gap: 0.25rem;
+    color: var(--ds-ink-2);
+  }
+  .ds-catalog-abilities b {
+    color: var(--ds-ink);
+    font-weight: 600;
+  }
+  .ds-catalog-fields {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.25rem 0.75rem;
+  }
+  .ds-catalog-fields dt {
+    color: var(--ds-ink-2);
+  }
+  .ds-catalog-augments {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  .ds-catalog-augments > li {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+  .ds-catalog-augments b {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  /* O que leva a outro lugar a partir do cartão: os aprimoramentos, "Agrava para",
+   * os poderes da classe. */
+  .ds-catalog-more {
+    margin: 0;
+    font-size: var(--ds-t-sm);
+    line-height: var(--ds-lh-sm);
+  }
+  .ds-catalog-more > :is(a, button) {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ds-action);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .ds-catalog-more > :is(a, button):hover {
+    text-decoration: underline;
+  }
+  /* O ELO para outro verbete: o sublinhado é PONTILHADO como o do selo de página,
+   * porque as duas coisas são "leva para outro lugar". */
+  .ds-crossref {
+    border-radius: var(--ds-r-control);
+    color: inherit;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+  }
+  .ds-crossref:hover {
+    color: var(--ds-action);
+  }
+  .ds-catalog-more > .ds-crossref {
+    color: var(--ds-action);
+  }
+  /* NO TOQUE, o que está sozinho numa linha é alvo de 44×44 de verdade (o elo
+   * citado no meio da frase é a exceção Inline da norma). As margens negativas
+   * devolvem à cabeça do cartão a altura que o alvo tomou: o crachá e a página
+   * continuam do tamanho deles, e a área a mais cai no espaço vazio em volta. */
+  @media (pointer: coarse) {
+    .ds-catalog-more > :is(a, button) {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--ds-h-control);
+    }
+    .ds-catalog-page > a,
+    .ds-badge > .ds-crossref {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--ds-h-control);
+      min-height: var(--ds-h-control);
+      margin-block: -0.75rem;
+    }
+    .ds-catalog-page > a {
+      justify-content: flex-end;
+    }
+  }
+
   /* A JANELA À PARTE é para a segunda tela ou a TV da mesa: no celular não
    * há segunda tela, e o botão some (decisão do dono). */
   [data-board-window-opener] {

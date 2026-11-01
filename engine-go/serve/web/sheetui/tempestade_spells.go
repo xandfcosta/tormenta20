@@ -130,28 +130,13 @@ func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
 //	spellSheetMeta(row) // "2º círculo · Padrão · médio · instantânea · p180", na Bola de Fogo
 func spellSheetMeta(spell learnedSpellRow) string {
 	parts := []string{spell.Circle + " círculo", spellLineMeta(spell, false)}
-	if duration := spellDurationName(spell.Duration); duration != "" {
+	if duration := book.DurationName(spell.Duration); duration != "" {
 		parts = append(parts, duration)
 	}
 	if spell.Page > 0 {
 		parts = append(parts, "p"+strconv.Itoa(spell.Page))
 	}
 	return strings.Join(parts, " · ")
-}
-
-// spellDurationName escreve a duração do catálogo. A "definida" sai vazia: é a
-// magia cuja duração o próprio texto diz ("1 rodada", "1 hora"), e a regra
-// logo abaixo a escreve melhor do que uma palavra.
-func spellDurationName(id string) string {
-	switch id {
-	case "instantanea":
-		return "instantânea"
-	case "dia":
-		return "1 dia"
-	case "definida":
-		return ""
-	}
-	return id
 }
 
 // spellSheetFoot é o pé da folha: o Esquecer e o Conjurar com o custo.

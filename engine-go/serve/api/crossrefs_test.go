@@ -25,16 +25,9 @@ func TestTheConditionEffectTypeBecameALink(t *testing.T) {
 		t.Error("a tag da condição não leva ao tipo de efeito")
 	}
 	// E ela é escrita como o LIVRO escreve, não como o dado guarda: a tag é
-	// `cansaco`, sem acento e em caixa baixa, porque é uma chave. O ponto final
-	// vem junto porque é assim que o livro fecha a condição ("… *Medo.*").
-	if !strings.Contains(body, ">Medo.<") {
+	// `cansaco`, sem acento e em caixa baixa, porque é uma chave.
+	if !strings.Contains(body, ">Medo</a>") {
 		t.Error("a tag saiu com a cara de chave em vez do nome do tipo")
-	}
-	// E ela vem DEPOIS da explicação, não colada no nome: "Abalado Medo" se lê
-	// como se as duas palavras fossem o mesmo verbete.
-	shaken := body[strings.Index(body, ">Abalado<"):]
-	if strings.Index(shaken, "em testes de perícia") > strings.Index(shaken, ">Medo.<") {
-		t.Error("o tipo de efeito voltou para antes da explicação")
 	}
 	effects := pedeNoMestre(t, s, eu, "GET", "/mestre/efeitos", "").Body.String()
 	if !strings.Contains(effects, "Medo capaz de prejudicar o alvo") {
@@ -276,7 +269,7 @@ func TestAugmentsOpenInTheBox(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	scene := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?entrada=bola-de-fogo", "").Body.String()
-	if !strings.Contains(scene, "aprimoramentos disponíveis") {
+	if !strings.Contains(scene, "3 aprimoramentos") {
 		t.Fatal("o cartão não oferece os aprimoramentos")
 	}
 	if !strings.Contains(scene, "parte=aprimoramentos") {

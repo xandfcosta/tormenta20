@@ -24,6 +24,7 @@ import (
 var permitidos = map[string]bool{
 	"t20engine/domain/book":      true, // o catálogo TIPADO, que é o que ele desenha
 	"t20engine/serve/web/ui":     true, // o kit, para o botão e o ícone
+	"t20engine/serve/web/ds":     true, // o kit do Tempestade, para a caixa do verbete
 	"t20engine/serve/web/routes": true, // os endereços do leitor e do verbete
 }
 

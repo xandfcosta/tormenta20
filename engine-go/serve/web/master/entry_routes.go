@@ -3,9 +3,11 @@ package master
 import (
 	"net/http"
 
+	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 
+	"github.com/a-h/templ"
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 )
@@ -45,14 +47,21 @@ func (s Scene) handleCrossRefEntry(w http.ResponseWriter, r *http.Request) {
 	// o miolo da mesma caixa: duas rotas obrigariam o cliente a saber qual
 	// chamar, e o dia em que houver um terceiro pedaço seriam três.
 	core := CrossRefEntry(group, s.deps.BookAddress())
+	title := group.entryName()
 	if q.Get("parte") == "aprimoramentos" && len(group.Spells) == 1 {
 		core = SpellAugments(group.Spells[0], s.deps.BookAddress())
+		title = "Aprimoramentos de " + group.Spells[0].Name
+	}
+	if title == "" {
+		title = bookui.EntryDialogTitle
 	}
 
 	sse := datastar.NewSSE(w, r)
-	fragment, err := ui.RenderFragment(r.Context(), core)
-	if err != nil {
-		return
+	for _, part := range []templ.Component{bookui.EntryTitle(title), core} {
+		fragment, err := ui.RenderFragment(r.Context(), part)
+		if err != nil {
+			return
+		}
+		_ = sse.PatchElements(fragment)
 	}
-	_ = sse.PatchElements(fragment)
 }

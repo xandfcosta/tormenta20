@@ -356,6 +356,21 @@ func RangeName(a string) string {
 	return a
 }
 
+// DurationName escreve a duração da magia como o livro, e não como a chave que o
+// motor lê (`instantanea`). A "definida" sai vazia: é a magia cuja duração o próprio
+// texto diz ("1 rodada", "1 hora"), e ele a escreve melhor do que uma palavra.
+func DurationName(id string) string {
+	switch id {
+	case "instantanea":
+		return "instantânea"
+	case "dia":
+		return "1 dia"
+	case "definida":
+		return ""
+	}
+	return id
+}
+
 func CategoryName(c string) string {
 	if r, ok := categoryLabel[c]; ok {
 		return r

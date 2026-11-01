@@ -504,7 +504,7 @@ teste foi o primeiro lugar onde ele precisou existir.
 | **laço** | `lasso` | `TestTheLassoCatchesTheTokenByItsBody` |
 | **porta** (a cena de entrar) | `door` | `TestTheDoorRefusesAWrongPasswordWithoutOpeningASession` |
 | **crachá** | `badge` | `TestTheTypeBadgeTogglesWithoutNavigating`, e a receita `ui.BadgeClasses`. **A grafia é `badge` e não `chip`**: a folha de especificação do grimório chamava o bloco de "Chip" enquanto o servidor já escrevia `badgeOn`/`toggleBadge` para a mesma pílula — dois nomes para um conceito, que é o que esta coluna existe para impedir |
-| **gaveta** | `drawer` | e2e `a recuperação sai da fileira quando o palco é baixo` (a do palco), e2e `deitado os filtros viram gaveta` (a dos filtros) |
+| **gaveta** | `drawer` | e2e `a recuperação sai da fileira quando o palco é baixo` (a do palco), `CreatureFilters` (a dos filtros do Bestiário) |
 | **área** (de transferência) | `clipboard` | e2e `colar põe outro igual no centro da vista` |
 | **monograma** | `monogram`, `.monograma` | `TestTheMonogramComesFromTheKindAndTheNumberBecomesASeal` |
 | **matiz** | `hue` | `TestTheNameHueMatchesTheJs` |

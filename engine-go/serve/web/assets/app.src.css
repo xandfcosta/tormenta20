@@ -122,65 +122,6 @@ html {
   }
 }
 
-/* A GAVETA DE FILTROS do celular deitado (ALE-230).
- *
- * A 844×390 o bestiário dava 11px para a lista de criaturas — 0,2 de uma linha
- * de 49px — e o maior consumidor não era navegação: eram os FILTROS, 124px de
- * ND mínimo, ND máximo e sete crachás de tipo. Medido escondendo a camada e
- * remedindo, ela sozinha devolve 3,37 linhas.
- *
- * Deitado eles viram gaveta; em toda outra forma a gaveta não existe. A busca
- * fica SEMPRE de fora: ela é como se acha uma criatura pelo nome, que é o gesto
- * do meio do combate, e escondê-la trocaria um problema por outro.
- *
- * UM SÓ DESENHO, e é por isso que isto é CSS e não um segundo bloco no `.templ`
- * — dois desenhos do mesmo filtro seriam dois lugares para consertar, que é a
- * razão escrita no `commands.templ` para os botões do palco.
- *
- * A CONSULTA é a NEGAÇÃO de `max-lg:landscape` — mais largo que o telefone OU em
- * pé —, e nunca uma consulta de altura: o telefone em pé com o teclado virtual
- * mede 390×494, e a gaveta se fecharia debaixo do dedo no meio da digitação.
- *
- * AS DUAS REGRAS DE ABERTURA existem porque os motores escondem o miolo de um
- * `<details>` fechado de dois jeitos diferentes, e a falha aqui precisa ser
- * SEGURA: se sobrasse só a de `::details-content` e o motor não a conhecesse, a
- * regra inteira cairia e o desktop ficaria com o resumo escondido E o miolo
- * fechado — os filtros sumiriam da tela larga, que é onde eles mais servem. Com
- * as duas, o pior caso é a gaveta abrir onde não precisava. */
-.filters-in-drawer > summary {
-  list-style: none;
-  cursor: pointer;
-}
-.filters-in-drawer > summary::-webkit-details-marker {
-  display: none;
-}
-@media not all and (max-width: 1023px), (orientation: portrait) {
-  .filters-in-drawer > summary {
-    display: none;
-  }
-  .filters-in-drawer:not([open]) > *:not(summary) {
-    display: revert;
-  }
-  .filters-in-drawer:not([open])::details-content {
-    content-visibility: visible;
-  }
-}
-
-/* A grade dos catálogos (ALE-258).
- *
- * Duas travas, e as duas são MEDIDA DE LEITURA portada da ALE-170, não estética:
- *
- *  - piso de 22rem por cartão, porque abaixo disso a prosa de uma magia vira
- *    uma fita de duas palavras por linha;
- *  - teto de TRÊS colunas, porque acima disso a linha fica curta demais para
- *    descrição de regra. A SPA calculava o número em JS (`catalogColumns`)
- *    porque a lista é virtualizada e "duas colunas" tinha de ser um agrupamento
- *    dos DADOS antes de entregá-los. Sem virtualização a grade nativa mede o
- *    contêiner de graça — mas `auto-fill` sozinho não tem teto, e medido a 1920
- *    ele dava QUATRO.
- *
- * O `max()` no piso é o que impõe o teto: uma coluna nunca fica menor que um
- * terço do contêiner, então nunca cabem quatro. */
 /* O CURSOR da ficha fica na moldura dela, e na linguagem da casa.
    Três medições levaram a esta forma, e vale registrar as duas erradas.
 
@@ -260,21 +201,6 @@ html {
   }
 }
 
-/* O CARTÃO dentro da CAIXA do elo perde a moldura (ALE-264).
-
-   O cartão do acervo tem borda e cantos porque na lista ele é um cartão entre
-   muitos. Dentro do diálogo do elo ele é o conteúdo ÚNICO de uma caixa que já
-   tem borda e cantos — e o resultado eram duas bordas concêntricas com três
-   milímetros entre elas, com o ✕ do diálogo colado na de dentro. O dono mandou a
-   imagem.
-
-   FORA de `@layer` pela mesma razão da regra abaixo: utilitário do Tailwind é
-   camada, e estilo não-camada ganha dele. */
-#entry-in-dialog .collection-card {
-  border: 0;
-  padding: 0;
-}
-
 /* O CAMPO do buscador: o anel do foco vai na LINHA, não no `<input>` (ALE-264).
 
    A regra global da casa dá anel dourado a qualquer `input` da cena. Num campo
@@ -326,14 +252,6 @@ html {
     color: oklch(1 0 0 / 0.85);
   }
 
-  .collection-in-columns {
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(22rem, (100% - 1rem) / 3)), 1fr));
-  }
-  .collection-in-columns > * {
-    min-width: 0;
-  }
 }
 
 /* O RODAPÉ DO MESTRE quando o palco é baixo (ALE-263) — a tradução do

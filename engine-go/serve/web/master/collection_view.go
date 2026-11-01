@@ -107,6 +107,34 @@ type collectionGroup struct {
 	Gods       []book.God
 }
 
+// entryName é o nome do primeiro verbete do grupo, ou vazio. Quem o chama é a caixa
+// do elo, em que o grupo tem um verbete só.
+func (g collectionGroup) entryName() string {
+	switch {
+	case len(g.Conditions) > 0:
+		return g.Conditions[0].Name
+	case len(g.Spells) > 0:
+		return g.Spells[0].Name
+	case len(g.Powers) > 0:
+		return g.Powers[0].Name
+	case len(g.Items) > 0:
+		return g.Items[0].Name
+	case len(g.Effects) > 0:
+		return g.Effects[0].Name
+	case len(g.Schools) > 0:
+		return g.Schools[0].Name
+	case len(g.Expertises) > 0:
+		return g.Expertises[0].Name
+	case len(g.Races) > 0:
+		return g.Races[0].Name
+	case len(g.Classes) > 0:
+		return g.Classes[0].Name
+	case len(g.Gods) > 0:
+		return g.Gods[0].Name
+	}
+	return ""
+}
+
 func (g collectionGroup) Count() int {
 	return len(g.Conditions) + len(g.Spells) + len(g.Powers) + len(g.Items) +
 		len(g.Effects) + len(g.Schools) + len(g.Expertises) + len(g.Races) + len(g.Classes) + len(g.Gods)
@@ -143,9 +171,24 @@ type collectionView struct {
 	Lit      map[string][]string
 	Groups   []collectionGroup
 	Findings int
+	// Total é o tamanho do catálogo da cena sem filtro nenhum.
+	Total int
 }
 
 func (v collectionView) Searching() bool { return strings.TrimSpace(v.Term) != "" }
+
+// offersFilters diz se a cena desenha os filtros: o catálogo tem de ter algum, e com
+// termo digitado eles somem.
+func (v collectionView) offersFilters() bool { return !v.Searching() && len(v.Filters) > 0 }
+
+// groupCount é o que o cabeçalho do grupo diz: na busca, quantos achados; no
+// catálogo, quanto dele sobrou dos filtros.
+func (v collectionView) groupCount(g collectionGroup) string {
+	if v.Searching() || g.Count() == v.Total {
+		return strconv.Itoa(g.Count())
+	}
+	return fmt.Sprintf("%d de %d", g.Count(), v.Total)
+}
 
 // loadCollection monta a cena: os quatro catálogos quando há busca, um só
 // quando não há.
@@ -155,6 +198,7 @@ func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collection
 		Lit: c.Filters,
 	}
 	v.Filters = filtersForTab(v.Aba)
+	v.Total = groupForTab(book.Catalogs(), v.Aba, nil).Count()
 	// A ENTRADA vem primeiro e encerra: ela é um endereço para um verbete só, e
 	// misturá-la com busca daria uma tela que responde duas perguntas.
 	if c.Entry != "" {
@@ -339,9 +383,76 @@ func toggleBadge(aba, key, value string) string {
 // aprimoramento" e "3 aprimoramentos".
 func augmentsWritten(n int) string {
 	if n == 1 {
-		return "1 aprimoramento disponível."
+		return "1 aprimoramento"
 	}
-	return fmt.Sprintf("%d aprimoramentos disponíveis.", n)
+	return fmt.Sprintf("%d aprimoramentos", n)
+}
+
+// spellMeta é a linha de meta da magia, com a resistência só quando há.
+func spellMeta(m book.Spell) string {
+	parts := []string{
+		"Execução: " + book.CastingName(m.Execution),
+		"Alcance: " + book.RangeName(m.Range),
+	}
+	if duration := book.DurationName(m.Duration); duration != "" {
+		parts = append(parts, "Duração: "+duration)
+	}
+	if m.Resistance != "" {
+		parts = append(parts, "Resistência: "+m.Resistance)
+	}
+	return strings.Join(parts, " · ")
+}
+
+// raceMeta é a linha de meta da raça. Visão no escuro cobre a penumbra, e por isso
+// sai uma só.
+func raceMeta(r book.Race) string {
+	parts := []string{book.TierName(r.Tier), r.Size, fmt.Sprintf("Deslocamento: %dm", r.Speed)}
+	if r.Darkvision {
+		parts = append(parts, "Visão no escuro")
+	} else if r.LowLightVision {
+		parts = append(parts, "Visão na penumbra")
+	}
+	return strings.Join(parts, " · ")
+}
+
+// expertiseMarks são os crachás da perícia, com o atributo na frente.
+func expertiseMarks(p book.Expertise) []string {
+	marks := []string{book.AttributeAbbrev(p.Attribute)}
+	if p.TrainedOnly {
+		marks = append(marks, "Só treinada")
+	}
+	if p.ArmorPenalty {
+		marks = append(marks, "Penalidade de armadura")
+	}
+	return marks
+}
+
+// energyWritten é a energia do deus com a inicial maiúscula: o dado a guarda em
+// caixa baixa (`negativa`), que é como o filtro a casa.
+func energyWritten(energy string) string {
+	if energy == "" {
+		return ""
+	}
+	return strings.ToUpper(energy[:1]) + energy[1:]
+}
+
+// nonEmpty é o crachá que só sai quando o dado existe.
+func nonEmpty(text string) []string {
+	if text == "" {
+		return nil
+	}
+	return []string{text}
+}
+
+func classTarget(name string) (string, string) { return "classes", book.KeyOfName(name) }
+
+func expertiseTarget(name string) (string, string) { return "pericias", book.KeyOfName(name) }
+
+func powerTarget(name string) (string, string) {
+	if id := bookui.PowerID(name); id != "" {
+		return "poderes", id
+	}
+	return "", ""
 }
 
 // priceWritten é o dinheiro do livro em pt-BR: vírgula decimal e no máximo duas

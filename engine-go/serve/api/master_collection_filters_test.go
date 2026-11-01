@@ -17,7 +17,7 @@ func TestTheFilterIsAnAddress(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	body := pedeNoMestre(t, s, eu, "GET", "/mestre/magias?circulo=3&escola=evocacao", "").Body.String()
-	if !strings.Contains(body, "6 entradas") {
+	if !strings.Contains(body, "<span>6 de 198</span>") {
 		t.Error("a cena não abriu filtrada pelo endereço")
 	}
 	// E os crachás nascem ACESOS: sem isso a lista está filtrada e a tela não
@@ -37,7 +37,7 @@ func TestAFilterFromAnotherTabDoesNotApply(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	body := pedeNoMestre(t, s, eu, "GET", "/mestre/condicoes?circulo=3", "").Body.String()
-	if !strings.Contains(body, "35 entradas") {
+	if !strings.Contains(body, "<span>Condições</span><span>35</span>") {
 		t.Error("um filtro de outra aba mexeu na lista das condições")
 	}
 }
