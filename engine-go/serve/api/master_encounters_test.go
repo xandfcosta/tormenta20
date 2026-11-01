@@ -18,7 +18,7 @@ func TestTheAddGestureReturnsAPatch(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/encontros/adicionar/ogro", `{"encontro":[]}`)
+	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/encontros/adicionar/ogro", `{"encounter_rows":[]}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}

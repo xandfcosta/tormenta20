@@ -14,7 +14,7 @@ import (
 
 func encontroDe(t *testing.T, rows []encounterRow) encountersView {
 	t.Helper()
-	return loadEncounters(nivelPadrao, grupoPadrao, rows, "")
+	return loadEncounters(partyLevelDefault, partySizeDefault, rows, "")
 }
 
 // A mesma criatura SOBE A CONTAGEM, e não vira uma segunda linha.
@@ -31,13 +31,13 @@ func TestTheSameCreatureRaisesTheCount(t *testing.T) {
 	if len(rows) != 1 {
 		t.Fatalf("%d linhas, quero 1 com quantidade 4", len(rows))
 	}
-	if rows[0].Qtd != 4 {
-		t.Fatalf("quantidade %d, quero 4", rows[0].Qtd)
+	if rows[0].Count != 4 {
+		t.Fatalf("quantidade %d, quero 4", rows[0].Count)
 	}
 
 	partyOfFour := encontroDe(t, rows).ND()
 	twoPairs := encontroDe(t, []encounterRow{
-		{ID: "ogro", Qtd: 2}, {ID: "ogro", Qtd: 2},
+		{ID: "ogro", Count: 2}, {ID: "ogro", Count: 2},
 	}).ND()
 	if partyOfFour >= twoPairs {
 		t.Errorf("um grupo de quatro deu ND %v e dois de dois deram %v — a regra da dobra "+
@@ -49,9 +49,9 @@ func TestTheSameCreatureRaisesTheCount(t *testing.T) {
 // deixar a linha com 0 mostraria "ND 0" numa linha que ainda parece parte do
 // encontro.
 func TestTheLastOneRemovedTakesTheRow(t *testing.T) {
-	rows := []encounterRow{{ID: "ogro", Qtd: 2}}
+	rows := []encounterRow{{ID: "ogro", Count: 2}}
 	rows = lessRow(rows, "ogro")
-	if len(rows) != 1 || rows[0].Qtd != 1 {
+	if len(rows) != 1 || rows[0].Count != 1 {
 		t.Fatalf("depois de um passo: %+v", rows)
 	}
 	rows = lessRow(rows, "ogro")
@@ -64,8 +64,8 @@ func TestTheLastOneRemovedTakesTheRow(t *testing.T) {
 // viva.
 func TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow(t *testing.T) {
 	v := encontroDe(t, []encounterRow{
-		{ID: "ogro", Qtd: 1},
-		{ID: "dragao-de-papel-machê", Qtd: 3},
+		{ID: "ogro", Count: 1},
+		{ID: "dragao-de-papel-machê", Count: 3},
 	})
 	if len(v.Rows) != 1 {
 		t.Fatalf("%d linhas, quero só a que existe", len(v.Rows))
@@ -82,7 +82,7 @@ func TestAnEntryThatVanishedDoesNotBecomeAnEmptyRow(t *testing.T) {
 // nenhum erro.
 func TestTheCopiedLinkReopensTheEncounter(t *testing.T) {
 	original := loadEncounters(5, 3, []encounterRow{
-		{ID: "ogro", Qtd: 2}, {ID: "goblin-salteador", Qtd: 4},
+		{ID: "ogro", Count: 2}, {ID: "goblin-salteador", Count: 4},
 	}, "")
 
 	link := encounterAddress(original)
@@ -109,7 +109,7 @@ func TestTheCopiedLinkReopensTheEncounter(t *testing.T) {
 	}
 	for i := range original.Rows {
 		if back.Rows[i].Entry.ID != original.Rows[i].Entry.ID ||
-			back.Rows[i].Qtd != original.Rows[i].Qtd {
+			back.Rows[i].Count != original.Rows[i].Count {
 			t.Errorf("linha %d voltou diferente: %+v", i, back.Rows[i])
 		}
 	}
@@ -130,9 +130,9 @@ func TestACrookedLinkDoesNotCostTheWholeEncounter(t *testing.T) {
 // mudaria a dificuldade sem mudar o encontro.
 func TestAnAbsurdLevelAndSizeFallBackToTheDefault(t *testing.T) {
 	v := loadEncounters(999, -3, nil, "")
-	if v.Level != nivelPadrao || v.Group != grupoPadrao {
+	if v.Level != partyLevelDefault || v.Group != partySizeDefault {
 		t.Errorf("nível %d e grupo %d, quero os padrões %d e %d",
-			v.Level, v.Group, nivelPadrao, grupoPadrao)
+			v.Level, v.Group, partyLevelDefault, partySizeDefault)
 	}
 }
 

@@ -35,8 +35,8 @@ templ encounterPartyPanel(v encountersView) {
 		@ui.SectionLabel("muted", "self-center") {
 			O grupo
 		}
-		@partyField("nivel", "Nível", v.Level, nivelMinimo, nivelMaximo)
-		@partyField("grupo", "Personagens", v.Group, grupoMinimo, grupoMaximo)
+		@partyField("party_level", "Nível", v.Level, partyLevelMin, partyLevelMax)
+		@partyField("party_size", "Personagens", v.Group, partySizeMin, partySizeMax)
 	</div>
 }
 
@@ -46,10 +46,10 @@ templ encounterPartyPanel(v encountersView) {
 templ partyField(signal, label string, value, min, max int) {
 	<div class="space-y-1">
 		@ui.SectionLabel("muted", "block") {
-			<label for={ "encontro-" + signal }>{ label }</label>
+			<label for={ "encounter-" + signal }>{ label }</label>
 		}
 		<input
-			id={ "encontro-" + signal }
+			id={ "encounter-" + signal }
 			type="number"
 			min={ ui.Int(min) }
 			max={ ui.Int(max) }
@@ -125,7 +125,7 @@ templ composition(v encountersView) {
 					<span class="font-mono text-3xs text-muted-foreground">{ "grupo ND " + roundedCR(l.ND) }</span>
 					<div class="ml-auto flex items-center gap-1">
 						@quantityStep(l.Entry, "menos", "−")
-						<span class="w-8 text-center font-mono text-sm tabular-nums">{ ui.Int(l.Qtd) }</span>
+						<span class="w-8 text-center font-mono text-sm tabular-nums">{ ui.Int(l.Count) }</span>
 						@quantityStep(l.Entry, "mais", "+")
 						@ui.Button(ui.VariantGhostDanger, ui.SizeIcon, "", templ.Attributes{"type": "button", "aria-label": "Remover " + l.Entry.Name + " do encontro", "data-on:click": fmt.Sprintf("@post('/mestre/encontros/remover/%s')", l.Entry.ID)}) {
 							✕
