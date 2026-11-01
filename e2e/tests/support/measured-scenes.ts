@@ -41,13 +41,6 @@ export type MeasuredVisit = {
    */
   session: 'gm' | 'player' | 'none'
   /**
-   * a cena pode não existir NESTA bancada, e a ausência é legítima. Hoje é só o
-   * leitor: sem `LIVRO_PDF` a rota devolve 404 de propósito, e o caso PULA com
-   * motivo visível em vez de reprovar. Pular é diferente de medir, e a diferença
-   * aparece no relatório — que é o contrário de um verde silencioso.
-   */
-  mayBeAbsent?: boolean
-  /**
    * o modo em que a visita mede; sem ele, o claro. A folha viva tem uma visita por
    * modo, e é ali que o kit é medido no escuro.
    */

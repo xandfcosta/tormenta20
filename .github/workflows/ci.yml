@@ -170,7 +170,10 @@ jobs:
           JWT_SECRET: e2e-ci-secret
           PORT: '3010'
           COOKIE_NAME: t20_session
+          # O livro de teste: sem ele os casos do leitor não têm o que medir, e reprovam.
+          LIVRO_PDF: tmp/e2e-book.pdf
         run: |
+          go run ./cmd/testbook "$LIVRO_PDF"
           ./tmp/api > api.log 2>&1 &
           for _ in $(seq 1 60); do
             curl -sf http://localhost:3010/health > /dev/null && break

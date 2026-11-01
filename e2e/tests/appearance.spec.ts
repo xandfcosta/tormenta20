@@ -121,10 +121,6 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
 
       test(`no desktop: contraste, Cinzel, piso de texto e fonte em ${where}`, async ({ page }) => {
         const response = await page.goto(visit.address)
-        if (visit.mayBeAbsent && response?.status() === 404) {
-          test.skip(true, `esta bancada não serve ${visit.address}`)
-          return
-        }
         expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
         // A Cinzel é do grimório e os pisos de 12px e 44px são do Tempestade
         // (ALE-497): cada cena mede os do sistema que ela veste, e o relatório
@@ -170,10 +166,6 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
 
         test(`no celular: alvo de toque, corte lateral e face mais larga em ${where}`, async ({ page }) => {
           const response = await page.goto(visit.address)
-          if (visit.mayBeAbsent && response?.status() === 404) {
-            test.skip(true, `esta bancada não serve ${visit.address}`)
-            return
-          }
           expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
           const migrated = (await page.locator('[data-slot="scene-shell"].scene-ds').count()) > 0
 
