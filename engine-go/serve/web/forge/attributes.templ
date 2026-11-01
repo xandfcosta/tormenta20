@@ -2,7 +2,6 @@ package forge
 
 import (
 	"fmt"
-	"strconv"
 	"t20engine/domain/book"
 	"t20engine/serve/web/ds"
 )
@@ -41,21 +40,22 @@ templ attributesBody(v attributesView) {
 // decide o próximo toque.
 templ pointCount(v attributesView) {
 	<div class="ds-forge-points">
-		<span class="ds-forge-points-left">{ strconv.Itoa(v.Budget - v.Spent) + " de " + strconv.Itoa(v.Budget) + " pontos" }</span>
+		<span class="ds-forge-points-left">{ v.PointsLine }</span>
 		<span class="ds-help">
-			para gastar (p17). Um único atributo pode descer a −1 e devolver um ponto.
+			O livro dá 10 pontos para gastar (p17), mas a escolha é livre: quem rolou os dados na mesa põe aqui o que saiu.
 		</span>
 	</div>
 }
 
-// attributeStepper é uma linha: o nome, o `−`, o valor base, o `+` e o total.
-//
-// O botão desligado é conveniência sobre a MESMA regra do servidor — ele é
-// desligado com a resposta que o motor daria ao toque, e não com uma segunda
-// conta escrita aqui.
+// attributeStepper é uma linha: o nome e a soma, o `−`, o valor base, o `+` e o total.
 templ attributeStepper(id int64, row attributeRow) {
 	<div class="ds-row ds-forge-attr">
-		<span class="ds-row-title">{ row.Label }</span>
+		<span class="ds-forge-attr-name">
+			<span class="ds-row-title">{ row.Label }</span>
+			if row.Sum != "" {
+				<small class="ds-forge-sum">{ row.Sum }</small>
+			}
+		</span>
 		<span class="ds-forge-stepper">
 			@ds.IconButton(ds.ButtonSecondary, "Minus", "Diminuir "+row.Label, stepAttrs(id, row, -1))
 			<b>{ book.WithSign(row.Base) }</b>
@@ -66,18 +66,7 @@ templ attributeStepper(id int64, row attributeRow) {
 }
 
 func stepAttrs(id int64, row attributeRow, step int) templ.Attributes {
-	attrs := templ.Attributes{"type": "button", "data-on:click": attributePost(id, row.Key, step)}
-	if !buttonFits(row, step) {
-		attrs["disabled"] = true
-	}
-	return attrs
-}
-
-func buttonFits(row attributeRow, step int) bool {
-	if step > 0 {
-		return row.CanRaise
-	}
-	return row.CanLower
+	return templ.Attributes{"type": "button", "data-on:click": attributePost(id, row.Key, step)}
 }
 
 // attributePost monta o comando. Ele não carrega estado nenhum na URL — esta

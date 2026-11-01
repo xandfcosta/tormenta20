@@ -23,18 +23,18 @@ import (
 // sobre uma linha do banco — a mesma forma dos comandos da ficha, com a mesma
 // recusa em 200 e a cena inteira de volta.
 //
-// A compra de pontos é do MOTOR (`engine.PointBuyWarnings`), e é ele quem sabe
-// que só um atributo desce a −1 e que o orçamento é 10. Esta cena não recalcula
-// nada: ela pergunta se o espalhamento resultante tem reclamação e, se tiver,
-// não grava.
+// A escolha é LIVRE, e a compra de pontos só INFORMA. O livro dá dois métodos
+// (p17), e travar nos pontos deixaria sem saída quem rolou na mesa: as rolagens
+// dão mais de um negativo e dão −2. A conta dos pontos continua sendo do motor
+// (`engine.PointBuySpent`); esta cena só a mostra.
 
 // attributesView é a cena inteira.
 type attributesView struct {
 	ID       int64
 	HeroName string
 	Rows     []attributeRow
-	Spent    int
-	Budget   int
+	// PointsLine é o contador, e ele não recusa nada.
+	PointsLine string
 	// Refusal é a frase da recusa. Ela é CONTEÚDO e não status: o Datastar
 	// descarta o remendo de uma resposta que não é 2xx, então uma recusa
 	// devolvida em 422 deixaria a tela parada e muda.
@@ -47,10 +47,10 @@ type attributeRow struct {
 	Label string
 	// Base é o que a compra de pontos gasta; Total é o que a ficha usa, já com
 	// o modificador da raça somado pelo motor.
-	Base     int
-	Total    int
-	CanRaise bool
-	CanLower bool
+	Base  int
+	Total int
+	// Sum é de onde vem o total, em palavras; vazio quando nada soma ao escolhido.
+	Sum string
 }
 
 // handleAttributes desenha a distribuição.
@@ -98,9 +98,6 @@ func (s Scene) stepAttribute(r *http.Request) (refusal string, status int, err e
 			"atributo %q não existe: são os seis do livro", key)
 	}
 	spread[key] += step
-	if notices := engine.PointBuyWarnings(spread); len(notices) > 0 {
-		return purchaseRefusal(notices[0]), http.StatusOK, nil
-	}
 	if refusal, err := s.leavesChosenExpertises(r, row, spread); err != nil || refusal != "" {
 		return refusal, http.StatusOK, err
 	}
@@ -115,14 +112,6 @@ func (s Scene) stepAttribute(r *http.Request) (refusal string, status int, err e
 	// impede o ciclo `−`/`+` de virar uma bomba de cura de dois cliques, e hoje
 	// sai de graça em vez de sair de uma conta de delta (ALE-355).
 	return "", http.StatusOK, nil
-}
-
-// purchaseRefusal traduz o aviso do motor para a frase que a cena mostra.
-//
-// O motor escreve para quem depura ("compra de pontos: 14 pontos gastos excedem
-// o limite de 10"); a cena fala com quem está criando um herói.
-func purchaseRefusal(notice string) string {
-	return "Não cabe na compra de pontos (p17): " + notice
 }
 
 // heroSpread lê os seis atributos base da linha do banco.
@@ -185,42 +174,53 @@ func (s Scene) loadAttributes(r *http.Request, refusal string) (attributesView, 
 		return attributesView{}, http.StatusInternalServerError, err
 	}
 	spread := heroSpread(row)
-	spent, _ := engine.PointBuySpent(spread)
 	v := attributesView{
-		ID: row.ID, HeroName: row.Name, Spent: spent,
-		Budget: engine.PointBuyBudget, Refusal: refusal,
+		ID: row.ID, HeroName: row.Name,
+		PointsLine: pointsLine(engine.PointBuySpent(spread)),
+		Refusal:    refusal,
 	}
 	for _, attribute := range book.AttributeOrder {
-		v.Rows = append(v.Rows, attributeRowOf(attribute.Key, spread, sheet, spent))
+		v.Rows = append(v.Rows, attributeRowOf(attribute.Key, spread, sheet))
 	}
 	return v, http.StatusOK, nil
 }
 
-// attributeRowOf monta uma das seis linhas, já dizendo se cada botão cabe.
-//
-// Os dois botões são desligados pela MESMA regra que recusaria o clique — a
-// pergunta é feita ao motor com o espalhamento hipotético. Travar na tela é
-// conveniência; quem recusa de verdade é o servidor, no `stepAttribute`.
-func attributeRowOf(
-	key string, spread map[string]int, sheet engine.ComputedSheet, spent int,
-) attributeRow {
+// attributeRowOf monta uma das seis linhas.
+func attributeRowOf(key string, spread map[string]int, sheet engine.ComputedSheet) attributeRow {
+	computed := sheet.Attributes[key]
 	return attributeRow{
 		Key: key, Label: book.AttributeLabel(key),
-		Base:     spread[key],
-		Total:    sheet.Attributes[key].Total,
-		CanRaise: stepFits(key, spread, +1),
-		CanLower: stepFits(key, spread, -1),
+		Base:  spread[key],
+		Total: computed.Total,
+		Sum:   attributeSum(spread[key], computed.Contributions),
 	}
 }
 
-// stepFits pergunta ao motor se o espalhamento continuaria legal com o passo.
-func stepFits(key string, spread map[string]int, step int) bool {
-	hypothesis := make(map[string]int, len(spread))
-	for k, v := range spread {
-		hypothesis[k] = v
+// attributeSum escreve a conta do total: "+1 escolhido +2 Raça: Elfo". Sem nada a somar
+// ela é vazia, porque o escolhido já é o total e a linha só repetiria o número.
+func attributeSum(base int, contributions []engine.SourceAmount) string {
+	if len(contributions) == 0 {
+		return ""
 	}
-	hypothesis[key] += step
-	return len(engine.PointBuyWarnings(hypothesis)) == 0
+	sum := book.WithSign(base) + " escolhido"
+	for _, part := range contributions {
+		sum += " " + book.WithSign(part.Amount) + " " + part.Source
+	}
+	return sum
+}
+
+// pointsLine diz onde o espalhamento está em relação aos pontos do livro (p17).
+//
+// @example pointsLine(14, true) // "4 pontos além dos 10"
+func pointsLine(spent int, inTable bool) string {
+	switch {
+	case !inTable:
+		return "Fora da tabela de pontos"
+	case spent > engine.PointBuyBudget:
+		return fmt.Sprintf("%d pontos além dos %d", spent-engine.PointBuyBudget, engine.PointBuyBudget)
+	default:
+		return fmt.Sprintf("%d de %d pontos", engine.PointBuyBudget-spent, engine.PointBuyBudget)
+	}
 }
 
 func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attributesView) {

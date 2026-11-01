@@ -2174,6 +2174,16 @@
   .ds-forge-attr {
     grid-template-columns: minmax(0, 1fr) auto 3.25rem;
   }
+  .ds-forge-attr-name {
+    display: grid;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+  .ds-forge-sum {
+    color: var(--ds-ink-3);
+    font-size: var(--ds-t-xs);
+    font-variant-numeric: tabular-nums;
+  }
   .ds-forge-stepper {
     display: flex;
     align-items: center;
