@@ -117,8 +117,8 @@ func TestAProficiencyWithASourceDoesNotUncheckByHand(t *testing.T) {
 	}
 }
 
-// Tirar a escolha tira a proficiência, e restaurar o padrão a mantém.
-func TestTheProficiencyPowerChoiceLeavesWithTheChoiceAndStaysOnRestore(t *testing.T) {
+// Trocar a escolha leva a proficiência dela, e restaurar o padrão a mantém. A marcada à mão fica.
+func TestTheProficiencyPowerChoiceMovesWithTheSwapAndStaysOnRestore(t *testing.T) {
 	f, id := guerreiroWithTheClassDefault(t)
 	if refusal := powerCommand(t, f, id, proficiencyPowerPath+"armas-de-fogo", ""); refusal != "" {
 		t.Fatalf("escolher armas de fogo foi recusado: %q", refusal)
@@ -130,14 +130,25 @@ func TestTheProficiencyPowerChoiceLeavesWithTheChoiceAndStaysOnRestore(t *testin
 	if !saved(t, f, id)["armas-de-fogo"] {
 		t.Error("restaurar o padrão tirou armas de fogo, que o poder Proficiência concede")
 	}
-	if refusal := powerCommand(t, f, id, proficiencyPowerPath+"armas-de-fogo/tira", ""); refusal != "" {
-		t.Fatalf("tirar a escolha foi recusado: %q", refusal)
+	if refusal := toggleProficiencyOf(t, f, id, "armas-exoticas"); refusal != "" {
+		t.Fatalf("marcar à mão foi recusado: %q", refusal)
 	}
-	if saved(t, f, id)["armas-de-fogo"] {
-		t.Error("tirar a escolha da Proficiência deixou armas de fogo na ficha")
+	row := levelPickRow(t, f, id, "armas-de-fogo")
+	if refusal := swapRow(t, f, id, row.ID, "proficiencia/armas-marciais"); !strings.Contains(refusal, "já sabe usar") {
+		t.Errorf("trocar pelo que a ficha já tem devia ser recusado, e a recusa foi %q", refusal)
 	}
-	if !saved(t, f, id)["armas-marciais"] {
-		t.Error("tirar a escolha levou junto uma proficiência da classe")
+	if refusal := swapRow(t, f, id, row.ID, "class.guerreiro.durao"); refusal != "" {
+		t.Fatalf("trocar foi recusado: %q", refusal)
+	}
+	after := saved(t, f, id)
+	if after["armas-de-fogo"] {
+		t.Error("a troca deixou armas de fogo na ficha")
+	}
+	if !after["armas-marciais"] {
+		t.Error("a troca levou junto uma proficiência da classe")
+	}
+	if !after["armas-exoticas"] {
+		t.Error("a troca levou junto a proficiência marcada à mão")
 	}
 }
 

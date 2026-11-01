@@ -317,8 +317,18 @@ func situate(rows []LevelChoiceDTO, levels, automatic []LevelChoiceDTO) []LevelC
 			levelOf[row.Ref] = row.Level
 		}
 	}
+	countedSoFar := map[string]int{}
+	for _, row := range rows {
+		if row.Level > 0 && row.Kind == LevelKindPick {
+			countedSoFar[row.Ref]++
+		}
+	}
 	for i := range rows {
 		if rows[i].Level != 0 {
+			continue
+		}
+		if level, counted := countedPickLevel(rows[i], levels, countedSoFar); counted {
+			rows[i].Level = level
 			continue
 		}
 		rows[i].Level = last
@@ -327,6 +337,30 @@ func situate(rows []LevelChoiceDTO, levels, automatic []LevelChoiceDTO) []LevelC
 		}
 	}
 	return rows
+}
+
+// countedPickLevel é o nível que deu esta escolha contada: o 2º terreno do Explorador é do 7º
+// nível do caçador, e não do 3º, onde o poder entrou (p50). É o que faz o `−` levá-la junto.
+func countedPickLevel(row LevelChoiceDTO, levels []LevelChoiceDTO, countedSoFar map[string]int) (int64, bool) {
+	power, known := book.ClassPowers()[row.Ref]
+	if row.Kind != LevelKindPick || !known || power.Choice == nil {
+		return 0, false
+	}
+	nth := countedSoFar[row.Ref]
+	if nth >= len(power.Choice.CountLevels) {
+		return 0, false
+	}
+	countedSoFar[row.Ref]++
+	classLevel := 0
+	for _, level := range levels {
+		if level.Ref == power.ClassName {
+			classLevel++
+			if classLevel == power.Choice.CountLevels[nth] {
+				return level.Level, true
+			}
+		}
+	}
+	return 0, false
 }
 
 // powerSlotLevels são os níveis do personagem que dão vaga de poder: cada classe, a partir do

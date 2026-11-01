@@ -42,6 +42,16 @@ type ClassPower struct {
 	// (p38), o animal do Totem. Ela chega pela concessão que APONTA, porque o
 	// `classPowersResolved` funde o verbete nela.
 	Choice *PowerChoice `json:"choice"`
+	// Prerequisites são os pré-requisitos do verbete. A ficha lê os de poder, para
+	// recusar a troca de uma escolha da qual outra depende.
+	Prerequisites []PowerPrerequisite `json:"prerequisites"`
+}
+
+// PowerPrerequisite é um pré-requisito. `IDs` é "um destes" (o `ID` é um só).
+type PowerPrerequisite struct {
+	Kind string   `json:"kind"`
+	ID   string   `json:"id"`
+	IDs  []string `json:"ids"`
 }
 
 // PowerChoice é a escolha de um poder, como o catálogo a escreve.
@@ -163,6 +173,8 @@ type GeneralPower struct {
 	// Choice é a escolha que o poder geral pede — a perícia do Foco em Perícia,
 	// a arma do Foco em Arma (p128-130, ALE-510).
 	Choice *PowerChoice `json:"choice"`
+	// Prerequisites, como no poder de classe.
+	Prerequisites []PowerPrerequisite `json:"prerequisites"`
 }
 
 // PowerWithChoice é o poder de id dado quando ele pede escolha, de CLASSE ou

@@ -12,8 +12,8 @@ import (
 // terreno no 3º nível e mais um a cada quatro (p50), e repetir um terreno é
 // escolha válida — soma +2 nele. Não ocupam vaga.
 //
-// A ficha que sairia da conta — descer o nível com terrenos a mais — é
-// RECUSADA, como a do Especialista (decisão do dono).
+// Escolher além da conta é recusado. Descer o nível leva junto o que passou da
+// conta: o `LastLevelOf` diz antes o que some.
 
 // levelChoiceLimit é quantas escolhas o nível da classe dá, e o nível.
 func levelChoiceLimit(dto CharacterDTO, power book.ClassPower) (int, int) {
@@ -48,8 +48,8 @@ func LevelCountedChoicesFit(dto CharacterDTO) error {
 		}
 		limit, level := levelChoiceLimit(dto, power)
 		if len(picks[id]) > limit {
-			return fmt.Errorf("%s dá %d escolhas no nível %d de %s, e ficariam %d: tire uma do %s antes",
-				power.Name, limit, level, power.ClassName, len(picks[id]), power.Name)
+			return fmt.Errorf("%s dá %d escolhas no nível %d de %s, e ficariam %d: para mudar, use Trocar, em Por nível",
+				power.Name, limit, level, power.ClassName, len(picks[id]))
 		}
 		for _, pick := range picks[id] {
 			i := slices.IndexFunc(power.Choice.Options, func(o book.PowerChoiceOption) bool { return o.ID == pick })

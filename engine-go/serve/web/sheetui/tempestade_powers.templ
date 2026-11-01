@@ -13,8 +13,16 @@ import (
 templ tempestadePowers(v View) {
 	<section class="grid gap-3" aria-label="Poderes">
 		@ds.FilterBar() {
+			<div class="mb-2 flex flex-wrap gap-2" role="group" aria-label="Como ver os poderes">
+				@ds.Option(!v.ByLevel, templ.Attributes{"data-on:click": byLevelGet(v, false)}) {
+					Ações e passivas
+				}
+				@ds.Option(v.ByLevel, templ.Attributes{"data-on:click": byLevelGet(v, true)}) {
+					Por nível
+				}
+			</div>
 			<div class="flex flex-wrap items-center gap-2">
-				<div class="min-w-0 flex-1">
+				<div class="min-w-0 flex-1" hidden?={ v.ByLevel }>
 					@ds.SearchField("power-search", "Buscar poder", templ.Attributes{
 						"value": v.Powers.Search, "data-bind:power_search": true,
 						"data-on:input__debounce.250ms": sheetGet(v),
@@ -29,7 +37,9 @@ templ tempestadePowers(v View) {
 				}
 			</div>
 		}
-		if v.Powers.Search != "" {
+		if v.ByLevel {
+			@tempestadeByLevel(v)
+		} else if v.Powers.Search != "" {
 			@ds.List("Resultado", strconv.Itoa(len(v.Powers.Results))) {
 				if len(v.Powers.Results) == 0 {
 					@ds.Row("Nenhum poder para \""+v.Powers.Search+"\"", "", "", "")

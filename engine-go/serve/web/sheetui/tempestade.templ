@@ -67,7 +67,7 @@ templ tempestadeSheet(v View) {
 			@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM)
 		}
 		@tempestadeClassChoice(v, +1, "Qual classe sobe de nível?")
-		@tempestadeClassChoice(v, -1, "Qual classe desce de nível?")
+		@lastLevelDialog(v)
 	</div>
 }
 
@@ -157,12 +157,10 @@ templ levelControl(v View) {
 	</div>
 }
 
-// tempestadeLevelStep pergunta quando há o que escolher (ver `directStep`). Sem classe
-// elegível, desabilitado e não escondido.
+// tempestadeLevelStep sempre pergunta: o `+` é onde se escolhe outra classe (p35), e o `−` avisa o que
+// some. Sem o que fazer, desabilitado e não escondido.
 templ tempestadeLevelStep(v View, step int, label, icon string) {
-	if directStep(v, step) != "" {
-		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "data-on:click": directStep(v, step)})
-	} else if len(thatCan(v.AsClasses, step)) > 0 {
+	if len(thatCan(v.AsClasses, step)) > 0 {
 		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "commandfor": stepDialog(step), "command": "show-modal"})
 	} else {
 		@ds.IconButton(ds.ButtonSecondary, icon, label, templ.Attributes{"type": "button", "disabled": true})
@@ -170,7 +168,7 @@ templ tempestadeLevelStep(v View, step int, label, icon string) {
 }
 
 templ tempestadeClassChoice(v View, step int, title string) {
-	if directStep(v, step) == "" && len(thatCan(v.AsClasses, step)) > 0 {
+	if len(thatCan(v.AsClasses, step)) > 0 {
 		@ds.Dialog(stepDialog(step), title, nil) {
 			<p class="ds-card-text">O nível do personagem é a soma dos níveis de classe, então o nível é sempre de UMA delas.</p>
 			@ds.List("", "") {
@@ -181,11 +179,7 @@ templ tempestadeClassChoice(v View, step int, title string) {
 						data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + stepCommand(v, class.Name, step) }
 					>
 						<span class="ds-row-title">{ class.Name }</span>
-						if step < 0 && class.Leaves {
-							<span class="ds-row-value">sai da ficha</span>
-						} else {
-							<span class="ds-row-value">{ strconv.FormatInt(class.Level, 10) }</span>
-						}
+						<span class="ds-row-value">{ strconv.FormatInt(class.Level, 10) }</span>
 					</button>
 				}
 			}

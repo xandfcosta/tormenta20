@@ -1837,7 +1837,7 @@ INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref"
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (506, 31, 3, 'power', 'class.cacador.ponto-fraco', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (507, 31, 4, 'power', 'class.cacador.inimigo-de-criatura', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (508, 31, 3, 'pick', 'class.cacador.explorador', 'floresta', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (509, 31, 3, 'pick', 'class.cacador.explorador', 'floresta', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (509, 31, 7, 'pick', 'class.cacador.explorador', 'floresta', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (510, 31, 5, 'automatic', 'class.cacador.caminho-do-explorador', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (511, 31, 3, 'automatic', 'class.cacador.explorador', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (512, 31, 9, 'automatic', 'class.cacador.marca-da-presa-1d12', '', 0);

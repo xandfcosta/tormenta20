@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"slices"
 	"strconv"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
@@ -95,7 +94,9 @@ func Routes(r chi.Router, s Scene) {
 	// AS ESCOLHAS do diálogo.
 	r.Post("/personagens/{id}/poderes/escolhe/{poder}", s.sheetCommand(pickPower))
 	r.Post("/personagens/{id}/poderes/escolha/{poder}/{opcao}", s.sheetCommand(pickPowerOption))
-	r.Post("/personagens/{id}/poderes/escolha/{poder}/{opcao}/tira", s.sheetCommand(dropPowerOption))
+	// TROCAR é o único jeito de mudar uma escolha feita: ela nunca fica vazia.
+	r.Post("/personagens/{id}/escolhas/{escolha}/troca/{poder}", s.sheetCommand(swapChoice))
+	r.Post("/personagens/{id}/escolhas/{escolha}/troca/{poder}/{opcao}", s.sheetCommand(swapChoice))
 	r.Post("/personagens/{id}/poderes/origem/{beneficio}", s.sheetCommand(pickOriginBenefit))
 	r.Post("/personagens/{id}/poderes/raca/{habilidade}/{opcao}", s.sheetCommand(pickRaceAbility))
 	r.Post("/personagens/{id}/poderes/variante/{variante}", s.sheetCommand(pickRaceVariant))
@@ -274,6 +275,31 @@ func enterClass(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 	return s.plays.EnterClass(r.Context(), row, class)
 }
 
+// lowerLastLevel é o `−`: só o último nível sai, e o que foi escolhido nele sai junto.
+func (s Scene) lowerLastLevel(
+	r *http.Request, row sqlcgen.Character, dto sheet.CharacterDTO, class string, target int64,
+) error {
+	loss, known := sheet.LastLevelOf(dto)
+	if known && loss.ClassName != class {
+		return fmt.Errorf("o nível %d é de %s: só o último nível desce", loss.Level, loss.ClassName)
+	}
+	if target < 1 {
+		return s.plays.LeaveClass(r.Context(), row, class)
+	}
+	if !known {
+		return fmt.Errorf("a ficha %d não tem nível guardado para descer", row.ID)
+	}
+	// A ficha antiga pode ter o mesmo atributo duas vezes no mesmo patamar, e o `−` não a conserta
+	// sozinho: quem resolve é o Trocar.
+	if err := sheet.AttributeIncreasesFit(sheet.LoweredBy(dto, loss)); err != nil {
+		return err
+	}
+	if err := s.plays.LowerLastLevel(r.Context(), row, loss); err != nil {
+		return err
+	}
+	return s.settlePickEffects(r, row, dto, loss.Removed, nil)
+}
+
 // mudaONivel sobe ou desce UMA CLASSE, e o nível do personagem acompanha.
 //
 // NUNCA escreva o nível do personagem direto: ele é a SOMA dos níveis de classe,
@@ -301,25 +327,10 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 			continue
 		}
 		target := cl.Level + int64(step)
-		if target < 1 {
-			return s.plays.LeaveClass(r.Context(), row, class)
+		if step > 0 {
+			return s.plays.LevelClass(r.Context(), row, class, target)
 		}
-		// A escolha contada por NÍVEL (os terrenos do Explorador) tem de caber
-		// no nível novo: descer com escolha a mais é recusado (ALE-503).
-		lowered := dto
-		lowered.Classes = slices.Clone(dto.Classes)
-		for i := range lowered.Classes {
-			if lowered.Classes[i].ClassName == class {
-				lowered.Classes[i].Level = target
-			}
-		}
-		if err := sheet.LevelCountedChoicesFit(lowered); err != nil {
-			return err
-		}
-		if err := sheet.AttributeIncreasesFit(lowered); err != nil {
-			return err
-		}
-		return s.plays.LevelClass(r.Context(), row, class, target)
+		return s.lowerLastLevel(r, row, dto, class, target)
 	}
 	return fmt.Errorf("%s não é uma classe deste personagem", class)
 }

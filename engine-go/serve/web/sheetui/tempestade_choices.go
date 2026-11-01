@@ -54,18 +54,14 @@ func originWritten(card originChoiceCard) string {
 	return strconv.Itoa(len(card.Chosen)) + " de " + strconv.Itoa(card.Ceiling)
 }
 
-// raceAbilityPost e countedPost são os endereços de marcar e tirar uma opção
+// raceAbilityPost e countedPost são os endereços de marcar uma opção
 // de habilidade de raça e de escolha contada.
 func raceAbilityPost(v View, block raceAbilityBlock, value string) string {
 	return sheetPost(v, "/poderes/raca/"+block.ID+"/"+url.PathEscape(value))
 }
 
-func countedPost(v View, id, value string, takesOff bool) string {
-	path := "/poderes/escolha/" + id + "/" + url.PathEscape(value)
-	if takesOff {
-		path += "/tira"
-	}
-	return sheetPost(v, path)
+func countedPost(v View, id, value string) string {
+	return sheetPost(v, "/poderes/escolha/"+id+"/"+url.PathEscape(value))
 }
 
 // pendingTitle é o cabeçalho das pendências, como o mockup aprovado o

@@ -1,0 +1,115 @@
+package sheetui
+
+import (
+	"strconv"
+
+	"t20engine/domain/sheet"
+	"t20engine/serve/web/ds"
+)
+
+// tempestadeByLevel é a seção "Por nível" da aba Poderes: o que o personagem ganhou em cada nível,
+// do mais recente para o mais antigo. Só a escolha tem botão, porque a automática vem da classe.
+templ tempestadeByLevel(v View) {
+	for _, entry := range v.LevelHistory {
+		@ds.List(levelEntryTitle(entry), entry.Tier) {
+			for _, line := range entry.Lines {
+				<div class="ds-row ds-level-line" data-automatic?={ line.Automatic }>
+					<span class="min-w-0">
+						<span class="ds-row-title">{ line.Name }</span>
+						if line.Detail != "" {
+							<span class="ds-row-meta ds-level-detail">{ line.Detail }</span>
+						}
+					</span>
+					<span class="ds-level-actions">
+						if line.Automatic {
+							<span class="ds-badge" data-variant="outline">automática</span>
+						} else {
+							if line.Estimated {
+								<span class="ds-badge" data-variant="outline">nível estimado</span>
+							}
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": swapGet(v, line.RowID)}) {
+								Trocar
+							}
+						}
+					</span>
+				</div>
+			}
+			if entry.Pending {
+				<div class="ds-row ds-level-line">
+					<span class="ds-row-title">Escolha pendente</span>
+					<span class="ds-level-actions">
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal"}) {
+							Escolher
+						}
+					</span>
+				</div>
+			}
+		}
+	}
+	if v.SwapDialog != nil {
+		@swapDialog(v, *v.SwapDialog)
+	}
+}
+
+// swapDialog abre sozinho, porque ele só existe quando alguém tocou em Trocar.
+templ swapDialog(v View, d swapDialogView) {
+	<div id="swap-dialog-host" data-init="document.getElementById('swap-choice').showModal()">
+		@ds.Dialog("swap-choice", "Trocar a escolha do nível "+strconv.FormatInt(d.Level, 10), nil) {
+			<p class="ds-card-text">Hoje: <b>{ d.Current }</b>. O nível continua com uma escolha: ela só muda.</p>
+			@ds.List("Trocar por", "") {
+				if len(d.Options) == 0 {
+					@ds.Row("Não há outra opção para este nível", "", "", "")
+				}
+				for _, option := range d.Options {
+					<button type="button" class="ds-row w-full text-left" data-on:click={ swapClosing() + swapPost(v, d.RowID, option.Target) }>
+						<span class="ds-row-title">{ option.Label }</span>
+					</button>
+				}
+			}
+		}
+	</div>
+}
+
+// lastLevelDialog é o `−`: diz antes o que some.
+templ lastLevelDialog(v View) {
+	if v.LastLevel != nil {
+		@ds.Dialog(stepDialog(-1), "Descer para o nível "+strconv.FormatInt(v.LastLevel.Level-1, 10)+"?", nil) {
+			<p class="ds-card-text">{ lastLevelText(*v.LastLevel) }</p>
+			if len(v.LastLevel.Lines) > 0 {
+				@ds.List("", "") {
+					for _, line := range v.LastLevel.Lines {
+						@ds.Row(line, "", "", "")
+					}
+				}
+			}
+			<div class="grid grid-cols-2 gap-2">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-wide": true, "commandfor": stepDialog(-1), "command": "close"}) {
+					Cancelar
+				}
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{
+					"type":          "button",
+					"data-wide":     true,
+					"data-on:click": "document.getElementById('" + stepDialog(-1) + "').close(); " + stepCommand(v, v.LastLevel.ClassName, -1),
+				}) {
+					Descer
+				}
+			</div>
+		}
+	}
+}
+
+func levelEntryTitle(entry sheet.LevelEntry) string {
+	return "Nível " + strconv.FormatInt(entry.Level, 10) + " · " + entry.ClassName + " " + strconv.FormatInt(entry.ClassLevel, 10)
+}
+
+func lastLevelText(loss sheet.LastLevelLoss) string {
+	text := "Sai o nível " + strconv.FormatInt(loss.Level, 10) + ", de " + loss.ClassName + "."
+	if len(loss.Lines) > 0 {
+		return text + " Junto dele somem:"
+	}
+	return text
+}
+
+func swapClosing() string {
+	return "document.getElementById('swap-choice').close(); "
+}

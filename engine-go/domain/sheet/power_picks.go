@@ -91,23 +91,6 @@ func WithPowerPick(blob, power, option string, choice book.PowerChoice) string {
 	return marshalPowerPicks(picks)
 }
 
-// WithoutPowerPick tira UMA ocorrência da escolha, e devolve quantas sobraram.
-// A cópia é de uma só porque Força em dois patamares são dois +1, e tirar um
-// não tira o outro.
-func WithoutPowerPick(blob, power, option string) (string, int) {
-	picks := PowerPicks(blob)
-	at := slices.Index(picks[power], option)
-	if at < 0 {
-		return marshalPowerPicks(picks), len(picks[power])
-	}
-	picks[power] = slices.Delete(slices.Clone(picks[power]), at, at+1)
-	left := len(picks[power])
-	if left == 0 {
-		delete(picks, power)
-	}
-	return marshalPowerPicks(picks), left
-}
-
 // spellPicksFit confere as escolhas do Foco em Magia (p131): "uma magia que
 // possa lançar" — uma do grimório — e "magias diferentes".
 func spellPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
@@ -124,14 +107,6 @@ func spellPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) erro
 		}
 	}
 	return nil
-}
-
-// WithoutPowerPicksOf apaga as escolhas de um poder — o que acontece quando o
-// poder sai da ficha, para não sobrar escolha de poder que ninguém tem.
-func WithoutPowerPicksOf(blob, power string) string {
-	picks := PowerPicks(blob)
-	delete(picks, power)
-	return marshalPowerPicks(picks)
 }
 
 // powerPicksFit confere as escolhas: só de poder que a ficha tem — escolhido ou
