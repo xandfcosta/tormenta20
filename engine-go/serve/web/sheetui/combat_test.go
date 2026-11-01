@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // Os guardas do painel de COMBATE.
@@ -154,7 +155,7 @@ func TestTheWeaponBlockFollowsWhoWieldsAndWhoCasts(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			panel := panelForCombat(engine.ComputedSheet{}, tc.cards, tc.caster)
+			panel := panelForCombat(engine.ComputedSheet{}, tc.cards, tc.caster, sheet.CharacterDTO{})
 			if panel.ShowWeapons != tc.wantBlock {
 				t.Errorf("ShowWeapons = %v, quer %v", panel.ShowWeapons, tc.wantBlock)
 			}
@@ -167,10 +168,10 @@ func TestTheWeaponBlockFollowsWhoWieldsAndWhoCasts(t *testing.T) {
 
 // A TRIPLA MÁGICA SÓ SAI PARA QUEM CONJURA POR CLASSE.
 func TestTheSpellTripletOnlyShowsForWhoCasts(t *testing.T) {
-	if tiles := panelForCombat(engine.ComputedSheet{}, nil, false).MagicTiles; len(tiles) != 0 {
+	if tiles := panelForCombat(engine.ComputedSheet{}, nil, false, sheet.CharacterDTO{}).MagicTiles; len(tiles) != 0 {
 		t.Errorf("quem não conjura recebeu %d caixas mágicas", len(tiles))
 	}
-	tiles := panelForCombat(engine.ComputedSheet{}, nil, true).MagicTiles
+	tiles := panelForCombat(engine.ComputedSheet{}, nil, true, sheet.CharacterDTO{}).MagicTiles
 	if len(tiles) != 3 {
 		t.Fatalf("o conjurador recebeu %d caixas mágicas, quer 3", len(tiles))
 	}

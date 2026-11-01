@@ -276,7 +276,7 @@ templ numbersSection() {
 		}
 		@specimenPiece("Atributo", "Os seis atributos: três colunas no celular, seis no resto.", false, false) {
 			@ds.Stats() {
-				@ds.Stat("FOR", "+1")
+				@ds.StatButton("FOR", "+1", templ.Attributes{"aria-label": "Força +1: ver a soma"})
 				@ds.Stat("DES", "+4")
 				@ds.Stat("CON", "+2")
 				@ds.Stat("INT", "+0")
