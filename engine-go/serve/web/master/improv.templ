@@ -154,8 +154,8 @@ templ dungeonPlanner(v improvView) {
 			<input
 				id="improv-rooms"
 				type="number"
-				min={ ui.Int(salasMinimo) }
-				max={ ui.Int(salasMaximo) }
+				min={ ui.Int(roomsMin) }
+				max={ ui.Int(roomsMax) }
 				value={ ui.Int(v.Rooms) }
 				data-bind:rooms
 				data-on:input__debounce.300ms="@get('/mestre/improviso')"

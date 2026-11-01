@@ -162,8 +162,8 @@ func TestAboveTheCeilingIsNotAnError(t *testing.T) {
 	}
 	// Salas absurdas caem no padrão, como as outras cenas: o número vem dos
 	// sinais e alguém edita à mão.
-	if got := loadImprov(improvView{Rooms: -4}).Rooms; got != salasPadrao {
-		t.Errorf("-4 salas viraram %d, quero o padrão %d", got, salasPadrao)
+	if got := loadImprov(improvView{Rooms: -4}).Rooms; got != roomsDefault {
+		t.Errorf("-4 salas viraram %d, quero o padrão %d", got, roomsDefault)
 	}
 }
 

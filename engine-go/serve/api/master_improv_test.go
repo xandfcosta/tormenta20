@@ -18,7 +18,7 @@ func TestRollingReturnsAPatchAndStacks(t *testing.T) {
 	eu := seedUser(t, s, "mestre@t20.local")
 
 	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/ruina",
-		`{"ruina":[{"r":2,"t":"Vazia"}]}`)
+		`{"ruin_rolls":[{"r":2,"t":"Vazia"}]}`)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -52,8 +52,8 @@ func TestClearingResetsOnlyThatTable(t *testing.T) {
 	s := newTestServer(t)
 	eu := seedUser(t, s, "mestre@t20.local")
 
-	signals := `{"ruina":[{"r":4,"t":"Vazia"}],"perseguicao":[{"r":9,"t":"Obstáculo"}],` +
-		`"recompensa":[{"r":2,"t":"Favor"}],"ideias":[{"r":7,"t":"Cripta"}]}`
+	signals := `{"ruin_rolls":[{"r":4,"t":"Vazia"}],"chase_rolls":[{"r":9,"t":"Obstáculo"}],` +
+		`"reward_rolls":[{"r":2,"t":"Favor"}],"idea_rolls":[{"r":7,"t":"Cripta"}]}`
 	rec := pedeNoMestre(t, s, eu, "POST", "/mestre/improviso/ruina/limpar", signals)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d", rec.Code)

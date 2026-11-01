@@ -147,14 +147,14 @@ func pushOnto(v improvView, table string, s roll) improvView {
 // navegador a cada clique no botão de rolar.
 func improvFromRequest(r *http.Request) improvView {
 	signals := struct {
-		Ruin   []roll `json:"ruina"`
-		Chase  []roll `json:"perseguicao"`
-		Reward []roll `json:"recompensa"`
-		Ideas  []roll `json:"ideias"`
-		Chaos  []roll `json:"baralho"`
+		Ruin   []roll `json:"ruin_rolls"`
+		Chase  []roll `json:"chase_rolls"`
+		Reward []roll `json:"reward_rolls"`
+		Ideas  []roll `json:"idea_rolls"`
+		Chaos  []roll `json:"chaos_rolls"`
 		Rooms  *int   `json:"rooms"`
 	}{}
-	v := improvView{Rooms: salasPadrao}
+	v := improvView{Rooms: roomsDefault}
 	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return v
 	}
