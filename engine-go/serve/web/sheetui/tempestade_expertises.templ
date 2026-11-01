@@ -97,10 +97,8 @@ templ expertiseSum(v View, row expertiseRow) {
 					@ds.Switch("Treinada", row.Trained, templ.Attributes{"aria-label": row.Name + " treinada", "data-on:change": sheetPost(v, "/pericias/treino/"+row.Command)})
 				}
 			</div>
-			if !v.Draft {
-				@expertiseSpends(row)
-				@expertiseSumRoll(v, row)
-			}
+			@expertiseSpends(row)
+			@expertiseSumRoll(v, row)
 			if row.Custom {
 				<div class="ds-sum-line">
 					@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/pericias/remover/"+row.Command)}) {

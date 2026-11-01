@@ -41,7 +41,7 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 	}
 
 	// AS TABELAS FILHAS, uma por `INSERT…SELECT` sob o id novo. Dano, efeitos e condições NÃO
-	// vêm: quem joga é a cópia, e ela nasce inteira (ALE-564). As que têm
+	// vêm: o que se gastou no rascunho fica nele, e a cópia nasce inteira (ALE-564). As que têm
 	// carimbo próprio — itens, magias — levam um `now` fresco: a cópia
 	// nasce agora, e herdar o carimbo do molde faria a mesa dizer que o item
 	// entrou na mochila antes de o herói existir nela.
