@@ -114,9 +114,7 @@ type Character struct {
 	Raceattributechoices string         `json:"raceattributechoices"`
 	Secondaryracechoices string         `json:"secondaryracechoices"`
 	Originchoices        string         `json:"originchoices"`
-	Classpowers          string         `json:"classpowers"`
 	Classchoices         string         `json:"classchoices"`
-	Powerchoices         string         `json:"powerchoices"`
 	Activeconditions     string         `json:"activeconditions"`
 	Createdat            string         `json:"createdat"`
 	Updatedat            string         `json:"updatedat"`
@@ -167,6 +165,16 @@ type CharacterItem struct {
 type CharacterItemEnchant struct {
 	Itemid    int64  `json:"itemid"`
 	Enchantid string `json:"enchantid"`
+}
+
+type CharacterLevelChoice struct {
+	ID          int64         `json:"id"`
+	Characterid int64         `json:"characterid"`
+	Level       sql.NullInt64 `json:"level"`
+	Kind        string        `json:"kind"`
+	Ref         string        `json:"ref"`
+	Pick        string        `json:"pick"`
+	Estimated   int64         `json:"estimated"`
 }
 
 type CharacterNonlethalDamage struct {

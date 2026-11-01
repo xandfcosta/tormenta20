@@ -171,11 +171,7 @@ func TestAClassWithSomethingChosenCannotLeave(t *testing.T) {
 		if picked.Name == "" {
 			t.Fatal("o catálogo não tem poder eletivo de Ladino: o caso não mede nada")
 		}
-		if _, err := f.s.db.ExecContext(context.Background(),
-			"UPDATE characters SET classPowers = ? WHERE id = ?", fmt.Sprintf("[%q]", picked.ID), id,
-		); err != nil {
-			t.Fatalf("gravar o poder: %v", err)
-		}
+		seedPowerChoices(t, f.s, id, fmt.Sprintf("[%q]", picked.ID), "{}")
 		if refusal := stepClass(t, f, id, "Ladino", -1); !strings.Contains(refusal, picked.Name) {
 			t.Errorf("a recusa não citou o poder %q: %q", picked.Name, refusal)
 		}

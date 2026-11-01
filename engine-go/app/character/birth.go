@@ -52,9 +52,7 @@ func (b Births) Create(
 		RaceAttributeChoices: compactOr(body.RaceAttributeChoices, "{}"),
 		SecondaryRaceChoices: compactOr(body.SecondaryRaceChoices, "[]"),
 		OriginChoices:        sheet.MarshalStrings(body.OriginChoices),
-		ClassPowers:          sheet.MarshalStrings(body.ClassPowers),
 		ClassChoices:         compactOr(body.ClassChoices, "{}"),
-		PowerChoices:         compactOr(body.PowerChoices, "{}"),
 		CreatedAt:            now, UpdatedAt: now,
 	})
 	if err != nil {
@@ -92,6 +90,14 @@ func (b Births) Create(
 		}); err != nil {
 			return 0, fmt.Errorf("gravar um item da ficha %d: %w", id, err)
 		}
+	}
+	row, err := q.GetCharacter(ctx, id)
+	if err != nil {
+		return 0, fmt.Errorf("reler a ficha %d: %w", id, err)
+	}
+	classPowers, powerChoices := sheet.MarshalStrings(body.ClassPowers), compactOr(body.PowerChoices, "{}")
+	if err := saveChoiceBlobs(ctx, q, b.catalogs, row, &classPowers, &powerChoices); err != nil {
+		return 0, err
 	}
 	if err := tx.Commit(); err != nil {
 		return 0, fmt.Errorf("fechar a transação do nascimento: %w", err)

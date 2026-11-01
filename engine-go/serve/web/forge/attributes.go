@@ -127,13 +127,13 @@ func heroSpread(row sqlcgen.Character) map[string]int {
 // abaixo das perícias escolhidas no Especialista (p73, ALE-501). A recusa é
 // frase da cena, como a da compra de pontos.
 func (s Scene) leavesChosenExpertises(r *http.Request, row sqlcgen.Character, spread map[string]int) (string, error) {
-	if !sheet.HasExpertiseChoice(row.Powerchoices) &&
-		!sheet.HasRaceAbilityPicks(row.Raceattributechoices, row.Secondaryracechoices) {
-		return "", nil
-	}
 	dto, err := sheet.Load(r.Context(), s.deps.Queries(), s.deps.Catalogs(), row)
 	if err != nil {
 		return "", err
+	}
+	if !sheet.HasExpertiseChoice(dto.PowerChoices) &&
+		!sheet.HasRaceAbilityPicks(row.Raceattributechoices, row.Secondaryracechoices) {
+		return "", nil
 	}
 	refused := sheet.ChangeKeepsChosenExpertises(dto, func(d *sheet.CharacterDTO) {
 		d.Strength, d.Dexterity = int64(spread["strength"]), int64(spread["dexterity"])

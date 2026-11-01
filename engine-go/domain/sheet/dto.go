@@ -69,6 +69,9 @@ type CharacterDTO struct {
 	Items         []ItemDTO      `json:"items"`
 	ActiveEffects []EffectDTO    `json:"activeEffects"`
 	Spells        []SpellDTO     `json:"spells"`
+	// LevelChoices é de onde saem `ClassPowers` e `PowerChoices`, com o nível de cada
+	// escolha. Não atravessa para o motor, que pergunta só o que o personagem tem.
+	LevelChoices []LevelChoiceDTO `json:"-"`
 	// O estado de JOGO da ficha — situacionais ligados, usos gastos e o preço
 	// pago pelas posturas. Viaja com a ficha porque a tela precisa dos três
 	// para desenhar o primeiro quadro.
@@ -154,9 +157,9 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		RaceAttributeChoices: c.Raceattributechoices,
 		SecondaryRaceChoices: c.Secondaryracechoices,
 		OriginChoices:        c.Originchoices,
-		ClassPowers:          c.Classpowers,
+		ClassPowers:          "[]",
 		ClassChoices:         c.Classchoices,
-		PowerChoices:         c.Powerchoices,
+		PowerChoices:         "{}",
 		ActiveConditions:     c.Activeconditions,
 		CreatedAt:            c.Createdat,
 		UpdatedAt:            c.Updatedat,

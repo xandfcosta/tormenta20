@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -51,11 +50,7 @@ func rerollsTheAttack(t *testing.T, f sceneFixture, who int64, key, body string)
 
 func withPowers(t *testing.T, f sceneFixture, powers, choices string) {
 	t.Helper()
-	if _, err := f.s.db.ExecContext(context.Background(),
-		"UPDATE characters SET classPowers = ?, powerChoices = ? WHERE id = ?", powers, choices, f.charID,
-	); err != nil {
-		t.Fatalf("semear os poderes: %v", err)
-	}
+	seedPowerChoices(t, f.s, f.charID, powers, choices)
 }
 
 // p130 Sortudo: "Quando faz um teste, você pode gastar 3 PM para rolá-lo

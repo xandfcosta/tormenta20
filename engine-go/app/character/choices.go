@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // ChoiceWrite são as cinco colunas de ESCOLHA da ficha, e NULO quer dizer "não
@@ -34,9 +35,9 @@ type ChoiceWrite struct {
 //
 // `COALESCE(?, coluna)` diz a MESMA coisa numa instrução FIXA: o parâmetro nulo
 // devolve o valor que já está lá. Não há concatenação, não há supressão, e as
-// sete colunas estão escritas à vista. As sete são `TEXT NOT NULL`, então
-// nenhuma delas pode ser nula no banco e o `COALESCE` nunca cai num terceiro
-// caso.
+// colunas estão escritas à vista. Todas são `TEXT NOT NULL`, então nenhuma delas
+// pode ser nula no banco e o `COALESCE` nunca cai num terceiro caso. Os poderes e
+// as escolhas deles vão para as linhas por nível (`saveChoiceBlobs`).
 //
 // # E um pedido VAZIO não vira `UPDATE`
 //
@@ -47,21 +48,21 @@ func (p Plays) SaveChoices(ctx context.Context, id int64, choices ChoiceWrite) e
 	if choices == (ChoiceWrite{}) {
 		return nil
 	}
-	if _, err := p.db.ExecContext(ctx, `UPDATE characters SET
-		classPowers          = COALESCE(?, classPowers),
-		originChoices        = COALESCE(?, originChoices),
-		classChoices         = COALESCE(?, classChoices),
-		raceAbilityChoices   = COALESCE(?, raceAbilityChoices),
-		raceAttributeChoices = COALESCE(?, raceAttributeChoices),
-		powerChoices         = COALESCE(?, powerChoices),
-		secondaryRaceChoices = COALESCE(?, secondaryRaceChoices),
-		updatedAt            = ?
-		WHERE id = ?`,
-		choices.ClassPowers, choices.OriginChoices, choices.ClassChoices,
-		choices.RaceAbilityChoices, choices.RaceAttributeChoices, choices.PowerChoices,
-		choices.SecondaryRaceChoices, dbvalue.NowISO(), id,
-	); err != nil {
-		return fmt.Errorf("gravar as escolhas da ficha %d: %w", id, err)
-	}
-	return nil
+	return p.inTx(ctx, "gravar as escolhas", func(tx *sqlcgen.Queries) error {
+		row, err := tx.GetCharacter(ctx, id)
+		if err != nil {
+			return fmt.Errorf("ler a ficha %d: %w", id, err)
+		}
+		if err := tx.SetCharacterChoices(ctx, sqlcgen.SetCharacterChoicesParams{
+			OriginChoices:        dbvalue.NullString(choices.OriginChoices),
+			ClassChoices:         dbvalue.NullString(choices.ClassChoices),
+			RaceAbilityChoices:   dbvalue.NullString(choices.RaceAbilityChoices),
+			RaceAttributeChoices: dbvalue.NullString(choices.RaceAttributeChoices),
+			SecondaryRaceChoices: dbvalue.NullString(choices.SecondaryRaceChoices),
+			UpdatedAt:            dbvalue.NowISO(), ID: id,
+		}); err != nil {
+			return fmt.Errorf("gravar as escolhas da ficha %d: %w", id, err)
+		}
+		return saveChoiceBlobs(ctx, tx, p.catalogs, row, choices.ClassPowers, choices.PowerChoices)
+	})
 }

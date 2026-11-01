@@ -49,8 +49,7 @@ func knightOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 		Strength: 3, Dexterity: 1, Constitution: 4, Intelligence: 0, Wisdom: 1, Charisma: 2,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o cavaleiro: %v", err)

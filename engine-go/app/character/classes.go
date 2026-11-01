@@ -41,9 +41,12 @@ func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class stri
 		}); err != nil {
 			return fmt.Errorf("gravar a classe %s: %w", class, err)
 		}
-		return q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
+		if err := q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
 			Level: total + 1, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-		})
+		}); err != nil {
+			return err
+		}
+		return syncLevelChoices(ctx, q, p.catalogs, row)
 	})
 }
 
@@ -76,8 +79,11 @@ func (p Plays) LeaveClass(ctx context.Context, row sqlcgen.Character, class stri
 		if err := q.DeleteClass(ctx, sqlcgen.DeleteClassParams{Characterid: row.ID, Classname: class}); err != nil {
 			return fmt.Errorf("apagar a classe %s: %w", class, err)
 		}
-		return q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
+		if err := q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
 			Level: total - 1, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-		})
+		}); err != nil {
+			return err
+		}
+		return syncLevelChoices(ctx, q, p.catalogs, row)
 	})
 }

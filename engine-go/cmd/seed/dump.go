@@ -48,6 +48,7 @@ var dumpTables = []string{
 	// mostrar.
 	"character_item_enchants",
 	"character_spells",
+	"character_level_choices",
 	"campaign_members",
 	"sessions",
 	// Depois de `campaigns`, que é o pai dele pela FK (ALE-292).

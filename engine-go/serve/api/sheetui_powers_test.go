@@ -34,8 +34,7 @@ func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int
 		Strength: 4, Dexterity: 2, Constitution: 3, Intelligence: 0, Wisdom: 1, Charisma: 0,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear o bárbaro: %v", err)
@@ -109,11 +108,12 @@ func TestTheCollectionJoinsTheProvenances(t *testing.T) {
 func choiceCom(t *testing.T, f sceneFixture, id int64, powers, origin string) {
 	t.Helper()
 	if _, err := f.s.db.ExecContext(context.Background(),
-		"UPDATE characters SET classPowers = ?, originChoices = ? WHERE id = ?",
-		powers, origin, id,
+		"UPDATE characters SET originChoices = ? WHERE id = ?", origin, id,
 	); err != nil {
 		t.Fatalf("semear as escolhas: %v", err)
 	}
+	_, picks := storedChoices(t, f.s, id)
+	seedPowerChoices(t, f.s, id, powers, picks)
 }
 
 // O PODER DO DEUS entra no acervo — ele é da ficha como qualquer outro.

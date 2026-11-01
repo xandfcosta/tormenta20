@@ -58,12 +58,12 @@ func seedCasterWithPowers(t *testing.T, s *Server, ownerID int64, className stri
 		OwnerId: ownerID, Name: "Conjurador", Origin: "estudioso", Level: int64(classLevel),
 		Intelligence: 4, Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: classPowers, ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear personagem: %v", err)
 	}
+	seedPowerChoices(t, s, id, classPowers, "{}")
 	if err := s.queries.CreateClass(ctx, sqlcgen.CreateClassParams{
 		Characterid: id, Classname: className, Level: int64(classLevel),
 	}); err != nil {

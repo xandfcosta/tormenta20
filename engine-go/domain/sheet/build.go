@@ -31,6 +31,12 @@ func Load(
 ) (CharacterDTO, error) {
 	dto := CharacterScalarsFrom(c)
 
+	levelChoices, err := q.ListLevelChoicesByCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	dto = WithLevelChoices(dto, LevelChoicesFrom(levelChoices))
+
 	races, err := q.ListRacesByCharacter(ctx, c.ID)
 	if err != nil {
 		return dto, err

@@ -52,15 +52,17 @@ func (p Plays) LevelClass(
 	if total > 20 {
 		return fmt.Errorf("as classes somariam o nível %d, e o 20º é o último (p35)", total)
 	}
-	if _, err := p.queries.SetCharacterClassLevel(ctx, sqlcgen.SetCharacterClassLevelParams{
-		Level: level, CharacterId: row.ID, ClassName: class,
-	}); err != nil {
-		return fmt.Errorf("gravar o nível %d de %s: %w", level, class, err)
-	}
-	if err := p.queries.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
-		Level: total, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	}); err != nil {
-		return fmt.Errorf("gravar o nível %d da ficha %d: %w", total, row.ID, err)
-	}
-	return nil
+	return p.inTx(ctx, "mudar o nível de "+class, func(q *sqlcgen.Queries) error {
+		if _, err := q.SetCharacterClassLevel(ctx, sqlcgen.SetCharacterClassLevelParams{
+			Level: level, CharacterId: row.ID, ClassName: class,
+		}); err != nil {
+			return fmt.Errorf("gravar o nível %d de %s: %w", level, class, err)
+		}
+		if err := q.SetCharacterLevel(ctx, sqlcgen.SetCharacterLevelParams{
+			Level: total, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
+		}); err != nil {
+			return fmt.Errorf("gravar o nível %d da ficha %d: %w", total, row.ID, err)
+		}
+		return syncLevelChoices(ctx, q, p.catalogs, row)
+	})
 }

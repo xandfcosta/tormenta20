@@ -224,16 +224,16 @@ WHERE id = sqlc.arg('id');
 INSERT INTO characters (
   ownerId, name, origin, god, godPower, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
-  proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices, classPowers,
-  classChoices, powerChoices, createdAt, updatedAt
+  proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices,
+  classChoices, createdAt, updatedAt
 ) VALUES (
   sqlc.arg('ownerId'), sqlc.arg('name'), sqlc.arg('origin'), sqlc.arg('god'), sqlc.arg('godPower'),
   sqlc.arg('tibar'), sqlc.arg('level'),
   sqlc.arg('strength'), sqlc.arg('dexterity'), sqlc.arg('constitution'),
   sqlc.arg('intelligence'), sqlc.arg('wisdom'), sqlc.arg('charisma'), sqlc.arg('size'),
   sqlc.arg('displacement'), sqlc.arg('proficiencies'), sqlc.arg('raceAttributeChoices'),
-  sqlc.arg('secondaryRaceChoices'), sqlc.arg('originChoices'), sqlc.arg('classPowers'),
-  sqlc.arg('classChoices'), sqlc.arg('powerChoices'), sqlc.arg('createdAt'), sqlc.arg('updatedAt')
+  sqlc.arg('secondaryRaceChoices'), sqlc.arg('originChoices'),
+  sqlc.arg('classChoices'), sqlc.arg('createdAt'), sqlc.arg('updatedAt')
 )
 RETURNING id;
 
@@ -242,6 +242,35 @@ INSERT INTO character_races (characterId, race) VALUES (?, ?);
 
 -- name: CreateClass :exec
 INSERT INTO character_classes (characterId, className, level) VALUES (?, ?, ?);
+
+-- name: SetCharacterChoices :exec
+UPDATE characters SET
+  originChoices        = COALESCE(sqlc.narg('originChoices'), originChoices),
+  classChoices         = COALESCE(sqlc.narg('classChoices'), classChoices),
+  raceAbilityChoices   = COALESCE(sqlc.narg('raceAbilityChoices'), raceAbilityChoices),
+  raceAttributeChoices = COALESCE(sqlc.narg('raceAttributeChoices'), raceAttributeChoices),
+  secondaryRaceChoices = COALESCE(sqlc.narg('secondaryRaceChoices'), secondaryRaceChoices),
+  updatedAt            = sqlc.arg('updatedAt')
+WHERE id = sqlc.arg('id');
+
+-- name: ListLevelChoicesByCharacter :many
+SELECT * FROM character_level_choices WHERE characterId = ? ORDER BY id ASC;
+
+-- name: ListLevelChoicesByCharacters :many
+SELECT * FROM character_level_choices WHERE characterId IN (sqlc.slice('ids')) ORDER BY id ASC;
+
+-- name: CreateLevelChoice :exec
+INSERT INTO character_level_choices (characterId, level, kind, ref, pick, estimated)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- name: SetLevelChoiceLevel :exec
+UPDATE character_level_choices SET level = ? WHERE id = ?;
+
+-- name: DeleteLevelChoice :exec
+DELETE FROM character_level_choices WHERE id = ?;
+
+-- name: ListCharacterIDs :many
+SELECT id FROM characters ORDER BY id ASC;
 
 -- name: DeleteClass :exec
 DELETE FROM character_classes WHERE characterId = ? AND className = ?;

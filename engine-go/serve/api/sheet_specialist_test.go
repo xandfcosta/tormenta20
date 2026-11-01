@@ -31,8 +31,7 @@ func specialist(t *testing.T, intelligence int64) (sceneFixture, int64) {
 		OwnerId: f.player, Name: "Ladina", Origin: "soldado", Level: 7, Intelligence: intelligence,
 		Size: "Médio", Displacement: 9,
 		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
-		OriginChoices: "[]", ClassPowers: "[]", ClassChoices: "{}", PowerChoices: "{}",
-		CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
 	})
 	if err != nil {
 		t.Fatalf("semear a ladina: %v", err)
@@ -68,11 +67,8 @@ func sheetPost(t *testing.T, f sceneFixture, id int64, path, body string) string
 
 func storedPowerChoices(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	row, err := f.s.queries.GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("ler a ficha: %v", err)
-	}
-	return row.Powerchoices
+	_, choices := storedChoices(t, f.s, id)
+	return choices
 }
 
 // Int 2: duas perícias, só treinadas, sem vaga de poder.
@@ -166,8 +162,8 @@ func TestTheSheetDoesNotLeaveTheSpecialistChoice(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if row.Intelligence != 1 || row.Powerchoices != before {
-		t.Errorf("a ficha mudou com as recusas: Int %d, escolhas %s", row.Intelligence, row.Powerchoices)
+	if row.Intelligence != 1 || storedPowerChoices(t, f, id) != before {
+		t.Errorf("a ficha mudou com as recusas: Int %d, escolhas %s", row.Intelligence, storedPowerChoices(t, f, id))
 	}
 	// O CONTROLE: o gesto que não toca a escolha passa.
 	if refusal := sheetPost(t, f, id, "/pericias/treino/Acrobacia", ""); refusal != "" {

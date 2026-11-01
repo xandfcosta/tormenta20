@@ -349,16 +349,16 @@ const createCharacter = `-- name: CreateCharacter :one
 INSERT INTO characters (
   ownerId, name, origin, god, godPower, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
-  proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices, classPowers,
-  classChoices, powerChoices, createdAt, updatedAt
+  proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices,
+  classChoices, createdAt, updatedAt
 ) VALUES (
   ?1, ?2, ?3, ?4, ?5,
   ?6, ?7,
   ?8, ?9, ?10,
   ?11, ?12, ?13, ?14,
   ?15, ?16, ?17,
-  ?18, ?19, ?20,
-  ?21, ?22, ?23, ?24
+  ?18, ?19,
+  ?20, ?21, ?22
 )
 RETURNING id
 `
@@ -383,9 +383,7 @@ type CreateCharacterParams struct {
 	RaceAttributeChoices string         `json:"raceAttributeChoices"`
 	SecondaryRaceChoices string         `json:"secondaryRaceChoices"`
 	OriginChoices        string         `json:"originChoices"`
-	ClassPowers          string         `json:"classPowers"`
 	ClassChoices         string         `json:"classChoices"`
-	PowerChoices         string         `json:"powerChoices"`
 	CreatedAt            string         `json:"createdAt"`
 	UpdatedAt            string         `json:"updatedAt"`
 }
@@ -411,9 +409,7 @@ func (q *Queries) CreateCharacter(ctx context.Context, arg CreateCharacterParams
 		arg.RaceAttributeChoices,
 		arg.SecondaryRaceChoices,
 		arg.OriginChoices,
-		arg.ClassPowers,
 		arg.ClassChoices,
-		arg.PowerChoices,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -531,6 +527,32 @@ func (q *Queries) CreateItem(ctx context.Context, arg CreateItemParams) (CreateI
 		&i.Material,
 	)
 	return i, err
+}
+
+const createLevelChoice = `-- name: CreateLevelChoice :exec
+INSERT INTO character_level_choices (characterId, level, kind, ref, pick, estimated)
+VALUES (?, ?, ?, ?, ?, ?)
+`
+
+type CreateLevelChoiceParams struct {
+	Characterid int64         `json:"characterid"`
+	Level       sql.NullInt64 `json:"level"`
+	Kind        string        `json:"kind"`
+	Ref         string        `json:"ref"`
+	Pick        string        `json:"pick"`
+	Estimated   int64         `json:"estimated"`
+}
+
+func (q *Queries) CreateLevelChoice(ctx context.Context, arg CreateLevelChoiceParams) error {
+	_, err := q.db.ExecContext(ctx, createLevelChoice,
+		arg.Characterid,
+		arg.Level,
+		arg.Kind,
+		arg.Ref,
+		arg.Pick,
+		arg.Estimated,
+	)
+	return err
 }
 
 const createMember = `-- name: CreateMember :one
@@ -839,6 +861,15 @@ DELETE FROM character_items WHERE id = ?
 
 func (q *Queries) DeleteItem(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteItem, id)
+	return err
+}
+
+const deleteLevelChoice = `-- name: DeleteLevelChoice :exec
+DELETE FROM character_level_choices WHERE id = ?
+`
+
+func (q *Queries) DeleteLevelChoice(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteLevelChoice, id)
 	return err
 }
 
@@ -1246,7 +1277,7 @@ func (q *Queries) GetCampaignPlace(ctx context.Context, id int64) (CampaignPlace
 }
 
 const getCharacter = `-- name: GetCharacter :one
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error) {
@@ -1274,9 +1305,7 @@ func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error)
 		&i.Raceattributechoices,
 		&i.Secondaryracechoices,
 		&i.Originchoices,
-		&i.Classpowers,
 		&i.Classchoices,
-		&i.Powerchoices,
 		&i.Activeconditions,
 		&i.Createdat,
 		&i.Updatedat,
@@ -2115,6 +2144,33 @@ func (q *Queries) ListCharacterDamage(ctx context.Context, ids []int64) ([]Chara
 	return items, nil
 }
 
+const listCharacterIDs = `-- name: ListCharacterIDs :many
+SELECT id FROM characters ORDER BY id ASC
+`
+
+func (q *Queries) ListCharacterIDs(ctx context.Context) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, listCharacterIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCharacterPowerUses = `-- name: ListCharacterPowerUses :many
 SELECT powerId, scope, used FROM character_power_uses
 WHERE characterId = ? ORDER BY powerId, scope
@@ -2184,7 +2240,7 @@ func (q *Queries) ListCharacterStances(ctx context.Context, characterid int64) (
 }
 
 const listCharactersByIDs = `-- name: ListCharactersByIDs :many
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id IN (/*SLICE:ids*/?)
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id IN (/*SLICE:ids*/?)
 `
 
 func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Character, error) {
@@ -2228,9 +2284,7 @@ func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Chara
 			&i.Raceattributechoices,
 			&i.Secondaryracechoices,
 			&i.Originchoices,
-			&i.Classpowers,
 			&i.Classchoices,
-			&i.Powerchoices,
 			&i.Activeconditions,
 			&i.Createdat,
 			&i.Updatedat,
@@ -2252,7 +2306,7 @@ func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Chara
 
 const listCharactersByOwner = `-- name: ListCharactersByOwner :many
 
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classpowers, classchoices, powerchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
+SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
 WHERE ownerId = ? AND sourceCharacterId IS NULL
 ORDER BY updatedAt DESC
 `
@@ -2291,9 +2345,7 @@ func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]C
 			&i.Raceattributechoices,
 			&i.Secondaryracechoices,
 			&i.Originchoices,
-			&i.Classpowers,
 			&i.Classchoices,
-			&i.Powerchoices,
 			&i.Activeconditions,
 			&i.Createdat,
 			&i.Updatedat,
@@ -2651,6 +2703,86 @@ func (q *Queries) ListItemsByCharacters(ctx context.Context, ids []int64) ([]Lis
 			&i.Equipped,
 			&i.Improvements,
 			&i.Material,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listLevelChoicesByCharacter = `-- name: ListLevelChoicesByCharacter :many
+SELECT id, characterid, level, kind, ref, pick, estimated FROM character_level_choices WHERE characterId = ? ORDER BY id ASC
+`
+
+func (q *Queries) ListLevelChoicesByCharacter(ctx context.Context, characterid int64) ([]CharacterLevelChoice, error) {
+	rows, err := q.db.QueryContext(ctx, listLevelChoicesByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterLevelChoice{}
+	for rows.Next() {
+		var i CharacterLevelChoice
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Level,
+			&i.Kind,
+			&i.Ref,
+			&i.Pick,
+			&i.Estimated,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listLevelChoicesByCharacters = `-- name: ListLevelChoicesByCharacters :many
+SELECT id, characterid, level, kind, ref, pick, estimated FROM character_level_choices WHERE characterId IN (/*SLICE:ids*/?) ORDER BY id ASC
+`
+
+func (q *Queries) ListLevelChoicesByCharacters(ctx context.Context, ids []int64) ([]CharacterLevelChoice, error) {
+	query := listLevelChoicesByCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterLevelChoice{}
+	for rows.Next() {
+		var i CharacterLevelChoice
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Level,
+			&i.Kind,
+			&i.Ref,
+			&i.Pick,
+			&i.Estimated,
 		); err != nil {
 			return nil, err
 		}
@@ -3399,6 +3531,40 @@ func (q *Queries) SetCharacterAttributes(ctx context.Context, arg SetCharacterAt
 	return err
 }
 
+const setCharacterChoices = `-- name: SetCharacterChoices :exec
+UPDATE characters SET
+  originChoices        = COALESCE(?1, originChoices),
+  classChoices         = COALESCE(?2, classChoices),
+  raceAbilityChoices   = COALESCE(?3, raceAbilityChoices),
+  raceAttributeChoices = COALESCE(?4, raceAttributeChoices),
+  secondaryRaceChoices = COALESCE(?5, secondaryRaceChoices),
+  updatedAt            = ?6
+WHERE id = ?7
+`
+
+type SetCharacterChoicesParams struct {
+	OriginChoices        sql.NullString `json:"originChoices"`
+	ClassChoices         sql.NullString `json:"classChoices"`
+	RaceAbilityChoices   sql.NullString `json:"raceAbilityChoices"`
+	RaceAttributeChoices sql.NullString `json:"raceAttributeChoices"`
+	SecondaryRaceChoices sql.NullString `json:"secondaryRaceChoices"`
+	UpdatedAt            string         `json:"updatedAt"`
+	ID                   int64          `json:"id"`
+}
+
+func (q *Queries) SetCharacterChoices(ctx context.Context, arg SetCharacterChoicesParams) error {
+	_, err := q.db.ExecContext(ctx, setCharacterChoices,
+		arg.OriginChoices,
+		arg.ClassChoices,
+		arg.RaceAbilityChoices,
+		arg.RaceAttributeChoices,
+		arg.SecondaryRaceChoices,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	return err
+}
+
 const setCharacterClassLevel = `-- name: SetCharacterClassLevel :execrows
 UPDATE character_classes SET level = ?1
 WHERE characterId = ?2 AND className = ?3
@@ -3485,6 +3651,20 @@ type SetItemQuantityParams struct {
 
 func (q *Queries) SetItemQuantity(ctx context.Context, arg SetItemQuantityParams) error {
 	_, err := q.db.ExecContext(ctx, setItemQuantity, arg.Quantity, arg.ID)
+	return err
+}
+
+const setLevelChoiceLevel = `-- name: SetLevelChoiceLevel :exec
+UPDATE character_level_choices SET level = ? WHERE id = ?
+`
+
+type SetLevelChoiceLevelParams struct {
+	Level sql.NullInt64 `json:"level"`
+	ID    int64         `json:"id"`
+}
+
+func (q *Queries) SetLevelChoiceLevel(ctx context.Context, arg SetLevelChoiceLevelParams) error {
+	_, err := q.db.ExecContext(ctx, setLevelChoiceLevel, arg.Level, arg.ID)
 	return err
 }
 
