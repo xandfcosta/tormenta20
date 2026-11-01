@@ -2,6 +2,8 @@ package master
 
 import (
 	"fmt"
+	"t20engine/serve/web/bookui"
+	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 
@@ -25,166 +27,151 @@ import (
 // quando o artefato está na mesa. Sem ela, "Baralho do Caos" ao lado de
 // "Perseguição" leria como quinta ferramenta de improviso.
 //
-// Três tabelas lado a lado e a masmorra embaixo, como o original. A grade é
-// `sm:2 xl:3` e não a `.ds-catalog-grid` dos catálogos: aqui os cartões são
-// CONTROLES com histórico curto, não prosa de regra, então a medida de leitura
-// que rege os catálogos não se aplica.
+// Mockup `improviso.html`. Três tabelas lado a lado e a masmorra embaixo. A grade não é
+// a dos catálogos: aqui os cartões são CONTROLES com histórico curto, não prosa de regra,
+// então a medida de leitura que rege os catálogos não se aplica.
 
+// A região é a cena inteira porque os itens da seta são os botões dos cartões, e o campo
+// de salas fica de fora: num campo de número a seta muda o valor.
 templ improvScene(v improvView) {
 	<section
 		id="improv"
-		class="mesa-palco flex min-h-0 flex-1 flex-col gap-4"
-		aria-labelledby="table-improv"
+		class="ds-improv"
+		aria-label="Improviso"
 		data-signals={ improvSignals(v) }
+		data-nav-region="tabelas"
+		data-nav-layout="grid"
 	>
-		<h2 id="table-improv" class="font-heading text-lg tracking-wide text-foreground">Improviso</h2>
-		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-			<div>
-				@ui.SectionLabel("muted", "mb-2") {
-					Tabelas do Cap 6
-				}
-				<div class="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
-					@rollingTable("ruina", "Ermos — Ruína", "d6", "p269", v.Ruin)
-					@rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5 · p274", v.Chase)
-					@rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7 · p279", v.Reward)
-				</div>
-			</div>
-			<div class="border-t border-grimorio-iron pt-4">
-				@ui.SectionLabel("muted", "mb-2") {
-					Masmorra
-				}
-				<div class="grid items-start gap-3 sm:grid-cols-2">
-					@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2 · p263", v.Ideas)
-					@dungeonPlanner(v)
-				</div>
-			</div>
-			<div class="border-t border-grimorio-iron pt-4">
-				@ui.SectionLabel("muted", "mb-2") {
-					Artefato
-				}
-				<div class="grid items-start gap-3 sm:grid-cols-2">
-					@rollingTable("baralho", "Baralho do Caos — carta", "1d%", "p347", v.Chaos)
-				</div>
-			</div>
+		@improvSection("Tabelas do Cap 6") {
+			@rollingTable("ruina", "Ermos — Ruína", "d6", "", 269, "Ruína", v.Ruin, v)
+			@rollingTable("perseguicao", "Perseguição — evento", "d20", "Tabela 6-5", 274, "Tabela 6-5", v.Chase, v)
+			@rollingTable("recompensa", "Consequências de buscas", "d6", "Tabela 6-7", 279, "Tabela 6-7", v.Reward, v)
+		}
+		@improvSection("Masmorra") {
+			@rollingTable("ideias", "Ideias de masmorra", "d20", "Tabela 6-2", 263, "Tabela 6-2", v.Ideas, v)
+			@dungeonPlanner(v)
+		}
+		@improvSection("Artefato") {
+			@rollingTable("baralho", "Baralho do Caos — carta", "1d%", "", 347, "Baralho do Caos", v.Chaos, v)
+		}
+	</section>
+}
+
+templ improvSection(title string) {
+	<section class="ds-improv-section" aria-label={ title }>
+		<h2 class="ds-list-head">{ title }</h2>
+		<div class="ds-improv-grid">
+			{ children... }
 		</div>
 	</section>
 }
 
-// rollingTable é o cartão de uma tabela: o botão, o último resultado grande, e
-// as anteriores em voz baixa.
+// tableCitation é a citação à direita do nome: a tabela, quando tem número, e a página
+// como elo para o livro. O número do dado só vale se dá para conferir, e o elo deixa a
+// conferência a um toque.
+templ tableCitation(table string, page int, term string, v improvView) {
+	if table != "" {
+		{ table + " · " }
+	}
+	@bookui.PageSealInMeta(v.Book, page, term)
+}
+
+// rollingTable é o cartão de uma tabela: o botão, o último resultado grande, e as
+// anteriores em voz baixa. O botão vem ANTES do resultado para não sair do lugar: o
+// resultado cresce para baixo, e quem rola várias vezes não precisa perseguir o botão.
 //
-// O NÚMERO aparece sempre, ao lado do texto. Ele não é detalhe de
-// implementação: "saiu 4" é metade da resposta, e uma tabela cujo resultado não
-// se confere contra o livro é um oráculo, não uma ferramenta.
+// O NÚMERO aparece sempre, ao lado do texto. Ele não é detalhe de implementação: "saiu 4"
+// é metade da resposta, e uma tabela cujo resultado não se confere contra o livro é um
+// oráculo, não uma ferramenta.
 //
-// `<section aria-label>` e não `<div>`: um cartão com cabeçalho próprio É uma
-// região, e sem nome acessível ele vira caixa anônima para quem navega por
-// regiões. De quebra, é o que
-// deixa o teste apontar para UM cartão em vez de contar filhos de `div`, que é
-// o acoplamento a formato de DOM que o guia manda não escrever.
-templ rollingTable(id, title, data, source string, history []roll) {
-	<section aria-label={ title } class="flex flex-col gap-2 rounded-sm border border-grimorio-iron p-3">
-		<div class="flex flex-wrap items-baseline gap-x-2">
-			<h3 class="font-heading text-sm tracking-wide text-foreground">{ title }</h3>
-			<span class="text-3xs text-muted-foreground">{ source }</span>
-		</div>
-		<button
-			type="button"
-			data-on:click={ fmt.Sprintf("@post('/mestre/improviso/%s')", id) }
-			data-indicator={ "rolando" + id }
-			class="inline-flex min-h-11 items-center justify-center gap-1.5 self-start rounded-sm border border-grimorio-iron px-3 text-xs text-foreground outline-none transition-colors hover:bg-accent"
-		>
-			@ui.Icon("Dices", "size-4")
-			{ "Rolar " + data }
-		</button>
-		if len(history) > 0 {
-			// LIMPAR só aparece com histórico: um botão que não tem o que fazer
-			// ocupa a linha e ensina errado.
-			@ui.Button(ui.VariantGhost, ui.SizeInline, "self-start px-1 text-xs", templ.Attributes{"type": "button", "aria-label": "Limpar o histórico de " + title, "data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id)}) {
-				Limpar
-			}
-		}
-		if len(history) == 0 {
-			<p class="text-xs text-muted-foreground">Nada rolado ainda.</p>
-		} else {
-			// O `aria-live` fica no BLOCO do resultado e não no botão: quem usa
-			// leitor de tela precisa ouvir o que saiu, e o botão só diria que
-			// foi clicado. `polite` porque a rolagem é do próprio usuário —
-			// `assertive` interromperia a leitura dele por uma coisa que ele
-			// acabou de pedir.
-			<div aria-live="polite" class="space-y-0.5">
-				<p class="flex items-baseline gap-2">
-					<span class="font-mono text-2xl leading-none tabular-nums text-grimorio-gold">{ ui.Int(history[0].Roll) }</span>
-					<span class="text-sm text-foreground">{ history[0].Text }</span>
-				</p>
-				if history[0].Detail != "" {
-					<p class="pl-9 text-xs text-muted-foreground">{ history[0].Detail }</p>
+// `<section aria-label>` e não `<div>`: um cartão com cabeçalho próprio É uma região, e
+// sem nome acessível ele vira caixa anônima para quem navega por regiões. De quebra, é o
+// que deixa o teste apontar para UM cartão em vez de contar filhos de `div`.
+templ rollingTable(id, title, die, table string, page int, term string, history []roll, v improvView) {
+	<section aria-label={ title } class="ds-improv-table">
+		@ds.EntryCard(title, nil, tableCitation(table, page, term, v)) {
+			<div class="ds-improv-acts">
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{
+					"type": "button", "data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s')", id),
+				}) {
+					@ui.Icon("Dices", "ds-icon")
+					{ "Rolar " + die }
 				}
-			</div>
-			if len(history) > 1 {
-				// As anteriores existem porque o mestre que rola duas vezes na
-				// mesma cena quer COMPARAR — guardar só a última joga fora a
-				// comparação no instante da segunda rolagem.
-				<ul class="space-y-0.5 border-t border-grimorio-iron pt-1.5">
-					for _, s := range history[1:] {
-						<li class="flex items-baseline gap-2 text-3xs text-muted-foreground">
-							<span class="w-5 shrink-0 text-right font-mono tabular-nums">{ ui.Int(s.Roll) }</span>
-							<span class="truncate">{ s.Text }</span>
-						</li>
+				// LIMPAR só aparece com histórico: um botão que não tem o que fazer ocupa a
+				// linha e ensina errado.
+				if len(history) > 0 {
+					@ds.Button(ds.ButtonGhost, templ.Attributes{
+						"type": "button", "aria-label": "Limpar o histórico de " + title,
+						"data-on:click": fmt.Sprintf("@post('/mestre/improviso/%s/limpar')", id),
+					}) {
+						Limpar
 					}
-				</ul>
-			}
-		}
-	</section>
-}
-
-// dungeonPlanner não rola dado: ele responde uma CONTA sobre o número de
-// salas — que tamanho o livro chama isso, quanto tempo de mesa ele ocupa, e
-// quantas ameaças distribuir (uma a cada três salas, p263).
-templ dungeonPlanner(v improvView) {
-	<section aria-label="Esqueleto da masmorra" class="flex flex-col gap-2 rounded-sm border border-grimorio-iron p-3">
-		<div class="flex flex-wrap items-baseline gap-x-2">
-			<h3 class="font-heading text-sm tracking-wide text-foreground">Esqueleto</h3>
-			<span class="text-3xs text-muted-foreground">p263</span>
-		</div>
-		<div class="space-y-1">
-			@ui.SectionLabel("muted", "block") {
-				<label for="improv-rooms">Salas</label>
-			}
-			<input
-				id="improv-rooms"
-				type="number"
-				min={ ui.Int(salasMinimo) }
-				max={ ui.Int(salasMaximo) }
-				value={ ui.Int(v.Rooms) }
-				data-bind:rooms
-				data-on:input__debounce.300ms="@get('/mestre/improviso')"
-				aria-label="Número de salas da masmorra"
-				class="h-9 w-24 rounded-sm border border-input bg-transparent px-2 text-base tabular-nums outline-none md:text-sm"
-			/>
-		</div>
-		if v.OverCeiling {
-			// Acima do teto não é ERRO: é o livro recomendando parar. A tela diz
-			// isso em vez de esconder o resultado ou fingir um tamanho.
-			<p class="text-xs text-muted-foreground">
-				Acima do maior tamanho de masmorra do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
-			</p>
-		} else if v.Size != nil {
-			<dl class="space-y-1 text-xs">
-				@skeletonRow("Tamanho", v.Size.Label)
-				@skeletonRow("Ritmo", pacingName(v.Size.Pacing))
-				@skeletonRow("Ameaças a distribuir", ui.Int(v.Threats))
-				if v.Size.MaxSecondaryObjectives > 0 {
-					@skeletonRow("Objetivos secundários (até)", ui.Int(v.Size.MaxSecondaryObjectives))
 				}
-			</dl>
+			</div>
+			if len(history) == 0 {
+				<p class="ds-row-meta">Nada rolado ainda.</p>
+			} else {
+				// O `aria-live` fica no BLOCO do resultado e não no botão: quem usa leitor de
+				// tela precisa ouvir o que saiu, e o botão só diria que foi clicado. `polite`
+				// porque a rolagem é do próprio usuário — `assertive` interromperia a leitura
+				// dele por uma coisa que ele acabou de pedir.
+				<div class="ds-improv-last" aria-live="polite">
+					<b>{ ui.Int(history[0].Roll) }</b>
+					<p>{ history[0].Text }</p>
+					if history[0].Detail != "" {
+						<p class="ds-improv-detail">{ history[0].Detail }</p>
+					}
+				</div>
+				// As anteriores existem porque o mestre que rola duas vezes na mesma cena quer
+				// COMPARAR — guardar só a última joga fora a comparação no instante da segunda
+				// rolagem.
+				if len(history) > 1 {
+					<ul class="ds-improv-older">
+						for _, s := range history[1:] {
+							<li>
+								<b>{ ui.Int(s.Roll) }</b>
+								<span>{ s.Text }</span>
+							</li>
+						}
+					</ul>
+				}
+			}
 		}
 	</section>
 }
 
-templ skeletonRow(label, value string) {
-	<div class="flex items-baseline justify-between gap-2">
-		<dt class="text-muted-foreground">{ label }</dt>
-		<dd class="font-mono tabular-nums text-foreground">{ value }</dd>
-	</div>
+// dungeonPlanner não rola dado: ele responde uma CONTA sobre o número de salas — que
+// tamanho o livro chama isso, quanto tempo de mesa ele ocupa, e quantas ameaças
+// distribuir (uma a cada três salas, p263).
+templ dungeonPlanner(v improvView) {
+	<section aria-label="Esqueleto da masmorra" class="ds-improv-table">
+		@ds.EntryCard("Esqueleto", nil, tableCitation("", 263, "Tabela 6-2", v)) {
+			<div class="ds-improv-rooms">
+				@ds.TextField(ds.Field{ID: "improv-rooms", Label: "Salas", Type: "number", Value: ui.Int(v.Rooms)}, templ.Attributes{
+					"min": ui.Int(roomsMin), "max": ui.Int(roomsMax), "inputmode": "numeric", "data-bind:rooms": true,
+					"data-on:input__debounce.300ms": "@get('/mestre/improviso')",
+				})
+			</div>
+			if v.OverCeiling {
+				// Acima do teto não é ERRO: é o livro recomendando parar. A tela diz isso em vez
+				// de esconder o resultado ou fingir um tamanho.
+				<p class="ds-row-meta">
+					Acima do maior tamanho de masmorra do livro. Ele recomenda parar aqui e quebrar em masmorras menores.
+				</p>
+			} else if v.Size != nil {
+				<dl class="ds-entry-fields">
+					<dt>Tamanho</dt>
+					<dd>{ v.Size.Label }</dd>
+					<dt>Ritmo</dt>
+					<dd>{ pacingName(v.Size.Pacing) }</dd>
+					<dt>Ameaças a distribuir</dt>
+					<dd>{ ui.Int(v.Threats) }</dd>
+					if v.Size.MaxSecondaryObjectives > 0 {
+						<dt>Objetivos secundários (até)</dt>
+						<dd>{ ui.Int(v.Size.MaxSecondaryObjectives) }</dd>
+					}
+				</dl>
+			}
+		}
+	</section>
 }

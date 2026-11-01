@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/serve/web/bookui"
 )
 
 // O IMPROVISO: as tabelas do Cap 6 e o esqueleto de masmorra na hora, numa tela
@@ -39,6 +40,9 @@ const historyDepth = 5
 // tabelas são independentes — rolar ruína não pode empurrar o evento de
 // perseguição para fora da tela.
 type improvView struct {
+	// Book é o endereço do PDF servido, para a página de cada tabela ser um elo. Zero
+	// valor é não ter livro configurado, e aí a página sai em texto.
+	Book   bookui.BookAddress
 	Ruin   []roll
 	Chase  []roll
 	Reward []roll
@@ -55,15 +59,15 @@ type improvView struct {
 }
 
 const (
-	salasMinimo = 1
-	salasMaximo = 200
-	salasPadrao = 6
+	roomsMin     = 1
+	roomsMax     = 200
+	roomsDefault = 6
 )
 
 // loadImprov monta a cena a partir dos históricos que vieram nos sinais.
 func loadImprov(v improvView) improvView {
 	_, dungeon := book.ImprovTables()
-	v.Rooms = clamp(v.Rooms, salasMinimo, salasMaximo, salasPadrao)
+	v.Rooms = clamp(v.Rooms, roomsMin, roomsMax, roomsDefault)
 
 	for i := range dungeon.SizeTable {
 		t := dungeon.SizeTable[i]
@@ -80,8 +84,8 @@ func loadImprov(v improvView) improvView {
 }
 
 // empilha põe o sorteio novo na frente e corta o excesso.
-func push(history []roll, novo roll) []roll {
-	outside := append([]roll{novo}, history...)
+func push(history []roll, next roll) []roll {
+	outside := append([]roll{next}, history...)
 	if len(outside) > historyDepth {
 		outside = outside[:historyDepth]
 	}
@@ -237,6 +241,6 @@ func improvSignals(v improvView) string {
 		return string(b)
 	}
 	return fmt.Sprintf(
-		`{ruina: %s, perseguicao: %s, recompensa: %s, ideias: %s, baralho: %s, rooms: %d}`,
+		`{ruin_rolls: %s, chase_rolls: %s, reward_rolls: %s, idea_rolls: %s, chaos_rolls: %s, rooms: %d}`,
 		j(v.Ruin), j(v.Chase), j(v.Reward), j(v.Ideas), j(v.Chaos), v.Rooms)
 }
