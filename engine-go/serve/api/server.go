@@ -24,6 +24,10 @@ import (
 // Server é a RAIZ DE COMPOSIÇÃO: ele guarda o que o app inteiro precisa e
 // cumpre a porta de cada cena.
 type Server struct {
+	// liveStreamsClosing fecha quando o processo vai encerrar. Ver `CloseLiveStreams`.
+	liveStreamsClosing chan struct{}
+	closeStreamsOnce   sync.Once
+
 	cfg      config.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
@@ -66,6 +70,16 @@ type Server struct {
 // é pior de ler — o `t.TempDir()` falha com "directory not empty", porque o
 // SQLite recria `-wal`/`-shm` depois do `RemoveAll`, e a mensagem fala da
 // LIMPEZA e não do defeito. Trabalho novo em goroutine traz o contador de volta.
+
+// CloseLiveStreams encerra os fluxos da mesa, e é o que deixa o `Shutdown` terminar.
+//
+// O `Shutdown` espera toda requisição em curso, e um fluxo aberto não termina sozinho:
+// com um jogador só conectado, o desligamento gastava o prazo inteiro e acabava forçado.
+// É um canal próprio, e não o contexto da requisição, porque cancelar o contexto de
+// todas cortaria no meio as gravações que o `Shutdown` existe para esperar.
+func (s *Server) CloseLiveStreams() {
+	s.closeStreamsOnce.Do(func() { close(s.liveStreamsClosing) })
+}
 
 // characterChanged avisa as mesas AO VIVO que uma ficha mudou.
 //
@@ -156,7 +170,8 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		return ports, ports
 	})
 	srv = &Server{
-		cfg: cfg, db: database, queries: q, catalogs: catalogs,
+		liveStreamsClosing: make(chan struct{}),
+		cfg:                cfg, db: database, queries: q, catalogs: catalogs,
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),

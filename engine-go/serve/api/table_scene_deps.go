@@ -57,6 +57,9 @@ func (h tableHost) CharacterChanged(characterID int64) {
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
+// LiveStreamsClosing fecha quando o processo vai encerrar.
+func (h tableHost) LiveStreamsClosing() <-chan struct{} { return h.rules.liveStreamsClosing }
+
 // ── o estado AO VIVO ─────────────────────────────────────────────────────────
 
 // ── PUBLICAR, que é do hospedeiro ────────────────────────────────────────────

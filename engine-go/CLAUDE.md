@@ -220,6 +220,10 @@ certa. Custo: os escritores serializam, a leitura segue livre (WAL), e o
   `cmd/api/main.go` antes de "consertar".
 - **Sinal encerra com ordem** (`signal.NotifyContext` + `Shutdown`, 10s): defer
   não roda em morte por sinal, e um `VACUUM INTO` morreria pela metade.
+- **O fluxo da mesa ABORTA ao encerrar** (`CloseLiveStreams`, `panic(http.ErrAbortHandler)`):
+  sem isso, uma conexão aberta prende o `Shutdown` até o prazo. E não pode ser `return`:
+  fechar limpo é resposta completa para o Datastar, que não reconecta, e a mesa fica parada
+  sem erro nenhum. Medido no navegador.
 - **Corpo de requisição tem teto de 1 MB** no `httpio.DecodeJSON`, com 413
   próprio, e não "JSON inválido".
 - O backup automático (`BACKUP_EVERY`, `BACKUP_KEEP`) usa o `VACUUM INTO` do

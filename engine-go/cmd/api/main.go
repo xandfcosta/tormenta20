@@ -58,7 +58,7 @@ func main() {
 	go srv.ScheduleBackups(ctx)
 
 	announce(cfg) // por último, para o endereço ser a última linha da tela
-	if err := serve(ctx, cfg, mux); err != nil {
+	if err := serve(ctx, cfg, mux, srv.CloseLiveStreams); err != nil {
 		log.Fatalf("listen: %v", err)
 	}
 	// Aqui morava um `srv.WaitForBackground()`, que esperava a gravação do
@@ -89,8 +89,9 @@ func httpServerFor(cfg config.Config, mux http.Handler) *http.Server {
 //   - `WriteTimeout` fica de FORA de propósito. Ele mataria o fluxo SSE, que é
 //     conexão longa por natureza, e o download do PDF do livro numa rede ruim.
 //     É o timeout que parece obrigatório e é justamente o errado aqui.
-func serve(ctx context.Context, cfg config.Config, mux http.Handler) error {
+func serve(ctx context.Context, cfg config.Config, mux http.Handler, closeLiveStreams func()) error {
 	server := httpServerFor(cfg, mux)
+	server.RegisterOnShutdown(closeLiveStreams)
 	failed := make(chan error, 1)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

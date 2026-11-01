@@ -104,6 +104,12 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// A aba fechou, o jogador trocou de superfície ou a rede caiu. Sair
 			// aqui é o que impede a goroutine de sobreviver ao leitor.
 			return
+		case <-s.deps.LiveStreamsClosing():
+			// O processo vai encerrar. ABORTA em vez de `return`: fechar limpo é uma
+			// resposta completa para o Datastar, que não reconectaria, e a mesa ficaria
+			// parada depois do deploy. Conexão cortada é erro de rede, e dele ele se
+			// recupera sozinho.
+			panic(http.ErrAbortHandler)
 		case ev := <-sub.C:
 			// A ficha só é relida quando o evento diz que ELA mudou: reler a cada
 			// tique é uma linha por segundo por jogador conectado, quase sempre para
