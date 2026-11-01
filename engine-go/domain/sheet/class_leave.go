@@ -33,8 +33,25 @@ func ClassCanLeave(dto CharacterDTO, class string) error {
 	if err := chosenFitPowers(remaining); err != nil {
 		return fmt.Errorf("não dá para tirar %s: %w", class, err)
 	}
-	if choice := ClassChoiceSelections(dto)[class]; choice.Devotee != "" || choice.Path != "" {
-		return fmt.Errorf("não dá para tirar %s: há uma escolha feita nessa classe", class)
+	choice := ClassChoiceSelections(dto)[class]
+	if choice.Devotee != "" {
+		return fmt.Errorf("não dá para tirar %s: o devoto %s foi escolhido nela",
+			class, optionLabel(ClassDevotees(class), choice.Devotee))
+	}
+	if choice.Path != "" {
+		return fmt.Errorf("não dá para tirar %s: o caminho %s foi escolhido nela",
+			class, optionLabel(classPaths[class].Options, choice.Path))
 	}
 	return nil
+}
+
+// optionLabel é o rótulo que a pessoa escolheu. O valor gravado serve de resposta quando
+// ele saiu da lista, porque ainda diz mais do que nada.
+func optionLabel(options []ChoiceOption, value string) string {
+	for _, option := range options {
+		if option.Value == value {
+			return option.Label
+		}
+	}
+	return value
 }

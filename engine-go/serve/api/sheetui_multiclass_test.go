@@ -195,6 +195,30 @@ func TestAClassWithSomethingChosenCannotLeave(t *testing.T) {
 		}
 	})
 
+	// A ESCOLHA DA CLASSE: a recusa diz o rótulo que a pessoa escolheu, e não o valor gravado.
+	for _, c := range []struct{ class, blob, wants string }{
+		{"Clérigo", `{"Clérigo":{"devoto":"khalmyr"}}`, "Khalmyr"},
+		{"Arcanista", `{"Arcanista":{"caminho":"bruxo"}}`, "Bruxo"},
+	} {
+		t.Run("escolha de "+c.class, func(t *testing.T) {
+			f, id := guerreiro(t)
+			if refusal := enterClass(t, f, id, c.class); refusal != "" {
+				t.Fatalf("entrar: %q", refusal)
+			}
+			if _, err := f.s.db.ExecContext(context.Background(),
+				"UPDATE characters SET classChoices = ? WHERE id = ?", c.blob, id,
+			); err != nil {
+				t.Fatalf("gravar a escolha: %v", err)
+			}
+			if refusal := stepClass(t, f, id, c.class, -1); !strings.Contains(refusal, c.wants) {
+				t.Errorf("a recusa não citou %q: %q", c.wants, refusal)
+			}
+			if classesOfTheSheet(t, f, id)[c.class] != 1 {
+				t.Error("a classe saiu mesmo recusada")
+			}
+		})
+	}
+
 	// O CONTROLE: a magia que outra classe da ficha também concede não segura ninguém.
 	t.Run("magia que a outra classe também concede", func(t *testing.T) {
 		f := newSceneFixture(t)
