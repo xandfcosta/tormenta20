@@ -46,6 +46,7 @@ var dumpTables = []string{
 	// acervo de poderes abria sem a ativação que o personagem existe para
 	// mostrar.
 	"character_item_enchants",
+	"character_oversized_weapons",
 	"character_spells",
 	"character_level_choices",
 	"campaign_members",

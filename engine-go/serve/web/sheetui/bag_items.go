@@ -38,6 +38,10 @@ type itemSheet struct {
 	// (p333). Por isso eles não entram no `Overlays` nem viram `overlayChoice`:
 	// a lista do diálogo é de escolha, e esta é de leitura.
 	Enchants []overlayRow
+	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
+	// se ela está ligada.
+	Weapon    bool
+	Oversized bool
 	// Overlayable diz se o item ACEITA melhoria: não se forja uma poção em
 	// aço-rubi, e um diálogo com duas listas vazias é pior que botão nenhum.
 	Overlayable  bool
@@ -113,10 +117,12 @@ func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
 		Overlays:      appliedImprovements(item),
 		Enchants:      appliedEnchants(item),
 		Command:       strconv.FormatInt(item.ID, 10),
+		Oversized:     item.Oversized,
 	}
 	if catalog == nil {
 		return character
 	}
+	character.Weapon = catalog.Weapon != nil
 	character.Book = thatSaysBook(*catalog)
 	character.Consumable = consumableUse(*catalog)
 	character.Overlayable = aceitaMelhoria(*catalog)

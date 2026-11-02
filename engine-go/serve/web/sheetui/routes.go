@@ -89,6 +89,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/itens/{item}/remover", s.sheetCommand(removeItemFromSheet))
 	r.Post("/personagens/{id}/itens/{item}/usa", s.sheetCommand(useItem))
 	r.Post("/personagens/{id}/itens/{item}/melhorias", s.sheetCommand(applyOverlays))
+	r.Post("/personagens/{id}/itens/{item}/categoria-maior", s.sheetCommand(toggleOversizedWeapon))
 	// OS PODERES.
 	r.Post("/personagens/{id}/poderes/usa/{poder}", s.sheetCommand(usePower))
 	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(enterStance))

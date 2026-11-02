@@ -51,13 +51,15 @@ type seedUser struct {
 }
 
 type seedCharacter struct {
-	Create      json.RawMessage `json:"create"`
-	Spells      []seedSpell     `json:"spells"`
-	Enchants    []seedEnchant   `json:"enchants"`
-	Overlays    []seedOverlay   `json:"overlays"`
-	Simple      bool            `json:"simple"`
-	SceneEffect bool            `json:"sceneEffect"`
-	HpFraction  *float64        `json:"hpFraction"`
+	Create   json.RawMessage `json:"create"`
+	Spells   []seedSpell     `json:"spells"`
+	Enchants []seedEnchant   `json:"enchants"`
+	// OversizedWeapons são os `catalogId` das armas de categoria maior.
+	OversizedWeapons []string      `json:"oversizedWeapons"`
+	Overlays         []seedOverlay `json:"overlays"`
+	Simple           bool          `json:"simple"`
+	SceneEffect      bool          `json:"sceneEffect"`
+	HpFraction       *float64      `json:"hpFraction"`
 }
 
 type seedSpell struct {
@@ -102,6 +104,8 @@ type casaDaSeed interface {
 	// é ele quem encanta no app (ALE-416), e a seed não ganha um caminho
 	// próprio que não recuse o que o livro recusa.
 	EnchantItem(ctx context.Context, itemID int64, enchants []string) error
+	// ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
+	ToggleOversizedWeapon(ctx context.Context, itemID int64) error
 	// SaveItemOverlays escreve melhoria e MATERIAL, pelo mesmo caso de uso do
 	// jogador: o material é o que anda o dado da arma (p166), e o elenco
 	// precisa dele para a mecânica existir na tela.
@@ -250,7 +254,7 @@ func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch 
 			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
-	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 {
+	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 && len(ch.OversizedWeapons) == 0 {
 		return nil
 	}
 	return enrichLiveState(ctx, square, id, ch)
@@ -329,6 +333,15 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 	}
 	if err := applyEnchants(ctx, square, id, sheet.Items, ch.Enchants); err != nil {
 		return err
+	}
+	for _, weapon := range ch.OversizedWeapons {
+		line := lineOfCatalogItem(sheet.Items, weapon)
+		if line == 0 {
+			return fmt.Errorf("o personagem %d não tem a arma %q para marcar como de categoria maior", id, weapon)
+		}
+		if err := square.ToggleOversizedWeapon(ctx, line); err != nil {
+			return fmt.Errorf("marcar a %q do personagem %d: %w", weapon, id, err)
+		}
 	}
 	return applyOverlays(ctx, square, id, sheet.Items, ch.Overlays)
 }

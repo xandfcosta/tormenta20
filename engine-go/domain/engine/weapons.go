@@ -109,6 +109,13 @@ const (
 	FiredScope  = "fired"
 )
 
+// OversizedWeaponScope é o escopo da arma de categoria maior, e é por ele que a
+// Empunhadura Poderosa diminui a penalidade para –2 (p125).
+const (
+	OversizedWeaponScope   = "oversized-weapon"
+	OversizedWeaponPenalty = -5
+)
+
 // weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
 //
 // O tipo é o PROPÓSITO que o catálogo dá à arma, um só: a machadinha é de
@@ -186,8 +193,13 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
-		card := shared.card(ch, it.Name, w,
-			append([]string{weaponScope}, weaponKindScopes(w)...), damageThis, steps, nonLethal)
+		scopes := append([]string{weaponScope}, weaponKindScopes(w)...)
+		// "Armas aumentadas [...] causam um passo a mais de dano" (p143).
+		if it.Oversized {
+			scopes = append(scopes, OversizedWeaponScope)
+			steps++
+		}
+		card := shared.card(ch, it.Name, w, scopes, damageThis, steps, nonLethal)
 		card.CatalogID = *it.CatalogID
 		cards = append(cards, card)
 		if len(cards) == 2 {
@@ -238,6 +250,14 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 	attackParts := []TotalContribs{}
 	for _, scope := range scopes {
 		attackParts = append(attackParts, totalContribsFor(b.effects, ModifierTarget{K: "attack", Scope: scope}))
+		// "Sofre –5 nos testes de ataque" (p106). Mora aqui e não em modificador de
+		// item porque o escopo é de todas as armas marcadas: duas na mão somariam −10.
+		if scope == OversizedWeaponScope {
+			attackParts = append(attackParts, TotalContribs{
+				Total:         OversizedWeaponPenalty,
+				Contributions: []BreakdownContribution{{Source: "arma de categoria maior", Amount: OversizedWeaponPenalty}},
+			})
+		}
 	}
 	ownAttack := ownContribsOf(attackParts...)
 	if len(ownAttack.Contributions) == 0 {

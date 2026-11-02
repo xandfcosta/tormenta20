@@ -3,6 +3,7 @@ package sheetui
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
@@ -142,6 +143,26 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	// entrar — a fronteira é a ausência do campo, não um `if` (ALE-416).
 	return s.plays.SaveItemOverlays(
 		r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
+}
+
+// toggleOversizedWeapon liga ou desliga a marca de arma de categoria maior. Marcar
+// passa pelo teto de carga, porque a arma ocupa um espaço a mais (p106).
+func toggleOversizedWeapon(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	item, err := s.sheetItem(r, row.ID)
+	if err != nil {
+		return err
+	}
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	marked := slices.ContainsFunc(dto.Items, func(i sheet.ItemDTO) bool { return i.ID == item.ID && i.Oversized })
+	if !marked {
+		if err := s.refusePastTheDouble(r, row, float64(item.Quantity)); err != nil {
+			return err
+		}
+	}
+	return s.plays.ToggleOversizedWeapon(r.Context(), item.ID)
 }
 
 // askedQuantity lê a quantidade, com as bordas do formulário.

@@ -207,7 +207,7 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.School != "" {
 		return t.School
 	}
-	scopeWords := map[string]string{"all": "todos", "melee": "corpo a corpo", "ranged": "à distância"}
+	scopeWords := map[string]string{"all": "todos", "melee": "corpo a corpo", "ranged": "à distância", engine.OversizedWeaponScope: "arma de categoria maior"}
 	return scopeWords[t.Scope]
 }
 

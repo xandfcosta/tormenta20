@@ -82,6 +82,9 @@ type CharacterItem struct {
 	// e os limita em separado: "quatro melhorias e três encantos" (p334).
 	Enchants []string `json:"enchants,omitempty"`
 	Material *string  `json:"material"`
+	// Oversized é a arma feita para uma categoria de tamanho maior (p106). O catálogo
+	// não dá tamanho por item, então é a mochila que guarda a marca.
+	Oversized bool `json:"oversized,omitempty"`
 }
 
 // ActiveEffectRow is a consumed scene/day buff carrying a JSON-encoded

@@ -3324,6 +3324,85 @@ func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]Live
 	return items, nil
 }
 
+const markOversizedWeapon = `-- name: MarkOversizedWeapon :exec
+INSERT INTO character_oversized_weapons (itemId) VALUES (?)
+`
+
+func (q *Queries) MarkOversizedWeapon(ctx context.Context, itemid int64) error {
+	_, err := q.db.ExecContext(ctx, markOversizedWeapon, itemid)
+	return err
+}
+
+const oversizedWeaponsOfCharacter = `-- name: OversizedWeaponsOfCharacter :many
+SELECT o.itemId
+FROM character_oversized_weapons o
+JOIN character_items i ON i.id = o.itemId
+WHERE i.characterId = ?
+`
+
+func (q *Queries) OversizedWeaponsOfCharacter(ctx context.Context, characterid int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, oversizedWeaponsOfCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var itemid int64
+		if err := rows.Scan(&itemid); err != nil {
+			return nil, err
+		}
+		items = append(items, itemid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const oversizedWeaponsOfCharacters = `-- name: OversizedWeaponsOfCharacters :many
+SELECT o.itemId
+FROM character_oversized_weapons o
+JOIN character_items i ON i.id = o.itemId
+WHERE i.characterId IN (/*SLICE:ids*/?)
+`
+
+func (q *Queries) OversizedWeaponsOfCharacters(ctx context.Context, ids []int64) ([]int64, error) {
+	query := oversizedWeaponsOfCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var itemid int64
+		if err := rows.Scan(&itemid); err != nil {
+			return nil, err
+		}
+		items = append(items, itemid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const recordAccountInviteUse = `-- name: RecordAccountInviteUse :exec
 INSERT INTO account_invite_uses (linkId, userId, usedAt) VALUES (?, ?, ?)
 `
@@ -3681,6 +3760,20 @@ func (q *Queries) SetItemQuantity(ctx context.Context, arg SetItemQuantityParams
 	return err
 }
 
+const setItemSlots = `-- name: SetItemSlots :exec
+UPDATE character_items SET slots = ? WHERE id = ?
+`
+
+type SetItemSlotsParams struct {
+	Slots float64 `json:"slots"`
+	ID    int64   `json:"id"`
+}
+
+func (q *Queries) SetItemSlots(ctx context.Context, arg SetItemSlotsParams) error {
+	_, err := q.db.ExecContext(ctx, setItemSlots, arg.Slots, arg.ID)
+	return err
+}
+
 const setLevelChoiceLevel = `-- name: SetLevelChoiceLevel :exec
 UPDATE character_level_choices SET level = ? WHERE id = ?
 `
@@ -3839,6 +3932,18 @@ type TransferCampaignsParams struct {
 // survives the player leaving the table.
 func (q *Queries) TransferCampaigns(ctx context.Context, arg TransferCampaignsParams) (int64, error) {
 	result, err := q.db.ExecContext(ctx, transferCampaigns, arg.NewOwnerId, arg.UpdatedAt, arg.OldOwnerId)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const unmarkOversizedWeapon = `-- name: UnmarkOversizedWeapon :execrows
+DELETE FROM character_oversized_weapons WHERE itemId = ?
+`
+
+func (q *Queries) UnmarkOversizedWeapon(ctx context.Context, itemid int64) (int64, error) {
+	result, err := q.db.ExecContext(ctx, unmarkOversizedWeapon, itemid)
 	if err != nil {
 		return 0, err
 	}

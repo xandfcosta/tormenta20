@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
@@ -155,13 +156,17 @@ func partialSheetsForPools(
 	for _, row := range encantos {
 		porItem[row.Itemid] = append(porItem[row.Itemid], row.Enchantid)
 	}
+	oversized, err := q.OversizedWeaponsOfCharacters(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("ler as armas de categoria maior de %d fichas: %w", len(ids), err)
+	}
 	for _, it := range items {
 		dto := partials[it.Characterid]
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
-			Enchants: porItem[it.ID],
+			Enchants: porItem[it.ID], Oversized: slices.Contains(oversized, it.ID),
 		})
 		partials[it.Characterid] = dto
 	}
