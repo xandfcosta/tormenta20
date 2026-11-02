@@ -25,6 +25,9 @@ var generalPowersPart02 = []GeneralPower{
 		},
 		BookPage: 124,
 		UID:      "pwr_kpmof6a47l",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "flag", Name: "arremesso-potente"}, Amount: 1, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:            "ataque-com-escudo",

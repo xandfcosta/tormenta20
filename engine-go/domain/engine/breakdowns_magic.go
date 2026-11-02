@@ -73,12 +73,27 @@ func casterLevelForPmLimit(ch Character) int {
 func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
 	base := max(1, casterLevelForPmLimit(ch))
 	stat := StatFor(e, ModifierTarget{K: "pmLimit"})
-	return ValueBreakdown{
-		Base:          base,
-		ItemBonus:     stat.Total,
-		Total:         base + stat.Total,
-		Contributions: withNoteContribs(stat.Contributions),
+	bonus := stat.Total
+	contributions := withNoteContribs(stat.Contributions)
+	// Magia Ilimitada: "soma seu atributo-chave no limite de PM" (p131).
+	if attribute, _ := bestSpellcasting(ch, e); attribute != "" && e.Flags["magia-ilimitada"] {
+		key := effectiveAttribute(ch, attribute, e)
+		bonus += key
+		contributions = append(contributions, BreakdownContribution{Source: "Magia Ilimitada", Amount: key})
 	}
+	total := base + bonus
+	// O ritual "dobra seu limite de PM" (p131), e o que dobra é o limite inteiro. A diferença vira linha,
+	// para a decomposição continuar fechando na soma.
+	if doubled := pmLimitFactor(e).Applied(total); doubled != total {
+		contributions = append(contributions, BreakdownContribution{Source: "Celebrar Ritual", Amount: doubled - total})
+		total = doubled
+	}
+	return ValueBreakdown{Base: base, ItemBonus: bonus, Total: total, Contributions: contributions}
+}
+
+// pmLimitFactor é o multiplicador do limite de PM, vazio quando nada o multiplica.
+func pmLimitFactor(e ItemEffects) Ratio {
+	return e.Factors[targetKey(ModifierTarget{K: "pmLimit"})]
 }
 
 // bestBaseSpellCd is the best CD across the character's caster classes — p173:
@@ -256,7 +271,7 @@ func (r *Ruleset) SpellPmLimitFor(
 	ch Character, conditionals map[string]bool, spellClasses []string,
 ) int {
 	effects := r.sheetEffects(ch, conditionals)
-	return SpellPmLimit(ch, pmLimitBreakdown(ch, effects).ItemBonus, spellClasses)
+	return pmLimitFactor(effects).Applied(SpellPmLimit(ch, pmLimitBreakdown(ch, effects).ItemBonus, spellClasses))
 }
 
 // resolvePmCostMod aplica a regra da p226 às contribuições de custo de PM:

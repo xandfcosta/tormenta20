@@ -83,6 +83,7 @@
             "charisma": 3,
             "size": "Médio",
             "displacement": 9,
+            "classPowers": ["magia-ilimitada", "celebrar-ritual"],
             "items": [
               {
                 "catalogId": "adaga",
