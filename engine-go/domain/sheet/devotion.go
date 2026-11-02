@@ -100,3 +100,54 @@ func GrantedPowersMissing(dto CharacterDTO) int {
 	}
 	return max(GrantedPowerLimit(dto.Classes, *dto.God)-held, 0)
 }
+
+// DevotionChange diz o que muda na ficha ao trocar de deus, para o passo pedir a confirmação. O alvo vazio
+// é ficar sem deus.
+//
+//	DevotionChange(dto, "azgher") // ["Deus: Khalmyr → Azgher.", "Falta escolher 2 poderes concedidos de Azgher."]
+func DevotionChange(dto CharacterDTO, target string) []string {
+	current := ""
+	if dto.God != nil {
+		current = book.DevotionName(*dto.God)
+	}
+	var kept, leaving []string
+	for _, power := range UnmarshalStrings(dto.GodPowers) {
+		if target != "" && GrantedPowerIsOfGod(target, power) {
+			kept = append(kept, power)
+		} else {
+			leaving = append(leaving, power)
+		}
+	}
+	lines := []string{"Deus: " + current + " → " + book.DevotionName(target) + "."}
+	if target == "" {
+		lines[0] = current + " deixa de ser o deus da ficha."
+	}
+	if len(leaving) == 1 {
+		lines = append(lines, leaving[0]+" fica na ficha, mas é de outro deus. Tirar é da mesa.")
+	} else if len(leaving) > 1 {
+		lines = append(lines, joinedNames(leaving)+" ficam na ficha, mas são de outro deus. Tirar é da mesa.")
+	}
+	for _, power := range kept {
+		lines = append(lines, power+" continua valendo: "+book.DevotionName(target)+" também o concede.")
+	}
+	limit := GrantedPowerLimit(dto.Classes, target)
+	switch missing := limit - len(kept); {
+	case target == "":
+		if DevotionRequired(dto.Classes) {
+			lines = append(lines, "A devoção fica pendente.")
+		}
+	case limit == 0:
+		lines = append(lines, book.DevotionName(target)+" não recebe poder concedido.")
+	case missing == 1:
+		lines = append(lines, "Falta escolher 1 poder concedido de "+book.DevotionName(target)+".")
+	case missing > 1:
+		lines = append(lines, fmt.Sprintf("Falta escolher %d poderes concedidos de %s.", missing, book.DevotionName(target)))
+	}
+	return lines
+}
+
+// joinedNames escreve a lista como a frase pede: "A, B e C".
+func joinedNames(names []string) string {
+	last := len(names) - 1
+	return strings.Join(names[:last], ", ") + " e " + names[last]
+}

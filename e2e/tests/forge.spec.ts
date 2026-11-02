@@ -190,3 +190,39 @@ test('o diálogo do atributo grava e continua aberto', async ({ page }) => {
   expect(contrast.falhas, 'texto abaixo do AA no diálogo do atributo').toEqual([])
   await expectNoHorizontalOverflow(page, VIEWPORTS)
 })
+
+// O aviso aparece por um sinal, e sinal errado não dá erro em lugar nenhum: o toque só não faria nada.
+test('trocar de deus diz o que muda e só troca depois de confirmar', async ({ page }) => {
+  await page.goto('/personagens/nova')
+  await page.getByLabel('Nome').fill('Devoto do Guarda da Forja')
+  await escolhe(page, 'race', 'Humano')
+  await escolhe(page, 'class', 'Clérigo')
+  await escolhe(page, 'origin', 'Acólito')
+  await escolhe(page, 'god', 'Khalmyr')
+  await escolhe(page, 'weaponSimple', 'Adaga')
+  await escolhe(page, 'armor', 'Couro batido')
+  await page.getByRole('button', { name: 'Forjar' }).click()
+  await page.waitForURL(/\/personagens\/\d+$/)
+
+  await page.goto(page.url() + '?tab=abilities')
+  await page.getByRole('button', { name: /^Escolher/ }).first().click()
+  await page.locator('.ds-steps').getByRole('button', { name: /Devoção/ }).first().click()
+  const step = page.locator('#choice-step-devotion')
+  await step.getByRole('button', { name: 'Escolher Dom da Verdade' }).click()
+  await expect(step.getByRole('button', { name: 'Escolher Dom da Verdade' })).toHaveAttribute('aria-pressed', 'true')
+
+  const notice = step.getByRole('group', { name: 'Confirmar a troca de deus' }).filter({ hasText: 'Khalmyr → Azgher' })
+  await expect(notice).toBeHidden()
+  await step.getByRole('button', { name: 'Azgher', exact: true }).click()
+  await expect(notice).toBeVisible()
+  await expect(notice).toContainText('Dom da Verdade fica na ficha')
+
+  await notice.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(notice).toBeHidden()
+  await expect(step.getByRole('button', { name: 'Khalmyr', exact: true })).toHaveAttribute('aria-pressed', 'true')
+
+  await step.getByRole('button', { name: 'Azgher', exact: true }).click()
+  await notice.getByRole('button', { name: 'Confirmar a troca' }).click()
+  await expect(step.getByRole('button', { name: 'Azgher', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(step.getByText('Dom da Verdade é de outro deus')).toBeVisible()
+})

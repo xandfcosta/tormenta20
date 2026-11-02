@@ -46,6 +46,14 @@ type devotionChoice struct {
 	Limit, Held int
 	// OldPowers são os guardados que não são do deus de agora.
 	OldPowers []string
+	// Changes são os avisos de troca, um por deus que se pode escolher. Sem deus não há o que avisar.
+	Changes []devotionChangeNotice
+}
+
+// devotionChangeNotice é o que muda na ficha ao trocar para Target. O Target `nenhum` é ficar sem deus.
+type devotionChangeNotice struct {
+	Target string
+	Lines  []string
 }
 
 type grantedPowerRow struct {
@@ -378,6 +386,12 @@ func devotionChoiceOf(dto sheet.CharacterDTO) devotionChoice {
 	}
 	if len(choice.Powers) == 0 {
 		choice.NoGrant = book.DevotionWritten(god) + " não recebe poder concedido."
+	}
+	choice.Changes = append(choice.Changes, devotionChangeNotice{Target: noDevotion, Lines: sheet.DevotionChange(dto, "")})
+	for _, option := range options {
+		if option.Value != god {
+			choice.Changes = append(choice.Changes, devotionChangeNotice{Target: option.Value, Lines: sheet.DevotionChange(dto, option.Value)})
+		}
 	}
 	return choice
 }

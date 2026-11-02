@@ -205,21 +205,38 @@ templ classPickerDs(v View, class, choice, label string, selector pickerChoice) 
 	</div>
 }
 
-// devotionStepBody é o deus da ficha e os poderes que ele concede. Trocar de deus não tira o poder: o
-// passo avisa, e tirar é da mesa.
+// devotionStepBody é o deus da ficha e os poderes que ele concede. Trocar de deus pede confirmação, com o
+// que muda na ficha: o poder fica, e tirar é da mesa.
 templ devotionStepBody(v View, d devotionChoice) {
-	<div class="ds-field">
+	<div class="ds-field" data-signals="{devotion_target: ''}">
 		<span class="ds-field-label">Deus</span>
 		<div class="ds-options">
-			@ds.Option(d.Gods.Chosen == "", templ.Attributes{"data-on:click": sheetPost(v, "/poderes/devocao/"+noDevotion)}) {
+			@ds.Option(d.Gods.Chosen == "", templ.Attributes{"data-on:click": devotionGesture(v, d, noDevotion)}) {
 				Nenhum
 			}
 			for _, god := range d.Gods.Options {
-				@ds.Option(god.Active, templ.Attributes{"data-on:click": sheetPost(v, "/poderes/devocao/"+god.Value)}) {
+				@ds.Option(god.Active, templ.Attributes{"data-on:click": devotionGesture(v, d, god.Value)}) {
 					{ god.Label }
 				}
 			}
 		</div>
+		for _, change := range d.Changes {
+			<div class="ds-devotion-change" role="group" aria-label="Confirmar a troca de deus" style="display: none" data-show={ "$devotion_target === '" + change.Target + "'" }>
+				<ul>
+					for _, line := range change.Lines {
+						<li>{ line }</li>
+					}
+				</ul>
+				<div class="ds-devotion-change-actions">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "$devotion_target = ''"}) {
+						Cancelar
+					}
+					@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "$devotion_target = ''; " + sheetPost(v, "/poderes/devocao/"+change.Target)}) {
+						Confirmar a troca
+					}
+				</div>
+			</div>
+		}
 	</div>
 	if d.NoGrant != "" {
 		<p class="ds-help">{ d.NoGrant }</p>
@@ -254,6 +271,17 @@ templ devotionStepBody(v View, d devotionChoice) {
 			}
 		}
 	}
+}
+
+// devotionGesture é o toque num deus. Sem deus na ficha ele já escolhe; com deus, abre o aviso da troca.
+func devotionGesture(v View, d devotionChoice, target string) string {
+	if d.Gods.Chosen == "" {
+		return sheetPost(v, "/poderes/devocao/"+target)
+	}
+	if target == d.Gods.Chosen || (target == noDevotion && d.Gods.Chosen == "") {
+		return "$devotion_target = ''"
+	}
+	return "$devotion_target = '" + target + "'"
 }
 
 // countedChoiceDs é a escolha do poder concedido contada por atributo — as

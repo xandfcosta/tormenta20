@@ -133,6 +133,50 @@ func TestTheOldGodPowerStaysWithoutTakingASlot(t *testing.T) {
 	}
 }
 
+// Quem já tem deus não troca num toque: o passo diz o que muda, e pede confirmação. Sem deus não há o que
+// avisar, e o toque já escolhe.
+func TestChangingTheGodTellsWhatChangesAndAsks(t *testing.T) {
+	f := newSceneFixture(t)
+	fresh := seedCharacterAtLevel(t, f.s, f.player, "Fiel", "Clérigo", 1, 0, 0)
+	if screen := html.UnescapeString(powerScreen(t, f, fresh)); strings.Contains(screen, "$devotion_target") {
+		t.Error("sem deus, não há troca a confirmar")
+	}
+
+	id := devotedTo(t, f, "Clérigo", "khalmyr")
+	if refusal := powerCommand(t, f, id, grantedPath("Dom da Verdade"), ""); refusal != "" {
+		t.Fatalf("o poder: %q", refusal)
+	}
+	if refusal := powerCommand(t, f, id, grantedPath("Coragem Total"), ""); refusal != "" {
+		t.Fatalf("o poder: %q", refusal)
+	}
+	screen := html.UnescapeString(powerScreen(t, f, id))
+	if !strings.Contains(screen, "$devotion_target = 'azgher'") {
+		t.Error("tocar em outro deus devia abrir a confirmação")
+	}
+	for _, want := range []string{
+		"Deus: Khalmyr → Azgher.",
+		"Dom da Verdade e Coragem Total ficam na ficha, mas são de outro deus. Tirar é da mesa.",
+		"Falta escolher 2 poderes concedidos de Azgher.",
+	} {
+		if !strings.Contains(screen, want) {
+			t.Errorf("o aviso não diz %q", want)
+		}
+	}
+	// Coragem Total também é de Valkaria (p105), e continua valendo depois da troca.
+	if !strings.Contains(screen, "Coragem Total continua valendo: Valkaria também o concede.") {
+		t.Error("o aviso não separa o poder que o novo deus também concede")
+	}
+	if !strings.Contains(screen, "Confirmar a troca") {
+		t.Error("o aviso não tem o botão de confirmar")
+	}
+	if !strings.Contains(screen, "Deus: Khalmyr → Panteão.") || !strings.Contains(screen, "Panteão não recebe poder concedido.") {
+		t.Error("o aviso do Panteão não diz que ele não concede nada")
+	}
+	if !strings.Contains(screen, "Khalmyr deixa de ser o deus da ficha.") || !strings.Contains(screen, "A devoção fica pendente.") {
+		t.Error("o aviso de ficar sem deus não diz o que muda para um clérigo")
+	}
+}
+
 // A migração guarda como lista o poder que cada ficha já tinha.
 func TestTheMigrationKeepsTheGrantedPowerAsAList(t *testing.T) {
 	db, err := sql.Open("sqlite", ":memory:")
