@@ -66,6 +66,15 @@ func multiclassMpPool(classes []ClassEntry) int {
 // runs). What survives above is `classVitalsTable`, `pvPoolWithCon`,
 // `multiclassPvPool` and `multiclassMpPool`, which `vitals_catalog.go` still calls.
 
+// ClassLevelGains é o que um nível da classe soma, antes da Constituição.
+func ClassLevelGains(className string) (pvPerLevel, pmPerLevel int, ok bool) {
+	v, ok := classVitalsTable[className]
+	if !ok {
+		return 0, 0, false
+	}
+	return v.pvPerLevel, v.mpPerLevel, true
+}
+
 // ClassStartingVitals são o PV inicial e o PM por nível de uma classe (p34).
 //
 // Exportados para a FORJA: a carta de classe precisa dizer o que a escolha

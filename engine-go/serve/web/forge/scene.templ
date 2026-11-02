@@ -3,16 +3,18 @@ package forge
 import (
 	"strconv"
 	"strings"
+	"t20engine/domain/search"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
 
-// A FORJA no Tempestade (ALE-535), pelo mockup aprovado `forja.html`: o nome,
-// raça, classe e origem como linhas que abrem uma folha com busca, o
-// equipamento num cartão e Forjar preso embaixo.
+// A FORJA no Tempestade (ALE-535), pelos mockups aprovados `forja.html` e
+// `forja-nivel.html`: o nome, raça e origem como linhas que abrem uma folha
+// com busca, a lista das classes com o nível de cada uma, o equipamento num
+// cartão e Forjar preso embaixo.
 //
 // O ESTADO TEM UMA CASA SÓ: o próprio formulário. O que precisa do servidor é o
-// EQUIPAMENTO, que muda com a classe, e a linha que diz o que foi escolhido; o
+// EQUIPAMENTO, que muda com a primeira classe, e a linha que diz o que foi escolhido; o
 // `@post` do Datastar manda o formulário inteiro (`contentType: 'form'`) e a
 // folha volta redesenhada.
 //
@@ -36,18 +38,18 @@ templ forgeBody(v forgeView) {
 			@ds.TextField(ds.Field{ID: "forge-name", Name: "name", Label: "Nome", Value: v.Name, Placeholder: "Como a mesa vai chamar o herói", Error: strings.Join(v.Errors["name"], " ")}, templ.Attributes{"maxlength": strconv.Itoa(heroNameMax)})
 			<div class="ds-list">
 				@pickRow("race", "Raça", "forge-race", v.racePick())
-				@pickRow("class", "Classe", "forge-class", v.classPick())
 				@pickRow("origin", "Origem", "forge-origin", v.originPick())
 			</div>
 			@fieldRefusals(v.Errors["race"])
-			@fieldRefusals(v.Errors["class"])
 			@fieldRefusals(v.Errors["origin"])
+			@classLevels(v)
+			@fieldRefusals(v.Errors["class"])
 			if v.Gear != nil {
 				@gearChoice(*v.Gear, v.Errors)
 			} else {
 				@ds.Empty("Equipamento inicial", "Ele aparece com a classe: é ela que diz que armas e armaduras o kit oferece.")
 			}
-			<p class="ds-help">Poderes, benefícios de origem, treino de perícia e as escolhas da raça se terminam na ficha.</p>
+			<p class="ds-help">Poderes, benefícios de origem, treino de perícia, as escolhas da raça e as de cada nível se terminam na ficha.</p>
 			<div class="ds-forge-foot">
 				@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL("/personagens"), nil) {
 					Cancelar
@@ -69,7 +71,7 @@ templ forgeBody(v forgeView) {
 				</div>
 			}
 		}
-		@ds.Dialog("forge-class", "Classe", nil) {
+		@ds.Dialog("forge-class", v.classSheetTitle(), nil) {
 			@ds.FilterBar() {
 				@pickSearch("class_query", "Buscar classe")
 			}
@@ -132,6 +134,40 @@ templ pickSearch(signal, label string) {
 	@ds.SearchField("forge-"+signal, label, templ.Attributes{"data-bind:" + signal: true})
 }
 
+// classLevels é a lista das classes do herói, com o nível total no alto. As linhas `classes` moram aqui
+// porque o formulário é o estado; o `−` no 1º nível tira a classe, e é assim que se troca a primeira.
+templ classLevels(v forgeView) {
+	if len(v.ClassLines) == 0 {
+		<div class="ds-list">
+			@pickRow("class", "Classe", "forge-class", pickSummary{})
+		</div>
+	} else {
+		<div class="ds-list ds-forge-classes">
+			@ds.ListHead("Classes", "Nível "+strconv.FormatInt(v.TotalLevel, 10))
+			for _, line := range v.ClassLines {
+				<input type="hidden" name="classes" value={ line.Name + ":" + strconv.FormatInt(line.Level, 10) }/>
+				<div class="ds-row ds-forge-class">
+					<span class="ds-forge-pick-value">
+						<span class="ds-row-title">{ line.Name }</span>
+						<span class="ds-row-meta">{ line.Meta }</span>
+					</span>
+					<span class="ds-forge-stepper">
+						@ds.IconButton(ds.ButtonSecondary, "Minus", classStepDownLabel(line), templ.Attributes{"type": "button", "data-on:click": classStepCommand(line.Name, -1)})
+						<b>{ strconv.FormatInt(line.Level, 10) }</b>
+						@ds.IconButton(ds.ButtonSecondary, "Plus", "Aumentar "+line.Name, classStepUpAttrs(v, line.Name))
+					</span>
+				</div>
+			}
+			if !v.LevelCapped {
+				<button type="button" class="ds-row ds-forge-add" id="forge-pick-class" commandfor="forge-class" command="show-modal">
+					@ui.Icon("Plus", "ds-icon")
+					Outra classe
+				</button>
+			}
+		</div>
+	}
+}
+
 // As OPÇÕES de cada folha: o rádio cobre a linha inteira (`ds-pick`), e ele
 // pertence ao formulário da forja pelo atributo `form`.
 templ racePickOption(c raceCard) {
@@ -150,11 +186,13 @@ templ racePickOption(c raceCard) {
 	</label>
 }
 
-// A classe pede ao servidor a cada troca: é ela que diz o que o kit de p140
-// oferece, e essa regra não é copiada para uma expressão do navegador.
+// A classe pede ao servidor a cada troca: a primeira diz o que o kit de p140
+// oferece, e essa regra não é copiada para uma expressão do navegador. A opção
+// escolhida some da folha, e o `id` é o que impede o remendo de reaproveitar o
+// rádio marcado para a carta seguinte, que entraria no herói sem ninguém pedir.
 templ classPickOption(c classCard) {
-	<label class="ds-pick ds-forge-option" data-find={ c.Find } data-show={ pickFilter("class_query") }>
-		<input type="radio" name="class" form="forge-form" value={ c.Name } checked?={ c.Chosen } data-on:change={ pickChosen() }/>
+	<label id={ "forge-class-" + search.Fold(c.Name) } class="ds-pick ds-forge-option" data-find={ c.Find } data-show={ pickFilter("class_query") }>
+		<input type="radio" name="class" form="forge-form" value={ c.Name } data-on:change={ pickChosen() }/>
 		<span class="ds-row-title">{ c.Name }</span>
 		<span class="ds-forge-option-accent">{ "PV " + strconv.Itoa(c.PV) + " · PM " + strconv.Itoa(c.PM) }</span>
 		<span class="ds-row-meta">{ c.Expertises }</span>
@@ -177,8 +215,7 @@ templ originPickOption(o originOption) {
 templ gearChoice(g startingGear, errs map[string][]string) {
 	@ds.Card("Equipamento inicial", nil) {
 		<p class="ds-card-text">
-			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6
-			rolados na hora (p140).
+			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6 rolados na hora (p140).
 		</p>
 		<div class="ds-list">
 			@pickRow("weaponSimple", "Arma simples", "forge-weaponSimple", itemPick(g.SimpleWeapons))
