@@ -7,6 +7,16 @@ import (
 	"t20engine/infra/db/dbvalue"
 )
 
+// copiedItemPairs liga cada item da cópia ao original, pela posição na mochila. A cópia
+// tem ids novos, e o catálogo não distingue duas espadas iguais; o `ORDER BY id` do
+// passo dos itens é o que preserva a posição. Pede os ids da cópia e do original.
+const copiedItemPairs = `(
+	SELECT copied.id AS copiedId, original.id AS originalId
+	FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS place FROM character_items WHERE characterId = ?) copied
+	JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS place FROM character_items WHERE characterId = ?) original
+		ON original.place = copied.place
+)`
+
 // cloneCharacterTx é o clone SEM dono da transação, para quem precisa que a
 // cópia e o que vem depois dela caiam ou vivam juntos.
 //
@@ -56,14 +66,14 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 			SELECT ?, name, attribute, trained, custom FROM character_expertises WHERE characterId = ?`, []any{destID, sourceID}},
 		{"items", `INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
 			SELECT ?, catalogId, name, quantity, slots, equipped, improvements, material, ? FROM character_items WHERE characterId = ? ORDER BY id`, []any{destID, now, sourceID}},
-		// A marca de categoria maior vai pela posição do item na mochila, que o `ORDER BY`
-		// acima preserva: a cópia tem ids novos, e o catálogo não distingue duas espadas.
+		// O encanto e a marca de categoria maior moram em tabelas filhas do ITEM. Ver
+		// `copiedItemPairs`.
+		{"item enchants", `INSERT INTO character_item_enchants (itemId, enchantId)
+			SELECT pair.copiedId, enchant.enchantId FROM ` + copiedItemPairs + ` pair
+			JOIN character_item_enchants enchant ON enchant.itemId = pair.originalId`, []any{destID, sourceID}},
 		{"oversized weapons", `INSERT INTO character_oversized_weapons (itemId)
-			SELECT copied.id
-			FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS place FROM character_items WHERE characterId = ?) copied
-			JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS place FROM character_items WHERE characterId = ?) original
-				ON original.place = copied.place
-			JOIN character_oversized_weapons mark ON mark.itemId = original.id`, []any{destID, sourceID}},
+			SELECT pair.copiedId FROM ` + copiedItemPairs + ` pair
+			JOIN character_oversized_weapons mark ON mark.itemId = pair.originalId`, []any{destID, sourceID}},
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
 		// O HISTÓRICO POR NÍVEL vem junto: é daqui que saem os poderes da ficha, e a cópia
