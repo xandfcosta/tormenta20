@@ -247,6 +247,17 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 	if w.Purpose == "ranged" {
 		skill, attribute = "Pontaria", "dexterity"
 		strDamage = 0
+	} else if w.Purpose == "thrown" {
+		// A arma de arremesso é de ataque à distância: Pontaria no teste e Força no dano (p142). O Arremesso
+		// Potente troca a Destreza pela Força no teste, e a Acuidade a Força pela Destreza no dano (p124).
+		// Os dois dizem "pode", e a ficha fica com a maior.
+		skill, attribute = "Pontaria", "dexterity"
+		if b.effects.Flags["arremesso-potente"] && b.forTotal > b.dexTotal {
+			attribute = "strength"
+		}
+		if b.hasFinesse && b.dexTotal > b.forTotal {
+			strDamage, dexDamageUsed = b.dexTotal, true
+		}
 	} else {
 		// Finesse (Adaga / Acuidade com Arma): use Destreza when it beats Força.
 		dexAttack, dexDamage := weaponDexUse(w, b.hasFinesse, b.forTotal, b.dexTotal)
@@ -306,14 +317,14 @@ const (
 // weaponDexUse mirrors weapon-cards.ts weaponDexUse: whether a wielded weapon may
 // use Destreza instead of Força on attack/damage (T20 p145). Only when DES beats
 // FOR (the rule is optional, so the sheet takes the better). Attack finesse = the
-// weapon's inherent flag (Adaga) OR the Acuidade power on a light-melee/thrown/
-// ágil weapon; damage finesse is Acuidade-only. Ranged never applies (ALE-31).
+// weapon's inherent flag (Adaga) OR the Acuidade power on a light-melee or ágil
+// weapon; damage finesse is Acuidade-only. Ranged never applies (ALE-31), and the
+// thrown weapon has its own branch in the card, because it already attacks with Destreza.
 func weaponDexUse(w *WeaponStats, hasFinesse bool, forTotal, dexTotal int) (attack, damage bool) {
 	if w.Purpose == "ranged" || dexTotal <= forTotal {
 		return false, false
 	}
-	finesse := hasFinesse &&
-		((w.Hand == "light" && w.Purpose == "melee") || w.Purpose == "thrown" || hasTrait(w.Traits, "agil"))
+	finesse := hasFinesse && ((w.Hand == "light" && w.Purpose == "melee") || hasTrait(w.Traits, "agil"))
 	return w.Finesse || finesse, finesse
 }
 
