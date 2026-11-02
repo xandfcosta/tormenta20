@@ -65,6 +65,9 @@ func TestTheGodCatalogShowsTauronAsDead(t *testing.T) {
 	if !strings.Contains(body, "Não concede nada") {
 		t.Errorf("a carta de Tauron não diz que ele não concede nada:\n%s", body)
 	}
+	if found := askTheFinder(t, s, eu, `{"finder":"tauron"}`); !strings.Contains(found, "entrada=tauron") {
+		t.Errorf("a busca não leva à carta de Tauron:\n%s", found)
+	}
 	alive := pedeNoMestre(t, s, eu, "GET", "/mestre/deuses?entrada=khalmyr", "").Body.String()
 	if strings.Contains(alive, ">Morto<") {
 		t.Error("Khalmyr saiu como morto")
