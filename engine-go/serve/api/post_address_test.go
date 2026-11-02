@@ -374,10 +374,6 @@ func scenesThatWriteAddresses(t *testing.T, f sceneFixture) []struct {
 			User       int64
 		}{"cronica " + aba, campaign + "?tab=" + aba, f.gm})
 	}
-	scenes = append(scenes, struct {
-		Name, Path string
-		User       int64
-	}{"atributos", sheet + "/atributos", f.player})
 	return scenes
 }
 

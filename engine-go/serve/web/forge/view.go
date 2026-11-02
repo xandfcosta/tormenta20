@@ -1,6 +1,7 @@
 package forge
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"sort"
@@ -34,8 +35,11 @@ type forgeView struct {
 	// LevelCapped é o 20º nível: os `+` se apagam e não há outra classe a oferecer (p35).
 	LevelCapped bool
 	Origins     []originOption
-	Gods        []godOption
-	GodChosen   string
+	// AttributeRows são as seis linhas, e AttributeRefusals o que nos campos não é valor.
+	AttributeRows     []attributeRow
+	AttributeRefusals []string
+	Gods              []godOption
+	GodChosen         string
 	// GodGrantsPower é falso para o Panteão e o Paladino do Bem, que não recebem poder concedido (p57).
 	GodGrantsPower bool
 	// GodRefusal diz por que o deus marcado não serve às classes de agora.
@@ -137,9 +141,14 @@ type itemOption struct {
 // Ela é chamada nas três situações e devolve a mesma coisa nas três: a folha
 // vazia do primeiro GET, a folha redesenhada quando uma escolha muda, e a folha
 // recusada com os erros por campo.
-func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
+func (s Scene) blankForgeSheet(ctx context.Context, answers forgeAnswers, errs wire.FieldErrorMap) (forgeView, error) {
 	races, classes, _ := book.CharacterCatalogs()
 	v := forgeView{Name: answers.Name, Errors: errs}
+	rows, refusals, err := s.attributeRowsOf(ctx, answers)
+	if err != nil {
+		return forgeView{}, err
+	}
+	v.AttributeRows, v.AttributeRefusals = rows, refusals
 	for _, race := range races {
 		v.Races = append(v.Races, raceCardOf(race, answers.Race))
 	}
@@ -161,7 +170,7 @@ func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
 		v.Gear = startingGearFor(answers, *class)
 	}
 	v.OrphanRefusals = orphanRefusals(errs, v.Gear)
-	return v
+	return v, nil
 }
 
 // classLinesOf escreve o que cada classe dá: a primeira, o que ela dá por inteiro; as outras, o que somam
@@ -209,7 +218,7 @@ func godOptions(answers forgeAnswers) ([]godOption, string) {
 
 // orphanRefusals junta as recusas dos campos que esta folha não desenha.
 func orphanRefusals(errs wire.FieldErrorMap, gear *startingGear) []string {
-	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true, "god": true}
+	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true, "god": true, "attributes": true}
 	if gear != nil {
 		onScreen["weaponSimple"] = true
 		onScreen["weaponMartial"] = len(gear.MartialWeapons) > 0

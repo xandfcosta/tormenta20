@@ -154,8 +154,8 @@ func TestTheSheetDoesNotLeaveTheSpecialistChoice(t *testing.T) {
 		}
 	}
 	if forged := f.requests(t, f.player, http.MethodPost,
-		fmt.Sprintf("/personagens/%d/atributos/intelligence/-1", id), ""); !strings.Contains(forged.Body.String(), "Especialista") {
-		t.Error("baixar a Inteligência na forja não foi recusado pelo Especialista")
+		fmt.Sprintf("/personagens/%d/atributos/intelligence/0", id), ""); !strings.Contains(forged.Body.String(), "Especialista") {
+		t.Error("baixar a Inteligência no diálogo não foi recusado pelo Especialista")
 	}
 
 	row, err := f.s.queries.GetCharacter(context.Background(), id)
@@ -221,7 +221,7 @@ func TestTheChoicesDialogShowsTheSpecialist(t *testing.T) {
 func TestFreeingASpecialistSkillLetsTheIntelligenceGoDown(t *testing.T) {
 	f, id := specialist(t, 2)
 	picksSpecialist(t, f, id, "Ladinagem", "Furtividade")
-	lower := fmt.Sprintf("/personagens/%d/atributos/intelligence/-1", id)
+	lower := fmt.Sprintf("/personagens/%d/atributos/intelligence/1", id)
 
 	refused := f.requests(t, f.player, http.MethodPost, lower, "").Body.String()
 	if !strings.Contains(refused, "libere 1") {

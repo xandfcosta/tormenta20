@@ -95,6 +95,10 @@ type attributeTile struct {
 	Value string
 	// Sum é de onde vem o total: "+1 livre +2 Aumento de Atributo".
 	Sum string
+	// Free é o valor livre, o que o diálogo muda.
+	Free int64
+	// Warning é o efeito que o livro prevê abaixo de −5.
+	Warning string
 }
 
 // weaponTile é uma arma empunhada como fórmula pronta de rolar.
@@ -349,11 +353,13 @@ func attributeTiles(computed engine.ComputedSheet, dto sheet.CharacterDTO) []att
 	tiles := make([]attributeTile, 0, len(engine.AttributeKeys))
 	for _, key := range engine.AttributeKeys {
 		tiles = append(tiles, attributeTile{
-			Key:   key,
-			Abbr:  attributeAbbr[key],
-			Label: book.AttributeLabel(key),
-			Value: book.WithSign(computed.Attributes[key].Total),
-			Sum:   sheet.AttributeSum(int(bases[key]), computed.Attributes[key].Contributions),
+			Key:     key,
+			Abbr:    attributeAbbr[key],
+			Label:   book.AttributeLabel(key),
+			Value:   book.WithSign(computed.Attributes[key].Total),
+			Sum:     sheet.AttributeSum(int(bases[key]), computed.Attributes[key].Contributions),
+			Free:    bases[key],
+			Warning: sheet.AttributeMinimumEffect(key, computed.Attributes[key].Total),
 		})
 	}
 	return tiles

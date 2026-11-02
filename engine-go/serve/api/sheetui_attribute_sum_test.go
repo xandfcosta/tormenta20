@@ -28,8 +28,8 @@ func TestTheAttributeDialogSeparatesTheFreeValueFromTheLevelOne(t *testing.T) {
 	for _, want := range []string{
 		"+1 livre +2 Aumento de Atributo",
 		"Força +3",
-		fmt.Sprintf("/personagens/%d/atributos", id),
-		"Mudar o valor livre",
+		fmt.Sprintf("/personagens/%d/atributos/strength/2", id),
+		`aria-label="Valor de Força"`,
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("a ficha não traz %q", want)
@@ -37,7 +37,7 @@ func TestTheAttributeDialogSeparatesTheFreeValueFromTheLevelOne(t *testing.T) {
 	}
 
 	// Mudar o livre não mexe no que veio de nível.
-	if code := f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/atributos/strength/1", id), "").Code; code != http.StatusOK {
+	if code := f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/atributos/strength/2", id), "").Code; code != http.StatusOK {
 		t.Fatalf("mudar o valor livre: status %d", code)
 	}
 	page = html.UnescapeString(f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String())
@@ -46,7 +46,25 @@ func TestTheAttributeDialogSeparatesTheFreeValueFromTheLevelOne(t *testing.T) {
 	}
 }
 
-// Só o dono muda, e a tela é a mesma da forja: o outro jogador leva a recusa.
+// O valor é escrito no próprio diálogo, e o que não é número volta como recusa dentro dele.
+func TestTheSheetDialogRefusesAWrongValue(t *testing.T) {
+	f, id := barbaro(t, 5)
+	for _, written := range []string{"150", "abc"} {
+		refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/atributos/strength/%s", id, written), "").Body.String())
+		if !strings.Contains(refusal, written) {
+			t.Errorf("a recusa de %q não cita o valor: %q", written, refusal)
+		}
+	}
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/atributos/sorte/1", id), "").Body.String()); !strings.Contains(refusal, "sorte") {
+		t.Errorf("a recusa do atributo que não existe não o cita: %q", refusal)
+	}
+	warned := html.UnescapeString(f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/atributos/strength/-6", id), "").Body.String())
+	if !strings.Contains(warned, "paralisado (p17)") {
+		t.Errorf("Força −6 não avisou o efeito do livro:\n%s", warned)
+	}
+}
+
+// Só o dono muda: o outro jogador leva a recusa.
 func TestOnlyTheOwnerChangesTheFreeValueAfterCreation(t *testing.T) {
 	f, id := barbaro(t, 5)
 	path := fmt.Sprintf("/personagens/%d/atributos/strength/1", id)

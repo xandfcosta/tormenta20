@@ -343,16 +343,37 @@ templ attributeStat(attr attributeTile) {
 	})
 }
 
-// attributeDialog é a soma do atributo e o caminho para mudar o valor livre. A parte que veio
-// de nível se muda na aba Poderes, e por isso o botão não promete mexer nela.
+// attributeDialog muda o valor livre ali mesmo, e diz de onde vem o total. A parte que veio de nível se
+// muda na aba Poderes, e por isso o campo não promete mexer nela. A recusa sai aqui dentro porque o aviso
+// da ficha fica atrás do diálogo aberto.
 templ attributeDialog(v View, attr attributeTile) {
 	@ds.Dialog(attributeDialogID(attr.Key), attr.Label+" "+attr.Value, nil) {
-		<p><b>{ attr.Sum }</b></p>
-		<p class="ds-card-text">O Aumento de Atributo se escolhe na aba Poderes.</p>
-		@ds.LinkButton(ds.ButtonSecondary, templ.SafeURL(fmt.Sprintf("/personagens/%d/atributos", v.ID)), templ.Attributes{"data-wide": true}) {
-			Mudar o valor livre
+		if v.Refusal != "" {
+			<p role="alert" class="ds-alert">{ v.Refusal }</p>
 		}
+		<div class="ds-field">
+			<span class="ds-field-label">Valor livre</span>
+			@ds.ValueStepper(attr.Label, strconv.FormatInt(attr.Free, 10), attributeValueAttrs(v, attr, attr.Free-1), templ.Attributes{
+				"data-on:change":  attributeWrittenCommand(v, attr.Key),
+				"data-on:keydown": ds.EnterLeavesTheField,
+			}, attributeValueAttrs(v, attr, attr.Free+1))
+		</div>
+		<p><b>{ attr.Sum }</b></p>
+		if attr.Warning != "" {
+			<p class="ds-forge-warning">{ attr.Warning }</p>
+		}
+		<p class="ds-card-text">O Aumento de Atributo se escolhe na aba Poderes.</p>
 	}
+}
+
+func attributeValueAttrs(v View, attr attributeTile, value int64) templ.Attributes {
+	return templ.Attributes{"type": "button", "data-on:click": sheetPost(v, fmt.Sprintf("/atributos/%s/%d", attr.Key, value))}
+}
+
+// attributeWrittenCommand manda o que está no campo. Vazio vale zero, e o caminho não pode ficar sem o
+// último pedaço.
+func attributeWrittenCommand(v View, key string) string {
+	return sheetPostWith(v, "/atributos/"+key+"/§", "encodeURIComponent(evt.target.value.trim() || '0')")
 }
 
 // sheetMenuDialog é o ⋯: quem o personagem é, por extenso, e o que é raro —

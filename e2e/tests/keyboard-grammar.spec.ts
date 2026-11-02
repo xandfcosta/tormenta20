@@ -36,10 +36,6 @@ const CENAS = [
   { nome: 'forja', url: '/personagens/nova' },
 ]
 
-// A segunda cena da forja NÃO cabe nesta lista: o endereço dela tem o id do
-// herói, e o herói só existe depois de alguém forjar. Ela é medida em
-// `forge.spec.ts`, que a alcança pelo caminho de verdade — a lista aqui é
-// de cenas com endereço fixo, e fingir um id faria o guarda medir um 403.
 
 
 for (const scene of CENAS) {

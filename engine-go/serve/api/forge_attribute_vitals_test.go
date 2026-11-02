@@ -33,7 +33,7 @@ func umHeroiForjado(t *testing.T, f sceneFixture) (int64, string) {
 	return id, "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
 }
 
-// A cena de atributos enchia os poços no fim de TODO passo bem-sucedido — a
+// O gesto de atributos enchia os poços no fim de TODO passo bem-sucedido — a
 // função que fazia isso deixou de existir (ALE-355), e o que ela gravava era
 // `HpCurrent = HpMax`. O guarda da cena confere id, existência e posse — e nada
 // mais: não há checagem nenhuma de que o herói ainda está sendo forjado, e não
@@ -52,7 +52,7 @@ func TestTheAttributeStepDoesNotHealTheHero(t *testing.T) {
 	fereOHeroi(t, f, id, 3, 0)
 
 	// O GESTO DO ABUSO, inteiro: desce a Constituição e devolve o ponto.
-	for _, step := range []string{"/constitution/-1", "/constitution/1"} {
+	for _, step := range []string{"/constitution/-1", "/constitution/0"} {
 		if code := postaAForja(t, f, f.player, attributes+step, nil).Code; code != http.StatusOK {
 			t.Fatalf("o passo %q respondeu %d", step, code)
 		}
@@ -96,7 +96,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	fereOHeroi(t, f, id, 3, 0)
 
 	// Base +2 num elfo dá Con +1: +1 de PV máximo por nível, e o nível é 1.
-	if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
+	if code := postaAForja(t, f, f.player, attributes+"/constitution/2", nil).Code; code != http.StatusOK {
 		t.Fatalf("subir a Constituição de novo respondeu %d", code)
 	}
 	if pv, pvMax, _, _ := osVitaisDe(t, f, id); pv != 4 || pvMax != 21 {
@@ -104,7 +104,7 @@ func TestTheAttributeStepWalksTheWoundedPoolWithTheMax(t *testing.T) {
 	}
 
 	// E DE VOLTA: o mesmo delta para baixo desfaz exatamente o passo.
-	if code := postaAForja(t, f, f.player, attributes+"/constitution/-1", nil).Code; code != http.StatusOK {
+	if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
 		t.Fatalf("descer a Constituição respondeu %d", code)
 	}
 	if pv, pvMax, _, _ := osVitaisDe(t, f, id); pv != 3 || pvMax != 20 {
@@ -126,12 +126,10 @@ func TestTheNewbornStillLeavesTheForgeWithFullPools(t *testing.T) {
 	if pv, pvMax, pm, pmMax := osVitaisDe(t, f, id); pv != pvMax || pm != pmMax {
 		t.Fatalf("o herói nasceu em %d/%d PV e %d/%d PM, e devia nascer CHEIO", pv, pvMax, pm, pmMax)
 	}
-	// Cheio continua cheio quando o máximo SOBE: dois pontos em Constituição
-	// levam o elfo de Con 0 a Con +1, e o poço acompanha.
-	for i := 0; i < 2; i++ {
-		if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
-			t.Fatalf("subir a Constituição respondeu %d", code)
-		}
+	// Cheio continua cheio quando o máximo SOBE: Constituição livre 2 leva o elfo
+	// a Con +1, e o poço acompanha.
+	if code := postaAForja(t, f, f.player, attributes+"/constitution/2", nil).Code; code != http.StatusOK {
+		t.Fatalf("subir a Constituição respondeu %d", code)
 	}
 	if pv, pvMax, _, _ := osVitaisDe(t, f, id); pv != 21 || pvMax != 21 {
 		t.Errorf("o recém-nascido ficou em %d/%d, e cheio segue cheio em 21/21", pv, pvMax)

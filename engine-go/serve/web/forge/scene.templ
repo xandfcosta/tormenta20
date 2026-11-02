@@ -11,7 +11,7 @@ import (
 // A FORJA no Tempestade (ALE-535), pelos mockups aprovados `forja.html` e
 // `forja-nivel.html`: o nome, raça, origem e deus como linhas que abrem uma folha
 // com busca, a lista das classes com o nível de cada uma, o equipamento num
-// cartão e Forjar preso embaixo.
+// cartão, os atributos e Forjar preso embaixo.
 //
 // O ESTADO TEM UMA CASA SÓ: o próprio formulário. O que precisa do servidor é o
 // EQUIPAMENTO, que muda com a primeira classe, e a linha que diz o que foi escolhido; o
@@ -48,6 +48,7 @@ templ forgeBody(v forgeView) {
 			}
 			@classLevels(v)
 			@fieldRefusals(v.Errors["class"])
+			@attributeLines(v)
 			if v.Gear != nil {
 				@gearChoice(*v.Gear, v.Errors)
 			} else {

@@ -13,8 +13,8 @@ import (
 
 // O NASCIMENTO DO HERÓI.
 //
-// A forja curta pergunta o nome, a raça, a origem, o deus (opcional) e o nível em cada classe, mais o
-// equipamento inicial de p140, e o que sai dela é um personagem VÁLIDO, não um rascunho. O que ela não
+// A forja pergunta numa tela só o nome, a raça, a origem, o deus (opcional), o nível em cada classe, os
+// atributos e o equipamento inicial de p140, e o que sai dela é um personagem VÁLIDO, não um rascunho. O que ela não
 // pergunta são as escolhas que a ficha já sabe fazer: os dois benefícios da origem (p85), o treino de
 // perícia, os atributos de raça, o caminho, o poder concedido e as escolhas de cada nível. Isso vira
 // PENDÊNCIA, e pendência não é erro.
@@ -43,11 +43,13 @@ type forgeAnswers struct {
 	BrokenClassLines []string
 	Origin           string
 	// God é o id da devoção, ou "" para nenhuma.
-	God           string
-	SimpleWeapon  string
-	MartialWeapon string
-	Armor         string
-	Shield        bool
+	God string
+	// AttributesWritten é o que está nos seis campos, por chave.
+	AttributesWritten map[string]string
+	SimpleWeapon      string
+	MartialWeapon     string
+	Armor             string
+	Shield            bool
 }
 
 // forgeRefusals confere a folha inteira e devolve uma mensagem por campo.
@@ -66,6 +68,9 @@ func forgeRefusals(answers forgeAnswers) wire.FieldErrorMap {
 	}
 	if _, found := book.Origins()[answers.Origin]; !found {
 		errs["origin"] = []string{choiceRefusal(answers.Origin, "a origem", "origem")}
+	}
+	if _, refusals := answers.attributeValues(); len(refusals) > 0 {
+		errs["attributes"] = refusals
 	}
 	if refusals := classRefusals(answers); len(refusals) > 0 {
 		errs["class"] = refusals
@@ -257,15 +262,13 @@ func (s Scene) birthHero(r *http.Request, ownerID int64, stylesheet forgeAnswers
 // raça, e as perícias treinadas são as FIXAS da classe. As que a classe manda
 // escolher — o "Luta ou Pontaria" do guerreiro e as duas do bolo — são
 // pendência da ficha, junto com os dois benefícios da origem (p85).
-//
-// Os seis atributos nascem em ZERO, que é o ponto de partida da compra de
-// pontos (p17): distribuí-los é a segunda cena da forja.
 func birthBody(stylesheet forgeAnswers, race book.Race, class book.Class) (sheet.CreateBody, error) {
 	tibar, err := birthPurse(stylesheet.Origin, totalLevelOf(stylesheet.Classes))
 	if err != nil {
 		return sheet.CreateBody{}, err
 	}
 	kit := engine.StartingKitFor(class.Name, class.Proficiencies)
+	values, _ := stylesheet.attributeValues()
 	var god *string
 	if stylesheet.God != "" {
 		god = &stylesheet.God
@@ -275,6 +278,12 @@ func birthBody(stylesheet forgeAnswers, race book.Race, class book.Class) (sheet
 		Races:             []string{race.ID},
 		Origin:            stylesheet.Origin,
 		God:               god,
+		Strength:          int64(values["strength"]),
+		Dexterity:         int64(values["dexterity"]),
+		Constitution:      int64(values["constitution"]),
+		Intelligence:      int64(values["intelligence"]),
+		Wisdom:            int64(values["wisdom"]),
+		Charisma:          int64(values["charisma"]),
 		Classes:           stylesheet.Classes,
 		Tibar:             &tibar,
 		Items:             birthItems(stylesheet, kit),

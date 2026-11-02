@@ -6,72 +6,35 @@ import (
 	"t20engine/serve/web/ds"
 )
 
-// OS ATRIBUTOS DA FORJA — a segunda tela, no Tempestade (ALE-535).
-//
-// Ela é uma cena de comandos, e não um formulário: o herói já existe, então
-// cada `+` e cada `−` grava. Por isso ela é Datastar de ponta a ponta, e a
-// recusa volta desenhada aqui dentro em vez de num status.
-templ attributesScene(v attributesView) {
-	@attributesBody(v)
-}
-
-templ attributesBody(v attributesView) {
-	<div id="forge-attributes" class="ds-forge">
-		@pointCount(v)
-		if v.Refusal != "" {
-			<p class="ds-forge-refusal" role="alert">{ v.Refusal }</p>
-		}
-		<div class="ds-list" data-nav-region="content" data-nav-layout="column">
-			for _, row := range v.Rows {
-				@attributeStepper(v.ID, row)
-			}
+// attributeLines é a lista dos seis.
+templ attributeLines(v forgeView) {
+	<div class="ds-list">
+		<div class="ds-list-head ds-forge-attr-head">
+			<span>Atributos</span>
 		</div>
-		<p class="ds-help">
-			Aqui se muda só o valor livre, e o total já soma o resto. O Aumento de Atributo e a raça
-			que ESCOLHE onde pôr o bônus — o humano e os meio-elfos — se resolvem na ficha, na aba Poderes.
-		</p>
-		@ds.LinkButton(ds.ButtonPrimary, templ.SafeURL(fmt.Sprintf("/personagens/%d", v.ID)), templ.Attributes{"data-wide": true}) {
-			Abrir a ficha
+		for _, row := range v.AttributeRows {
+			<div class="ds-row ds-forge-attr">
+				<span class="ds-forge-attr-name">
+					<span class="ds-row-title">{ row.Label }</span>
+					if row.Sum != "" {
+						<small class="ds-forge-sum">{ row.Sum }</small>
+					}
+					if row.Warning != "" {
+						<small class="ds-forge-warning">{ row.Warning }</small>
+					}
+				</span>
+				@ds.ValueStepper(row.Label, row.Written, attributeStepAttrs(row.Key, -1), templ.Attributes{
+					"id": "forge-attr-" + row.Key, "name": row.Key, "data-on:change": forgeRedraw(),
+					"data-on:keydown": ds.EnterLeavesTheField,
+				}, attributeStepAttrs(row.Key, 1))
+				<span class="ds-forge-total"><small>total</small>{ book.WithSign(row.Total) }</span>
+			</div>
 		}
 	</div>
+	@fieldRefusals(v.AttributeRefusals)
 }
 
-// pointCount é o placar do orçamento. Ele fica ACIMA das linhas porque é o que
-// decide o próximo toque.
-templ pointCount(v attributesView) {
-	<div class="ds-forge-points">
-		<span class="ds-forge-points-left">{ v.PointsLine }</span>
-		<span class="ds-help">
-			O livro dá 10 pontos para gastar (p17), mas a escolha é livre: quem rolou os dados na mesa põe aqui o que saiu.
-		</span>
-	</div>
-}
-
-// attributeStepper é uma linha: o nome e a soma, o `−`, o valor base, o `+` e o total.
-templ attributeStepper(id int64, row attributeRow) {
-	<div class="ds-row ds-forge-attr">
-		<span class="ds-forge-attr-name">
-			<span class="ds-row-title">{ row.Label }</span>
-			if row.Sum != "" {
-				<small class="ds-forge-sum">{ row.Sum }</small>
-			}
-		</span>
-		<span class="ds-forge-stepper">
-			@ds.IconButton(ds.ButtonSecondary, "Minus", "Diminuir "+row.Label, stepAttrs(id, row, -1))
-			<b>{ book.WithSign(row.Base) }</b>
-			@ds.IconButton(ds.ButtonSecondary, "Plus", "Aumentar "+row.Label, stepAttrs(id, row, 1))
-		</span>
-		<span class="ds-forge-total"><small>total</small>{ book.WithSign(row.Total) }</span>
-	</div>
-}
-
-func stepAttrs(id int64, row attributeRow, step int) templ.Attributes {
-	return templ.Attributes{"type": "button", "data-on:click": attributePost(id, row.Key, step)}
-}
-
-// attributePost monta o comando. Ele não carrega estado nenhum na URL — esta
-// cena não tem aba nem busca —, e é por isso que ela não precisa do cuidado do
-// `sheetPost`.
-func attributePost(id int64, key string, step int) string {
-	return fmt.Sprintf("@post('/personagens/%d/atributos/%s/%d')", id, key, step)
+func attributeStepAttrs(key string, step int) templ.Attributes {
+	return templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf(
+		"@post('/personagens/nova/esboco/atributo/%s/%d', {contentType: 'form', selector: '#forge-form'})", key, step)}
 }

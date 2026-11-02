@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
@@ -211,9 +210,6 @@ func TestTheHeroIsBornDressedAndWithAPurse(t *testing.T) {
 		t.Fatalf("status %d, esperado 303: %s", rec.Code, rec.Body.String())
 	}
 	destination := rec.Header().Get("Location")
-	if !strings.HasSuffix(destination, "/atributos") {
-		t.Fatalf("o nascimento levou para %q, e não para os atributos", destination)
-	}
 
 	id := oIDDoDestino(t, destination)
 	row, err := f.s.queries.GetCharacter(context.Background(), id)
@@ -304,98 +300,7 @@ func TestTheHeroIsBornWithWhatTheClassTrainsAndUses(t *testing.T) {
 	}
 }
 
-// A escolha é LIVRE (p17): quem rolou na mesa põe o que saiu, e a Tabela 1-1 dá
-// mais de um negativo e dá −2. A compra de pontos só informa.
-func TestTheForgeAttributesAreAFreeChoice(t *testing.T) {
-	f := newSceneFixture(t)
-	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
-	id := oIDDoDestino(t, rec.Header().Get("Location"))
-	attributes := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
-
-	steps := []string{
-		"/strength/1", "/strength/1", "/strength/1", "/strength/1", "/strength/1",
-		"/dexterity/1", "/dexterity/1", "/dexterity/1", "/dexterity/1",
-		"/wisdom/-1", "/charisma/-1", "/charisma/-1",
-	}
-	for _, step := range steps {
-		answer := postaAForja(t, f, f.player, attributes+step, nil)
-		if answer.Code != http.StatusOK {
-			t.Fatalf("%s: status %d", step, answer.Code)
-		}
-		if sentence := sceneRefusal(answer.Body.String()); sentence != "" {
-			t.Fatalf("%s foi recusado: %q", step, sentence)
-		}
-	}
-
-	row, err := f.s.queries.GetCharacter(context.Background(), id)
-	if err != nil {
-		t.Fatalf("herói: %v", err)
-	}
-	if row.Strength != 5 || row.Dexterity != 4 || row.Wisdom != -1 || row.Charisma != -2 {
-		t.Errorf("For %d, Des %d, Sab %d, Car %d: esperava 5, 4, -1 e -2",
-			row.Strength, row.Dexterity, row.Wisdom, row.Charisma)
-	}
-	if body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String(); !strings.Contains(body, "Fora da tabela de pontos") {
-		t.Error("com Força 5 a cena não disse que saiu da tabela de pontos")
-	}
-
-	// E a Constituição mexe no PV: subir um ponto sobe o poço, e ele fica cheio.
-	if code := postaAForja(t, f, f.player, attributes+"/constitution/1", nil).Code; code != http.StatusOK {
-		t.Fatalf("subir Constituição: status %d", code)
-	}
-	// Con base +1 com a Constituição −1 do elfo dá Con 0: o poço volta a 20.
-	if pool := poolsOf(t, f.s, id); pool.HpMax != 20 || pool.HpCurrent != 20 {
-		t.Errorf("PV %d/%d, esperado 20/20 com Con base +1 num elfo", pool.HpCurrent, pool.HpMax)
-	}
-}
-
-// O contador informa o que passou dos 10 pontos (p17), sem recusar.
-func TestTheForgePointCountSaysHowFarPastTheBudget(t *testing.T) {
-	f := newSceneFixture(t)
-	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
-	id := oIDDoDestino(t, rec.Header().Get("Location"))
-	attributes := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
-
-	for _, step := range []string{"/strength/1", "/strength/1", "/strength/1", "/strength/1", "/dexterity/1", "/dexterity/1", "/dexterity/1", "/dexterity/1"} {
-		postaAForja(t, f, f.player, attributes+step, nil)
-	}
-	// 7 + 7 = 14 pontos.
-	if body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String(); !strings.Contains(body, "4 pontos além dos 10") {
-		t.Error("com 14 pontos gastos a cena não disse quanto passou dos 10")
-	}
-}
-
-// Cada linha mostra de onde vem o total: o elfo dá Inteligência +2 (p22).
-func TestTheForgeRowShowsTheSumWithTheRace(t *testing.T) {
-	f := newSceneFixture(t)
-	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
-	id := oIDDoDestino(t, rec.Header().Get("Location"))
-	attributes := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
-
-	postaAForja(t, f, f.player, attributes+"/intelligence/1", nil)
-	body := f.requests(t, f.player, http.MethodGet, attributes, "").Body.String()
-	if !strings.Contains(body, "+1 livre +2 Raça: Elfo") {
-		t.Errorf("a linha de Inteligência não mostrou a soma; somas na cena: %q",
-			regexp.MustCompile(`ds-forge-sum[^<]*<?[^<]*`).FindAllString(body, -1))
-	}
-}
-
-// A posse é conferida como em toda rota de personagem.
-func TestTheForgeAttributesBelongToTheOwner(t *testing.T) {
-	f := newSceneFixture(t)
-	rec := postaAForja(t, f, f.player, "/personagens/nova", aFolhaPreenchida())
-	id := oIDDoDestino(t, rec.Header().Get("Location"))
-	path := "/personagens/" + strconv.FormatInt(id, 10) + "/atributos"
-
-	if code := postaAForja(t, f, f.gm, path+"/strength/1", nil).Code; code != http.StatusForbidden {
-		t.Errorf("o mestre distribuiu atributo de herói alheio: status %d", code)
-	}
-	if code := f.requests(t, f.gm, http.MethodGet, path, "").Code; code != http.StatusForbidden {
-		t.Errorf("o mestre abriu os atributos de herói alheio: status %d", code)
-	}
-}
-
-// oIDDoDestino tira o id de "/personagens/7/atributos".
+// oIDDoDestino tira o id de "/personagens/7".
 //
 // Ele confere o SEGMENTO em vez de contar posição: contar quebra quando a rota
 // muda de profundidade, e o modo de falhar é ruim — `ParseInt("atributos")` não
