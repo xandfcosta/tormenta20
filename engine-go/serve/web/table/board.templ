@@ -366,7 +366,7 @@ templ markerActions(v BoardView, m boardMarker) {
 				title="Esconder da mesa"
 			}
 			data-on:click={ markerCommand(v, m.ID, "revelar") }
-			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-accent"
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs outline-none hover:bg-(--ds-sunk)"
 		>
 			if m.Hidden {
 				@ui.Icon("Eye", "size-4")
@@ -390,7 +390,7 @@ templ markerActions(v BoardView, m boardMarker) {
 			aria-label={ "Apagar o marcador " + m.Text }
 			title="Apagar"
 			data-on:click={ pickMarker("") + "; " + markerCommand(v, m.ID, "remover") }
-			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-muted-foreground outline-none hover:border hover:border-destructive hover:text-destructive-ink"
+			class="inline-flex size-6 items-center justify-center rounded-sm text-xs text-(--ds-ink-2) outline-none hover:border hover:border-(--ds-danger) hover:text-(--ds-danger)"
 		>
 			@ui.Icon("X", "size-4")
 		</button>

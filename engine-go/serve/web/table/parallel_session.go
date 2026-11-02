@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"t20engine/serve/web/sheetui"
-	"t20engine/serve/web/ui"
 )
 
 // A SESSÃO DO JOGADOR (ALE-473): a ficha que ela desenha e o sistema que a
@@ -27,13 +26,13 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
 }
 
-// pageSystemAndStream é o sistema que a página veste e o fluxo que ela abre.
-// A janela à parte do tabuleiro leva a marca no fluxo, para remendar só o mapa.
-func pageSystemAndStream(view View) (ui.DesignSystem, string) {
+// streamOfPage é o fluxo que a página abre. A janela à parte do tabuleiro leva a marca no fluxo, para
+// remendar só o mapa.
+func streamOfPage(view View) string {
 	if view.BoardWindow {
-		return ui.SystemTempestade, view.SessionBase() + "/fluxo?janela=tabuleiro"
+		return view.SessionBase() + "/fluxo?janela=tabuleiro"
 	}
-	return ui.SystemTempestade, view.SessionBase() + "/fluxo"
+	return view.SessionBase() + "/fluxo"
 }
 
 // dressBoardWindow liga a JANELA À PARTE do tabuleiro do mestre (ALE-522): a

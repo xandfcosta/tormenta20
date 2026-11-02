@@ -138,31 +138,16 @@ func TestThePageComesBackInTheChosenMode(t *testing.T) {
 	}
 }
 
-// A folha viva veste o sistema novo, e o resto do app continua no grimório até
-// a vez de cada tela: é a transição POR ESCOPO da ALE-497.
-func TestOnlyTheMigratedSceneWearsTheNewSystem(t *testing.T) {
-	s, owner := hubFixture(t)
+// Toda página veste o Tempestade, inclusive a que não diz nada: a casca não tem outro sistema.
+func TestEveryPageWearsTheSystem(t *testing.T) {
+	s, _ := hubFixture(t)
 
-	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`)
-	scopeOf := func(path string) string {
-		tag := shell.FindString(pedeHub(t, s, owner, http.MethodGet, path).Body.String())
-		if tag == "" {
-			t.Fatalf("%s não desenhou a casca", path)
-		}
-		return tag
-	}
-
-	if tag := scopeOf("/sistema"); !strings.Contains(tag, "scene-ds") || strings.Contains(tag, "scene-grimorio") {
-		t.Errorf("a folha viva não saiu só no escopo scene-ds: %s", tag)
-	}
-	// O CONTROLE do grimório é uma página sem sistema declarado, e não uma tela: elas estão
-	// acabando, e é o padrão da casca que decide o que veste quem ainda não migrou.
 	rec := httptest.NewRecorder()
 	s.sceneCore().WritePage(rec, httptest.NewRequest(http.MethodGet, "/", nil), http.StatusOK,
-		ui.Page{Title: "Sem sistema", Shape: ui.ShellBare}, templ.NopComponent)
-	tag := shell.FindString(rec.Body.String())
-	if strings.Contains(tag, "scene-ds") || !strings.Contains(tag, "scene-grimorio") {
-		t.Errorf("a página sem sistema não saiu no grimório: %s", tag)
+		ui.Page{Title: "Qualquer", Shape: ui.ShellBare}, templ.NopComponent)
+	tag := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`).FindString(rec.Body.String())
+	if !strings.Contains(tag, "scene-ds") {
+		t.Errorf("a página não saiu no escopo do sistema: %s", tag)
 	}
 }
 

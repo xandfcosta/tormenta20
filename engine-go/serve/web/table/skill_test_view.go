@@ -26,10 +26,9 @@ type skillTestBand struct {
 	// jogador, que escreve o total grande e a soma ao lado: "d20 (14) + 7" e 21.
 	Sum   string
 	Total int
-	// Seal e Class são o selo e a cor dele. Sem CD não há passou/falhou, então o
+	// Seal é o selo. Sem CD não há passou/falhou, então o
 	// selo diz só o que NÃO depende de CD: os naturais da p221.
-	Seal  string
-	Class string
+	Seal string
 	// Tone é o tom do selo no kit: "good" no 20 natural, "danger" no 1.
 	Tone string
 	// ByHand diz que o d20 veio da mesa. Sem a marca ninguém sabe se confia no
@@ -54,8 +53,8 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 		Who: t.Who, Skill: t.Skill, ByHand: t.ByHand,
 		Sum:   "d20 (" + writtenDice(t) + ")" + signedTerm(t.Modifier),
 		Total: t.Total,
-		Seal:  "Teste", Class: "mesa-ataque-comum",
-		Paid: writtenPaid(t.Spends), Rerolled: writtenRerolls(t.Rerolls, t.Roll),
+		Seal:  "Teste",
+		Paid:  writtenPaid(t.Spends), Rerolled: writtenRerolls(t.Rerolls, t.Roll),
 	}
 	band.Tally = fmt.Sprintf("%s = %d", band.Sum, band.Total)
 	// A TROCA aparece no nome: "Diplomacia com Enganação" — o número da conta é
@@ -68,9 +67,9 @@ func skillTestBandOf(st *live.SessionRuntimeState) *skillTestBand {
 	// nenhuma, e a CD é do mestre, dita em voz.
 	switch {
 	case t.Natural20:
-		band.Seal, band.Class, band.Tone = "20 natural", "mesa-ataque-critico", "good"
+		band.Seal, band.Tone = "20 natural", "good"
 	case t.Natural1:
-		band.Seal, band.Class, band.Tone = "1 natural", "mesa-ataque-erro", "danger"
+		band.Seal, band.Tone = "1 natural", "danger"
 	}
 	return band
 }

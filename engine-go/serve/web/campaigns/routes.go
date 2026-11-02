@@ -72,8 +72,7 @@ func (s Scene) handleList(w http.ResponseWriter, r *http.Request) {
 		Title: "Campanhas · Tormenta 20",
 		// `ui.ShellBare`: esta cena desenha o próprio cabeçalho, porque ele carrega
 		// as ações. A casca densa poria um segundo `<h1>` acima.
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Shape: ui.ShellBare,
 	}, SceneBody(view))
 }
 
@@ -150,7 +149,6 @@ func (s Scene) writeNewPage(w http.ResponseWriter, r *http.Request, status int, 
 		// folha nasce sem saída visível — o Esc existe, mas atalho não é a única
 		// porta.
 		Shape:        ui.ShellDense,
-		System:       ui.SystemTempestade,
 		Back:         "/campanhas",
 		BackLabel:    "Campanhas",
 		VisibleTitle: "Nova campanha",
@@ -258,7 +256,6 @@ func (s Scene) writeJoinPage(w http.ResponseWriter, r *http.Request, status int,
 	s.deps.WritePage(w, r, status, ui.Page{
 		Title:        "Entrar numa mesa",
 		Shape:        ui.ShellDense,
-		System:       ui.SystemTempestade,
 		Back:         "/campanhas",
 		BackLabel:    "Campanhas",
 		VisibleTitle: "Entrar numa mesa",
@@ -578,8 +575,7 @@ func (s Scene) writeOnePage(w http.ResponseWriter, r *http.Request, status int, 
 		Title: v.Name,
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, porque o `<h1>` é o
 		// nome da campanha, abaixo da barra.
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Shape: ui.ShellBare,
 		// O sinal é só de INTERAÇÃO — o aviso do interruptor. Nada de estado da
 		// aplicação: a aba vem da URL e o resto vem desenhado.
 		Signals: "{rule_error: ''}",

@@ -10,7 +10,7 @@ import { expect, type Page } from '@playwright/test'
  * a letra continua legível.
  *
  * Medido no `secondary`: o preenchimento contra o fundo da cena dá 1,30:1, e a
- * borda (`--grimorio-iron-light`) dá 3,57:1. **A borda é o conserto** — sem este
+ * borda do controle dá 3,57:1. **A borda é o conserto** — sem este
  * guarda, tirá-la não acusa nada: o botão continua clicável, o texto continua
  * legível, e o que se perde é a fronteira.
  *

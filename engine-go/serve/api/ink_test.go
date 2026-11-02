@@ -45,9 +45,10 @@ func TestEveryHouseTintExistsInTheStylesheet(t *testing.T) {
 	// um piso que o conjunto ANTIGO já satisfazia faria a volta acidental à
 	// lista curta passar verde. Ele DESCE quando o terreno encolhe: cada tela
 	// que migra para o Tempestade leva tintas do grimório junto (a administração
-	// deixou 18, ALE-546, e o rascunho de lugar e as notas deixaram 11, ALE-565).
-	if len(used) < 8 {
-		t.Fatalf("a varredura achou %d tintas da casa, e são dezenas: o padrão parou de casar", len(used))
+	// deixou 18, ALE-546, e o rascunho de lugar e as notas deixaram 11, ALE-565). Sem o grimório
+	// (ALE-569) sobram as barras de vida e mana.
+	if len(used) < 3 {
+		t.Fatalf("a varredura achou %d tintas da casa: o padrão parou de casar", len(used))
 	}
 
 	names := make([]string, 0, len(used))
@@ -144,7 +145,7 @@ func semOsComentarios(source string) string {
 // que a paleta embutida do Tailwind já cobre. Token semântico novo entra aqui
 // junto com a linha do `@theme` — as duas metades do mesmo ato.
 var asPaletasDaCasa = []string{
-	"grimorio", "arcane", "penalty", "hp", "mp", "terreno",
+	"arcane", "penalty", "hp", "mp", "terreno",
 	"accent", "background", "bonus", "border", "card", "destructive",
 	"foreground", "input", "marker", "muted", "popover", "primary",
 	"ring", "secondary", "warning",

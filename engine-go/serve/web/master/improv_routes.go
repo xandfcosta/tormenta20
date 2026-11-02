@@ -84,9 +84,8 @@ func (s Scene) respondImprov(w http.ResponseWriter, r *http.Request, table strin
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:  "Improviso · Mesa do Mestre · Tormenta 20",
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Title: "Improviso · Mesa do Mestre · Tormenta 20",
+		Shape: ui.ShellBare,
 	}, masterFrame("improviso", "Improviso", nil, improvScene(ready)))
 }
 

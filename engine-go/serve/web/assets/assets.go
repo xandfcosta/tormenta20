@@ -79,9 +79,8 @@ func Handler() http.Handler {
 
 // FontsHandler serve as fontes que a FOLHA pede em `/fonts/…`.
 //
-// Sem esta rota, `GET /fonts/cinzel-latin.woff2` dá 404 e a Cinzel cai para uma
-// serifada do sistema em TODA tela: o `@font-face` pede o caminho ABSOLUTO, e
-// não há mais nada que o resolva.
+// Sem esta rota, a Atkinson dá 404 e o texto cai para uma face do sistema em TODA
+// tela: o `@font-face` pede o caminho ABSOLUTO, e não há mais nada que o resolva.
 func FontsHandler() http.Handler {
 	sub, err := fs.Sub(files, "static/fonts")
 	if err != nil {

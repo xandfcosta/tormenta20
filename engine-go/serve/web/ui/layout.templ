@@ -3,18 +3,15 @@ package ui
 import "net/http"
 
 // A CASCA da cena. Escrever o leiaute à mão numa tela nova, em vez de usá-la,
-// perde CINCO coisas, e só uma é o padding:
+// perde QUATRO coisas, e só uma é o padding:
 //
-//  1. `.scene-grimorio` — é o ESCOPO dos tokens, e o `@custom-variant dark` da
-//     casa dispara nele. Sem a classe, todo utilitário `dark:` das telas
-//     silenciosamente não faz nada.
-//  2. A textura de fundo e a vinheta, que são a identidade visual da cena.
-//  3. `h-dvh` com overflow interno. A premissa do app é tela cheia com o
+//  1. `.scene-ds` — é o ESCOPO dos tokens. Sem a classe, a tela sai sem cor.
+//  2. `h-dvh` com overflow interno. A premissa do app é tela cheia com o
 //     CONTEÚDO rolando, não o documento; sem isso a página rola por fora e a
 //     faixa fixa da Mesa passa a competir com a barra do navegador.
-//  4. `env(safe-area-inset-*)`. O `viewport-fit=cover` já está no `<head>`,
+//  3. `env(safe-area-inset-*)`. O `viewport-fit=cover` já está no `<head>`,
 //     mas sem `env()` ele só serve para o conteúdo entrar DEBAIXO do notch.
-//  5. A escala de espaçamento da casa (`px-4 py-4` no denso).
+//  4. A escala de espaçamento da casa (`px-4 py-4` no denso).
 //
 // É o que faz duas telas individualmente corretas parecerem do mesmo app.
 
@@ -38,10 +35,10 @@ type Page struct {
 	Overlays []templ.Component
 	// Title é sempre o do `<title>`. O que aparece na TELA depende da Forma.
 	Title string
-	Shape  ShellShape
-	// VisibleTitle e Voltar são da casca DENSA; Kicker é da casca TÍTULO.
+	Shape ShellShape
+	// VisibleTitle e Voltar são da casca DENSA.
 	VisibleTitle string
-	Back        string
+	Back         string
 	// NoClientState marca a superfície que não pode ter sinal NEM `data-init`
 	// — hoje só a PORTA. Um sinal é estado do cliente e o Datastar o serializa em
 	// TODA requisição seguinte, então qualquer estado ali faria a senha viajar de
@@ -52,8 +49,7 @@ type Page struct {
 	// desenho, e amarrar uma regra de segurança a um nome de leiaute é a regra
 	// sumindo no dia em que alguém usar a mesma casca noutra tela.
 	NoClientState bool
-	Kicker        string
-	Signals        string
+	Signals       string
 	Init          string
 	// Scripts são os módulos EXTRA de UMA cena. O `scene.js` vale para toda
 	// página; estes são para o que é de uma só. Carregá-los em toda cena seria
@@ -64,27 +60,12 @@ type Page struct {
 	// destino é melhor que a seta genérica quando a cena não é filha óbvia de
 	// ninguém.
 	BackLabel string
-	// System é o sistema de desenho da cena. A UI está migrando tela a tela
-	// (ALE-497), e a cena que não diz nada continua no grimório — é o zero do
-	// tipo de propósito, para nenhuma tela mudar sem alguém pedir.
-	System DesignSystem
 	// ColorMode é a escolha de claro ou escuro que a pessoa fez, e quem a lê do
 	// cookie é o hospedeiro. Vazio é "siga o sistema operacional". Ela sai no
 	// `<html>` já na resposta: decidir no navegador desenharia um quadro no modo
 	// errado antes de trocar.
 	ColorMode ColorMode
 }
-
-// DesignSystem é qual dos dois sistemas a cena veste durante a migração.
-type DesignSystem string
-
-const (
-	// SystemGrimoire é o sistema de antes, até a última tela migrar.
-	SystemGrimoire DesignSystem = ""
-	// SystemTempestade é o sistema novo: as peças de `serve/web/ds`, só dentro
-	// do escopo `.scene-ds`.
-	SystemTempestade DesignSystem = "tempestade"
-)
 
 // ColorMode é o modo de cor ESCOLHIDO. Não há valor para "sistema": quem não
 // escolheu não tem modo, e o CSS segue o `prefers-color-scheme`.
@@ -135,9 +116,8 @@ const (
 	// ui.ShellDense é o cabeçalho compacto das telas de conteúdo: voltar + título
 	// pequeno, `px-4 py-4`.
 	ShellDense ShellShape = "densa"
-	// ui.ShellTitled é a TELA-TÍTULO — o nome do jogo em Cinzel grande e
-	// centralizado, sem link de voltar, `px-5 py-14`. É a forma do Hub e a da
-	// PORTA: quem está fora não tem para onde voltar.
+	// ui.ShellTitled é a TELA-TÍTULO, sem link de voltar: ela desenha a própria
+	// marca. É a forma do Hub e a da PORTA: quem está fora não tem para onde voltar.
 	ShellTitled ShellShape = "titulo"
 )
 
@@ -202,55 +182,16 @@ templ Layout(p Page, body templ.Component) {
 				if p.Back != "" {
 					data-voltar={ p.Back }
 				}
-				class={ "relative flex h-dvh flex-col overflow-hidden",
-					templ.KV("scene-grimorio", p.System == SystemGrimoire),
-					templ.KV("scene-ds", p.System == SystemTempestade) }
+				class="scene-ds relative flex h-dvh flex-col overflow-hidden"
 			>
-				if p.System == SystemGrimoire {
-					<div aria-hidden="true" data-slot="background-texture" data-variant="stone" data-vignette="true" class="grimorio-stone grimorio-vignette pointer-events-none absolute inset-0 -z-10"></div>
-				}
-				if p.Shape == ShellDense && p.System == SystemTempestade {
+				if p.Shape == ShellDense {
 					@denseHeader(p)
-				} else if p.Shape == ShellDense {
-					<header
-						class="relative flex flex-wrap items-center gap-3 border-b border-grimorio-iron px-4 py-3"
-						style="padding-top: max(0.75rem, env(safe-area-inset-top))"
-					>
-						// `min-h-11` é o alvo de toque da casa, e o link é um `<a>` de
-						// verdade: a volta é navegação, e um botão com JavaScript
-						// perderia o clique do meio, o "abrir em nova aba" e o teclado
-						// que o navegador já dá.
-						<a
-							href={ templ.SafeURL(p.Back) }
-							class="inline-flex min-h-11 items-center gap-1 px-3 font-heading text-sm tracking-wide text-muted-foreground outline-none transition-colors hover:text-grimorio-gold"
-						>
-							if p.BackLabel != "" {
-								{ "‹ " + p.BackLabel }
-							} else {
-								‹ Voltar
-							}
-						</a>
-						// Só quando HÁ título: um `<h1>` vazio entra na árvore de
-						// acessibilidade como cabeçalho sem nome, e o leitor de
-						// tela anuncia "título, nível 1" sobre o nada. A crônica
-						// desenha o próprio `h1` com o nome da campanha, e a casca
-						// não tem o que dizer por cima disso.
-						if p.VisibleTitle != "" {
-							<h1 class="font-heading text-xl tracking-wide text-foreground">{ p.VisibleTitle }</h1>
-						}
-					</header>
 				}
 				<div
 					data-slot="scene-content"
 					class={ "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto",
-						templ.KV("px-4 py-4", p.Shape == ShellDense),
-						templ.KV("px-5 py-14", p.Shape == ShellTitled && p.System == SystemGrimoire) }
+						templ.KV("px-4 py-4", p.Shape == ShellDense) }
 				>
-					// No Tempestade a tela-título desenha a própria marca (a porta,
-					// ALE-524); o título em Cinzel é do grimório.
-					if p.Shape == ShellTitled && p.System == SystemGrimoire {
-						@SceneTitle(p.Title, p.Kicker)
-					}
 					@body
 				</div>
 				// O BUSCADOR é desenhado por último e fora do que rola:

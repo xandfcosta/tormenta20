@@ -46,9 +46,8 @@ func (s Scene) handleBestiary(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		// O `<title>` carrega a tela e a ferramenta: quem tem seis abas abertas
 		// precisa saber qual ferramenta está em cada uma.
-		Title:  "Bestiário · Mesa do Mestre · Tormenta 20",
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Title: "Bestiário · Mesa do Mestre · Tormenta 20",
+		Shape: ui.ShellBare,
 	}, masterFrame("bestiario", "Bestiário", nil, bestiaryScene(v)))
 }
 

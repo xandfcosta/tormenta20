@@ -238,7 +238,7 @@ export async function expectDentroDaJanela(page: Page, root = 'body'): Promise<v
  *
  * Ignora quem rola de lado DE PROPÓSITO, marcado com `data-scrolls-x`.
  *
- * @example await expectNadaRolaDeLado(page, '.scene-grimorio')
+ * @example await expectNadaRolaDeLado(page, '.scene-ds')
  */
 export async function expectNadaRolaDeLado(page: Page, root = 'body'): Promise<void> {
   const scrolling = await page.evaluate((rootSelector) => {

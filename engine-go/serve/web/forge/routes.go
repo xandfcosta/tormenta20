@@ -97,7 +97,6 @@ func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v 
 		// `ui.ShellDense`: o cabeçalho compacto com a seta de voltar, como a
 		// campanha nova. Sem ele a folha nasce sem saída visível.
 		Shape:        ui.ShellDense,
-		System:       ui.SystemTempestade,
 		Back:         "/personagens",
 		BackLabel:    "Personagens",
 		VisibleTitle: "Forjar um herói",

@@ -114,7 +114,7 @@ Uma tela pode mentir com a suíte inteira verde: o dado certo e a apresentação
 errada. Por isso olhar é passo, e não zelo (ver o [APRENDIZADOS.md](APRENDIZADOS.md)).
 
 **A divisão de trabalho É a regra.** A MÁQUINA julga LIMIAR e LIGAÇÃO: contraste
-abaixo do AA, Cinzel abaixo do piso, alvo de toque, sinal escrito sem leitor, id
+abaixo do AA, texto abaixo do piso, alvo de toque, sinal escrito sem leitor, id
 apontado que não existe. O OLHO julga COMPOSIÇÃO e HIERARQUIA: o que salta
 primeiro e se era para saltar, o que ficou apertado, o que ficou solto, o que
 desalinha. Nenhum limiar responde a essas quatro, e é por isso que este passo é

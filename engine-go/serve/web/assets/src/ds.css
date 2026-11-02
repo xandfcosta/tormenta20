@@ -1,15 +1,8 @@
 /* O SISTEMA TEMPESTADE (ALE-497, fundação na ALE-479).
  *
- * A UI está sendo refeita do zero e as telas migram uma a uma. Até a última, o
- * app tem dois sistemas, e quem escolhe é a CENA: a casca põe `.scene-ds` na cena
- * migrada e `.scene-grimorio` na que ainda não foi. Por isso todo token daqui é
- * `--ds-*` e nada é declarado na raiz — um token com o mesmo nome do grimório
- * repintaria as telas que ainda não migraram, e é exatamente a convivência que
- * a transição POR ESCOPO decidiu evitar.
- *
- * As pranchas que este arquivo implementa (estrutura e cor, com o contraste
- * medido) estão na épica. O que é decisão está nelas; o que é de código está
- * aqui. */
+ * Todo token daqui é `--ds-*` e vive em `.scene-ds`, o escopo que a casca põe em toda cena. As
+ * pranchas que este arquivo implementa (estrutura e cor, com o contraste medido) estão na épica. O
+ * que é decisão está nelas; o que é de código está aqui. */
 
 /* Atkinson Hyperlegible Next (OFL 1.1, licença em
  * /fonts/atkinson-hyperlegible-next-license.txt) — a face ÚNICA do sistema,
@@ -78,6 +71,13 @@
   --ds-action: light-dark(#6d28d9, #b29bfb);
   --ds-action-ink: light-dark(#ffffff, #1b1033);
   --ds-focus: light-dark(#6d28d9, #b29bfb);
+  /* AS TINTAS DO MAPA não mudam com o modo: o chão do tabuleiro é escuro nos dois. */
+  --ds-map-gold: oklch(0.8 0.11 85);
+  --ds-map-danger: oklch(0.55 0.19 25);
+  --ds-map-danger-ink: oklch(0.76 0.13 25);
+  --ds-map-blue: oklch(0.66 0.16 250);
+  --ds-map-green: oklch(0.6 0.17 145);
+  --ds-map-seal-ink: oklch(0.97 0.01 85);
 
   /* ESTADOS, iguais em toda paleta e diferentes só entre os modos. O vermelho é
    * de destruir e de PV, e nunca de ação. */
@@ -115,12 +115,9 @@
 
 /* O FOCO do sistema: a cor de ação, 2px, afastado 2px.
  *
- * O REPOUSO é escrito igual ao destino, pelo motivo da receita do grimório
- * (ALE-318, no `index.css`): o `transition-colors` do Tailwind inclui
+ * O REPOUSO é escrito igual ao destino (ALE-318): o `transition-colors` do Tailwind inclui
  * `outline-*`, e com o repouso diferente o anel seria ALCANÇADO em 150ms em
- * vez de desenhado. Sem diferença, não há o que interpolar — e o repouso do
- * grimório (ouro, 1px) vale na raiz, então sem esta regra ele seria o ponto de
- * partida aqui dentro. Quem cobra é o `expectOneFocusRing` na folha viva. */
+ * vez de desenhado. Sem diferença, não há o que interpolar. Quem cobra é o `expectOneFocusRing` na folha viva. */
 .scene-ds * {
   outline-color: var(--ds-focus);
   outline-width: 2px;
@@ -3508,32 +3505,6 @@
     display: flex;
     flex: 1;
     min-height: 16rem;
-  }
-  /* AS PEÇAS DO GRIMÓRIO HOSPEDADAS NO KIT: o caderno, o bestiário e o editor
-   * do bloco são os de hoje, e as utilitárias deles leem as variáveis do tema
-   * direto (`bg-background` é `var(--background)`). Remapear as variáveis aqui
-   * troca a tinta inteira sem disputar com a camada das utilitárias, que vem
-   * depois desta e ganharia de qualquer seletor. */
-  .ds-gm-notes,
-  .ds-gm-bestiary,
-  .ds-gm-float {
-    --background: var(--ds-surface);
-    --foreground: var(--ds-ink);
-    --card: var(--ds-surface);
-    --muted: var(--ds-sunk);
-    --muted-foreground: var(--ds-ink-2);
-    --accent: var(--ds-sunk);
-    --input: var(--ds-line);
-    --border: var(--ds-line);
-    --primary: var(--ds-action);
-    --primary-foreground: var(--ds-action-ink);
-    --destructive: var(--ds-danger);
-    --destructive-ink: var(--ds-danger);
-    --grimorio-iron: var(--ds-line);
-    --grimorio-iron-light: var(--ds-line-strong);
-    --grimorio-gold: var(--ds-action);
-    --color-grimorio-gold: var(--ds-action);
-    --grimorio-panel: var(--ds-surface);
   }
   .ds-gm-member,
   .ds-gm-npc {
