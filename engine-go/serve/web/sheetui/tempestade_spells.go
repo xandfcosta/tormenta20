@@ -117,7 +117,7 @@ func grantedSheetID(index int) string {
 //
 //	spellLineMeta(row, false) // "Padrão · médio", na Bola de Fogo
 func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
-	meta := book.CastingName(spell.Execution) + " · " + strings.ToLower(book.RangeName(spell.Range))
+	meta := spell.ExecutionWritten + " · " + strings.ToLower(spell.RangeWritten)
 	if requiresPrep && !spell.Prepared {
 		meta += " · não preparada"
 	}

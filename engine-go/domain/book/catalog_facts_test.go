@@ -32,7 +32,7 @@ func TestTheSpellSaysWhatResists(t *testing.T) {
 	for id, want := range map[string]string{
 		"relampago":    "Reflexos reduz à metade",
 		"bola-de-fogo": "Reflexos reduz à metade",
-		"luz":          "Vontade anula", "armadura-arcana": "",
+		"luz":          "Vontade anula (veja texto)", "armadura-arcana": "",
 	} {
 		spell, found := SpellByID(id)
 		if !found {
@@ -86,6 +86,47 @@ func TestEverySpellSaysWhatItActsOn(t *testing.T) {
 	} {
 		if spell, _ := SpellByID(id); spell.Targeting != want {
 			t.Errorf("%s: saiu %q, e o livro diz %q", id, spell.Targeting, want)
+		}
+	}
+}
+
+// A magia diz o que a linha dela diz no livro, inclusive onde o motor guarda outra coisa: o custo de
+// ação de "duas rodadas" é uma decisão à parte, mas a tela não pode trocar o texto.
+func TestTheSpellLineReadsLikeTheBook(t *testing.T) {
+	for id, want := range map[string]struct{ execution, reach, resistance string }{
+		"relampago-flamejante-de-reynard": {"duas rodadas", "Médio", "Reflexos reduz à metade"},
+		"cupula-de-repulsao":              {"Padrão", "Pessoal", "Vontade anula"},
+		"conjurar-monstro":                {"Completa", "Curto", ""},
+		"runa-de-protecao":                {"1 hora", "Toque", "varia (veja o texto)"},
+		"sonho":                           {"10 minutos", "Ilimitado", ""},
+		"roubar-a-alma":                   {"Padrão", "Curto", "Vontade parcial"},
+		"controlar-o-clima":               {"Completa", "2km", ""},
+		"desejo":                          {"Completa", "veja texto", "veja texto"},
+		"luz":                             {"Padrão", "Curto", "Vontade anula (veja texto)"},
+		"curar-ferimentos":                {"Padrão", "Toque", ""},
+		"assassino-fantasmagorico":        {"Padrão", "Longo", "Vontade anula, Fortitude parcial"},
+	} {
+		spell, found := SpellByID(id)
+		if !found {
+			t.Fatalf("a magia %s não está no catálogo", id)
+		}
+		if got := SpellExecutionWritten(spell); got != want.execution {
+			t.Errorf("%s: a execução saiu %q, e o livro diz %q", id, got, want.execution)
+		}
+		if got := SpellRangeWritten(spell); got != want.reach {
+			t.Errorf("%s: o alcance saiu %q, e o livro diz %q", id, got, want.reach)
+		}
+		if got := SpellResistanceWritten(spell); got != want.resistance {
+			t.Errorf("%s: a resistência saiu %q, e o livro diz %q", id, got, want.resistance)
+		}
+	}
+}
+
+// O texto do livro não mexe no custo de ação: "1 hora" continua custando o que o motor já cobra.
+func TestTheBookTextDoesNotChangeTheActionCost(t *testing.T) {
+	for _, id := range []string{"runa-de-protecao", "sonho", "banimento", "mata-dragao", "relampago-flamejante-de-reynard"} {
+		if spell, _ := SpellByID(id); spell.Execution != "completa" {
+			t.Errorf("%s: o custo de ação virou %q, e a decisão do dono é não mexer nele", id, spell.Execution)
 		}
 	}
 }

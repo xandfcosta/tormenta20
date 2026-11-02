@@ -262,9 +262,10 @@ var spellsPart13 = []Spell{
 				Description: "Aumenta o número de alvos em +1. Compartilham sonho/pesadelo entre si e com o conjurador.",
 			},
 		},
-		BookPage:     207,
-		UID:          "spl_7yvq2mqfug",
-		DurationNote: "veja texto",
+		BookPage:      207,
+		UID:           "spl_7yvq2mqfug",
+		DurationNote:  "veja texto",
+		ExecutionNote: "10 minutos",
 	},
 	{
 		ID:         "sopro-da-salvacao",
