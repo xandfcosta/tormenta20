@@ -2192,6 +2192,7 @@
     gap: 0.5rem;
   }
   .ds-forge-option {
+    align-content: center;
     display: grid;
     gap: 2px;
     align-items: start;
