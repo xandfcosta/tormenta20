@@ -43,6 +43,7 @@ classe
 cond
 cor
 decisao
+deus
 die
 efeito
 entryId

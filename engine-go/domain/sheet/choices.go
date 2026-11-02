@@ -129,6 +129,9 @@ func WithChoicesValid(dto CharacterDTO) error {
 	if err := originFitBenefits(dto); err != nil {
 		return err
 	}
+	if err := devotionIsValid(dto); err != nil {
+		return err
+	}
 	return classChoiceSelectionsAreValid(dto)
 }
 
@@ -229,19 +232,13 @@ func OriginBenefitsOf(origin book.Origin) []book.OriginBenefit {
 	return outside
 }
 
-// classChoiceSelectionsAreValid confere caminho e devoto contra as opções da
-// classe.
+// classChoiceSelectionsAreValid confere o caminho contra as opções da classe.
 func classChoiceSelectionsAreValid(dto CharacterDTO) error {
 	choices := ClassChoiceSelections(dto)
 	for _, class := range dto.Classes {
 		blob := choices[class.ClassName]
 		if err := chosenExistsOption(
 			"caminho", blob.Path, LevelPaths(class.ClassName, class.Level), class.ClassName,
-		); err != nil {
-			return err
-		}
-		if err := chosenExistsOption(
-			"devoto", blob.Devotee, ClassDevotees(class.ClassName), class.ClassName,
 		); err != nil {
 			return err
 		}

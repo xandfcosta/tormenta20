@@ -19,7 +19,7 @@
                 "level": 10
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 4,
             "dexterity": 1,
             "constitution": 4,
@@ -74,7 +74,7 @@
                 "level": 8
               }
             ],
-            "god": "Lena",
+            "god": "lena",
             "strength": 1,
             "dexterity": 2,
             "constitution": 2,
@@ -136,7 +136,7 @@
                 "level": 12
               }
             ],
-            "god": "Tenebra",
+            "god": "tenebra",
             "strength": 1,
             "dexterity": 2,
             "constitution": 3,
@@ -226,7 +226,7 @@
                 "level": 9
               }
             ],
-            "god": "Allihanna",
+            "god": "allihanna",
             "strength": 1,
             "dexterity": 3,
             "constitution": 2,
@@ -285,7 +285,7 @@
                 "level": 4
               }
             ],
-            "god": "Valkaria",
+            "god": "valkaria",
             "strength": 3,
             "dexterity": 2,
             "constitution": 3,
@@ -361,7 +361,7 @@
                 "level": 11
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 3,
             "dexterity": 1,
             "constitution": 3,
@@ -432,7 +432,7 @@
                 "level": 20
               }
             ],
-            "god": "Valkaria",
+            "god": "valkaria",
             "strength": 5,
             "dexterity": 2,
             "constitution": 5,
@@ -555,7 +555,7 @@
                 "level": 6
               }
             ],
-            "god": "Tanna-Toh",
+            "god": "tanna-toh",
             "strength": 0,
             "dexterity": 3,
             "constitution": 2,
@@ -741,7 +741,7 @@
                 "level": 8
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 4,
             "dexterity": 3,
             "constitution": 3,
@@ -808,7 +808,7 @@
                 "level": 9
               }
             ],
-            "god": "Wynna",
+            "god": "wynna",
             "godPower": "Bênção do Mana",
             "strength": 0,
             "dexterity": 3,
@@ -896,7 +896,7 @@
                 "level": 10
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 3,
             "dexterity": 1,
             "constitution": 3,
@@ -971,7 +971,7 @@
                 "level": 6
               }
             ],
-            "god": "Kallyadranoch",
+            "god": "kallyadranoch",
             "strength": 4,
             "dexterity": 2,
             "constitution": 4,
@@ -1063,7 +1063,7 @@
                 "level": 20
               }
             ],
-            "god": "Wynna",
+            "god": "wynna",
             "strength": 0,
             "dexterity": 3,
             "constitution": 3,
@@ -1117,7 +1117,7 @@
                 "level": 20
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 6,
             "dexterity": 2,
             "constitution": 5,
@@ -1151,7 +1151,7 @@
                 "level": 8
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 1,
             "dexterity": 1,
             "constitution": 2,
@@ -1198,7 +1198,7 @@
                 "level": 12
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 4,
             "dexterity": 1,
             "constitution": 4,
@@ -1252,7 +1252,7 @@
                 "level": 8
               }
             ],
-            "god": "Valkaria",
+            "god": "valkaria",
             "strength": 3,
             "dexterity": 4,
             "constitution": 3,
@@ -1329,7 +1329,7 @@
                 "level": 12
               }
             ],
-            "god": "Tenebra",
+            "god": "tenebra",
             "strength": 4,
             "dexterity": 1,
             "constitution": 4,
@@ -1367,7 +1367,7 @@
                 "level": 20
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 5,
             "dexterity": 2,
             "constitution": 4,
@@ -1413,7 +1413,7 @@
                 "level": 20
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 5,
             "dexterity": 2,
             "constitution": 4,
@@ -1458,7 +1458,7 @@
                 "level": 10
               }
             ],
-            "god": "Allihanna",
+            "god": "allihanna",
             "strength": 4,
             "dexterity": 3,
             "constitution": 3,
@@ -1500,7 +1500,7 @@
                 "level": 8
               }
             ],
-            "god": "Allihanna",
+            "god": "allihanna",
             "strength": 2,
             "dexterity": 4,
             "constitution": 1,
@@ -1539,7 +1539,7 @@
                 "level": 9
               }
             ],
-            "god": "Tenebra",
+            "god": "tenebra",
             "strength": 3,
             "dexterity": 3,
             "constitution": 3,
@@ -1587,7 +1587,7 @@
                 "level": 10
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 3,
             "dexterity": 1,
             "constitution": 4,
@@ -1640,7 +1640,7 @@
                 "level": 5
               }
             ],
-            "god": "Nimb",
+            "god": "nimb",
             "strength": 0,
             "dexterity": 3,
             "constitution": 1,
@@ -1685,7 +1685,7 @@
                 "level": 9
               }
             ],
-            "god": "Allihanna",
+            "god": "allihanna",
             "strength": 1,
             "dexterity": 4,
             "constitution": 2,
@@ -1737,7 +1737,7 @@
                 "level": 10
               }
             ],
-            "god": "Khalmyr",
+            "god": "khalmyr",
             "strength": 4,
             "dexterity": 2,
             "constitution": 4,
@@ -1774,7 +1774,7 @@
                 "level": 4
               }
             ],
-            "god": "Hyninn",
+            "god": "hyninn",
             "strength": 0,
             "dexterity": 4,
             "constitution": 2,
@@ -1810,7 +1810,7 @@
                 "level": 6
               }
             ],
-            "god": "Hyninn",
+            "god": "hyninn",
             "strength": 0,
             "dexterity": 2,
             "constitution": 1,

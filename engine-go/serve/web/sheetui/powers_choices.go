@@ -29,6 +29,27 @@ type choicesPanel struct {
 	Races   []raceChoiceCard
 	Origin  *originChoiceCard
 	Classes []classChoiceCard
+	// Devotion é o passo da devoção, que toda ficha tem.
+	Devotion devotionChoice
+}
+
+// devotionChoice é o deus da ficha e o poder que ele concede.
+type devotionChoice struct {
+	Name     string
+	Required bool
+	Gods     pickerChoice
+	// Powers são os poderes do deus escolhido, e NoGrant diz quem escolheu uma devoção sem poder.
+	Powers  []grantedPowerRow
+	NoGrant string
+	// OldPower é o poder guardado que não é do deus de agora.
+	OldPower string
+	// HasPower diz se há poder a tirar.
+	HasPower bool
+}
+
+type grantedPowerRow struct {
+	Name, Detail string
+	Active       bool
 }
 
 // raceChoiceCard é o que uma raça pede: o bônus de atributo e as variantes.
@@ -87,9 +108,8 @@ type classChoiceCard struct {
 	Slots int
 	Used  int
 	// Powers são os poderes ELETIVOS da classe mais os gerais, já marcados.
-	Powers  []powerChoice
-	Path    *pickerChoice
-	Devotee *pickerChoice
+	Powers []powerChoice
+	Path   *pickerChoice
 	// Counted são as escolhas contadas por atributo dos poderes que a classe
 	// CONCEDEU — as perícias do Especialista (ALE-501).
 	Counted []countedChoice
@@ -190,7 +210,7 @@ func (o powerOption) Written() string {
 	return o.Label
 }
 
-// pickerChoice é uma escolha de valor único — caminho ou devoto.
+// pickerChoice é uma escolha de valor único.
 type pickerChoice struct {
 	Options []filterOption
 	Chosen  string
@@ -202,6 +222,7 @@ func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPane
 	panel.Races = s.raceChoices(dto, search)
 	panel.Origin = originChoice(dto)
 	panel.Classes = classChoiceCards(dto, search)
+	panel.Devotion = devotionChoiceOf(dto)
 	return panel
 }
 
@@ -321,12 +342,38 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 		if options := sheet.LevelPaths(class.ClassName, class.Level); len(options) > 0 {
 			card.Path = markedPicker(options, choices[class.ClassName].Path)
 		}
-		if options := sheet.ClassDevotees(class.ClassName); len(options) > 0 {
-			card.Devotee = markedPicker(options, choices[class.ClassName].Devotee)
-		}
 		cards = append(cards, card)
 	}
 	return cards
+}
+
+// devotionChoiceOf monta o passo da devoção.
+func devotionChoiceOf(dto sheet.CharacterDTO) devotionChoice {
+	god := ""
+	if dto.God != nil {
+		god = *dto.God
+	}
+	choice := devotionChoice{
+		Name: "nenhuma", Required: sheet.DevotionRequired(dto.Classes),
+		Gods: *markedPicker(sheet.DevotionOptions(dto.Classes), god), HasPower: dto.GodPower != "",
+	}
+	if god != "" {
+		choice.Name = book.DevotionName(god)
+		for _, power := range book.GrantedPowersOf(god) {
+			choice.Powers = append(choice.Powers, grantedPowerRow{
+				Name: power.Name, Detail: power.Description, Active: power.Name == dto.GodPower,
+			})
+		}
+		if len(choice.Powers) == 0 {
+			choice.NoGrant = book.DevotionWritten(god) + " não recebe poder concedido."
+		}
+		if dto.GodPower != "" && !sheet.GrantedPowerIsOfGod(god, dto.GodPower) {
+			choice.OldPower = dto.GodPower
+		}
+	} else if dto.GodPower != "" {
+		choice.OldPower = dto.GodPower
+	}
+	return choice
 }
 
 // markedPicker vira as opções do LIVRO nas opções da TELA, marcando a escolhida.
@@ -409,7 +456,7 @@ func attributeWrittenChoice(choice attributeChoice) string {
 // personagem: raça, origem, classe.
 var sourceThree = []string{"raca", "origem", "classe"}
 
-// choiceClassCommand escreve o `@post` do caminho ou do devoto.
+// choiceClassCommand escreve o `@post` do caminho.
 func choiceClassCommand(v View, class, choice, value string) string {
 	return sheetPost(v, "/poderes/classe/"+url.PathEscape(class)+"/"+choice+"/"+value)
 }

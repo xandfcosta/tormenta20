@@ -192,18 +192,17 @@ func TestAClassWithSomethingChosenCannotLeave(t *testing.T) {
 	})
 
 	// A ESCOLHA DA CLASSE: a recusa diz o rótulo que a pessoa escolheu, e não o valor gravado.
-	for _, c := range []struct{ class, blob, wants string }{
-		{"Clérigo", `{"Clérigo":{"devoto":"khalmyr"}}`, "Khalmyr"},
-		{"Arcanista", `{"Arcanista":{"caminho":"bruxo"}}`, "Bruxo"},
+	// A devoção recusa quando o deus só vale PELA classe: o Panteão é do clérigo (p57).
+	for _, c := range []struct{ class, write, wants string }{
+		{"Clérigo", `UPDATE characters SET god = 'panteao' WHERE id = ?`, "Panteão"},
+		{"Arcanista", `UPDATE characters SET classChoices = '{"Arcanista":{"caminho":"bruxo"}}' WHERE id = ?`, "Bruxo"},
 	} {
 		t.Run("escolha de "+c.class, func(t *testing.T) {
 			f, id := guerreiro(t)
 			if refusal := enterClass(t, f, id, c.class); refusal != "" {
 				t.Fatalf("entrar: %q", refusal)
 			}
-			if _, err := f.s.db.ExecContext(context.Background(),
-				"UPDATE characters SET classChoices = ? WHERE id = ?", c.blob, id,
-			); err != nil {
+			if _, err := f.s.db.ExecContext(context.Background(), c.write, id); err != nil {
 				t.Fatalf("gravar a escolha: %v", err)
 			}
 			if refusal := stepClass(t, f, id, c.class, -1); !strings.Contains(refusal, c.wants) {

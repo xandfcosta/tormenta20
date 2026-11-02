@@ -106,7 +106,7 @@ var classPowersPart13 = []ClassPower{
 				Class:     "Paladino",
 				Field:     "devoto",
 				Label:     "Devoto, exceto Lena ou Marah",
-				Forbidden: []string{"lena", "marah", "paladino-do-bem"},
+				Forbidden: []string{"lena", "marah", "bem"},
 			},
 		},
 	},

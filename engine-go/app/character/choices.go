@@ -22,6 +22,8 @@ type ChoiceWrite struct {
 	RaceAttributeChoices *string
 	PowerChoices         *string
 	SecondaryRaceChoices *string
+	God                  *string
+	GodPower             *string
 }
 
 // SaveChoices grava só as escolhas que MUDARAM.
@@ -59,6 +61,8 @@ func (p Plays) SaveChoices(ctx context.Context, id int64, choices ChoiceWrite) e
 			RaceAbilityChoices:   dbvalue.NullString(choices.RaceAbilityChoices),
 			RaceAttributeChoices: dbvalue.NullString(choices.RaceAttributeChoices),
 			SecondaryRaceChoices: dbvalue.NullString(choices.SecondaryRaceChoices),
+			God:                  dbvalue.NullString(choices.God),
+			GodPower:             dbvalue.NullString(choices.GodPower),
 			UpdatedAt:            dbvalue.NowISO(), ID: id,
 		}); err != nil {
 			return fmt.Errorf("gravar as escolhas da ficha %d: %w", id, err)

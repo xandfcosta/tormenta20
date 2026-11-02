@@ -215,16 +215,12 @@ func ownsClassPower(
 	return choice.value(power.GrantedByChoice.Field) == power.GrantedByChoice.Value
 }
 
-// ClassChoiceSelections são as escolhas de devoto e de caminho de UMA classe.
+// ClassChoiceSelections são as escolhas de UMA classe. A devoção não é uma delas: é o deus da ficha.
 type ClassChoiceSelections struct {
-	Devotee string `json:"devoto"`
-	Path    string `json:"caminho"`
+	Path string `json:"caminho"`
 }
 
 func (s ClassChoiceSelections) value(field string) string {
-	if field == "devoto" {
-		return s.Devotee
-	}
 	if field == "caminho" {
 		return s.Path
 	}

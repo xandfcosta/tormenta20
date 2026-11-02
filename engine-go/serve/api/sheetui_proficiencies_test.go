@@ -241,6 +241,7 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		"beneficio":   "origin-batedor-pericia-furtividade",
 		"variante":    "suraggel-aggelus",
 		"escolha":     "caminho",
+		"deus":        "khalmyr",
 		"valor":       "bruxo",
 		"ascendencia": "aggelus",
 		"habilidade":  "lefou-deformidade",

@@ -341,6 +341,8 @@ func OptionList(kind string) []string {
 		}
 		optionLists["races"] = idsDoRecurso("races")
 		optionLists["origins"] = idsDoRecurso("origins")
+		// A ficha guarda o deus pelo id, e a semente é conferida contra o que a ficha guarda.
+		optionLists["gods"] = idsDoRecurso("gods")
 	})
 	return optionLists[kind]
 }

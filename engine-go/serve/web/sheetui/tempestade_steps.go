@@ -21,7 +21,7 @@ type choiceStep struct {
 	Count string
 	Done  bool
 	// Kind diz o que o passo desenha: `race`, `origin`, `powers`, `path`,
-	// `devotee`, `counted` ou `general`.
+	// `devotion`, `counted` ou `general`.
 	Kind    string
 	Race    raceChoiceCard
 	Class   classChoiceCard
@@ -73,9 +73,6 @@ func choiceStepsOf(v View) []choiceStep {
 		if card.Path != nil {
 			all = append(all, pickerStep(prefix+"-path", card.ClassName+" · caminho", "path", card, *card.Path))
 		}
-		if card.Devotee != nil {
-			all = append(all, pickerStep(prefix+"-devotee", card.ClassName+" · devoto", "devotee", card, *card.Devotee))
-		}
 		for _, counted := range card.Counted {
 			all = append(all, choiceStep{
 				ID: prefix + "-counted-" + counted.ID, Title: card.ClassName + " · " + counted.Name, Meta: counted.Detail,
@@ -85,6 +82,7 @@ func choiceStepsOf(v View) []choiceStep {
 		}
 	}
 	all = append(all, generalChoiceSteps(v)...)
+	all = append(all, devotionStep(v))
 	steps := make([]choiceStep, 0, len(all))
 	for _, done := range []bool{false, true} {
 		for _, s := range all {
@@ -94,6 +92,17 @@ func choiceStepsOf(v View) []choiceStep {
 		}
 	}
 	return steps
+}
+
+// devotionStep é o passo da devoção, que toda ficha tem e só clérigo, paladino e druida têm de
+// resolver.
+func devotionStep(v View) choiceStep {
+	devotion := v.Choices.Devotion
+	step := choiceStep{ID: "devotion", Title: "Devoção", Meta: devotion.Name, Kind: "devotion", Done: true}
+	if devotion.Required && devotion.Gods.Chosen == "" {
+		step.Meta, step.Count, step.Done = "escolha um", "falta 1", false
+	}
+	return step
 }
 
 // generalChoiceSteps são os poderes gerais que a ficha TEM e cuja escolha
@@ -132,7 +141,7 @@ func ownedPowerChoice(v View, id string) (powerChoice, bool) {
 	return powerChoice{}, false
 }
 
-// pickerStep é o passo de uma escolha de valor só — o caminho, o devoto —, com
+// pickerStep é o passo de uma escolha de valor só, como o caminho, com
 // o que foi escolhido na nota.
 func pickerStep(id, title, kind string, card classChoiceCard, picker pickerChoice) choiceStep {
 	step := choiceStep{ID: id, Title: title, Meta: "escolha um", Kind: kind, Class: card, Done: picker.Chosen != ""}

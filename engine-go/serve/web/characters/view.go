@@ -138,7 +138,7 @@ func HeroCardOf(catalogs *engine.Catalogs, c sheet.CharacterDTO) HeroCard {
 func stageLine(c sheet.CharacterDTO) string {
 	parts := []string{}
 	if c.God != nil && *c.God != "" {
-		parts = append(parts, "Devoto de "+*c.God)
+		parts = append(parts, book.DevotionWritten(*c.God))
 	}
 	parts = append(parts, book.OriginLabel(c.Origin), c.Size)
 	// Fatia nova em vez do filtro no lugar (`partes[:0]`): aquele é correto e é

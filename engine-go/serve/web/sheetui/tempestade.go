@@ -219,7 +219,7 @@ func identityOf(dto sheet.CharacterDTO, classes string) []identityLine {
 	}
 	god := "Nenhuma"
 	if dto.God != nil && *dto.God != "" {
-		god = *dto.God
+		god = book.DevotionName(*dto.God)
 	}
 	return []identityLine{
 		{"Classe", orMissing(classes)},
