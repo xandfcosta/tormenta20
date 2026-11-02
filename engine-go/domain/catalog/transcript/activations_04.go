@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 4 de 12 de `Activations` (activations.go).
+// Parte 4 de 11 de `Activations` (activations.go).
 var activationsPart04 = []Activation{
 	{
 		ID:     "class.cavaleiro.estandarte",

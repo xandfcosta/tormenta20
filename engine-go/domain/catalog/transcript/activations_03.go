@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 3 de 12 de `Activations` (activations.go).
+// Parte 3 de 11 de `Activations` (activations.go).
 var activationsPart03 = []Activation{
 	{
 		ID:     "class.cacador.bote",

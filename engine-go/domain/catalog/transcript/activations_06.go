@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 6 de 12 de `Activations` (activations.go).
+// Parte 6 de 11 de `Activations` (activations.go).
 var activationsPart06 = []Activation{
 	{
 		ID:         "class.inventor.engenhosidade",

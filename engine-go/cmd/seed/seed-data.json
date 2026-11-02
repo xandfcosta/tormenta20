@@ -829,6 +829,9 @@
               }
             },
             "classPowers": [
+              "magia-acelerada",
+              "magia-ampliada",
+              "magia-discreta",
               "foco-em-magia"
             ],
             "powerChoices": {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -53,6 +54,11 @@ type Signals struct {
 	Aug3 *int `json:"augment3"`
 	Aug4 *int `json:"augment4"`
 	Aug5 *int `json:"augment5"`
+	// Os poderes que são aprimoramento (p131) valem para qualquer magia, e por isso
+	// têm sinal pelo nome, e não pelo índice da lista da magia.
+	AugmentQuickened *int `json:"augment_quickened"`
+	AugmentAmplified *int `json:"augment_amplified"`
+	AugmentDiscreet  *int `json:"augment_discreet"`
 	// Os filtros do catálogo de magias.
 	SpellSearch string `json:"spell_search"`
 	SpellCircle string `json:"spell_circle"`
@@ -134,6 +140,24 @@ func (s Signals) augments() []sheet.AugmentPick {
 			continue
 		}
 		picks = append(picks, sheet.AugmentPick{AugmentIndex: i, Stacks: *value})
+	}
+	return picks
+}
+
+// powerAugments traduz os sinais dos poderes, com a mesma regra do zero e do nulo.
+func (s Signals) powerAugments() []sheet.PowerAugmentPick {
+	picks := []sheet.PowerAugmentPick{}
+	for _, power := range []struct {
+		id    string
+		value *int
+	}{
+		{book.QuickenedSpellPower, s.AugmentQuickened},
+		{book.AmplifiedSpellPower, s.AugmentAmplified},
+		{book.DiscreetSpellPower, s.AugmentDiscreet},
+	} {
+		if power.value != nil && *power.value > 0 {
+			picks = append(picks, sheet.PowerAugmentPick{PowerID: power.id, Stacks: *power.value})
+		}
 	}
 	return picks
 }

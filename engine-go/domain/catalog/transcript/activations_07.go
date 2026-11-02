@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 7 de 12 de `Activations` (activations.go).
+// Parte 7 de 11 de `Activations` (activations.go).
 var activationsPart07 = []Activation{
 	{
 		ID:     "class.lutador.lingua-dos-becos",

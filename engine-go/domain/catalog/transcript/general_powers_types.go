@@ -11,4 +11,5 @@ type GeneralPower struct {
 	Modifiers     []Modifier     `json:"modifiers,omitempty"`
 	MinLevel      int            `json:"minLevel,omitempty"`
 	Choice        *PowerChoice   `json:"choice,omitempty"`
+	SpellAugment  *SpellAugment  `json:"spellAugment,omitempty"`
 }

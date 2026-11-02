@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 5 de 12 de `Activations` (activations.go).
+// Parte 5 de 11 de `Activations` (activations.go).
 var activationsPart05 = []Activation{
 	{
 		ID:     "class.druida.espirito-dos-solsticios",

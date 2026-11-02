@@ -111,33 +111,6 @@ type catalogSpellRow struct {
 	Command string
 }
 
-// augmentRow é um aprimoramento, com o que ele custa e se está trancado.
-type augmentRow struct {
-	Index int
-	PM    int
-	// Stacks diz se ele EMPILHA. `muda` não empilha — trocar o tipo de dano duas
-	// vezes não é trocar duas vezes mais.
-	Stacks      bool
-	Description string
-	// Locked é o aprimoramento que exige um círculo acima do alcançável. Ele
-	// aparece com cadeado em vez de sumir: a pessoa merece saber que existe e
-	// que ela ainda não chega lá.
-	Locked         bool
-	RequiredCircle int
-	// Exclusive não aceita companhia na mesma conjuração (p171). Truque diz, além
-	// disso, que a conjuração inteira custa zero. Ver GLOSSARY.
-	Exclusive bool
-	Cantrip   bool
-	// Toggle, More e Less são os gestos MONTADOS, e não expressões escritas no
-	// `.templ`, porque cada um precisa ver a VIZINHANÇA: ligar o exclusivo apaga
-	// os outros e ligar qualquer outro apaga o exclusivo. É a mesma regra do
-	// `augmentsReset` — quem troca limpa —, e é ela que impede a tela de
-	// oferecer uma combinação que o servidor vai recusar.
-	Toggle string
-	More   string
-	Less   string
-}
-
 // spellbookPanelOf monta a aba.
 func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school string) spellbookPanel {
 	panel := spellbookPanel{
@@ -185,7 +158,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
 			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
 			CD:        s.spellCdOf(dto, spell),
-			Augments:  augmentRowsOf(learned.CatalogSpellID, spell, castable),
+			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, castable),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
 			DurationWritten: book.SpellDurationWritten(fromBook),
@@ -238,80 +211,6 @@ func aceitaAClasse(list []string, name string) bool {
 		}
 	}
 	return false
-}
-
-// augmentRowsOf traduz os aprimoramentos, trancando os fora de alcance e
-// montando os gestos que se apagam entre si.
-func augmentRowsOf(spellID string, spell catalog.Spell, castable int) []augmentRow {
-	var exclusive []int
-	for i, a := range spell.Augments {
-		if a.Exclusive {
-			exclusive = append(exclusive, i)
-		}
-	}
-
-	rows := make([]augmentRow, 0, len(spell.Augments))
-	for i, a := range spell.Augments {
-		row := augmentRow{
-			Index: i, PM: a.PmCost, Stacks: a.Kind != "muda",
-			Description: augmentDescription(spellID, i),
-			Exclusive:   a.Exclusive, Cantrip: a.Cantrip,
-		}
-		if a.RequiresCircle != nil {
-			row.RequiredCircle = *a.RequiresCircle
-			row.Locked = *a.RequiresCircle > castable
-		}
-		// Quem o gesto APAGA: o exclusivo apaga todos os outros, e os outros
-		// apagam os exclusivos. Sem isto a tela deixa montar truque + companhia,
-		// mostra um custo e o servidor recusa na hora do clique — a recusa é a
-		// fronteira, mas oferecer o que não vale é a tela mentindo.
-		deletes := exclusive
-		if a.Exclusive {
-			deletes = outrosIndices(len(spell.Augments), i)
-		}
-		row.Toggle = clearSignals(deletes, i) + augmentSignal(i) + " = " + augmentSignal(i) + " ? 0 : 1"
-		row.More = clearSignals(deletes, i) + augmentSignal(i) + "++"
-		// Diminuir não apaga nada: tirar uma pilha não monta combinação nova.
-		row.Less = augmentSignal(i) + " = Math.max(0, " + augmentSignal(i) + " - 1)"
-		rows = append(rows, row)
-	}
-	return rows
-}
-
-// outrosIndices são todos os índices menos o próprio.
-func outrosIndices(howMany, own int) []int {
-	var outside []int
-	for i := 0; i < howMany; i++ {
-		if i != own {
-			outside = append(outside, i)
-		}
-	}
-	return outside
-}
-
-// clearSignals monta "$augmentA = 0; " para cada índice, pulando o próprio.
-func clearSignals(indices []int, own int) string {
-	expr := ""
-	for _, i := range indices {
-		if i == own {
-			continue
-		}
-		expr += augmentSignal(i) + " = 0; "
-	}
-	return expr
-}
-
-// augmentDescription lê o texto do aprimoramento do catálogo cru.
-//
-// O `catalog.Augment` do Go é um subconjunto deliberado e não carrega a
-// descrição — mas a tela precisa dela, senão o jogador escolhe entre "1 PM" e
-// "1 PM" sem saber o que cada um faz.
-func augmentDescription(spellID string, index int) string {
-	fromBook := spellOfBook(spellID)
-	if index < len(fromBook.Augments) {
-		return fromBook.Augments[index].Description
-	}
-	return ""
 }
 
 // spellOfBook acha a magia no acervo já ordenado.
@@ -396,68 +295,6 @@ func aprendidasEscrito(n int) string {
 		return "1 aprendida"
 	}
 	return strconv.Itoa(n) + " aprendidas"
-}
-
-// augmentSignal é o sinal que guarda a pilha de um aprimoramento.
-//
-// São SEIS, reaproveitados por todas as magias, e não um por magia: só um
-// diálogo abre por vez, e seis é o máximo do catálogo (Conjurar Monstro). Um
-// sinal por magia daria 198 × 6 declarações no `<body>` para guardar seis
-// números.
-func augmentSignal(index int) string {
-	return "$augment" + strconv.Itoa(index)
-}
-
-// costPreview é a expressão que soma o custo na tela.
-//
-// Ela é PRÉVIA e não decisão: quem recusa é o servidor, com a regra inteira — o
-// teto da p224, a redução de custo por item e o PM disponível. Escrever a regra
-// aqui daria uma segunda conta do mesmo número.
-//
-// Aprimoramento TRANCADO fica de fora da soma: ele não tem contador, então o
-// sinal dele nunca sobe — mas somá-lo mostraria um custo que o servidor não
-// cobraria.
-func costPreview(spell learnedSpellRow) string {
-	expr := strconv.Itoa(spell.BasePm)
-	for _, a := range spell.Augments {
-		if a.Locked {
-			continue
-		}
-		expr += " + " + strconv.Itoa(a.PM) + " * " + augmentSignal(a.Index)
-	}
-	// O TRUQUE zera a conjuração INTEIRA, e não a parcela dele: "reduz seu custo
-	// em PM para zero" (p171). Somado como um `+0 PM`, o custo base ficava de pé
-	// e a tela anunciava 1 PM sobre uma conjuração que o servidor não cobra
-	// (ALE-339). A prévia continua sem decidir nada — ela só deixou de discordar.
-	for _, a := range spell.Augments {
-		if a.Cantrip {
-			return "(" + augmentSignal(a.Index) + " ? 0 : (" + expr + ")) + ' PM'"
-		}
-	}
-	return "(" + expr + ") + ' PM'"
-}
-
-// augmentPriceWritten é a linha de baixo do aprimoramento: o que ele custa e o
-// que ele impede.
-//
-// O TRUQUE não escreve "+0 PM", que é a mesma coisa que um aprimoramento de
-// custo zero — e a Luz tem um desses (p197), então as duas linhas sairiam
-// idênticas dizendo coisas diferentes. Ele escreve que ZERA a conjuração, que é
-// o que a p171 diz.
-//
-// E a linha diz que ele não combina porque o gesto APAGA os outros: sem a frase,
-// ligar o truque faz as escolhas anteriores sumirem sem explicação.
-func augmentPriceWritten(a augmentRow) string {
-	if a.Locked {
-		return "+" + strconv.Itoa(a.PM) + " PM · exige o " + strconv.Itoa(a.RequiredCircle) + "º círculo"
-	}
-	if a.Cantrip {
-		return "a conjuração custa 0 PM · não combina com os outros"
-	}
-	if a.Exclusive {
-		return "+" + strconv.Itoa(a.PM) + " PM · não combina com os outros"
-	}
-	return "+" + strconv.Itoa(a.PM) + " PM"
 }
 
 // circleName é "Truque" ou "3º", como a mesa fala.
