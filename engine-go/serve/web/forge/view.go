@@ -12,6 +12,7 @@ import (
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 	"t20engine/infra/wire"
+	"t20engine/serve/web/bookui"
 )
 
 // A FOLHA EM BRANCO DA FORJA — o que a cena desenha.
@@ -38,8 +39,10 @@ type forgeView struct {
 	// AttributeRows são as seis linhas, e AttributeRefusals o que nos campos não é valor.
 	AttributeRows     []attributeRow
 	AttributeRefusals []string
-	Gods              []godOption
-	GodChosen         string
+	// BookAddress é para onde o selo da p17 aponta.
+	BookAddress bookui.BookAddress
+	Gods        []godOption
+	GodChosen   string
 	// GodGrantsPower é falso para o Panteão e o Paladino do Bem, que não recebem poder concedido (p57).
 	GodGrantsPower bool
 	// GodRefusal diz por que o deus marcado não serve às classes de agora.
@@ -143,7 +146,7 @@ type itemOption struct {
 // recusada com os erros por campo.
 func (s Scene) blankForgeSheet(ctx context.Context, answers forgeAnswers, errs wire.FieldErrorMap) (forgeView, error) {
 	races, classes, _ := book.CharacterCatalogs()
-	v := forgeView{Name: answers.Name, Errors: errs}
+	v := forgeView{Name: answers.Name, Errors: errs, BookAddress: s.deps.BookAddress()}
 	rows, refusals, err := s.attributeRowsOf(ctx, answers)
 	if err != nil {
 		return forgeView{}, err

@@ -94,6 +94,26 @@ func TestTheForgeStepperMovesTheWrittenValue(t *testing.T) {
 	}
 }
 
+// A folha não fala mais em pontos a gastar, e o "i" explica os dois métodos, cada um com a página.
+func TestTheAttributeHelpExplainsBothMethods(t *testing.T) {
+	f := newSceneFixture(t)
+	body := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
+	if !strings.Contains(body, `commandfor="forge-attributes-help"`) {
+		t.Error("a folha não tem o botão que abre a explicação")
+	}
+	for _, want := range []string{`id="forge-attributes-help"`, "4d6", "descarte o menor", "10 pontos", "7 ou menos"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("a explicação não traz %q", want)
+		}
+	}
+	if got := strings.Count(body, "p17"); got < 2 {
+		t.Errorf("cada método aponta a página, e a p17 saiu %d vez(es)", got)
+	}
+	if strings.Contains(body, "de 10 pontos") {
+		t.Error("o contador de pontos continua na folha")
+	}
+}
+
 // Abaixo de −5 o livro prevê um efeito (p17). A folha avisa e não trava: quem decide é o mestre.
 func TestBelowMinusFiveTheForgeWarnsWithoutRefusing(t *testing.T) {
 	f := newSceneFixture(t)

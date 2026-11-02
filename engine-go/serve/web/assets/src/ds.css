@@ -2240,6 +2240,57 @@
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
   }
+  .ds-forge-methods {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .ds-forge-method {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .ds-forge-method ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: decimal;
+    display: grid;
+    gap: 0.125rem;
+  }
+  .ds-forge-method-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .ds-forge-method-head a {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+  .ds-forge-method-head > h3 {
+    margin: 0;
+    font-size: var(--ds-t-md);
+    line-height: var(--ds-lh-md);
+    font-weight: 700;
+  }
+  .ds-forge-method-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: var(--ds-t-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-forge-method-table th,
+  .ds-forge-method-table td {
+    padding: 0.25rem 0.5rem;
+    border-top: 1px solid var(--ds-line);
+    text-align: left;
+  }
+  .ds-forge-method-table th {
+    border-top: 0;
+    color: var(--ds-ink-2);
+    font-weight: 600;
+  }
   .ds-value-stepper {
     display: flex;
     align-items: center;

@@ -8,6 +8,7 @@ import (
 
 	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/ui"
 )
 
@@ -21,6 +22,8 @@ type Deps interface {
 	// WritePage é a montagem da casca (ver `web/ui`).
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
 	CurrentUserID(r *http.Request) int64
+	// BookAddress é onde o PDF está, para o selo "p17" saber para onde apontar.
+	BookAddress() bookui.BookAddress
 }
 
 // Scene é a forja montada com as dependências dela.

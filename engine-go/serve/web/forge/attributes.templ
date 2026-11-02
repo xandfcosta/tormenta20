@@ -2,15 +2,18 @@ package forge
 
 import (
 	"fmt"
+	"strconv"
 	"t20engine/domain/book"
+	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/ds"
 )
 
-// attributeLines é a lista dos seis.
+// attributeLines é a lista dos seis, com o "i" que explica os dois métodos do livro.
 templ attributeLines(v forgeView) {
 	<div class="ds-list">
 		<div class="ds-list-head ds-forge-attr-head">
 			<span>Atributos</span>
+			@ds.IconButton(ds.ButtonGhost, "Info", "Como definir os atributos", templ.Attributes{"type": "button", "commandfor": "forge-attributes-help", "command": "show-modal"})
 		</div>
 		for _, row := range v.AttributeRows {
 			<div class="ds-row ds-forge-attr">
@@ -38,3 +41,64 @@ func attributeStepAttrs(key string, step int) templ.Attributes {
 	return templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf(
 		"@post('/personagens/nova/esboco/atributo/%s/%d', {contentType: 'form', selector: '#forge-form'})", key, step)}
 }
+
+// attributesHelp é o que o "i" abre: os dois métodos da p17, cada um com a própria tabela, para quem está
+// usando um não precisar ler a coluna do outro. A explicação inteira continua no livro.
+templ attributesHelp(address bookui.BookAddress) {
+	@ds.Dialog("forge-attributes-help", "Como definir os atributos", nil) {
+		@ds.DialogScroll() {
+			<div class="ds-forge-methods">
+				<section class="ds-forge-method">
+					<header class="ds-forge-method-head">
+						<h3>Com rolagens</h3>
+						<span class="ds-row-meta">
+							@bookui.PageSealInMeta(address, 17, "Definindo seus atributos")
+						</span>
+					</header>
+					<ol>
+						<li>Role 4d6, descarte o menor e some os outros três.</li>
+						<li>Repita até ter seis números.</li>
+						<li>Converta cada número pela tabela.</li>
+						<li>Distribua os valores entre os atributos como quiser.</li>
+					</ol>
+					<p class="ds-help">Se os valores não somarem pelo menos 6, role de novo o menor, até somarem 6 ou mais.</p>
+					<table class="ds-forge-method-table">
+						<thead><tr><th scope="col">Rolagem</th><th scope="col">Valor</th></tr></thead>
+						<tbody>
+							for _, line := range rollConversion {
+								<tr><td>{ line.Roll }</td><td>{ book.WithSign(line.Value) }</td></tr>
+							}
+						</tbody>
+					</table>
+				</section>
+				<section class="ds-forge-method">
+					<header class="ds-forge-method-head">
+						<h3>Com pontos</h3>
+						<span class="ds-row-meta">
+							@bookui.PageSealInMeta(address, 17, "Definindo seus atributos")
+						</span>
+					</header>
+					<p class="ds-help">Todos os atributos começam em 0, e você tem 10 pontos para aumentá-los pelo custo da tabela. Baixar um atributo para −1 dá 1 ponto a mais.</p>
+					<table class="ds-forge-method-table">
+						<thead><tr><th scope="col">Valor</th><th scope="col">Custo</th></tr></thead>
+						<tbody>
+							for _, line := range pointCosts {
+								<tr><td>{ book.WithSign(line.Value) }</td><td>{ strconv.Itoa(line.Cost) }</td></tr>
+							}
+						</tbody>
+					</table>
+				</section>
+			</div>
+		}
+	}
+}
+
+// As duas colunas da Tabela 1-1 (p17). Só a tela as lê: a ficha aceita qualquer valor.
+var rollConversion = []struct {
+	Roll  string
+	Value int
+}{
+	{"7 ou menos", -2}, {"8-9", -1}, {"10-11", 0}, {"12-13", 1}, {"14-15", 2}, {"16-17", 3}, {"18", 4},
+}
+
+var pointCosts = []struct{ Value, Cost int }{{-1, -1}, {0, 0}, {1, 1}, {2, 2}, {3, 4}, {4, 7}}

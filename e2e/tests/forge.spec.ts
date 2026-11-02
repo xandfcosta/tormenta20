@@ -147,6 +147,11 @@ test('os atributos escritos em sequência sobrevivem ao redesenho', async ({ pag
   await expect(page.locator('#forge-attr-strength')).toHaveValue('4')
   await expect(page.locator('#forge-attr-dexterity')).toHaveValue('1')
   await expect(page.locator('#forge-attr-constitution')).toHaveValue('-2')
+
+  await page.getByRole('button', { name: 'Como definir os atributos' }).click()
+  await expect(page.locator('dialog[open]').getByText('Com rolagens')).toBeVisible()
+  await expect(page.locator('dialog[open]').getByText('Com pontos')).toBeVisible()
+  await expectDsFloors(page, 'na explicação dos atributos')
 })
 
 // O diálogo mora na camada de cima: o remendo tem de deixá-lo aberto, e a recusa tem de sair dentro dele.
