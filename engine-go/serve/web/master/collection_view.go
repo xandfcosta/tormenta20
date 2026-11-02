@@ -233,7 +233,8 @@ func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collection
 		return v
 	}
 
-	races, classes, gods := book.CharacterCatalogs()
+	races, classes, _ := book.CharacterCatalogs()
+	gods := book.CatalogGods()
 	for _, g := range []collectionGroup{
 		{Label: "Condições", Conditions: filter(a.Conditions, book.ConditionFields, search)},
 		{Label: "Magias", Spells: filter(a.Spells, book.SpellFields, search)},
@@ -324,7 +325,8 @@ func groupForEntry(aba, id string) collectionGroup {
 
 // groupForTab monta o catálogo da cena, já com os crachás aplicados.
 func groupForTab(a book.GMCatalogs, aba string, lit map[string][]string) collectionGroup {
-	races, classes, gods := book.CharacterCatalogs()
+	races, classes, _ := book.CharacterCatalogs()
+	gods := book.CatalogGods()
 	switch aba {
 	case "magias":
 		return collectionGroup{Label: "Magias", Spells: applyFilters(a.Spells, lit, spellMatches)}

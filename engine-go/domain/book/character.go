@@ -175,6 +175,8 @@ type God struct {
 	GrantedPowers   []string `json:"poderesConcedidos"`
 	Devotees        []string `json:"devotos"`
 	BookPage        int      `json:"bookPage"`
+	// Dead é o deus que o livro dá por morto: ele aparece no catálogo, mas não concede nada.
+	Dead bool `json:"-"`
 }
 
 // ── a leitura, uma vez só ────────────────────────────────────────────────────

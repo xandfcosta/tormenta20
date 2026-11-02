@@ -103,7 +103,8 @@ func buildHits(search string, byText bool) finderView {
 		return v
 	}
 	a := book.Catalogs()
-	races, classes, gods := book.CharacterCatalogs()
+	races, classes, _ := book.CharacterCatalogs()
+	gods := book.CatalogGods()
 	for _, g := range []finderGroup{
 		foundGroup("Condições", a.Conditions, search, byText, routes.MasterSearch("condicoes", search), book.ConditionFields, conditionHit),
 		foundGroup("Criaturas", book.Creatures(), search, byText, routes.MasterBestiarySearch(search), entryFields, entryHit),
