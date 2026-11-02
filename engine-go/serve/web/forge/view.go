@@ -99,6 +99,8 @@ type startingGear struct {
 	// Escudo é o rótulo do escudo do kit, ou "" quando a classe não usa escudos.
 	Shield       string
 	ShieldChosen bool
+	// Purse é a bolsa escrita, que muda com o nível do herói (p140).
+	Purse string
 	// AResolver são as concessões de origem que são ESCOLHA e não item — elas
 	// não nascem na mochila, e a folha diz isso em vez de deixar o jogador
 	// descobrir que faltou algo.
@@ -266,6 +268,7 @@ func startingGearFor(answers forgeAnswers, class book.Class) *startingGear {
 		SimpleWeapons: itemOptionsInCategory("weapon-simple", answers.SimpleWeapon),
 		Armors:        itemOptionsByID(kit.Armors, answers.Armor),
 		ToResolve:     grantsToResolve(answers.Origin),
+		Purse:         purseWritten(totalLevelOf(answers.Classes)),
 	}
 	if kit.MartialWeapon {
 		eq.MartialWeapons = itemOptionsInCategory("weapon-martial", answers.MartialWeapon)

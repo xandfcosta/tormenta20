@@ -247,7 +247,7 @@ func (s Scene) birthHero(r *http.Request, ownerID int64, stylesheet forgeAnswers
 // Os seis atributos nascem em ZERO, que é o ponto de partida da compra de
 // pontos (p17): distribuí-los é a segunda cena da forja.
 func birthBody(stylesheet forgeAnswers, race book.Race, class book.Class) (sheet.CreateBody, error) {
-	tibar, err := birthPurse(stylesheet.Origin)
+	tibar, err := birthPurse(stylesheet.Origin, totalLevelOf(stylesheet.Classes))
 	if err != nil {
 		return sheet.CreateBody{}, err
 	}

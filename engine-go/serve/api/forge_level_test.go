@@ -89,6 +89,22 @@ func TestAHeroForgedAtHighLevelEqualsOneWhoClimbed(t *testing.T) {
 	}
 }
 
+// Acima do 1º nível, a bolsa é a da Tabela 3-1 e não os 4d6 (p140). O Acólito não concede dinheiro.
+func TestAHeroAboveLevelOneStartsWithTheMoneyOfTheTable(t *testing.T) {
+	f := newSceneFixture(t)
+	if tibar := forgedSheet(t, f, forgedHero(t, f, threeAndOne)).Tibar; tibar != 1000 {
+		t.Errorf("o herói de nível 4 nasceu com T$ %v, e a tabela dá T$ 1.000", tibar)
+	}
+	screen := draftStep(t, f, "Guerreiro", 1, url.Values{"classes": {"Guerreiro:3"}})
+	if !strings.Contains(screen, "T$ 1.000") {
+		t.Errorf("a folha não diz a bolsa do nível 4:\n%s", screen)
+	}
+	first := postaAForja(t, f, f.player, "/personagens/nova/esboco", url.Values{"classes": {"Guerreiro:1"}}).Body.String()
+	if !strings.Contains(first, "4d6") {
+		t.Error("no 1º nível a folha deixou de dizer os 4d6")
+	}
+}
+
 // A outra classe não dá perícias nem proficiências (p35): quem as dá é a primeira.
 func TestOnlyTheFirstClassGivesExpertisesAndProficiencies(t *testing.T) {
 	f := newSceneFixture(t)

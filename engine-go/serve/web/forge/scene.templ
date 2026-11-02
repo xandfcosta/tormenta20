@@ -215,7 +215,7 @@ templ originPickOption(o originOption) {
 templ gearChoice(g startingGear, errs map[string][]string) {
 	@ds.Card("Equipamento inicial", nil) {
 		<p class="ds-card-text">
-			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais T$ 4d6 rolados na hora (p140).
+			Mochila, saco de dormir e traje de viajante vêm com todo mundo, mais { g.Purse } (p140).
 		</p>
 		<div class="ds-list">
 			@pickRow("weaponSimple", "Arma simples", "forge-weaponSimple", itemPick(g.SimpleWeapons))
