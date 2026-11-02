@@ -34,6 +34,10 @@ type forgeView struct {
 	// LevelCapped é o 20º nível: os `+` se apagam e não há outra classe a oferecer (p35).
 	LevelCapped bool
 	Origins     []originOption
+	Gods        []godOption
+	GodChosen   string
+	// GodRefusal diz por que o deus marcado não serve às classes de agora.
+	GodRefusal string
 	// Equipamento é nil enquanto não há classe escolhida: o kit de p140 só se
 	// conhece pela classe, e oferecer uma armadura antes disso seria oferecer a
 	// escolha errada para o arcanista.
@@ -80,6 +84,14 @@ type classLine struct {
 	Name  string
 	Meta  string
 	Level int64
+}
+
+// godOption é uma linha da folha do deus. O `Value` vazio é o Nenhum.
+type godOption struct {
+	Value  string
+	Label  string
+	Chosen bool
+	Find   string
 }
 
 // originOption é uma linha da lista de origens.
@@ -138,6 +150,10 @@ func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
 	v.TotalLevel = totalLevelOf(answers.Classes)
 	v.LevelCapped = v.TotalLevel >= heroLevelMax
 	v.Origins = originOptions(answers.Origin)
+	v.Gods, v.GodChosen = godOptions(answers)
+	if err := sheet.DevotionRefusal(classesOnTheSheet(answers.Classes), answers.God); err != nil {
+		v.GodRefusal = err.Error() + "."
+	}
 	if class := answers.firstClass(); class != nil {
 		v.Gear = startingGearFor(answers, *class)
 	}
@@ -167,9 +183,30 @@ func classLinesOf(classes []sheet.ClassEntry) []classLine {
 	return lines
 }
 
+// godOptions é a lista da folha do deus, e o nome do que está marcado. O deus que as classes de agora
+// recusam continua na lista: tirá-lo faria a escolha sumir em silêncio, e quem a troca é a pessoa.
+func godOptions(answers forgeAnswers) ([]godOption, string) {
+	options := []godOption{{Value: "", Label: "Nenhum", Chosen: answers.God == "", Find: search.Fold("Nenhum")}}
+	known := false
+	for _, devotion := range sheet.DevotionOptions(classesOnTheSheet(answers.Classes)) {
+		known = known || devotion.Value == answers.God
+		options = append(options, godOption{
+			Value: devotion.Value, Label: devotion.Label, Chosen: devotion.Value == answers.God, Find: search.Fold(devotion.Label),
+		})
+	}
+	if answers.God == "" {
+		return options, "Nenhum"
+	}
+	name := book.DevotionName(answers.God)
+	if !known {
+		options = append(options, godOption{Value: answers.God, Label: name, Chosen: true, Find: search.Fold(name)})
+	}
+	return options, name
+}
+
 // orphanRefusals junta as recusas dos campos que esta folha não desenha.
 func orphanRefusals(errs wire.FieldErrorMap, gear *startingGear) []string {
-	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true}
+	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true, "god": true}
 	if gear != nil {
 		onScreen["weaponSimple"] = true
 		onScreen["weaponMartial"] = len(gear.MartialWeapons) > 0

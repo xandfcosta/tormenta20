@@ -8,7 +8,7 @@ import (
 	"github.com/a-h/templ"
 )
 
-// AS LINHAS DE ESCOLHA da folha (ALE-535): raça e origem abrem uma folha
+// AS LINHAS DE ESCOLHA da folha (ALE-535): raça, origem e deus abrem uma folha
 // com busca, e a linha diz o que já foi escolhido. A classe tem lista própria,
 // porque cada uma leva um nível.
 
@@ -30,6 +30,14 @@ func (v forgeView) racePick() pickSummary {
 		}
 	}
 	return pickSummary{}
+}
+
+// godPick é a linha do deus, que nunca fica vazia: o Nenhum é uma resposta.
+func (v forgeView) godPick() pickSummary {
+	if v.GodChosen == "Nenhum" {
+		return pickSummary{Title: v.GodChosen, Meta: "opcional"}
+	}
+	return pickSummary{Title: v.GodChosen, Meta: "o poder concedido se escolhe na ficha"}
 }
 
 // classSheetTitle é o título da folha de classes: a primeira é a classe, e as seguintes são outra.

@@ -35,22 +35,30 @@ func DevotionRequired(classes []ClassDTO) bool {
 	return slices.ContainsFunc(classes, func(c ClassDTO) bool { return len(ClassDevotees(c.ClassName)) > 0 })
 }
 
-// devotionIsValid confere o deus da ficha contra as classes dela.
-func devotionIsValid(dto CharacterDTO) error {
-	if dto.God == nil || *dto.God == "" {
+// DevotionRefusal diz por que a devoção não vale para estas classes, ou nil quando vale. A forja a usa
+// antes de a ficha existir, e por isso ela recebe as classes e não a ficha.
+func DevotionRefusal(classes []ClassDTO, god string) error {
+	if god == "" {
 		return nil
 	}
-	god := *dto.God
-	for _, class := range dto.Classes {
+	for _, class := range classes {
 		accepted := ClassDevotees(class.ClassName)
 		if len(accepted) > 0 && !slices.ContainsFunc(accepted, func(o ChoiceOption) bool { return o.Value == god }) {
-			return fmt.Errorf("%s não serve a %s: escolha uma das devoções da classe", class.ClassName, book.DevotionName(god))
+			return fmt.Errorf("%s não serve a %s: escolha outro deus, ou Nenhum", class.ClassName, book.DevotionName(god))
 		}
 	}
-	if !slices.ContainsFunc(DevotionOptions(dto.Classes), func(o ChoiceOption) bool { return o.Value == god }) {
+	if !slices.ContainsFunc(DevotionOptions(classes), func(o ChoiceOption) bool { return o.Value == god }) {
 		return fmt.Errorf("%s não é uma devoção que esta ficha possa ter", book.DevotionName(god))
 	}
 	return nil
+}
+
+// devotionIsValid confere o deus da ficha contra as classes dela.
+func devotionIsValid(dto CharacterDTO) error {
+	if dto.God == nil {
+		return nil
+	}
+	return DevotionRefusal(dto.Classes, *dto.God)
 }
 
 // GrantedPowerIsOfGod diz se o poder é um dos que o deus concede.

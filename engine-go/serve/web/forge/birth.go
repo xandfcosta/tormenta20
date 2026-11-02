@@ -13,7 +13,7 @@ import (
 
 // O NASCIMENTO DO HERÓI.
 //
-// A forja curta pergunta o nome, a raça, a origem e o nível em cada classe, mais o
+// A forja curta pergunta o nome, a raça, a origem, o deus (opcional) e o nível em cada classe, mais o
 // equipamento inicial de p140, e o que sai dela é um personagem VÁLIDO, não um rascunho. O que ela não
 // pergunta são as escolhas que a ficha já sabe fazer: os dois benefícios da origem (p85), o treino de
 // perícia, os atributos de raça, o caminho, o poder concedido e as escolhas de cada nível. Isso vira
@@ -42,10 +42,12 @@ type forgeAnswers struct {
 	// BrokenClassLines são as linhas de classe ilegíveis, guardadas para a recusa citá-las.
 	BrokenClassLines []string
 	Origin           string
-	SimpleWeapon     string
-	MartialWeapon    string
-	Armor            string
-	Shield           bool
+	// God é o id da devoção, ou "" para nenhuma.
+	God           string
+	SimpleWeapon  string
+	MartialWeapon string
+	Armor         string
+	Shield        bool
 }
 
 // forgeRefusals confere a folha inteira e devolve uma mensagem por campo.
@@ -68,6 +70,9 @@ func forgeRefusals(answers forgeAnswers) wire.FieldErrorMap {
 	if refusals := classRefusals(answers); len(refusals) > 0 {
 		errs["class"] = refusals
 		return errs
+	}
+	if err := sheet.DevotionRefusal(classesOnTheSheet(answers.Classes), answers.God); err != nil {
+		errs["god"] = []string{err.Error() + "."}
 	}
 	class := answers.firstClass()
 	// O equipamento só se confere DEPOIS da classe: é ela que diz quais peças o
@@ -117,6 +122,15 @@ func totalLevelOf(classes []sheet.ClassEntry) int64 {
 		total += entry.Level
 	}
 	return total
+}
+
+// classesOnTheSheet é a mesma lista na forma que as regras da ficha leem.
+func classesOnTheSheet(classes []sheet.ClassEntry) []sheet.ClassDTO {
+	out := make([]sheet.ClassDTO, 0, len(classes))
+	for _, entry := range classes {
+		out = append(out, sheet.ClassDTO{ClassName: entry.ClassName, Level: entry.Level})
+	}
+	return out
 }
 
 // choiceRefusal separa "não escolheu" de "escolheu o que não existe".
@@ -252,10 +266,15 @@ func birthBody(stylesheet forgeAnswers, race book.Race, class book.Class) (sheet
 		return sheet.CreateBody{}, err
 	}
 	kit := engine.StartingKitFor(class.Name, class.Proficiencies)
+	var god *string
+	if stylesheet.God != "" {
+		god = &stylesheet.God
+	}
 	return sheet.CreateBody{
 		Name:              strings.TrimSpace(stylesheet.Name),
 		Races:             []string{race.ID},
 		Origin:            stylesheet.Origin,
+		God:               god,
 		Classes:           stylesheet.Classes,
 		Tibar:             &tibar,
 		Items:             birthItems(stylesheet, kit),

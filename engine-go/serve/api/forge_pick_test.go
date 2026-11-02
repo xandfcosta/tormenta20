@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// As ESCOLHAS da forja no Tempestade (ALE-535): raça e origem são linhas
+// As ESCOLHAS da forja no Tempestade (ALE-535): raça, origem e deus são linhas
 // que abrem uma folha com busca, e a folha mora FORA do formulário.
 
 // pickRow devolve o HTML da linha de escolha de um campo, do botão até o fim

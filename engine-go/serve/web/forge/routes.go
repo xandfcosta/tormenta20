@@ -117,6 +117,7 @@ func answersFromForm(r *http.Request) (forgeAnswers, error) {
 		Classes:          withNewClass(classes, r.PostFormValue("class")),
 		BrokenClassLines: broken,
 		Origin:           r.PostFormValue("origin"),
+		God:              r.PostFormValue("god"),
 		SimpleWeapon:     r.PostFormValue("weaponSimple"),
 		MartialWeapon:    r.PostFormValue("weaponMartial"),
 		Armor:            r.PostFormValue("armor"),
