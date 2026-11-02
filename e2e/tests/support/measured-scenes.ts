@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
  * O REGISTRO DAS CENAS MEDIDAS POR APARÊNCIA (ALE-320).
  *
  * Contraste e tipografia só o navegador responde — converter oklch para sRGB e
- * saber em que tamanho a Cinzel foi DESENHADA são perguntas que nenhuma outra
+ * saber em que tamanho a letra foi DESENHADA são perguntas que nenhuma outra
  * camada tem como fazer. Por isso a medição roda aqui.
  *
  * O que mudou é o REGIME. Ela morava enumerada: dezoito endereços escritos um a

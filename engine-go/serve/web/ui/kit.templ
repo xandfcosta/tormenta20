@@ -4,30 +4,6 @@ package ui
 // vez. Token inventado à mão em cinco telas diverge em silêncio, e ninguém
 // compara duas telas lado a lado.
 
-// SceneTitle é o título cinematográfico do Grimório: Cinzel em caixa alta,
-// entreletra larga e o brilho arcano, com um `kicker` dourado embaixo.
-templ SceneTitle(title, kicker string) {
-	<div data-slot="scene-title" class="flex flex-col items-center gap-1 text-center">
-		<h1 class="scene-title-glow font-heading font-bold text-[clamp(2.2rem,8vw,3.4rem)] uppercase leading-tight tracking-[0.18em] text-foreground">
-			{ title }
-		</h1>
-		if kicker != "" {
-			// 14px e não 12: a Cinzel abaixo de 14 vira desenho antes de virar
-			// texto, e o subtítulo continua serifado para conversar com o
-			// título acima dele.
-			<p class="font-heading text-sm uppercase tracking-[0.3em] text-grimorio-gold">{ kicker }</p>
-		}
-	</div>
-}
-
-// ── OS OUTROS DOIS PAPÉIS DA FAMÍLIA ────────────────────────────────────────
-//
-// A família de rótulos em CAIXA ALTA tem TRÊS papéis, e **um componente só para
-// os três seria pior que escrevê-los à mão**: passaria a esconder que são
-// coisas diferentes. O rótulo de campo não é cabeçalho de nada, e vesti-lo de
-// Cinzel mudaria a cara da ficha em dezenas de lugares. Eles compartilham a
-// família e nada mais.
-
 // ScrollBox é uma região que ROLA e que o TECLADO alcança.
 //
 // O `tabindex="0"` é o conserto e não enfeite. A casca do app é `h-dvh` com

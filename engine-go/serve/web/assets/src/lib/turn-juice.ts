@@ -130,7 +130,7 @@ export function pulsarVez(target: Element | null | undefined): void {
       { transform: 'scale(1)', boxShadow: '0 0 0 0 transparent' },
       {
         transform: 'scale(1.015)',
-        boxShadow: '0 0 14px 2px color-mix(in oklch, var(--grimorio-gold) 45%, transparent)',
+        boxShadow: '0 0 14px 2px color-mix(in oklch, var(--ds-map-gold) 45%, transparent)',
         offset: 0.4,
       },
       { transform: 'scale(1)', boxShadow: '0 0 0 0 transparent' },

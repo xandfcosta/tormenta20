@@ -41,8 +41,7 @@ func (s Scene) handleCharacters(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title: "Personagens · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, que carrega a forja.
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Shape: ui.ShellBare,
 	}, SceneBody(view))
 }
 

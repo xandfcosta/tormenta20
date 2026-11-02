@@ -31,9 +31,8 @@ func (s Scene) handleHub(w http.ResponseWriter, r *http.Request) {
 	}
 	view.ColorMode = ui.ColorModeOf(r)
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:  "Tormenta 20",
-		Shape:  ui.ShellTitled,
-		System: ui.SystemTempestade,
+		Title: "Tormenta 20",
+		Shape: ui.ShellTitled,
 		// Sem `data-voltar`: o Hub é a cena raiz e o Esc não tem para onde ir.
 	}, hub(view))
 }

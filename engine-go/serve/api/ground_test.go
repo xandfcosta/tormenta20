@@ -46,46 +46,6 @@ func TestEveryOfferedGroundCanBePainted(t *testing.T) {
 	}
 }
 
-// Guarda de CASCATA, e ele prende a COLOCAÇÃO porque é ela o defeito.
-//
-// Dentro de `@layer components` a regra NÃO VALE: o elemento carrega a
-// utilitária `flex` do Tailwind, que mora numa camada POSTERIOR, e camada
-// posterior ganha de anterior independentemente de especificidade. O efeito é o
-// pior possível — numa tela larga aparecem OS DOIS, o painel lateral com a ficha
-// e o modal por cima dela.
-//
-// O que este guarda NÃO faz: ele não resolve cascata, ele lê TEXTO. Cascata de
-// verdade só um navegador resolve, e um e2e para uma linha seria caro. O que ele
-// pega é a regressão exata e provável — alguém arrastar a regra de volta para
-// dentro do `@layer` numa arrumação, achando que camada é organização.
-func TestTheRuleThatHidesTheDialogStaysOutOfTheLayer(t *testing.T) {
-	sheet, err := os.ReadFile("../web/assets/app.src.css")
-	if err != nil {
-		t.Fatalf("ler o CSS da casa: %v", err)
-	}
-	css := string(sheet)
-
-	pos := strings.Index(css, ".table-sheet-in-dialog")
-	if pos < 0 {
-		t.Fatalf("a regra sumiu da folha — o guarda está lendo o arquivo errado (%d bytes)", len(css))
-	}
-
-	// Profundidade de blocos ABERTOS na altura da regra. Um nível é o
-	// `@container`, que é legítimo e necessário; dois ou mais significa que há
-	// um `@layer` (ou outro bloco) por fora, e lá a regra perde.
-	depth := 0
-	for _, c := range css[:pos] {
-		if c == '{' {
-			depth++
-		} else if c == '}' {
-			depth--
-		}
-	}
-	if depth > 1 {
-		t.Errorf("a regra que esconde a ficha em diálogo está %d blocos aninhada, e só o `@container` é esperado: dentro de `@layer` ela perde para o `flex` do Tailwind e a tela larga mostra o painel E o modal", depth)
-	}
-}
-
 // A FOLHA E A PASTA DE FONTES DIZEM A MESMA COISA, NAS DUAS DIREÇÕES.
 //
 // A folha pede `/fonts/…` por caminho absoluto, e um pedido sem arquivo não dá

@@ -94,13 +94,8 @@ test('nenhum painel da ficha transborda o telefone', async ({ page }) => {
     ).toBeGreaterThan(30)
     expect(ratio.falhas, `texto abaixo do AA em ${address}`).toEqual([])
 
-    // A TIPOGRAFIA saiu deste caminhar, e não por esquecimento: o medidor dela
-    // é o da CINZEL, e a ficha Tempestade não desenha Cinzel nenhuma — a face é
-    // a Atkinson. Mantido, ele reprovaria no próprio controle ("nenhum texto em
-    // Cinzel") em toda aba, que é medir a fonte errada e não a ficha. O piso de
-    // texto do sistema novo (12px) é do `measureDsText`, e quem o passa pelas
-    // abas da ficha é o `appearance.spec`, pelas cenas do
-    // `appearance_scenes.json`.
+    // O piso de texto (12px) é do `measureDsText`, e quem o passa pelas abas da
+    // ficha é o `appearance.spec`, pelas cenas do `appearance_scenes.json`.
 
     // E O ANEL DE FOCO entra no MESMO caminhar, pela terceira vez e pela mesma
     // razão: à parte ele seria enumeração.

@@ -232,7 +232,6 @@ func (s Scene) writeAttributes(w http.ResponseWriter, r *http.Request, v attribu
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:        "Atributos · Forja · Tormenta 20",
 		Shape:        ui.ShellDense,
-		System:       ui.SystemTempestade,
 		Back:         "/personagens",
 		BackLabel:    "Personagens",
 		VisibleTitle: v.HeroName,

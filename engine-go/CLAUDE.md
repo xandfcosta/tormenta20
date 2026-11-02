@@ -1111,9 +1111,8 @@ do dono" na [raiz](../CLAUDE.md). Nome PRÓPRIO do livro não é prosa:
   (casa e papéis em `asPaletasDaCasa`: `destructive`, `primary`, `muted`, …)
   contra a folha, varrendo o DIRETÓRIO com piso de denominador que SOBE com a
   varredura — piso antigo não denunciaria a volta do conjunto antigo.
-- **A CLASSE DE ESCOPO não é tinta**: `scene-grimorio` é condição dos tokens (o
-  `@custom-variant dark` é `&:is(.dark *, .scene-grimorio, …)`) — sem ela o app
-  sai sem cor. Cobre o `TestEveryScopeClassExistsInTheStylesheet`, que lê só
+- **A CLASSE DE ESCOPO não é tinta**: `scene-ds` é condição dos tokens, e sem ela
+  o app sai sem cor. Cobre o `TestEveryScopeClassExistsInTheStylesheet`, que lê só
   `class=` e `templ.KV("…")` — `data-slot` como `scene-title` não é classe, e a
   casca escolhe `scene-ds` por condição.
 
@@ -1267,16 +1266,12 @@ monta página. Não ponha esses campos em cada `ui.Page{…}`.
 pule comentário e string, com o compilador de rede; o identificador hifenizado
 (`data-nav-layout`) ele não pega — ache-o com `grep` depois.
 
-## Dois sistemas de desenho, até a última tela migrar
+## O sistema de desenho
 
-A transição é POR ESCOPO: a cena migrada veste o **Tempestade** inteiro, a
-outra fica no **grimório**. A cena escolhe com `ui.Page.System`, e o zero do
-tipo é o grimório, para nenhuma tela mudar sem pedido. Vocabulário na seção H
+Toda cena veste o **Tempestade**, e a casca põe `.scene-ds` nela. Vocabulário na seção H
 do [GLOSSARY](../GLOSSARY.md).
 
-- **Os tokens `--ds-*` só existem dentro de `.scene-ds`**
-  (`serve/web/assets/src/ds.css`): na raiz, um com nome de token do grimório
-  repintaria as telas não migradas.
+- **Os tokens `--ds-*` só existem dentro de `.scene-ds`** (`serve/web/assets/src/ds.css`).
 - **Cada cor é UM token com os dois modos** (`light-dark()`), resolvido pelo
   `color-scheme` do elemento que o USA; o modo escolhido é atributo no
   `<html>`, não segundo bloco de tokens.
@@ -1287,24 +1282,12 @@ do [GLOSSARY](../GLOSSARY.md).
   só existe em HTTPS e `localhost`, e o app é servido em HTTP na rede da mesa. O e2e
   roda em `localhost`, onde ela existe, e por isso não vê a chamada direta quebrar.
 - **Pisos do Tempestade: 12px de texto e 44×44 de alvo no toque**, medidos pelo
-  e2e (`support/ds-floors.ts`, no laço do `appearance.spec.ts`) só na cena com
-  `.scene-ds` — o caso anota o sistema, sem lista de cenas migradas. O guarda
-  da Cinzel mede a outra metade. O elo citado no meio de uma frase é a exceção
-  `Inline` da 2.5.5, e não conta; alvo sozinho numa linha conta, mesmo sendo elo.
-- **Medidor que mire um escopo pelo nome mira os DOIS** até o grimório sair: só
-  `.scene-grimorio`, só o `index.css` ou só o `class="…"` passa VERDE sem medir
-  a cena nova.
-- **Tela grande migra em PARALELO, no mesmo endereço.** Parte não migrada
-  desenha um vazio que leva à antiga — nunca o grimório dentro da cena
-  Tempestade. Migrada a última, a antiga é APAGADA, com os testes portados
-  antes.
-- **O fim da migração é apagar**, não converter: `.scene-grimorio`, tokens
-  `grimorio-*`, Cinzel, Liberation e JetBrains Mono saem juntos.
+  e2e (`support/ds-floors.ts`, no laço do `appearance.spec.ts`). O elo citado no meio de uma frase é a
+  exceção `Inline` da 2.5.5, e não conta; alvo sozinho numa linha conta, mesmo sendo elo.
 
 ## O anel de foco é UMA receita, e o repouso dela existe para não animar
 
-A regra de foco mora na folha de cada sistema (`index.css` para
-`.scene-grimorio`, `ds.css` para `.scene-ds`) e **não é layerada**: ganha de
+A regra de foco mora no `ds.css` e **não é layerada**: ganha de
 todo utilitário do Tailwind, então `focus-visible:outline-*` numa `class=` não
 faz efeito. O `TestNoHandwrittenFocusRing` impede a cópia.
 

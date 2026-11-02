@@ -102,13 +102,12 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
 	view.dressBoardWindow(r)
-	system, stream := pageSystemAndStream(view)
+	stream := streamOfPage(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   fmt.Sprintf("Mesa · Sessão %d", view.SessionNum),
 		Signals: tableSignalsExpr(s.deps.BuildRevision()),
-		System:  system,
 		// O FLUXO LEVA A MARCA: é ele que redesenha o cabeçalho a cada tique, e
 		// sem ela o stream mandaria o cabeçalho de hoje para a sessão do jogador.
 		Init: fmt.Sprintf("@get('%s')", stream),

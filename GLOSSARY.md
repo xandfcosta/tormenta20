@@ -184,7 +184,7 @@ uma decisão do dono antes do renome.
 1. o estado da sessão (`live.Scene`, `session-scene-start/end`);
 2. a **duração de efeito** do livro (`scope: "scene"`, `DeleteEffectsByScope`);
 3. o mapa guardado de um LUGAR (`PlaceScene`/`SavePlaceScene` → guardam um `BoardState`);
-4. a casca visual da UI (`ui.Layout`, `scene-grimorio`, `scene-nav`).
+4. a casca visual da UI (`ui.Layout`, `scene-ds`, `scene-nav`).
 
 Consequência medida: `endScene` existe **três vezes** no pacote `api` —
 `session_state.go` e `app/session/store.go` desligam a cena, e
@@ -321,15 +321,11 @@ mesa para o botão que o aparelho dela não tem.
 
 ---
 
-**C8 — `grimório` é o app, é o catálogo do mestre e é a aba do jogador.** A
-casca visual inteira se chama assim (`scene-grimorio`, `grimorio-gold`,
-"— Grimório de Arton —"), as abas de catálogo do mestre são "as abas do
-grimório" (ver **aba**), e a aba Magias da ficha tem
-**Grimório** por título — que é o sentido do LIVRO, e o mais estreito dos três.
-Nenhum é errado e nenhum se conserta por palpite: o primeiro é a marca do
-produto, o terceiro é a palavra da mesa. O identificador é que não pode ser só
-`grimorio` — os desta fatia são `spellbookPanel`, `learnedSpellRow`,
-`spellbookPanelOf`.
+**C8 — `grimório` é o catálogo do mestre e é a aba do jogador.** As abas de catálogo do mestre são
+"as abas do grimório" (ver **aba**), e a aba Magias da ficha tem **Grimório** por título — que é o
+sentido do LIVRO, e o mais estreito dos dois. A casca visual antiga também se chamava assim, e saiu
+(ALE-569). O identificador é que não pode ser só `grimorio` — os desta fatia são `spellbookPanel`,
+`learnedSpellRow`, `spellbookPanelOf`.
 
 ---
 
@@ -531,19 +527,17 @@ resolvidas por palpite:**
 
 ## H. O sistema Tempestade
 
-A UI foi refeita do zero, e toda tela já veste o Tempestade. Os termos abaixo são
-os que a migração precisou nomear. Do grimório restam os tokens e as fontes, que
-ainda saem.
+A UI foi refeita do zero, e toda tela veste o Tempestade. Os termos abaixo são os que a migração
+precisou nomear.
 
 | Canônico | Identificador | Proibidos | O que é |
 |---|---|---|---|
-| **sistema de desenho** | `ui.DesignSystem`, `Page.System` | ~~tema~~ | Qual dos dois a cena veste: o **grimório** (`SystemGrimoire`, o zero do tipo, `.scene-grimorio`) ou o **Tempestade** (`SystemTempestade`, `.scene-ds`). `tema` está proibido porque claro e escuro também são chamados assim, e são outra coisa — o **modo de cor**. |
-| **Tempestade** | `SystemTempestade`, `.scene-ds`, `--ds-*` | ~~ds novo~~, ~~v2~~ | O sistema novo: uma face só (Atkinson Hyperlegible Next), seis tamanhos de texto com piso de 12px, alvo de 44px no toque e a paleta neutra-violeta com a ação em roxo. O nome é o da paleta escolhida, e é o que distingue as duas metades da migração sem dizer qual é a "nova" — que deixa de ser nova no dia seguinte. |
+| **Tempestade** | `.scene-ds`, `--ds-*` | ~~ds novo~~, ~~v2~~ | O sistema de desenho: uma face só (Atkinson Hyperlegible Next), seis tamanhos de texto com piso de 12px, alvo de 44px no toque e a paleta neutra-violeta com a ação em roxo. O nome é o da paleta escolhida, e é o que distingue as duas metades da migração sem dizer qual é a "nova" — que deixa de ser nova no dia seguinte. |
 | **modo de cor** | `ui.ColorMode`, cookie `color_mode`, `<html data-mode>`, `POST /modo` | ~~tema~~, ~~dark mode~~ | Claro, escuro ou o do sistema operacional, escolhido pela PESSOA e válido em toda cena Tempestade. Quem não escolheu não tem modo, e o CSS segue o `prefers-color-scheme`. É cookie e não `localStorage` porque o servidor entrega o `<html>` já no modo certo, sem o quadro no modo errado. |
 | **kit** | `serve/web/ds` | ~~componentes~~ sozinho | As peças com que toda tela Tempestade se monta. A tela não escolhe cor: a peça escreve a classe e a variante. Peça nova entra no kit e na **folha viva** antes de entrar numa tela. |
 | **folha viva** | `serve/web/specimen`, `/sistema` | ~~storybook~~, ~~catálogo~~ (é do mestre) | A tela que desenha cada peça do kit, dividida em seções, no modo que o seletor escolhe, para o olho conferir e o guarda de aparência medir. |
 | **selo** | `ds.Seal`, `SealTone` | ~~tag~~, ~~chip~~ | Um veredito curto com a cor do que ele sugere, como a dificuldade de um encontro. O **crachá** é dado neutro; o selo é julgamento, e por isso tem tom. O texto é o que se lê, e a cor é reforço. |
-| **menu lateral** | `ds.SideMenu` | ~~sidebar~~, ~~trilho~~ (é o do grimório) | As telas de uma área, em seções, à esquerda no desktop: as treze da Mesa do Mestre. Abaixo do desktop ele some, e quem leva às telas é a barra de baixo. |
+| **menu lateral** | `ds.SideMenu` | ~~sidebar~~, ~~trilho~~ | As telas de uma área, em seções, à esquerda no desktop: as treze da Mesa do Mestre. Abaixo do desktop ele some, e quem leva às telas é a barra de baixo. |
 | **crachá removível** | `ds.RemovableBadge` | ~~chip~~, ~~ficha~~ | O crachá do que está ATIVO e pode sair — uma condição na ficha —, com o botão de tirar dentro. ~~ficha~~ está proibido pelo motivo óbvio: a ficha é a do personagem. O crachá que só informa é o `ds.Badge`, mesma palavra da linha da seção G. |
 | **linha da conta** | `ds.Sum`, `ds.SumRow`, `ds.SumTerm` | ~~acordeão~~, ~~decomposição~~ (na tela) | A linha que mostra nome e total e, ao toque, ABRE a conta com uma **parcela** por linha, quantas houver (decisão do dono: "a conta pode crescer indefinidamente"). Na conta, só a penalidade tem cor. |
 | **folha do poder** | `powerSheet`, `ds.ActionRow` | ~~detalhe~~, ~~modal~~ | O diálogo que o toque no NOME de um poder abre: a regra inteira com a página, o que ele dá em curso e por que não se pode usar agora, com o gesto no pé. A linha da lista não mostra o texto da regra (decisão do dono): o nome lê, a ponta age. |
@@ -561,5 +555,5 @@ ainda saem.
 | **migração em paralelo** | — | ~~ficha nova~~, ~~beta~~ | Como uma tela GRANDE migra para o Tempestade: construída no MESMO endereço atrás de uma marca (`?tempestade=1`), com a de hoje intacta até a última parte migrar, e então a marca some e a de hoje é apagada (decisão do dono). A ficha, a sessão do jogador e a mesa do mestre migraram assim, e as três já saíram da marca. |
 | **folha do combatente** | `gmCombatantSheet` | ~~ficha~~ (de NPC), ~~detalhe~~ | O diálogo que uma linha da fila do MESTRE abre: o editor de PV e PM dentro dele, o que a mesa vê, as condições, o lápis que edita nome e iniciativa, e o Remover. Não é **ficha** — a ficha é do personagem, e quem tem uma ganha o botão da ficha completa na folha. |
 | **consultas** (do mestre) | `gmConsults` | ~~painel~~, ~~trilho~~ | A terceira superfície da mesa do mestre no Tempestade: o que se abre com uma pergunta na cabeça, em quatro abas — **Notas**, **Grupo** (os jogadores), **Elenco** (os NPCs guardados) e **Bestiário**. O **elenco** continua sendo jogadores e NPCs; a aba que leva o nome mostra a metade que o Grupo não mostra. |
-| **faixa dos vitais** | `vitalStrip` | ~~crachá do jogador~~ (é o do grimório) | No celular, a fileira de PV e PM colada na **barra de baixo**: −1 e +1 à mão, e tocar no número abre o diálogo de dano ou cura de qualquer valor. |
+| **faixa dos vitais** | `vitalStrip` | ~~crachá do jogador~~ | No celular, a fileira de PV e PM colada na **barra de baixo**: −1 e +1 à mão, e tocar no número abre o diálogo de dano ou cura de qualquer valor. |
 | **coluna da ficha** | `sheetRail` | ~~sidebar~~, ~~barra lateral~~ | No desktop, a coluna fixa à esquerda com o que vale em toda aba: quem é, PV, PM, efeitos ativos, Defesa, atributos e nível. No celular o mesmo conteúdo se reparte entre o cabeçalho, a faixa dos vitais e o ⋯. |

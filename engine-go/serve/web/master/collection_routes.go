@@ -36,9 +36,8 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:  tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Title: tabLabel(v.Aba) + " · Mesa do Mestre · Tormenta 20",
+		Shape: ui.ShellBare,
 	}, masterFrame(v.Aba, tabLabel(v.Aba), nil, collectionScene(v)))
 }
 

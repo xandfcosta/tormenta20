@@ -15,8 +15,7 @@ func Routes(r chi.Router, s Scene) {
 
 func (s Scene) handleSpecimen(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:  "Sistema",
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Title: "Sistema",
+		Shape: ui.ShellBare,
 	}, specimen(ui.ColorModeOf(r)))
 }

@@ -3,7 +3,6 @@ import { medeOContraste } from './support/contrast'
 import { expectTextIsDrawnWithAShippedFace } from './support/fonts'
 import { expectNothingIsClippedSideways, measureSidewaysClipping } from './support/geometry'
 import { MEASURED_SCENES, SESSION_FILE } from './support/measured-scenes'
-import { expectCinzelAcimaDoPiso } from './support/typography'
 import { expectOneFocusRing } from './support/focus'
 import { DS_TEXT_FLOOR, DS_TOUCH_FLOOR, measureDsText, measureDsTouchTargets } from './support/ds-floors'
 
@@ -11,7 +10,7 @@ import { DS_TEXT_FLOOR, DS_TOUCH_FLOOR, measureDsText, measureDsTouchTargets } f
  * A APARÊNCIA DE TODA CENA QUE DESENHA PÁGINA.
  *
  * E2E porque não há outra testemunha: contraste exige converter oklch para sRGB,
- * e tipografia exige saber em que tamanho a Cinzel foi DESENHADA — herança de
+ * e o piso de texto exige saber em que tamanho a letra foi DESENHADA — herança de
  * CSS, não o que está escrito na `class=`. Em jsdom o `getComputedStyle` devolve
  * o oklch cru e todo elemento mede zero.
  *
@@ -119,15 +118,9 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
     test.describe(`aparência: ${where}`, () => {
       test.use({ storageState: SESSION_FILE[visit.session], colorScheme: visit.colorScheme ?? 'light' })
 
-      test(`no desktop: contraste, Cinzel, piso de texto e fonte em ${where}`, async ({ page }) => {
+      test(`no desktop: contraste, piso de texto e fonte em ${where}`, async ({ page }) => {
         const response = await page.goto(visit.address)
         expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-        // A Cinzel é do grimório e os pisos de 12px e 44px são do Tempestade
-        // (ALE-497): cada cena mede os do sistema que ela veste, e o relatório
-        // diz qual foi.
-        const migrated = (await page.locator('[data-slot="scene-shell"].scene-ds').count()) > 0
-        test.info().annotations.push({ type: 'sistema', description: migrated ? 'Tempestade' : 'grimório' })
-
         await runMeasures(where, [
           // O CONTROLE do modo: sem ele, uma visita "escura" que abrisse em claro
           // mediria o claro duas vezes, com a mesma cor de verde.
@@ -143,13 +136,11 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
             ).toBeGreaterThan(MEASURED_TEXT_FLOOR)
             expect(contrast.falhas, `texto abaixo do AA em ${where}`).toEqual([])
           }],
-          ...(migrated
-            ? [[`texto de ${DS_TEXT_FLOOR}px ou mais`, async () => {
-                const report = await measureDsText(page)
-                expect(report.medidos, `${where}: nenhum texto medido no escopo .scene-ds`).toBeGreaterThan(MEASURED_TEXT_FLOOR)
-                expect(report.falhas, `texto abaixo de ${DS_TEXT_FLOOR}px no sistema Tempestade em ${where}`).toEqual([])
-              }] as [string, () => Promise<void>]]
-            : [['Cinzel acima do piso', () => expectCinzelAcimaDoPiso(page, `em ${where}`)] as [string, () => Promise<void>]]),
+          [`texto de ${DS_TEXT_FLOOR}px ou mais`, async () => {
+            const report = await measureDsText(page)
+            expect(report.medidos, `${where}: nenhum texto medido no escopo .scene-ds`).toBeGreaterThan(MEASURED_TEXT_FLOOR)
+            expect(report.falhas, `texto abaixo de ${DS_TEXT_FLOOR}px no sistema Tempestade em ${where}`).toEqual([])
+          }],
           // A FACE DESENHADA é o que torna os outros medidores repetíveis: com
           // a face vindo da máquina, eles respondem sobre o computador que rodou
           // a suíte (ALE-362).
@@ -167,16 +158,13 @@ for (const [label, scene] of Object.entries(MEASURED_SCENES)) {
         test(`no celular: alvo de toque, corte lateral e face mais larga em ${where}`, async ({ page }) => {
           const response = await page.goto(visit.address)
           expect(response?.status(), `${visit.address} não respondeu`).toBeLessThan(400)
-          const migrated = (await page.locator('[data-slot="scene-shell"].scene-ds').count()) > 0
 
           await runMeasures(where, [
-            ...(migrated
-              ? [[`alvo de ${DS_TOUCH_FLOOR}px ou mais`, async () => {
-                  const report = await measureDsTouchTargets(page)
-                  expect(report.medidos, `${where}: nenhum alvo medido no escopo .scene-ds`).toBeGreaterThan(0)
-                  expect(report.falhas, `alvo menor que ${DS_TOUCH_FLOOR}×${DS_TOUCH_FLOOR} no toque em ${where}`).toEqual([])
-                }] as [string, () => Promise<void>]]
-              : []),
+            [`alvo de ${DS_TOUCH_FLOOR}px ou mais`, async () => {
+              const report = await measureDsTouchTargets(page)
+              expect(report.medidos, `${where}: nenhum alvo medido no escopo .scene-ds`).toBeGreaterThan(0)
+              expect(report.falhas, `alvo menor que ${DS_TOUCH_FLOOR}×${DS_TOUCH_FLOOR} no toque em ${where}`).toEqual([])
+            }],
             ['nada cortado de lado', () => expectNothingIsClippedSideways(page, 'body')],
             // A FACE MAIS LARGA por último: ela injeta estilo na página, e
             // qualquer medidor depois dela mediria a página perturbada.

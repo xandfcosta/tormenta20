@@ -57,7 +57,7 @@ templ bookAnchor(book BookAddress, page int, term string) {
 		rel="noopener"
 		data-nav-skip
 		title={ fmt.Sprintf("Abrir o livro na página %d", page) }
-		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-grimorio-gold"
+		class="rounded-sm underline decoration-dotted underline-offset-2 outline-none transition-colors hover:text-(--ds-action)"
 	>{ children... }</a>
 }
 

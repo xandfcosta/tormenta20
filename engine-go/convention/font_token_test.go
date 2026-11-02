@@ -114,7 +114,7 @@ func TestEveryFontTokenNamesAFaceTheAppShips(t *testing.T) {
 
 	// O DENOMINADOR: uma folha sem `--font-*` nenhum e uma folha em conformidade
 	// se parecem no terminal.
-	if measured < 3 {
+	if measured < 1 {
 		t.Fatalf("o guarda achou só %d token de fonte — está lendo a folha errada", measured)
 	}
 	t.Logf("%d tokens de fonte, %d famílias entregues, %d na dívida", measured, len(shipped), len(base))

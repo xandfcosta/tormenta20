@@ -10,19 +10,12 @@ import (
 
 // A CLASSE DE ESCOPO NÃO É TINTA, E POR ISSO ELA ESCAPA.
 //
-// `scene-grimorio` é o escopo em que os tokens da paleta existem: o
-// `@custom-variant dark` do `index.css` é `&:is(.dark *, .scene-grimorio, …)`.
-// Sem essa classe no elemento de fora, NENHUM token resolve — e o app inteiro
-// sai sem cor, sem contraste e com o realce de foco de outra receita.
+// `scene-ds` é o escopo em que os tokens da paleta existem. Sem essa classe no elemento de fora,
+// NENHUM token resolve — e o app inteiro sai sem cor, sem contraste e sem realce de foco.
 //
-// Ela escapou do `TestEveryHouseTintExistsInTheStylesheet` porque aquele mede
-// TINTA (`text-grimorio-gold`, `bg-grimorio-panel`), e a classe de escopo não é
-// uma tinta: é a CONDIÇÃO para as tintas valerem. Perdê-la deixa o guarda de
-// tinta, o `go build` e o `templ generate` todos VERDES, e só o e2e denuncia.
-//
-// O gesto que a perde é banal: uma varredura de identificadores para inglês —
-// o HÍFEN é fronteira de palavra, então `scene-grimorio` vira `scene-grimoire`
-// junto com o resto.
+// Ela escapa do `TestEveryHouseTintExistsInTheStylesheet` porque aquele mede TINTA, e a classe de
+// escopo não é uma tinta: é a CONDIÇÃO para as tintas valerem. Perdê-la deixa o guarda de tinta, o
+// `go build` e o `templ generate` todos VERDES, e só o e2e denuncia.
 func TestEveryScopeClassExistsInTheStylesheet(t *testing.T) {
 	sheet := compiledStylesheet(t)
 

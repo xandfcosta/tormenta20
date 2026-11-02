@@ -13,7 +13,7 @@ import (
 // TODA CENA QUE DESENHA PÁGINA TEM APARÊNCIA MEDIDA (ALE-320).
 //
 // Contraste e tipografia só existem no NAVEGADOR — converter oklch para sRGB e
-// saber em que tamanho a Cinzel de fato foi desenhada são perguntas que nenhuma
+// saber em que tamanho a letra de fato foi desenhada são perguntas que nenhuma
 // outra camada responde. Por isso a medição roda no Playwright; o problema era
 // que ela morava lá ENUMERADA: dezoito endereços escritos um a um, catorze
 // cópias do mesmo caso, e nada cobrando a cena que nascesse amanhã.

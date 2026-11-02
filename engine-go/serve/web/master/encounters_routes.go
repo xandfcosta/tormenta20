@@ -68,9 +68,8 @@ func (s Scene) respondEncounter(
 	}
 
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
-		Title:  "Encontros · Mesa do Mestre · Tormenta 20",
-		Shape:  ui.ShellBare,
-		System: ui.SystemTempestade,
+		Title: "Encontros · Mesa do Mestre · Tormenta 20",
+		Shape: ui.ShellBare,
 	}, masterFrame("encontros", "Encontros", copyEncounterButton(), encountersScene(v)))
 }
 

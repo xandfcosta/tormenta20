@@ -115,16 +115,16 @@ func TestNoHandwrittenFocusRing(t *testing.T) {
 	// existe uma GLOBAL. No dia em que alguém apagar a global, proibir a cópia
 	// deixa o app inteiro sem realce — e o guarda precisa falhar junto, em vez de
 	// seguir cobrando uma regra cuja razão sumiu.
-	sheet, err := os.ReadFile("../serve/web/assets/src/index.css")
+	sheet, err := os.ReadFile("../serve/web/assets/src/ds.css")
 	if err != nil {
 		t.Fatalf("ler a folha-fonte: %v", err)
 	}
 	// O padrão é a DECLARAÇÃO e não "algum `:focus-visible` seguido de outline":
 	// a regra do trilho (`[data-nav-region] … { outline: none }`) casaria com essa
 	// forma frouxa e o controle passaria com a receita apagada.
-	global := regexp.MustCompile(`:focus-visible \{\n\s*outline: 2px solid var\(--grimorio-gold\);\n\s*outline-offset: 1px;`)
+	global := regexp.MustCompile(`:focus-visible \{\n\s*outline: 2px solid var\(--ds-focus\);`)
 	if !global.Match(sheet) {
-		t.Fatalf("a receita GLOBAL de foco sumiu do `index.css`: sem ela, proibir a receita à mão " +
+		t.Fatalf("a receita GLOBAL de foco sumiu do `ds.css`: sem ela, proibir a receita à mão " +
 			"deixa o app sem realce nenhum, e este guarda estaria cobrando uma regra sem razão")
 	}
 	t.Logf("%d arquivos lidos", filesRead)

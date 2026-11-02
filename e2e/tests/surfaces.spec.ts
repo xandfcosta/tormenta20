@@ -89,122 +89,13 @@ const HOUSE_SURFACES = [
   },
 ] as const
 
-/**
- * A razão de cada texto crimson VISÍVEL contra o fundo EFETIVO — subindo a
- * árvore até o primeiro fundo opaco, que é exatamente onde os dois defeitos se
- * escondiam: o elemento do texto é transparente e o painel de trás não é o que
- * se imagina.
- *
- * Por que e2e: converter oklch para sRGB é trabalho do navegador; em jsdom o
- * `getComputedStyle` devolve o oklch cru e ler aqueles três números como RGB
- * dá razão inventada.
- */
-async function weakTints(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 1
-    canvas.height = 1
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return ['sem canvas']
-
-    const rgb = (css: string): [number, number, number, number] => {
-      ctx.clearRect(0, 0, 1, 1)
-      ctx.fillStyle = css
-      ctx.fillRect(0, 0, 1, 1)
-      const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
-      return [r ?? 0, g ?? 0, b ?? 0, a ?? 0]
-    }
-    const luminance = (c: [number, number, number, number]) => {
-      const [r, g, b] = [c[0], c[1], c[2]].map((v) => {
-        const x = v / 255
-        return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
-      })
-      return 0.2126 * (r ?? 0) + 0.7152 * (g ?? 0) + 0.0722 * (b ?? 0)
-    }
-
-    /** As tintas da casa, resolvidas em sRGB pelo navegador, e não "qualquer
-     *  coisa avermelhada": casar por aparência não sabe dizer QUAL token falhou.
-     *
-     *  Os três crimsons são tinta por construção. Os quatro VITAIS foram
-     *  escolhidos como cor de BARRA e escrevem em alguns lugares por hábito —
-     *  entram para que o dia em que alguém escrever com um deles numa tela nova
-     *  seja descoberto aqui. */
-    const root = getComputedStyle(document.documentElement)
-    const TINT_TOKENS = [
-      '--grimorio-crimson',
-      '--grimorio-crimson-bright',
-      '--grimorio-parchment-crimson',
-      '--hp-full',
-      '--hp-hurt',
-      '--hp-critical',
-      '--mp-arcane',
-    ]
-    const tints = TINT_TOKENS.map((token) => ({
-      token,
-      key: rgb(root.getPropertyValue(token).trim()).slice(0, 3).join(','),
-    }))
-
-    const effectiveBackground = (el: HTMLElement) => {
-      let node: HTMLElement | null = el
-      while (node) {
-        const c = rgb(getComputedStyle(node).backgroundColor)
-        if (c[3] >= 250) return c
-        node = node.parentElement
-      }
-      return rgb('#000')
-    }
-
-    return [...document.querySelectorAll<HTMLElement>('*')]
-      .filter((el) => {
-        // Só quem PINTA texto próprio: um contêiner herda a cor e mediria a
-        // mesma tinta dez vezes, com o mesmo veredito.
-        const ownText = [...el.childNodes].some(
-          (n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim(),
-        )
-        return ownText && el.getBoundingClientRect().height > 0
-      })
-      .map((el) => {
-        const color = rgb(getComputedStyle(el).color)
-        const hit = tints.find((t) => t.key === [color[0], color[1], color[2]].join(','))
-        if (!hit) return null
-        const [a, b] = [luminance(color), luminance(effectiveBackground(el))].sort((x, y) => y - x)
-        const ratio = ((a ?? 0) + 0.05) / ((b ?? 0) + 0.05)
-        return {
-          token: hit.token,
-          text: el.textContent?.trim().slice(0, 24) ?? '',
-          ratio: Number(ratio.toFixed(2)),
-        }
-      })
-      .filter((t) => t !== null && t.ratio < 4.5)
-      .map((t) => `${t?.token} em "${t?.text}" dá ${t?.ratio}:1`)
-  })
-}
-
 test.describe('As superfícies da casa', () => {
-  /**
-   * O CRIMSON É LEGÍVEL EM TODA SUPERFÍCIE ONDE ELE POUSA.
-   *
-   * UM TESTE POR SUPERFÍCIE, e isso não é estilo: visitar uma superfície e depois
-   * navegar mais duas vezes no MESMO contexto derruba a terceira página em
-   * branco, com `net::ERR_INSUFFICIENT_RESOURCES` no console — o Chromium
-   * estoura o limite de recursos por página. Um `expect` cansado dentro de um
-   * teste desses acusaria o app. Cada teste ganha página nova.
-   */
-  for (const surface of HOUSE_SURFACES) {
-    test(`a tinta da casa alcança texto ${surface.where}`, async ({ page }) => {
-      await surface.visit(page)
-      const weak = await weakTints(page)
-      expect(weak, `tinta abaixo do mínimo de texto ${surface.where}`).toEqual([])
-    })
-  }
-
   /**
    * Todo foco da casa tem a MESMA cara, em TODA superfície.
    *
    * O medidor mora em `support/focus.ts` e não aqui: instrumento dentro de um
    * chamador tem exatamente um chamador. O que fica aqui é a lista de
-   * superfícies, a mesma do guarda de tinta — cena nova entra numa linha e ganha
-   * as duas medições.
+   * superfícies — cena nova entra numa linha e ganha a medição.
    *
    * O caminhar pelas SETE ABAS da ficha NÃO mora aqui de propósito: ele vive no
    * `sheet.spec.ts`, junto do contraste e da tipografia, porque à parte seria

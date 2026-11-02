@@ -1,15 +1,8 @@
 /* A folha das cenas em Datastar (ALE-219).
  *
  * Ela NÃO redefine cor nenhuma: importa a folha do sistema de desenho, que é
- * onde os tokens moram. Uma segunda paleta é uma paleta que diverge.
- *
- * O `index.css` vinha da SPA (`frontend/src/index.css`) e veio para cá na
- * ALE-272 (fatia 10c), quando a SPA saiu: era ela quem o hospedava, e não quem
- * o possuía — a paleta sempre foi da casa. */
+ * onde os tokens moram. Uma segunda paleta é uma paleta que diverge. */
 @import "./src/index.css";
-/* O sistema novo, que convive com o grimório até a última tela migrar
- * (ALE-497). Ele só vale dentro de `.scene-ds`, então importá-lo aqui não muda
- * nenhuma tela que ainda não migrou. */
 @import "./src/ds.css";
 
 /* Os templates. MEDIDO na ALE-278 (fatia 4), e o resultado desmente o que estava
@@ -52,7 +45,6 @@
 /* O KIT (ALE-278, fatia 4). Ele saiu de `api/` para `web/ui/`, e o glob acima é
  * de um nível só — sem esta linha, `Button`, `TextField` e a casca inteira
  * perderiam as classes, em silêncio. */
-
 
 /* A folha COMPILADA (`static/mesa.css`) é versionada, e isso é decisão e não
  * descuido: o `go:embed` não compila sem ela, então um clone limpo perderia
@@ -117,43 +109,7 @@ html {
    quer é justamente sobrepor uma utilitária que o elemento precisa ter para
    funcionar como modal na largura em que ele É usado. */
 @container (min-width: 50rem) and (min-height: 30rem) {
-  .table-sheet-in-dialog {
-    display: none;
-  }
-}
 
-/* O CURSOR da ficha fica na moldura dela, e na linguagem da casa.
-   Três medições levaram a esta forma, e vale registrar as duas erradas.
-
-   (1) Anel no MIOLO desenha por dentro do que rola: acompanha a rolagem,
-   encosta no conteúdo e some no corte. Foi o "estranhamento" que o dono
-   descreveu com a tela na mão.
-
-   (2) Anel na `<section>` via `:has()` deu DOIS anéis, também medido — porque o
-   miolo continuava pegando a regra global de foco do `index.css`, aquela que
-   vale para qualquer focável. O que eu não tinha visto é que existe uma SEGUNDA
-   regra global logo abaixo dela: item dentro de `[data-nav-region]` não usa anel
-   de navegador, usa a linguagem de "selecionado" da casa — borda dourada com
-   brilho, a mesma do trilho e da tira de heróis. Só que o seletor dela é
-   `:is(a, button, [data-nav-item])`, e o meu miolo era um `[tabindex]` puro:
-   caía na regra geral em vez da de cursor.
-
-   O conserto é o miolo declarar `data-nav-item`, que é a convenção, e o cursor
-   ser desenhado na MOLDURA: quem recebe o foco continua sendo o miolo (a
-   navegação não muda) e quem se acende é a caixa, sem nada por dentro do que
-   rola.
-
-   Fora de `@layer` porque disputa com regras não-camadas do `index.css`, e
-   depois do import por isso mesmo: mesma especificidade, ganha quem vem depois. */
-.scene-grimorio .mesa-painel > [data-nav-item]:focus-visible {
-  box-shadow: none;
-}
-
-.scene-grimorio .mesa-painel:has(> [data-nav-item]:focus-visible) {
-  border-color: var(--grimorio-gold);
-  box-shadow:
-    0 0 0 1px var(--grimorio-gold),
-    0 0 18px oklch(0.8 0.11 85 / 0.28);
 }
 
 /* A FICHA DO MONSTRO em duas colunas quando ela tem largura (ALE-264).
@@ -204,28 +160,14 @@ html {
 @layer components {
   /* O MONOGRAMA do avatar: as duas letras dentro do círculo colorido (ALE-252).
    *
-   * Ele é MARCA e não texto — decisão do dono, 2026-09-08 —, e a diferença tem
-   * consequência mecânica. O piso de 14px da Cinzel existe porque ela "vira
-   * desenho antes de virar texto" nesse tamanho (ALE-173), e num monogram
-   * virar desenho é o objetivo: são duas letras (ver `ui.Monogram`), com o nome
-   * escrito por extenso ao lado em texto de verdade.
-   *
-   * A receita mora AQUI e não em quatro `class=` à mão porque a classe É a
-   * isenção: o `support/tipografia.ts` pula quem estiver dentro de um
-   * `.monogram`, e assim quem escrever um monogram novo herda o desenho e a
-   * isenção juntos. Isentar por `aria-hidden` — que é o que três dos quatro
-   * sítios já tinham — livraria TODA Cinzel decorativa, que é largo demais.
-   *
-   * O TAMANHO e a FORMA ficam com quem chama: os quatro círculos medem 32, 44 e
-   * 48px, com cantos diferentes, e normalizá-los aqui mudaria quatro cenas numa
-   * issue que não é sobre isso. O `background` é o gradiente derivado do nome
-   * (`ui.NameGradient`), e por isso é `style` e não classe. */
+   * O TAMANHO e a FORMA ficam com quem chama, e o `background` é o gradiente derivado do nome
+   * (`ui.NameGradient`), por isso é `style` e não classe. */
   .monogram {
     display: flex;
     flex: none;
     align-items: center;
     justify-content: center;
-    font-family: var(--font-heading);
+    font-family: var(--font-ds);
     color: oklch(1 0 0 / 0.85);
   }
 
@@ -261,19 +203,9 @@ html {
  * Com `contents` o invólucro não existe para o leiaute enquanto está visível —
  * os botões participam da fileira como se ele não estivesse lá. */
 @layer components {
-  .stage-tall-only {
-    display: contents;
-  }
-  .stage-drawer {
-    display: none;
-  }
+
   @container (max-height: 30rem) {
-    .stage-tall-only {
-      display: none;
-    }
-    .stage-drawer {
-      display: block;
-    }
+
   }
 }
 
@@ -376,7 +308,7 @@ html {
        ganhar faixa — as duas faixas precisam ler como a MESMA escala. */
     --movimento-cabe: oklch(0.78 0.19 145);
     --movimento-segundo: oklch(0.62 0.16 255);
-    --movimento-alem: var(--destructive);
+    --movimento-alem: var(--ds-map-danger);
     position: relative;
     overflow: hidden;
     min-height: 0;
@@ -387,7 +319,7 @@ html {
        `gold/red/green/blue/violet` e a autoridade nunca aceitou nenhum dos
        cinco, então todo marcador caía no dourado — em silêncio, que é a marca
        desta família. O `piloto_marcador_test.go` amarra esta lista à de lá. */
-    --marcador-ouro: var(--grimorio-gold);
+    --marcador-ouro: var(--ds-map-gold);
     /* O carmim é a TINTA e não o bloco (ALE-292). Ele era `--hp-critical`, que é
        a cor de PREENCHER a barra de PV — e a letra do marcador desenhada com ela
        dava 4,11:1 sobre o mapa, abaixo dos 4,5 do AA. As outras três passam.
@@ -396,222 +328,11 @@ html {
        escreve e contorna.
        Ninguém tinha medido porque nenhum guarda visitava um mapa COM marcador —
        o primeiro que visitou (o do rascunho de lugar) reprovou na estreia. */
-    --marcador-carmim: var(--destructive-ink);
-    --marcador-azul: var(--mp-arcane);
-    --marcador-verde: var(--hp-full);
+    --marcador-carmim: var(--ds-map-danger-ink);
+    --marcador-azul: var(--ds-map-blue);
+    --marcador-verde: var(--ds-map-green);
   }
 
-  /* O TRILHO flutua colado à esquerda, centrado na altura: trocar de ferramenta
-   * é o gesto mais frequente da cena, e a mão volta sempre ao mesmo lugar.
-   *
-   * VERTICAL porque nove ferramentas numa linha não cabem em telefone nenhum —
-   * é o enrolamento que a ALE-178 registrou, com o ✕ inalcançável a 390px. */
-  /* A BARRA DE CIMA, virada em DOIS PAINÉIS nos cantos (ALE-203, decisão do
-   * dono: "faça a barra de cima do tabuleiro ser uma barra overlay igual a
-   * sidebar").
-   *
-   * Ela era uma LINHA acima da cena e custava altura de mapa em toda tela.
-   * Flutuando, o tabuleiro cresce até o topo — que é a mesma decisão que já
-   * governa o trilho, os avisos e os ajudantes: nesta cena, tudo o que não é
-   * mapa mora POR CIMA dele.
-   *
-   * FUNDO OPACO, como o do trilho, e pela mesma razão medida lá: um fundo que
-   * deixa a grade passar transforma texto e ícones em ruído justamente sobre o
-   * terreno pintado.
-   *
-   * O `max-width` do nome não é zelo: nome de cena é digitado pelo mestre, e um
-   * "Salão dos Mil Espelhos de Wynlla" sem teto atravessaria o topo até debaixo
-   * dos verbos do outro canto. O corte com reticências é o que mantém os dois
-   * painéis dois. */
-  .board-scene-name,
-  .board-scene-verbs {
-    position: absolute;
-    top: 0.5rem;
-    z-index: 7;
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    border-radius: 0.125rem;
-    background: oklch(0.18 0.012 300);
-  }
-  .board-scene-name {
-    left: 0.5rem;
-    max-width: min(18rem, 40%);
-    padding: 0.25rem 0.625rem;
-    font-size: 0.875rem;
-    color: var(--color-foreground);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* A BARRA DE ABAS (ALE-205) mora no mesmo painel do nome, e com mais de uma
-   * cena aberta ele precisa de mais largura do que o nome sozinho pedia — sem
-   * chegar nos verbos do outro canto, que é o que o teto de 18rem protegia.
-   *
-   * Quem passar dali ROLA na horizontal em vez de enrolar linha: o painel tem
-   * altura de uma linha e uma segunda o faria crescer para dentro do mapa. Com
-   * oito abas (o teto do servidor) num telefone, rolar é a saída que não custa
-   * mapa. */
-  .board-scene-name:has(.board-tab) {
-    /* 35% e não mais, MEDIDO com oito abas em 1280px: o painel dos verbos do
-     * MESTRE é o mais cheio da casa (zoom, cortina, lente, pôr no mapa, abrir
-     * outra, acervo com contagem, encerrar) e ocupa 61% da cena. Com 55% os
-     * dois se encostavam — o nome da última aba passava por baixo do "Lugares
-     * da campanha", e o corte com reticências que mantém os dois painéis dois
-     * deixava de acontecer. */
-    max-width: min(30rem, 35%);
-    gap: 0.125rem;
-    padding: 0.125rem 0.25rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  /* Cada ficha corta a SUA — o corte no painel cortaria a última aba pela
-   * metade e ela pareceria não existir. */
-  .board-tab {
-    flex: none;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    max-width: 9rem;
-    padding: 0.125rem 0.5rem;
-    border: 1px solid transparent;
-    border-radius: 0.125rem;
-    font-size: 0.875rem;
-    color: var(--color-muted-foreground);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: color 150ms, border-color 150ms;
-  }
-  .board-tab:hover {
-    color: var(--color-foreground);
-    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
-  }
-  .board-tab:focus-visible {
-    outline: 2px solid var(--color-ring);
-    outline-offset: 2px;
-  }
-  /* MOSTRAR ESTA À MESA (ALE-205, fatia 2) vive colado na ficha ativa, e é o
-   * único item da barra que não é uma aba — por isso ele não herda o
-   * `.board-tab`: uma ficha a mais ali seria lida como um quarto tabuleiro.
-   * Menor que 44px de propósito: ele não é alvo de toque frequente (o mestre o
-   * usa uma vez por cena), e a barra tem altura de uma linha. */
-  .board-tab-pull {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    margin-left: -0.0625rem;
-    border-radius: 0.125rem;
-    color: var(--color-muted-foreground);
-    transition: color 150ms, background-color 150ms;
-  }
-  .board-tab-pull:hover {
-    color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
-    background: oklch(0.24 0.014 300);
-  }
-  .board-tab-pull:focus-visible {
-    outline: 2px solid var(--color-ring);
-    outline-offset: 2px;
-  }
-  /* A ATIVA acende, e é o ÚNICO sinal de qual cena está na tela: o mapa embaixo
-   * não se identifica sozinho — duas cenas de cripta com o mesmo chão são a
-   * mesma imagem. */
-  .board-tab-active {
-    color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
-    border-color: var(--color-grimorio-gold, oklch(0.78 0.13 85));
-    /* A ATIVA tem mais largura que as outras porque é a que se LÊ: as demais
-     * respondem "onde mais eu posso ir" e cortar "Cripta do Rei Caolho" em
-     * "Cripta do Rei…" ali não custa nada. Medido na bancada com 9rem para
-     * todas: a ativa saía cortada em "Cripta do Rei Caolh", e o nome da cena em
-     * que se está é o que o painel existia para dizer. */
-    max-width: 14rem;
-  }
-  .board-scene-verbs {
-    right: 0.5rem;
-    gap: 0.125rem;
-    padding: 0.125rem 0.25rem;
-  }
-  /* O PAINEL DEVOLVE OS VÃOS AO MAPA (ALE-294).
-   *
-   * Ele é uma CAIXA por cima da cena, e como caixa recebia o clique na faixa
-   * inteira que ocupa — inclusive no fundo entre os ícones, que não faz nada.
-   * Medido a 390px varrendo a janela a cada 4px: dos 864 pontos do painel, 328
-   * (38%) caíam no fundo. Ali pintar terreno, largar marcador ou pegar uma peça
-   * era um gesto que sumia sem nada na tela para explicar, e cobrir a vista e
-   * roubar o clique são promessas diferentes — a segunda nunca foi feita.
-   *
-   * É o mesmo remédio dos avisos e ajudantes acima, e a mesma armadilha: só é
-   * seguro se TODO controle reativar. Um que fique de fora vira botão morto, que
-   * é pior que o defeito porque não deixa erro em lugar nenhum. Quem prende isso
-   * é o `TestNoChromeOverTheMapStealsTheClickOffItsControls`, que cruza esta
-   * lista com o HTML servido.
-   *
-   * O NOME DA CENA fica de fora, e não por esquecimento: a caixa dele É o texto
-   * (ele encolhe até o nome), então não há vão para devolver — e sem ponteiro o
-   * nome deixaria de poder ser selecionado, que é perder por nada. O TRILHO
-   * também: ele ROLA por dentro quando as nove ferramentas não cabem, e um fundo
-   * transparente ao ponteiro mandaria a roda para o mapa, que amplia. */
-  .board-scene-verbs {
-    pointer-events: none;
-  }
-  .board-scene-verbs :is(a, button, input, label, select, summary, textarea) {
-    pointer-events: auto;
-  }
-
-  .board-rail {
-    position: absolute;
-    left: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 7;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.125rem;
-    padding: 0.25rem;
-    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    border-radius: 0.125rem;
-    /* Fundo OPACO e não translúcido: o trilho fica por cima do mapa, e um fundo
-     * que deixa a grade passar transforma nove ícones num ruído difícil de ler
-     * justamente sobre o terreno pintado. */
-    background: oklch(0.18 0.012 300);
-    box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
-    /* Se o trilho for mais alto que a cena — telefone deitado com o mestre vendo
-     * as nove —, ele rola por dentro em vez de vazar para fora do mapa. */
-    max-height: calc(100% - 1rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  .board-rail-crease {
-    width: 1.25rem;
-    height: 1px;
-    margin-block: 0.125rem;
-    background: var(--color-grimorio-iron, oklch(0.35 0.01 305));
-  }
-
-  .board-tool {
-    position: relative;
-    display: flex;
-    width: 2.25rem;
-    height: 2.25rem;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid transparent;
-    border-radius: 0.125rem;
-    outline: none;
-    transition: color 150ms, border-color 150ms, background-color 150ms;
-  }
-  .board-tool:hover {
-    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    color: var(--color-foreground, oklch(0.93 0.014 85));
-  }
-  .board-tool:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: -2px;
-  }
   /* A ATIVA é a coisa mais alta do trilho, e isto foi medido na tela: com só o
    * `.brush-on` (borda + fundo a 14%), o ANEL DE FOCO de outro botão lia
    * como "esta é a ativa" — dois estados diferentes com o mesmo peso visual, num
@@ -621,141 +342,10 @@ html {
    * que nenhum estado passageiro usa. */
   .board-tool.brush-on {
     background-color: oklch(0.8 0.11 85 / 0.22);
-    box-shadow: inset 3px 0 0 var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    box-shadow: inset 3px 0 0 var(--ds-map-gold);
   }
   .board-tool.brush-on .board-tool-key { opacity: 0.9; }
-  /* O NÚMERO no canto, e não só no `title`: um atalho que só existe no balão do
-   * mouse é um atalho que quem navega por teclado nunca descobre — e é
-   * justamente essa pessoa que mais o usaria. */
-  .board-tool-key {
-    position: absolute;
-    right: 1px;
-    bottom: 0;
-    font-family: var(--font-mono, ui-monospace, monospace);
-    font-size: 0.5625rem;
-    line-height: 1;
-    opacity: 0.55;
-  }
 
-  /* AVISOS no alto, AJUDANTES no pé, e a divisa é de natureza: aviso é ESTADO da
-   * cena que se esquece (a cortina, a lente); ajudante é o que a ferramenta
-   * ativa diz AGORA (a medida, o gabarito, o custo do movimento).
-   *
-   * O CONTÊINER não recebe clique e os filhos recebem: eles cobrem uma faixa
-   * inteira do mapa, e sem isso um aviso apagado roubaria o clique de metade da
-   * cena sem nada na tela para explicar. */
-  .board-notices,
-  .board-helpers {
-    position: absolute;
-    left: 0;
-    right: 0;
-    z-index: 6;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    /* O trilho mora na esquerda; os overlays começam depois dele para não
-       cobrirem os ícones. */
-    padding-left: 3.75rem;
-    pointer-events: none;
-  }
-  /* Os AVISOS começam ABAIXO dos painéis dos cantos, e não no topo cru.
-   *
-   * A barra de cima virou dois painéis flutuantes (ALE-203), e eles ocupam
-   * justamente a faixa onde o primeiro aviso nascia. Sem este recuo, "a cortina
-   * está fechada" aparece por baixo do nome da cena — visível pela metade, que é
-   * pior que escondido: quem olha rápido lê meia frase e segue. */
-  .board-notices { top: 2.75rem; }
-  .board-helpers { bottom: 0; }
-  .board-notices > *,
-  .board-helpers > * {
-    pointer-events: auto;
-  }
-
-  .board-notice {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid oklch(0.8 0.11 85 / 0.4);
-    border-radius: 0.125rem;
-    background: oklch(0.2 0.03 85 / 0.96);
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-    box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
-  }
-  .board-notice-exit {
-    margin-left: auto;
-    display: inline-flex;
-    min-height: 1.5rem;
-    align-items: center;
-    border: 1px solid oklch(0.8 0.11 85 / 0.6);
-    border-radius: 0.125rem;
-    padding-inline: 0.5rem;
-    font-size: 0.75rem;
-    outline: none;
-    transition: background-color 150ms;
-  }
-  .board-notice-exit:hover { background: oklch(0.8 0.11 85 / 0.2); }
-  .board-notice-exit:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 1px;
-  }
-
-  /* O AJUDANTE é a barra da ferramenta ativa. Ele era uma tira ABAIXO do mapa,
-   * com `border-t`, e virou painel flutuante — a borda de cima não descreve mais
-   * nada, e o fundo opaco é o que o torna legível sobre a grade. */
-  .board-helper {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    border-radius: 0.125rem;
-    background: oklch(0.18 0.012 300 / 0.96);
-    padding: 0.375rem 0.5rem;
-    font-size: 0.875rem;
-    box-shadow: 0 4px 14px oklch(0 0 0 / 0.45);
-  }
-
-  /* A LEGENDA DAS CORES do movimento (ALE-203).
-   *
-   * O dono reparou que "não tem um modo do usuário saber o que as cores
-   * indicam". As três ficam sempre na tela e a da vez ACENDE — mostrar só a
-   * ativa ensinaria a cor do momento e esconderia a escala, e é a escala que
-   * muda a decisão de quem está montando o movimento.
-   *
-   * A BOLINHA é um `::before` e não um ícone: ela precisa ser exatamente a cor
-   * do fio correspondente, e a única forma de garantir isso é as duas lerem a
-   * MESMA variável. Um ícone colorido à mão vira a segunda definição da cor, e
-   * dessa vez com o pior sintoma possível — a legenda ensinando errado.
-   *
-   * APAGADA é opacidade e não uma cor cinza: a bolinha continua na cor da faixa,
-   * só que fraca, e é isso que faz a acesa e a apagada serem reconhecíveis como
-   * a mesma coisa em dois estados. */
-  .board-bands {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 0.75rem;
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-  }
-  .board-band {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3125rem;
-    opacity: 0.45;
-    color: var(--color-muted-foreground);
-  }
-  .board-band::before {
-    content: '';
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 9999px;
-    background: var(--faixa-cor);
-  }
   .board-band-fits {
     --faixa-cor: var(--movimento-cabe);
   }
@@ -765,102 +355,19 @@ html {
   .board-band-beyond {
     --faixa-cor: var(--movimento-alem);
   }
-  .board-band-active {
-    opacity: 1;
-    color: var(--color-foreground);
-    font-weight: 600;
-  }
-
-  /* O SELO DE RASCUNHO, no rodapé do movimento do JOGADOR (ALE-203).
-   *
-   * O desenho dele é sempre só visual — quem põe a peça no lugar é o mestre —, e
-   * sem nomear isso a tela do jogador vira a do mestre com um botão faltando. O
-   * selo responde "por que não posso confirmar?" antes de a pergunta nascer.
-   *
-   * Contorno e não preenchimento chapado: ele fica ao lado de um texto que já é
-   * a informação principal (o custo e as ações), e um bloco sólido ali roubaria
-   * a leitura do número. */
-  .board-draft-seal {
-    margin-right: 0.5rem;
-    border: 1px solid color-mix(in oklch, var(--color-grimorio-gold, oklch(0.8 0.11 85)) 45%, transparent);
-    border-radius: 0.125rem;
-    padding: 0.0625rem 0.375rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-  }
-
-  /* O PALCO SAIU (ALE-203). Ele era a caixa que ROLAVA, e rolagem nativa precisa
-   * de um fim: o plano tinha `width: colunas × --quadrado` porque havia moldura,
-   * e a moldura era o retângulo do que existia. Num plano infinito não há
-   * `scrollWidth` para o navegador prender, então quem anda é a JANELA (dois
-   * sinais em pixels) e o gesto é o arrasto — que é o que o dono cobrou como
-   * "ferramenta de movimentar dentro do tabuleiro com clique e arrasto".
-   *
-   * O que se perde com a rolagem nativa: a roda, o teclado e o toque de graça.
-   * Os três voltaram à mão — a roda em `aRodaMoveAJanela`, as setas em
-   * `oTecladoDaJanela`, e o toque pelo mesmo `pointer*` do arrasto.
-   *
-   * O que se ganha: o quadrado debaixo do dedo PARA DE MUDAR. A moldura crescia
-   * quando se pintava perto da borda, e `X0` ia de -11 para -12 entre dois
-   * cliques — medido na bancada. Era uma das duas causas do "apaguei e não
-   * apagou".
-   *
-   * O CENTRALIZAR continua SALTANDO e não deslizando, e a decisão segue medida:
-   * `scroll-behavior: smooth` (ou `scrollTo({behavior:'smooth'})`) deixava o
-   * `scrollTop` em ZERO, sem erro em lugar nenhum. Um botão que anima e não
-   * chega é pior que um botão que salta. */
-
-  /* AS NOTAS DA SESSÃO (ALE-269, superfície 5).
-   *
-   * UM NÓ NOS DOIS ARRANJOS, e isto não é economia: a prévia tem id, e id é
-   * como o remendo a encontra. Um segundo nó para o telefone seria um segundo
-   * `#table-notes-preview` — o `PatchElements` acerta o primeiro, o outro
-   * envelhece na tela, e as duas metades passam a discordar sobre a mesma nota.
-   * É o mesmo defeito da ALE-122, agora em HTML, e o guarda das regiões o
-   * pegaria. Então a "gaveta" do telefone é ESTA seção, posicionada por CSS.
-   *
-   * O contêiner é da SEÇÃO e não da janela, e a razão é a que a ALE-139 mediu
-   * três vezes: esta região é uma coluna de 40% ao lado do mapa e a tela
-   * inteira por cima dele, e um limiar de viewport prometeria duas colunas onde
-   * cabe uma só.
-   *
-   * 42rem = 672px é o MESMO corte do `@2xl` que a SPA usa para o lado a lado. */
-  .notes-column {
-    container-type: inline-size;
-    container-name: notas;
-  }
 
   /* A LARGURA vem do sinal (ALE-218), com o `clamp` de antes como PADRÃO — o
    * mestre que nunca arrastou a divisa vê exatamente o que via. A variável mora
    * no `<main>`, e não aqui, porque esta coluna tem `data-show`. */
   @media (min-width: 64rem) {
-    .notes-column {
-      width: var(--notas-largura, clamp(22rem, 40%, 44rem));
-    }
-  }
 
-  /* A DIVISA é fina e o ALVO é largo: 4px de tinta com 12px de área, que é o
-   * mínimo que um ponteiro acha sem mirar. */
-  .notes-divider {
-    width: 4px;
-    margin-inline: 4px;
-    cursor: col-resize;
-  }
-
-  .notes-layout {
-    grid-template-columns: 1fr;
   }
 
   /* Só o modo DUPLO reparte, e a classe vem do sinal: com uma coluna fixa de
    * duas trilhas, o modo "ler" deixaria metade da região vazia — o item
    * escondido não é item de grade, e a trilha dele fica lá do mesmo jeito. */
   @container notas (min-width: 42rem) {
-    .notes-layout.notes-split {
-      grid-template-columns: 1fr 1fr;
-    }
+
   }
   /* O PLANO é uma ORIGEM, não uma caixa (ALE-203): tamanho ZERO, e tudo o que
    * ele contém escapa dele por `position: absolute`. Ele tinha `width: colunas ×
@@ -996,36 +503,12 @@ html {
   .board-hue-concealment { color: oklch(0.88 0.04 260); }
   .board-hue-elevated { color: oklch(0.8 0.14 145); }
 
-  /* A SUPERFÍCIE ESCOLHIDA do jogador (ALE-129, portada na ALE-269).
-   *
-   * Dourado cheio e não só o texto, ao contrário da aba do editor: aqui a
-   * escolha decide o que ocupa a TELA INTEIRA, e não onde se está olhando dentro
-   * de um formulário. É a mesma marca do `.brush-on`, porque é a mesma
-   * força de afirmação. */
-  .surface-chosen {
-    border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-    background-color: oklch(0.8 0.11 85 / 0.15);
-    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-  }
-
-  /* A ABA ABERTA do editor de bloco (ALE-269).
-   *
-   * Dourado no TEXTO e um filete embaixo, e não o fundo cheio do
-   * `.brush-on`: são coisas diferentes e a tela precisa dizer isso. Uma
-   * ferramenta LIGADA muda o que o próximo clique faz e fica ligada enquanto o
-   * mestre trabalha; uma aba só diz onde ele está olhando agora. Vestir as duas
-   * igual ensinaria que trocar de aba muda o comportamento de alguma coisa. */
-  .tab-on {
-    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-    border-bottom-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-  }
-
   /* A ferramenta LIGADA, e é dourado porque nesta casa dourado é o que diz "a
      vez" e "o ativo" — na iniciativa e no tabuleiro (ALE-200/ALE-201). */
   .brush-on {
-    border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    border-color: var(--ds-map-gold);
     background-color: oklch(0.8 0.11 85 / 0.14);
-    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    color: var(--ds-map-gold);
   }
 
   .board-token {
@@ -1041,12 +524,12 @@ html {
     outline: none;
     transition: box-shadow 120ms ease;
   }
-  .board-token:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .board-token:focus-visible { outline: 2px solid var(--ds-map-gold); outline-offset: 2px; }
 
   /* O anel da vez é o MESMO dourado da linha da fila e da faixa: duas cores para
    * "a vez" fariam a mesa procurar duas coisas (ALE-200). */
   .board-token-on-turn {
-    box-shadow: 0 0 0 3px var(--grimorio-gold), 0 0 12px 2px oklch(0.8 0.11 85 / 0.45);
+    box-shadow: 0 0 0 3px var(--ds-map-gold), 0 0 12px 2px oklch(0.8 0.11 85 / 0.45);
     z-index: 2;
   }
   /* Escondida da mesa: meia tinta e traço cortado, e só o MESTRE a recebe — para
@@ -1079,8 +562,8 @@ html {
     min-width: 1.1em;
     padding: 0 0.2em;
     border-radius: 9999px;
-    background: var(--marker);
-    color: var(--marker-foreground);
+    background: var(--ds-map-danger);
+    color: var(--ds-map-seal-ink);
     font-size: calc(var(--quadrado) * 0.24);
     font-weight: 700;
     line-height: 1.25;
@@ -1147,9 +630,9 @@ html {
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem;
-    border: 1px solid var(--grimorio-iron);
+    border: 1px solid var(--ds-line);
     border-radius: 0.25rem;
-    background: var(--grimorio-panel);
+    background: var(--ds-surface);
     pointer-events: auto;
     white-space: nowrap;
   }
@@ -1271,7 +754,7 @@ html {
   .board-lasso {
     position: absolute;
     pointer-events: none;
-    border: 2px dashed var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    border: 2px dashed var(--ds-map-gold);
     background: oklch(0.8 0.11 85 / 0.10);
   }
 
@@ -1282,7 +765,7 @@ html {
    * duas marcas no mesmo lugar seriam uma só. Aqui o de dentro continua dizendo
    * de quem é o turno, e o de fora diz que o dedo vai levar esta junto. */
   .board-token-marked {
-    outline: 2px dashed var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    outline: 2px dashed var(--ds-map-gold);
     outline-offset: 2px;
   }
 
@@ -1299,7 +782,7 @@ html {
   .board-viewport-grabbing { cursor: grabbing; }
 
   .board-squares:focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--ds-map-gold);
     outline-offset: -2px;
   }
   /* As peças e a trilha sobem acima da camada de casas. */
@@ -1317,7 +800,7 @@ html {
    * simplesmente não desenhava: a classe no elemento, o `outline` computado em
    * `none`, sem erro e sem aviso. Foi olhar a tela que pegou (ALE-364). */
   .board-token.board-token-targeted {
-    outline: 2px dashed var(--destructive);
+    outline: 2px dashed var(--ds-map-danger);
     outline-offset: 2px;
   }
 
@@ -1335,7 +818,7 @@ html {
     align-items: center;
     gap: 0.125rem;
     padding: 0.125rem;
-    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    border: 1px solid var(--ds-line);
     background: oklch(0.18 0.012 300);
     box-shadow: 0 6px 16px oklch(0 0 0 / 0.5);
     /* Sem `white-space: nowrap` o menu quebraria em duas linhas dentro de uma
@@ -1379,7 +862,7 @@ html {
     max-height: 80dvh;
     overflow-y: auto;
     padding: 0.125rem;
-    border: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    border: 1px solid var(--ds-line);
     background: oklch(0.18 0.012 300);
     box-shadow: 0 6px 16px oklch(0 0 0 / 0.5);
     white-space: nowrap;
@@ -1400,64 +883,11 @@ html {
     font-size: 0.625rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: var(--color-muted-foreground, oklch(0.74 0.02 85));
+    color: var(--ds-ink-2);
   }
 
   .board-token-copy-group + .board-token-copy-mode {
     margin-top: 0;
-  }
-
-  /* A FAIXA DA ÁREA de transferência (ALE-206), no painel de verbos da cena.
-   *
-   * Ela mora no painel e não flutuando sobre o mapa porque o que ela responde —
-   * "o que o CTRL+V vai colar?" — é uma pergunta sobre a CENA, como o zoom e a
-   * cortina ao lado. Um balão próprio seria uma segunda casa para o mesmo tipo
-   * de informação. */
-  .board-area {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding-right: 0.25rem;
-    border-right: 1px solid var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    margin-right: 0.25rem;
-  }
-
-  .board-area-text {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    /* `max-width` com corte: o rótulo é o nome da peça, e "Ogro Capitão da
-     * Guarda Negra" empurraria o zoom para fora do painel — que é exatamente o
-     * defeito que a ALE-271 mediu com o botão do acervo. */
-    max-width: 12rem;
-    overflow: hidden;
-    font-size: 0.6875rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: var(--color-grimorio-gold, oklch(0.78 0.12 85));
-  }
-
-  .board-area-clear {
-    display: flex;
-    width: 1.5rem;
-    height: 1.5rem;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid transparent;
-    color: var(--color-muted-foreground, oklch(0.74 0.02 85));
-    outline: none;
-    transition: color 150ms, border-color 150ms;
-  }
-
-  .board-area-clear:hover {
-    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    color: var(--color-foreground, oklch(0.94 0.01 85));
-  }
-
-  .board-area-clear:focus-visible {
-    outline: 2px solid var(--color-ring, oklch(0.72 0.13 85));
-    outline-offset: -2px;
   }
 
   .board-token-copy-mode {
@@ -1479,11 +909,11 @@ html {
   }
 
   .board-token-copy-mode:hover {
-    background: var(--color-accent, oklch(0.28 0.02 300));
+    background: var(--ds-sunk);
   }
 
   .board-token-copy-mode:focus-visible {
-    outline: 2px solid var(--color-ring, oklch(0.72 0.13 85));
+    outline: 2px solid var(--ds-map-gold);
     outline-offset: -2px;
   }
 
@@ -1507,12 +937,12 @@ html {
 
   .board-token-copy-name {
     font-size: 0.8125rem;
-    color: var(--color-foreground, oklch(0.94 0.01 85));
+    color: var(--ds-ink);
   }
 
   .board-token-copy-phrase {
     font-size: 0.6875rem;
-    color: var(--color-muted-foreground, oklch(0.74 0.02 85));
+    color: var(--ds-ink-2);
   }
 
   .board-token-verb {
@@ -1526,33 +956,33 @@ html {
     align-items: center;
     justify-content: center;
     border: 1px solid transparent;
-    color: var(--color-muted-foreground, oklch(0.74 0.02 85));
+    color: var(--ds-ink-2);
     outline: none;
     transition: color 150ms, border-color 150ms, background-color 150ms;
   }
   .board-token-verb:hover {
-    border-color: var(--color-grimorio-iron, oklch(0.35 0.01 305));
-    color: var(--color-foreground, oklch(0.93 0.014 85));
+    border-color: var(--ds-line);
+    color: var(--ds-ink);
   }
   .board-token-verb:focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--ds-map-gold);
     outline-offset: -2px;
   }
   /* LIGADO em dourado: é o `aria-pressed` da visibilidade, e dourado é o que esta
      casa usa para "o ativo" em toda parte. */
   .board-token-verb[aria-pressed='true'] {
-    border-color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
-    color: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    border-color: var(--ds-map-gold);
+    color: var(--ds-map-gold);
   }
   .board-token-verb-danger:hover {
-    border-color: var(--destructive);
-    color: var(--destructive);
+    border-color: var(--ds-map-danger);
+    color: var(--ds-map-danger);
   }
   .board-token-crease {
     width: 1px;
     height: 1.25rem;
     margin-inline: 0.125rem;
-    background: var(--color-grimorio-iron, oklch(0.35 0.01 305));
+    background: var(--ds-line);
   }
 
   /* Com FERRAMENTA ligada a peça e o losango saem do alcance do dedo (ALE-269).
@@ -1614,16 +1044,16 @@ html {
 
   .board-ruler-arrow {
     fill: none;
-    stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    stroke: var(--ds-map-gold);
     /* `non-scaling-stroke` no atributo do elemento: o fio é uma LINHA de leitura
        e não parte do mapa — ele tem de ter a mesma espessura em qualquer zoom,
        ao contrário da borda do gabarito, que é a forma. */
     stroke-width: 2;
   }
-  .board-ruler-tip { fill: var(--color-grimorio-gold, oklch(0.8 0.11 85)); }
+  .board-ruler-tip { fill: var(--ds-map-gold); }
   .board-ruler-target {
     fill: none;
-    stroke: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    stroke: var(--ds-map-gold);
     stroke-width: 2;
   }
 
@@ -1638,7 +1068,7 @@ html {
      que faz o número sobreviver por cima do fio dourado e de uma peça: sem o
      halo escuro, ouro sobre ouro some. */
   .board-ruler-label {
-    fill: var(--color-grimorio-gold, oklch(0.8 0.11 85));
+    fill: var(--ds-map-gold);
     stroke: oklch(0.15 0.01 300 / 0.9);
     stroke-width: 3;
     paint-order: stroke;
@@ -1830,28 +1260,6 @@ html {
  * continuar VENDO. */
 @layer utilities {
   @media (min-width: 64rem) {
-    .notes-float .notes-column {
-      position: absolute;
-      inset-block: 0;
-      /* `left: auto` NÃO é redundante: a classe base traz `inset-0` do
-       * Tailwind, que põe `left: 0` junto. Com os dois lados definidos e uma
-       * largura fixa, o navegador resolve pelo LEFT — e o painel foi parar do
-       * lado ERRADO do mapa, com o guarda passando porque ele só media a
-       * largura do tabuleiro. */
-      left: auto;
-      right: 0;
-      z-index: 30;
-    }
 
-    /* A divisa acompanha a borda ESQUERDA do painel, senão ela ficaria no fim do
-     * mapa e a largura passaria a ser ajustada por um alvo que não encosta no
-     * que ele ajusta. */
-    .notes-float .notes-divider {
-      position: absolute;
-      inset-block: 0;
-      right: var(--notas-largura, clamp(22rem, 40%, 44rem));
-      z-index: 31;
-      margin-inline: 0;
-    }
   }
 }

@@ -36,7 +36,6 @@ func (s Scene) handleAdmin(w http.ResponseWriter, r *http.Request) {
 		Shape:        ui.ShellDense,
 		VisibleTitle: "Administração",
 		Back:         "/",
-		System:       ui.SystemTempestade,
 		// Sem `Init`: esta tela não abre stream nenhum. Os sinais existem só
 		// para o diálogo e para os avisos — estado de INTERAÇÃO, não da
 		// aplicação.

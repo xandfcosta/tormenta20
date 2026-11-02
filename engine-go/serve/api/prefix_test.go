@@ -91,7 +91,7 @@ func TestTheProcessServesEverythingFromOneRouter(t *testing.T) {
 		{"/health", http.StatusOK, "o CI e um monitor externo perguntam na RAIZ"},
 		{"/api/health", http.StatusOK, "a mesma saúde sob o prefixo da API"},
 		{"/favicon.svg", http.StatusOK, "o layout pede o ícone por caminho absoluto"},
-		{"/fonts/cinzel-latin.woff2", http.StatusOK, "a folha pede a Cinzel por caminho absoluto"},
+		{"/fonts/atkinson-hyperlegible-next.woff2", http.StatusOK, "a folha pede a fonte por caminho absoluto"},
 		{"/static/app.css", http.StatusOK, "a folha e o bundle do Datastar são anônimos"},
 	} {
 		rec := httptest.NewRecorder()

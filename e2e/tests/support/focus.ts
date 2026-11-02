@@ -3,10 +3,9 @@ import { expect, type Page } from '@playwright/test'
 /**
  * O MEDIDOR DO ANEL DE FOCO da casa: uma receita só, em toda cena.
  *
- * A regra é global e mora no `index.css` — `2px solid var(--grimorio-gold)` a
- * `outline-offset: 1px`, sobre tudo que recebe foco dentro de uma cena. O offset
- * é 1px por medição: o anel é `outline` e não `box-shadow` porque o contêiner que
- * rola corta o realce, e offset grande sofre o mesmo corte.
+ * A regra é global e mora no `ds.css` — `2px solid var(--ds-focus)`, sobre tudo
+ * que recebe foco dentro de uma cena. O anel é `outline` e não `box-shadow` porque
+ * o contêiner que rola corta o realce.
  *
  * Ele mora AQUI e não dentro de um spec: instrumento que mora dentro de um
  * chamador tem exatamente um chamador, e cobertura é função de onde o guarda
@@ -51,7 +50,7 @@ import { expect, type Page } from '@playwright/test'
  * achadas.
  *
  * As TRÊS CHAVES ficam em português, contra a regra de idioma, porque é a
- * grafia dos outros medidores da casa (`contrast.ts`, `typography.ts`,
+ * grafia dos outros medidores da casa (`contrast.ts`,
  * `touch-targets.ts`): renomear só estas forkaria a convenção em duas grafias,
  * que é pior. Trocá-las é varredura, e essa é decisão própria.
  */

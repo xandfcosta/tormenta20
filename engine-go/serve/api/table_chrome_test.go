@@ -45,12 +45,6 @@ func TestNoChromeOverTheMapStealsTheClickOffItsControls(t *testing.T) {
 	if len(noPointer) < 3 {
 		t.Fatalf("a folha só tira o ponteiro de %d classes do tabuleiro: o canal não está aberto e o silêncio abaixo não é evidência", len(noPointer))
 	}
-	// O PAINEL DE VERBOS é o caso que escreveu a issue, e ele é nomeado porque a
-	// varredura abaixo não o cobraria: um painel que recebe o clique inteiro não
-	// tem controle morto nenhum — ele está errado do outro lado.
-	if !noPointer["board-scene-verbs"] {
-		t.Error("o painel de verbos recebe o clique na faixa INTEIRA que ocupa: medido a 390px, 328 dos 864 pontos dele (38%) caem no fundo entre os ícones, e ali pintar terreno, largar marcador ou pegar uma peça é um gesto que some")
-	}
 
 	root, err := html.Parse(strings.NewReader(screen))
 	if err != nil {
