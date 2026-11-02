@@ -351,7 +351,7 @@ var itemsPart01 = []Item{
 		Equip:    "wielded",
 		Hands:    1,
 		Weapon: &WeaponStats{
-			Damage:    "1d8",
+			Damage:    "1d6",
 			CritRange: 18,
 			CritMult:  2,
 			Type:      "perfuracao",
