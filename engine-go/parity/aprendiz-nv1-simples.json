@@ -6,7 +6,7 @@
     "name": "Aprendiz Nv1 Simples",
     "origin": "charlatao",
     "god": null,
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 1,
     "hpMax": 11,

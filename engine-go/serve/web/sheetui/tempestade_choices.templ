@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -204,30 +205,44 @@ templ classPickerDs(v View, class, choice, label string, selector pickerChoice) 
 	</div>
 }
 
-// devotionStepBody é o deus da ficha e o poder que ele concede. Trocar de deus não tira o poder: o
-// passo avisa, e tirar é da mesa.
+// devotionStepBody é o deus da ficha e os poderes que ele concede. Trocar de deus pede confirmação, com o
+// que muda na ficha, porque os poderes que o novo não concede saem.
 templ devotionStepBody(v View, d devotionChoice) {
-	<div class="ds-field">
+	<div class="ds-field" data-signals="{devotion_target: ''}">
 		<span class="ds-field-label">Deus</span>
 		<div class="ds-options">
-			@ds.Option(d.Gods.Chosen == "", templ.Attributes{"data-on:click": sheetPost(v, "/poderes/devocao/"+noDevotion)}) {
+			@ds.Option(d.Gods.Chosen == "", templ.Attributes{"data-on:click": devotionGesture(v, d, noDevotion)}) {
 				Nenhum
 			}
 			for _, god := range d.Gods.Options {
-				@ds.Option(god.Active, templ.Attributes{"data-on:click": sheetPost(v, "/poderes/devocao/"+god.Value)}) {
+				@ds.Option(god.Active, templ.Attributes{"data-on:click": devotionGesture(v, d, god.Value)}) {
 					{ god.Label }
 				}
 			}
 		</div>
+		for _, change := range d.Changes {
+			<div class="ds-devotion-change" role="group" aria-label="Confirmar a troca de deus" style="display: none" data-show={ "$devotion_target === '" + change.Target + "'" }>
+				<ul>
+					for _, line := range change.Lines {
+						<li>{ line }</li>
+					}
+				</ul>
+				<div class="ds-devotion-change-actions">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "$devotion_target = ''"}) {
+						Cancelar
+					}
+					@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": "$devotion_target = ''; " + sheetPost(v, "/poderes/devocao/"+change.Target)}) {
+						Confirmar a troca
+					}
+				</div>
+			</div>
+		}
 	</div>
-	if d.OldPower != "" {
-		<p class="ds-help" role="note">{ d.OldPower + " é de outro deus. Ele fica na ficha até a mesa decidir." }</p>
-	}
 	if d.NoGrant != "" {
 		<p class="ds-help">{ d.NoGrant }</p>
 	}
-	if len(d.Powers) > 0 || d.HasPower {
-		@ds.List("Poder concedido", "") {
+	if len(d.Powers) > 0 {
+		@ds.List("Poder concedido", fmt.Sprintf("%d de %d", d.Held, d.Limit)) {
 			for _, power := range d.Powers {
 				<div class="ds-row ds-level-line">
 					<span class="ds-level-text">
@@ -239,16 +254,34 @@ templ devotionStepBody(v View, d devotionChoice) {
 					}
 				</div>
 			}
-			if d.HasPower {
+		}
+	}
+	if len(d.OldPowers) > 0 {
+		@ds.List("De outro deus", "") {
+			for _, power := range d.OldPowers {
 				<div class="ds-row ds-level-line">
-					<span class="ds-row-title">Nenhum</span>
-					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/poderes/poder-concedido/"+noDevotion)}) {
+					<span class="ds-level-text">
+						<span class="ds-row-title">{ power }</span>
+						<span class="ds-row-meta ds-level-detail">{ power + " é de outro deus." }</span>
+					</span>
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Tirar " + power, "data-on:click": sheetPost(v, "/poderes/poder-concedido/"+url.PathEscape(power))}) {
 						Tirar
 					}
 				</div>
 			}
 		}
 	}
+}
+
+// devotionGesture é o toque num deus. Sem deus na ficha ele já escolhe; com deus, abre o aviso da troca.
+func devotionGesture(v View, d devotionChoice, target string) string {
+	if d.Gods.Chosen == "" {
+		return sheetPost(v, "/poderes/devocao/"+target)
+	}
+	if target == d.Gods.Chosen || (target == noDevotion && d.Gods.Chosen == "") {
+		return "$devotion_target = ''"
+	}
+	return "$devotion_target = '" + target + "'"
 }
 
 // countedChoiceDs é a escolha do poder concedido contada por atributo — as

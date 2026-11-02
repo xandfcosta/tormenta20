@@ -21,7 +21,7 @@ func storedDevotion(t *testing.T, f sceneFixture, id int64) (string, string) {
 	var god sql.NullString
 	var power string
 	if err := f.s.db.QueryRowContext(context.Background(),
-		`SELECT god, godPower FROM characters WHERE id = ?`, id).Scan(&god, &power); err != nil {
+		`SELECT god, godPowers FROM characters WHERE id = ?`, id).Scan(&god, &power); err != nil {
 		t.Fatal(err)
 	}
 	return god.String, power
@@ -93,7 +93,8 @@ func TestTheGodSettlesThePendingDevotion(t *testing.T) {
 		t.Fatal(err)
 	}
 	screen := powerScreen(t, f, id)
-	if step := choiceStepTitled(t, screen, "Devoção"); step.Tag != "feito" {
+	// O deus resolve o devoto, e o que falta agora são os dois poderes (p57).
+	if step := choiceStepTitled(t, screen, "Devoção"); step.Tag != "falta 2" {
 		t.Errorf("com o deus na ficha, o passo diz %q", step.Tag)
 	}
 	if strings.Contains(screen, "escolher devoto") {
@@ -106,8 +107,8 @@ func TestTheGodSettlesThePendingDevotion(t *testing.T) {
 	}
 }
 
-// Trocar de deus não apaga o poder concedido: o passo avisa, e tirar é da mesa.
-func TestChangingTheGodKeepsTheGrantedPowerAndWarns(t *testing.T) {
+// O poder concedido é do deus da ficha: sem deus não há o que escolher, e o de outro deus é recusado.
+func TestTheGrantedPowerBelongsToTheGodOfTheSheet(t *testing.T) {
 	f, id := guerreiro(t)
 	if refusal := powerCommand(t, f, id, grantedPath("Dom da Verdade"), ""); !strings.Contains(refusal, "deus") {
 		t.Errorf("sem deus não há poder concedido, e a recusa foi %q", refusal)
@@ -121,19 +122,10 @@ func TestChangingTheGodKeepsTheGrantedPowerAndWarns(t *testing.T) {
 	if refusal := powerCommand(t, f, id, grantedPath("Afinidade com a Tormenta"), ""); !strings.Contains(refusal, "Khalmyr") {
 		t.Errorf("o poder de outro deus devia ser recusado, e a recusa foi %q", refusal)
 	}
-	if refusal := powerCommand(t, f, id, devotionPath("wynna"), ""); refusal != "" {
-		t.Fatalf("trocar: %q", refusal)
-	}
-	if _, power := storedDevotion(t, f, id); power != "Dom da Verdade" {
-		t.Errorf("trocar de deus apagou o poder, e ficou %q", power)
-	}
-	if screen := powerScreen(t, f, id); !strings.Contains(screen, "Dom da Verdade é de outro deus") {
-		t.Error("o passo não avisa que o poder é do deus antigo")
-	}
-	if refusal := powerCommand(t, f, id, grantedPath("nenhum"), ""); refusal != "" {
+	if refusal := powerCommand(t, f, id, grantedPath("Dom da Verdade"), ""); refusal != "" {
 		t.Errorf("tirar o poder: %q", refusal)
 	}
-	if _, power := storedDevotion(t, f, id); power != "" {
+	if _, power := storedDevotion(t, f, id); power != "[]" {
 		t.Errorf("tirar deixou %q", power)
 	}
 }

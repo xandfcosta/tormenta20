@@ -251,38 +251,57 @@ func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 	})
 }
 
-// noDevotion é o valor do gesto de ficar sem deus, ou sem o poder concedido.
+// noDevotion é o valor do gesto de ficar sem deus.
 const noDevotion = "nenhum"
 
-// pickDevotion grava o deus da ficha, que é a fonte única da devoção (ALE-518). O poder concedido não
-// sai junto: ele é do deus antigo, o passo avisa, e tirar é da mesa.
+// pickDevotion grava o deus da ficha, que é a fonte única da devoção (ALE-518), e tira os poderes que ele não
+// concede, por decisão do dono. O passo avisa disso antes de chegar aqui.
 func pickDevotion(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	god := pathParam(r, "deus")
 	if god == noDevotion {
 		god = ""
 	}
-	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.God = &god })
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		dto.God = &god
+		kept := slices.DeleteFunc(sheet.UnmarshalStrings(dto.GodPowers), func(power string) bool {
+			return !sheet.GrantedPowerIsOfGod(god, power)
+		})
+		dto.GodPowers = sheet.MarshalStrings(&kept)
+	})
 }
 
-// pickGrantedPower grava o poder concedido, que tem de ser do deus da ficha.
+// pickGrantedPower marca ou desmarca um poder concedido. O marcado sai, seja de que deus for; o novo tem de
+// ser do deus da ficha, e cabe nas vagas dele (`sheet.GrantedPowerLimit`). Numa vaga só, ele troca o outro,
+// como numa escolha de um; com duas, tirar é um gesto, para ninguém perder um poder sem pedir.
 func pickGrantedPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	power := pathParam(r, "poder")
-	if power == noDevotion {
-		power = ""
-	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	if power != "" {
-		if dto.God == nil || *dto.God == "" {
-			return fmt.Errorf("sem deus, não há poder concedido para escolher: %s", power)
-		}
-		if !sheet.GrantedPowerIsOfGod(*dto.God, power) {
-			return fmt.Errorf("%s não é um poder que %s concede", power, book.DevotionName(*dto.God))
-		}
+	held := sheet.UnmarshalStrings(dto.GodPowers)
+	if slices.Contains(held, power) {
+		held = slices.DeleteFunc(held, func(name string) bool { return name == power })
+		return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.GodPowers = sheet.MarshalStrings(&held) })
 	}
-	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.GodPower = power })
+	if dto.God == nil || *dto.God == "" {
+		return fmt.Errorf("sem deus, não há poder concedido para escolher: %s", power)
+	}
+	god := *dto.God
+	if !sheet.GrantedPowerIsOfGod(god, power) {
+		return fmt.Errorf("%s não é um poder que %s concede", power, book.DevotionName(god))
+	}
+	limit := sheet.GrantedPowerLimit(dto.Classes, god)
+	ofTheGod := slices.DeleteFunc(slices.Clone(held), func(name string) bool { return !sheet.GrantedPowerIsOfGod(god, name) })
+	switch {
+	case len(ofTheGod) < limit:
+	case limit == 1:
+		held = slices.DeleteFunc(held, func(name string) bool { return sheet.GrantedPowerIsOfGod(god, name) })
+	default:
+		return fmt.Errorf("esta ficha recebe %d poderes concedidos de %s: tire um antes de escolher %s", limit, book.DevotionName(god), power)
+	}
+	held = append(held, power)
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.GodPowers = sheet.MarshalStrings(&held) })
 }
 
 // pickRaceAttributes grava a distribuição de atributo da raça.
@@ -370,8 +389,8 @@ func (s Scene) saveTheChoices(
 	if !samePointedText(dto.God, before.God) {
 		writes.God, moved = dto.God, true
 	}
-	if dto.GodPower != before.GodPower {
-		writes.GodPower, moved = &dto.GodPower, true
+	if dto.GodPowers != before.GodPowers {
+		writes.GodPowers, moved = &dto.GodPowers, true
 	}
 	if !moved {
 		return nil

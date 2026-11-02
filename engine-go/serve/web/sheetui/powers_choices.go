@@ -2,6 +2,7 @@ package sheetui
 
 import (
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ type choicesPanel struct {
 	Devotion devotionChoice
 }
 
-// devotionChoice é o deus da ficha e o poder que ele concede.
+// devotionChoice é o deus da ficha e os poderes que ele concede.
 type devotionChoice struct {
 	Name     string
 	Required bool
@@ -41,10 +42,19 @@ type devotionChoice struct {
 	// Powers são os poderes do deus escolhido, e NoGrant diz quem escolheu uma devoção sem poder.
 	Powers  []grantedPowerRow
 	NoGrant string
-	// OldPower é o poder guardado que não é do deus de agora.
-	OldPower string
-	// HasPower diz se há poder a tirar.
-	HasPower bool
+	// Limit é quantos poderes o deus dá a esta ficha, e Held quantos dele foram escolhidos.
+	Limit, Held int
+	// OldPowers são os guardados que não são do deus de agora: só uma ficha de antes de a troca tirá-los
+	// chega assim.
+	OldPowers []string
+	// Changes são os avisos de troca, um por deus que se pode escolher. Sem deus não há o que avisar.
+	Changes []devotionChangeNotice
+}
+
+// devotionChangeNotice é o que muda na ficha ao trocar para Target. O Target `nenhum` é ficar sem deus.
+type devotionChangeNotice struct {
+	Target string
+	Lines  []string
 }
 
 type grantedPowerRow struct {
@@ -353,25 +363,36 @@ func devotionChoiceOf(dto sheet.CharacterDTO) devotionChoice {
 	if dto.God != nil {
 		god = *dto.God
 	}
+	options := sheet.DevotionOptions(dto.Classes)
 	choice := devotionChoice{
 		Name: "nenhuma", Required: sheet.DevotionRequired(dto.Classes),
-		Gods: *markedPicker(sheet.DevotionOptions(dto.Classes), god), HasPower: dto.GodPower != "",
+		Gods: *markedPicker(options, god), Limit: sheet.GrantedPowerLimit(dto.Classes, god),
 	}
-	if god != "" {
-		choice.Name = book.DevotionName(god)
-		for _, power := range book.GrantedPowersOf(god) {
-			choice.Powers = append(choice.Powers, grantedPowerRow{
-				Name: power.Name, Detail: power.Description, Active: power.Name == dto.GodPower,
-			})
+	held := sheet.UnmarshalStrings(dto.GodPowers)
+	for _, power := range held {
+		if god != "" && sheet.GrantedPowerIsOfGod(god, power) {
+			choice.Held++
+		} else {
+			choice.OldPowers = append(choice.OldPowers, power)
 		}
-		if len(choice.Powers) == 0 {
-			choice.NoGrant = book.DevotionWritten(god) + " não recebe poder concedido."
+	}
+	if god == "" {
+		return choice
+	}
+	choice.Name = book.DevotionName(god)
+	for _, power := range book.GrantedPowersOf(god) {
+		choice.Powers = append(choice.Powers, grantedPowerRow{
+			Name: power.Name, Detail: power.Description, Active: slices.Contains(held, power.Name),
+		})
+	}
+	if len(choice.Powers) == 0 {
+		choice.NoGrant = book.DevotionWritten(god) + " não recebe poder concedido."
+	}
+	choice.Changes = append(choice.Changes, devotionChangeNotice{Target: noDevotion, Lines: sheet.DevotionChange(dto, "")})
+	for _, option := range options {
+		if option.Value != god {
+			choice.Changes = append(choice.Changes, devotionChangeNotice{Target: option.Value, Lines: sheet.DevotionChange(dto, option.Value)})
 		}
-		if dto.GodPower != "" && !sheet.GrantedPowerIsOfGod(god, dto.GodPower) {
-			choice.OldPower = dto.GodPower
-		}
-	} else if dto.GodPower != "" {
-		choice.OldPower = dto.GodPower
 	}
 	return choice
 }

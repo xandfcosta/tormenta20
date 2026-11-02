@@ -116,7 +116,7 @@ func everyCollectorCharacter() Character {
 		// Escamas Dracônicas porque ela TEM modificador: a fonte da devoção só
 		// nasce quando o poder concede alguma coisa, então um poder sem
 		// modificador deixaria o caso medindo nove fontes de novo, em silêncio.
-		GodPower: "Escamas Dracônicas",
+		GodPowers: `["Escamas Dracônicas"]`,
 		// `vitalidade` é poder GERAL e `pele-corrompida` é da TORMENTA: os dois
 		// entram pela mesma coluna e saem por coletores diferentes.
 		ClassPowers:          `["class.barbaro.golpe-poderoso","vitalidade","pele-corrompida"]`,

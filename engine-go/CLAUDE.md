@@ -641,7 +641,7 @@ Mente Criminosa não são).
 
 ### A devoção é fonte da coleta, e não só de PV e PM
 
-O poder concedido do devoto é FONTE da coleta (`godPowerActiveItem`) e chega a
+O poder concedido do devoto é FONTE da coleta (`godPowerActiveItems`) e chega a
 qualquer alvo; o `vitalGrantMods` continua somando PV e PM, sem duplicar.
 
 ### Os acumuladores moram numa entidade SINGLETON

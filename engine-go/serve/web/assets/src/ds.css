@@ -2184,6 +2184,27 @@
   .ds-forge-add:hover {
     background: var(--ds-sunk);
   }
+  .ds-devotion-change {
+    display: grid;
+    gap: 0.625rem;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--ds-line-strong);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+  }
+  .ds-devotion-change > ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: disc;
+    display: grid;
+    gap: 0.25rem;
+  }
+  .ds-devotion-change-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
   .ds-forge-pick-empty {
     color: var(--ds-action);
   }

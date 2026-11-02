@@ -6,7 +6,7 @@
     "name": "Lenda Nv20 Maximo",
     "origin": "herdeiro",
     "god": "Valkaria",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 20,
     "hpMax": 277,

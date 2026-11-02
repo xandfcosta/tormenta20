@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -182,6 +183,12 @@ func classPendings(dto sheet.CharacterDTO) []pendencia {
 	}
 	if sheet.DevotionRequired(dto.Classes) && (dto.God == nil || *dto.God == "") {
 		outside = append(outside, pendencia{Source: "classe", Label: "Devoção: escolher o deus"})
+	}
+	switch missing := sheet.GrantedPowersMissing(dto); {
+	case missing == 1:
+		outside = append(outside, pendencia{Source: "classe", Label: "Devoção: escolher 1 poder concedido"})
+	case missing > 1:
+		outside = append(outside, pendencia{Source: "classe", Label: fmt.Sprintf("Devoção: escolher %d poderes concedidos", missing)})
 	}
 	for _, counted := range sheet.CountedChoices(dto) {
 		// O que falta é o que AINDA cabe: com menos treinadas que o limite, a

@@ -73,3 +73,81 @@ func devotionIsValid(dto CharacterDTO) error {
 func GrantedPowerIsOfGod(god, power string) bool {
 	return slices.ContainsFunc(book.GrantedPowersOf(god), func(p book.GrantedPower) bool { return p.Name == power })
 }
+
+// GrantedPowerLimit é quantos poderes concedidos a devoção dá: um (p96), dois para quem tem classe que
+// serve a um deus (p57, p61, p82), e nenhum na devoção sem lista, como o Panteão.
+func GrantedPowerLimit(classes []ClassDTO, god string) int {
+	switch {
+	case len(book.GrantedPowersOf(god)) == 0:
+		return 0
+	case DevotionRequired(classes):
+		return 2
+	}
+	return 1
+}
+
+// GrantedPowersMissing é quantos poderes do deus de agora faltam escolher. O de outro deus, numa ficha de
+// antes de a troca tirá-lo, não ocupa vaga.
+func GrantedPowersMissing(dto CharacterDTO) int {
+	if dto.God == nil {
+		return 0
+	}
+	held := 0
+	for _, power := range UnmarshalStrings(dto.GodPowers) {
+		if GrantedPowerIsOfGod(*dto.God, power) {
+			held++
+		}
+	}
+	return max(GrantedPowerLimit(dto.Classes, *dto.God)-held, 0)
+}
+
+// DevotionChange diz o que muda na ficha ao trocar de deus, para o passo pedir a confirmação. O alvo vazio
+// é ficar sem deus.
+//
+//	DevotionChange(dto, "azgher") // ["Deus: Khalmyr → Azgher.", "Falta escolher 2 poderes concedidos de Azgher."]
+func DevotionChange(dto CharacterDTO, target string) []string {
+	current := ""
+	if dto.God != nil {
+		current = book.DevotionName(*dto.God)
+	}
+	var kept, leaving []string
+	for _, power := range UnmarshalStrings(dto.GodPowers) {
+		if target != "" && GrantedPowerIsOfGod(target, power) {
+			kept = append(kept, power)
+		} else {
+			leaving = append(leaving, power)
+		}
+	}
+	lines := []string{"Deus: " + current + " → " + book.DevotionName(target) + "."}
+	if target == "" {
+		lines[0] = current + " deixa de ser o deus da ficha."
+	}
+	if len(leaving) == 1 {
+		lines = append(lines, leaving[0]+" sai da ficha.")
+	} else if len(leaving) > 1 {
+		lines = append(lines, joinedNames(leaving)+" saem da ficha.")
+	}
+	for _, power := range kept {
+		lines = append(lines, power+" continua valendo: "+book.DevotionName(target)+" também o concede.")
+	}
+	limit := GrantedPowerLimit(dto.Classes, target)
+	switch missing := limit - len(kept); {
+	case target == "":
+		if DevotionRequired(dto.Classes) {
+			lines = append(lines, "A devoção fica pendente.")
+		}
+	case limit == 0:
+		lines = append(lines, book.DevotionName(target)+" não recebe poder concedido.")
+	case missing == 1:
+		lines = append(lines, "Falta escolher 1 poder concedido de "+book.DevotionName(target)+".")
+	case missing > 1:
+		lines = append(lines, fmt.Sprintf("Falta escolher %d poderes concedidos de %s.", missing, book.DevotionName(target)))
+	}
+	return lines
+}
+
+// joinedNames escreve a lista como a frase pede: "A, B e C".
+func joinedNames(names []string) string {
+	last := len(names) - 1
+	return strings.Join(names[:last], ", ") + " e " + names[last]
+}

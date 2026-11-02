@@ -6,7 +6,7 @@
     "name": "Batedor Nv2 Simples",
     "origin": "batedor",
     "god": null,
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 2,
     "hpMax": 19,

@@ -2,6 +2,7 @@ package sheetui
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -101,6 +102,9 @@ func devotionStep(v View) choiceStep {
 	step := choiceStep{ID: "devotion", Title: "Devoção", Meta: devotion.Name, Kind: "devotion", Done: true}
 	if devotion.Required && devotion.Gods.Chosen == "" {
 		step.Meta, step.Count, step.Done = "escolha um", "falta 1", false
+	}
+	if missing := devotion.Limit - devotion.Held; missing > 0 {
+		step.Count, step.Done = fmt.Sprintf("falta %d", missing), false
 	}
 	return step
 }

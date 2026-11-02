@@ -45,7 +45,7 @@ func TestTheGodPowerReachesTheSheet(t *testing.T) {
 
 	comPoder := func(poder string) ItemEffects {
 		return ComputeItemEffects(world.ActiveItemsFor(
-			Character{Level: 1, GodPower: poder, Expertises: pericias}))
+			Character{Level: 1, GodPowers: `["` + poder + `"]`, Expertises: pericias}))
 	}
 	subiu := func(efeitos ItemEffects, alvo ModifierTarget) int {
 		return StatFor(efeitos, alvo).Total - StatFor(semDevocao, alvo).Total
@@ -82,5 +82,23 @@ func TestTheGodPowerReachesTheSheet(t *testing.T) {
 		t.Errorf("Escamas Dracônicas subiu Enganação em %d, e ela não dá perícia "+
 			"nenhuma além de Fortitude — o motor está somando poder que o "+
 			"personagem não tem", got)
+	}
+}
+
+// Clérigo, druida e paladino recebem dois (p57, p61, p82), e os dois chegam à ficha: um à Defesa e o outro
+// ao PM não se confundem.
+func TestBothGrantedPowersReachTheSheet(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	cleric := []CharacterClass{{ClassName: "Clérigo", Level: 1}}
+	bare := Character{Level: 1, Classes: cleric}
+	both := Character{Level: 1, Classes: cleric, GodPowers: `["Escamas Dracônicas","Bênção do Mana"]`}
+	defense := ModifierTarget{K: "defense"}
+	before := StatFor(ComputeItemEffects(world.ActiveItemsFor(bare)), defense).Total
+	after := StatFor(ComputeItemEffects(world.ActiveItemsFor(both)), defense).Total
+	if after-before != 2 {
+		t.Errorf("as Escamas Dracônicas deviam somar 2 na Defesa, e somaram %d", after-before)
+	}
+	if world.VitalsForCharacter(both).PmMax <= world.VitalsForCharacter(bare).PmMax {
+		t.Error("a Bênção do Mana, o segundo poder, não mexeu no PM")
 	}
 }

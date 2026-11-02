@@ -8,7 +8,7 @@ package engine
 type Character struct {
 	ID           int    `json:"id"`
 	Origin       string `json:"origin"`
-	GodPower     string `json:"godPower"`
+	GodPowers    string `json:"godPowers"`
 	Level        int    `json:"level"`
 	Strength     int    `json:"strength"`
 	Dexterity    int    `json:"dexterity"`

@@ -20,13 +20,13 @@ func cloneCharacterTx(ctx context.Context, tx *sql.Tx, sourceID, campaignID int6
 
 	res, err := tx.ExecContext(ctx, `
 INSERT INTO characters (
-  ownerId, name, origin, god, godPower, tibar, level,
+  ownerId, name, origin, god, godPowers, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
   secondaryRaceChoices, originChoices, classChoices,
   activeConditions, sourceCharacterId, campaignId, createdAt, updatedAt)
 SELECT
-  ownerId, name, origin, god, godPower, tibar, level,
+  ownerId, name, origin, god, godPowers, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma,
   size, displacement, proficiencies, raceAbilityChoices, raceAttributeChoices,
   secondaryRaceChoices, originChoices, classChoices,

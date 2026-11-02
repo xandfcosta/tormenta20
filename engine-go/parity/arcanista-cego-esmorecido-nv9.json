@@ -6,7 +6,7 @@
     "name": "Arcanista Cego e Esmorecido Nv9",
     "origin": "charlatao",
     "god": "Wynna",
-    "godPower": "Bênção do Mana",
+    "godPowers": "[\"Bênção do Mana\"]",
     "tibar": 0,
     "level": 9,
     "hpMax": 42,

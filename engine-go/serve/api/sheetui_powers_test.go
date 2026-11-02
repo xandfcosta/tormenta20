@@ -248,7 +248,7 @@ func rowTitles(rows []actionRowOnScreen) []string {
 func devoteOf(t *testing.T, f sceneFixture, id int64, god, power string) {
 	t.Helper()
 	if _, err := f.s.db.ExecContext(context.Background(),
-		"UPDATE characters SET god = ?, godPower = ? WHERE id = ?", god, power, id,
+		"UPDATE characters SET god = ?, godPowers = json_array(?) WHERE id = ?", god, power, id,
 	); err != nil {
 		t.Fatalf("semear a devoção: %v", err)
 	}

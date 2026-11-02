@@ -6,7 +6,7 @@
     "name": "Kharvos, O Guardião Rubro",
     "origin": "refugiado",
     "god": "Tauron",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 3000,
     "level": 7,
     "hpMax": 67,

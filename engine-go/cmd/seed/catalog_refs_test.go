@@ -26,7 +26,7 @@ func TestTheSeedRefusesEveryUnknownCatalogReference(t *testing.T) {
 		{"origin", "Acóito", "origin"},
 		{"className", "Arcanistaa", "classes"},
 		{"god", "Alihanna", "god"},
-		{"godPower", "Benção do Mana", "godPower"},
+		{"godPowers", "Benção do Mana", "godPowers"},
 		{"spell", "bola-de-fog", "magia"},
 		{"item", "machado-de-batalha", "item"},
 		{"powerChoice", "espada-curtaa", "opções de Especialização em Arma"},
@@ -140,7 +140,17 @@ func sujaOCriar(t *testing.T, create map[string]json.RawMessage, field, wrong st
 		return specialistPickSwapped(t, create, wrong)
 	case "raceAbilityPick":
 		return raceAbilityPickSwapped(t, create, wrong)
-	default: // origin, god, godPower — todos strings simples
+	case "godPowers":
+		if _, found := create[field]; !found {
+			return false
+		}
+		raw, err := json.Marshal([]string{wrong})
+		if err != nil {
+			t.Fatalf("marshal de %q: %v", wrong, err)
+		}
+		create[field] = raw
+		return true
+	default: // origin, god — strings simples
 		if _, found := create[field]; !found {
 			return false
 		}

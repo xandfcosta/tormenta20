@@ -6,7 +6,7 @@
     "name": "Multiclasse Guer+Arc Nv8",
     "origin": "heroi-campones",
     "god": "Valkaria",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 8,
     "hpMax": 75,

@@ -362,6 +362,7 @@
               }
             ],
             "god": "khalmyr",
+            "godPowers": ["Coragem Total", "Dom da Verdade"],
             "strength": 3,
             "dexterity": 1,
             "constitution": 3,
@@ -809,7 +810,7 @@
               }
             ],
             "god": "wynna",
-            "godPower": "Bênção do Mana",
+            "godPowers": ["Bênção do Mana"],
             "strength": 0,
             "dexterity": 3,
             "constitution": 2,
@@ -885,7 +886,7 @@
           "hpFraction": 0.6,
           "create": {
             "name": "Paladino Sagrado Nv10",
-            "godPower": "Dom da Verdade",
+            "godPowers": ["Dom da Verdade"],
             "races": [
               "suraggel"
             ],
