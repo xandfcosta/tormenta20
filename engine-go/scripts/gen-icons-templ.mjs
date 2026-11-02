@@ -101,6 +101,7 @@ const QUERIDOS = [
   'Moon',
   'Theater',
   'Library',
+  'Info',
   'Minus',
   'Pencil',
   'Eye',

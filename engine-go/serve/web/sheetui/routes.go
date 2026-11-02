@@ -32,6 +32,7 @@ func Routes(r chi.Router, s Scene) {
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.sheetCommand(mudaONivel))
 	r.Post("/personagens/{id}/classes/{classe}/entra", s.sheetCommand(enterClass))
+	r.Post("/personagens/{id}/atributos/{atributo}/{valor}", s.sheetCommand(setAttributeValue))
 	// DOIS caminhos e não um com "padrao" no lugar da categoria: aí o dia em que
 	// uma proficiência se chamasse `padrao` calaria o restaurar, e o `alterna`
 	// no meio é o que impede a colisão de existir.
@@ -275,6 +276,20 @@ func enterClass(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		return fmt.Errorf("classe %q não é um nome válido", chi.URLParam(r, "classe"))
 	}
 	return s.plays.EnterClass(r.Context(), row, class)
+}
+
+// setAttributeValue grava o valor livre que o diálogo do atributo escreveu. O `−` e o `+` mandam o valor
+// já calculado, então o gesto é um só, e a recusa de um POST escrito à mão é a mesma do campo.
+func setAttributeValue(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	written, err := url.PathUnescape(chi.URLParam(r, "valor"))
+	if err != nil {
+		return fmt.Errorf("%q não é um valor válido", chi.URLParam(r, "valor"))
+	}
+	value, err := sheet.AttributeValueRead(written)
+	if err != nil {
+		return err
+	}
+	return s.plays.SetAttribute(r.Context(), row, chi.URLParam(r, "atributo"), value)
 }
 
 // lowerLastLevel é o `−`: só o último nível sai, e o que foi escolhido nele sai junto.

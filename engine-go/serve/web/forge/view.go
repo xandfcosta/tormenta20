@@ -1,6 +1,7 @@
 package forge
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"sort"
@@ -11,6 +12,7 @@ import (
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 	"t20engine/infra/wire"
+	"t20engine/serve/web/bookui"
 )
 
 // A FOLHA EM BRANCO DA FORJA — o que a cena desenha.
@@ -34,6 +36,11 @@ type forgeView struct {
 	// LevelCapped é o 20º nível: os `+` se apagam e não há outra classe a oferecer (p35).
 	LevelCapped bool
 	Origins     []originOption
+	// AttributeRows são as seis linhas, e AttributeRefusals o que nos campos não é valor.
+	AttributeRows     []attributeRow
+	AttributeRefusals []string
+	// BookAddress é para onde o selo da p17 aponta.
+	BookAddress bookui.BookAddress
 	Gods        []godOption
 	GodChosen   string
 	// GodGrantsPower é falso para o Panteão e o Paladino do Bem, que não recebem poder concedido (p57).
@@ -137,9 +144,14 @@ type itemOption struct {
 // Ela é chamada nas três situações e devolve a mesma coisa nas três: a folha
 // vazia do primeiro GET, a folha redesenhada quando uma escolha muda, e a folha
 // recusada com os erros por campo.
-func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
+func (s Scene) blankForgeSheet(ctx context.Context, answers forgeAnswers, errs wire.FieldErrorMap) (forgeView, error) {
 	races, classes, _ := book.CharacterCatalogs()
-	v := forgeView{Name: answers.Name, Errors: errs}
+	v := forgeView{Name: answers.Name, Errors: errs, BookAddress: s.deps.BookAddress()}
+	rows, refusals, err := s.attributeRowsOf(ctx, answers)
+	if err != nil {
+		return forgeView{}, err
+	}
+	v.AttributeRows, v.AttributeRefusals = rows, refusals
 	for _, race := range races {
 		v.Races = append(v.Races, raceCardOf(race, answers.Race))
 	}
@@ -161,7 +173,7 @@ func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
 		v.Gear = startingGearFor(answers, *class)
 	}
 	v.OrphanRefusals = orphanRefusals(errs, v.Gear)
-	return v
+	return v, nil
 }
 
 // classLinesOf escreve o que cada classe dá: a primeira, o que ela dá por inteiro; as outras, o que somam
@@ -209,7 +221,7 @@ func godOptions(answers forgeAnswers) ([]godOption, string) {
 
 // orphanRefusals junta as recusas dos campos que esta folha não desenha.
 func orphanRefusals(errs wire.FieldErrorMap, gear *startingGear) []string {
-	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true, "god": true}
+	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true, "god": true, "attributes": true}
 	if gear != nil {
 		onScreen["weaponSimple"] = true
 		onScreen["weaponMartial"] = len(gear.MartialWeapons) > 0

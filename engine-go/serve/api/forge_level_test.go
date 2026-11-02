@@ -25,9 +25,9 @@ func forgedHero(t *testing.T, f sceneFixture, change func(url.Values)) int64 {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("a forja recusou (%d):\n%s", rec.Code, rec.Body.String())
 	}
-	found := regexp.MustCompile(`/personagens/(\d+)/atributos`).FindStringSubmatch(rec.Header().Get("Location"))
+	found := regexp.MustCompile(`/personagens/(\d+)$`).FindStringSubmatch(rec.Header().Get("Location"))
 	if found == nil {
-		t.Fatalf("a forja não levou aos atributos: %q", rec.Header().Get("Location"))
+		t.Fatalf("a forja não levou à ficha: %q", rec.Header().Get("Location"))
 	}
 	id, _ := strconv.ParseInt(found[1], 10, 64)
 	return id

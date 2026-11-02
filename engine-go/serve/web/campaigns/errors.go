@@ -18,9 +18,8 @@ var errNoSuchCampaign = errors.New("campanha não existe")
 // trimOrNull traduz texto vazio em NULL, e é uma CÓPIA declarada de sete linhas
 // que o `api` também tem.
 //
-// Pô-la na porta seria mais acoplamento que duplicação — é a mesma decisão do
-// `stepFromURL` da forja, e pelo mesmo motivo: a alternativa é um método na
-// interface para converter uma string.
+// Pô-la na porta seria mais acoplamento que duplicação: a alternativa é um método
+// na interface para converter uma string.
 //
 // Ela mora aqui e não no `campaign` porque o pacote de REGRA não pode carregar
 // `database/sql`: a regra devolve texto, quem grava traduz. Esta cena grava.

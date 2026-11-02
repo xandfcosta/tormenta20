@@ -10,7 +10,9 @@ import (
 	"strings"
 
 	"github.com/starfederation/datastar-go/datastar"
+	"t20engine/domain/book"
 	"t20engine/domain/sheet"
+	"t20engine/infra/wire"
 	"t20engine/serve/web/ui"
 )
 
@@ -23,7 +25,7 @@ import (
 
 // handleForge desenha a folha em branco.
 func (s Scene) handleForge(w http.ResponseWriter, r *http.Request) {
-	s.writeForge(w, r, http.StatusOK, blankForgeSheet(forgeAnswers{}, nil))
+	s.writeForge(w, r, http.StatusOK, forgeAnswers{}, nil)
 }
 
 // handleForgeDraft redesenha a folha com o que já foi respondido.
@@ -39,7 +41,30 @@ func (s Scene) handleForgeDraft(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	redrawForge(w, r, answers)
+	s.redrawForge(w, r, answers)
+}
+
+// handleForgeAttributeStep é o `−` e o `+` de um atributo, sobre o que está escrito no campo. Campo com
+// texto que não é número conta como zero: a recusa dele já está na tela.
+func (s Scene) handleForgeAttributeStep(w http.ResponseWriter, r *http.Request) {
+	answers, err := answersFromForm(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	key := chi.URLParam(r, "atributo")
+	if !attributeKnown(key) {
+		http.Error(w, fmt.Sprintf("atributo %q não existe: são os seis do livro", key), http.StatusBadRequest)
+		return
+	}
+	step, err := strconv.Atoi(chi.URLParam(r, "passo"))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("o passo é um número, e veio %q", chi.URLParam(r, "passo")), http.StatusBadRequest)
+		return
+	}
+	values, _ := answers.attributeValues()
+	answers.AttributesWritten[key] = strconv.Itoa(values[key] + step)
+	s.redrawForge(w, r, answers)
 }
 
 // handleForgeLevelStep é o `−` e o `+` de uma classe. Só redesenha: o nível mora no formulário, e o
@@ -61,11 +86,16 @@ func (s Scene) handleForgeLevelStep(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answers.Classes = steppedClasses(answers.Classes, class, step)
-	redrawForge(w, r, answers)
+	s.redrawForge(w, r, answers)
 }
 
-func redrawForge(w http.ResponseWriter, r *http.Request, answers forgeAnswers) {
-	fragment, err := ui.RenderFragment(r.Context(), forgeBody(blankForgeSheet(answers, nil)))
+func (s Scene) redrawForge(w http.ResponseWriter, r *http.Request, answers forgeAnswers) {
+	v, err := s.blankForgeSheet(r.Context(), answers, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fragment, err := ui.RenderFragment(r.Context(), forgeBody(v))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -73,7 +103,7 @@ func redrawForge(w http.ResponseWriter, r *http.Request, answers forgeAnswers) {
 	_ = datastar.NewSSE(w, r).PatchElements(fragment)
 }
 
-// handleForgePost cria o herói e leva para a distribuição de atributos.
+// handleForgePost cria o herói e leva para a ficha dele.
 //
 // A recusa REDESENHA a folha com o que foi respondido e o erro no campo, em 422
 // — a mesma decisão da folha em branco da campanha. Aqui o 422 é
@@ -83,11 +113,11 @@ func redrawForge(w http.ResponseWriter, r *http.Request, answers forgeAnswers) {
 func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
 	answers, err := answersFromForm(r)
 	if err != nil {
-		s.writeForge(w, r, http.StatusBadRequest, blankForgeSheet(forgeAnswers{}, nil))
+		s.writeForge(w, r, http.StatusBadRequest, forgeAnswers{}, nil)
 		return
 	}
 	if errs := forgeRefusals(answers); len(errs) > 0 {
-		s.writeForge(w, r, http.StatusUnprocessableEntity, blankForgeSheet(answers, errs))
+		s.writeForge(w, r, http.StatusUnprocessableEntity, answers, errs)
 		return
 	}
 	id, err := s.birthHero(r, s.deps.CurrentUserID(r), answers)
@@ -96,9 +126,9 @@ func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
-	// navegador siga com GET — sem ele, recarregar a cena dos atributos forjaria
-	// um segundo herói igual.
-	http.Redirect(w, r, "/personagens/"+strconv.FormatInt(id, 10)+"/atributos", http.StatusSeeOther)
+	// navegador siga com GET — sem ele, recarregar a ficha forjaria um segundo
+	// herói igual.
+	http.Redirect(w, r, "/personagens/"+strconv.FormatInt(id, 10), http.StatusSeeOther)
 }
 
 // answersFromForm lê as respostas do formulário.
@@ -111,17 +141,22 @@ func answersFromForm(r *http.Request) (forgeAnswers, error) {
 		return forgeAnswers{}, err
 	}
 	classes, broken := classLinesRead(r.PostForm["classes"])
+	written := map[string]string{}
+	for _, attribute := range book.AttributeOrder {
+		written[attribute.Key] = r.PostFormValue(attribute.Key)
+	}
 	return forgeAnswers{
-		Name:             r.PostFormValue("name"),
-		Race:             r.PostFormValue("race"),
-		Classes:          withNewClass(classes, r.PostFormValue("class")),
-		BrokenClassLines: broken,
-		Origin:           r.PostFormValue("origin"),
-		God:              r.PostFormValue("god"),
-		SimpleWeapon:     r.PostFormValue("weaponSimple"),
-		MartialWeapon:    r.PostFormValue("weaponMartial"),
-		Armor:            r.PostFormValue("armor"),
-		Shield:           r.PostFormValue("shield") != "",
+		AttributesWritten: written,
+		Name:              r.PostFormValue("name"),
+		Race:              r.PostFormValue("race"),
+		Classes:           withNewClass(classes, r.PostFormValue("class")),
+		BrokenClassLines:  broken,
+		Origin:            r.PostFormValue("origin"),
+		God:               r.PostFormValue("god"),
+		SimpleWeapon:      r.PostFormValue("weaponSimple"),
+		MartialWeapon:     r.PostFormValue("weaponMartial"),
+		Armor:             r.PostFormValue("armor"),
+		Shield:            r.PostFormValue("shield") != "",
 	}, nil
 }
 
@@ -167,7 +202,12 @@ func steppedClasses(classes []sheet.ClassEntry, class string, step int64) []shee
 	return moved
 }
 
-func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v forgeView) {
+func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, answers forgeAnswers, errs wire.FieldErrorMap) {
+	v, err := s.blankForgeSheet(r.Context(), answers, errs)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	s.deps.WritePage(w, r, status, ui.Page{
 		Title: "Forja · Tormenta 20",
 		// `ui.ShellDense`: o cabeçalho compacto com a seta de voltar, como a
@@ -182,15 +222,11 @@ func (s Scene) writeForge(w http.ResponseWriter, r *http.Request, status int, v 
 // Routes monta a forja no roteador de quem a hospeda.
 //
 // Os endereços moram AQUI e não em quem monta: a cena é a dona do que
-// ela atende, e quem a hospeda escolhe só onde encaixá-la. As três primeiras
-// rotas são a folha em branco; as duas últimas vivem sob o id porque o herói JÁ
-// existe — o nascimento é o `POST /personagens/nova`, e daqui em diante tudo é
-// comando sobre uma linha do banco.
+// ela atende, e quem a hospeda escolhe só onde encaixá-la.
 func Routes(r chi.Router, s Scene) {
 	r.Get("/personagens/nova", s.handleForge)
 	r.Post("/personagens/nova", s.handleForgePost)
 	r.Post("/personagens/nova/esboco", s.handleForgeDraft)
 	r.Post("/personagens/nova/esboco/nivel/{classe}/{passo}", s.handleForgeLevelStep)
-	r.Get("/personagens/{id}/atributos", s.handleAttributes)
-	r.Post("/personagens/{id}/atributos/{atributo}/{passo}", s.handleAttributeStep)
+	r.Post("/personagens/nova/esboco/atributo/{atributo}/{passo}", s.handleForgeAttributeStep)
 }

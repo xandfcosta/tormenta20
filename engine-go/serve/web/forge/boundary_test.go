@@ -41,6 +41,7 @@ var permitidos = map[string]bool{
 	"t20engine/domain/engine":    true, // as regras do livro
 	"t20engine/serve/web/ui":     true, // a casca e os ícones
 	"t20engine/serve/web/ds":     true, // as peças do Tempestade
+	"t20engine/serve/web/bookui": true, // o selo que aponta a página do livro
 	"t20engine/domain/search":    true, // a dobra de acento da busca das folhas
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
 	"t20engine/infra/db/dbvalue": true,

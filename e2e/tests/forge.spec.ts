@@ -7,7 +7,7 @@ import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 /**
  * A FORJA — a folha em branco e os atributos.
  *
- * Dois casos, e os dois se justificam com mecanismo que só um navegador tem.
+ * Os casos se justificam com mecanismo que só um navegador tem.
  *
  * O primeiro é o REDESENHO PELO FORMULÁRIO. O `@post` do Datastar manda o
  * `<form>` inteiro (`contentType: 'form'`, achado pelo `selector`) e o servidor
@@ -129,7 +129,33 @@ test('a classe que entra não traz outra junto no gesto seguinte', async ({ page
   await expect(page.getByText('Nível 3', { exact: true })).toBeVisible()
 })
 
-test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
+// O mecanismo só existe no navegador: cada campo redesenha a folha ao sair dele, e o remendo não pode comer
+// o que já se digitou no campo seguinte.
+test('os atributos escritos em sequência sobrevivem ao redesenho', async ({ page }) => {
+  await page.goto('/personagens/nova')
+  await page.locator('#forge-attr-strength').click()
+  await page.keyboard.press('Control+A')
+  await page.keyboard.type('4')
+  await page.locator('#forge-attr-dexterity').click()
+  await page.keyboard.press('Control+A')
+  await page.keyboard.type('1')
+  await page.locator('#forge-attr-constitution').click()
+  await page.keyboard.press('Control+A')
+  await page.keyboard.type('-2')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/personagens\/nova$/)
+  await expect(page.locator('#forge-attr-strength')).toHaveValue('4')
+  await expect(page.locator('#forge-attr-dexterity')).toHaveValue('1')
+  await expect(page.locator('#forge-attr-constitution')).toHaveValue('-2')
+
+  await page.getByRole('button', { name: 'Como definir os atributos' }).click()
+  await expect(page.locator('dialog[open]').getByText('Com rolagens')).toBeVisible()
+  await expect(page.locator('dialog[open]').getByText('Com pontos')).toBeVisible()
+  await expectDsFloors(page, 'na explicação dos atributos')
+})
+
+// O diálogo mora na camada de cima: o remendo tem de deixá-lo aberto, e a recusa tem de sair dentro dele.
+test('o diálogo do atributo grava e continua aberto', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/personagens/nova')
   await page.getByLabel('Nome').fill('Herói do Guarda da Forja')
@@ -139,31 +165,28 @@ test('a distribuição de atributos anda pelo servidor', async ({ page }) => {
   await escolhe(page, 'weaponSimple', 'Adaga')
   await escolhe(page, 'weaponMartial', 'Espada longa')
   await escolhe(page, 'armor', 'Couro batido')
-  await page.getByRole('button', { name: 'Forjar' }).click()
-
-  await page.waitForURL(/\/atributos$/)
-  await expect(page.getByText('10 de 10 pontos')).toBeVisible()
-
   await page.getByRole('button', { name: 'Aumentar Força' }).click()
-  await expect(page.getByText('9 de 10 pontos')).toBeVisible()
+  await expect(page.locator('#forge-attr-strength')).toHaveValue('1')
+  await page.getByRole('button', { name: 'Forjar' }).click()
+  await page.waitForURL(/\/personagens\/\d+$/)
+
+  const sheetAddress = page.url()
+  await page.goto(sheetAddress + '?tab=combat')
+  await page.getByRole('button', { name: /^Força \+1: ver a soma/ }).first().click()
+  const dialog = page.locator('dialog[open]')
+  const field = dialog.locator('.ds-value-input')
+  await expect(field).toHaveValue('1')
+  await field.fill('3')
+  await page.keyboard.press('Enter')
+  await expect(dialog.getByText('+3 livre')).toBeVisible()
+  await expect(dialog).toBeVisible()
+
+  await field.fill('150')
+  await page.keyboard.press('Enter')
+  await expect(dialog.getByRole('alert')).toContainText('150')
 
   const contrast = await medeOContraste(page)
   expect(contrast.medidos, 'o medidor não achou texto: a cena não carregou').toBeGreaterThan(20)
-  expect(contrast.falhas, 'texto abaixo do AA nos atributos da forja').toEqual([])
-  await expectDsFloors(page, 'nos atributos da forja')
+  expect(contrast.falhas, 'texto abaixo do AA no diálogo do atributo').toEqual([])
   await expectNoHorizontalOverflow(page, VIEWPORTS)
-
-  // A GRAMÁTICA DE TECLADO, medida aqui e não na lista do
-  // `keyboard-grammar.spec.ts`: aquele guarda enumera cenas de
-  // endereço FIXO, e o desta tem o id de um herói que só existe depois de
-  // alguém forjar. Sem esta asserção, a única cena do app com endereço
-  // dinâmico nasceria fora do regime — que é a forma exata do defeito que
-  // aquele guarda existe para prender.
-  await page.setViewportSize({ width: 1400, height: 900 })
-  const region = page.locator('[data-nav-region="content"]')
-  await expect(region).toHaveCount(1)
-  expect(
-    await region.locator('button:not([disabled]),a[href]').count(),
-    'a região da cena não tem item nenhum para as setas dirigirem',
-  ).toBeGreaterThan(0)
 })

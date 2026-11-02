@@ -98,3 +98,17 @@ templ SearchField(id, label string, attrs templ.Attributes) {
 		<input class="ds-input" id={ id } type="search" aria-label={ label } placeholder={ label } { attrs... }/>
 	</div>
 }
+
+// EnterLeavesTheField é o Enter de um campo de valor: sair do campo é o que grava, e dentro de um formulário
+// o Enter de outro modo o enviaria.
+const EnterLeavesTheField = "if (evt.key === 'Enter') { evt.preventDefault(); el.blur() }"
+
+// ValueStepper é um valor que se escreve direto, com o `−` e o `+` ao lado. Os botões ficam porque o teclado
+// numérico do celular pode não ter o sinal de menos. O campo é texto: quem recusa é o servidor.
+templ ValueStepper(label, written string, down, field, up templ.Attributes) {
+	<span class="ds-value-stepper">
+		@IconButton(ButtonSecondary, "Minus", "Diminuir "+label, down)
+		<input class="ds-input ds-value-input" type="text" inputmode="numeric" autocomplete="off" aria-label={ "Valor de " + label } value={ written } { field... }/>
+		@IconButton(ButtonSecondary, "Plus", "Aumentar "+label, up)
+	</span>
+}
