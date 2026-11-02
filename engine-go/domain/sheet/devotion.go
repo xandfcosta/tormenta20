@@ -3,16 +3,20 @@ package sheet
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"t20engine/domain/book"
 )
 
 // DevotionOptions são as devoções que a ficha pode escolher. Quem não tem classe que sirva a um deus
-// escolhe qualquer um; quem tem fica com o que TODAS aceitam, e é o que faz um clérigo/paladino só
-// ver quem serve aos dois.
+// escolhe qualquer um, ou Tauron; quem tem fica com o que TODAS aceitam, e é o que faz um
+// clérigo/paladino só ver quem serve aos dois. Tauron não entra nas listas das classes porque elas são
+// as do livro, e no livro ele já morreu (p25).
 func DevotionOptions(classes []ClassDTO) []ChoiceOption {
 	_, _, gods := book.CharacterCatalogs()
-	options := godsThat(gods, func(book.God) bool { return true })
+	options := append(godsThat(gods, func(book.God) bool { return true }),
+		ChoiceOption{Value: book.DevotionTauron, Label: book.DevotionName(book.DevotionTauron)})
+	slices.SortFunc(options, func(a, b ChoiceOption) int { return strings.Compare(a.Label, b.Label) })
 	limited := false
 	for _, class := range classes {
 		accepted := ClassDevotees(class.ClassName)
