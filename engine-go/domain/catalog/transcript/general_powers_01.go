@@ -42,6 +42,30 @@ var generalPowersPart01 = []GeneralPower{
 					Ends:  "turn",
 				},
 			},
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "thrown"},
+				Amount:    -2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:     "flagOn",
+					Flag:     "ataque-poderoso",
+					Label:    "no ataque corpo a corpo; desliga quando a vez passa",
+					Ends:     "turn",
+					Requires: []string{"arremesso-potente"},
+				},
+			},
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "thrown"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:     "flagOn",
+					Flag:     "ataque-poderoso",
+					Label:    "no ataque corpo a corpo; desliga quando a vez passa",
+					Ends:     "turn",
+					Requires: []string{"arremesso-potente"},
+				},
+			},
 		},
 	},
 	{
@@ -266,6 +290,14 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Luta"}},
 		BookPage:      128,
 		UID:           "pwr_gcvafbbb5h",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "unarmedDamage"},
+				BonusType: "untyped",
+				Note:      "desarmado causa 1d6, letal ou não",
+				Dice:      "1d6",
+			},
+		},
 	},
 	{
 		ID:            "foco-em-arma",
