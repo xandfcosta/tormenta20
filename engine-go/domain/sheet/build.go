@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
@@ -73,12 +74,16 @@ func Load(
 	if err != nil {
 		return dto, err
 	}
+	oversized, err := q.OversizedWeaponsOfCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
 	for _, it := range items {
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
-			Enchants: enchants[it.ID],
+			Enchants: enchants[it.ID], Oversized: slices.Contains(oversized, it.ID),
 		})
 	}
 

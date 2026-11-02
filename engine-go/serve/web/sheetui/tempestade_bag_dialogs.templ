@@ -60,6 +60,10 @@ templ itemSheetDs(v View, s itemSheet) {
 				}
 			}
 		}
+		if s.Weapon {
+			@ds.Switch("Arma de categoria maior", s.Oversized, templ.Attributes{"data-on:change": sheetPost(v, "/itens/"+s.Command+"/categoria-maior")})
+			<p class="ds-help">–5 no ataque, ou –2 com Empunhadura Poderosa; um passo de dano a mais e um espaço a mais (p106, p125, p143).</p>
+		}
 		// O ENCANTO SÓ SE LÊ: quem encanta é o mestre (p333).
 		if len(s.Enchants) > 0 {
 			@ds.BareList("Encantos", "") {

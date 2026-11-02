@@ -180,6 +180,10 @@ type CharacterNonlethalDamage struct {
 	Amount      int64 `json:"amount"`
 }
 
+type CharacterOversizedWeapon struct {
+	Itemid int64 `json:"itemid"`
+}
+
 type CharacterPowerUse struct {
 	Characterid int64  `json:"characterid"`
 	Powerid     string `json:"powerid"`

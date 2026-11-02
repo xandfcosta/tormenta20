@@ -138,6 +138,11 @@ func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []strin
 	return sd.plays.EnchantItem(ctx, itemID, enchants)
 }
 
+// ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
+func (sd Seeder) ToggleOversizedWeapon(ctx context.Context, itemID int64) error {
+	return sd.plays.ToggleOversizedWeapon(ctx, itemID)
+}
+
 // SaveItemOverlays forja melhoria e material num item do elenco, pelo mesmo
 // caso de uso do jogador.
 func (sd Seeder) SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error {

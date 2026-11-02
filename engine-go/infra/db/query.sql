@@ -779,3 +779,24 @@ SELECT c.id AS campaignId,
   (SELECT COUNT(*) FROM campaign_members m WHERE m.campaignId = c.id) AS heroes,
   (SELECT COUNT(*) FROM sessions s WHERE s.campaignId = c.id) AS sessions
 FROM campaigns c;
+
+-- name: OversizedWeaponsOfCharacter :many
+SELECT o.itemId
+FROM character_oversized_weapons o
+JOIN character_items i ON i.id = o.itemId
+WHERE i.characterId = ?;
+
+-- name: OversizedWeaponsOfCharacters :many
+SELECT o.itemId
+FROM character_oversized_weapons o
+JOIN character_items i ON i.id = o.itemId
+WHERE i.characterId IN (sqlc.slice('ids'));
+
+-- name: MarkOversizedWeapon :exec
+INSERT INTO character_oversized_weapons (itemId) VALUES (?);
+
+-- name: UnmarkOversizedWeapon :execrows
+DELETE FROM character_oversized_weapons WHERE itemId = ?;
+
+-- name: SetItemSlots :exec
+UPDATE character_items SET slots = ? WHERE id = ?;

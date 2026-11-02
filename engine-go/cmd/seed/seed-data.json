@@ -731,6 +731,7 @@
         },
         {
           "sceneEffect": true,
+          "oversizedWeapons": ["espada-curta"],
           "create": {
             "name": "Guerreiro Veterano Nv8",
             "races": [
@@ -760,6 +761,7 @@
               ]
             },
             "classPowers": [
+              "empunhadura-poderosa",
               "reflexos-de-combate",
               "estilo-de-duas-armas",
               "class.guerreiro.aumento-de-atributo",

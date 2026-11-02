@@ -55,7 +55,15 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"expertises", `INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
 			SELECT ?, name, attribute, trained, custom FROM character_expertises WHERE characterId = ?`, []any{destID, sourceID}},
 		{"items", `INSERT INTO character_items (characterId, catalogId, name, quantity, slots, equipped, improvements, material, createdAt)
-			SELECT ?, catalogId, name, quantity, slots, equipped, improvements, material, ? FROM character_items WHERE characterId = ?`, []any{destID, now, sourceID}},
+			SELECT ?, catalogId, name, quantity, slots, equipped, improvements, material, ? FROM character_items WHERE characterId = ? ORDER BY id`, []any{destID, now, sourceID}},
+		// A marca de categoria maior vai pela posição do item na mochila, que o `ORDER BY`
+		// acima preserva: a cópia tem ids novos, e o catálogo não distingue duas espadas.
+		{"oversized weapons", `INSERT INTO character_oversized_weapons (itemId)
+			SELECT copied.id
+			FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS place FROM character_items WHERE characterId = ?) copied
+			JOIN (SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS place FROM character_items WHERE characterId = ?) original
+				ON original.place = copied.place
+			JOIN character_oversized_weapons mark ON mark.itemId = original.id`, []any{destID, sourceID}},
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
 		// O HISTÓRICO POR NÍVEL vem junto: é daqui que saem os poderes da ficha, e a cópia

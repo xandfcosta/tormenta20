@@ -180,3 +180,35 @@ func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string)
 		return nil
 	})
 }
+
+// ToggleOversizedWeapon marca ou desmarca a arma como feita para uma categoria de
+// tamanho maior, e ajusta o espaço a mais que ela ocupa (p106, "mínimo meio espaço").
+//
+// Ela recebe o ITEM e não o estado desejado, como o `TogglePrepared`: quem sabe o que
+// está lá é o servidor, e é ele que inverte.
+func (p Plays) ToggleOversizedWeapon(ctx context.Context, itemID int64) error {
+	return p.inTx(ctx, fmt.Sprintf("marcar a arma %d", itemID), func(q *sqlcgen.Queries) error {
+		row, err := q.GetItem(ctx, itemID)
+		if err != nil {
+			return err
+		}
+		var catalog *book.Item
+		if row.Catalogid.Valid {
+			catalog = book.ItemByID(row.Catalogid.String)
+		}
+		if catalog == nil || catalog.Weapon == nil {
+			return fmt.Errorf("%s não é uma arma do livro, e só arma tem categoria de tamanho", row.Name)
+		}
+		removed, err := q.UnmarkOversizedWeapon(ctx, itemID)
+		if err != nil {
+			return err
+		}
+		slots := row.Slots + 1
+		if removed > 0 {
+			slots = max(row.Slots-1, 0.5)
+		} else if err := q.MarkOversizedWeapon(ctx, itemID); err != nil {
+			return err
+		}
+		return q.SetItemSlots(ctx, sqlcgen.SetItemSlotsParams{Slots: slots, ID: itemID})
+	})
+}

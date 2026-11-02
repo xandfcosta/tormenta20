@@ -178,6 +178,9 @@ var generalPowersPart02 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 3}},
 		BookPage:      125,
 		UID:           "pwr_7gp33qw6w2",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "attack", Scope: "oversized-weapon"}, Amount: 3, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:            "estilo-de-arma-longa",

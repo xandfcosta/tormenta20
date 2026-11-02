@@ -162,6 +162,9 @@ func weaponDieOfItem(item sheet.ItemDTO, catalog book.Item) string {
 	for _, overlay := range bookOverlays(item) {
 		steps += engine.DamageStepsOf(overlay.Modifiers, item.Equipped)
 	}
+	if item.Oversized {
+		steps++
+	}
 	return engine.DamageStep(catalog.Weapon.Damage, steps)
 }
 

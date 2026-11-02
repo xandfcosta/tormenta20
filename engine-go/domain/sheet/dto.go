@@ -109,6 +109,8 @@ type ItemDTO struct {
 	// já é lista.
 	Enchants []string `json:"enchants"`
 	Material *string  `json:"material"`
+	// Oversized é a marca de arma de categoria maior — ver `engine.CharacterItem`.
+	Oversized bool `json:"oversized,omitempty"`
 }
 
 type EffectDTO struct {
