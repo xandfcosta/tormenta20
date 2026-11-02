@@ -299,6 +299,7 @@ var spellsPart01 = []Spell{
 		BookPage:     202,
 		UID:          "spl_iea2ugnk3s",
 		DurationNote: "até chegar ao solo ou cena, o que ocorrer primeiro",
+		DurationText: "até chegar ao solo ou cena, o que vier primeiro",
 	},
 	{
 		ID:         "criar-ilusao",

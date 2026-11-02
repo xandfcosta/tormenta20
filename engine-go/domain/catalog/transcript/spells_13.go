@@ -119,8 +119,9 @@ var spellsPart13 = []Spell{
 				RequiresCircle: 3,
 			},
 		},
-		BookPage: 206,
-		UID:      "spl_rccf4sulxv",
+		BookPage:     206,
+		UID:          "spl_rccf4sulxv",
+		DurationText: "1 cena",
 	},
 	{
 		ID:         "seta-infalivel-de-talude",
@@ -423,8 +424,9 @@ var spellsPart13 = []Spell{
 				Description: "Aumenta o tamanho máximo da criatura em uma categoria (Grande/Enorme/Colossal) ou dobra a quantidade do objeto.",
 			},
 		},
-		BookPage: 208,
-		UID:      "spl_wftwhvgq56",
+		BookPage:     208,
+		UID:          "spl_wftwhvgq56",
+		DurationText: "sustentada ou instantânea (veja texto)",
 	},
 	{
 		ID:         "tentaculos-de-trevas",

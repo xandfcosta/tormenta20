@@ -35,6 +35,17 @@ func SpellExecutionWritten(m Spell) string {
 	return CastingName(m.Execution)
 }
 
+// SpellDurationWritten é a duração como o livro escreve.
+func SpellDurationWritten(m Spell) string {
+	if m.DurationText != "" {
+		return m.DurationText
+	}
+	if m.DurationNote != "" {
+		return m.DurationNote
+	}
+	return DurationName(m.Duration)
+}
+
 // SpellRangeWritten é o alcance como o livro escreve, com a nota de quem foge das seis medidas.
 func SpellRangeWritten(m Spell) string {
 	if m.RangeNote != "" {
