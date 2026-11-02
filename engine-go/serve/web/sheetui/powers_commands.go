@@ -254,14 +254,20 @@ func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 // noDevotion é o valor do gesto de ficar sem deus.
 const noDevotion = "nenhum"
 
-// pickDevotion grava o deus da ficha, que é a fonte única da devoção (ALE-518). O poder concedido não
-// sai junto: ele é do deus antigo, o passo avisa, e tirar é da mesa.
+// pickDevotion grava o deus da ficha, que é a fonte única da devoção (ALE-518), e tira os poderes que ele não
+// concede, por decisão do dono. O passo avisa disso antes de chegar aqui.
 func pickDevotion(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	god := pathParam(r, "deus")
 	if god == noDevotion {
 		god = ""
 	}
-	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.God = &god })
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		dto.God = &god
+		kept := slices.DeleteFunc(sheet.UnmarshalStrings(dto.GodPowers), func(power string) bool {
+			return !sheet.GrantedPowerIsOfGod(god, power)
+		})
+		dto.GodPowers = sheet.MarshalStrings(&kept)
+	})
 }
 
 // pickGrantedPower marca ou desmarca um poder concedido. O marcado sai, seja de que deus for; o novo tem de

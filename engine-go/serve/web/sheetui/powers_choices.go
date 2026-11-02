@@ -44,7 +44,8 @@ type devotionChoice struct {
 	NoGrant string
 	// Limit é quantos poderes o deus dá a esta ficha, e Held quantos dele foram escolhidos.
 	Limit, Held int
-	// OldPowers são os guardados que não são do deus de agora.
+	// OldPowers são os guardados que não são do deus de agora: só uma ficha de antes de a troca tirá-los
+	// chega assim.
 	OldPowers []string
 	// Changes são os avisos de troca, um por deus que se pode escolher. Sem deus não há o que avisar.
 	Changes []devotionChangeNotice

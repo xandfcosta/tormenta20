@@ -215,7 +215,7 @@ test('trocar de deus diz o que muda e só troca depois de confirmar', async ({ p
   await expect(notice).toBeHidden()
   await step.getByRole('button', { name: 'Azgher', exact: true }).click()
   await expect(notice).toBeVisible()
-  await expect(notice).toContainText('Dom da Verdade fica na ficha')
+  await expect(notice).toContainText('Dom da Verdade sai da ficha')
 
   await notice.getByRole('button', { name: 'Cancelar' }).click()
   await expect(notice).toBeHidden()
@@ -224,5 +224,5 @@ test('trocar de deus diz o que muda e só troca depois de confirmar', async ({ p
   await step.getByRole('button', { name: 'Azgher', exact: true }).click()
   await notice.getByRole('button', { name: 'Confirmar a troca' }).click()
   await expect(step.getByRole('button', { name: 'Azgher', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(step.getByText('Dom da Verdade é de outro deus')).toBeVisible()
+  await expect(step.getByRole('button', { name: 'Escolher Dom da Verdade' })).toHaveCount(0)
 })

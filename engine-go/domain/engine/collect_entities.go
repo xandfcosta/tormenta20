@@ -278,8 +278,7 @@ func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 // Escamas Dracônicas não mudavam a Defesa de ninguém.
 //
 // Quantos cabem na ficha é de quem os escolhe (p96; dois para clérigo, druida e
-// paladino): aqui conta todo poder guardado, inclusive o do deus antigo, que
-// fica até a mesa decidir.
+// paladino): aqui conta todo poder guardado.
 func (r *Ruleset) godPowerActiveItems(ch Character) []ActiveItem {
 	var items []ActiveItem
 	for _, name := range parseChoiceSet(ch.GodPowers).list {

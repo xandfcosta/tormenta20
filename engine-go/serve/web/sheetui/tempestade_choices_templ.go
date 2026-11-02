@@ -947,7 +947,7 @@ func classPickerDs(v View, class, choice, label string, selector pickerChoice) t
 }
 
 // devotionStepBody é o deus da ficha e os poderes que ele concede. Trocar de deus pede confirmação, com o
-// que muda na ficha: o poder fica, e tirar é da mesa.
+// que muda na ficha, porque os poderes que o novo não concede saem.
 func devotionStepBody(v View, d devotionChoice) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1251,9 +1251,9 @@ func devotionStepBody(v View, d devotionChoice) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var57 string
-					templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(power + " é de outro deus. Ele fica na ficha até a mesa decidir.")
+					templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(power + " é de outro deus.")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_choices.templ`, Line: 265, Col: 117}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_choices.templ`, Line: 265, Col: 78}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 					if templ_7745c5c3_Err != nil {

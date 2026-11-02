@@ -86,8 +86,8 @@ func GrantedPowerLimit(classes []ClassDTO, god string) int {
 	return 1
 }
 
-// GrantedPowersMissing é quantos poderes do deus de agora faltam escolher. O do deus antigo não conta: ele
-// fica na ficha até a mesa decidir, e não ocupa a vaga do novo.
+// GrantedPowersMissing é quantos poderes do deus de agora faltam escolher. O de outro deus, numa ficha de
+// antes de a troca tirá-lo, não ocupa vaga.
 func GrantedPowersMissing(dto CharacterDTO) int {
 	if dto.God == nil {
 		return 0
@@ -123,9 +123,9 @@ func DevotionChange(dto CharacterDTO, target string) []string {
 		lines[0] = current + " deixa de ser o deus da ficha."
 	}
 	if len(leaving) == 1 {
-		lines = append(lines, leaving[0]+" fica na ficha, mas é de outro deus. Tirar é da mesa.")
+		lines = append(lines, leaving[0]+" sai da ficha.")
 	} else if len(leaving) > 1 {
-		lines = append(lines, joinedNames(leaving)+" ficam na ficha, mas são de outro deus. Tirar é da mesa.")
+		lines = append(lines, joinedNames(leaving)+" saem da ficha.")
 	}
 	for _, power := range kept {
 		lines = append(lines, power+" continua valendo: "+book.DevotionName(target)+" também o concede.")

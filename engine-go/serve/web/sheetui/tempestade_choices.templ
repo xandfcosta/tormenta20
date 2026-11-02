@@ -206,7 +206,7 @@ templ classPickerDs(v View, class, choice, label string, selector pickerChoice) 
 }
 
 // devotionStepBody é o deus da ficha e os poderes que ele concede. Trocar de deus pede confirmação, com o
-// que muda na ficha: o poder fica, e tirar é da mesa.
+// que muda na ficha, porque os poderes que o novo não concede saem.
 templ devotionStepBody(v View, d devotionChoice) {
 	<div class="ds-field" data-signals="{devotion_target: ''}">
 		<span class="ds-field-label">Deus</span>
@@ -262,7 +262,7 @@ templ devotionStepBody(v View, d devotionChoice) {
 				<div class="ds-row ds-level-line">
 					<span class="ds-level-text">
 						<span class="ds-row-title">{ power }</span>
-						<span class="ds-row-meta ds-level-detail">{ power + " é de outro deus. Ele fica na ficha até a mesa decidir." }</span>
+						<span class="ds-row-meta ds-level-detail">{ power + " é de outro deus." }</span>
 					</span>
 					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Tirar " + power, "data-on:click": sheetPost(v, "/poderes/poder-concedido/"+url.PathEscape(power))}) {
 						Tirar

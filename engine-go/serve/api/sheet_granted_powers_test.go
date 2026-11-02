@@ -101,35 +101,54 @@ func TestAnyOtherDevoteeHasOneGrantedPower(t *testing.T) {
 	}
 }
 
-// O poder do deus antigo fica na ficha, e não ocupa a vaga do novo.
-func TestTheOldGodPowerStaysWithoutTakingASlot(t *testing.T) {
+// Trocar de deus tira da ficha o que o deus novo não concede, por decisão do dono. O que ele também concede
+// fica, e ocupa a vaga: Coragem Total é de Khalmyr e de Valkaria (p99, p105).
+func TestChangingTheGodRemovesThePowersItDoesNotGrant(t *testing.T) {
 	f := newSceneFixture(t)
 	id := devotedTo(t, f, "Clérigo", "khalmyr")
-	if refusal := powerCommand(t, f, id, grantedPath("Dom da Verdade"), ""); refusal != "" {
-		t.Fatalf("o poder: %q", refusal)
-	}
-	if refusal := powerCommand(t, f, id, devotionPath("azgher"), ""); refusal != "" {
-		t.Fatalf("trocar: %q", refusal)
-	}
-	if step := choiceStepTitled(t, powerScreen(t, f, id), "Devoção"); step.Tag != "falta 2" {
-		t.Errorf("o poder antigo não ocupa vaga, e o passo diz %q", step.Tag)
-	}
-	for _, power := range []string{"Espada Solar", "Fulgor Solar"} {
+	for _, power := range []string{"Coragem Total", "Dom da Verdade"} {
 		if refusal := powerCommand(t, f, id, grantedPath(power), ""); refusal != "" {
 			t.Fatalf("%s: %q", power, refusal)
 		}
 	}
-	if got := storedGrantedPowers(t, f, id); !slices.Equal(got, []string{"Dom da Verdade", "Espada Solar", "Fulgor Solar"}) {
-		t.Errorf("guardou %v", got)
+	if refusal := powerCommand(t, f, id, devotionPath("valkaria"), ""); refusal != "" {
+		t.Fatalf("trocar: %q", refusal)
 	}
-	if screen := powerScreen(t, f, id); !strings.Contains(screen, "Dom da Verdade é de outro deus") {
-		t.Error("o passo não avisa que o poder é do deus antigo")
+	if got := storedGrantedPowers(t, f, id); !slices.Equal(got, []string{"Coragem Total"}) {
+		t.Errorf("trocar para Valkaria devia deixar só a Coragem Total, e ficou %v", got)
+	}
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Devoção"); step.Tag != "falta 1" {
+		t.Errorf("com um dos dois de Valkaria, o passo diz %q", step.Tag)
+	}
+	if refusal := powerCommand(t, f, id, devotionPath("nenhum"), ""); refusal != "" {
+		t.Fatalf("ficar sem deus: %q", refusal)
+	}
+	if got := storedGrantedPowers(t, f, id); len(got) != 0 {
+		t.Errorf("sem deus, nenhum poder concedido fica, e ficou %v", got)
+	}
+}
+
+// A ficha que já chega com o poder de outro deus, de antes desta regra, mostra-o e deixa tirar. Ele não
+// ocupa a vaga do deus de agora.
+func TestAPowerOfAnotherGodFromBeforeCanBeTakenOut(t *testing.T) {
+	f := newSceneFixture(t)
+	id := devotedTo(t, f, "Clérigo", "azgher")
+	if _, err := f.s.db.ExecContext(context.Background(),
+		`UPDATE characters SET godPowers = '["Dom da Verdade"]' WHERE id = ?`, id); err != nil {
+		t.Fatal(err)
+	}
+	screen := powerScreen(t, f, id)
+	if !strings.Contains(screen, "Dom da Verdade é de outro deus") {
+		t.Error("o passo não avisa que o poder é de outro deus")
+	}
+	if step := choiceStepTitled(t, screen, "Devoção"); step.Tag != "falta 2" {
+		t.Errorf("o poder de outro deus não ocupa vaga, e o passo diz %q", step.Tag)
 	}
 	if refusal := powerCommand(t, f, id, grantedPath("Dom da Verdade"), ""); refusal != "" {
-		t.Fatalf("tirar o antigo: %q", refusal)
+		t.Fatalf("tirar: %q", refusal)
 	}
-	if got := storedGrantedPowers(t, f, id); !slices.Equal(got, []string{"Espada Solar", "Fulgor Solar"}) {
-		t.Errorf("tirar o antigo deixou %v", got)
+	if got := storedGrantedPowers(t, f, id); len(got) != 0 {
+		t.Errorf("tirar deixou %v", got)
 	}
 }
 
@@ -155,7 +174,7 @@ func TestChangingTheGodTellsWhatChangesAndAsks(t *testing.T) {
 	}
 	for _, want := range []string{
 		"Deus: Khalmyr → Azgher.",
-		"Dom da Verdade e Coragem Total ficam na ficha, mas são de outro deus. Tirar é da mesa.",
+		"Dom da Verdade e Coragem Total saem da ficha.",
 		"Falta escolher 2 poderes concedidos de Azgher.",
 	} {
 		if !strings.Contains(screen, want) {
