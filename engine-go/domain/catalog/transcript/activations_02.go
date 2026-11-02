@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 2 de 12 de `Activations` (activations.go).
+// Parte 2 de 11 de `Activations` (activations.go).
 var activationsPart02 = []Activation{
 	{
 		ID:     "class.bucaneiro.ataque-acrobatico",

@@ -769,9 +769,9 @@ func augmentLine(a augmentRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(augmentSignal(a.Index))
+			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.Signal)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_spells.templ`, Line: 155, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_spells.templ`, Line: 155, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -790,7 +790,7 @@ func augmentLine(a augmentRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = ds.Switch("", false, templ.Attributes{"aria-label": a.Description, "data-on:change": a.Toggle, "data-effect": "el.checked = " + augmentSignal(a.Index) + " > 0"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.Switch("", false, templ.Attributes{"aria-label": a.Description, "data-on:change": a.Toggle, "data-effect": "el.checked = " + a.Signal + " > 0"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

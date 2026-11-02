@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 10 de 12 de `Activations` (activations.go).
+// Parte 10 de 11 de `Activations` (activations.go).
 var activationsPart10 = []Activation{
 	{
 		ID:     "deus.lin-wu.coragem-total",
@@ -463,14 +463,6 @@ var activationsPart10 = []Activation{
 		Kind:   "instant",
 		Action: "movimento",
 		PMCost: PMCost{Fixed: 2},
-		Uses:   nil,
-	},
-	{
-		ID:     "item.encanto-hipnotico",
-		Name:   "Hipnótico",
-		Kind:   "instant",
-		Action: "padrao",
-		PMCost: PMCost{Fixed: 3},
 		Uses:   nil,
 	},
 }

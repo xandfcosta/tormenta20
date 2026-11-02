@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"t20engine/app/character"
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
@@ -45,7 +46,8 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	// diz o que ela custa do turno (p233), e a conjuração ainda pode ser
 	// recusada pelo grimório, pela preparação ou pelo PM — cobrar antes tiraria
 	// a padrão de alguém por uma magia que nunca saiu.
-	cost := engine.ActionCost(spell.Execution)
+	powerAugments := signals.powerAugments()
+	cost := engine.ActionCost(character.CastExecution(spell.Execution, powerAugments))
 	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
 		return err
 	}
@@ -53,7 +55,7 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	if err != nil {
 		return err
 	}
-	if err := s.plays.Cast(r.Context(), dto, spellID, signals.augments()); err != nil {
+	if err := s.plays.Cast(r.Context(), dto, spellID, signals.augments(), powerAugments); err != nil {
 		return err
 	}
 	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)

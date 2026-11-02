@@ -218,3 +218,11 @@ type AugmentPick struct {
 	AugmentIndex int `json:"augmentIndex"`
 	Stacks       int `json:"stacks"`
 }
+
+// PowerAugmentPick é um PODER que é aprimoramento (p131), escolhido ao conjurar,
+// e quantas vezes. Ele não cabe no `AugmentPick` porque o índice daquele aponta
+// para a lista da magia, e o poder vale para todas.
+type PowerAugmentPick struct {
+	PowerID string
+	Stacks  int
+}

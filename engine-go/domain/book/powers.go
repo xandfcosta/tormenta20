@@ -180,6 +180,9 @@ type GeneralPower struct {
 	Choice *PowerChoice `json:"choice"`
 	// Prerequisites, como no poder de classe.
 	Prerequisites []PowerPrerequisite `json:"prerequisites"`
+	// SpellAugment é o preço e o efeito do poder que é aprimoramento (p131), que
+	// se escolhe ao conjurar. Nulo em todos os outros. Ver `PowerAugments`.
+	SpellAugment *SpellAugment `json:"spellAugment"`
 }
 
 // PowerWithChoice é o poder de id dado quando ele pede escolha, de CLASSE ou

@@ -3,8 +3,11 @@ package character
 import (
 	"context"
 	"fmt"
+	"slices"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -81,7 +84,8 @@ func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpe
 // A recusa volta como uma FRASE para um humano ler numa tela — ver por que ela
 // não é tipada no `doc.go` do pacote.
 func (p Plays) Cast(
-	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string, augments []sheet.AugmentPick,
+	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string,
+	augments []sheet.AugmentPick, powerAugments []sheet.PowerAugmentPick,
 ) error {
 	spell, known := catalog.LookupSpell(catalogSpellID)
 	if !known {
@@ -99,6 +103,11 @@ func (p Plays) Cast(
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
+	powerPm, powerErr := validatePowerAugments(dto, spell, catalogSpellID, augments, powerAugments)
+	if powerErr != "" {
+		return fmt.Errorf("%s", powerErr)
+	}
+	augmentPm += powerPm
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return err
@@ -221,4 +230,69 @@ func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, castableCi
 		total += a.PmCost * p.Stacks
 	}
 	return total, ""
+}
+
+// validatePowerAugments confere os poderes escolhidos como aprimoramento (p131) e
+// devolve o PM deles, ou a frase da recusa.
+//
+// O poder que falta na ficha é recusado aqui porque quem desenha a linha é a tela,
+// e a fronteira é o servidor: um pedido montado à mão pagaria o aprimoramento de
+// um poder que o personagem não tem.
+func validatePowerAugments(
+	dto sheet.CharacterDTO, spell catalog.Spell, spellID string,
+	spellPicks []sheet.AugmentPick, picks []sheet.PowerAugmentPick,
+) (int, string) {
+	if len(picks) == 0 {
+		return 0, ""
+	}
+	fromBook, _ := book.SpellByID(spellID)
+	owned := sheet.OwnedPowers(dto)
+	total := 0
+	for _, pick := range picks {
+		augment, known := book.PowerAugmentOf(pick.PowerID)
+		if !known {
+			return 0, fmt.Sprintf("o poder %q não é aprimoramento de magia", pick.PowerID)
+		}
+		if !slices.ContainsFunc(owned, func(p sheet.OwnedPower) bool { return p.ID == pick.PowerID }) {
+			return 0, fmt.Sprintf("esta ficha não tem %s", augment.Name)
+		}
+		if pick.Stacks < 1 {
+			return 0, fmt.Sprintf("%s pede um número de repetições de 1 para cima (veio %d)", augment.Name, pick.Stacks)
+		}
+		if augment.Augment.Kind == "muda" && pick.Stacks > 1 {
+			return 0, fmt.Sprintf("%s muda a magia, e mudança não se acumula", augment.Name)
+		}
+		if bar := book.PowerAugmentBar(pick.PowerID, fromBook); bar != "" {
+			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, bar)
+		}
+		for _, spellPick := range spellPicks {
+			own := spell.Augments[spellPick.AugmentIndex]
+			if own.Exclusive {
+				return 0, fmt.Sprintf(
+					"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele", spellPick.AugmentIndex)
+			}
+			// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
+			if pick.PowerID == book.QuickenedSpellPower && spellPick.AugmentIndex < len(fromBook.Augments) &&
+				book.AugmentChangesExecution(fromBook.Augments[spellPick.AugmentIndex].Description) {
+				return 0, fmt.Sprintf("%s e o aprimoramento %d mudam a execução, e mudança não se acumula",
+					augment.Name, spellPick.AugmentIndex)
+			}
+		}
+		total += augment.Augment.PmCost * pick.Stacks
+	}
+	return total, ""
+}
+
+// CastExecution é a execução que esta conjuração cobra do turno: a da magia, ou
+// a ação livre da Magia Acelerada (p131).
+//
+// Quem chama pergunta ANTES de conjurar, e um pedido sem o poder na ficha só passa
+// por aqui para ser recusado pelo `Cast` logo em seguida, sem gastar nada.
+func CastExecution(execution string, powerAugments []sheet.PowerAugmentPick) string {
+	for _, pick := range powerAugments {
+		if pick.PowerID == book.QuickenedSpellPower {
+			return string(engine.ActionFree)
+		}
+	}
+	return execution
 }

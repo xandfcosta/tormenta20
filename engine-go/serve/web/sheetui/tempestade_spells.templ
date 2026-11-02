@@ -66,7 +66,7 @@ templ tempestadeSpells(v View) {
 			}
 		}
 	</section>
-	// QUEM ABRE A FOLHA COMEÇA DO ZERO: o fechar zera as seis pilhas. O `close`
+	// QUEM ABRE A FOLHA COMEÇA DO ZERO: o fechar zera as pilhas. O `close`
 	// não sobe pela árvore, e é a captura que o pega aqui em cima.
 	<div class="contents" data-on:close__capture={ augmentsReset }>
 		for _, group := range spellCircleGroups(v) {
@@ -152,11 +152,11 @@ templ augmentLine(a augmentRow) {
 		} else if a.Stacks {
 			<div class="ds-stepper">
 				@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos de "+a.Description, templ.Attributes{"type": "button", "data-on:click": a.Less})
-				<b class="tabular-nums" data-text={ augmentSignal(a.Index) }></b>
+				<b class="tabular-nums" data-text={ a.Signal }></b>
 				@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais de "+a.Description, templ.Attributes{"type": "button", "data-on:click": a.More})
 			</div>
 		} else {
-			@ds.Switch("", false, templ.Attributes{"aria-label": a.Description, "data-on:change": a.Toggle, "data-effect": "el.checked = " + augmentSignal(a.Index) + " > 0"})
+			@ds.Switch("", false, templ.Attributes{"aria-label": a.Description, "data-on:change": a.Toggle, "data-effect": "el.checked = " + a.Signal + " > 0"})
 		}
 	</div>
 }

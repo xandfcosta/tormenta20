@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 9 de 12 de `Activations` (activations.go).
+// Parte 9 de 11 de `Activations` (activations.go).
 var activationsPart09 = []Activation{
 	{
 		ID:       "origin.marujo.passagem-de-navio",

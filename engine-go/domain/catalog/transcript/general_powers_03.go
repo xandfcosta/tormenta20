@@ -280,6 +280,11 @@ var generalPowersPart03 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Capacidade de lançar magias de 2º círculo"}},
 		BookPage:      131,
 		UID:           "pwr_e5z5b5zuzr",
+		SpellAugment: &SpellAugment{
+			PMCost:      4,
+			Kind:        "muda",
+			Description: "Muda a execução para ação livre. Só uma magia por rodada.",
+		},
 	},
 	{
 		ID:            "magia-ampliada",
@@ -289,6 +294,11 @@ var generalPowersPart03 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Lançar magias"}},
 		BookPage:      131,
 		UID:           "pwr_hngryleapj",
+		SpellAugment: &SpellAugment{
+			PMCost:      2,
+			Kind:        "aumenta",
+			Description: "Aumenta o alcance em um passo ou dobra a área.",
+		},
 	},
 	{
 		ID:            "magia-discreta",
@@ -298,6 +308,11 @@ var generalPowersPart03 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Lançar magias"}},
 		BookPage:      131,
 		UID:           "pwr_5x4aexwbnz",
+		SpellAugment: &SpellAugment{
+			PMCost:      2,
+			Kind:        "muda",
+			Description: "Sem gesticular nem falar. Com armadura, sem teste de Misticismo. Perceber a magia pede Misticismo CD 20.",
+		},
 	},
 	{
 		ID:            "magia-ilimitada",
