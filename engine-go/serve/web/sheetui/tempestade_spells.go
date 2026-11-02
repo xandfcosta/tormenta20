@@ -139,6 +139,16 @@ func spellSheetMeta(spell learnedSpellRow) string {
 	return strings.Join(parts, " · ")
 }
 
+// spellSheetReach é a linha do que a magia alcança: o alvo e, quando há, a resistência.
+//
+//	spellSheetReach(row) // "Área: esfera com 6m de raio · Resistência: Reflexos reduz à metade"
+func spellSheetReach(spell learnedSpellRow) string {
+	if spell.Resistance == "" {
+		return spell.Targeting
+	}
+	return spell.Targeting + " · Resistência: " + spell.Resistance
+}
+
 // spellSheetFoot é o pé da folha: o Esquecer e o Conjurar com o custo.
 func spellSheetFoot(v View, spell learnedSpellRow) templ.Component {
 	return spellSheetFootBody(v, spell)

@@ -118,6 +118,12 @@
  * O REPOUSO é escrito igual ao destino (ALE-318): o `transition-colors` do Tailwind inclui
  * `outline-*`, e com o repouso diferente o anel seria ALCANÇADO em 150ms em
  * vez de desenhado. Sem diferença, não há o que interpolar. Quem cobra é o `expectOneFocusRing` na folha viva. */
+/* A FACE É UMA SÓ, e o `<code>` e o `<kbd>` também: sem isto o navegador os desenha na monoespaçada
+ * da máquina, e a largura do texto muda de um aparelho para outro. */
+.scene-ds :is(code, kbd, samp, pre) {
+  font-family: var(--font-ds);
+}
+
 .scene-ds * {
   outline-color: var(--ds-focus);
   outline-width: 2px;
@@ -3453,7 +3459,6 @@
     padding: 0 0.25rem;
     border-radius: 0.25rem;
     background: var(--ds-bg);
-    font-family: var(--font-ds);
     font-size: var(--ds-t-xs);
   }
   .ds-note-error {

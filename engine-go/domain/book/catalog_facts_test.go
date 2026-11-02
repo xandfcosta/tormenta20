@@ -1,6 +1,7 @@
 package book
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -61,6 +62,30 @@ func TestThePowerSaysWhatItRequires(t *testing.T) {
 	for id := range ClassPowers() {
 		if written := PowerRequirements(id); strings.Contains(written, "class.") {
 			t.Errorf("%s: o pré-requisito cita um id: %q", id, written)
+		}
+	}
+}
+
+// Toda magia diz sobre o que ela age, nas palavras do livro: o Alvo, a Área ou o Efeito. A forma
+// vale para as 198; o valor se prende só onde há armadilha.
+func TestEverySpellSaysWhatItActsOn(t *testing.T) {
+	shape := regexp.MustCompile(`^(Alvo|Alvos|Área|Efeito|Alvo ou Área): \S`)
+	spells := Catalogs().Spells
+	for _, spell := range spells {
+		if !shape.MatchString(spell.Targeting) {
+			t.Errorf("%s (p%d): %q não é um alvo do livro", spell.ID, spell.BookPage, spell.Targeting)
+		}
+	}
+	if len(spells) != 198 {
+		t.Fatalf("o catálogo tem %d magias, e o livro tem 198", len(spells))
+	}
+	for id, want := range map[string]string{
+		"relampago":      "Área: linha de 30m",
+		"dissipar-magia": "Alvo ou Área: 1 criatura ou 1 objeto mágico ou esfera com 3m de raio",
+		"sono":           "Alvo: 1 humanoide",
+	} {
+		if spell, _ := SpellByID(id); spell.Targeting != want {
+			t.Errorf("%s: saiu %q, e o livro diz %q", id, spell.Targeting, want)
 		}
 	}
 }

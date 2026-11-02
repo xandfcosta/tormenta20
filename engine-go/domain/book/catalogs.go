@@ -48,12 +48,14 @@ func AugmentKindName(kind string) string {
 }
 
 type Spell struct {
-	ID         string         `json:"id"`
-	Name       string         `json:"name"`
-	Circle     int            `json:"circle"`
-	School     string         `json:"school"`
-	Execution  string         `json:"execution"`
-	Range      string         `json:"range"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Circle    int    `json:"circle"`
+	School    string `json:"school"`
+	Execution string `json:"execution"`
+	Range     string `json:"range"`
+	// Targeting é o Alvo, a Área ou o Efeito, nas palavras do livro: "Área: linha de 30m".
+	Targeting  string         `json:"targeting"`
 	Duration   string         `json:"duration"`
 	SaveType   string         `json:"saveType"`
 	Resistance string         `json:"resistance,omitempty"`
