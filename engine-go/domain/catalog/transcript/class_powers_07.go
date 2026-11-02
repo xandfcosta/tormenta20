@@ -27,7 +27,7 @@ var classPowersPart07 = []ClassPower{
 		Name:           "Devoto Fiel",
 		Description:    "Devoto de deus maior. Recebe DOIS poderes concedidos por se tornar devoto (em vez de um). Alternativa: cultuar o Panteão (não recebe Poder Concedido; só pode usar maças). Atributo-chave para magias: Sabedoria.",
 		GrantedAtLevel: 1,
-		BookPage:       61,
+		BookPage:       57,
 		UID:            "pwr_5b7m4pkkg5",
 		Unmodeled:      "os dois poderes concedidos se escolhem no passo Devoção do Escolher, e não nesta linha",
 	},
