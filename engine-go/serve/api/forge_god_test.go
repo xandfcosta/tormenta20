@@ -34,6 +34,22 @@ func TestTheForgeOffersTheGodOfTheClasses(t *testing.T) {
 	}
 }
 
+// A linha do deus não promete o que a devoção não dá: o Panteão não recebe poder concedido (p57).
+func TestThePickRowSaysWhenTheDevotionGrantsNoPower(t *testing.T) {
+	f := newSceneFixture(t)
+	body := postaAForja(t, f, f.player, "/personagens/nova/esboco",
+		url.Values{"classes": {"Clérigo:1"}, "god": {"panteao"}}).Body.String()
+	row := pickRow(t, body, "god")
+	if !strings.Contains(row, "não recebe poder concedido") || strings.Contains(row, "se escolhe na ficha") {
+		t.Errorf("a linha do Panteão promete um poder que ele não dá:\n%s", row)
+	}
+	khalmyr := postaAForja(t, f, f.player, "/personagens/nova/esboco",
+		url.Values{"classes": {"Clérigo:1"}, "god": {"khalmyr"}}).Body.String()
+	if row := pickRow(t, khalmyr, "god"); !strings.Contains(row, "se escolhe na ficha") {
+		t.Errorf("a linha de Khalmyr não diz onde se escolhe o poder:\n%s", row)
+	}
+}
+
 // Tenebra servia até entrar o paladino: o deus continua marcado, e a folha diz o que houve.
 func TestAGodTheClassRefusesStaysAndIsNamed(t *testing.T) {
 	f := newSceneFixture(t)

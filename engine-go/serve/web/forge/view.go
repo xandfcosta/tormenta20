@@ -36,6 +36,8 @@ type forgeView struct {
 	Origins     []originOption
 	Gods        []godOption
 	GodChosen   string
+	// GodGrantsPower é falso para o Panteão e o Paladino do Bem, que não recebem poder concedido (p57).
+	GodGrantsPower bool
 	// GodRefusal diz por que o deus marcado não serve às classes de agora.
 	GodRefusal string
 	// Equipamento é nil enquanto não há classe escolhida: o kit de p140 só se
@@ -151,6 +153,7 @@ func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
 	v.LevelCapped = v.TotalLevel >= heroLevelMax
 	v.Origins = originOptions(answers.Origin)
 	v.Gods, v.GodChosen = godOptions(answers)
+	v.GodGrantsPower = len(book.GrantedPowersOf(answers.God)) > 0
 	if err := sheet.DevotionRefusal(classesOnTheSheet(answers.Classes), answers.God); err != nil {
 		v.GodRefusal = err.Error() + "."
 	}

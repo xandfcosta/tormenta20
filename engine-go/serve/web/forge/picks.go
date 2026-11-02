@@ -37,6 +37,9 @@ func (v forgeView) godPick() pickSummary {
 	if v.GodChosen == "Nenhum" {
 		return pickSummary{Title: v.GodChosen, Meta: "opcional"}
 	}
+	if !v.GodGrantsPower {
+		return pickSummary{Title: v.GodChosen, Meta: "não recebe poder concedido"}
+	}
 	return pickSummary{Title: v.GodChosen, Meta: "o poder concedido se escolhe na ficha"}
 }
 
