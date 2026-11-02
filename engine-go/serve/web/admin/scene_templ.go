@@ -84,7 +84,7 @@ func adminScene(v adminView) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = ds.InviteBody("/admin/convites").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.InviteBody("/admin/convites", openInvitePath(v)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -289,7 +289,7 @@ func invitesPanel(v adminView) templ.Component {
 			return nil
 		})
 		templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{
-			"type": "button", "data-on:click": "$copied = false; document.getElementById('invite-link').innerHTML = ''; document.getElementById('admin-invite').showModal()",
+			"type": "button", "data-on:click": "$copied = false; document.getElementById('admin-invite').showModal()",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -299,7 +299,7 @@ func invitesPanel(v adminView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(v.Invites) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<p class=\"ds-row-meta\">Nenhum convite pendente. Todo mundo que foi convidado já entrou.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<p class=\"ds-row-meta\">Nenhum link aberto. Gere um em Convidar.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -335,9 +335,9 @@ func invitesPanel(v adminView) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var13 string
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("Expira em " + c.Expires + ".")
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs("Expira em " + c.Expires + " · " + c.Entered + ".")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 99, Col: 64}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/admin/scene.templ`, Line: 99, Col: 85}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {

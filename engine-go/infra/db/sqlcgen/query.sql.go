@@ -216,9 +216,9 @@ func (q *Queries) ClearNonLethalDamage(ctx context.Context, characterid int64) e
 
 const createAccountInvite = `-- name: CreateAccountInvite :one
 
-INSERT INTO account_invites (token, createdBy, createdAt, expiresAt)
+INSERT INTO account_invite_links (token, createdBy, createdAt, expiresAt)
 VALUES (?, ?, ?, ?)
-RETURNING id, token, createdby, createdat, expiresat, usedat, usedby
+RETURNING id, token, createdby, createdat, expiresat, revokedat
 `
 
 type CreateAccountInviteParams struct {
@@ -229,22 +229,21 @@ type CreateAccountInviteParams struct {
 }
 
 // account invites (ALE-120)
-func (q *Queries) CreateAccountInvite(ctx context.Context, arg CreateAccountInviteParams) (AccountInvite, error) {
+func (q *Queries) CreateAccountInvite(ctx context.Context, arg CreateAccountInviteParams) (AccountInviteLink, error) {
 	row := q.db.QueryRowContext(ctx, createAccountInvite,
 		arg.Token,
 		arg.Createdby,
 		arg.Createdat,
 		arg.Expiresat,
 	)
-	var i AccountInvite
+	var i AccountInviteLink
 	err := row.Scan(
 		&i.ID,
 		&i.Token,
 		&i.Createdby,
 		&i.Createdat,
 		&i.Expiresat,
-		&i.Usedat,
-		&i.Usedby,
+		&i.Revokedat,
 	)
 	return i, err
 }
@@ -1146,20 +1145,19 @@ func (q *Queries) FirstLiveSessionForUser(ctx context.Context, userid int64) (Fi
 }
 
 const getAccountInvite = `-- name: GetAccountInvite :one
-SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites WHERE token = ? LIMIT 1
+SELECT id, token, createdby, createdat, expiresat, revokedat FROM account_invite_links WHERE token = ? LIMIT 1
 `
 
-func (q *Queries) GetAccountInvite(ctx context.Context, token string) (AccountInvite, error) {
+func (q *Queries) GetAccountInvite(ctx context.Context, token string) (AccountInviteLink, error) {
 	row := q.db.QueryRowContext(ctx, getAccountInvite, token)
-	var i AccountInvite
+	var i AccountInviteLink
 	err := row.Scan(
 		&i.ID,
 		&i.Token,
 		&i.Createdby,
 		&i.Createdat,
 		&i.Expiresat,
-		&i.Usedat,
-		&i.Usedby,
+		&i.Revokedat,
 	)
 	return i, err
 }
@@ -2900,28 +2898,34 @@ func (q *Queries) ListNonLethalDamage(ctx context.Context, ids []int64) ([]Chara
 }
 
 const listOpenAccountInvites = `-- name: ListOpenAccountInvites :many
-SELECT id, token, createdby, createdat, expiresat, usedat, usedby FROM account_invites
-WHERE usedAt IS NULL AND expiresAt > ?1
-ORDER BY createdAt DESC
+SELECT l.id, l.token, l.expiresAt,
+  (SELECT COUNT(*) FROM account_invite_uses u WHERE u.linkId = l.id) AS accounts
+FROM account_invite_links l
+WHERE l.revokedAt IS NULL AND l.expiresAt > ?1
+ORDER BY l.createdAt DESC, l.id DESC
 `
 
-func (q *Queries) ListOpenAccountInvites(ctx context.Context, now string) ([]AccountInvite, error) {
+type ListOpenAccountInvitesRow struct {
+	ID        int64  `json:"id"`
+	Token     string `json:"token"`
+	Expiresat string `json:"expiresat"`
+	Accounts  int64  `json:"accounts"`
+}
+
+func (q *Queries) ListOpenAccountInvites(ctx context.Context, now string) ([]ListOpenAccountInvitesRow, error) {
 	rows, err := q.db.QueryContext(ctx, listOpenAccountInvites, now)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []AccountInvite{}
+	items := []ListOpenAccountInvitesRow{}
 	for rows.Next() {
-		var i AccountInvite
+		var i ListOpenAccountInvitesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Token,
-			&i.Createdby,
-			&i.Createdat,
 			&i.Expiresat,
-			&i.Usedat,
-			&i.Usedby,
+			&i.Accounts,
 		); err != nil {
 			return nil, err
 		}
@@ -3320,6 +3324,21 @@ func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]Live
 	return items, nil
 }
 
+const recordAccountInviteUse = `-- name: RecordAccountInviteUse :exec
+INSERT INTO account_invite_uses (linkId, userId, usedAt) VALUES (?, ?, ?)
+`
+
+type RecordAccountInviteUseParams struct {
+	Linkid int64  `json:"linkid"`
+	Userid int64  `json:"userid"`
+	Usedat string `json:"usedat"`
+}
+
+func (q *Queries) RecordAccountInviteUse(ctx context.Context, arg RecordAccountInviteUseParams) error {
+	_, err := q.db.ExecContext(ctx, recordAccountInviteUse, arg.Linkid, arg.Userid, arg.Usedat)
+	return err
+}
+
 const removeCharacterConditional = `-- name: RemoveCharacterConditional :exec
 DELETE FROM character_conditionals WHERE characterId = ? AND conditionalId = ?
 `
@@ -3394,16 +3413,31 @@ func (q *Queries) ResetSessionTracker(ctx context.Context, arg ResetSessionTrack
 }
 
 const revokeAccountInvite = `-- name: RevokeAccountInvite :execrows
-DELETE FROM account_invites WHERE id = ? AND usedAt IS NULL
+UPDATE account_invite_links SET revokedAt = ?1
+WHERE id = ?2 AND revokedAt IS NULL
 `
 
+type RevokeAccountInviteParams struct {
+	Now sql.NullString `json:"now"`
+	ID  int64          `json:"id"`
+}
+
 // Only what is still open: a spent invite stays as the record of who came in by it.
-func (q *Queries) RevokeAccountInvite(ctx context.Context, id int64) (int64, error) {
-	result, err := q.db.ExecContext(ctx, revokeAccountInvite, id)
+func (q *Queries) RevokeAccountInvite(ctx context.Context, arg RevokeAccountInviteParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, revokeAccountInvite, arg.Now, arg.ID)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const revokeOpenAccountInvites = `-- name: RevokeOpenAccountInvites :exec
+UPDATE account_invite_links SET revokedAt = ?1 WHERE revokedAt IS NULL
+`
+
+func (q *Queries) RevokeOpenAccountInvites(ctx context.Context, now sql.NullString) error {
+	_, err := q.db.ExecContext(ctx, revokeOpenAccountInvites, now)
+	return err
 }
 
 const saveCampaignPlace = `-- name: SaveCampaignPlace :one
@@ -3700,27 +3734,6 @@ func (q *Queries) SetSpellPreparedByCatalog(ctx context.Context, arg SetSpellPre
 		&i.Learnedat,
 	)
 	return i, err
-}
-
-const spendAccountInvite = `-- name: SpendAccountInvite :execrows
-UPDATE account_invites SET usedAt = ?, usedBy = ?
-WHERE id = ? AND usedAt IS NULL
-`
-
-type SpendAccountInviteParams struct {
-	Usedat sql.NullString `json:"usedat"`
-	Usedby sql.NullInt64  `json:"usedby"`
-	ID     int64          `json:"id"`
-}
-
-// Single use for real: `usedAt IS NULL` is what makes the second registration
-// with the same link a no-op, and the affected rows say which one won.
-func (q *Queries) SpendAccountInvite(ctx context.Context, arg SpendAccountInviteParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, spendAccountInvite, arg.Usedat, arg.Usedby, arg.ID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected()
 }
 
 const spendPasswordReset = `-- name: SpendPasswordReset :execrows

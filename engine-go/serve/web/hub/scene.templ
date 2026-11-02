@@ -29,7 +29,7 @@ templ hub(v hubView) {
 	</div>
 	@playerMenu(v)
 	if v.EhAdmin {
-		@inviteDialog()
+		@inviteDialog(v.InvitePath)
 	}
 }
 
@@ -132,8 +132,8 @@ templ playerMenu(v hubView) {
 }
 
 // inviteDialog é o convite, no kit.
-templ inviteDialog() {
+templ inviteDialog(path string) {
 	@ds.Dialog("hub-invite", "Convidar jogador", nil) {
-		@ds.InviteBody("/convites")
+		@ds.InviteBody("/convites", path)
 	}
 }

@@ -101,7 +101,7 @@ func hub(v hubView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.EhAdmin {
-			templ_7745c5c3_Err = inviteDialog().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = inviteDialog(v.InvitePath).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -471,7 +471,7 @@ func playerMenu(v hubView) templ.Component {
 }
 
 // inviteDialog é o convite, no kit.
-func inviteDialog() templ.Component {
+func inviteDialog(path string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -504,7 +504,7 @@ func inviteDialog() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = ds.InviteBody("/convites").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.InviteBody("/convites", path).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -1,0 +1,52 @@
+package ds
+
+import "t20engine/serve/web/ui"
+
+// InviteBody é o miolo do diálogo de convite de conta: quem chama põe o `ds.Dialog` em
+// volta, e a ROTA é dele porque as telas precisam de remendos diferentes. No início só
+// volta o link; na administração volta o link e a lista de convites abertos. O caminho
+// é o do link aberto, vazio quando não há nenhum.
+//
+// O link chega por remendo do servidor (`#invite-link`) e NÃO passa por sinal: um token
+// que abre contas em estado de cliente viajaria de volta em toda requisição seguinte.
+//
+// O botão fica FORA do remendo: trocado junto com o link, o `data-indicator` do botão
+// velho nunca desliga, e o novo nasce desabilitado.
+templ InviteBody(route, path string) {
+	<div class="contents" data-signals="{error: '', copied: false}">
+		@InviteLink(path)
+		<p class="ds-help ds-reg-error" data-show="$error" data-text="$error" style="display:none"></p>
+		@Button(ButtonPrimary, templ.Attributes{
+			"type": "button", "data-on:click": "$copied = false; @post('" + route + "')",
+			"data-indicator:generating": true, "data-attr:disabled": "$generating",
+		}) {
+			Gerar novo link
+		}
+	</div>
+}
+
+// InviteLink é o link aberto, ou o convite a gerar um. Só o CAMINHO viaja: quem
+// prefixa a origem é o navegador, porque o servidor não sabe por qual endereço a mesa o
+// alcança, e convite existe para ser MANDADO, então host errado é link morto.
+//
+// O caminho vai DENTRO do `data-init`, e não só no `data-path`: o remendo reaproveita o
+// campo, e o Datastar só roda de novo o `data-init` cujo texto mudou. Lendo do `dataset`,
+// o segundo link chegava e a tela continuava mostrando o primeiro.
+//
+// `readonly` e não `disabled`: campo desabilitado não entra na seleção nem no "copiar"
+// do teclado, e copiar é a única coisa que se faz com ele.
+templ InviteLink(path string) {
+	<div id="invite-link" class="ds-hub-invite">
+		if path == "" {
+			<p class="ds-help">Gere um link e envie para quem vai entrar. Ele serve para várias contas, expira em 7 dias, e cada pessoa escolhe a própria senha.</p>
+		} else {
+			<input id="invite-url" class="ds-input" readonly aria-label="Link de convite" data-path={ path } data-init={ "el.value = location.origin + '" + path + "'" }/>
+			@Button(ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": ui.CopyThen("document.getElementById('invite-url').value", "$copied = true")}) {
+				@ui.Icon("Copy", "ds-icon")
+				Copiar
+			}
+			<p class="ds-help" aria-live="polite" data-show="$copied" style="display:none">Link copiado.</p>
+			<p class="ds-help">Este link serve para várias contas, por 7 dias desde que foi gerado. Gerar um novo derruba este: quem ainda não entrou vai precisar do novo.</p>
+		}
+	</div>
+}

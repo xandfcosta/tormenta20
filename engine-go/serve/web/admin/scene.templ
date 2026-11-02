@@ -26,7 +26,7 @@ templ adminScene(v adminView) {
 		// O miolo é o mesmo do início: cunhar convite é uma coisa só. Aqui a rota devolve
 		// também a lista de convites abertos.
 		@ds.Dialog("admin-invite", "Convidar jogador", nil) {
-			@ds.InviteBody("/admin/convites")
+			@ds.InviteBody("/admin/convites", openInvitePath(v))
 		}
 		<p class="ds-help ds-reg-error" data-show="$error != ''" data-text="$error" style="display:none"></p>
 	</main>
@@ -82,21 +82,21 @@ templ invitesPanel(v adminView) {
 		<header class="ds-admin-head">
 			<h2 class="ds-list-head">{ fmt.Sprintf("Convites abertos · %d", len(v.Invites)) }</h2>
 			@ds.Button(ds.ButtonSecondary, templ.Attributes{
-				"type": "button", "data-on:click": "$copied = false; document.getElementById('invite-link').innerHTML = ''; document.getElementById('admin-invite').showModal()",
+				"type": "button", "data-on:click": "$copied = false; document.getElementById('admin-invite').showModal()",
 			}) {
 				@ui.Icon("UserPlus", "ds-icon")
 				Convidar
 			}
 		</header>
 		if len(v.Invites) == 0 {
-			<p class="ds-row-meta">Nenhum convite pendente. Todo mundo que foi convidado já entrou.</p>
+			<p class="ds-row-meta">Nenhum link aberto. Gere um em Convidar.</p>
 		} else {
 			@ds.List("", "") {
 				for _, c := range v.Invites {
 					<div class="ds-row">
 						<div>
 							<div class="ds-row-title">{ c.Label }</div>
-							<div class="ds-row-meta">{ "Expira em " + c.Expires + "." }</div>
+							<div class="ds-row-meta">{ "Expira em " + c.Expires + " · " + c.Entered + "." }</div>
 						</div>
 						<div class="ds-admin-acts">
 							@ds.Button(ds.ButtonGhost, templ.Attributes{

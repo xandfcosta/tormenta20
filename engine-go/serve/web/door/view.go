@@ -55,7 +55,7 @@ const (
 	// A mesma resposta para "não existe conta" e "senha errada": distinguir os
 	// dois entrega a quem sonda a lista de quem tem conta aqui.
 	noticeBadCredentials = "E-mail ou senha incorretos."
-	// O servidor recusa convite inexistente, gasto e vencido com o mesmo 403,
+	// O servidor recusa convite inexistente, revogado e vencido com o mesmo 403,
 	// pelo mesmo motivo. O jogador lê isto em vez do inglês da API.
 	noticeBadInvite = "Convite inválido ou expirado. Peça um link novo a quem administra a mesa."
 	// O link morto é um vazio do kit: o título diz o que houve, e o texto o

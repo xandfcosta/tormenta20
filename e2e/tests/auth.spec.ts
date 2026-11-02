@@ -44,7 +44,7 @@ test.describe('A porta do jogo', () => {
 
   // NÃO há caso de "criar conta só abre com convite", e a ausência é
   // deliberada: a porta é do SERVIDOR e está presa em Go
-  // (`TestRegisterRequiresAnInvite`, `TestRegisterWithAnInviteWorksExactlyOnce`,
+  // (`TestRegisterRequiresAnInvite`, `TestOneInviteLinkOpensSeveralAccounts`,
   // `TestExpiredInviteIsRejected`). Esconder a tela é UX sobre uma porta já
   // fechada, e afirmar UI não move a fronteira de segurança.
 
