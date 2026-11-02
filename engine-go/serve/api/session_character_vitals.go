@@ -228,15 +228,33 @@ func (v sheetVitals) EndSustained(ctx context.Context, charID int64, catalogID s
 
 // ExpireTurnEffects derruba o que durava a vez que acabou.
 func (v sheetVitals) ExpireTurnEffects(ctx context.Context, charID int64) error {
-	return v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
+	if err := v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
 		Characterid: charID, Scope: engine.TurnScope(),
-	})
+	}); err != nil {
+		return err
+	}
+	return v.turnSwitchesOff(ctx, charID, engine.SwitchEndsTurn)
+}
+
+// turnSwitchesOff desliga os interruptores de poder geral que acabam neste momento (p233).
+func (v sheetVitals) turnSwitchesOff(ctx context.Context, charID int64, end string) error {
+	for _, key := range v.catalogs().SwitchesEndingAt(end) {
+		if err := v.q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+			Characterid: charID, Conditionalid: key,
+		}); err != nil {
+			return fmt.Errorf("desligar %s da ficha %d: %w", key, charID, err)
+		}
+	}
+	return nil
 }
 
 func (v sheetVitals) ExpireOwnTurnEffects(ctx context.Context, charID int64) error {
-	return v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
+	if err := v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
 		Characterid: charID, Scope: engine.OwnTurnScope(),
-	})
+	}); err != nil {
+		return err
+	}
+	return v.turnSwitchesOff(ctx, charID, engine.SwitchEndsOwnTurn)
 }
 
 // ConditionsOf lê as condições ligadas na ficha.

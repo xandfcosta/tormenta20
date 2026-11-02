@@ -141,6 +141,16 @@ func (s Scopes) clearScenePlay(ctx context.Context, characterID int64) error {
 	}); err != nil {
 		return fmt.Errorf("expirar os efeitos até a próxima vez do personagem %d: %w", characterID, err)
 	}
+	// Os interruptores que dependem da vez têm a mesma rede: fora de combate não há vez que os desligue.
+	for _, end := range []string{engine.SwitchEndsTurn, engine.SwitchEndsOwnTurn} {
+		for _, key := range s.catalogs.SwitchesEndingAt(end) {
+			if err := s.queries.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+				Characterid: characterID, Conditionalid: key,
+			}); err != nil {
+				return fmt.Errorf("desligar %s do personagem %d: %w", key, characterID, err)
+			}
+		}
+	}
 	if err := s.queries.ClearCharacterPowerUsesByScope(ctx, sqlcgen.ClearCharacterPowerUsesByScopeParams{
 		Characterid: characterID, Scope: "scene",
 	}); err != nil {
