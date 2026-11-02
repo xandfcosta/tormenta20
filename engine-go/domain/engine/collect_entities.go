@@ -270,30 +270,31 @@ func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 	return out
 }
 
-// godPowerActiveItem é o poder concedido pelo deus de quem é devoto.
+// godPowerActiveItems são os poderes concedidos pelo deus de quem é devoto.
 //
-// A devoção NÃO era fonte de modificador (ALE-397). O `GodPower` só entrava
+// A devoção NÃO era fonte de modificador (ALE-397). O `GodPowers` só entrava
 // pelo `vitalGrantMods`, que existe para PV e PM e descarta todo alvo que não
 // seja um dos dois — então a Bênção do Mana funcionava, por ser `maxPm`, e as
 // Escamas Dracônicas não mudavam a Defesa de ninguém.
 //
-// É UM poder e não uma lista: o livro dá um poder concedido ao se tornar
-// devoto (p96), e o druida, que recebe dois, ainda não é modelado — a coluna
-// `godPower` guarda um nome só.
-func (r *Ruleset) godPowerActiveItem(ch Character) *ActiveItem {
-	if ch.GodPower == "" {
-		return nil
+// Quantos cabem na ficha é de quem os escolhe (p96; dois para clérigo, druida e
+// paladino): aqui conta todo poder guardado, inclusive o do deus antigo, que
+// fica até a mesa decidir.
+func (r *Ruleset) godPowerActiveItems(ch Character) []ActiveItem {
+	var items []ActiveItem
+	for _, name := range parseChoiceSet(ch.GodPowers).list {
+		power := r.grantedPowerByName(name)
+		if power == nil || len(power.Modifiers) == 0 {
+			continue
+		}
+		items = append(items, ActiveItem{
+			SourceID:  power.ID,
+			Source:    "Devoção: " + power.Name,
+			Equipped:  &vestedWear,
+			Modifiers: power.Modifiers,
+		})
 	}
-	power := r.grantedPowerByName(ch.GodPower)
-	if power == nil || len(power.Modifiers) == 0 {
-		return nil
-	}
-	return &ActiveItem{
-		SourceID:  power.ID,
-		Source:    "Devoção: " + power.Name,
-		Equipped:  &vestedWear,
-		Modifiers: power.Modifiers,
-	}
+	return items
 }
 
 // tormentaCarismaItem: the escalating Carisma loss over the count of real

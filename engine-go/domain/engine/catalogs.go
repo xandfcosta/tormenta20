@@ -210,7 +210,7 @@ type GeneralPower struct {
 
 // GrantedPower é o poder concedido do deus — só o nome e os modificadores são
 // lidos (Bênção do Mana → maxPm). Indexado por NOME porque é o nome que o
-// `Character.godPower` guarda.
+// `Character.godPowers` guarda.
 type GrantedPower struct {
 	// ID já existia no catálogo e ninguém o lia. Ele entrou quando a devoção
 	// virou fonte do coletor (ALE-397): toda fonte precisa de um `SourceID`
@@ -392,7 +392,7 @@ func (c *Catalogs) getGeneralPower(id string) *GeneralPower { return c.generalBy
 func (c *Catalogs) generalPowerByUid(uid string) *GeneralPower { return c.generalByUid[uid] }
 
 // grantedPowerByName é o poder concedido do deus indexado pelo nome do livro,
-// que é o que o `Character.godPower` guarda.
+// que é o que o `Character.godPowers` guarda.
 func (c *Catalogs) grantedPowerByName(name string) *GrantedPower { return c.grantedByName[name] }
 
 // getOrigin acha uma origem pelo id.

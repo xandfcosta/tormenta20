@@ -73,3 +73,30 @@ func devotionIsValid(dto CharacterDTO) error {
 func GrantedPowerIsOfGod(god, power string) bool {
 	return slices.ContainsFunc(book.GrantedPowersOf(god), func(p book.GrantedPower) bool { return p.Name == power })
 }
+
+// GrantedPowerLimit é quantos poderes concedidos a devoção dá: um (p96), dois para quem tem classe que
+// serve a um deus (p57, p61, p82), e nenhum na devoção sem lista, como o Panteão.
+func GrantedPowerLimit(classes []ClassDTO, god string) int {
+	switch {
+	case len(book.GrantedPowersOf(god)) == 0:
+		return 0
+	case DevotionRequired(classes):
+		return 2
+	}
+	return 1
+}
+
+// GrantedPowersMissing é quantos poderes do deus de agora faltam escolher. O do deus antigo não conta: ele
+// fica na ficha até a mesa decidir, e não ocupa a vaga do novo.
+func GrantedPowersMissing(dto CharacterDTO) int {
+	if dto.God == nil {
+		return 0
+	}
+	held := 0
+	for _, power := range UnmarshalStrings(dto.GodPowers) {
+		if GrantedPowerIsOfGod(*dto.God, power) {
+			held++
+		}
+	}
+	return max(GrantedPowerLimit(dto.Classes, *dto.God)-held, 0)
+}

@@ -6,7 +6,7 @@
     "name": "Necromante Nv12 Magias",
     "origin": "criminoso",
     "god": "Tenebra",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 12,
     "hpMax": 54,

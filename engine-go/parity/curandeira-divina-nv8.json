@@ -6,7 +6,7 @@
     "name": "Curandeira Divina Nv8",
     "origin": "acolito",
     "god": "Lena",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 8,
     "hpMax": 52,

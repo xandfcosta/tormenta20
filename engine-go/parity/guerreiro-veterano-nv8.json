@@ -6,7 +6,7 @@
     "name": "Guerreiro Veterano Nv8",
     "origin": "soldado",
     "god": "Khalmyr",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 8,
     "hpMax": 87,

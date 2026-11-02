@@ -6,7 +6,7 @@
     "name": "Bardo Versátil Nv7",
     "origin": "amnesico",
     "god": null,
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 7,
     "hpMax": 51,

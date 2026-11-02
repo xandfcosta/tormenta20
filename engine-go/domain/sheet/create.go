@@ -24,14 +24,14 @@ type StartingItem struct {
 }
 
 type CreateBody struct {
-	Name     string         `json:"name"`
-	Races    []string       `json:"races"`
-	Origin   string         `json:"origin"`
-	Classes  []ClassEntry   `json:"classes"`
-	God      *string        `json:"god"`
-	GodPower *string        `json:"godPower"`
-	Tibar    *float64       `json:"tibar"`
-	Items    []StartingItem `json:"items"`
+	Name      string         `json:"name"`
+	Races     []string       `json:"races"`
+	Origin    string         `json:"origin"`
+	Classes   []ClassEntry   `json:"classes"`
+	God       *string        `json:"god"`
+	GodPowers *[]string      `json:"godPowers"`
+	Tibar     *float64       `json:"tibar"`
+	Items     []StartingItem `json:"items"`
 	// Os quatro vitais SAÍRAM do corpo de criação: quem cria não escolhe o poço,
 	// porque ele é derivado do catálogo (ALE-355). Um campo que o servidor ia
 	// ignorar é pior que ausente — ele promete uma escolha que não existe.

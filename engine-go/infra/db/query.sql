@@ -221,12 +221,12 @@ WHERE id = sqlc.arg('id');
 
 -- name: CreateCharacter :one
 INSERT INTO characters (
-  ownerId, name, origin, god, godPower, tibar, level,
+  ownerId, name, origin, god, godPowers, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
   proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices,
   classChoices, createdAt, updatedAt
 ) VALUES (
-  sqlc.arg('ownerId'), sqlc.arg('name'), sqlc.arg('origin'), sqlc.arg('god'), sqlc.arg('godPower'),
+  sqlc.arg('ownerId'), sqlc.arg('name'), sqlc.arg('origin'), sqlc.arg('god'), sqlc.arg('godPowers'),
   sqlc.arg('tibar'), sqlc.arg('level'),
   sqlc.arg('strength'), sqlc.arg('dexterity'), sqlc.arg('constitution'),
   sqlc.arg('intelligence'), sqlc.arg('wisdom'), sqlc.arg('charisma'), sqlc.arg('size'),
@@ -247,7 +247,7 @@ UPDATE characters SET
   raceAttributeChoices = COALESCE(sqlc.narg('raceAttributeChoices'), raceAttributeChoices),
   secondaryRaceChoices = COALESCE(sqlc.narg('secondaryRaceChoices'), secondaryRaceChoices),
   god                  = COALESCE(sqlc.narg('god'), god),
-  godPower             = COALESCE(sqlc.narg('godPower'), godPower),
+  godPowers            = COALESCE(sqlc.narg('godPowers'), godPowers),
   updatedAt            = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 

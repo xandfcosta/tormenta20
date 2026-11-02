@@ -18,7 +18,7 @@ type CharacterDTO struct {
 	Name                 string  `json:"name"`
 	Origin               string  `json:"origin"`
 	God                  *string `json:"god"`
-	GodPower             string  `json:"godPower"`
+	GodPowers            string  `json:"godPowers"`
 	Tibar                float64 `json:"tibar"`
 	Level                int64   `json:"level"`
 	HpMax                int64   `json:"hpMax"`
@@ -136,7 +136,7 @@ func CharacterScalarsFrom(c sqlcgen.Character) CharacterDTO {
 		Name:       c.Name,
 		Origin:     c.Origin,
 		God:        dbvalue.NullToPtr(c.God),
-		GodPower:   c.Godpower,
+		GodPowers:  c.Godpowers,
 		Tibar:      c.Tibar,
 		Level:      c.Level,
 		// Os quatro vitais NÃO saem daqui: eles são derivados, e o

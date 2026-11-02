@@ -54,7 +54,7 @@ func TestTheConditionalGodPowersOfferTheirSwitch(t *testing.T) {
 		{"Sangue Ofídico", ModifierTarget{K: "resistance"}, 5, "p135"},
 	} {
 		desligado := ComputeItemEffects(world.ActiveItemsFor(
-			Character{Level: 1, GodPower: caso.poder}))
+			Character{Level: 1, GodPowers: `["` + caso.poder + `"]`}))
 
 		if got := StatFor(desligado, caso.alvo).Total; got != 0 {
 			t.Errorf("%s: %s vale %d com o interruptor DESLIGADO, e o livro o dá só "+

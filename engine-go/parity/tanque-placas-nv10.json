@@ -6,7 +6,7 @@
     "name": "Tanque Placas Nv10",
     "origin": "soldado",
     "god": "Khalmyr",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 10,
     "hpMax": 137,

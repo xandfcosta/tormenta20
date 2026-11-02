@@ -321,23 +321,24 @@ func chosenPowersOf(dto CharacterDTO) []OwnedPower {
 	return outside
 }
 
-// godPowerOf é o poder que a devoção concede — UM, guardado pelo NOME.
+// godPowerOf são os poderes que a devoção concede, guardados pelo NOME.
 //
-// Ele não aparecia no acervo da tela, e a falta ficava calada: o Dom da Verdade
+// Eles não apareciam no acervo da tela, e a falta ficava calada: o Dom da Verdade
 // (p133) está na ficha de quem é devoto de Khalmyr e não estava na lista que diz
 // o que o personagem tem.
 func godPowerOf(dto CharacterDTO) []OwnedPower {
-	if dto.GodPower == "" {
-		return nil
-	}
-	for _, power := range book.DivinePowers() {
-		if power.Name != dto.GodPower {
-			continue
+	var owned []OwnedPower
+	for _, name := range UnmarshalStrings(dto.GodPowers) {
+		for _, power := range book.DivinePowers() {
+			if power.Name != name {
+				continue
+			}
+			owned = append(owned, OwnedPower{
+				ID: power.ID, Name: power.Name, Detail: power.Description,
+				Source: PowerFromGod, Owner: power.Source, Page: power.BookPage,
+			})
+			break
 		}
-		return []OwnedPower{{
-			ID: power.ID, Name: power.Name, Detail: power.Description,
-			Source: PowerFromGod, Owner: power.Source, Page: power.BookPage,
-		}}
 	}
-	return nil
+	return owned
 }

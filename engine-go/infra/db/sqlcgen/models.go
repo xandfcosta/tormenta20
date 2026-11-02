@@ -98,7 +98,7 @@ type Character struct {
 	Name                 string         `json:"name"`
 	Origin               string         `json:"origin"`
 	God                  sql.NullString `json:"god"`
-	Godpower             string         `json:"godpower"`
+	Godpowers            string         `json:"godpowers"`
 	Tibar                float64        `json:"tibar"`
 	Level                int64          `json:"level"`
 	Strength             int64          `json:"strength"`

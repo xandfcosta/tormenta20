@@ -29,7 +29,7 @@ var classPowersPart07 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       61,
 		UID:            "pwr_5b7m4pkkg5",
-		Unmodeled:      "os DOIS poderes concedidos se escolhem à mão: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
+		Unmodeled:      "os dois poderes concedidos se escolhem no passo Devoção do Escolher, e não nesta linha",
 	},
 	{
 		ID:             "class.clerigo.magias-1-circulo",
@@ -325,7 +325,7 @@ var classPowersPart07 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       61,
 		UID:            "pwr_g7ocrjqrqd",
-		Unmodeled:      "os DOIS poderes concedidos se escolhem à mão: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
+		Unmodeled:      "os dois poderes concedidos se escolhem no passo Devoção do Escolher, e não nesta linha",
 	},
 	{
 		ID:             "class.druida.empatia-selvagem",

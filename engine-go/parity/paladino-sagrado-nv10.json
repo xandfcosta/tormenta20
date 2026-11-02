@@ -6,7 +6,7 @@
     "name": "Paladino Sagrado Nv10",
     "origin": "aristocrata",
     "god": "Khalmyr",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 10,
     "hpMax": 95,

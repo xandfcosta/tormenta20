@@ -6,7 +6,7 @@
     "name": "Recruta Nv1 Simples",
     "origin": "capanga",
     "god": null,
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 1,
     "hpMax": 23,

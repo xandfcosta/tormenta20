@@ -361,7 +361,7 @@ func (q *Queries) CreateCampaignCreature(ctx context.Context, arg CreateCampaign
 
 const createCharacter = `-- name: CreateCharacter :one
 INSERT INTO characters (
-  ownerId, name, origin, god, godPower, tibar, level,
+  ownerId, name, origin, god, godPowers, tibar, level,
   strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement,
   proficiencies, raceAttributeChoices, secondaryRaceChoices, originChoices,
   classChoices, createdAt, updatedAt
@@ -382,7 +382,7 @@ type CreateCharacterParams struct {
 	Name                 string         `json:"name"`
 	Origin               string         `json:"origin"`
 	God                  sql.NullString `json:"god"`
-	GodPower             string         `json:"godPower"`
+	GodPowers            string         `json:"godPowers"`
 	Tibar                float64        `json:"tibar"`
 	Level                int64          `json:"level"`
 	Strength             int64          `json:"strength"`
@@ -408,7 +408,7 @@ func (q *Queries) CreateCharacter(ctx context.Context, arg CreateCharacterParams
 		arg.Name,
 		arg.Origin,
 		arg.God,
-		arg.GodPower,
+		arg.GodPowers,
 		arg.Tibar,
 		arg.Level,
 		arg.Strength,
@@ -1280,7 +1280,7 @@ func (q *Queries) GetCampaignPlace(ctx context.Context, id int64) (CampaignPlace
 }
 
 const getCharacter = `-- name: GetCharacter :one
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
+SELECT id, ownerid, name, origin, god, godpowers, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error) {
@@ -1292,7 +1292,7 @@ func (q *Queries) GetCharacter(ctx context.Context, id int64) (Character, error)
 		&i.Name,
 		&i.Origin,
 		&i.God,
-		&i.Godpower,
+		&i.Godpowers,
 		&i.Tibar,
 		&i.Level,
 		&i.Strength,
@@ -2243,7 +2243,7 @@ func (q *Queries) ListCharacterStances(ctx context.Context, characterid int64) (
 }
 
 const listCharactersByIDs = `-- name: ListCharactersByIDs :many
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id IN (/*SLICE:ids*/?)
+SELECT id, ownerid, name, origin, god, godpowers, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters WHERE id IN (/*SLICE:ids*/?)
 `
 
 func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Character, error) {
@@ -2271,7 +2271,7 @@ func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Chara
 			&i.Name,
 			&i.Origin,
 			&i.God,
-			&i.Godpower,
+			&i.Godpowers,
 			&i.Tibar,
 			&i.Level,
 			&i.Strength,
@@ -2309,7 +2309,7 @@ func (q *Queries) ListCharactersByIDs(ctx context.Context, ids []int64) ([]Chara
 
 const listCharactersByOwner = `-- name: ListCharactersByOwner :many
 
-SELECT id, ownerid, name, origin, god, godpower, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
+SELECT id, ownerid, name, origin, god, godpowers, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
 WHERE ownerId = ? AND sourceCharacterId IS NULL
 ORDER BY updatedAt DESC
 `
@@ -2332,7 +2332,7 @@ func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]C
 			&i.Name,
 			&i.Origin,
 			&i.God,
-			&i.Godpower,
+			&i.Godpowers,
 			&i.Tibar,
 			&i.Level,
 			&i.Strength,
@@ -3545,7 +3545,7 @@ UPDATE characters SET
   raceAttributeChoices = COALESCE(?4, raceAttributeChoices),
   secondaryRaceChoices = COALESCE(?5, secondaryRaceChoices),
   god                  = COALESCE(?6, god),
-  godPower             = COALESCE(?7, godPower),
+  godPowers            = COALESCE(?7, godPowers),
   updatedAt            = ?8
 WHERE id = ?9
 `
@@ -3557,7 +3557,7 @@ type SetCharacterChoicesParams struct {
 	RaceAttributeChoices sql.NullString `json:"raceAttributeChoices"`
 	SecondaryRaceChoices sql.NullString `json:"secondaryRaceChoices"`
 	God                  sql.NullString `json:"god"`
-	GodPower             sql.NullString `json:"godPower"`
+	GodPowers            sql.NullString `json:"godPowers"`
 	UpdatedAt            string         `json:"updatedAt"`
 	ID                   int64          `json:"id"`
 }
@@ -3570,7 +3570,7 @@ func (q *Queries) SetCharacterChoices(ctx context.Context, arg SetCharacterChoic
 		arg.RaceAttributeChoices,
 		arg.SecondaryRaceChoices,
 		arg.God,
-		arg.GodPower,
+		arg.GodPowers,
 		arg.UpdatedAt,
 		arg.ID,
 	)

@@ -6,7 +6,7 @@
     "name": "Druida Natureza Nv9",
     "origin": "eremita",
     "god": "Allihanna",
-    "godPower": "",
+    "godPowers": "[]",
     "tibar": 0,
     "level": 9,
     "hpMax": 66,

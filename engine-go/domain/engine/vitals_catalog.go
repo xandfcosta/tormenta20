@@ -25,7 +25,7 @@ type VitalContext struct {
 	RaceAncestry  string                           `json:"raceAncestry,omitempty"`
 	PowerIDs      []string                         `json:"powerIds"`
 	ClassChoices  map[string]ClassChoiceSelections `json:"classChoices"`
-	GodPower      string                           `json:"godPower"`
+	GodPowers     []string                         `json:"godPowers"`
 	Origin        string                           `json:"origin"`
 	OriginChoices []string                         `json:"originChoices"`
 	AttrTotals    map[string]int                   `json:"attrTotals"`
@@ -102,8 +102,8 @@ func (r *Ruleset) vitalGrantMods(ctx VitalContext) []Modifier {
 			out = append(out, gp.Modifiers...)
 		}
 	}
-	if ctx.GodPower != "" {
-		if gp := r.grantedPowerByName(ctx.GodPower); gp != nil {
+	for _, name := range ctx.GodPowers {
+		if gp := r.grantedPowerByName(name); gp != nil {
 			out = append(out, gp.Modifiers...)
 		}
 	}

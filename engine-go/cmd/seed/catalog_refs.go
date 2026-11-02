@@ -165,11 +165,14 @@ func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []re
 		})
 	}
 	for field, list := range map[string]string{
-		"origin": "origens", "god": "deuses", "godPower": "poderes concedidos", "size": "tamanhos",
+		"origin": "origens", "god": "deuses", "size": "tamanhos",
 	} {
 		if name, ok := textoDe(create, field); ok {
 			broken = append(broken, c.confere(where+", create."+field, name, list)...)
 		}
+	}
+	for _, power := range listaDe(create, "godPowers") {
+		broken = append(broken, c.confere(where+", create.godPowers", power, "poderes concedidos")...)
 	}
 	for _, race := range listaDe(create, "races") {
 		broken = append(broken, c.confere(where+", create.races", race, "raças")...)

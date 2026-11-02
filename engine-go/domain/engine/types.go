@@ -54,7 +54,7 @@ type CharacterInput struct {
 	PowerIDs           []string               `json:"powerIds"`
 	ClassChoices       map[string]ClassChoice `json:"classChoices"`
 	Classes            []ClassEntry           `json:"classes"`
-	GodPower           string                 `json:"godPower"`
+	GodPowers          []string               `json:"godPowers"`
 	Origin             string                 `json:"origin"`
 	OriginChoices      []string               `json:"originChoices"`
 	ActiveConditions   []string               `json:"activeConditions"`
