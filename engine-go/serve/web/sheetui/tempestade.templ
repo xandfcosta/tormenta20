@@ -62,9 +62,9 @@ templ tempestadeSheet(v View) {
 		for _, attr := range v.Combat.Attributes {
 			@attributeDialog(v, attr)
 		}
-		@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV)
+		@vitalDialog(v, "pv", "Pontos de vida", v.PV, ds.MeterPV, v.PVLevels)
 		if !v.NoMana {
-			@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM)
+			@vitalDialog(v, "pm", "Pontos de mana", v.PM, ds.MeterPM, v.PMLevels)
 		}
 		@tempestadeClassChoice(v, +1, "Qual classe sobe de nível?")
 		@lastLevelDialog(v)
@@ -271,7 +271,7 @@ templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKin
 
 // vitalDialog é o dano ou a cura de qualquer valor. O temporário é LEITURA: ele
 // vem dos efeitos ativos, e o app não tem gesto que o escreva à mão.
-templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKind) {
+templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKind, levels []vitalLevelRow) {
 	@ds.Dialog("vital-"+which, title, nil) {
 		@ds.MeterView(meterOf(map[string]string{"pv": "PV", "pm": "PM"}[which], vital, kind))
 		if vital.Temp != "" {
@@ -290,6 +290,24 @@ templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKi
 				}
 			</div>
 		</div>
+		// A CONTA ABRE EM OUTRO DIÁLOGO (decisão do dono): aberta aqui, ela afastaria o
+		// campo do número que ele muda.
+		if len(levels) > 0 {
+			@ds.BareList("", "") {
+				@ds.ActionRow(vitalLevelsTitle(vital), "", vitalLevelsID(which)) {
+					@ui.Icon("ChevronRight", "ds-icon")
+				}
+			}
+		}
+	}
+	if len(levels) > 0 {
+		@ds.Dialog(vitalLevelsID(which), vitalLevelsTitle(vital), nil) {
+			@ds.BareList("", "") {
+				for _, level := range levels {
+					@ds.Row(level.Title, level.Account, level.Total, "")
+				}
+			}
+		}
 	}
 }
 

@@ -54,7 +54,10 @@ type View struct {
 	Defense string
 	PV      sheetVital
 	PM      sheetVital
-	NoMana  bool
+	// PVLevels e PMLevels são a conta nível a nível de cada barra.
+	PVLevels []vitalLevelRow
+	PMLevels []vitalLevelRow
+	NoMana   bool
 	// Classes é "Guerreiro 3 / Ladino 2" — a mesma linha do palco, e string e
 	// não lista porque é assim que a mesa lê e é assim que o cartão já a monta.
 	Classes string
@@ -205,6 +208,7 @@ func (s Scene) Load(
 		return View{}, 500, err
 	}
 	card := characters.HeroCardOf(s.deps.Catalogs(), dto)
+	pvLevels, pmLevels := vitalLevelsOf(dto)
 	v := View{
 		ID:           dto.ID,
 		Draft:        !dto.CampaignID.Valid,
@@ -219,6 +223,8 @@ func (s Scene) Load(
 		PV:           withTempPool(downed(vital(dto.HpCurrent, dto.HpMax), dto.ActiveConditions), sheet.TempHpTarget, dto.ActiveEffects),
 		PM:           withTempPool(vital(dto.MpCurrent, dto.MpMax), sheet.TempMpTarget, dto.ActiveEffects),
 		NoMana:       dto.MpMax == 0,
+		PVLevels:     pvLevels,
+		PMLevels:     pmLevels,
 		Classes:      card.Classes,
 		AsClasses:    stepClasses(dto),
 		OtherClasses: otherClasses(dto),

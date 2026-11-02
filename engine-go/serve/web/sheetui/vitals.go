@@ -1,9 +1,11 @@
 package sheetui
 
 import (
+	"cmp"
 	"slices"
 	"strconv"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/ui"
@@ -70,4 +72,92 @@ func withTempPool(v sheetVital, target string, effects []sheet.EffectDTO) sheetV
 		v.Temp = "+" + strconv.Itoa(total)
 	}
 	return v
+}
+
+// vitalLevelRow é a linha da conta de um nível: de onde vem, o cálculo e o valor.
+type vitalLevelRow struct {
+	Title   string
+	Account string
+	Total   string
+}
+
+// vitalLevelsOf é a conta nível a nível dos dois poços, em linhas de tela.
+//
+// A ordem dos níveis é o registro de escolhas, e o motor a confere contra as classes.
+// Sem motor ou com a ficha ilegível não há conta a mostrar, e a linha que a abre some.
+func vitalLevelsOf(dto sheet.CharacterDTO) (pv, pm []vitalLevelRow) {
+	if dto.Ruleset == nil {
+		return nil, nil
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return nil, nil
+	}
+	levels := dto.Ruleset.VitalLevelsFor(dto.Ruleset.VitalContextFor(ec), classByLevelOf(dto))
+	return vitalLevelRowsOf(levels.PV), vitalLevelRowsOf(levels.PM)
+}
+
+// classByLevelOf é a classe de cada nível, na ordem do registro.
+func classByLevelOf(dto sheet.CharacterDTO) []string {
+	rows := slices.Clone(dto.LevelChoices)
+	rows = slices.DeleteFunc(rows, func(row sheet.LevelChoiceDTO) bool { return row.Kind != "class" })
+	slices.SortStableFunc(rows, func(a, b sheet.LevelChoiceDTO) int { return cmp.Compare(a.Level, b.Level) })
+	classes := make([]string, len(rows))
+	for i, row := range rows {
+		classes[i] = row.Ref
+	}
+	return classes
+}
+
+func vitalLevelRowsOf(lines []engine.VitalLevelLine) []vitalLevelRow {
+	rows := make([]vitalLevelRow, len(lines))
+	for i, line := range lines {
+		rows[i] = vitalLevelRow{
+			Title:   "Nível " + strconv.Itoa(line.Level) + " · " + line.ClassName,
+			Account: vitalLevelAccount(line),
+			Total:   strconv.Itoa(line.Total),
+		}
+	}
+	return rows
+}
+
+// vitalLevelAccount escreve o cálculo de um nível.
+//
+//	vitalLevelAccount(line) // "6 da classe + 5 de Inteligência + 1 de Bênção do Mana"
+func vitalLevelAccount(line engine.VitalLevelLine) string {
+	account := ""
+	for i, part := range line.Parts {
+		amount := part.Amount
+		if i > 0 {
+			if amount < 0 {
+				account += " − "
+				amount = -amount
+			} else {
+				account += " + "
+			}
+		}
+		account += strconv.Itoa(amount) + vitalPartName(part)
+	}
+	// "Você sempre ganha pelo menos 1 PV ao subir de nível" (p35).
+	if line.Floored {
+		account += ": mínimo 1"
+	}
+	return account
+}
+
+func vitalPartName(part engine.VitalLevelPart) string {
+	switch {
+	case part.Attribute != "":
+		return " de " + book.AttributeLabel(part.Attribute)
+	case part.Source != "":
+		return " de " + part.Source
+	}
+	return " da classe"
+}
+
+func vitalLevelsID(which string) string { return "vital-" + which + "-levels" }
+
+// vitalLevelsTitle é "Como chega em 87": o máximo, que é o que a conta explica.
+func vitalLevelsTitle(vital sheetVital) string {
+	return "Como chega em " + strconv.FormatInt(vital.Max, 10)
 }
