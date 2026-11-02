@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -158,22 +159,48 @@ func announce(cfg config.Config) {
 	}
 }
 
-// lanURLs lista os IPv4 não-loopback desta máquina. O servidor já escuta em
-// todas as interfaces; o que falta é serem descobríveis. São os endereços que a
-// mesa abre, em HTTP: não há nada na frente do processo (ALE-531).
+// lanURLs lista os endereços que a mesa abre. O servidor já escuta em todas as
+// interfaces; o que falta é serem descobríveis. São em HTTP: não há nada na frente
+// do processo (ALE-531).
 func lanURLs(cfg config.Config) []string {
-	addrs, err := net.InterfaceAddrs()
+	found, err := net.Interfaces()
 	if err != nil {
 		log.Printf("interfaces: %v — LAN address unknown", err)
 		return nil
 	}
-	var urls []string
-	for _, addr := range addrs {
-		ipNet, ok := addr.(*net.IPNet)
-		if !ok || ipNet.IP.IsLoopback() || ipNet.IP.To4() == nil {
+	interfaces := make([]lanInterface, 0, len(found))
+	for _, each := range found {
+		addrs, err := each.Addrs()
+		if err != nil {
+			log.Printf("interface %s: %v", each.Name, err)
 			continue
 		}
-		urls = append(urls, fmt.Sprintf("%s://%s:%s", "http", ipNet.IP, cfg.Port))
+		interfaces = append(interfaces, lanInterface{Name: each.Name, Addrs: addrs})
+	}
+	return lanURLsOf(interfaces, cfg)
+}
+
+// lanInterface é o que a lista precisa saber de uma interface.
+type lanInterface struct {
+	Name  string
+	Addrs []net.Addr
+}
+
+// lanURLsOf escreve um endereço por IPv4 não-loopback, sem as interfaces virtuais do Docker: elas só
+// existem dentro da máquina, e um jogador que recebesse o endereço delas não entraria.
+func lanURLsOf(interfaces []lanInterface, cfg config.Config) []string {
+	var urls []string
+	for _, each := range interfaces {
+		if each.Name == "docker0" || strings.HasPrefix(each.Name, "br-") || strings.HasPrefix(each.Name, "veth") {
+			continue
+		}
+		for _, addr := range each.Addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if !ok || ipNet.IP.IsLoopback() || ipNet.IP.To4() == nil {
+				continue
+			}
+			urls = append(urls, fmt.Sprintf("%s://%s:%s", "http", ipNet.IP, cfg.Port))
+		}
 	}
 	return urls
 }
