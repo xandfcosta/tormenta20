@@ -19,7 +19,7 @@ import (
 type skillTestBand struct {
 	Who   string
 	Skill string
-	// Tally é a conta inteira em monoespaçado: "d20 (14) + 7 = 21". A mesa
+	// Tally é a conta inteira: "d20 (14) + 7 = 21". A mesa
 	// desconfia de número sem origem — "21" pede "de onde?".
 	Tally string
 	// Sum e Total são a mesma conta partida, para o cartão da sessão do

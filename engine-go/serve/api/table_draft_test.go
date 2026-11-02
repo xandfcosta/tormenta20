@@ -530,7 +530,7 @@ func TestTheDraftWearsTheBoardOfTheMaster(t *testing.T) {
 			t.Errorf("o rascunho não traz %q", want)
 		}
 	}
-	for _, gone := range []string{"grimorio-frame", "mesa-palco", `aria-label="Pôr no mapa"`, `aria-label="Encerrar o tabuleiro"`, "ds-gm-pick"} {
+	for _, gone := range []string{`aria-label="Pôr no mapa"`, `aria-label="Encerrar o tabuleiro"`, "ds-gm-pick"} {
 		if strings.Contains(body, gone) {
 			t.Errorf("o rascunho ainda traz %q", gone)
 		}

@@ -22,9 +22,6 @@ func TestTheParallelChoicesDialogOpensOneStepAtATime(t *testing.T) {
 	if dialog == "" {
 		t.Fatal("a aba Poderes não desenhou o diálogo de escolhas")
 	}
-	if grimoire := regexp.MustCompile(`[\w:-]*grimorio[\w-]*`).FindAllString(dialog, 3); len(grimoire) > 0 {
-		t.Errorf("o diálogo de escolhas desenhou classe do grimório: %v", grimoire)
-	}
 	if strings.Contains(dialog, "De onde vem a escolha") {
 		t.Error("o diálogo ainda tem a fileira Raça · Origem · Classe, que repetia a lista dos passos")
 	}

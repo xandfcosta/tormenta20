@@ -242,9 +242,6 @@ func TestTheNotesWindowWearsTheNewSystem(t *testing.T) {
 			t.Errorf("a janela de notas não traz %q", want)
 		}
 	}
-	if strings.Contains(page, "grimorio-") {
-		t.Error("a janela de notas ainda usa cor do grimório")
-	}
 	css, err := os.ReadFile("../web/assets/src/ds.css")
 	if err != nil {
 		t.Fatal(err)

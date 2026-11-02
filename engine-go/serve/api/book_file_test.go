@@ -255,7 +255,7 @@ func TestTheReaderWearsTheNewSystem(t *testing.T) {
 	body := pedeNoMestre(t, s, eu, "GET", "/livro/ler?p=290&t=Lobo", "").Body.String()
 
 	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`).FindString(body)
-	if !strings.Contains(shell, "scene-ds") || strings.Contains(shell, "scene-grimorio") {
+	if !strings.Contains(shell, "scene-ds") {
 		t.Errorf("o leitor não saiu no escopo do Tempestade: %s", shell)
 	}
 	if strings.Contains(body, "Back") {

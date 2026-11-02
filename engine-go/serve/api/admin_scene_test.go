@@ -141,10 +141,8 @@ func TestTheAdminWearsTheNewSystem(t *testing.T) {
 	boss := seedUser(t, s, "chefe@t20.local")
 	body := askScene(t, s, boss, http.MethodGet, "/admin").Body.String()
 
-	// A CASCA e não a página inteira: os diálogos do livro, que a casca desenha em toda
-	// tela, ainda vestem o grimório, e têm a fatia deles.
 	shell := regexp.MustCompile(`<section[^>]*data-slot="scene-shell"[^>]*>`).FindString(body)
-	if !strings.Contains(shell, "scene-ds") || strings.Contains(shell, "scene-grimorio") {
+	if !strings.Contains(shell, "scene-ds") {
 		t.Errorf("a administração não saiu no escopo do Tempestade: %s", shell)
 	}
 	if !strings.Contains(body, `<h1 class="ds-header-title">Administração</h1>`) {

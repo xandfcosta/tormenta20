@@ -46,8 +46,8 @@ import (
 // mora na folha (`.ds-pick:has(:focus-visible)`, no `ds.css`), e não sobrou
 // nenhum escrito à mão.
 //
-// As outras variantes de `focus-visible:` — `opacity-80`, `bg-accent`,
-// `bg-grimorio-gold` — não são deste guarda: elas mudam a PEÇA no foco, não o
+// As outras variantes de `focus-visible:` — `opacity-80` e as de fundo —
+// não são deste guarda: elas mudam a PEÇA no foco, não o
 // anel, e a regra global não tem opinião sobre isso.
 func TestNoHandwrittenFocusRing(t *testing.T) {
 	// O token só é receita quando começa a classe. `has-[:focus-visible]:…` é

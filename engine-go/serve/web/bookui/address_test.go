@@ -51,7 +51,7 @@ func TestTheBookDialogWearsItsOwnSystemScope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if !strings.Contains(box, "scene-ds") || strings.Contains(box, "grimorio") {
+	if !strings.Contains(box, "scene-ds") {
 		t.Errorf("a caixa do livro não saiu só no Tempestade: %s", box)
 	}
 	// O título é o da barra do leitor, dentro do `iframe`. Um segundo aqui eram dois
