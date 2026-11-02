@@ -409,8 +409,8 @@ func augmentsWritten(n int) string {
 // spellMeta é a linha de meta da magia, com a resistência só quando há.
 func spellMeta(m book.Spell) string {
 	parts := []string{
-		"Execução: " + book.CastingName(m.Execution),
-		"Alcance: " + book.RangeName(m.Range),
+		"Execução: " + book.SpellExecutionWritten(m),
+		"Alcance: " + book.SpellRangeWritten(m),
 		m.Targeting,
 	}
 	if duration := book.DurationName(m.Duration); duration != "" {

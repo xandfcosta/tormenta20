@@ -89,8 +89,9 @@ var spellsPart05 = []Spell{
 				Description: "Muda a resistência para nenhum. Devolve automaticamente uma criatura conjurada (por magia de convocação) para o plano de origem.",
 			},
 		},
-		BookPage: 182,
-		UID:      "spl_uz7nwo3qri",
+		BookPage:      182,
+		UID:           "spl_uz7nwo3qri",
+		ExecutionNote: "1d3+1 rodadas",
 	},
 	{
 		ID:         "barragem-elemental-de-vectorius",

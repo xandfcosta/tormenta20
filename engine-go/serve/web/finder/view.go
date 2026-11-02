@@ -220,7 +220,7 @@ func conditionHit(c book.Condition) finderHit {
 func spellHit(m book.Spell) finderHit {
 	return finderHit{
 		Name:        m.Name,
-		Detail:      fmt.Sprintf("%dº círculo · %s", m.Circle, book.CastingName(m.Execution)),
+		Detail:      fmt.Sprintf("%dº círculo · %s", m.Circle, book.SpellExecutionWritten(m)),
 		Destination: routes.MasterEntry("magias", m.ID),
 		Page:        m.BookPage,
 	}

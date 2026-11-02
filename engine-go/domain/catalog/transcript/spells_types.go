@@ -19,6 +19,11 @@ type Spell struct {
 	UID          string         `json:"uid"`
 	Buff         *SpellBuff     `json:"buff,omitempty"`
 	DurationNote string         `json:"durationNote,omitempty"`
+	// As notas são o texto do livro onde o campo não tem como dizer: o `Execution` é o custo de
+	// ação que o motor cobra, e "1 hora" não é um deles.
+	ExecutionNote  string `json:"executionNote,omitempty"`
+	RangeNote      string `json:"rangeNote,omitempty"`
+	ResistanceNote string `json:"resistanceNote,omitempty"`
 }
 
 type SpellAugment struct {

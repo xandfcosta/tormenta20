@@ -55,14 +55,18 @@ type Spell struct {
 	Execution string `json:"execution"`
 	Range     string `json:"range"`
 	// Targeting é o Alvo, a Área ou o Efeito, nas palavras do livro: "Área: linha de 30m".
-	Targeting  string         `json:"targeting"`
-	Duration   string         `json:"duration"`
-	SaveType   string         `json:"saveType"`
-	Resistance string         `json:"resistance,omitempty"`
-	BaseEffect string         `json:"baseEffect"`
-	Augments   []SpellAugment `json:"augments"`
-	Classes    []string       `json:"classes"`
-	BookPage   int            `json:"bookPage"`
+	Targeting  string `json:"targeting"`
+	Duration   string `json:"duration"`
+	SaveType   string `json:"saveType"`
+	Resistance string `json:"resistance,omitempty"`
+	// As notas são o texto do livro onde o campo acima não tem como dizer.
+	ExecutionNote  string         `json:"executionNote,omitempty"`
+	RangeNote      string         `json:"rangeNote,omitempty"`
+	ResistanceNote string         `json:"resistanceNote,omitempty"`
+	BaseEffect     string         `json:"baseEffect"`
+	Augments       []SpellAugment `json:"augments"`
+	Classes        []string       `json:"classes"`
+	BookPage       int            `json:"bookPage"`
 }
 
 // Power é o poder ACHATADO. O livro espalha poder por três catálogos —

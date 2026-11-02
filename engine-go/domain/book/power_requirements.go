@@ -13,6 +13,9 @@ var spellSaveNames = map[string]string{"fortitude": "Fortitude", "reflexos": "Re
 //
 //	SpellResistanceWritten(relampago) // "Reflexos reduz à metade"
 func SpellResistanceWritten(m Spell) string {
+	if m.ResistanceNote != "" {
+		return m.ResistanceNote
+	}
 	save, known := spellSaveNames[m.SaveType]
 	if !known || m.Resistance == "" {
 		return ""
@@ -21,6 +24,23 @@ func SpellResistanceWritten(m Spell) string {
 		return save + " reduz à metade"
 	}
 	return save + " " + m.Resistance
+}
+
+// SpellExecutionWritten é a execução como o livro escreve. O `Execution` é o custo de ação que o
+// motor cobra, e não tem como dizer "duas rodadas" ou "1 hora"; quem diz é a nota.
+func SpellExecutionWritten(m Spell) string {
+	if m.ExecutionNote != "" {
+		return m.ExecutionNote
+	}
+	return CastingName(m.Execution)
+}
+
+// SpellRangeWritten é o alcance como o livro escreve, com a nota de quem foge das seis medidas.
+func SpellRangeWritten(m Spell) string {
+	if m.RangeNote != "" {
+		return m.RangeNote
+	}
+	return RangeName(m.Range)
 }
 
 // PowerRequirements é o pré-requisito do poder por extenso, como o livro escreve, ou "" sem
