@@ -48,6 +48,123 @@ func (r *Ruleset) ComputeVitals(ctx VitalContext) VitalPools {
 	}
 }
 
+// VitalLevelPart é uma parcela da conta de um nível. Source vazio é a classe, e
+// Attribute diz que a parcela é aquele atributo, que é como a mesa a chama.
+type VitalLevelPart struct {
+	Source    string
+	Attribute string
+	Amount    int
+}
+
+// VitalLevelLine é a conta de um nível. Floored é o "pelo menos 1 PV" (p35): as
+// parcelas somam menos que o Total.
+type VitalLevelLine struct {
+	Level     int
+	ClassName string
+	Parts     []VitalLevelPart
+	Floored   bool
+	Total     int
+}
+
+// VitalLevels são as contas nível a nível dos dois poços.
+type VitalLevels struct {
+	PV []VitalLevelLine
+	PM []VitalLevelLine
+}
+
+// VitalLevelsFor abre o PV e o PM máximos nível a nível, para a tela mostrar a conta.
+//
+// classByLevel é a classe de cada nível, na ordem em que foram pegos. Quando o registro
+// não bate com as classes, vale a ordem delas: é ela que o `multiclassPvPool` usa, e uma
+// conta em outra ordem não fecharia com o total.
+//
+// O QUE OS PODERES DÃO cai no nível em que a regra soma, pela DIFERENÇA entre um nível e
+// o anterior. O livro dá o total e não o histórico: o poder que cresce com o nível é
+// retroativo, então a linha mostra o efeito, e não quando o poder foi escolhido. É a
+// diferença que faz a soma fechar por construção, seja qual for a escala.
+//
+//	world.VitalLevelsFor(ctx, []string{"Guerreiro", "Guerreiro"}).PV // [{Total: 24}, {Total: 9}]
+func (r *Ruleset) VitalLevelsFor(ctx VitalContext, classByLevel []string) VitalLevels {
+	order := levelOrderOf(ctx.Classes, classByLevel)
+	con := ctx.AttrTotals["constitution"]
+	grants := r.vitalGrants(ctx)
+	out := VitalLevels{}
+	for i, className := range order {
+		level := i + 1
+		pv := VitalLevelLine{Level: level, ClassName: className}
+		pm := VitalLevelLine{Level: level, ClassName: className}
+		if entry, known := classVitalsTable[className]; known {
+			base := entry.pvPerLevel
+			if i == 0 {
+				base = entry.startHP
+			}
+			pv.Parts = append(pv.Parts, VitalLevelPart{Amount: base})
+			if con != 0 {
+				pv.Parts = append(pv.Parts, VitalLevelPart{Attribute: "constitution", Amount: con})
+			}
+			pv.Total = base + con
+			// "Você sempre ganha pelo menos 1 PV ao subir de nível" (p35): o 1º nível
+			// não é subida, e é por isso que o piso não vale nele.
+			if i > 0 && pv.Total < 1 {
+				pv.Total, pv.Floored = 1, true
+			}
+			pm.Parts = append(pm.Parts, VitalLevelPart{Amount: entry.mpPerLevel})
+			pm.Total = entry.mpPerLevel
+		}
+		for _, grant := range grants {
+			amount := evalModifierScale(grant.Amount, grant.Scale, level, ctx.AttrTotals)
+			if i > 0 {
+				amount -= evalModifierScale(grant.Amount, grant.Scale, level-1, ctx.AttrTotals)
+			}
+			if amount == 0 {
+				continue
+			}
+			part := VitalLevelPart{Source: grant.Source, Amount: amount}
+			if grant.Scale != nil && grant.Scale.Per == "attribute" {
+				part.Attribute = grant.Scale.Attribute
+			}
+			line := &pm
+			if grant.Target.K == "maxPv" {
+				line = &pv
+			}
+			line.Parts = append(line.Parts, part)
+			line.Total += amount
+		}
+		out.PV = append(out.PV, pv)
+		out.PM = append(out.PM, pm)
+	}
+	return out
+}
+
+// levelOrderOf é a classe de cada nível: o registro, se ele bater com as classes em
+// quantidade e na primeira, ou as classes em sequência.
+func levelOrderOf(classes []ClassEntry, classByLevel []string) []string {
+	fromClasses := []string{}
+	left := map[string]int{}
+	for _, entry := range classes {
+		left[entry.ClassName] += entry.Level
+		for range entry.Level {
+			fromClasses = append(fromClasses, entry.ClassName)
+		}
+	}
+	if len(classByLevel) != len(fromClasses) || len(classByLevel) == 0 || classByLevel[0] != fromClasses[0] {
+		return fromClasses
+	}
+	for _, className := range classByLevel {
+		left[className]--
+		if left[className] < 0 {
+			return fromClasses
+		}
+	}
+	return classByLevel
+}
+
+// vitalGrant é um modificador de PV ou PM, com o nome de quem o concede.
+type vitalGrant struct {
+	Modifier
+	Source string
+}
+
 // sumVitalGrants sums maxPv/maxPm over owned abilities,
 // evaluating each scale, with the p226 dedupe — "o valor de um mesmo atributo
 // não se acumula em características do personagem. Ou seja, um clérigo/druida
@@ -57,20 +174,9 @@ func (r *Ruleset) ComputeVitals(ctx VitalContext) VitalPools {
 // A metade da DEFESA da mesma regra (o bucaneiro/nobre e o Carisma) não está
 // implementada — o resolveStack agrupa por bonusType, não por atributo.
 func (r *Ruleset) sumVitalGrants(ctx VitalContext) (pv, pm int) {
-	seen := map[string]bool{}
-	for _, m := range r.vitalGrantMods(ctx) {
-		if m.Target.K != "maxPv" && m.Target.K != "maxPm" {
-			continue
-		}
-		if m.Scale != nil && m.Scale.Per == "attribute" {
-			key := m.Target.K + ":" + m.Scale.Attribute
-			if seen[key] {
-				continue
-			}
-			seen[key] = true
-		}
-		amount := evalModifierScale(m.Amount, m.Scale, ctx.Level, ctx.AttrTotals)
-		if m.Target.K == "maxPv" {
+	for _, grant := range r.vitalGrants(ctx) {
+		amount := evalModifierScale(grant.Amount, grant.Scale, ctx.Level, ctx.AttrTotals)
+		if grant.Target.K == "maxPv" {
 			pv += amount
 		} else {
 			pm += amount
@@ -79,37 +185,62 @@ func (r *Ruleset) sumVitalGrants(ctx VitalContext) (pv, pm int) {
 	return pv, pm
 }
 
+// vitalGrants são os modificadores de PV e PM que valem, já com o corte da p226.
+func (r *Ruleset) vitalGrants(ctx VitalContext) []vitalGrant {
+	seen := map[string]bool{}
+	out := []vitalGrant{}
+	for _, grant := range r.vitalGrantMods(ctx) {
+		if grant.Target.K != "maxPv" && grant.Target.K != "maxPm" {
+			continue
+		}
+		if grant.Scale != nil && grant.Scale.Per == "attribute" {
+			key := grant.Target.K + ":" + grant.Scale.Attribute
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+		}
+		out = append(out, grant)
+	}
+	return out
+}
+
 // vitalGrantMods collects every modifier from the abilities
 // the character owns — race, class powers (per class at ITS level), general
 // powers, the god power, and origin benefits. NOT items/activeEffects (those
 // aren't vital-grant sources). Filtered to vital targets by the caller.
-func (r *Ruleset) vitalGrantMods(ctx VitalContext) []Modifier {
-	out := []Modifier{}
+func (r *Ruleset) vitalGrantMods(ctx VitalContext) []vitalGrant {
+	out := []vitalGrant{}
+	add := func(source string, mods []Modifier) {
+		for _, m := range mods {
+			out = append(out, vitalGrant{Modifier: m, Source: source})
+		}
+	}
 	powers := toSet(ctx.PowerIDs)
 
 	if ctx.RaceID != "" {
 		if race := r.getRace(ctx.RaceID); race != nil {
-			out = append(out, raceModifiers(race, toSet(ctx.RaceAbilityChoices), ctx.RaceAncestry)...)
+			add(race.Name, raceModifiers(race, toSet(ctx.RaceAbilityChoices), ctx.RaceAncestry))
 		}
 	}
 	for _, ce := range ctx.Classes {
 		for _, power := range r.ownedClassPowers(ce.ClassName, ce.Level, powers, ctx.ClassChoices[ce.ClassName]) {
-			out = append(out, power.Modifiers...)
+			add(power.Name, power.Modifiers)
 		}
 	}
 	for _, id := range ctx.PowerIDs {
 		if gp := r.getGeneralPower(id); gp != nil {
-			out = append(out, gp.Modifiers...)
+			add(gp.Name, gp.Modifiers)
 		}
 	}
 	for _, name := range ctx.GodPowers {
 		if gp := r.grantedPowerByName(name); gp != nil {
-			out = append(out, gp.Modifiers...)
+			add(gp.Name, gp.Modifiers)
 		}
 	}
 	if ctx.Origin != "" {
 		if origin := r.getOrigin(ctx.Origin); origin != nil {
-			out = append(out, originModifiers(origin, toSet(ctx.OriginChoices), r.generalPowerByUid)...)
+			add(origin.Name, originModifiers(origin, toSet(ctx.OriginChoices), r.generalPowerByUid))
 		}
 	}
 	return out
