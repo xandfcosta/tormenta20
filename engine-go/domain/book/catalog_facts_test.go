@@ -130,3 +130,27 @@ func TestTheBookTextDoesNotChangeTheActionCost(t *testing.T) {
 		}
 	}
 }
+
+// A duração sai como o livro escreve, e nenhuma magia fica sem ela.
+func TestEverySpellSaysHowLongItLasts(t *testing.T) {
+	for _, spell := range Catalogs().Spells {
+		if SpellDurationWritten(spell) == "" {
+			t.Errorf("%s (p%d) não diz a duração", spell.ID, spell.BookPage)
+		}
+	}
+	for id, want := range map[string]string{
+		"relampago":          "instantânea",
+		"runa-de-protecao":   "permanente até ser descarregada",
+		"hipnotismo":         "1d4 rodadas",
+		"anular-a-luz":       "ver texto",
+		"queda-suave":        "até chegar ao solo ou cena, o que vier primeiro",
+		"telecinesia":        "sustentada ou instantânea (veja texto)",
+		"palavra-primordial": "instantânea ou veja texto",
+		"servos-invisiveis":  "1 cena",
+	} {
+		spell, _ := SpellByID(id)
+		if got := SpellDurationWritten(spell); got != want {
+			t.Errorf("%s: a duração saiu %q, e o livro diz %q", id, got, want)
+		}
+	}
+}

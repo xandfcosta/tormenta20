@@ -60,6 +60,10 @@ type Spell struct {
 	SaveType   string `json:"saveType"`
 	Resistance string `json:"resistance,omitempty"`
 	// As notas são o texto do livro onde o campo acima não tem como dizer.
+	// DurationNote é lida pelo motor, que precisa entender o texto. DurationText é o texto do livro
+	// onde os dois divergem, e só a tela o lê.
+	DurationNote   string         `json:"durationNote,omitempty"`
+	DurationText   string         `json:"durationText,omitempty"`
 	ExecutionNote  string         `json:"executionNote,omitempty"`
 	RangeNote      string         `json:"rangeNote,omitempty"`
 	ResistanceNote string         `json:"resistanceNote,omitempty"`

@@ -413,9 +413,7 @@ func spellMeta(m book.Spell) string {
 		"Alcance: " + book.SpellRangeWritten(m),
 		m.Targeting,
 	}
-	if duration := book.DurationName(m.Duration); duration != "" {
-		parts = append(parts, "Duração: "+duration)
-	}
+	parts = append(parts, "Duração: "+book.SpellDurationWritten(m))
 	if resistance := book.SpellResistanceWritten(m); resistance != "" {
 		parts = append(parts, "Resistência: "+resistance)
 	}

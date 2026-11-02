@@ -21,6 +21,8 @@ type Spell struct {
 	DurationNote string         `json:"durationNote,omitempty"`
 	// As notas são o texto do livro onde o campo não tem como dizer: o `Execution` é o custo de
 	// ação que o motor cobra, e "1 hora" não é um deles.
+	// DurationText é o texto do livro onde a `DurationNote`, que o motor lê, diverge dele.
+	DurationText   string `json:"durationText,omitempty"`
 	ExecutionNote  string `json:"executionNote,omitempty"`
 	RangeNote      string `json:"rangeNote,omitempty"`
 	ResistanceNote string `json:"resistanceNote,omitempty"`

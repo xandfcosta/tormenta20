@@ -130,9 +130,7 @@ func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
 //	spellSheetMeta(row) // "2º círculo · Padrão · médio · instantânea · p180", na Bola de Fogo
 func spellSheetMeta(spell learnedSpellRow) string {
 	parts := []string{spell.Circle + " círculo", spellLineMeta(spell, false)}
-	if duration := book.DurationName(spell.Duration); duration != "" {
-		parts = append(parts, duration)
-	}
+	parts = append(parts, spell.DurationWritten)
 	if spell.Page > 0 {
 		parts = append(parts, "p"+strconv.Itoa(spell.Page))
 	}

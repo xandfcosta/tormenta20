@@ -76,6 +76,7 @@ type learnedSpellRow struct {
 	// ExecutionWritten e RangeWritten são o texto do livro. O `Execution` é o custo de ação.
 	ExecutionWritten string
 	RangeWritten     string
+	DurationWritten  string
 	// Targeting é o Alvo, a Área ou o Efeito, nas palavras do livro.
 	Targeting string
 	// Resistance é o que se testa para resistir, vazio na magia sem resistência.
@@ -187,9 +188,10 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Augments:  augmentRowsOf(learned.CatalogSpellID, spell, castable),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
-			Targeting:  fromBook.Targeting,
-			Resistance: book.SpellResistanceWritten(fromBook),
-			Effect:     fromBook.BaseEffect, Page: fromBook.BookPage,
+			DurationWritten: book.SpellDurationWritten(fromBook),
+			Targeting:       fromBook.Targeting,
+			Resistance:      book.SpellResistanceWritten(fromBook),
+			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:  learned.CatalogSpellID,
 			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),

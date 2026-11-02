@@ -195,6 +195,7 @@ var spellsPart04 = []Spell{
 		BookPage:     180,
 		UID:          "spl_i43d2otvwo",
 		DurationNote: "ver texto (aura persistente até fim da cena; enjôo 1d4 rodadas)",
+		DurationText: "ver texto",
 	},
 	{
 		ID:         "aparencia-perfeita",
