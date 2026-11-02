@@ -1,6 +1,9 @@
 package forge
 
 import (
+	"fmt"
+	"strconv"
+
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 
@@ -79,10 +82,17 @@ func originRow(name string) sheet.StartingItem {
 	return sheet.StartingItem{Name: &name, Quantity: &quantity, Slots: &spaces}
 }
 
-// birthPurse rola os T$ 4d6 de p140 e soma o dinheiro que a origem
-// conceder ("T$ 2d6 (último salário)", do Artesão).
-func birthPurse(origin string) (float64, error) {
-	total, err := engine.RollStartingMoney()
+// birthPurse é a bolsa de p140 para este nível, somada ao dinheiro que a origem
+// conceder ("T$ 2d6 (último salário)", do Artesão). O 1º nível rola 4d6; acima
+// dele, o valor é o da Tabela 3-1, sem dado.
+func birthPurse(origin string, level int64) (float64, error) {
+	var total int
+	var err error
+	if level > 1 {
+		total, err = engine.StartingMoneyForLevel(int(level))
+	} else {
+		total, err = engine.RollStartingMoney()
+	}
 	if err != nil {
 		return 0, err
 	}
@@ -107,4 +117,24 @@ func originGrants(origin string) []engine.OriginItemGrant {
 		grants = append(grants, engine.ParseOriginItem(sentence))
 	}
 	return grants
+}
+
+// purseWritten diz na folha a bolsa que o herói vai ter neste nível (p140).
+//
+//	purseWritten(4) // "T$ 1.000 pelo nível 4"
+func purseWritten(level int64) string {
+	tibar, err := engine.StartingMoneyForLevel(int(level))
+	if err != nil {
+		return "T$ " + engine.StartingMoneyDice + " rolados na hora"
+	}
+	return fmt.Sprintf("T$ %s pelo nível %d", thousandsWritten(tibar), level)
+}
+
+// thousandsWritten separa os milhares como a tabela do livro escreve: 260.000.
+func thousandsWritten(n int) string {
+	digits := strconv.Itoa(n)
+	for i := len(digits) - 3; i > 0; i -= 3 {
+		digits = digits[:i] + "." + digits[i:]
+	}
+	return digits
 }

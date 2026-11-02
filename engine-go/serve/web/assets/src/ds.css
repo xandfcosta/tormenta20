@@ -2151,6 +2151,39 @@
     gap: 1px;
     min-width: 0;
   }
+  .ds-forge-class {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.625rem;
+  }
+  /* O nível total é a resposta da lista, e não mais um rótulo dela. */
+  .ds-forge-classes > .ds-list-head > :last-child {
+    color: var(--ds-ink);
+    font-size: var(--ds-t-md);
+    line-height: var(--ds-lh-md);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-forge-add {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    min-height: 2.75rem;
+    border: 0;
+    border-top: 1px solid var(--ds-line);
+    background: none;
+    color: var(--ds-action);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .ds-forge-add:hover {
+    background: var(--ds-sunk);
+  }
   .ds-forge-pick-empty {
     color: var(--ds-action);
   }
@@ -2159,6 +2192,7 @@
     gap: 0.5rem;
   }
   .ds-forge-option {
+    align-content: center;
     display: grid;
     gap: 2px;
     align-items: start;

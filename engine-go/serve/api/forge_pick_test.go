@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// As ESCOLHAS da forja no Tempestade (ALE-535): raça, classe e origem são linhas
+// As ESCOLHAS da forja no Tempestade (ALE-535): raça, origem e deus são linhas
 // que abrem uma folha com busca, e a folha mora FORA do formulário.
 
 // pickRow devolve o HTML da linha de escolha de um campo, do botão até o fim
@@ -35,7 +35,7 @@ func TestEachPickRowSaysWhatWasChosen(t *testing.T) {
 		"race": {"elfo"}, "class": {"Guerreiro"}, "origin": {"acolito"},
 	}).Body.String()
 
-	for field, chosen := range map[string]string{"race": "Elfo", "class": "Guerreiro", "origin": "Acólito"} {
+	for field, chosen := range map[string]string{"race": "Elfo", "origin": "Acólito"} {
 		if row := pickRow(t, body, field); !strings.Contains(row, chosen) {
 			t.Errorf("a linha de %s não diz %q:\n%s", field, chosen, row)
 		}

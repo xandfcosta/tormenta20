@@ -54,6 +54,11 @@ async function escolhe(page: import('@playwright/test').Page, group: string, rot
     .locator(`label:has(input[name="${group}"])`)
     .filter({ has: page.getByText(rotulo, { exact: true }) })
     .click()
+  // A classe não tem linha que a diga: ela entra na lista, com o nível no formulário.
+  if (group === 'class') {
+    await expect(page.locator(`input[name="classes"][value^="${rotulo}:"]`)).toHaveCount(1)
+    return
+  }
   await expect(page.locator(`#forge-pick-${group}`)).toContainText(rotulo)
 }
 
@@ -88,6 +93,7 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   // formulário, e o servidor o devolve preenchido.
   await page.getByLabel('Nome').fill('Thessa de Valkaria')
   await escolhe(page, 'class', 'Arcanista')
+  await page.getByRole('button', { name: 'Tirar Guerreiro' }).click()
   await expect(page.getByText('Arcanistas começam sem armadura')).toBeVisible()
   await expect(page.locator('#forge-pick-weaponMartial')).toHaveCount(0)
   await expect(page.getByLabel('Nome')).toHaveValue('Thessa de Valkaria')
@@ -105,6 +111,22 @@ test('o equipamento aparece e segue a classe, redesenhado pelo servidor', async 
   await page.locator('#forge-pick-race').click()
   await expect(page.locator('dialog[open]')).toBeVisible()
   await expectOneFocusRing(page, 'na folha de raça da forja', 10)
+})
+
+// O mecanismo só existe no navegador: o rádio marcado sai da folha, e um remendo que o reaproveitasse
+// para a carta seguinte manteria o `checked` da PROPRIEDADE, que o HTML servido não mostra.
+test('a classe que entra não traz outra junto no gesto seguinte', async ({ page }) => {
+  await page.goto('/personagens/nova')
+  await escolhe(page, 'class', 'Guerreiro')
+  await escolhe(page, 'class', 'Arcanista')
+  await page.getByRole('button', { name: 'Aumentar Guerreiro' }).click()
+  const classes = page.locator('input[name="classes"]')
+  await expect(page.locator('input[name="classes"][value="Guerreiro:2"]')).toHaveCount(1)
+  await expect.poll(() => classes.evaluateAll((all) => all.map((el) => (el as HTMLInputElement).value))).toEqual([
+    'Guerreiro:2',
+    'Arcanista:1',
+  ])
+  await expect(page.getByText('Nível 3', { exact: true })).toBeVisible()
 })
 
 test('a distribuição de atributos anda pelo servidor', async ({ page }) => {

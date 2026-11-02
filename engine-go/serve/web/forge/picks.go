@@ -2,11 +2,15 @@ package forge
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
+
+	"github.com/a-h/templ"
 )
 
-// AS LINHAS DE ESCOLHA da folha (ALE-535): raça, classe e origem abrem uma
-// folha com busca, e a linha diz o que já foi escolhido.
+// AS LINHAS DE ESCOLHA da folha (ALE-535): raça, origem e deus abrem uma folha
+// com busca, e a linha diz o que já foi escolhido. A classe tem lista própria,
+// porque cada uma leva um nível.
 
 // pickSummary é o que a linha mostra: o nome escolhido e uma linha do que ele
 // dá. Vazio quando nada foi escolhido — aí a linha convida a escolher.
@@ -28,13 +32,46 @@ func (v forgeView) racePick() pickSummary {
 	return pickSummary{}
 }
 
-func (v forgeView) classPick() pickSummary {
-	for _, c := range v.Classes {
-		if c.Chosen {
-			return pickSummary{Title: c.Name, Meta: fmt.Sprintf("PV %d · PM %d · %s", c.PV, c.PM, c.Expertises)}
-		}
+// godPick é a linha do deus, que nunca fica vazia: o Nenhum é uma resposta.
+func (v forgeView) godPick() pickSummary {
+	if v.GodChosen == "Nenhum" {
+		return pickSummary{Title: v.GodChosen, Meta: "opcional"}
 	}
-	return pickSummary{}
+	if !v.GodGrantsPower {
+		return pickSummary{Title: v.GodChosen, Meta: "não recebe poder concedido"}
+	}
+	return pickSummary{Title: v.GodChosen, Meta: "o poder concedido se escolhe na ficha"}
+}
+
+// classSheetTitle é o título da folha de classes: a primeira é a classe, e as seguintes são outra.
+func (v forgeView) classSheetTitle() string {
+	if len(v.ClassLines) == 0 {
+		return "Classe"
+	}
+	return "Outra classe"
+}
+
+// classStepCommand é o `−` ou o `+` de uma classe. Manda o formulário inteiro, como todo redesenho.
+func classStepCommand(class string, step int) string {
+	return fmt.Sprintf("@post('/personagens/nova/esboco/nivel/%s/%d', {contentType: 'form', selector: '#forge-form'})",
+		url.PathEscape(class), step)
+}
+
+// classStepDownLabel diz o que o `−` faz: no 1º nível ele tira a classe.
+func classStepDownLabel(line classLine) string {
+	if line.Level == 1 {
+		return "Tirar " + line.Name
+	}
+	return "Diminuir " + line.Name
+}
+
+// classStepUpAttrs é o `+`, que no 20º nível do herói fica apagado.
+func classStepUpAttrs(v forgeView, class string) templ.Attributes {
+	attrs := templ.Attributes{"type": "button", "data-on:click": classStepCommand(class, 1)}
+	if v.LevelCapped {
+		attrs["disabled"] = true
+	}
+	return attrs
 }
 
 func (v forgeView) originPick() pickSummary {

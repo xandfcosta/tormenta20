@@ -2,12 +2,14 @@ package forge
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/search"
+	"t20engine/domain/sheet"
 	"t20engine/infra/wire"
 )
 
@@ -22,10 +24,22 @@ import (
 
 // forgeView é a folha inteira.
 type forgeView struct {
-	Name    string
-	Races   []raceCard
+	Name  string
+	Races []raceCard
+	// Classes são as cartas da folha de escolher, sem as que o herói já tem.
 	Classes []classCard
-	Origins []originOption
+	// ClassLines são as classes do herói, com o nível de cada uma.
+	ClassLines []classLine
+	TotalLevel int64
+	// LevelCapped é o 20º nível: os `+` se apagam e não há outra classe a oferecer (p35).
+	LevelCapped bool
+	Origins     []originOption
+	Gods        []godOption
+	GodChosen   string
+	// GodGrantsPower é falso para o Panteão e o Paladino do Bem, que não recebem poder concedido (p57).
+	GodGrantsPower bool
+	// GodRefusal diz por que o deus marcado não serve às classes de agora.
+	GodRefusal string
 	// Equipamento é nil enquanto não há classe escolhida: o kit de p140 só se
 	// conhece pela classe, e oferecer uma armadura antes disso seria oferecer a
 	// escolha errada para o arcanista.
@@ -64,8 +78,22 @@ type classCard struct {
 	PV         int
 	PM         int
 	Expertises string
-	Chosen     bool
 	Find       string
+}
+
+// classLine é uma classe que o herói já tem.
+type classLine struct {
+	Name  string
+	Meta  string
+	Level int64
+}
+
+// godOption é uma linha da folha do deus. O `Value` vazio é o Nenhum.
+type godOption struct {
+	Value  string
+	Label  string
+	Chosen bool
+	Find   string
 }
 
 // originOption é uma linha da lista de origens.
@@ -85,6 +113,8 @@ type startingGear struct {
 	// Escudo é o rótulo do escudo do kit, ou "" quando a classe não usa escudos.
 	Shield       string
 	ShieldChosen bool
+	// Purse é a bolsa escrita, que muda com o nível do herói (p140).
+	Purse string
 	// AResolver são as concessões de origem que são ESCOLHA e não item — elas
 	// não nascem na mochila, e a folha diz isso em vez de deixar o jogador
 	// descobrir que faltou algo.
@@ -105,28 +135,81 @@ type itemOption struct {
 // blankForgeSheet monta a cena a partir das respostas que já existem.
 //
 // Ela é chamada nas três situações e devolve a mesma coisa nas três: a folha
-// vazia do primeiro GET, a folha redesenhada quando a classe muda, e a folha
+// vazia do primeiro GET, a folha redesenhada quando uma escolha muda, e a folha
 // recusada com os erros por campo.
-func blankForgeSheet(sheet forgeAnswers, errs wire.FieldErrorMap) forgeView {
+func blankForgeSheet(answers forgeAnswers, errs wire.FieldErrorMap) forgeView {
 	races, classes, _ := book.CharacterCatalogs()
-	v := forgeView{Name: sheet.Name, Errors: errs}
+	v := forgeView{Name: answers.Name, Errors: errs}
 	for _, race := range races {
-		v.Races = append(v.Races, raceCardOf(race, sheet.Race))
+		v.Races = append(v.Races, raceCardOf(race, answers.Race))
 	}
 	for _, class := range classes {
-		v.Classes = append(v.Classes, classCardOf(class, sheet.Class))
+		if !slices.ContainsFunc(answers.Classes, func(c sheet.ClassEntry) bool { return c.ClassName == class.Name }) {
+			v.Classes = append(v.Classes, classCardOf(class))
+		}
 	}
-	v.Origins = originOptions(sheet.Origin)
-	if class := classByName(sheet.Class); class != nil {
-		v.Gear = startingGearFor(sheet, *class)
+	v.ClassLines = classLinesOf(answers.Classes)
+	v.TotalLevel = totalLevelOf(answers.Classes)
+	v.LevelCapped = v.TotalLevel >= heroLevelMax
+	v.Origins = originOptions(answers.Origin)
+	v.Gods, v.GodChosen = godOptions(answers)
+	v.GodGrantsPower = len(book.GrantedPowersOf(answers.God)) > 0
+	if err := sheet.DevotionRefusal(classesOnTheSheet(answers.Classes), answers.God); err != nil {
+		v.GodRefusal = err.Error() + "."
+	}
+	if class := answers.firstClass(); class != nil {
+		v.Gear = startingGearFor(answers, *class)
 	}
 	v.OrphanRefusals = orphanRefusals(errs, v.Gear)
 	return v
 }
 
+// classLinesOf escreve o que cada classe dá: a primeira, o que ela dá por inteiro; as outras, o que somam
+// por nível, porque "não ganha as perícias treinadas ou proficiências da nova classe" (p35).
+func classLinesOf(classes []sheet.ClassEntry) []classLine {
+	lines := make([]classLine, 0, len(classes))
+	for i, entry := range classes {
+		class := classByName(entry.ClassName)
+		if class == nil {
+			continue
+		}
+		line := classLine{Name: class.Name, Level: entry.Level}
+		if i == 0 {
+			pv, pm, _ := engine.ClassStartingVitals(class.Name)
+			line.Meta = fmt.Sprintf("1ª classe · PV %d · PM %d · %s", pv, pm, cardExpertisesLine(*class))
+		} else {
+			pv, pm, _ := engine.ClassLevelGains(class.Name)
+			line.Meta = fmt.Sprintf("+%d PV e +%d PM por nível · sem perícias nem proficiências", pv, pm)
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
+// godOptions é a lista da folha do deus, e o nome do que está marcado. O deus que as classes de agora
+// recusam continua na lista: tirá-lo faria a escolha sumir em silêncio, e quem a troca é a pessoa.
+func godOptions(answers forgeAnswers) ([]godOption, string) {
+	options := []godOption{{Value: "", Label: "Nenhum", Chosen: answers.God == "", Find: search.Fold("Nenhum")}}
+	known := false
+	for _, devotion := range sheet.DevotionOptions(classesOnTheSheet(answers.Classes)) {
+		known = known || devotion.Value == answers.God
+		options = append(options, godOption{
+			Value: devotion.Value, Label: devotion.Label, Chosen: devotion.Value == answers.God, Find: search.Fold(devotion.Label),
+		})
+	}
+	if answers.God == "" {
+		return options, "Nenhum"
+	}
+	name := book.DevotionName(answers.God)
+	if !known {
+		options = append(options, godOption{Value: answers.God, Label: name, Chosen: true, Find: search.Fold(name)})
+	}
+	return options, name
+}
+
 // orphanRefusals junta as recusas dos campos que esta folha não desenha.
 func orphanRefusals(errs wire.FieldErrorMap, gear *startingGear) []string {
-	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true}
+	onScreen := map[string]bool{"name": true, "race": true, "class": true, "origin": true, "god": true}
 	if gear != nil {
 		onScreen["weaponSimple"] = true
 		onScreen["weaponMartial"] = len(gear.MartialWeapons) > 0
@@ -161,12 +244,9 @@ func raceCardOf(race book.Race, chosen string) raceCard {
 	return card
 }
 
-func classCardOf(class book.Class, chosen string) classCard {
+func classCardOf(class book.Class) classCard {
 	pv, pm, _ := engine.ClassStartingVitals(class.Name)
-	card := classCard{
-		Name: class.Name, PV: pv, PM: pm,
-		Expertises: cardExpertisesLine(class), Chosen: class.Name == chosen,
-	}
+	card := classCard{Name: class.Name, PV: pv, PM: pm, Expertises: cardExpertisesLine(class)}
 	card.Find = search.Fold(card.Name + " " + card.Expertises)
 	return card
 }
@@ -222,18 +302,19 @@ func benefitsLine(origin book.Origin) string {
 }
 
 // startingGearFor monta os seletores do kit desta classe.
-func startingGearFor(sheet forgeAnswers, class book.Class) *startingGear {
+func startingGearFor(answers forgeAnswers, class book.Class) *startingGear {
 	kit := engine.StartingKitFor(class.Name, class.Proficiencies)
 	eq := &startingGear{
-		SimpleWeapons: itemOptionsInCategory("weapon-simple", sheet.SimpleWeapon),
-		Armors:        itemOptionsByID(kit.Armors, sheet.Armor),
-		ToResolve:     grantsToResolve(sheet.Origin),
+		SimpleWeapons: itemOptionsInCategory("weapon-simple", answers.SimpleWeapon),
+		Armors:        itemOptionsByID(kit.Armors, answers.Armor),
+		ToResolve:     grantsToResolve(answers.Origin),
+		Purse:         purseWritten(totalLevelOf(answers.Classes)),
 	}
 	if kit.MartialWeapon {
-		eq.MartialWeapons = itemOptionsInCategory("weapon-martial", sheet.MartialWeapon)
+		eq.MartialWeapons = itemOptionsInCategory("weapon-martial", answers.MartialWeapon)
 	}
 	if item := book.ItemByID(kit.Shield); item != nil {
-		eq.Shield, eq.ShieldChosen = item.Name, sheet.Shield
+		eq.Shield, eq.ShieldChosen = item.Name, answers.Shield
 	}
 	return eq
 }
