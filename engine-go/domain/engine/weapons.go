@@ -95,6 +95,15 @@ const (
 	// RangedScope: "uma arma de ataque à distância" (Arqueiro, p50), que o
 	// livro divide em arremesso e disparo (p142) — as duas entram.
 	RangedScope = "ranged"
+	// MeleeScope: todo ataque corpo a corpo (Ataque Poderoso, p124).
+	MeleeScope = "melee"
+	// MeleeOneHandedScope e MeleeTwoHandedScope: a arma corpo a corpo em uma das mãos (Estilo de Uma Arma,
+	// p128) e nas duas (Estilo de Duas Mãos, p128).
+	MeleeOneHandedScope = "melee-one-handed"
+	MeleeTwoHandedScope = "melee-two-handed"
+	// ThrownScope e FiredScope: as duas metades de "à distância" (p142).
+	ThrownScope = "thrown"
+	FiredScope  = "fired"
 )
 
 // weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
@@ -103,11 +112,20 @@ const (
 // arremesso, então o Esgrimista não soma nela nem quando ela é usada corpo a
 // corpo. É a mesma leitura que decide se a Força entra no dano.
 func weaponKindScopes(w *WeaponStats) []string {
-	switch {
-	case w.Purpose == "ranged" || w.Purpose == "thrown":
-		return []string{RangedScope}
-	case w.Purpose == "melee" && (w.Hand == "light" || hasTrait(w.Traits, "agil")):
-		return []string{MeleeLightOrAgileScope}
+	switch w.Purpose {
+	case "ranged":
+		return []string{RangedScope, FiredScope}
+	case "thrown":
+		return []string{RangedScope, ThrownScope}
+	case "melee":
+		scopes := []string{MeleeScope, MeleeOneHandedScope}
+		if w.Hand == "two" {
+			scopes[1] = MeleeTwoHandedScope
+		}
+		if w.Hand == "light" || hasTrait(w.Traits, "agil") {
+			scopes = append(scopes, MeleeLightOrAgileScope)
+		}
+		return scopes
 	}
 	return nil
 }

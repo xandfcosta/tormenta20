@@ -120,7 +120,25 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 	flags := flagsOf(w)
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		c := t.Mod.Condition
-		if c == nil || c.C != "flagRequired" {
+		if c == nil {
+			return
+		}
+		if c.C == "flagOn" {
+			for _, flag := range c.Requires {
+				if !flags.set[flag] {
+					ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " não está posta"})
+					return
+				}
+			}
+			for _, flag := range c.Unless {
+				if flags.set[flag] {
+					ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " o cala"})
+					return
+				}
+			}
+			return
+		}
+		if c.C != "flagRequired" {
 			return
 		}
 		for _, flag := range c.AllFlags() {

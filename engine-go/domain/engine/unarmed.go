@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -44,7 +45,11 @@ func (r *Ruleset) unarmedCard(ch Character, b cardBasis) WeaponCard {
 	}
 	steps := StatFor(b.effects, ModifierTarget{K: "damageStep", Scope: UnarmedScope}).Total
 	nonLethal := !brawl && !b.effects.Flags["lethal-unarmed"]
-	scopes := append([]string{UnarmedScope}, weaponKindScopes(w)...)
+	// O desarmado é corpo a corpo (p143), mas não é "uma arma em uma das mãos": o Estilo de Uma Arma o
+	// exclui com todas as letras (p128).
+	scopes := append([]string{UnarmedScope}, slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool {
+		return scope == MeleeOneHandedScope
+	})...)
 	none := TotalContribs{Contributions: []BreakdownContribution{}}
 	return b.card(ch, UnarmedName, w, scopes, none, steps, nonLethal)
 }

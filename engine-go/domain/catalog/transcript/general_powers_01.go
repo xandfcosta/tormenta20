@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 1 de 2 de `GeneralPowers` (general_powers.go).
+// Parte 1 de 3 de `GeneralPowers` (general_powers.go).
 var generalPowersPart01 = []GeneralPower{
 	{
 		ID:            "acuidade-com-arma",
@@ -19,6 +19,30 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}},
 		BookPage:      124,
 		UID:           "pwr_pjqnme3ntu",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "melee"},
+				Amount:    -2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "ataque-poderoso",
+					Label: "no ataque corpo a corpo; desliga quando a vez passa",
+					Ends:  "turn",
+				},
+			},
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "melee"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "ataque-poderoso",
+					Label: "no ataque corpo a corpo; desliga quando a vez passa",
+					Ends:  "turn",
+				},
+			},
+		},
 	},
 	{
 		ID:            "combate-defensivo",
@@ -28,6 +52,30 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
 		BookPage:      125,
 		UID:           "pwr_kt7nxgsqn3",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+				Amount:    -2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "combate-defensivo",
+					Label: "ao agredir; dura até o seu próximo turno",
+					Ends:  "own-turn",
+				},
+			},
+			{
+				Target:    ModifierTarget{Kind: "defense"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "combate-defensivo",
+					Label: "ao agredir; dura até o seu próximo turno",
+					Ends:  "own-turn",
+				},
+			},
+		},
 	},
 	{
 		ID:            "esquiva",
@@ -80,6 +128,14 @@ var generalPowersPart01 = []GeneralPower{
 		},
 		BookPage: 125,
 		UID:      "pwr_vn5p2725k5",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "defense"},
+				Amount:    2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "estilo-de-arma-e-escudo", Label: "usando escudo"},
+			},
+		},
 	},
 	{
 		ID:            "estilo-de-duas-armas",
@@ -89,6 +145,20 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 2}, {Kind: "trained", Expertise: "Luta"}},
 		BookPage:      125,
 		UID:           "pwr_rsxvsqntjs",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+				Amount:    -2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:   "flagOn",
+					Flag:   "estilo-de-duas-armas",
+					Label:  "com duas armas, uma delas leve; dura até o seu próximo turno",
+					Ends:   "own-turn",
+					Unless: []string{"ambidestria"},
+				},
+			},
+		},
 	},
 	{
 		ID:            "estilo-de-duas-maos",
@@ -98,6 +168,18 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 2}, {Kind: "trained", Expertise: "Luta"}},
 		BookPage:      128,
 		UID:           "pwr_3sll3muo74",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "melee-two-handed"},
+				Amount:    5,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "estilo-de-duas-maos",
+					Label: "com arma corpo a corpo nas duas mãos",
+				},
+			},
+		},
 	},
 	{
 		ID:            "estilo-de-disparo",
@@ -107,6 +189,15 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Pontaria"}},
 		BookPage:      125,
 		UID:           "pwr_nerh6ajpdd",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "fired"},
+				Amount:    1,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "estilo-de-disparo", Label: "com arma de disparo"},
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "dexterity"},
+			},
+		},
 	},
 	{
 		ID:            "estilo-de-arremesso",
@@ -116,6 +207,25 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Pontaria"}},
 		BookPage:      125,
 		UID:           "pwr_xus5yq4eip",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "thrown"},
+				Amount:    2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "estilo-de-arremesso", Label: "com arma de arremesso"},
+			},
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "thrown"},
+				Amount:    2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:     "flagOn",
+					Flag:     "estilo-de-arremesso",
+					Label:    "com arma de arremesso",
+					Requires: []string{"saque-rapido"},
+				},
+			},
+		},
 	},
 	{
 		ID:            "estilo-de-uma-arma",
@@ -125,6 +235,28 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Luta"}},
 		BookPage:      128,
 		UID:           "pwr_scnvpc4xrv",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "defense"},
+				Amount:    2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "estilo-de-uma-arma",
+					Label: "com arma em uma das mãos e nada na outra",
+				},
+			},
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "melee-one-handed"},
+				Amount:    2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "estilo-de-uma-arma",
+					Label: "com arma em uma das mãos e nada na outra",
+				},
+			},
+		},
 	},
 	{
 		ID:            "estilo-desarmado",
@@ -186,6 +318,7 @@ var generalPowersPart01 = []GeneralPower{
 		UID:           "pwr_4ki2tgful6",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Iniciativa"}, Amount: 2, BonusType: "untyped"},
+			{Target: ModifierTarget{Kind: "flag", Name: "saque-rapido"}, Amount: 1, BonusType: "untyped"},
 		},
 	},
 	{
@@ -214,226 +347,5 @@ var generalPowersPart01 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "estilo-de-duas-armas"}},
 		BookPage:      124,
 		UID:           "pwr_2uptshm3e5",
-	},
-	{
-		ID:          "arremesso-multiplo",
-		Kind:        "combate",
-		Name:        "Arremesso Múltiplo",
-		Description: "Uma vez por rodada, ao atacar com arma de arremesso, gasta 1 PM para ataque adicional contra o mesmo alvo arremessando outra arma.",
-		Prerequisites: []Prerequisite{
-			{Kind: "attribute", Attr: "dexterity", Min: 1},
-			{Kind: "power", ID: "estilo-de-arremesso"},
-		},
-		BookPage: 124,
-		UID:      "pwr_d7llhclxwl",
-	},
-	{
-		ID:          "arremesso-potente",
-		Kind:        "combate",
-		Name:        "Arremesso Potente",
-		Description: "Com arma de arremesso, usa For em vez de Des nos testes de ataque. Se possui Ataque Poderoso, pode usá-lo com armas de arremesso.",
-		Prerequisites: []Prerequisite{
-			{Kind: "attribute", Attr: "strength", Min: 1},
-			{Kind: "power", ID: "estilo-de-arremesso"},
-		},
-		BookPage: 124,
-		UID:      "pwr_kpmof6a47l",
-	},
-	{
-		ID:            "ataque-com-escudo",
-		Kind:          "combate",
-		Name:          "Ataque com Escudo",
-		Description:   "Uma vez por rodada, ao usar ação agredir com escudo, gasta 1 PM para ataque corpo a corpo extra com o escudo. Não perde o bônus do escudo na Defesa.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "estilo-de-arma-e-escudo"}},
-		BookPage:      124,
-		UID:           "pwr_vqaen2nf5m",
-	},
-	{
-		ID:            "ataque-pesado",
-		Kind:          "combate",
-		Name:          "Ataque Pesado",
-		Description:   "Ao acertar ataque corpo a corpo com arma de duas mãos, gasta 1 PM para aplicar derrubar ou empurrar contra o alvo (usa resultado do ataque como teste de manobra).",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "estilo-de-duas-maos"}},
-		BookPage:      124,
-		UID:           "pwr_ponwljdmsu",
-	},
-	{
-		ID:            "ataque-preciso",
-		Kind:          "combate",
-		Name:          "Ataque Preciso",
-		Description:   "Empunhando arma corpo a corpo em uma mão e nada na outra: +2 na margem de ameaça e +1 no multiplicador de crítico com ela.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "estilo-de-uma-arma"}},
-		BookPage:      124,
-		UID:           "pwr_kzstqcodyz",
-	},
-	{
-		ID:            "bloqueio-com-escudo",
-		Kind:          "combate",
-		Name:          "Bloqueio com Escudo",
-		Description:   "Ao sofrer dano, gasta 1 PM para receber redução de dano igual ao bônus de Defesa do escudo. Exige escudo equipado.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "estilo-de-arma-e-escudo"}},
-		BookPage:      124,
-		UID:           "pwr_n6wgad3luj",
-	},
-	{
-		ID:            "carga-de-cavalaria",
-		Kind:          "combate",
-		Name:          "Carga de Cavalaria",
-		Description:   "Ao fazer investida montado: +2d8 dano e pode continuar movendo depois do ataque (linha reta; máximo 2× deslocamento).",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "ginete"}},
-		BookPage:      124,
-		UID:           "pwr_udm2q4qbij",
-	},
-	{
-		ID:            "derrubar-aprimorado",
-		Kind:          "combate",
-		Name:          "Derrubar Aprimorado",
-		Description:   "+2 em testes de ataque para derrubar. Ao derrubar com essa manobra, gasta 1 PM para ataque extra contra o alvo.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "combate-defensivo"}},
-		BookPage:      125,
-		UID:           "pwr_zgafgkcslc",
-		Modifiers: []Modifier{
-			{Target: ModifierTarget{Kind: "maneuver", Name: "derrubar"}, Amount: 2, BonusType: "untyped"},
-		},
-	},
-	{
-		ID:            "desarmar-aprimorado",
-		Kind:          "combate",
-		Name:          "Desarmar Aprimorado",
-		Description:   "+2 em testes de ataque para desarmar. Ao desarmar, gasta 1 PM para arremessar a arma para longe (direção 1d8, distância 1d6×1,5m).",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "combate-defensivo"}},
-		BookPage:      125,
-		UID:           "pwr_2dx4clo5dn",
-		Modifiers: []Modifier{
-			{Target: ModifierTarget{Kind: "maneuver", Name: "desarmar"}, Amount: 2, BonusType: "untyped"},
-		},
-	},
-	{
-		ID:            "disparo-preciso",
-		Kind:          "combate",
-		Name:          "Disparo Preciso",
-		Description:   "Ataques à distância contra oponentes envolvidos em corpo a corpo não sofrem penalidade de -5.",
-		Prerequisites: []Prerequisite{{Kind: "anyPower", IDs: []string{"estilo-de-disparo", "estilo-de-arremesso"}}},
-		BookPage:      125,
-		UID:           "pwr_uyuqaxy52v",
-	},
-	{
-		ID:          "disparo-rapido",
-		Kind:        "combate",
-		Name:        "Disparo Rápido",
-		Description: "Empunhando arma de disparo que recarrega como ação livre + agredir como ação completa: um ataque adicional. Sofre -2 em todos os testes de ataque até o próximo turno.",
-		Prerequisites: []Prerequisite{
-			{Kind: "attribute", Attr: "dexterity", Min: 1},
-			{Kind: "power", ID: "estilo-de-disparo"},
-		},
-		BookPage: 125,
-		UID:      "pwr_db2mhe5dil",
-	},
-	{
-		ID:            "empunhadura-poderosa",
-		Kind:          "combate",
-		Name:          "Empunhadura Poderosa",
-		Description:   "Ao usar arma de uma categoria de tamanho maior que o próprio, penalidade cai de -5 para -2.",
-		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 3}},
-		BookPage:      125,
-		UID:           "pwr_7gp33qw6w2",
-	},
-	{
-		ID:            "estilo-de-arma-longa",
-		Kind:          "combate",
-		Name:          "Estilo de Arma Longa",
-		Description:   "+2 em testes de ataque com armas alongadas e pode atacar alvos adjacentes com essas armas.",
-		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}, {Kind: "trained", Expertise: "Luta"}},
-		BookPage:      125,
-		UID:           "pwr_pycnhbir7l",
-		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
-				Amount:    2,
-				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "context", Note: "com armas alongadas"},
-			},
-		},
-	},
-	{
-		ID:            "fanatico",
-		Kind:          "combate",
-		Name:          "Fanático",
-		Description:   "Deslocamento não é reduzido por usar armaduras pesadas.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "encouracado"}},
-		BookPage:      128,
-		UID:           "pwr_mdo2v7cqnk",
-		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "flag", Name: "displacement-ignores-armor"},
-				Amount:    1,
-				BonusType: "untyped",
-				Note:      "não é reduzido por armadura pesada",
-			},
-		},
-		MinLevel: 12,
-	},
-	{
-		ID:            "finta-aprimorada",
-		Kind:          "combate",
-		Name:          "Finta Aprimorada",
-		Description:   "+2 em testes de Enganação para fintar e pode fintar como ação de movimento.",
-		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Enganação"}},
-		BookPage:      128,
-		UID:           "pwr_vzi2v5iiuq",
-		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "expertise", Name: "Enganação"},
-				Amount:    2,
-				BonusType: "untyped",
-				Condition: &ModifierCondition{Kind: "context", Note: "para fintar"},
-			},
-		},
-	},
-	{
-		ID:            "inexpugnavel",
-		Kind:          "combate",
-		Name:          "Inexpugnável",
-		Description:   "Usando armadura pesada: +2 em todos os testes de resistência.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "encouracado"}},
-		BookPage:      128,
-		UID:           "pwr_7varjlo7wk",
-		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "resistance"},
-				Amount:    2,
-				BonusType: "untyped",
-				Note:      "+2 em resistências",
-				Condition: &ModifierCondition{Kind: "flagRequired", Flag: "armadura-pesada", Label: "com armadura pesada"},
-			},
-		},
-		MinLevel: 6,
-	},
-	{
-		ID:            "mira-apurada",
-		Kind:          "combate",
-		Name:          "Mira Apurada",
-		Description:   "Ao usar a ação mirar: +2 em testes de ataque e na margem de ameaça com ataques à distância até o fim do turno.",
-		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "wisdom", Min: 1}, {Kind: "power", ID: "disparo-preciso"}},
-		BookPage:      128,
-		UID:           "pwr_ka2wbsjwe3",
-	},
-	{
-		ID:            "piqueiro",
-		Kind:          "combate",
-		Name:          "Piqueiro",
-		Description:   "Uma vez por rodada, se empunhando arma alongada e um inimigo entrar voluntariamente no alcance: gasta 1 PM para ataque corpo a corpo. Se o oponente entrou em investida, ataque causa dois dados de dano extra.",
-		Prerequisites: []Prerequisite{{Kind: "power", ID: "estilo-de-arma-longa"}},
-		BookPage:      128,
-		UID:           "pwr_ufv4pwmdpx",
-	},
-	{
-		ID:            "presenca-aterradora",
-		Kind:          "combate",
-		Name:          "Presença Aterradora",
-		Description:   "Ação padrão + 1 PM para assustar todas as criaturas escolhidas em alcance curto (regras de Intimidação).",
-		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Intimidação"}},
-		BookPage:      128,
-		UID:           "pwr_w4wzoekaby",
 	},
 }
