@@ -91,6 +91,21 @@ func TestTheHubDrawsNoAdminEntriesForAPlayer(t *testing.T) {
 	}
 }
 
+// O início mostra o link aberto a quem administra, e a mais ninguém: o endereço
+// abre conta, e não pode viajar na página de um jogador.
+func TestTheHubShowsTheOpenLinkOnlyToAnAdmin(t *testing.T) {
+	s, owner := hubFixture(t, "mestre@t20.local")
+	player := seedUser(t, s, "jogadora@t20.local")
+	token := inviteFrom(t, s, owner)
+
+	if !strings.Contains(pedeHub(t, s, owner, http.MethodGet, "/").Body.String(), token) {
+		t.Error("o diálogo do início não mostra o link aberto")
+	}
+	if strings.Contains(pedeHub(t, s, player, http.MethodGet, "/").Body.String(), token) {
+		t.Error("a página de um jogador carrega o link que abre conta")
+	}
+}
+
 func TestTheHubRefusesAnInviteFromANonAdmin(t *testing.T) {
 	s, _ := hubFixture(t, "mestre@t20.local")
 	player := seedUser(t, s, "jogadora@t20.local")

@@ -1,5 +1,5 @@
 // Package accounts são os CASOS DE USO de uma conta: entrar, cadastrar-se
-// gastando um convite, e trocar a senha por um link de uso único.
+// com um convite, e trocar a senha por um link de uso único.
 //
 // # Por que `accounts` e não `account`
 //
@@ -23,12 +23,12 @@
 //
 // A mesa é servida na LAN, então cadastro aberto seria uma porta de verdade:
 // qualquer um que alcançasse o endereço criaria conta. O administrador cunha um
-// link de uso único e o entrega ao jogador, que ainda escolhe a própria senha —
-// o administrador nunca a vê.
+// link e o entrega à mesa: ele serve para várias contas até vencer ou ser
+// derrubado, e cada jogador escolhe a própria senha — o administrador nunca a vê.
 //
 // O convite de CAMPANHA (`app/campaign`) é outra coisa: ele traz um usuário
 // EXISTENTE para uma mesa. Este é o que faz a conta existir, e é por isso que
-// ele se GASTA ao ser usado, na mesma transação que escreve a conta.
+// por onde ela entrou fica registrado na mesma transação que a escreve.
 //
 // # O `bcrypt` mora aqui, e isso é fronteira
 //

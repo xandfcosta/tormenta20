@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strconv"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
@@ -53,6 +54,9 @@ type inviteRow struct {
 	Token   string
 	Label   string
 	Expires string
+	// Entered diz quantas contas entraram por ele: o link serve para várias, e é
+	// este número que denuncia um link que vazou.
+	Entered string
 	URL     string
 }
 
@@ -98,6 +102,7 @@ func (s Scene) loadAdmin(ctx context.Context, meID int64) (adminView, error) {
 			Token:   c.Token,
 			Label:   "Link de convite " + firstChars(c.Token, 6),
 			Expires: expiryLabel(c.Expiresat, time.Now()),
+			Entered: accountsEntered(c.Accounts),
 			URL:     routes.AccountInvite(c.Token),
 		})
 	}
@@ -207,4 +212,23 @@ func expiryLabel(iso string, now time.Time) string {
 		hours = 1
 	}
 	return ui.Plural(hours, "hora", "horas")
+}
+
+// accountsEntered escreve quantas contas entraram por um link.
+func accountsEntered(count int64) string {
+	switch count {
+	case 0:
+		return "ninguém entrou ainda"
+	case 1:
+		return "1 conta entrou"
+	}
+	return strconv.FormatInt(count, 10) + " contas entraram"
+}
+
+// openInvitePath é o link que o diálogo mostra: o mais novo, primeiro da lista.
+func openInvitePath(v adminView) string {
+	if len(v.Invites) == 0 {
+		return ""
+	}
+	return v.Invites[0].URL
 }

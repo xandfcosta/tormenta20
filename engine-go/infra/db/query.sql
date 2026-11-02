@@ -502,18 +502,15 @@ ORDER BY m.addedAt ASC;
 -- account invites (ALE-120)
 
 -- name: CreateAccountInvite :one
-INSERT INTO account_invites (token, createdBy, createdAt, expiresAt)
+INSERT INTO account_invite_links (token, createdBy, createdAt, expiresAt)
 VALUES (?, ?, ?, ?)
 RETURNING *;
 
 -- name: GetAccountInvite :one
-SELECT * FROM account_invites WHERE token = ? LIMIT 1;
+SELECT * FROM account_invite_links WHERE token = ? LIMIT 1;
 
--- Single use for real: `usedAt IS NULL` is what makes the second registration
--- with the same link a no-op, and the affected rows say which one won.
--- name: SpendAccountInvite :execrows
-UPDATE account_invites SET usedAt = ?, usedBy = ?
-WHERE id = ? AND usedAt IS NULL;
+-- name: RecordAccountInviteUse :exec
+INSERT INTO account_invite_uses (linkId, userId, usedAt) VALUES (?, ?, ?);
 
 -- name: ListAllCampaigns :many
 SELECT * FROM campaigns ORDER BY updatedAt DESC;
@@ -528,12 +525,18 @@ FROM users u ORDER BY u.createdAt;
 
 -- Only what is still open: a spent invite stays as the record of who came in by it.
 -- name: RevokeAccountInvite :execrows
-DELETE FROM account_invites WHERE id = ? AND usedAt IS NULL;
+UPDATE account_invite_links SET revokedAt = sqlc.arg('now')
+WHERE id = sqlc.arg('id') AND revokedAt IS NULL;
+
+-- name: RevokeOpenAccountInvites :exec
+UPDATE account_invite_links SET revokedAt = sqlc.arg('now') WHERE revokedAt IS NULL;
 
 -- name: ListOpenAccountInvites :many
-SELECT * FROM account_invites
-WHERE usedAt IS NULL AND expiresAt > sqlc.arg('now')
-ORDER BY createdAt DESC;
+SELECT l.id, l.token, l.expiresAt,
+  (SELECT COUNT(*) FROM account_invite_uses u WHERE u.linkId = l.id) AS accounts
+FROM account_invite_links l
+WHERE l.revokedAt IS NULL AND l.expiresAt > sqlc.arg('now')
+ORDER BY l.createdAt DESC, l.id DESC;
 
 -- Deleting an account moves its mesas to the caller first, so the chronicle
 -- survives the player leaving the table.

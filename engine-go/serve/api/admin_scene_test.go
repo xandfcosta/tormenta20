@@ -187,9 +187,9 @@ func TestARevokedInviteNoLongerOpensAnAccount(t *testing.T) {
 	}
 }
 
-// Só se revoga o que está aberto: o convite gasto continua no registro de quem entrou
-// por ele, e a tela diz que não deu em vez de fingir que revogou.
-func TestAUsedInviteCannotBeRevoked(t *testing.T) {
+// O link usado continua aberto, então continua revogável: é assim que quem
+// administra fecha um link que vazou. Quem já entrou fica no registro.
+func TestAUsedInviteLinkCanStillBeRevoked(t *testing.T) {
 	s := newTestServer(t, "chefe@t20.local")
 	boss := seedUser(t, s, "chefe@t20.local")
 	token := inviteFrom(t, s, boss)
@@ -198,12 +198,76 @@ func TestAUsedInviteCannotBeRevoked(t *testing.T) {
 		t.Fatalf("o cadastro com o convite novo falhou: %v", err)
 	}
 
-	rec := askScene(t, s, boss, http.MethodPost, address)
-	if !strings.Contains(rec.Body.String(), "não está mais aberto") {
-		t.Errorf("revogar o convite gasto não disse que ele não está aberto: %s", rec.Body.String())
+	if rec := askScene(t, s, boss, http.MethodPost, address); strings.Contains(rec.Body.String(), "não está mais aberto") {
+		t.Fatalf("o link usado foi recusado na revogação: %s", rec.Body.String())
 	}
-	if _, err := s.queries.GetAccountInvite(context.Background(), token); err != nil {
-		t.Errorf("revogar apagou o registro do convite gasto: %v", err)
+	if err := registra(t, s, "tarde@t20.local", token); !errors.Is(err, accounts.ErrBadInvite) {
+		t.Errorf("o link revogado tinha de ser recusado no cadastro, veio %v", err)
+	}
+	if got := countRows(t, s, "SELECT COUNT(*) FROM account_invite_uses"); got != 1 {
+		t.Errorf("revogar mexeu no registro de quem entrou: %d linhas, want 1", got)
+	}
+	// Revogar de novo diz que não deu, em vez de fingir que revogou.
+	if rec := askScene(t, s, boss, http.MethodPost, address); !strings.Contains(rec.Body.String(), "não está mais aberto") {
+		t.Errorf("revogar duas vezes não disse que o link fechou: %s", rec.Body.String())
+	}
+}
+
+// Gerar outro link derruba o anterior (decisão do dono): é o único jeito de cortar
+// quem ainda tem o endereço, e os links abertos não se acumulam.
+func TestGeneratingAnotherLinkDropsTheOpenOne(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	old := inviteFrom(t, s, boss)
+
+	body := askScene(t, s, boss, http.MethodPost, "/admin/convites").Body.String()
+
+	if !strings.Contains(body, "Convites abertos · 1") {
+		t.Errorf("o painel não voltou com um link só:\n%s", body)
+	}
+	if strings.Contains(body, old) {
+		t.Error("o remendo ainda mostra o link derrubado")
+	}
+	if err := registra(t, s, "atrasada@t20.local", old); !errors.Is(err, accounts.ErrBadInvite) {
+		t.Errorf("o link anterior tinha de ser recusado, veio %v", err)
+	}
+}
+
+// Quem abre o diálogo vê o link aberto, e não precisa gerar outro para reenviar.
+func TestTheAdminSceneShowsTheOpenLinkAndWhoEntered(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	token := inviteFrom(t, s, boss)
+	for _, email := range []string{"um@t20.local", "dois@t20.local"} {
+		if err := registra(t, s, email, token); err != nil {
+			t.Fatalf("cadastro: %v", err)
+		}
+	}
+
+	page := askScene(t, s, boss, http.MethodGet, "/admin").Body.String()
+
+	dialog := regexp.MustCompile(`(?s)<dialog[^>]*id="admin-invite".*?</dialog>`).FindString(page)
+	if !strings.Contains(dialog, token) {
+		t.Errorf("o diálogo não mostra o link aberto:\n%s", dialog)
+	}
+	if !strings.Contains(page, "2 contas entraram") {
+		t.Error("o painel não diz quantas contas entraram pelo link")
+	}
+}
+
+// Revogar remenda o diálogo também: ele não pode continuar oferecendo o link morto.
+func TestRevokingClearsTheLinkFromTheDialog(t *testing.T) {
+	s := newTestServer(t, "chefe@t20.local")
+	boss := seedUser(t, s, "chefe@t20.local")
+	token := inviteFrom(t, s, boss)
+
+	body := askScene(t, s, boss, http.MethodPost, revokeAddress(t, s, token)).Body.String()
+
+	if !strings.Contains(body, `id="invite-link"`) {
+		t.Fatalf("o remendo não trouxe o diálogo:\n%s", body)
+	}
+	if strings.Contains(body, token) {
+		t.Error("o diálogo continua com o link revogado")
 	}
 }
 

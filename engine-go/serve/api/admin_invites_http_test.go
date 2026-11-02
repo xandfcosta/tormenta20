@@ -34,7 +34,7 @@ func registra(t *testing.T, s *Server, email, token string) error {
 // inviteFrom cunha um convite pela REGRA e devolve o token.
 func inviteFrom(t *testing.T, s *Server, adminID int64) string {
 	t.Helper()
-	invite, err := s.accountGate().MintInvite(context.Background(), adminID)
+	invite, err := s.accountGate().RotateInvite(context.Background(), adminID)
 	if err != nil {
 		t.Fatalf("cunhar convite: %v", err)
 	}
@@ -71,30 +71,25 @@ func TestRegisterRequiresAnInvite(t *testing.T) {
 	}
 }
 
-func TestRegisterWithAnInviteWorksExactlyOnce(t *testing.T) {
+// Um link serve para várias contas (decisão do dono): quem administra manda o
+// mesmo endereço para a mesa inteira.
+func TestOneInviteLinkOpensSeveralAccounts(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	token := inviteFrom(t, s, seedUser(t, s, adminEmail))
 
-	first := registra(t, s, "bruna@t20.local", token)
-	second := registra(t, s, "caio@t20.local", token)
-
-	if first != nil {
-		t.Fatalf("o convite válido tinha de valer, veio %v", first)
+	for _, email := range []string{"bruna@t20.local", "caio@t20.local"} {
+		if err := registra(t, s, email, token); err != nil {
+			t.Fatalf("%s não entrou pelo link: %v", email, err)
+		}
 	}
-	if !errors.Is(second, accounts.ErrBadInvite) {
-		t.Fatalf("esperada recusa reusando o convite, veio %v", second)
-	}
-	// Volta atrás junto com o convite: link gasto não deixa meia conta para trás.
-	if _, err := s.queries.GetUserByEmail(context.Background(), "caio@t20.local"); err == nil {
-		t.Error("o segundo registro não podia ter deixado conta para trás")
+	if got := countRows(t, s, "SELECT COUNT(*) FROM account_invite_uses"); got != 2 {
+		t.Errorf("o registro de quem entrou tem %d linhas, want 2", got)
 	}
 }
 
-// O reuso em sequência acima é pego só pela conferência de LEITURA, então ele
-// não prova o `usedAt IS NULL` do UPDATE. O que essa cláusula protege é a
-// CORRIDA: todo mundo que abre o link no mesmo instante passa pela leitura, e um
-// só UPDATE acha o convite por gastar — os perdedores voltam atrás com ele.
-func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
+// A mesa inteira abre o link ao mesmo tempo, e ninguém perde a corrida: o que
+// esta transação protege é a conta nunca ficar sem o registro de por onde entrou.
+func TestEveryoneOpeningTheLinkTogetherGetsAnAccount(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	token := inviteFrom(t, s, seedUser(t, s, adminEmail))
 
@@ -112,35 +107,31 @@ func TestConcurrentRegistrationsSpendTheInviteOnce(t *testing.T) {
 	}
 	close(start)
 
-	created := 0
 	for range racers {
-		if <-errs == nil {
-			created++
+		if err := <-errs; err != nil {
+			t.Errorf("um cadastro simultâneo foi recusado: %v", err)
 		}
 	}
-	if created != 1 {
-		t.Errorf("%d cadastros aceitos com UM convite, esperado exatamente 1", created)
+	// O admin semeado mais os quatro.
+	if got := countUsers(t, s); got != 5 {
+		t.Errorf("o banco ficou com %d contas, esperado 5", got)
 	}
-	// O admin semeado mais o vencedor da corrida, e mais ninguém.
-	if got := countUsers(t, s); got != 2 {
-		t.Errorf("o banco ficou com %d contas, esperado 2 (o admin e o vencedor)", got)
+	if got := countRows(t, s, "SELECT COUNT(*) FROM account_invite_uses"); got != racers {
+		t.Errorf("o registro de quem entrou tem %d linhas, want %d", got, racers)
 	}
 }
 
-// E-mail repetido não pode queimar o link — o jogador ainda tem de entrar.
-func TestAFailedRegistrationKeepsTheInviteSpendable(t *testing.T) {
+// O e-mail repetido volta atrás inteiro: nem conta, nem registro de entrada.
+func TestAFailedRegistrationLeavesNoTraceOnTheLink(t *testing.T) {
 	s := newTestServer(t, adminEmail)
 	token := inviteFrom(t, s, seedUser(t, s, adminEmail))
 	seedUser(t, s, "bruna@t20.local")
 
-	clash := registra(t, s, "bruna@t20.local", token)
-	retry := registra(t, s, "bruna2@t20.local", token)
-
-	if !errors.Is(clash, accounts.ErrEmailTaken) {
+	if clash := registra(t, s, "bruna@t20.local", token); !errors.Is(clash, accounts.ErrEmailTaken) {
 		t.Fatalf("esperada colisão de e-mail repetido, veio %v", clash)
 	}
-	if retry != nil {
-		t.Fatalf("o convite tinha de continuar valendo, veio %v", retry)
+	if got := countRows(t, s, "SELECT COUNT(*) FROM account_invite_uses"); got != 0 {
+		t.Errorf("o cadastro recusado deixou %d linhas no registro de entrada", got)
 	}
 }
 
@@ -210,7 +201,7 @@ func countUsers(t *testing.T, s *Server) int {
 
 func countOpenInvites(t *testing.T, s *Server) int {
 	t.Helper()
-	return countRows(t, s, "SELECT COUNT(*) FROM account_invites WHERE usedAt IS NULL")
+	return countRows(t, s, "SELECT COUNT(*) FROM account_invite_links WHERE revokedAt IS NULL")
 }
 
 func countRows(t *testing.T, s *Server, query string) int {

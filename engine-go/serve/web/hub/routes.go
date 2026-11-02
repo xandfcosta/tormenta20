@@ -50,7 +50,7 @@ func (s Scene) handleHubSignOut(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/entrar", http.StatusSeeOther)
 }
 
-// handleHubInvite cunha o link de conta e devolve o remendo com ele.
+// handleHubInvite cunha o link de conta, derrubando o anterior, e devolve o remendo com ele.
 func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
 	if !s.deps.CurrentViewer(r).IsAdmin {
@@ -59,13 +59,13 @@ func (s Scene) handleHubInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": "Só quem administra pode convidar."})
 		return
 	}
-	invite, err := s.gate.MintInvite(r.Context(), s.deps.CurrentViewer(r).ID)
+	invite, err := s.gate.RotateInvite(r.Context(), s.deps.CurrentViewer(r).ID)
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return
 	}
-	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ds.MintedInvite`.
-	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite(routes.AccountInvite(invite.Token)))
+	// Só o CAMINHO: quem prefixa a origem é o navegador. Ver `ds.InviteLink`.
+	fragment, err := ui.RenderFragment(r.Context(), ds.InviteLink(routes.AccountInvite(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": internalNotice})
 		return

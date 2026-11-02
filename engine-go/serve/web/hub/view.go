@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 	"unicode"
 )
@@ -22,6 +23,9 @@ type hubView struct {
 	// sabe com qual conta entrou.
 	Email   string
 	EhAdmin bool
+	// InvitePath é o link de convite aberto, só para quem administra: o endereço
+	// abre conta, e não viaja na página de um jogador.
+	InvitePath string
 	// Alive é a sessão que o cartão "Voltar à mesa" retoma, ou nil. Uma
 	// consulta, não N+1 — ver `liveSession`.
 	Alive *hubLiveSession
@@ -47,13 +51,24 @@ func (s Scene) loadHub(ctx context.Context, eu Viewer) (hubView, error) {
 	if err != nil {
 		return hubView{}, err
 	}
+	invitePath := ""
+	if eu.IsAdmin {
+		token, err := s.gate.OpenInviteToken(ctx)
+		if err != nil {
+			return hubView{}, err
+		}
+		if token != "" {
+			invitePath = routes.AccountInvite(token)
+		}
+	}
 	name := displayName(eu)
 	return hubView{
-		Name:    name,
-		Initial: initialOf(name),
-		Email:   eu.Email,
-		EhAdmin: eu.IsAdmin,
-		Alive:   alive,
+		Name:       name,
+		Initial:    initialOf(name),
+		Email:      eu.Email,
+		EhAdmin:    eu.IsAdmin,
+		InvitePath: invitePath,
+		Alive:      alive,
 	}, nil
 }
 

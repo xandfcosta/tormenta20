@@ -8,14 +8,19 @@ import (
 	"database/sql"
 )
 
-type AccountInvite struct {
+type AccountInviteLink struct {
 	ID        int64          `json:"id"`
 	Token     string         `json:"token"`
 	Createdby int64          `json:"createdby"`
 	Createdat string         `json:"createdat"`
 	Expiresat string         `json:"expiresat"`
-	Usedat    sql.NullString `json:"usedat"`
-	Usedby    sql.NullInt64  `json:"usedby"`
+	Revokedat sql.NullString `json:"revokedat"`
+}
+
+type AccountInviteUse struct {
+	Linkid int64  `json:"linkid"`
+	Userid int64  `json:"userid"`
+	Usedat string `json:"usedat"`
 }
 
 type ActiveEffect struct {

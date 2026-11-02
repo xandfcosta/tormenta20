@@ -36,16 +36,14 @@ var (
 	ErrBadCredentials = fmt.Errorf("e-mail ou senha não conferem: %w", app.ErrForbidden)
 	// ErrEmailTaken é o endereço que já tem conta.
 	ErrEmailTaken = fmt.Errorf("este e-mail já tem conta: %w", app.ErrRefused)
-	// ErrBadInvite cobre desconhecido, vencido e GASTO do mesmo jeito — inclusive
-	// o gasto que só a transação descobre, quando duas pessoas abrem o mesmo
-	// link ao mesmo tempo. As três pedem a mesma coisa de quem está do outro
-	// lado: um convite novo.
+	// ErrBadInvite cobre desconhecido, vencido e REVOGADO do mesmo jeito. Os três
+	// pedem a mesma coisa de quem está do outro lado: um convite novo.
 	ErrBadInvite = fmt.Errorf("este convite não serve: %w", app.ErrForbidden)
 )
 
 // accountInviteTTL é curto de propósito: o link passa de mão em mão na mesa e
 // não por e-mail, então uma semana é generosa — e um link esquecido num
-// histórico de conversa para de funcionar.
+// histórico de conversa, que abriria quantas contas quisessem, para de funcionar.
 const accountInviteTTL = 7 * 24 * time.Hour
 
 // bcryptCost é o custo do hash de senha.
@@ -92,7 +90,7 @@ func (g Gate) Authenticate(ctx context.Context, email, password string) (sqlcgen
 }
 
 // Register é a REGRA por trás do cadastro: resolve o convite que este endereço
-// tem de gastar, gera o hash e escreve a linha.
+// tem de apresentar, gera o hash e escreve a linha.
 func (g Gate) Register(ctx context.Context, body account.RegisterBody) (sqlcgen.User, error) {
 	// A NORMALIZAÇÃO é da regra, e não de quem a chama: uma garantia que mora no
 	// transporte é uma garantia que o próximo transporte esquece. O `IsAdmin` do
@@ -119,50 +117,88 @@ func (g Gate) Register(ctx context.Context, body account.RegisterBody) (sqlcgen.
 	}, invite)
 }
 
-// MintInvite cunha o link de uso único que abre UMA conta.
+// RotateInvite cunha o link que abre contas e derruba os que estavam abertos.
 //
 // Ele é pedido por DUAS telas — a administração e o hub —, e é por isso que o
 // prazo mora aqui: com a conta de validade dentro de um manipulador HTTP, a
 // segunda tela só teria duas saídas, chamar a própria rota por dentro ou copiar
 // a conta.
-func (g Gate) MintInvite(ctx context.Context, createdBy int64) (sqlcgen.AccountInvite, error) {
+//
+// Derrubar é a metade que protege: o link serve para várias contas, então gerar
+// outro é como se corta quem ainda tem o endereço antigo na mão.
+func (g Gate) RotateInvite(ctx context.Context, createdBy int64) (sqlcgen.AccountInviteLink, error) {
 	token, err := secret.Token()
 	if err != nil {
-		return sqlcgen.AccountInvite{}, err
+		return sqlcgen.AccountInviteLink{}, err
 	}
+	tx, err := g.db.BeginTx(ctx, nil)
+	if err != nil {
+		return sqlcgen.AccountInviteLink{}, fmt.Errorf("abrir a transação do convite: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	q := g.queries.WithTx(tx)
 	now := time.Now()
-	return g.queries.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
+	if err := q.RevokeOpenAccountInvites(ctx, sql.NullString{String: dbvalue.IsoAt(now), Valid: true}); err != nil {
+		return sqlcgen.AccountInviteLink{}, fmt.Errorf("derrubar os convites abertos: %w", err)
+	}
+	invite, err := q.CreateAccountInvite(ctx, sqlcgen.CreateAccountInviteParams{
 		Token:     token,
 		Createdby: createdBy,
 		Createdat: dbvalue.IsoAt(now),
 		Expiresat: dbvalue.IsoAt(now.Add(accountInviteTTL)),
 	})
+	if err != nil {
+		return sqlcgen.AccountInviteLink{}, fmt.Errorf("cunhar o convite: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return sqlcgen.AccountInviteLink{}, fmt.Errorf("fechar a transação do convite: %w", err)
+	}
+	return invite, nil
 }
 
-// ErrInviteNotOpen diz que o convite já foi gasto, ou já foi revogado.
+// OpenInviteToken é o token do link aberto mais novo, ou "" quando não há nenhum.
+//
+// Vazio é estado NORMAL: o diálogo oferece gerar um. Pode haver mais de um aberto
+// só entre os convites anteriores à regra de um link por vez, e a administração
+// lista todos para revogar.
+func (g Gate) OpenInviteToken(ctx context.Context) (string, error) {
+	open, err := g.queries.ListOpenAccountInvites(ctx, dbvalue.NowISO())
+	if err != nil {
+		return "", fmt.Errorf("ler os convites abertos: %w", err)
+	}
+	if len(open) == 0 {
+		return "", nil
+	}
+	return open[0].Token, nil
+}
+
+// ErrInviteNotOpen diz que o convite já foi revogado.
 var ErrInviteNotOpen = errors.New("o convite não está mais aberto")
 
 // RevokeInvite derruba um convite aberto: quem já recebeu o link deixa de conseguir
-// entrar por ele. O convite gasto fica, porque ele é o registro de quem entrou.
+// entrar por ele. A linha fica, porque ela sustenta o registro de quem entrou.
 func (g Gate) RevokeInvite(ctx context.Context, id int64) error {
-	removed, err := g.queries.RevokeAccountInvite(ctx, id)
+	revoked, err := g.queries.RevokeAccountInvite(ctx, sqlcgen.RevokeAccountInviteParams{
+		Now: sql.NullString{String: dbvalue.NowISO(), Valid: true}, ID: id,
+	})
 	if err != nil {
 		return err
 	}
-	if removed == 0 {
+	if revoked == 0 {
 		return ErrInviteNotOpen
 	}
 	return nil
 }
 
-// registrationInvite resolve o convite que este cadastro tem de gastar.
+// registrationInvite resolve o convite que este cadastro tem de apresentar.
 //
 // Os endereços do `ADMIN_EMAILS` são a exceção, e a única: o dono precisa
 // conseguir criar a própria conta numa máquina nova, e "quem se cadastra
 // primeiro ganha a coroa" entregaria isso a quem abrisse a página antes.
 func (g Gate) registrationInvite(
 	ctx context.Context, email, token string,
-) (*sqlcgen.AccountInvite, error) {
+) (*sqlcgen.AccountInviteLink, error) {
 	if g.cfg.IsAdmin(email) {
 		return nil, nil
 	}
@@ -173,34 +209,30 @@ func (g Gate) registrationInvite(
 	return &invite, nil
 }
 
-// usableInvite carrega um convite que ainda pode ser gasto: ele existe, ninguém
-// o usou, e não venceu.
-func (g Gate) usableInvite(ctx context.Context, token string) (sqlcgen.AccountInvite, bool) {
+// usableInvite carrega um convite que ainda abre conta: ele existe, ninguém o
+// revogou, e não venceu.
+func (g Gate) usableInvite(ctx context.Context, token string) (sqlcgen.AccountInviteLink, bool) {
 	if token == "" {
-		return sqlcgen.AccountInvite{}, false
+		return sqlcgen.AccountInviteLink{}, false
 	}
 	invite, err := g.queries.GetAccountInvite(ctx, token)
-	if err != nil || invite.Usedat.Valid {
-		return sqlcgen.AccountInvite{}, false
+	if err != nil || invite.Revokedat.Valid {
+		return sqlcgen.AccountInviteLink{}, false
 	}
 	wins, err := time.Parse(dbvalue.IsoLayout, invite.Expiresat)
 	if err != nil || time.Now().UTC().After(wins) {
-		return sqlcgen.AccountInvite{}, false
+		return sqlcgen.AccountInviteLink{}, false
 	}
 	return invite, true
 }
 
-// createUser insere a conta e, quando o cadastro veio de um convite, o GASTA na
-// MESMA transação.
-//
-// É o que faz o uso único ser invariante em vez de esperança: dois jogadores
-// abrindo o mesmo link ao mesmo tempo passam os dois pela conferência de
-// leitura, mas só um `UPDATE` acha `usedAt IS NULL`, e a conta do perdedor volta
-// atrás junto.
+// createUser insere a conta e, quando o cadastro veio de um convite, registra por
+// onde ela entrou na MESMA transação: conta e registro existem juntos ou não
+// existem.
 //
 // `invite` é nulo quando um endereço de `ADMIN_EMAILS` cria a própria conta.
 func (g Gate) createUser(
-	ctx context.Context, params sqlcgen.CreateUserParams, invite *sqlcgen.AccountInvite,
+	ctx context.Context, params sqlcgen.CreateUserParams, invite *sqlcgen.AccountInviteLink,
 ) (sqlcgen.User, error) {
 	tx, err := g.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -217,31 +249,16 @@ func (g Gate) createUser(
 		return sqlcgen.User{}, fmt.Errorf("gravar a conta de %q: %w", params.Email, err)
 	}
 	if invite != nil {
-		if err := spend(ctx, q, invite.ID, user.ID); err != nil {
-			return sqlcgen.User{}, err
+		if err := q.RecordAccountInviteUse(ctx, sqlcgen.RecordAccountInviteUseParams{
+			Linkid: invite.ID, Userid: user.ID, Usedat: dbvalue.NowISO(),
+		}); err != nil {
+			return sqlcgen.User{}, fmt.Errorf("registrar a entrada pelo convite %d: %w", invite.ID, err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
 		return sqlcgen.User{}, fmt.Errorf("fechar a transação do cadastro: %w", err)
 	}
 	return user, nil
-}
-
-// spend marca o convite como usado, e ZERO linhas afetadas quer dizer que
-// alguém ganhou a corrida entre a conferência e o `UPDATE`.
-func spend(ctx context.Context, q *sqlcgen.Queries, inviteID, userID int64) error {
-	rows, err := q.SpendAccountInvite(ctx, sqlcgen.SpendAccountInviteParams{
-		Usedat: sql.NullString{String: dbvalue.NowISO(), Valid: true},
-		Usedby: sql.NullInt64{Int64: userID, Valid: true},
-		ID:     inviteID,
-	})
-	if err != nil {
-		return fmt.Errorf("gastar o convite %d: %w", inviteID, err)
-	}
-	if rows == 0 {
-		return ErrBadInvite
-	}
-	return nil
 }
 
 // SignSession assina o JWT de uma sessão.

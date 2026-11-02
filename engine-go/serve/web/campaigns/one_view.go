@@ -75,7 +75,7 @@ type oneView struct {
 	IgnoredRules []string
 	// InviteLink é o CAMINHO do convite desta mesa, ou "" quando ela não tem
 	// um. Caminho e não URL: quem prefixa a origem é o navegador — ver a razão
-	// em `ds.MintedInvite`.
+	// em `ds.InviteLink`.
 	InviteLink string
 	// Errors e Aviso servem à aba de configuração, que é a única com formulário.
 	Errors wire.FieldErrorMap

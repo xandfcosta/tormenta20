@@ -149,8 +149,8 @@ func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 	_ = sse.PatchElements(fragment)
 }
 
-// handleMintInvite cunha o convite e devolve DOIS remendos: o link e o
-// painel de convites.
+// handleMintInvite cunha o convite, derrubando o anterior, e devolve DOIS remendos:
+// o link e o painel de convites.
 //
 // O segundo é o que separa esta rota da do Hub, e ele não é enfeite: cunhar
 // muda a LISTA que está a três centímetros do botão, e sem remendá-la a tela
@@ -158,12 +158,12 @@ func (s Scene) handleMintReset(w http.ResponseWriter, r *http.Request) {
 // essa lista, e por isso lá basta o link — mesma regra, transportes diferentes.
 func (s Scene) handleMintInvite(w http.ResponseWriter, r *http.Request) {
 	sse := datastar.NewSSE(w, r)
-	invite, err := s.gate.MintInvite(r.Context(), s.deps.CurrentUserID(r))
+	invite, err := s.gate.RotateInvite(r.Context(), s.deps.CurrentUserID(r))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	fragment, err := ui.RenderFragment(r.Context(), ds.MintedInvite(routes.AccountInvite(invite.Token)))
+	fragment, err := ui.RenderFragment(r.Context(), ds.InviteLink(routes.AccountInvite(invite.Token)))
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
@@ -190,8 +190,12 @@ func (s Scene) handleRevokeInvite(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"error": ui.NoticeInternal})
 		return
 	}
-	s.patchPanels(sse, r, invitesPanel)
+	// O diálogo mora fora do painel, e não pode continuar oferecendo o link morto.
+	s.patchPanels(sse, r, invitesPanel, inviteLinkOf)
 }
+
+// inviteLinkOf é o miolo do diálogo como painel, para o remendo achá-lo pelo id.
+func inviteLinkOf(v adminView) templ.Component { return ds.InviteLink(openInvitePath(v)) }
 
 // Routes monta a administração no roteador de quem a hospeda.
 //
