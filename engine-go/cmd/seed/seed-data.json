@@ -761,7 +761,10 @@
             "classPowers": [
               "class.guerreiro.aumento-de-atributo",
               "class.guerreiro.especializacao-em-arma",
-              "class.guerreiro.valentao"
+              "class.guerreiro.valentao",
+              "ataque-poderoso",
+              "combate-defensivo",
+              "estilo-de-duas-maos"
             ],
             "powerChoices": {
               "class.guerreiro.aumento-de-atributo": [

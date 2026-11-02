@@ -3,6 +3,7 @@ package engine
 import (
 	"encoding/json"
 	"math"
+	"slices"
 	"sort"
 )
 
@@ -43,6 +44,35 @@ type ModifierCondition struct {
 	// posta; o `flagRequired` pede TODAS. Ver `ModifierCondition.AllFlags`.
 	Flags []string `json:"flags,omitempty"`
 	Label string   `json:"label,omitempty"` // flagOn, flagOff, flagRequired
+	// Ends diz quando o interruptor de um `flagOn` desliga sozinho na sessão ao vivo. Vazio fica ligado até
+	// alguém desligar.
+	Ends string `json:"ends,omitempty"`
+	// Requires e Unless são as flags que um `flagOn` pede, ou que o calam: "se também possuir Saque Rápido",
+	// "se possuir Ambidestria, em vez disso não sofre penalidade" (p125).
+	Requires []string `json:"requires,omitempty"`
+	Unless   []string `json:"unless,omitempty"`
+}
+
+// Quando um interruptor desliga sozinho. A vez que passa é o "até o fim do turno", e a vez que volta para
+// o dono é o "até o seu próximo turno" (p233).
+const (
+	SwitchEndsTurn    = "turn"
+	SwitchEndsOwnTurn = "own-turn"
+)
+
+// SwitchesEndingAt são as chaves dos interruptores de poder geral que desligam neste momento.
+//
+//	catalogs.SwitchesEndingAt(SwitchEndsTurn) // ["flag:ataque-poderoso", ...]
+func (c *Catalogs) SwitchesEndingAt(end string) []string {
+	keys := []string{}
+	for _, power := range c.generalByID {
+		for _, m := range power.Modifiers {
+			if m.Condition != nil && m.Condition.Ends == end && !slices.Contains(keys, FlagGroupID(m.Condition.Flag)) {
+				keys = append(keys, FlagGroupID(m.Condition.Flag))
+			}
+		}
+	}
+	return keys
 }
 
 // AllFlags são a `Flag` e as `Flags` juntas, sem a vazia.

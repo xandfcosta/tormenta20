@@ -5,4 +5,5 @@ package transcript
 var GeneralPowers = concat(
 	generalPowersPart01,
 	generalPowersPart02,
+	generalPowersPart03,
 )

@@ -30,8 +30,14 @@ type ModifierCondition struct {
 	// cala se qualquer uma estiver posta, o `flagRequired` pede todas.
 	Flags []string `json:"flags,omitempty"`
 	Label string   `json:"label,omitempty"`
-	Trait string   `json:"trait,omitempty"`
-	Type  string   `json:"type,omitempty"`
+	// Ends diz quando o interruptor de um `flagOn` desliga sozinho na sessão ao vivo: "turn" quando a vez
+	// passa, "own-turn" quando ela volta para o dono. Vazio fica ligado até alguém desligar.
+	Ends string `json:"ends,omitempty"`
+	// Requires e Unless são as flags que um `flagOn` pede, ou que o calam: o "se também possuir" do livro.
+	Requires []string `json:"requires,omitempty"`
+	Unless   []string `json:"unless,omitempty"`
+	Trait    string   `json:"trait,omitempty"`
+	Type     string   `json:"type,omitempty"`
 }
 
 type PMScaling struct {

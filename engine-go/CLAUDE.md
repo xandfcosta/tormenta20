@@ -816,6 +816,14 @@ Condicionais que dividem uma flag viram UM interruptor, com chave
 representável. Vale para a POSTURA, o Folião, o terreno do Explorador e a
 `marca-da-presa`.
 
+
+### O interruptor pode desligar sozinho
+
+O `flagOn` declara no `Ends` quando acaba, e o `Catalogs.SwitchesEndingAt` responde a quem gira a vez: `turn`
+sai quando a vez passa, e `own-turn` quando ela volta para o dono (p233). Fora de combate não há vez, e o fim
+de cena é a rede dos dois. Sem `Ends`, fica ligado até alguém desligar. `Requires` e `Unless` são o "se também
+possuir" do livro: o poder levanta uma flag, e o termo pede ou é calado por ela.
+
 ### O catálogo chega ao processo por dois caminhos
 
 O `catalog.Resource` serve o `transcript` compilado, que sempre existe. O

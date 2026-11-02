@@ -237,6 +237,8 @@ var itemFlagLabel = map[string]string{
 	// A do Acrobático (p129), e ela fala do CAMINHO e não do deslocamento: o
 	// metro continua o mesmo, o que muda é o que cada casa cobra.
 	"movement-ignores-difficult": "Terreno difícil não custa nada",
+	"saque-rapido":               "Saque Rápido",
+	"ambidestria":                "Ambidestria",
 	// As TRÊS do descanso da noite (p106, ALE-488), na voz do livro.
 	sheet.FlagRestOneCategoryUp:   "Descansa uma categoria acima",
 	sheet.FlagRestNeverBelowLevel: "Descanso nunca rende menos que o nível",
