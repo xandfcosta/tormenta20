@@ -96,6 +96,10 @@ ele pega para o dano.
   `engine-go/` — mais `pnpm typecheck` lá, quando mexer nas ilhas de JS. Mexeu
   em gesto de ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e &&
   npx playwright test` (sobe o próprio servidor e o próprio banco).
+- **Antes de abrir PR:** `pnpm ci:local` roda o que a CI confere, com os artefatos
+  gerados e o e2e. Em worktree é `bash scripts/ci-local.sh`, porque o `pnpm` recusa o
+  `node_modules` em symlink. Passo novo no `ci.yml` entra no script também: nada
+  liga os dois.
 - **`git add` antes do `go test`.** Os guardas varrem `git ls-files`, então um
   arquivo novo fora do índice não é medido, e a suíte fica verde sem ele.
 - **Releia a documentação que a sua mudança tocou** — o `.md` do pacote e o
