@@ -128,7 +128,58 @@ func SituationsBetween(
 			out = append(out, engine.TargetObjectInMotion)
 		}
 	})
+	if targetInMeleeCombat(w, b, attackerEntry, target) {
+		out = append(out, engine.TargetInMeleeCombat)
+	}
 	return out
+}
+
+// targetInMeleeCombat diz se o alvo está "dentro do alcance natural de qualquer
+// inimigo (incluindo você)" (p233).
+//
+// O LADO É O `Kind`, e a resposta é sugestão: a peça não sabe quem é aliada (ver o
+// cabeçalho), então um NPC aliado conta como inimigo do grupo. O −5 aparece na
+// decomposição, e quem decide o ataque é o mestre.
+//
+// A peça escondida não conta: o −5 na rolagem do jogador entregaria a emboscada.
+func targetInMeleeCombat(w *ecs.World, b *BoardState, attackerEntry string, target AttackTargetOnTheBoard) bool {
+	if target.EntryID == "" {
+		return false
+	}
+	var targetBody body
+	targetKind, found := "", false
+	ecs.Each2(w, func(e ecs.Entity, at tokenAt, r body) {
+		if isTheTarget(w, e, b.Tokens[at.Index], target) {
+			targetBody, targetKind, found = r, b.Tokens[at.Index].Kind, true
+		}
+	})
+	if !found || targetKind == "object" {
+		return false
+	}
+	inMelee := false
+	ecs.Each2(w, func(e ecs.Entity, at tokenAt, r body) {
+		token := b.Tokens[at.Index]
+		if token.Kind == "object" || token.Hidden || isTheTarget(w, e, token, target) {
+			return
+		}
+		bound, tied := ecs.Get[boundTo](w, e)
+		isAttacker := tied && bound.EntryID == attackerEntry
+		if (isAttacker || token.Kind != targetKind) && r.reaches(targetBody) {
+			inMelee = true
+		}
+	})
+	return inMelee
+}
+
+// reaches diz se o outro corpo está no alcance natural deste.
+//
+// O alcance natural e o espaço ocupado são a mesma coluna da Tabela 1-21 (p107),
+// então o lado do corpo É o alcance em quadrados. "Adjacente no mapa" (p233) vale
+// para a diagonal também; além disso, a régua é a da mesa (`engine.RangeSquares`).
+func (r body) reaches(other body) bool {
+	dx := max(0, other.X0-r.X1, r.X0-other.X1)
+	dy := max(0, other.Y0-r.Y1, r.Y0-other.Y1)
+	return (dx <= 1 && dy <= 1) || dx+dy <= r.X1-r.X0+1
 }
 
 // isTheTarget casa a peça com o endereço que chegou — a linha ou a peça.

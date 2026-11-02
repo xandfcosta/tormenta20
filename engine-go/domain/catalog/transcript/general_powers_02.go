@@ -141,6 +141,9 @@ var generalPowersPart02 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "anyPower", IDs: []string{"estilo-de-disparo", "estilo-de-arremesso"}}},
 		BookPage:      125,
 		UID:           "pwr_uyuqaxy52v",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "flag", Name: "disparo-preciso"}, Amount: 1, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:          "disparo-rapido",
