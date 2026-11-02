@@ -236,10 +236,10 @@ func pickRaceVariant(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 	})
 }
 
-// pickClassChoice grava o caminho ou o devoto de uma classe.
+// pickClassChoice grava o caminho de uma classe.
 func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	choice, value := chi.URLParam(r, "escolha"), chi.URLParam(r, "valor")
-	if choice != "caminho" && choice != "devoto" {
+	if choice != "caminho" {
 		return fmt.Errorf("%q não é uma escolha de classe", choice)
 	}
 	class, err := url.PathUnescape(chi.URLParam(r, "classe"))
@@ -247,8 +247,42 @@ func pickClassChoice(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 		return fmt.Errorf("a classe %q não é um nome", chi.URLParam(r, "classe"))
 	}
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
-		dto.ClassChoices = choiceClassCom(dto.ClassChoices, class, choice, value)
+		dto.ClassChoices = choiceClassCom(dto.ClassChoices, class, value)
 	})
+}
+
+// noDevotion é o valor do gesto de ficar sem deus, ou sem o poder concedido.
+const noDevotion = "nenhum"
+
+// pickDevotion grava o deus da ficha, que é a fonte única da devoção (ALE-518). O poder concedido não
+// sai junto: ele é do deus antigo, o passo avisa, e tirar é da mesa.
+func pickDevotion(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	god := pathParam(r, "deus")
+	if god == noDevotion {
+		god = ""
+	}
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.God = &god })
+}
+
+// pickGrantedPower grava o poder concedido, que tem de ser do deus da ficha.
+func pickGrantedPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	power := pathParam(r, "poder")
+	if power == noDevotion {
+		power = ""
+	}
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	if power != "" {
+		if dto.God == nil || *dto.God == "" {
+			return fmt.Errorf("sem deus, não há poder concedido para escolher: %s", power)
+		}
+		if !sheet.GrantedPowerIsOfGod(*dto.God, power) {
+			return fmt.Errorf("%s não é um poder que %s concede", power, book.DevotionName(*dto.God))
+		}
+	}
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.GodPower = power })
 }
 
 // pickRaceAttributes grava a distribuição de atributo da raça.
@@ -333,6 +367,12 @@ func (s Scene) saveTheChoices(
 	if dto.SecondaryRaceChoices != before.SecondaryRaceChoices {
 		writes.SecondaryRaceChoices, moved = &dto.SecondaryRaceChoices, true
 	}
+	if !samePointedText(dto.God, before.God) {
+		writes.God, moved = dto.God, true
+	}
+	if dto.GodPower != before.GodPower {
+		writes.GodPower, moved = &dto.GodPower, true
+	}
 	if !moved {
 		return nil
 	}
@@ -400,20 +440,24 @@ func variantSibling(dto sheet.CharacterDTO, chosen string) map[string]bool {
 	return outside
 }
 
-// choiceClassCom escreve caminho ou devoto no blob de escolhas.
-func choiceClassCom(blob, class, which, value string) string {
+// choiceClassCom escreve o caminho no blob de escolhas.
+func choiceClassCom(blob, class, value string) string {
 	choices := map[string]engine.ClassChoiceSelections{}
 	_ = json.Unmarshal([]byte(blob), &choices)
 	ofClass := choices[class]
-	if which == "caminho" {
-		ofClass.Path = value
-	} else {
-		ofClass.Devotee = value
-	}
+	ofClass.Path = value
 	choices[class] = ofClass
 	after, err := json.Marshal(choices)
 	if err != nil {
 		return blob
 	}
 	return string(after)
+}
+
+// samePointedText compara o TEXTO de dois campos opcionais, que ponteiro nenhum diz.
+func samePointedText(a, b *string) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	return *a == *b
 }

@@ -102,6 +102,8 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/poderes/raca/{habilidade}/{opcao}", s.sheetCommand(pickRaceAbility))
 	r.Post("/personagens/{id}/poderes/variante/{variante}", s.sheetCommand(pickRaceVariant))
 	r.Post("/personagens/{id}/poderes/classe/{classe}/{escolha}/{valor}", s.sheetCommand(pickClassChoice))
+	r.Post("/personagens/{id}/poderes/devocao/{deus}", s.sheetCommand(pickDevotion))
+	r.Post("/personagens/{id}/poderes/poder-concedido/{poder}", s.sheetCommand(pickGrantedPower))
 	r.Post("/personagens/{id}/poderes/atributos", s.sheetCommand(pickRaceAttributes))
 	r.Post("/personagens/{id}/poderes/ascendencia/{ascendencia}", s.sheetCommand(pickRaceAscendencia))
 }

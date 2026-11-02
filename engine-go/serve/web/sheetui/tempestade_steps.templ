@@ -77,8 +77,8 @@ templ choiceStepSection(v View, step choiceStep) {
 					}
 				case "path":
 					@classPickerDs(v, step.Class.ClassName, "caminho", "Caminho", *step.Class.Path)
-				case "devotee":
-					@classPickerDs(v, step.Class.ClassName, "devoto", "Devoto", *step.Class.Devotee)
+				case "devotion":
+					@devotionStepBody(v, v.Choices.Devotion)
 				case "counted":
 					@countedChoiceDs(v, step.Counted)
 				case "general":

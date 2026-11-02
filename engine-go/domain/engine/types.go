@@ -67,8 +67,7 @@ type AdditionalRace struct {
 }
 
 type ClassChoice struct {
-	Devotee string `json:"devoto"`
-	Path    string `json:"caminho"`
+	Path string `json:"caminho"`
 }
 
 type ClassEntry struct {

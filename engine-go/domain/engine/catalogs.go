@@ -194,7 +194,7 @@ func (p ClassPower) choiceNames() map[string]string {
 }
 
 type GrantedByChoice struct {
-	Field string `json:"field"` // 'devoto' | 'caminho'
+	Field string `json:"field"` // 'caminho'
 	Value string `json:"value"`
 }
 

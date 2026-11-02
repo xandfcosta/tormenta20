@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"net/url"
 	"strconv"
 
 	"t20engine/serve/web/ds"
@@ -201,6 +202,53 @@ templ classPickerDs(v View, class, choice, label string, selector pickerChoice) 
 			}
 		</div>
 	</div>
+}
+
+// devotionStepBody é o deus da ficha e o poder que ele concede. Trocar de deus não tira o poder: o
+// passo avisa, e tirar é da mesa.
+templ devotionStepBody(v View, d devotionChoice) {
+	<div class="ds-field">
+		<span class="ds-field-label">Deus</span>
+		<div class="ds-options">
+			@ds.Option(d.Gods.Chosen == "", templ.Attributes{"data-on:click": sheetPost(v, "/poderes/devocao/"+noDevotion)}) {
+				Nenhum
+			}
+			for _, god := range d.Gods.Options {
+				@ds.Option(god.Active, templ.Attributes{"data-on:click": sheetPost(v, "/poderes/devocao/"+god.Value)}) {
+					{ god.Label }
+				}
+			}
+		</div>
+	</div>
+	if d.OldPower != "" {
+		<p class="ds-help" role="note">{ d.OldPower + " é de outro deus. Ele fica na ficha até a mesa decidir." }</p>
+	}
+	if d.NoGrant != "" {
+		<p class="ds-help">{ d.NoGrant }</p>
+	}
+	if len(d.Powers) > 0 || d.HasPower {
+		@ds.List("Poder concedido", "") {
+			for _, power := range d.Powers {
+				<div class="ds-row ds-level-line">
+					<span class="ds-level-text">
+						<span class="ds-row-title">{ power.Name }</span>
+						<span class="ds-row-meta ds-level-detail">{ power.Detail }</span>
+					</span>
+					@ds.Option(power.Active, templ.Attributes{"aria-label": "Escolher " + power.Name, "data-on:click": sheetPost(v, "/poderes/poder-concedido/"+url.PathEscape(power.Name))}) {
+						Escolher
+					}
+				</div>
+			}
+			if d.HasPower {
+				<div class="ds-row ds-level-line">
+					<span class="ds-row-title">Nenhum</span>
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/poderes/poder-concedido/"+noDevotion)}) {
+						Tirar
+					}
+				</div>
+			}
+		}
+	}
 }
 
 // countedChoiceDs é a escolha do poder concedido contada por atributo — as

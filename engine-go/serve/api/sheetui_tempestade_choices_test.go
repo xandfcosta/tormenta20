@@ -41,7 +41,7 @@ func TestTheParallelChoicesDialogOpensOneStepAtATime(t *testing.T) {
 	// Cada passo: o toque na lista que o abre, e o que ele oferece por dentro
 	// da parte que rola.
 	steps := []struct{ what, step, inside string }{
-		{"o devoto como opção", "class-Paladino-devotee", `<button[^>]*class="ds-option"[^>]*data-on:click="[^"]*/poderes/classe/Paladino/devoto/`},
+		{"a devoção como opção", "devotion", `<button[^>]*class="ds-option"[^>]*data-on:click="[^"]*/poderes/devocao/`},
 		{"o benefício da origem como interruptor", "origin", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/origem/`},
 		{"o poder da classe como interruptor", "class-Paladino-powers", `<input[^>]*role="switch"[^>]*data-on:change="[^"]*/poderes/escolhe/`},
 	}

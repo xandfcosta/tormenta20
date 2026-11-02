@@ -246,6 +246,8 @@ UPDATE characters SET
   raceAbilityChoices   = COALESCE(sqlc.narg('raceAbilityChoices'), raceAbilityChoices),
   raceAttributeChoices = COALESCE(sqlc.narg('raceAttributeChoices'), raceAttributeChoices),
   secondaryRaceChoices = COALESCE(sqlc.narg('secondaryRaceChoices'), secondaryRaceChoices),
+  god                  = COALESCE(sqlc.narg('god'), god),
+  godPower             = COALESCE(sqlc.narg('godPower'), godPower),
   updatedAt            = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');
 

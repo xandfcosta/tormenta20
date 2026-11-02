@@ -14,7 +14,7 @@ import (
 // forja promete por escrito "dá para criar assim e terminar na ficha". O que
 // este arquivo faz é olhar a ficha e dizer, com a palavra que a pessoa lê, o que
 // está faltando: o bônus de atributo da raça, os dois benefícios da origem, as
-// vagas de poder abertas, o caminho, o devoto.
+// vagas de poder abertas, o caminho, a devoção.
 //
 // # As REGRAS não estão aqui, e é isso que faz a recusa valer
 //
@@ -174,16 +174,14 @@ func classPendings(dto sheet.CharacterDTO) []pendencia {
 			})
 		}
 		blob := choices[class.ClassName]
-		if len(sheet.ClassDevotees(class.ClassName)) > 0 && blob.Devotee == "" {
-			outside = append(outside, pendencia{
-				Source: "classe", Label: class.ClassName + ": escolher devoto",
-			})
-		}
 		if len(sheet.LevelPaths(class.ClassName, class.Level)) > 0 && blob.Path == "" {
 			outside = append(outside, pendencia{
 				Source: "classe", Label: class.ClassName + ": escolher caminho",
 			})
 		}
+	}
+	if sheet.DevotionRequired(dto.Classes) && (dto.God == nil || *dto.God == "") {
+		outside = append(outside, pendencia{Source: "classe", Label: "Devoção: escolher o deus"})
 	}
 	for _, counted := range sheet.CountedChoices(dto) {
 		// O que falta é o que AINDA cabe: com menos treinadas que o limite, a

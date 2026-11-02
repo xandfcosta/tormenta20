@@ -375,8 +375,8 @@ func choiceStepSection(v View, step choiceStep) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-			case "devotee":
-				templ_7745c5c3_Err = classPickerDs(v, step.Class.ClassName, "devoto", "Devoto", *step.Class.Devotee).Render(ctx, templ_7745c5c3_Buffer)
+			case "devotion":
+				templ_7745c5c3_Err = devotionStepBody(v, v.Choices.Devotion).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -3544,8 +3544,10 @@ UPDATE characters SET
   raceAbilityChoices   = COALESCE(?3, raceAbilityChoices),
   raceAttributeChoices = COALESCE(?4, raceAttributeChoices),
   secondaryRaceChoices = COALESCE(?5, secondaryRaceChoices),
-  updatedAt            = ?6
-WHERE id = ?7
+  god                  = COALESCE(?6, god),
+  godPower             = COALESCE(?7, godPower),
+  updatedAt            = ?8
+WHERE id = ?9
 `
 
 type SetCharacterChoicesParams struct {
@@ -3554,6 +3556,8 @@ type SetCharacterChoicesParams struct {
 	RaceAbilityChoices   sql.NullString `json:"raceAbilityChoices"`
 	RaceAttributeChoices sql.NullString `json:"raceAttributeChoices"`
 	SecondaryRaceChoices sql.NullString `json:"secondaryRaceChoices"`
+	God                  sql.NullString `json:"god"`
+	GodPower             sql.NullString `json:"godPower"`
 	UpdatedAt            string         `json:"updatedAt"`
 	ID                   int64          `json:"id"`
 }
@@ -3565,6 +3569,8 @@ func (q *Queries) SetCharacterChoices(ctx context.Context, arg SetCharacterChoic
 		arg.RaceAbilityChoices,
 		arg.RaceAttributeChoices,
 		arg.SecondaryRaceChoices,
+		arg.God,
+		arg.GodPower,
 		arg.UpdatedAt,
 		arg.ID,
 	)

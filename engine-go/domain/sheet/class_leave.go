@@ -34,9 +34,8 @@ func ClassCanLeave(dto CharacterDTO, class string) error {
 		return fmt.Errorf("não dá para tirar %s: %w", class, err)
 	}
 	choice := ClassChoiceSelections(dto)[class]
-	if choice.Devotee != "" {
-		return fmt.Errorf("não dá para tirar %s: o devoto %s foi escolhido nela",
-			class, optionLabel(ClassDevotees(class), choice.Devotee))
+	if err := devotionIsValid(remaining); err != nil {
+		return fmt.Errorf("não dá para tirar %s: %w", class, err)
 	}
 	if choice.Path != "" {
 		return fmt.Errorf("não dá para tirar %s: o caminho %s foi escolhido nela",
