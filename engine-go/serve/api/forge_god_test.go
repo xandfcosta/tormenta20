@@ -86,7 +86,7 @@ func TestTheForgeListsTauronInOrder(t *testing.T) {
 	}
 	cleric := postaAForja(t, f, f.player, "/personagens/nova/esboco",
 		url.Values{"classes": {"Clérigo:1"}}).Body.String()
-	if strings.Contains(cleric, `value="tauron"`) {
-		t.Error("o clérigo vê Tauron, e ele não está na lista do livro")
+	if !strings.Contains(cleric, `value="tauron"`) {
+		t.Error("o clérigo não vê Tauron")
 	}
 }

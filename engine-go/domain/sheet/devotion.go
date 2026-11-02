@@ -10,13 +10,10 @@ import (
 
 // DevotionOptions são as devoções que a ficha pode escolher. Quem não tem classe que sirva a um deus
 // escolhe qualquer um, ou Tauron; quem tem fica com o que TODAS aceitam, e é o que faz um
-// clérigo/paladino só ver quem serve aos dois. Tauron não entra nas listas das classes porque elas são
-// as do livro, e no livro ele já morreu (p25).
+// clérigo/paladino só ver quem serve aos dois.
 func DevotionOptions(classes []ClassDTO) []ChoiceOption {
 	_, _, gods := book.CharacterCatalogs()
-	options := append(godsThat(gods, func(book.God) bool { return true }),
-		ChoiceOption{Value: book.DevotionTauron, Label: book.DevotionName(book.DevotionTauron)})
-	slices.SortFunc(options, func(a, b ChoiceOption) int { return strings.Compare(a.Label, b.Label) })
+	options := withTauron(godsThat(gods, func(book.God) bool { return true }))
 	limited := false
 	for _, class := range classes {
 		accepted := ClassDevotees(class.ClassName)
@@ -32,6 +29,13 @@ func DevotionOptions(classes []ClassDTO) []ChoiceOption {
 		})
 	}
 	return options
+}
+
+// withTauron põe Tauron na lista, em ordem de nome.
+func withTauron(options []ChoiceOption) []ChoiceOption {
+	all := append(options, ChoiceOption{Value: book.DevotionTauron, Label: book.DevotionName(book.DevotionTauron)})
+	slices.SortFunc(all, func(a, b ChoiceOption) int { return strings.Compare(a.Label, b.Label) })
+	return all
 }
 
 // DevotionRequired diz se a ficha tem classe que serve a um deus, e por isso fica pendente sem ele.

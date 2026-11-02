@@ -227,12 +227,15 @@ func TestTauronIsADevotionThatGrantsNothing(t *testing.T) {
 		t.Errorf("Tauron não concede o Dom da Verdade, e a recusa foi %q", refusal)
 	}
 
-	// Clérigo, paladino e druida seguem as listas do livro, e ele não está em nenhuma.
+	// Decisão do dono: as três classes que servem a um deus também podem servir a ele.
 	for _, class := range []string{"Clérigo", "Paladino", "Druida"} {
 		cf := newSceneFixture(t)
 		classID := seedCharacterAtLevel(t, cf.s, cf.player, "Fiel", class, 1, 0, 0)
-		if refusal := powerCommand(t, cf, classID, devotionPath("tauron"), ""); !strings.Contains(refusal, class) {
-			t.Errorf("Tauron não está na lista de %s, e a recusa foi %q", class, refusal)
+		if refusal := powerCommand(t, cf, classID, devotionPath("tauron"), ""); refusal != "" {
+			t.Errorf("%s não conseguiu servir a Tauron: %q", class, refusal)
+		}
+		if step := choiceStepTitled(t, powerScreen(t, cf, classID), "Devoção"); step.Tag != "feito" {
+			t.Errorf("Tauron não resolveu a devoção de %s: %q", class, step.Tag)
 		}
 	}
 }

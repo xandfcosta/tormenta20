@@ -88,18 +88,19 @@ func LevelPaths(class string, level int64) []ChoiceOption {
 // As três listas são do livro: o Clérigo serve qualquer deus MAIOR ou o Panteão
 // (p57); o Paladino tem a lista de oito mais o "Paladino do Bem" (p82); o Druida
 // serve Allihanna, Megalokk ou Oceano (p61), e não tem alternativa fora das
-// divindades.
+// divindades. Tauron entra nas três por decisão do dono: o livro não o lista
+// porque ele morreu (p25), e a mesa pode servi-lo mesmo assim, sem receber nada.
 func ClassDevotees(class string) []ChoiceOption {
 	_, _, gods := book.CharacterCatalogs()
 	switch class {
 	case "Clérigo":
-		return append(godsThat(gods, func(d book.God) bool { return d.Major }),
+		return append(withTauron(godsThat(gods, func(d book.God) bool { return d.Major })),
 			ChoiceOption{Value: "panteao", Label: "Panteão"})
 	case "Paladino":
-		return append(godsThat(gods, func(d book.God) bool { return d.PaladinEligible }),
+		return append(withTauron(godsThat(gods, func(d book.God) bool { return d.PaladinEligible })),
 			ChoiceOption{Value: "bem", Label: "Paladino do Bem"})
 	case "Druida":
-		return godsThat(gods, func(d book.God) bool { return d.DruidEligible })
+		return withTauron(godsThat(gods, func(d book.God) bool { return d.DruidEligible }))
 	}
 	return nil
 }
