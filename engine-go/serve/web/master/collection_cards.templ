@@ -243,8 +243,16 @@ templ classCard(c book.Class, bookRef bookui.BookAddress) {
 // então ele diria a mesma coisa em todos. Campo VAZIO não vira rótulo órfão: Lena e
 // Marah não têm arma preferida no livro, e "Arma preferida:" seguido de nada parece
 // dado perdido em vez de ausência com significado.
+// godBadges são os crachás do deus: a energia dele, ou o aviso de que ele morreu.
+func godBadges(d book.God) []string {
+	if d.Dead {
+		return []string{"Morto"}
+	}
+	return nonEmpty(energyWritten(d.Energy))
+}
+
 templ godCard(d book.God, bookRef bookui.BookAddress) {
-	@catalogCard(d.Name, d.BookPage, bookRef, plainBadges(nonEmpty(energyWritten(d.Energy))...)) {
+	@catalogCard(d.Name, d.BookPage, bookRef, plainBadges(godBadges(d)...)) {
 		<p class="ds-entry-body">{ d.Portfolio }</p>
 		<dl class="ds-entry-fields">
 			if d.Symbol != "" {
@@ -254,6 +262,10 @@ templ godCard(d book.God, bookRef bookui.BookAddress) {
 			if d.PreferredWeapon != "" {
 				<dt>Arma preferida</dt>
 				<dd>{ d.PreferredWeapon }</dd>
+			}
+			if d.Dead {
+				<dt>Concede</dt>
+				<dd>Não concede nada</dd>
 			}
 			if len(d.GrantedPowers) > 0 {
 				<dt>Concede</dt>

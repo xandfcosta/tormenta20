@@ -50,3 +50,26 @@ func TestAnEmptyLabelDoesNotComeOutAlone(t *testing.T) {
 		t.Error("o rótulo sumiu de quem tem valor — o guarda acima passaria por ausência de tudo")
 	}
 }
+
+// Tauron morreu (p25), e o catálogo diz isso em vez de parecer um deus que não concede por descuido.
+func TestTheGodCatalogShowsTauronAsDead(t *testing.T) {
+	s := newTestServer(t)
+	eu := seedUser(t, s, "mestre@t20.local")
+	body := pedeNoMestre(t, s, eu, "GET", "/mestre/deuses?entrada=tauron", "").Body.String()
+	if !strings.Contains(body, "Deus da Força") {
+		t.Errorf("a carta de Tauron não diz quem ele era:\n%s", body)
+	}
+	if !strings.Contains(body, ">Morto<") {
+		t.Errorf("a carta de Tauron não diz que ele está morto:\n%s", body)
+	}
+	if !strings.Contains(body, "Não concede nada") {
+		t.Errorf("a carta de Tauron não diz que ele não concede nada:\n%s", body)
+	}
+	if found := askTheFinder(t, s, eu, `{"finder":"tauron"}`); !strings.Contains(found, "entrada=tauron") {
+		t.Errorf("a busca não leva à carta de Tauron:\n%s", found)
+	}
+	alive := pedeNoMestre(t, s, eu, "GET", "/mestre/deuses?entrada=khalmyr", "").Body.String()
+	if strings.Contains(alive, ">Morto<") {
+		t.Error("Khalmyr saiu como morto")
+	}
+}

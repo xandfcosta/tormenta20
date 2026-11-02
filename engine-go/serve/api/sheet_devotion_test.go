@@ -211,3 +211,31 @@ func TestLeavingTheClassKeepsTheGod(t *testing.T) {
 		t.Errorf("o deus saiu junto com a classe: %q", god)
 	}
 }
+
+// Tauron morreu (p25), então não é um dos vinte deuses do livro, e a mesa ainda pode servi-lo: ele
+// entra na lista sem conceder nada, e o passo diz isso.
+func TestTauronIsADevotionThatGrantsNothing(t *testing.T) {
+	f, id := guerreiro(t)
+	if refusal := powerCommand(t, f, id, devotionPath("tauron"), ""); refusal != "" {
+		t.Fatalf("o guerreiro não conseguiu servir a Tauron: %q", refusal)
+	}
+	if screen := powerScreen(t, f, id); !strings.Contains(screen, "Devoto de Tauron não recebe poder concedido") {
+		t.Errorf("o passo não diz que Tauron não concede nada:\n%s", screen)
+	}
+	refusal := powerCommand(t, f, id, grantedPath(url.PathEscape("Dom da Verdade")), "")
+	if !strings.Contains(refusal, "Tauron") {
+		t.Errorf("Tauron não concede o Dom da Verdade, e a recusa foi %q", refusal)
+	}
+
+	// Decisão do dono: as três classes que servem a um deus também podem servir a ele.
+	for _, class := range []string{"Clérigo", "Paladino", "Druida"} {
+		cf := newSceneFixture(t)
+		classID := seedCharacterAtLevel(t, cf.s, cf.player, "Fiel", class, 1, 0, 0)
+		if refusal := powerCommand(t, cf, classID, devotionPath("tauron"), ""); refusal != "" {
+			t.Errorf("%s não conseguiu servir a Tauron: %q", class, refusal)
+		}
+		if step := choiceStepTitled(t, powerScreen(t, cf, classID), "Devoção"); step.Tag != "feito" {
+			t.Errorf("Tauron não resolveu a devoção de %s: %q", class, step.Tag)
+		}
+	}
+}

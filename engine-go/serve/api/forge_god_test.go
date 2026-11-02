@@ -71,3 +71,22 @@ func TestAGodTheClassRefusesStaysAndIsNamed(t *testing.T) {
 		t.Errorf("a forja aceitou o paladino de Tenebra: %d", rec.Code)
 	}
 }
+
+// A lista está em ordem de nome, e Tauron cai no lugar dele, entre Tanna-Toh e Tenebra.
+func TestTheForgeListsTauronInOrder(t *testing.T) {
+	f := newSceneFixture(t)
+	blank := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
+	tanna, tauron, tenebra := strings.Index(blank, `value="tanna-toh"`), strings.Index(blank, `value="tauron"`), strings.Index(blank, `value="tenebra"`)
+	if tauron < 0 || tanna > tauron || tauron > tenebra {
+		t.Errorf("Tauron fora de ordem: Tanna-Toh em %d, Tauron em %d, Tenebra em %d", tanna, tauron, tenebra)
+	}
+	hero := forgedSheet(t, f, forgedHero(t, f, func(answers url.Values) { answers.Set("god", "tauron") }))
+	if hero.God == nil || *hero.God != "tauron" {
+		t.Errorf("Tauron não nasceu na ficha: %v", hero.God)
+	}
+	cleric := postaAForja(t, f, f.player, "/personagens/nova/esboco",
+		url.Values{"classes": {"Clérigo:1"}}).Body.String()
+	if !strings.Contains(cleric, `value="tauron"`) {
+		t.Error("o clérigo não vê Tauron")
+	}
+}
