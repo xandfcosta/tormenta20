@@ -239,6 +239,7 @@ var itemFlagLabel = map[string]string{
 	"movement-ignores-difficult": "Terreno difícil não custa nada",
 	"saque-rapido":               "Saque Rápido",
 	"arremesso-potente":          "Arremesso Potente",
+	"disparo-preciso":            "Disparo Preciso",
 	"magia-ilimitada":            "Magia Ilimitada",
 	"ambidestria":                "Ambidestria",
 	// As TRÊS do descanso da noite (p106, ALE-488), na voz do livro.

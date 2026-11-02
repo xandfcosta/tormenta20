@@ -31,6 +31,7 @@ type missChance struct{ UpTo int }
 type forbidsTheAttack struct{}
 
 // meleeOnly é o "(apenas para corpo a corpo)" de duas linhas da tabela.
+type shootingIntoMelee struct{}
 type meleeOnly struct{}
 
 // situationLabel é a procedência que a mesa lê.
@@ -72,6 +73,9 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 			if rule.MeleeOnly {
 				ecs.Set(w, e, meleeOnly{})
 			}
+			if rule.ShootingIntoMelee {
+				ecs.Set(w, e, shootingIntoMelee{})
+			}
 		}
 	}
 }
@@ -84,6 +88,9 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 // movimento da redação do tabuleiro — o que não vale SOME INTEIRO.
 func dropWhatDoesNotReachThisWeapon(card WeaponCard) ecs.System {
 	return func(w *ecs.World) {
+		if card.Skill != "Pontaria" || card.ShootsIntoMelee {
+			ecs.Each(w, func(e ecs.Entity, _ shootingIntoMelee) { w.Despawn(e) })
+		}
 		if card.Skill != "Pontaria" {
 			return
 		}

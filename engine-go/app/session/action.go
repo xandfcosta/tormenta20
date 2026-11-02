@@ -35,6 +35,7 @@ func chargeTurn(s *live.SessionRuntimeState, cost engine.ActionCost) error {
 		return err
 	}
 	s.Scene.StandardLeft, s.Scene.MovementLeft = left.Standard, left.Movement
+	s.Scene.ExtraMovementLeft = left.ExtraMovement
 	return nil
 }
 
@@ -60,7 +61,7 @@ func spendsFromTurn(s *live.SessionRuntimeState, cost engine.ActionCost) (engine
 		return engine.TurnBudget{}, false, nil
 	}
 	left, err := engine.TurnBudget{
-		Standard: s.Scene.StandardLeft, Movement: s.Scene.MovementLeft,
+		Standard: s.Scene.StandardLeft, Movement: s.Scene.MovementLeft, ExtraMovement: s.Scene.ExtraMovementLeft,
 	}.Spend(cost)
 	if err != nil {
 		return left, true, fmt.Errorf("%s: %w", whoIsOnTurn(s), err)

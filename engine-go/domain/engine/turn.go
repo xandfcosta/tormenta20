@@ -48,12 +48,15 @@ var ErrNoActionLeft = errors.New("não sobrou ação neste turno")
 
 // TurnBudget é o que AINDA está de pé no turno de alguém.
 //
-// Dois booleanos e não um contador: o livro não diz "duas ações", ele diz UMA
-// padrão e UMA de movimento, com uma troca de mão única entre elas. Um contador
-// de dois perderia exatamente a assimetria que a troca descreve.
+// Booleanos e não um contador: o livro não diz "duas ações", ele diz UMA padrão e
+// UMA de movimento, com uma troca de mão única entre elas. Um contador de dois
+// perderia exatamente a assimetria que a troca descreve.
 type TurnBudget struct {
 	Standard bool `json:"standard"`
 	Movement bool `json:"movement"`
+	// ExtraMovement é a ação de movimento a mais do primeiro turno de quem tem
+	// Reflexos de Combate (p129).
+	ExtraMovement bool `json:"extraMovement,omitempty"`
 }
 
 // FullTurn é o turno de quem acabou de entrar nele.
@@ -80,6 +83,11 @@ func (b TurnBudget) Spend(cost ActionCost) (TurnBudget, error) {
 		return b, nil
 
 	case ActionMovement:
+		// O extra paga primeiro: quem andou com ele ainda faz uma ação completa.
+		if b.ExtraMovement {
+			b.ExtraMovement = false
+			return b, nil
+		}
 		if b.Movement {
 			b.Movement = false
 			return b, nil
@@ -99,7 +107,7 @@ func (b TurnBudget) Spend(cost ActionCost) (TurnBudget, error) {
 		if !b.Standard || !b.Movement {
 			return b, fmt.Errorf("%w, e uma ação completa exige o turno inteiro", ErrNoActionLeft)
 		}
-		return TurnBudget{}, nil
+		return TurnBudget{ExtraMovement: b.ExtraMovement}, nil
 	}
 	return b, unknownActionCost(cost)
 }

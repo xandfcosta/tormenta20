@@ -139,6 +139,8 @@ type Item struct {
 }
 
 type Weapon struct {
+	// Hand é `light`, `one` ou `two`: arma leve, de uma mão ou de duas.
+	Hand      string   `json:"hand"`
 	Damage    string   `json:"damage"`
 	CritRange int      `json:"critRange"`
 	CritMult  int      `json:"critMult"`

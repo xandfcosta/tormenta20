@@ -1,5 +1,7 @@
 package live
 
+import "slices"
+
 // A CENA, como o livro a define (T20 p252).
 //
 // "O tempo narrativo de uma aventura de Tormenta20 é medido em CENAS. Uma cena
@@ -56,6 +58,13 @@ type Scene struct {
 	// Só a cena de AÇÃO tem turno, então só ela as usa.
 	StandardLeft bool `json:"standardLeft"`
 	MovementLeft bool `json:"movementLeft"`
+	// ExtraMovementLeft é a ação de movimento a mais do turno em curso, de quem
+	// entrou no primeiro turno do combate com Reflexos de Combate (p129).
+	ExtraMovementLeft bool `json:"extraMovementLeft,omitempty"`
+	// TurnsBegun são as linhas da fila que já entraram na vez neste combate. A
+	// rodada sozinha não responde "é o primeiro turno dela?": quem chega no meio da
+	// briga tem o primeiro turno numa rodada adiantada.
+	TurnsBegun []string `json:"turnsBegun,omitempty"`
 	// Number é a ordem dentro da sessão, começando em 1. Ele existe porque a
 	// sessão tem uma SEQUÊNCIA de cenas — sem número, "a terceira cena da noite"
 	// não tem como ser dita.
@@ -132,7 +141,7 @@ func RefreshTurn(st *SessionRuntimeState) {
 	if st.Scene == nil {
 		return
 	}
-	st.Scene.StandardLeft, st.Scene.MovementLeft = true, true
+	st.Scene.StandardLeft, st.Scene.MovementLeft, st.Scene.ExtraMovementLeft = true, true, false
 	// A MANUTENÇÃO DA VEZ ANTERIOR SAI JUNTO: ela é o extrato deste turno, e
 	// deixá-la faria a faixa dizer que a Velocidade de outra pessoa caiu agora.
 	st.Scene.Upkeep = nil
@@ -148,13 +157,34 @@ func RefreshTurn(st *SessionRuntimeState) {
 // uma ação de movimento" (p233) —, e um "padrão" seco leria como "só atacar"
 // para quem está decidindo se a criatura escapa do fogo.
 func (s *Scene) actionsLeft() string {
+	extra := ""
+	if s.ExtraMovementLeft {
+		extra = " e movimento extra"
+	}
 	switch {
 	case s.StandardLeft && s.MovementLeft:
+		if extra != "" {
+			return "padrão, movimento" + extra
+		}
 		return "padrão e movimento"
 	case s.StandardLeft:
-		return "padrão (dá para mover)"
+		return "padrão (dá para mover)" + extra
 	case s.MovementLeft:
-		return "movimento"
+		return "movimento" + extra
+	}
+	if extra != "" {
+		return "movimento extra"
 	}
 	return "sem ação"
+}
+
+// BeginsFirstTurn registra que a linha entrou na vez e diz se este é o primeiro
+// turno dela no combate. Voltar a vez para a primeira rodada também conta: o turno
+// devolvido é o mesmo, e tem de voltar como era.
+func (s *Scene) BeginsFirstTurn(entryID string, round int) bool {
+	if slices.Contains(s.TurnsBegun, entryID) {
+		return round == 1
+	}
+	s.TurnsBegun = append(s.TurnsBegun, entryID)
+	return true
 }

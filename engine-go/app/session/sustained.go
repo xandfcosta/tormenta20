@@ -156,3 +156,22 @@ func (st *Store) expireOwnTurnEffects(ctx context.Context, u Unit, s *live.Sessi
 	}
 	return nil
 }
+
+// grantFirstTurnMovement dá a ação de movimento extra a quem entra no primeiro turno
+// do combate com Reflexos de Combate (p129). A pergunta sobre o poder vai à ficha,
+// e a fila só guarda a resposta deste turno.
+func grantFirstTurnMovement(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
+	if !s.Scene.CountsRounds() || u.TurnEffects == nil || s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
+		return nil
+	}
+	entry := s.Initiative[s.TurnIndex]
+	if entry.CharacterID == nil || !s.Scene.BeginsFirstTurn(entry.ID, s.Round) {
+		return nil
+	}
+	gains, err := u.TurnEffects.GainsFirstTurnMovement(ctx, *entry.CharacterID)
+	if err != nil {
+		return fmt.Errorf("ler o primeiro turno de %s: %w", entry.Label, err)
+	}
+	s.Scene.ExtraMovementLeft = gains
+	return nil
+}

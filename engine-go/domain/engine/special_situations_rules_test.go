@@ -156,8 +156,15 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	// pela razão errada.
 	card := aWeapon("1d8", 3, 20, 2, 5)
 	medidos := 0
+	bow := card
+	bow.Skill = "Pontaria"
 	for _, situation := range SpecialSituationsOfTheBook() {
-		w := judgeWorld(card, AttackTarget{Defense: 15},
+		measuredWith := card
+		// A única que só vale para quem atira, pela mesma razão do flanqueio.
+		if situation == TargetInMeleeCombat {
+			measuredWith = bow
+		}
+		w := judgeWorld(measuredWith, AttackTarget{Defense: 15},
 			[]SpecialSituation{situation}, 10, fixedDice(t, 10, 4))
 		medidos++
 
@@ -202,12 +209,56 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	const daProsaDaP239 = 1 // o objeto em movimento
 	const daProsaDaP236 = 1 // trocar o tipo de dano
 	const daInvestida = 2   // a investida (p235) e a Imprudente (p42)
-	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236 + daInvestida
+	const daProsaDaP233 = 1 // atirar em combate corpo a corpo
+	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236 + daInvestida + daProsaDaP233
 	if medidos != esperadas {
 		t.Errorf("a varredura mediu %d situações, e o livro dá %d: %d linhas da Tabela 5-3 "+
-			"que não são condição, %d da prosa da p239, %d da prosa da p236 e %d da investida.\n"+
-			"Linha nova entra no `specialSituationTable` E numa destas quatro parcelas: um "+
+			"que não são condição, %d da prosa da p239, %d da prosa da p236, %d da investida e %d da prosa da p233.\n"+
+			"Linha nova entra no `specialSituationTable` E numa destas cinco parcelas: um "+
 			"guarda que percorre o próprio mapa dá verde sobre a linha que ninguém escreveu",
-			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236, daInvestida)
+			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236, daInvestida, daProsaDaP233)
+	}
+}
+
+// attackShootingIntoMelee ataca com a arma dada, com o alvo em combate corpo a corpo.
+func attackShootingIntoMelee(t *testing.T, weapon WeaponCard) AttackOutcome {
+	t.Helper()
+	out, err := suggestedAttackUnder(weapon, AttackTarget{Defense: 15},
+		[]SpecialSituation{TargetInMeleeCombat}, 10, fixedDice(t, 10, 4))
+	if err != nil {
+		t.Fatalf("resolver: %v", err)
+	}
+	return out
+}
+
+// "Quando faz um ataque à distância contra uma criatura em combate corpo a corpo,
+// você sofre –5 no teste de ataque" (p233). 10 + 5 = 15 sem a penalidade.
+func TestShootingIntoMeleeCostsFiveOnlyAtRange(t *testing.T) {
+	bow := aWeapon("1d6", 0, 20, 3, 5)
+	bow.Skill = "Pontaria"
+	if got := attackShootingIntoMelee(t, bow).Total; got != 10 {
+		t.Errorf("atirando em combate corpo a corpo o total veio %d, want 10", got)
+	}
+
+	sword := aWeapon("1d8", 3, 20, 2, 5)
+	sword.Skill = "Luta"
+	if got := attackShootingIntoMelee(t, sword).Total; got != 15 {
+		t.Errorf("com a espada o total veio %d: a penalidade é de quem atira", got)
+	}
+
+	// "sem sofrer a penalidade de –5 no teste de ataque" (Disparo Preciso, p125).
+	bow.ShootsIntoMelee = true
+	if got := attackShootingIntoMelee(t, bow).Total; got != 15 {
+		t.Errorf("com Disparo Preciso o total veio %d, want 15", got)
+	}
+}
+
+func TestThePreciseShotPowerReachesTheWeaponCard(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	if world.ComputeWeaponCards(switchHero(`[]`, 0, "arco-curto"), nil)[0].ShootsIntoMelee {
+		t.Fatal("o controle falhou: a carta sem o poder já atira sem penalidade")
+	}
+	if !world.ComputeWeaponCards(switchHero(`["disparo-preciso"]`, 0, "arco-curto"), nil)[0].ShootsIntoMelee {
+		t.Error("Disparo Preciso não chegou à carta da arma")
 	}
 }

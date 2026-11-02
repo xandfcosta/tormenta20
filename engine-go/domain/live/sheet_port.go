@@ -94,6 +94,9 @@ type SheetTurnEffects interface {
 	// ExpireOwnTurnEffects derruba o que durava "até o seu próximo turno" — a
 	// guarda aberta da investida (p235). Chamado só para quem ENTRA na vez.
 	ExpireOwnTurnEffects(ctx context.Context, charID int64) error
+	// GainsFirstTurnMovement diz se a ficha ganha uma ação de movimento extra no
+	// primeiro turno de cada combate — Reflexos de Combate (p129).
+	GainsFirstTurnMovement(ctx context.Context, charID int64) (bool, error)
 	// ConditionsOf devolve as condições ligadas na ficha. O instante de quem
 	// age sai delas — o inconsciente não reage, o atordoado não age —, e é
 	// nelas que o sangramento da p236 mora.

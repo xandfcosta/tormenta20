@@ -222,6 +222,9 @@ func (st *Store) NextTurn(ctx context.Context, sessionID int64) (*live.SessionRu
 		if err := st.expireOwnTurnEffects(ctx, u, s); err != nil {
 			return err
 		}
+		if err := grantFirstTurnMovement(ctx, u, s); err != nil {
+			return err
+		}
 		return st.payUpkeep(ctx, u, s)
 	})
 }
@@ -271,9 +274,9 @@ func (st *Store) turnGesture(
 // mas não desfaz o que a vez que passou consumiu: voltar é conserto de mesa, e
 // ressuscitar efeito expirado exigiria guardar o que foi derrubado.
 func (st *Store) PreviousTurn(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.turnGesture(ctx, sessionID, func(_ context.Context, _ Unit, s *live.SessionRuntimeState) error {
+	return st.turnGesture(ctx, sessionID, func(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 		live.RewindTurn(s)
-		return nil
+		return grantFirstTurnMovement(ctx, u, s)
 	})
 }
 

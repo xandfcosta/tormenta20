@@ -31,6 +31,10 @@ func (d *turnEffectsDouble) ExpireTurnEffects(_ context.Context, charID int64) e
 	return nil
 }
 
+func (d *turnEffectsDouble) GainsFirstTurnMovement(context.Context, int64) (bool, error) {
+	return false, nil
+}
+
 func (d *turnEffectsDouble) ExpireOwnTurnEffects(_ context.Context, charID int64) error {
 	d.ownExpired = append(d.ownExpired, charID)
 	return nil

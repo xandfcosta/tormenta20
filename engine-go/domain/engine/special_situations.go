@@ -59,6 +59,9 @@ const (
 	// Investida Imprudente (p42) — escolha do gesto, como a troca de tipo.
 	AttackerCharging           SpecialSituation = "charging"
 	AttackerChargingRecklessly SpecialSituation = "charging-recklessly"
+	// TargetInMeleeCombat é o alvo em combate corpo a corpo (p233). Como o objeto
+	// em movimento, é prosa e não linha da tabela, com o mesmo mecanismo dela.
+	TargetInMeleeCombat SpecialSituation = "target-in-melee-combat"
 )
 
 // specialSituationTable é a Tabela 5-3 transcrita, e ela é a FONTE do guarda de
@@ -103,6 +106,9 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// ataque não muda (p42). Ver `charge.go`.
 	AttackerCharging:           {Label: "investida", Attack: ChargeAttackBonus, MeleeOnly: true},
 	AttackerChargingRecklessly: {Label: "investida imprudente", Attack: ChargeAttackBonus, MeleeOnly: true},
+	// "Quando faz um ataque à distância contra uma criatura em combate corpo a
+	// corpo, você sofre –5 no teste de ataque" (p233).
+	TargetInMeleeCombat: {Label: "alvo em combate corpo a corpo", Attack: -5, ShootingIntoMelee: true},
 }
 
 // situationRule é uma linha da tabela. Zero em tudo que a linha não diz.
@@ -113,6 +119,8 @@ type situationRule struct {
 	MissUpTo  int
 	Forbids   bool
 	MeleeOnly bool
+	// ShootingIntoMelee só vale para quem atira, e o Disparo Preciso a tira (p125).
+	ShootingIntoMelee bool
 }
 
 // SpecialSituationsOfTheBook são as linhas transcritas, para quem precisa

@@ -26,12 +26,15 @@ type WeaponCard struct {
 	// CatalogID é o item do catálogo, vazio no desarmado. Não vai para o fio:
 	// quem o lê é o rolar de novo do Mestre em Arma, que escolhe uma arma do
 	// catálogo (p66, ALE-508).
-	CatalogID string             `json:"-"`
-	Skill     string             `json:"skill"`     // "Luta" | "Pontaria"
-	Attribute string             `json:"attribute"` // the skill perícia's attribute
-	Attack    int                `json:"attack"`
-	Expertise ExpertiseBreakdown `json:"expertise"`
-	AttackAll TotalContribs      `json:"attackAll"`
+	CatalogID string `json:"-"`
+	Skill     string `json:"skill"` // "Luta" | "Pontaria"
+	// ShootsIntoMelee é o Disparo Preciso (p125): atira em combate corpo a corpo
+	// sem a penalidade. Não vai para o fio, porque só o ataque o lê.
+	ShootsIntoMelee bool               `json:"-"`
+	Attribute       string             `json:"attribute"` // the skill perícia's attribute
+	Attack          int                `json:"attack"`
+	Expertise       ExpertiseBreakdown `json:"expertise"`
+	AttackAll       TotalContribs      `json:"attackAll"`
 	// AttackOwn é o ataque que vale só para esta arma — o Foco em Arma.
 	AttackOwn TotalContribs `json:"attackOwn,omitzero"`
 	Damage    string        `json:"damage"` // dice, e.g. "1d8"
@@ -284,27 +287,29 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		critMult += StatFor(b.effects, ModifierTarget{K: "critMult", Scope: scope}).Total
 	}
 	return WeaponCard{
-		Name:          name,
-		Skill:         skill,
-		Attribute:     ex.Attribute,
-		Attack:        ex.Total + b.attackAll.Total + ownAttack.Total,
-		AttackOwn:     ownAttack,
-		Expertise:     ex,
-		AttackAll:     b.attackAll,
-		Damage:        damage,
-		DamageType:    w.Type,
-		StrDamage:     strDamage,
-		DexBy:         dexBy,
-		DexDamage:     dexDamageUsed,
-		DamageBonus:   strDamage + b.damageAll.Total + ownDamage.Total,
-		DamageAll:     b.damageAll,
-		DamageOwn:     ownDamage,
-		CritRange:     threatRangeOf(w.CritRange, b.effects, scopes),
-		CritMult:      critMult,
-		NonLethal:     nonLethal,
-		ExtraDamage:   b.effects.ExtraDamage,
-		Announces:     b.effects.Announced,
-		CriticalBonus: b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
+		Name:  name,
+		Skill: skill,
+		// "sem sofrer a penalidade de –5 no teste de ataque" (p125).
+		ShootsIntoMelee: b.effects.Flags["disparo-preciso"],
+		Attribute:       ex.Attribute,
+		Attack:          ex.Total + b.attackAll.Total + ownAttack.Total,
+		AttackOwn:       ownAttack,
+		Expertise:       ex,
+		AttackAll:       b.attackAll,
+		Damage:          damage,
+		DamageType:      w.Type,
+		StrDamage:       strDamage,
+		DexBy:           dexBy,
+		DexDamage:       dexDamageUsed,
+		DamageBonus:     strDamage + b.damageAll.Total + ownDamage.Total,
+		DamageAll:       b.damageAll,
+		DamageOwn:       ownDamage,
+		CritRange:       threatRangeOf(w.CritRange, b.effects, scopes),
+		CritMult:        critMult,
+		NonLethal:       nonLethal,
+		ExtraDamage:     b.effects.ExtraDamage,
+		Announces:       b.effects.Announced,
+		CriticalBonus:   b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 	}
 }
 

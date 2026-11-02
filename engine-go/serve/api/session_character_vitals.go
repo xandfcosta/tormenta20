@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
@@ -255,6 +256,21 @@ func (v sheetVitals) ExpireOwnTurnEffects(ctx context.Context, charID int64) err
 		return err
 	}
 	return v.turnSwitchesOff(ctx, charID, engine.SwitchEndsOwnTurn)
+}
+
+// GainsFirstTurnMovement pergunta ao acervo da ficha por Reflexos de Combate (p129).
+func (v sheetVitals) GainsFirstTurnMovement(ctx context.Context, charID int64) (bool, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return false, err
+	}
+	dto, err := sheet.Load(ctx, v.q, v.catalogs(), row)
+	if err != nil {
+		return false, err
+	}
+	return slices.ContainsFunc(sheet.OwnedPowers(dto), func(p sheet.OwnedPower) bool {
+		return p.ID == "reflexos-de-combate"
+	}), nil
 }
 
 // ConditionsOf lê as condições ligadas na ficha.
