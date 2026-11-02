@@ -48,3 +48,16 @@ func TestTheForgeRefusesAMagicWeaponInTheKit(t *testing.T) {
 		}
 	}
 }
+
+// Os atributos do Suraggel vêm da ascendência (p31), e a carta diz isso em vez de ficar em branco.
+func TestTheSuraggelCardSaysItDependsOnTheAscendancy(t *testing.T) {
+	f := newSceneFixture(t)
+	body := f.requests(t, f.player, http.MethodGet, "/personagens/nova", "").Body.String()
+	card := regexp.MustCompile(`value="suraggel"[\s\S]*?</label>`).FindString(body)
+	if card == "" {
+		t.Fatal("a folha não tem a carta do Suraggel")
+	}
+	if !regexp.MustCompile(`depende da ascendência`).MatchString(card) {
+		t.Errorf("a carta do Suraggel não diz de onde vêm os atributos:\n%s", card)
+	}
+}

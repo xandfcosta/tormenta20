@@ -55,9 +55,13 @@ type RaceAttribute struct {
 //
 //	"+2 Int, +1 Des, −1 Con"       // elfo
 //	"+1 em três atributos"          // humano
+//	"depende da ascendência"        // suraggel (p31)
 func (a RaceAttribute) Escrito() string {
 	if a.Kind == "floating" {
 		return fmt.Sprintf("%s em %s", WithSign(a.Value), InWords(a.Count))
+	}
+	if a.Kind == "subraca-gated" {
+		return "depende da ascendência"
 	}
 	var parts []string
 	for _, attribute := range AttributeOrder {
