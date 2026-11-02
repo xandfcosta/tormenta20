@@ -331,12 +331,13 @@ func startingGearFor(answers forgeAnswers, class book.Class) *startingGear {
 	return eq
 }
 
-// itemOptionsInCategory são todos os itens de uma categoria do catálogo, na ordem
-// em que o acervo já os guarda.
+// itemOptionsInCategory são as armas comuns de uma categoria, na ordem em que o acervo já as guarda. O kit
+// de p140 é do capítulo dos itens mundanos, e o item específico do Capítulo 8 herda a categoria da arma de
+// que é feito: é o `ComposedOf` que o separa.
 func itemOptionsInCategory(category, chosen string) []itemOption {
 	var options []itemOption
 	for _, item := range book.Catalogs().Items {
-		if item.Category == category {
+		if item.Category == category && item.ComposedOf == nil {
 			options = append(options, itemOptionOf(item, chosen))
 		}
 	}

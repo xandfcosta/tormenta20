@@ -188,6 +188,9 @@ func weaponFitsKit(id, category string, offered bool) string {
 	if item.Category != category {
 		return fmt.Sprintf("%s não é uma arma da categoria que o kit oferece.", item.Name)
 	}
+	if item.ComposedOf != nil {
+		return fmt.Sprintf("%s é um item mágico, e o kit de p140 só tem armas comuns.", item.Name)
+	}
 	return ""
 }
 
