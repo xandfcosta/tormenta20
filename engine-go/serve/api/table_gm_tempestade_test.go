@@ -30,7 +30,7 @@ func TestTheGmTableIsTheTempestadeOneWithItsSessionSettings(t *testing.T) {
 		t.Fatal("a mesa do mestre não tem as Configurações da sessão")
 	}
 	rendered := renderNode(t, config)
-	if !strings.Contains(rendered, "ds-dialog") || strings.Contains(rendered, "grimorio") {
+	if !strings.Contains(rendered, "ds-dialog") {
 		t.Error("as Configurações da sessão não vestem o kit")
 	}
 	for _, want := range []string{"Título", "Reiniciar o combate", "Excluir sessão"} {
@@ -155,12 +155,6 @@ func TestTheParallelGmTableDrawsTheBoard(t *testing.T) {
 			t.Errorf("o tabuleiro do mestre não tem o verbo %q", verb)
 		}
 	}
-	rendered := renderNode(t, board)
-	for _, old := range []string{"scene-grimorio", "grimorio-iron", "grimorio-gold", "board-rail"} {
-		if strings.Contains(rendered, old) {
-			t.Errorf("a região do tabuleiro do mestre ainda leva %q, do grimório", old)
-		}
-	}
 }
 
 // A JANELA À PARTE desenha só o mapa: é para a segunda tela ou a TV da mesa.
@@ -245,9 +239,6 @@ func TestTheParallelGmTableDrawsTheConsults(t *testing.T) {
 	if bestiary == nil || !strings.Contains(textOf(bestiary), "Ogro") {
 		t.Fatal("a aba Bestiário não lista as criaturas")
 	}
-	if strings.Contains(renderNode(t, bestiary), "scene-grimorio") {
-		t.Error("o bestiário do mestre no Tempestade ainda veste o grimório")
-	}
 }
 
 // A CRIATURA ABERTA no bestiário volta no kit, com o ajuste e os dois verbos:
@@ -255,9 +246,6 @@ func TestTheParallelGmTableDrawsTheConsults(t *testing.T) {
 func TestTheGmBestiaryOpensTheCreatureInTheKit(t *testing.T) {
 	f := newSceneFixture(t)
 	body := gmRequest(t, f, f.tableUrl()+"/bestiario?criatura=ogro&abrir=1").Body.String()
-	if strings.Contains(body, "scene-grimorio") {
-		t.Error("o bestiário remendou o diálogo do grimório")
-	}
 	for _, want := range []string{"Guardar no elenco", "na fila"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("a criatura aberta não tem %q", want)

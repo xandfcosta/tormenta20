@@ -96,7 +96,7 @@ func TestAColorOutsideTheListIsRefusedWithASentence(t *testing.T) {
 
 	// A FRASE INTEIRA e não as palavras soltas, provado por sabotagem: procurar
 	// "gold" e "Carmim" no corpo passa VERDE com a recusa apagada, porque as duas
-	// aparecem no HTML por acidente — a classe `grimorio-gold` e o `title` do
+	// aparecem no HTML por acidente — uma classe e o `title` do
 	// botão de cor. Asserção sobre substring comum mede a página, não a mensagem.
 	//
 	// AS ASPAS VÊM ESCAPADAS: a recusa viaja dentro do sinal `command_error`, num

@@ -31,7 +31,7 @@ func TestTheSheetWearsTempestade(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Lia", "Guerreiro", 3, 0, 0)
 
-	if shell := sceneShell.FindString(parallelSheet(t, f, id, "expertises")); !strings.Contains(shell, "scene-ds") || strings.Contains(shell, "scene-grimorio") {
+	if shell := sceneShell.FindString(parallelSheet(t, f, id, "expertises")); !strings.Contains(shell, "scene-ds") {
 		t.Errorf("a ficha não saiu só no Tempestade: %s", shell)
 	}
 	answer := f.requests(t, f.player, http.MethodPost,
@@ -78,9 +78,6 @@ func TestAGestureOfTheParallelSheetNeverDrawsTheGrimoire(t *testing.T) {
 		fmt.Sprintf("/personagens/%d/vitais/pv/-1?tab=proficiencies", id), "").Body.String()
 	if !strings.Contains(scene, "sheet-scene") {
 		t.Fatal("o gesto não devolveu a cena da ficha")
-	}
-	if grimoire := regexp.MustCompile(`[\w:-]*grimorio[\w-]*`).FindAllString(scene, 5); len(grimoire) > 0 {
-		t.Errorf("a ficha desenhou classe do grimório: %v", grimoire)
 	}
 }
 

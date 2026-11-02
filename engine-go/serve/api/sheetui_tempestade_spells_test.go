@@ -80,9 +80,6 @@ func TestTheParallelSpellsTabGroupsTheSpellbookByCircle(t *testing.T) {
 	if !regexp.MustCompile(`<button[^>]*` + opens + `[^>]*aria-label="Conjurar Bola de Fogo"|<button[^>]*aria-label="Conjurar Bola de Fogo"[^>]*` + opens).MatchString(page) {
 		t.Error("o Conjurar da linha da Bola de Fogo não abre a folha dela")
 	}
-	if grimoire := regexp.MustCompile(`[\w:-]*grimorio[\w-]*`).FindAllString(sceneShell.FindString(page), 3); len(grimoire) > 0 {
-		t.Errorf("a aba Magias vestiu o grimório: %v", grimoire)
-	}
 }
 
 func TestTheParallelSpellSheetHasTheRuleTheAugmentsAndForgetApart(t *testing.T) {

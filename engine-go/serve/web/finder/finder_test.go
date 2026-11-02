@@ -187,7 +187,7 @@ func TestTheFinderWearsItsOwnSystemScope(t *testing.T) {
 	if err != nil {
 		t.Fatalf("render: %v", err)
 	}
-	if !strings.Contains(box, "scene-ds") || strings.Contains(box, "grimorio") {
+	if !strings.Contains(box, "scene-ds") {
 		t.Errorf("a caixa não saiu só no Tempestade: %s", box[:min(len(box), 300)])
 	}
 	found, err := ui.RenderFragment(t.Context(), finderResults(searchTheBook("fogo")))
@@ -196,8 +196,5 @@ func TestTheFinderWearsItsOwnSystemScope(t *testing.T) {
 	}
 	if !strings.Contains(found, "data-resultado") {
 		t.Fatal("a busca por fogo não achou nada, e este caso não mediria nada")
-	}
-	if strings.Contains(found, "grimorio") {
-		t.Error("os achados ainda desenham classe do grimório")
 	}
 }
