@@ -11,7 +11,8 @@
     "typecheck": "pnpm -r run typecheck",
     "start": "pnpm build && pnpm -F @tormenta20/engine-go start",
     "db:backup": "bash scripts/backup-db.sh",
-    "deploy:prod": "bash scripts/deploy-prod.sh"
+    "deploy:prod": "bash scripts/deploy-prod.sh",
+    "ci:local": "bash scripts/ci-local.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0"
