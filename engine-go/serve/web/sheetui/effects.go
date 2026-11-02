@@ -113,6 +113,9 @@ type situationalRow struct {
 	// Degrees é a escolha de DEGRAU, quando o poder vende uma (p53). Nula no
 	// situacional comum, que é a maioria.
 	Degrees []degreeOption
+	// Warning é o que falta para a regra valer, e não impede de ligar: quem decide é
+	// o mestre.
+	Warning string
 	// DegreesOf é o NOME DO PODER que vende o degrau, e ele existe para o
 	// rótulo acessível do seletor. O `Label` da linha é a nota da CONDIÇÃO —
 	// "contra o alvo do Duelo — 2 PM, até o fim da cena" —, e "Degraus de
@@ -344,6 +347,7 @@ func situationalRowsOf(
 			row.Targets = append(row.Targets, c.Target)
 		}
 		row.Degrees, row.DegreesOf = degreeOptionsFor(g.Key, head, dto)
+		row.Warning = twoWeaponStyleWarning(g.Key, dto)
 		rows = append(rows, row)
 	}
 	return rows, nil

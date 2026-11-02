@@ -760,6 +760,8 @@
               ]
             },
             "classPowers": [
+              "reflexos-de-combate",
+              "estilo-de-duas-armas",
               "class.guerreiro.aumento-de-atributo",
               "class.guerreiro.especializacao-em-arma",
               "class.guerreiro.valentao",

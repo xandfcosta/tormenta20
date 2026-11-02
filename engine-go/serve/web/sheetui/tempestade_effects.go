@@ -2,10 +2,14 @@ package sheetui
 
 import (
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
+	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/search"
+	"t20engine/domain/sheet"
 )
 
 // A ABA EFEITOS DA FICHA (ALE-473). O dado é o do painel
@@ -44,7 +48,39 @@ func situationalMeta(row situationalRow) string {
 			meta += " · " + d.Label + " · " + d.Pm
 		}
 	}
+	if row.Warning != "" {
+		meta += " · " + row.Warning
+	}
 	return meta
+}
+
+// twoWeaponStyleWarning avisa que o Estilo de Duas Armas pede uma arma leve: "se
+// estiver empunhando duas armas (e pelo menos uma delas for leve)" (p125). O Arma
+// Secundária Grande dispensa a leve (p124).
+//
+// Item feito à mão não diz se é leve, e aí a tela cala em vez de acusar.
+func twoWeaponStyleWarning(key string, dto sheet.CharacterDTO) string {
+	if key != engine.FlagGroupID("estilo-de-duas-armas") {
+		return ""
+	}
+	owned := sheet.OwnedPowers(dto)
+	if slices.ContainsFunc(owned, func(p sheet.OwnedPower) bool { return p.ID == "arma-secundaria-grande" }) {
+		return ""
+	}
+	for _, item := range dto.Items {
+		if item.Equipped == nil || sheet.HandsFor(*item.Equipped) == 0 {
+			continue
+		}
+		if item.CatalogID == nil {
+			return ""
+		}
+		if fromBook := book.ItemByID(*item.CatalogID); fromBook == nil || fromBook.Weapon == nil {
+			continue
+		} else if fromBook.Weapon.Hand == "light" {
+			return ""
+		}
+	}
+	return "Nenhuma arma empunhada é leve (p125)"
 }
 
 // situationalToggles é o gesto do interruptor: a chave vai no sinal.

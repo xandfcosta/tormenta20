@@ -104,6 +104,9 @@ templ tempestadeEffects(v View) {
 templ situationalSheet(v View, row situationalRow) {
 	@ds.Dialog(situationalSheetID(row), row.Label, nil) {
 		<p class="ds-row-meta">{ row.Source }</p>
+		if row.Warning != "" {
+			<p class="ds-help">{ row.Warning }</p>
+		}
 		if len(row.Modifiers) > 0 {
 			<div class="ds-sum-body ds-terms">
 				@ds.SumTerms(sumTermsOf(row.Modifiers))
