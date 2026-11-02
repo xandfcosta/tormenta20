@@ -168,6 +168,9 @@ func TestTheSpellSheetSaysWhatResists(t *testing.T) {
 		}
 	}
 	page := parallelSheet(t, f, id, "spells")
+	if !strings.Contains(page, "Área: esfera com 6m de raio") || !strings.Contains(page, "Alvo: você") {
+		t.Error("a folha da magia não diz o alvo ou a área")
+	}
 	if strings.Count(page, "Resistência: ") != 1 || !strings.Contains(page, "Resistência: Reflexos reduz à metade") {
 		t.Errorf("a folha devia dizer a resistência só da Bola de Fogo: %d ocorrências", strings.Count(page, "Resistência: "))
 	}

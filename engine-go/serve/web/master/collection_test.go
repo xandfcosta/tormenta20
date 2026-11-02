@@ -269,6 +269,9 @@ func TestTheCatalogCardsSayWhatTheBookSays(t *testing.T) {
 	if !strings.Contains(spells, "Resistência: Reflexos reduz à metade") {
 		t.Error("o cartão da magia não diz o que se testa para resistir")
 	}
+	if !strings.Contains(spells, "Área: linha de 30m") {
+		t.Error("o cartão da magia não diz a área")
+	}
 	powers := pedeNaCenaComLivro(t, "/mestre/poderes").Body.String()
 	_, card, found := strings.Cut(powers, ">Acuidade com Arma<")
 	if !found {

@@ -106,9 +106,7 @@ templ castGesture(v View, spell learnedSpellRow) {
 templ spellSheet(v View, spell learnedSpellRow) {
 	@ds.Dialog(spellSheetID(spell), spell.Name, spellSheetFoot(v, spell)) {
 		<p class="ds-row-meta">{ spellSheetMeta(spell) }</p>
-		if spell.Resistance != "" {
-			<p class="ds-row-meta">{ "Resistência: " + spell.Resistance }</p>
-		}
+		<p class="ds-row-meta">{ spellSheetReach(spell) }</p>
 		<p class="ds-card-text">{ spell.Effect }</p>
 		if v.Spells.RequiresPrep {
 			@ds.Switch("Preparada", spell.Prepared, templ.Attributes{"data-on:change": sheetPost(v, "/magias/prepara/"+spell.Command)})
@@ -189,23 +187,23 @@ templ learnSpellSheet(v View) {
 			</div>
 		}
 		@ds.DialogScroll() {
-		@ds.List("No livro", strconv.Itoa(len(v.Spells.Catalog))) {
-			if len(v.Spells.Catalog) == 0 {
-				@ds.Row("Nenhuma magia com esses filtros", "", "", "")
-			}
-			for _, spell := range v.Spells.Catalog {
-				<div class="ds-row ds-pick-row">
-					<div class="min-w-0">
-						<div class="ds-row-title">{ spell.Name }</div>
-						<div class="ds-row-meta">{ spell.Circle + " círculo · " + spell.School + " · p" + strconv.Itoa(spell.Page) }</div>
-						<div class="ds-pick-detail">{ spell.Effect }</div>
+			@ds.List("No livro", strconv.Itoa(len(v.Spells.Catalog))) {
+				if len(v.Spells.Catalog) == 0 {
+					@ds.Row("Nenhuma magia com esses filtros", "", "", "")
+				}
+				for _, spell := range v.Spells.Catalog {
+					<div class="ds-row ds-pick-row">
+						<div class="min-w-0">
+							<div class="ds-row-title">{ spell.Name }</div>
+							<div class="ds-row-meta">{ spell.Circle + " círculo · " + spell.School + " · p" + strconv.Itoa(spell.Page) }</div>
+							<div class="ds-pick-detail">{ spell.Effect }</div>
+						</div>
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "data-on:click": sheetPost(v, "/magias/aprende/"+spell.Command)}) {
+							Aprender
+						}
 					</div>
-					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "data-on:click": sheetPost(v, "/magias/aprende/"+spell.Command)}) {
-						Aprender
-					}
-				</div>
+				}
 			}
-		}
 		}
 	}
 }

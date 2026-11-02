@@ -7,6 +7,7 @@ type Spell struct {
 	School       string         `json:"school"`
 	Execution    string         `json:"execution"`
 	Range        string         `json:"range"`
+	Targeting    string         `json:"targeting"`
 	Duration     string         `json:"duration"`
 	SaveType     string         `json:"saveType"`
 	Resistance   *string        `json:"resistance"`
