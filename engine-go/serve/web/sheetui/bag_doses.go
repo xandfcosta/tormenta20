@@ -65,10 +65,21 @@ func dosesOnTheItemSheet(
 }
 
 // loadDose carrega o item da mochila na arma do endereço.
+//
+// RPG é jogo de turno: quem propôs um ataque não faz outra coisa até ele acabar
+// (decisão do dono). Sem isso, a dose devolvida por um cancelamento acharia a arma
+// recarregada, e ela ficaria com mais do que cabe.
 func loadDose(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
 		return err
+	}
+	attacking, err := s.deps.HasAttackInProgress(r.Context(), row.ID)
+	if err != nil {
+		return err
+	}
+	if attacking {
+		return fmt.Errorf("%s tem um ataque na mesa: carregue depois de ele acabar", row.Name)
 	}
 	weapon, err := strconv.ParseInt(chi.URLParam(r, "arma"), 10, 64)
 	if err != nil {

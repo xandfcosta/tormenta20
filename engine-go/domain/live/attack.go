@@ -268,6 +268,17 @@ func ProposeAttack(st *SessionRuntimeState, attack PendingAttack) error {
 	return nil
 }
 
+// HoldsTheCharacter diz se o ataque na mesa é deste personagem e ainda não acabou.
+// O erro já encerrou o golpe (ver `RuleAttack`): o provisório dele só fica para o
+// jogador ler a decisão.
+func HoldsTheCharacter(st *SessionRuntimeState, characterID int64) bool {
+	if st == nil || st.PendingAttack == nil || st.PendingAttack.Ruling == RulingMiss {
+		return false
+	}
+	at := FindEntryIndex(st, st.PendingAttack.AttackerEntryID)
+	return at >= 0 && st.Initiative[at].CharacterID != nil && *st.Initiative[at].CharacterID == characterID
+}
+
 // AttackToCommit responde "esta pessoa pode confirmar este ataque agora?" e
 // devolve o provisório — sem aplicar nada.
 //

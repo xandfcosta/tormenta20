@@ -734,3 +734,61 @@ func TestTheEmbeddedRefetchBringsTheActionsAlong(t *testing.T) {
 		t.Error("repedir a ficha embutida não trouxe as Ações")
 	}
 }
+
+// Decisão do dono: RPG é jogo de turno, e quem propôs um ataque não faz outra coisa até
+// ele acabar. É também o que impede a dose devolvida de encontrar a arma cheia.
+func TestLoadingWaitsForTheAttackOnTheTable(t *testing.T) {
+	f, goblin := doseAttackOnTurn(t)
+	weapon := weaponWithInjection(t, f)
+	loaded(t, f, weapon, "acido", "Ácido")
+	bottle := itemSemeia(t, f, f.charID, "fogo-alquimico", "Fogo alquímico", "")
+
+	expectRefused := func(moment string) {
+		t.Helper()
+		if refusal := loadsDose(t, f, f.charID, bottle, weapon); !strings.Contains(refusal, "ataque") {
+			t.Errorf("%s, carregar devia ser recusado dizendo por quê, e veio %q", moment, refusal)
+		}
+		if lines := bagLinesOf(t, f, f.charID, "Fogo alquímico"); len(lines) != 1 {
+			t.Fatalf("%s, o item recusado saiu da mochila: %+v", moment, lines)
+		}
+	}
+
+	attacks(t, f, goblin, "")
+	expectRefused("com o ataque esperando a decisão")
+	gmRules(t, f, "acertou")
+	expectRefused("com o ataque esperando o dano")
+
+	f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/cancelar", "")
+	if refusal := loadsDose(t, f, f.charID, bottle, weapon); refusal != "" {
+		t.Errorf("sem ataque na mesa, carregar foi recusado: %q", refusal)
+	}
+	expectDoses(t, f, weapon, "acido", "fogo-alquimico")
+}
+
+// O erro encerra o golpe, e o provisório só fica para o jogador ler a decisão.
+func TestLoadingIsFreeAfterTheMiss(t *testing.T) {
+	f, goblin := doseAttackOnTurn(t)
+	weapon := weaponWithInjection(t, f)
+	bottle := itemSemeia(t, f, f.charID, "fogo-alquimico", "Fogo alquímico", "")
+	attacks(t, f, goblin, "")
+	gmRules(t, f, "errou")
+
+	if refusal := loadsDose(t, f, f.charID, bottle, weapon); refusal != "" {
+		t.Errorf("depois do erro, carregar foi recusado: %q", refusal)
+	}
+}
+
+// O ataque de outra ficha na mesma mesa não prende esta.
+func TestAnotherCharactersAttackDoesNotHoldTheLoad(t *testing.T) {
+	f, goblin := doseAttackOnTurn(t)
+	attacks(t, f, goblin, "")
+	other := seedCharacter(t, f.s, f.player, "Outro")
+	seedMember(t, f.s, f.campaignID, other)
+	weapon := itemSemeia(t, f, other, "espada-longa", "Espada longa", "")
+	setImprovements(t, f, other, weapon, `{"item_improvements":["`+injectionID+`"]}`)
+	bottle := itemSemeia(t, f, other, "fogo-alquimico", "Fogo alquímico", "")
+
+	if refusal := loadsDose(t, f, other, bottle, weapon); refusal != "" {
+		t.Errorf("o ataque de outra ficha recusou esta: %q", refusal)
+	}
+}

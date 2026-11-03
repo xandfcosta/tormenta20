@@ -73,7 +73,9 @@ mão não saberia quantos dados pegar.
 **A dose da Injeção alquímica sai na decisão** (p165): o provisório leva a dose desde o
 d20, e o `session.Store.RuleAttack` a tira da arma no acerto e no crítico, na mesma
 transação da mesa. Cancelar o ataque, ou trocá-lo por outro antes do ✓, a devolve. Ela não entra
-nas parcelas do dano: o efeito é uma frase na faixa, e quem aplica é o mestre.
+nas parcelas do dano: o efeito é uma frase na faixa, e quem aplica é o mestre. Carregar é
+recusado enquanto o ataque de quem carrega não acabou (`live.HoldsTheCharacter`), e é isso
+que impede a dose devolvida de encontrar a arma cheia.
 
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
