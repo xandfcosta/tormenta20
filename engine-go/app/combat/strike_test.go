@@ -442,7 +442,7 @@ func (tabuleiroQuebrado) Between(context.Context, int64, string, board.AttackTar
 // rótulo "trocando o tipo de dano" no `Situations` do provisório, e a manobra
 // NUNCA preenche esse campo — o laço percorria uma lista vazia e passaria mesmo
 // se a manobra pagasse os −5. Um teste de ausência sem prova de que o canal
-// existiria é a armadilha que o `CLAUDE.md` nomeia.
+// existiria é a armadilha que o `docs/testing.md` nomeia.
 //
 // Uma manobra não causa dano, então trocar o TIPO dele não significa nada ali —
 // e uma penalidade sobre um teste sem dano é um número que ninguém consegue

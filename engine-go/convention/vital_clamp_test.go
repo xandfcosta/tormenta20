@@ -20,7 +20,7 @@ import (
 // arquivo a um diretório de distância: um ajudante que não existe mais, com o
 // mesmo `min(max(0, …), teto)` por dentro (ALE-355 → ALE-356).
 //
-// É a lição que o `CLAUDE.md` já registra sobre o número de guardas: uma
+// É a lição que "Como uma convenção passa a valer", no `CLAUDE.md`, já registra sobre o número de guardas: uma
 // contagem escrita à mão sobre uma família que cresce envelhece, e quem a
 // escreve é quem menos desconfia dela.
 //

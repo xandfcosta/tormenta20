@@ -8,9 +8,7 @@ package table
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // A JANELA DAS NOTAS (ALE-218) — a mesma superfície, sem o mapa em volta.
 //
@@ -18,6 +16,23 @@ import (
 // `modesRange`: a janela não é outra tela, é o mesmo painel noutro lugar. Duas
 // cópias do editor divergiriam na primeira mudança de gramática do markdown,
 // que é o defeito que o `.templ` vizinho existe para não ter.
+//
+// É CENA, e não o nó movido, porque nó adotado por outro documento perde o Datastar.
+//
+// AS DUAS NÃO PODEM ESTAR ABERTAS AO MESMO TEMPO: ambas gravam `sessions.notes` com
+// autosave de 1,2s, e quem salva por último apaga o parágrafo do outro, com as DUAS
+// faixas dizendo "Salvo". O pacto é `localStorage` mais o evento `storage`, que chega a
+// toda janela da origem sem objeto vivo, com chave pelo ID DA SESSÃO.
+//
+//   - quem fecha a coluna é o ANÚNCIO da janela, e não o clique: com o pop-up bloqueado,
+//     a coluna fica, e o bloqueio é dito em PALAVRAS (`window.open` devolvendo nulo é a
+//     única pista);
+//   - `pagehide`, e não `beforeunload`, que pede confirmação em alguns caminhos; `unload`
+//     é pulado no cache de ida e volta;
+//   - a chave pode ficar PRESA se a janela morrer sem `pagehide`, e por isso o botão chama
+//     `window.open` com o mesmo NOME, que acha a janela viva ou abre outra;
+//   - o `TestEveryAddressAPostWritesExistsInTheRouter` confere o `window.open` como GET:
+//     perguntar por POST no mesmo caminho acharia a rota de SALVAR.
 //
 // O que ela NÃO tem, e cada ausência é uma decisão:
 //
@@ -54,7 +69,7 @@ func notesWindow(v View) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(seedNotesWindow(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes_window.templ`, Line: 25, Col: 32}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes_window.templ`, Line: 40, Col: 32}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -67,7 +82,7 @@ func notesWindow(v View) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(givesTheNotesBack(v))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes_window.templ`, Line: 26, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes_window.templ`, Line: 41, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -80,7 +95,7 @@ func notesWindow(v View) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Notas · Sessão %d", v.SessionNum))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes_window.templ`, Line: 30, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/notes_window.templ`, Line: 45, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {

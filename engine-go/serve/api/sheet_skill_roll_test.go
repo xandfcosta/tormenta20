@@ -98,7 +98,7 @@ func TestTheDieTheTableRolledReachesTheBandWithTheSheetModifier(t *testing.T) {
 	//
 	// Pelo DELTA e não por um número escrito à mão: o bônus de treino depende do
 	// nível, e escrevê-lo aqui seria reimplementar a regra que a ficha já computa
-	// — o erro que o `CLAUDE.md` chama de derivar o esperado do código sob teste.
+	// — o erro que o `docs/testing.md` chama de derivar o esperado do código sob teste.
 	antes := teste.Modifier
 	if rec := f.requests(t, f.player, http.MethodPost,
 		"/personagens/"+strconv.FormatInt(f.charID, 10)+"/pericias/treino/Iniciativa", ""); rec.Code != http.StatusOK {

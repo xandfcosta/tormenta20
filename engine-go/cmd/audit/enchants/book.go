@@ -11,7 +11,7 @@ import (
 )
 
 // O livro impresso está 6 páginas atrás do PDF; a conta é do
-// `engine-go/CLAUDE.md`, que é o dono dela.
+// `engine-go/docs/catalog.md`, que é o dono dela.
 const (
 	pdfOffset = 6
 	slack     = 3.0

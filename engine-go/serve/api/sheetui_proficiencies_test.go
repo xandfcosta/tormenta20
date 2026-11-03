@@ -382,7 +382,7 @@ func TestNoSheetCommandLosesTheTab(t *testing.T) {
 
 	// O APÓSTROFO SAI ESCAPADO: valor de atributo DINÂMICO passa pelo escape de
 	// HTML do templ (`&#39;`), enquanto uma constante sai literal — a armadilha
-	// está no `engine-go/CLAUDE.md`. Procurar só a aspa crua acha ZERO comandos,
+	// está no `engine-go/docs/screens.md`. Procurar só a aspa crua acha ZERO comandos,
 	// e quem denuncia isso é o CONTROLE lá embaixo.
 	posted := regexp.MustCompile(`@post\((?:&#39;|')([^'&]+)(?:&#39;|')\)`)
 	var seen int

@@ -12,7 +12,7 @@ import (
 // TestNoFocusAsksTheServerWithoutAKeyboardGuard: pedido disparado por FOCO é
 // afordância de TECLADO, e por isso ele pede `:focus-visible`.
 //
-// A razão está no `engine-go/CLAUDE.md`, em "Dois pedidos de UM gesto: quem
+// A razão está no `engine-go/docs/datastar.md`, em "Dois pedidos de UM gesto: quem
 // CHEGA por último manda": o clique do mouse também FOCA, então um nó que pede
 // ao servidor nos dois manda dois pedidos por gesto, e a ordem de CHEGADA não é
 // a de saída. No bestiário isso fechava a ficha que o clique tinha acabado de
@@ -29,7 +29,7 @@ import (
 // `data-on:focus`, um é do `web/master` e três são do `api` (campanhas, o
 // tabuleiro da mesa e personagens).
 //
-// É a forma que o CLAUDE.md da raiz descreve em "Um guarda só mede o que ele
+// É a forma que o `docs/testing.md` descreve em "Um guarda só mede o que ele
 // VISITA", e o conserto é o mesmo que o guarda de tinta levou: **caminhada, não
 // lista** — nem lista de cenas, nem, como aqui, o diretório em que o arquivo por
 // acaso mora. O `convention/` existe exatamente para a regra que é de todos os

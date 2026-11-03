@@ -357,7 +357,7 @@ func TestTurningTheChipOnMovesTheNumberOnTheSameScreen(t *testing.T) {
 //
 // Pelo DELTA e não por um número escrito à mão: o bônus de ataque do bárbaro sai
 // de Luta mais atributo mais o que a arma dá, e cravá-lo aqui seria reimplementar
-// a conta da aba Combate — o erro que o `CLAUDE.md` chama de derivar o esperado
+// a conta da aba Combate — o erro que o `docs/testing.md` chama de derivar o esperado
 // do código sob teste.
 func ataqueDoCartao(t *testing.T, painel string) int {
 	t.Helper()

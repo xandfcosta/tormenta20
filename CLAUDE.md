@@ -15,6 +15,23 @@ Houve uma SPA em SolidJS (`frontend/`) e um motor compilado para WASM que rodava
 no navegador. Os dois saíram: as cenas são renderizadas no servidor,
 e a regra tem um lugar só.
 
+## O fluxo de um escopo
+
+Todo escopo passa por estes passos, nesta ordem. **CI verde não é o fim do escopo.**
+
+1. **Issue e worktree**, saindo de uma `main` atualizada.
+2. **Leia o guia do assunto antes de escrever**: a tabela em
+   [engine-go/CLAUDE.md](engine-go/CLAUDE.md) diz qual, e teste é
+   [docs/testing.md](docs/testing.md).
+3. **O teste nasce vermelho**, e depois vem o código.
+4. **O portão, sozinho:** `bash scripts/ci-local.sh` em worktree. Leia o resultado antes
+   de commitar: não encadeie nada a ele.
+5. **Olhe a tela**, se a mudança tocou uma (ver "O último passo é OLHAR").
+6. **Releia a documentação** que a mudança tocou.
+7. **A revisão do diff**, como em "Ao terminar um escopo: revisar": a lista classificada vai
+   para o dono e para a seção **Revisão** do corpo do PR, ou a seção diz por que não houve.
+8. **O pedido de merge**, junto da lista. **Sem a lista, não se pede merge.**
+
 ## O sistema INFORMA; o mestre DECIDE
 
 **Esta é a pergunta que vem antes de "como implementar": a fatia que você está
@@ -89,9 +106,9 @@ ele pega para o dano.
   moram, e o número não é repetido aqui de propósito (ver "Documentação").
 - **Mexeu em `.templ`?** `go tool templ generate`, e **leia a saída DELE**, não a
   do `go build`. **Classe CSS nova no app?**
-  `engine-go/scripts/build-css.sh`. As duas armadilhas — e as do Datastar,
-  que não deixam erro para trás — estão explicadas no
-  [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
+  `engine-go/scripts/build-css.sh`. As duas armadilhas estão em
+  [screens.md](engine-go/docs/screens.md), e as do Datastar, que não deixam erro para
+  trás, em [datastar.md](engine-go/docs/datastar.md).
 - **Antes de commitar:** `go test ./...`, `go vet ./...` e `gofmt` no
   `engine-go/` — mais `pnpm typecheck` lá, quando mexer nas ilhas de JS. Mexeu
   em gesto de ponteiro, leiaute real ou fluxo entre dois clientes? `cd e2e &&
@@ -250,136 +267,9 @@ melhores comentários do repositório.
 cobertura de cada pedacinho de código.** Um teste ganha o lugar dele protegendo
 um resultado que alguém notaria quebrar. Tudo abaixo decorre disso.
 
-- **Prefira INTEGRAÇÃO.** O teste padrão monta uma página de verdade (ou bate num
-  handler de verdade, pelo roteador de verdade) com o I/O trocado na borda, e
-  afirma o que a pessoa ou o chamador recebe. É a faixa que pega defeito de
-  COMPOSIÇÃO — que é onde os defeitos deste repositório de fato estiveram — e é
-  para lá que a cobertura nova vai primeiro.
-- **Unitário para o que carrega REGRA**, não para o que carrega encanamento.
-  Empilhamento de modificador, PV/PM, arredondamento, limites, rollback otimista,
-  formato de fio: sim. Getter, formatador de uma linha, um `Set` + `sort` que a
-  asserção reimplementa, e tudo que o typechecker já garante: não.
-- **E2E é o menor conjunto possível.** Um teste de Playwright precisa se
-  justificar com um mecanismo que só um navegador real tem — linha do tempo de
-  animação, leiaute e overflow reais, lista virtualizada que mede zero no jsdom,
-  gesto de ponteiro com passos intermediários, fluxo ao vivo entre dois
-  servidores. **"É uma jornada do usuário" NÃO é justificativa**: jornada é mais
-  barata e mais firme como teste de integração. E2E é a coisa mais cara e mais
-  frágil deste repositório; gaste com intenção.
-- **Empurre cada garantia para a camada mais barata que a segura.** Regra de
-  servidor pertence a um teste de handler, não a uma asserção de que o botão
-  sumiu — travar na UI é UX, a fronteira de segurança é o servidor.
-- **Uma regra, uma camada.** Uma regra é prendida UMA vez, onde ela mora; as
-  outras camadas afirmam presença e ligação, nunca a fronteira de novo. **Se
-  apagar um teste não muda nada que outra camada já não acuse, apague.**
-- **Correção de defeito ganha teste de regressão, e ele nasce VERMELHO.** Um
-  teste que nunca foi visto falhando é um palpite. Quando o conserto e o teste
-  entram juntos, o commit diz como o teste foi provado falho.
-- **Nunca derive o esperado do código sob teste.** Não importe o helper que está
-  sendo testado para montar o valor que se espera dele, e não espelhe a
-  implementação na asserção — os dois andam juntos com o defeito. Escreva o
-  número e a data na mão. Medido: um teste de componente que não passava o
-  tamanho comparava o valor do servidor com o **default** da SPA, e passava verde
-  sobre nada.
-- **Unitário prova DECISÃO, não consulta.** Um spec que troca a borda protege
-  exatamente duas coisas: a ramificação em volta da chamada e os argumentos dela.
-  Um spec que não afirma nenhuma das duas é um *mock echo* — arranje o dublê para
-  devolver X, afirme que o resultado é X — e não deve ser escrito. Ele prova que
-  a linguagem devolve valores.
-- **Quando o PREDICADO decide quem é afetado, prenda o predicado.** O `where` de
-  uma consulta, o papel num `BoardForRole`, o filtro que escolhe QUAIS peças a
-  mesa vê: isso não é encanamento, é a regra. Arranjar o resultado por ordem de
-  chamada diz o que acontece *com* as linhas achadas e nada sobre *quais* linhas
-  são essas.
-
-### O INSTRUMENTO MENTE COM CARA DE RESULTADO
-
-A infraestrutura em volta da medição destrói a medição, e o que sobra parece um
-dado. **A pergunta que abre todas: "o que este instrumento DESLIGA para
-funcionar, e o que ele não mede?"** Os casos que produziram cada linha estão no
-[APRENDIZADOS.md](APRENDIZADOS.md).
-
-- **Limpeza não fala mais alto que o defeito**: `finally` que estoura esconde o
-  erro de verdade. Limpeza ganha `catch`.
-- **Nunca rode a suíte com `| tail`**: não achar a linha no que sobrou parece
-  "não aconteceu".
-- **Sonda instalada cedo demais mede o nada**: um `MutationObserver` num
-  `addInitScript` observa um `body` que ainda é `null`.
-- **`boundingBox` devolve a caixa de um elemento coberto**, e o clique acerta
-  quem está por cima.
-- **Parser que ignora o que não entende inventa achados.** Falhe no que não
-  sabe ler.
-- **Comparar tamanho responde sobre tamanho.** A pergunta costuma ser o LIMIAR
-  da norma.
-- **Captura de tela não diz nada sobre animação**: o `screenshot()` finaliza toda
-  animação finita antes de fotografar.
-- **Sonda de vida longa mede tudo na janela dela**: armada antes do gesto, ela
-  conta a mão. A janela é parte do desenho.
-- **"Existe agora" e "existe quando importa" são perguntas diferentes.**
-- **Varredura de um nível não é varredura**: o que vale é o fecho transitivo.
-- **Leia a norma até o fim**: o WCAG tem exceções que medir tamanho não enxerga.
-- **Meça o que é DESENHADO, não o que foi escrito**: herança é a regra do CSS.
-- **Transição em curso faz o computado mentir.** Pergunte com `getAnimations()`
-  se há transição, em vez de escolher outro instante.
-- **Mostrador cujo repouso é igual ao sucesso não testemunha o sucesso.** Ele
-  mostra algo diferente antes e depois?
-- **Lista de PROIBIDOS subconta em silêncio.** Use uma de PERMITIDOS e falhe no
-  que não conhece.
-- **O medidor de contraste ignora o ALFA**: sabotar a opacidade é sabotagem
-  inerte, e não prova guarda nenhum.
-
-**Antes de ler AUSÊNCIA como evidência, prove que o canal estaria lá se o evento
-tivesse acontecido**: uma linha que sai sempre, ou o caso positivo conhecido. E
-o canal pode morrer depois de instalado — navegação descarta o documento e o
-observador junto, e a lista vazia diz "nada mudou". **Afirme o documento antes
-de afirmar o silêncio.**
-
-### Instrumento que DECOMPÕE tem denominador de graça: a soma
-
-**Toda decomposição afirma a soma antes das parcelas.** Uma tabela de parcelas
-com nomes e alturas certas pode somar o dobro do todo sem nada reclamar; a soma
-que não fecha é o que denuncia. Monte a medição de forma que cada parte tenha um
-dono só (uma coluna de sondas `elementFromPoint` fecha por construção). E o
-EFEITO de um corte se mede cortando de verdade (`display:none` e medir de
-novo), nunca subtraindo.
-
-### Um guarda só mede o que ele VISITA
-
-Cobertura de contraste, tipografia e leiaute depende de onde o teste NAVEGA, não
-de quantas asserções ele tem. Quatro formas de não visitar:
-
-1. **A cena não está na lista.** Enumerar é remendo. O que restaura a amostragem
-   é um guarda que force a VARREDURA ("alguém escreveu a receita à mão?"), que
-   vale para a cena que nascer amanhã.
-2. **O medidor não é importável.** Instrumento privado de um arquivo de teste
-   tem exatamente um chamador.
-3. **A tela tem UM item.** O defeito de N>1 é invisível com N=1. Quantos itens o
-   caso põe na tela, e de quantos o defeito precisa?
-4. **Todas as telas, um só DADO.** Tela que ramifica pelo dado pede um caso por
-   ramo, com o ramo nomeado e o controle afirmando que ele apareceu.
-
-**O controle que fecha as quatro é o DENOMINADOR**: todo medidor devolve
-`{falhas, medidos}`. Sem isso, "verde" e "não mediu" são a mesma cor.
-
-### O resto
-
-- **Apague teste que custa mais do que protege**: asserção sobre nome de classe e
-  forma de DOM que ninguém prometeu, teste que redescobre o esperado rodando a
-  implementação, teste sobre código morto ou fora do bundle. Teste verde sobre
-  código que ninguém usa é a pior dívida — cobra manutenção e não protege nada.
-- Dado transcrito do livro (catálogos) é validado por SCHEMA, não por
-  um `expect` por campo repetindo o mesmo número. Prenda a *exceção* (a armadilha
-  da tabela), nunca a tabela inteira.
-- Troque I/O externo (API, banco, sistema de arquivos) por classes dublê nomeadas, não por stub inline. Testes F.I.R.S.T: rápidos, independentes,
-  repetíveis, auto-verificáveis, oportunos.
-- **Teste nasce antes do código.** Sem o teto de linha por função (ver "Estilo
-  de código"), uma função pode ser o comportamento inteiro, e o teste que a
-  define cabe ser escrito primeiro — na camada que a seção já manda usar
-  (integração por padrão, unitário só pra regra). Caçando defeito, reproduza no
-  navegador ou num handler antes: o defeito reproduzido É o teste vermelho, e
-  ele nasce antes do conserto por definição.
-- **Ordem do corte: escreva o substituto, veja-o verde, DEPOIS apague.** Apagar
-  primeiro abre uma janela cega.
+**Antes de escrever ou mudar um teste, ou de confiar numa medição, leia
+[docs/testing.md](docs/testing.md)**: as faixas, o vermelho antes de confiar e as formas
+de um instrumento mentir com cara de resultado.
 
 ## Como uma convenção passa a valer
 
@@ -462,69 +352,9 @@ palpite pelo menos uma vez:
 línguas: `board-drag.spec.ts` contendo `test('arrastar a peça propõe a parada')`.
 Ela se chama **descrição do teste** — uma palavra por conceito.
 
-### Sinal: `snake_case`, inglês, uma grafia em todos os canais
-
-A forma foi MEDIDA no navegador, e o mecanismo É a regra:
-
-- **camelCase quebra em silêncio.** Nome de atributo é minusculado pelo parser de
-  HTML: `data-bind:buscaCriatura` chega como `data-bind:buscacriatura` e o
-  Datastar liga um sinal NOVO, deixando o declarado intocado. O fio leva os DOIS
-  e o servidor lê o errado — sem erro em lugar nenhum.
-- **kebab-case vira outra coisa.** O Datastar transforma `-[a-z]` em maiúscula
-  por padrão, então `data-bind:creature-search` liga um sinal em camelCase: duas
-  grafias para um conceito, que é a raiz do defeito acima.
-- **`_` atravessa intacto** — não há caixa para perder, e o `-` é o único
-  caractere que a transformação toca.
-
-Prefixo por FAMÍLIA quando o sinal pertence a um grupo (`template_*`, `ruler_*`),
-para o `grep` achar a família inteira.
-
-Nenhum teste de Go pega isso — a minusculação acontece no NAVEGADOR, e o HTML
-servido ainda tem a caixa que o autor escreveu. A garantia desceu para o TEXTO do
-atributo: `TestNoDatastarAttributeKeyCarriesUppercase` varre a forma, e
-`TestNoNewSignalBreaksTheNamingStandard` varre com linha de base VAZIA.
-
-#### Renomear um sinal são SETE canais, e nada liga um ao outro
-
-Isto é checklist, não história: renomear é ato humano, nenhum guarda o cobre, e
-**cinco dos sete são invisíveis para um `grep` de `$nome`**.
-
-| # | canal | como aparece |
-|---|---|---|
-| 1 | expressão | `$creature_search` |
-| 2 | chave de atributo | `data-bind:creature_search` |
-| 3 | **valor** de atributo | `data-ref="delete_dialog"` |
-| 4 | declaração | `data-signals="{…}"`, e as strings montadas em Go |
-| 5 | tag JSON do servidor | `json:"creature_search"` |
-| 6 | filtro de remendo | `data-on-signal-patch-filter="{include: /^sheet_version$/}"` |
-| 7 | **argumento de string** | `toggleBadge(aba, key, …)`, que monta `"$" + key` |
-
-Os canais 3 e 7 deixaram quatro diálogos sem abrir com a suíte de Go inteira
-verde: **a expressão passa a ler `undefined`, que em JavaScript não é erro** — é
-o gesto não fazer nada. O canal 4 tem a armadilha inversa: `undefined != ''` é
-VERDADEIRO, então um `<p>` que devia nascer escondido nasce mostrado.
-
-**Nem toda tag JSON é sinal** — leia o diff das tags antes de aceitar uma
-varredura. E há um oitavo leitor que não é canal de escrita: a **constante**
-(`const brushSignal = "pincelando"`, lida como `"$" + brushSignal`), que metade
-das vezes mora num bloco `const (…)` com a palavra na linha de cima.
-
-Quem fecha: `TestEverySignalDeclaredByValueHasAReader` (3),
-`TestEverySignalTheTableDeclaresHasAReader` (4), e a catraca para a FORMA. **O 7
-não tem guarda** — hoje é um sítio só, o `toggleBadge` do acervo do mestre, e
-está nomeado aqui por isso.
-
-#### O id de elemento tem NOVE canais
-
-`id="x"` · `getElementById('x')` · `aria-labelledby` · `aria-describedby` ·
-`for=` · `popovertarget` · `commandfor` · `querySelector('#x')` · e
-**`el.id === 'x'`**, que foi o que escapou: o renome passou por cima, o Enter
-deixou de abrir o primeiro achado, e nada mais mudou na tela.
-
-Quem cobra é o `TestEveryReferencedElementIdExists` — todo id APONTADO existe em
-algum `.templ`, escrito como `id="x"` ou entregue a uma peça do kit que o
-escreve (`ds.Dialog("x", …)`). Ele não cobra o contrário: um id pode existir só
-para o CSS.
+**O nome de um sinal e o de um id têm canais que nada liga um ao outro.** Antes de criar
+ou renomear um, leia "Os nomes de sinal e de id" em
+[engine-go/docs/datastar.md](engine-go/docs/datastar.md).
 
 ### Renomear ao encontrar
 
@@ -548,7 +378,7 @@ A razão é o que eles mediam. Idioma não é uma propriedade que um `map[string
 decida: os três primeiros perguntavam "esta palavra está numa lista de palavras
 portuguesas que eu conheço?", e a resposta era não para quase toda palavra
 portuguesa que ainda não tinha mordido alguém. Uma lista de PROIBIDOS subconta em
-silêncio — é a armadilha que a seção "O INSTRUMENTO MENTE" já nomeia —, e aqui
+silêncio — é a armadilha que "O INSTRUMENTO MENTE", em [docs/testing.md](docs/testing.md), já nomeia —, e aqui
 ela subcontava sem nem ter um denominador para denunciar a subcontagem.
 
 O de nome de arquivo invertia o erro: como lista de PERMITIDOS, reprovava toda
@@ -651,13 +481,10 @@ grafias conviviam depois de a varredura já ter rodado.
   página conferida antes de escrever — como conferir é do
   [engine-go/CLAUDE.md](engine-go/CLAUDE.md).
 
-## Guias por pacote
+## Guias
 
-- **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) — regenerar
-  oráculo é ato deliberado, citação de página conferida, validação de schema dos
-  catálogos, as armadilhas do `templ` e as do Datastar que não deixam erro
-  para trás, os dois defeitos silenciosos do `sqlc`, e por que a bancada copia um
-  molde migrado.
-- **`e2e/`** (Playwright) **não tem guia próprio**: o que rege e2e está na seção
-  "Testes" deste arquivo, e é uma regra só — e2e é a faixa mais cara do
-  repositório e cada caso se justifica com um mecanismo que só um navegador tem.
+Estes arquivos não carregam sozinhos: abra o do assunto antes de escrever.
+
+- **Testes e medições:** [docs/testing.md](docs/testing.md), que também rege o `e2e/`.
+- **`engine-go/`** (Go): [engine-go/CLAUDE.md](engine-go/CLAUDE.md) é o índice, com o mapa
+  das pastas e o que ler para cada assunto em `engine-go/docs/`.

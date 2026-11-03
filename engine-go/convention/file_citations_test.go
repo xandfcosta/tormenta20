@@ -37,7 +37,7 @@ var arquivosAusentesDePROPOSITO = map[string]bool{
 	// APAGADO VAZIO na ALE-278. Quando o `book` levou as 330 linhas deste
 	// arquivo (`4260797d`), sobrou nele `package api` e um `import ()` — e ele
 	// atravessou três fatias assim, porque um arquivo vazio não quebra nada e
-	// não aparece em diff nenhum. O `engine-go/CLAUDE.md` o nomeia para contar
+	// não aparece em diff nenhum. O guia do engine o nomeia para contar
 	// isso, que é justamente o caso de lápide que esta lista existe para deixar
 	// explícito.
 	"piloto_catalogos_do_personagem.go": true,
@@ -152,7 +152,7 @@ var oCaminhoCitado = regexp.MustCompile(
 // `vista`, o `terreno`, o `chao`, o `aviso`, a `busca`, a `cortina`, os
 // `enderecos_antigos`: a mesma história catorze vezes.
 //
-// É o defeito que o `CLAUDE.md` descreve — *renomear um símbolo deixa a
+// É o defeito que a seção "Documentação" do `CLAUDE.md` descreve — *renomear um símbolo deixa a
 // explicação falando de um nome que não existe* — cometido pelas duas issues que
 // mais renomearam coisas. Nenhuma das duas podia tê-lo visto: não havia guarda.
 //

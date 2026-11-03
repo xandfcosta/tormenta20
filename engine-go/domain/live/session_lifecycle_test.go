@@ -7,7 +7,7 @@ import (
 
 // A DECISÃO do ciclo, sem banco, sem servidor e sem fixture.
 //
-// É a faixa que o `CLAUDE.md` reserva ao que carrega REGRA: os quatro caminhos,
+// É a faixa que o `docs/testing.md` reserva ao que carrega REGRA: os quatro caminhos,
 // as duas recusas e o clique repetido cabem numa tabela, e cada linha nomeia o
 // caso que ela protege — a mensagem de falha diz o caso, e não "esperava X".
 func TestAskingForAStatusSaysWhichWriteToMake(t *testing.T) {
@@ -45,7 +45,7 @@ func TestAskingForAStatusSaysWhichWriteToMake(t *testing.T) {
 	}
 }
 
-// A MENSAGEM da recusa carrega o valor ofensor, que é o que o `CLAUDE.md` pede
+// A MENSAGEM da recusa carrega o valor ofensor, que é o que "Estilo de código", no `CLAUDE.md`, pede
 // de toda exceção: "a sessão está X" resolve na hora, "pedido inválido" não.
 func TestRefusingToEndAPlannedSessionNamesTheStatus(t *testing.T) {
 	_, err := ChangeToStatus("planned", "ended")

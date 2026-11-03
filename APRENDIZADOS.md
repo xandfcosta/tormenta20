@@ -1,7 +1,7 @@
 # Aprendizados
 
 O que o repositório aprendeu errando, e que não é regra. A REGRA mora nos guias
-(`CLAUDE.md` e `engine-go/CLAUDE.md`); aqui mora o CASO que a produziu, para quem
+(`CLAUDE.md`, `engine-go/CLAUDE.md` e os `docs/` deles); aqui mora o CASO que a produziu, para quem
 quiser entender por que ela existe.
 
 **Este arquivo é revisado periodicamente com o dono.** A cada revisão, um
@@ -105,6 +105,85 @@ diferentes. As cenas em templ reinventaram dois deles em 106 sítios com 30
 grafias antes de o kit ganhar as três receitas.
 
 ## Do guia do `engine-go`
+
+### A derivação, e o que ela CUSTOU (saiu do guia em 2026-11)
+
+O grafo tem uma aresta só (a carga alimenta o deslocamento e as perícias); o
+resto lê `(personagem, efeitos)`. **Um sistema que não roda deixa o componente
+ausente, e quem o lê recebe ZERO**, sem erro nem log. Pagam isso o
+`TestEveryDerivationSystemWritesItsComponent` (lista à mão, uma conferência por
+sistema, porque o `ecs` não diz quantos componentes uma entidade tem) e o
+`TestTheLoadIsDerivedBeforeWhatReadsIt`, que prende a aresta com o personagem
+SOBRECARREGADO: sem isso, a carga zerada e a de verdade dão o mesmo deslocamento.
+
+### O que a resolução em sistemas comprou (saiu do guia em 2026-11)
+
+O termo que não cumpre condição, perde o empilhamento ou vira fator fica no
+mundo com a tag `Suppressed{Why}`, para a ficha poder responder *"por que 12?"*
+com "−2 de X, não aplicado por não empilhar". A tela ainda não o lê.
+
+### O tabuleiro entrou, e foi ele quem devolveu o `Despawn` (saiu do guia em 2026-11)
+
+- **Peça e marcador são a mesma espécie de entidade, e o que o mestre escondeu
+  SOME INTEIRO**: `Despawn` apaga a entidade e todo componente dela; "presente
+  porém anônima" entregaria a emboscada igual. O `Despawn` pela metade é pego
+  pelos casos de redação do `domain/board`.
+- **A ENTIDADE NÃO TROCA entre os gestos do tabuleiro**, ao contrário da ficha:
+  muda o COMPONENTE (`body` para quem pergunta quadrado, `boundTo` para quem
+  pergunta fila), e os dois pipelines compartilham um construtor de mundo só.
+- **A ORDEM da redação é regra**: é a de DESENHO (quem vem depois fica por cima)
+  e decide qual peça a tela oferece para mover. Asserção sobre CONTEÚDO
+  sobrevive a um embaralhamento; prendem o `TestTheRedactionKeepsTheDrawingOrder`
+  e o `TestTheRedactionKeepsTheMarkerOrder`.
+- **O CORPO da peça é um componente** (`body`), dono de "ocupa
+  `footprint × footprint` quadrados a partir da âncora". O footprint zerado vira
+  1 ali porque a peça do BANCO não passa pelo `AddToken`
+  (`TestATokenSavedWithoutASizeStillTakesItsSquare`).
+- **Monte o mundo UMA vez por gesto**: o `PopulateBoard` põe a peça recém-criada
+  no mundo antes de procurar o quadrado da seguinte, ou as duas acham o mesmo
+  lugar livre.
+
+### A FRONTEIRA do tabuleiro abriu para o núcleo, e o preço foi um guarda (saiu do guia em 2026-11)
+
+O `domain/ecs` está na lista de permitidos do
+`TestTheBoardDoesNotKnowTheCharacterSheet` pela razão do `infra/events`: é FOLHA
+e não sabe o que é Tormenta. A lista avisa: *acrescentar import a ela transforma
+a porta em enfeite*. A folha tem guarda, `TestTheCoreImportsNothingOfTheProject`
+(exceção: o `world_test.go`, do pacote externo `ecs_test`), que varre os testes
+de propósito: os componentes de mentira do núcleo se chamam `label` e `weight`
+porque *"se uma palavra do livro aparecer neste pacote, o desenho vazou"*.
+
+### O RACIOCÍNIO guardado envelhece como o código guardado (saiu do guia em 2026-11)
+
+Docstring envelhece como `.md`, e ninguém relê a de função que não vai tocar —
+ver "Comentários" em [docs/testing.md](docs/testing.md); a sonda que caça isso
+precisa do controle positivo de "O INSTRUMENTO MENTE COM CARA DE RESULTADO".
+
+### Guarda de leiaute precisa do ESTADO, não só da cena (saiu do guia em 2026-11)
+
+Ver "Um guarda só mede o que ele VISITA" no [CLAUDE.md da raiz](CLAUDE.md).
+**Texto escondido por CSS sai da árvore de acessibilidade**: um rótulo com
+`display:none` não é lido nem pelo leitor de tela nem pelo `getByLabel`.
+
+### Os pacotes que saíram do `api` (saiu do guia em 2026-11)
+
+`campaign`, `account`, `search`, `book`, `sheet` e `creature` são do `domain/`;
+`events`, da `infra/`. Para a próxima extração:
+
+1. **Função pura copiada por causa de fronteira é lugar de defeito silencioso.**
+   Copie o CORPO do original, nunca uma reescrita de memória — e prefira o
+   pacote, que apaga a cópia e a razão de haver duas.
+2. **O guarda de fronteira que mais importa é o do pacote MAIS IMPORTADO.** Se
+   o `book` alcançar o `api`, toda cena que o importa alcança HTTP com o guarda
+   de cada uma VERDE, porque cada um só olha os próprios imports. Vale para
+   `sheet`, `creature` e `events`.
+3. **A regra de PRODUTO não desce para a infraestrutura** — por isso o
+   `account` ("a senha tem ao menos 8 caracteres") mora no `domain/`. Regra com
+   consumidor de TELA e de API tem UMA frase, em pt-BR, morando com ela: duas
+   frases quebram quando alguém mexe no limite.
+
+**O critério de mover é a DEPENDÊNCIA, medida:** "isto carrega HTTP?" se
+responde nos imports do arquivo, não no assunto dele.
 
 ### O caso de uso morava no domínio, e a contagem dele envelheceu (2026-10)
 

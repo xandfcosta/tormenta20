@@ -112,7 +112,7 @@ func TestNoRouteCarriesACoordinateInThePath(t *testing.T) {
 	if len(list) > 0 {
 		t.Errorf("parâmetro de caminho que o PERMITIDOS não conhece — %d de %d, em %d rotas:\n  %s\n"+
 			"A coordenada de um gesto viaja no CORPO, pelo `payload` do `@post` (ver "+
-			"`engine-go/CLAUDE.md`). Se este parâmetro NÃO vem do ponteiro, escreva a linha em "+
+			"`engine-go/docs/datastar.md`). Se este parâmetro NÃO vem do ponteiro, escreva a linha em "+
 			routeParamsFile+" — o guarda falha no que não conhece de propósito, porque a lista de "+
 			"PROIBIDOS que ele substituiu deixou nove grafias de coordenada passarem verdes.",
 			len(list), len(seen), len(routes), strings.Join(list, "\n  "))

@@ -26,7 +26,7 @@ import (
 //	Penalidade de armadura −7          ← esta EXPLICA o "Outros", não soma
 //	TOTAL −2
 //
-// Quem lê soma −9 e vê −2. É exatamente a família que o `CLAUDE.md` descreve em
+// Quem lê soma −9 e vê −2. É exatamente a família que o `docs/testing.md` descreve em
 // "toda decomposição afirma a soma antes de afirmar as parcelas", acontecida na
 // tela que existe PARA mostrar a decomposição.
 //
@@ -42,7 +42,7 @@ import (
 //
 // Um campo lido por um `.templ` que o desenha sem efeito visual nenhum. O guarda
 // prende a LIGAÇÃO, não o desenho — de propósito: prender aparência em teste é a
-// família inteira de armadilhas do `CLAUDE.md`.
+// família inteira de armadilhas do `docs/testing.md`.
 func TestEveryBreakdownRowFieldHasAReader(t *testing.T) {
 	written, sites := breakdownRowFieldsWritten(t)
 	read := selectorsReadInPackage(t)

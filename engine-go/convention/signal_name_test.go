@@ -12,8 +12,8 @@ import (
 
 // NOME DE SINAL DO DATASTAR: `snake_case`, INGLÊS, UMA GRAFIA SÓ (ALE-301).
 //
-// O padrão inteiro e a razão de cada metade estão no `CLAUDE.md`, seção
-// "Idioma". O que este guarda cobra é a FORMA — `snake_case` —, porque é ela
+// O padrão inteiro e a razão de cada metade estão em `engine-go/docs/datastar.md`, seção
+// "Os nomes de sinal e de id". O que este guarda cobra é a FORMA — `snake_case` —, porque é ela
 // que o parser do navegador decide, e é ela que já produziu defeito.
 //
 // A metade do IDIOMA não tem guarda próprio e não deve ter: "está em inglês"
@@ -133,7 +133,7 @@ func TestNoNewSignalBreaksTheNamingStandard(t *testing.T) {
 	if len(fresh) > 0 {
 		t.Errorf("sinal fora do padrão de nome — %d:\n  %s\n"+
 			"Nome de sinal é `snake_case`, em inglês, com UMA grafia em todos os canais "+
-			"(CLAUDE.md, \"Idioma\"). Caixa alta em chave de atributo é minusculada pelo parser e "+
+			"(engine-go/docs/datastar.md, \"Os nomes de sinal e de id\"). Caixa alta em chave de atributo é minusculada pelo parser e "+
 			"liga um sinal NOVO — o gesto passa a \"não fazer nada\", sem erro em lugar nenhum. "+
 			"A linha de base em %s registra a dívida ANTIGA e não aceita nome novo.",
 			len(fresh), strings.Join(fresh, "\n  "), signalDebt)

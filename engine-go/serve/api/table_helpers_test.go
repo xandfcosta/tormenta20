@@ -29,7 +29,7 @@ func bodyDraft(inside string) string {
 // guardas leem — nunca a fonte.
 //
 // Uma classe que o scanner do Tailwind não viu não existe na folha, e é
-// justamente esse o modo de falhar que não dá erro (ver o `engine-go/CLAUDE.md`).
+// justamente esse o modo de falhar que não dá erro (ver o `engine-go/docs/screens.md`).
 // Ler a fonte faria todo guarda desta família passar verde sobre tinta que o
 // navegador nunca recebeu.
 func compiledStylesheet(t *testing.T) string {

@@ -18,7 +18,7 @@
 -- coluna nula nem cumpriria o papel, porque no SQLite dois NULL sao distintos.
 --
 -- Tabela e nao coluna, e comentario sem acento: as duas razoes sao do
--- engine-go/CLAUDE.md, secao do sqlc.
+-- engine-go/docs/infra.md, secao do sqlc.
 
 -- +goose Up
 CREATE TABLE campaign_silences (

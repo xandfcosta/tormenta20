@@ -119,7 +119,7 @@ func (s Scene) idCampaignNpc(c commandCtx, id int64) (sqlcgen.CampaignCreature, 
 // castRefusal traduz a recusa TIPADA do caso de uso na FRASE que a cena mostra.
 //
 // A Mesa devolve recusa como CONTEÚDO em 200 — o Datastar descarta o corpo de
-// um 4xx —, e essa é a exceção declarada no `engine-go/CLAUDE.md`. O que muda é
+// um 4xx —, e essa é a exceção declarada no `engine-go/docs/datastar.md`. O que muda é
 // de onde a frase vem: a decisão é do caso de uso e a redação é daqui.
 func castRefusal(err error, what string) error {
 	switch {

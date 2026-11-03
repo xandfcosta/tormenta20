@@ -16,7 +16,7 @@
 -- um formato so para aprender, e o motor ja sabe le-lo.
 --
 -- Tabela e nao coluna, e comentario sem acento: as duas razoes sao do
--- engine-go/CLAUDE.md, secao do sqlc.
+-- engine-go/docs/infra.md, secao do sqlc.
 
 -- +goose Up
 CREATE TABLE campaign_items (

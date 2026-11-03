@@ -9,7 +9,7 @@
 // vale mais junto.
 //
 // Por que são DUAS âncoras, por que a tabela é lida primeiro e por que a
-// descrição do poder único se cerca por TRÊS dimensões é do `engine-go/CLAUDE.md`.
+// descrição do poder único se cerca por TRÊS dimensões é do `engine-go/docs/catalog.md`.
 //
 // Ele PROPÕE: nada é escrito.
 //

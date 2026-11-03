@@ -87,7 +87,7 @@ func TestTheArrowWithoutStopsJoinsBothEndsOfThePath(t *testing.T) {
 //
 // A folha compilada e não a fonte, porque é ela que o navegador recebe: uma
 // classe que o scanner do Tailwind não viu não existe na folha, e é justamente
-// esse o modo de falhar que não dá erro (ver o `engine-go/CLAUDE.md`).
+// esse o modo de falhar que não dá erro (ver o `engine-go/docs/screens.md`).
 func classesThatReceiveBox(t *testing.T) map[string]bool {
 	t.Helper()
 	sheet, err := os.ReadFile("../assets/static/app.css")

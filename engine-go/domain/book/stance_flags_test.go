@@ -177,7 +177,7 @@ func TestEveryFlagGrantHangsOnAClassPower(t *testing.T) {
 //   - o INÍCIO DE CENA (`passive` + `temp-hp`) não espera gesto nenhum, e sai
 //     na varredura do `Party.StartScene`.
 //
-// É uma lista de PERMITIDOS e não de proibidos, pela razão que o `CLAUDE.md` já
+// É uma lista de PERMITIDOS e não de proibidos, pela razão que o `docs/testing.md` já
 // dá: uma lista de proibidos subconta em silêncio. Um par novo — um `instant`
 // que conceda PV temporários, um `passive` que ligue modificadores — reprova
 // aqui com o id, em vez de virar dado inerte no catálogo.

@@ -144,7 +144,7 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 // prévia que sobrevivesse ao soltar ficaria por cima da seta de verdade, com o
 // mesmo formato e outra medida — dois caminhos na tela e nenhum jeito de saber
 // qual é o que vale. É a mesma regra do nó compartilhado que o diálogo de senha
-// ensinou (ver o CLAUDE.md deste pacote).
+// ensinou (ver "Remendo em nó COMPARTILHADO", em `engine-go/docs/datastar.md`).
 //
 // O `$preview_x` volta para um valor IMPOSSÍVEL e não para zero: zero é uma casa
 // legítima do plano, e o próximo arrasto que começasse nela não pediria prévia
@@ -185,7 +185,7 @@ const dragOffsetStyle = "`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 //
 // As funções abaixo existem porque **o templ não aceita `else if` numa
 // lista de atributos** e não reclama: os dois ramos saem, o navegador guarda o
-// primeiro e o outro morre em silêncio. A armadilha está no `engine-go/CLAUDE.md`,
+// primeiro e o outro morre em silêncio. A armadilha está no `engine-go/docs/screens.md`,
 // seção "templ".
 //
 // A escolha entre os dois gestos volta para o Go, e o elemento passa a ter UMA

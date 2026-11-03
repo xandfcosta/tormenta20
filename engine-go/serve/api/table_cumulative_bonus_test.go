@@ -38,7 +38,7 @@ import (
 // A primeira versão era `Atacar · …([+-]\d+)</span>` com `.*?` no meio, e ela
 // casava com o `+5` de `1d6+5` — o DANO do detalhe, que não se mexe quando o
 // bônus sobe. O caso teria passado verde sobre o número errado, que é a
-// armadilha que o `CLAUDE.md` chama de instrumento com cara de resultado.
+// armadilha que o `docs/testing.md` chama de instrumento com cara de resultado.
 var attackValue = regexp.MustCompile(`>([+-]\d+)</span>`)
 
 // ragingBarbarianWithTheBloodPower é a bancada: o bárbaro de nível 6, com a
