@@ -73,7 +73,7 @@ func TestTheFourItemRulesLandInOrder(t *testing.T) {
 		return strings.Contains(m.Note, "sem proficiência")
 	})
 	mirror := at("o espelho de ataque", func(m Modifier) bool {
-		return m.Target.K == "expertise" && strings.Contains(m.Note, "desbalanceada: -2")
+		return m.Target.Scope == WeaponDamageScope("machado-taurico") && strings.Contains(m.Note, "desbalanceada: -2")
 	})
 	fixed := at("a melhoria equilibrada", func(m Modifier) bool {
 		return m.Note == "anula desbalanceada"

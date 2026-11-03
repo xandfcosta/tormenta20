@@ -14,14 +14,14 @@ import (
 // mão: Defesa 10 + DES 2 = 12; Luta ½ nível 1 + FOR 4 + treino 2 = +7;
 // Pontaria 1 + DES 2 = +3; a espada longa rola 1d8 + FOR 4, 19-20/x2. O
 // fixture não tem proficiência nenhuma, então a espada cobra -5 no ataque
-// (p142), e o corpo a corpo, que lê a arma empunhada, também: +7 - 5 = +2.
+// (p142), e só ela: o corpo a corpo fica em +7, e a espada em +2.
 func TestTheParallelCombatTabSumsDefenseAttacksAndWeapons(t *testing.T) {
 	f, id := fighterFixture(t)
 	itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded")
 	page := parallelSheet(t, f, id, "combat")
 
 	for name, total := range map[string]string{
-		"Defesa": "12", "Ataque corpo a corpo": "+2", "Ataque à distância": "+3", "Espada longa": "+2",
+		"Defesa": "12", "Ataque corpo a corpo": "+7", "Ataque à distância": "+3", "Espada longa": "+2",
 	} {
 		if sum := sumLine(t, page, name); !strings.Contains(sum, `<span class="ds-row-value">`+total+`</span>`) {
 			t.Errorf("a linha %q não fechou em %s:\n%s", name, total, sum)

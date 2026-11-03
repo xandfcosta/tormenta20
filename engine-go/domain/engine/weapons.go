@@ -1,12 +1,12 @@
 package engine
 
 // WeaponCard is one wielded-weapon formula card (combat-magic-stats.tsx
-// WeaponFormulaCards): attack = the weapon's attack perícia (Luta melee/thrown,
-// Pontaria ranged) + global attack mods; damage adds Força for melee/thrown (not
-// ranged) + global damage mods. Go owns the NUMBERS; the structural row labels
+// WeaponFormulaCards): attack = the weapon's attack perícia (Luta melee, Pontaria
+// thrown/fired) + global attack mods; damage adds Força for melee/thrown (not
+// fired) + global damage mods. Go owns the NUMBERS; the structural row labels
 // (½ nível, FOR, Treino) and the crit string are applied on the front. Per-weapon
-// mods (desbalanceada, Certeira…) already ride the Luta/Pontaria mirror inside
-// effects, so the expertise breakdown carries them — no scope:'this' added here.
+// mods (desbalanceada, Certeira…) ride the weapon scope inside effects, so they
+// land on this weapon's cards through `AttackOwn` — no scope:'this' added here.
 // ExtraDamage é uma parcela de dano de outro tipo, somada por um encanto.
 type ExtraDamage struct {
 	Dice string `json:"dice"` // "1d6"
@@ -140,9 +140,9 @@ func weaponKindScopes(w *WeaponStats) []string {
 	return nil
 }
 
-// ThrownCardSuffix distingue, no nome da carta, o uso de arremesso de uma arma
+// thrownCardSuffix distingue, no nome da carta, o uso de arremesso de uma arma
 // corpo a corpo. É um substantivo para servir à lança e ao tridente.
-const ThrownCardSuffix = " (arremesso)"
+const thrownCardSuffix = " (arremesso)"
 
 // thrownUseOf é a mesma arma arremessada, ou nulo se ela não tem esse segundo uso.
 //
@@ -229,7 +229,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		}
 		cards = append(cards, cardOf(it.Name, w))
 		if thrown := thrownUseOf(w); thrown != nil {
-			cards = append(cards, cardOf(it.Name+ThrownCardSuffix, thrown))
+			cards = append(cards, cardOf(it.Name+thrownCardSuffix, thrown))
 		}
 		weaponsInHand++
 		if weaponsInHand == 2 {
