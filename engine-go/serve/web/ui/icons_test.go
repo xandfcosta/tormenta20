@@ -52,7 +52,7 @@ var iconTableShapes = []*regexp.Regexp{regexp.MustCompile(`\bIcon:\s*"([A-Za-z0-
 // LIMITE DELE, e vale saber antes de confiar: ele só enxerga o nome ESCRITO no
 // template. Uma cena que passa o nome por variável — `@icone(f.Icone)`, que é o
 // que a trilha do mestre faz para percorrer uma tabela — escapa inteira. Esse é o regime de ENUMERAÇÃO de que fala o
-// CLAUDE.md: o guarda cobre por amostragem enquanto as chamadas forem
+// `docs/testing.md`: o guarda cobre por amostragem enquanto as chamadas forem
 // literais, e no dia em que uma vira indireta ela precisa trazer o próprio
 // guarda. O `TestTheGmTrailIconsExist`, logo abaixo, é esse guarda
 // para a primeira indireta que apareceu.

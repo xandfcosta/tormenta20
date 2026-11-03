@@ -1,7 +1,7 @@
 // Package convention guarda as convenções do REPOSITÓRIO — as que não são de
 // nenhum pacote e que por isso não teriam onde morar.
 //
-// O CLAUDE.md da raiz diz que uma convenção mecanizável vira guarda, e que um
+// O CLAUDE.md da raiz, em "Como uma convenção passa a valer", diz que uma convenção mecanizável vira guarda, e que um
 // guarda mora no pacote que a possui. As duas frases se contradizem para uma
 // regra sobre TODOS os pacotes: pô-la em qualquer um deles é escolher um dono
 // arbitrário, e o `api` — que seria a escolha natural pelo tamanho — está sendo

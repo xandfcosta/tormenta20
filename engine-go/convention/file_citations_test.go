@@ -152,7 +152,7 @@ var oCaminhoCitado = regexp.MustCompile(
 // `vista`, o `terreno`, o `chao`, o `aviso`, a `busca`, a `cortina`, os
 // `enderecos_antigos`: a mesma história catorze vezes.
 //
-// É o defeito que o `CLAUDE.md` descreve — *renomear um símbolo deixa a
+// É o defeito que a seção "Documentação" do `CLAUDE.md` descreve — *renomear um símbolo deixa a
 // explicação falando de um nome que não existe* — cometido pelas duas issues que
 // mais renomearam coisas. Nenhuma das duas podia tê-lo visto: não havia guarda.
 //

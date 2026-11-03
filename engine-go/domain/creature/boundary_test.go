@@ -55,7 +55,7 @@ func TestTheCreatureImportsNothing(t *testing.T) {
 	}
 
 	// Sem isto, apagar o pacote deixaria o guarda VERDE — ausência lida como
-	// aprovação, que é a família que o `CLAUDE.md` da raiz descreve.
+	// aprovação, que é a família que o `docs/testing.md` descreve.
 	if visited == 0 {
 		t.Fatal("nenhum arquivo .go visitado — o guarda ficou cego")
 	}

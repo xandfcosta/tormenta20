@@ -274,7 +274,7 @@ type SkillSpendChoice struct {
 }
 
 // SpendKey é o nome do gasto no sinal da tela: o fim do id, em `snake_case`
-// (o `-` não atravessa o Datastar — ver o `CLAUDE.md`, "Sinal"). As duas
+// (o `-` não atravessa o Datastar — ver `engine-go/docs/datastar.md`, "Sinal"). As duas
 // Engenhosidades dão a mesma chave, e é a oferta única do grupo.
 //
 //	SpendKey("class.bucaneiro.audacia") // "audacia"

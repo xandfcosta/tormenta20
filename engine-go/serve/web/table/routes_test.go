@@ -52,7 +52,7 @@ func TestNoTableSignalIsDeclaredTwice(t *testing.T) {
 // # Por que o guarda da `convention` não alcança
 //
 // O `TestEverySignalDeclaredByValueHasAReader` lê o VALOR de um atributo
-// (`data-ref="x"`) — o canal 3 dos sete da tabela do `CLAUDE.md`. A declaração
+// (`data-ref="x"`) — o canal 3 dos sete da tabela de `engine-go/docs/datastar.md`. A declaração
 // da Mesa é o canal 4: uma string MONTADA EM GO. Os dois canais precisam de
 // varredura própria, e este é o da Mesa.
 //

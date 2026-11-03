@@ -3,7 +3,7 @@
 // Uso: cd engine-go && go run ./cmd/genoracle
 //
 // Não existe segunda implementação: o oráculo é o Go descrevendo o Go. Por isso
-// a regra de processo do CLAUDE.md deste pacote vale mais do que nunca:
+// a regra "Regenerar oráculo", do `engine-go/CLAUDE.md`, vale mais do que nunca:
 //
 //	O diff de um oráculo é revisado contra o LIVRO, nunca aceito porque "o
 //	teste ficou verde".

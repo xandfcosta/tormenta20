@@ -45,7 +45,7 @@ const THE_SCREENS: Screen[] = [
   // O DIÁLOGO DE CONJURAR é o caso que abriu a ALE-341, e ele só existe depois
   // de um clique: os interruptores dos aprimoramentos nascem escondidos. Uma
   // varredura que só carregasse endereços não o alcançaria — é a primeira das
-  // quatro formas de "não visitar" que o CLAUDE.md lista.
+  // quatro formas de "não visitar" que o docs/testing.md lista.
   {
     nome: 'os aprimoramentos ao conjurar',
     rota: '/personagens/3?tab=spells',

@@ -21,7 +21,7 @@ import (
 //
 // A razão é que nenhuma das 18 fichas tem um item que dispare DUAS das regras
 // ao mesmo tempo, fora de um par. Sabotagem que não reprova não é guarda cego —
-// é o oráculo não visitando o caso, que é a família que o `CLAUDE.md` cataloga
+// é o oráculo não visitando o caso, que é a família que o `docs/testing.md` cataloga
 // em "um guarda só mede o que ele VISITA".
 //
 // # O caso que dispara TRÊS regras de uma vez

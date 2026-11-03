@@ -8,7 +8,7 @@ import (
 // O ATAQUE EM DOIS TEMPOS: o teste, a decisão do mestre, e só então o dano.
 //
 // O crítico muda QUANTOS dados se rolam (p231), e quem diz se houve crítico é o
-// mestre (ver o `CLAUDE.md` da raiz). Por isso o dano não existe antes da
+// mestre (ver "O veredito é do mestre", no `CLAUDE.md` da raiz). Por isso o dano não existe antes da
 // decisão: rolado junto com o d20, ele sairia multiplicado pela sugestão do
 // livro e não pela palavra de quem decide.
 

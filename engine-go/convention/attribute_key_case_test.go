@@ -24,7 +24,7 @@ import (
 // A regra já estava escrita — **treze vezes**, em treze comentários espalhados
 // por `web/table`, `web/sheetui`, `web/finder` e `web/master`, cada um contando
 // a mesma história com um exemplo diferente. Ela nunca foi VARRIDA, e o
-// resultado é o do `CLAUDE.md`: convenção escrita e não varrida vale exatamente
+// resultado é o de "Como uma convenção passa a valer", no `CLAUDE.md`: convenção escrita e não varrida vale exatamente
 // nos arquivos que alguém apontou. O décimo quarto sítio — o `buscaCriatura` do
 // construtor de encontros — tinha o defeito.
 //

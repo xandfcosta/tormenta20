@@ -144,7 +144,7 @@ func fingerFollowsWithPreview(v BoardView, p boardToken) string {
 // prévia que sobrevivesse ao soltar ficaria por cima da seta de verdade, com o
 // mesmo formato e outra medida — dois caminhos na tela e nenhum jeito de saber
 // qual é o que vale. É a mesma regra do nó compartilhado que o diálogo de senha
-// ensinou (ver o CLAUDE.md deste pacote).
+// ensinou (ver "Remendo em nó COMPARTILHADO", em `engine-go/docs/datastar.md`).
 //
 // O `$preview_x` volta para um valor IMPOSSÍVEL e não para zero: zero é uma casa
 // legítima do plano, e o próximo arrasto que começasse nela não pediria prévia

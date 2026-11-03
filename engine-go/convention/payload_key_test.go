@@ -97,7 +97,7 @@ func balancedObject(text string, i int) (string, bool) {
 // # Por que o guarda cobra a grafia exata (ALE-313)
 //
 // Porque essa tolerância é a mesma que já produziu defeito nesta casa. O
-// `CLAUDE.md` registra o camelCase do construtor de encontros: ele *funcionava
+// `engine-go/docs/datastar.md` registra o camelCase do construtor de encontros: ele *funcionava
 // por acidente, porque o encoding/json casa campo sem diferenciar caixa quando
 // não há correspondência exata, e a chave ligada vinha por último* — invertida a
 // ordem das chaves, o mesmo código lê `""` e a busca deixa de filtrar, sem erro

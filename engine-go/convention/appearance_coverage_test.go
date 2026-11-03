@@ -18,7 +18,7 @@ import (
 // que ela morava lá ENUMERADA: dezoito endereços escritos um a um, catorze
 // cópias do mesmo caso, e nada cobrando a cena que nascesse amanhã.
 //
-// É o regime que o `CLAUDE.md` chama de remendo na ALE-252 ("cada cena nova
+// É o regime que o `docs/testing.md` chama de remendo na ALE-252 ("cada cena nova
 // continuava precisando da própria linha"), e o molde do conserto é o da
 // ALE-295: o guarda não pergunta "esta cena está na lista?", ele FORÇA a
 // varredura.

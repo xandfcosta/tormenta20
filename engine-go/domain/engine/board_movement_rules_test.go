@@ -440,7 +440,7 @@ func TestTheTwoReachBandsDoNotOverlap(t *testing.T) {
 		}
 	}
 	// OS NÚMEROS SÃO ESCRITOS À MÃO: derivá-los de uma segunda chamada à
-	// implementação é o "esperado calculado" que o CLAUDE.md proíbe — um erro na
+	// implementação é o "esperado calculado" que o docs/testing.md proíbe — um erro na
 	// conta sairia dos DOIS lados e o guarda ficaria verde.
 	//
 	// A conta vem da REGRA. Com a diagonal custando o dobro (T20 p238), um passo
