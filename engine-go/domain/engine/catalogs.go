@@ -41,10 +41,13 @@ type CatalogItem struct {
 func (c *Catalogs) Item(id string) *CatalogItem { return c.itemsByID[id] }
 
 type WeaponStats struct {
-	Purpose string   `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
-	Hand    string   `json:"hand"`    // 'light' | 'one' | 'two' (finesse gating — ALE-31)
-	Traits  []string `json:"traits"`
-	Damage  string   `json:"damage"` // dice, e.g. "1d8" (weapon-card display)
+	Purpose string `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
+	Hand    string `json:"hand"`    // 'light' | 'one' | 'two' (finesse gating — ALE-31)
+	// Range é o alcance da Tabela 3-3, vazio na arma sem alcance. Numa arma corpo a
+	// corpo é ele que abre o segundo uso: ver `thrownUseOf`.
+	Range  string   `json:"range"`
+	Traits []string `json:"traits"`
+	Damage string   `json:"damage"` // dice, e.g. "1d8" (weapon-card display)
 	// Type é o tipo do dano da ARMA — "corte", "perfuracao", "impacto". Ele
 	// chegou com a RD por tipo (ALE-410): sem ele, uma redução de corte não
 	// alcança os dados da espada, que são justamente o corte.

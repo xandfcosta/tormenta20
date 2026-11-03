@@ -35,8 +35,8 @@ func TestTheDefensiveManeuverBonusNeverReachesTheAttack(t *testing.T) {
 
 	ataqueDe := func(ch Character) int {
 		cards := wieldedCards(world.ComputeWeaponCards(ch, nil))
-		if len(cards) != 1 {
-			t.Fatalf("esperava uma carta de arma e vieram %d — sem ela o caso não "+
+		if len(cards) != 2 {
+			t.Fatalf("esperava os dois usos da adaga e vieram %d cartas — sem elas o caso não "+
 				"mede o vazamento que existe para pegar", len(cards))
 		}
 		return cards[0].Attack

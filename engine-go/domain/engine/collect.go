@@ -278,7 +278,6 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 	if catalog == nil || catalog.Weapon == nil {
 		return []Modifier{}
 	}
-	expertise := attackExpertiseFor(catalog.Weapon.Purpose)
 	out := []Modifier{}
 	for _, m := range ownMods {
 		if m.Target.K != "attack" || m.Target.Scope != "this" {
@@ -292,13 +291,15 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 		if note == "" {
 			note = "bônus desta arma"
 		}
-		out = append(out, Modifier{
-			Target:    ModifierTarget{K: "expertise", Name: expertise},
-			Amount:    m.Amount,
-			BonusType: m.BonusType,
-			Condition: condition,
-			Note:      note,
-		})
+		for _, expertise := range attackExpertisesFor(catalog.Weapon) {
+			out = append(out, Modifier{
+				Target:    ModifierTarget{K: "expertise", Name: expertise},
+				Amount:    m.Amount,
+				BonusType: m.BonusType,
+				Condition: condition,
+				Note:      note,
+			})
+		}
 	}
 	return out
 }
@@ -315,13 +316,17 @@ func equilibradaHomebrewMods(catalog *CatalogItem, improvementIDs []string) []Mo
 	if !contains(improvementIDs, "melhoria-equilibrada") {
 		return []Modifier{}
 	}
-	return []Modifier{{
-		Target:    ModifierTarget{K: "expertise", Name: attackExpertiseFor(catalog.Weapon.Purpose)},
-		Amount:    2,
-		BonusType: "untyped",
-		Condition: &ModifierCondition{C: "context", Note: "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"},
-		Note:      "anula desbalanceada",
-	}}
+	out := []Modifier{}
+	for _, expertise := range attackExpertisesFor(catalog.Weapon) {
+		out = append(out, Modifier{
+			Target:    ModifierTarget{K: "expertise", Name: expertise},
+			Amount:    2,
+			BonusType: "untyped",
+			Condition: &ModifierCondition{C: "context", Note: "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"},
+			Note:      "anula desbalanceada",
+		})
+	}
+	return out
 }
 
 // vestedEsotericHomebrewMods: a HOMEBREW_VESTED_OK esotérico
@@ -384,35 +389,41 @@ func nonProficiencyPenalties(catalog *CatalogItem, prof map[string]bool) []Modif
 }
 
 func weaponNonProficiency(catalog *CatalogItem) []Modifier {
-	purpose := ""
+	out := []Modifier{{
+		Target:    ModifierTarget{K: "attack", Scope: "this"},
+		Amount:    -5,
+		BonusType: "untyped",
+		Condition: &ModifierCondition{C: "wielded"},
+		Note:      "sem proficiência",
+	}}
+	expertises := []string{"Pontaria"}
 	if catalog.Weapon != nil {
-		purpose = catalog.Weapon.Purpose
+		expertises = attackExpertisesFor(catalog.Weapon)
 	}
-	return []Modifier{
-		{
-			Target:    ModifierTarget{K: "attack", Scope: "this"},
-			Amount:    -5,
-			BonusType: "untyped",
-			Condition: &ModifierCondition{C: "wielded"},
-			Note:      "sem proficiência",
-		},
-		{
-			Target:    ModifierTarget{K: "expertise", Name: attackExpertiseFor(purpose)},
+	for _, expertise := range expertises {
+		out = append(out, Modifier{
+			Target:    ModifierTarget{K: "expertise", Name: expertise},
 			Amount:    -5,
 			BonusType: "untyped",
 			Condition: &ModifierCondition{C: "wielded"},
 			Note:      "sem proficiência: -5 em testes de ataque (p142)",
-		},
+		})
 	}
+	return out
 }
 
-// attackExpertiseFor maps a weapon purpose to its attack perícia (T20 resolves
-// attacks as expertise tests): melee → Luta, everything else → Pontaria.
-func attackExpertiseFor(purpose string) string {
-	if purpose == "melee" {
-		return "Luta"
+// attackExpertisesFor são as perícias com que esta arma ataca: o que é da ARMA, como a
+// melhoria e a falta de proficiência, vale nos dois usos da que também se arremessa.
+//
+//	attackExpertisesFor(lanca) // ["Luta", "Pontaria"]
+func attackExpertisesFor(w *WeaponStats) []string {
+	if w.Purpose != "melee" {
+		return []string{"Pontaria"}
 	}
-	return "Pontaria"
+	if thrownUseOf(w) != nil {
+		return []string{"Luta", "Pontaria"}
+	}
+	return []string{"Luta"}
 }
 
 // effectSourceName ports the item branch of entities/character/effect-source.ts:
