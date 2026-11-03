@@ -39,7 +39,7 @@ func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, er
 	}
 	if req.Weapon < 0 || req.Weapon >= len(cards) {
 		return engine.WeaponCard{}, boost, fmt.Errorf(
-			"%s empunha %d arma(s) e o pedido veio na %d: %w",
+			"%s tem %d carta(s) de ataque e o pedido veio na %d: %w",
 			striker.Label, len(cards), req.Weapon, app.ErrRefused)
 	}
 	return cards[req.Weapon], boost, nil
