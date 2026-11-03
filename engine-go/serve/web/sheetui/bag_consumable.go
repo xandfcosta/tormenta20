@@ -2,7 +2,7 @@ package sheetui
 
 import "t20engine/domain/book"
 
-// consumableUse descreve a dose, ou nil quando o item não se usa.
+// consumableUse descreve o consumo, ou nil quando o item não se usa.
 func consumableUse(catalog book.Item) *consumeChoice {
 	// O item de dose só se usa carregando (decisão do dono): ver `itemSheetDoses`.
 	if catalog.Consumable == nil || catalog.Consumable.Dose != nil {

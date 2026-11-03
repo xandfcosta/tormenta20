@@ -111,7 +111,7 @@ func TestABlobWithoutATurnInventsNoScene(t *testing.T) {
 //
 // Refrescar só os tetos. O atual era declarado intocável, e o resultado é que a
 // fila só andava quando o gesto passava POR ELA: sete sítios mudam o poço de um
-// personagem e cinco são da FICHA — os botões ±PV, a dose, a conjuração, a
+// personagem e cinco são da FICHA — os botões ±PV, a poção, a conjuração, a
 // postura e o descanso pedido pelo jogador. Nenhum deles chegava à linha, e o
 // mestre escolhia alvo por um número de antes (ALE-358).
 //

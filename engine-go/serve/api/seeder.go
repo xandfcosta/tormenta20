@@ -37,7 +37,7 @@ type Seeder struct {
 	// segundo chamador que a porta da forja nomeava antes de haver camada.
 	births character.Births
 	// plays é o mesmo caso de uso que a Mochila da ficha usa para beber uma
-	// dose — o segundo chamador de novo, e pela mesma razão do `births`.
+	// poção — o segundo chamador de novo, e pela mesma razão do `births`.
 	plays   character.Plays
 	sheet   sheetRules
 	queries *sqlcgen.Queries
@@ -154,7 +154,7 @@ func (sd Seeder) SaveItemOverlays(ctx context.Context, itemID int64, improvement
 	return sd.plays.SaveItemOverlays(ctx, itemID, improvements, material)
 }
 
-// ConsumeItem gasta uma dose, para o elenco ter efeito de cena ligado.
+// ConsumeItem gasta uma unidade do item, para o elenco ter efeito de cena ligado.
 func (sd Seeder) ConsumeItem(ctx context.Context, id, itemID int64) error {
 	row, err := sd.queries.GetCharacter(ctx, id)
 	if err != nil {

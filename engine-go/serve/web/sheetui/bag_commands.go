@@ -122,7 +122,7 @@ func (s Scene) itemGesture(
 	return s.plays.FollowMaximumChange(r.Context(), dto, projected)
 }
 
-// useItem gasta uma dose do consumível.
+// useItem gasta uma unidade do consumível.
 //
 // A regra inteira — a rolagem presa no máximo, a linha de efeito de cena ou dia,
 // a porção diária, a baixa do item — mora no `Plays.Consume`. Os números rolados

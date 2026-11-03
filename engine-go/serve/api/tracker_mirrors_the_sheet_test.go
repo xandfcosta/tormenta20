@@ -17,7 +17,7 @@ import (
 //
 // Sete gestos mudam o poço de um personagem e só DOIS contavam à fila: o dano
 // pela própria fila e o mestre descansando o grupo. Os outros cinco são os da
-// FICHA — os botões ±PV/±PM, beber uma dose, conjurar, entrar numa postura e o
+// FICHA — os botões ±PV/±PM, beber uma poção, conjurar, entrar numa postura e o
 // descanso de dia pedido pelo jogador.
 //
 // # O sintoma é SILENCIOSO, e é da pior família

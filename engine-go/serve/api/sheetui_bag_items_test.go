@@ -166,8 +166,8 @@ func TestEditingAndRemovingAnItem(t *testing.T) {
 	}
 }
 
-// USAR gasta a dose e aplica o que a MESA rolou, preso no máximo.
-func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
+// USAR gasta o item e aplica o que a MESA rolou, preso no máximo.
+func TestUsingSpendsTheItemAndAppliesTheTableRoll(t *testing.T) {
 	f := newSceneFixture(t)
 	id := seedCharacterAtLevel(t, f.s, f.player, "Ferido", "Guerreiro", 3, 20, 0)
 	seedMember(t, f.s, f.campaignID, id)
@@ -179,13 +179,13 @@ func TestUsingSpendsTheDoseAndAppliesTheTableRoll(t *testing.T) {
 	if pool := poolsOf(t, f.s, id); pool.HpCurrent != 17 {
 		t.Errorf("o PV ficou %d, quer 17 (10 + os 7 que a mesa rolou)", pool.HpCurrent)
 	}
-	// A DOSE FOI GASTA: era uma só, então a linha sai da ficha.
+	// O ITEM FOI GASTO: era um só, então a linha sai da ficha.
 	items, err := f.s.sceneCore().Queries().ListItemsByCharacter(context.Background(), id)
 	if err != nil {
 		t.Fatalf("listar: %v", err)
 	}
 	if len(items) != 0 {
-		t.Error("a dose foi usada e o item continua na mochila")
+		t.Error("o item foi usado e continua na mochila")
 	}
 }
 

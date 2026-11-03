@@ -20,7 +20,7 @@ import (
 // material — o poço derivado — e guarda para si a única escrita.
 //
 // A divisão: o funil deriva e grava, a REGRA do gesto decide o atual novo. Uma
-// dose cura até o teto, uma magia cobra PM, uma noite de descanso soma o que o
+// poção cura até o teto, uma magia cobra PM, uma noite de descanso soma o que o
 // livro manda — e nenhuma delas precisa saber que o que o banco guarda é DANO.
 
 // Pools são os poços de um personagem num instante: o máximo derivado do
@@ -52,7 +52,7 @@ type PoolRule func(Pools) (Pools, error)
 // ApplyToPools deriva os poços, deixa a regra do gesto decidir o atual, e grava.
 //
 // Devolve o poço como ficou, porque quase todo chamador precisa espelhá-lo: a
-// cena redesenha a barra, o rastreador da mesa copia o número, a dose responde
+// cena redesenha a barra, o rastreador da mesa copia o número, a poção responde
 // quanto curou.
 //
 // Ela carrega a ficha inteira porque o máximo depende do agregado — classes,
@@ -117,7 +117,7 @@ func ApplyToLoadedPools(
 // acorda. QUAIS é decisão do `engine.DyingConditionChange`; aqui só se grava.
 //
 // Ela mora NO FUNIL porque ele é o único caminho de escrita de vital (o
-// `TestEveryVitalWriteGoesThroughTheFunnel` o prende): pancada do mestre, dose,
+// `TestEveryVitalWriteGoesThroughTheFunnel` o prende): pancada do mestre, poção,
 // descanso e conjuração passam todos aqui, e nenhum escapa das condições.
 func followTheHitPoints(
 	ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, before, after, nonLethal int64,

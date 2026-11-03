@@ -12,7 +12,7 @@ import (
 
 // O que a POÇÃO faz.
 //
-// A decisão que mora no `app/character/dose.go`: catalisador é DECREMENTO INSTANTÂNEO
+// A decisão que mora no `app/character/consume.go`: catalisador é DECREMENTO INSTANTÂNEO
 // até o motor de magias chegar. O que se prova aqui é o que a mesa observa — a
 // poção some do inventário, o PV sobe e para no máximo, e o inventário é de quem
 // o abriu. A conta do dado (2d4 → média 5) pertence ao `rollAverage`.
@@ -31,14 +31,14 @@ func seedConsumable(t *testing.T, s *Server, charID int64, catalogID, name strin
 
 // consumeItem chama a REGRA direto, e não a rota.
 //
-// O que estes casos prendem nunca foi o transporte: é a baixa de UMA dose, a
+// O que estes casos prendem nunca foi o transporte: é a baixa de UMA unidade, a
 // cura presa no máximo, o efeito de cena e a porção diária. **Teste de regra
 // vive junto da regra**, e o caminho é o MESMO que a Mochila da ficha usa — o
 // `character.Plays.Consume`, chamado direto pelos dois.
 //
 // Sem `httptest.NewRequest`: o caso de uso recebe CONTEXTO, e montar um pedido
 // falso só para entregá-lo era o sintoma que a ALE-347 veio tirar.
-func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (character.Dose, error) {
+func consumeItem(t *testing.T, s *Server, charID, itemID int64, pv, pm *int64) (character.ConsumedItem, error) {
 	t.Helper()
 	row, err := s.queries.GetCharacter(context.Background(), charID)
 	if err != nil {
@@ -67,16 +67,16 @@ func TestConsumeDecrementsExactlyOneAndHeals(t *testing.T) {
 	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 8, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 3)
 
-	dose, errDose := consumeItem(t, s, char, item, nil, nil)
+	used, errUse := consumeItem(t, s, char, item, nil, nil)
 
-	if errDose != nil {
-		t.Fatalf("a dose foi recusada: %v", errDose)
+	if errUse != nil {
+		t.Fatalf("o consumo foi recusado: %v", errUse)
 	}
-	if dose.Quantity != 2 || dose.Removed {
-		t.Fatalf("o resultado diz quantidade %d removido=%v, esperado 2 e falso", dose.Quantity, dose.Removed)
+	if used.Quantity != 2 || used.Removed {
+		t.Fatalf("o resultado diz quantidade %d removido=%v, esperado 2 e falso", used.Quantity, used.Removed)
 	}
-	if dose.HpCurrent != 17 {
-		t.Fatalf("PV = %d, esperado 17 (12 + os 5 de média de 2d4)", dose.HpCurrent)
+	if used.HpCurrent != 17 {
+		t.Fatalf("PV = %d, esperado 17 (12 + os 5 de média de 2d4)", used.HpCurrent)
 	}
 	// O que o resultado diz e o que o banco guarda têm de ser a mesma coisa: a
 	// ficha recarrega do banco, e um resultado otimista que mentisse só
@@ -92,16 +92,16 @@ func TestConsumeLastUnitRemovesTheItem(t *testing.T) {
 	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 8, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
-	dose, errDose := consumeItem(t, s, char, item, nil, nil)
+	used, errUse := consumeItem(t, s, char, item, nil, nil)
 
-	if errDose != nil {
-		t.Fatalf("a dose foi recusada: %v", errDose)
+	if errUse != nil {
+		t.Fatalf("o consumo foi recusado: %v", errUse)
 	}
-	if !dose.Removed {
-		t.Fatalf("a última dose devia sair da mochila, veio %+v", dose)
+	if !used.Removed {
+		t.Fatalf("a última unidade devia sair da mochila, veio %+v", used)
 	}
 	if _, alive := itemQuantity(t, s, item); alive {
-		t.Fatal("a última dose continua no banco — a mochila mostraria uma poção que não existe")
+		t.Fatal("a última unidade continua no banco — a mochila mostraria uma poção que não existe")
 	}
 }
 
@@ -111,13 +111,13 @@ func TestConsumeClampsGainAtMaximum(t *testing.T) {
 	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 2, 0)
 	item := seedConsumable(t, s, char, "balsamo-restaurador", "Bálsamo restaurador", 1)
 
-	dose, errDose := consumeItem(t, s, char, item, nil, nil)
-	if errDose != nil {
-		t.Fatalf("a dose foi recusada: %v", errDose)
+	used, errUse := consumeItem(t, s, char, item, nil, nil)
+	if errUse != nil {
+		t.Fatalf("o consumo foi recusado: %v", errUse)
 	}
 
-	if dose.HpCurrent != 20 {
-		t.Fatalf("PV = %d, esperado 20: 18 + 5 não pode passar do máximo", dose.HpCurrent)
+	if used.HpCurrent != 20 {
+		t.Fatalf("PV = %d, esperado 20: 18 + 5 não pode passar do máximo", used.HpCurrent)
 	}
 }
 
@@ -129,13 +129,13 @@ func TestConsumeUsesRolledValueWhenTheTableRolls(t *testing.T) {
 
 	// A média é o padrão de quem não quer rolar; quem rola manda o resultado.
 	rolledHP := int64(8)
-	dose, errDose := consumeItem(t, s, char, item, &rolledHP, nil)
-	if errDose != nil {
-		t.Fatalf("a dose foi recusada: %v", errDose)
+	used, errUse := consumeItem(t, s, char, item, &rolledHP, nil)
+	if errUse != nil {
+		t.Fatalf("o consumo foi recusado: %v", errUse)
 	}
 
-	if dose.HpCurrent != 18 {
-		t.Fatalf("PV = %d, esperado 18 (10 + o 8 rolado na mesa)", dose.HpCurrent)
+	if used.HpCurrent != 18 {
+		t.Fatalf("PV = %d, esperado 18 (10 + o 8 rolado na mesa)", used.HpCurrent)
 	}
 }
 
@@ -145,16 +145,16 @@ func TestConsumeCreatesTheSceneEffect(t *testing.T) {
 	char := seedCharacterAtLevel(t, s, owner, "Bardo", "Bardo", 1, 2, 0)
 	item := seedConsumable(t, s, char, "cosmetico", "Cosmético", 1)
 
-	dose, errDose := consumeItem(t, s, char, item, nil, nil)
-	if errDose != nil {
-		t.Fatalf("a dose foi recusada: %v", errDose)
+	used, errUse := consumeItem(t, s, char, item, nil, nil)
+	if errUse != nil {
+		t.Fatalf("o consumo foi recusado: %v", errUse)
 	}
 
-	if dose.Effect == nil {
+	if used.Effect == nil {
 		t.Fatal("o cosmético dura a cena inteira e não devolveu efeito nenhum")
 	}
-	if dose.Effect.Scope != "scene" || dose.Effect.CatalogID != "cosmetico" {
-		t.Fatalf("efeito = %+v, esperado escopo de cena para o cosmético", dose.Effect)
+	if used.Effect.Scope != "scene" || used.Effect.CatalogID != "cosmetico" {
+		t.Fatalf("efeito = %+v, esperado escopo de cena para o cosmético", used.Effect)
 	}
 }
 
@@ -169,10 +169,10 @@ func TestConsumeRefusesWhatIsNotConsumable(t *testing.T) {
 	char := seedCharacterAtLevel(t, s, owner, "Guerreiro", "Guerreiro", 1, 8, 0)
 	item := seedConsumable(t, s, char, "espada-longa", "Espada longa", 1)
 
-	dose, errDose := consumeItem(t, s, char, item, nil, nil)
+	used, errUse := consumeItem(t, s, char, item, nil, nil)
 
-	if errDose == nil {
-		t.Fatalf("status = — e não foi recusado (dose %+v)", dose)
+	if errUse == nil {
+		t.Fatalf("status = — e não foi recusado (consumo %+v)", used)
 	}
 	if _, alive := itemQuantity(t, s, item); !alive {
 		t.Fatal("a espada sumiu da mochila ao ser recusada")
@@ -218,9 +218,9 @@ func TestConsumeAllowsThePortionAgainAfterTheDayEnds(t *testing.T) {
 		t.Fatalf("encerrar o dia falhou: %d (%v)", status, err)
 	}
 
-	_, errDose := consumeItem(t, s, char, item, nil, nil)
+	_, errUse := consumeItem(t, s, char, item, nil, nil)
 
-	if errDose != nil {
-		t.Fatalf("a dose foi recusada: %v", errDose)
+	if errUse != nil {
+		t.Fatalf("o consumo foi recusado: %v", errUse)
 	}
 }

@@ -17,14 +17,14 @@ import (
 )
 
 // ErrDailyPortion é a recusa da porção diária. Ela é RECONHECÍVEL em vez de
-// virar texto porque a dose tem dois caminhos para ela — o efeito já na ficha e
+// virar texto porque o consumo tem dois caminhos para ela — o efeito já na ficha e
 // a colisão do UNIQUE no meio da transação — e quem chama precisa saber que os
 // dois são a mesma recusa.
 var ErrDailyPortion = errors.New("apenas uma porção por dia")
 
-// Dose é o que uma dose consumida MUDOU: o item, o efeito que ela deixou e os
+// ConsumedItem é o que um consumo MUDOU: o item, o efeito que ela deixou e os
 // poços depois dela.
-type Dose struct {
+type ConsumedItem struct {
 	Name      string
 	ItemID    int64
 	Quantity  int64
@@ -34,7 +34,7 @@ type Dose struct {
 	MpCurrent int64
 }
 
-// Consume é a dose INTEIRA: a rolagem imediata presa no máximo, a linha de
+// Consume é o consumo INTEIRO: a rolagem imediata presa no máximo, a linha de
 // efeito de cena ou dia, e a baixa do item — tudo numa transação.
 //
 // Ela tem dois chamadores, e é por isso que mora aqui: a Mochila da ficha e o
@@ -42,38 +42,38 @@ type Dose struct {
 // esta poção?". É a mesma razão do `Cast`.
 //
 // A TRANSAÇÃO é o caso inteiro desta fatia: três escritas — o efeito, o item e
-// os poços — que ou acontecem juntas ou não acontecem. Meia dose gravada é uma
+// os poços — que ou acontecem juntas ou não acontecem. Consumo gravado pela metade é uma
 // poção que sumiu do inventário sem curar ninguém.
 func (p Plays) Consume(
 	ctx context.Context, row sqlcgen.Character, itemID int64, hpRolled, mpRolled *int64,
-) (Dose, error) {
+) (ConsumedItem, error) {
 	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
 	if err != nil {
-		return Dose{}, err
+		return ConsumedItem{}, err
 	}
 	item := findItemDTO(dto.Items, itemID)
 	if item == nil {
-		return Dose{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
+		return ConsumedItem{}, fmt.Errorf("o item %d não está nesta ficha", itemID)
 	}
 	if item.CatalogID == nil {
-		return Dose{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
+		return ConsumedItem{}, fmt.Errorf("%q é um item custom e não tem o que usar", item.Name)
 	}
 	cat, known := catalog.LookupItem(*item.CatalogID)
 	if !known || cat.Consumable == nil {
-		return Dose{}, fmt.Errorf("%q não é um consumível", item.Name)
+		return ConsumedItem{}, fmt.Errorf("%q não é um consumível", item.Name)
 	}
 	if item.Quantity < 1 {
-		return Dose{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
+		return ConsumedItem{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
 	}
 	if sheet.DoseEffectOf(cat.ID) != nil {
-		return Dose{}, fmt.Errorf("%s só se usa carregando uma arma com %s; para gastar de outro jeito, remova da mochila",
+		return ConsumedItem{}, fmt.Errorf("%s só se usa carregando uma arma com %s; para gastar de outro jeito, remova da mochila",
 			cat.Name, sheet.AlchemicalInjectionName)
 	}
 	spec := cat.Consumable
 	if spec.OncePerDay {
 		for _, e := range dto.ActiveEffects {
 			if e.CatalogID == cat.ID {
-				return Dose{Name: cat.Name}, ErrDailyPortion
+				return ConsumedItem{Name: cat.Name}, ErrDailyPortion
 			}
 		}
 	}
@@ -83,7 +83,7 @@ func (p Plays) Consume(
 
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
-		return Dose{}, fmt.Errorf("abrir a transação da dose de %q: %w", cat.Name, err)
+		return ConsumedItem{}, fmt.Errorf("abrir a transação do consumo de %q: %w", cat.Name, err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := p.queries.WithTx(tx)
@@ -96,10 +96,10 @@ func (p Plays) Consume(
 			Modifiers: effectModifiers(spec.Modifiers), Createdat: now,
 		})
 		if db.IsUniqueViolation(err) {
-			return Dose{Name: cat.Name}, ErrDailyPortion
+			return ConsumedItem{Name: cat.Name}, ErrDailyPortion
 		}
 		if err != nil {
-			return Dose{}, fmt.Errorf("gravar o efeito de %q: %w", cat.Name, err)
+			return ConsumedItem{}, fmt.Errorf("gravar o efeito de %q: %w", cat.Name, err)
 		}
 		effect = &sheet.EffectDTO{
 			ID: eff.ID, CatalogID: eff.Catalogid, Scope: eff.Scope,
@@ -111,16 +111,16 @@ func (p Plays) Consume(
 	newQty := item.Quantity - 1
 	if item.Quantity > 1 {
 		if err := q.SetItemQuantity(ctx, sqlcgen.SetItemQuantityParams{Quantity: newQty, ID: itemID}); err != nil {
-			return Dose{}, fmt.Errorf("dar baixa numa dose de %q: %w", cat.Name, err)
+			return ConsumedItem{}, fmt.Errorf("dar baixa em uma unidade de %q: %w", cat.Name, err)
 		}
 	} else {
 		if err := q.DeleteItem(ctx, itemID); err != nil {
-			return Dose{}, fmt.Errorf("tirar %q da mochila: %w", cat.Name, err)
+			return ConsumedItem{}, fmt.Errorf("tirar %q da mochila: %w", cat.Name, err)
 		}
 		removed, newQty = true, 0
 	}
 
-	// O poço tem de sair do funil mesmo quando a dose não cura nada: ele é o que
+	// O poço tem de sair do funil mesmo quando o item não cura nada: ele é o que
 	// a cena redesenha, e devolver a coluna crua aqui traria o número velho.
 	pools, err := sheet.ApplyToPools(ctx, q, p.catalogs, row,
 		func(poolMap sheet.Pools) (sheet.Pools, error) {
@@ -133,13 +133,13 @@ func (p Plays) Consume(
 			return poolMap, nil
 		})
 	if err != nil {
-		return Dose{}, fmt.Errorf("gravar os poços da ficha %d: %w", row.ID, err)
+		return ConsumedItem{}, fmt.Errorf("gravar os poços da ficha %d: %w", row.ID, err)
 	}
 	hpCurrent, mpCurrent := pools.HpCurrent, pools.MpCurrent
 	if err := tx.Commit(); err != nil {
-		return Dose{}, fmt.Errorf("fechar a transação da dose de %q: %w", cat.Name, err)
+		return ConsumedItem{}, fmt.Errorf("fechar a transação do consumo de %q: %w", cat.Name, err)
 	}
-	return Dose{
+	return ConsumedItem{
 		Name: cat.Name, ItemID: itemID, Quantity: newQty, Removed: removed,
 		Effect: effect, HpCurrent: hpCurrent, MpCurrent: mpCurrent,
 	}, nil
@@ -171,7 +171,7 @@ func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 	return rollAverage(g.Dice, g.Bonus), true
 }
 
-// wantsEffectRow decide se a dose deixa LINHA de efeito. A linha é duas coisas
+// wantsEffectRow decide se o consumo deixa LINHA de efeito. A linha é duas coisas
 // ao mesmo tempo: o que a ficha mostra em "Efeitos ativos" e o MARCADOR de que
 // a porção do dia já foi consumida — é ela que o `OncePerDay` lá em cima
 // procura, e é ela que o UNIQUE (characterId, catalogId, scope) protege.

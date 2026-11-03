@@ -7,7 +7,7 @@ import (
 
 // Os guardas dos DIÁLOGOS da Mochila (ALE-272, fatia 7).
 //
-// A ficha de item, o catálogo, o item custom, a dose do consumível e — a parte
+// A ficha de item, o catálogo, o item custom, o uso do consumível e — a parte
 // que era só de tela até aqui — a compatibilidade de melhoria e material.
 
 // itemScreenSheet acha um item pelo nome, para o teste não guardar ids.
