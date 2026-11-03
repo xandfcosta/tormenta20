@@ -65,6 +65,10 @@ func (p Plays) Consume(
 	if item.Quantity < 1 {
 		return Dose{}, fmt.Errorf("não sobrou nenhum uso de %q", item.Name)
 	}
+	if sheet.DoseEffectOf(cat.ID) != nil {
+		return Dose{}, fmt.Errorf("%s só se usa carregando uma arma com %s; para gastar de outro jeito, remova da mochila",
+			cat.Name, sheet.AlchemicalInjectionName)
+	}
 	spec := cat.Consumable
 	if spec.OncePerDay {
 		for _, e := range dto.ActiveEffects {

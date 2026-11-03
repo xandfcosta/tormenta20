@@ -31,6 +31,7 @@ func (a attackProposal) forPlayer(pa live.PendingAttack) *attackProposal {
 	}
 	out.Tally = rollNotation(pa.Roll, pa.Total) + " = " + strconv.Itoa(pa.Total)
 	out.Boost, out.Guard, out.Rerolled = a.Boost, a.Guard, a.Rerolled
+	out.Dose = a.Dose
 	out.Said, out.ToRoll, out.Hand, out.HandBonus = a.Said, a.ToRoll, a.Hand, a.HandBonus
 	out.DamageLine, out.DamageTotal = a.DamageLine, a.DamageTotal
 	return &out

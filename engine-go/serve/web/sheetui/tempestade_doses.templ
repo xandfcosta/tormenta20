@@ -1,0 +1,51 @@
+package sheetui
+
+import "t20engine/serve/web/ds"
+
+// itemSheetDosesDs é a Injeção alquímica no diálogo do item: o que a arma guarda, ou
+// em que arma o item cabe.
+templ itemSheetDosesDs(v View, s itemSheet) {
+	if s.Doses.Loads {
+		<div class="ds-field">
+			<span class="ds-field-label">Carregar · ação completa</span>
+			if s.Doses.CanLoad() {
+				<p class="ds-help">O item sai da mochila e ocupa um espaço da Injeção alquímica. O golpe que acertar libera a dose.</p>
+				<div class="ds-options">
+					for _, target := range s.Doses.LoadInto {
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": itemSheetID(s.Command), "command": "close", "data-on:click": sheetPost(v, "/itens/"+s.Command+"/carrega/"+target.Command)}) {
+							{ target.Label }
+						}
+					}
+				</div>
+			} else {
+				<p class="ds-help">Este item carrega numa arma com Injeção alquímica e espaço livre, e não há nenhuma na ficha. Para gastá-lo de outro jeito, remova da mochila.</p>
+			}
+		</div>
+	} else {
+		@ds.BareList("Doses da Injeção alquímica", s.Doses.Count) {
+			if len(s.Doses.Held) == 0 {
+				@ds.Row("Nenhuma dose carregada", "use o item na mochila", "", "")
+			}
+			for _, dose := range s.Doses.Held {
+				@ds.Row(dose.Name, dose.Effect, "", "")
+			}
+		}
+	}
+}
+
+// doseStripDs é a pergunta "qual dose sai?", embaixo da linha do ataque, como o impulso.
+templ doseStripDs(weapon int, choices []doseChoice) {
+	<div class="ds-boost" role="group" aria-label="Dose do ataque">
+		<span class="ds-field-label">Dose</span>
+		for i, dose := range choices {
+			<button
+				type="button"
+				class="ds-option"
+				data-attr:aria-pressed={ ariaBoolExpr(doseChosenExpr(weapon, dose, i == 0)) }
+				data-on:click={ doseChooseCommand(weapon, dose) }
+			>
+				{ dose.Name }
+			</button>
+		}
+	</div>
+}

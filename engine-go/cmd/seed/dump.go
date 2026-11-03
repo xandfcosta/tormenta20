@@ -47,6 +47,7 @@ var dumpTables = []string{
 	// mostrar.
 	"character_item_enchants",
 	"character_oversized_weapons",
+	"character_item_doses",
 	"character_spells",
 	"character_level_choices",
 	"campaign_members",

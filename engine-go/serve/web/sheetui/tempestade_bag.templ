@@ -62,7 +62,7 @@ templ tempestadeBag(v View) {
 					}
 					for _, tile := range v.Bag.Stowed {
 						@ds.ActionRow(tile.Name, stowedMeta(tile), itemSheetID(tile.Command)) {
-							if s := itemSheetByCommand(v, tile.Command); s != nil && s.Consumable != nil {
+							if s := itemSheetByCommand(v, tile.Command); s != nil && (s.Consumable != nil || s.Doses.CanLoad()) {
 								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Usar " + tile.Name, "commandfor": itemSheetID(tile.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": "$item_roll_hp = 0; $item_roll_mp = 0"}) {
 									Usar
 								}

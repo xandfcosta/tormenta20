@@ -74,6 +74,9 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"oversized weapons", `INSERT INTO character_oversized_weapons (itemId)
 			SELECT pair.copiedId FROM ` + copiedItemPairs + ` pair
 			JOIN character_oversized_weapons mark ON mark.itemId = pair.originalId`, []any{destID, sourceID}},
+		{"weapon doses", `INSERT INTO character_item_doses (itemId, catalogId)
+			SELECT pair.copiedId, dose.catalogId FROM ` + copiedItemPairs + ` pair
+			JOIN character_item_doses dose ON dose.itemId = pair.originalId ORDER BY dose.id`, []any{destID, sourceID}},
 		{"spells", `INSERT INTO character_spells (characterId, catalogSpellId, prepared, learnedAt)
 			SELECT ?, catalogSpellId, prepared, ? FROM character_spells WHERE characterId = ?`, []any{destID, now, sourceID}},
 		// O HISTÓRICO POR NÍVEL vem junto: é daqui que saem os poderes da ficha, e a cópia

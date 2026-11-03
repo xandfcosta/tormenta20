@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
@@ -30,7 +31,9 @@ type itemSheet struct {
 	Equip []equipChoice
 	// Consumable existe só para o que se usa, e diz se a mesa precisa rolar.
 	Consumable *consumeChoice
-	Book       *bookInfo
+	// Doses é o que o diálogo diz da Injeção alquímica, nulo no item que não a toca.
+	Doses *itemSheetDoses
+	Book  *bookInfo
 	// Overlays são as melhorias e o material JÁ aplicados, com o que fazem.
 	Overlays []overlayRow
 	// Enchants são os encantos que a arma CARREGA, e a ficha só os LÊ: quem
@@ -98,10 +101,14 @@ type catalogItemRow struct {
 	Page     int
 }
 
-func itemSheetsOf(dto sheet.CharacterDTO, proficiencies map[string]bool) []itemSheet {
+func itemSheetsOf(
+	dto sheet.CharacterDTO, proficiencies map[string]bool, attributes map[string]engine.AttributeBreakdown,
+) []itemSheet {
 	sheets := make([]itemSheet, 0, len(dto.Items))
 	for _, item := range dto.Items {
-		sheets = append(sheets, itemSheetOf(item, proficiencies))
+		entry := itemSheetOf(item, proficiencies)
+		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
+		sheets = append(sheets, entry)
 	}
 	return sheets
 }
@@ -204,41 +211,6 @@ func contemTraco(traits []string, target string) bool {
 		}
 	}
 	return false
-}
-
-// consumableUse descreve a dose, ou nil quando o item não se usa.
-func consumableUse(catalog book.Item) *consumeChoice {
-	if catalog.Consumable == nil {
-		return nil
-	}
-	use := &consumeChoice{Scope: writtenScope(catalog.Consumable.Scope)}
-	if immediate := catalog.Consumable.Instant; immediate != nil && catalog.Consumable.Scope == "instant" {
-		use.HpDice = rollThatAsksANumber(immediate.HP)
-		use.MpDice = rollThatAsksANumber(immediate.MP)
-	}
-	return use
-}
-
-var consumableScopes = map[string]string{
-	"instant": "imediato", "scene": "1 cena", "day": "1 dia",
-}
-
-func writtenScope(scope string) string {
-	if name, found := consumableScopes[scope]; found {
-		return name
-	}
-	return scope
-}
-
-// rollThatAsksANumber é o dado que a MESA rola, ou "" quando o ganho é fixo.
-//
-// Ganho fixo não pergunta nada: perguntar o resultado de um dado que não existe
-// é pedir que a pessoa invente um número.
-func rollThatAsksANumber(gain *book.GainRoll) string {
-	if gain == nil || gain.Dice == "" || gain.Dice == "0" {
-		return ""
-	}
-	return gain.Dice
 }
 
 // thatSaysBook é o bloco de referência da ficha do item.
@@ -372,6 +344,10 @@ func appliedEnchants(item sheet.ItemDTO) []overlayRow {
 // A Equilibrada carrega quatro modificadores de manobra que dividem a mesma
 // nota "+2 em manobras"; juntá-las cruas escrevia a frase quatro vezes.
 func overlaySummary(entry book.Item) string {
+	// A Injeção não muda número nenhum da ficha: o que ela faz mora nas doses.
+	if entry.ID == sheet.AlchemicalInjection {
+		return "guarda " + strconv.Itoa(sheet.MaxDoses) + " doses, e o golpe que acerta libera uma"
+	}
 	notes := []string{}
 	for _, m := range entry.Modifiers {
 		if m.Note != "" {

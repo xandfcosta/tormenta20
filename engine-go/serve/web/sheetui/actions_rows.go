@@ -40,6 +40,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 		rows = append(rows, actionRow{
 			Weapon: i,
 			Boosts: offered,
+			Doses:  weapon.Doses,
 			Name:   "Atacar · " + weapon.Name,
 			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
 			Value:  weapon.Attack,
@@ -120,9 +121,10 @@ func fullRows(combat panelCombat, computed engine.ComputedSheet, reckless bool) 
 // informação. A linha reta, o dobro do deslocamento e o terreno são do mestre.
 func chargeRow(combat panelCombat, reckless bool) actionRow {
 	row := actionRow{
-		Name:   "Investida",
-		Detail: "em linha reta · +2 no ataque, −2 na Defesa até a sua vez · p235",
-		Moves:  []string{"attack"},
+		Name:       "Investida",
+		Detail:     "em linha reta · +2 no ataque, −2 na Defesa até a sua vez · p235",
+		Moves:      []string{"attack"},
+		ClearsDose: true,
 	}
 	weapon := -1
 	for i, w := range combat.Weapons {

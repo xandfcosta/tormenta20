@@ -57,9 +57,11 @@ type seedCharacter struct {
 	// OversizedWeapons são os `catalogId` das armas de categoria maior.
 	OversizedWeapons []string      `json:"oversizedWeapons"`
 	Overlays         []seedOverlay `json:"overlays"`
-	Simple           bool          `json:"simple"`
-	SceneEffect      bool          `json:"sceneEffect"`
-	HpFraction       *float64      `json:"hpFraction"`
+	// Doses são os itens carregados na Injeção alquímica, depois dos `overlays`.
+	Doses       []seedDose `json:"doses"`
+	Simple      bool       `json:"simple"`
+	SceneEffect bool       `json:"sceneEffect"`
+	HpFraction  *float64   `json:"hpFraction"`
 }
 
 type seedSpell struct {
@@ -75,6 +77,12 @@ type seedSpell struct {
 type seedEnchant struct {
 	Item     string   `json:"item"`
 	Enchants []string `json:"enchants"`
+}
+
+// seedDose é um item carregado na Injeção alquímica de uma arma do elenco.
+type seedDose struct {
+	Weapon string `json:"weapon"`
+	Item   string `json:"item"`
 }
 
 // seedOverlay são as SOBREPOSIÇÕES de um item do elenco — melhorias e material.
@@ -110,6 +118,8 @@ type casaDaSeed interface {
 	// jogador: o material é o que anda o dado da arma (p166), e o elenco
 	// precisa dele para a mecânica existir na tela.
 	SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error
+	// LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.
+	LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error
 }
 
 // standardTrained são as perícias que todo personagem não-simples treina, para a
@@ -254,7 +264,7 @@ func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch 
 			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
-	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 && len(ch.OversizedWeapons) == 0 {
+	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 && len(ch.OversizedWeapons) == 0 && len(ch.Doses) == 0 {
 		return nil
 	}
 	return enrichLiveState(ctx, square, id, ch)
@@ -343,7 +353,16 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 			return fmt.Errorf("marcar a %q do personagem %d: %w", weapon, id, err)
 		}
 	}
-	return applyOverlays(ctx, square, id, sheet.Items, ch.Overlays)
+	if err := applyOverlays(ctx, square, id, sheet.Items, ch.Overlays); err != nil {
+		return err
+	}
+	for _, dose := range ch.Doses {
+		item, weapon := lineOfCatalogItem(sheet.Items, dose.Item), lineOfCatalogItem(sheet.Items, dose.Weapon)
+		if err := square.LoadDose(ctx, id, item, weapon); err != nil {
+			return fmt.Errorf("carregar %q em %q no personagem %d: %w", dose.Item, dose.Weapon, id, err)
+		}
+	}
+	return nil
 }
 
 // applyOverlays forja melhoria e material nos itens DEPOIS de o personagem

@@ -27,14 +27,26 @@ import (
 func TestEveryTypedSignalTheActionsSurfaceReadsIsDeclaredByTheTable(t *testing.T) {
 	f, barbaro, _ := barbarianOnTurn(t)
 	seedClasse(t, f.s, barbaro, "Guerreiro", 5)
-	page := acoesDaMesa(t, f)
+	expectTypedSignalsDeclared(t, acoesDaMesa(t, f), "$stance_degrees", "$boost_power")
+}
 
+// A tira da dose só existe em arma com duas doses diferentes, e o caso acima não a vê.
+func TestTheDoseStripSignalsAreDeclaredByTheTable(t *testing.T) {
+	f, _ := doseAttackOnTurn(t)
+	weapon := weaponWithInjection(t, f)
+	loaded(t, f, weapon, "acido", "Ácido")
+	loaded(t, f, weapon, "fogo-alquimico", "Fogo alquímico")
+	expectTypedSignalsDeclared(t, acoesDaMesa(t, f), "$dose_weapon")
+}
+
+func expectTypedSignalsDeclared(t *testing.T, page string, controls ...string) {
+	t.Helper()
 	at := strings.Index(page, `id="actions-scene"`)
 	if at < 0 {
 		t.Fatal("a página da Mesa não desenhou a aba Ações")
 	}
 	surface := html.UnescapeString(page[at:])
-	for _, control := range []string{"$stance_degrees", "$boost_power"} {
+	for _, control := range controls {
 		if !strings.Contains(surface, control) {
 			t.Fatalf("a aba Ações não lê %s — o caso não tem o que medir", control)
 		}

@@ -27,7 +27,11 @@ type WeaponCard struct {
 	// quem o lê é o rolar de novo do Mestre em Arma, que escolhe uma arma do
 	// catálogo (p66, ALE-508).
 	CatalogID string `json:"-"`
-	Skill     string `json:"skill"` // "Luta" | "Pontaria"
+	// ItemID e Doses são a linha da mochila e o que a Injeção alquímica guarda (p165).
+	// Não vão para o fio, porque só o gesto de atacar e a tela os leem.
+	ItemID int64    `json:"-"`
+	Doses  []string `json:"-"`
+	Skill  string   `json:"skill"` // "Luta" | "Pontaria"
 	// OtherUse é a mesma arma usada do outro jeito, nulo se ela só tem um: a lança
 	// que voa, a azagaia que bate (ver `otherUseOf`). Não vai para o fio, porque só
 	// o gesto de atacar e a conta da ficha a leem.
@@ -212,6 +216,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			}
 			card := shared.card(ch, name, use, scopes, damageThis, steps, nonLethal)
 			card.CatalogID = *it.CatalogID
+			card.ItemID, card.Doses = it.ID, it.Doses
 			return card
 		}
 		card := cardOf(it.Name, w)

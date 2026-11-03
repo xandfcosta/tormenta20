@@ -254,7 +254,7 @@ func tempestadeBag(v View) templ.Component {
 						}()
 					}
 					ctx = templ.InitializeContext(ctx)
-					if s := itemSheetByCommand(v, tile.Command); s != nil && s.Consumable != nil {
+					if s := itemSheetByCommand(v, tile.Command); s != nil && (s.Consumable != nil || s.Doses.CanLoad()) {
 						templ_7745c5c3_Var11 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)

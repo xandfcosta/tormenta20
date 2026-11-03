@@ -56,6 +56,19 @@ type Consumable struct {
 	Spell      string           `json:"spell,omitempty"`
 	Kind       string           `json:"kind,omitempty"`
 	Augment    string           `json:"augment,omitempty"`
+	Dose       *DoseEffect      `json:"dose,omitempty"`
+}
+
+// DoseEffect é o que o item faz quando a Injeção alquímica o libera (p165), e a
+// presença dele é o que diz que o item carrega. O preparado que não fere (o bálsamo,
+// o cosmético) não tem: decisão do dono.
+type DoseEffect struct {
+	Effect string `json:"effect"`
+	// Save é o teste que o item pede, SaveAttribute o atributo da CD (p227) e OnSave o
+	// que passar nele faz.
+	Save          string `json:"save"`
+	SaveAttribute string `json:"saveAttribute"`
+	OnSave        string `json:"onSave"`
 }
 
 type InstantRecovery struct {

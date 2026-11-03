@@ -17,7 +17,8 @@ import (
 
 // ProposeAttack guarda o ataque rolado. Ninguém perde PV aqui.
 func (st *Store) ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error) {
-	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+	// O golpe novo tira da mesa o acerto que ninguém confirmou.
+	return st.withTheDoseBack(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return live.ProposeAttack(s, attack) })
 }
 
@@ -143,7 +144,7 @@ func (st *Store) RuleAttack(
 	ctx context.Context, sessionID int64, who live.Attacker, ruling string, toRoll *live.DamageToRoll,
 ) (*live.SessionRuntimeState, error) {
 	if ruling != live.RulingMiss {
-		return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+		return st.withTheDoseSpent(ctx, sessionID,
 			func(s *live.SessionRuntimeState) error { return live.RuleAttack(s, who, ruling, toRoll) })
 	}
 	state, err := st.State(ctx, sessionID)
@@ -185,8 +186,9 @@ func attackerIsOnTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bo
 	return s.Initiative[s.TurnIndex].ID == attack.AttackerEntryID
 }
 
-// CancelAttack descarta o provisório sem mexer em ninguém.
+// CancelAttack descarta o provisório sem ferir ninguém, e devolve à arma a dose que o
+// acerto gastou.
 func (st *Store) CancelAttack(ctx context.Context, sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
-	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
+	return st.withTheDoseBack(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return live.CancelAttack(s, who) })
 }

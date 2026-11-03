@@ -93,6 +93,10 @@ type actionRow struct {
 	// PM que este golpe pode levar (ver `attack_boost.go`).
 	Weapon int
 	Boosts []attackBoost
+	// Doses são as da Injeção alquímica desta arma.
+	Doses []doseChoice
+	// ClearsDose é a linha que leva a dose escolhida sem mostrá-la: a Investida.
+	ClearsDose bool
 }
 
 // actionRoll é um gesto de rolar que sai de uma linha.

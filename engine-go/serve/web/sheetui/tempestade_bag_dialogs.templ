@@ -45,6 +45,9 @@ templ itemSheetDs(v View, s itemSheet) {
 				}
 			</div>
 		}
+		if s.Doses != nil {
+			@itemSheetDosesDs(v, s)
+		}
 		if s.Book != nil {
 			<div class="ds-field">
 				<span class="ds-field-label">{ s.Book.Category + " · T$ " + s.Book.Price + " · p" + strconv.Itoa(s.Book.Page) }</span>

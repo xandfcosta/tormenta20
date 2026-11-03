@@ -166,6 +166,16 @@ type Consumable struct {
 	Spell   string `json:"spell"`
 	Kind    string `json:"kind"`
 	Augment string `json:"augment"`
+	// Dose é o que o item faz na Injeção alquímica (p165), nula se ele não carrega.
+	Dose *DoseEffect `json:"dose"`
+}
+
+// DoseEffect é o efeito de uma dose; a CD quem escreve é a `sheet.WrittenDose`.
+type DoseEffect struct {
+	Effect        string `json:"effect"`
+	Save          string `json:"save"`
+	SaveAttribute string `json:"saveAttribute"`
+	OnSave        string `json:"onSave"`
 }
 
 // ImmediateGain é o PV/PM que um consumível devolve na hora. O `Dice` é a

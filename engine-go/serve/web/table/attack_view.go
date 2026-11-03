@@ -34,6 +34,8 @@ type attackProposal struct {
 	// Boost é o impulso de PM que o golpe leva e o que a confirmação cobra —
 	// "Golpe Divino · 3 PM ao confirmar" (ALE-487).
 	Boost string
+	// Dose diz o que a Injeção alquímica libera neste golpe (p165).
+	Dose string
 	// Guard é a guarda que a investida abre em quem investiu (p235). Para o
 	// NPC, que não tem ficha onde a penalidade more, a frase é o que o mestre
 	// aplica.
@@ -82,6 +84,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
 		Boost:    writtenBoost(*pa),
+		Dose:     writtenDose(*pa),
 		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:     pa.ByUserID == userID,
 		Rerolled: writtenRerolls(pa.Rerolls, pa.Roll),

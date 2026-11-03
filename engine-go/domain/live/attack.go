@@ -66,6 +66,9 @@ type PendingAttack struct {
 	// Charge é a investida que levou ao golpe (p235, p42): a confirmação cobra
 	// a ação COMPLETA dela e abre a guarda de quem investiu (ALE-499).
 	Charge string `json:"charge,omitempty"`
+	// Dose é o que a Injeção alquímica da arma libera se o golpe acertar (p165).
+	// Nula em arma sem dose e na manobra, que não causa dano.
+	Dose *AttackDose `json:"dose,omitempty"`
 	// Situations são os rótulos da Tabela 5-3 que valeram neste ataque, e a
 	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
 	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.
@@ -133,6 +136,17 @@ type PendingAttack struct {
 	// Replay é o que o pedido escolheu e o provisório não diz: rolar de novo
 	// refaz o golpe com o mesmo pedido e outro d20.
 	Replay AttackReplay `json:"replay,omitzero"`
+}
+
+// AttackDose é a dose em jogo no golpe. Ela viaja escrita porque a faixa só recebe o
+// provisório, e o efeito já leva a CD de quem atacou.
+type AttackDose struct {
+	ItemID    int64  `json:"itemId"`
+	CatalogID string `json:"catalogId"`
+	Name      string `json:"name"`
+	Effect    string `json:"effect"`
+	// Spent diz que a dose já saiu da arma: é o que o cancelamento devolve.
+	Spent bool `json:"spent,omitempty"`
 }
 
 // AttackReplay é o pedido do golpe que o resultado não carrega. A arma vai

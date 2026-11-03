@@ -800,3 +800,36 @@ DELETE FROM character_oversized_weapons WHERE itemId = ?;
 
 -- name: SetItemSlots :exec
 UPDATE character_items SET slots = ? WHERE id = ?;
+
+-- name: DosesOfCharacter :many
+SELECT d.itemId, d.catalogId
+FROM character_item_doses d
+JOIN character_items i ON i.id = d.itemId
+WHERE i.characterId = ?
+ORDER BY d.id;
+
+-- name: CountItemDoses :one
+SELECT COUNT(*) FROM character_item_doses WHERE itemId = ?;
+
+-- name: AddItemDose :exec
+INSERT INTO character_item_doses (itemId, catalogId) VALUES (?, ?);
+
+-- name: SpendItemDose :execrows
+-- Duas doses iguais sao a mesma coisa: sai a mais antiga.
+DELETE FROM character_item_doses WHERE id = (
+  SELECT MIN(oldest.id) FROM character_item_doses oldest
+  WHERE oldest.itemId = sqlc.arg('itemId') AND oldest.catalogId = sqlc.arg('catalogId')
+);
+
+-- name: ReturnItemDose :exec
+-- A arma pode ter saido da ficha, ou perdido a melhoria, depois do golpe: entao nao ha
+-- para onde a dose voltar, e cancelar o ataque continua valendo.
+INSERT INTO character_item_doses (itemId, catalogId)
+SELECT i.id, sqlc.arg('catalogId') FROM character_items i
+WHERE i.id = sqlc.arg('itemId') AND instr(i.improvements, sqlc.arg('improvement')) > 0;
+
+-- name: ClearItemDoses :exec
+DELETE FROM character_item_doses WHERE itemId = ?;
+
+-- name: SetItemOverlays :exec
+UPDATE character_items SET improvements = ?, material = ? WHERE id = ?;

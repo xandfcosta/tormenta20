@@ -160,6 +160,12 @@ type CharacterItem struct {
 	Createdat    string         `json:"createdat"`
 }
 
+type CharacterItemDose struct {
+	ID        int64  `json:"id"`
+	Itemid    int64  `json:"itemid"`
+	Catalogid string `json:"catalogid"`
+}
+
 type CharacterItemEnchant struct {
 	Itemid    int64  `json:"itemid"`
 	Enchantid string `json:"enchantid"`

@@ -117,6 +117,8 @@ type ActionStrike struct {
 	Maneuver string
 	// Boost é o impulso de PM pedido para este golpe; o poder vazio é sem.
 	Boost engine.BoostChoice
+	// Dose é a dose escolhida na linha da arma; vazio é a mais antiga.
+	Dose string
 	// Charge é a investida que leva ao golpe (`engine.ChargePlain`,
 	// `engine.ChargeReckless`); vazio é golpe parado.
 	Charge string

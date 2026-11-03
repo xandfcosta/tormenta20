@@ -57,6 +57,9 @@ type Combatant struct {
 	Boost func(engine.BoostChoice) ([]engine.WeaponCard, int, error)
 	// ChargesRecklessly diz que a ficha tem a Investida Imprudente (p42).
 	ChargesRecklessly bool
+	// WrittenDose é o nome e o efeito de uma dose, com a CD desta ficha (p227).
+	// Nulo para quem não tem ficha, que não carrega dose.
+	WrittenDose func(catalogID string) (name, effect string)
 	// ManaAvailable é o PM que a ficha pode gastar AGORA, poças temporárias
 	// incluídas: o impulso que custa mais que isso é recusado na proposta.
 	ManaAvailable int
@@ -182,6 +185,9 @@ type Request struct {
 	// Boost é o impulso de PM que o jogador pediu para ESTE golpe — o Golpe
 	// Divino, o Ataque Especial (ALE-487). Vazio é golpe sem impulso.
 	Boost engine.BoostChoice
+	// Dose é o id da dose que quem ataca escolheu, entre as da arma. Vazio é a mais
+	// antiga, que é a única pergunta possível quando as duas são iguais.
+	Dose string
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -402,7 +408,11 @@ func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Reque
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	return setup.pendingOf(who, req, out), nil
+	pending := setup.pendingOf(who, req, out)
+	if pending.Dose, err = s.doseFor(ctx, req, setup); err != nil {
+		return live.PendingAttack{}, err
+	}
+	return pending, nil
 }
 
 // rollManeuver resolve o teste OPOSTO da manobra e guarda o provisório.

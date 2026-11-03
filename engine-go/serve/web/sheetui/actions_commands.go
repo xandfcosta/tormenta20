@@ -28,7 +28,7 @@ func rollsAttackOnTheTarget(otherUse bool) func(Scene, *http.Request, sqlcgen.Ch
 		if err != nil {
 			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 		}
-		strike := ActionStrike{Weapon: weapon, OtherUse: otherUse}
+		strike := ActionStrike{Weapon: weapon, OtherUse: otherUse, Dose: chosenDose(sig, weapon)}
 		if sig.BoostPower != "" && sig.BoostWeapon != nil && int(*sig.BoostWeapon) == weapon {
 			strike.Boost = engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
 		}
@@ -46,7 +46,7 @@ func chargesTheTarget(charge string) func(Scene, *http.Request, sqlcgen.Characte
 		if err != nil {
 			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 		}
-		return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, Charge: charge}, sig)
+		return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, Charge: charge, Dose: chosenDose(sig, weapon)}, sig)
 	}
 }
 

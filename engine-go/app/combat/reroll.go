@@ -47,6 +47,9 @@ func ReplayRequest(
 		OtherUse: pending.Replay.OtherUse,
 		Charge:   pending.Charge,
 	}
+	if pending.Dose != nil {
+		req.Dose = pending.Dose.CatalogID
+	}
 	if pending.BoostPowerID != "" {
 		req.Boost = engine.BoostChoice{
 			PowerID: pending.BoostPowerID, Steps: pending.Replay.BoostSteps, Split: pending.Replay.BoostSplit,

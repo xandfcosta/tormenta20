@@ -121,6 +121,7 @@ func (h sheetHost) ProposeStrikeOnTable(
 			OtherUse:        strike.OtherUse,
 			Maneuver:        strike.Maneuver,
 			Boost:           strike.Boost,
+			Dose:            strike.Dose,
 			Charge:          strike.Charge,
 			OwnsAttacker:    true,
 		})

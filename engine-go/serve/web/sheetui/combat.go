@@ -106,7 +106,9 @@ type weaponTile struct {
 	Key  string
 	Name string
 	// Other é o outro jeito de usar esta arma, nulo se ela só tem um.
-	Other  *weaponOtherUseTile
+	Other *weaponOtherUseTile
+	// Doses são as da Injeção alquímica, da mais antiga à mais nova.
+	Doses  []doseChoice
 	Skill  string
 	Attack string
 	// AttackTotal é o mesmo ataque como número, para quem soma nele — a
@@ -422,6 +424,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Key:         "weapon-" + strconv.Itoa(i),
 			Name:        card.Name,
 			Other:       other,
+			Doses:       doseChoicesOf(card.Doses),
 			Skill:       card.Skill,
 			Attack:      book.WithSign(card.Attack),
 			AttackTotal: card.Attack,

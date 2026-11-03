@@ -259,6 +259,23 @@ func damageRows(pa live.PendingAttack) []duelRow {
 		duelRow{Label: "Dano final", Value: strconv.Itoa(pa.Damage), Final: true})
 }
 
+// writtenDose é a frase da dose. O efeito fica fora do dano do golpe porque quem o
+// aplica é o mestre, e o crítico não o multiplica: é dado extra (p231, decisão do dono).
+func writtenDose(pa live.PendingAttack) string {
+	dose := pa.Dose
+	if dose == nil || pa.Ruling == live.RulingMiss {
+		return ""
+	}
+	if !dose.Spent {
+		return "Se acertar, libera " + dose.Name + ": " + dose.Effect + "."
+	}
+	line := "Liberou " + dose.Name + ": " + dose.Effect + ". O mestre aplica."
+	if pa.Critical {
+		line += " O crítico não multiplica a dose (p231)."
+	}
+	return line
+}
+
 // damageNotes são o que qualifica o dano para o mestre: não letal (p236), a
 // chance de ignorar o crítico (p166, p338) e o que o livro reserva ao golpe.
 func damageNotes(pa live.PendingAttack) []string {
