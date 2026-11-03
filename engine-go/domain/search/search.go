@@ -11,8 +11,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -26,22 +24,22 @@ import (
 // ordem alfabética. Quem precisa de ordem de relevância é o buscador do livro,
 // mais abaixo.
 
-// combining é a transformação que dobra acento: decompõe em base + marca e joga
-// as marcas fora. Construída UMA vez porque ela é cara de montar e não tem
-// estado.
-var combining = transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
-
 // Fold normaliza para comparação: minúsculas e sem acento.
 //
 // "Anão" e "anao" viram a mesma coisa, que é o ponto.
+//
+// Sem `transform.Chain` guardada numa variável do pacote: ela tem buffers
+// próprios, e pedidos paralelos a dividi-la estouram ou trocam o texto de um
+// pelo do outro. Uma `norm.Form` é só um valor, sem estado.
 func Fold(s string) string {
-	clean, _, err := transform.String(combining, s)
-	if err != nil {
-		// A transformação só falha em entrada mal formada; comparar o original
-		// é pior que nada, mas é melhor que a busca inteira parar de funcionar.
-		return strings.ToLower(s)
-	}
-	return strings.ToLower(clean)
+	decomposed := norm.NFD.String(s)
+	withoutMarks := strings.Map(func(r rune) rune {
+		if unicode.Is(unicode.Mn, r) {
+			return -1
+		}
+		return r
+	}, decomposed)
+	return strings.ToLower(norm.NFC.String(withoutMarks))
 }
 
 // Matches responde se ALGUM dos campos casa com o que foi digitado.

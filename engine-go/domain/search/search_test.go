@@ -1,6 +1,10 @@
 package search
 
-import "testing"
+import (
+	"fmt"
+	"sync"
+	"testing"
+)
 
 // A TOLERÂNCIA A ERRO DE DIGITAÇÃO, medida onde ela mora.
 //
@@ -25,5 +29,48 @@ func TestTheNearlyEqualGapFitsInTwoLetters(t *testing.T) {
 	}
 	if isNearlyEqual("dragao venerave", "dv") {
 		t.Error("duas letras distantes casaram um nome inteiro")
+	}
+}
+
+// TestFoldAnswersParallelRequests: cada pedido HTTP dobra texto na própria
+// goroutine, e dois jogadores buscando ao mesmo tempo não podem derrubar um ao
+// outro nem receber o texto do outro.
+func TestFoldAnswersParallelRequests(t *testing.T) {
+	const searchers = 16
+	const foldsEach = 2000
+	cases := map[string]string{
+		"Anão":             "anao",
+		"Atuação":          "atuacao",
+		"Bola de Fogo":     "bola de fogo",
+		"Explosão Cônica":  "explosao conica",
+		"Capitão-Baluarte": "capitao-baluarte",
+	}
+
+	failures := make(chan string, searchers)
+	var searching sync.WaitGroup
+	for range searchers {
+		searching.Add(1)
+		go func() {
+			defer searching.Done()
+			defer func() {
+				if broken := recover(); broken != nil {
+					failures <- fmt.Sprintf("o Fold estourou: %v", broken)
+				}
+			}()
+			for range foldsEach {
+				for accented, want := range cases {
+					if got := Fold(accented); got != want {
+						failures <- fmt.Sprintf("Fold(%q) = %q, esperava %q", accented, got, want)
+						return
+					}
+				}
+			}
+		}()
+	}
+	searching.Wait()
+	close(failures)
+
+	for failure := range failures {
+		t.Error(failure)
 	}
 }
