@@ -142,6 +142,7 @@ type AttackReplay struct {
 	WeaponIndex        int    `json:"weaponIndex,omitempty"`
 	WeaponID           string `json:"weaponId,omitempty"`
 	SwitchesDamageType bool   `json:"switchesDamageType,omitempty"`
+	OtherUse           bool   `json:"otherUse,omitempty"`
 	BoostSteps         int    `json:"boostSteps,omitempty"`
 	BoostSplit         string `json:"boostSplit,omitempty"`
 }

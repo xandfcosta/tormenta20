@@ -97,8 +97,8 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	boosted := r.weaponCardsWith(ch, activeConditionals, []ActiveItem{item})
 	if boost.MeleeOnly {
 		for i := range boosted {
-			if !boosted[i].IsMelee() && i < len(plain) {
-				boosted[i] = plain[i]
+			if i < len(plain) {
+				boosted[i] = refusingRangedUses(boosted[i], plain[i])
 			}
 		}
 	}

@@ -121,7 +121,7 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 		if len(row.Rolls) > 1 {
 			<div class="ds-options ds-turn-action-rolls">
 				for _, roll := range row.Rolls {
-					@actionRollDs(v, group, roll, ds.ButtonSecondary, "")
+					@actionRollDs(v, group, roll, rollLook(roll), rollAfter(row))
 				}
 			</div>
 		}
@@ -141,7 +141,11 @@ templ actionRollDs(v View, group actionGroup, roll actionRoll, look ds.ButtonVar
 		}
 	} else {
 		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"data-on:click": rollCommand(v, roll, after)})) {
-			{ roll.Label }
+			if roll.LabelExpr != "" {
+				<span data-text={ roll.LabelExpr }>{ roll.Label }</span>
+			} else {
+				{ roll.Label }
+			}
 		}
 	}
 }

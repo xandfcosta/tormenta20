@@ -54,7 +54,8 @@ func Routes(r chi.Router, s Scene) {
 	// um endereço com campanha e sessão dentro obrigaria a ficha a carregar
 	// coordenada de mesa só para se redesenhar. Quem sabe em que sessão este
 	// personagem está é o hospedeiro, pela porta, como no teste de perícia.
-	r.Post("/personagens/{id}/acoes/atacar/{arma}", s.sheetCommand(rollsAttackOnTheTarget))
+	r.Post("/personagens/{id}/acoes/atacar/{arma}", s.sheetCommand(rollsAttackOnTheTarget(false)))
+	r.Post("/personagens/{id}/acoes/atacar/{arma}/outro-uso", s.sheetCommand(rollsAttackOnTheTarget(true)))
 	r.Post("/personagens/{id}/acoes/manobra/{manobra}", s.sheetCommand(rollsManeuverOnTheTarget))
 	r.Post("/personagens/{id}/acoes/investida/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargePlain)))
 	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargeReckless)))

@@ -200,11 +200,10 @@ func TestTheWeaponSumsLandOnlyOnTheWeaponsTheBookNames(t *testing.T) {
 	if got := damageOwnOf(t, world, archer, "arco-curto"); got != 3 {
 		t.Errorf("Arqueiro no arco curto (disparo), Sab 3: soma %d, want 3", got)
 	}
-	if got := damageOwnOf(t, world, archer, "machadinha"+thrownCardSuffix); got != 3 {
-		t.Errorf("Arqueiro na machadinha (arremesso), Sab 3: soma %d, want 3", got)
-	}
-	if got := damageOwnOf(t, world, archer, "machadinha"); got != 0 {
-		t.Errorf("Arqueiro na machadinha corpo a corpo, Sab 3: soma %d, want 0", got)
+	if card := world.ComputeWeaponCards(archer, nil)[1]; card.Name != "machadinha" ||
+		card.DamageOwn.Total != 0 || card.OtherUse.DamageOwn.Total != 3 {
+		t.Errorf("Arqueiro na machadinha, Sab 3: carta %q, corpo a corpo soma %d (want 0), arremesso soma %d (want 3)",
+			card.Name, card.DamageOwn.Total, card.OtherUse.DamageOwn.Total)
 	}
 	melee := wielding(attributeSumHero("Caçador", 5, `["class.cacador.arqueiro"]`), "espada-longa")
 	melee.Wisdom = 3

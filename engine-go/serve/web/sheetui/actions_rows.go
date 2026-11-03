@@ -28,6 +28,15 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 		if i < len(boosts) {
 			offered = boosts[i]
 		}
+		rolls := []actionRoll{{
+			Label: "Rolar", Path: fmt.Sprintf("/acoes/atacar/%d", i), NeedsTarget: true, Primary: true,
+		}}
+		if weapon.Other != nil {
+			rolls = append(rolls, actionRoll{
+				Label: weapon.Other.Label, Path: fmt.Sprintf("/acoes/atacar/%d/outro-uso", i), NeedsTarget: true,
+				LabelExpr: boostPreviewExpr(i, offered, "otherUse", weapon.Other.Label),
+			})
+		}
 		rows = append(rows, actionRow{
 			Weapon: i,
 			Boosts: offered,
@@ -39,9 +48,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 			// A ARMA VAI NO CAMINHO, pelo ÍNDICE: o `Propose` escolhe por índice
 			// e já recusa o que não existe, e um nome no endereço obrigaria o
 			// servidor a casar texto para achar de volta a mesma arma.
-			Rolls: []actionRoll{{
-				Label: "Rolar", Path: fmt.Sprintf("/acoes/atacar/%d", i), NeedsTarget: true,
-			}},
+			Rolls: rolls,
 		})
 	}
 	// A MANOBRA SÓ EXISTE COM ARMA CORPO A CORPO NA MÃO: *"não é possível fazer

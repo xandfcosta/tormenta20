@@ -111,6 +111,8 @@ type ActionStrike struct {
 	TargetEntryID string
 	// Weapon é qual das empunhadas, por índice. Zero é a primeira.
 	Weapon int
+	// OtherUse pede o outro jeito de usar essa arma: arremessar, ou bater com a azagaia.
+	OtherUse bool
 	// Maneuver é uma das cinco da p234 quando o gesto é manobra. Vazio é golpe.
 	Maneuver string
 	// Boost é o impulso de PM pedido para este golpe; o poder vazio é sem.

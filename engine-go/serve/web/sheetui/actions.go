@@ -104,6 +104,11 @@ type actionRoll struct {
 	// Label é o verbo no botão: "Rolar" quando a linha já se nomeia, e o nome da
 	// manobra quando não — cinco botões escritos "Rolar" não dizem qual é qual.
 	Label string
+	// LabelExpr, quando escrita, é o rótulo que acompanha o impulso escolhido, e o
+	// vazio esconde o botão: o outro uso muda de número, ou deixa de valer.
+	LabelExpr string
+	// Primary é o gesto principal de uma linha com vários: o ataque e o outro uso dele.
+	Primary bool
 	// Path é o endereço RELATIVO à ficha. Quem monta o `@post` é o `sheetPost`,
 	// que carrega a aba e a marca de embutida que a URL da página não leva.
 	Path string

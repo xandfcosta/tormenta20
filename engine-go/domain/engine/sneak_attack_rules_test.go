@@ -22,8 +22,8 @@ func TestTheSneakAttackDiceGrowEveryTwoRogueLevels(t *testing.T) {
 	}{{1, "1d6"}, {2, "1d6"}, {3, "2d6"}, {5, "3d6"}, {10, "5d6"}, {19, "10d6"}, {20, "10d6"}} {
 		rogue := wielding(attributeSumHero("Ladino", tt.level, `[]`), "adaga")
 		off := wieldedCards(world.ComputeWeaponCards(rogue, nil))
-		if len(off) != 2 {
-			t.Fatalf("Ladino %d com adaga virou %d cartas, e ela bate e voa", tt.level, len(off))
+		if len(off) != 1 {
+			t.Fatalf("Ladino %d com adaga virou %d cartas", tt.level, len(off))
 		}
 		if len(off[0].ExtraDamage) != 0 {
 			t.Errorf("Ladino %d: o Ataque Furtivo entrou sem ser ligado: %+v", tt.level, off[0].ExtraDamage)

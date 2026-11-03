@@ -107,3 +107,39 @@ func TestTheSpecialAttackGoesToAttackDamageOrHalfEach(t *testing.T) {
 		t.Errorf("o Ataque Especial sem dizer onde vai o bônus passou")
 	}
 }
+
+// "Quando faz um ataque CORPO A CORPO" (p82): o uso à distância recusa o Golpe Divino, e o uso corpo a corpo o recebe.
+// Devolver a carta sem o bônus e deixar o pedido passar cobraria o PM em troca de nada.
+func TestTheMeleeOnlyBoostIsRefusedByTheRangedUse(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	strike := BoostChoice{PowerID: "class.paladino.golpe-divino-1d8"}
+	cardsOf := func(weapon string) WeaponCard {
+		paladin := wielding(attributeSumHero("Paladino", 5, `[]`), weapon)
+		paladin.Charisma = 3
+		cards, _, err := world.BoostedWeaponCards(paladin, nil, strike)
+		if err != nil {
+			t.Fatalf("o Golpe Divino foi recusado em %s: %v", weapon, err)
+		}
+		return cards[0]
+	}
+
+	spear := cardsOf("lanca")
+	if spear.RefusesBoost || len(spear.ExtraDamage) != 1 {
+		t.Errorf("a lança corpo a corpo tem de receber o golpe: recusa %v, dados %+v", spear.RefusesBoost, spear.ExtraDamage)
+	}
+	if !spear.OtherUse.RefusesBoost || len(spear.OtherUse.ExtraDamage) != 0 {
+		t.Errorf("a lança arremessada tem de recusar o golpe: recusa %v, dados %+v", spear.OtherUse.RefusesBoost, spear.OtherUse.ExtraDamage)
+	}
+
+	javelin := cardsOf("azagaia")
+	if !javelin.RefusesBoost || len(javelin.ExtraDamage) != 0 {
+		t.Errorf("a azagaia arremessada tem de recusar o golpe: recusa %v, dados %+v", javelin.RefusesBoost, javelin.ExtraDamage)
+	}
+	if javelin.OtherUse.RefusesBoost || len(javelin.OtherUse.ExtraDamage) != 1 {
+		t.Errorf("bater com a azagaia é corpo a corpo: recusa %v, dados %+v", javelin.OtherUse.RefusesBoost, javelin.OtherUse.ExtraDamage)
+	}
+
+	if bow := cardsOf("arco-curto"); !bow.RefusesBoost {
+		t.Errorf("o arco tem de recusar o golpe: %+v", bow)
+	}
+}

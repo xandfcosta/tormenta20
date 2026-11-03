@@ -103,8 +103,10 @@ type attributeTile struct {
 
 // weaponTile é uma arma empunhada como fórmula pronta de rolar.
 type weaponTile struct {
-	Key    string
-	Name   string
+	Key  string
+	Name string
+	// Other é o outro jeito de usar esta arma, nulo se ela só tem um.
+	Other  *weaponOtherUseTile
 	Skill  string
 	Attack string
 	// AttackTotal é o mesmo ataque como número, para quem soma nele — a
@@ -390,15 +392,36 @@ func spellDcTotal(sheet engine.ComputedSheet) int {
 	return base + sheet.SpellDCBonus.Total
 }
 
-// weaponTiles são as cartas do motor: duas armas na mão, no máximo, e cada uso delas.
+// weaponOtherUseTile são as duas contas do outro uso da arma, dentro da linha dela.
+type weaponOtherUseTile struct {
+	Verb      string
+	Label     string
+	Skill     string
+	Attack    string
+	Damage    string
+	Crit      string
+	AttackSum []ds.SumTerm
+	DamageSum []ds.SumTerm
+}
+
+// weaponTiles são as armas empunhadas, no máximo duas — o motor já as limita.
 func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 	tiles := make([]weaponTile, 0, len(cards))
 	for i, card := range cards {
 		attackRows, damageRows := weaponRows(card)
 		attackSum, damageSum := weaponSumTerms(card)
+		var other *weaponOtherUseTile
+		if use := card.OtherUse; use != nil {
+			otherAttack, otherDamage := weaponSumTerms(*use)
+			other = &weaponOtherUseTile{
+				Verb: otherUseVerb(use), Label: otherUseLabel(use), Skill: use.Skill, Attack: book.WithSign(use.Attack),
+				Damage: damageLabel(*use), Crit: critLabel(*use), AttackSum: otherAttack, DamageSum: otherDamage,
+			}
+		}
 		tiles = append(tiles, weaponTile{
 			Key:         "weapon-" + strconv.Itoa(i),
 			Name:        card.Name,
+			Other:       other,
 			Skill:       card.Skill,
 			Attack:      book.WithSign(card.Attack),
 			AttackTotal: card.Attack,

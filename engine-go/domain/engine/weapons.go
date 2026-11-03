@@ -28,6 +28,13 @@ type WeaponCard struct {
 	// catálogo (p66, ALE-508).
 	CatalogID string `json:"-"`
 	Skill     string `json:"skill"` // "Luta" | "Pontaria"
+	// OtherUse é a mesma arma usada do outro jeito, nulo se ela só tem um: a lança
+	// que voa, a azagaia que bate (ver `otherUseOf`). Não vai para o fio, porque só
+	// o gesto de atacar e a conta da ficha a leem.
+	OtherUse *WeaponCard `json:"-"`
+	// RefusesBoost diz que o impulso pedido não vale neste uso: o Golpe Divino e a
+	// arma à distância. Não vai para o fio, porque só o pedido de atacar o lê.
+	RefusesBoost bool `json:"-"`
 	// ShootsIntoMelee é o Disparo Preciso (p125): atira em combate corpo a corpo
 	// sem a penalidade. Não vai para o fio, porque só o ataque o lê.
 	ShootsIntoMelee bool               `json:"-"`
@@ -118,9 +125,9 @@ const (
 
 // weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
 //
-// O tipo é o PROPÓSITO desta carta, um só: a machadinha corpo a corpo recebe o
-// Esgrimista, e a carta dela de arremesso recebe o Estilo de Arremesso. É a mesma
-// leitura que decide se a Força entra no dano.
+// O tipo é o PROPÓSITO deste uso, um só: a machadinha corpo a corpo recebe o
+// Esgrimista, e arremessada recebe o Estilo de Arremesso. É a mesma leitura que
+// decide se a Força entra no dano.
 func weaponKindScopes(w *WeaponStats) []string {
 	switch w.Purpose {
 	case "ranged":
@@ -140,25 +147,6 @@ func weaponKindScopes(w *WeaponStats) []string {
 	return nil
 }
 
-// thrownCardSuffix distingue, no nome da carta, o uso de arremesso de uma arma
-// corpo a corpo. É um substantivo para servir à lança e ao tridente.
-const thrownCardSuffix = " (arremesso)"
-
-// thrownUseOf é a mesma arma arremessada, ou nulo se ela não tem esse segundo uso.
-//
-// "Armas com alcance podem ser usadas para ataques à distância" (p143), e é o
-// alcance na Tabela 3-3 (p144) que separa a lança da espada. A espada também voa,
-// com −5 e em alcance curto (p143), mas uma carta para cada arma da mão encheria
-// a ficha com um gesto raro: esse fica com o mestre.
-func thrownUseOf(w *WeaponStats) *WeaponStats {
-	if w.Purpose != "melee" || w.Range == "" {
-		return nil
-	}
-	thrown := *w
-	thrown.Purpose = "thrown"
-	return &thrown
-}
-
 // ownContribsOf junta as parcelas que valem só para esta arma, numa decomposição
 // — do dano ou do ataque.
 func ownContribsOf(parts ...TotalContribs) TotalContribs {
@@ -172,8 +160,8 @@ func ownContribsOf(parts ...TotalContribs) TotalContribs {
 
 // ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
 // the given active conditionals (Fúria's global attack/damage mods land in
-// attackAll/damageAll). Only catalog weapons in a hand slot, capped at two. A melee
-// weapon with range has a card for each use, and the thrown one comes right after.
+// attackAll/damageAll). Only catalog weapons in a hand slot, capped at two, so the
+// index of a card is the index of the weapon; the other use rides inside the card.
 func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string]bool) []WeaponCard {
 	return r.weaponCardsWith(ch, activeConditionals, nil)
 }
@@ -194,7 +182,6 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 	damageThis := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "this"})
 
 	cards := []WeaponCard{}
-	weaponsInHand := 0
 	for _, it := range ch.Items {
 		if it.Equipped == nil || (*it.Equipped != "wielded" && *it.Equipped != "wielded2") {
 			continue
@@ -227,12 +214,13 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			card.CatalogID = *it.CatalogID
 			return card
 		}
-		cards = append(cards, cardOf(it.Name, w))
-		if thrown := thrownUseOf(w); thrown != nil {
-			cards = append(cards, cardOf(it.Name+thrownCardSuffix, thrown))
+		card := cardOf(it.Name, w)
+		if other := otherUseOf(w, it.Enchants); other != nil {
+			use := other.applied(cardOf(it.Name+other.suffix, &other.stats))
+			card.OtherUse = &use
 		}
-		weaponsInHand++
-		if weaponsInHand == 2 {
+		cards = append(cards, card)
+		if len(cards) == 2 {
 			break
 		}
 	}
