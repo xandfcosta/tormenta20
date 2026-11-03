@@ -156,7 +156,7 @@ porque *"se uma palavra do livro aparecer neste pacote, o desenho vazou"*.
 ### O RACIOCÍNIO guardado envelhece como o código guardado (saiu do guia em 2026-11)
 
 Docstring envelhece como `.md`, e ninguém relê a de função que não vai tocar —
-ver "Comentários" no [CLAUDE.md da raiz](CLAUDE.md); a sonda que caça isso
+ver "Comentários" em [docs/testing.md](docs/testing.md); a sonda que caça isso
 precisa do controle positivo de "O INSTRUMENTO MENTE COM CARA DE RESULTADO".
 
 ### Guarda de leiaute precisa do ESTADO, não só da cena (saiu do guia em 2026-11)

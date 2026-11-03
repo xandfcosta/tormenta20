@@ -36,7 +36,7 @@ de cada pacote.
 ## Testes
 
 As faixas, o vermelho antes de confiar e o que não merece teste estão em
-"Testes" do [CLAUDE.md da raiz](../../CLAUDE.md). Daqui:
+[docs/testing.md](../../docs/testing.md). Daqui:
 
 - `go test ./...` — sem flag, sem setup.
 - **Teste de regra vive junto da regra e cita a página** (e o exemplo

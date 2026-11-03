@@ -15,7 +15,7 @@ import (
 )
 
 // semLivro é a porta cumprida por um dublê NOMEADO, e não por um stub inline
-// (CLAUDE.md, "Testes").
+// (`docs/testing.md`).
 //
 // Ele responde "não há PDF configurado", que é o caso REAL de quem não apontou
 // `LIVRO_PDF` — e não um valor inventado para o teste passar. A consequência de

@@ -29,7 +29,7 @@ import (
 // `data-on:focus`, um é do `web/master` e três são do `api` (campanhas, o
 // tabuleiro da mesa e personagens).
 //
-// É a forma que o CLAUDE.md da raiz descreve em "Um guarda só mede o que ele
+// É a forma que o `docs/testing.md` descreve em "Um guarda só mede o que ele
 // VISITA", e o conserto é o mesmo que o guarda de tinta levou: **caminhada, não
 // lista** — nem lista de cenas, nem, como aqui, o diretório em que o arquivo por
 // acaso mora. O `convention/` existe exatamente para a regra que é de todos os

@@ -267,3 +267,69 @@ data-on:click="$target_id = el.dataset.id; $target_name = el.dataset.nome;
 
 A cada cena nova: existe nó compartilhado que recebe escrita depois da
 renderização? Se existe, quem troca de item tem de apagá-lo.
+
+## Os nomes de sinal e de id
+
+### Sinal: `snake_case`, inglês, uma grafia em todos os canais
+
+A forma foi MEDIDA no navegador, e o mecanismo É a regra:
+
+- **camelCase quebra em silêncio.** Nome de atributo é minusculado pelo parser de
+  HTML: `data-bind:buscaCriatura` chega como `data-bind:buscacriatura` e o
+  Datastar liga um sinal NOVO, deixando o declarado intocado. O fio leva os DOIS
+  e o servidor lê o errado — sem erro em lugar nenhum.
+- **kebab-case vira outra coisa.** O Datastar transforma `-[a-z]` em maiúscula
+  por padrão, então `data-bind:creature-search` liga um sinal em camelCase: duas
+  grafias para um conceito, que é a raiz do defeito acima.
+- **`_` atravessa intacto** — não há caixa para perder, e o `-` é o único
+  caractere que a transformação toca.
+
+Prefixo por FAMÍLIA quando o sinal pertence a um grupo (`template_*`, `ruler_*`),
+para o `grep` achar a família inteira.
+
+Nenhum teste de Go pega isso — a minusculação acontece no NAVEGADOR, e o HTML
+servido ainda tem a caixa que o autor escreveu. A garantia desceu para o TEXTO do
+atributo: `TestNoDatastarAttributeKeyCarriesUppercase` varre a forma, e
+`TestNoNewSignalBreaksTheNamingStandard` varre com linha de base VAZIA.
+
+### Renomear um sinal são SETE canais, e nada liga um ao outro
+
+Isto é checklist, não história: renomear é ato humano, nenhum guarda o cobre, e
+**cinco dos sete são invisíveis para um `grep` de `$nome`**.
+
+| # | canal | como aparece |
+|---|---|---|
+| 1 | expressão | `$creature_search` |
+| 2 | chave de atributo | `data-bind:creature_search` |
+| 3 | **valor** de atributo | `data-ref="delete_dialog"` |
+| 4 | declaração | `data-signals="{…}"`, e as strings montadas em Go |
+| 5 | tag JSON do servidor | `json:"creature_search"` |
+| 6 | filtro de remendo | `data-on-signal-patch-filter="{include: /^sheet_version$/}"` |
+| 7 | **argumento de string** | `toggleBadge(aba, key, …)`, que monta `"$" + key` |
+
+Os canais 3 e 7 deixaram quatro diálogos sem abrir com a suíte de Go inteira
+verde: **a expressão passa a ler `undefined`, que em JavaScript não é erro** — é
+o gesto não fazer nada. O canal 4 tem a armadilha inversa: `undefined != ''` é
+VERDADEIRO, então um `<p>` que devia nascer escondido nasce mostrado.
+
+**Nem toda tag JSON é sinal** — leia o diff das tags antes de aceitar uma
+varredura. E há um oitavo leitor que não é canal de escrita: a **constante**
+(`const brushSignal = "pincelando"`, lida como `"$" + brushSignal`), que metade
+das vezes mora num bloco `const (…)` com a palavra na linha de cima.
+
+Quem fecha: `TestEverySignalDeclaredByValueHasAReader` (3),
+`TestEverySignalTheTableDeclaresHasAReader` (4), e a catraca para a FORMA. **O 7
+não tem guarda** — hoje é um sítio só, o `toggleBadge` do acervo do mestre, e
+está nomeado aqui por isso.
+
+### O id de elemento tem NOVE canais
+
+`id="x"` · `getElementById('x')` · `aria-labelledby` · `aria-describedby` ·
+`for=` · `popovertarget` · `commandfor` · `querySelector('#x')` · e
+**`el.id === 'x'`**, que foi o que escapou: o renome passou por cima, o Enter
+deixou de abrir o primeiro achado, e nada mais mudou na tela.
+
+Quem cobra é o `TestEveryReferencedElementIdExists` — todo id APONTADO existe em
+algum `.templ`, escrito como `id="x"` ou entregue a uma peça do kit que o
+escreve (`ds.Dialog("x", …)`). Ele não cobra o contrário: um id pode existir só
+para o CSS.

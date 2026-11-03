@@ -18,7 +18,7 @@ trás, então não dá para descobrir depois.
 | `.templ`, cena, `serve/web`, CSS | [screens.md](docs/screens.md) | `templ generate`, classe nova, ícone, porta da cena |
 | `data-*`, `@post`, sinal, remendo, gesto do tabuleiro | [datastar.md](docs/datastar.md) | recusa em 4xx some, `ReadSignals` antes do `NewSSE`, o morph, coordenada no corpo |
 | migração, `query.sql`, `infra/`, `cmd/api`, fluxo ao vivo | [infra.md](docs/infra.md) | comentário de SQL é ASCII, coluna nova vira tabela, SSE e gzip |
-| teste, `convention/`, apagar código | [tests.md](docs/tests.md) | bancada, guarda novo, a regra que só o teste apagado guardava |
+| teste, `convention/`, apagar código | [tests.md](docs/tests.md) e [testing.md](../docs/testing.md) | bancada, guarda novo, a regra que só o teste apagado guardava |
 
 ## O mapa das pastas
 
