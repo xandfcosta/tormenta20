@@ -112,6 +112,10 @@ func classByLevelOf(dto sheet.CharacterDTO) []string {
 func vitalLevelRowsOf(lines []engine.VitalLevelLine) []vitalLevelRow {
 	rows := make([]vitalLevelRow, len(lines))
 	for i, line := range lines {
+		if line.Level == 0 {
+			rows[i] = vitalLevelRow{Title: line.Source, Account: line.Note, Total: strconv.Itoa(line.Total)}
+			continue
+		}
 		rows[i] = vitalLevelRow{
 			Title:   "Nível " + strconv.Itoa(line.Level) + " · " + line.ClassName,
 			Account: vitalLevelAccount(line),
