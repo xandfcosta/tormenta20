@@ -97,7 +97,25 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	if err := s.keepsChosenExpertises(r, row, withoutItem(item.ID)); err != nil {
 		return err
 	}
-	return s.plays.RemoveItem(r.Context(), item.ID)
+	return s.followingTheHitPoints(r, row, func() error { return s.plays.RemoveItem(r.Context(), item.ID) })
+}
+
+// followingTheHitPoints faz um gesto de item e, se ele mexeu no PV atual, liga e desliga
+// as condições. O item pode dar PV (os anéis, p342) ou Constituição, e o atual é o máximo
+// menos o dano, então guardar um anel com pouca vida pode derrubar.
+func (s Scene) followingTheHitPoints(r *http.Request, row sqlcgen.Character, gesture func() error) error {
+	before, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	if err := gesture(); err != nil {
+		return err
+	}
+	after, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.FollowHitPointsFrom(r.Context(), after, before.HpCurrent)
 }
 
 // useItem gasta uma dose do consumível.
@@ -266,7 +284,7 @@ func saveEquipped(r *http.Request, s Scene, row sqlcgen.Character, itemID int64,
 	if err := s.keepsChosenExpertises(r, row, equippedAs(itemID, wear)); err != nil {
 		return err
 	}
-	return s.plays.SaveEquipped(r.Context(), itemID, place)
+	return s.followingTheHitPoints(r, row, func() error { return s.plays.SaveEquipped(r.Context(), itemID, place) })
 }
 
 // slotEquipEh aceita só os três lugares do livro.

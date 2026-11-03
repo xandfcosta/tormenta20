@@ -157,6 +157,22 @@ func followTheHitPoints(
 	return nil
 }
 
+// FollowHitPointsFrom liga e desliga as condições quando o PV atual mudou sem passar pelo
+// funil, porque foi o MÁXIMO que se moveu: um item que dava PV saiu ou voltou, e o atual é
+// o máximo menos o dano. Ela não grava vital nenhum.
+//
+// @example sheet.FollowHitPointsFrom(ctx, q, &dto, 5) // o anel saiu e o PV foi de 5 a -5
+func FollowHitPointsFrom(ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, before int64) error {
+	if before == dto.HpCurrent {
+		return nil
+	}
+	nonLethal, err := storedNonLethal(ctx, q, dto.ID)
+	if err != nil {
+		return err
+	}
+	return followTheHitPoints(ctx, q, dto, before, dto.HpCurrent, nonLethal)
+}
+
 // Aqui moravam o `RefreshPools` e o `FillPools`, e os dois viraram NADA.
 //
 // O primeiro regravava os poços sem mexer no gasto — o gesto do passo de

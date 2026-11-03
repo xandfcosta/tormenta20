@@ -77,6 +77,12 @@ func (p Plays) RemoveItem(ctx context.Context, itemID int64) error {
 	return nil
 }
 
+// FollowHitPointsFrom liga as condições que o PV pede depois de um gesto que moveu o
+// máximo, como tirar o anel: quem chega a 0 ou menos cai, por qualquer caminho (p236).
+func (p Plays) FollowHitPointsFrom(ctx context.Context, dto sheet.CharacterDTO, before int64) error {
+	return sheet.FollowHitPointsFrom(ctx, p.queries, &dto, before)
+}
+
 // SaveCustomItem grava nome, quantidade e espaços de um item da mochila.
 //
 // `spaces` é `float64` porque a coluna `slots` é REAL: a carga do livro conta
