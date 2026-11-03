@@ -36,31 +36,33 @@ func (p Plays) AddCatalogItem(ctx context.Context, characterID int64, catalogID 
 	if catalog == nil {
 		return fmt.Errorf("o item %q não existe no livro", catalogID)
 	}
-	if catalog.StacksInTheBag() {
-		summed, err := p.addOneToPlainLine(ctx, characterID, *catalog)
-		if err != nil || summed {
-			return err
+	return p.inTx(ctx, "pôr "+catalog.Name+" na mochila", func(q *sqlcgen.Queries) error {
+		if catalog.StacksInTheBag() {
+			summed, err := addOneToPlainLine(ctx, q, characterID, *catalog)
+			if err != nil || summed {
+				return err
+			}
 		}
-	}
-	if _, err := p.queries.CreateItem(ctx, sqlcgen.CreateItemParams{
-		Characterid:  characterID,
-		Catalogid:    sql.NullString{String: catalog.ID, Valid: true},
-		Name:         catalog.Name,
-		Quantity:     1,
-		Slots:        catalog.Slots,
-		Improvements: "[]",
-		Createdat:    dbvalue.NowISO(),
-	}); err != nil {
-		return fmt.Errorf("pôr %q na mochila de %d: %w", catalog.Name, characterID, err)
-	}
-	return nil
+		if _, err := q.CreateItem(ctx, sqlcgen.CreateItemParams{
+			Characterid:  characterID,
+			Catalogid:    sql.NullString{String: catalog.ID, Valid: true},
+			Name:         catalog.Name,
+			Quantity:     1,
+			Slots:        catalog.Slots,
+			Improvements: "[]",
+			Createdat:    dbvalue.NowISO(),
+		}); err != nil {
+			return fmt.Errorf("pôr %q na mochila de %d: %w", catalog.Name, characterID, err)
+		}
+		return nil
+	})
 }
 
 // addOneToPlainLine soma um na primeira linha que ainda é só este item do livro, e diz
 // se achou uma. Linha no corpo, melhorada ou editada não recebe a soma: a peça
 // nova ganharia o lugar, as melhorias ou o nome da outra.
-func (p Plays) addOneToPlainLine(ctx context.Context, characterID int64, catalog book.Item) (bool, error) {
-	lines, err := p.queries.ListItemsByCharacter(ctx, characterID)
+func addOneToPlainLine(ctx context.Context, q *sqlcgen.Queries, characterID int64, catalog book.Item) (bool, error) {
+	lines, err := q.ListItemsByCharacter(ctx, characterID)
 	if err != nil {
 		return false, fmt.Errorf("ler a mochila de %d: %w", characterID, err)
 	}
@@ -74,7 +76,7 @@ func (p Plays) addOneToPlainLine(ctx context.Context, characterID int64, catalog
 		if total > sheet.MaxItemQuantity {
 			return false, fmt.Errorf("%s somaria %d, e o máximo são %d", catalog.Name, total, sheet.MaxItemQuantity)
 		}
-		if err := p.queries.SetItemQuantity(ctx, sqlcgen.SetItemQuantityParams{Quantity: total, ID: line.ID}); err != nil {
+		if err := q.SetItemQuantity(ctx, sqlcgen.SetItemQuantityParams{Quantity: total, ID: line.ID}); err != nil {
 			return false, fmt.Errorf("somar %q na linha %d: %w", catalog.Name, line.ID, err)
 		}
 		return true, nil

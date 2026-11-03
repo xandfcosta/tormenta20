@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 
 	"t20engine/infra/db/sqlcgen"
@@ -49,6 +50,34 @@ func TestAddingTheSameItemAgainSumsOnItsLine(t *testing.T) {
 	}
 	if lines[0].Quantity != 2 {
 		t.Errorf("dois gestos deram quantidade %d", lines[0].Quantity)
+	}
+}
+
+// Oito pedidos porque um par é pouco para expor uma corrida entre ler a mochila e
+// gravar a soma. Sem transação, um gesto se perde ou vira uma segunda linha.
+func TestSimultaneousAddsCountEveryGesture(t *testing.T) {
+	f, id := fighterFixture(t)
+
+	const gestures = 8
+	refusals := make([]string, gestures)
+	var adding sync.WaitGroup
+	for n := range gestures {
+		adding.Add(1)
+		go func() {
+			defer adding.Done()
+			refusals[n] = addToBag(t, f, id, "fogo-alquimico")
+		}()
+	}
+	adding.Wait()
+
+	for _, refusal := range refusals {
+		if refusal != "" {
+			t.Fatalf("um gesto simultâneo foi recusado: %q", refusal)
+		}
+	}
+	lines := bagLinesOf(t, f, id, "Fogo alquímico")
+	if len(lines) != 1 || lines[0].Quantity != gestures {
+		t.Errorf("%d gestos deram %+v, e esperava uma linha com %d", gestures, lines, gestures)
 	}
 }
 
