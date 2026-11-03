@@ -13,7 +13,7 @@ import (
 // TODA CLASSE APLICADA EXISTE NA FOLHA COMPILADA (ALE-301).
 //
 // Classe que não está na folha não dá erro: o elemento aparece SEM ESTILO. É a
-// armadilha que o `engine-go/CLAUDE.md` registra em duas linhas — a classe que
+// armadilha que o `engine-go/docs/screens.md` registra em duas linhas — a classe que
 // não passou pelo scanner e o TOKEN inventado — e ela é a mesma de qualquer
 // renome pela metade.
 //

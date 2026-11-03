@@ -15,7 +15,7 @@ import (
 //
 // # Por que isto não é ECS, e a decisão é a do guia
 //
-// *ECS para o que COMPÕE, função para o que calcula* — e o `engine-go/CLAUDE.md`
+// *ECS para o que COMPÕE, função para o que calcula* — e o `engine-go/docs/engine.md`
 // nomeia esta saída por extenso: "uma tabela fechada que só se lê". Não há
 // entidade aqui. A Defesa de uma porta não é composta de parcelas que sistemas
 // diferentes contribuem: ela É o degrau do tamanho dela, e um sistema que

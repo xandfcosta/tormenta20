@@ -10,7 +10,7 @@
 // linha `Pré-requisito:` do verbete —, e os dois instrumentos se conferem um ao
 // outro ANTES de encostar no catálogo. Por que a segunda âncora existe, e por
 // que a tabela se lê primeiro retirando as células dela da busca por verbete, é
-// do `engine-go/CLAUDE.md`, na seção dos auditores.
+// do `engine-go/docs/catalog.md`, na seção dos auditores.
 //
 // O denominador: por poder, se ancorou nas duas declarações, numa só, ou em
 // nenhuma; e o total de PRÉ-REQUISITOS comparados, porque um poder que ancorou

@@ -185,7 +185,7 @@ const dragOffsetStyle = "`--arrasto-x:${$drag_x}px; --arrasto-y:${$drag_y}px`"
 //
 // As funções abaixo existem porque **o templ não aceita `else if` numa
 // lista de atributos** e não reclama: os dois ramos saem, o navegador guarda o
-// primeiro e o outro morre em silêncio. A armadilha está no `engine-go/CLAUDE.md`,
+// primeiro e o outro morre em silêncio. A armadilha está no `engine-go/docs/screens.md`,
 // seção "templ".
 //
 // A escolha entre os dois gestos volta para o Go, e o elemento passa a ter UMA

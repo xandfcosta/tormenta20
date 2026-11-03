@@ -12,7 +12,7 @@ import (
 // TestNoFocusAsksTheServerWithoutAKeyboardGuard: pedido disparado por FOCO é
 // afordância de TECLADO, e por isso ele pede `:focus-visible`.
 //
-// A razão está no `engine-go/CLAUDE.md`, em "Dois pedidos de UM gesto: quem
+// A razão está no `engine-go/docs/datastar.md`, em "Dois pedidos de UM gesto: quem
 // CHEGA por último manda": o clique do mouse também FOCA, então um nó que pede
 // ao servidor nos dois manda dois pedidos por gesto, e a ordem de CHEGADA não é
 // a de saída. No bestiário isso fechava a ficha que o clique tinha acabado de

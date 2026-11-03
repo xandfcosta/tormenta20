@@ -1,7 +1,7 @@
 # Aprendizados
 
 O que o repositório aprendeu errando, e que não é regra. A REGRA mora nos guias
-(`CLAUDE.md` e `engine-go/CLAUDE.md`); aqui mora o CASO que a produziu, para quem
+(`CLAUDE.md`, `engine-go/CLAUDE.md` e os `docs/` deles); aqui mora o CASO que a produziu, para quem
 quiser entender por que ela existe.
 
 **Este arquivo é revisado periodicamente com o dono.** A cada revisão, um
