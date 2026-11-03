@@ -320,7 +320,7 @@ test('os poderes abrem o diálogo de escolher sem estourar o telefone', async ({
   const dialog = page.getByRole('dialog', { name: 'Escolher' })
   await expect(dialog).toBeVisible()
   // O PASSO DA CLASSE é o que leva a lista longa; o Tanque é Guerreiro.
-  await dialog.getByRole('navigation', { name: 'Escolhas' }).getByRole('button', { name: /^Guerreiro/ }).click()
+  await dialog.getByRole('navigation', { name: 'Escolhas' }).getByRole('button', { name: /^Guerreiro \d/ }).click()
   // O `:visible` não é preciosismo: os passos são desenhados de uma vez e
   // alternados por `data-show`, então o primeiro `switch` do DOM pode ser de um
   // passo escondido — e esperar por ele é esperar para sempre.

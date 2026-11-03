@@ -357,11 +357,7 @@ func PaySkillSpends(offers []SkillSpendOffer, chosen []SkillSpendChoice) (PaidSk
 //
 //	ClassSkillList("Ladino") // [Ladinagem, Ofício, Acrobacia, …]
 func ClassSkillList(class string) []string {
-	var all map[string]ClassExpertises
-	if raw, ok := catalog.Resource("class-expertises"); ok {
-		_ = json.Unmarshal(raw, &all)
-	}
-	rule, found := all[class]
+	rule, found := ClassExpertisesOf(class)
 	if !found {
 		return nil
 	}
@@ -370,4 +366,14 @@ func ClassSkillList(class string) []string {
 		out = append(out, rule.EitherOr.Options...)
 	}
 	return out
+}
+
+// ClassExpertisesOf é a regra de perícias da classe, e diz se a classe tem uma.
+func ClassExpertisesOf(class string) (ClassExpertises, bool) {
+	var all map[string]ClassExpertises
+	if raw, ok := catalog.Resource("class-expertises"); ok {
+		_ = json.Unmarshal(raw, &all)
+	}
+	rule, found := all[class]
+	return rule, found
 }
