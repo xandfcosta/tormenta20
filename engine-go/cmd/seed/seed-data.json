@@ -781,6 +781,10 @@
             },
             "items": [
               {
+                "catalogId": "anel-da-vitalidade",
+                "equipped": "vested"
+              },
+              {
                 "catalogId": "espada-curta",
                 "equipped": "wielded"
               },

@@ -194,3 +194,62 @@ func TestTheLinesAlwaysAddUpToTheMaximum(t *testing.T) {
 		t.Errorf("a varredura mediu %d casos, want %d", measured, want)
 	}
 }
+
+// OS ANÉIS (p342): "Você recebe +10 PV" e "+5 PM", somente vestidos. O dia de uso fica
+// com o mestre, e a tela o avisa (decisão do dono).
+func ringHero(rings ...string) Character {
+	vested := "vested"
+	hero := Character{Level: 1, Classes: []CharacterClass{{ClassName: "Guerreiro", Level: 1}}, ClassPowers: "[]"}
+	for _, ring := range rings {
+		id := ring
+		hero.Items = append(hero.Items, CharacterItem{CatalogID: &id, Name: id, Equipped: &vested, Improvements: "[]"})
+	}
+	return hero
+}
+
+func TestAVestedRingAddsToTheMaximum(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	stowed := ringHero("anel-da-vitalidade")
+	stowed.Items[0].Equipped = nil
+	for _, c := range []struct {
+		name   string
+		hero   Character
+		pv, pm int
+	}{
+		{"sem anel", ringHero(), 20, 3},
+		{"guardado não soma", stowed, 20, 3},
+		{"Anel da Vitalidade", ringHero("anel-da-vitalidade"), 30, 3},
+		{"Anel da Energia", ringHero("anel-da-energia"), 20, 8},
+		{"os dois", ringHero("anel-da-vitalidade", "anel-da-energia"), 30, 8},
+		// "Efeitos de itens [...] acumulam com os de outras fontes, mas não entre si" (p226).
+		{"dois iguais valem um", ringHero("anel-da-vitalidade", "anel-da-vitalidade"), 30, 3},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			got := world.VitalsForCharacter(c.hero)
+			if got.PvMax != c.pv || got.PmMax != c.pm {
+				t.Errorf("máximo = %d PV e %d PM, want %d e %d", got.PvMax, got.PmMax, c.pv, c.pm)
+			}
+		})
+	}
+}
+
+// O anel não pertence a nível nenhum: ele é uma linha à parte, e a soma fecha com ela.
+func TestARingIsItsOwnLineInTheAccount(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	hero := ringHero("anel-da-vitalidade")
+	got := world.VitalLevelsFor(world.VitalContextFor(hero), []string{"Guerreiro"})
+
+	if len(got.PV) != 2 {
+		t.Fatalf("a conta de PV tem %d linhas, want o nível e o anel: %+v", len(got.PV), got.PV)
+	}
+	ring := got.PV[1]
+	if ring.Level != 0 || ring.Source != "Anel da vitalidade" || ring.Total != 10 {
+		t.Errorf("a linha do anel veio %+v", ring)
+	}
+	if ring.Note == "" {
+		t.Error("a linha do anel não traz o aviso do dia de uso")
+	}
+	if got.PV[0].Total != 20 {
+		t.Errorf("o anel entrou no 1º nível: %+v", got.PV[0])
+	}
+}

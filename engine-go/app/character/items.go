@@ -77,6 +77,12 @@ func (p Plays) RemoveItem(ctx context.Context, itemID int64) error {
 	return nil
 }
 
+// FollowMaximumChange liga as condições que o PV pede depois de um gesto que moveu o
+// máximo. Ver `sheet.FollowMaximumChange`.
+func (p Plays) FollowMaximumChange(ctx context.Context, dto, projected sheet.CharacterDTO) error {
+	return sheet.FollowMaximumChange(ctx, p.queries, dto, projected)
+}
+
 // SaveCustomItem grava nome, quantidade e espaços de um item da mochila.
 //
 // `spaces` é `float64` porque a coluna `slots` é REAL: a carga do livro conta

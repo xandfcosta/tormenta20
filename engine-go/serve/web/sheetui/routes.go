@@ -302,7 +302,10 @@ func (s Scene) lowerLastLevel(
 		return fmt.Errorf("o nível %d é de %s: só o último nível desce", loss.Level, loss.ClassName)
 	}
 	if target < 1 {
-		return s.plays.LeaveClass(r.Context(), row, class)
+		if err := s.plays.LeaveClass(r.Context(), row, class); err != nil {
+			return err
+		}
+		return s.plays.FollowMaximumChange(r.Context(), dto, withClassAt(dto, class, 0))
 	}
 	if !known {
 		return fmt.Errorf("a ficha %d não tem nível guardado para descer", row.ID)
@@ -315,7 +318,25 @@ func (s Scene) lowerLastLevel(
 	if err := s.plays.LowerLastLevel(r.Context(), row, loss); err != nil {
 		return err
 	}
-	return s.settlePickEffects(r, row, dto, loss.Removed, nil)
+	if err := s.settlePickEffects(r, row, dto, loss.Removed, nil); err != nil {
+		return err
+	}
+	return s.plays.FollowMaximumChange(r.Context(), dto, sheet.LoweredBy(dto, loss))
+}
+
+// withClassAt é a ficha simulada com a classe naquele nível. Nível zero tira a classe.
+func withClassAt(dto sheet.CharacterDTO, class string, level int64) sheet.CharacterDTO {
+	classes := make([]sheet.ClassDTO, 0, len(dto.Classes))
+	for _, entry := range dto.Classes {
+		if entry.ClassName == class {
+			entry.Level = level
+		}
+		if entry.Level > 0 {
+			classes = append(classes, entry)
+		}
+	}
+	dto.Classes = classes
+	return dto
 }
 
 // mudaONivel sobe ou desce UMA CLASSE, e o nível do personagem acompanha.
@@ -346,7 +367,10 @@ func mudaONivel(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) erro
 		}
 		target := cl.Level + int64(step)
 		if step > 0 {
-			return s.plays.LevelClass(r.Context(), row, class, target)
+			if err := s.plays.LevelClass(r.Context(), row, class, target); err != nil {
+				return err
+			}
+			return s.plays.FollowMaximumChange(r.Context(), dto, withClassAt(dto, class, target))
 		}
 		return s.lowerLastLevel(r, row, dto, class, target)
 	}

@@ -157,6 +157,37 @@ func followTheHitPoints(
 	return nil
 }
 
+// FollowMaximumChange liga e desliga as condições quando um gesto move o MÁXIMO de PV: um
+// item que dava PV saiu ou voltou, ou o nível mudou. O PV atual é o máximo menos o dano,
+// então ele anda junto sem passar pelo funil, e quem chega a 0 ou menos cai (p236).
+//
+// Ela recebe a ficha de antes e a SIMULADA, e não relê nada: o gesto já tem a ficha em
+// mãos, e carregá-la de novo para comparar custaria duas cargas a cada equipar. Nenhuma
+// consulta acontece quando o máximo não mudou, que é quase sempre. Ela não grava vital.
+//
+// @example sheet.FollowMaximumChange(ctx, q, dto, projected) // o anel saiu: o PV foi de 5 a -5
+func FollowMaximumChange(ctx context.Context, q *sqlcgen.Queries, dto, projected CharacterDTO) error {
+	if dto.Ruleset == nil {
+		return nil
+	}
+	character, err := EngineCharacterFrom(projected)
+	if err != nil {
+		return err
+	}
+	maxAfter := int64(dto.Ruleset.VitalsForCharacter(character).PvMax)
+	if maxAfter == dto.HpMax {
+		return nil
+	}
+	nonLethal, err := storedNonLethal(ctx, q, dto.ID)
+	if err != nil {
+		return err
+	}
+	before := dto.HpCurrent
+	dto.HpCurrent = WithinHitPoints(before+maxAfter-dto.HpMax, maxAfter)
+	dto.HpMax = maxAfter
+	return followTheHitPoints(ctx, q, &dto, before, dto.HpCurrent, nonLethal)
+}
+
 // Aqui moravam o `RefreshPools` e o `FillPools`, e os dois viraram NADA.
 //
 // O primeiro regravava os poços sem mexer no gasto — o gesto do passo de

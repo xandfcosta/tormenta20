@@ -682,7 +682,7 @@ func absInt(n int) int {
 
 // ─── non-stacking resolution ──────────────────────────────────────────
 
-// AS DUAS FRASES DO EMPILHAMENTO (T20 p107), num dono só.
+// AS DUAS FRASES DO EMPILHAMENTO (T20 p226 e p333), num dono só.
 //
 // Elas existem como função porque DOIS percursos as usam: o `resolveStack`, que
 // dobra uma lista, e o sistema `resolveStacking` da resolução em ECS, que

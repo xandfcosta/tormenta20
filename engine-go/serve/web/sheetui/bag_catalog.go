@@ -123,6 +123,11 @@ func thatGrantsItem(item sheet.ItemDTO, exempt wearerExemptions) []itemChip {
 			continue
 		}
 		chips = append(chips, itemChip{Text: modifierBadge(m)})
+		// O LIVRO PEDE UM PRAZO que o app não conta (os anéis, p342): o bônus soma, e a
+		// nota avisa para o mestre decidir.
+		if (m.Target.K == "maxPv" || m.Target.K == "maxPm") && m.Note != "" {
+			chips = append(chips, itemChip{Text: m.Note, Reason: true})
+		}
 		// A BANDEIRA QUE O PRÓPRIO ITEM ISENTA sai riscada, com o que o verbete
 		// diz ao lado: a Cota élfica ACENDE a bandeira da armadura pesada (ela é
 		// uma cota de malha) e logo em seguida isenta o portador dela. Prometer

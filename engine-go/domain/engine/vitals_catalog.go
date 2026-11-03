@@ -29,6 +29,9 @@ type VitalContext struct {
 	Origin        string                           `json:"origin"`
 	OriginChoices []string                         `json:"originChoices"`
 	AttrTotals    map[string]int                   `json:"attrTotals"`
+	// ItemGrants são os itens vestidos que dão PV ou PM (os anéis, p342), já com o não
+	// empilhamento. Moram à parte porque não pertencem a nível nenhum.
+	ItemGrants []vitalGrant `json:"-"`
 }
 
 type VitalPools struct {
@@ -58,9 +61,14 @@ type VitalLevelPart struct {
 
 // VitalLevelLine é a conta de um nível. Floored é o "pelo menos 1 PV" (p35): as
 // parcelas somam menos que o Total.
+//
+// A linha de um item não é de nível nenhum: Level é zero, Source é o item e Note é o
+// que o livro pede dele.
 type VitalLevelLine struct {
 	Level     int
 	ClassName string
+	Source    string
+	Note      string
 	Parts     []VitalLevelPart
 	Floored   bool
 	Total     int
@@ -133,6 +141,15 @@ func (r *Ruleset) VitalLevelsFor(ctx VitalContext, classByLevel []string) VitalL
 		out.PV = append(out.PV, pv)
 		out.PM = append(out.PM, pm)
 	}
+	for _, item := range ctx.ItemGrants {
+		amount := evalModifierScale(item.Amount, item.Scale, ctx.Level, ctx.AttrTotals)
+		line := VitalLevelLine{Source: item.Source, Note: item.Note, Total: amount}
+		if item.Target.K == "maxPv" {
+			out.PV = append(out.PV, line)
+		} else {
+			out.PM = append(out.PM, line)
+		}
+	}
 	return out
 }
 
@@ -159,6 +176,39 @@ func levelOrderOf(classes []ClassEntry, classByLevel []string) []string {
 	return classByLevel
 }
 
+// itemVitalGrants são os modificadores de PV e PM dos itens que estão valendo.
+//
+// "Dois itens [...] que forneçam +1 em Fortitude não terá +2 — como os efeitos são da
+// mesma fonte, não acumulam" (p226), então dois Anéis da Vitalidade valem um. O corte é aqui porque estes modificadores não passam pela pilha do
+// `resolveStack`, que é de quem tem `ItemEffects`.
+func (r *Ruleset) itemVitalGrants(items []CharacterItem) []vitalGrant {
+	best := map[string]int{}
+	out := []vitalGrant{}
+	for _, it := range items {
+		if it.CatalogID == nil {
+			continue
+		}
+		catalog := r.getCatalogItem(*it.CatalogID)
+		if catalog == nil {
+			continue
+		}
+		for _, m := range r.ownItemMods(it, catalog) {
+			if (m.Target.K != "maxPv" && m.Target.K != "maxPm") || !conditionMet(m, it.Equipped) {
+				continue
+			}
+			key := m.Target.K + ":" + m.BonusType
+			at, seen := best[key]
+			if !seen {
+				best[key] = len(out)
+				out = append(out, vitalGrant{Modifier: m, Source: catalog.Name})
+			} else if m.Amount > out[at].Amount {
+				out[at] = vitalGrant{Modifier: m, Source: catalog.Name}
+			}
+		}
+	}
+	return out
+}
+
 // vitalGrant é um modificador de PV ou PM, com o nome de quem o concede.
 type vitalGrant struct {
 	Modifier
@@ -174,7 +224,7 @@ type vitalGrant struct {
 // A metade da DEFESA da mesma regra (o bucaneiro/nobre e o Carisma) não está
 // implementada — o resolveStack agrupa por bonusType, não por atributo.
 func (r *Ruleset) sumVitalGrants(ctx VitalContext) (pv, pm int) {
-	for _, grant := range r.vitalGrants(ctx) {
+	for _, grant := range append(r.vitalGrants(ctx), ctx.ItemGrants...) {
 		amount := evalModifierScale(grant.Amount, grant.Scale, ctx.Level, ctx.AttrTotals)
 		if grant.Target.K == "maxPv" {
 			pv += amount

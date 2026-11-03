@@ -20,6 +20,11 @@ func (s Scene) keepsChosenExpertises(r *http.Request, row sqlcgen.Character, cha
 	if err != nil {
 		return err
 	}
+	return keepsChosenExpertisesOf(dto, row, change)
+}
+
+// keepsChosenExpertisesOf é a mesma recusa para quem já carregou a ficha.
+func keepsChosenExpertisesOf(dto sheet.CharacterDTO, row sqlcgen.Character, change func(*sheet.CharacterDTO)) error {
 	if !sheet.HasExpertiseChoice(dto.PowerChoices) &&
 		!sheet.HasRaceAbilityPicks(row.Raceattributechoices, row.Secondaryracechoices) {
 		return nil

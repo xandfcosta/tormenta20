@@ -247,8 +247,9 @@ func scaleWhatTheSourceFactorHits(w *ecs.World) {
 	})
 }
 
-// resolveStacking cala quem perde o empilhamento (T20 p107: bônus do mesmo tipo
-// não se somam, vale o maior; `untyped` é a exceção e acumula).
+// resolveStacking cala quem perde o empilhamento (T20 p226: efeitos de itens "acumulam
+// com os de outras fontes, mas não entre si", e p333: "use apenas o melhor"). O
+// `untyped` é a exceção e acumula.
 //
 // Ele CALA em vez de descartar, e é a diferença que esta fatia compra: o termo
 // que perdeu continua no mundo, com a razão escrita.
