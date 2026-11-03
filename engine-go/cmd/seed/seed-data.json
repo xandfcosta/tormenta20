@@ -789,6 +789,10 @@
                 "equipped": "wielded"
               },
               {
+                "catalogId": "azagaia",
+                "equipped": "wielded2"
+              },
+              {
                 "catalogId": "armadura-couro",
                 "equipped": "vested"
               },
