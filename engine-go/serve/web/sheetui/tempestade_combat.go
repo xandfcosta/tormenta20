@@ -63,7 +63,7 @@ func weaponSumTerms(card engine.WeaponCard) (attack, damage []ds.SumTerm) {
 	attack = withContributions(attack, card.Attack-card.Expertise.Total, card.AttackAll.Contributions, card.AttackOwn.Contributions)
 
 	bonus := card.DamageBonus
-	if card.Skill == "Luta" {
+	if addsAttributeToDamage(card) {
 		strength := ds.SumTerm{Label: "Força", Value: book.WithSign(card.StrDamage)}
 		if card.DexDamage {
 			strength = ds.SumTerm{Label: "Destreza", Note: "Acuidade com Arma", Value: book.WithSign(card.StrDamage)}
