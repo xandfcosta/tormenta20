@@ -111,7 +111,7 @@ func tempestadeBag(v View) templ.Component {
 		})
 		templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{
 			"type": "button", "commandfor": "item-add", "command": "show-modal", "aria-haspopup": "dialog",
-			"data-on:click": "$item_qty = 1; $catalog_search = ''; $catalog_category = ''",
+			"data-on:click": "$catalog_search = ''; $catalog_category = ''",
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

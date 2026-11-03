@@ -45,19 +45,16 @@ func (s Scene) refusesPastTheDoubleOf(dto sheet.CharacterDTO, added float64) err
 // O NOME e os ESPAÇOS vêm do catálogo, e não do cliente: são dado transcrito do
 // livro, e deixar o navegador mandá-los abriria a porta para uma "Espada longa"
 // de 0 espaços.
-func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+func addCatalogItem(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	catalog := book.ItemByID(chi.URLParam(r, "catalogo"))
 	if catalog == nil {
 		return fmt.Errorf("o item %q não existe no livro", chi.URLParam(r, "catalogo"))
 	}
-	amount, err := askedQuantity(signals)
-	if err != nil {
+	// Sempre um por gesto: a quantidade só muda no Editar do item (decisão do dono).
+	if err := s.refusePastTheDouble(r, row, catalog.Slots); err != nil {
 		return err
 	}
-	if err := s.refusePastTheDouble(r, row, float64(amount)*catalog.Slots); err != nil {
-		return err
-	}
-	return s.plays.AddCatalogItem(r.Context(), row.ID, catalog.ID, amount)
+	return s.plays.AddCatalogItem(r.Context(), row.ID, catalog.ID)
 }
 
 // addCustomItem cria o item que o livro não tem — a lembrança de um NPC, a
@@ -195,8 +192,8 @@ func askedQuantity(signals Signals) (int64, error) {
 	if signals.ItemQtd == nil {
 		return 1, nil
 	}
-	if *signals.ItemQtd < 1 || *signals.ItemQtd > 9999 {
-		return 0, fmt.Errorf("a quantidade %d está fora de 1 a 9999", *signals.ItemQtd)
+	if *signals.ItemQtd < 1 || *signals.ItemQtd > sheet.MaxItemQuantity {
+		return 0, fmt.Errorf("a quantidade %d está fora de 1 a %d", *signals.ItemQtd, sheet.MaxItemQuantity)
 	}
 	return *signals.ItemQtd, nil
 }

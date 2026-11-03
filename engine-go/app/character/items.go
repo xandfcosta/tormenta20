@@ -29,31 +29,64 @@ import (
 //
 // O NOME e os ESPAÇOS saem do catálogo e não de quem chama, e isso é a regra e
 // não zelo: são dado transcrito do livro, e deixar o navegador mandá-los abriria
-// a porta para uma "Espada longa" de 0 espaços. Quem chama diz QUAL item e
-// QUANTOS, que é tudo o que ele sabe.
-func (p Plays) AddCatalogItem(
-	ctx context.Context, characterID int64, catalogID string, amount int64,
-) error {
+// a porta para uma "Espada longa" de 0 espaços. Quem chama diz QUAL item, e
+// mais nada: cada gesto põe um, e a quantidade maior é do Editar do item.
+func (p Plays) AddCatalogItem(ctx context.Context, characterID int64, catalogID string) error {
 	catalog := book.ItemByID(catalogID)
 	if catalog == nil {
 		return fmt.Errorf("o item %q não existe no livro", catalogID)
 	}
-	if _, err := p.queries.CreateItem(ctx, sqlcgen.CreateItemParams{
-		Characterid:  characterID,
-		Catalogid:    sql.NullString{String: catalog.ID, Valid: true},
-		Name:         catalog.Name,
-		Quantity:     amount,
-		Slots:        catalog.Slots,
-		Improvements: "[]",
-		Createdat:    dbvalue.NowISO(),
-	}); err != nil {
-		return fmt.Errorf("pôr %q na mochila de %d: %w", catalog.Name, characterID, err)
+	return p.inTx(ctx, "pôr "+catalog.Name+" na mochila", func(q *sqlcgen.Queries) error {
+		if catalog.StacksInTheBag() {
+			summed, err := addOneToPlainLine(ctx, q, characterID, *catalog)
+			if err != nil || summed {
+				return err
+			}
+		}
+		if _, err := q.CreateItem(ctx, sqlcgen.CreateItemParams{
+			Characterid:  characterID,
+			Catalogid:    sql.NullString{String: catalog.ID, Valid: true},
+			Name:         catalog.Name,
+			Quantity:     1,
+			Slots:        catalog.Slots,
+			Improvements: "[]",
+			Createdat:    dbvalue.NowISO(),
+		}); err != nil {
+			return fmt.Errorf("pôr %q na mochila de %d: %w", catalog.Name, characterID, err)
+		}
+		return nil
+	})
+}
+
+// addOneToPlainLine soma um na primeira linha que ainda é só este item do livro, e diz
+// se achou uma. Linha no corpo, melhorada ou editada não recebe a soma: a peça
+// nova ganharia o lugar, as melhorias ou o nome da outra.
+func addOneToPlainLine(ctx context.Context, q *sqlcgen.Queries, characterID int64, catalog book.Item) (bool, error) {
+	lines, err := q.ListItemsByCharacter(ctx, characterID)
+	if err != nil {
+		return false, fmt.Errorf("ler a mochila de %d: %w", characterID, err)
 	}
-	return nil
+	for _, line := range lines {
+		plain := !line.Equipped.Valid && !line.Material.Valid && line.Improvements == "[]"
+		sameEntry := line.Catalogid.String == catalog.ID && line.Name == catalog.Name && line.Slots == catalog.Slots
+		if !plain || !sameEntry {
+			continue
+		}
+		total := line.Quantity + 1
+		if total > sheet.MaxItemQuantity {
+			return false, fmt.Errorf("%s somaria %d, e o máximo são %d", catalog.Name, total, sheet.MaxItemQuantity)
+		}
+		if err := q.SetItemQuantity(ctx, sqlcgen.SetItemQuantityParams{Quantity: total, ID: line.ID}); err != nil {
+			return false, fmt.Errorf("somar %q na linha %d: %w", catalog.Name, line.ID, err)
+		}
+		return true, nil
+	}
+	return false, nil
 }
 
 // AddCustomItem cria o item que o livro não tem — a lembrança de um NPC, a
-// chave de um cofre.
+// chave de um cofre. Ele nunca soma: dois itens caseiros são diferentes,
+// mesmo com o mesmo nome.
 func (p Plays) AddCustomItem(
 	ctx context.Context, characterID int64, name string, amount int64, spaces float64,
 ) error {

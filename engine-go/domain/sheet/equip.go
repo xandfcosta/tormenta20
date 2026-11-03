@@ -132,6 +132,9 @@ func EquipLimitErrorOver(equipped []sqlcgen.ListEquippedItemsRow, excludeItemID 
 	return EquipLimitError(others, incoming)
 }
 
+// MaxItemQuantity é o teto da quantidade de uma linha da mochila.
+const MaxItemQuantity = 9999
+
 // SlotsNotMultiple diz se o espaço NÃO é um múltiplo finito de 0,5.
 //
 // A carga conta de meio em meio (uma adaga ocupa 1, um bálsamo 0,5), então um

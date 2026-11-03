@@ -22,6 +22,15 @@ func ItemByID(id string) *Item {
 	return nil
 }
 
+// StacksInTheBag diz se mais um deste item soma na linha que já existe.
+//
+// Arma, armadura e escudo não somam: a linha guarda o lugar no corpo, as
+// melhorias e o material, e uma pilha não se divide. Duas espadas curtas numa
+// linha só não iriam para as duas mãos.
+func (i Item) StacksInTheBag() bool {
+	return i.Weapon == nil && i.Armor == nil && i.Shield == nil
+}
+
 // ItemByName é a busca por NOME, sem diferenciar maiúsculas.
 //
 // Existe porque nem toda procedência cita o item por id: a linha "Itens" de uma

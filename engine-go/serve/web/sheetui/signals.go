@@ -82,8 +82,8 @@ type Signals struct {
 	// Os filtros do diálogo de adicionar do catálogo.
 	CatalogSearch   string `json:"catalog_search"`
 	CatalogCategory string `json:"catalog_category"`
-	// Os campos de um item: quantidade, nome e espaços. `ItemQtd` serve ao
-	// catálogo e à edição; os outros dois só ao item custom.
+	// Os campos de um item: quantidade, nome e espaços, do item caseiro e da
+	// edição. O catálogo não os lê: ele põe um item por gesto.
 	ItemQtd   *int64   `json:"item_qty"`
 	ItemName  *string  `json:"item_name"`
 	ItemSlots *float64 `json:"item_slots"`

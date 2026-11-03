@@ -147,7 +147,6 @@ templ itemAddDialog(v View) {
 					}
 				}
 			</div>
-			@ds.TextField(ds.Field{ID: "catalog-qty", Label: "Quantidade", Type: "number"}, templ.Attributes{"min": "1", "max": "9999", "data-bind:item_qty": true})
 		}
 		@ds.DialogScroll() {
 			@ds.List("No livro", strconv.Itoa(len(v.Bag.Catalog))) {
