@@ -252,6 +252,8 @@ func (s Scene) Load(
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet), dto)
 		v.SpellCasting = spellCastingOf(sheet)
 		v.Expertises = expertisePanelFor(dto, sheet, search)
+		v.Choices.Training = classTrainingOf(dto, sheet)
+		v.Choices.Pending = append(v.Choices.Pending, trainingPendings(v.Choices.Training)...)
 		// DEPOIS dos três, e não ao lado: o painel de Ações não computa nada —
 		// ele reagrupa o Combate, os Poderes e as Magias, e montá-lo antes
 		// deles o deixaria lendo campos vazios.

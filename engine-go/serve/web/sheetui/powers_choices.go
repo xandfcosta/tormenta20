@@ -32,6 +32,8 @@ type choicesPanel struct {
 	Classes []classChoiceCard
 	// Devotion é o passo da devoção, que toda ficha tem.
 	Devotion devotionChoice
+	// Training é o passo das perícias da primeira classe, ou nil sem classe.
+	Training *sheet.ClassTraining
 }
 
 // devotionChoice é o deus da ficha e os poderes que ele concede.

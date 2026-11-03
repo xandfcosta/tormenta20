@@ -1,6 +1,11 @@
 package sheetui
 
 import (
+	"net/url"
+	"slices"
+	"strconv"
+
+	"t20engine/domain/sheet"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
 )
@@ -85,7 +90,30 @@ templ choiceStepSection(v View, step choiceStep) {
 					@ds.List("", "") {
 						@powerPickRow(v, step.Power, false)
 					}
+				case "training":
+					@classTrainingDs(v, *v.Choices.Training)
 			}
 		}
 	</section>
+}
+
+// classTrainingDs é o passo das perícias da classe. O gesto é o mesmo interruptor
+// de treino da aba Perícias, e por isso uma tela nunca desfaz a outra.
+templ classTrainingDs(v View, training sheet.ClassTraining) {
+	for _, block := range training.Blocks {
+		<div class="ds-field">
+			<div class="ds-pick-head">
+				<span class="ds-field-label">{ block.Name }</span>
+				<span class="ds-row-meta">{ strconv.Itoa(block.Chosen) + " de " + strconv.Itoa(block.Limit) }</span>
+			</div>
+			<div class="ds-options">
+				for _, name := range block.Offered {
+					@ds.Option(slices.Contains(block.Trained, name), templ.Attributes{"aria-label": block.Name + ": " + name, "data-on:click": sheetPost(v, "/pericias/treino/"+url.PathEscape(name))}) {
+						{ name }
+					}
+				}
+			</div>
+		</div>
+	}
+	<span class="ds-help">A perícia que a origem ou um poder já treina não aparece aqui, porque não gasta escolha.</span>
 }

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // OS PASSOS DO ESCOLHER (ALE-473), pelo mockup aprovado: cada escolha que a
@@ -22,7 +25,7 @@ type choiceStep struct {
 	Count string
 	Done  bool
 	// Kind diz o que o passo desenha: `race`, `origin`, `powers`, `path`,
-	// `devotion`, `counted` ou `general`.
+	// `devotion`, `counted`, `general` ou `training`.
 	Kind    string
 	Race    raceChoiceCard
 	Class   classChoiceCard
@@ -40,6 +43,18 @@ func (s choiceStep) Tag() string {
 		return "falta 1"
 	}
 	return s.Count
+}
+
+// classTrainingOf monta o passo das perícias da classe. Quem outra fonte já treina
+// sai da conta do motor, que é a mesma que a aba Perícias mostra.
+func classTrainingOf(dto sheet.CharacterDTO, computed engine.ComputedSheet) *sheet.ClassTraining {
+	elsewhere := map[string]bool{}
+	for _, expertise := range computed.Expertises {
+		if len(expertise.TrainedBy) > 0 {
+			elsewhere[expertise.Name] = true
+		}
+	}
+	return sheet.ClassTrainingOf(dto, elsewhere)
 }
 
 // choiceStepsOf são os passos na ordem em que o livro monta um personagem —
@@ -62,6 +77,12 @@ func choiceStepsOf(v View) []choiceStep {
 	}
 	if o := v.Choices.Origin; o != nil {
 		all = append(all, choiceStep{ID: "origin", Title: "Origem · " + o.Name, Meta: "benefícios", Count: originWritten(*o), Done: o.Left <= 0, Kind: "origin"})
+	}
+	if t := v.Choices.Training; t != nil && t.Limit() > 0 {
+		all = append(all, choiceStep{
+			ID: "class-" + t.ClassName + "-training", Title: t.ClassName + " · perícias", Meta: "treino da classe",
+			Count: strconv.Itoa(t.Chosen()) + " de " + strconv.Itoa(t.Limit()), Done: t.Chosen() >= t.Limit(), Kind: "training",
+		})
 	}
 	for _, card := range v.Choices.Classes {
 		prefix := "class-" + card.ClassName

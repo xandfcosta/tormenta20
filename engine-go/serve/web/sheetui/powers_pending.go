@@ -159,6 +159,22 @@ func originPending(dto sheet.CharacterDTO) []pendencia {
 	}}
 }
 
+// trainingPendings é o treino da classe que falta. Ela mora fora do `classPendings`
+// porque só o motor sabe o que a origem já treinou: sem isso, a pendência contaria o
+// que o passo não oferece.
+func trainingPendings(training *sheet.ClassTraining) []pendencia {
+	if training == nil {
+		return nil
+	}
+	switch missing := training.Limit() - training.Chosen(); {
+	case missing == 1:
+		return []pendencia{{Source: "classe", Label: training.ClassName + ": 1 perícia por escolher"}}
+	case missing > 1:
+		return []pendencia{{Source: "classe", Label: fmt.Sprintf("%s: %d perícias por escolher", training.ClassName, missing)}}
+	}
+	return nil
+}
+
 func classPendings(dto sheet.CharacterDTO) []pendencia {
 	choices := sheet.ClassChoiceSelections(dto)
 	used := sheet.UsedPowerSlots(dto)
