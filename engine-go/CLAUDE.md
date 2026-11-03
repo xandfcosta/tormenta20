@@ -423,26 +423,10 @@ um mundo à parte. A entidade muda porque a pergunta muda:
 | **terreno sob a peça** (`situations_ecs.go`) | a PEÇA | que terreno ela está pisando, e o que ele faz com o ataque? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
-### A derivação, e o que ela CUSTOU
-
-O grafo tem uma aresta só (a carga alimenta o deslocamento e as perícias); o
-resto lê `(personagem, efeitos)`. **Um sistema que não roda deixa o componente
-ausente, e quem o lê recebe ZERO**, sem erro nem log. Pagam isso o
-`TestEveryDerivationSystemWritesItsComponent` (lista à mão, uma conferência por
-sistema, porque o `ecs` não diz quantos componentes uma entidade tem) e o
-`TestTheLoadIsDerivedBeforeWhatReadsIt`, que prende a aresta com o personagem
-SOBRECARREGADO: sem isso, a carga zerada e a de verdade dão o mesmo deslocamento.
-
 ### Os componentes são agrupados por PERGUNTA
 
 Um componente junta o que se lê junto: `derivedMagic` carrega limite de PM, CD e
 custo. Um campo por componente seria a struct de volta, com cerimônia.
-
-### O que a resolução em sistemas comprou
-
-O termo que não cumpre condição, perde o empilhamento ou vira fator fica no
-mundo com a tag `Suppressed{Why}`, para a ficha poder responder *"por que 12?"*
-com "−2 de X, não aplicado por não empilhar". A tela ainda não o lê.
 
 ### O ataque em sistemas, e a única ordem que a rede NÃO pegava
 
@@ -456,37 +440,6 @@ com "−2 de X, não aplicado por não empilhar". A tela ainda não o lê.
   passe depois não troca o motivo que a mesa lê pelo dele.
 - **A notação de dano só é lida no tempo do dano**: julgar o teste não a lê, e o
   `RollAttackDamage` e o `DamageToRoll` falham num `"1d"` do catálogo sempre.
-
-### O tabuleiro entrou, e foi ele quem devolveu o `Despawn`
-
-- **Peça e marcador são a mesma espécie de entidade, e o que o mestre escondeu
-  SOME INTEIRO**: `Despawn` apaga a entidade e todo componente dela; "presente
-  porém anônima" entregaria a emboscada igual. O `Despawn` pela metade é pego
-  pelos casos de redação do `domain/board`.
-- **A ENTIDADE NÃO TROCA entre os gestos do tabuleiro**, ao contrário da ficha:
-  muda o COMPONENTE (`body` para quem pergunta quadrado, `boundTo` para quem
-  pergunta fila), e os dois pipelines compartilham um construtor de mundo só.
-- **A ORDEM da redação é regra**: é a de DESENHO (quem vem depois fica por cima)
-  e decide qual peça a tela oferece para mover. Asserção sobre CONTEÚDO
-  sobrevive a um embaralhamento; prendem o `TestTheRedactionKeepsTheDrawingOrder`
-  e o `TestTheRedactionKeepsTheMarkerOrder`.
-- **O CORPO da peça é um componente** (`body`), dono de "ocupa
-  `footprint × footprint` quadrados a partir da âncora". O footprint zerado vira
-  1 ali porque a peça do BANCO não passa pelo `AddToken`
-  (`TestATokenSavedWithoutASizeStillTakesItsSquare`).
-- **Monte o mundo UMA vez por gesto**: o `PopulateBoard` põe a peça recém-criada
-  no mundo antes de procurar o quadrado da seguinte, ou as duas acham o mesmo
-  lugar livre.
-
-### A FRONTEIRA do tabuleiro abriu para o núcleo, e o preço foi um guarda
-
-O `domain/ecs` está na lista de permitidos do
-`TestTheBoardDoesNotKnowTheCharacterSheet` pela razão do `infra/events`: é FOLHA
-e não sabe o que é Tormenta. A lista avisa: *acrescentar import a ela transforma
-a porta em enfeite*. A folha tem guarda, `TestTheCoreImportsNothingOfTheProject`
-(exceção: o `world_test.go`, do pacote externo `ecs_test`), que varre os testes
-de propósito: os componentes de mentira do núcleo se chamam `label` e `weight`
-porque *"se uma palavra do livro aparecer neste pacote, o desenho vazou"*.
 
 ### A ORDEM dos sistemas é a regra, em toda fase
 
@@ -1201,18 +1154,6 @@ cobertura. Arranjo por uma porta que nenhum caminho de produção usa, ou bancad
 que escreve uma coluna que a produção nunca escreve, deixa o verde sobre o
 arranjo. **Monte o estado pelo caminho de produção**, não pela porta mais curta.
 
-### O RACIOCÍNIO guardado envelhece como o código guardado
-
-Docstring envelhece como `.md`, e ninguém relê a de função que não vai tocar —
-ver "Comentários" no [CLAUDE.md da raiz](../CLAUDE.md); a sonda que caça isso
-precisa do controle positivo de "O INSTRUMENTO MENTE COM CARA DE RESULTADO".
-
-### Guarda de leiaute precisa do ESTADO, não só da cena
-
-Ver "Um guarda só mede o que ele VISITA" no [CLAUDE.md da raiz](../CLAUDE.md).
-**Texto escondido por CSS sai da árvore de acessibilidade**: um rótulo com
-`display:none` não é lido nem pelo leitor de tela nem pelo `getByLabel`.
-
 ## Apagar código morto: as armadilhas do RECORTE
 
 Quantos métodos exportados o `*Server` ainda tem se pergunta ao código:
@@ -1231,26 +1172,6 @@ alguém chama.
 **Cena se testa pelo `WebRouter()`**, não pelo `Router()` da API JSON. Guarda
 que varre rotas morre com o terreno; confira se a invariante mudou de casa (a
 escrita de ficha por estranho é do `TestNoSheetWriteAcceptsAStranger`).
-
-## Os pacotes que saíram do `api`
-
-`campaign`, `account`, `search`, `book`, `sheet` e `creature` são do `domain/`;
-`events`, da `infra/`. Para a próxima extração:
-
-1. **Função pura copiada por causa de fronteira é lugar de defeito silencioso.**
-   Copie o CORPO do original, nunca uma reescrita de memória — e prefira o
-   pacote, que apaga a cópia e a razão de haver duas.
-2. **O guarda de fronteira que mais importa é o do pacote MAIS IMPORTADO.** Se
-   o `book` alcançar o `api`, toda cena que o importa alcança HTTP com o guarda
-   de cada uma VERDE, porque cada um só olha os próprios imports. Vale para
-   `sheet`, `creature` e `events`.
-3. **A regra de PRODUTO não desce para a infraestrutura** — por isso o
-   `account` ("a senha tem ao menos 8 caracteres") mora no `domain/`. Regra com
-   consumidor de TELA e de API tem UMA frase, em pt-BR, morando com ela: duas
-   frases quebram quando alguém mexe no limite.
-
-**O critério de mover é a DEPENDÊNCIA, medida:** "isto carrega HTTP?" se
-responde nos imports do arquivo, não no assunto dele.
 
 ## `web/ui`: o kit de apresentação, e o que ele NÃO pode saber
 
@@ -1318,31 +1239,6 @@ duplicação é deliberada, e o `e2e/tests/support/focus.ts`
 - **Guarda que aproxima um seletor mede outro seletor**: a isenção do anel
   COPIA o da folha (`[data-nav-region] :is(a, button, [data-nav-item])`), não
   "tudo dentro de `[data-nav-region]`".
-
-## As notas numa janela própria, e o pacto que as torna únicas
-
-`GET /campanhas/{campanha}/sessoes/{sessao}/notas` desenha o MESMO painel, sem
-o mapa. **É CENA**, porque nó adotado por outro documento perde o Datastar (ver
-"O nó que muda de DOCUMENTO"). Reusa `notesBody`, `modesRange` e
-`autosaveState`; o que ela NÃO tem está decidido no cabeçalho do
-`notes_window.templ`.
-
-**As duas não podem estar abertas ao mesmo tempo**: ambas gravam
-`sessions.notes` com autosave de 1,2s, e quem salva por último apaga o parágrafo
-do outro, com as DUAS faixas dizendo "Salvo". O pacto é `localStorage` mais o
-evento `storage` (chega a toda janela da origem sem objeto vivo), com chave
-pelo ID DA SESSÃO.
-
-- **Quem fecha a coluna é o ANÚNCIO da janela, não o clique**: com o pop-up
-  bloqueado, a coluna fica, e o bloqueio é dito em PALAVRAS — `window.open`
-  devolvendo nulo é a única pista.
-- **`pagehide`, não `beforeunload`** (que pede confirmação em alguns caminhos);
-  `unload` é pulado no cache de ida e volta.
-- **A chave pode ficar PRESA** se a janela morrer sem `pagehide`; o botão chama
-  `window.open` com o mesmo NOME, que acha a janela viva ou abre outra.
-
-O `TestEveryAddressAPostWritesExistsInTheRouter` confere o `window.open` como
-GET: perguntar por POST no mesmo caminho acharia a rota de SALVAR.
 
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
@@ -1580,7 +1476,7 @@ Uma janela própria (Document Picture-in-Picture, `<iframe>`) que pega o nó viv
 com `appendChild` leva classes, texto e `data-*`, **mas não a reatividade**: o
 runtime observa o documento de origem. Sem exceção, sem console, tela perfeita.
 **Superfície que vai para janela própria é CENA com endereço**, com o runtime
-dela (ver "As notas numa janela própria").
+dela (ver o cabeçalho do `notes_window.templ`).
 
 ## O evento de ponteiro SINTÉTICO destrói o que ele mede
 

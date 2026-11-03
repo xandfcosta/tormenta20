@@ -1,8 +1,6 @@
 package table
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // A JANELA DAS NOTAS (ALE-218) — a mesma superfície, sem o mapa em volta.
 //
@@ -10,6 +8,23 @@ import (
 // `modesRange`: a janela não é outra tela, é o mesmo painel noutro lugar. Duas
 // cópias do editor divergiriam na primeira mudança de gramática do markdown,
 // que é o defeito que o `.templ` vizinho existe para não ter.
+//
+// É CENA, e não o nó movido, porque nó adotado por outro documento perde o Datastar.
+//
+// AS DUAS NÃO PODEM ESTAR ABERTAS AO MESMO TEMPO: ambas gravam `sessions.notes` com
+// autosave de 1,2s, e quem salva por último apaga o parágrafo do outro, com as DUAS
+// faixas dizendo "Salvo". O pacto é `localStorage` mais o evento `storage`, que chega a
+// toda janela da origem sem objeto vivo, com chave pelo ID DA SESSÃO.
+//
+//   - quem fecha a coluna é o ANÚNCIO da janela, e não o clique: com o pop-up bloqueado,
+//     a coluna fica, e o bloqueio é dito em PALAVRAS (`window.open` devolvendo nulo é a
+//     única pista);
+//   - `pagehide`, e não `beforeunload`, que pede confirmação em alguns caminhos; `unload`
+//     é pulado no cache de ida e volta;
+//   - a chave pode ficar PRESA se a janela morrer sem `pagehide`, e por isso o botão chama
+//     `window.open` com o mesmo NOME, que acha a janela viva ou abre outra;
+//   - o `TestEveryAddressAPostWritesExistsInTheRouter` confere o `window.open` como GET:
+//     perguntar por POST no mesmo caminho acharia a rota de SALVAR.
 //
 // O que ela NÃO tem, e cada ausência é uma decisão:
 //
