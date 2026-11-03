@@ -1,12 +1,12 @@
 package engine
 
 // WeaponCard is one wielded-weapon formula card (combat-magic-stats.tsx
-// WeaponFormulaCards): attack = the weapon's attack perícia (Luta melee/thrown,
-// Pontaria ranged) + global attack mods; damage adds Força for melee/thrown (not
-// ranged) + global damage mods. Go owns the NUMBERS; the structural row labels
+// WeaponFormulaCards): attack = the weapon's attack perícia (Luta melee, Pontaria
+// thrown/fired) + global attack mods; damage adds Força for melee/thrown (not
+// fired) + global damage mods. Go owns the NUMBERS; the structural row labels
 // (½ nível, FOR, Treino) and the crit string are applied on the front. Per-weapon
-// mods (desbalanceada, Certeira…) already ride the Luta/Pontaria mirror inside
-// effects, so the expertise breakdown carries them — no scope:'this' added here.
+// mods (desbalanceada, Certeira…) ride the weapon scope inside effects, so they
+// land on this weapon's cards through `AttackOwn` — no scope:'this' added here.
 // ExtraDamage é uma parcela de dano de outro tipo, somada por um encanto.
 type ExtraDamage struct {
 	Dice string `json:"dice"` // "1d6"
@@ -118,9 +118,9 @@ const (
 
 // weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
 //
-// O tipo é o PROPÓSITO que o catálogo dá à arma, um só: a machadinha é de
-// arremesso, então o Esgrimista não soma nela nem quando ela é usada corpo a
-// corpo. É a mesma leitura que decide se a Força entra no dano.
+// O tipo é o PROPÓSITO desta carta, um só: a machadinha corpo a corpo recebe o
+// Esgrimista, e a carta dela de arremesso recebe o Estilo de Arremesso. É a mesma
+// leitura que decide se a Força entra no dano.
 func weaponKindScopes(w *WeaponStats) []string {
 	switch w.Purpose {
 	case "ranged":
@@ -140,6 +140,25 @@ func weaponKindScopes(w *WeaponStats) []string {
 	return nil
 }
 
+// thrownCardSuffix distingue, no nome da carta, o uso de arremesso de uma arma
+// corpo a corpo. É um substantivo para servir à lança e ao tridente.
+const thrownCardSuffix = " (arremesso)"
+
+// thrownUseOf é a mesma arma arremessada, ou nulo se ela não tem esse segundo uso.
+//
+// "Armas com alcance podem ser usadas para ataques à distância" (p143), e é o
+// alcance na Tabela 3-3 (p144) que separa a lança da espada. A espada também voa,
+// com −5 e em alcance curto (p143), mas uma carta para cada arma da mão encheria
+// a ficha com um gesto raro: esse fica com o mestre.
+func thrownUseOf(w *WeaponStats) *WeaponStats {
+	if w.Purpose != "melee" || w.Range == "" {
+		return nil
+	}
+	thrown := *w
+	thrown.Purpose = "thrown"
+	return &thrown
+}
+
 // ownContribsOf junta as parcelas que valem só para esta arma, numa decomposição
 // — do dano ou do ataque.
 func ownContribsOf(parts ...TotalContribs) TotalContribs {
@@ -153,7 +172,8 @@ func ownContribsOf(parts ...TotalContribs) TotalContribs {
 
 // ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
 // the given active conditionals (Fúria's global attack/damage mods land in
-// attackAll/damageAll). Only catalog weapons in a hand slot, capped at two.
+// attackAll/damageAll). Only catalog weapons in a hand slot, capped at two. A melee
+// weapon with range has a card for each use, and the thrown one comes right after.
 func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string]bool) []WeaponCard {
 	return r.weaponCardsWith(ch, activeConditionals, nil)
 }
@@ -174,6 +194,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 	damageThis := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "this"})
 
 	cards := []WeaponCard{}
+	weaponsInHand := 0
 	for _, it := range ch.Items {
 		if it.Equipped == nil || (*it.Equipped != "wielded" && *it.Equipped != "wielded2") {
 			continue
@@ -193,16 +214,25 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
-		scopes := append([]string{weaponScope}, weaponKindScopes(w)...)
 		// "Armas aumentadas [...] causam um passo a mais de dano" (p143).
 		if it.Oversized {
-			scopes = append(scopes, OversizedWeaponScope)
 			steps++
 		}
-		card := shared.card(ch, it.Name, w, scopes, damageThis, steps, nonLethal)
-		card.CatalogID = *it.CatalogID
-		cards = append(cards, card)
-		if len(cards) == 2 {
+		cardOf := func(name string, use *WeaponStats) WeaponCard {
+			scopes := append([]string{weaponScope}, weaponKindScopes(use)...)
+			if it.Oversized {
+				scopes = append(scopes, OversizedWeaponScope)
+			}
+			card := shared.card(ch, name, use, scopes, damageThis, steps, nonLethal)
+			card.CatalogID = *it.CatalogID
+			return card
+		}
+		cards = append(cards, cardOf(it.Name, w))
+		if thrown := thrownUseOf(w); thrown != nil {
+			cards = append(cards, cardOf(it.Name+thrownCardSuffix, thrown))
+		}
+		weaponsInHand++
+		if weaponsInHand == 2 {
 			break
 		}
 	}

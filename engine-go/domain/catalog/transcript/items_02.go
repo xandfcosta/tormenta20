@@ -58,7 +58,7 @@ var itemsPart02 = []Item{
 			CritMult:  2,
 			Type:      "perfuracao",
 			Hand:      "one",
-			Purpose:   "thrown",
+			Purpose:   "melee",
 			Range:     "curto",
 			Traits:    []string{"versatil"},
 		},

@@ -34,6 +34,22 @@ func TestTheWeaponSumSaysWhyDexterityAndCountsDamageApart(t *testing.T) {
 	sameTerms(t, "dano com Acuidade", damage, []ds.SumTerm{{Label: "Destreza", Note: "Acuidade com Arma", Value: "+3"}})
 }
 
+// A ARMA DE ARREMESSO ataca com Pontaria e soma a Força no dano (p142): a conta dá nome
+// a ela, e a arma de disparo não tem atributo nenhum para mostrar.
+func TestTheThrownWeaponSumNamesTheStrengthInTheDamage(t *testing.T) {
+	spear := engine.WeaponCard{Name: "Lança (arremesso)", Skill: "Pontaria", Damage: "1d6", StrDamage: 4, DamageBonus: 4}
+	_, damage := weaponSumTerms(spear)
+	sameTerms(t, "dano da lança arremessada", damage, []ds.SumTerm{{Label: "Força", Value: "+4"}})
+	_, rows := weaponRows(spear)
+	if len(rows) != 1 || rows[0].Label != "FOR" || rows[0].Value != "+4" {
+		t.Errorf("a decomposição do dano da lança arremessada: %+v, esperado FOR +4", rows)
+	}
+
+	bow := engine.WeaponCard{Name: "Arco curto", Skill: "Pontaria", Damage: "1d6"}
+	_, damage = weaponSumTerms(bow)
+	sameTerms(t, "dano do arco", damage, []ds.SumTerm{})
+}
+
 func sameTerms(t *testing.T, what string, got, want []ds.SumTerm) {
 	t.Helper()
 	if len(got) != len(want) {

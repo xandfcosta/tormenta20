@@ -1574,6 +1574,44 @@
       "critMult": 2
     },
     {
+      "name": "Adaga (arremesso)",
+      "skill": "Pontaria",
+      "attribute": "dexterity",
+      "attack": 12,
+      "expertise": {
+        "name": "Pontaria",
+        "attribute": "dexterity",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d4",
+      "damageType": "perfuracao",
+      "strDamage": 1,
+      "damageBonus": 1,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 19,
+      "critMult": 2
+    },
+    {
       "name": "Ataque desarmado",
       "skill": "Luta",
       "attribute": "strength",
@@ -1626,6 +1664,44 @@
       "attack": 12,
       "expertise": {
         "name": "Luta",
+        "attribute": "dexterity",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 4,
+        "attrValue": 4,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d4",
+      "damageType": "perfuracao",
+      "strDamage": 1,
+      "damageBonus": 1,
+      "damageAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 19,
+      "critMult": 2
+    },
+    {
+      "name": "Adaga (arremesso)",
+      "skill": "Pontaria",
+      "attribute": "dexterity",
+      "attack": 12,
+      "expertise": {
+        "name": "Pontaria",
         "attribute": "dexterity",
         "base": 12,
         "itemBonus": 0,

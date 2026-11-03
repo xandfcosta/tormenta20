@@ -96,8 +96,8 @@ func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
 	for _, card := range wieldedCards(world.ComputeWeaponCards(ch, nil)) {
 		bonus[card.Name] = card
 	}
-	if len(bonus) != 2 {
-		t.Fatalf("esperava as cartas da espada e da adaga, e vieram %d", len(bonus))
+	if len(bonus) != 3 {
+		t.Fatalf("esperava as cartas da espada e os dois usos da adaga, e vieram %d", len(bonus))
 	}
 
 	// Força 3 no dano das duas; a espada escolhida soma +2.

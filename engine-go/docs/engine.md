@@ -316,6 +316,13 @@ Mente Criminosa não são).
   (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`. O
   ATAQUE por escopo de arma (o `weapon:<id>` do Foco em Arma) é o `AttackOwn`,
   que a decomposição da tela soma.
+- **A arma corpo a corpo com alcance tem uma carta para cada uso** (`thrownUseOf`,
+  p143-144): a mão continua limitada a duas armas, mas o índice da carta não é o da
+  mão. A arma sem alcance também pode voar, com −5 (p143), e a Azagaia pode bater,
+  com −5 (p146): esses gestos raros não têm carta, e ficam com o mestre.
+- **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
+  moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é
+  uma só para a mão inteira, e um bônus nela sobe a arma da outra mão.
 
 ### A devoção é fonte da coleta, e não só de PV e PM
 

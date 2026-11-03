@@ -257,9 +257,15 @@ func overlayModsFor(overlay *CatalogItem, host *CatalogItem) []Modifier {
 	return OverlayModifiers(hostCategory, overlay.Name, overlay.Modifiers)
 }
 
-// mirrorWeaponAttackMods espelha o {attack,scope:this} da arma na perícia de
-// Luta/Pontaria dela — no T20 o ataque É um teste de perícia, então é ali que o
-// bônus tem de aparecer para entrar na conta e na decomposição.
+// mirrorWeaponAttackMods leva o {attack,scope:this} da arma para o escopo dela, que
+// é o que as cartas dessa arma leem e nenhuma outra.
+//
+// NÃO VAI PARA A PERÍCIA, embora no T20 o ataque seja um teste de perícia. Luta é
+// uma só para a mão inteira: a Certeira da espada subia a clava da outra mão e o
+// desarmado, e o −5 de uma arma sem proficiência derrubava os dois (p142, p164).
+//
+// O limite é o id do catálogo: duas adagas na mão dividem o escopo, e a Certeira de
+// uma aparece nas duas.
 //
 // O ESPELHO PRESERVA O `bonusType`, e isso é regra e não zelo: ele nascia
 // `untyped` fixo, e `untyped` é o único tipo que ACUMULA — então a resolução de
@@ -278,7 +284,6 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 	if catalog == nil || catalog.Weapon == nil {
 		return []Modifier{}
 	}
-	expertise := attackExpertiseFor(catalog.Weapon.Purpose)
 	out := []Modifier{}
 	for _, m := range ownMods {
 		if m.Target.K != "attack" || m.Target.Scope != "this" {
@@ -293,7 +298,7 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 			note = "bônus desta arma"
 		}
 		out = append(out, Modifier{
-			Target:    ModifierTarget{K: "expertise", Name: expertise},
+			Target:    ModifierTarget{K: "attack", Scope: WeaponDamageScope(catalog.ID)},
 			Amount:    m.Amount,
 			BonusType: m.BonusType,
 			Condition: condition,
@@ -316,7 +321,7 @@ func equilibradaHomebrewMods(catalog *CatalogItem, improvementIDs []string) []Mo
 		return []Modifier{}
 	}
 	return []Modifier{{
-		Target:    ModifierTarget{K: "expertise", Name: attackExpertiseFor(catalog.Weapon.Purpose)},
+		Target:    ModifierTarget{K: "attack", Scope: WeaponDamageScope(catalog.ID)},
 		Amount:    2,
 		BonusType: "untyped",
 		Condition: &ModifierCondition{C: "context", Note: "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"},
@@ -384,10 +389,6 @@ func nonProficiencyPenalties(catalog *CatalogItem, prof map[string]bool) []Modif
 }
 
 func weaponNonProficiency(catalog *CatalogItem) []Modifier {
-	purpose := ""
-	if catalog.Weapon != nil {
-		purpose = catalog.Weapon.Purpose
-	}
 	return []Modifier{
 		{
 			Target:    ModifierTarget{K: "attack", Scope: "this"},
@@ -397,22 +398,13 @@ func weaponNonProficiency(catalog *CatalogItem) []Modifier {
 			Note:      "sem proficiência",
 		},
 		{
-			Target:    ModifierTarget{K: "expertise", Name: attackExpertiseFor(purpose)},
+			Target:    ModifierTarget{K: "attack", Scope: WeaponDamageScope(catalog.ID)},
 			Amount:    -5,
 			BonusType: "untyped",
 			Condition: &ModifierCondition{C: "wielded"},
 			Note:      "sem proficiência: -5 em testes de ataque (p142)",
 		},
 	}
-}
-
-// attackExpertiseFor maps a weapon purpose to its attack perícia (T20 resolves
-// attacks as expertise tests): melee → Luta, everything else → Pontaria.
-func attackExpertiseFor(purpose string) string {
-	if purpose == "melee" {
-		return "Luta"
-	}
-	return "Pontaria"
 }
 
 // effectSourceName ports the item branch of entities/character/effect-source.ts:

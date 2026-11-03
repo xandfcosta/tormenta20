@@ -95,11 +95,11 @@ func expertiseRows(ex engine.ExpertiseBreakdown, all *engine.TotalContribs) []br
 
 // weaponRows são as duas contas de uma arma: o ataque e o dano.
 //
-// A linha de FOR sai no dano de corpo a corpo e de arremesso (as duas rolam
-// Luta) e NUNCA no de arma de disparo, onde o motor já devolve `StrDamage` zero.
+// A linha de FOR sai no dano de corpo a corpo e de arremesso, e NUNCA no de arma
+// de disparo: ver `addsAttributeToDamage`.
 func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 	attack = append(expertiseRows(card.Expertise, &card.AttackAll), rowsFromContributions(card.AttackOwn.Contributions)...)
-	if card.Skill == "Luta" {
+	if addsAttributeToDamage(card) {
 		// Com a Acuidade com Arma a parcela é a Destreza, e o rótulo a segue.
 		label := "FOR"
 		if card.DexDamage {
@@ -109,6 +109,15 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 	}
 	damage = append(damage, rowsFromContributions(card.DamageAll.Contributions)...)
 	return attack, append(damage, rowsFromContributions(card.DamageOwn.Contributions)...)
+}
+
+// addsAttributeToDamage diz se o dano desta carta soma um atributo.
+//
+// Pelo número e não pela perícia: a arma de arremesso ataca com Pontaria e soma a
+// Força (p142), e só a de disparo chega aqui com `StrDamage` zero. A exceção do
+// corpo a corpo é a Força 0, que a conta mostra como +0.
+func addsAttributeToDamage(card engine.WeaponCard) bool {
+	return card.IsMelee() || card.StrDamage != 0
 }
 
 // pmLimitRows é o teto de PM por magia.

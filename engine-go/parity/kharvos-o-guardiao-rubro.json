@@ -405,8 +405,8 @@
         },
         {
           "target": {
-            "k": "expertise",
-            "name": "Luta"
+            "k": "attack",
+            "scope": "weapon:machado-taurico"
           },
           "amount": -2,
           "bonusType": "untyped",
@@ -417,8 +417,8 @@
         },
         {
           "target": {
-            "k": "expertise",
-            "name": "Luta"
+            "k": "attack",
+            "scope": "weapon:machado-taurico"
           },
           "amount": 2,
           "bonusType": "untyped",
@@ -789,6 +789,18 @@
           }
         ]
       },
+      "attack:weapon:machado-taurico": {
+        "total": -2,
+        "contributions": [
+          {
+            "sourceId": "machado-taurico",
+            "source": "Machado táurico",
+            "bonusType": "untyped",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          }
+        ]
+      },
       "attribute:constitution": {
         "total": 1,
         "contributions": [
@@ -875,18 +887,6 @@
             "source": "Pele de Ferro",
             "bonusType": "untyped",
             "amount": 4
-          }
-        ]
-      },
-      "expertise:Luta": {
-        "total": -2,
-        "contributions": [
-          {
-            "sourceId": "machado-taurico",
-            "source": "Machado táurico",
-            "bonusType": "untyped",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
           }
         ]
       },
@@ -995,15 +995,15 @@
     ],
     "conditional": [
       {
-        "term": "machado-taurico::expertise:Luta::::context///",
+        "term": "machado-taurico::attack:weapon:machado-taurico::::context///",
         "sourceId": "machado-taurico",
         "source": "Machado táurico",
         "bonusType": "untyped",
         "amount": 2,
         "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)",
         "target": {
-          "k": "expertise",
-          "name": "Luta"
+          "k": "attack",
+          "scope": "weapon:machado-taurico"
         }
       },
       {
@@ -1492,20 +1492,14 @@
         "name": "Luta",
         "attribute": "strength",
         "base": 12,
-        "itemBonus": -2,
-        "total": 10,
+        "itemBonus": 0,
+        "total": 12,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [
-          {
-            "source": "Machado táurico",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
@@ -1670,7 +1664,7 @@
     "class.barbaro.furia::attack:all::::flagOn///furia",
     "class.barbaro.furia::damage:all::::flagOn///furia",
     "lefou::resistance::::against//lefeu e a Tormenta/",
-    "machado-taurico::expertise:Luta::::context///",
+    "machado-taurico::attack:weapon:machado-taurico::::context///",
     "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
     "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata"
   ],
@@ -2127,18 +2121,7 @@
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [
-          {
-            "source": "Machado táurico",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          },
-          {
-            "source": "Machado táurico (cond.)",
-            "amount": 2,
-            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       {
@@ -2326,18 +2309,7 @@
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [
-          {
-            "source": "Machado táurico",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          },
-          {
-            "source": "Machado táurico (cond.)",
-            "amount": 2,
-            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
@@ -2347,6 +2319,21 @@
             "source": "Fúria (cond.)",
             "amount": 2,
             "note": "Em Fúria"
+          }
+        ]
+      },
+      "attackOwn": {
+        "total": 0,
+        "contributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          },
+          {
+            "source": "Machado táurico (cond.)",
+            "amount": 2,
+            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
           }
         ]
       },
@@ -2391,18 +2378,7 @@
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [
-          {
-            "source": "Machado táurico",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          },
-          {
-            "source": "Machado táurico (cond.)",
-            "amount": 2,
-            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
@@ -2462,25 +2438,29 @@
         "name": "Luta",
         "attribute": "strength",
         "base": 12,
-        "itemBonus": -2,
-        "total": 10,
+        "itemBonus": 0,
+        "total": 12,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [
-          {
-            "source": "Machado táurico",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       "attackAll": {
         "total": 0,
         "contributions": []
+      },
+      "attackOwn": {
+        "total": -2,
+        "contributions": [
+          {
+            "source": "Machado táurico",
+            "amount": -2,
+            "note": "desbalanceada: -2 em ataque"
+          }
+        ]
       },
       "damage": "2d8",
       "damageType": "corte",
@@ -2506,25 +2486,19 @@
       "name": "Ataque desarmado",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 10,
+      "attack": 12,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
         "base": 12,
-        "itemBonus": -2,
-        "total": 10,
+        "itemBonus": 0,
+        "total": 12,
         "halfLevel": 3,
         "attrValue": 5,
         "training": 4,
         "trained": true,
         "trainedBy": [],
-        "itemContributions": [
-          {
-            "source": "Machado táurico",
-            "amount": -2,
-            "note": "desbalanceada: -2 em ataque"
-          }
-        ],
+        "itemContributions": [],
         "armorPenaltyApplied": 0
       },
       "attackAll": {

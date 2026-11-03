@@ -390,7 +390,7 @@ func spellDcTotal(sheet engine.ComputedSheet) int {
 	return base + sheet.SpellDCBonus.Total
 }
 
-// weaponTiles são as armas empunhadas, no máximo duas — o motor já as limita.
+// weaponTiles são as cartas do motor: duas armas na mão, no máximo, e cada uso delas.
 func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 	tiles := make([]weaponTile, 0, len(cards))
 	for i, card := range cards {
