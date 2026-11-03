@@ -101,3 +101,47 @@ func TestPuttingTheRingBackOnGetsTheCharacterUp(t *testing.T) {
 		t.Errorf("de pé, a ficha continua com as condições de quem caiu: %s", row.Activeconditions)
 	}
 }
+
+// Baixar de nível também move o máximo: com 2 de 30 PV, a ficha vai a -2 de 26, e quem
+// chega a 0 ou menos cai, por qualquer caminho (p236).
+func TestLoweringALevelWhileHurtKnocksTheCharacterDown(t *testing.T) {
+	f, id := arcanistaDeNivel(t, 5)
+	level := func(step string) {
+		t.Helper()
+		rec := f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/nivel/Arcanista/%s?tab=combat", id, step), "")
+		if refusal := sceneRefusal(rec.Body.String()); refusal != "" {
+			t.Fatalf("mudar o nível (%s) foi recusado: %q", step, refusal)
+		}
+	}
+	conditions := func() string {
+		t.Helper()
+		row, err := f.s.queries.GetCharacter(context.Background(), id)
+		if err != nil {
+			t.Fatalf("ler a ficha: %v", err)
+		}
+		return row.Activeconditions
+	}
+	level("1")
+	arrangePools(t, f.s, id, func(pools sheet.Pools) (sheet.Pools, error) {
+		pools.HpCurrent = 2
+		return pools, nil
+	})
+
+	level("-1")
+
+	if got := poolsOf(t, f.s, id).HpCurrent; got != -2 {
+		t.Fatalf("depois de baixar a ficha tem %d PV, want -2", got)
+	}
+	if got := conditions(); !strings.Contains(got, "inconsciente") || !strings.Contains(got, "sangrando") {
+		t.Errorf("a ficha caiu sem as condições da p236: %s", got)
+	}
+
+	// Subir de volta traz o PV para 2, e quem chega a 1 PV acorda (p236).
+	level("1")
+	if got := poolsOf(t, f.s, id).HpCurrent; got != 2 {
+		t.Fatalf("depois de subir a ficha tem %d PV, want 2", got)
+	}
+	if got := conditions(); strings.Contains(got, "inconsciente") || strings.Contains(got, "sangrando") {
+		t.Errorf("de pé, a ficha continua com as condições de quem caiu: %s", got)
+	}
+}
