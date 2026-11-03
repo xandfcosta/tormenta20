@@ -16,9 +16,9 @@ import (
 // As cartas do bárbaro com a lança na outra mão: 0 o machado, 1 a lança, 2 a lança arremessada e 3 o desarmado.
 func barbarianWithASpear(t *testing.T) (sceneFixture, int64, string) {
 	t.Helper()
-	f, barbaro, goblin := barbarianOnTurn(t)
+	f, barbarian, goblin := barbarianOnTurn(t)
 	if _, err := f.s.queries.CreateItem(context.Background(), sqlcgen.CreateItemParams{
-		Characterid: barbaro, Catalogid: sql.NullString{String: "lanca", Valid: true},
+		Characterid: barbarian, Catalogid: sql.NullString{String: "lanca", Valid: true},
 		Name: "Lança", Quantity: 1, Slots: 1,
 		Equipped:     sql.NullString{String: "wielded2", Valid: true},
 		Improvements: "[]", Createdat: dbvalue.NowISO(),
@@ -27,18 +27,18 @@ func barbarianWithASpear(t *testing.T) (sceneFixture, int64, string) {
 	}
 	// Com proficiência, para o −5 de cada arma não entrar na conta que se está lendo.
 	if _, err := f.s.db.ExecContext(context.Background(),
-		`UPDATE characters SET proficiencies = '["armas-simples","armas-marciais"]' WHERE id = ?`, barbaro); err != nil {
+		`UPDATE characters SET proficiencies = '["armas-simples","armas-marciais"]' WHERE id = ?`, barbarian); err != nil {
 		t.Fatalf("dar as proficiências: %v", err)
 	}
-	return f, barbaro, goblin
+	return f, barbarian, goblin
 }
 
 func TestTheActionsOfferBothUsesOfTheSpear(t *testing.T) {
 	f, _, _ := barbarianWithASpear(t)
-	padrao := entre(t, acoesDaMesa(t, f), "Ação padrão", "Ação de movimento")
+	standardActions := entre(t, acoesDaMesa(t, f), "Ação padrão", "Ação de movimento")
 	for _, use := range []string{"Lança", "Lança (arremesso)"} {
-		if !strings.Contains(padrao, use) {
-			t.Errorf("a ação padrão não oferece %q:\n%s", use, recorte(padrao))
+		if !strings.Contains(standardActions, use) {
+			t.Errorf("a ação padrão não oferece %q:\n%s", use, recorte(standardActions))
 		}
 	}
 }
@@ -53,8 +53,8 @@ func TestTheSpearAttacksWithFightingUpCloseAndAimWhenThrown(t *testing.T) {
 		{"atacar/2", "Lança (arremesso)", 5},
 	} {
 		t.Run(c.weapon, func(t *testing.T) {
-			f, barbaro, goblin := barbarianWithASpear(t)
-			if refusal := rollsFromTheActions(t, f, barbaro, c.path, goblin); refusal != "" {
+			f, barbarian, goblin := barbarianWithASpear(t)
+			if refusal := rollsFromTheActions(t, f, barbarian, c.path, goblin); refusal != "" {
 				t.Fatalf("o ataque foi recusado: %q", refusal)
 			}
 			pending := stateOf(t, f.s.sessions, f.sessionID).PendingAttack
@@ -70,11 +70,11 @@ func TestTheSpearAttacksWithFightingUpCloseAndAimWhenThrown(t *testing.T) {
 
 // "No fim do movimento, faz um ataque corpo a corpo" (p235): a lança na mão investe, e a lança que voa não.
 func TestOnlyTheSpearUpCloseCharges(t *testing.T) {
-	f, barbaro, goblin := barbarianWithASpear(t)
-	if refusal := rollsFromTheActions(t, f, barbaro, "investida/2", goblin); !strings.Contains(refusal, "Lança (arremesso)") {
+	f, barbarian, goblin := barbarianWithASpear(t)
+	if refusal := rollsFromTheActions(t, f, barbarian, "investida/2", goblin); !strings.Contains(refusal, "Lança (arremesso)") {
 		t.Errorf("a investida com a lança arremessada não foi recusada pelo nome: %q", refusal)
 	}
-	if refusal := rollsFromTheActions(t, f, barbaro, "investida/1", goblin); refusal != "" {
+	if refusal := rollsFromTheActions(t, f, barbarian, "investida/1", goblin); refusal != "" {
 		t.Errorf("a investida com a lança foi recusada: %q", refusal)
 	}
 }
