@@ -53,10 +53,14 @@ func rollLook(roll actionRoll) ds.ButtonVariant {
 
 // rollAfter é o que roda depois do gesto: o golpe gasta o impulso escolhido.
 func rollAfter(row actionRow) string {
+	after := ""
 	if len(row.Boosts) > 0 {
-		return rollClearsTheBoost()
+		after = rollClearsTheBoost()
 	}
-	return ""
+	if len(row.Doses) > 0 || row.ClearsDose {
+		after += rollClearsTheDose()
+	}
+	return after
 }
 
 // chipAttrs junta o gesto e a espera do chip. O que o servidor recusa nasce

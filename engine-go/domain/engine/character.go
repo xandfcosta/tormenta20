@@ -68,6 +68,8 @@ type CharacterClass struct {
 // CharacterItem is one row of the character's bag. Equipped is a pointer so the
 // null (unequipped) state is distinguishable from a wear slot.
 type CharacterItem struct {
+	// ID é a linha da mochila, e o golpe a leva para saber de que arma a dose sai.
+	ID        int64   `json:"id,omitempty"`
 	CatalogID *string `json:"catalogId"`
 	Name      string  `json:"name"`
 	// Quantity e Slots são o que a linha PESA na mochila (p141). Quem os lê não
@@ -85,6 +87,9 @@ type CharacterItem struct {
 	// Oversized é a arma feita para uma categoria de tamanho maior (p106). O catálogo
 	// não dá tamanho por item, então é a mochila que guarda a marca.
 	Oversized bool `json:"oversized,omitempty"`
+	// Doses são o que a Injeção alquímica guarda, por id, da mais antiga à mais nova
+	// (p165).
+	Doses []string `json:"doses,omitempty"`
 }
 
 // ActiveEffectRow is a consumed scene/day buff carrying a JSON-encoded

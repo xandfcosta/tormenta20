@@ -732,6 +732,16 @@
         {
           "sceneEffect": true,
           "oversizedWeapons": ["espada-curta"],
+          "overlays": [
+            {
+              "item": "espada-curta",
+              "improvements": ["melhoria-injecao-alquimica"]
+            }
+          ],
+          "doses": [
+            { "weapon": "espada-curta", "item": "acido" },
+            { "weapon": "espada-curta", "item": "fogo-alquimico" }
+          ],
           "create": {
             "name": "Guerreiro Veterano Nv8",
             "races": [
@@ -807,7 +817,9 @@
               {
                 "catalogId": "cosmetico",
                 "quantity": 2
-              }
+              },
+              { "catalogId": "acido" },
+              { "catalogId": "fogo-alquimico", "quantity": 2 }
             ]
           }
         },

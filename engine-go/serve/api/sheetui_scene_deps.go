@@ -121,6 +121,7 @@ func (h sheetHost) ProposeStrikeOnTable(
 			OtherUse:        strike.OtherUse,
 			Maneuver:        strike.Maneuver,
 			Boost:           strike.Boost,
+			Dose:            strike.Dose,
 			Charge:          strike.Charge,
 			OwnsAttacker:    true,
 		})
@@ -151,6 +152,21 @@ func (h sheetHost) characterOnTurn(
 		return nil, nil
 	}
 	return &onTurn, nil
+}
+
+// HasAttackInProgress varre as mesas abertas do personagem. Erro ao ler uma delas
+// sobe: sem saber, o gesto que depende desta resposta não pode seguir.
+func (h sheetHost) HasAttackInProgress(ctx context.Context, characterID int64) (bool, error) {
+	for _, table := range h.liveTablesOf(ctx, characterID) {
+		state, err := h.rules.sessions.State(ctx, table.SessionID)
+		if err != nil {
+			return false, err
+		}
+		if live.HoldsTheCharacter(state, characterID) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // liveTable é uma mesa aberta, com as DUAS coordenadas.

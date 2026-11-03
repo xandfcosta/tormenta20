@@ -177,7 +177,7 @@ func tableSignalsExpr(revision string) string {
 		// declaração eles nascem texto vazio, e a leitura do `Signals` da ficha
 		// falha INTEIRA — o golpe chegava sem o `turn_target` (ALE-499). Quem
 		// cobra é o `TestEveryTypedSignalTheActionsSurfaceReadsIsDeclaredByTheTable`.
-		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: ''",
+		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: '', dose_weapon: -1, dose_choice: ''",
 		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
 		// diálogo da perícia também é desenhado dentro da Mesa.
 		sheetui.ExpertiseSpendsDeclaration(),

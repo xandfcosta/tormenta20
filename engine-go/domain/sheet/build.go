@@ -78,12 +78,20 @@ func Load(
 	if err != nil {
 		return dto, err
 	}
+	doses, err := q.DosesOfCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	dosesByItem := map[int64][]string{}
+	for _, dose := range doses {
+		dosesByItem[dose.Itemid] = append(dosesByItem[dose.Itemid], dose.Catalogid)
+	}
 	for _, it := range items {
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
-			Enchants: enchants[it.ID], Oversized: slices.Contains(oversized, it.ID),
+			Enchants: enchants[it.ID], Oversized: slices.Contains(oversized, it.ID), Doses: dosesByItem[it.ID],
 		})
 	}
 

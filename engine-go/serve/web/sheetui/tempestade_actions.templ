@@ -101,6 +101,9 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 			if !row.Can && row.Why != "" {
 				<div class="ds-row-meta ds-turn-action-why">{ row.Why }</div>
 			}
+			if len(row.Doses) > 0 {
+				<div class="ds-row-meta">{ writtenDoses(row.Doses) }</div>
+			}
 		</div>
 		if row.Cost != "" {
 			<span class="ds-row-meta">{ row.Cost }</span>
@@ -113,10 +116,8 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 		} else if row.Value != "" {
 			<span class="ds-row-value">{ row.Value }</span>
 		}
-		if len(row.Rolls) == 1 && len(row.Boosts) > 0 {
-			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary, rollClearsTheBoost())
-		} else if len(row.Rolls) == 1 {
-			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary, "")
+		if len(row.Rolls) == 1 {
+			@actionRollDs(v, group, row.Rolls[0], ds.ButtonPrimary, rollAfter(row))
 		}
 		if len(row.Rolls) > 1 {
 			<div class="ds-options ds-turn-action-rolls">
@@ -127,6 +128,9 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 		}
 		if len(row.Boosts) > 0 {
 			@boostStripDs(row)
+		}
+		if choices := doseChoicesToAsk(row.Doses); len(choices) > 0 {
+			@doseStripDs(row.Weapon, choices)
 		}
 	</div>
 }

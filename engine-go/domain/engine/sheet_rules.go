@@ -76,6 +76,10 @@ func spellcastingAttributeFor(ch Character, className string) string {
 	return base
 }
 
+// EffectSaveDc é a CD de qualquer efeito gerado por um personagem (p227), como a
+// dose que a Injeção alquímica libera.
+func EffectSaveDc(level, attribute int) int { return spellSaveDc(level, attribute) }
+
 // spellSaveDc is the save CD against any spell — p173: "10 + metade do nível
 // do personagem + atributo-chave da magia" (a p227 repete a fórmula para
 // qualquer efeito de personagem).

@@ -119,6 +119,10 @@ type Signals struct {
 	BoostPower  string `json:"boost_power"`
 	BoostSteps  int64  `json:"boost_steps"`
 	BoostSplit  string `json:"boost_split"`
+	// A dose escolhida na linha de ataque, quando a arma guarda duas diferentes. A arma
+	// vem junto pela mesma razão do impulso.
+	DoseWeapon  *int64 `json:"dose_weapon"`
+	DoseChoice  string `json:"dose_choice"`
 	PowerSearch string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
 	RaceAttributes []string `json:"race_attributes"`

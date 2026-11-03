@@ -143,6 +143,11 @@ func (sd Seeder) ToggleOversizedWeapon(ctx context.Context, itemID int64) error 
 	return sd.plays.ToggleOversizedWeapon(ctx, itemID)
 }
 
+// LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.
+func (sd Seeder) LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error {
+	return sd.plays.LoadDose(ctx, characterID, doseItemID, weaponItemID)
+}
+
 // SaveItemOverlays forja melhoria e material num item do elenco, pelo mesmo
 // caso de uso do jogador.
 func (sd Seeder) SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error {

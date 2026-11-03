@@ -243,17 +243,32 @@ func (st *Store) turnGesture(
 	ctx context.Context, sessionID int64,
 	change func(context.Context, Unit, *live.SessionRuntimeState) error,
 ) (*live.SessionRuntimeState, error) {
+	clone, err := st.unitGesture(ctx, sessionID,
+		func(inUnit context.Context, u Unit, s *live.SessionRuntimeState) error {
+			if err := change(inUnit, u, s); err != nil {
+				return err
+			}
+			return st.openBleedingCheck(inUnit, u, s)
+		})
+	if err != nil {
+		return nil, err
+	}
+	st.bus.Publish(events.TurnAdvanced{SessionID: sessionID})
+	return clone, nil
+}
+
+// unitGesture muda a mesa e o que mais o gesto gravar na MESMA transação.
+func (st *Store) unitGesture(
+	ctx context.Context, sessionID int64,
+	change func(context.Context, Unit, *live.SessionRuntimeState) error,
+) (*live.SessionRuntimeState, error) {
 	st.Mu.Lock()
+	defer st.Mu.Unlock()
 	var clone *live.SessionRuntimeState
 	err := st.units.Do(ctx, func(u Unit) error {
 		inUnit := WithUnit(ctx, u)
 		saved, err := u.Snapshots.Mutate(inUnit, sessionID,
-			func(s *live.SessionRuntimeState) error {
-				if err := change(inUnit, u, s); err != nil {
-					return err
-				}
-				return st.openBleedingCheck(inUnit, u, s)
-			})
+			func(s *live.SessionRuntimeState) error { return change(inUnit, u, s) })
 		if err != nil {
 			return err
 		}
@@ -262,11 +277,9 @@ func (st *Store) turnGesture(
 		clone.Seq = st.nextSeqLocked(sessionID)
 		return nil
 	})
-	st.Mu.Unlock()
 	if err != nil {
 		return nil, err
 	}
-	st.bus.Publish(events.TurnAdvanced{SessionID: sessionID})
 	return clone, nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
@@ -15,7 +16,7 @@ import (
 //
 // # Por que `UPDATE` escrito à mão, e não uma consulta gerada
 //
-// Nenhuma das três colunas tem query no sqlc, e esta camada É onde uma escrita
+// As duas escritas que sobraram não têm query no sqlc, e esta camada É onde uma escrita
 // sem consulta gerada pode morar — foi por não haver este lugar que elas viviam
 // no `serve/api`, montadas por um construtor genérico de `SET`. O conserto
 // definitivo é escrever a consulta no `query.sql` e regerar; até lá o SQL está
@@ -160,15 +161,21 @@ func (p Plays) SaveEquipped(ctx context.Context, itemID int64, place string) err
 func (p Plays) SaveItemOverlays(
 	ctx context.Context, itemID int64, improvements []string, material string,
 ) error {
-	var column any
-	if material != "" {
-		column = material
-	}
-	_, err := p.db.ExecContext(ctx,
-		"UPDATE character_items SET improvements = ?, material = ? WHERE id = ?",
-		sheet.MarshalStrings(&improvements), column, itemID,
-	)
-	return err
+	return p.inTx(ctx, "gravar as melhorias", func(q *sqlcgen.Queries) error {
+		err := q.SetItemOverlays(ctx, sqlcgen.SetItemOverlaysParams{
+			Improvements: sheet.MarshalStrings(&improvements),
+			Material:     sql.NullString{String: material, Valid: material != ""},
+			ID:           itemID,
+		})
+		if err != nil {
+			return fmt.Errorf("gravar as melhorias do item %d: %w", itemID, err)
+		}
+		if slices.Contains(improvements, sheet.AlchemicalInjection) {
+			return nil
+		}
+		// Sem a melhoria na arma, as doses não têm onde estar (decisão do dono).
+		return q.ClearItemDoses(ctx, itemID)
+	})
 }
 
 // EnchantItem grava os encantos de UMA arma, e é a porta do MESTRE.

@@ -40,6 +40,20 @@ func (q *Queries) AddClassLevel(ctx context.Context, arg AddClassLevelParams) er
 	return err
 }
 
+const addItemDose = `-- name: AddItemDose :exec
+INSERT INTO character_item_doses (itemId, catalogId) VALUES (?, ?)
+`
+
+type AddItemDoseParams struct {
+	Itemid    int64  `json:"itemid"`
+	Catalogid string `json:"catalogid"`
+}
+
+func (q *Queries) AddItemDose(ctx context.Context, arg AddItemDoseParams) error {
+	_, err := q.db.ExecContext(ctx, addItemDose, arg.Itemid, arg.Catalogid)
+	return err
+}
+
 const addItemEnchant = `-- name: AddItemEnchant :exec
 INSERT INTO character_item_enchants (itemId, enchantId) VALUES (?, ?)
 `
@@ -196,6 +210,15 @@ func (q *Queries) ClearIgnoredRulesForCampaign(ctx context.Context, campaignid i
 	return err
 }
 
+const clearItemDoses = `-- name: ClearItemDoses :exec
+DELETE FROM character_item_doses WHERE itemId = ?
+`
+
+func (q *Queries) ClearItemDoses(ctx context.Context, itemid int64) error {
+	_, err := q.db.ExecContext(ctx, clearItemDoses, itemid)
+	return err
+}
+
 const clearItemEnchants = `-- name: ClearItemEnchants :exec
 DELETE FROM character_item_enchants WHERE itemId = ?
 `
@@ -212,6 +235,17 @@ DELETE FROM character_nonlethal_damage WHERE characterId = ?
 func (q *Queries) ClearNonLethalDamage(ctx context.Context, characterid int64) error {
 	_, err := q.db.ExecContext(ctx, clearNonLethalDamage, characterid)
 	return err
+}
+
+const countItemDoses = `-- name: CountItemDoses :one
+SELECT COUNT(*) FROM character_item_doses WHERE itemId = ?
+`
+
+func (q *Queries) CountItemDoses(ctx context.Context, itemid int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countItemDoses, itemid)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const createAccountInvite = `-- name: CreateAccountInvite :one
@@ -940,6 +974,42 @@ DELETE FROM users WHERE id = ?
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
+}
+
+const dosesOfCharacter = `-- name: DosesOfCharacter :many
+SELECT d.itemId, d.catalogId
+FROM character_item_doses d
+JOIN character_items i ON i.id = d.itemId
+WHERE i.characterId = ?
+ORDER BY d.id
+`
+
+type DosesOfCharacterRow struct {
+	Itemid    int64  `json:"itemid"`
+	Catalogid string `json:"catalogid"`
+}
+
+func (q *Queries) DosesOfCharacter(ctx context.Context, characterid int64) ([]DosesOfCharacterRow, error) {
+	rows, err := q.db.QueryContext(ctx, dosesOfCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DosesOfCharacterRow{}
+	for rows.Next() {
+		var i DosesOfCharacterRow
+		if err := rows.Scan(&i.Itemid, &i.Catalogid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const enchantsOfCharacter = `-- name: EnchantsOfCharacter :many
@@ -3491,6 +3561,25 @@ func (q *Queries) ResetSessionTracker(ctx context.Context, arg ResetSessionTrack
 	return err
 }
 
+const returnItemDose = `-- name: ReturnItemDose :exec
+INSERT INTO character_item_doses (itemId, catalogId)
+SELECT i.id, ?1 FROM character_items i
+WHERE i.id = ?2 AND instr(i.improvements, ?3) > 0
+`
+
+type ReturnItemDoseParams struct {
+	CatalogId   string `json:"catalogId"`
+	ItemId      int64  `json:"itemId"`
+	Improvement string `json:"improvement"`
+}
+
+// A arma pode ter saido da ficha, ou perdido a melhoria, depois do golpe: entao nao ha
+// para onde a dose voltar, e cancelar o ataque continua valendo.
+func (q *Queries) ReturnItemDose(ctx context.Context, arg ReturnItemDoseParams) error {
+	_, err := q.db.ExecContext(ctx, returnItemDose, arg.CatalogId, arg.ItemId, arg.Improvement)
+	return err
+}
+
 const revokeAccountInvite = `-- name: RevokeAccountInvite :execrows
 UPDATE account_invite_links SET revokedAt = ?1
 WHERE id = ?2 AND revokedAt IS NULL
@@ -3746,6 +3835,21 @@ func (q *Queries) SetInviteToken(ctx context.Context, arg SetInviteTokenParams) 
 	return i, err
 }
 
+const setItemOverlays = `-- name: SetItemOverlays :exec
+UPDATE character_items SET improvements = ?, material = ? WHERE id = ?
+`
+
+type SetItemOverlaysParams struct {
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+	ID           int64          `json:"id"`
+}
+
+func (q *Queries) SetItemOverlays(ctx context.Context, arg SetItemOverlaysParams) error {
+	_, err := q.db.ExecContext(ctx, setItemOverlays, arg.Improvements, arg.Material, arg.ID)
+	return err
+}
+
 const setItemQuantity = `-- name: SetItemQuantity :exec
 UPDATE character_items SET quantity = ?1 WHERE id = ?2
 `
@@ -3827,6 +3931,27 @@ func (q *Queries) SetSpellPreparedByCatalog(ctx context.Context, arg SetSpellPre
 		&i.Learnedat,
 	)
 	return i, err
+}
+
+const spendItemDose = `-- name: SpendItemDose :execrows
+DELETE FROM character_item_doses WHERE id = (
+  SELECT MIN(oldest.id) FROM character_item_doses oldest
+  WHERE oldest.itemId = ?1 AND oldest.catalogId = ?2
+)
+`
+
+type SpendItemDoseParams struct {
+	ItemId    int64  `json:"itemId"`
+	CatalogId string `json:"catalogId"`
+}
+
+// Duas doses iguais sao a mesma coisa: sai a mais antiga.
+func (q *Queries) SpendItemDose(ctx context.Context, arg SpendItemDoseParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, spendItemDose, arg.ItemId, arg.CatalogId)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const spendPasswordReset = `-- name: SpendPasswordReset :execrows

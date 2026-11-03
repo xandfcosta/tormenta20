@@ -47,6 +47,9 @@ templ gmAttack(v View) {
 				if v.Attack.Hint != "" {
 					<p class="ds-help">{ v.Attack.Hint }</p>
 				}
+				if v.Attack.Dose != "" {
+					<p class="ds-help">{ v.Attack.Dose }</p>
+				}
 				if v.Attack.Stage == stageDamage {
 					<p class="ds-help">{ v.Attack.Attacker + " rola o dano: " }<b>{ v.Attack.ToRoll }</b></p>
 				}
@@ -173,6 +176,9 @@ templ tempestadeAttack(v View) {
 
 // playerAttackBody é o que só quem atacou vê, por tempo.
 templ playerAttackBody(v View) {
+	if v.Attack.Dose != "" {
+		<p class="ds-help">{ v.Attack.Dose }</p>
+	}
 	switch v.Attack.Stage {
 		case stageDamage:
 			<p class="ds-help">O mestre disse: <b>{ v.Attack.Said }</b></p>

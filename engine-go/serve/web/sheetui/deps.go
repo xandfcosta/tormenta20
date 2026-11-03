@@ -79,6 +79,9 @@ type Deps interface {
 	// pousar o provisório. Nada para fazer em silêncio seria o botão não
 	// funcionar.
 	ProposeStrikeOnTable(ctx context.Context, characterID int64, strike ActionStrike) error
+	// HasAttackInProgress diz se o personagem propôs um ataque que ainda não acabou
+	// em alguma mesa aberta. A mesa é o único lugar que sabe disso.
+	HasAttackInProgress(ctx context.Context, characterID int64) (bool, error)
 	// As ESCRITAS, uma por gesto: a cena decide QUANDO, o hospedeiro sabe COMO.
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)
@@ -117,6 +120,8 @@ type ActionStrike struct {
 	Maneuver string
 	// Boost é o impulso de PM pedido para este golpe; o poder vazio é sem.
 	Boost engine.BoostChoice
+	// Dose é a dose escolhida na linha da arma; vazio é a mais antiga.
+	Dose string
 	// Charge é a investida que leva ao golpe (`engine.ChargePlain`,
 	// `engine.ChargeReckless`); vazio é golpe parado.
 	Charge string

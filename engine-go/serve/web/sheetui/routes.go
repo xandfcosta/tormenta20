@@ -89,6 +89,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/itens/{item}/edita", s.sheetCommand(editItem))
 	r.Post("/personagens/{id}/itens/{item}/remover", s.sheetCommand(removeItemFromSheet))
 	r.Post("/personagens/{id}/itens/{item}/usa", s.sheetCommand(useItem))
+	r.Post("/personagens/{id}/itens/{item}/carrega/{arma}", s.sheetCommand(loadDose))
 	r.Post("/personagens/{id}/itens/{item}/melhorias", s.sheetCommand(applyOverlays))
 	r.Post("/personagens/{id}/itens/{item}/categoria-maior", s.sheetCommand(toggleOversizedWeapon))
 	// OS PODERES.
@@ -139,7 +140,9 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		_ = datastar.NewSSE(w, r).PatchElements(fragment)
+		sse := datastar.NewSSE(w, r)
+		_ = sse.PatchElements(fragment)
+		patchActionsAlong(r, sse, view)
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
@@ -237,19 +240,23 @@ func (s Scene) sheetCommand(
 			return
 		}
 		_ = sse.PatchElements(fragment)
-		// A SUPERFÍCIE DE AÇÕES VAI JUNTO, e pelo mesmo motivo que o aviso de
-		// ficha mexida mora neste gateway: ela é um nó IRMÃO do `#sheet-scene`,
-		// e mais de trinta mutações passam por aqui. Um comando que remendasse
-		// só a ficha deixaria o número velho na tela — ligar a Fúria pelos chips
-		// moveria o `+8` da aba Combate e não o `+8` da linha de Atacar.
-		//
-		// Só EMBUTIDA: fora da sessão o `#actions-scene` não existe na página, e
-		// mandar remendo para um id que não está lá é trabalho que ninguém usa.
-		if view.Embedded {
-			if acoes, err := ui.RenderFragment(r.Context(), ActionsSurface(view)); err == nil {
-				_ = sse.PatchElements(acoes)
-			}
-		}
+		patchActionsAlong(r, sse, view)
+	}
+}
+
+// patchActionsAlong manda a superfície de Ações junto da ficha, porque ela é um nó
+// IRMÃO do `#sheet-scene`. Um remendo só da ficha deixaria o número velho na tela:
+// ligar a Fúria pelos chips moveria o `+8` da aba Combate e não o `+8` da linha de
+// Atacar, e o aviso do stream deixaria nela a dose que o mestre acabou de gastar.
+//
+// Só EMBUTIDA: fora da sessão o `#actions-scene` não existe na página, e mandar
+// remendo para um id que não está lá é trabalho que ninguém usa.
+func patchActionsAlong(r *http.Request, sse *datastar.ServerSentEventGenerator, view View) {
+	if !view.Embedded {
+		return
+	}
+	if actions, err := ui.RenderFragment(r.Context(), ActionsSurface(view)); err == nil {
+		_ = sse.PatchElements(actions)
 	}
 }
 

@@ -111,6 +111,8 @@ type ItemDTO struct {
 	Material *string  `json:"material"`
 	// Oversized é a marca de arma de categoria maior — ver `engine.CharacterItem`.
 	Oversized bool `json:"oversized,omitempty"`
+	// Doses são as da Injeção alquímica (p165) — ver `doses.go`.
+	Doses []string `json:"doses,omitempty"`
 }
 
 type EffectDTO struct {
