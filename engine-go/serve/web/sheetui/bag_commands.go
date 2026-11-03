@@ -27,6 +27,11 @@ func (s Scene) refusePastTheDouble(r *http.Request, row sqlcgen.Character, added
 	if err != nil {
 		return err
 	}
+	return s.refusesPastTheDoubleOf(dto, added)
+}
+
+// refusesPastTheDoubleOf é a mesma recusa para quem já carregou a ficha.
+func (s Scene) refusesPastTheDoubleOf(dto sheet.CharacterDTO, added float64) error {
 	computed, _, ok := s.sheetForPanels(dto)
 	if !ok || computed.Load.FitsAdding(added) {
 		return nil
@@ -94,28 +99,30 @@ func removeItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	if err != nil {
 		return err
 	}
-	if err := s.keepsChosenExpertises(r, row, withoutItem(item.ID)); err != nil {
-		return err
-	}
-	return s.followingTheHitPoints(r, row, func() error { return s.plays.RemoveItem(r.Context(), item.ID) })
+	return s.itemGesture(r, row, withoutItem(item.ID), func() error { return s.plays.RemoveItem(r.Context(), item.ID) })
 }
 
-// followingTheHitPoints faz um gesto de item e, se ele mexeu no PV atual, liga e desliga
-// as condições. O item pode dar PV (os anéis, p342) ou Constituição, e o atual é o máximo
-// menos o dano, então guardar um anel com pouca vida pode derrubar.
-func (s Scene) followingTheHitPoints(r *http.Request, row sqlcgen.Character, gesture func() error) error {
-	before, err := s.deps.LoadCharacter(r.Context(), row)
+// itemGesture faz um gesto que muda o que a ficha carrega, com a recusa das perícias
+// escolhidas e as condições que o PV pede, sobre UMA carga só: as duas perguntas leem a
+// mesma simulação. O item pode dar PV (os anéis, p342) ou Constituição, então guardá-lo
+// com pouca vida pode derrubar.
+func (s Scene) itemGesture(
+	r *http.Request, row sqlcgen.Character, change func(*sheet.CharacterDTO), persist func() error,
+) error {
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
 		return err
 	}
-	if err := gesture(); err != nil {
+	if err := keepsChosenExpertisesOf(dto, row, change); err != nil {
 		return err
 	}
-	after, err := s.deps.LoadCharacter(r.Context(), row)
-	if err != nil {
+	projected := dto
+	projected.Items = slices.Clone(dto.Items)
+	change(&projected)
+	if err := persist(); err != nil {
 		return err
 	}
-	return s.plays.FollowHitPointsFrom(r.Context(), after, before.HpCurrent)
+	return s.plays.FollowMaximumChange(r.Context(), dto, projected)
 }
 
 // useItem gasta uma dose do consumível.
@@ -176,7 +183,7 @@ func toggleOversizedWeapon(s Scene, r *http.Request, row sqlcgen.Character, _ Si
 	}
 	marked := slices.ContainsFunc(dto.Items, func(i sheet.ItemDTO) bool { return i.ID == item.ID && i.Oversized })
 	if !marked {
-		if err := s.refusePastTheDouble(r, row, float64(item.Quantity)); err != nil {
+		if err := s.refusesPastTheDoubleOf(dto, float64(item.Quantity)); err != nil {
 			return err
 		}
 	}
@@ -281,10 +288,7 @@ func saveEquipped(r *http.Request, s Scene, row sqlcgen.Character, itemID int64,
 	if place != "" {
 		wear = &place
 	}
-	if err := s.keepsChosenExpertises(r, row, equippedAs(itemID, wear)); err != nil {
-		return err
-	}
-	return s.followingTheHitPoints(r, row, func() error { return s.plays.SaveEquipped(r.Context(), itemID, place) })
+	return s.itemGesture(r, row, equippedAs(itemID, wear), func() error { return s.plays.SaveEquipped(r.Context(), itemID, place) })
 }
 
 // slotEquipEh aceita só os três lugares do livro.

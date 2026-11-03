@@ -157,20 +157,35 @@ func followTheHitPoints(
 	return nil
 }
 
-// FollowHitPointsFrom liga e desliga as condições quando o PV atual mudou sem passar pelo
-// funil, porque foi o MÁXIMO que se moveu: um item que dava PV saiu ou voltou, e o atual é
-// o máximo menos o dano. Ela não grava vital nenhum.
+// FollowMaximumChange liga e desliga as condições quando um gesto move o MÁXIMO de PV: um
+// item que dava PV saiu ou voltou, ou o nível mudou. O PV atual é o máximo menos o dano,
+// então ele anda junto sem passar pelo funil, e quem chega a 0 ou menos cai (p236).
 //
-// @example sheet.FollowHitPointsFrom(ctx, q, &dto, 5) // o anel saiu e o PV foi de 5 a -5
-func FollowHitPointsFrom(ctx context.Context, q *sqlcgen.Queries, dto *CharacterDTO, before int64) error {
-	if before == dto.HpCurrent {
+// Ela recebe a ficha de antes e a SIMULADA, e não relê nada: o gesto já tem a ficha em
+// mãos, e carregá-la de novo para comparar custaria duas cargas a cada equipar. Nenhuma
+// consulta acontece quando o máximo não mudou, que é quase sempre. Ela não grava vital.
+//
+// @example sheet.FollowMaximumChange(ctx, q, dto, projected) // o anel saiu: o PV foi de 5 a -5
+func FollowMaximumChange(ctx context.Context, q *sqlcgen.Queries, dto, projected CharacterDTO) error {
+	if dto.Ruleset == nil {
+		return nil
+	}
+	character, err := EngineCharacterFrom(projected)
+	if err != nil {
+		return err
+	}
+	maxAfter := int64(dto.Ruleset.VitalsForCharacter(character).PvMax)
+	if maxAfter == dto.HpMax {
 		return nil
 	}
 	nonLethal, err := storedNonLethal(ctx, q, dto.ID)
 	if err != nil {
 		return err
 	}
-	return followTheHitPoints(ctx, q, dto, before, dto.HpCurrent, nonLethal)
+	before := dto.HpCurrent
+	dto.HpCurrent = WithinHitPoints(before+maxAfter-dto.HpMax, maxAfter)
+	dto.HpMax = maxAfter
+	return followTheHitPoints(ctx, q, &dto, before, dto.HpCurrent, nonLethal)
 }
 
 // Aqui moravam o `RefreshPools` e o `FillPools`, e os dois viraram NADA.
