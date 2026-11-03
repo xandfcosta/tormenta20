@@ -39,8 +39,19 @@ func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, er
 	}
 	if req.Weapon < 0 || req.Weapon >= len(cards) {
 		return engine.WeaponCard{}, boost, fmt.Errorf(
-			"%s tem %d carta(s) de ataque e o pedido veio na %d: %w",
+			"%s tem %d ataque(s) à mão, contando o desarmado, e o pedido veio no %d: %w",
 			striker.Label, len(cards), req.Weapon, app.ErrRefused)
 	}
-	return cards[req.Weapon], boost, nil
+	card := cards[req.Weapon]
+	if req.OtherUse {
+		if card.OtherUse == nil {
+			return engine.WeaponCard{}, boost, fmt.Errorf("%s não tem outro uso: %w", card.Name, app.ErrRefused)
+		}
+		card = *card.OtherUse
+	}
+	if card.RefusesBoost {
+		return engine.WeaponCard{}, boost, fmt.Errorf(
+			"%s não recebe este impulso, que só vale corpo a corpo: %w", card.Name, app.ErrRefused)
+	}
+	return card, boost, nil
 }

@@ -71,5 +71,13 @@ templ weaponSum(w weaponTile) {
 		<p class="ds-sum-section">{ "Dano · crítico " + w.Crit }</p>
 		@ds.SumTerms(w.DamageSum)
 		@ds.SumTotal(w.Damage, nil)
+		if w.Other != nil {
+			<p class="ds-sum-section">{ w.Other.Verb + " · Ataque · " + w.Other.Skill }</p>
+			@ds.SumTerms(w.Other.AttackSum)
+			@ds.SumTotal(w.Other.Attack, nil)
+			<p class="ds-sum-section">{ w.Other.Verb + " · Dano · crítico " + w.Other.Crit }</p>
+			@ds.SumTerms(w.Other.DamageSum)
+			@ds.SumTotal(w.Other.Damage, nil)
+		}
 	}
 }

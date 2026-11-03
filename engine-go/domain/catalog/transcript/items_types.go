@@ -29,15 +29,17 @@ type Item struct {
 }
 
 type WeaponStats struct {
-	Damage    string   `json:"damage"`
-	CritRange int      `json:"critRange"`
-	CritMult  int      `json:"critMult"`
-	Type      string   `json:"type"`
-	Hand      string   `json:"hand"`
-	Purpose   string   `json:"purpose"`
-	Range     string   `json:"range,omitempty"`
-	Traits    []string `json:"traits"`
-	Finesse   bool     `json:"finesse,omitempty"`
+	Damage    string `json:"damage"`
+	CritRange int    `json:"critRange"`
+	CritMult  int    `json:"critMult"`
+	Type      string `json:"type"`
+	Hand      string `json:"hand"`
+	Purpose   string `json:"purpose"`
+	Range     string `json:"range,omitempty"`
+	// MeleeWithPenalty é a arma de arremesso que também bate, com −5: a azagaia (p146).
+	MeleeWithPenalty bool     `json:"meleeWithPenalty,omitempty"`
+	Traits           []string `json:"traits"`
+	Finesse          bool     `json:"finesse,omitempty"`
 }
 
 type ArmorStats struct {

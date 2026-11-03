@@ -118,6 +118,7 @@ func (h sheetHost) ProposeStrikeOnTable(
 			AttackerEntryID: onTurn.ID,
 			TargetEntryID:   strike.TargetEntryID,
 			Weapon:          strike.Weapon,
+			OtherUse:        strike.OtherUse,
 			Maneuver:        strike.Maneuver,
 			Boost:           strike.Boost,
 			Charge:          strike.Charge,

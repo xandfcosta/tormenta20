@@ -44,10 +44,12 @@ type WeaponStats struct {
 	Purpose string `json:"purpose"` // 'melee' | 'thrown' | 'ranged'
 	Hand    string `json:"hand"`    // 'light' | 'one' | 'two' (finesse gating — ALE-31)
 	// Range é o alcance da Tabela 3-3, vazio na arma sem alcance. Numa arma corpo a
-	// corpo é ele que abre o segundo uso: ver `thrownUseOf`.
-	Range  string   `json:"range"`
-	Traits []string `json:"traits"`
-	Damage string   `json:"damage"` // dice, e.g. "1d8" (weapon-card display)
+	// corpo é ele que decide se arremessar custa −5: ver `otherUseOf`.
+	Range string `json:"range"`
+	// MeleeWithPenalty é a arma de arremesso que também bate, com −5: a azagaia (p146).
+	MeleeWithPenalty bool     `json:"meleeWithPenalty"`
+	Traits           []string `json:"traits"`
+	Damage           string   `json:"damage"` // dice, e.g. "1d8" (weapon-card display)
 	// Type é o tipo do dano da ARMA — "corte", "perfuracao", "impacto". Ele
 	// chegou com a RD por tipo (ALE-410): sem ele, uma redução de corte não
 	// alcança os dados da espada, que são justamente o corte.

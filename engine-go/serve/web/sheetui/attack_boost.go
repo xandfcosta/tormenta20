@@ -56,6 +56,9 @@ type attackBoost struct {
 type boostPreview struct {
 	Attack string `json:"attack"`
 	Detail string `json:"detail"`
+	// OtherUse é o rótulo do botão do outro uso com o impulso, vazio quando o impulso
+	// não vale nele: o Golpe Divino não acompanha a lança que voa.
+	OtherUse string `json:"otherUse"`
 }
 
 // boostSplits são os lados de um impulso, na ordem da tela.
@@ -139,13 +142,31 @@ func boostPreviewsOf(
 					break
 				}
 				out[i][key] = boostPreview{
-					Attack: book.WithSign(cards[i].Attack),
-					Detail: boostedWeaponDetail(cards[i], plain[i]),
+					Attack:   book.WithSign(cards[i].Attack),
+					Detail:   boostedWeaponDetail(cards[i], plain[i]),
+					OtherUse: otherUseLabel(cards[i].OtherUse),
 				}
 			}
 		}
 	}
 	return out
+}
+
+// otherUseVerb é o nome do gesto. Ele sai da perícia, porque o único outro uso em
+// corpo a corpo é bater com a azagaia.
+func otherUseVerb(other *engine.WeaponCard) string {
+	if other.IsMelee() {
+		return "Bater"
+	}
+	return "Arremessar"
+}
+
+// otherUseLabel é o botão do outro uso, com o ataque dele: "Arremessar +12".
+func otherUseLabel(other *engine.WeaponCard) string {
+	if other == nil || other.RefusesBoost {
+		return ""
+	}
+	return otherUseVerb(other) + " " + book.WithSign(other.Attack)
 }
 
 // boostedWeaponDetail é a linha pequena sob o nome da arma — "1d8+3 · 20/x3 · Luta" —,
@@ -210,9 +231,12 @@ func boostPreviewExpr(weapon int, boosts []attackBoost, field, plain string) str
 	for _, boost := range boosts {
 		table := map[string]string{}
 		for key, preview := range boost.Previews {
-			if field == "attack" {
+			switch field {
+			case "attack":
 				table[key] = preview.Attack
-			} else {
+			case "otherUse":
+				table[key] = preview.OtherUse
+			default:
 				table[key] = preview.Detail
 			}
 		}

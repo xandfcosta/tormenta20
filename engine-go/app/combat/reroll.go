@@ -27,7 +27,7 @@ func (r Request) attackDie(d20 int) engine.AttackDie {
 // replayOf é o que o provisório guarda do pedido para rolar de novo.
 func (r Request) replayOf(weapon engine.WeaponCard) live.AttackReplay {
 	return live.AttackReplay{
-		WeaponIndex: r.Weapon, WeaponID: weapon.CatalogID, SwitchesDamageType: r.SwitchesDamageType,
+		WeaponIndex: r.Weapon, WeaponID: weapon.CatalogID, SwitchesDamageType: r.SwitchesDamageType, OtherUse: r.OtherUse,
 		BoostSteps: r.Boost.Steps, BoostSplit: r.Boost.Split,
 	}
 }
@@ -44,7 +44,8 @@ func ReplayRequest(
 		AttackerEntryID: pending.AttackerEntryID, TargetEntryID: pending.TargetEntryID,
 		TargetObject: object, OwnsAttacker: ownsAttacker,
 		Weapon: pending.Replay.WeaponIndex, SwitchesDamageType: pending.Replay.SwitchesDamageType,
-		Charge: pending.Charge,
+		OtherUse: pending.Replay.OtherUse,
+		Charge:   pending.Charge,
 	}
 	if pending.BoostPowerID != "" {
 		req.Boost = engine.BoostChoice{

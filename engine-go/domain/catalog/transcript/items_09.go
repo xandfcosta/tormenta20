@@ -350,7 +350,7 @@ var itemsPart09 = []Item{
 		UID:         "itm_4s7jiu7hmg",
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma pode ser arremessada em alcance curto. Caso já pudesse ser arremessada, seu alcance aumenta em uma categoria. Após o ataque, se estiver livre, a arma volta voando para você. Pegá-la é uma reação.",
-		Unmodeled:   &ItemUnmodeled{Note: "muda `purpose` e `range` da arma, que são campos da `WeaponStats` e não alvo de modificador"},
+		Unmodeled:   &ItemUnmodeled{Note: "tira o −5 do arremesso (`otherUseOf`); o aumento de alcance e a volta da arma não têm onde morar, porque a carta não leva alcance e a arma não sai da mão"},
 		RollMin:     11,
 		RollMax:     12,
 		CountsAs:    1,

@@ -20,17 +20,20 @@ import (
 // alvo (o sinal que a barra da Mesa escreve) e de onde sai a arma (o índice no
 // caminho).
 
-// rollsAttackOnTheTarget rola o golpe da vez contra o alvo escolhido.
-func rollsAttackOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
-	weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
-	if err != nil {
-		return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
+// rollsAttackOnTheTarget rola o golpe da vez contra o alvo escolhido, com a arma
+// ou com o outro uso dela. Um handler por espécie, como a investida logo abaixo.
+func rollsAttackOnTheTarget(otherUse bool) func(Scene, *http.Request, sqlcgen.Character, Signals) error {
+	return func(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+		weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
+		if err != nil {
+			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
+		}
+		strike := ActionStrike{Weapon: weapon, OtherUse: otherUse}
+		if sig.BoostPower != "" && sig.BoostWeapon != nil && int(*sig.BoostWeapon) == weapon {
+			strike.Boost = engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
+		}
+		return s.proposeOnTheTable(r, row, strike, sig)
 	}
-	strike := ActionStrike{Weapon: weapon}
-	if sig.BoostPower != "" && sig.BoostWeapon != nil && int(*sig.BoostWeapon) == weapon {
-		strike.Boost = engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
-	}
-	return s.proposeOnTheTable(r, row, strike, sig)
 }
 
 // chargesTheTarget rola a investida (p235) — ou a Imprudente (p42) — da vez

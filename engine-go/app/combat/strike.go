@@ -26,7 +26,7 @@ import (
 type Combatant struct {
 	EntryID string
 	Label   string
-	// Weapons são as cartas de ataque, pelo motor: uma por uso de cada arma. VAZIO para quem não tem
+	// Weapons são as armas empunhadas e o desarmado, pelo motor. VAZIO para quem não tem
 	// ficha — e é por isso que esta fatia só deixa PERSONAGEM atacar: o verbete
 	// do bestiário traz o ataque como texto ("crítico 19"), e texto não resolve.
 	Weapons         []engine.WeaponCard
@@ -160,9 +160,12 @@ type Request struct {
 	// peça do tabuleiro; a REGRA (a Defesa pelo tamanho, a RD pelo material)
 	// fica aqui, que é onde o motor é chamado.
 	TargetObject *ObjectTarget
-	// Weapon é qual das cartas de ataque, por índice, e não qual das mãos: a arma
-	// que também se arremessa ocupa duas. Zero é a primeira.
+	// Weapon é qual das armas empunhadas, por índice. Zero é a primeira, que é
+	// o caso de quase toda ficha.
 	Weapon int
+	// OtherUse pede o outro jeito de usar essa arma: arremessar a lança, bater com a
+	// azagaia (`engine.WeaponCard.OtherUse`).
+	OtherUse bool
 	// OwnsAttacker: quem pede é dono do personagem que ataca. Resolvido no
 	// gateway, CONTRA O BANCO — o cliente não é fonte de posse. É o mesmo campo
 	// e a mesma razão do `board.Mover.OwnsCharacter`.
