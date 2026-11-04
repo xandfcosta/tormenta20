@@ -55,6 +55,9 @@ type Combatant struct {
 	// (`engine.BoostedWeaponCards`). Nulo para quem não tem ficha — o bloco de
 	// criatura não paga PM no golpe.
 	Boost func(engine.BoostChoice) ([]engine.WeaponCard, int, error)
+	// Stances são as posturas acesas agora, que a proposta guarda. Vazio para quem não
+	// tem ficha.
+	Stances []string
 	// ChargesRecklessly diz que a ficha tem a Investida Imprudente (p42).
 	ChargesRecklessly bool
 	// WrittenDose é o nome e o efeito de uma dose, com a CD desta ficha (p227).
@@ -78,9 +81,10 @@ type Tables interface {
 	ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 	RuleAttack(ctx context.Context, sessionID int64, who live.Attacker, ruling string, toRoll *live.DamageToRoll) (*live.SessionRuntimeState, error)
 	RecordAttackDamage(ctx context.Context, sessionID int64, who live.Attacker, rolled live.PendingAttack) (*live.SessionRuntimeState, error)
+	RerollAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 	// CharacterActionFits diz se este personagem pode gastar o custo AGORA: se
 	// ele pode agir (o instante, pelo PV e pelas condições da ficha) e se sobrou
-	// ação no turno. Não cobra nada — quem cobra é a confirmação.
+	// ação no turno. Não cobra nada — quem cobra é o `ProposeAttack`, depois de rolar.
 	CharacterActionFits(ctx context.Context, characterID int64, cost engine.ActionCost) error
 }
 
@@ -191,21 +195,14 @@ type Request struct {
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
-	// OpposedD20 é o d20 de quem se DEFENDE da manobra, e ele existe pelo mesmo
-	// motivo do `D20`: a mesa pode rolar na mão. Nulo é o servidor rolar.
+	// OpposedD20 é o d20 de quem se DEFENDE da manobra, nos mesmos termos do `D20`.
 	OpposedD20 *int
 	// D20 é a rolagem QUE JÁ ACONTECEU na mesa, quando aconteceu.
 	//
-	// Nulo é o servidor rolar. Os dois caminhos existem porque as duas mesas
-	// existem, e este repositório já tem os dois precedentes escritos: a
-	// INICIATIVA recebe o d20 do jogador (ele rolou um dado de verdade e
-	// digitou), e a bolsa inicial rola no servidor. Aceitar nulo é o que
-	// permite o gesto de menu — que não tem onde digitar — sem fechar a porta
-	// para a mesa que rola dado na mão.
+	// Nulo é o servidor rolar, que é o que o gesto de menu faz: ele não tem onde digitar.
+	// Hoje só os testes o preenchem, para medir um dado sem depender da sorte: o golpe na
+	// mesa rola no servidor, e o que a pessoa digita é o dano.
 	D20 *int
-	// CountsAsNaturalTwenty diz que o `D20` "será considerado um 20 natural"
-	// (Sorte de Nimb, p48): só o rolar de novo o acende (ALE-508).
-	CountsAsNaturalTwenty bool
 }
 
 // strikerFor confere QUEM ATACA e monta o combatente dele.
@@ -226,6 +223,11 @@ func (s Strike) strikerFor(
 	if state == nil {
 		return live.InitiativeEntry{}, Combatant{}, fmt.Errorf(
 			"a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
+	}
+	// ANTES DA AÇÃO: a proposta já pagou a padrão, e "não sobrou ação" não diria o que a
+	// pessoa está esperando.
+	if err := live.RefusesANewAttack(state); err != nil {
+		return live.InitiativeEntry{}, Combatant{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 	}
 	attackerEntry, err := entryOf(state, req.AttackerEntryID)
 	if err != nil {
@@ -279,10 +281,8 @@ func (r Request) TargetObjectTokenID() string {
 }
 
 // strikeSetup é o que o golpe sabe antes de qualquer dado: quem ataca, com que
-// arma, contra o quê e sob quais linhas da Tabela 5-3. Os dois tempos o montam
-// do mesmo jeito — o teste a partir do pedido, o dano a partir do provisório —,
-// e montá-lo em dois lugares faria a próxima correção acertar um e esquecer o
-// outro.
+// arma, contra o quê e sob quais linhas da Tabela 5-3. Ele só existe na proposta:
+// a decisão e o dano leem o golpe congelado nela.
 type strikeSetup struct {
 	attacker live.InitiativeEntry
 	striker  Combatant
@@ -356,27 +356,6 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 	return setup, nil
 }
 
-// pendingOf é o provisório do golpe, com o que o pedido escolheu e o teste
-// devolveu. O dano fica de fora: ele é rolado depois da decisão do mestre.
-func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.AttackOutcome) live.PendingAttack {
-	margin, multiplier := engine.CriticalOf(setup.weapon)
-	pending := live.PendingAttack{
-		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: setup.weapon.Name,
-		// A DEFESA do provisório é a que o ataque ENFRENTOU, já com a Tabela
-		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
-		// atrás da carroça" são leituras diferentes do mesmo número.
-		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
-		Hit: out.Hit, Critical: out.Critical, CritRange: margin, CritMult: multiplier,
-		Melee: setup.weapon.IsMelee(), ByUserID: who.ID,
-		BoostPowerID: setup.boost.powerID, BoostPM: setup.boost.pm, Charge: req.Charge,
-		Replay: req.replayOf(setup.weapon),
-	}
-	if req.TargetObject != nil {
-		pending.TargetTokenID, pending.TargetLabel = req.TargetObject.TokenID, req.TargetObject.Label
-	}
-	return pending
-}
-
 // Propose rola o TESTE do ataque e guarda o provisório. Ninguém perde PV aqui,
 // e o dano ainda não existe: ele vem depois da decisão do mestre.
 func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
@@ -391,7 +370,7 @@ func (s Strike) Propose(ctx context.Context, who app.Caller, role string, req Re
 }
 
 // roll rola o teste do golpe ou a manobra do pedido, sem guardar: quem guarda
-// é o `Propose`, e o `Reroll` junta antes o que o primeiro dado deixou.
+// é o `Propose`.
 func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Request) (live.PendingAttack, error) {
 	setup, err := s.setUp(ctx, role, req)
 	if err != nil {
@@ -404,15 +383,11 @@ func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Reque
 	if req.Maneuver != "" {
 		return s.rollManeuver(who, req, setup, d20)
 	}
-	out, err := engine.JudgeAttack(setup.weapon, setup.target, setup.situations, req.attackDie(d20), s.rollDie)
+	out, err := engine.JudgeAttack(setup.weapon, setup.target, setup.situations, engine.D20(d20), s.rollDie)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	pending := setup.pendingOf(who, req, out)
-	if pending.Dose, err = s.doseFor(ctx, req, setup); err != nil {
-		return live.PendingAttack{}, err
-	}
-	return pending, nil
+	return setup.proposalOf(who, req, out)
 }
 
 // rollManeuver resolve o teste OPOSTO da manobra e guarda o provisório.
@@ -446,7 +421,8 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 
 	pending := live.PendingAttack{
 		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: weapon.Name,
-		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, Replay: req.replayOf(weapon),
+		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, WeaponID: weapon.CatalogID,
+		AttackerStances: striker.Stances, TargetStances: victim.Stances,
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,

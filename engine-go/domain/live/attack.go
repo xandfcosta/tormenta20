@@ -1,6 +1,9 @@
 package live
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // O ATAQUE PROPOSTO, e a divisa de quem decide sobre ele.
 //
@@ -59,13 +62,21 @@ type PendingAttack struct {
 	// cancelado.
 	NonLethal int `json:"nonLethal,omitempty"`
 	// BoostPowerID e BoostPM são o impulso de PM que o golpe levou (o Golpe
-	// Divino, o Ataque Especial — ALE-487) e o que ele custa. A CONFIRMAÇÃO
-	// cobra o PM, depois de o golpe pousar: o provisório cancelado não custa.
+	// Divino, o Ataque Especial — ALE-487) e o que ele custa. A proposta paga ao
+	// nascer (`Paid`).
 	BoostPowerID string `json:"boostPowerId,omitempty"`
 	BoostPM      int    `json:"boostPm,omitempty"`
-	// Charge é a investida que levou ao golpe (p235, p42): a confirmação cobra
-	// a ação COMPLETA dela e abre a guarda de quem investiu (ALE-499).
+	// Charge é a investida que levou ao golpe (p235, p42): a proposta paga a ação
+	// COMPLETA dela, e o encerramento abre a guarda de quem investiu (ALE-499).
 	Charge string `json:"charge,omitempty"`
+	// Paid é o que a proposta pagou ao nascer, e é o que o cancelamento do mestre
+	// devolve. Nulo na proposta de antes desta regra, que não pagou nada.
+	Paid *AttackPaid `json:"paid,omitempty"`
+	// AttackerStances e TargetStances são as posturas de cada lado na hora da proposta.
+	// Os gatilhos cumulativos do encerramento leem daqui (decisão do dono), porque ligar
+	// a Fúria depois do crítico não muda o golpe que foi proposto.
+	AttackerStances []string `json:"attackerStances,omitempty"`
+	TargetStances   []string `json:"targetStances,omitempty"`
 	// Dose é o que a Injeção alquímica da arma libera se o golpe acertar (p165).
 	// Nula em arma sem dose e na manobra, que não causa dano.
 	Dose *AttackDose `json:"dose,omitempty"`
@@ -127,15 +138,30 @@ type PendingAttack struct {
 	// Num golpe, os campos de dano falam e este é nulo; numa manobra, o inverso.
 	// É ele que diz à faixa qual das duas frases escrever.
 	Maneuver *ManeuverRoll `json:"maneuver,omitempty"`
-	// ByUserID é quem rolou. O mestre confirma por qualquer um; quem propôs
-	// cancela o que é dele.
+	// ByUserID é quem rolou. O mestre confirma e cancela por qualquer um; quem propôs
+	// só rola o dano e fecha o próprio erro.
 	ByUserID int64 `json:"byUserId"`
 	// Rerolls são os "rolar de novo" pagos, em ordem: vale o ÚLTIMO dado
 	// (p226, ALE-508).
 	Rerolls []DieReroll `json:"rerolls,omitempty"`
-	// Replay é o que o pedido escolheu e o provisório não diz: rolar de novo
-	// refaz o golpe com o mesmo pedido e outro d20.
-	Replay AttackReplay `json:"replay,omitzero"`
+	// WeaponID é o id do catálogo da arma, que é o que o Mestre em Arma escolheu (p66).
+	WeaponID string `json:"weaponId,omitempty"`
+	// Frozen é o golpe como foi proposto (`engine.FreezeStrike`). O regime só o guarda.
+	Frozen json.RawMessage `json:"frozen,omitempty"`
+}
+
+// AttackPaid é o que saiu da mesa e da ficha quando a proposta nasceu.
+//
+// As três ações guardam o que a cobrança de fato tirou: a pessoa pode ter andado depois
+// de propor, e devolver o turno inteiro daria de volta esse movimento. A cena e a rodada
+// dizem de que turno elas saíram, porque a vez que volta na rodada seguinte é outro turno.
+type AttackPaid struct {
+	CharacterID   *int64 `json:"characterId,omitempty"`
+	Scene         int    `json:"scene,omitempty"`
+	Round         int    `json:"round,omitempty"`
+	Standard      bool   `json:"standard,omitempty"`
+	Movement      bool   `json:"movement,omitempty"`
+	ExtraMovement bool   `json:"extraMovement,omitempty"`
 }
 
 // AttackDose é a dose em jogo no golpe. Ela viaja escrita porque a faixa só recebe o
@@ -147,18 +173,6 @@ type AttackDose struct {
 	Effect    string `json:"effect"`
 	// Spent diz que a dose já saiu da arma: é o que o cancelamento devolve.
 	Spent bool `json:"spent,omitempty"`
-}
-
-// AttackReplay é o pedido do golpe que o resultado não carrega. A arma vai
-// pelo ÍNDICE porque é ele que o pedido usa; WeaponID é o id do catálogo, que
-// é o que o Mestre em Arma escolheu (p66).
-type AttackReplay struct {
-	WeaponIndex        int    `json:"weaponIndex,omitempty"`
-	WeaponID           string `json:"weaponId,omitempty"`
-	SwitchesDamageType bool   `json:"switchesDamageType,omitempty"`
-	OtherUse           bool   `json:"otherUse,omitempty"`
-	BoostSteps         int    `json:"boostSteps,omitempty"`
-	BoostSplit         string `json:"boostSplit,omitempty"`
 }
 
 // ForeseenCondition é uma condição que o livro reserva ao golpe, do jeito que a
@@ -245,10 +259,12 @@ type Attacker struct {
 
 // ProposeAttack guarda o ataque rolado, sem tocar em PV nenhum.
 //
-// No máximo UM por sessão, e o novo substitui o antigo — dois provisórios
-// simultâneos são duas verdades sobre a mesma cena, e a mesa não teria como
-// saber qual confirmar. É a mesma decisão do `ProposeMove`.
+// No máximo UM por sessão: dois provisórios simultâneos são duas verdades sobre a mesma
+// cena, e a mesa não teria como saber qual confirmar.
 func ProposeAttack(st *SessionRuntimeState, attack PendingAttack) error {
+	if err := RefusesANewAttack(st); err != nil {
+		return err
+	}
 	if FindEntryIndex(st, attack.AttackerEntryID) < 0 {
 		return fmt.Errorf("quem ataca (%s) não está na fila", attack.AttackerEntryID)
 	}
@@ -268,11 +284,46 @@ func ProposeAttack(st *SessionRuntimeState, attack PendingAttack) error {
 	return nil
 }
 
+// RefusesANewAttack recusa o golpe novo enquanto o anterior não acabou. A PROPOSTA É
+// IMUTÁVEL, e a próxima só existe depois da resposta do mestre (decisão do dono). O erro
+// dele já encerrou o golpe, e é o único que o golpe novo substitui; o acerto ainda espera
+// o dano e o ✓.
+func RefusesANewAttack(st *SessionRuntimeState) error {
+	if attackIsOpen(st) {
+		return fmt.Errorf("já há um ataque em andamento na mesa: o próximo abre depois da resposta do mestre")
+	}
+	return nil
+}
+
+func attackIsOpen(st *SessionRuntimeState) bool {
+	return st != nil && st.PendingAttack != nil && st.PendingAttack.Ruling != RulingMiss
+}
+
+// ReplaceAttackRoll troca o dado da proposta pelo do "rolar de novo" (p226), que é pago
+// e vale antes da decisão. É a única mudança que a proposta aceita, e ela traz exatamente
+// um rolar de novo a mais: outra aba pode ter rolado depois da leitura de quem pediu, e
+// gravar por cima apagaria um PM já pago da lista que o cancelamento devolve.
+func ReplaceAttackRoll(st *SessionRuntimeState, attack PendingAttack) error {
+	open := st.PendingAttack
+	if open == nil {
+		return fmt.Errorf("não há ataque proposto para rolar de novo")
+	}
+	if open.Ruling != "" {
+		return fmt.Errorf("o mestre já decidiu este ataque, e rolar de novo vale antes da decisão (p226)")
+	}
+	if len(attack.Rerolls) != len(open.Rerolls)+1 {
+		return fmt.Errorf("o ataque já foi rolado de novo %d vez(es) enquanto este pedido chegava: olhe o dado novo antes de pagar outra",
+			len(open.Rerolls))
+	}
+	st.PendingAttack = &attack
+	return nil
+}
+
 // HoldsTheCharacter diz se o ataque na mesa é deste personagem e ainda não acabou.
 // O erro já encerrou o golpe (ver `RuleAttack`): o provisório dele só fica para o
 // jogador ler a decisão.
 func HoldsTheCharacter(st *SessionRuntimeState, characterID int64) bool {
-	if st == nil || st.PendingAttack == nil || st.PendingAttack.Ruling == RulingMiss {
+	if !attackIsOpen(st) {
 		return false
 	}
 	at := FindEntryIndex(st, st.PendingAttack.AttackerEntryID)
@@ -335,9 +386,11 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 // substitui ou quando quem atacou o fecha.
 func ClearPendingAttack(st *SessionRuntimeState) { st.PendingAttack = nil }
 
-// CancelAttack descarta o provisório sem mexer em ninguém. O mestre cancela por
-// qualquer um — é ele quem toca a mesa quando o jogador caiu da rede —, e o
-// jogador só o que ele mesmo rolou.
+// CancelAttack descarta o provisório. O cancelamento do mestre é uma resposta: ele
+// cancela por qualquer um, e é quem toca a mesa quando o jogador caiu da rede.
+//
+// O jogador só fecha o erro dele, que já acabou. Retirar a proposta sem resposta seria
+// um d20 novo de graça: propor, ler o dado, cancelar e rolar de novo.
 func CancelAttack(st *SessionRuntimeState, who Attacker) error {
 	attack := st.PendingAttack
 	if attack == nil {
@@ -345,6 +398,9 @@ func CancelAttack(st *SessionRuntimeState, who Attacker) error {
 	}
 	if who.Role != "gm" && attack.ByUserID != who.UserID {
 		return fmt.Errorf("o ataque proposto não é seu")
+	}
+	if who.Role != "gm" && attack.Ruling != RulingMiss {
+		return fmt.Errorf("a proposta de ataque só sai da mesa com a resposta do mestre")
 	}
 	st.PendingAttack = nil
 	return nil
@@ -354,8 +410,8 @@ func CancelAttack(st *SessionRuntimeState, who Attacker) error {
 // No acerto e no crítico, `toRoll` é o dano que o jogador vai rolar.
 //
 // Uma vez só: a decisão muda o que o jogador rola, e trocá-la depois de ele
-// pegar os dados é a mesa discordando dela mesma. Quem errou cancela e rola de
-// novo.
+// pegar os dados é a mesa discordando dela mesma. Quem decidiu errado cancela, e
+// o jogador propõe de novo.
 func RuleAttack(st *SessionRuntimeState, who Attacker, ruling string, toRoll *DamageToRoll) error {
 	attack := st.PendingAttack
 	if attack == nil {

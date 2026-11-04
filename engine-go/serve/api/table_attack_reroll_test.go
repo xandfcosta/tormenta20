@@ -11,8 +11,8 @@ import (
 // ROLAR DE NOVO O ATAQUE NA FAIXA DO PROVISÓRIO (p226, ALE-508): só quem rolou,
 // antes de o mestre confirmar, e vale o SEGUNDO dado.
 //
-// O provisório é semeado com um 1 natural, como no `boostedProposal`: o d20 da
-// proposta é de verdade, e o que se prende aqui é o que o SEGUNDO faz.
+// O provisório é semeado com um 1 natural: o d20 da proposta é de verdade, e o que se
+// prende aqui é o que o SEGUNDO faz.
 
 func pendingWithANaturalOne(t *testing.T, f sceneFixture, path string) live.PendingAttack {
 	t.Helper()
@@ -32,9 +32,7 @@ func pendingWithANaturalOne(t *testing.T, f sceneFixture, path string) live.Pend
 	if seeded.Maneuver != nil {
 		seeded.Maneuver.Margin = seeded.Total - seeded.Maneuver.Opposed
 	}
-	if _, err := f.s.sessions.ProposeAttack(t.Context(), f.sessionID, seeded); err != nil {
-		t.Fatalf("semear o 1 natural no provisório: %v", err)
-	}
+	replacesTheProposal(t, f, seeded)
 	return seeded
 }
 

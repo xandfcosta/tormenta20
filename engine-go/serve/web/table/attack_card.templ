@@ -26,8 +26,8 @@ templ gmAttack(v View) {
 				if v.Attack.Action != "" {
 					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
 				}
-				// O IMPULSO fica à vista antes do ✓: confirmar cobra o PM da ficha,
-				// e quem confirma precisa saber quanto (ALE-487).
+				// O IMPULSO fica à vista: a proposta já pagou o PM, e quem responde
+				// precisa saber quanto o cancelamento devolve (ALE-487).
 				if v.Attack.Boost != "" {
 					@ds.Badge(v.Attack.Boost, true)
 				}
@@ -211,16 +211,15 @@ templ playerAttackBody(v View) {
 				<p class="ds-help">{ line }</p>
 			}
 			<p class="ds-help">O mestre diz o resultado.</p>
-			<div class="ds-strike-foot">
-				for _, offer := range v.Attack.Offers {
-					@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
-						{ offer.Label }
+			if len(v.Attack.Offers) > 0 {
+				<div class="ds-strike-foot">
+					for _, offer := range v.Attack.Offers {
+						@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
+							{ offer.Label }
+						}
 					}
-				}
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")}) {
-					Cancelar
-				}
-			</div>
+				</div>
+			}
 	}
 }
 

@@ -1,7 +1,6 @@
 package combat
 
 import (
-	"context"
 	"fmt"
 	"slices"
 
@@ -9,30 +8,10 @@ import (
 	"t20engine/domain/live"
 )
 
-func (s Strike) doseFor(ctx context.Context, req Request, setup strikeSetup) (*live.AttackDose, error) {
-	state, err := s.tables.State(ctx, req.SessionID)
-	if err != nil {
-		return nil, err
-	}
-	return setup.doseOf(req, doseComingBack(state))
-}
-
-// doseComingBack é a dose gasta do acerto que este golpe vai tirar da mesa: guardar o
-// golpe novo a devolve à arma, e ela já conta para ele.
-func doseComingBack(state *live.SessionRuntimeState) *live.AttackDose {
-	if state == nil || state.PendingAttack == nil || state.PendingAttack.Dose == nil || !state.PendingAttack.Dose.Spent {
-		return nil
-	}
-	return state.PendingAttack.Dose
-}
-
 // doseOf é a dose em jogo neste golpe (p165). Quem a gasta é a decisão do mestre,
 // e não este gesto: errar não libera nada.
-func (setup strikeSetup) doseOf(req Request, comingBack *live.AttackDose) (*live.AttackDose, error) {
+func (setup strikeSetup) doseOf(req Request) (*live.AttackDose, error) {
 	loaded := setup.weapon.Doses
-	if comingBack != nil && comingBack.ItemID == setup.weapon.ItemID {
-		loaded = append(slices.Clone(loaded), comingBack.CatalogID)
-	}
 	if len(loaded) == 0 && req.Dose == "" {
 		return nil, nil
 	}

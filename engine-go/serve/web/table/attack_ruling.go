@@ -11,7 +11,6 @@ import (
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/app"
-	"t20engine/app/combat"
 	"t20engine/domain/live"
 )
 
@@ -33,11 +32,7 @@ func rulesAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if !known {
 		return nil, fmt.Errorf("a decisão %q não existe: é errou, acertou ou critico", chi.URLParam(c.R, "decisao"))
 	}
-	_, _, req, err := st.pendingStrike(c)
-	if err != nil {
-		return nil, err
-	}
-	ruled, err := st.strike.Rule(c.R.Context(), app.Caller{ID: c.User}, c.Role, req, ruling)
+	ruled, err := st.strike.Rule(c.R.Context(), app.Caller{ID: c.User}, c.Role, c.SessionID, ruling)
 	if err != nil || ruling != live.RulingMiss || ruled.PendingAttack == nil {
 		return ruled, err
 	}
@@ -67,40 +62,10 @@ func rollsAttackDamageByHand(st Scene, c commandCtx) (*live.SessionRuntimeState,
 }
 
 func (st Scene) rollDamage(c commandCtx, hand []int) (*live.SessionRuntimeState, error) {
-	_, _, req, err := st.pendingStrike(c)
-	if err != nil {
-		return nil, err
-	}
-	if _, err := st.strike.RollDamage(c.R.Context(), app.Caller{ID: c.User}, c.Role, req, hand); err != nil {
+	if _, err := st.strike.RollDamage(c.R.Context(), app.Caller{ID: c.User}, c.Role, c.SessionID, hand); err != nil {
 		return nil, err
 	}
 	return st.deps.Sessions().State(c.R.Context(), c.SessionID)
-}
-
-// pendingStrike é o provisório em jogo e o pedido que o refaz — com a posse
-// resolvida CONTRA O BANCO e a peça atacada relida do tabuleiro.
-func (st Scene) pendingStrike(c commandCtx) (*live.SessionRuntimeState, live.PendingAttack, combat.Request, error) {
-	ctx := c.R.Context()
-	state, err := st.deps.Sessions().State(ctx, c.SessionID)
-	if err != nil {
-		return nil, live.PendingAttack{}, combat.Request{}, err
-	}
-	if state == nil || state.PendingAttack == nil {
-		return nil, live.PendingAttack{}, combat.Request{}, errors.New("não há ataque na mesa")
-	}
-	pending := *state.PendingAttack
-	var object *combat.ObjectTarget
-	if pending.TargetTokenID != "" {
-		if object, err = st.objectTokenOf(c, pending.TargetTokenID); err != nil {
-			return nil, live.PendingAttack{}, combat.Request{}, err
-		}
-	}
-	owns := false
-	if attacker := entryByID(state, pending.AttackerEntryID); attacker != nil && attacker.CharacterID != nil {
-		_, mine, _ := st.tableRoster(ctx, c.User, c.CampaignID)
-		owns = mine[*attacker.CharacterID]
-	}
-	return state, pending, combat.ReplayRequest(c.CampaignID, c.SessionID, pending, owns, object), nil
 }
 
 func diceCount(toRoll live.DamageToRoll) int {

@@ -3,28 +3,20 @@ package session
 import (
 	"context"
 
-	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/infra/events"
 )
 
-// AS TRÊS MUTAÇÕES DO ATAQUE PROPOSTO (ALE-364).
+// AS MUTAÇÕES DO ATAQUE PROPOSTO (ALE-364).
 //
 // Elas moram fora do `store.go` porque têm outra razão para mudar: o resto do
 // store é a fila e os vitais, e isto é o ciclo propor-confirmar-cancelar de um
 // gesto de combate. O que as junta a ele é o mesmo estado de sessão, e não o
-// mesmo assunto.
-
-// ProposeAttack guarda o ataque rolado. Ninguém perde PV aqui.
-func (st *Store) ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error) {
-	// O golpe novo tira da mesa o acerto que ninguém confirmou.
-	return st.withTheDoseBack(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { return live.ProposeAttack(s, attack) })
-}
+// mesmo assunto. O pagamento da proposta mora em `attack_payment.go`.
 
 // RecordSkillTest guarda o teste rolado para a mesa ver (p220-221).
 //
-// Ele mora neste arquivo e não num irmão porque é a MESMA pergunta que as três
+// Ele mora neste arquivo e não num irmão porque é a MESMA pergunta que as
 // mutações do ataque respondem — "o que a mesa acabou de rolar?" —, e a
 // diferença é que este não tem ciclo: não há propor, confirmar nem cancelar.
 //
@@ -79,19 +71,6 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 	if err != nil {
 		return nil, err
 	}
-	// AGREDIR É AÇÃO PADRÃO (p233), e a investida completa (p235), cobrada de
-	// quem ataca SE ele ainda está na vez — a mesma regra do movimento: o
-	// mestre confirma fora de hora o tempo todo, e cobrar do turno de outro
-	// tiraria a ação de quem não atacou. A
-	// CONFERÊNCIA vem antes do dano e a COBRANÇA depois, pela razão do
-	// `ActionFits`: entre propor e confirmar o jogador pode ter conjurado, e o
-	// dano de um ataque que não cabia mais não pode pousar.
-	onTurn := attackerIsOnTurn(state, attack)
-	if onTurn {
-		if err := st.ActionFits(ctx, sessionID, engine.StrikeAction(attack.Charge)); err != nil {
-			return nil, err
-		}
-	}
 	// O ALVO-PEÇA NÃO PASSA POR AQUI, e não é esquecimento: o PV de um objeto
 	// mora no TABULEIRO, que é outro agregado com trava própria. Quem o escreve
 	// é a cena, antes de chamar este método — aqui o provisório só é liquidado.
@@ -124,19 +103,14 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 				return err
 			}
 			live.ClearPendingAttack(s)
-			if !onTurn {
-				return nil
-			}
-			return chargeTurn(s, engine.StrikeAction(attack.Charge))
+			return nil
 		})
 }
 
 // RuleAttack guarda a decisão do mestre sobre o golpe.
 //
-// O ERRO É UM DESFECHO, e por isso ele cobra: agredir é ação padrão (p233) e
-// errar não a devolve. A cobrança segue a do `CommitAttack` — de quem ataca, se
-// ele ainda está na vez, conferida antes e cobrada sob a trava. O acerto e o
-// crítico não cobram aqui: eles esperam o dano, e quem cobra é o ✓.
+// O ERRO É UM DESFECHO, e a ação e o PM que a proposta pagou ficam pagos: agredir é ação
+// padrão (p233) e errar não a devolve. O acerto tira a dose da arma.
 //
 // O provisório do erro FICA, com a decisão, para o jogador ler "o mestre disse:
 // errou"; o próximo ataque o substitui, e quem atacou pode tirá-lo da mesa.
@@ -147,26 +121,8 @@ func (st *Store) RuleAttack(
 		return st.withTheDoseSpent(ctx, sessionID,
 			func(s *live.SessionRuntimeState) error { return live.RuleAttack(s, who, ruling, toRoll) })
 	}
-	state, err := st.State(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	onTurn := state.PendingAttack != nil && attackerIsOnTurn(state, *state.PendingAttack)
-	if onTurn {
-		if err := st.ActionFits(ctx, sessionID, engine.StrikeAction(state.PendingAttack.Charge)); err != nil {
-			return nil, err
-		}
-	}
 	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error {
-			if err := live.RuleAttack(s, who, ruling, nil); err != nil {
-				return err
-			}
-			if !onTurn {
-				return nil
-			}
-			return chargeTurn(s, engine.StrikeAction(s.PendingAttack.Charge))
-		})
+		func(s *live.SessionRuntimeState) error { return live.RuleAttack(s, who, ruling, nil) })
 }
 
 // RecordAttackDamage guarda o dano rolado depois da decisão. Ninguém perde PV
@@ -176,19 +132,4 @@ func (st *Store) RecordAttackDamage(
 ) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return live.RecordAttackDamage(s, who, rolled) })
-}
-
-// attackerIsOnTurn diz se quem atacou é a linha da vez em curso.
-func attackerIsOnTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bool {
-	if s == nil || s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
-		return false
-	}
-	return s.Initiative[s.TurnIndex].ID == attack.AttackerEntryID
-}
-
-// CancelAttack descarta o provisório sem ferir ninguém, e devolve à arma a dose que o
-// acerto gastou.
-func (st *Store) CancelAttack(ctx context.Context, sessionID int64, who live.Attacker) (*live.SessionRuntimeState, error) {
-	return st.withTheDoseBack(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { return live.CancelAttack(s, who) })
 }

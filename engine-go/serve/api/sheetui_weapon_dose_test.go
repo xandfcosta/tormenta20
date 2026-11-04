@@ -11,8 +11,6 @@ import (
 
 	"golang.org/x/net/html"
 
-	"t20engine/app/combat"
-	"t20engine/domain/live"
 	"t20engine/infra/events"
 )
 
@@ -300,27 +298,6 @@ func TestTheDoseDoesNotComeBackAfterTheCheck(t *testing.T) {
 	expectDoses(t, f, weapon)
 }
 
-// Um golpe novo tira da mesa o acerto que ninguém confirmou, e ele não aconteceu.
-func TestANewAttackOverAnUnconfirmedHitGivesTheDoseBack(t *testing.T) {
-	f, goblin := doseAttackOnTurn(t)
-	weapon := weaponWithInjection(t, f)
-	loaded(t, f, weapon, "acido", "Ácido")
-	attacks(t, f, goblin, "")
-	gmRules(t, f, "acertou")
-	expectDoses(t, f, weapon)
-
-	if refusal := attacks(t, f, goblin, ""); refusal != "" {
-		t.Fatalf("o golpe novo foi recusado: %q", refusal)
-	}
-	expectDoses(t, f, weapon, "acido")
-	// O golpe novo leva a dose que voltou: a arma não ficou sem ela.
-	if pa := pendingOf(t, f); pa == nil || pa.Dose == nil || pa.Dose.CatalogID != "acido" {
-		t.Fatalf("o golpe novo devia levar o ácido que voltou, e levou %+v", pa)
-	}
-	gmRules(t, f, "acertou")
-	expectDoses(t, f, weapon)
-}
-
 func TestTheInvestidaAlsoClearsTheChosenDose(t *testing.T) {
 	f, _ := doseAttackOnTurn(t)
 	weapon := weaponWithInjection(t, f)
@@ -520,14 +497,6 @@ func TestTheCriticalDoesNotMultiplyTheDose(t *testing.T) {
 	gm := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
 	if !strings.Contains(gm, "2d4 de ácido") || !strings.Contains(gm, "não multiplica") {
 		t.Errorf("a faixa devia dizer a dose sem multiplicar, e não diz")
-	}
-}
-
-// Rolar de novo refaz o pedido, e a dose escolhida vai junto.
-func TestTheReplayKeepsTheChosenDose(t *testing.T) {
-	pending := live.PendingAttack{Dose: &live.AttackDose{ItemID: 7, CatalogID: "acido"}}
-	if got := combat.ReplayRequest(1, 1, pending, true, nil).Dose; got != "acido" {
-		t.Errorf("o pedido refeito levou a dose %q", got)
 	}
 }
 

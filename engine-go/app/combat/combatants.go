@@ -94,7 +94,16 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		},
 		ManaAvailable:     int(dto.ManaAvailable()),
 		ChargesRecklessly: sheet.OwnsClassPower(dto, engine.RecklessChargePowerID),
+		Stances:           stanceFlagsOf(dto),
 	}, nil
+}
+
+func stanceFlagsOf(dto sheet.CharacterDTO) []string {
+	flags := make([]string, 0, len(dto.Stances))
+	for _, stance := range dto.Stances {
+		flags = append(flags, stance.Flag)
+	}
+	return flags
 }
 
 // fromBlock: o NPC que o mestre escreveu. Ele não empunha arma do catálogo — o

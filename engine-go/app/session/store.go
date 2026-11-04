@@ -272,7 +272,7 @@ func (st *Store) unitGesture(
 		if err != nil {
 			return err
 		}
-		st.States[sessionID] = saved
+		st.installWhenItCounts(inUnit, sessionID, saved)
 		clone = live.CloneState(saved)
 		clone.Seq = st.nextSeqLocked(sessionID)
 		return nil
@@ -305,9 +305,25 @@ func (st *Store) PreviousTurn(ctx context.Context, sessionID int64) (*live.Sessi
 // `snapshotsFor(ctx)`, então um gesto que abra a transação leva o esvaziamento
 // junto. Escrevendo pelo caderno cru, o mesmo gesto bateria na própria trava e
 // esperaria o `busy_timeout` (ALE-371).
+//
+// A proposta de ataque sem resposta some junto, e ela não aconteceu: o que ela pagou volta.
 func (st *Store) RestartCombat(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	return st.apply(ctx, sessionID, events.InitiativeReset{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { *s = *live.EmptyRuntimeState(); return nil })
+	var moved *int64
+	clone, err := st.unitGesture(ctx, sessionID,
+		func(inUnit context.Context, u Unit, s *live.SessionRuntimeState) error {
+			var err error
+			if moved, err = givesTheProposalBack(inUnit, u, s, s.PendingAttack); err != nil {
+				return err
+			}
+			*s = *live.EmptyRuntimeState()
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+	st.bus.Publish(events.InitiativeReset{SessionID: sessionID})
+	st.wakeTheSheet(moved)
+	return clone, nil
 }
 
 func (st *Store) Reset(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {

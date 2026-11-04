@@ -178,6 +178,8 @@ func tableSignalsExpr(revision string) string {
 		// falha INTEIRA — o golpe chegava sem o `turn_target` (ALE-499). Quem
 		// cobra é o `TestEveryTypedSignalTheActionsSurfaceReadsIsDeclaredByTheTable`.
 		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: '', dose_weapon: -1, dose_choice: ''",
+		// O ATAQUE EM ABERTO, que a barra de alvo escreve como escreve a vez.
+		"attack_open: false",
 		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
 		// diálogo da perícia também é desenhado dentro da Mesa.
 		sheetui.ExpertiseSpendsDeclaration(),
@@ -346,7 +348,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
 	// que o servidor recusa. Oferecer o que será recusado é desenhar um erro.
 	// O PROVISÓRIO do ataque é montado aqui e não no `tableViewOf` porque ele
-	// depende de QUEM OLHA — só quem rolou cancela o que é dele —, e o
+	// depende de QUEM OLHA — só quem rolou vê os botões de rolar de novo —, e o
 	// construtor puro não recebe o usuário.
 	view.Attack = s.attackProposalFor(ctx, st, userID, role, campaignID, sessionID)
 	view.SkillTest = s.skillTestBandFor(ctx, st, userID, campaignID, sessionID)

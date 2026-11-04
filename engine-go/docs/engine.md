@@ -48,9 +48,9 @@ mão não saberia quantos dados pegar.
   contra as faces e o caso de uso recusa os que sobram.
 - **O ✓ exige decisão e dano** (`AttackToCommit`); a manobra não rola dano, e
   o ✓ dela é a decisão.
-- **O erro ENCERRA o golpe**: cobra a ação padrão (`session.Store.RuleAttack`)
-  e deixa o que o ✓ deixaria — PM do impulso, guarda da investida, gatilhos
-  cumulativos (`afterTheStrike`). O provisório fica com a decisão, para o
+- **O erro ENCERRA o golpe**: a ação e o PM pagos na proposta ficam pagos, e ele
+  deixa o que o ✓ deixaria — guarda da investida, gatilhos cumulativos
+  (`afterTheStrike`). O provisório fica com a decisão, para o
   jogador ler "o mestre disse: errou", até a vez mudar (`dropTheSettledMiss`)
   ou o próximo ataque o substituir.
 - **Rolar de novo vale antes da decisão** (p226): o `Reroll` recusa depois dela.
@@ -72,10 +72,29 @@ mão não saberia quantos dados pegar.
 
 **A dose da Injeção alquímica sai na decisão** (p165): o provisório leva a dose desde o
 d20, e o `session.Store.RuleAttack` a tira da arma no acerto e no crítico, na mesma
-transação da mesa. Cancelar o ataque, ou trocá-lo por outro antes do ✓, a devolve. Ela não entra
+transação da mesa. Cancelar o ataque antes do ✓ a devolve. Ela não entra
 nas parcelas do dano: o efeito é uma frase na faixa, e quem aplica é o mestre. Carregar é
 recusado enquanto o ataque de quem carrega não acabou (`live.HoldsTheCharacter`), e é isso
 que impede a dose devolvida de encontrar a arma cheia.
+
+**A proposta é imutável** (decisão do dono). O `engine.FreezeStrike` guarda nela a arma, o
+alvo e a Tabela 5-3 do instante do d20, e a decisão, o dano e o rolar de novo leem dali, e não
+da ficha: ligar uma postura depois de propor não muda o golpe. O próximo ataque só existe
+depois da resposta do mestre (`live.RefusesANewAttack`): o erro, o ✓ ou o cancelamento dele. O
+jogador não retira a proposta, porque isso seria um d20 novo de graça. O "rolar de novo" pago
+(p226) é a única troca que ela aceita, e só o dado muda.
+
+**A proposta paga ao nascer** (decisão do dono, `session.Store.ProposeAttack`): a ação e o PM do
+impulso saem ali, na mesma transação. Assim a postura que não couber é recusada na hora dela, e
+a resposta do mestre não falha por um gesto posterior. O cancelamento do mestre devolve a ação
+(só ao turno de onde ela saiu), o PM do impulso e dos "rolar de novo" (ao poço, até o máximo) e
+a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
+aconteceu, e fechar a leitura dele não devolve nada. O "rolar de novo" é conferido e pago na
+transação que troca o dado (`session.Store.RerollAttack`).
+
+**Os gatilhos cumulativos leem a postura da proposta** (`AttackerStances`, `TargetStances`),
+dos dois lados: ligar a Fúria depois do crítico não sobe o bônus. Se a postura acabou antes do
+✓, também não sobe, porque o que ela acumula sai com ela (`cumulativesInTheAir`).
 
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
@@ -327,7 +346,7 @@ Mente Criminosa não são).
   `otherUseOf`), e o índice da carta é o da mão: toda arma corpo a corpo se arremessa,
   com −5 se não tiver alcance (p143) nem o encanto Arremesso (p335, decisão do dono), e
   a Azagaia bate com −5 (p146). O pedido leva
-  `OtherUse`, e o `AttackReplay` o guarda para a decisão e o dano. O impulso só corpo a
+  `OtherUse`, e a proposta o congela para a decisão e o dano. O impulso só corpo a
   corpo é recusado no uso à distância (`RefusesBoost`), para não cobrar PM em troca de nada.
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
   moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é

@@ -31,8 +31,8 @@ type attackProposal struct {
 	Tally string
 	// Situations são os motivos da Tabela 5-3, em prosa e FORA da conta.
 	Situations string
-	// Boost é o impulso de PM que o golpe leva e o que a confirmação cobra —
-	// "Golpe Divino · 3 PM ao confirmar" (ALE-487).
+	// Boost é o impulso de PM que o golpe leva e o que a proposta pagou —
+	// "Golpe Divino · 3 PM" (ALE-487).
 	Boost string
 	// Dose diz o que a Injeção alquímica libera neste golpe (p165).
 	Dose string
@@ -40,8 +40,8 @@ type attackProposal struct {
 	// NPC, que não tem ficha onde a penalidade more, a frase é o que o mestre
 	// aplica.
 	Guard string
-	// Mine diz se quem olha foi quem rolou: só ele cancela e rola o dano do que
-	// é dele. O mestre faz os dois por qualquer um.
+	// Mine diz se quem olha foi quem rolou: só ele rola o dano do que é dele e fecha
+	// o erro dele. O mestre faz os dois por qualquer um, e é quem cancela.
 	Mine bool
 	// Rerolled diz os "rolar de novo" pagos, e Offers são os botões de quem
 	// rolou (p226, ALE-508) — só antes da decisão.
@@ -270,7 +270,7 @@ func entryLabel(st *live.SessionRuntimeState, entryID string) string {
 	return "quem saiu da fila"
 }
 
-// writtenBoost é o impulso do golpe com o PM que a confirmação cobra, ou "".
+// writtenBoost é o impulso do golpe com o PM que a proposta pagou, ou "".
 func writtenBoost(pa live.PendingAttack) string {
 	if pa.BoostPowerID == "" {
 		return ""
@@ -279,7 +279,7 @@ func writtenBoost(pa live.PendingAttack) string {
 	if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
 		name = power.Name
 	}
-	return fmt.Sprintf("%s · %d PM ao confirmar", name, pa.BoostPM)
+	return fmt.Sprintf("%s · %d PM", name, pa.BoostPM)
 }
 
 // writtenGuard é a penalidade que a investida deixa, ou "".
@@ -333,6 +333,10 @@ const notationStep = "\u00a0| "
 // "→ 11 de dano não" / "letal", e "dano não" sozinho no fim de uma linha diz o
 // contrário do que a regra diz.
 const nonLethalWords = "não letal"
+
+// attackIsOpen diz se o ataque na mesa ainda não acabou. O erro já encerrou o
+// golpe, e o cartão dele só fica para o jogador ler a decisão.
+func attackIsOpen(a *attackProposal) bool { return a != nil && a.Stage != stageMiss }
 
 // attackNotes são as linhas do cartão do ataque além da conta: o impulso, as
 // situações, a guarda aberta e o que já foi rolado de novo — na ordem em que o

@@ -88,20 +88,15 @@ func TestAttackingSpendsTheStandardAction(t *testing.T) {
 	if stateOf(t, f.s.sessions, f.sessionID).PendingAttack == nil {
 		t.Fatalf("o ataque permitido não virou provisório: %q", tableRefusal(t, rec.Body.String()))
 	}
-	// PROPOR NÃO COBRA: o provisório ainda pode ser cancelado, e um ataque
-	// cancelado não aconteceu.
-	if scene := stateOf(t, f.s.sessions, f.sessionID).Scene; !scene.StandardLeft {
-		t.Fatal("propor o ataque já gastou a ação padrão, antes de o mestre confirmar")
-	}
-	if rec := settlesAsTheBookSuggests(t, f); rec.Code != http.StatusOK {
-		t.Fatalf("encerrar o ataque deu %d", rec.Code)
-	}
 	scene := stateOf(t, f.s.sessions, f.sessionID).Scene
 	if scene.StandardLeft {
-		t.Error("o ataque confirmado não gastou a ação padrão")
+		t.Error("o ataque proposto não gastou a ação padrão")
 	}
 	if !scene.MovementLeft {
 		t.Error("atacar não toca na ação de movimento")
+	}
+	if rec := settlesAsTheBookSuggests(t, f); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar o ataque deu %d", rec.Code)
 	}
 
 	// O SEGUNDO ATAQUE NÃO SAI: a padrão acabou e a troca da p233 é de mão

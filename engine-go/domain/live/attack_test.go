@@ -80,13 +80,13 @@ func TestTheGameMasterGetsTheAttackToApply(t *testing.T) {
 	}
 }
 
-// CANCELAR desfaz sem mexer em ninguém, e o jogador cancela o que ele propôs.
+// CANCELAR desfaz sem mexer em ninguém.
 func TestCancelingAnAttackLeavesTheVitalsAlone(t *testing.T) {
 	st := aQueue(t)
 	if err := ProposeAttack(st, umGolpe()); err != nil {
 		t.Fatalf("propor: %v", err)
 	}
-	if err := CancelAttack(st, Attacker{UserID: 7, Role: "player"}); err != nil {
+	if err := CancelAttack(st, Attacker{UserID: 1, Role: "gm"}); err != nil {
 		t.Fatalf("cancelar: %v", err)
 	}
 	if st.PendingAttack != nil {
@@ -116,5 +116,52 @@ func TestProposingAgainstSomeoneOutsideTheQueueRefuses(t *testing.T) {
 	out.TargetEntryID = "ninguem"
 	if err := ProposeAttack(st, out); err == nil {
 		t.Error("propor contra quem não está na fila tem de recusar")
+	}
+}
+
+// aStrikeWithoutRuling é o golpe como ele nasce, antes de o mestre falar.
+func aStrikeWithoutRuling() PendingAttack {
+	attack := umGolpe()
+	attack.Ruling, attack.DamageToRoll, attack.DamageRolled = "", nil, false
+	return attack
+}
+
+// A conferência sob a trava: o "acertou" do mestre pode chegar entre o jogador pedir o
+// rolar de novo e o dado novo ser gravado (p226).
+func TestAReplacedRollWaitsForNoRuling(t *testing.T) {
+	st := aQueue(t)
+	if err := ProposeAttack(st, aStrikeWithoutRuling()); err != nil {
+		t.Fatalf("propor: %v", err)
+	}
+	second := aStrikeWithoutRuling()
+	second.Roll = 9
+	second.Rerolls = []DieReroll{{Name: "Sortudo", PM: 3}}
+	if err := ReplaceAttackRoll(st, second); err != nil {
+		t.Fatalf("rolar de novo antes da decisão: %v", err)
+	}
+	if st.PendingAttack.Roll != 9 {
+		t.Errorf("o dado novo não ficou: %d", st.PendingAttack.Roll)
+	}
+	third := second
+	third.Rerolls = []DieReroll{{Name: "Sortudo", PM: 3}, {Name: "Sortudo", PM: 3}}
+	if err := RuleAttack(st, Attacker{UserID: 1, Role: "gm"}, RulingMiss, nil); err != nil {
+		t.Fatalf("decidir: %v", err)
+	}
+	if err := ReplaceAttackRoll(st, third); err == nil {
+		t.Error("rolou de novo depois da decisão do mestre")
+	}
+}
+
+// Propor sobre o erro vale, porque ele já encerrou o golpe.
+func TestANewProposalReplacesTheMiss(t *testing.T) {
+	st := aQueue(t)
+	if err := ProposeAttack(st, aStrikeWithoutRuling()); err != nil {
+		t.Fatalf("propor: %v", err)
+	}
+	if err := RuleAttack(st, Attacker{UserID: 1, Role: "gm"}, RulingMiss, nil); err != nil {
+		t.Fatalf("decidir: %v", err)
+	}
+	if err := ProposeAttack(st, aStrikeWithoutRuling()); err != nil {
+		t.Errorf("o erro encerrou o golpe, e a proposta nova foi recusada: %v", err)
 	}
 }

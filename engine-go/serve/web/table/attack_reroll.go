@@ -9,7 +9,6 @@ import (
 
 	"t20engine/app"
 	"t20engine/app/character"
-	"t20engine/domain/book"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/routes"
@@ -22,10 +21,14 @@ import (
 // rerollsAttack rola de novo o ataque provisório com o gasto do caminho.
 func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	ctx := c.R.Context()
-	state, pa, req, err := st.pendingStrike(c)
+	state, err := st.deps.Sessions().State(ctx, c.SessionID)
 	if err != nil {
 		return nil, err
 	}
+	if state == nil || state.PendingAttack == nil {
+		return nil, errors.New("não há ataque na mesa")
+	}
+	pa := *state.PendingAttack
 	attacker := entryByID(state, pa.AttackerEntryID)
 	if attacker == nil || attacker.CharacterID == nil {
 		return nil, errors.New("quem atacou não tem ficha de onde pagar o rolar de novo")
@@ -38,13 +41,12 @@ func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = st.plays.PayAttackReroll(ctx, row, meleeAttack(pa), pa.Replay.WeaponID, chi.URLParam(c.R, "gasto"),
-		func(offer book.SkillSpendOffer) error {
-			_, err := st.strike.Reroll(ctx, app.Caller{ID: c.User}, c.Role, req, d20,
-				live.DieReroll{Name: offer.Name, PM: offer.PM}, offer.NaturalFrom)
-			return err
-		})
+	offer, err := st.plays.AttackRerollOffer(ctx, row, meleeAttack(pa), pa.WeaponID, chi.URLParam(c.R, "gasto"))
 	if err != nil {
+		return nil, err
+	}
+	if _, err := st.strike.Reroll(ctx, app.Caller{ID: c.User}, c.SessionID, d20,
+		live.DieReroll{Name: offer.Name, PM: offer.PM}, offer.NaturalFrom); err != nil {
 		return nil, err
 	}
 	return st.deps.Sessions().State(ctx, c.SessionID)
@@ -82,7 +84,7 @@ func (s Scene) attackProposalFor(
 		return band
 	}
 	pa := st.PendingAttack
-	for _, offer := range character.AttackRerollOffersFor(dto, meleeAttack(*pa), pa.Replay.WeaponID) {
+	for _, offer := range character.AttackRerollOffersFor(dto, meleeAttack(*pa), pa.WeaponID) {
 		band.Offers = append(band.Offers, rerollOffer{
 			Label: fmt.Sprintf("Rolar de novo · %s · %d PM", offer.Name, offer.PM),
 			Path:  fmt.Sprintf("%s/ataque/rolar-de-novo/%s", routes.Session(campaignID, sessionID), offer.Key),

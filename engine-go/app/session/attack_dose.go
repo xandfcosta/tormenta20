@@ -14,16 +14,7 @@ import (
 // quando o mestre diz que acertou, e volta se o ataque for cancelado depois disso.
 //
 // A mesa e a ficha gravam na mesma transação, e o que fazer com a dose se decide
-// dentro dela, sob a trava: conferido antes, o "acertou" do mestre no meio de um
-// cancelamento do jogador tiraria a dose da arma sem devolvê-la, e dois toques no
-// "acertou" gastariam duas.
-
-func spentDoseOf(s *live.SessionRuntimeState) *live.AttackDose {
-	if s.PendingAttack == nil || s.PendingAttack.Dose == nil || !s.PendingAttack.Dose.Spent {
-		return nil
-	}
-	return s.PendingAttack.Dose
-}
+// dentro dela, sob a trava: conferido antes, dois toques no "acertou" gastariam duas.
 
 // withTheDoseSpent grava a decisão de acerto e tira a dose da arma. Se ela já não
 // estiver lá, o golpe segue sem dose: o acerto é do mestre, e não depende dela.
@@ -60,39 +51,14 @@ func (st *Store) withTheDoseSpent(
 	return clone, nil
 }
 
-// withTheDoseBack tira da mesa o golpe que não aconteceu, e devolve a dose à arma.
-func (st *Store) withTheDoseBack(
-	ctx context.Context, sessionID int64, ev events.Event, discard func(*live.SessionRuntimeState) error,
-) (*live.SessionRuntimeState, error) {
-	var moved *int64
-	clone, err := st.unitGesture(ctx, sessionID,
-		func(inUnit context.Context, u Unit, s *live.SessionRuntimeState) error {
-			dose := spentDoseOf(s)
-			var attacker *int64
-			if dose != nil {
-				attacker = attackerCharacterOf(s)
-			}
-			if err := discard(s); err != nil {
-				return err
-			}
-			if dose == nil {
-				return nil
-			}
-			err := u.InTx.ReturnItemDose(inUnit, sqlcgen.ReturnItemDoseParams{
-				CatalogId: dose.CatalogID, ItemId: dose.ItemID, Improvement: sheet.AlchemicalInjection,
-			})
-			if err != nil {
-				return err
-			}
-			moved = attacker
-			return stampTheSheet(inUnit, u, moved)
-		})
-	if err != nil {
-		return nil, err
+// returnsTheDose devolve à arma a dose que o acerto gastou.
+func returnsTheDose(ctx context.Context, u Unit, dose *live.AttackDose) error {
+	if dose == nil || !dose.Spent {
+		return nil
 	}
-	st.bus.Publish(ev)
-	st.wakeTheSheet(moved)
-	return clone, nil
+	return u.InTx.ReturnItemDose(ctx, sqlcgen.ReturnItemDoseParams{
+		CatalogId: dose.CatalogID, ItemId: dose.ItemID, Improvement: sheet.AlchemicalInjection,
+	})
 }
 
 func attackerCharacterOf(s *live.SessionRuntimeState) *int64 {

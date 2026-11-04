@@ -7,8 +7,7 @@ import (
 	"t20engine/domain/engine"
 )
 
-// paidBoost é o impulso que o golpe leva: o poder e o PM que a confirmação
-// cobra.
+// paidBoost é o impulso que o golpe leva: o poder e o PM que a proposta paga.
 type paidBoost struct {
 	powerID string
 	pm      int
@@ -17,9 +16,9 @@ type paidBoost struct {
 // weaponFor é a carta com que o golpe rola: a empunhada no índice pedido, já
 // com o impulso de PM quando houver um.
 //
-// O PM é conferido AQUI, contra a ficha, e cobrado só na confirmação (decisão
-// do dono na ALE-487): um provisório que o mestre cancela não custa nada, e um
-// que a ficha não pode pagar não chega a existir.
+// O PM é conferido AQUI, contra a ficha, antes de rolar: a proposta que a ficha não
+// pode pagar não chega a existir. Quem cobra é o `session.Store.ProposeAttack`, e o
+// cancelamento do mestre devolve (decisão do dono).
 func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, error) {
 	cards := striker.Weapons
 	boost := paidBoost{}

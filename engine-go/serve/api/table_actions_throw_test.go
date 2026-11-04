@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/app/combat"
+	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -76,10 +76,13 @@ func TestTheSpearAttacksWithFightingUpCloseAndAimWhenThrown(t *testing.T) {
 			if pending.Weapon != c.weapon || pending.Total-pending.Roll != c.bonus {
 				t.Errorf("o ataque saiu com %q e %+d; esperado %q e %+d", pending.Weapon, pending.Total-pending.Roll, c.weapon, c.bonus)
 			}
-			// A decisão do mestre e o dano refazem o pedido: o uso tem de ir junto.
-			replay := combat.ReplayRequest(f.campaignID, f.sessionID, *pending, true, nil)
-			if replay.OtherUse != c.otherUse {
-				t.Errorf("o pedido refeito perdeu o uso: %v, esperado %v", replay.OtherUse, c.otherUse)
+			// A decisão do mestre e o dano leem a proposta: o uso tem de estar nela.
+			frozen, err := engine.ThawStrike(pending.Frozen)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if frozen.Weapon.Attack != c.bonus {
+				t.Errorf("a proposta congelou o ataque %+d, esperado %+d", frozen.Weapon.Attack, c.bonus)
 			}
 		})
 	}

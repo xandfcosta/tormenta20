@@ -3,6 +3,7 @@ package combat
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
@@ -12,9 +13,8 @@ import (
 
 // O IMPULSO DE PM NO GOLPE (ALE-487). O que o motor soma é do
 // `BoostedWeaponCards` e tem os casos do livro lá; aqui se prende o que ESTA
-// camada decide: a carta do golpe é a impulsionada, o provisório leva o PM para
-// a confirmação cobrar, e o PM que a ficha não tem recusa a proposta (decisão do
-// dono: recusa na proposta, cobra no confirmar).
+// camada decide: a carta do golpe é a impulsionada, o provisório leva o PM que o
+// `session.Store.ProposeAttack` cobra, e o PM que a ficha não tem recusa a proposta.
 
 // boostedSword devolve a espada com +3 no ataque por 2 PM, para qualquer pedido.
 func boostedSword(choice engine.BoostChoice) ([]engine.WeaponCard, int, error) {
@@ -44,6 +44,30 @@ func TestTheBoostedCardRollsAndTheProvisionalCarriesTheCost(t *testing.T) {
 	}
 	if out.BoostPM != 2 || out.BoostPowerID != "class.paladino.golpe-divino-1d8" {
 		t.Errorf("o provisório saiu com impulso %q por %d PM, want o Golpe Divino por 2 PM", out.BoostPowerID, out.BoostPM)
+	}
+}
+
+// As posturas viajam na proposta porque os gatilhos do encerramento leem dela, e não da
+// ficha daquele momento.
+func TestTheProposalCarriesTheStancesOfBothSides(t *testing.T) {
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Stances: []string{"furia"}},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10, Stances: []string{"postura-foco-de-batalha"}},
+	}, table, semTabuleiro{}, fixedDie(4))
+
+	for _, maneuver := range []string{"", "derrubar"} {
+		d20 := 10
+		out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true, Maneuver: maneuver,
+		})
+		if err != nil {
+			t.Fatalf("propor %q: %v", maneuver, err)
+		}
+		if !slices.Equal(out.AttackerStances, []string{"furia"}) || !slices.Equal(out.TargetStances, []string{"postura-foco-de-batalha"}) {
+			t.Errorf("%q saiu com as posturas %v e %v", maneuver, out.AttackerStances, out.TargetStances)
+		}
+		table.state.PendingAttack = nil
 	}
 }
 
