@@ -45,6 +45,25 @@ func (p Plays) TouchVital(
 	return err
 }
 
+// SpendVital é o "Dano" e o "Gastar" do diálogo: um gasto de verdade, que a poça temporária
+// paga primeiro (p106). O `TouchVital` é a correção do número, e não passa por ela.
+func (p Plays) SpendVital(ctx context.Context, row sqlcgen.Character, which string, amount int) error {
+	return p.inTx(ctx, "gastar "+which, func(q *sqlcgen.Queries) error {
+		switch which {
+		case "pv":
+			_, err := sheet.ApplyToPools(ctx, q, p.catalogs, row, func(pools sheet.Pools) (sheet.Pools, error) {
+				plan, err := sheet.DrainTempHpAndHit(ctx, q, row.ID, pools.HpCurrent, amount)
+				pools.HpCurrent = int64(plan.HpCurrent)
+				return pools, err
+			})
+			return err
+		case "pm":
+			return chargeMp(ctx, q, p.catalogs, row, amount)
+		}
+		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", which)
+	})
+}
+
 // TouchTempVital soma à poça feita à mão, ou tira das poças do vital.
 //
 // Somar não reescreve a poça de um poder ou magia, que tem duração própria, e a feita à

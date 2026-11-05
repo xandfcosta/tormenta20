@@ -174,3 +174,71 @@ func TestTheVitalDialogOffersTheTemporaryPoints(t *testing.T) {
 		t.Error("com temporários, o diálogo não oferece Tirar")
 	}
 }
+
+// "Dano" e "Gastar" são gasto, e os temporários pagam primeiro (p106). O que sobra sai do poço.
+func TestTheDialogDamageAndSpendDrainThePoolFirst(t *testing.T) {
+	for _, c := range []struct {
+		name, vital string
+		temp        func(*testing.T, sceneFixture, int64) int
+		current     func(*testing.T, *Server, int64) int64
+	}{
+		{"PV", "pv", tempHpOf, func(t *testing.T, s *Server, id int64) int64 { return poolsOf(t, s, id).HpCurrent }},
+		{"PM", "pm", tempManaOf, mpOf},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			f, id := barbaro(t, 5)
+			touchesTemp(t, f, id, c.vital, 5)
+			before := c.current(t, f.s, id)
+			if refusal := sheetPost(t, f, id, "/vitais/"+c.vital+"/gasto/3", ""); refusal != "" {
+				t.Fatalf("gastar 3 foi recusado: %q", refusal)
+			}
+			if got, temp := c.current(t, f.s, id), c.temp(t, f, id); got != before || temp != 2 {
+				t.Errorf("a poça paga primeiro: poço %d (era %d), poça %d de 2", got, before, temp)
+			}
+			if refusal := sheetPost(t, f, id, "/vitais/"+c.vital+"/gasto/4", ""); refusal != "" {
+				t.Fatalf("gastar 4 foi recusado: %q", refusal)
+			}
+			if got, temp := c.current(t, f.s, id), c.temp(t, f, id); got != before-2 || temp != 0 {
+				t.Errorf("o que sobra sai do poço: poço %d de %d, poça %d", got, before-2, temp)
+			}
+		})
+	}
+}
+
+// O −1 e o +1 são correção, e a Cura e o Recuperar não mexem na poça.
+func TestTheCorrectionsKeepThePool(t *testing.T) {
+	f, id := barbaro(t, 5)
+	touchesTemp(t, f, id, "pv", 5)
+	before := poolsOf(t, f.s, id).HpCurrent
+	for _, step := range []string{"-1", "1"} {
+		if refusal := sheetPost(t, f, id, "/vitais/pv/"+step, ""); refusal != "" {
+			t.Fatalf("corrigir %s foi recusado: %q", step, refusal)
+		}
+	}
+	if got, temp := poolsOf(t, f.s, id).HpCurrent, tempHpOf(t, f, id); got != before || temp != 5 {
+		t.Errorf("a correção mexeu na poça: PV %d de %d, poça %d de 5", got, before, temp)
+	}
+}
+
+func TestTheDialogOffersTheSpendGesture(t *testing.T) {
+	f, id := barbaro(t, 5)
+	page := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
+	for _, want := range []string{"/vitais/pv/gasto/", "/vitais/pm/gasto/"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("o diálogo não usa %s", want)
+		}
+	}
+}
+
+func TestAStrangeSpendIsRefused(t *testing.T) {
+	f, id := barbaro(t, 5)
+	before := poolsOf(t, f.s, id)
+	for _, path := range []string{"/vitais/xp/gasto/2", "/vitais/pv/gasto/0", "/vitais/pv/gasto/-3"} {
+		if refusal := sheetPost(t, f, id, path, ""); refusal == "" {
+			t.Errorf("%s devia ser recusado", path)
+		}
+	}
+	if after := poolsOf(t, f.s, id); after.HpCurrent != before.HpCurrent {
+		t.Errorf("o gasto recusado mexeu no PV: %d virou %d", before.HpCurrent, after.HpCurrent)
+	}
+}

@@ -30,6 +30,7 @@ func Routes(r chi.Router, s Scene) {
 	// zerados e a tela voltaria sem o filtro que a pessoa usava.
 	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.sheetCommand(touchesVital))
 	r.Post("/personagens/{id}/vitais/{qual}/temporarios/{passo}", s.sheetCommand(touchesTempVital))
+	r.Post("/personagens/{id}/vitais/{qual}/gasto/{passo}", s.sheetCommand(spendsVital))
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.sheetCommand(mudaONivel))
 	r.Post("/personagens/{id}/classes/{classe}/entra", s.sheetCommand(enterClass))
@@ -265,9 +266,9 @@ func patchActionsAlong(r *http.Request, sse *datastar.ServerSentEventGenerator, 
 //
 // PRENDER e não recusar, e essa é a diferença entre o gesto e a API: o corpo do
 // `PATCH /vitals` manda o valor ABSOLUTO e é recusado fora da faixa, o que está
-// certo para um cliente que calculou. Aqui o gesto é "levou seis" — com 4 de PV
-// o resultado é zero, e uma recusa faria o mestre clicar quatro vezes de um em
-// um para chegar no mesmo lugar.
+// certo para um cliente que calculou. Aqui o gesto é uma correção do número, e uma
+// recusa faria o mestre clicar de um em um para chegar no mesmo lugar. Por isso ele
+// não toca na poça temporária: quem paga com ela é o `spendsVital`.
 //
 // O TETO é o máximo do personagem: curar além do máximo não é PV temporário, que
 // é outra regra e tem dono no motor (`TempHpFuria`).
@@ -286,6 +287,18 @@ func touchesTempVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 		return err
 	}
 	return s.plays.TouchTempVital(r.Context(), row, chi.URLParam(r, "qual"), step)
+}
+
+// spendsVital é o "Dano" e o "Gastar" do diálogo, que drenam os temporários primeiro.
+func spendsVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	amount, err := uRLStep(r)
+	if err != nil {
+		return err
+	}
+	if amount < 0 {
+		return fmt.Errorf("o gasto é um valor positivo, e veio %d", amount)
+	}
+	return s.plays.SpendVital(r.Context(), row, chi.URLParam(r, "qual"), amount)
 }
 
 // enterClass dá o 1º nível numa classe que o personagem ainda não tem (p35).

@@ -100,6 +100,26 @@ func SpendLoadedMana(
 	return nil
 }
 
+// DrainTempHpAndHit roda a ordem do livro — os poços temporários primeiro, o
+// maior antes — e devolve o PV que sobra nos reais, já gravadas as drenagens.
+//
+// O PV com que ela decide é o DERIVADO, que chega pelo funil: com a coluna crua,
+// um personagem cujo máximo mudou por catálogo apanharia a partir do PV de
+// ontem.
+func DrainTempHpAndHit(
+	ctx context.Context, q *sqlcgen.Queries, characterID int64, hpCurrent int64, amount int,
+) (DamagePlan, error) {
+	effects, err := q.ListActiveEffectsByCharacter(ctx, characterID)
+	if err != nil {
+		return DamagePlan{}, err
+	}
+	plan := PlanDamage(ParseTempHpPools(effects), int(hpCurrent), amount)
+	// O LAÇO DE ESCREVER É DO DOMÍNIO: o dano de PV e o gasto de PM produzem o
+	// mesmo par de listas, e uma segunda cópia dele divergiria no dia em que
+	// uma das duas ganhasse um passo.
+	return plan, WriteDrain(ctx, q, plan.Updates, plan.DeleteIDs)
+}
+
 // WriteDrain grava o que um plano fez com as poças — as reescritas e as que
 // esvaziaram.
 //
