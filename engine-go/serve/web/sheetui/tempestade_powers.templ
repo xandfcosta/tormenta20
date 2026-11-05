@@ -133,7 +133,7 @@ templ powerGesture(v View, row powerRow) {
 // powerSheet é a folha do poder: a regra inteira com a página, o que ele dá
 // agora quando está em curso, a razão da recusa, e o gesto no pé.
 templ powerSheet(v View, row powerRow, id string) {
-	@ds.Dialog(id, row.Name, powerSheetFoot(v, row)) {
+	@sheetDialog(v, id, row.Name, powerSheetFoot(v, row)) {
 		<p class="ds-row-meta">{ powerSheetMeta(row) }</p>
 		if row.Requires != "" {
 			<p class="ds-row-meta">{ "Pré-requisito: " + row.Requires }</p>
@@ -155,7 +155,7 @@ templ powerSheetFootBody(v View, row powerRow) {
 // useStepsDialog escolhe quantos degraus pagar num USO — a Marca da Presa,
 // cujo degrau troca o dado (p50).
 templ useStepsDialog(v View, row powerRow, id string) {
-	@ds.Dialog(id, row.Name, stepsConfirm(id, "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
+	@sheetDialog(v, id, row.Name, stepsConfirm(id, "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
 		<p class="ds-help">{ "Cada +" + strconv.Itoa(row.Degrees.StepPm) + " PM compra " + row.Degrees.StepLabel + "." }</p>
 		@stepsCounter(row.Degrees.MaxSteps, useCounterExpr(*row.Degrees))
 		for steps, parts := range row.Degrees.Riders {
@@ -174,7 +174,7 @@ templ useStepsDialog(v View, row powerRow, id string) {
 // stanceStepsDialog escolhe quantos degraus pagar ao entrar na postura. O custo
 // é PRÉVIA, e quem cobra é o servidor.
 templ stanceStepsDialog(v View, row powerRow, id string) {
-	@ds.Dialog(id, row.Name, stepsConfirm(id, "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))) {
+	@sheetDialog(v, id, row.Name, stepsConfirm(id, "Ativar", "Confirmar "+row.Name, sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra"))) {
 		if says := degreeRateSays(row); says != "" {
 			<p class="ds-help">{ says }</p>
 		}

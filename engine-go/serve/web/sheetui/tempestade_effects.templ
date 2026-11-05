@@ -63,7 +63,7 @@ templ tempestadeEffects(v View) {
 	for _, row := range v.Effects.Situational {
 		@situationalSheet(v, row)
 	}
-	@ds.Dialog("condition-picker", "Aplicar condição", nil) {
+	@sheetDialog(v, "condition-picker", "Aplicar condição", nil) {
 		@ds.FilterBar() {
 			@ds.SearchField("condition-search", "Buscar condição", templ.Attributes{
 				"value": v.EffectPicks.ConditionSearch, "data-bind:condition_search": true,
@@ -75,7 +75,7 @@ templ tempestadeEffects(v View) {
 				pickerOptionsShown(v.Effects.ConditionOptions, v.EffectPicks.ConditionSearch, ""))
 		}
 	}
-	@ds.Dialog("buff-picker", "Aplicar magia", nil) {
+	@sheetDialog(v, "buff-picker", "Aplicar magia", nil) {
 		@ds.FilterBar() {
 			@ds.SearchField("buff-search", "Buscar magia", templ.Attributes{
 				"value": v.EffectPicks.BuffSearch, "data-bind:buff_search": true,
@@ -102,7 +102,7 @@ templ tempestadeEffects(v View) {
 // quando ligado, e os degraus quando o poder os vende — com o preço em cada
 // um, porque quem paga o PM é a mesa (ALE-454).
 templ situationalSheet(v View, row situationalRow) {
-	@ds.Dialog(situationalSheetID(row), row.Label, nil) {
+	@sheetDialog(v, situationalSheetID(row), row.Label, nil) {
 		<p class="ds-row-meta">{ row.Source }</p>
 		if row.Warning != "" {
 			<p class="ds-help">{ row.Warning }</p>

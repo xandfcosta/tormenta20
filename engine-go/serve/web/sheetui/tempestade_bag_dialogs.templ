@@ -12,7 +12,7 @@ import (
 
 // itemSheetDs é a folha do item (ver o GLOSSARY).
 templ itemSheetDs(v View, s itemSheet) {
-	@ds.Dialog(itemSheetID(s.Command), s.Name, itemSheetFoot(v, s)) {
+	@sheetDialog(v, itemSheetID(s.Command), s.Name, itemSheetFoot(v, s)) {
 		<p class="ds-help">{ writtenWeight(s) }</p>
 		if s.NoProficiency {
 			<p role="alert" class="ds-alert">Sem proficiência: a penalidade da p142 já está no ataque.</p>
@@ -79,7 +79,7 @@ templ itemSheetDs(v View, s itemSheet) {
 	if s.Overlayable {
 		@improvementsDs(v, s)
 	}
-	@ds.Dialog(itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))) {
+	@sheetDialog(v, itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))) {
 		@itemFormFields(itemEditID(s.Command))
 	}
 }
@@ -103,7 +103,7 @@ templ itemSheetFoot(v View, s itemSheet) {
 // improvementsDs escolhe melhorias e material. As listas já vêm filtradas pela
 // família do item, e quem recusa o resto é o servidor (`fitsItemImprovement`).
 templ improvementsDs(v View, s itemSheet) {
-	@ds.Dialog(itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)) {
+	@sheetDialog(v, itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)) {
 		@ds.BareList("Melhorias", "") {
 			for _, c := range s.Improvements {
 				<div class="ds-row ds-pick-row">
@@ -138,7 +138,7 @@ templ improvementsFoot(v View, s itemSheet) {
 // fixas e só a lista rolando, e no pé o item próprio, para o que o livro não
 // tem — Catálogo e Custom viraram um gesto só (decisão do dono).
 templ itemAddDialog(v View) {
-	@ds.Dialog("item-add", "Adicionar item", itemAddFoot()) {
+	@sheetDialog(v, "item-add", "Adicionar item", itemAddFoot()) {
 		@ds.FilterBar() {
 			@ds.SearchField("catalog-search", "Buscar no livro", templ.Attributes{
 				"value": v.Bag.CatalogSearch, "data-bind:catalog_search": true, "data-on:input__debounce.250ms": sheetGet(v),
@@ -181,7 +181,7 @@ templ itemAddFoot() {
 // customItemDialog é o item fora do livro — nome, quantidade e espaços. O
 // editar de cada item é o mesmo formulário, com outro destino.
 templ customItemDialog(v View) {
-	@ds.Dialog("item-custom", "Item fora do livro", itemFormFoot("item-custom", "Adicionar", sheetPost(v, "/itens/custom"))) {
+	@sheetDialog(v, "item-custom", "Item fora do livro", itemFormFoot("item-custom", "Adicionar", sheetPost(v, "/itens/custom"))) {
 		@itemFormFields("item-custom")
 	}
 }
@@ -203,7 +203,7 @@ templ itemFormFoot(id, button, command string) {
 // bagMoneyDialog são as três coisas que se fazem com dinheiro na mesa:
 // receber, gastar e escrever o total (ver `moneyModes`).
 templ bagMoneyDialog(v View) {
-	@ds.Dialog("bag-money", "Dinheiro", bagMoneyFoot(v)) {
+	@sheetDialog(v, "bag-money", "Dinheiro", bagMoneyFoot(v)) {
 		<p class="ds-help">{ "Você tem T$ " + v.Bag.Money.Tibar + "." }</p>
 		<div class="ds-options" role="group" aria-label="O que fazer com o dinheiro">
 			for _, mode := range moneyModes {

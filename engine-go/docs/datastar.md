@@ -101,6 +101,11 @@ faltando. Para o próximo guarda de cena:
   bancada recém-montada o endereço morto não está no HTML.
 - **Expressão que o extrator não resolve REPROVA**, em vez de sair da conta.
 
+**Com um diálogo aberto, a recusa aparece dentro dele**: a da página fica atrás do modal, e o gesto
+parece não ter feito nada. Na ficha, todo diálogo usa o `sheetDialog`, e o
+`TestEverySheetDialogShowsTheRefusal` reprova com o id do que usar o `ds.Dialog` direto. O Escolher é
+a exceção: cada passo desenha a dele, acima do que rola.
+
 ### `contentType: 'form'` valida o formulário ANTES de mandar
 
 `@post(url, {contentType: 'form'})` manda o `<form>` mais próximo, não os
@@ -331,5 +336,5 @@ deixou de abrir o primeiro achado, e nada mais mudou na tela.
 
 Quem cobra é o `TestEveryReferencedElementIdExists` — todo id APONTADO existe em
 algum `.templ`, escrito como `id="x"` ou entregue a uma peça do kit que o
-escreve (`ds.Dialog("x", …)`). Ele não cobra o contrário: um id pode existir só
+escreve (`ds.Dialog("x", …)`, ou o `sheetDialog` da ficha). Ele não cobra o contrário: um id pode existir só
 para o CSS.

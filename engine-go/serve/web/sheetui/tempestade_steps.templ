@@ -65,6 +65,13 @@ templ choiceStepSection(v View, step choiceStep) {
 				@ds.IconButton(ds.ButtonGhost, "X", "Fechar", nil)
 			</form>
 		</div>
+		// ACIMA DO QUE ROLA: tocada lá embaixo na lista, a opção recusada continua à vista
+		// da frase.
+		if v.Refusal != "" {
+			<div class="ds-step-refusal">
+				@refusalInDialog(v)
+			</div>
+		}
 		if step.Kind == "powers" {
 			@powersStepFilters(v, step.Class)
 		}

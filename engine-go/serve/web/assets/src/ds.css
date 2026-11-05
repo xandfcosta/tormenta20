@@ -777,6 +777,9 @@
     padding: 0;
     overflow: hidden;
   }
+  .ds-step-refusal {
+    padding-block: 0.5rem;
+  }
   .ds-steps {
     display: grid;
     flex: 1;
@@ -1295,6 +1298,12 @@
   }
   /* `max-content` nas linhas: num grid que rola, um filho com `overflow:
    * hidden` (uma `ds-list`) encolheria até zero para caber na altura. */
+  .ds-dialog-body > .ds-alert:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--ds-surface);
+  }
   .ds-dialog-body {
     display: grid;
     grid-auto-rows: max-content;
