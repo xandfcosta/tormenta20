@@ -255,7 +255,7 @@ func overlayModsFor(overlay *CatalogItem, host *CatalogItem) []Modifier {
 	if host != nil {
 		hostCategory = host.Category
 	}
-	return hostedHere(OverlayModifiers(hostCategory, overlay.Name, overlay.Modifiers), host)
+	return hostedHere(overlay, OverlayModifiers(hostCategory, overlay.Name, overlay.Modifiers), host)
 }
 
 // mirrorWeaponAttackMods leva o {attack,scope:this} da arma para o escopo dela, que

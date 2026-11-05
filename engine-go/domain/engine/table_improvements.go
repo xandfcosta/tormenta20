@@ -31,9 +31,11 @@ func (r *Ruleset) tableImprovementEntry(id string) *CatalogItem {
 		return nil
 	}
 	for _, improvement := range r.mesa.Improvements {
-		if improvement.ID == id {
+		// Quem perdeu o direito para de somar: o mestre manda no que vale agora, e não no que valia
+		// quando o jogador a colocou. Ela segue na lista do item, para poder sair.
+		if improvement.ID == id && improvement.Applies.Matches(Character{ID: int(r.holder)}) {
 			return &CatalogItem{
-				ID: id, Name: improvement.Name, Category: "improvement",
+				ID: id, Name: improvement.Name, Category: "improvement", AppliesTo: familiesOf(improvement.Family),
 				Modifiers: []Modifier{tableImprovementModifier(improvement)},
 			}
 		}
@@ -62,9 +64,14 @@ func tableImprovementModifier(improvement TableImprovement) Modifier {
 // hostedHere prende à arma o que a melhoria da mesa dá nela: o `this` do dano é lido em todas as
 // cartas, e o da margem em nenhuma; o escopo da arma é lido só na dela. O ataque não entra, porque o
 // espelho de `mirrorWeaponAttackMods` já o leva.
-func hostedHere(mods []Modifier, host *CatalogItem) []Modifier {
+func hostedHere(overlay *CatalogItem, mods []Modifier, host *CatalogItem) []Modifier {
 	if host == nil {
 		return mods
+	}
+	// A melhoria da mesa que deixou de caber neste item para de somar, pela mesma razão do dono.
+	if strings.HasPrefix(overlay.ID, TableImprovementPrefix) && len(overlay.AppliesTo) > 0 &&
+		overlay.AppliesTo[0] != ItemFamilyOf(host.Category) {
+		return []Modifier{}
 	}
 	out := make([]Modifier, 0, len(mods))
 	for _, modifier := range mods {
@@ -74,4 +81,27 @@ func hostedHere(mods []Modifier, host *CatalogItem) []Modifier {
 		out = append(out, modifier)
 	}
 	return out
+}
+
+func familiesOf(family string) []string {
+	if family == "" {
+		return nil
+	}
+	return []string{family}
+}
+
+// ItemFamilyOf é a família do item pela categoria: arma, armadura, escudo ou vestuário, que é onde
+// cai todo o resto. É a família em que melhoria e encanto cabem.
+//
+// @example engine.ItemFamilyOf("weapon-martial") // "weapon"
+func ItemFamilyOf(category string) string {
+	switch {
+	case strings.HasPrefix(category, "weapon-"):
+		return "weapon"
+	case strings.HasPrefix(category, "armor-"):
+		return "armor"
+	case category == "shield":
+		return "shield"
+	}
+	return "apparel"
 }

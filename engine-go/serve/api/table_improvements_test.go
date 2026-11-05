@@ -537,3 +537,48 @@ func TestATwistedItemDoesNotTakeTheTabDown(t *testing.T) {
 		t.Errorf("a aba caiu com um item ilegível: %q", page[:min(200, len(page))])
 	}
 }
+
+// O mestre manda: quem perdeu o direito à melhoria, ou o item em que ela deixou de caber, para de
+// somar. Ela segue na lista do item, para poder sair, e volta a somar se o mestre a devolver.
+func TestAnImprovementCountsOnlyWhileTheGMSaysSo(t *testing.T) {
+	f, id := fighterFixture(t)
+	inCampaign(t, f, id)
+	item := itemSemeia(t, f, id, "algemas", "Algemas", "vested")
+	before := lutaOf(t, f.s, id)
+	beforeHP := poolsOf(t, f.s, id).HpMax
+	mine := strings.Replace(improvementSignals("Minha", "apparel", "expertise", "Luta", 1),
+		`"table_improvement_scope":"mesa"`, fmt.Sprintf(`"table_improvement_scope":"um","table_improvement_character":"%d"`, id), 1)
+	improvement := createsImprovement(t, f, mine)
+	vigor := createsImprovement(t, f, strings.Replace(mine, `"table_improvement_target":"expertise"`, `"table_improvement_target":"maxPv"`, 1))
+	placesImprovements(t, f, f.player, id, item, improvement, vigor)
+	if got := lutaOf(t, f.s, id); got != before+1 {
+		t.Fatalf("o controle: a melhoria dele dá +1 em Luta, e foi de %+d a %+d", before, got)
+	}
+	if got := poolsOf(t, f.s, id).HpMax; got != beforeHP+1 {
+		t.Fatalf("o controle: a melhoria dele dá +1 em PV, e foi de %d a %d", beforeHP, got)
+	}
+	setTo := func(column string, value any) {
+		if _, err := f.s.db.ExecContext(context.Background(), "UPDATE campaign_improvements SET "+column+" = ?", value); err != nil {
+			t.Fatal(err)
+		}
+	}
+	setTo("characterId", f.charID)
+	if got := lutaOf(t, f.s, id); got != before {
+		t.Errorf("dada a outra pessoa, a melhoria seguiu somando: Luta %+d, e era %+d", got, before)
+	}
+	if got := poolsOf(t, f.s, id).HpMax; got != beforeHP {
+		t.Errorf("dada a outra pessoa, a melhoria seguiu somando no PV: %d, e era %d", got, beforeHP)
+	}
+	if !strings.Contains(improvementDialog(t, f, id, item), "Minha") {
+		t.Error("a melhoria saiu da lista, e ninguém consegue tirá-la")
+	}
+	setTo("characterId", id)
+	setTo("family", "weapon")
+	if got := lutaOf(t, f.s, id); got != before {
+		t.Errorf("a melhoria que só cabe em arma seguiu somando nas algemas: Luta %+d, e era %+d", got, before)
+	}
+	setTo("family", "apparel")
+	if got := lutaOf(t, f.s, id); got != before+1 {
+		t.Errorf("devolvida, a melhoria voltou a somar: Luta %+d, e devia ser %+d", got, before+1)
+	}
+}

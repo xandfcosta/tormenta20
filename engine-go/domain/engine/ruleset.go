@@ -35,6 +35,18 @@ import (
 type Ruleset struct {
 	book *Catalogs
 	mesa Amendments
+	// holder é a ficha a que este mundo foi entregue (`HeldBy`). A melhoria da mesa dada a um
+	// personagem só soma para ele; sem dono, só as da mesa inteira somam.
+	holder int64
+}
+
+// HeldBy é este mundo entregue a uma ficha: o mesmo livro e a mesma mesa, sabendo de quem é o item.
+//
+// @example dto.Ruleset = world.HeldBy(row.ID)
+func (r *Ruleset) HeldBy(characterID int64) *Ruleset {
+	held := *r
+	held.holder = characterID
+	return &held
 }
 
 // Amendments é o que uma mesa MUDA no livro.

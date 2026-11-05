@@ -53,7 +53,7 @@ func RulesetsFor(
 			continue
 		}
 		if known, ok := porCampanha[campaignID.Int64]; ok {
-			out[characterID] = known
+			out[characterID] = known.HeldBy(characterID)
 			continue
 		}
 		mesa, err := amendmentsOf(ctx, q, campaignID.Int64)
@@ -62,7 +62,7 @@ func RulesetsFor(
 		}
 		world := engine.RulesetOf(book, mesa)
 		porCampanha[campaignID.Int64] = world
-		out[characterID] = world
+		out[characterID] = world.HeldBy(characterID)
 	}
 	return out, nil
 }
