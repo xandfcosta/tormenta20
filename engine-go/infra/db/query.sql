@@ -58,7 +58,7 @@ SELECT id, catalogId, name, quantity, slots, equipped, improvements, material
 FROM character_items WHERE characterId = ? ORDER BY id ASC;
 
 -- name: ListActiveEffectsByCharacter :many
-SELECT id, catalogId, scope, modifiers, createdAt
+SELECT id, source, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC;
 
 -- name: ListActiveEffectsByCharacters :many

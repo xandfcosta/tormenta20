@@ -98,11 +98,16 @@ func spendsOnTheAttack(ctx context.Context, u Unit, s *live.SessionRuntimeState,
 	if available := pool.ManaAvailable(); int64(pm) > available {
 		return fmt.Errorf("o golpe pede %d PM, e sobram %d", pm, available)
 	}
-	hp, mp, err := u.Sheet.SpendMana(ctx, *characterID, pm)
+	hp, mp, receipt, err := u.Sheet.SpendManaKeepingReceipt(ctx, *characterID, pm)
 	if err != nil {
 		return fmt.Errorf("cobrar o PM do golpe: %w", err)
 	}
-	entry := s.PendingAttack.AttackerEntryID
+	attack := s.PendingAttack
+	if attack.Paid == nil {
+		attack.Paid = &live.AttackPaid{CharacterID: characterID}
+	}
+	attack.Paid.Mana = append(attack.Paid.Mana, receipt)
+	entry := attack.AttackerEntryID
 	return live.PatchEntryVitals(s, entry, hp, mp, hpFloorOf(s, entry))
 }
 
@@ -170,30 +175,27 @@ func givesTheTurnBack(s *live.SessionRuntimeState, open live.PendingAttack) {
 	s.Scene.ExtraMovementLeft = s.Scene.ExtraMovementLeft || paid.ExtraMovement
 }
 
-// givesTheManaBack devolve o impulso e os "rolar de novo" ao poço, até o máximo dele. A
-// poça temporária que pagou não renasce: ela é apagada ao esvaziar, e não dá para saber
-// quanto tempo ela ainda duraria.
+// givesTheManaBack desfaz cada recibo: o PM do impulso e dos "rolar de novo" volta de onde
+// saiu, ao poço ou à poça temporária.
 func givesTheManaBack(ctx context.Context, u Unit, s *live.SessionRuntimeState, open live.PendingAttack) error {
 	if open.Paid == nil || open.Paid.CharacterID == nil {
 		return nil
 	}
-	back := int64(open.BoostPM)
-	for _, reroll := range open.Rerolls {
-		back += int64(reroll.PM)
+	for _, receipt := range open.Paid.Mana {
+		hp, mp, err := u.Sheet.GiveManaBack(ctx, *open.Paid.CharacterID, receipt)
+		// A FICHA APAGADA não tem para onde receber, e isso não pode prender o golpe na mesa.
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("devolver o PM do golpe cancelado: %w", err)
+		}
+		if live.FindEntryIndex(s, open.AttackerEntryID) < 0 {
+			continue
+		}
+		if err := live.PatchEntryVitals(s, open.AttackerEntryID, hp, mp, hpFloorOf(s, open.AttackerEntryID)); err != nil {
+			return err
+		}
 	}
-	if back == 0 {
-		return nil
-	}
-	hp, mp, err := u.Sheet.ApplyDelta(ctx, *open.Paid.CharacterID, nil, &back, 0)
-	// A FICHA APAGADA não tem para onde receber, e isso não pode prender o golpe na mesa.
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("devolver o PM do golpe cancelado: %w", err)
-	}
-	if live.FindEntryIndex(s, open.AttackerEntryID) < 0 {
-		return nil
-	}
-	return live.PatchEntryVitals(s, open.AttackerEntryID, hp, mp, hpFloorOf(s, open.AttackerEntryID))
+	return nil
 }

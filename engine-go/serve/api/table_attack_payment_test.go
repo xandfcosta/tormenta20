@@ -9,6 +9,7 @@ import (
 
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/infra/db/dbvalue"
 )
 
 // A PROPOSTA PAGA AO NASCER, e o cancelamento do mestre devolve (decisão do dono). Cobrada
@@ -507,5 +508,89 @@ func TestARageEndedBeforeTheCheckStillRaisesTheBonus(t *testing.T) {
 	}
 	if lines := bloodEffects(t, f, barbaro); lines != 1 {
 		t.Errorf("o crítico foi proposto em fúria, e o bônus não subiu: %d linhas", lines)
+	}
+}
+
+// seedTempMana enche uma poça temporária de PM, com um campo que o motor não conhece: ele
+// tem de sobreviver à volta.
+func seedTempMana(t *testing.T, f sceneFixture, id int64, amount int) {
+	t.Helper()
+	modifiers := fmt.Sprintf(`[{"target":{"k":"tempMp"},"amount":%d,"bonusType":"untyped","note":"","gained":7}]`, amount)
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"INSERT INTO active_effects (characterId, source, catalogId, scope, modifiers, createdAt) VALUES (?, 'power', 'poca.teste', 'scene', ?, ?)",
+		id, modifiers, dbvalue.NowISO()); err != nil {
+		t.Fatalf("semear a poça: %v", err)
+	}
+}
+
+func tempManaOf(t *testing.T, f sceneFixture, id int64) int {
+	t.Helper()
+	_, reserve := manaOnTheSheet(t, f, id)
+	return reserve
+}
+
+// O cancelamento desfaz o gasto do jeito que ele saiu: a parte da poça volta à poça, e a
+// do poço ao poço. Devolvida ao poço, a parte da poça se perderia com o poço cheio.
+func TestTheGMCancellingRestoresWhereTheManaCameFrom(t *testing.T) {
+	cases := map[string]struct {
+		mana, temp, paidMana, paidTemp int
+	}{
+		"a poça paga tudo e some": {mana: 5, temp: 2, paidMana: 5, paidTemp: 0},
+		"a poça paga e sobra":     {mana: 5, temp: 3, paidMana: 5, paidTemp: 1},
+		"a poça e o poço dividem": {mana: 5, temp: 1, paidMana: 4, paidTemp: 0},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			f, barbaro, goblin := boostingBarbarian(t, int64(c.mana))
+			seedTempMana(t, f, barbaro, c.temp)
+			proposesWithTheBoost(t, f, barbaro, goblin)
+			if got, temp := mpOf(t, f.s, barbaro), tempManaOf(t, f, barbaro); got != int64(c.paidMana) || temp != c.paidTemp {
+				t.Fatalf("depois do impulso de 2 PM: poço %d, poça %d; want %d e %d", got, temp, c.paidMana, c.paidTemp)
+			}
+			gmCancels(t, f)
+			if got, temp := mpOf(t, f.s, barbaro), tempManaOf(t, f, barbaro); got != int64(c.mana) || temp != c.temp {
+				t.Errorf("depois do cancelamento: poço %d, poça %d; want %d e %d", got, temp, c.mana, c.temp)
+			}
+		})
+	}
+}
+
+func TestTheTemporaryPoolComesBackWithThePoolFull(t *testing.T) {
+	f, barbaro, goblin := boostingBarbarian(t, 0)
+	full := poolsOf(t, f.s, barbaro).MpMax
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE character_damage SET mpSpent = 0 WHERE characterId = ?", barbaro); err != nil {
+		t.Fatalf("encher o poço: %v", err)
+	}
+	seedTempMana(t, f, barbaro, 2)
+	proposesWithTheBoost(t, f, barbaro, goblin)
+	gmCancels(t, f)
+	if got, temp := mpOf(t, f.s, barbaro), tempManaOf(t, f, barbaro); got != full || temp != 2 {
+		t.Errorf("poço %d, poça %d; want %d e 2", got, temp, full)
+	}
+	var modifiers string
+	if err := f.s.db.QueryRowContext(context.Background(),
+		"SELECT modifiers FROM active_effects WHERE characterId = ? AND catalogId = 'poca.teste' AND source = 'power'", barbaro).Scan(&modifiers); err != nil {
+		t.Fatalf("a poça não voltou com a procedência dela: %v", err)
+	}
+	if !strings.Contains(modifiers, `"gained":7`) {
+		t.Errorf("a poça voltou sem os campos dela: %s", modifiers)
+	}
+}
+
+func TestTheRerollAlsoGivesThePoolBack(t *testing.T) {
+	f, barbaro, goblin := boostingBarbarian(t, 5)
+	seedTempMana(t, f, barbaro, 4)
+	proposesWithTheBoost(t, f, barbaro, goblin)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":10}`)
+	if len(got.Rerolls) != 1 {
+		t.Fatalf("o Sortudo não rolou de novo: %+v", got.Rerolls)
+	}
+	if mana, temp := mpOf(t, f.s, barbaro), tempManaOf(t, f, barbaro); mana != 4 || temp != 0 {
+		t.Fatalf("depois de 2 + 3 PM: poço %d, poça %d; want 4 e 0", mana, temp)
+	}
+	gmCancels(t, f)
+	if mana, temp := mpOf(t, f.s, barbaro), tempManaOf(t, f, barbaro); mana != 5 || temp != 4 {
+		t.Errorf("depois do cancelamento: poço %d, poça %d; want 5 e 4", mana, temp)
 	}
 }

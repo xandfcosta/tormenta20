@@ -162,6 +162,8 @@ type AttackPaid struct {
 	Standard      bool   `json:"standard,omitempty"`
 	Movement      bool   `json:"movement,omitempty"`
 	ExtraMovement bool   `json:"extraMovement,omitempty"`
+	// Mana são os recibos do impulso e dos "rolar de novo" (`SheetVitals`).
+	Mana []json.RawMessage `json:"mana,omitempty"`
 }
 
 // AttackDose é a dose em jogo no golpe. Ela viaja escrita porque a faixa só recebe o
@@ -315,6 +317,8 @@ func ReplaceAttackRoll(st *SessionRuntimeState, attack PendingAttack) error {
 		return fmt.Errorf("o ataque já foi rolado de novo %d vez(es) enquanto este pedido chegava: olhe o dado novo antes de pagar outra",
 			len(open.Rerolls))
 	}
+	// O QUE JÁ FOI PAGO vem da mesa, e não de quem leu a proposta antes.
+	attack.Paid = open.Paid
 	st.PendingAttack = &attack
 	return nil
 }

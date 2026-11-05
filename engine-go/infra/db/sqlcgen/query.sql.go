@@ -1733,12 +1733,13 @@ func (q *Queries) IsGmAtLiveTableForCharacter(ctx context.Context, arg IsGmAtLiv
 }
 
 const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
-SELECT id, catalogId, scope, modifiers, createdAt
+SELECT id, source, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC
 `
 
 type ListActiveEffectsByCharacterRow struct {
 	ID        int64  `json:"id"`
+	Source    string `json:"source"`
 	Catalogid string `json:"catalogid"`
 	Scope     string `json:"scope"`
 	Modifiers string `json:"modifiers"`
@@ -1756,6 +1757,7 @@ func (q *Queries) ListActiveEffectsByCharacter(ctx context.Context, characterid 
 		var i ListActiveEffectsByCharacterRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.Source,
 			&i.Catalogid,
 			&i.Scope,
 			&i.Modifiers,

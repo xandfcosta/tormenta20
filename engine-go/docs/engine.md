@@ -87,8 +87,8 @@ jogador não retira a proposta, porque isso seria um d20 novo de graça. O "rola
 **A proposta paga ao nascer** (decisão do dono, `session.Store.ProposeAttack`): a ação e o PM do
 impulso saem ali, na mesma transação. Assim a postura que não couber é recusada na hora dela, e
 a resposta do mestre não falha por um gesto posterior. O cancelamento do mestre devolve a ação
-(só ao turno de onde ela saiu), o PM do impulso e dos "rolar de novo" (ao poço, até o máximo) e
-a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
+(só ao turno de onde ela saiu), o PM do impulso e dos "rolar de novo" (cada ponto de onde saiu,
+ao poço ou à poça temporária, pelo `sheet.ManaReceipt`) e a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
 aconteceu, e fechar a leitura dele não devolve nada. O "rolar de novo" é conferido e pago na
 transação que troca o dado (`session.Store.RerollAttack`).
 
