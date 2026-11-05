@@ -106,6 +106,9 @@ func WeaponDamageScope(catalogID string) string { return "weapon:" + catalogID }
 
 // Os escopos de dano por TIPO de arma, com os nomes que o livro dá a eles.
 const (
+	// WieldedScope: "1 arma empunhada" (Arma Mágica). A arma natural e o desarmado ficam de
+	// fora, como diz o quadro de Ataques Desarmados e Armas Naturais.
+	WieldedScope = "wielded"
 	// MeleeLightOrAgileScope: "uma arma corpo a corpo leve ou ágil"
 	// (Esgrimista, p48).
 	MeleeLightOrAgileScope = "melee-light-or-agile"
@@ -216,7 +219,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			steps++
 		}
 		cardOf := func(name string, use *WeaponStats) WeaponCard {
-			scopes := append([]string{weaponScope}, weaponKindScopes(use)...)
+			scopes := append([]string{weaponScope, WieldedScope}, weaponKindScopes(use)...)
 			if it.Oversized {
 				scopes = append(scopes, OversizedWeaponScope)
 			}

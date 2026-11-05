@@ -351,13 +351,13 @@ var spellsPart04 = []Spell{
 		Buff: &SpellBuff{
 			Modifiers: []Modifier{
 				{
-					Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+					Target:    ModifierTarget{Kind: "attack", Scope: "wielded"},
 					Amount:    1,
 					BonusType: "enhancement",
 					Note:      "Arma Mágica",
 				},
 				{
-					Target:    ModifierTarget{Kind: "damage", Scope: "all"},
+					Target:    ModifierTarget{Kind: "damage", Scope: "wielded"},
 					Amount:    1,
 					BonusType: "enhancement",
 					Note:      "Arma Mágica",

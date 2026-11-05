@@ -89,14 +89,26 @@ func weaponProficiency(itemID string) string {
 }
 
 // weaponPicksFit confere o pré-requisito da arma escolhida: "proficiência com
-// a arma" (Foco em Arma, p128).
+// a arma" (Foco em Arma, p128). A arma natural não pede proficiência, mas a ficha tem de tê-la.
 func weaponPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
 	has := UnmarshalStrings(dto.Proficiencies)
+	natural := power.Choice.Offered()
 	for _, pick := range picks {
+		if slices.ContainsFunc(natural, func(o book.PowerChoiceOption) bool { return o.ID == pick && o.NaturalWeapon }) && !ownsNaturalWeapon(dto, pick) {
+			return fmt.Errorf("%s: esta ficha não tem a arma natural %q", power.Name, pick)
+		}
 		key := weaponProficiency(pick)
 		if key != "" && !slices.Contains(has, key) {
 			return fmt.Errorf("%s pede proficiência com a arma, e esta ficha não sabe usar %s", power.Name, book.ProficiencyLabel(key))
 		}
 	}
 	return nil
+}
+
+func ownsNaturalWeapon(dto CharacterDTO, source string) bool {
+	if dto.Ruleset == nil {
+		return false
+	}
+	ec, err := EngineCharacterFrom(dto)
+	return err == nil && slices.Contains(dto.Ruleset.NaturalWeaponSources(ec), source)
 }

@@ -158,7 +158,7 @@ func actionsPanelFrom(
 		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
 		engine.ActionMovement: {movementRow(computed)},
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID)),
-		engine.ActionFree:     extraStrikeRows(combat),
+		engine.ActionFree:     extraStrikeRows(combat, boosts),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {

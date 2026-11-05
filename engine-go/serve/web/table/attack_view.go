@@ -301,20 +301,21 @@ func extraStrikeBarred(st *live.SessionRuntimeState) string {
 
 // writtenBoost é o impulso do golpe com o PM que a proposta pagou, ou "".
 func writtenBoost(pa live.PendingAttack) string {
+	parts := []string{}
 	if pa.ExtraOf != "" {
-		if pa.BoostPM > 0 {
-			return fmt.Sprintf("Ataque extra · %d PM", pa.BoostPM)
+		parts = append(parts, "Ataque extra")
+	}
+	if pa.BoostPowerID != "" {
+		name := pa.BoostPowerID
+		if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
+			name = power.Name
 		}
-		return "Ataque extra"
+		parts = append(parts, name)
 	}
-	if pa.BoostPowerID == "" {
-		return ""
+	if pa.BoostPM > 0 {
+		parts = append(parts, fmt.Sprintf("%d PM", pa.BoostPM))
 	}
-	name := pa.BoostPowerID
-	if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
-		name = power.Name
-	}
-	return fmt.Sprintf("%s · %d PM", name, pa.BoostPM)
+	return strings.Join(parts, " · ")
 }
 
 // writtenGuard é a penalidade que a investida deixa, ou "".

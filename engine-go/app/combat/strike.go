@@ -332,9 +332,12 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		if err != nil {
 			return strikeSetup{}, err
 		}
-		if setup.boost, err = extraStrikeOf(state, weapon); err != nil {
+		extraPM, err := extraStrikeOf(state, weapon)
+		if err != nil {
 			return strikeSetup{}, err
 		}
+		// O IMPULSO SOMA: o PM do extra e o dele saem juntos, e a mesa lê o total.
+		setup.boost.pm += extraPM
 	}
 	if req.TargetObject != nil {
 		if setup.target, err = engine.ObjectTarget(req.TargetObject.Size, req.TargetObject.Material); err != nil {

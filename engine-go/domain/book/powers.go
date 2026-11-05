@@ -3,6 +3,7 @@ package book
 import (
 	"encoding/json"
 	"slices"
+	"sort"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -88,6 +89,8 @@ type PowerChoice struct {
 type PowerChoiceOption struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+	// NaturalWeapon diz que a opção é uma arma natural, que só vale para quem a tem.
+	NaturalWeapon bool `json:"naturalWeapon,omitempty"`
 	// MinLevel é o nível da classe a partir do qual a opção vale.
 	MinLevel int `json:"minLevel"`
 }
@@ -142,7 +145,45 @@ func (c PowerChoice) Offered() []PowerChoiceOption {
 			out = append(out, PowerChoiceOption{ID: item.ID, Name: item.Name})
 		}
 	}
+	// "Escolha uma arma" (p128). A arma natural só o Foco em Arma alcança, por decisão do dono.
+	if c.RequiresProficiency {
+		out = append(out, naturalWeaponOptions()...)
+	}
 	return out
+}
+
+// naturalWeaponOptions são as armas naturais do livro, com a fonte como id: é o escopo da carta.
+func naturalWeaponOptions() []PowerChoiceOption {
+	out := []PowerChoiceOption{}
+	add := func(id string, weapon *namedNaturalWeapon) {
+		if weapon != nil {
+			out = append(out, PowerChoiceOption{ID: id, Name: weapon.Name, NaturalWeapon: true})
+		}
+	}
+	for key, race := range RaceTraitsByKey() {
+		if key != race.ID {
+			continue
+		}
+		for _, ability := range race.Abilities {
+			add(ability.ID, ability.NaturalWeapon)
+		}
+	}
+	for id, power := range GeneralPowers() {
+		add(id, power.NaturalWeapon)
+	}
+	for _, power := range ListOf[struct {
+		ID            string              `json:"id"`
+		NaturalWeapon *namedNaturalWeapon `json:"naturalWeapon"`
+	}]("granted-powers") {
+		add(power.ID, power.NaturalWeapon)
+	}
+	sort.Slice(out, func(a, b int) bool { return out[a].ID < out[b].ID })
+	return out
+}
+
+// namedNaturalWeapon é o que a escolha lê da arma natural: o nome. A conta é do motor.
+type namedNaturalWeapon struct {
+	Name string `json:"name"`
 }
 
 type GrantByChoice struct {
@@ -183,6 +224,8 @@ type GeneralPower struct {
 	// SpellAugment é o preço e o efeito do poder que é aprimoramento (p131), que
 	// se escolhe ao conjurar. Nulo em todos os outros. Ver `PowerAugments`.
 	SpellAugment *SpellAugment `json:"spellAugment"`
+	// NaturalWeapon é a arma natural que o poder da Tormenta dá (p137).
+	NaturalWeapon *namedNaturalWeapon `json:"naturalWeapon"`
 }
 
 // PowerWithChoice é o poder de id dado quando ele pede escolha, de CLASSE ou
