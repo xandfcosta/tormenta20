@@ -11,6 +11,7 @@
       { "address": "/campanhas", "session": "gm" },
       { "address": "/campanhas/nova", "session": "gm" },
       { "address": "/campanhas/1", "session": "gm" },
+      { "address": "/campanhas/1?tab=regras", "session": "gm" },
       { "address": "/campanhas/entrar", "session": "gm" }
     ]
   },

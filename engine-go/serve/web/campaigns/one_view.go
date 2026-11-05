@@ -60,6 +60,9 @@ type oneView struct {
 	// porque é o que separa uma crônica de anos de uma aberta ontem.
 	CreatedAt string
 
+	// TableRules são as regras da mesa, carregadas só na aba delas.
+	TableRules []tableRuleRow
+
 	// Places é o ACERVO da campanha, e ele só é carregado na aba dele.
 	//
 	// Sob demanda e não sempre: uma crônica longa tem dezenas de lugares, e a
@@ -121,6 +124,7 @@ func oneTabs(isGM bool, requested string) []oneTab {
 		{ID: "visao", Label: "Visão geral"},
 		{ID: "sessoes", Label: "Sessões"},
 		{ID: "membros", Label: "Membros"},
+		{ID: "regras", Label: "Regras da mesa"},
 	}
 	if isGM {
 		// LUGARES antes de CONFIG, e a ordem é a do uso: preparar a próxima cena
@@ -219,6 +223,12 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	if v.IsGM && v.AbaAtiva() == "lugares" {
 		v.Places = s.placesOf(ctx, c.ID)
 		v.Chaos = groundOptions()
+	}
+
+	if v.AbaAtiva() == "regras" {
+		if v.TableRules, err = s.tableRulesOf(ctx, c.ID, v.IsGM, euID); err != nil {
+			return oneView{}, err
+		}
 	}
 
 	members, err := s.deps.Queries().ListMembers(ctx, id)

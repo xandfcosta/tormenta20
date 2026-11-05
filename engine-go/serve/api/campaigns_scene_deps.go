@@ -18,10 +18,11 @@ import (
 type campaignsHost struct {
 	sceneCore
 	rules campaignRules
+	sheet sheetRules
 }
 
 func (s *Server) campaignsHost() campaignsHost {
-	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules()}
+	return campaignsHost{sceneCore: s.sceneCore(), rules: s.campaignRules(), sheet: s.sheetRules()}
 }
 
 // RequesterIsAdmin diz se QUEM PEDE administra o servidor.
@@ -30,3 +31,6 @@ func (s *Server) campaignsHost() campaignsHost {
 // que a administração pede e que olha a CONFIGURAÇÃO. São perguntas diferentes
 // com a mesma cara, e reusar o nome faria uma responder pela outra.
 func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
+
+// CharacterChanged avisa que uma ficha mudou. A regra é da FICHA, e a campanha a pede emprestada.
+func (h campaignsHost) CharacterChanged(characterID int64) { h.sheet.characterChanged(characterID) }

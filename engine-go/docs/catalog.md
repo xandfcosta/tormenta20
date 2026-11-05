@@ -38,13 +38,14 @@ e personagem chegariam misturados e a procedência morreria: `sheet.RulesetFor`
 resolve UMA vez e o resultado viaja em `CharacterDTO.Ruleset` (`json:"-"`); o
 lote da mesa (`sheet.RulesetsFor`) consulta uma vez por campanha DISTINTA.
 
-### As três espécies de emenda, e por que não são uma lista só
+### As quatro espécies de emenda, e por que não são uma lista só
 
 | espécie | tabela | o que muda | escopo |
 |---|---|---|---|
 | **verbete** | `campaign_items` | o que uma COISA é | a campanha inteira |
 | **concessão** | `campaign_grants` | quem TEM as coisas | seletor |
 | **silêncio** | `campaign_silences` | o que esta mesa NÃO aplica | seletor |
+| **regra da mesa** | `campaign_rules` | o que soma quando as condições valem | seletor |
 
 Respondem a perguntas diferentes; uma tabela com `kind` as forçaria a uma forma
 só. A de verbete não tem escopo: item que significa uma coisa para você e outra

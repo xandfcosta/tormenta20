@@ -40,6 +40,12 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/campanhas/{id}/convite", s.handleRotateInvite)
 	r.Post("/campanhas/{id}/nova-sessao", s.handleNewSession)
 	r.Post("/campanhas/{id}/regras/{regra}", s.handleToggleRule)
+	// As REGRAS DA MESA têm endereço próprio: as de cima são as opcionais do livro.
+	r.Post("/campanhas/{id}/regras-da-mesa/editor", s.handleTableRuleEditor)
+	r.Post("/campanhas/{id}/regras-da-mesa/rascunho", s.handleTableRuleDraft)
+	r.Post("/campanhas/{id}/regras-da-mesa/gravar", s.handleTableRuleSave)
+	r.Post("/campanhas/{id}/regras-da-mesa/{regra}/ligar", s.handleTableRuleFlip)
+	r.Post("/campanhas/{id}/regras-da-mesa/{regra}/excluir", s.handleTableRuleRemove)
 	// O ACERVO DE LUGARES. A cena LISTA, CRIA e APAGA; quem MONTA a cena
 	// guardada é o tabuleiro, num endereço vizinho
 	// (`/campanhas/{id}/lugares/{placeId}`) servido pela cena da Mesa — é lá que

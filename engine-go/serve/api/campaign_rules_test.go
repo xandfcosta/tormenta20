@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 )
@@ -20,7 +21,7 @@ func inCampaign(t *testing.T, f sceneFixture, id int64) {
 	}
 }
 
-// seedsRule grava a regra ligada na campanha da bancada. A tela que escreve é a fatia seguinte.
+// seedsRule grava a regra ligada na campanha da bancada, sem passar pelo editor.
 func seedsRule(t *testing.T, f sceneFixture, name, conditions, effect string) string {
 	t.Helper()
 	id := "regra-" + strings.ReplaceAll(strings.ToLower(name), " ", "-")
@@ -252,4 +253,23 @@ func TestTheSheetNamesTheRuleInTheBreakdown(t *testing.T) {
 	if !found {
 		t.Error("o ataque da carta não leva a origem da regra")
 	}
+}
+
+func ruleCard(t *testing.T, f sceneFixture, id int64) engine.WeaponCard {
+	t.Helper()
+	dto, ec := loadedCharacter(t, f, id)
+	return dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals))[0]
+}
+
+func ruleSheet(t *testing.T, f sceneFixture, id int64) engine.ComputedSheet {
+	t.Helper()
+	row, err := f.s.queries.GetCharacter(context.Background(), id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	computed, err := sheet.LoadAndCompute(context.Background(), f.s.queries, f.s.catalogs, row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return computed
 }
