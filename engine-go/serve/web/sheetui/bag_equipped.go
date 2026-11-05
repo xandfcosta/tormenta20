@@ -127,9 +127,9 @@ func vestedPositionsOf(
 // O RÓTULO DO LUGAR não entra aqui: ele é da POSIÇÃO, e não do item. Enquanto
 // o cartão o carregava, o mesmo nome existia em dois campos — o da posição
 // vazia e o do cartão —, e dois campos para um conceito divergem.
-func equippedCardOf(item sheet.ItemDTO, proficiencies map[string]bool, exempt wearerExemptions) *equippedCard {
+func equippedCardOf(world *engine.Ruleset, item sheet.ItemDTO, proficiencies map[string]bool, exempt wearerExemptions) *equippedCard {
 	overlays := []itemChip{}
-	for _, name := range itemOverlays(item) {
+	for _, name := range append(tableImprovementNames(world, item), itemOverlays(item)...) {
 		overlays = append(overlays, itemChip{Text: name})
 	}
 	return &equippedCard{

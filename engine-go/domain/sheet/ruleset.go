@@ -53,7 +53,7 @@ func RulesetsFor(
 			continue
 		}
 		if known, ok := porCampanha[campaignID.Int64]; ok {
-			out[characterID] = known
+			out[characterID] = known.HeldBy(characterID)
 			continue
 		}
 		mesa, err := amendmentsOf(ctx, q, campaignID.Int64)
@@ -62,7 +62,7 @@ func RulesetsFor(
 		}
 		world := engine.RulesetOf(book, mesa)
 		porCampanha[campaignID.Int64] = world
-		out[characterID] = world
+		out[characterID] = world.HeldBy(characterID)
 	}
 	return out, nil
 }
@@ -107,6 +107,20 @@ func amendmentsOf(
 			Applies:   selectorOf(row.Characterid),
 			Label:     row.Label,
 			Modifiers: mods,
+		})
+	}
+	// O QUE O MESTRE CRIOU PARA SE COLOCAR NUM ITEM.
+	improvements, err := q.ListCampaignImprovements(ctx, campaignID)
+	if err != nil {
+		return out, fmt.Errorf("ler as melhorias da campanha %d: %w", campaignID, err)
+	}
+	for _, row := range improvements {
+		effect, err := engine.ParseRuleEffect(row.Effect)
+		if err != nil {
+			return engine.Amendments{}, fmt.Errorf("a melhoria %q da campanha %d: %w", row.Name, campaignID, err)
+		}
+		out.Improvements = append(out.Improvements, engine.TableImprovement{
+			ID: row.ID, Name: row.Name, Applies: selectorOf(row.Characterid), Family: row.Family, Effect: effect,
 		})
 	}
 	// O QUE A MESA DESLIGA, termo a termo.

@@ -35,6 +35,18 @@ import (
 type Ruleset struct {
 	book *Catalogs
 	mesa Amendments
+	// holder é a ficha a que este mundo foi entregue (`HeldBy`). A melhoria da mesa dada a um
+	// personagem só soma para ele; sem dono, só as da mesa inteira somam.
+	holder int64
+}
+
+// HeldBy é este mundo entregue a uma ficha: o mesmo livro e a mesma mesa, sabendo de quem é o item.
+//
+// @example dto.Ruleset = world.HeldBy(row.ID)
+func (r *Ruleset) HeldBy(characterID int64) *Ruleset {
+	held := *r
+	held.holder = characterID
+	return &held
 }
 
 // Amendments é o que uma mesa MUDA no livro.
@@ -62,6 +74,9 @@ type Amendments struct {
 	// Rules são as regras da mesa que estão ligadas: condições e efeito, montados pelo mestre.
 	// Ver `table_rules.go`.
 	Rules []TableRule
+
+	// Improvements são as melhorias que o mestre criou. Ver `table_improvements.go`.
+	Improvements []TableImprovement
 }
 
 // CampaignGrant é o que a mesa concede a quem o seletor alcança.
@@ -130,6 +145,9 @@ func (r *Ruleset) Book() *Catalogs { return r.book }
 // Ela nunca escreve no mapa do livro: duas mesas leem o mesmo `Catalogs`
 // primado, e sujá-lo vazaria a regra de uma para a outra e para o molde.
 func (r *Ruleset) itemOf(id string) *CatalogItem {
+	if created := r.tableImprovementEntry(id); created != nil {
+		return created
+	}
 	book := r.book.itemsByID[id]
 	adds := r.mesa.Entries[id]
 	if book == nil || len(adds) == 0 {

@@ -64,11 +64,20 @@ func ParseTableRule(conditions, effect string) ([]RuleCondition, RuleEffect, err
 	if err := json.Unmarshal([]byte(conditions), &when); err != nil {
 		return nil, RuleEffect{}, fmt.Errorf("as condições da regra estão ilegíveis: %w", err)
 	}
-	var then RuleEffect
-	if err := json.Unmarshal([]byte(effect), &then); err != nil {
-		return nil, RuleEffect{}, fmt.Errorf("o efeito da regra está ilegível: %w", err)
+	then, err := ParseRuleEffect(effect)
+	if err != nil {
+		return nil, RuleEffect{}, err
 	}
 	return when, then, nil
+}
+
+// ParseRuleEffect lê o efeito como a coluna o guarda: o da regra e o da melhoria têm a mesma forma.
+func ParseRuleEffect(effect string) (RuleEffect, error) {
+	var then RuleEffect
+	if err := json.Unmarshal([]byte(effect), &then); err != nil {
+		return RuleEffect{}, fmt.Errorf("o efeito está ilegível: %w", err)
+	}
+	return then, nil
 }
 
 // RuleReaches diz se a regra alcança esta ficha hoje: é a prévia do editor. A postura conta como

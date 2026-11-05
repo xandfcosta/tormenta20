@@ -108,8 +108,15 @@ templ improvementsDs(v View, s itemSheet) {
 			for _, c := range s.Improvements {
 				<div class="ds-row ds-pick-row">
 					<div class="min-w-0">
-						<div class="ds-row-title">{ c.Name }</div>
-						<div class="ds-row-meta">{ "T$ " + c.Price }</div>
+						<div class="ds-row-title">
+							{ c.Name }
+							if c.FromTable {
+								@ds.Badge("da mesa", true)
+							}
+						</div>
+						if !c.FromTable {
+							<div class="ds-row-meta">{ "T$ " + c.Price }</div>
+						}
 						<div class="ds-pick-detail">{ c.Effect }</div>
 					</div>
 					@ds.Switch("", c.Active, templ.Attributes{"aria-label": c.Name, "data-on:change": thatTogglesImprovementGesture(c), "data-effect": "el.checked = " + improvementSignal(c)})

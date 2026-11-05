@@ -2,7 +2,8 @@ package book
 
 import (
 	"fmt"
-	"strings"
+
+	"t20engine/domain/engine"
 )
 
 // O ENCANTO DO ITEM: quem cabe, quantos cabem, e o que exige o quê (p333-339).
@@ -31,17 +32,7 @@ var encantoDeItem = map[string]bool{"weapon-enchant": true, "armor-enchant": tru
 // que o diálogo de melhorias, e a resposta tem de ser uma só.
 //
 // @example book.ItemFamily(*book.ItemByID("espada-longa")) // "weapon"
-func ItemFamily(item Item) string {
-	switch {
-	case strings.HasPrefix(item.Category, "weapon-"):
-		return "weapon"
-	case strings.HasPrefix(item.Category, "armor-"):
-		return "armor"
-	case item.Category == "shield":
-		return "shield"
-	}
-	return "apparel"
-}
+func ItemFamily(item Item) string { return engine.ItemFamilyOf(item.Category) }
 
 // FitsOverlayFamily diz se a SOBREPOSIÇÃO serve à família do item.
 //

@@ -244,8 +244,9 @@ var conditionModifierTable = map[string][]Modifier{
 }
 
 // overlayModsFor é o que a sobreposição concede AO HOSPEDEIRO: a regra inteira
-// mora no `OverlayModifiers` (composition.go), e aqui ficam só os dois ponteiros
-// que podem ser nulos — item sem verbete e sobreposição com id torto.
+// mora no `OverlayModifiers` (composition.go), e aqui ficam os dois ponteiros
+// que podem ser nulos — item sem verbete e sobreposição com id torto — e o
+// `hostedHere`, que prende à arma o golpe da melhoria da mesa.
 func overlayModsFor(overlay *CatalogItem, host *CatalogItem) []Modifier {
 	if overlay == nil {
 		return []Modifier{}
@@ -254,7 +255,7 @@ func overlayModsFor(overlay *CatalogItem, host *CatalogItem) []Modifier {
 	if host != nil {
 		hostCategory = host.Category
 	}
-	return OverlayModifiers(hostCategory, overlay.Name, overlay.Modifiers)
+	return hostedHere(overlay, OverlayModifiers(hostCategory, overlay.Name, overlay.Modifiers), host)
 }
 
 // mirrorWeaponAttackMods leva o {attack,scope:this} da arma para o escopo dela, que

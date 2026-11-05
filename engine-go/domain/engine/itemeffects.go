@@ -649,6 +649,8 @@ func conditionMet(m Modifier, equipped *string) bool {
 		return isWielded(equipped)
 	case "vested":
 		return equipped != nil && *equipped == "vested"
+	case "inUse":
+		return equipped != nil
 	case "flagOff", "flagRequired":
 		// As duas já passaram pelo portão de flags no laço principal.
 		return true

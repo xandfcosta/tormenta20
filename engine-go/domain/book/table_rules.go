@@ -145,14 +145,8 @@ func TableRuleProblem(name string, when []engine.RuleCondition, effect engine.Ru
 	if stances > 1 {
 		return fmt.Errorf("a regra olha %d posturas, e cabe uma por regra", stances)
 	}
-	if effect.Kind != engine.RuleAdds {
-		return fmt.Errorf("o efeito %q não existe", effect.Kind)
-	}
-	if !slices.ContainsFunc(RuleTargets(), func(o RuleOption) bool { return o.ID == effect.Target.K }) {
-		return fmt.Errorf("a soma em %q não existe: escolha um alvo da lista", effect.Target.K)
-	}
-	if effect.Target.K == "expertise" && !slices.ContainsFunc(Expertises(), func(e Expertise) bool { return e.Name == effect.Target.Name }) {
-		return fmt.Errorf("%q não é perícia do livro", effect.Target.Name)
+	if err := effectTargetProblem(effect); err != nil {
+		return err
 	}
 	if stances > 0 && (effect.Target.K == "maxPv" || effect.Target.K == "maxPm") {
 		return fmt.Errorf("PV e PM máximos não dependem de postura: tire a condição de postura, ou mude o alvo")
@@ -162,6 +156,19 @@ func TableRuleProblem(name string, when []engine.RuleCondition, effect engine.Ru
 	}
 	if effect.Amount == 0 {
 		return fmt.Errorf("a soma é zero, e a regra não mudaria nada: escreva um número diferente de zero")
+	}
+	return nil
+}
+
+func effectTargetProblem(effect engine.RuleEffect) error {
+	if effect.Kind != engine.RuleAdds {
+		return fmt.Errorf("o efeito %q não existe", effect.Kind)
+	}
+	if !slices.ContainsFunc(RuleTargets(), func(o RuleOption) bool { return o.ID == effect.Target.K }) {
+		return fmt.Errorf("a soma em %q não existe: escolha um alvo da lista", effect.Target.K)
+	}
+	if effect.Target.K == "expertise" && !slices.ContainsFunc(Expertises(), func(e Expertise) bool { return e.Name == effect.Target.Name }) {
+		return fmt.Errorf("%q não é perícia do livro", effect.Target.Name)
 	}
 	return nil
 }
@@ -178,7 +185,7 @@ func ruleKindName(kind string) string {
 // RuleCountsPerItem diz se a regra soma uma vez por item, e é onde o limite tem o que limitar. O item
 // nomeado é um só, e o que é número de golpe é de cada arma.
 func RuleCountsPerItem(when []engine.RuleCondition, target string) bool {
-	if target == "attack" || target == "damage" || target == "critRange" {
+	if aimsTheStrike(target) {
 		return false
 	}
 	byKind := func(kinds ...string) bool {
@@ -216,15 +223,7 @@ func WrittenTableRule(when []engine.RuleCondition, effect engine.RuleEffect) str
 			parts = append(parts, "em "+name)
 		}
 	}
-	amount := strconv.Itoa(effect.Amount)
-	if effect.Amount > 0 {
-		amount = "+" + amount
-	}
-	phrase := ruleTargetPhrases[effect.Target.K]
-	if effect.Target.K == "expertise" {
-		phrase = "em " + effect.Target.Name
-	}
-	sum := amount + " " + phrase
+	sum := WrittenSum(effect)
 	if RuleCountsPerItem(when, effect.Target.K) && effect.Limit != 1 {
 		sum += " por item"
 		if effect.Limit > 1 {
@@ -235,6 +234,19 @@ func WrittenTableRule(when []engine.RuleCondition, effect engine.RuleEffect) str
 		return sum
 	}
 	return strings.Join(parts, " e ") + ": " + sum
+}
+
+// WrittenSum é a soma em português: "+1 em Luta".
+func WrittenSum(effect engine.RuleEffect) string {
+	amount := strconv.Itoa(effect.Amount)
+	if effect.Amount > 0 {
+		amount = "+" + amount
+	}
+	phrase := ruleTargetPhrases[effect.Target.K]
+	if effect.Target.K == "expertise" {
+		phrase = "em " + effect.Target.Name
+	}
+	return amount + " " + phrase
 }
 
 // RuleConditionsForReach troca a postura pelo poder que a dá, para a pergunta "quem esta regra

@@ -129,9 +129,11 @@ func Load(
 
 	// O MUNDO DA FICHA é resolvido aqui, uma vez, e viaja no agregado. Fora de
 	// campanha ele é o livro puro — que é o que o molde do elenco vê.
-	if dto.Ruleset, err = RulesetFor(ctx, q, cat, c.CampaignId); err != nil {
+	world, err := RulesetFor(ctx, q, cat, c.CampaignId)
+	if err != nil {
 		return dto, err
 	}
+	dto.Ruleset = world.HeldBy(c.ID)
 
 	// O estado de JOGO vem junto e nao por rota propria: separado, a ficha abriria
 	// com a Furia desligada e a ligaria um instante depois, piscando os numeros

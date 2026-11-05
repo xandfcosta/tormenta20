@@ -89,6 +89,8 @@ type overlayChoice struct {
 	Effect string
 	Price  string
 	Active bool
+	// FromTable é a melhoria que o mestre criou: ela não tem preço, e quem cobra, se cobrar, é ele.
+	FromTable bool
 }
 
 // catalogItemRow é uma linha do catálogo no diálogo de adicionar.
@@ -107,6 +109,7 @@ func itemSheetsOf(
 	sheets := make([]itemSheet, 0, len(dto.Items))
 	for _, item := range dto.Items {
 		entry := itemSheetOf(item, proficiencies)
+		offerTableImprovements(&entry, dto, item)
 		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
 		sheets = append(sheets, entry)
 	}

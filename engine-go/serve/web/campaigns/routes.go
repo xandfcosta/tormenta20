@@ -46,6 +46,10 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/campanhas/{id}/regras-da-mesa/gravar", s.handleTableRuleSave)
 	r.Post("/campanhas/{id}/regras-da-mesa/{regra}/ligar", s.handleTableRuleFlip)
 	r.Post("/campanhas/{id}/regras-da-mesa/{regra}/excluir", s.handleTableRuleRemove)
+	r.Post("/campanhas/{id}/melhorias-da-mesa/editor", s.handleTableImprovementEditor)
+	r.Post("/campanhas/{id}/melhorias-da-mesa/rascunho", s.handleTableImprovementDraft)
+	r.Post("/campanhas/{id}/melhorias-da-mesa/gravar", s.handleTableImprovementSave)
+	r.Post("/campanhas/{id}/melhorias-da-mesa/{melhoria}/excluir", s.handleTableImprovementRemove)
 	// O ACERVO DE LUGARES. A cena LISTA, CRIA e APAGA; quem MONTA a cena
 	// guardada é o tabuleiro, num endereço vizinho
 	// (`/campanhas/{id}/lugares/{placeId}`) servido pela cena da Mesa — é lá que

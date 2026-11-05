@@ -151,7 +151,7 @@ func oneRuleChanged(changed int64, err error, ruleID string) error {
 
 func (l Lifecycle) characterSitsAt(ctx context.Context, campaignID, characterID int64) error {
 	if characterID == 0 {
-		return TableRuleRefusal{Reason: "Escolha o personagem a quem a regra vale."}
+		return TableRuleRefusal{Reason: "Escolha o personagem a quem ela vale."}
 	}
 	members, err := l.queries.ListMembers(ctx, campaignID)
 	if err != nil {

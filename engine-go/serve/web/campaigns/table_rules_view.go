@@ -36,14 +36,9 @@ func (s Scene) tableRulesOf(ctx context.Context, campaignID int64, isGM bool, eu
 	if err != nil {
 		return nil, err
 	}
-	members, err := s.deps.Queries().ListMembers(ctx, campaignID)
+	names, mine, err := s.seatsOf(ctx, campaignID, euID)
 	if err != nil {
 		return nil, err
-	}
-	names, mine := map[int64]string{}, map[int64]bool{}
-	for _, member := range members {
-		names[member.Characterid] = memberName(member.Charname, member.Characterid)
-		mine[member.Characterid] = member.Charownerid == euID
 	}
 	out := []tableRuleRow{}
 	for _, rule := range rules {
@@ -61,6 +56,20 @@ func (s Scene) tableRulesOf(ctx context.Context, campaignID int64, isGM bool, eu
 		})
 	}
 	return out, nil
+}
+
+// seatsOf são os nomes da mesa, e quais personagens são de quem está olhando.
+func (s Scene) seatsOf(ctx context.Context, campaignID, euID int64) (names map[int64]string, mine map[int64]bool, err error) {
+	members, err := s.deps.Queries().ListMembers(ctx, campaignID)
+	if err != nil {
+		return nil, nil, err
+	}
+	names, mine = map[int64]string{}, map[int64]bool{}
+	for _, member := range members {
+		names[member.Characterid] = memberName(member.Charname, member.Characterid)
+		mine[member.Characterid] = member.Charownerid == euID
+	}
+	return names, mine, nil
 }
 
 // O RASCUNHO, como os sinais o guardam. As condições são sinais numerados, de 1 até a conta.
@@ -90,13 +99,7 @@ func readRuleDraft(r *http.Request) (ruleDraft, error) {
 	if err := datastar.ReadSignals(r, &signals); err != nil {
 		return ruleDraft{}, fmt.Errorf("não entendi o editor: %w", err)
 	}
-	text := func(key string) string {
-		var written string
-		if json.Unmarshal(signals[key], &written) == nil {
-			return written
-		}
-		return strings.TrimSpace(string(signals[key])) // é número, ou não veio
-	}
+	text := func(key string) string { return signalText(signals, key) }
 	draft := ruleDraft{
 		ID: text("table_rule_id"), Name: text("table_rule_name"), Scope: text("table_rule_scope"),
 		Character: text("table_rule_character"), Target: text("table_rule_target"),
@@ -107,6 +110,15 @@ func readRuleDraft(r *http.Request) (ruleDraft, error) {
 		draft.When = append(draft.When, engine.RuleCondition{Kind: text(ruleKindSignal(slot)), Value: text(ruleValueSignal(slot))})
 	}
 	return draft, nil
+}
+
+// signalText lê um sinal como texto: o sinal chega em JSON, e aspas e barras têm de voltar como foram escritas.
+func signalText(signals map[string]json.RawMessage, key string) string {
+	var written string
+	if json.Unmarshal(signals[key], &written) == nil {
+		return written
+	}
+	return strings.TrimSpace(string(signals[key])) // é número, ou não veio
 }
 
 // normalized acerta o que a troca deixou para trás: a espécie mudou e o valor era da outra.
@@ -138,13 +150,18 @@ func optionListed(options []book.RuleOption, id string) bool {
 	return false
 }
 
-func (d ruleDraft) effect() engine.RuleEffect {
-	amount, _ := strconv.Atoi(strings.TrimPrefix(d.Amount, "+"))
-	target := engine.ModifierTarget{K: d.Target}
-	if d.Target == "expertise" {
-		target.Name = d.Skill
+// addsEffect é o "soma em" que o editor de regra e o de melhoria escrevem igual.
+func addsEffect(targetID, skill, written string) engine.RuleEffect {
+	amount, _ := strconv.Atoi(strings.TrimPrefix(written, "+"))
+	target := engine.ModifierTarget{K: targetID}
+	if targetID == "expertise" {
+		target.Name = skill
 	}
-	effect := engine.RuleEffect{Kind: engine.RuleAdds, Target: target, Amount: amount}
+	return engine.RuleEffect{Kind: engine.RuleAdds, Target: target, Amount: amount}
+}
+
+func (d ruleDraft) effect() engine.RuleEffect {
+	effect := addsEffect(d.Target, d.Skill, d.Amount)
 	// Campo escondido não vale: o sinal fica com o que se digitou antes de a regra deixar de somar por item.
 	if book.RuleCountsPerItem(d.When, d.Target) {
 		effect.Limit, _ = strconv.Atoi(d.Limit)
@@ -152,11 +169,15 @@ func (d ruleDraft) effect() engine.RuleEffect {
 	return effect
 }
 
-func (d ruleDraft) applies() (engine.Selector, *int64) {
-	if d.Scope != "um" {
+func (d ruleDraft) applies() (engine.Selector, *int64) { return seatApplies(d.Scope, d.Character) }
+
+// seatApplies traduz "Toda a mesa" e "Um personagem". O id zero é o que a escolha que faltou vira:
+// o seletor não o casa, e quem grava pede a escolha.
+func seatApplies(scope, character string) (engine.Selector, *int64) {
+	if scope != "um" {
 		return engine.EveryoneIn(), nil
 	}
-	id, err := strconv.ParseInt(d.Character, 10, 64)
+	id, err := strconv.ParseInt(character, 10, 64)
 	if err != nil {
 		id = 0
 	}

@@ -16,6 +16,7 @@ templ tableRulesTab(v oneView) {
 	<div class="ds-camp-form">
 		if v.IsGM {
 			<div hidden data-signals={ tableRulesSignals() }></div>
+			<div hidden data-signals={ tableImprovementsSignals() }></div>
 			<p class="ds-help">O que esta mesa muda no livro. Nenhuma regra vem ligada, e os jogadores leem as que estão ligadas.</p>
 			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": openRuleEditor(v.ID, "")}) {
 				@ui.Icon("Plus", "ds-icon")
@@ -30,6 +31,7 @@ templ tableRulesTab(v oneView) {
 				<div id="table-rule-form"></div>
 			}
 		}
+		@tableImprovementsSection(v)
 	</div>
 }
 
@@ -47,7 +49,7 @@ templ tableRulesList(v oneView) {
 		if len(v.TableRules) == 0 {
 			@ds.Empty("Nenhuma regra", tableRulesEmptyText(v.IsGM))
 		} else {
-			@ds.List("", countOf(int64(len(v.TableRules)), "regra", "regras")) {
+			@ds.List("Regras", countOf(int64(len(v.TableRules)), "regra", "regras")) {
 				for _, rule := range v.TableRules {
 					<div class="ds-row ds-table-rule">
 						<div class="min-w-0">
@@ -81,11 +83,11 @@ func draftPost(v ruleEditorView, query string) string {
 	return fmt.Sprintf("@post('%s')", ruleURL(v.CampaignID, "/rascunho"+query))
 }
 
-templ ruleSelect(v ruleEditorView, label, signal, current string, options []book.RuleOption) {
+templ ruleSelect(onChange, label, signal, current string, options []book.RuleOption) {
 	<select
 		class="ds-input ds-select"
 		aria-label={ label }
-		{ templ.Attributes{"data-bind:" + signal: true, "data-on:change": draftPost(v, "")}... }
+		{ templ.Attributes{"data-bind:" + signal: true, "data-on:change": onChange}... }
 	>
 		for _, option := range options {
 			<option value={ option.ID } selected?={ option.ID == current }>{ option.Name }</option>
@@ -117,16 +119,16 @@ templ ruleEditorForm(v ruleEditorView) {
 				}
 			</div>
 			if v.Draft.Scope == "um" {
-				@ruleSelect(v, "Personagem", "table_rule_character", v.Draft.Character, v.Characters)
+				@ruleSelect(draftPost(v, ""), "Personagem", "table_rule_character", v.Draft.Character, v.Characters)
 			}
 		</div>
 		<div class="ds-field">
 			<span class="ds-field-label">Quando</span>
 			for _, line := range v.Lines {
 				<div class="ds-rule-line">
-					@ruleSelect(v, "Tipo da condição "+strconv.Itoa(line.Slot), ruleKindSignal(line.Slot), line.Kind, v.Kinds)
+					@ruleSelect(draftPost(v, ""), "Tipo da condição "+strconv.Itoa(line.Slot), ruleKindSignal(line.Slot), line.Kind, v.Kinds)
 					if line.Kind != engine.RuleOnVested {
-						@ruleSelect(v, "Qual, na condição "+strconv.Itoa(line.Slot), ruleValueSignal(line.Slot), line.Value, line.Options)
+						@ruleSelect(draftPost(v, ""), "Qual, na condição "+strconv.Itoa(line.Slot), ruleValueSignal(line.Slot), line.Value, line.Options)
 					}
 					@ds.IconButton(ds.ButtonGhost, "X", "Tirar a condição "+strconv.Itoa(line.Slot), templ.Attributes{"type": "button", "data-on:click": draftPost(v, "?tira="+strconv.Itoa(line.Slot))})
 				</div>
@@ -146,9 +148,9 @@ templ ruleEditorForm(v ruleEditorView) {
 		<div class="ds-field">
 			<span class="ds-field-label">Efeito: soma em</span>
 			<div class="ds-rule-line">
-				@ruleSelect(v, "Em quê", "table_rule_target", v.Draft.Target, v.Targets)
+				@ruleSelect(draftPost(v, ""), "Em quê", "table_rule_target", v.Draft.Target, v.Targets)
 				if v.Draft.Target == "expertise" {
-					@ruleSelect(v, "Qual perícia", "table_rule_skill", v.Draft.Skill, v.Skills)
+					@ruleSelect(draftPost(v, ""), "Qual perícia", "table_rule_skill", v.Draft.Skill, v.Skills)
 				}
 				<input class="ds-input ds-rule-amount" aria-label="Quanto" type="number" data-bind:table_rule_amount data-on:change={ draftPost(v, "") }/>
 				if book.RuleCountsPerItem(v.Draft.When, v.Draft.Target) {
