@@ -77,6 +77,7 @@ func (r *Ruleset) collectionSystems(ch Character) []ecs.System {
 		spawnOne(func() *ActiveItem { return r.tormentaCarismaItem(ch) }),
 		spawnOne(func() *ActiveItem { return conditionActiveItem(ch) }),
 		spawnAll(func() []ActiveItem { return r.campaignGrants(ch) }),
+		spawnAll(func() []ActiveItem { return r.tableRuleItems(ch) }),
 		// O SILÊNCIO é o último sistema, e tem de ser: ele age sobre o que os
 		// anteriores penduraram, inclusive sobre uma concessão da própria mesa.
 		r.silenceSystem(ch),
