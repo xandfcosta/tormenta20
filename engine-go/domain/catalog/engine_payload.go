@@ -78,5 +78,23 @@ func assembleEnginePayload() ([]byte, error) {
 		return nil, err
 	}
 	out["tormentaPowerIds"] = idsJSON
+	// E a arma natural que alguns dão (p137), porque é carta de ataque.
+	natural := map[string]json.RawMessage{}
+	for id, entry := range byID {
+		var power struct {
+			NaturalWeapon json.RawMessage `json:"naturalWeapon"`
+		}
+		if err := json.Unmarshal(entry, &power); err != nil {
+			return nil, fmt.Errorf("catalog.EnginePayload: o poder da Tormenta %q está ilegível: %w", id, err)
+		}
+		if power.NaturalWeapon != nil {
+			natural[id] = power.NaturalWeapon
+		}
+	}
+	naturalJSON, err := json.Marshal(natural)
+	if err != nil {
+		return nil, err
+	}
+	out["tormentaNaturalWeapons"] = naturalJSON
 	return json.Marshal(out)
 }

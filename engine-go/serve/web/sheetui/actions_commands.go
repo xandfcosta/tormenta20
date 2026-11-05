@@ -50,6 +50,15 @@ func chargesTheTarget(charge string) func(Scene, *http.Request, sqlcgen.Characte
 	}
 }
 
+// rollsExtraStrikeOnTheTarget rola o ataque extra da arma natural (p25) contra o alvo escolhido.
+func rollsExtraStrikeOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+	weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
+	if err != nil {
+		return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
+	}
+	return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, ExtraStrike: true}, sig)
+}
+
 // rollsManeuverOnTheTarget rola a manobra da vez contra o alvo escolhido
 // (p234).
 //

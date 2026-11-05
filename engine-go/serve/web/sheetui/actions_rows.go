@@ -16,6 +16,35 @@ import (
 // como a superfície se MONTA; aqui, o que o livro dá para fazer na vez (p233-235),
 // que muda quando uma ação nova do livro entra.
 
+// extraStrikeRows é o ataque extra de cada arma natural (p25): não gasta a vez, e espera a
+// resposta do mestre ao golpe com outra arma. A mesa escreve os dois sinais.
+func extraStrikeRows(combat panelCombat) []actionRow {
+	rows := []actionRow{}
+	for i, weapon := range combat.Weapons {
+		natural := weapon.Natural
+		if natural == nil {
+			continue
+		}
+		rows = append(rows, actionRow{
+			Name:   "Ataque extra · " + weapon.Name,
+			Detail: weapon.Damage + " · depois de agredir com outra arma",
+			Value:  weapon.Attack,
+			Cost:   strconv.Itoa(natural.ExtraPM) + " PM",
+			Can:    true,
+			Rolls: []actionRoll{{
+				Label: "Rolar", Path: fmt.Sprintf("/acoes/ataque-extra/%d", i), NeedsTarget: true, Primary: true,
+				AlsoWaits: extraStrikeWaits(*natural),
+			}},
+		})
+	}
+	return rows
+}
+
+func extraStrikeWaits(natural engine.NaturalStrike) string {
+	return fmt.Sprintf("!$my_turn || !$extra_open || $extra_barred === '%[1]s' || $extra_used.filter(source => source === '%[1]s').length >= %[2]d",
+		natural.SourceID, natural.ExtraAttacks)
+}
+
 // standardRows são as ações padrão que toda ficha de combate tem.
 //
 // O ATAQUE VEM PRIMEIRO, e o livro diz por quê: *"fazer um ataque ou lançar uma

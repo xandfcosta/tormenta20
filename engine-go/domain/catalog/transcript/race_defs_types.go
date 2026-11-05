@@ -24,7 +24,8 @@ type RaceAbility struct {
 	Choice      *PowerChoice         `json:"choice,omitempty"`
 	// Ancestry diz que a habilidade é de UMA ascendência — a Luz Sagrada do
 	// aggelus, as Sombras Profanas do sulfure (p31, ALE-505).
-	Ancestry string `json:"ancestry,omitempty"`
+	Ancestry      string         `json:"ancestry,omitempty"`
+	NaturalWeapon *NaturalWeapon `json:"naturalWeapon,omitempty"`
 	// GrantsProficiency são as proficiências que a habilidade dá (o
 	// Vanguardista, armas de fogo).
 	GrantsProficiency []string `json:"grantsProficiency,omitempty"`

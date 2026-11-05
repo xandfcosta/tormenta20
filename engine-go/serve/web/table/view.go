@@ -40,6 +40,11 @@ type View struct {
 	Scene *sceneView
 	Round int
 	Turn  tableTurn
+	// ExtraStrikeOpen, ExtraStrikeBarred e ExtraStrikesUsed são o ataque extra das armas
+	// naturais nesta vez, que as Ações leem nos sinais (p25). O último já vem como lista JSON.
+	ExtraStrikeOpen   bool
+	ExtraStrikeBarred string
+	ExtraStrikesUsed  string
 	// Upcoming é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
 	Upcoming []turnAhead
@@ -376,13 +381,16 @@ func tableViewOf(
 		SessionID:   sessionID,
 		SessionNum:  sessionNum,
 		SceneActive: st.InScene(), Scene: sceneOf(st),
-		Round:    st.Round,
-		Turn:     tableTurnOf(st, mine),
-		Upcoming: turnStripOf(st, mine),
-		Endless:  endlessStripOf(st, mine),
-		Group:    group,
-		Queue:    tableTrackerOf(st, mine, pools),
-		Eu:       eu,
+		Round:             st.Round,
+		Turn:              tableTurnOf(st, mine),
+		ExtraStrikesUsed:  writtenExtraStrikes(st),
+		ExtraStrikeOpen:   extraStrikeIsOpen(st),
+		ExtraStrikeBarred: extraStrikeBarred(st),
+		Upcoming:          turnStripOf(st, mine),
+		Endless:           endlessStripOf(st, mine),
+		Group:             group,
+		Queue:             tableTrackerOf(st, mine, pools),
+		Eu:                eu,
 	}
 }
 

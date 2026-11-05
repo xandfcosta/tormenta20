@@ -320,12 +320,13 @@ var raceDefinitionsPart01 = []RaceDefinition{
 		AttributeBonuses: OrderedMap[int]{{"strength", 2}, {"constitution", 1}, {"wisdom", -1}},
 		Abilities: []RaceAbility{
 			{
-				ID:          "minotauro-chifres",
-				RaceID:      "minotauro",
-				Name:        "Chifres",
-				Description: "Arma natural de chifres (dano 1d6, crítico x2, perfuração). Uma vez por rodada, ao usar agredir com outra arma, pode gastar 1 PM para fazer um ataque corpo a corpo extra com os chifres.",
-				UID:         "rac_ufu4k272et",
-				Unmodeled:   "a arma natural e o ataque extra por 1 PM: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				ID:            "minotauro-chifres",
+				Modeled:       []string{"a linha de ataque dos chifres e o ataque extra por 1 PM"},
+				RaceID:        "minotauro",
+				Name:          "Chifres",
+				Description:   "Arma natural de chifres (dano 1d6, crítico x2, perfuração). Uma vez por rodada, ao usar agredir com outra arma, pode gastar 1 PM para fazer um ataque corpo a corpo extra com os chifres.",
+				UID:           "rac_ufu4k272et",
+				NaturalWeapon: &NaturalWeapon{Name: "Chifres", Damage: "1d6", CritMult: 2, DamageType: "perfuracao", ExtraPM: 1},
 			},
 			{
 				ID:          "minotauro-couro-rigido",

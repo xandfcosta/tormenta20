@@ -109,6 +109,8 @@ func New(d Deps, gestures character.Plays) Scene { return Scene{deps: d, plays: 
 // hospedeiro, contra o banco (p231). Um campo de atacante nesta estrutura seria
 // o cliente escolhendo de quem é o turno.
 type ActionStrike struct {
+	// ExtraStrike é o ataque extra da arma natural `Weapon` (p25).
+	ExtraStrike bool
 	// TargetEntryID é a linha da FILA mirada, e ela vem do sinal que a barra da
 	// Mesa escreve.
 	TargetEntryID string

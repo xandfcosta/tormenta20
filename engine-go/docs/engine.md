@@ -97,6 +97,12 @@ dos dois lados, porque ela é um retrato do personagem: ligar a Fúria depois do
 o bônus, e encerrá-la antes do ✓ não tira (`cumulativesInTheAir`). Gravado com a postura já
 encerrada, o bônus fica até a cena acabar, ou até a próxima fúria acabar.
 
+**As armas naturais têm carta própria**, depois do desarmado (`naturalCards`), e o catálogo as
+declara em `NaturalWeapon`. O ataque extra delas (p25) abre com a resposta do mestre ao golpe da
+ação agredir, a manobra inclusive: a investida não é agredir, e a arma natural do golpe não é
+"outra arma" para ela mesma, mas abre as outras. Ele é outra proposta, que não gasta ação e paga o
+PM da fonte uma vez por vez (`opensTheExtraStrike`, `takesTheExtraStrike`).
+
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
 decisão, no `attack_ruling_rules_test.go`. Os casos de regra do livro decidem

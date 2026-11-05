@@ -77,7 +77,8 @@ type RaceAbility struct {
 	// escolha é a TROCA por poder da Tormenta, que não custa Carisma (p24).
 	Choice *RaceAbilityChoice `json:"choice"`
 	// Ancestry: a habilidade só vale na ascendência escolhida (p31, ALE-505).
-	Ancestry string `json:"ancestry"`
+	Ancestry      string         `json:"ancestry"`
+	NaturalWeapon *NaturalWeapon `json:"naturalWeapon"`
 }
 
 // RaceAbilityChoice é o que o motor lê da escolha de uma habilidade de raça.
@@ -220,9 +221,10 @@ type GrantedPower struct {
 	// ID já existia no catálogo e ninguém o lia. Ele entrou quando a devoção
 	// virou fonte do coletor (ALE-397): toda fonte precisa de um `SourceID`
 	// estável, e derivá-lo do nome criaria uma segunda grafia do mesmo id.
-	ID        string     `json:"id"`
-	Name      string     `json:"name"`
-	Modifiers []Modifier `json:"modifiers"`
+	ID            string         `json:"id"`
+	Name          string         `json:"name"`
+	Modifiers     []Modifier     `json:"modifiers"`
+	NaturalWeapon *NaturalWeapon `json:"naturalWeapon"`
 }
 
 // RaceAttributeEntry é a entrada de raça do `races.json` — o MESMO arquivo que o
@@ -310,6 +312,8 @@ type Catalogs struct {
 	grantedByName map[string]*GrantedPower
 	raceAttrsByID map[string]*RaceAttributeEntry
 	tormentaIDs   map[string]bool
+	// tormentaNaturalWeapons são as armas naturais dos poderes da Tormenta, por id.
+	tormentaNaturalWeapons map[string]NaturalWeapon
 }
 
 // enginePayload é a forma JSON que o `catalog.EnginePayload` monta a partir dos
@@ -321,6 +325,9 @@ type enginePayload struct {
 	ClassPowers   []ClassPower       `json:"classPowers"`
 	GeneralPowers []GeneralPower     `json:"generalPowers"`
 	GrantedPowers []GrantedPower     `json:"grantedPowers"`
+	// TormentaNaturalWeapons são as armas naturais dos poderes da Tormenta, por id: dos
+	// outros campos deles o motor só lê o id (p137).
+	TormentaNaturalWeapons map[string]NaturalWeapon `json:"tormentaNaturalWeapons"`
 	// NÃO se chama `Ancestries`: ascendência neste motor é a metade que o
 	// suraggel escolhe (`choice.ancestry`), e uma palavra por conceito. Isto é
 	// a tabela de atributo POR RAÇA, que o dump guarda sob `racas`.
@@ -344,6 +351,8 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		grantedByName: make(map[string]*GrantedPower, len(p.GrantedPowers)),
 		raceAttrsByID: make(map[string]*RaceAttributeEntry, len(p.RaceAttributes)),
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
+
+		tormentaNaturalWeapons: p.TormentaNaturalWeapons,
 	}
 	for i := range p.Items {
 		c.itemsByID[p.Items[i].ID] = &p.Items[i]

@@ -285,6 +285,15 @@ var grantedPowersPart01 = []GrantedPower{
 		Kind:     "ataque",
 		BookPage: 135,
 		UID:      "pwr_4knnnkfx64",
+		NaturalWeapon: &NaturalWeapon{
+			Name:              "Mordida",
+			Damage:            "1d6",
+			CritMult:          2,
+			DamageType:        "perfuracao",
+			ExtraPM:           1,
+			AwakenedByUse:     true,
+			StepsOnSameWeapon: 2,
+		},
 	},
 	{
 		ID:       "servos-do-dragao",

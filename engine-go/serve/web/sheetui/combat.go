@@ -107,6 +107,8 @@ type weaponTile struct {
 	Name string
 	// Other é o outro jeito de usar esta arma, nulo se ela só tem um.
 	Other *weaponOtherUseTile
+	// Natural diz que esta é uma arma natural, e o que ela dá no ataque extra (p25).
+	Natural *engine.NaturalStrike
 	// Doses são as da Injeção alquímica, da mais antiga à mais nova.
 	Doses  []doseChoice
 	Skill  string
@@ -424,6 +426,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Key:         "weapon-" + strconv.Itoa(i),
 			Name:        card.Name,
 			Other:       other,
+			Natural:     card.Natural,
 			Doses:       doseChoicesOf(card.Doses),
 			Skill:       card.Skill,
 			Attack:      book.WithSign(card.Attack),

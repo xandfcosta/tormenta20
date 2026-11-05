@@ -1,6 +1,7 @@
 package table
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -270,8 +271,42 @@ func entryLabel(st *live.SessionRuntimeState, entryID string) string {
 	return "quem saiu da fila"
 }
 
+// writtenExtraStrikes é a lista dos ataques extra da vez, escrita para o sinal.
+func writtenExtraStrikes(st *live.SessionRuntimeState) string {
+	used := []string{}
+	if st != nil && st.Scene != nil && st.Scene.ExtraStrikesUsed != nil {
+		used = st.Scene.ExtraStrikesUsed
+	}
+	written, err := json.Marshal(used)
+	if err != nil {
+		return "[]"
+	}
+	return string(written)
+}
+
+// extraStrikeIsOpen diz se quem está na vez é quem agrediu e já teve a resposta do mestre.
+func extraStrikeIsOpen(st *live.SessionRuntimeState) bool {
+	if st == nil || st.Scene == nil || st.Scene.ExtraStrikeEntry == "" || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
+		return false
+	}
+	return st.Initiative[st.TurnIndex].ID == st.Scene.ExtraStrikeEntry
+}
+
+func extraStrikeBarred(st *live.SessionRuntimeState) string {
+	if st == nil || st.Scene == nil {
+		return ""
+	}
+	return st.Scene.ExtraStrikeBarred
+}
+
 // writtenBoost é o impulso do golpe com o PM que a proposta pagou, ou "".
 func writtenBoost(pa live.PendingAttack) string {
+	if pa.ExtraOf != "" {
+		if pa.BoostPM > 0 {
+			return fmt.Sprintf("Ataque extra · %d PM", pa.BoostPM)
+		}
+		return "Ataque extra"
+	}
 	if pa.BoostPowerID == "" {
 		return ""
 	}

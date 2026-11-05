@@ -27,6 +27,9 @@ type WeaponCard struct {
 	// quem o lê é o rolar de novo do Mestre em Arma, que escolhe uma arma do
 	// catálogo (p66, ALE-508).
 	CatalogID string `json:"-"`
+	// Natural diz que esta é uma arma natural, e o que ela dá no ataque extra. Fora do fio:
+	// só o gesto de atacar e as Ações a leem.
+	Natural *NaturalStrike `json:"-"`
 	// ItemID e Doses são a linha da mochila e o que a Injeção alquímica guarda (p165).
 	// Não vão para o fio, porque só o gesto de atacar e a tela os leem.
 	ItemID int64    `json:"-"`
@@ -162,7 +165,10 @@ func ownContribsOf(parts ...TotalContribs) TotalContribs {
 	return out
 }
 
-// ComputeWeaponCards resolves the wielded-weapon cards for a raw Character under
+// ComputeWeaponCards são as cartas de ataque de um personagem: as armas empunhadas, o desarmado
+// e as armas naturais (`naturalCards`), nessa ordem.
+//
+// It resolves the wielded-weapon cards for a raw Character under
 // the given active conditionals (Fúria's global attack/damage mods land in
 // attackAll/damageAll). Only catalog weapons in a hand slot, capped at two, so the
 // index of a card is the index of the weapon; the other use rides inside the card.
@@ -229,7 +235,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			break
 		}
 	}
-	return append(cards, r.unarmedCard(ch, shared))
+	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared)...)
 }
 
 // cardBasis é o que toda carta da ficha divide: os bônus globais e os atributos

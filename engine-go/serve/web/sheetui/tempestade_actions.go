@@ -12,12 +12,15 @@ import (
 // falta, e a vez que não é do jogador quando o grupo gasta a vez. Vazia quando
 // nada espera.
 //
-//	actionWaits(group, roll) // "$turn_target === '' || $attack_open || !$my_turn"
-func actionWaits(group actionGroup, needsTarget bool) string {
+//	actionWaits(group, true, "") // "$turn_target === '' || $attack_open || !$my_turn"
+func actionWaits(group actionGroup, needsTarget bool, also string) string {
 	var waits []string
 	if needsTarget {
 		// O que pede alvo é golpe, e o próximo só abre depois da resposta do mestre.
 		waits = append(waits, "$turn_target === ''", "$attack_open")
+	}
+	if also != "" {
+		waits = append(waits, also)
 	}
 	if group.OnTurn {
 		waits = append(waits, "!$my_turn")
@@ -31,7 +34,7 @@ func rollAttrs(v View, group actionGroup, roll actionRoll, gesture templ.Attribu
 	for key, value := range gesture {
 		attrs[key] = value
 	}
-	if waits := actionWaits(group, roll.NeedsTarget); waits != "" {
+	if waits := actionWaits(group, roll.NeedsTarget, roll.AlsoWaits); waits != "" {
 		attrs["data-attr:disabled"] = waits
 	}
 	if title := rollTitle(roll); title != "" {
@@ -74,7 +77,7 @@ func chipAttrs(group actionGroup, chip actionChip, gesture templ.Attributes) tem
 	if !chip.Can {
 		attrs["disabled"] = true
 		attrs["title"] = chip.Why
-	} else if waits := actionWaits(group, false); waits != "" {
+	} else if waits := actionWaits(group, false, ""); waits != "" {
 		attrs["data-attr:disabled"] = waits
 	}
 	return attrs

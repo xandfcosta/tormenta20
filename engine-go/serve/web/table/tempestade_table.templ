@@ -148,7 +148,7 @@ templ endlessStrip(v View) {
 // também ESCREVE DE QUEM É A VEZ (`my_turn`) a cada tique, e diz por que as
 // ações apagaram. Fora de combate a vez é de todos — conjurar não espera fila.
 templ tempestadeTargetBar(v View) {
-	<div id="table-turn-target" class="ds-target" data-signals={ fmt.Sprintf("{my_turn: %t, attack_open: %t}", v.Turn.Kind != "other", attackIsOpen(v.Attack)) }>
+	<div id="table-turn-target" class="ds-target" data-signals={ fmt.Sprintf("{my_turn: %t, attack_open: %t, extra_open: %t, extra_barred: %q, extra_used: %s}", v.Turn.Kind != "other", attackIsOpen(v.Attack), v.ExtraStrikeOpen, v.ExtraStrikeBarred, v.ExtraStrikesUsed) }>
 		if v.Turn.Kind == "other" {
 			<p class="ds-off-turn">É a vez de <b>{ v.Turn.Label }</b>. As ações abrem na sua vez.</p>
 		} else if attackIsOpen(v.Attack) {

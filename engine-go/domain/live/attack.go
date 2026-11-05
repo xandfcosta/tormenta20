@@ -69,6 +69,14 @@ type PendingAttack struct {
 	// Charge é a investida que levou ao golpe (p235, p42): a proposta paga a ação
 	// COMPLETA dela, e o encerramento abre a guarda de quem investiu (ALE-499).
 	Charge string `json:"charge,omitempty"`
+	// OpensExtra diz que este golpe é a ação agredir: a resposta do mestre abre o ataque extra
+	// das armas naturais (p25). NaturalSource é a fonte da arma, quando ela é natural. ExtraOf é
+	// a fonte quando este golpe É o ataque extra, e ExtraLimit, quantos ela dá na vez. O PM dele
+	// vai no `BoostPM`.
+	OpensExtra    bool   `json:"opensExtra,omitempty"`
+	NaturalSource string `json:"naturalSource,omitempty"`
+	ExtraOf       string `json:"extraOf,omitempty"`
+	ExtraLimit    int    `json:"extraLimit,omitempty"`
 	// Paid é o que a proposta pagou ao nascer, e é o que o cancelamento do mestre
 	// devolve. Nulo na proposta de antes desta regra, que não pagou nada.
 	Paid *AttackPaid `json:"paid,omitempty"`

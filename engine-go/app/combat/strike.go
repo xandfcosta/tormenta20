@@ -26,7 +26,7 @@ import (
 type Combatant struct {
 	EntryID string
 	Label   string
-	// Weapons são as armas empunhadas e o desarmado, pelo motor. VAZIO para quem não tem
+	// Weapons são as armas empunhadas, o desarmado e as armas naturais, pelo motor. VAZIO para quem não tem
 	// ficha — e é por isso que esta fatia só deixa PERSONAGEM atacar: o verbete
 	// do bestiário traz o ataque como texto ("crítico 19"), e texto não resolve.
 	Weapons         []engine.WeaponCard
@@ -192,6 +192,9 @@ type Request struct {
 	// Dose é o id da dose que quem ataca escolheu, entre as da arma. Vazio é a mais
 	// antiga, que é a única pergunta possível quando as duas são iguais.
 	Dose string
+	// ExtraStrike pede o ataque extra da arma natural `Weapon`: sem gastar ação, pelo PM dela
+	// (p25). Só existe depois de agredir com outra arma, e quem confere é o `ProposeAttack`.
+	ExtraStrike bool
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -245,7 +248,11 @@ func (s Strike) strikerFor(
 	// rolado por quem está atordoado, ou já gastou a padrão, é um provisório que
 	// a mesa vê e que nunca poderia ter acontecido.
 	if attackerEntry.CharacterID != nil {
-		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, engine.StrikeAction(req.Charge)); err != nil {
+		cost := engine.StrikeAction(req.Charge)
+		if req.ExtraStrike {
+			cost = engine.ActionFree
+		}
+		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, cost); err != nil {
 			return live.InitiativeEntry{}, Combatant{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 		}
 	}
@@ -320,6 +327,15 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		return strikeSetup{}, err
 	}
 	setup := strikeSetup{attacker: attackerEntry, striker: striker, weapon: weapon, boost: boost}
+	if req.ExtraStrike {
+		state, err := s.tables.State(ctx, req.SessionID)
+		if err != nil {
+			return strikeSetup{}, err
+		}
+		if setup.boost, err = extraStrikeOf(state, weapon); err != nil {
+			return strikeSetup{}, err
+		}
+	}
 	if req.TargetObject != nil {
 		if setup.target, err = engine.ObjectTarget(req.TargetObject.Size, req.TargetObject.Material); err != nil {
 			return strikeSetup{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
@@ -422,7 +438,7 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 	pending := live.PendingAttack{
 		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: weapon.Name,
 		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, WeaponID: weapon.CatalogID,
-		AttackerStances: striker.Stances, TargetStances: victim.Stances,
+		AttackerStances: striker.Stances, TargetStances: victim.Stances, OpensExtra: true,
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,

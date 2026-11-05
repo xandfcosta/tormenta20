@@ -457,12 +457,4 @@ var activationsPart10 = []Activation{
 			},
 		},
 	},
-	{
-		ID:     "item.encanto-gelido",
-		Name:   "Gélido",
-		Kind:   "instant",
-		Action: "movimento",
-		PMCost: PMCost{Fixed: 2},
-		Uses:   nil,
-	},
 }

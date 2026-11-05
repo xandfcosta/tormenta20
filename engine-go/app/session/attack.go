@@ -99,9 +99,11 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 		func(s *live.SessionRuntimeState) error {
 			// Conferido DE NOVO sob a trava: entre a leitura lá em cima e esta
 			// linha, outro pedido pode ter cancelado o mesmo provisório.
-			if _, err := live.AttackToCommit(s, who); err != nil {
+			settled, err := live.AttackToCommit(s, who)
+			if err != nil {
 				return err
 			}
+			opensTheExtraStrike(s, settled)
 			live.ClearPendingAttack(s)
 			return nil
 		})
@@ -122,7 +124,13 @@ func (st *Store) RuleAttack(
 			func(s *live.SessionRuntimeState) error { return live.RuleAttack(s, who, ruling, toRoll) })
 	}
 	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { return live.RuleAttack(s, who, ruling, nil) })
+		func(s *live.SessionRuntimeState) error {
+			if err := live.RuleAttack(s, who, ruling, nil); err != nil {
+				return err
+			}
+			opensTheExtraStrike(s, *s.PendingAttack)
+			return nil
+		})
 }
 
 // RecordAttackDamage guarda o dano rolado depois da decisão. Ninguém perde PV

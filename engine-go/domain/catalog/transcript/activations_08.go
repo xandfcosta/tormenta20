@@ -111,15 +111,6 @@ var activationsPart08 = []Activation{
 		},
 	},
 	{
-		ID:       "race.minotauro.chifres",
-		Name:     "Chifres",
-		Kind:     "instant",
-		Action:   "livre",
-		PMCost:   PMCost{Fixed: 1},
-		Uses:     ptr("rodada"),
-		BookPage: 25,
-	},
-	{
 		ID:       "race.qareen.tatuagem-mistica",
 		Name:     "Tatuagem Mística",
 		Kind:     "instant",
@@ -217,15 +208,6 @@ var activationsPart08 = []Activation{
 		Action:   "padrao",
 		PMCost:   PMCost{Fixed: 2},
 		Uses:     nil,
-		BookPage: 31,
-	},
-	{
-		ID:       "race.trog.mordida",
-		Name:     "Mordida",
-		Kind:     "instant",
-		Action:   "livre",
-		PMCost:   PMCost{Fixed: 1},
-		Uses:     ptr("rodada"),
 		BookPage: 31,
 	},
 	{

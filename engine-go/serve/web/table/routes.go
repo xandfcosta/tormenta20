@@ -180,6 +180,9 @@ func tableSignalsExpr(revision string) string {
 		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: '', dose_weapon: -1, dose_choice: ''",
 		// O ATAQUE EM ABERTO, que a barra de alvo escreve como escreve a vez.
 		"attack_open: false",
+		"extra_open: false",
+		"extra_barred: ''",
+		"extra_used: []",
 		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
 		// diálogo da perícia também é desenhado dentro da Mesa.
 		sheetui.ExpertiseSpendsDeclaration(),

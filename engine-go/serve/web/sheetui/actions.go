@@ -120,6 +120,9 @@ type actionRoll struct {
 	// nasce desabilitado até haver um. O servidor recusa de todo jeito; isto é
 	// para o botão não existir só para levar recusa.
 	NeedsTarget bool
+	// AlsoWaits é o que mais apaga o gesto, além do alvo: o ataque extra espera o golpe
+	// principal.
+	AlsoWaits string
 	// Command, quando escrito, substitui o `@post` do `Path`: é o toque que
 	// ABRE o contador de degraus do poder. Before vem antes do `@post` — o
 	// poder que vende degrau zera o contador antes de usar.
@@ -155,6 +158,7 @@ func actionsPanelFrom(
 		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
 		engine.ActionMovement: {movementRow(computed)},
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID)),
+		engine.ActionFree:     extraStrikeRows(combat),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {
