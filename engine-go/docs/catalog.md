@@ -45,7 +45,7 @@ lote da mesa (`sheet.RulesetsFor`) consulta uma vez por campanha DISTINTA.
 | **verbete** | `campaign_items` | o que uma COISA é | a campanha inteira |
 | **concessão** | `campaign_grants` | quem TEM as coisas | seletor |
 | **silêncio** | `campaign_silences` | o que esta mesa NÃO aplica | seletor |
-| **regra da mesa** | `campaign_rules` | o que soma quando as condições valem | seletor |
+| **regra da mesa** | `campaign_rules` | o que soma, o que vale como empunhado e de que deus se escolhem poderes, quando as condições valem | seletor |
 | **melhoria da mesa** | `campaign_improvements` | o que se coloca num item | seletor |
 
 Respondem a perguntas diferentes; uma tabela com `kind` as forçaria a uma forma

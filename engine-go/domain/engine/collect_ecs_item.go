@@ -89,7 +89,7 @@ func (r *Ruleset) spawnWornItems(ch Character) ecs.System {
 			ecs.Set(w, e, Grants{
 				SourceID:  catalogItemID(it),
 				Source:    it.Name,
-				Wear:      it.Equipped,
+				Wear:      r.wornWear(ch, it),
 				Modifiers: append([]Modifier{}, own...),
 			})
 

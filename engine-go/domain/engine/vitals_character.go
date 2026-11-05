@@ -35,7 +35,7 @@ func (r *Ruleset) VitalContextFor(ch Character) VitalContext {
 		Origin:             ch.Origin,
 		OriginChoices:      parseChoiceSet(ch.OriginChoices).list,
 		AttrTotals:         attrTotals,
-		ItemGrants:         append(r.itemVitalGrants(ch.Items), r.ruleVitalGrants(ch)...),
+		ItemGrants:         append(r.itemVitalGrants(ch), r.ruleVitalGrants(ch)...),
 	}
 }
 

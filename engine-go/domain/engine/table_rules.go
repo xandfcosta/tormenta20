@@ -9,9 +9,10 @@ import (
 
 // AS REGRAS DA MESA: o que o mestre monta no editor guiado, condições e um efeito.
 //
-// Elas viram `ActiveItem` como toda outra fonte, e por isso chegam ao número e à conta da ficha
-// pelo mesmo cano. O silêncio da mesa as alcança nessa coleta, mas não no PV e no PM, que o máximo
-// deriva à parte (`ruleVitalGrants`).
+// A que SOMA vira `ActiveItem` como toda outra fonte, e por isso chega ao número e à conta da ficha
+// pelo mesmo cano. O silêncio da mesa a alcança nessa coleta, mas não no PV e no PM, que o máximo
+// deriva à parte (`ruleVitalGrants`). As outras duas mudam o estado de uso de um item (`wornWear`) e
+// a lista de poderes concedidos (`BorrowedGods`).
 
 // As espécies de condição, como a coluna as grava.
 const (
@@ -26,8 +27,13 @@ const (
 	RuleOnStance      = "stance"
 )
 
-// RuleAdds é o efeito de somar um número.
-const RuleAdds = "adds"
+// Os efeitos, como a coluna os grava. Só o de somar vira modificador: o de empunhar muda o estado de
+// uso de um item, e o de poderes, a lista que a ficha oferece.
+const (
+	RuleAdds            = "adds"
+	RuleCountsAsWielded = "wielded"
+	RuleBorrowsPowers   = "powers-of"
+)
 
 // TableRuleSource é o prefixo que separa a regra de toda fonte do livro, como o da concessão.
 const TableRuleSource = "campaign-rule:"
@@ -45,6 +51,8 @@ type RuleEffect struct {
 	Amount int            `json:"amount"`
 	// Limit é até quantos itens a regra soma, quando ela soma por item. Zero é sem limite.
 	Limit int `json:"limit,omitempty"`
+	// God é o deus de quem a regra empresta a lista de poderes concedidos (`RuleBorrowsPowers`).
+	God string `json:"god,omitempty"`
 }
 
 // TableRule é uma regra da mesa ligada.
@@ -84,7 +92,74 @@ func ParseRuleEffect(effect string) (RuleEffect, error) {
 // alcançada, porque quem a tem pode ligá-la; quem pergunta troca a postura pelo poder que a dá
 // (`book.RuleConditionsForReach`), já que o motor só conhece a flag dela.
 func (r *Ruleset) RuleReaches(ch Character, rule TableRule) bool {
-	return rule.Applies.Matches(ch) && r.characterFitsRule(ch, rule) && len(r.ruleModifiers(ch, rule)) > 0
+	if !rule.Applies.Matches(ch) || !r.characterFitsRule(ch, rule) {
+		return false
+	}
+	switch rule.Effect.Kind {
+	case RuleCountsAsWielded:
+		return slices.ContainsFunc(ch.Items, func(it CharacterItem) bool { return r.ruleNamesTheItem(rule, it) })
+	case RuleBorrowsPowers:
+		return true
+	}
+	return len(r.ruleModifiers(ch, rule)) > 0
+}
+
+// ruleItemConditions são as condições que olham um item.
+func ruleItemConditions(rule TableRule) []RuleCondition {
+	return slices.DeleteFunc(slices.Clone(rule.When), func(c RuleCondition) bool {
+		return !slices.Contains([]string{RuleOnItem, RuleOnImprovement, RuleOnTrait, RuleOnVested}, c.Kind)
+	})
+}
+
+// ruleNamesTheItem diz se o item, onde quer que esteja, passa nas condições de item da regra. O
+// "vestido" fica de fora: quem pergunta é justamente se o item pode ser vestido.
+func (r *Ruleset) ruleNamesTheItem(rule TableRule, it CharacterItem) bool {
+	if it.CatalogID == nil {
+		return false
+	}
+	catalog := r.getCatalogItem(*it.CatalogID)
+	onItem := slices.DeleteFunc(ruleItemConditions(rule), func(c RuleCondition) bool { return c.Kind == RuleOnVested })
+	if catalog == nil || len(onItem) == 0 {
+		return false
+	}
+	worn := vestedWear
+	it.Equipped = &worn
+	return itemFitsRule(it, catalog, onItem)
+}
+
+// WearsAsWielded diz se uma regra ligada deixa este item ser vestido valendo como empunhado.
+//
+// @example world.WearsAsWielded(ch, item) // true para o medalhão, com a regra da mesa
+func (r *Ruleset) WearsAsWielded(ch Character, it CharacterItem) bool {
+	for _, rule := range r.mesa.Rules {
+		if rule.Effect.Kind == RuleCountsAsWielded && rule.Applies.Matches(ch) && r.characterFitsRule(ch, rule) && r.ruleNamesTheItem(rule, it) {
+			return true
+		}
+	}
+	return false
+}
+
+// wornWear é o estado de uso com que o item entra na conta: o vestido que a regra faz valer como
+// empunhado passa nas condições de empunhar E nas de vestir. O modificador não muda: mudar a condição
+// dele mudaria o endereço do termo, e o silêncio do mestre deixaria de alcançá-lo.
+func (r *Ruleset) wornWear(ch Character, it CharacterItem) *string {
+	if it.Equipped == nil || *it.Equipped != "vested" || !r.WearsAsWielded(ch, it) {
+		return it.Equipped
+	}
+	worn := wornAsWielded
+	return &worn
+}
+
+// BorrowedGods são os deuses de quem as regras ligadas emprestam a lista de poderes concedidos a esta
+// ficha. A lista soma à do deus dela (decisão do dono).
+func (r *Ruleset) BorrowedGods(ch Character) []string {
+	out := []string{}
+	for _, rule := range r.mesa.Rules {
+		if rule.Effect.Kind == RuleBorrowsPowers && rule.Applies.Matches(ch) && r.characterFitsRule(ch, rule) && !slices.Contains(out, rule.Effect.God) {
+			out = append(out, rule.Effect.God)
+		}
+	}
+	return out
 }
 
 func (r *Ruleset) tableRuleItems(ch Character) []ActiveItem {
@@ -165,9 +240,7 @@ func (r *Ruleset) ownsPower(ch Character, id string) bool {
 // por item em uso que passa em todas, porque elas olham o MESMO item; dois iguais na mão contam uma
 // vez. O limite corta o que soma na ficha; o que é preso a uma arma é de cada arma, e não acumula.
 func (r *Ruleset) ruleModifiers(ch Character, rule TableRule) []Modifier {
-	onItem := slices.DeleteFunc(slices.Clone(rule.When), func(c RuleCondition) bool {
-		return !slices.Contains([]string{RuleOnItem, RuleOnImprovement, RuleOnTrait, RuleOnVested}, c.Kind)
-	})
+	onItem := ruleItemConditions(rule)
 	modifier := Modifier{
 		Target: rule.Effect.Target, Amount: rule.Effect.Amount, BonusType: "untyped", Note: rule.Name,
 		Condition: ruleStanceCondition(rule),

@@ -181,7 +181,8 @@ func levelOrderOf(classes []ClassEntry, classByLevel []string) []string {
 // "Dois itens [...] que forneçam +1 em Fortitude não terá +2 — como os efeitos são da
 // mesma fonte, não acumulam" (p226), então dois Anéis da Vitalidade valem um. O corte é aqui porque estes modificadores não passam pela pilha do
 // `resolveStack`, que é de quem tem `ItemEffects`.
-func (r *Ruleset) itemVitalGrants(items []CharacterItem) []vitalGrant {
+func (r *Ruleset) itemVitalGrants(ch Character) []vitalGrant {
+	items := ch.Items
 	best := map[string]int{}
 	out := []vitalGrant{}
 	for _, it := range items {
@@ -192,8 +193,9 @@ func (r *Ruleset) itemVitalGrants(items []CharacterItem) []vitalGrant {
 		if catalog == nil {
 			continue
 		}
+		wear := r.wornWear(ch, it)
 		for _, m := range r.ownItemMods(it, catalog) {
-			if (m.Target.K != "maxPv" && m.Target.K != "maxPm") || !conditionMet(m, it.Equipped) {
+			if (m.Target.K != "maxPv" && m.Target.K != "maxPm") || !conditionMet(m, wear) {
 				continue
 			}
 			key := m.Target.K + ":" + m.BonusType

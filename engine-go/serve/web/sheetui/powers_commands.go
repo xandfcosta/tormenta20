@@ -263,8 +263,9 @@ func pickDevotion(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 	}
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
 		dto.God = &god
+		ofTheGod := sheet.GrantedPowerNames(*dto, god)
 		kept := slices.DeleteFunc(sheet.UnmarshalStrings(dto.GodPowers), func(power string) bool {
-			return !sheet.GrantedPowerIsOfGod(god, power)
+			return !slices.Contains(ofTheGod, power)
 		})
 		dto.GodPowers = sheet.MarshalStrings(&kept)
 	})
@@ -288,15 +289,16 @@ func pickGrantedPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 		return fmt.Errorf("sem deus, não há poder concedido para escolher: %s", power)
 	}
 	god := *dto.God
-	if !sheet.GrantedPowerIsOfGod(god, power) {
+	offered := sheet.GrantedPowerNames(dto, god)
+	if !slices.Contains(offered, power) {
 		return fmt.Errorf("%s não é um poder que %s concede", power, book.DevotionName(god))
 	}
-	limit := sheet.GrantedPowerLimit(dto.Classes, god)
-	ofTheGod := slices.DeleteFunc(slices.Clone(held), func(name string) bool { return !sheet.GrantedPowerIsOfGod(god, name) })
+	limit := sheet.GrantedPowerLimit(dto, god)
+	ofTheGod := slices.DeleteFunc(slices.Clone(held), func(name string) bool { return !slices.Contains(offered, name) })
 	switch {
 	case len(ofTheGod) < limit:
 	case limit == 1:
-		held = slices.DeleteFunc(held, func(name string) bool { return sheet.GrantedPowerIsOfGod(god, name) })
+		held = slices.DeleteFunc(held, func(name string) bool { return slices.Contains(offered, name) })
 	default:
 		return fmt.Errorf("esta ficha recebe %d poderes concedidos de %s: tire um antes de escolher %s", limit, book.DevotionName(god), power)
 	}
