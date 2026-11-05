@@ -311,7 +311,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog(itemSheetID(s.Command), s.Name, itemSheetFoot(v, s)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, itemSheetID(s.Command), s.Name, itemSheetFoot(v, s)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -339,7 +339,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog(itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -626,7 +626,7 @@ func improvementsDs(v View, s itemSheet) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog(itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -884,7 +884,7 @@ func itemAddDialog(v View) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog("item-add", "Adicionar item", itemAddFoot()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, "item-add", "Adicionar item", itemAddFoot()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -980,7 +980,7 @@ func customItemDialog(v View) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog("item-custom", "Item fora do livro", itemFormFoot("item-custom", "Adicionar", sheetPost(v, "/itens/custom"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var42), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, "item-custom", "Item fora do livro", itemFormFoot("item-custom", "Adicionar", sheetPost(v, "/itens/custom"))).Render(templ.WithChildren(ctx, templ_7745c5c3_Var42), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1179,7 +1179,7 @@ func bagMoneyDialog(v View) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog("bag-money", "Dinheiro", bagMoneyFoot(v)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, "bag-money", "Dinheiro", bagMoneyFoot(v)).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

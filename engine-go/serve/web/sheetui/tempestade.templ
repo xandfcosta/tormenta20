@@ -27,7 +27,7 @@ templ tempestadeSheet(v View) {
 			// As descrições dos efeitos moram FORA da coluna: o celular a esconde,
 			// e a aba Efeitos abre as mesmas.
 			for _, e := range activeEffects(v) {
-				@activeEffectDialog(e)
+				@activeEffectDialog(v, e)
 			}
 			<div class="ds-sheet-main">
 				<div class="ds-sheet-tabs">
@@ -174,7 +174,7 @@ templ tempestadeLevelStep(v View, step int, label, icon string) {
 
 templ tempestadeClassChoice(v View, step int, title string) {
 	if len(thatCan(v.AsClasses, step)) > 0 {
-		@ds.Dialog(stepDialog(step), title, nil) {
+		@sheetDialog(v, stepDialog(step), title, nil) {
 			<p class="ds-card-text">O nível do personagem é a soma dos níveis de classe, então o nível é sempre de UMA delas.</p>
 			@ds.List("", "") {
 				for _, class := range thatCan(v.AsClasses, step) {
@@ -269,10 +269,26 @@ templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKin
 	</div>
 }
 
+// sheetDialog é o diálogo da ficha com a recusa dentro: um modal deixa a página atrás dele, e
+// a recusa desenhada só lá parece um gesto que não fez nada. Fechado, ele não mostra nada, e
+// a da página é a que se lê.
+templ sheetDialog(v View, id, title string, foot templ.Component) {
+	@ds.Dialog(id, title, foot) {
+		@refusalInDialog(v)
+		{ children... }
+	}
+}
+
+templ refusalInDialog(v View) {
+	if v.Refusal != "" {
+		<p role="alert" class="ds-alert">{ v.Refusal }</p>
+	}
+}
+
 // vitalDialog é o dano ou a cura de qualquer valor, e os temporários, que são outra conta:
 // eles não têm teto e pagam primeiro (p106).
 templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKind, levels []vitalLevelRow) {
-	@ds.Dialog("vital-"+which, title, nil) {
+	@sheetDialog(v, "vital-"+which, title, nil) {
 		@ds.MeterView(meterOf(map[string]string{"pv": "PV", "pm": "PM"}[which], vital, kind))
 		<div class="ds-field">
 			<label for={ "vital-" + which + "-amount" }>Valor</label>
@@ -313,7 +329,7 @@ templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKi
 		}
 	}
 	if len(levels) > 0 {
-		@ds.Dialog(vitalLevelsID(which), vitalLevelsTitle(vital), nil) {
+		@sheetDialog(v, vitalLevelsID(which), vitalLevelsTitle(vital), nil) {
 			@ds.BareList("", "") {
 				for _, level := range levels {
 					@ds.Row(level.Title, level.Account, level.Total, "")
@@ -361,7 +377,7 @@ templ sheetBottomNav(v View) {
 }
 
 templ sheetMoreDialog(v View) {
-	@ds.Dialog("sheet-more", "Mais seções", nil) {
+	@sheetDialog(v, "sheet-more", "Mais seções", nil) {
 		@ds.List("", "") {
 			for _, tab := range moreTabs(v) {
 				@ds.Row(tab.Label, "", "", templ.SafeURL(sheetRoute(v.ID, tab.Value)))
@@ -380,13 +396,9 @@ templ attributeStat(attr attributeTile) {
 }
 
 // attributeDialog muda o valor livre ali mesmo, e diz de onde vem o total. A parte que veio de nível se
-// muda na aba Poderes, e por isso o campo não promete mexer nela. A recusa sai aqui dentro porque o aviso
-// da ficha fica atrás do diálogo aberto.
+// muda na aba Poderes, e por isso o campo não promete mexer nela.
 templ attributeDialog(v View, attr attributeTile) {
-	@ds.Dialog(attributeDialogID(attr.Key), attr.Label+" "+attr.Value, nil) {
-		if v.Refusal != "" {
-			<p role="alert" class="ds-alert">{ v.Refusal }</p>
-		}
+	@sheetDialog(v, attributeDialogID(attr.Key), attr.Label+" "+attr.Value, nil) {
 		<div class="ds-field">
 			<span class="ds-field-label">Valor livre</span>
 			@ds.ValueStepper(attr.Label, strconv.FormatInt(attr.Free, 10), attributeValueAttrs(v, attr, attr.Free-1), templ.Attributes{
@@ -417,7 +429,7 @@ func attributeWrittenCommand(v View, key string) string {
 // já está na coluna, e dois degraus na mesma tela são dois lugares para
 // procurar.
 templ sheetMenuDialog(v View) {
-	@ds.Dialog("sheet-menu", v.Name, nil) {
+	@sheetDialog(v, "sheet-menu", v.Name, nil) {
 		<div class="ds-sheet-identity">
 			<div class="ds-avatar" data-large aria-hidden="true" style={ "background: " + v.Gradient }>{ v.Initials }</div>
 			@ds.List("", "") {
@@ -438,8 +450,8 @@ templ sheetMenuDialog(v View) {
 
 // activeEffectDialog é a descrição de um efeito em vigor: o que ele faz, de
 // onde vem, e o gesto de tirar no pé.
-templ activeEffectDialog(e activeEffect) {
-	@ds.Dialog(e.Dialog, e.Name, activeEffectFoot(e)) {
+templ activeEffectDialog(v View, e activeEffect) {
+	@sheetDialog(v, e.Dialog, e.Name, activeEffectFoot(e)) {
 		<p class="ds-row-meta">{ e.Meta }</p>
 		if e.Text != "" {
 			<p class="ds-card-text">{ e.Text }</p>

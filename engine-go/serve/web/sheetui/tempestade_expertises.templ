@@ -179,7 +179,7 @@ templ expertiseSumRoll(v View, row expertiseRow) {
 // expertiseCraftDialog cria uma perícia que o livro não tem. A tela diz "nova
 // perícia", e nunca "ofício" — Ofício É uma das 29 do livro (p115).
 templ expertiseCraftDialog(v View) {
-	@ds.Dialog("expertise-craft", "Nova perícia", expertiseCraftFoot(v)) {
+	@sheetDialog(v, "expertise-craft", "Nova perícia", expertiseCraftFoot(v)) {
 		@ds.TextField(ds.Field{ID: "craft-name", Label: "Nome", Placeholder: "Ferreiro, Marinheiro…"}, templ.Attributes{"maxlength": "40", "data-bind:new_expertise": true})
 		<div class="ds-field">
 			<label for="craft-attribute">Atributo</label>

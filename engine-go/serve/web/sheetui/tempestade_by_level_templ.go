@@ -340,7 +340,7 @@ func swapDialog(v View, d swapDialogView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Dialog("swap-choice", "Trocar a escolha do nível "+strconv.FormatInt(d.Level, 10), nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetDialog(v, "swap-choice", "Trocar a escolha do nível "+strconv.FormatInt(d.Level, 10), nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -488,7 +488,7 @@ func lastLevelDialog(v View) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = ds.Dialog(stepDialog(-1), "Descer para o nível "+strconv.FormatInt(v.LastLevel.Level-1, 10)+"?", nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = sheetDialog(v, stepDialog(-1), "Descer para o nível "+strconv.FormatInt(v.LastLevel.Level-1, 10)+"?", nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var15), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

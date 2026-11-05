@@ -59,7 +59,7 @@ templ tempestadeByLevel(v View) {
 // swapDialog abre sozinho, porque ele só existe quando alguém tocou em Trocar.
 templ swapDialog(v View, d swapDialogView) {
 	<div id="swap-dialog-host" data-init="document.getElementById('swap-choice').showModal()">
-		@ds.Dialog("swap-choice", "Trocar a escolha do nível "+strconv.FormatInt(d.Level, 10), nil) {
+		@sheetDialog(v, "swap-choice", "Trocar a escolha do nível "+strconv.FormatInt(d.Level, 10), nil) {
 			<p class="ds-card-text">Hoje: <b>{ d.Current }</b>. O nível continua com uma escolha: ela só muda.</p>
 			@ds.List("Trocar por", "") {
 				if len(d.Options) == 0 {
@@ -78,7 +78,7 @@ templ swapDialog(v View, d swapDialogView) {
 // lastLevelDialog é o `−`: diz antes o que some.
 templ lastLevelDialog(v View) {
 	if v.LastLevel != nil {
-		@ds.Dialog(stepDialog(-1), "Descer para o nível "+strconv.FormatInt(v.LastLevel.Level-1, 10)+"?", nil) {
+		@sheetDialog(v, stepDialog(-1), "Descer para o nível "+strconv.FormatInt(v.LastLevel.Level-1, 10)+"?", nil) {
 			<p class="ds-card-text">{ lastLevelText(*v.LastLevel) }</p>
 			if len(v.LastLevel.Lines) > 0 {
 				@ds.List("", "") {
