@@ -12,11 +12,12 @@ import (
 // falta, e a vez que não é do jogador quando o grupo gasta a vez. Vazia quando
 // nada espera.
 //
-//	actionWaits(group, roll) // "$turn_target === '' || !$my_turn"
+//	actionWaits(group, roll) // "$turn_target === '' || $attack_open || !$my_turn"
 func actionWaits(group actionGroup, needsTarget bool) string {
 	var waits []string
 	if needsTarget {
-		waits = append(waits, "$turn_target === ''")
+		// O que pede alvo é golpe, e o próximo só abre depois da resposta do mestre.
+		waits = append(waits, "$turn_target === ''", "$attack_open")
 	}
 	if group.OnTurn {
 		waits = append(waits, "!$my_turn")

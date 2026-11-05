@@ -33,24 +33,38 @@ func SpendMana(
 	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs,
 	row sqlcgen.Character, amount int,
 ) (Pools, error) {
+	pools, _, err := SpendManaKeepingReceipt(ctx, q, cat, row, amount)
+	return pools, err
+}
+
+// SpendManaKeepingReceipt é o mesmo gasto, para quem pode ter de desfazê-lo
+// (`GiveManaBack`).
+//
+//	pools, receipt, err := sheet.SpendManaKeepingReceipt(ctx, q, catalogs, row, 2)
+func SpendManaKeepingReceipt(
+	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs,
+	row sqlcgen.Character, amount int,
+) (Pools, ManaReceipt, error) {
 	effects, err := q.ListActiveEffectsByCharacter(ctx, row.ID)
 	if err != nil {
-		return Pools{}, fmt.Errorf("ler as poças de PM da ficha %d: %w", row.ID, err)
+		return Pools{}, ManaReceipt{}, fmt.Errorf("ler as poças de PM da ficha %d: %w", row.ID, err)
 	}
 	var plan SpendPlan
+	var receipt ManaReceipt
 	pools, err := ApplyToPools(ctx, q, cat, row, func(pools Pools) (Pools, error) {
 		if amount <= 0 {
 			return pools, nil
 		}
 		plan = PlanSpend(ParseTempMpPools(effects), int(pools.MpCurrent), amount)
+		receipt = receiptOf(effects, plan, int(pools.MpCurrent)-plan.MpCurrent)
 		pools.MpCurrent = int64(plan.MpCurrent)
 		return pools, nil
 	})
 	if err != nil {
-		return pools, fmt.Errorf("cobrar %d PM da ficha %d: %w", amount, row.ID, err)
+		return pools, receipt, fmt.Errorf("cobrar %d PM da ficha %d: %w", amount, row.ID, err)
 	}
 	pools.TempMp = int64(plan.TempMpRemaining)
-	return pools, WriteDrain(ctx, q, plan.Updates, plan.DeleteIDs)
+	return pools, receipt, WriteDrain(ctx, q, plan.Updates, plan.DeleteIDs)
 }
 
 // SpendLoadedMana é o MESMO funil para quem já tem o agregado na mão.

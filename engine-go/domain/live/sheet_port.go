@@ -1,6 +1,9 @@
 package live
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 // A PORTA DA FICHA (ALE-254).
 //
@@ -41,6 +44,13 @@ type SheetVitals interface {
 	//
 	// Devolve os dois vitais para a linha da fila espelhar, como as irmãs.
 	SpendMana(ctx context.Context, charID int64, amount int) (*int64, *int64, error)
+
+	// SpendManaKeepingReceipt é o mesmo gasto, com o recibo de onde cada ponto saiu. O
+	// regime só guarda o recibo: as poças são da ficha, e quem o lê é o `GiveManaBack`.
+	SpendManaKeepingReceipt(ctx context.Context, charID int64, amount int) (*int64, *int64, json.RawMessage, error)
+
+	// GiveManaBack desfaz o gasto do recibo, ponto a ponto, de volta de onde ele saiu.
+	GiveManaBack(ctx context.Context, charID int64, receipt json.RawMessage) (*int64, *int64, error)
 
 	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
 	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)

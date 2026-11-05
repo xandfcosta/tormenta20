@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -133,6 +134,45 @@ func (v sheetVitals) SpendMana(
 		return nil, nil, err
 	}
 	pools, err := sheet.SpendMana(ctx, v.q, v.catalogs(), row, amount)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &pools.HpCurrent, &pools.MpCurrent, nil
+}
+
+// SpendManaKeepingReceipt cobra pelo mesmo funil, e devolve o recibo escrito para a mesa
+// guardar sem abrir.
+func (v sheetVitals) SpendManaKeepingReceipt(
+	ctx context.Context, charID int64, amount int,
+) (*int64, *int64, json.RawMessage, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	pools, receipt, err := sheet.SpendManaKeepingReceipt(ctx, v.q, v.catalogs(), row, amount)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	written, err := json.Marshal(receipt)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("escrever o recibo do PM: %w", err)
+	}
+	return &pools.HpCurrent, &pools.MpCurrent, written, nil
+}
+
+// GiveManaBack desfaz o gasto do recibo.
+func (v sheetVitals) GiveManaBack(
+	ctx context.Context, charID int64, written json.RawMessage,
+) (*int64, *int64, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, err
+	}
+	var receipt sheet.ManaReceipt
+	if err := json.Unmarshal(written, &receipt); err != nil {
+		return nil, nil, fmt.Errorf("ler o recibo do PM: %w", err)
+	}
+	pools, err := sheet.GiveManaBack(ctx, v.q, v.catalogs(), row, receipt)
 	if err != nil {
 		return nil, nil, err
 	}

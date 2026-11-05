@@ -264,10 +264,87 @@ func TestTheBattleFocusFillsThePoolWhenTheKnightIsAttacked(t *testing.T) {
 	_, antes := manaOnTheSheet(t, f, cavaleiro)
 
 	// O GOLPE ERRA de propósito: o ponto é do ataque, não do acerto.
-	theGameMasterConfirmsAMissAgainst(t, f, goblin, alvo)
+	theGameMasterConfirmsAMissAgainst(t, f, goblin, alvo, battleFocus)
 	if _, depois := manaOnTheSheet(t, f, cavaleiro); depois != antes+1 {
 		t.Errorf("ser atacado tinha de dar 1 PM temporário mesmo no erro: %d virou %d", antes, depois)
 	}
+}
+
+// Quem tem o poder e não está na postura não ganha o ponto.
+func TestTheBattleFocusNeedsTheStance(t *testing.T) {
+	f, cavaleiro, alvo, goblin := knightOnTurn(t)
+	theGameMasterConfirmsAMissAgainst(t, f, goblin, alvo)
+	if _, reserva := manaOnTheSheet(t, f, cavaleiro); reserva != 0 {
+		t.Errorf("sem o Foco de Batalha em pé, ser atacado deu %d PM temporários", reserva)
+	}
+}
+
+// A postura do alvo conta pela proposta (decisão do dono), medida pela rota: quem ataca é
+// outro personagem, e a postura só cabe na vez do cavaleiro. O erro do mestre dispara o
+// gatilho.
+func TestTheBattleFocusCountsByTheStanceAtTheProposal(t *testing.T) {
+	onTurnOf := func(t *testing.T, f sceneFixture, label string) {
+		t.Helper()
+		for range 4 {
+			state := stateOf(t, f.s.sessions, f.sessionID)
+			if state.TurnIndex >= 0 && state.Initiative[state.TurnIndex].Label == label {
+				return
+			}
+			if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
+				t.Fatalf("girar a vez: %v", err)
+			}
+		}
+		t.Fatalf("a vez não chegou em %s", label)
+	}
+	knightWithAnAttacker := func(t *testing.T) (sceneFixture, int64, string) {
+		t.Helper()
+		f, cavaleiro, alvo, _ := knightOnTurn(t)
+		other, err := f.s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+			OwnerId: f.player, Name: "Atacante", Origin: "guarda", Level: 1,
+			Strength: 3, Dexterity: 1, Constitution: 1, Intelligence: 0, Wisdom: 0, Charisma: 0,
+			Size: "Médio", Displacement: 9,
+			Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
+			OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+		})
+		if err != nil {
+			t.Fatalf("semear quem ataca: %v", err)
+		}
+		seedClasse(t, f.s, other, "Guerreiro", 1)
+		seedMember(t, f.s, f.campaignID, other)
+		if _, err := f.s.sessions.AddInitiativeEntry(context.Background(), f.sessionID, sheetCombatant("Atacante", 1, other)); err != nil {
+			t.Fatalf("pôr quem ataca na fila: %v", err)
+		}
+		return f, cavaleiro, alvo
+	}
+
+	t.Run("na postura ao ser atacado", func(t *testing.T) {
+		f, cavaleiro, alvo := knightWithAnAttacker(t)
+		onTurnOf(t, f, "Postural")
+		if refused := assumes(t, f, cavaleiro, battleFocus); refused != "" {
+			t.Fatalf("assumir o Foco de Batalha: %s", refused)
+		}
+		_, antes := manaOnTheSheet(t, f, cavaleiro)
+		onTurnOf(t, f, "Atacante")
+		proposesOnTheQueue(t, f, alvo)
+		gmRules(t, f, "errou")
+		if _, depois := manaOnTheSheet(t, f, cavaleiro); depois != antes+1 {
+			t.Errorf("ser atacado na postura tinha de dar 1 PM temporário: %d virou %d", antes, depois)
+		}
+	})
+	t.Run("assumida depois da proposta", func(t *testing.T) {
+		f, cavaleiro, alvo := knightWithAnAttacker(t)
+		onTurnOf(t, f, "Atacante")
+		proposesOnTheQueue(t, f, alvo)
+		onTurnOf(t, f, "Postural")
+		if refused := assumes(t, f, cavaleiro, battleFocus); refused != "" {
+			t.Fatalf("assumir o Foco de Batalha: %s", refused)
+		}
+		_, antes := manaOnTheSheet(t, f, cavaleiro)
+		gmRules(t, f, "errou")
+		if _, depois := manaOnTheSheet(t, f, cavaleiro); depois != antes {
+			t.Errorf("o alvo não estava na postura quando o golpe foi proposto, e a reserva foi de %d para %d", antes, depois)
+		}
+	})
 }
 
 // E QUEM ATACA NÃO GANHA NADA COM ELE — o controle do lado.
@@ -283,17 +360,22 @@ func TestNoBattleFocusPointGoesToTheAttacker(t *testing.T) {
 	_, antes := manaOnTheSheet(t, f, cavaleiro)
 
 	// Agora o CAVALEIRO é quem ataca.
-	theGameMasterConfirmsAMissAgainst(t, f, alvo, goblin)
+	theGameMasterConfirmsAMissAgainst(t, f, alvo, goblin, battleFocus)
 	if _, depois := manaOnTheSheet(t, f, cavaleiro); depois != antes {
 		t.Errorf("atacar encheu a poça de quem atacou: %d virou %d", antes, depois)
 	}
 }
 
-// theGameMasterConfirmsAMissAgainst semeia um golpe e o mestre diz que ERROU.
-func theGameMasterConfirmsAMissAgainst(t *testing.T, f sceneFixture, attacker, target string) {
+// battleFocus é a flag da postura do Foco de Batalha (p54).
+const battleFocus = "postura-foco-de-batalha"
+
+// theGameMasterConfirmsAMissAgainst semeia um golpe e o mestre diz que ERROU. As posturas
+// valem para os dois lados na proposta: o caso de quem ataca precisa delas tanto quanto o
+// do alvo, para o gatilho não passar só por estar faltando a postura.
+func theGameMasterConfirmsAMissAgainst(t *testing.T, f sceneFixture, attacker, target string, stances ...string) {
 	t.Helper()
 	if _, err := f.s.sessions.ProposeAttack(context.Background(), f.sessionID, live.PendingAttack{
-		AttackerEntryID: attacker, TargetEntryID: target,
+		AttackerEntryID: attacker, TargetEntryID: target, TargetStances: stances, AttackerStances: stances,
 		Weapon: "Espada longa", Roll: 3, Total: 6, Defense: 20,
 		Hit: false, Critical: false, Melee: true,
 	}); err != nil {

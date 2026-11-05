@@ -16,41 +16,58 @@ import (
 // Rule guarda a decisão do mestre sobre o golpe proposto. No acerto e no
 // crítico, ela já diz ao jogador o que rolar, com o ×N da arma.
 //
-//	state, err := strike.Rule(ctx, gm, "gm", req, live.RulingCritical)
-func (s Strike) Rule(ctx context.Context, who app.Caller, role string, req Request, ruling string) (*live.SessionRuntimeState, error) {
+//	state, err := strike.Rule(ctx, gm, "gm", sessionID, live.RulingCritical)
+func (s Strike) Rule(ctx context.Context, who app.Caller, role string, sessionID int64, ruling string) (*live.SessionRuntimeState, error) {
 	var toRoll *live.DamageToRoll
 	if ruling == live.RulingHit || ruling == live.RulingCritical {
-		setup, err := s.setUp(ctx, role, req)
+		state, err := s.tables.State(ctx, sessionID)
 		if err != nil {
 			return nil, err
 		}
-		formula, err := engine.DamageToRoll(setup.weapon, engine.Ruling(ruling))
-		if err != nil {
-			return nil, err
+		// Sem proposta, ou numa manobra, quem responde é a regra lá embaixo.
+		if state != nil && state.PendingAttack != nil && state.PendingAttack.Maneuver == nil {
+			frozen, err := strikeProposedIn(*state.PendingAttack)
+			if err != nil {
+				return nil, err
+			}
+			formula, err := engine.DamageToRoll(frozen.Weapon, engine.Ruling(ruling))
+			if err != nil {
+				return nil, err
+			}
+			toRoll = damageToRollOf(formula)
 		}
-		toRoll = damageToRollOf(formula)
 	}
-	return s.tables.RuleAttack(ctx, req.SessionID, live.Attacker{UserID: who.ID, Role: role}, ruling, toRoll)
+	return s.tables.RuleAttack(ctx, sessionID, live.Attacker{UserID: who.ID, Role: role}, ruling, toRoll)
+}
+
+// strikeProposedIn lê o golpe congelado na proposta. A que veio de antes de ele existir
+// não tem o que ler, e recalcular pela ficha de agora seria mudar a proposta.
+func strikeProposedIn(pending live.PendingAttack) (engine.FrozenStrike, error) {
+	if len(pending.Frozen) == 0 {
+		return engine.FrozenStrike{}, fmt.Errorf(
+			"este ataque foi proposto antes de uma atualização do app: o mestre cancela, e ele é rolado de novo: %w", app.ErrRefused)
+	}
+	return engine.ThawStrike(pending.Frozen)
 }
 
 // RollDamage rola o dano do golpe que o mestre decidiu. `hand` são os dados que
 // a mesa rolou na mão, na ordem da fórmula; nulo é o servidor rolar.
 //
-//	pending, err := strike.RollDamage(ctx, player, "player", req, []int{5, 3})
-func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, req Request, hand []int) (live.PendingAttack, error) {
+//	pending, err := strike.RollDamage(ctx, player, "player", sessionID, []int{5, 3})
+func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, sessionID int64, hand []int) (live.PendingAttack, error) {
 	attacker := live.Attacker{UserID: who.ID, Role: role}
-	state, err := s.tables.State(ctx, req.SessionID)
+	state, err := s.tables.State(ctx, sessionID)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
 	if state == nil {
-		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", req.SessionID, app.ErrNotFound)
+		return live.PendingAttack{}, fmt.Errorf("a sessão %d não tem mesa aberta: %w", sessionID, app.ErrNotFound)
 	}
 	pending, err := live.AttackAwaitingDamage(state, attacker)
 	if err != nil {
 		return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 	}
-	setup, err := s.setUp(ctx, role, req)
+	frozen, err := strikeProposedIn(pending)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -60,7 +77,7 @@ func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, req
 		byHand = engine.DiceRolledByHand(hand)
 		rollDie = byHand.Roll
 	}
-	out, err := engine.RollAttackDamage(setup.weapon, setup.target, setup.situations,
+	out, err := engine.RollAttackDamage(frozen.Weapon, frozen.Target, frozen.Situations,
 		engine.D20(pending.Roll), engine.Ruling(pending.Ruling), rollDie)
 	if err != nil {
 		return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
@@ -73,7 +90,7 @@ func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, req
 	pending.RawDamage, pending.Absorbed, pending.Damage, pending.NonLethal = out.RawDamage, out.Absorbed, out.Damage, out.NonLethal
 	pending.CriticalExtra, pending.CritExtraIgnoreChance = out.CriticalExtra, out.CritExtraIgnoreChance
 	pending.Announces = foreseenOf(out)
-	if _, err := s.tables.RecordAttackDamage(ctx, req.SessionID, attacker, pending); err != nil {
+	if _, err := s.tables.RecordAttackDamage(ctx, sessionID, attacker, pending); err != nil {
 		return live.PendingAttack{}, err
 	}
 	return pending, nil

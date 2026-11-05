@@ -61,12 +61,9 @@ func ragingBarbarianWithTheBloodPower(t *testing.T) (sceneFixture, int64, string
 	if !strings.Contains(superficieDeAcoes(t, acoesDaMesa(t, f)), "Encerrar Fúria") {
 		t.Fatal("a bancada não entrou em fúria: a superfície não oferece Encerrar Fúria")
 	}
-	// A VEZ PASSA PARA O GOBLIN, e isso é instrumento e não arranjo: confirmar
-	// o ataque de quem está NA VEZ cobra a ação padrão (p233), então o segundo
-	// crítico seria recusado por falta de ação — e a recusa volta num SINAL com
-	// status 200, que é exatamente o silêncio que esconderia o defeito.
-	// Confirmar fora da vez é caminho de produção: *"o mestre confirma fora de
-	// hora o tempo todo"*.
+	// A VEZ PASSA PARA O GOBLIN, e isso é instrumento e não arranjo: propor o
+	// ataque de quem está NA VEZ cobra a ação padrão (p233), então o segundo
+	// crítico semeado seria recusado por falta de ação.
 	atacante := entryLabeled(t, stateOf(t, f.s.sessions, f.sessionID), "Furioso")
 	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/proxima-vez", ""); rec.Code != http.StatusOK {
 		t.Fatalf("girar a vez deu %d", rec.Code)
@@ -123,11 +120,17 @@ func attackOnTheActionsSurface(t *testing.T, f sceneFixture) int {
 // CONFIRMADO, não quando é proposto — um provisório cancelado não aconteceu.
 func theGameMasterConfirmsACriticalHit(t *testing.T, f sceneFixture, attacker, target string) {
 	t.Helper()
+	confirmsACriticalProposedWith(t, f, attacker, target, "furia")
+}
+
+// confirmsACriticalProposedWith é o mesmo crítico, com as posturas do retrato da proposta.
+func confirmsACriticalProposedWith(t *testing.T, f sceneFixture, attacker, target string, stances ...string) {
+	t.Helper()
 	if _, err := f.s.sessions.ProposeAttack(context.Background(), f.sessionID, live.PendingAttack{
 		AttackerEntryID: attacker, TargetEntryID: target, TargetLabel: "Goblin",
 		Weapon: "Machado de batalha", Roll: 20, Total: 28, Defense: 13,
 		Hit: true, Critical: true, RawDamage: 1, Damage: 1,
-		Ruling: live.RulingCritical, DamageRolled: true,
+		Ruling: live.RulingCritical, DamageRolled: true, AttackerStances: stances,
 	}); err != nil {
 		t.Fatalf("semear o provisório crítico: %v", err)
 	}
@@ -188,7 +191,7 @@ func TestNoCumulativeBonusIsEarnedOutsideTheStance(t *testing.T) {
 	endsTheRage(t, f, barbaro)
 	before := attackOnTheActionsSurface(t, f)
 
-	theGameMasterConfirmsACriticalHit(t, f, attacker, goblin)
+	confirmsACriticalProposedWith(t, f, attacker, goblin)
 	if got := attackOnTheActionsSurface(t, f); got != before {
 		t.Errorf("fora da fúria o crítico acumulou assim mesmo: %+d virou %+d", before, got)
 	}
@@ -260,7 +263,7 @@ func theGameMasterConfirmsAPlainHit(t *testing.T, f sceneFixture, attacker, targ
 		AttackerEntryID: attacker, TargetEntryID: target, TargetLabel: "Bicho",
 		Weapon: "Machado de batalha", Roll: 11, Total: 19, Defense: 13,
 		Hit: true, Critical: false, RawDamage: damage, Damage: damage,
-		Ruling: live.RulingHit, DamageRolled: true,
+		Ruling: live.RulingHit, DamageRolled: true, AttackerStances: []string{"furia"},
 	}); err != nil {
 		t.Fatalf("semear o provisório: %v", err)
 	}

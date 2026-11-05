@@ -20,8 +20,8 @@ import (
 // OS NÚMEROS COM O IMPULSO VÊM PRONTOS DO SERVIDOR, um por degrau e por lado:
 // a tela só escolhe qual mostrar. Somar no cliente seria a segunda
 // implementação da regra, e o Carisma do Golpe Divino, que não cresce com o
-// degrau, é exatamente o tipo de detalhe que a cópia erraria. Quem cobra e
-// confere de verdade é o `combat`, com o motor.
+// degrau, é exatamente o tipo de detalhe que a cópia erraria. Quem confere de
+// verdade é o `combat`, com o motor.
 
 // Os sinais do impulso. Toda escrita deles começa zerando os quatro, porque a
 // Mesa não os declara: é a escrita que os cria (o mesmo do `stance_degrees`).

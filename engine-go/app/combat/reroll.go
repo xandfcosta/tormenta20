@@ -16,65 +16,22 @@ import (
 // mesmo que seja pior que o primeiro)." O provisório é a janela: depois da
 // confirmação ele não existe mais.
 
-// attackDie é o d20 do golpe: o rolado, ou o que conta como 20 natural.
-func (r Request) attackDie(d20 int) engine.AttackDie {
-	if r.CountsAsNaturalTwenty {
-		return engine.D20CountingAsNaturalTwenty(d20)
-	}
-	return engine.D20(d20)
-}
-
-// replayOf é o que o provisório guarda do pedido para rolar de novo.
-func (r Request) replayOf(weapon engine.WeaponCard) live.AttackReplay {
-	return live.AttackReplay{
-		WeaponIndex: r.Weapon, WeaponID: weapon.CatalogID, SwitchesDamageType: r.SwitchesDamageType, OtherUse: r.OtherUse,
-		BoostSteps: r.Boost.Steps, BoostSplit: r.Boost.Split,
-	}
-}
-
-// ReplayRequest é o pedido que REFAZ o provisório — para rolar de novo, para a
-// decisão do mestre e para o dano: o mesmo alvo, a mesma arma,
-// o mesmo impulso e a mesma investida, e o d20 do defensor da manobra intacto.
-// O que só a cena sabe — a posse e a peça atacada — vem de quem chama.
-func ReplayRequest(
-	campaignID, sessionID int64, pending live.PendingAttack, ownsAttacker bool, object *ObjectTarget,
-) Request {
-	req := Request{
-		CampaignID: campaignID, SessionID: sessionID,
-		AttackerEntryID: pending.AttackerEntryID, TargetEntryID: pending.TargetEntryID,
-		TargetObject: object, OwnsAttacker: ownsAttacker,
-		Weapon: pending.Replay.WeaponIndex, SwitchesDamageType: pending.Replay.SwitchesDamageType,
-		OtherUse: pending.Replay.OtherUse,
-		Charge:   pending.Charge,
-	}
-	if pending.Dose != nil {
-		req.Dose = pending.Dose.CatalogID
-	}
-	if pending.BoostPowerID != "" {
-		req.Boost = engine.BoostChoice{
-			PowerID: pending.BoostPowerID, Steps: pending.Replay.BoostSteps, Split: pending.Replay.BoostSplit,
-		}
-	}
-	if pending.Maneuver != nil {
-		opposed := pending.Maneuver.OpposedRoll
-		req.Maneuver, req.OpposedD20 = pending.Maneuver.Kind, &opposed
-	}
-	return req
-}
-
-// Reroll rola o provisório de novo com outro d20 e o guarda no lugar do
-// primeiro. O d20 da mesa vem em `given`, ou o servidor rola; `naturalFrom` é
-// o "11 ou mais vale 20 natural" da Sorte de Nimb (p48), zero nos outros.
+// Reroll troca o d20 da proposta por outro e a guarda de novo, que é quando `paid` sai da
+// ficha. O d20 da mesa vem em `given`, ou o servidor rola; `naturalFrom` é o "11 ou mais vale 20 natural" da Sorte de
+// Nimb (p48), zero nos outros.
+//
+// SÓ O DADO MUDA, e é a única mudança que a proposta aceita: os bônus são os de quando
+// ela foi feita, mesmo que a ficha tenha mudado depois.
 //
 // SÓ ANTES DA DECISÃO DO MESTRE (p226): depois dela, o teste já foi julgado.
 // E não há dano a guardar — ele é rolado depois da decisão.
 //
-//	pending, err := strike.Reroll(ctx, who, role, req, nil, live.DieReroll{Name: "Sortudo", PM: 3}, 0)
+//	pending, err := strike.Reroll(ctx, who, sessionID, nil, live.DieReroll{Name: "Sortudo", PM: 3}, 0)
 func (s Strike) Reroll(
-	ctx context.Context, who app.Caller, role string, req Request,
+	ctx context.Context, who app.Caller, sessionID int64,
 	given *int, paid live.DieReroll, naturalFrom int,
 ) (live.PendingAttack, error) {
-	state, err := s.tables.State(ctx, req.SessionID)
+	state, err := s.tables.State(ctx, sessionID)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
@@ -93,16 +50,49 @@ func (s Strike) Reroll(
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	req.D20 = &d20
-	req.CountsAsNaturalTwenty = naturalFrom > 0 && d20 >= naturalFrom && d20 != 20
-	second, err := s.roll(ctx, who, role, req)
+	natural := naturalFrom > 0 && d20 >= naturalFrom && d20 != 20
+	second, err := s.withAnotherDie(first, d20, natural)
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
-	paid.Discarded, paid.Natural = first.Roll, req.CountsAsNaturalTwenty
+	paid.Discarded, paid.Natural = first.Roll, natural
 	second.Rerolls = append(slices.Clone(first.Rerolls), paid)
-	if _, err := s.tables.ProposeAttack(ctx, req.SessionID, second); err != nil {
+	if _, err := s.tables.RerollAttack(ctx, sessionID, second); err != nil {
 		return live.PendingAttack{}, err
 	}
+	return second, nil
+}
+
+// withAnotherDie é a proposta com o d20 novo. Na manobra, os bônus saem dos totais
+// guardados: o total menos o dado, dos dois lados, e o d20 do defensor fica (p234).
+func (s Strike) withAnotherDie(first live.PendingAttack, d20 int, natural bool) (live.PendingAttack, error) {
+	second := first
+	if m := first.Maneuver; m != nil {
+		out := engine.ResolveManeuver(m.Kind,
+			engine.ManeuverSide{Bonus: first.Total - first.Roll},
+			engine.ManeuverSide{Bonus: m.Opposed - m.OpposedRoll}, d20, m.OpposedRoll)
+		if out.Refused != "" {
+			return live.PendingAttack{}, fmt.Errorf("%s: %w", out.Refused, app.ErrRefused)
+		}
+		rolled := *m
+		rolled.Margin = out.Margin
+		second.Maneuver = &rolled
+		second.Roll, second.Total = out.AttackerRoll, out.AttackerTotal
+		return second, nil
+	}
+	frozen, err := strikeProposedIn(first)
+	if err != nil {
+		return live.PendingAttack{}, err
+	}
+	die := engine.D20(d20)
+	if natural {
+		die = engine.D20CountingAsNaturalTwenty(d20)
+	}
+	out, err := engine.JudgeAttack(frozen.Weapon, frozen.Target, frozen.Situations, die, s.rollDie)
+	if err != nil {
+		return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
+	}
+	second.Roll, second.Total, second.Defense, second.Situations = out.Roll, out.Total, out.Defense, out.Situations
+	second.Hit, second.Critical = out.Hit, out.Critical
 	return second, nil
 }

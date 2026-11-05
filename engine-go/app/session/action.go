@@ -28,7 +28,7 @@ func (st *Store) SpendAction(ctx context.Context, sessionID int64, cost engine.A
 }
 
 // chargeTurn tira o custo do turno em curso, DENTRO de uma mutação — é o passo
-// que o `SpendAction` e a confirmação do ataque compartilham.
+// que o `SpendAction` e a proposta de ataque compartilham.
 func chargeTurn(s *live.SessionRuntimeState, cost engine.ActionCost) error {
 	left, charges, err := spendsFromTurn(s, cost)
 	if err != nil || !charges {

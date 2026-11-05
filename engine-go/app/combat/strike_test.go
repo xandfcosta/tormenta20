@@ -40,6 +40,10 @@ func (f *queueDouble) RuleAttack(
 	return f.state, live.RuleAttack(f.state, who, ruling, toRoll)
 }
 
+func (f *queueDouble) RerollAttack(_ context.Context, _ int64, a live.PendingAttack) (*live.SessionRuntimeState, error) {
+	return f.state, live.ReplaceAttackRoll(f.state, a)
+}
+
 func (f *queueDouble) RecordAttackDamage(
 	_ context.Context, _ int64, who live.Attacker, rolled live.PendingAttack,
 ) (*live.SessionRuntimeState, error) {
@@ -58,10 +62,10 @@ func (f *queueDouble) CharacterActionFits(context.Context, int64, engine.ActionC
 // acerto, e quem atacou rola o dano no dado do caso.
 func hitAndRoll(t *testing.T, strike Strike, req Request) live.PendingAttack {
 	t.Helper()
-	if _, err := strike.Rule(context.Background(), app.Caller{ID: 1}, "gm", req, live.RulingHit); err != nil {
+	if _, err := strike.Rule(context.Background(), app.Caller{ID: 1}, "gm", req.SessionID, live.RulingHit); err != nil {
 		t.Fatalf("o mestre dizer acerto: %v", err)
 	}
-	out, err := strike.RollDamage(context.Background(), app.Caller{ID: 7}, "player", req, nil)
+	out, err := strike.RollDamage(context.Background(), app.Caller{ID: 7}, "player", req.SessionID, nil)
 	if err != nil {
 		t.Fatalf("rolar o dano: %v", err)
 	}
@@ -151,6 +155,7 @@ func TestOnlyTheOwnerOrTheGameMasterRollsTheAttack(t *testing.T) {
 	if _, err := strike.Propose(context.Background(), app.Caller{ID: 1}, "gm", req); err != nil {
 		t.Errorf("o mestre rola por qualquer um, e veio %v", err)
 	}
+	table.state.PendingAttack = nil // a mesa respondeu, e o próximo pode propor
 	owner := req
 	owner.OwnsAttacker = true
 	if _, err := strike.Propose(context.Background(), app.Caller{ID: 9}, "player", owner); err != nil {

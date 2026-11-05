@@ -29,30 +29,23 @@ func AttackRerollOffersFor(dto sheet.CharacterDTO, melee bool, weaponID string) 
 	})
 }
 
-// PayAttackReroll confere que a ficha tem o gasto `key` e o PM dele, roda
-// `reroll` com a oferta e só então cobra: o rolar de novo que o motor recusa
-// não custa nada.
-func (p Plays) PayAttackReroll(
+// AttackRerollOffer acha o gasto `key` na ficha e confere o PM dele, para recusar antes de
+// rolar. Quem cobra é o `session.Store.RerollAttack`, na transação que troca o dado.
+func (p Plays) AttackRerollOffer(
 	ctx context.Context, row sqlcgen.Character, melee bool, weaponID, key string,
-	reroll func(book.SkillSpendOffer) error,
-) error {
+) (book.SkillSpendOffer, error) {
 	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
 	if err != nil {
-		return fmt.Errorf("carregar a ficha de %s: %w", row.Name, err)
+		return book.SkillSpendOffer{}, fmt.Errorf("carregar a ficha de %s: %w", row.Name, err)
 	}
 	offers := AttackRerollOffersFor(dto, melee, weaponID)
 	at := slices.IndexFunc(offers, func(o book.SkillSpendOffer) bool { return o.Key == key })
 	if at < 0 {
-		return fmt.Errorf("%s não tem %q para rolar de novo este ataque", row.Name, key)
+		return book.SkillSpendOffer{}, fmt.Errorf("%s não tem %q para rolar de novo este ataque", row.Name, key)
 	}
 	offer := offers[at]
 	if offer.PM > int(dto.ManaAvailable()) {
-		return fmt.Errorf("%s pede %d PM, e %s tem %d", offer.Name, offer.PM, row.Name, dto.ManaAvailable())
+		return book.SkillSpendOffer{}, fmt.Errorf("%s pede %d PM, e %s tem %d", offer.Name, offer.PM, row.Name, dto.ManaAvailable())
 	}
-	if err := reroll(offer); err != nil {
-		return err
-	}
-	return p.inTx(ctx, "pagar o rolar de novo do ataque", func(q *sqlcgen.Queries) error {
-		return chargeMp(ctx, q, p.catalogs, row, offer.PM)
-	})
+	return offer, nil
 }

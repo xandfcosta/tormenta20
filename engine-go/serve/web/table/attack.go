@@ -204,43 +204,22 @@ func confirmsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 }
 
 // afterTheStrike é o que o golpe ENCERRADO deixa, pelo ✓ do mestre ou pelo
-// "errou" dele: o PM do impulso, a guarda da investida e os gatilhos
-// cumulativos. Nenhum deles depende de acertar — o golpe aconteceu —, e o que
-// pede acerto (`bumpsTheAttacker`) lê a decisão no provisório.
+// "errou" dele: a guarda da investida e os gatilhos cumulativos. Nenhum deles
+// depende de acertar — o golpe aconteceu —, e o que pede acerto
+// (`bumpsTheAttacker`) lê a decisão no provisório.
 func (st Scene) afterTheStrike(
 	c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack, antes *int64,
 ) error {
-	if err := st.chargesTheBoost(c, state, pendente); err != nil {
-		return err
-	}
 	if err := st.opensTheGuard(c, state, pendente); err != nil {
 		return err
 	}
 	return st.raisesTheCumulativeBonus(c, state, pendente, antes)
 }
 
-// chargesTheBoost cobra o PM do impulso que o golpe confirmado levou
-// (ALE-487). DEPOIS do commit pela razão do bônus cumulativo logo abaixo: o
-// provisório cancelado não aconteceu, e o PM cobrado na proposta ficaria pago
-// por um golpe que o mestre disse que não houve.
-//
-// O ERRO SOBE, mesmo com o dano já pousado, pela mesma razão de lá: o PM que
-// não saiu é um número que a mesa usaria errado pelo resto da cena.
-func (st Scene) chargesTheBoost(c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack) error {
-	if pendente == nil || pendente.BoostPM <= 0 {
-		return nil
-	}
-	attacker := entryByID(state, pendente.AttackerEntryID)
-	if attacker == nil || attacker.CharacterID == nil {
-		return nil
-	}
-	return st.plays.PayAttackBoost(c.R.Context(), *attacker.CharacterID, pendente.BoostPM)
-}
-
 // opensTheGuard deixa em quem INVESTIU a penalidade na Defesa até a vez dele
-// voltar (p235, ALE-499). Depois do commit pela razão do impulso logo acima: o
-// golpe cancelado não abriu a guarda de ninguém. O NPC que investe não tem
-// ficha onde a penalidade more, e a faixa a diz ao mestre.
+// voltar (p235, ALE-499). Depois do commit: o golpe cancelado não abriu a guarda
+// de ninguém. O NPC que investe não tem ficha onde a penalidade more, e a faixa a
+// diz ao mestre.
 func (st Scene) opensTheGuard(c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack) error {
 	if pendente == nil || pendente.Charge == "" {
 		return nil
@@ -262,7 +241,8 @@ func (st Scene) opensTheGuard(c commandCtx, state *live.SessionRuntimeState, pen
 // mortal.
 //
 // DEPOIS DO COMMIT, sempre: um provisório cancelado não aconteceu, e um bônus
-// que subisse na proposta ficaria para trás quando o mestre dissesse não.
+// que subisse na proposta ficaria para trás quando o mestre dissesse não. A
+// postura que conta é a da proposta, que o provisório guarda.
 //
 // O ERRO SOBE, mesmo com o dano já pousado. É a escolha ruidosa de propósito:
 // o bônus que não foi gravado é um número que a mesa vai usar errado pelo resto
@@ -304,7 +284,7 @@ func (st Scene) bumpsTheAttacker(
 	if pendente.Melee {
 		triggers = append(triggers, "meleeHit")
 	}
-	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, triggers...)
+	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, pendente.AttackerStances, triggers...)
 }
 
 // bumpsTheTarget sobe o que quem APANHA ganha — hoje, o Foco de Batalha do
@@ -324,7 +304,7 @@ func (st Scene) bumpsTheTarget(
 	if target == nil || target.CharacterID == nil {
 		return nil
 	}
-	return st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, "attacked")
+	return st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, pendente.TargetStances, "attacked")
 }
 
 // targetHitPoints é o PV do alvo ANTES da confirmação, ou nulo quando não há

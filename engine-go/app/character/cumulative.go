@@ -27,7 +27,8 @@ import (
 // coisas.
 
 // BumpCumulativeBonus sobe o bônus dos poderes deste personagem cujos gatilhos
-// acabaram de acontecer.
+// acabaram de acontecer. `atProposal` são as posturas que ele tinha quando o golpe foi
+// proposto (ver `cumulativesInTheAir`).
 //
 // VÁRIOS GATILHOS NUMA CHAMADA porque um golpe confirmado pode ser dois ao
 // mesmo tempo — um crítico que também é corpo a corpo —, e duas chamadas
@@ -41,7 +42,7 @@ import (
 // personagem com poder cumulativo. Um erro aqui viraria um ataque recusado por
 // causa de um bônus que não existe.
 func (p Plays) BumpCumulativeBonus(
-	ctx context.Context, characterID int64, triggers ...string,
+	ctx context.Context, characterID int64, atProposal []string, triggers ...string,
 ) error {
 	fired := make([]string, 0, len(triggers))
 	for _, t := range triggers {
@@ -60,7 +61,7 @@ func (p Plays) BumpCumulativeBonus(
 	if err != nil {
 		return fmt.Errorf("montar a ficha %d para subir o bônus cumulativo: %w", characterID, err)
 	}
-	for _, spec := range cumulativesInTheAir(dto, fired) {
+	for _, spec := range cumulativesInTheAir(dto, atProposal, fired) {
 		if err := p.raiseOne(ctx, dto, spec); err != nil {
 			return err
 		}
@@ -69,23 +70,30 @@ func (p Plays) BumpCumulativeBonus(
 }
 
 // cumulativesInTheAir são os poderes cumulativos que ESTE personagem tem, com a
-// postura deles acesa e o gatilho casando.
+// postura deles acesa quando o golpe foi proposto e o gatilho casando.
 //
 // AS TRÊS CONDIÇÕES JUNTAS, e nenhuma é dispensável: sem a posse, todo bárbaro
-// acumularia; sem a flag, a Sangue dos Inimigos valeria fora da fúria, que é
+// acumularia; sem a postura, a Sangue dos Inimigos valeria fora da fúria, que é
 // metade do poder; sem o gatilho, um crítico subiria o bônus de um poder que
 // só acumula ao derrubar.
-func cumulativesInTheAir(dto sheet.CharacterDTO, triggers []string) []book.Activation {
-	flags := map[string]bool{}
-	for _, s := range dto.Stances {
-		flags[s.Flag] = true
-	}
+//
+// A PROPOSTA É UM RETRATO do personagem (decisão do dono), e por isso a postura de agora
+// não entra: ligar a Fúria depois do crítico não sobe nada, e encerrá-la antes do ✓ não
+// tira. Encerrada, ela já não leva embora o bônus gravado depois: ele fica até a cena
+// acabar, ou até a próxima fúria acabar.
+func cumulativesInTheAir(dto sheet.CharacterDTO, atProposal, triggers []string) []book.Activation {
 	outside := []book.Activation{}
 	for _, spec := range book.Activations() {
 		if spec.Cumulative == nil || !slices.Contains(triggers, spec.Cumulative.On) {
 			continue
 		}
-		if spec.RequiresFlag != "" && !flags[spec.RequiresFlag] {
+		// O Foco de Batalha é a própria postura: ele não pede a flag de outra, e acumula
+		// pela dele.
+		stance := spec.RequiresFlag
+		if stance == "" {
+			stance = spec.Flag
+		}
+		if stance != "" && !slices.Contains(atProposal, stance) {
 			continue
 		}
 		if !sheet.OwnsClassPower(dto, spec.ID) {

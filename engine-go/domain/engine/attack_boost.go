@@ -14,9 +14,8 @@ import (
 // (`StepsAt`). O verbete o escreve em `boost`, fora dos modificadores comuns,
 // porque ele não vale na ficha: vale no golpe em que o jogador o paga.
 //
-// O motor confere e devolve; quem COBRA é a confirmação do mestre, depois de o
-// golpe pousar (decisão do dono na ALE-487) — um provisório cancelado não custa
-// nada.
+// O motor confere e devolve; quem COBRA é a proposta, e o cancelamento do mestre
+// devolve (decisão do dono) — um provisório cancelado não custa nada.
 
 // ClassPowerBoost é a oferta do verbete: o preço, o teto que cresce com o nível,
 // o que cada degrau soma, e as duas travas do livro.
