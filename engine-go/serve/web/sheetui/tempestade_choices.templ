@@ -85,7 +85,7 @@ templ raceAbilityDs(v View, block raceAbilityBlock) {
 			@raceAbilityOptions(v, block, block.Swaps)
 		}
 		if block.PowerGroups != nil || block.Search != "" {
-			<span class="ds-help">Ou um poder geral</span>
+			<span class="ds-help">{ block.PowerLabel() }</span>
 			@ds.FilterBar() {
 				@ds.SearchField("race-power-search-"+block.ID, "Buscar poder geral de "+block.Name, templ.Attributes{
 					"value": block.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),

@@ -3,7 +3,7 @@ package engine
 // AS ESCOLHAS DAS HABILIDADES DE RAÇA no motor (ALE-493, ALE-502, ALE-504): o
 // que se escolheu mora em `abilityPicks`, no blob da raça, pelo id da
 // habilidade — perícia (o +2 da Deformidade, o Ofício do Vanguardista), poder
-// (a troca da Deformidade, o poder geral da Memória Póstuma) ou habilidade de
+// (a troca da Deformidade, o poder geral da Memória Póstuma e do Versátil) ou habilidade de
 // outra raça (a Memória Póstuma do osteon).
 
 // abilityChoiceModifiers são os modificadores das habilidades que pedem
@@ -29,7 +29,7 @@ func (r *Ruleset) abilityChoiceModifiers(race *RaceDefinition, picks map[string]
 
 // RaceHeldPowers são os poderes que uma habilidade de raça deu à ficha: o da
 // Tormenta que a Deformidade trocou por um bônus (p24), o geral da Memória
-// Póstuma (p29).
+// Póstuma (p29) e do Versátil (p19).
 //
 //	r.RaceHeldPowers(lefou) // ["olhos-vermelhos"]
 func (r *Ruleset) RaceHeldPowers(ch Character) []string {

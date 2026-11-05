@@ -190,7 +190,7 @@ func pickRaceAbility(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 	var picked error
 	toTrain := ""
 	err := s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
-		// A Memória Póstuma TREINA a perícia escolhida (p29): a conferência
+		// A Memória Póstuma e o Versátil TREINAM a perícia escolhida (p29, p19): a conferência
 		// vê a ficha já treinada, e o treino é gravado depois da escolha.
 		if toTrain = sheet.TrainsOnPick(*dto, ability, option); toTrain != "" {
 			dto.Expertises = trainedCopy(dto.Expertises, toTrain)
