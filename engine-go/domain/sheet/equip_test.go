@@ -39,9 +39,9 @@ func TestEquipAxisError(t *testing.T) {
 	if top, _ := EquipAxisError(nil, "wielded"); top != "" {
 		t.Error("custom item (nil catalog) should skip the axis check")
 	}
-	homebrew := &engine.CatalogItem{ID: "medalhao-de-prata", Name: "Medalhão", Equip: "wielded"}
-	if top, _ := EquipAxisError(homebrew, "vested"); top != "" {
-		t.Error("homebrew vested allowance should pass")
+	medallion := &engine.CatalogItem{ID: "medalhao-de-prata", Name: "Medalhão", Equip: "wielded"}
+	if top, _ := EquipAxisError(medallion, "vested"); top == "" {
+		t.Error("the book only wields the medallion: vesting it is the table rule's, not the axis's")
 	}
 }
 

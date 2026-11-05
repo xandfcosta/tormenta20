@@ -12,14 +12,12 @@ import "t20engine/domain/ecs"
 // # A capacidade é COMPONENTE, e é isso que muda a leitura
 //
 // Os marcadores carregam a CLASSIFICAÇÃO, e o sistema para de reperguntar: o
-// `UnbalancedFixed` funde três condições — é arma, tem o traço `desbalanceada`,
-// tem a melhoria — numa passada, e o sistema que roda sobre ele só escreve o
-// modificador. A regra passa a estar na CONSULTA, visível, em vez de enterrada
-// num `if` no meio de uma função de trinta linhas.
+// `Unproficient` responde uma vez "a pessoa sabe usar isto?", e o sistema que
+// roda sobre ele só escreve o modificador. A regra passa a estar na CONSULTA,
+// visível, em vez de enterrada num `if` no meio de uma função de trinta linhas.
 //
-// O que isso compra: uma regra da mesa nova é um marcador, uma linha na
-// classificação, um sistema e uma linha na lista. **Nenhuma edição em função
-// existente** — que é a diferença entre estender e mexer.
+// O homebrew que morava aqui (a Equilibrada e o medalhão vestido) virou regra
+// da mesa: o mestre a escreve no editor, e ela não é mais marcador.
 
 // WornItem é a fonte crua: o que a pessoa está usando, e o verbete do livro.
 type WornItem struct {
@@ -29,10 +27,9 @@ type WornItem struct {
 
 // OwnGrants é o ESTÁGIO 1 congelado — catálogo, melhorias e material.
 //
-// Ele existe separado do `Grants` porque duas das cinco transformações leem os
-// modificadores ANTES das penalidades: o espelho de ataque de arma e o
-// esotérico vestido. Sem os dois estágios, elas leriam o acumulado e
-// espelhariam a própria penalidade.
+// Ele existe separado do `Grants` porque o espelho de ataque de arma lê os
+// modificadores ANTES das penalidades. Sem os dois estágios, ele leria o
+// acumulado e espelharia a própria penalidade.
 type OwnGrants struct{ Modifiers []Modifier }
 
 // Os MARCADORES. Struct vazia é o suficiente: quem responde a pergunta é a
@@ -42,14 +39,9 @@ type (
 	Unproficient struct{}
 	// WeaponLike: o verbete declara arma.
 	WeaponLike struct{}
-	// UnbalancedFixed: arma desbalanceada COM a melhoria que anula o traço.
-	UnbalancedFixed struct{}
-	// VestedEsoteric: esotérico VESTIDO que a regra opcional deixa manter o
-	// bônus de empunhadura.
-	VestedEsoteric struct{}
 )
 
-// itemSystems são as seis passadas sobre os itens equipados, NA ORDEM.
+// itemSystems são as passadas sobre os itens equipados, NA ORDEM.
 //
 // Trocar duas linhas aqui troca a ordem dos modificadores dentro do item, e o
 // teste de paridade reprova — que é o resultado certo.
@@ -58,8 +50,6 @@ func (r *Ruleset) itemSystems(ch Character) []ecs.System {
 		r.spawnWornItems(ch),
 		penalizeUnproficient,
 		mirrorWeaponAttack,
-		grantEquilibradaHomebrew,
-		grantVestedEsotericHomebrew,
 	}
 }
 
@@ -106,21 +96,10 @@ func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem,
 	if required := requiredProficiency(catalog); required != "" && !prof[required] {
 		ecs.Set(w, e, Unproficient{})
 	}
-	// O ESOTÉRICO NÃO É ARMA, e por isso ele vem ANTES do retorno cedo.
-	// Escrevê-lo depois foi o defeito que o oráculo pegou: o medalhão de prata
-	// é `esoteric`, caía no `return` de "não é arma", e os dois bônus de
-	// empunhadura sumiam da ficha do Kharvos.
-	if it.Equipped != nil && *it.Equipped == "vested" && homebrewVestedOK[catalog.ID] {
-		ecs.Set(w, e, VestedEsoteric{})
-	}
 	if catalog.Weapon == nil {
 		return
 	}
 	ecs.Set(w, e, WeaponLike{})
-	if contains(catalog.Weapon.Traits, "desbalanceada") &&
-		contains(parseStringArray(it.Improvements), "melhoria-equilibrada") {
-		ecs.Set(w, e, UnbalancedFixed{})
-	}
 }
 
 // ownItemMods é o estágio 1: o que o verbete e as sobreposições concedem.
@@ -206,22 +185,5 @@ func mirrorWeaponAttack(w *ecs.World) {
 		item, _ := ecs.Get[WornItem](w, e)
 		own, _ := ecs.Get[OwnGrants](w, e)
 		grantMore(w, e, mirrorWeaponAttackMods(item.Catalog, own.Modifiers))
-	})
-}
-
-// grantEquilibradaHomebrew: a melhoria que anula o traço desbalanceada.
-func grantEquilibradaHomebrew(w *ecs.World) {
-	ecs.Each(w, func(e ecs.Entity, _ UnbalancedFixed) {
-		item, _ := ecs.Get[WornItem](w, e)
-		grantMore(w, e, equilibradaHomebrewMods(item.Catalog, parseStringArray(item.Item.Improvements)))
-	})
-}
-
-// grantVestedEsotericHomebrew: o esotérico vestido mantém o bônus de empunhar.
-func grantVestedEsotericHomebrew(w *ecs.World) {
-	ecs.Each(w, func(e ecs.Entity, _ VestedEsoteric) {
-		item, _ := ecs.Get[WornItem](w, e)
-		own, _ := ecs.Get[OwnGrants](w, e)
-		grantMore(w, e, vestedEsotericHomebrewMods(item.Item.Equipped, item.Catalog, own.Modifiers))
 	})
 }

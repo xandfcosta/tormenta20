@@ -6,8 +6,7 @@ import (
 
 // The top of the COLLECTION layer: ActiveItemsFor (the entry point) and the
 // item-level modifier assembly — catalog mods, overlays (melhorias/materiais),
-// non-proficiency penalties (p142), weapon-attack mirroring, and the two opt-in
-// homebrew rules. Together with collect_entities.go (race/origin/class/tormenta)
+// non-proficiency penalties (p142) and weapon-attack mirroring. Together with collect_entities.go (race/origin/class/tormenta)
 // it produces the []ActiveItem the resolution engine (ComputeItemEffects)
 // consumes.
 
@@ -16,10 +15,6 @@ import (
 var vestedWear = "vested"
 
 const deformidadeExpertiseBonus = 2 // deformidade.ts DEFORMIDADE_PERICIA_BONUS
-
-// homebrewVestedOK mirrors items/homebrew.ts HOMEBREW_VESTED_OK — esotéricos
-// that may be WORN and still grant their empunhado bonus (opt-in).
-var homebrewVestedOK = map[string]bool{"medalhao-de-prata": true}
 
 // expertiseNamesSet mirrors expertises.ts EXPERTISE_NAMES — the valid perícia
 // names Deformidade may target.
@@ -305,52 +300,6 @@ func mirrorWeaponAttackMods(catalog *CatalogItem, ownMods []Modifier) []Modifier
 			Condition: condition,
 			Note:      note,
 		})
-	}
-	return out
-}
-
-// equilibradaHomebrewMods: an opt-in +2 that nets out a
-// desbalanceada weapon's -2 when the Equilibrada melhoria is attached.
-func equilibradaHomebrewMods(catalog *CatalogItem, improvementIDs []string) []Modifier {
-	if catalog == nil || catalog.Weapon == nil {
-		return []Modifier{}
-	}
-	if !contains(catalog.Weapon.Traits, "desbalanceada") {
-		return []Modifier{}
-	}
-	if !contains(improvementIDs, "melhoria-equilibrada") {
-		return []Modifier{}
-	}
-	return []Modifier{{
-		Target:    ModifierTarget{K: "attack", Scope: WeaponDamageScope(catalog.ID)},
-		Amount:    2,
-		BonusType: "untyped",
-		Condition: &ModifierCondition{C: "context", Note: "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"},
-		Note:      "anula desbalanceada",
-	}}
-}
-
-// vestedEsotericHomebrewMods: a HOMEBREW_VESTED_OK esotérico
-// worn (vested) keeps its wielded-gated bonuses behind one flagOn toggle.
-func vestedEsotericHomebrewMods(equipped *string, catalog *CatalogItem, ownMods []Modifier) []Modifier {
-	if equipped == nil || *equipped != "vested" {
-		return []Modifier{}
-	}
-	if catalog == nil || !homebrewVestedOK[catalog.ID] {
-		return []Modifier{}
-	}
-	out := []Modifier{}
-	for _, m := range ownMods {
-		if m.Condition == nil || m.Condition.C != "wielded" {
-			continue
-		}
-		nm := m
-		nm.Condition = &ModifierCondition{
-			C:     "flagOn",
-			Flag:  "homebrew-vestido-" + catalog.ID,
-			Label: "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)",
-		}
-		out = append(out, nm)
 	}
 	return out
 }

@@ -27,10 +27,6 @@ const (
 	VestedLimit = 4
 )
 
-// homebrewVestedOK são os esotéricos que podem ser VESTIDOS apesar de o eixo
-// cru dizer só empunhado. É regra opcional, ligada por escolha da mesa.
-var homebrewVestedOK = map[string]bool{"medalhao-de-prata": true}
-
 // HandsFor são as mãos que um lugar de equipar ocupa: uma para `wielded`, duas
 // para `wielded2`, nenhuma para o resto (p141).
 //
@@ -66,14 +62,12 @@ func allowedEquipStates(equip string) []string {
 // EquipAxisError cobra que o `equipped` caiba no eixo do item do catálogo.
 //
 // Devolve DUAS mensagens — a do topo e a do campo — e as duas vêm vazias quando
-// a troca é válida, quando o item é inventado ou desconhecido, e quando a
-// permissão de vestir do homebrew se aplica. Duas porque quem mostra decide:
+// a troca é válida e quando o item é inventado ou desconhecido. Vestir o que o
+// livro manda empunhar é a regra da mesa "vale como empunhado", e quem a
+// pergunta é a cena (`vestsByTableRule`). Duas porque quem mostra decide:
 // o formulário põe a do campo ao lado da linha, a API JSON responde a do topo.
 func EquipAxisError(catalog *engine.CatalogItem, equipped string) (topMsg, fieldMsg string) {
 	if catalog == nil {
-		return "", ""
-	}
-	if equipped == "vested" && homebrewVestedOK[catalog.ID] {
 		return "", ""
 	}
 	allowed := allowedEquipStates(catalog.Equip)
