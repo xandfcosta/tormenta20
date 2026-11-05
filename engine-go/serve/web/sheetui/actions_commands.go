@@ -28,12 +28,17 @@ func rollsAttackOnTheTarget(otherUse bool) func(Scene, *http.Request, sqlcgen.Ch
 		if err != nil {
 			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 		}
-		strike := ActionStrike{Weapon: weapon, OtherUse: otherUse, Dose: chosenDose(sig, weapon)}
-		if sig.BoostPower != "" && sig.BoostWeapon != nil && int(*sig.BoostWeapon) == weapon {
-			strike.Boost = engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
-		}
+		strike := ActionStrike{Weapon: weapon, OtherUse: otherUse, Dose: chosenDose(sig, weapon), Boost: chosenBoost(sig, weapon)}
 		return s.proposeOnTheTable(r, row, strike, sig)
 	}
+}
+
+// chosenBoost é o impulso escolhido na tira desta arma, ou nenhum.
+func chosenBoost(sig Signals, weapon int) engine.BoostChoice {
+	if sig.BoostPower == "" || sig.BoostWeapon == nil || int(*sig.BoostWeapon) != weapon {
+		return engine.BoostChoice{}
+	}
+	return engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
 }
 
 // chargesTheTarget rola a investida (p235) — ou a Imprudente (p42) — da vez
@@ -56,7 +61,7 @@ func rollsExtraStrikeOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character
 	if err != nil {
 		return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 	}
-	return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, ExtraStrike: true}, sig)
+	return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, ExtraStrike: true, Boost: chosenBoost(sig, weapon)}, sig)
 }
 
 // rollsManeuverOnTheTarget rola a manobra da vez contra o alvo escolhido

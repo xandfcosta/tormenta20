@@ -72,7 +72,7 @@ type PendingAttack struct {
 	// OpensExtra diz que este golpe é a ação agredir: a resposta do mestre abre o ataque extra
 	// das armas naturais (p25). NaturalSource é a fonte da arma, quando ela é natural. ExtraOf é
 	// a fonte quando este golpe É o ataque extra, e ExtraLimit, quantos ela dá na vez. O PM dele
-	// vai no `BoostPM`.
+	// vai no `BoostPM`, somado ao do impulso.
 	OpensExtra    bool   `json:"opensExtra,omitempty"`
 	NaturalSource string `json:"naturalSource,omitempty"`
 	ExtraOf       string `json:"extraOf,omitempty"`

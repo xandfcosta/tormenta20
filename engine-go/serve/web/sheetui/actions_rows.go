@@ -18,14 +18,20 @@ import (
 
 // extraStrikeRows é o ataque extra de cada arma natural (p25): não gasta a vez, e espera a
 // resposta do mestre ao golpe com outra arma. A mesa escreve os dois sinais.
-func extraStrikeRows(combat panelCombat) []actionRow {
+func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
 	rows := []actionRow{}
 	for i, weapon := range combat.Weapons {
 		natural := weapon.Natural
 		if natural == nil {
 			continue
 		}
+		var offered []attackBoost
+		if i < len(boosts) {
+			offered = boosts[i]
+		}
 		rows = append(rows, actionRow{
+			Weapon: i,
+			Boosts: offered,
 			Name:   "Ataque extra · " + weapon.Name,
 			Detail: weapon.Damage + " · depois de agredir com outra arma",
 			Value:  weapon.Attack,
