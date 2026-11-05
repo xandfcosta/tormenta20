@@ -109,6 +109,20 @@ func amendmentsOf(
 			Modifiers: mods,
 		})
 	}
+	// O QUE O MESTRE CRIOU PARA SE COLOCAR NUM ITEM.
+	improvements, err := q.ListCampaignImprovements(ctx, campaignID)
+	if err != nil {
+		return out, fmt.Errorf("ler as melhorias da campanha %d: %w", campaignID, err)
+	}
+	for _, row := range improvements {
+		effect, err := engine.ParseRuleEffect(row.Effect)
+		if err != nil {
+			return engine.Amendments{}, fmt.Errorf("a melhoria %q da campanha %d: %w", row.Name, campaignID, err)
+		}
+		out.Improvements = append(out.Improvements, engine.TableImprovement{
+			ID: row.ID, Name: row.Name, Applies: selectorOf(row.Characterid), Family: row.Family, Effect: effect,
+		})
+	}
 	// O QUE A MESA DESLIGA, termo a termo.
 	silences, err := q.ListCampaignSilences(ctx, campaignID)
 	if err != nil {

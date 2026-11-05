@@ -67,6 +67,16 @@ type CampaignIgnoredRule struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignImprovement struct {
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Family      string        `json:"family"`
+	Effect      string        `json:"effect"`
+	Updatedat   string        `json:"updatedat"`
+}
+
 type CampaignItem struct {
 	Campaignid int64  `json:"campaignid"`
 	Itemid     string `json:"itemid"`

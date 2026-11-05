@@ -60,6 +60,7 @@ linha
 lista
 magia
 manobra
+melhoria
 nome
 opcao
 npcId

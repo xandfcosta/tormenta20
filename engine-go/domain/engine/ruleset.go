@@ -62,6 +62,9 @@ type Amendments struct {
 	// Rules são as regras da mesa que estão ligadas: condições e efeito, montados pelo mestre.
 	// Ver `table_rules.go`.
 	Rules []TableRule
+
+	// Improvements são as melhorias que o mestre criou. Ver `table_improvements.go`.
+	Improvements []TableImprovement
 }
 
 // CampaignGrant é o que a mesa concede a quem o seletor alcança.
@@ -130,6 +133,9 @@ func (r *Ruleset) Book() *Catalogs { return r.book }
 // Ela nunca escreve no mapa do livro: duas mesas leem o mesmo `Catalogs`
 // primado, e sujá-lo vazaria a regra de uma para a outra e para o molde.
 func (r *Ruleset) itemOf(id string) *CatalogItem {
+	if created := r.tableImprovementEntry(id); created != nil {
+		return created
+	}
 	book := r.book.itemsByID[id]
 	adds := r.mesa.Entries[id]
 	if book == nil || len(adds) == 0 {

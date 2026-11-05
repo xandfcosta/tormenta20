@@ -62,6 +62,8 @@ type oneView struct {
 
 	// TableRules são as regras da mesa, carregadas só na aba delas.
 	TableRules []tableRuleRow
+	// TableImprovements são as melhorias da mesa, carregadas na mesma aba.
+	TableImprovements []tableImprovementRow
 
 	// Places é o ACERVO da campanha, e ele só é carregado na aba dele.
 	//
@@ -227,6 +229,9 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 
 	if v.AbaAtiva() == "regras" {
 		if v.TableRules, err = s.tableRulesOf(ctx, c.ID, v.IsGM, euID); err != nil {
+			return oneView{}, err
+		}
+		if v.TableImprovements, err = s.tableImprovementsOf(ctx, c.ID, v.IsGM, euID); err != nil {
 			return oneView{}, err
 		}
 	}

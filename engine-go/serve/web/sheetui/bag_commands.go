@@ -149,7 +149,14 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 		return err
 	}
 	catalog := book.ItemByID(itemCatalog(item))
-	if err := fitsItemImprovement(catalog, signals.ItemImprovements, "improvement"); err != nil {
+	if twice := repeatedImprovement(signals.ItemImprovements); twice != "" {
+		return fmt.Errorf("a melhoria %q veio duas vezes: cada melhoria entra uma vez no item", twice)
+	}
+	fromBook, fromTable := splitImprovementIDs(signals.ItemImprovements)
+	if err := fitsItemImprovement(catalog, fromBook, "improvement"); err != nil {
+		return err
+	}
+	if err := tableImprovementsFit(s, r, row, item, catalog, fromTable); err != nil {
 		return err
 	}
 	materials := []string{}
@@ -163,8 +170,21 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	// arma é o MESTRE, e a escrita dele é o `characterPlays.EnchantItem`. Sem
 	// um `ItemEnchants` nos sinais, um pedido montado à mão não tem por onde
 	// entrar — a fronteira é a ausência do campo, não um `if` (ALE-416).
-	return s.plays.SaveItemOverlays(
-		r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
+	// Pelo `itemGesture`: a melhoria pode dar PV, e tirá-la com pouca vida derruba como guardar o item.
+	withOverlays := func(dto *sheet.CharacterDTO) {
+		for i := range dto.Items {
+			if dto.Items[i].ID == item.ID {
+				dto.Items[i].Improvements = sheet.MarshalStrings(&signals.ItemImprovements)
+				dto.Items[i].Material = nil
+				if signals.ItemMaterial != "" {
+					dto.Items[i].Material = &signals.ItemMaterial
+				}
+			}
+		}
+	}
+	return s.itemGesture(r, row, withOverlays, func() error {
+		return s.plays.SaveItemOverlays(r.Context(), item.ID, signals.ItemImprovements, signals.ItemMaterial)
+	})
 }
 
 // toggleOversizedWeapon liga ou desliga a marca de arma de categoria maior. Marcar

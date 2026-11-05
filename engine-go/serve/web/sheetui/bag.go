@@ -138,12 +138,12 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 		}
 	}
 	card := func(item sheet.ItemDTO) *equippedCard {
-		return equippedCardOf(item, proficiencies, exempt)
+		return equippedCardOf(dto.Ruleset, item, proficiencies, exempt)
 	}
 	panel.Hands, panel.HandsUsed = handPositionsOf(wielded, card)
 	panel.Vested, panel.VestedUsed = vestedPositionsOf(vested, card)
 	panel.StowedTotal = len(saved)
-	panel.Stowed = stowedTilesOf(bagFiltered(saved, search, category))
+	panel.Stowed = stowedTilesOf(dto.Ruleset, bagFiltered(saved, search, category))
 	sheet, _, ok := s.sheetForPanels(dto)
 	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet.Attributes)
 	if ok {
@@ -154,13 +154,13 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 }
 
 // stowedTilesOf traduz os itens guardados em ladrilhos.
-func stowedTilesOf(items []sheet.ItemDTO) []stowedTile {
+func stowedTilesOf(world *engine.Ruleset, items []sheet.ItemDTO) []stowedTile {
 	rows := make([]stowedTile, 0, len(items))
 	for _, item := range items {
 		rows = append(rows, stowedTile{
 			ID: item.ID, Name: item.Name, Quantity: item.Quantity,
 			Glyph:    itemGlyph(item),
-			Overlays: itemOverlays(item),
+			Overlays: append(tableImprovementNames(world, item), itemOverlays(item)...),
 			Command:  strconv.FormatInt(item.ID, 10),
 		})
 	}

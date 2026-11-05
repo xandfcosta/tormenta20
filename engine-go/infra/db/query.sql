@@ -858,3 +858,25 @@ DELETE FROM character_item_doses WHERE itemId = ?;
 
 -- name: SetItemOverlays :exec
 UPDATE character_items SET improvements = ?, material = ? WHERE id = ?;
+
+-- name: ListCampaignImprovements :many
+-- As melhorias da mesa, na ordem em que nasceram: o id vem do relogio.
+SELECT id, characterId, name, family, effect
+FROM campaign_improvements WHERE campaignId = ? ORDER BY id;
+
+-- name: InsertCampaignImprovement :exec
+INSERT INTO campaign_improvements (id, campaignId, characterId, name, family, effect, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- name: RewriteCampaignImprovement :execrows
+UPDATE campaign_improvements SET characterId = ?, name = ?, family = ?, effect = ?, updatedAt = ?
+WHERE id = ? AND campaignId = ?;
+
+-- name: DropCampaignImprovement :execrows
+DELETE FROM campaign_improvements WHERE id = ? AND campaignId = ?;
+
+-- name: ListCampaignItemsWithImprovements :many
+-- Os itens da mesa que levam alguma melhoria: quem conta o uso e quem tira a excluida.
+SELECT ci.id, ci.improvements, ci.material
+FROM character_items ci JOIN campaign_members m ON m.characterId = ci.characterId
+WHERE m.campaignId = ? AND ci.improvements <> '[]';

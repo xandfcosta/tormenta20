@@ -1012,6 +1012,23 @@ func (q *Queries) DosesOfCharacter(ctx context.Context, characterid int64) ([]Do
 	return items, nil
 }
 
+const dropCampaignImprovement = `-- name: DropCampaignImprovement :execrows
+DELETE FROM campaign_improvements WHERE id = ? AND campaignId = ?
+`
+
+type DropCampaignImprovementParams struct {
+	ID         string `json:"id"`
+	Campaignid int64  `json:"campaignid"`
+}
+
+func (q *Queries) DropCampaignImprovement(ctx context.Context, arg DropCampaignImprovementParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, dropCampaignImprovement, arg.ID, arg.Campaignid)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const dropCampaignRule = `-- name: DropCampaignRule :execrows
 DELETE FROM campaign_rules WHERE id = ? AND campaignId = ?
 `
@@ -1686,6 +1703,34 @@ func (q *Queries) IgnoreRuleInCampaign(ctx context.Context, arg IgnoreRuleInCamp
 	return err
 }
 
+const insertCampaignImprovement = `-- name: InsertCampaignImprovement :exec
+INSERT INTO campaign_improvements (id, campaignId, characterId, name, family, effect, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+`
+
+type InsertCampaignImprovementParams struct {
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Family      string        `json:"family"`
+	Effect      string        `json:"effect"`
+	Updatedat   string        `json:"updatedat"`
+}
+
+func (q *Queries) InsertCampaignImprovement(ctx context.Context, arg InsertCampaignImprovementParams) error {
+	_, err := q.db.ExecContext(ctx, insertCampaignImprovement,
+		arg.ID,
+		arg.Campaignid,
+		arg.Characterid,
+		arg.Name,
+		arg.Family,
+		arg.Effect,
+		arg.Updatedat,
+	)
+	return err
+}
+
 const insertCampaignRule = `-- name: InsertCampaignRule :exec
 INSERT INTO campaign_rules (id, campaignId, characterId, name, enabled, conditions, effect, updatedAt)
 VALUES (?, ?, ?, ?, 0, ?, ?, ?)
@@ -2011,6 +2056,49 @@ func (q *Queries) ListCampaignGrants(ctx context.Context, campaignid int64) ([]L
 	return items, nil
 }
 
+const listCampaignImprovements = `-- name: ListCampaignImprovements :many
+SELECT id, characterId, name, family, effect
+FROM campaign_improvements WHERE campaignId = ? ORDER BY id
+`
+
+type ListCampaignImprovementsRow struct {
+	ID          string        `json:"id"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Family      string        `json:"family"`
+	Effect      string        `json:"effect"`
+}
+
+// As melhorias da mesa, na ordem em que nasceram: o id vem do relogio.
+func (q *Queries) ListCampaignImprovements(ctx context.Context, campaignid int64) ([]ListCampaignImprovementsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignImprovements, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignImprovementsRow{}
+	for rows.Next() {
+		var i ListCampaignImprovementsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Name,
+			&i.Family,
+			&i.Effect,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCampaignItemPatches = `-- name: ListCampaignItemPatches :many
 SELECT itemId, adds FROM campaign_items WHERE campaignId = ? ORDER BY itemId
 `
@@ -2035,6 +2123,42 @@ func (q *Queries) ListCampaignItemPatches(ctx context.Context, campaignid int64)
 	for rows.Next() {
 		var i ListCampaignItemPatchesRow
 		if err := rows.Scan(&i.Itemid, &i.Adds); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignItemsWithImprovements = `-- name: ListCampaignItemsWithImprovements :many
+SELECT ci.id, ci.improvements, ci.material
+FROM character_items ci JOIN campaign_members m ON m.characterId = ci.characterId
+WHERE m.campaignId = ? AND ci.improvements <> '[]'
+`
+
+type ListCampaignItemsWithImprovementsRow struct {
+	ID           int64          `json:"id"`
+	Improvements string         `json:"improvements"`
+	Material     sql.NullString `json:"material"`
+}
+
+// Os itens da mesa que levam alguma melhoria: quem conta o uso e quem tira a excluida.
+func (q *Queries) ListCampaignItemsWithImprovements(ctx context.Context, campaignid int64) ([]ListCampaignItemsWithImprovementsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignItemsWithImprovements, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignItemsWithImprovementsRow{}
+	for rows.Next() {
+		var i ListCampaignItemsWithImprovementsRow
+		if err := rows.Scan(&i.ID, &i.Improvements, &i.Material); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -3759,6 +3883,37 @@ UPDATE account_invite_links SET revokedAt = ?1 WHERE revokedAt IS NULL
 func (q *Queries) RevokeOpenAccountInvites(ctx context.Context, now sql.NullString) error {
 	_, err := q.db.ExecContext(ctx, revokeOpenAccountInvites, now)
 	return err
+}
+
+const rewriteCampaignImprovement = `-- name: RewriteCampaignImprovement :execrows
+UPDATE campaign_improvements SET characterId = ?, name = ?, family = ?, effect = ?, updatedAt = ?
+WHERE id = ? AND campaignId = ?
+`
+
+type RewriteCampaignImprovementParams struct {
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Family      string        `json:"family"`
+	Effect      string        `json:"effect"`
+	Updatedat   string        `json:"updatedat"`
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+}
+
+func (q *Queries) RewriteCampaignImprovement(ctx context.Context, arg RewriteCampaignImprovementParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, rewriteCampaignImprovement,
+		arg.Characterid,
+		arg.Name,
+		arg.Family,
+		arg.Effect,
+		arg.Updatedat,
+		arg.ID,
+		arg.Campaignid,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const rewriteCampaignRule = `-- name: RewriteCampaignRule :execrows
