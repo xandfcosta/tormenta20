@@ -146,21 +146,29 @@ templ ruleEditorForm(v ruleEditorView) {
 			}
 		</div>
 		<div class="ds-field">
-			<span class="ds-field-label">Efeito: soma em</span>
+			<span class="ds-field-label">Efeito</span>
 			<div class="ds-rule-line">
-				@ruleSelect(draftPost(v, ""), "Em quê", "table_rule_target", v.Draft.Target, v.Targets)
-				if v.Draft.Target == "expertise" {
-					@ruleSelect(draftPost(v, ""), "Qual perícia", "table_rule_skill", v.Draft.Skill, v.Skills)
-				}
-				<input class="ds-input ds-rule-amount" aria-label="Quanto" type="number" data-bind:table_rule_amount data-on:change={ draftPost(v, "") }/>
-				if book.RuleCountsPerItem(v.Draft.When, v.Draft.Target) {
-					<span class="ds-rule-limit">
-						até
-						<input class="ds-input" aria-label="Até quantos itens" placeholder="sem limite" type="number" min="1" data-bind:table_rule_limit data-on:change={ draftPost(v, "") }/>
-						itens
-					</span>
+				@ruleSelect(draftPost(v, ""), "Tipo de efeito", "table_rule_effect", v.Draft.Effect, v.Effects)
+				if v.Draft.Effect == engine.RuleBorrowsPowers {
+					@ruleSelect(draftPost(v, ""), "De qual deus", "table_rule_god", v.Draft.God, v.Gods)
 				}
 			</div>
+			if v.Draft.Effect == engine.RuleAdds {
+				<div class="ds-rule-line">
+					@ruleSelect(draftPost(v, ""), "Em quê", "table_rule_target", v.Draft.Target, v.Targets)
+					if v.Draft.Target == "expertise" {
+						@ruleSelect(draftPost(v, ""), "Qual perícia", "table_rule_skill", v.Draft.Skill, v.Skills)
+					}
+					<input class="ds-input ds-rule-amount" aria-label="Quanto" type="number" data-bind:table_rule_amount data-on:change={ draftPost(v, "") }/>
+					if book.RuleCountsPerItem(v.Draft.When, v.Draft.Target) {
+						<span class="ds-rule-limit">
+							até
+							<input class="ds-input" aria-label="Até quantos itens" placeholder="sem limite" type="number" min="1" data-bind:table_rule_limit data-on:change={ draftPost(v, "") }/>
+							itens
+						</span>
+					}
+				</div>
+			}
 		</div>
 		<div class="ds-field">
 			<span class="ds-field-label">Prévia</span>

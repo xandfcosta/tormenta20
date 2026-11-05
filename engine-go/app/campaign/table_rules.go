@@ -5,12 +5,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
 	"t20engine/app"
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -168,4 +170,33 @@ func (l Lifecycle) characterSitsAt(ctx context.Context, campaignID, characterID 
 // newTableRuleID nasce do relógio, porque a lista se lê na ordem do id: a mais antiga primeiro.
 func newTableRuleID() string {
 	return "regra-" + strconv.FormatInt(time.Now().UnixNano(), 36)
+}
+
+// DropGrantedPowers tira das fichas da mesa os poderes concedidos que uma regra deixou de emprestar
+// (decisão do dono). Quem calcula o que deixou de valer é a cena, que tem as fichas carregadas; aqui
+// fica a escrita, depois de conferir o dono da mesa e o assento de cada ficha.
+func (l Lifecycle) DropGrantedPowers(ctx context.Context, who app.Caller, campaignID int64, lost map[int64][]string) error {
+	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
+		return err
+	}
+	for characterID, powers := range lost {
+		if err := l.characterSitsAt(ctx, campaignID, characterID); err != nil {
+			return err
+		}
+		row, err := l.queries.GetCharacter(ctx, characterID)
+		if err != nil {
+			return fmt.Errorf("ler a ficha %d: %w", characterID, err)
+		}
+		held := sheet.UnmarshalStrings(row.Godpowers)
+		kept := slices.DeleteFunc(slices.Clone(held), func(power string) bool { return slices.Contains(powers, power) })
+		if len(kept) == len(held) {
+			continue
+		}
+		if err := l.queries.SetCharacterChoices(ctx, sqlcgen.SetCharacterChoicesParams{
+			GodPowers: sql.NullString{String: sheet.MarshalStrings(&kept), Valid: true}, UpdatedAt: dbvalue.NowISO(), ID: characterID,
+		}); err != nil {
+			return fmt.Errorf("tirar os poderes %v da ficha %d: %w", powers, characterID, err)
+		}
+	}
+	return nil
 }

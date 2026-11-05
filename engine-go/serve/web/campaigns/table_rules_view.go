@@ -83,6 +83,8 @@ type ruleDraft struct {
 	Scope     string
 	Character string
 	When      []engine.RuleCondition
+	Effect    string
+	God       string
 	Target    string
 	Skill     string
 	Amount    string
@@ -90,7 +92,7 @@ type ruleDraft struct {
 }
 
 func blankRuleDraft() ruleDraft {
-	return ruleDraft{Scope: "mesa", Target: "attack", Amount: "1", When: []engine.RuleCondition{}}
+	return ruleDraft{Scope: "mesa", Effect: engine.RuleAdds, Target: "attack", Amount: "1", When: []engine.RuleCondition{}}
 }
 
 // readRuleDraft lê os sinais do editor.
@@ -103,7 +105,8 @@ func readRuleDraft(r *http.Request) (ruleDraft, error) {
 	draft := ruleDraft{
 		ID: text("table_rule_id"), Name: text("table_rule_name"), Scope: text("table_rule_scope"),
 		Character: text("table_rule_character"), Target: text("table_rule_target"),
-		Skill: text("table_rule_skill"), Amount: text("table_rule_amount"), Limit: text("table_rule_limit"), When: []engine.RuleCondition{},
+		Skill: text("table_rule_skill"), Amount: text("table_rule_amount"), Limit: text("table_rule_limit"),
+		Effect: text("table_rule_effect"), God: text("table_rule_god"), When: []engine.RuleCondition{},
 	}
 	count, _ := strconv.Atoi(text("table_rule_count"))
 	for slot := 1; slot <= min(count, book.MaxRuleConditions); slot++ {
@@ -123,6 +126,15 @@ func signalText(signals map[string]json.RawMessage, key string) string {
 
 // normalized acerta o que a troca deixou para trás: a espécie mudou e o valor era da outra.
 func (d ruleDraft) normalized() ruleDraft {
+	if d.Effect == "" {
+		d.Effect = engine.RuleAdds
+	}
+	if d.Effect == engine.RuleAdds && d.Target == "" {
+		d.Target = "attack"
+	}
+	if d.Effect == engine.RuleBorrowsPowers && d.God == "" {
+		d.God = "arsenal"
+	}
 	for i, condition := range d.When {
 		if condition.Kind == "" {
 			condition.Kind = engine.RuleOnItem
@@ -161,6 +173,13 @@ func addsEffect(targetID, skill, written string) engine.RuleEffect {
 }
 
 func (d ruleDraft) effect() engine.RuleEffect {
+	switch d.Effect {
+	case "", engine.RuleAdds:
+	case engine.RuleBorrowsPowers:
+		return engine.RuleEffect{Kind: d.Effect, God: d.God}
+	default:
+		return engine.RuleEffect{Kind: d.Effect}
+	}
 	effect := addsEffect(d.Target, d.Skill, d.Amount)
 	// Campo escondido não vale: o sinal fica com o que se digitou antes de a regra deixar de somar por item.
 	if book.RuleCountsPerItem(d.When, d.Target) {
@@ -194,7 +213,8 @@ func (d ruleDraft) signals() map[string]any {
 	out := map[string]any{
 		"table_rule_id": d.ID, "table_rule_name": d.Name, "table_rule_scope": d.Scope,
 		"table_rule_character": d.Character, "table_rule_target": d.Target, "table_rule_skill": d.Skill,
-		"table_rule_amount": d.Amount, "table_rule_limit": d.Limit, "table_rule_count": len(d.When),
+		"table_rule_amount": d.Amount, "table_rule_limit": d.Limit,
+		"table_rule_effect": d.Effect, "table_rule_god": d.God, "table_rule_count": len(d.When),
 	}
 	for slot := 1; slot <= book.MaxRuleConditions; slot++ {
 		kind, value := "", ""
@@ -231,6 +251,7 @@ func tableRulesSignals() string {
 func draftOfRule(rule campaign.StoredTableRule) ruleDraft {
 	draft := ruleDraft{
 		ID: rule.ID, Name: rule.Name, Scope: "mesa", When: rule.When,
+		Effect: rule.Effect.Kind, God: rule.Effect.God,
 		Target: rule.Effect.Target.K, Skill: rule.Effect.Target.Name, Amount: strconv.Itoa(rule.Effect.Amount),
 	}
 	if rule.Effect.Limit > 0 {
@@ -257,6 +278,8 @@ type ruleEditorView struct {
 	Lines      []ruleConditionLine
 	Kinds      []book.RuleOption
 	Targets    []book.RuleOption
+	Effects    []book.RuleOption
+	Gods       []book.RuleOption
 	Skills     []book.RuleOption
 	Characters []book.RuleOption
 	Preview    string
@@ -268,6 +291,7 @@ type ruleEditorView struct {
 func (s Scene) ruleEditorOf(ctx context.Context, campaignID int64, draft ruleDraft, refusal string) (ruleEditorView, error) {
 	v := ruleEditorView{
 		CampaignID: campaignID, Draft: draft, Kinds: book.RuleConditionKinds(), Targets: book.RuleTargets(),
+		Effects: book.RuleEffectKinds(), Gods: book.LendingGods(),
 		Refusal: refusal, CanAdd: len(draft.When) < book.MaxRuleConditions,
 	}
 	for i, condition := range draft.When {

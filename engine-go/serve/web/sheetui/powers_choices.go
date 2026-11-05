@@ -368,11 +368,13 @@ func devotionChoiceOf(dto sheet.CharacterDTO) devotionChoice {
 	options := sheet.DevotionOptions(dto.Classes)
 	choice := devotionChoice{
 		Name: "nenhuma", Required: sheet.DevotionRequired(dto.Classes),
-		Gods: *markedPicker(options, god), Limit: sheet.GrantedPowerLimit(dto.Classes, god),
+		Gods: *markedPicker(options, god), Limit: sheet.GrantedPowerLimit(dto, god),
 	}
 	held := sheet.UnmarshalStrings(dto.GodPowers)
+	offered := sheet.GrantedPowersFor(dto, god)
+	ofTheGod := sheet.GrantedPowerNames(dto, god)
 	for _, power := range held {
-		if god != "" && sheet.GrantedPowerIsOfGod(god, power) {
+		if god != "" && slices.Contains(ofTheGod, power) {
 			choice.Held++
 		} else {
 			choice.OldPowers = append(choice.OldPowers, power)
@@ -382,7 +384,7 @@ func devotionChoiceOf(dto sheet.CharacterDTO) devotionChoice {
 		return choice
 	}
 	choice.Name = book.DevotionName(god)
-	for _, power := range book.GrantedPowersOf(god) {
+	for _, power := range offered {
 		choice.Powers = append(choice.Powers, grantedPowerRow{
 			Name: power.Name, Detail: power.Description, Active: slices.Contains(held, power.Name),
 		})

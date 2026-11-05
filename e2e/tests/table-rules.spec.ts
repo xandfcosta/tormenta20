@@ -71,6 +71,26 @@ test('o limite aparece só onde a regra soma por item', async ({ page }) => {
   await expect(limit).toHaveCount(0)
 })
 
+// O tipo de efeito troca os campos do editor: o deus aparece no "escolhe poderes de", e a soma volta.
+test('o tipo de efeito troca os campos do editor', async ({ page }) => {
+  await page.goto('/campanhas/1?tab=regras')
+  await page.getByRole('button', { name: 'Nova regra' }).click()
+  const editor = page.locator('dialog[open]')
+  await expect(editor.getByLabel('Em quê')).toBeVisible()
+
+  await editor.getByLabel('Tipo de efeito').selectOption({ label: 'Escolhe poderes de' })
+  await expect(editor.getByLabel('De qual deus')).toBeVisible()
+  await expect(editor.getByLabel('Em quê')).toHaveCount(0)
+  await expect(editor.getByText('escolhe poderes de Arsenal')).toBeVisible()
+
+  await editor.getByLabel('Tipo de efeito').selectOption({ label: 'Vale como empunhado' })
+  await expect(editor.getByLabel('De qual deus')).toHaveCount(0)
+  await expect(editor.getByText('vestido, vale como empunhado')).toBeVisible()
+
+  await editor.getByLabel('Tipo de efeito').selectOption({ label: 'Soma em' })
+  await expect(editor.getByLabel('Em quê')).toBeVisible()
+})
+
 // A resposta de um rascunho pode chegar depois de a pessoa ter seguido escrevendo. Se ela trouxer de
 // volta o que a pessoa digitou, o texto volta atrás sem aviso — e a bancada rápida nunca vê.
 test('a resposta atrasada não desfaz o que se digitou depois', async ({ page }) => {

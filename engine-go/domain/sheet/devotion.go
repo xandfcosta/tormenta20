@@ -69,18 +69,50 @@ func devotionIsValid(dto CharacterDTO) error {
 	return DevotionRefusal(dto.Classes, *dto.God)
 }
 
-// GrantedPowerIsOfGod diz se o poder é um dos que o deus concede.
-func GrantedPowerIsOfGod(god, power string) bool {
-	return slices.ContainsFunc(book.GrantedPowersOf(god), func(p book.GrantedPower) bool { return p.Name == power })
+// GrantedPowersFor são os poderes que esta ficha escolhe sob o deus pedido: os dele, e os que as regras
+// da mesa emprestam a quem tem esse deus. A lista emprestada SOMA à do deus (decisão do dono).
+//
+//	GrantedPowersFor(dto, "tauron") // os de Arsenal, com a regra "devoto de Tauron escolhe poderes de Arsenal"
+func GrantedPowersFor(dto CharacterDTO, god string) []book.GrantedPower {
+	out := slices.Clone(book.GrantedPowersOf(god))
+	if dto.Ruleset == nil || god == "" {
+		return out
+	}
+	projected := dto
+	projected.God = &god
+	ec, err := EngineCharacterFrom(projected)
+	if err != nil {
+		// A conversão é um JSON de ida e volta do próprio agregado: falhar aqui é defeito, e a ficha
+		// segue com a lista do livro, que é a que vale sem regra nenhuma.
+		return out
+	}
+	for _, lender := range dto.Ruleset.BorrowedGods(ec) {
+		for _, power := range book.GrantedPowersOf(lender) {
+			if !slices.ContainsFunc(out, func(p book.GrantedPower) bool { return p.Name == power.Name }) {
+				out = append(out, power)
+			}
+		}
+	}
+	return out
+}
+
+// GrantedPowerNames são os nomes de `GrantedPowersFor`, para quem pergunta "este poder é do deus?"
+// várias vezes: a lista se calcula uma vez, porque a regra da mesa pede converter a ficha.
+func GrantedPowerNames(dto CharacterDTO, god string) []string {
+	names := []string{}
+	for _, power := range GrantedPowersFor(dto, god) {
+		names = append(names, power.Name)
+	}
+	return names
 }
 
 // GrantedPowerLimit é quantos poderes concedidos a devoção dá: um (p96), dois para quem tem classe que
 // serve a um deus (p57, p61, p82), e nenhum na devoção sem lista, como o Panteão.
-func GrantedPowerLimit(classes []ClassDTO, god string) int {
+func GrantedPowerLimit(dto CharacterDTO, god string) int {
 	switch {
-	case len(book.GrantedPowersOf(god)) == 0:
+	case len(GrantedPowersFor(dto, god)) == 0:
 		return 0
-	case DevotionRequired(classes):
+	case DevotionRequired(dto.Classes):
 		return 2
 	}
 	return 1
@@ -93,12 +125,13 @@ func GrantedPowersMissing(dto CharacterDTO) int {
 		return 0
 	}
 	held := 0
+	ofTheGod := GrantedPowerNames(dto, *dto.God)
 	for _, power := range UnmarshalStrings(dto.GodPowers) {
-		if GrantedPowerIsOfGod(*dto.God, power) {
+		if slices.Contains(ofTheGod, power) {
 			held++
 		}
 	}
-	return max(GrantedPowerLimit(dto.Classes, *dto.God)-held, 0)
+	return max(GrantedPowerLimit(dto, *dto.God)-held, 0)
 }
 
 // DevotionChange diz o que muda na ficha ao trocar de deus, para o passo pedir a confirmação. O alvo vazio
@@ -111,8 +144,9 @@ func DevotionChange(dto CharacterDTO, target string) []string {
 		current = book.DevotionName(*dto.God)
 	}
 	var kept, leaving []string
+	ofTheTarget := GrantedPowerNames(dto, target)
 	for _, power := range UnmarshalStrings(dto.GodPowers) {
-		if target != "" && GrantedPowerIsOfGod(target, power) {
+		if target != "" && slices.Contains(ofTheTarget, power) {
 			kept = append(kept, power)
 		} else {
 			leaving = append(leaving, power)
@@ -125,12 +159,16 @@ func DevotionChange(dto CharacterDTO, target string) []string {
 	if len(leaving) == 1 {
 		lines = append(lines, leaving[0]+" sai da ficha.")
 	} else if len(leaving) > 1 {
-		lines = append(lines, joinedNames(leaving)+" saem da ficha.")
+		lines = append(lines, book.WrittenList(leaving)+" saem da ficha.")
 	}
 	for _, power := range kept {
-		lines = append(lines, power+" continua valendo: "+book.DevotionName(target)+" também o concede.")
+		lender := book.DevotionName(target) + " também o concede."
+		if !slices.ContainsFunc(book.GrantedPowersOf(target), func(p book.GrantedPower) bool { return p.Name == power }) {
+			lender = "uma regra da mesa o empresta a quem é devoto de " + book.DevotionName(target) + "."
+		}
+		lines = append(lines, power+" continua valendo: "+lender)
 	}
-	limit := GrantedPowerLimit(dto.Classes, target)
+	limit := GrantedPowerLimit(dto, target)
 	switch missing := limit - len(kept); {
 	case target == "":
 		if DevotionRequired(dto.Classes) {
@@ -146,8 +184,21 @@ func DevotionChange(dto CharacterDTO, target string) []string {
 	return lines
 }
 
-// joinedNames escreve a lista como a frase pede: "A, B e C".
-func joinedNames(names []string) string {
-	last := len(names) - 1
-	return strings.Join(names[:last], ", ") + " e " + names[last]
+// ItemsWornAsWielded são os itens da ficha que uma regra da mesa deixa vestir valendo como empunhados.
+// Uma conversão só para a mochila inteira, e não uma por item.
+func ItemsWornAsWielded(dto CharacterDTO) (map[int64]bool, error) {
+	out := map[int64]bool{}
+	if dto.Ruleset == nil {
+		return out, nil
+	}
+	ec, err := EngineCharacterFrom(dto)
+	if err != nil {
+		return nil, err
+	}
+	for _, it := range ec.Items {
+		if dto.Ruleset.WearsAsWielded(ec, it) {
+			out[it.ID] = true
+		}
+	}
+	return out, nil
 }

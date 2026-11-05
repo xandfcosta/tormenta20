@@ -264,7 +264,8 @@ func stowItem(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error 
 // As DUAS recusas moram no `sheet`, e pela razão de sempre: o eixo do item
 // (`sheet.EquipAxisError` — um escudo não se veste) e os tetos de 2 mãos e 4
 // vestidos (`sheet.EquipLimitErrorOver`, p141). Escrevê-las de novo aqui daria
-// duas regras para a mesma pergunta.
+// duas regras para a mesma pergunta. A exceção da regra da mesa ao eixo é o
+// `vestsByTableRule`.
 func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	item, err := s.sheetItem(r, row.ID)
 	if err != nil {
@@ -282,7 +283,13 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	// a ser vestível. O `catalog.Resource` é o livro compilado: ele existe
 	// sempre que o binário existe.
 	if _, refusal := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); refusal != "" {
-		return fmt.Errorf("%s", refusal)
+		lent, err := s.vestsByTableRule(r, row, item.ID, slot)
+		if err != nil {
+			return err
+		}
+		if !lent {
+			return fmt.Errorf("%s", refusal)
+		}
 	}
 	equipped, err := s.deps.Queries().ListEquippedItems(r.Context(), row.ID)
 	if err != nil {

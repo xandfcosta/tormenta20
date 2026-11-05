@@ -145,6 +145,34 @@ func TableRuleProblem(name string, when []engine.RuleCondition, effect engine.Ru
 	if stances > 1 {
 		return fmt.Errorf("a regra olha %d posturas, e cabe uma por regra", stances)
 	}
+	ignored := map[string][]string{
+		engine.RuleCountsAsWielded: {engine.RuleOnStance},
+		engine.RuleBorrowsPowers:   {engine.RuleOnItem, engine.RuleOnImprovement, engine.RuleOnTrait, engine.RuleOnVested, engine.RuleOnStance},
+	}[effect.Kind]
+	for _, condition := range when {
+		if slices.Contains(ignored, condition.Kind) {
+			return fmt.Errorf("\"%s\" não olha %s: tire essa condição, ou mude o efeito", ruleEffectName(effect.Kind), strings.ToLower(ruleKindName(condition.Kind)))
+		}
+	}
+	switch effect.Kind {
+	case engine.RuleCountsAsWielded:
+		for _, condition := range when {
+			if item := ItemByID(condition.Value); condition.Kind == engine.RuleOnItem && item != nil && item.Equip != "wielded" {
+				return fmt.Errorf("%s não é de empunhar: \"vale como empunhado\" é para o item que o livro manda empunhar", item.Name)
+			}
+		}
+		if !slices.ContainsFunc(when, func(c engine.RuleCondition) bool {
+			return slices.Contains([]string{engine.RuleOnItem, engine.RuleOnImprovement, engine.RuleOnTrait}, c.Kind)
+		}) {
+			return fmt.Errorf("\"vale como empunhado\" precisa dizer qual item: ponha uma condição de arma ou item, melhoria ou traço")
+		}
+		return nil
+	case engine.RuleBorrowsPowers:
+		if len(GrantedPowersOf(effect.God)) == 0 {
+			return fmt.Errorf("%s não concede poderes: escolha um deus que conceda", DevotionWritten(effect.God))
+		}
+		return nil
+	}
 	if err := effectTargetProblem(effect); err != nil {
 		return err
 	}
@@ -224,7 +252,17 @@ func WrittenTableRule(when []engine.RuleCondition, effect engine.RuleEffect) str
 		}
 	}
 	sum := WrittenSum(effect)
-	if RuleCountsPerItem(when, effect.Target.K) && effect.Limit != 1 {
+	switch effect.Kind {
+	case engine.RuleCountsAsWielded:
+		sum = "vestido, vale como empunhado"
+	case engine.RuleBorrowsPowers:
+		names := []string{}
+		for _, power := range GrantedPowersOf(effect.God) {
+			names = append(names, power.Name)
+		}
+		sum = "escolhe poderes de " + DevotionName(effect.God) + " (" + WrittenList(names) + ")"
+	}
+	if effect.Kind == engine.RuleAdds && RuleCountsPerItem(when, effect.Target.K) && effect.Limit != 1 {
 		sum += " por item"
 		if effect.Limit > 1 {
 			sum += fmt.Sprintf(", até %+d", effect.Amount*effect.Limit)
@@ -247,6 +285,41 @@ func WrittenSum(effect engine.RuleEffect) string {
 		phrase = "em " + effect.Target.Name
 	}
 	return amount + " " + phrase
+}
+
+// RuleEffectKinds são os efeitos, na ordem do editor.
+func RuleEffectKinds() []RuleOption {
+	return []RuleOption{
+		{engine.RuleAdds, "Soma em"}, {engine.RuleCountsAsWielded, "Vale como empunhado"}, {engine.RuleBorrowsPowers, "Escolhe poderes de"},
+	}
+}
+
+// LendingGods são os deuses que têm poderes para emprestar: os que concedem algum.
+func LendingGods() []RuleOption {
+	out := []RuleOption{}
+	for _, god := range CatalogGods() {
+		if len(GrantedPowersOf(god.ID)) > 0 {
+			out = append(out, RuleOption{god.ID, god.Name})
+		}
+	}
+	return out
+}
+
+func ruleEffectName(kind string) string {
+	for _, option := range RuleEffectKinds() {
+		if option.ID == kind {
+			return option.Name
+		}
+	}
+	return kind
+}
+
+// WrittenList é a lista em português: "a, b e c".
+func WrittenList(names []string) string {
+	if len(names) < 2 {
+		return strings.Join(names, "")
+	}
+	return strings.Join(names[:len(names)-1], ", ") + " e " + names[len(names)-1]
 }
 
 // RuleConditionsForReach troca a postura pelo poder que a dá, para a pergunta "quem esta regra

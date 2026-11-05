@@ -1,10 +1,13 @@
 package sheetui
 
 import (
+	"net/http"
+	"slices"
 	"strconv"
 
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // A TIRA DE EQUIPADOS: as duas mãos e os quatro vestidos, como POSIÇÕES.
@@ -155,4 +158,26 @@ func proficienteEh(item sheet.ItemDTO, proficiencies map[string]bool) bool {
 	}
 	required := engine.RequiredProficiency(&engine.CatalogItem{Category: catalog.Category})
 	return required == "" || proficiencies[required]
+}
+
+// vestsByTableRule é a regra da mesa "vale como empunhado": ela deixa vestir o que o eixo do livro só
+// deixa empunhar. É a exceção à recusa do eixo, e mora aqui porque só a cena tem a ficha carregada.
+func (s Scene) vestsByTableRule(r *http.Request, row sqlcgen.Character, itemID int64, slot string) (bool, error) {
+	if slot != "vested" {
+		return false, nil
+	}
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return false, err
+	}
+	worn, err := sheet.ItemsWornAsWielded(dto)
+	return worn[itemID], err
+}
+
+// offerVesting põe o Vestir na folha do item que a regra da mesa deixa vestir.
+func offerVesting(entry *itemSheet, worn map[int64]bool, item sheet.ItemDTO) {
+	if !worn[item.ID] || equippedSlotOf(item) == "vested" || slices.ContainsFunc(entry.Equip, func(c equipChoice) bool { return c.Slot == "vested" }) {
+		return
+	}
+	entry.Equip = append(entry.Equip, equipChoice{Slot: "vested", Label: "Vestir"})
 }
