@@ -50,8 +50,7 @@ func (r *Ruleset) unarmedCard(ch Character, b cardBasis) WeaponCard {
 	scopes := append([]string{UnarmedScope}, slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool {
 		return scope == MeleeOneHandedScope
 	})...)
-	none := TotalContribs{Contributions: []BreakdownContribution{}}
-	return b.card(ch, UnarmedName, w, scopes, none, steps, nonLethal)
+	return b.card(ch, UnarmedName, w, scopes, steps, nonLethal)
 }
 
 // brawlDie é o maior dado desarmado que os poderes da ficha declaram

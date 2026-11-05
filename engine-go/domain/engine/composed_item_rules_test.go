@@ -75,7 +75,8 @@ func TestTheComposedWeaponBringsTheOverlaysTheBookWroteInItalics(t *testing.T) {
 	}
 	// O dano soma DOIS encantamentos de baldes diferentes: +2 da Formidável
 	// (enchantment) e +2 do Gelo eterno (enhancement), que a p333 manda somar.
-	damage := StatFor(effects, ModifierTarget{K: "damage", Scope: "this"})
+	// Os dois são DESTA arma, e moram no escopo dela (`onThisWeapon`).
+	damage := StatFor(effects, ModifierTarget{K: "damage", Scope: WeaponDamageScope("avalanche")})
 	if damage.Total != 4 {
 		t.Errorf("o dano desta arma somou %d: +2 da Formidável e +2 do Gelo eterno, "+
 			"que são baldes diferentes e a p333 manda somar", damage.Total)

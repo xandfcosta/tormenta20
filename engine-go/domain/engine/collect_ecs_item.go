@@ -1,6 +1,10 @@
 package engine
 
-import "t20engine/domain/ecs"
+import (
+	"slices"
+
+	"t20engine/domain/ecs"
+)
 
 // O ITEM EQUIPADO, DECOMPOSTO EM SISTEMAS (ALE-385).
 //
@@ -140,7 +144,31 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 	for _, id := range it.Enchants {
 		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 	}
-	return own
+	return onThisWeapon(own, catalog)
+}
+
+// onThisWeapon prende à arma o dano, a margem e o multiplicador que ela mesma concede, com o verbete,
+// a melhoria, o material ou o encanto: "a arma fornece +1 nas rolagens de dano" (Cruel, p165), "a
+// margem de ameaça [desta arma] aumenta" (Precisa, p166). No escopo vazio ou no `this`, toda carta os
+// lia, e a Cruel da espada subia a adaga da outra mão e o ataque desarmado.
+//
+// O escopo é o do id do catálogo, como o do espelho de ataque: duas adagas iguais na mão o dividem.
+// O ataque fica de fora porque `mirrorWeaponAttackMods` já o leva, e o passo de dano porque
+// `DamageStepsOf` o lê só dos modificadores deste item.
+func onThisWeapon(mods []Modifier, catalog *CatalogItem) []Modifier {
+	if catalog.Weapon == nil {
+		return mods
+	}
+	out := slices.Clone(mods)
+	for i, m := range out {
+		unscoped := m.Target.Scope == "" || m.Target.Scope == "this"
+		strike := m.Target.K == "critRange" || m.Target.K == "critMult" ||
+			(m.Target.K == "damage" && (m.Target.Scope == "this" || m.Dice != ""))
+		if unscoped && strike {
+			out[i].Target.Scope = WeaponDamageScope(catalog.ID)
+		}
+	}
+	return out
 }
 
 // noProficiencies é o conjunto vazio que os sistemas passam para uma função
@@ -186,4 +214,16 @@ func mirrorWeaponAttack(w *ecs.World) {
 		own, _ := ecs.Get[OwnGrants](w, e)
 		grantMore(w, e, mirrorWeaponAttackMods(item.Catalog, own.Modifiers))
 	})
+}
+
+// diceOfThisCard são os dados extras que valem nesta carta: os de toda arma (escopo vazio ou `all`, como
+// o Ataque Furtivo), e os da arma dela.
+func diceOfThisCard(extra []ExtraDamage, scopes []string) []ExtraDamage {
+	out := []ExtraDamage{}
+	for _, die := range extra {
+		if die.Scope == "" || die.Scope == "all" || slices.Contains(scopes, die.Scope) {
+			out = append(out, die)
+		}
+	}
+	return out
 }

@@ -61,9 +61,8 @@ func tableImprovementModifier(improvement TableImprovement) Modifier {
 	}
 }
 
-// hostedHere prende à arma o que a melhoria da mesa dá nela: o `this` do dano é lido em todas as
-// cartas, e o da margem em nenhuma; o escopo da arma é lido só na dela. O ataque não entra, porque o
-// espelho de `mirrorWeaponAttackMods` já o leva.
+// hostedHere tira a melhoria da mesa do item em que ela deixou de caber. Prender o golpe à arma é do
+// `onThisWeapon`, como para as melhorias do livro.
 func hostedHere(overlay *CatalogItem, mods []Modifier, host *CatalogItem) []Modifier {
 	if host == nil {
 		return mods
@@ -73,14 +72,7 @@ func hostedHere(overlay *CatalogItem, mods []Modifier, host *CatalogItem) []Modi
 		overlay.AppliesTo[0] != ItemFamilyOf(host.Category) {
 		return []Modifier{}
 	}
-	out := make([]Modifier, 0, len(mods))
-	for _, modifier := range mods {
-		if modifier.Condition != nil && modifier.Condition.C == "inUse" && modifier.Target.Scope == "this" && modifier.Target.K != "attack" {
-			modifier.Target.Scope = WeaponDamageScope(host.ID)
-		}
-		out = append(out, modifier)
-	}
-	return out
+	return mods
 }
 
 func familiesOf(family string) []string {

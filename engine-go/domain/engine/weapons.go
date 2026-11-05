@@ -11,6 +11,9 @@ package engine
 type ExtraDamage struct {
 	Dice string `json:"dice"` // "1d6"
 	Type string `json:"type"` // "fogo", "frio", "ácido"…
+	// Scope é a arma de que o dado é: o encanto Flamejante da espada não queima pela adaga. Vazio vale
+	// em toda carta. Fica fora do JSON porque a carta já sai filtrada (`diceOfThisCard`).
+	Scope string `json:"-"`
 }
 
 // IsMelee diz se esta arma bate CORPO A CORPO.
@@ -183,16 +186,9 @@ func (r *Ruleset) ComputeWeaponCards(ch Character, activeConditionals map[string
 func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) []WeaponCard {
 	effects := r.sheetEffectsWith(ch, activeConditionals, extra)
 	shared := newCardBasis(ch, effects)
-	// O `this` é o bônus que uma SOBREPOSIÇÃO dá — a melhoria Cruel, o material.
-	// Ele não tinha leitor nenhum, e por isso a Cruel (+1 dano, 300 PO) e a Atroz
-	// (+2, 3.000 PO) não faziam nada. O par com o ataque é o que escondia: o
-	// `attack:this` da Certeira SOBE o ataque, porque a perícia da arma soma os
-	// efeitos de ataque — e a mesma forma em dano caía no vazio.
-	//
-	// As duas chaves somam entre si de propósito: um +2 global e um +1 desta
-	// arma são bônus de origens diferentes, e o não-empilhamento já agiu DENTRO
-	// de cada uma.
-	damageThis := totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "this"})
+	// O dano que a melhoria, o material ou o encanto dão À ARMA chega no escopo dela (`onThisWeapon`), e
+	// cada carta o lê pelos próprios escopos. Aqui morava um leitor do `this` que toda carta somava: era
+	// por ele que a Cruel da espada subia a adaga da outra mão.
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {
@@ -223,7 +219,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			if it.Oversized {
 				scopes = append(scopes, OversizedWeaponScope)
 			}
-			card := shared.card(ch, name, use, scopes, damageThis, steps, nonLethal)
+			card := shared.card(ch, name, use, scopes, steps, nonLethal)
 			card.CatalogID = *it.CatalogID
 			card.ItemID, card.Doses = it.ID, it.Doses
 			return card
@@ -271,8 +267,8 @@ func newCardBasis(ch Character, effects ItemEffects) cardBasis {
 // card monta uma carta: a arma, os ESCOPOS que valem só para ela (o id do
 // catálogo, o tipo de arma, o desarmado) e os passos que já são dela.
 func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []string,
-	own TotalContribs, steps int, nonLethal bool) WeaponCard {
-	parts := []TotalContribs{own}
+	steps int, nonLethal bool) WeaponCard {
+	parts := []TotalContribs{}
 	for _, scope := range scopes {
 		parts = append(parts, totalContribsFor(b.effects, ModifierTarget{K: "damage", Scope: scope}))
 	}
@@ -359,7 +355,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		CritRange:       threatRangeOf(w.CritRange, b.effects, scopes),
 		CritMult:        critMult,
 		NonLethal:       nonLethal,
-		ExtraDamage:     b.effects.ExtraDamage,
+		ExtraDamage:     diceOfThisCard(b.effects.ExtraDamage, scopes),
 		Announces:       b.effects.Announced,
 		CriticalBonus:   b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 	}
@@ -457,6 +453,12 @@ func threatRangeOf(base int, effects ItemEffects, scopes []string) int {
 	width := 21 - base
 	if factor, has := effects.Factors[targetKey(ModifierTarget{K: "critRange"})]; has {
 		width = factor.Applied(width)
+	}
+	// O fator da arma, como o da Ameaçadora: ele também vem antes de somar.
+	for _, scope := range scopes {
+		if factor, has := effects.Factors[targetKey(ModifierTarget{K: "critRange", Scope: scope})]; has {
+			width = factor.Applied(width)
+		}
 	}
 	width += StatFor(effects, ModifierTarget{K: "critRange"}).Total
 	// A margem que vale só para UM tipo de ataque — o Golpe Cruel, "com ataques
