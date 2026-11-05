@@ -414,19 +414,6 @@
             "c": "wielded"
           },
           "note": "desbalanceada: -2 em ataque"
-        },
-        {
-          "target": {
-            "k": "attack",
-            "scope": "weapon:machado-taurico"
-          },
-          "amount": 2,
-          "bonusType": "untyped",
-          "condition": {
-            "c": "context",
-            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
-          },
-          "note": "anula desbalanceada"
         }
       ]
     },
@@ -514,32 +501,6 @@
           "bonusType": "enhancement",
           "condition": {
             "c": "wielded"
-          },
-          "note": "Vigilante: +2 na Defesa"
-        },
-        {
-          "target": {
-            "k": "pmLimit"
-          },
-          "amount": 1,
-          "bonusType": "enhancement",
-          "condition": {
-            "c": "flagOn",
-            "flag": "homebrew-vestido-medalhao-de-prata",
-            "label": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)"
-          },
-          "note": "+1 limite de PM em magias de alcance pessoal"
-        },
-        {
-          "target": {
-            "k": "defense"
-          },
-          "amount": 2,
-          "bonusType": "enhancement",
-          "condition": {
-            "c": "flagOn",
-            "flag": "homebrew-vestido-medalhao-de-prata",
-            "label": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)"
           },
           "note": "Vigilante: +2 na Defesa"
         }
@@ -994,42 +955,6 @@
       "rest-one-category-up"
     ],
     "conditional": [
-      {
-        "term": "machado-taurico::attack:weapon:machado-taurico::::context///",
-        "sourceId": "machado-taurico",
-        "source": "Machado táurico",
-        "bonusType": "untyped",
-        "amount": 2,
-        "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)",
-        "target": {
-          "k": "attack",
-          "scope": "weapon:machado-taurico"
-        }
-      },
-      {
-        "term": "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata",
-        "sourceId": "medalhao-de-prata",
-        "source": "Medalhão de prata",
-        "bonusType": "enhancement",
-        "amount": 1,
-        "note": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)",
-        "target": {
-          "k": "pmLimit"
-        },
-        "flag": "homebrew-vestido-medalhao-de-prata"
-      },
-      {
-        "term": "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
-        "sourceId": "medalhao-de-prata",
-        "source": "Medalhão de prata",
-        "bonusType": "enhancement",
-        "amount": 2,
-        "note": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)",
-        "target": {
-          "k": "defense"
-        },
-        "flag": "homebrew-vestido-medalhao-de-prata"
-      },
       {
         "term": "lefou::resistance::::against//lefeu e a Tormenta/",
         "sourceId": "lefou",
@@ -1663,31 +1588,28 @@
   "activeConditionals": [
     "class.barbaro.furia::attack:all::::flagOn///furia",
     "class.barbaro.furia::damage:all::::flagOn///furia",
-    "lefou::resistance::::against//lefeu e a Tormenta/",
-    "machado-taurico::attack:weapon:machado-taurico::::context///",
-    "medalhao-de-prata::defense::::flagOn///homebrew-vestido-medalhao-de-prata",
-    "medalhao-de-prata::pmLimit::::flagOn///homebrew-vestido-medalhao-de-prata"
+    "lefou::resistance::::against//lefeu e a Tormenta/"
   ],
   "sheetWithConditionals": {
     "defense": {
       "base": 11,
-      "itemBonus": 12,
-      "total": 23,
+      "itemBonus": 11,
+      "total": 22,
       "attribute": "dexterity",
       "attributeAmount": 1,
       "attributeSource": "",
       "attributeBlockedBy": "",
-      "vsMelee": 23,
-      "vsRanged": 23,
+      "vsMelee": 22,
+      "vsRanged": 22,
       "contributions": [
         {
           "source": "Couraça",
           "amount": 5
         },
         {
-          "source": "Medalhão de prata (cond.)",
-          "amount": 2,
-          "note": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)"
+          "source": "Couraça",
+          "amount": 1,
+          "note": "Reforçada: +1 Defesa"
         },
         {
           "source": "Raça: Minotauro",
@@ -1763,15 +1685,9 @@
     },
     "pmLimit": {
       "base": 7,
-      "itemBonus": 1,
-      "total": 8,
-      "contributions": [
-        {
-          "source": "Medalhão de prata (cond.)",
-          "amount": 1,
-          "note": "Homebrew: esotérico vestido mantém o bônus (RAW exige empunhar, p159)"
-        }
-      ]
+      "itemBonus": 0,
+      "total": 7,
+      "contributions": []
     },
     "bestBaseSpellCd": null,
     "spellCdByAttribute": {
@@ -2297,7 +2213,7 @@
       "name": "Machado táurico",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 14,
+      "attack": 12,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
@@ -2323,17 +2239,12 @@
         ]
       },
       "attackOwn": {
-        "total": 0,
+        "total": -2,
         "contributions": [
           {
             "source": "Machado táurico",
             "amount": -2,
             "note": "desbalanceada: -2 em ataque"
-          },
-          {
-            "source": "Machado táurico (cond.)",
-            "amount": 2,
-            "note": "Homebrew: Equilibrada anula a desbalanceada (-2 → 0)"
           }
         ]
       },

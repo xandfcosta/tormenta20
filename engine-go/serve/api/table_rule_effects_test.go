@@ -65,27 +65,6 @@ func TestAWieldedRuleLetsTheItemBeVested(t *testing.T) {
 	}
 }
 
-// Com a regra e o interruptor antigo do medalhão ligados juntos, o bônus vale uma vez: com a regra, o
-// item entra como empunhado, e o interruptor não tem o que acrescentar.
-func TestTheWieldedRuleAndTheOldToggleCountOnce(t *testing.T) {
-	f, id := fighterFixture(t)
-	inCampaign(t, f, id)
-	itemSemeia(t, f, id, "medalhao-de-prata", "Medalhão de prata", "vested")
-	before := pmLimitOf(t, f, id)
-	if _, err := f.s.db.ExecContext(context.Background(),
-		"INSERT INTO character_conditionals (characterId, conditionalId) VALUES (?, 'flag:homebrew-vestido-medalhao-de-prata')", id); err != nil {
-		t.Fatal(err)
-	}
-	withToggle := pmLimitOf(t, f, id)
-	if withToggle != before+1 {
-		t.Fatalf("o controle: o interruptor antigo dá +1, e foi de %d a %d", before, withToggle)
-	}
-	seedsRule(t, f, "Medalhão na cintura", `[{"kind":"item","value":"medalhao-de-prata"}]`, wieldedMedallion)
-	if got := pmLimitOf(t, f, id); got != before+1 {
-		t.Errorf("a regra e o interruptor somaram juntos: de %d a %d", before, got)
-	}
-}
-
 const borrowsArsenal = `{"kind":"powers-of","target":{"k":""},"amount":0,"god":"arsenal"}`
 
 // O devoto de Tauron escolhe os poderes de Arsenal, no limite do livro: um.
