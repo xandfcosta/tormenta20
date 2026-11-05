@@ -157,6 +157,9 @@ func TableRuleProblem(name string, when []engine.RuleCondition, effect engine.Ru
 	if stances > 0 && (effect.Target.K == "maxPv" || effect.Target.K == "maxPm") {
 		return fmt.Errorf("PV e PM máximos não dependem de postura: tire a condição de postura, ou mude o alvo")
 	}
+	if effect.Limit < 0 {
+		return fmt.Errorf("o limite é %d, e tem de ser um número de itens: deixe em branco para não ter limite", effect.Limit)
+	}
 	if effect.Amount == 0 {
 		return fmt.Errorf("a soma é zero, e a regra não mudaria nada: escreva um número diferente de zero")
 	}
@@ -170,6 +173,18 @@ func ruleKindName(kind string) string {
 		}
 	}
 	return kind
+}
+
+// RuleCountsPerItem diz se a regra soma uma vez por item, e é onde o limite tem o que limitar. O item
+// nomeado é um só, e o que é número de golpe é de cada arma.
+func RuleCountsPerItem(when []engine.RuleCondition, target string) bool {
+	if target == "attack" || target == "damage" || target == "critRange" {
+		return false
+	}
+	byKind := func(kinds ...string) bool {
+		return slices.ContainsFunc(when, func(c engine.RuleCondition) bool { return slices.Contains(kinds, c.Kind) })
+	}
+	return !byKind(engine.RuleOnItem) && byKind(engine.RuleOnImprovement, engine.RuleOnTrait, engine.RuleOnVested)
 }
 
 // WrittenTableRule é a regra em português: "com Machado táurico e a melhoria Equilibrada: +2 no ataque".
@@ -210,6 +225,12 @@ func WrittenTableRule(when []engine.RuleCondition, effect engine.RuleEffect) str
 		phrase = "em " + effect.Target.Name
 	}
 	sum := amount + " " + phrase
+	if RuleCountsPerItem(when, effect.Target.K) && effect.Limit != 1 {
+		sum += " por item"
+		if effect.Limit > 1 {
+			sum += fmt.Sprintf(", até %+d", effect.Amount*effect.Limit)
+		}
+	}
 	if len(parts) == 0 {
 		return sum
 	}

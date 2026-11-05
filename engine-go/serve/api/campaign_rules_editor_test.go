@@ -290,3 +290,112 @@ func TestThePlayerReadsTheTableRulesAndTheirOwn(t *testing.T) {
 		t.Error("o mestre lê todas as regras")
 	}
 }
+
+// Com condição de item que não nomeia um só, a regra soma por item, até o limite quando há limite.
+func TestARuleCountsPerItemUpToItsLimit(t *testing.T) {
+	cases := []struct {
+		name  string
+		limit string
+		adds  int
+	}{
+		{"sem limite", "", 3},
+		{"até 2", `,"limit":2`, 2},
+		{"até 1", `,"limit":1`, 1},
+		{"o limite acima do que se veste", `,"limit":9`, 3},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			f, id := fighterFixture(t)
+			inCampaign(t, f, id)
+			for _, item := range []string{"algemas", "andrajos-aldeao", "anel-da-liberdade"} {
+				itemSemeia(t, f, id, item, item, "vested")
+			}
+			beforeDefense, beforeHP := ruleSheet(t, f, id).Defense.Total, poolsOf(t, f.s, id).HpMax
+			seedsRule(t, f, "Defesa", `[{"kind":"vested"}]`, fmt.Sprintf(`{"kind":"adds","target":{"k":"defense"},"amount":1%s}`, c.limit))
+			seedsRule(t, f, "Vigor", `[{"kind":"vested"}]`, fmt.Sprintf(`{"kind":"adds","target":{"k":"maxPv"},"amount":1%s}`, c.limit))
+			if got := ruleSheet(t, f, id).Defense.Total; got != beforeDefense+c.adds {
+				t.Errorf("a Defesa foi de %d a %d, e devia somar %d", beforeDefense, got, c.adds)
+			}
+			if got := poolsOf(t, f.s, id).HpMax; int(got) != int(beforeHP)+c.adds {
+				t.Errorf("o PV foi de %d a %d, e devia somar %d", beforeHP, got, c.adds)
+			}
+		})
+	}
+}
+
+// O campo de limite só existe onde a regra soma por item, e a prévia diz o que ele faz.
+func TestThePreviewSaysHowTheRuleCounts(t *testing.T) {
+	vested := `"table_rule_kind_1":"vested","table_rule_value_1":""`
+	named := `"table_rule_kind_1":"item","table_rule_value_1":"espada-longa"`
+	signals := func(condition, target, limit string) string {
+		return fmt.Sprintf(`{"table_rule_name":"R","table_rule_scope":"mesa","table_rule_count":1,%s,"table_rule_target":%q,"table_rule_amount":1,"table_rule_limit":%q}`, condition, target, limit)
+	}
+	cases := []struct {
+		name, signals, says string
+		field               bool
+	}{
+		{"sem limite", signals(vested, "defense", ""), "vestido: +1 na Defesa por item", true},
+		{"com limite", signals(vested, "defense", "3"), "vestido: +1 na Defesa por item, até +3", true},
+		{"até um", signals(vested, "defense", "1"), "vestido: +1 na Defesa<", true},
+		{"o item nomeado é um só", signals(named, "defense", ""), "com Espada longa: +1 na Defesa<", false},
+		{"o golpe é de cada arma", signals(vested, "attack", ""), "vestido: +1 no ataque<", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			f := newSceneFixture(t)
+			body := f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/rascunho"), c.signals).Body.String()
+			if !strings.Contains(body, c.says) {
+				t.Errorf("a prévia devia dizer %q", c.says)
+			}
+			if got := strings.Contains(body, `aria-label="Até quantos itens"`); got != c.field {
+				t.Errorf("o campo de limite aparece = %v, e devia ser %v", got, c.field)
+			}
+		})
+	}
+}
+
+// O limite grava, volta ao abrir, sai quando a regra deixa de somar por item, e não aceita negativo.
+func TestTheLimitIsSavedWithTheRule(t *testing.T) {
+	vested := `{"table_rule_name":"Peças","table_rule_scope":"mesa","table_rule_count":1,"table_rule_kind_1":"vested","table_rule_value_1":"","table_rule_target":"defense","table_rule_amount":1,"table_rule_limit":"3"}`
+	f := newSceneFixture(t)
+	savesRule(t, f, vested)
+	rule, _, _ := theOnlyRule(t, f)
+	if page := rulesTab(t, f, f.gm); !strings.Contains(page, "por item, até +3") {
+		t.Error("a lista não diz o limite")
+	}
+	if body := f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/editor?regra="+rule), "").Body.String(); !strings.Contains(body, `"table_rule_limit":"3"`) {
+		t.Error("abrir a regra não traz o limite")
+	}
+	byTheSword := strings.Replace(vested, `"table_rule_kind_1":"vested","table_rule_value_1":""`, `"table_rule_kind_1":"item","table_rule_value_1":"espada-longa"`, 1)
+	savesRule(t, f, strings.Replace(byTheSword, `"table_rule_name"`, fmt.Sprintf(`"table_rule_id":%q,"table_rule_name"`, rule), 1))
+	var effect string
+	if err := f.s.db.QueryRowContext(context.Background(), "SELECT effect FROM campaign_rules WHERE id = ?", rule).Scan(&effect); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(effect, "limit") {
+		t.Errorf("o item nomeado é um só, e o limite ficou guardado: %s", effect)
+	}
+
+	f = newSceneFixture(t)
+	body := savesRule(t, f, strings.Replace(vested, `"table_rule_limit":"3"`, `"table_rule_limit":"-2"`, 1))
+	if !strings.Contains(body, "-2") || !strings.Contains(body, `role="alert"`) {
+		t.Errorf("o limite negativo devia ser recusado com o valor, e veio %q", body[:min(300, len(body))])
+	}
+}
+
+// O limite é do que soma na ficha. O número preso a uma arma é de cada arma, e o limite não o corta.
+func TestAWeaponRuleIgnoresTheLimit(t *testing.T) {
+	f, id := fighterFixture(t)
+	inCampaign(t, f, id)
+	saveHand(t, f, id, `["armas-simples","armas-marciais"]`)
+	itemSemeia(t, f, id, "florete", "Florete", "wielded")
+	itemSemeia(t, f, id, "cimitarra", "Cimitarra", "wielded2")
+	before := attackByWeapon(t, f, id)
+	seedsRule(t, f, "Ágeis", `[{"kind":"trait","value":"agil"}]`, `{"kind":"adds","target":{"k":"attack"},"amount":1,"limit":1}`)
+	after := attackByWeapon(t, f, id)
+	for _, name := range []string{"Florete", "Cimitarra"} {
+		if after[name] != before[name]+1 {
+			t.Errorf("%s foi de %+d a %+d, e cada arma ágil ganha +1", name, before[name], after[name])
+		}
+	}
+}

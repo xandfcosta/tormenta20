@@ -801,6 +801,14 @@
     border: 1px solid var(--ds-line);
     border-radius: var(--ds-r-control);
   }
+  .ds-rule-limit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ds-rule-limit > input {
+    width: 7.5rem;
+  }
   .ds-rule-actions {
     display: flex;
     justify-content: flex-end;

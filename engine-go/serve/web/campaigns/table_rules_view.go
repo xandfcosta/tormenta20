@@ -77,6 +77,7 @@ type ruleDraft struct {
 	Target    string
 	Skill     string
 	Amount    string
+	Limit     string
 }
 
 func blankRuleDraft() ruleDraft {
@@ -99,7 +100,7 @@ func readRuleDraft(r *http.Request) (ruleDraft, error) {
 	draft := ruleDraft{
 		ID: text("table_rule_id"), Name: text("table_rule_name"), Scope: text("table_rule_scope"),
 		Character: text("table_rule_character"), Target: text("table_rule_target"),
-		Skill: text("table_rule_skill"), Amount: text("table_rule_amount"), When: []engine.RuleCondition{},
+		Skill: text("table_rule_skill"), Amount: text("table_rule_amount"), Limit: text("table_rule_limit"), When: []engine.RuleCondition{},
 	}
 	count, _ := strconv.Atoi(text("table_rule_count"))
 	for slot := 1; slot <= min(count, book.MaxRuleConditions); slot++ {
@@ -143,7 +144,12 @@ func (d ruleDraft) effect() engine.RuleEffect {
 	if d.Target == "expertise" {
 		target.Name = d.Skill
 	}
-	return engine.RuleEffect{Kind: engine.RuleAdds, Target: target, Amount: amount}
+	effect := engine.RuleEffect{Kind: engine.RuleAdds, Target: target, Amount: amount}
+	// Campo escondido não vale: o sinal fica com o que se digitou antes de a regra deixar de somar por item.
+	if book.RuleCountsPerItem(d.When, d.Target) {
+		effect.Limit, _ = strconv.Atoi(d.Limit)
+	}
+	return effect
 }
 
 func (d ruleDraft) applies() (engine.Selector, *int64) {
@@ -167,7 +173,7 @@ func (d ruleDraft) signals() map[string]any {
 	out := map[string]any{
 		"table_rule_id": d.ID, "table_rule_name": d.Name, "table_rule_scope": d.Scope,
 		"table_rule_character": d.Character, "table_rule_target": d.Target, "table_rule_skill": d.Skill,
-		"table_rule_amount": d.Amount, "table_rule_count": len(d.When),
+		"table_rule_amount": d.Amount, "table_rule_limit": d.Limit, "table_rule_count": len(d.When),
 	}
 	for slot := 1; slot <= book.MaxRuleConditions; slot++ {
 		kind, value := "", ""
@@ -205,6 +211,9 @@ func draftOfRule(rule campaign.StoredTableRule) ruleDraft {
 	draft := ruleDraft{
 		ID: rule.ID, Name: rule.Name, Scope: "mesa", When: rule.When,
 		Target: rule.Effect.Target.K, Skill: rule.Effect.Target.Name, Amount: strconv.Itoa(rule.Effect.Amount),
+	}
+	if rule.Effect.Limit > 0 {
+		draft.Limit = strconv.Itoa(rule.Effect.Limit)
 	}
 	if rule.CharacterID != nil {
 		draft.Scope, draft.Character = "um", strconv.FormatInt(*rule.CharacterID, 10)

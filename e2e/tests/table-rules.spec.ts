@@ -47,6 +47,30 @@ test('o mestre monta, liga e apaga uma regra da mesa', async ({ page }) => {
   await expect(page.locator('.ds-table-rule', { hasText: 'Regra do teste' })).toHaveCount(0)
 })
 
+// O campo de limite nasce e some conforme o que a regra olha: os sinais vão e voltam a cada troca.
+test('o limite aparece só onde a regra soma por item', async ({ page }) => {
+  await page.goto('/campanhas/1?tab=regras')
+  await page.getByRole('button', { name: 'Nova regra' }).click()
+  const editor = page.locator('dialog[open]')
+  await expect(editor.getByLabel('Nome')).toBeVisible()
+  const limit = editor.getByLabel('Até quantos itens')
+  await editor.getByLabel('Em quê').selectOption({ label: 'Defesa' })
+  await expect(limit).toHaveCount(0)
+
+  await editor.getByRole('button', { name: 'Condição' }).click()
+  await editor.getByLabel('Tipo da condição 1').selectOption({ label: 'Está vestido' })
+  await expect(limit).toBeVisible()
+  await expect(editor.getByText('+1 na Defesa por item')).toBeVisible()
+
+  await limit.fill('3')
+  await limit.blur()
+  await expect(editor.getByText('+1 na Defesa por item, até +3')).toBeVisible()
+  await expect(limit).toHaveValue('3')
+
+  await editor.getByLabel('Em quê').selectOption({ label: 'Ataque' })
+  await expect(limit).toHaveCount(0)
+})
+
 // A resposta de um rascunho pode chegar depois de a pessoa ter seguido escrevendo. Se ela trouxer de
 // volta o que a pessoa digitou, o texto volta atrás sem aviso — e a bancada rápida nunca vê.
 test('a resposta atrasada não desfaz o que se digitou depois', async ({ page }) => {
@@ -134,5 +158,56 @@ test('ligar e excluir a regra chega na ficha aberta do jogador', async ({ browse
   } finally {
     await gm.close().catch(() => {})
     await player.close().catch(() => {})
+  }
+})
+
+// O outro lado da mesma mudança: o PV máximo na fila do mestre. Quem o relê é o stream da mesa dele.
+test('ligar a regra chega na fila do mestre', async ({ browser }) => {
+  test.setTimeout(90_000)
+  const gm = await browser.newContext({ storageState: '.auth/user.json' })
+  try {
+    const table = await gm.newPage()
+    await table.goto('/campanhas/1/sessoes/5')
+    const start = table.getByRole('button', { name: 'Iniciar uma cena de Ação' })
+    if (await start.count()) await start.click()
+    await expect(start).toHaveCount(0)
+    await table.getByRole('button', { name: 'Adicionar à fila' }).first().click()
+    await table.locator('#gm-add').getByRole('button', { name: 'Grupo', exact: true }).click()
+    await table.locator('#gm-add').getByRole('button', { name: 'Adicionar o grupo' }).click()
+    const rows = table.locator('.ds-gm-row')
+    await expect(rows.first()).toBeVisible()
+    const queueRow = rows.filter({ hasText: 'Recruta' }).first()
+    const queueHP = async () => (await queueRow.innerText()).match(/PV\s*\d+\s*\/\s*(\d+)/)?.[1] ?? ''
+    await expect.poll(queueHP).toMatch(/\d+/)
+    const before = Number(await queueHP())
+
+    const rulesScreen = await gm.newPage()
+    await rulesScreen.goto('/campanhas/1?tab=regras')
+    await rulesScreen.getByRole('button', { name: 'Nova regra' }).click()
+    const editor = rulesScreen.locator('dialog[open]')
+    await editor.getByLabel('Nome').fill('Vigor na fila')
+    await editor.getByLabel('Em quê').selectOption({ label: 'PV' })
+    await editor.getByLabel('Quanto').fill('5')
+    await editor.getByLabel('Quanto').blur()
+    await expect(editor.getByText('+5 em PV')).toBeVisible()
+    await editor.getByRole('button', { name: 'Gravar' }).click()
+    await rulesScreen.locator('.ds-table-rule', { hasText: 'Vigor na fila' }).getByRole('switch').click()
+    await expect(rulesScreen.locator('.ds-table-rule', { hasText: 'Vigor na fila' }).getByRole('switch')).toBeChecked()
+
+    await expect.poll(queueHP, { timeout: 8000, message: 'a fila do mestre não soube da regra' }).toBe(String(before + 5))
+
+    await rulesScreen.locator('.ds-table-rule', { hasText: 'Vigor na fila' }).getByRole('button', { name: 'Editar' }).click()
+    await expect(rulesScreen.locator('dialog[open]').getByLabel('Nome')).toHaveValue('Vigor na fila')
+    await rulesScreen.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
+    await rulesScreen.getByRole('dialog', { name: 'Excluir esta regra?' }).getByRole('button', { name: 'Excluir' }).click()
+    await expect(rulesScreen.locator('.ds-table-rule', { hasText: 'Vigor na fila' })).toHaveCount(0)
+    await expect.poll(queueHP, { timeout: 8000, message: 'a fila do mestre não soube da regra excluída' }).toBe(String(before))
+
+    // A sessão 5 é dividida com o spec dos dois clientes, então ela volta como estava.
+    await table.getByRole('button', { name: 'Cena, descanso e sessão' }).click()
+    await table.getByRole('button', { name: 'Encerrar a cena' }).click()
+    await expect(table.getByRole('button', { name: 'Iniciar uma cena de Ação' })).toBeVisible()
+  } finally {
+    await gm.close().catch(() => {})
   }
 })

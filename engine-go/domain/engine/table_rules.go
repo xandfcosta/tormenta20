@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strings"
 )
 
 // AS REGRAS DA MESA: o que o mestre monta no editor guiado, condições e um efeito.
@@ -42,6 +43,8 @@ type RuleEffect struct {
 	Kind   string         `json:"kind"`
 	Target ModifierTarget `json:"target"`
 	Amount int            `json:"amount"`
+	// Limit é até quantos itens a regra soma, quando ela soma por item. Zero é sem limite.
+	Limit int `json:"limit,omitempty"`
 }
 
 // TableRule é uma regra da mesa ligada.
@@ -150,7 +153,8 @@ func (r *Ruleset) ownsPower(ch Character, id string) bool {
 }
 
 // ruleModifiers são os modificadores da regra nesta ficha. Sem condição de item, é um. Com ela, um
-// por item em uso que passa em todas, porque elas olham o MESMO item; dois iguais na mão contam uma vez.
+// por item em uso que passa em todas, porque elas olham o MESMO item; dois iguais na mão contam uma
+// vez. O limite corta o que soma na ficha; o que é preso a uma arma é de cada arma, e não acumula.
 func (r *Ruleset) ruleModifiers(ch Character, rule TableRule) []Modifier {
 	onItem := slices.DeleteFunc(slices.Clone(rule.When), func(c RuleCondition) bool {
 		return !slices.Contains([]string{RuleOnItem, RuleOnImprovement, RuleOnTrait, RuleOnVested}, c.Kind)
@@ -168,6 +172,7 @@ func (r *Ruleset) ruleModifiers(ch Character, rule TableRule) []Modifier {
 	}
 	out := []Modifier{}
 	seen := map[string]bool{}
+	counted := 0
 	for _, item := range ch.Items {
 		if item.Equipped == nil || item.CatalogID == nil || seen[*item.CatalogID] {
 			continue
@@ -177,7 +182,14 @@ func (r *Ruleset) ruleModifiers(ch Character, rule TableRule) []Modifier {
 			continue
 		}
 		seen[*item.CatalogID] = true
-		out = append(out, modifierOnItem(modifier, catalog))
+		onThisItem := modifierOnItem(modifier, catalog)
+		if !isWeaponScoped(onThisItem) {
+			if rule.Effect.Limit > 0 && counted == rule.Effect.Limit {
+				continue
+			}
+			counted++
+		}
+		out = append(out, onThisItem)
 	}
 	return out
 }
@@ -213,6 +225,10 @@ func modifierOnItem(modifier Modifier, catalog *CatalogItem) Modifier {
 		modifier.Target.Scope = "all"
 	}
 	return modifier
+}
+
+func isWeaponScoped(modifier Modifier) bool {
+	return strings.HasPrefix(modifier.Target.Scope, WeaponDamageScope(""))
 }
 
 // aimsAWeapon diz se o alvo só tem leitor na carta com escopo. A margem não entra aqui: sem escopo,
