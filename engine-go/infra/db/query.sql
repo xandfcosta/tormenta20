@@ -736,6 +736,26 @@ SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY te
 SELECT id, characterId, name, conditions, effect
 FROM campaign_rules WHERE campaignId = ? AND enabled = 1 ORDER BY id;
 
+-- name: ListCampaignRules :many
+-- Todas as regras da mesa, ligadas ou nao: e o que a aba do mestre desenha.
+SELECT id, characterId, name, enabled, conditions, effect
+FROM campaign_rules WHERE campaignId = ? ORDER BY id;
+
+-- name: InsertCampaignRule :exec
+INSERT INTO campaign_rules (id, campaignId, characterId, name, enabled, conditions, effect, updatedAt)
+VALUES (?, ?, ?, ?, 0, ?, ?, ?);
+
+-- name: RewriteCampaignRule :execrows
+-- Pela campanha tambem: o id veio do cliente, e o de outra mesa nao pode ser alcancado.
+UPDATE campaign_rules SET characterId = ?, name = ?, conditions = ?, effect = ?, updatedAt = ?
+WHERE id = ? AND campaignId = ?;
+
+-- name: FlipCampaignRule :execrows
+UPDATE campaign_rules SET enabled = 1 - enabled, updatedAt = ? WHERE id = ? AND campaignId = ?;
+
+-- name: DropCampaignRule :execrows
+DELETE FROM campaign_rules WHERE id = ? AND campaignId = ?;
+
 -- name: EnchantsOfItem :many
 SELECT enchantId FROM character_item_enchants WHERE itemId = ? ORDER BY enchantId;
 

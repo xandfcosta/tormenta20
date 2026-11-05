@@ -35,6 +35,9 @@ var permitidos = map[string]bool{
 	// parâmetro do construtor, como na Mesa e na ficha — e cada entrada que vira
 	// caso de uso SAI da `Deps` em vez de ganhar um adaptador novo.
 	"t20engine/app": true,
+	// O editor das regras da mesa lê as opções no catálogo e pergunta ao motor quem a regra alcança.
+	"t20engine/domain/book":   true,
+	"t20engine/domain/engine": true,
 	// O `app/boards` é o acervo de LUGARES, e ele entrou INTEIRO no lugar de
 	// quatro entradas da porta que só o repassavam — mesmo desenho que a Mesa
 	// tem desde a ALE-344.

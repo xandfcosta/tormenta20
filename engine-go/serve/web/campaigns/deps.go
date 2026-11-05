@@ -9,6 +9,7 @@ import (
 	"t20engine/app/boards"
 	"t20engine/app/campaign"
 	"t20engine/app/session"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/ui"
@@ -41,6 +42,8 @@ type Deps interface {
 	// perguntas, e o compilador recusaria um só.
 	RequesterIsAdmin(r *http.Request) bool
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
+	// Catalogs é o livro: a prévia das regras da mesa carrega as fichas para saber quem alcança.
+	Catalogs() *engine.Catalogs
 
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)

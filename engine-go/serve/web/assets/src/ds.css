@@ -777,6 +777,35 @@
     padding: 0;
     overflow: hidden;
   }
+  .ds-table-rule {
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+  }
+  .ds-rule-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .ds-rule-line > .ds-select {
+    flex: 1 1 8rem;
+    min-width: 0;
+    width: auto;
+  }
+  .ds-rule-amount {
+    flex: 0 0 5rem;
+    width: 5rem;
+  }
+  .ds-rule-preview {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-control);
+  }
+  .ds-rule-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
   .ds-step-refusal {
     padding-block: 0.5rem;
   }

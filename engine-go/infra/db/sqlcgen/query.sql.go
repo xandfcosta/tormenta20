@@ -1012,6 +1012,23 @@ func (q *Queries) DosesOfCharacter(ctx context.Context, characterid int64) ([]Do
 	return items, nil
 }
 
+const dropCampaignRule = `-- name: DropCampaignRule :execrows
+DELETE FROM campaign_rules WHERE id = ? AND campaignId = ?
+`
+
+type DropCampaignRuleParams struct {
+	ID         string `json:"id"`
+	Campaignid int64  `json:"campaignid"`
+}
+
+func (q *Queries) DropCampaignRule(ctx context.Context, arg DropCampaignRuleParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, dropCampaignRule, arg.ID, arg.Campaignid)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const enchantsOfCharacter = `-- name: EnchantsOfCharacter :many
 SELECT e.itemId, e.enchantId
 FROM character_item_enchants e
@@ -1212,6 +1229,24 @@ func (q *Queries) FirstLiveSessionForUser(ctx context.Context, userid int64) (Fi
 		&i.Sessionnumber,
 	)
 	return i, err
+}
+
+const flipCampaignRule = `-- name: FlipCampaignRule :execrows
+UPDATE campaign_rules SET enabled = 1 - enabled, updatedAt = ? WHERE id = ? AND campaignId = ?
+`
+
+type FlipCampaignRuleParams struct {
+	Updatedat  string `json:"updatedat"`
+	ID         string `json:"id"`
+	Campaignid int64  `json:"campaignid"`
+}
+
+func (q *Queries) FlipCampaignRule(ctx context.Context, arg FlipCampaignRuleParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, flipCampaignRule, arg.Updatedat, arg.ID, arg.Campaignid)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getAccountInvite = `-- name: GetAccountInvite :one
@@ -1651,6 +1686,34 @@ func (q *Queries) IgnoreRuleInCampaign(ctx context.Context, arg IgnoreRuleInCamp
 	return err
 }
 
+const insertCampaignRule = `-- name: InsertCampaignRule :exec
+INSERT INTO campaign_rules (id, campaignId, characterId, name, enabled, conditions, effect, updatedAt)
+VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+`
+
+type InsertCampaignRuleParams struct {
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Conditions  string        `json:"conditions"`
+	Effect      string        `json:"effect"`
+	Updatedat   string        `json:"updatedat"`
+}
+
+func (q *Queries) InsertCampaignRule(ctx context.Context, arg InsertCampaignRuleParams) error {
+	_, err := q.db.ExecContext(ctx, insertCampaignRule,
+		arg.ID,
+		arg.Campaignid,
+		arg.Characterid,
+		arg.Name,
+		arg.Conditions,
+		arg.Effect,
+		arg.Updatedat,
+	)
+	return err
+}
+
 const isCampaignGmForCharacter = `-- name: IsCampaignGmForCharacter :one
 SELECT EXISTS (
   SELECT 1 FROM campaign_members m
@@ -2008,6 +2071,51 @@ func (q *Queries) ListCampaignPlaces(ctx context.Context, campaignid int64) ([]C
 			&i.State,
 			&i.Createdat,
 			&i.Updatedat,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCampaignRules = `-- name: ListCampaignRules :many
+SELECT id, characterId, name, enabled, conditions, effect
+FROM campaign_rules WHERE campaignId = ? ORDER BY id
+`
+
+type ListCampaignRulesRow struct {
+	ID          string        `json:"id"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Enabled     int64         `json:"enabled"`
+	Conditions  string        `json:"conditions"`
+	Effect      string        `json:"effect"`
+}
+
+// Todas as regras da mesa, ligadas ou nao: e o que a aba do mestre desenha.
+func (q *Queries) ListCampaignRules(ctx context.Context, campaignid int64) ([]ListCampaignRulesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignRules, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCampaignRulesRow{}
+	for rows.Next() {
+		var i ListCampaignRulesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Name,
+			&i.Enabled,
+			&i.Conditions,
+			&i.Effect,
 		); err != nil {
 			return nil, err
 		}
@@ -3651,6 +3759,38 @@ UPDATE account_invite_links SET revokedAt = ?1 WHERE revokedAt IS NULL
 func (q *Queries) RevokeOpenAccountInvites(ctx context.Context, now sql.NullString) error {
 	_, err := q.db.ExecContext(ctx, revokeOpenAccountInvites, now)
 	return err
+}
+
+const rewriteCampaignRule = `-- name: RewriteCampaignRule :execrows
+UPDATE campaign_rules SET characterId = ?, name = ?, conditions = ?, effect = ?, updatedAt = ?
+WHERE id = ? AND campaignId = ?
+`
+
+type RewriteCampaignRuleParams struct {
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Conditions  string        `json:"conditions"`
+	Effect      string        `json:"effect"`
+	Updatedat   string        `json:"updatedat"`
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+}
+
+// Pela campanha tambem: o id veio do cliente, e o de outra mesa nao pode ser alcancado.
+func (q *Queries) RewriteCampaignRule(ctx context.Context, arg RewriteCampaignRuleParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, rewriteCampaignRule,
+		arg.Characterid,
+		arg.Name,
+		arg.Conditions,
+		arg.Effect,
+		arg.Updatedat,
+		arg.ID,
+		arg.Campaignid,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const saveCampaignPlace = `-- name: SaveCampaignPlace :one
