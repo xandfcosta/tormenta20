@@ -199,3 +199,36 @@ func TestThePlayerPageCarriesNoEditorSignals(t *testing.T) {
 		t.Error("o jogador recebe os sinais do editor")
 	}
 }
+
+// O jogador lê as regras da mesa inteira e as do personagem dele. As de outra pessoa são da outra pessoa.
+func TestThePlayerReadsTheTableRulesAndTheirOwn(t *testing.T) {
+	f := newSceneFixture(t)
+	insert := func(name string, character any) {
+		if _, err := f.s.db.ExecContext(context.Background(),
+			`INSERT INTO campaign_rules (id, campaignId, characterId, name, enabled, conditions, effect, updatedAt) VALUES (?, ?, ?, ?, 1, '[]', ?, '2026-11-05T00:00:00.000Z')`,
+			"regra-"+name, f.campaignID, character, name, plusTwoAttack); err != nil {
+			t.Fatal(err)
+		}
+	}
+	someoneElse := seedCharacterAtLevel(t, f.s, f.gm, "Heroína do mestre", "Guerreiro", 3, 0, 0)
+	if _, err := f.s.db.ExecContext(context.Background(), "INSERT INTO campaign_members (campaignId, characterId, addedAt) VALUES (?, ?, '2026-11-05T00:00:00.000Z')", f.campaignID, someoneElse); err != nil {
+		t.Fatal(err)
+	}
+	insert("DaMesa", nil)
+	insert("Minha", f.charID)
+	insert("Alheia", someoneElse)
+
+	page := rulesTab(t, f, f.player)
+	for _, want := range []string{"DaMesa", "Minha"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("o jogador não lê a regra %q", want)
+		}
+	}
+	if strings.Contains(page, "Alheia") || strings.Contains(page, "Heroína do mestre") {
+		t.Error("o jogador lê a regra do personagem de outra pessoa")
+	}
+	gmPage := rulesTab(t, f, f.gm)
+	if !strings.Contains(gmPage, "Alheia") {
+		t.Error("o mestre lê todas as regras")
+	}
+}

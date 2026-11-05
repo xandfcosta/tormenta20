@@ -226,7 +226,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 	}
 
 	if v.AbaAtiva() == "regras" {
-		if v.TableRules, err = s.tableRulesOf(ctx, c.ID, v.IsGM); err != nil {
+		if v.TableRules, err = s.tableRulesOf(ctx, c.ID, v.IsGM, euID); err != nil {
 			return oneView{}, err
 		}
 	}

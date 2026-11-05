@@ -130,7 +130,7 @@ func (s Scene) handleTableRuleFlip(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
-	rows, err := s.tableRulesOf(r.Context(), id, true)
+	rows, err := s.tableRulesOf(r.Context(), id, true, 0)
 	if err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return

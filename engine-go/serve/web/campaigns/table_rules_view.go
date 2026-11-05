@@ -31,18 +31,24 @@ type tableRuleRow struct {
 }
 
 // tableRulesOf são as regras que quem olha lê: todas para o mestre, e as ligadas para o jogador.
-func (s Scene) tableRulesOf(ctx context.Context, campaignID int64, isGM bool) ([]tableRuleRow, error) {
+func (s Scene) tableRulesOf(ctx context.Context, campaignID int64, isGM bool, euID int64) ([]tableRuleRow, error) {
 	rules, err := s.life.TableRules(ctx, campaignID)
 	if err != nil {
 		return nil, err
 	}
-	names, err := s.memberNames(ctx, campaignID)
+	members, err := s.deps.Queries().ListMembers(ctx, campaignID)
 	if err != nil {
 		return nil, err
 	}
+	names, mine := map[int64]string{}, map[int64]bool{}
+	for _, member := range members {
+		names[member.Characterid] = memberName(member.Charname, member.Characterid)
+		mine[member.Characterid] = member.Charownerid == euID
+	}
 	out := []tableRuleRow{}
 	for _, rule := range rules {
-		if !isGM && !rule.Enabled {
+		// O jogador lê o que vale para ele: a regra individual de outra pessoa é da outra pessoa.
+		if !isGM && (!rule.Enabled || (rule.CharacterID != nil && !mine[*rule.CharacterID])) {
 			continue
 		}
 		scope := "Toda a mesa"
@@ -53,18 +59,6 @@ func (s Scene) tableRulesOf(ctx context.Context, campaignID int64, isGM bool) ([
 			ID: rule.ID, Name: rule.Name, Enabled: rule.Enabled,
 			Meta: scope + " · " + book.WrittenTableRule(rule.When, rule.Effect),
 		})
-	}
-	return out, nil
-}
-
-func (s Scene) memberNames(ctx context.Context, campaignID int64) (map[int64]string, error) {
-	members, err := s.deps.Queries().ListMembers(ctx, campaignID)
-	if err != nil {
-		return nil, err
-	}
-	out := make(map[int64]string, len(members))
-	for _, member := range members {
-		out[member.Characterid] = memberName(member.Charname, member.Characterid)
 	}
 	return out, nil
 }
