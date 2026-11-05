@@ -240,3 +240,15 @@ func TestTheEditorRefusesConditionsTheEffectIgnores(t *testing.T) {
 		})
 	}
 }
+
+// "Vale como empunhado" é para o item que o livro manda empunhar.
+func TestTheWieldedRuleRefusesAnItemThatIsNotHeld(t *testing.T) {
+	f := newSceneFixture(t)
+	body := savesRule(t, f, `{"table_rule_name":"A","table_rule_scope":"mesa","table_rule_count":1,"table_rule_kind_1":"item","table_rule_value_1":"bandana","table_rule_effect":"wielded"}`)
+	if !strings.Contains(body, "Bandana") || !strings.Contains(body, `role="alert"`) {
+		t.Errorf("a recusa devia nomear a bandana, e veio %q", body[:min(300, len(body))])
+	}
+	if total, _ := ruleCount(t, f); total != 0 {
+		t.Errorf("a recusa gravou %d regras", total)
+	}
+}

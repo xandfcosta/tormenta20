@@ -156,6 +156,11 @@ func TableRuleProblem(name string, when []engine.RuleCondition, effect engine.Ru
 	}
 	switch effect.Kind {
 	case engine.RuleCountsAsWielded:
+		for _, condition := range when {
+			if item := ItemByID(condition.Value); condition.Kind == engine.RuleOnItem && item != nil && item.Equip != "wielded" {
+				return fmt.Errorf("%s não é de empunhar: \"vale como empunhado\" é para o item que o livro manda empunhar", item.Name)
+			}
+		}
 		if !slices.ContainsFunc(when, func(c engine.RuleCondition) bool {
 			return slices.Contains([]string{engine.RuleOnItem, engine.RuleOnImprovement, engine.RuleOnTrait}, c.Kind)
 		}) {
