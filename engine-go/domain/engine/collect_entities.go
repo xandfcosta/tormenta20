@@ -248,7 +248,7 @@ func flagChoiceModifiers(m Modifier, picks []string, names map[string]string) []
 // stored in the classPowers blob by bare id. Iterates in stored order.
 func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 	chosen := parseChoiceSet(ch.ClassPowers)
-	// O poder geral que a Memória Póstuma deu vale como escolhido (ALE-502).
+	// O poder geral da Memória Póstuma e do Versátil vale como escolhido (ALE-502).
 	for _, id := range r.RaceHeldPowers(ch) {
 		if !chosen.has[id] {
 			chosen.list = append(chosen.list, id)

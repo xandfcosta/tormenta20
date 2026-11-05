@@ -139,7 +139,7 @@ func ClassTrainingOf(dto CharacterDTO, elsewhere map[string]bool) *ClassTraining
 }
 
 // trainedByOtherChoices são as perícias que outra escolha gravou na coluna de treino:
-// o Treinamento em Perícia (p131) e a Memória Póstuma (p29). Na coluna elas parecem
+// o Treinamento em Perícia (p131), a Memória Póstuma (p29) e o Versátil (p19). Na coluna elas parecem
 // iguais às da classe, e só a escolha guardada as separa.
 func trainedByOtherChoices(dto CharacterDTO) map[string]bool {
 	names := map[string]bool{}

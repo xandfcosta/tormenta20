@@ -19,13 +19,18 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			{
 				ID: "humano-versatil",
 				Modeled: []string{
-					"as duas perícias escolhidas se marcam treinadas na coluna da ficha, que é o lugar da escolha livre",
+					"as duas escolhas ficam na habilidade, e a perícia escolhida se marca treinada na coluna da ficha",
+					"uma das duas pode ser um poder geral",
 				},
 				RaceID:      "humano",
 				Name:        "Versátil",
 				Description: "Você se torna treinado em duas perícias a sua escolha (não precisam ser da sua classe). Pode trocar uma dessas perícias por um poder geral a sua escolha.",
 				UID:         "rac_r4izqcoo75",
-				Unmodeled:   "a troca de uma delas por um poder geral, que se escolhe à mão; e o motor não confere quantas foram marcadas",
+				Choice: &PowerChoice{
+					Kind:  "trained-or-one-power",
+					Label: "Duas perícias, ou uma perícia e um poder geral",
+					Count: 2,
+				},
 			},
 		},
 		UID: "rac_lamjkhw3wn",

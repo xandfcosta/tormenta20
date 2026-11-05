@@ -66,7 +66,7 @@ func borrowedAbilities(dto CharacterDTO) map[string]borrowed {
 			continue
 		}
 		for _, ability := range traits.Abilities {
-			if ability.Choice == nil || ability.Choice.Kind != trainedOrPower {
+			if ability.Choice == nil || !BorrowsAbilities(*ability.Choice) {
 				continue
 			}
 			for _, pick := range picks[ability.ID] {

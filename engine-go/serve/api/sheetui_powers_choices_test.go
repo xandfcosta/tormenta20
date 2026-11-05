@@ -199,9 +199,14 @@ func TestPowerSlotsAreOnePerLevelFromTheSecondOn(t *testing.T) {
 func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 	f, id := barbaro(t, 1)
 	seedRaca(t, f.s, id, "humano")
-
-	// O humano só pede a distribuição, então o "falta 1" do passo da raça é
-	// ela — e o "feito" depois é ela fechando.
+	// O VERSÁTIL FECHA PRIMEIRO, para sobrar só a distribuição: o "falta 1" do passo da
+	// raça é ela, e o "feito" depois é ela fechando.
+	for _, skill := range []string{"Cavalgar", "Luta"} {
+		seedPericia(t, f.s, id, skill, "strength", false)
+		if refusal := raceAbilityCommand(t, f, id, "humano-versatil", skill); refusal != "" {
+			t.Fatalf("escolher %s no Versátil: %q", skill, refusal)
+		}
+	}
 	if step := choiceStepTitled(t, powerScreen(t, f, id), "Raça · Humano"); step.Tag != "falta 1" {
 		t.Fatalf("o humano sem distribuição não mostra a pendência: o passo diz %q", step.Tag)
 	}

@@ -27,7 +27,7 @@ type raceAbilityBlock struct {
 	Swaps []powerOption
 	// NoCraft diz que a escolha é de Ofício e a ficha não tem nenhum.
 	NoCraft bool
-	// PowerGroups são os poderes gerais da Memória Póstuma, por grupo (p130),
+	// PowerGroups são os poderes gerais da Memória Póstuma e do Versátil, por grupo (p130),
 	// já filtrados pela busca (ALE-502).
 	PowerGroups []powerGroup
 	Search      string
@@ -42,7 +42,7 @@ type powerGroup struct {
 	Options []powerOption
 }
 
-// generalPowerGroups são os quatro grupos que a Memória Póstuma aceita, na
+// generalPowerGroups são os quatro grupos que a Memória Póstuma e o Versátil aceitam, na
 // ordem do livro (p130). Os Concedidos ficam de fora: pedem devoção.
 var generalPowerGroups = []struct{ Kind, Title string }{
 	{"combate", "Combate"}, {"destino", "Destino"}, {"magia", "Magia"}, {"tormenta", "Tormenta"},
@@ -58,9 +58,20 @@ func (b raceAbilityBlock) SkillsLabel() string {
 	case len(b.Swaps) > 0:
 		return "Perícias · +2"
 	case b.PowerGroups != nil || b.Search != "":
+		if b.Count > 1 {
+			return "Perícias · ficam treinadas"
+		}
 		return "Uma perícia · fica treinada"
 	}
 	return ""
+}
+
+// PowerLabel é o título dos poderes gerais. Com duas escolhas, o limite é de um poder (p19).
+func (b raceAbilityBlock) PowerLabel() string {
+	if b.Count > 1 {
+		return "Ou troque uma perícia por um poder geral"
+	}
+	return "Ou um poder geral"
 }
 
 // Written é "1 de 2".
@@ -69,7 +80,7 @@ func (b raceAbilityBlock) Written() string {
 }
 
 // raceAbilityBlocksOf monta os blocos da raça `race`. A busca filtra os
-// poderes gerais da Memória Póstuma.
+// poderes gerais.
 func raceAbilityBlocksOf(dto sheet.CharacterDTO, race, query string) []raceAbilityBlock {
 	out := []raceAbilityBlock{}
 	for _, choice := range sheet.RaceAbilityChoices(dto) {
@@ -98,7 +109,9 @@ func raceAbilityBlocksOf(dto sheet.CharacterDTO, race, query string) []raceAbili
 		if sheet.IsTrainedOrPower(*ability.Choice) {
 			block.Search = query
 			block.PowerGroups = generalPowerGroupsOf(choice.Picks, query)
-			block.RaceGroups = borrowableRaceGroupsOf(choice.Picks)
+			if sheet.BorrowsAbilities(*ability.Choice) {
+				block.RaceGroups = borrowableRaceGroupsOf(choice.Picks)
+			}
 		}
 		out = append(out, block)
 	}

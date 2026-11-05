@@ -60,7 +60,7 @@ func UsedPowerSlots(dto CharacterDTO) int {
 
 // FreePicks são as escolhas do poder que NÃO custam vaga, porque o poder veio
 // de fora da lista de escolhidos: o Foco em Perícia do Membro de Guilda (p92),
-// o poder geral da Memória Póstuma (ALE-510). Uma por fonte.
+// o poder geral da Memória Póstuma e do Versátil (ALE-510). Uma por fonte.
 func FreePicks(dto CharacterDTO, power book.ClassPower) int {
 	free := 0
 	for _, owned := range OwnedPowers(dto) {
