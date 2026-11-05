@@ -190,6 +190,15 @@ func vitalAmountPost(v View, which string, sign int) string {
 	return "$vital_amount > 0 && " + sheetPostWith(v, "/vitais/"+which+"/§", value)
 }
 
+// vitalTempPost é o gesto de somar ou tirar temporários, com o valor do campo.
+func vitalTempPost(v View, which string, sign int) string {
+	value := "$vital_temp_amount"
+	if sign < 0 {
+		value = "-" + value
+	}
+	return "$vital_temp_amount > 0 && " + sheetPostWith(v, "/vitais/"+which+"/temporarios/§", value)
+}
+
 // whoLine é a linha de quem é, debaixo do nome: classe, raça e devoção.
 func whoLine(v View) string {
 	parts := []string{}

@@ -36,6 +36,12 @@ func effectDisplayName(catalogID string) string {
 	if catalogID == engine.ChargeEffectID {
 		return "Investida · guarda aberta"
 	}
+	switch catalogID {
+	case sheet.HandmadeTempHpID:
+		return "PV temporários · à mão"
+	case sheet.HandmadeTempMpID:
+		return "PM temporários · à mão"
+	}
 	if spec := book.ActivationOf(catalogID, ""); spec != nil {
 		if spec.Kind == "stance" {
 			// O EFEITO DE UMA POSTURA É O DEGRAU PAGO, e só ele: a postura em si
