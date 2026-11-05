@@ -36,7 +36,14 @@ test('o mestre monta, liga e apaga uma regra da mesa', async ({ page }) => {
 
   await page.locator('.ds-table-rule', { hasText: 'Regra do teste' }).getByRole('button', { name: 'Editar' }).click()
   await expect(page.locator('dialog[open]').getByLabel('Nome')).toHaveValue('Regra do teste')
+  // Excluir pede confirmação: a regra ligada está na ficha dos jogadores.
   await page.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
+  const confirm = page.getByRole('dialog', { name: 'Excluir esta regra?' })
+  await confirm.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(confirm).toBeHidden()
+  await expect(page.locator('dialog[open]').getByLabel('Nome')).toHaveValue('Regra do teste')
+  await page.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
+  await confirm.getByRole('button', { name: 'Excluir' }).click()
   await expect(page.locator('.ds-table-rule', { hasText: 'Regra do teste' })).toHaveCount(0)
 })
 

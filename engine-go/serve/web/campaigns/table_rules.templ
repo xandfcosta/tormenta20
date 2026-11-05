@@ -162,7 +162,7 @@ templ ruleEditorForm(v ruleEditorView) {
 		</div>
 		<div class="ds-rule-actions">
 			if v.Draft.ID != "" {
-				@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf("@post('%s')", ruleURL(v.CampaignID, "/"+v.Draft.ID+"/excluir"))}) {
+				@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('table-rule-remove').showModal()"}) {
 					Excluir
 				}
 			}
@@ -175,5 +175,22 @@ templ ruleEditorForm(v ruleEditorView) {
 				Gravar
 			}
 		</div>
+		if v.Draft.ID != "" {
+			@ds.Dialog("table-rule-remove", "Excluir esta regra?", removeRuleFoot(v)) {
+				<p class="ds-help">Ela sai na hora da ficha de quem ela alcança, e não dá para desfazer.</p>
+			}
+		}
 	</div>
+}
+
+// O POST mora aqui, e não no botão do editor: a regra ligada está na ficha dos jogadores.
+templ removeRuleFoot(v ruleEditorView) {
+	<form method="dialog">
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "submit"}) {
+			Cancelar
+		}
+	</form>
+	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": fmt.Sprintf("document.getElementById('table-rule-remove').close(); @post('%s')", ruleURL(v.CampaignID, "/"+v.Draft.ID+"/excluir"))}) {
+		Excluir
+	}
 }
