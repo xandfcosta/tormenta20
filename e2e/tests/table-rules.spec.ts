@@ -83,3 +83,56 @@ test('a resposta atrasada não desfaz o que se digitou depois', async ({ page })
   await editor.getByLabel('Quanto').blur()
   await expect(editor.getByText('+7 na Defesa')).toBeVisible()
 })
+
+// O mestre liga a regra e a "Minha ficha" aberta na mesa acompanha, sem o jogador recarregar. E2e
+// porque é fluxo entre dois clientes: o aviso passa pelo stream da mesa e pelo sinal da versão.
+test('ligar e excluir a regra chega na ficha aberta do jogador', async ({ browser }) => {
+  test.setTimeout(90_000)
+  const gm = await browser.newContext({ storageState: '.auth/user.json' })
+  const player = await browser.newContext({ storageState: '.auth/player.json' })
+  try {
+    const playerScreen = await player.newPage()
+    await playerScreen.goto('/campanhas/1/sessoes/5')
+    await expect(playerScreen.getByRole('navigation', { name: 'Superfícies da sessão' })).toBeVisible()
+    await playerScreen.getByRole('button', { name: 'Ficha', exact: true }).click()
+    const sheet = playerScreen.getByRole('navigation', { name: 'Seções da ficha' })
+    await sheet.getByRole('link', { name: 'Combate' }).click()
+    const sheetHP = async () => {
+      const text = await playerScreen.locator('#sheet-scene').innerText()
+      return text.match(/\d+\s*\/\s*(\d+)/)?.[1] ?? ''
+    }
+    await expect.poll(sheetHP).toMatch(/\d+/)
+    const before = Number(await sheetHP())
+
+    const gmScreen = await gm.newPage()
+    await gmScreen.goto('/campanhas/1?tab=regras')
+    await gmScreen.getByRole('button', { name: 'Nova regra' }).click()
+    const editor = gmScreen.locator('dialog[open]')
+    await editor.getByLabel('Nome').fill('Vigor da mesa')
+    await editor.getByLabel('Em quê').selectOption({ label: 'PV' })
+    await editor.getByLabel('Quanto').fill('5')
+    await editor.getByLabel('Quanto').blur()
+    await expect(editor.getByText('+5 em PV')).toBeVisible()
+    await editor.getByRole('button', { name: 'Gravar' }).click()
+    const row = gmScreen.locator('.ds-table-rule', { hasText: 'Vigor da mesa' })
+    await row.getByRole('switch').click()
+    await expect(gmScreen.locator('.ds-table-rule', { hasText: 'Vigor da mesa' }).getByRole('switch')).toBeChecked()
+
+    await expect
+      .poll(sheetHP, { timeout: 8000, message: 'a ficha aberta não soube da regra ligada' })
+      .toBe(String(before + 5))
+
+    await gmScreen.locator('.ds-table-rule', { hasText: 'Vigor da mesa' }).getByRole('button', { name: 'Editar' }).click()
+    await expect(gmScreen.locator('dialog[open]').getByLabel('Nome')).toHaveValue('Vigor da mesa')
+    await gmScreen.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
+    await gmScreen.getByRole('dialog', { name: 'Excluir esta regra?' }).getByRole('button', { name: 'Excluir' }).click()
+    await expect(gmScreen.locator('.ds-table-rule', { hasText: 'Vigor da mesa' })).toHaveCount(0)
+
+    await expect
+      .poll(sheetHP, { timeout: 8000, message: 'a ficha aberta não soube da regra excluída' })
+      .toBe(String(before))
+  } finally {
+    await gm.close().catch(() => {})
+    await player.close().catch(() => {})
+  }
+})

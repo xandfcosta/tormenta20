@@ -1,8 +1,10 @@
 package campaigns
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"slices"
 	"strconv"
@@ -45,6 +47,19 @@ func (s Scene) patchRuleEditor(w http.ResponseWriter, r *http.Request, id int64,
 		return
 	}
 	_ = sse.PatchElements(fragment)
+}
+
+// wakeTableSheets faz a ficha aberta na mesa acompanhar a regra. A regra já está gravada, então a falha
+// aqui não vira recusa: a ficha fica velha até recarregar, e o log diz por quê.
+func (s Scene) wakeTableSheets(ctx context.Context, campaignID int64) {
+	stamped, err := s.life.StampTableSheets(ctx, campaignID)
+	if err != nil {
+		slog.Error("carimbar as fichas depois da regra da mesa", "campaign", campaignID, "error", err)
+		return
+	}
+	for _, characterID := range stamped {
+		s.deps.CharacterChanged(characterID)
+	}
 }
 
 // handleTableRuleEditor abre o editor: a regra pedida, ou o rascunho em branco.
@@ -115,6 +130,10 @@ func (s Scene) handleTableRuleSave(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
+	// A regra nova nasce desligada, e não muda ficha nenhuma.
+	if draft.ID != "" {
+		s.wakeTableSheets(r.Context(), id)
+	}
 	_ = datastar.NewSSE(w, r).Redirect(routes.CampaignTab(id, "regras"))
 }
 
@@ -130,6 +149,7 @@ func (s Scene) handleTableRuleFlip(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
+	s.wakeTableSheets(r.Context(), id)
 	rows, err := s.tableRulesOf(r.Context(), id, true, 0)
 	if err != nil {
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
@@ -152,6 +172,7 @@ func (s Scene) handleTableRuleRemove(w http.ResponseWriter, r *http.Request) {
 		refuse(w, err)
 		return
 	}
+	s.wakeTableSheets(r.Context(), id)
 	_ = datastar.NewSSE(w, r).Redirect(routes.CampaignTab(id, "regras"))
 }
 

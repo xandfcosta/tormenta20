@@ -44,6 +44,8 @@ type Deps interface {
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
 	// Catalogs é o livro: a prévia das regras da mesa carrega as fichas para saber quem alcança.
 	Catalogs() *engine.Catalogs
+	// CharacterChanged acorda a ficha aberta na mesa: a regra da mesa muda a conta dela.
+	CharacterChanged(characterID int64)
 
 	// WritePage é a montagem da casca.
 	WritePage(w http.ResponseWriter, r *http.Request, status int, p ui.Page, body templ.Component)

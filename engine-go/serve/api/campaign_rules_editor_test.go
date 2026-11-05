@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"t20engine/domain/sheet"
+	"t20engine/infra/events"
 )
 
 // O EDITOR DAS REGRAS DA MESA diante do que não é o caminho feliz: o texto com aspas, a regra que
@@ -197,6 +198,63 @@ func TestThePlayerPageCarriesNoEditorSignals(t *testing.T) {
 	f := newSceneFixture(t)
 	if strings.Contains(rulesTab(t, f, f.player), "table_rule_name") {
 		t.Error("o jogador recebe os sinais do editor")
+	}
+}
+
+// Mudar uma regra acorda a ficha aberta: o carimbo É a versão da ficha, e o aviso a faz ser relida.
+func TestAChangedRuleWakesTheSheetsAtTheTable(t *testing.T) {
+	f := newSceneFixture(t)
+	id := f.charID
+	updatedAt := func() string {
+		var stamp string
+		if err := f.s.db.QueryRowContext(context.Background(), "SELECT updatedAt FROM characters WHERE id = ?", id).Scan(&stamp); err != nil {
+			t.Fatal(err)
+		}
+		return stamp
+	}
+	subscription, stop := f.s.bus.Subscribe(events.OfCharacter(id))
+	defer stop()
+	woke := func() bool {
+		select {
+		case <-subscription.C:
+			return true
+		default:
+			return false
+		}
+	}
+	forget := func(stamp string) {
+		if _, err := f.s.db.ExecContext(context.Background(), "UPDATE characters SET updatedAt = ? WHERE id = ?", stamp, id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	const old = "2020-01-01T00:00:00.000Z"
+	forget(old)
+
+	savesRule(t, f, espadaDaCasa)
+	if woke() || updatedAt() != old {
+		t.Error("a regra nova nasce desligada e não muda ficha nenhuma: ela não devia acordar ninguém")
+	}
+	rule, _, _ := theOnlyRule(t, f)
+
+	gestures := []struct {
+		name string
+		does func()
+	}{
+		{"ligar", func() { f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/"+rule+"/ligar"), "") }},
+		{"editar", func() {
+			savesRule(t, f, strings.Replace(espadaDaCasa, `"table_rule_amount":2`, fmt.Sprintf(`"table_rule_amount":3,"table_rule_id":%q`, rule), 1))
+		}},
+		{"excluir", func() { f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/"+rule+"/excluir"), "") }},
+	}
+	for _, gesture := range gestures {
+		forget(old)
+		gesture.does()
+		if !woke() {
+			t.Errorf("%s não avisou a ficha aberta", gesture.name)
+		}
+		if updatedAt() == old {
+			t.Errorf("%s não carimbou a ficha, e a mesa compara o carimbo para reler", gesture.name)
+		}
 	}
 }
 

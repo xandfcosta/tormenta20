@@ -121,6 +121,24 @@ func (l Lifecycle) RemoveTableRule(ctx context.Context, who app.Caller, campaign
 	return oneRuleChanged(changed, err, ruleID)
 }
 
+// StampTableSheets carimba as fichas da mesa e diz quais são. A regra muda a conta delas sem tocar na
+// linha, e o carimbo é a versão que a mesa compara para reler a ficha aberta.
+func (l Lifecycle) StampTableSheets(ctx context.Context, campaignID int64) ([]int64, error) {
+	members, err := l.queries.ListMembers(ctx, campaignID)
+	if err != nil {
+		return nil, fmt.Errorf("ler a mesa %d: %w", campaignID, err)
+	}
+	stamp := dbvalue.NowISO()
+	stamped := make([]int64, 0, len(members))
+	for _, member := range members {
+		if err := l.queries.TouchCharacter(ctx, sqlcgen.TouchCharacterParams{UpdatedAt: stamp, ID: member.Characterid}); err != nil {
+			return stamped, fmt.Errorf("carimbar a ficha %d: %w", member.Characterid, err)
+		}
+		stamped = append(stamped, member.Characterid)
+	}
+	return stamped, nil
+}
+
 func oneRuleChanged(changed int64, err error, ruleID string) error {
 	if err != nil {
 		return fmt.Errorf("gravar a regra %q: %w", ruleID, err)
