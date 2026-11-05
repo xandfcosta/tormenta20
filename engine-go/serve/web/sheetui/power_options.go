@@ -29,6 +29,10 @@ func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []power
 		if (p.Choice.Kind == "trained-expertise" || p.Choice.Kind == "spell") && !owned[o.ID] {
 			continue
 		}
+		// E o Foco em Arma só alcança a arma natural que a ficha tem.
+		if o.NaturalWeapon && !owned[o.ID] {
+			continue
+		}
 		count := 0
 		for _, pick := range picks {
 			if pick == o.ID {
@@ -45,9 +49,9 @@ func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []power
 }
 
 // ownedOptionsOf é o que a ficha já tem entre as opções de escolha: as perícias
-// treinadas, as proficiências e as magias do grimório. As três famílias não
-// colidem — "Luta", "armas-marciais" e "bola-de-fogo" —, então um conjunto só
-// serve a todas.
+// treinadas, as proficiências, as magias do grimório e as armas naturais. As
+// famílias não colidem — "Luta", "armas-marciais", "bola-de-fogo" e
+// "minotauro-chifres" —, então um conjunto só serve a todas.
 func ownedOptionsOf(dto sheet.CharacterDTO) map[string]bool {
 	out := sheet.ToStringSet(sheet.UnmarshalStrings(dto.Proficiencies))
 	// A magia conta como "tida" quando a ficha a LANÇA: a do grimório acima do
@@ -55,6 +59,13 @@ func ownedOptionsOf(dto sheet.CharacterDTO) map[string]bool {
 	for _, spell := range dto.Spells {
 		if sheet.CanCastCircleOf(dto, spell.CatalogSpellID) {
 			out[spell.CatalogSpellID] = true
+		}
+	}
+	if dto.Ruleset != nil {
+		if ec, err := sheet.EngineCharacterFrom(dto); err == nil {
+			for _, source := range dto.Ruleset.NaturalWeaponSources(ec) {
+				out[source] = true
+			}
 		}
 	}
 	for _, e := range dto.Expertises {

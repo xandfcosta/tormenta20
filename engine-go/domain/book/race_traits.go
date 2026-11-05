@@ -43,6 +43,8 @@ type RaceAbility struct {
 	Choice *PowerChoice `json:"choice,omitempty"`
 	// GrantsProficiency entra no PADRÃO da ficha, como a da classe.
 	GrantsProficiency []string `json:"grantsProficiency,omitempty"`
+	// NaturalWeapon é a arma natural que a habilidade dá.
+	NaturalWeapon *namedNaturalWeapon `json:"naturalWeapon,omitempty"`
 	// Ancestry: a habilidade só vale na ascendência escolhida — a Luz Sagrada
 	// do aggelus, as Sombras Profanas do sulfure (p31, ALE-505).
 	Ancestry string `json:"ancestry,omitempty"`

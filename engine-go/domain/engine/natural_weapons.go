@@ -39,7 +39,7 @@ type ownedNaturalWeapon struct {
 
 // naturalWeaponsOf são as armas naturais da ficha: da raça, inclusive a habilidade tomada de
 // outra raça (p29), dos poderes da Tormenta e da devoção.
-func (r *Ruleset) naturalWeaponsOf(ch Character) []ownedNaturalWeapon {
+func (r *Ruleset) naturalWeaponsOf(ch Character, evenAsleep bool) []ownedNaturalWeapon {
 	out := []ownedNaturalWeapon{}
 	for _, applied := range r.appliedRaces(ch) {
 		abilities := slices.Clone(applied.race.Abilities)
@@ -62,10 +62,20 @@ func (r *Ruleset) naturalWeaponsOf(ch Character) []ownedNaturalWeapon {
 		if power == nil || power.NaturalWeapon == nil {
 			continue
 		}
-		if power.NaturalWeapon.AwakenedByUse && !usedThisScene(ch, power.ID) {
+		if power.NaturalWeapon.AwakenedByUse && !evenAsleep && !usedThisScene(ch, power.ID) {
 			continue
 		}
 		out = withGrantedWeapon(out, power.ID, *power.NaturalWeapon)
+	}
+	return out
+}
+
+// NaturalWeaponSources são as fontes das armas naturais que a ficha tem, mesmo a que ainda não
+// foi ativada: é a escolha do Foco em Arma, que dura mais que a cena (p128).
+func (r *Ruleset) NaturalWeaponSources(ch Character) []string {
+	out := []string{}
+	for _, owned := range r.naturalWeaponsOf(ch, true) {
+		out = append(out, owned.sourceID)
 	}
 	return out
 }
@@ -92,14 +102,16 @@ func usedThisScene(ch Character, grantedID string) bool {
 func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 	none := TotalContribs{Contributions: []BreakdownContribution{}}
 	cards := []WeaponCard{}
-	for _, owned := range r.naturalWeaponsOf(ch) {
+	for _, owned := range r.naturalWeaponsOf(ch, false) {
 		natural := owned.weapon
 		w := &WeaponStats{
 			Damage: natural.Damage, CritRange: 20, CritMult: natural.CritMult, Type: natural.DamageType,
 			Hand: "light", Purpose: "melee",
 		}
-		// Como o desarmado, ela não é "uma arma em uma das mãos" (p128).
+		// Como o desarmado, ela não é "uma arma em uma das mãos" (p128). O escopo da fonte é o
+		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
+		scopes = append(scopes, WeaponDamageScope(owned.sourceID))
 		card := b.card(ch, natural.Name, w, scopes, none, owned.steps, false)
 		card.Natural = &NaturalStrike{
 			SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1),
