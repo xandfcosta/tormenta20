@@ -493,9 +493,9 @@ func TestARageStartedAfterTheProposalDoesNotRaiseTheBonus(t *testing.T) {
 	}
 }
 
-// O que a postura acumula sai com ela (p42): gravar o bônus depois de ela acabar deixaria
-// o +1 valendo fora da fúria.
-func TestARageEndedBeforeTheCheckLeavesNoBonusBehind(t *testing.T) {
+// A PROPOSTA É UM RETRATO do personagem (decisão do dono): quem propôs em fúria acumula,
+// mesmo que a fúria tenha acabado antes do ✓.
+func TestARageEndedBeforeTheCheckStillRaisesTheBonus(t *testing.T) {
 	f, barbaro, goblin := barbarianWithTheBloodPower(t)
 	if refusal := powerCommand(t, f, barbaro, "postura/furia/entra", ""); refusal != "" {
 		t.Fatalf("entrar em fúria: %s", refusal)
@@ -505,7 +505,7 @@ func TestARageEndedBeforeTheCheckLeavesNoBonusBehind(t *testing.T) {
 	if refusal := gmRefusal(t, f, "/ataque/confirmar"); refusal != "" {
 		t.Fatalf("o ✓ foi recusado: %q", refusal)
 	}
-	if lines := bloodEffects(t, f, barbaro); lines != 0 {
-		t.Errorf("a fúria acabou e o bônus dela ficou gravado: %d linhas", lines)
+	if lines := bloodEffects(t, f, barbaro); lines != 1 {
+		t.Errorf("o crítico foi proposto em fúria, e o bônus não subiu: %d linhas", lines)
 	}
 }

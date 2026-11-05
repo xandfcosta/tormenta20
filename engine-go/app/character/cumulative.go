@@ -70,22 +70,18 @@ func (p Plays) BumpCumulativeBonus(
 }
 
 // cumulativesInTheAir são os poderes cumulativos que ESTE personagem tem, com a
-// postura deles acesa e o gatilho casando.
+// postura deles acesa quando o golpe foi proposto e o gatilho casando.
 //
 // AS TRÊS CONDIÇÕES JUNTAS, e nenhuma é dispensável: sem a posse, todo bárbaro
 // acumularia; sem a postura, a Sangue dos Inimigos valeria fora da fúria, que é
 // metade do poder; sem o gatilho, um crítico subiria o bônus de um poder que
 // só acumula ao derrubar.
 //
-// A POSTURA CONTA PELA PROPOSTA (decisão do dono): ligar a Fúria depois do crítico não
-// sobe nada. E ela tem de seguir acesa, porque o que uma postura acumula sai com ela
-// (`grantedEffectIDs`): gravar o bônus de uma fúria encerrada deixaria o +1 valendo fora
-// dela até o fim da cena.
+// A PROPOSTA É UM RETRATO do personagem (decisão do dono), e por isso a postura de agora
+// não entra: ligar a Fúria depois do crítico não sobe nada, e encerrá-la antes do ✓ não
+// tira. Encerrada, ela já não leva embora o bônus gravado depois: ele fica até a cena
+// acabar, ou até a próxima fúria acabar.
 func cumulativesInTheAir(dto sheet.CharacterDTO, atProposal, triggers []string) []book.Activation {
-	flags := map[string]bool{}
-	for _, s := range dto.Stances {
-		flags[s.Flag] = true
-	}
 	outside := []book.Activation{}
 	for _, spec := range book.Activations() {
 		if spec.Cumulative == nil || !slices.Contains(triggers, spec.Cumulative.On) {
@@ -97,7 +93,7 @@ func cumulativesInTheAir(dto sheet.CharacterDTO, atProposal, triggers []string) 
 		if stance == "" {
 			stance = spec.Flag
 		}
-		if stance != "" && (!flags[stance] || !slices.Contains(atProposal, stance)) {
+		if stance != "" && !slices.Contains(atProposal, stance) {
 			continue
 		}
 		if !sheet.OwnsClassPower(dto, spec.ID) {

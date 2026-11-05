@@ -120,11 +120,17 @@ func attackOnTheActionsSurface(t *testing.T, f sceneFixture) int {
 // CONFIRMADO, não quando é proposto — um provisório cancelado não aconteceu.
 func theGameMasterConfirmsACriticalHit(t *testing.T, f sceneFixture, attacker, target string) {
 	t.Helper()
+	confirmsACriticalProposedWith(t, f, attacker, target, "furia")
+}
+
+// confirmsACriticalProposedWith é o mesmo crítico, com as posturas do retrato da proposta.
+func confirmsACriticalProposedWith(t *testing.T, f sceneFixture, attacker, target string, stances ...string) {
+	t.Helper()
 	if _, err := f.s.sessions.ProposeAttack(context.Background(), f.sessionID, live.PendingAttack{
 		AttackerEntryID: attacker, TargetEntryID: target, TargetLabel: "Goblin",
 		Weapon: "Machado de batalha", Roll: 20, Total: 28, Defense: 13,
 		Hit: true, Critical: true, RawDamage: 1, Damage: 1,
-		Ruling: live.RulingCritical, DamageRolled: true, AttackerStances: []string{"furia"},
+		Ruling: live.RulingCritical, DamageRolled: true, AttackerStances: stances,
 	}); err != nil {
 		t.Fatalf("semear o provisório crítico: %v", err)
 	}
@@ -185,7 +191,7 @@ func TestNoCumulativeBonusIsEarnedOutsideTheStance(t *testing.T) {
 	endsTheRage(t, f, barbaro)
 	before := attackOnTheActionsSurface(t, f)
 
-	theGameMasterConfirmsACriticalHit(t, f, attacker, goblin)
+	confirmsACriticalProposedWith(t, f, attacker, goblin)
 	if got := attackOnTheActionsSurface(t, f); got != before {
 		t.Errorf("fora da fúria o crítico acumulou assim mesmo: %+d virou %+d", before, got)
 	}

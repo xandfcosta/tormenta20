@@ -93,8 +93,9 @@ aconteceu, e fechar a leitura dele não devolve nada. O "rolar de novo" é confe
 transação que troca o dado (`session.Store.RerollAttack`).
 
 **Os gatilhos cumulativos leem a postura da proposta** (`AttackerStances`, `TargetStances`),
-dos dois lados: ligar a Fúria depois do crítico não sobe o bônus. Se a postura acabou antes do
-✓, também não sobe, porque o que ela acumula sai com ela (`cumulativesInTheAir`).
+dos dois lados, porque ela é um retrato do personagem: ligar a Fúria depois do crítico não sobe
+o bônus, e encerrá-la antes do ✓ não tira (`cumulativesInTheAir`). Gravado com a postura já
+encerrada, o bônus fica até a cena acabar, ou até a próxima fúria acabar.
 
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
