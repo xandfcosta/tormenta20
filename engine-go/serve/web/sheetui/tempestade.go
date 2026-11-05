@@ -178,16 +178,25 @@ func withPage(meta string, page int) string {
 	return meta + " · p" + strconv.Itoa(page)
 }
 
-// vitalAmountPost é o gesto do diálogo de dano ou cura: o VALOR digitado entra
-// no caminho, com o sinal do botão. A rota de passo já aceita qualquer inteiro
-// diferente de zero e prende na faixa, então "levou 12" é o mesmo gesto do
-// −1, com outro número. O zero não sai: um passo zero é recusado pela rota.
+// vitalAmountPost é o gesto do diálogo de dano ou cura: o VALOR digitado entra no
+// caminho. O dano e o gasto têm rota própria, porque a poça temporária paga primeiro; a
+// cura e o recuperar são o +1 com outro número, e prendem na faixa. O zero não sai: as
+// duas rotas o recusam.
 func vitalAmountPost(v View, which string, sign int) string {
-	value := "$vital_amount"
+	path := "/vitais/" + which + "/§"
+	if sign < 0 {
+		path = "/vitais/" + which + "/gasto/§"
+	}
+	return "$vital_amount > 0 && " + sheetPostWith(v, path, "$vital_amount")
+}
+
+// vitalTempPost é o gesto de somar ou tirar temporários, com o valor do campo.
+func vitalTempPost(v View, which string, sign int) string {
+	value := "$vital_temp_amount"
 	if sign < 0 {
 		value = "-" + value
 	}
-	return "$vital_amount > 0 && " + sheetPostWith(v, "/vitais/"+which+"/§", value)
+	return "$vital_temp_amount > 0 && " + sheetPostWith(v, "/vitais/"+which+"/temporarios/§", value)
 }
 
 // whoLine é a linha de quem é, debaixo do nome: classe, raça e devoção.

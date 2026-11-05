@@ -41,26 +41,6 @@ type sheetVitals struct {
 	catalogs func() *engine.Catalogs
 }
 
-// drainTempHpAndHit roda a ordem do livro — os poços temporários primeiro, o
-// maior antes — e devolve o PV que sobra nos reais, já gravadas as drenagens.
-//
-// O PV com que ela decide é o DERIVADO, que chega pelo funil: com a coluna crua,
-// um personagem cujo máximo mudou por catálogo apanharia a partir do PV de
-// ontem.
-func drainTempHpAndHit(
-	ctx context.Context, q *sqlcgen.Queries, characterID int64, hpCurrent int64, amount int,
-) (sheet.DamagePlan, error) {
-	effects, err := q.ListActiveEffectsByCharacter(ctx, characterID)
-	if err != nil {
-		return sheet.DamagePlan{}, err
-	}
-	plan := sheet.PlanDamage(sheet.ParseTempHpPools(effects), int(hpCurrent), amount)
-	// O LAÇO DE ESCREVER É DO DOMÍNIO: o dano de PV e o gasto de PM produzem o
-	// mesmo par de listas, e uma segunda cópia dele divergiria no dia em que
-	// uma das duas ganhasse um passo.
-	return plan, sheet.WriteDrain(ctx, q, plan.Updates, plan.DeleteIDs)
-}
-
 // AddCondition acende uma condição na ficha, sem apagar as que já estão.
 //
 // LÊ E ESCREVE a lista inteira porque a coluna é um JSON de strings, e não uma
@@ -102,7 +82,7 @@ func (v sheetVitals) ApplyDelta(
 ) (*int64, *int64, error) {
 	return v.applyRule(ctx, charID, func(p sheet.Pools) (sheet.Pools, error) {
 		if hpDelta != nil && *hpDelta < 0 {
-			plan, err := drainTempHpAndHit(ctx, v.q, charID, p.HpCurrent, int(-*hpDelta))
+			plan, err := sheet.DrainTempHpAndHit(ctx, v.q, charID, p.HpCurrent, int(-*hpDelta))
 			if err != nil {
 				return p, err
 			}

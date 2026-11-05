@@ -29,6 +29,8 @@ func Routes(r chi.Router, s Scene) {
 	// SUBSTITUI os sinais, um corpo com o passo chegaria com os outros campos
 	// zerados e a tela voltaria sem o filtro que a pessoa usava.
 	r.Post("/personagens/{id}/vitais/{qual}/{passo}", s.sheetCommand(touchesVital))
+	r.Post("/personagens/{id}/vitais/{qual}/temporarios/{passo}", s.sheetCommand(touchesTempVital))
+	r.Post("/personagens/{id}/vitais/{qual}/gasto/{passo}", s.sheetCommand(spendsVital))
 	// A CLASSE vai no caminho porque o nível é dela: o do personagem é a SOMA.
 	r.Post("/personagens/{id}/nivel/{classe}/{passo}", s.sheetCommand(mudaONivel))
 	r.Post("/personagens/{id}/classes/{classe}/entra", s.sheetCommand(enterClass))
@@ -161,7 +163,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: ''," +
 			" power_search: '', stance_degrees: 0, power: '', show_passives: false," +
-			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', " + ExpertiseSpendsDeclaration() + "}",
+			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', vital_temp_amount: '', " + ExpertiseSpendsDeclaration() + "}",
 	}, SceneBody(view))
 }
 
@@ -264,9 +266,9 @@ func patchActionsAlong(r *http.Request, sse *datastar.ServerSentEventGenerator, 
 //
 // PRENDER e não recusar, e essa é a diferença entre o gesto e a API: o corpo do
 // `PATCH /vitals` manda o valor ABSOLUTO e é recusado fora da faixa, o que está
-// certo para um cliente que calculou. Aqui o gesto é "levou seis" — com 4 de PV
-// o resultado é zero, e uma recusa faria o mestre clicar quatro vezes de um em
-// um para chegar no mesmo lugar.
+// certo para um cliente que calculou. Aqui o gesto é uma correção do número, e uma
+// recusa faria o mestre clicar de um em um para chegar no mesmo lugar. Por isso ele
+// não toca na poça temporária: quem paga com ela é o `spendsVital`.
 //
 // O TETO é o máximo do personagem: curar além do máximo não é PV temporário, que
 // é outra regra e tem dono no motor (`TempHpFuria`).
@@ -276,6 +278,27 @@ func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 		return err
 	}
 	return s.plays.TouchVital(r.Context(), row, chi.URLParam(r, "qual"), step)
+}
+
+// touchesTempVital soma ou tira os temporários do PV ou do PM. O sinal do passo diz qual.
+func touchesTempVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	step, err := uRLStep(r)
+	if err != nil {
+		return err
+	}
+	return s.plays.TouchTempVital(r.Context(), row, chi.URLParam(r, "qual"), step)
+}
+
+// spendsVital é o "Dano" e o "Gastar" do diálogo, que drenam os temporários primeiro.
+func spendsVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	amount, err := uRLStep(r)
+	if err != nil {
+		return err
+	}
+	if amount < 0 {
+		return fmt.Errorf("o gasto é um valor positivo, e veio %d", amount)
+	}
+	return s.plays.SpendVital(r.Context(), row, chi.URLParam(r, "qual"), amount)
 }
 
 // enterClass dá o 1º nível numa classe que o personagem ainda não tem (p35).

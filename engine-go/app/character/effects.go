@@ -45,6 +45,72 @@ func (p Plays) TouchVital(
 	return err
 }
 
+// SpendVital é o "Dano" e o "Gastar" do diálogo: um gasto de verdade, que a poça temporária
+// paga primeiro (p106). O `TouchVital` é a correção do número, e não passa por ela.
+func (p Plays) SpendVital(ctx context.Context, row sqlcgen.Character, which string, amount int) error {
+	return p.inTx(ctx, "gastar "+which, func(q *sqlcgen.Queries) error {
+		switch which {
+		case "pv":
+			_, err := sheet.ApplyToPools(ctx, q, p.catalogs, row, func(pools sheet.Pools) (sheet.Pools, error) {
+				plan, err := sheet.DrainTempHpAndHit(ctx, q, row.ID, pools.HpCurrent, amount)
+				pools.HpCurrent = int64(plan.HpCurrent)
+				return pools, err
+			})
+			return err
+		case "pm":
+			return chargeMp(ctx, q, p.catalogs, row, amount)
+		}
+		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", which)
+	})
+}
+
+// TouchTempVital soma à poça feita à mão, ou tira das poças do vital.
+//
+// Somar não reescreve a poça de um poder ou magia, que tem duração própria, e a feita à
+// mão dura até o fim do dia, o padrão do livro (p106). Tirar segue a ordem do gasto, a
+// maior primeiro, e prende no zero como o `TouchVital`: o que sobra não sai do poço, porque
+// o gesto é sobre o temporário.
+func (p Plays) TouchTempVital(ctx context.Context, row sqlcgen.Character, which string, step int) error {
+	target, catalogID := sheet.TempHpTarget, sheet.HandmadeTempHpID
+	switch which {
+	case "pv":
+	case "pm":
+		target, catalogID = sheet.TempMpTarget, sheet.HandmadeTempMpID
+	default:
+		return fmt.Errorf("vital %q não existe: são 'pv' e 'pm'", which)
+	}
+	return p.inTx(ctx, "mexer nos temporários", func(q *sqlcgen.Queries) error {
+		effects, err := q.ListActiveEffectsByCharacter(ctx, row.ID)
+		if err != nil {
+			return fmt.Errorf("ler as poças da ficha %d: %w", row.ID, err)
+		}
+		pools := sheet.ParseTempPools(target, effects)
+		if step < 0 {
+			plan := sheet.PlanDrain(target, pools, -step)
+			return sheet.WriteDrain(ctx, q, plan.Updates, plan.DeleteIDs)
+		}
+		amount := step
+		for _, pool := range pools {
+			if pool.CatalogID == catalogID {
+				amount += pool.Amount
+			}
+		}
+		modifiers, err := json.Marshal([]map[string]any{
+			{"target": map[string]any{"k": target}, "amount": amount, "bonusType": "untyped", "note": ""},
+		})
+		if err != nil {
+			return fmt.Errorf("escrever a poça de %s: %w", which, err)
+		}
+		if _, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+			Characterid: row.ID, Source: "rule", Catalogid: catalogID, Scope: "day",
+			Modifiers: string(modifiers), Createdat: dbvalue.NowISO(),
+		}); err != nil {
+			return fmt.Errorf("gravar %d temporários de %s: %w", amount, which, err)
+		}
+		return nil
+	})
+}
+
 // ToggleBookCondition liga ou desliga UMA condição do livro (p394-395).
 //
 // Ela recebe a CONDIÇÃO e não a lista, pela razão de sempre: mandar a lista

@@ -42,6 +42,13 @@ const (
 	TempMpTarget = "tempMp"
 )
 
+// As chaves das poças feitas à mão, na ficha. Cada vital tem a dele: elas nunca coincidem
+// com uma poça de poder ou magia, que têm a chave do catálogo.
+const (
+	HandmadeTempHpID = "manual.temp-hp"
+	HandmadeTempMpID = "manual.temp-mp"
+)
+
 // TempPool é uma poça de um dos dois vitais.
 type TempPool struct {
 	EffectID  int64
