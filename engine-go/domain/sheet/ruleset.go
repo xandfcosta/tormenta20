@@ -67,8 +67,8 @@ func RulesetsFor(
 	return out, nil
 }
 
-// amendmentsOf lê o que UMA mesa mudou no livro: as duas espécies, numa função
-// só, porque as duas respondem à mesma campanha e quem as usa as quer juntas.
+// amendmentsOf lê o que UMA mesa mudou no livro: todas as espécies, numa função
+// só, porque elas respondem à mesma campanha e quem as usa as quer juntas.
 func amendmentsOf(
 	ctx context.Context, q *sqlcgen.Queries, campaignID int64,
 ) (engine.Amendments, error) {
@@ -118,6 +118,20 @@ func amendmentsOf(
 		out.Silences = append(out.Silences, engine.Silence{
 			Applies: selectorOf(row.Characterid),
 			Term:    row.Term,
+		})
+	}
+	// AS REGRAS DA MESA que estão ligadas.
+	rules, err := q.ListEnabledCampaignRules(ctx, campaignID)
+	if err != nil {
+		return out, fmt.Errorf("ler as regras da campanha %d: %w", campaignID, err)
+	}
+	for _, row := range rules {
+		when, then, err := engine.ParseTableRule(row.Conditions, row.Effect)
+		if err != nil {
+			return engine.Amendments{}, fmt.Errorf("a regra %q da campanha %d: %w", row.Name, campaignID, err)
+		}
+		out.Rules = append(out.Rules, engine.TableRule{
+			ID: row.ID, Name: row.Name, Applies: selectorOf(row.Characterid), When: when, Effect: then,
 		})
 	}
 	return out, nil

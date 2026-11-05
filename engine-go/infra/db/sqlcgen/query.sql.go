@@ -2549,6 +2549,49 @@ func (q *Queries) ListEffectIdsByCatalog(ctx context.Context, arg ListEffectIdsB
 	return items, nil
 }
 
+const listEnabledCampaignRules = `-- name: ListEnabledCampaignRules :many
+SELECT id, characterId, name, conditions, effect
+FROM campaign_rules WHERE campaignId = ? AND enabled = 1 ORDER BY id
+`
+
+type ListEnabledCampaignRulesRow struct {
+	ID          string        `json:"id"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Conditions  string        `json:"conditions"`
+	Effect      string        `json:"effect"`
+}
+
+// As regras da mesa que valem agora, na ordem em que o mestre as criou.
+func (q *Queries) ListEnabledCampaignRules(ctx context.Context, campaignid int64) ([]ListEnabledCampaignRulesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEnabledCampaignRules, campaignid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEnabledCampaignRulesRow{}
+	for rows.Next() {
+		var i ListEnabledCampaignRulesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Characterid,
+			&i.Name,
+			&i.Conditions,
+			&i.Effect,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEquippedItems = `-- name: ListEquippedItems :many
 SELECT id, equipped FROM character_items WHERE characterId = ? AND equipped IS NOT NULL
 `

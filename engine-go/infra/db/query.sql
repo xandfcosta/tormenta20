@@ -731,6 +731,11 @@ FROM campaign_grants WHERE campaignId = ? ORDER BY id;
 -- Os termos que esta mesa nao aplica. Ver a migracao 00018.
 SELECT characterId, term FROM campaign_silences WHERE campaignId = ? ORDER BY term;
 
+-- name: ListEnabledCampaignRules :many
+-- As regras da mesa que valem agora, na ordem em que o mestre as criou.
+SELECT id, characterId, name, conditions, effect
+FROM campaign_rules WHERE campaignId = ? AND enabled = 1 ORDER BY id;
+
 -- name: EnchantsOfItem :many
 SELECT enchantId FROM character_item_enchants WHERE itemId = ? ORDER BY enchantId;
 

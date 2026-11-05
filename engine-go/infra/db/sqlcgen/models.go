@@ -90,6 +90,17 @@ type CampaignPlace struct {
 	Updatedat  string `json:"updatedat"`
 }
 
+type CampaignRule struct {
+	ID          string        `json:"id"`
+	Campaignid  int64         `json:"campaignid"`
+	Characterid sql.NullInt64 `json:"characterid"`
+	Name        string        `json:"name"`
+	Enabled     int64         `json:"enabled"`
+	Conditions  string        `json:"conditions"`
+	Effect      string        `json:"effect"`
+	Updatedat   string        `json:"updatedat"`
+}
+
 type CampaignSilence struct {
 	Campaignid  int64         `json:"campaignid"`
 	Characterid sql.NullInt64 `json:"characterid"`

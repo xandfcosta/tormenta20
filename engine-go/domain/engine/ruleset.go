@@ -58,6 +58,10 @@ type Amendments struct {
 	// Ver `silence.go`: o endereço de um termo não carrega o valor, para uma
 	// errata do livro não evaporar o que o mestre escreveu.
 	Silences []Silence
+
+	// Rules são as regras da mesa que estão ligadas: condições e efeito, montados pelo mestre.
+	// Ver `table_rules.go`.
+	Rules []TableRule
 }
 
 // CampaignGrant é o que a mesa concede a quem o seletor alcança.
