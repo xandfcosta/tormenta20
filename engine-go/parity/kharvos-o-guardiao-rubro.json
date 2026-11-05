@@ -2416,6 +2416,60 @@
       "critRange": 20,
       "critMult": 2,
       "nonLethal": true
+    },
+    {
+      "name": "Chifres",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 14,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Fúria (cond.)",
+            "amount": 2,
+            "note": "Em Fúria"
+          }
+        ]
+      },
+      "damage": "1d6",
+      "damageType": "perfuracao",
+      "strDamage": 5,
+      "damageBonus": 8,
+      "damageAll": {
+        "total": 3,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          },
+          {
+            "source": "Fúria (cond.)",
+            "amount": 2,
+            "note": "Em Fúria"
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2
     }
   ],
   "vitals": {
@@ -2525,6 +2579,49 @@
       "critRange": 20,
       "critMult": 2,
       "nonLethal": true
+    },
+    {
+      "name": "Chifres",
+      "skill": "Luta",
+      "attribute": "strength",
+      "attack": 12,
+      "expertise": {
+        "name": "Luta",
+        "attribute": "strength",
+        "base": 12,
+        "itemBonus": 0,
+        "total": 12,
+        "halfLevel": 3,
+        "attrValue": 5,
+        "training": 4,
+        "trained": true,
+        "trainedBy": [],
+        "itemContributions": [],
+        "armorPenaltyApplied": 0
+      },
+      "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "damage": "1d6",
+      "damageType": "perfuracao",
+      "strDamage": 5,
+      "damageBonus": 6,
+      "damageAll": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 0,
+        "contributions": []
+      },
+      "critRange": 20,
+      "critMult": 2
     }
   ]
 }

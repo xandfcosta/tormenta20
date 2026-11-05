@@ -247,14 +247,7 @@ func flagChoiceModifiers(m Modifier, picks []string, names map[string]string) []
 // generalPowerActiveItem: general powers (Poder de Combate…)
 // stored in the classPowers blob by bare id. Iterates in stored order.
 func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	// O poder geral da Memória Póstuma e do Versátil vale como escolhido (ALE-502).
-	for _, id := range r.RaceHeldPowers(ch) {
-		if !chosen.has[id] {
-			chosen.list = append(chosen.list, id)
-			chosen.has[id] = true
-		}
-	}
+	chosen := r.chosenGeneralPowers(ch)
 	// A ESCOLHA do poder geral entra como a do de classe: o Foco em Arma vira
 	// +2 no `weapon:<arma escolhida>` (p128, ALE-510).
 	picks := parsePowerChoices(ch.PowerChoices)
@@ -268,6 +261,19 @@ func (r *Ruleset) generalPowerActiveItem(ch Character) []ActiveItem {
 		out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
 	}
 	return out
+}
+
+// chosenGeneralPowers são os poderes gerais que a ficha tem. O da Memória Póstuma e do
+// Versátil vale como escolhido (ALE-502).
+func (r *Ruleset) chosenGeneralPowers(ch Character) orderedSet {
+	chosen := parseChoiceSet(ch.ClassPowers)
+	for _, id := range r.RaceHeldPowers(ch) {
+		if !chosen.has[id] {
+			chosen.list = append(chosen.list, id)
+			chosen.has[id] = true
+		}
+	}
+	return chosen
 }
 
 // godPowerActiveItems são os poderes concedidos pelo deus de quem é devoto.

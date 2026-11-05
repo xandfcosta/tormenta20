@@ -123,6 +123,7 @@ func (h sheetHost) ProposeStrikeOnTable(
 			Boost:           strike.Boost,
 			Dose:            strike.Dose,
 			Charge:          strike.Charge,
+			ExtraStrike:     strike.ExtraStrike,
 			OwnsAttacker:    true,
 		})
 		return err

@@ -491,9 +491,9 @@ func tempestadeTargetBar(v View) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{my_turn: %t, attack_open: %t}", v.Turn.Kind != "other", attackIsOpen(v.Attack)))
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprintf("{my_turn: %t, attack_open: %t, extra_open: %t, extra_barred: %q, extra_used: %s}", v.Turn.Kind != "other", attackIsOpen(v.Attack), v.ExtraStrikeOpen, v.ExtraStrikeBarred, v.ExtraStrikesUsed))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_table.templ`, Line: 151, Col: 155}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/tempestade_table.templ`, Line: 151, Col: 265}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {

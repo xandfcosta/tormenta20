@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -70,17 +71,61 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 	attack := s.PendingAttack
 	paid := &live.AttackPaid{CharacterID: attackerCharacterOf(s), Round: s.Round}
 	attack.Paid = paid
-	if s.CountsRounds() && attackerIsOnTurn(s, *attack) {
+	if s.Scene != nil {
+		paid.Scene = s.Scene.Number
+	}
+	if attack.ExtraOf != "" {
+		if err := takesTheExtraStrike(s, attack); err != nil {
+			return err
+		}
+	} else if s.CountsRounds() && attackerIsOnTurn(s, *attack) {
 		before := *s.Scene
 		if err := chargeTurn(s, engine.StrikeAction(attack.Charge)); err != nil {
 			return err
 		}
-		paid.Scene = s.Scene.Number
 		paid.Standard = before.StandardLeft && !s.Scene.StandardLeft
 		paid.Movement = before.MovementLeft && !s.Scene.MovementLeft
 		paid.ExtraMovement = before.ExtraMovementLeft && !s.Scene.ExtraMovementLeft
 	}
 	return spendsOnTheAttack(ctx, u, s, paid.CharacterID, attack.BoostPM)
+}
+
+// takesTheExtraStrike confere e conta o ataque extra na vez, sob a trava. Ele não gasta ação.
+func takesTheExtraStrike(s *live.SessionRuntimeState, attack *live.PendingAttack) error {
+	if !s.CountsRounds() || s.Scene.ExtraStrikeEntry == "" || s.Scene.ExtraStrikeEntry != attack.AttackerEntryID ||
+		!attackerIsOnTurn(s, *attack) {
+		return fmt.Errorf("o ataque extra com %s vem depois de agredir com outra arma nesta vez, e da resposta do mestre", attack.Weapon)
+	}
+	if s.Scene.ExtraStrikeBarred == attack.ExtraOf {
+		return fmt.Errorf("o ataque extra com %s pede que o golpe tenha sido com outra arma", attack.Weapon)
+	}
+	used := 0
+	for _, source := range s.Scene.ExtraStrikesUsed {
+		if source == attack.ExtraOf {
+			used++
+		}
+	}
+	if used >= attack.ExtraLimit {
+		return fmt.Errorf("o ataque extra com %s é uma vez por rodada", attack.Weapon)
+	}
+	s.Scene.ExtraStrikesUsed = append(s.Scene.ExtraStrikesUsed, attack.ExtraOf)
+	return nil
+}
+
+// opensTheExtraStrike é o que a resposta do mestre deixa: agredir abre o ataque extra das outras
+// armas naturais (p25), se a vez ainda é a do turno em que o golpe nasceu.
+func opensTheExtraStrike(s *live.SessionRuntimeState, attack live.PendingAttack) {
+	if attack.OpensExtra && paidInThisTurn(s, attack) {
+		s.Scene.ExtraStrikeEntry, s.Scene.ExtraStrikeBarred = attack.AttackerEntryID, attack.NaturalSource
+	}
+}
+
+// paidInThisTurn diz se a proposta nasceu neste turno. Na vez de outra pessoa, ou na rodada
+// seguinte, a vez que volta já é outro turno.
+func paidInThisTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bool {
+	paid := attack.Paid
+	return paid != nil && s.CountsRounds() && attackerIsOnTurn(s, attack) &&
+		s.Scene.Number == paid.Scene && s.Round == paid.Round
 }
 
 // spendsOnTheAttack cobra PM de quem ataca e espelha na fila. Ele confere sob a trava: o
@@ -163,13 +208,13 @@ func givesTheProposalBack(ctx context.Context, u Unit, s *live.SessionRuntimeSta
 // givesTheTurnBack devolve as ações só ao turno de onde elas saíram. Na vez de outra
 // pessoa, ou na rodada seguinte, elas seriam uma ação a mais que ninguém pagou.
 func givesTheTurnBack(s *live.SessionRuntimeState, open live.PendingAttack) {
+	if !paidInThisTurn(s, open) {
+		return
+	}
+	if at := slices.Index(s.Scene.ExtraStrikesUsed, open.ExtraOf); open.ExtraOf != "" && at >= 0 {
+		s.Scene.ExtraStrikesUsed = slices.Delete(s.Scene.ExtraStrikesUsed, at, at+1)
+	}
 	paid := open.Paid
-	if paid == nil || !s.CountsRounds() || !attackerIsOnTurn(s, open) {
-		return
-	}
-	if s.Scene.Number != paid.Scene || s.Round != paid.Round {
-		return
-	}
 	s.Scene.StandardLeft = s.Scene.StandardLeft || paid.Standard
 	s.Scene.MovementLeft = s.Scene.MovementLeft || paid.Movement
 	s.Scene.ExtraMovementLeft = s.Scene.ExtraMovementLeft || paid.ExtraMovement

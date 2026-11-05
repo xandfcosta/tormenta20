@@ -58,6 +58,14 @@ type Scene struct {
 	// Só a cena de AÇÃO tem turno, então só ela as usa.
 	StandardLeft bool `json:"standardLeft"`
 	MovementLeft bool `json:"movementLeft"`
+	// ExtraStrikeEntry é a linha que agrediu com outra arma nesta vez e já teve a resposta do
+	// mestre: é o que abre o ataque extra das armas naturais (p25). Pela linha, porque voltar a
+	// vez ou tirar alguém da fila muda quem está na vez sem renovar o turno.
+	// ExtraStrikeBarred é a fonte da arma natural desse golpe, que não é "outra arma" para ela
+	// mesma, e ExtraStrikesUsed tem uma entrada por ataque extra feito nesta vez.
+	ExtraStrikeEntry  string   `json:"extraStrikeEntry,omitempty"`
+	ExtraStrikeBarred string   `json:"extraStrikeBarred,omitempty"`
+	ExtraStrikesUsed  []string `json:"extraStrikesUsed,omitempty"`
 	// ExtraMovementLeft é a ação de movimento a mais do turno em curso, de quem
 	// entrou no primeiro turno do combate com Reflexos de Combate (p129).
 	ExtraMovementLeft bool `json:"extraMovementLeft,omitempty"`
@@ -142,6 +150,7 @@ func RefreshTurn(st *SessionRuntimeState) {
 		return
 	}
 	st.Scene.StandardLeft, st.Scene.MovementLeft, st.Scene.ExtraMovementLeft = true, true, false
+	st.Scene.ExtraStrikeEntry, st.Scene.ExtraStrikeBarred, st.Scene.ExtraStrikesUsed = "", "", nil
 	// A MANUTENÇÃO DA VEZ ANTERIOR SAI JUNTO: ela é o extrato deste turno, e
 	// deixá-la faria a faixa dizer que a Velocidade de outra pessoa caiu agora.
 	st.Scene.Upkeep = nil

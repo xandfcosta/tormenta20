@@ -14,8 +14,13 @@ import (
 // cobra o PM. A varredura cobre poder de classe, poder geral e da Tormenta,
 // poder de deus, habilidade de raça e poder único de origem. É uma lista de
 // PERMITIDOS: o verbete novo que fale em PM sem gesto reprova com o nome dele,
-// e o permitido que ganhou gesto também — a lista só encolhe.
+// e o permitido que ganhou gesto também.
 var notAGesture = map[string]string{
+	// O PM delas sai no ataque extra, que é uma linha da aba Ações montada pela carta da arma.
+	"minotauro-chifres": "o ataque extra é a linha da arma natural",
+	"trog-mordida":      "o ataque extra é a linha da arma natural",
+	"dentes-afiados":    "o ataque extra é a linha da arma natural",
+	"membros-extras":    "o ataque extra é a linha da arma natural",
 	// o PM deles se paga no diálogo de conjurar, somado ao custo da magia (p131)
 	QuickenedSpellPower: "aprimoramento", AmplifiedSpellPower: "aprimoramento", DiscreetSpellPower: "aprimoramento",
 	// o TOTAL de PM

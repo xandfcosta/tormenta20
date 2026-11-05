@@ -3,6 +3,14 @@ package transcript
 // Parte 11 de 11 de `Activations` (activations.go).
 var activationsPart11 = []Activation{
 	{
+		ID:     "item.encanto-gelido",
+		Name:   "Gélido",
+		Kind:   "instant",
+		Action: "movimento",
+		PMCost: PMCost{Fixed: 2},
+		Uses:   nil,
+	},
+	{
 		ID:     "item.encanto-hipnotico",
 		Name:   "Hipnótico",
 		Kind:   "instant",
@@ -353,14 +361,6 @@ var activationsPart11 = []Activation{
 		Uses:   nil,
 	},
 	{
-		ID:     "dentes-afiados",
-		Name:   "Dentes Afiados",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
-		Uses:   ptr("rodada"),
-	},
-	{
 		ID:     "desprezar-a-realidade",
 		Name:   "Desprezar a Realidade",
 		Kind:   "instant",
@@ -375,14 +375,6 @@ var activationsPart11 = []Activation{
 		Action: "livre",
 		PMCost: PMCost{Fixed: 1},
 		Uses:   nil,
-	},
-	{
-		ID:     "membros-extras",
-		Name:   "Membros Extras",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 2},
-		Uses:   ptr("rodada"),
 	},
 	{
 		ID:     "visco-rubro",

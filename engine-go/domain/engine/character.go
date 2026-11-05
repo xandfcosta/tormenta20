@@ -1,21 +1,31 @@
 package engine
 
+// PowerUse é o contador de usos de um poder, numa janela de tempo.
+type PowerUse struct {
+	PowerID string `json:"powerId"`
+	Scope   string `json:"scope"`
+	Used    int    `json:"used"`
+}
+
 // Character is the RAW persisted sheet the collection layer (ActiveItemsFor)
 // reads, distinct from the flattened CharacterInput the MVP engine consumes.
 // Only the fields the collection layer touches are typed; the many JSON-string
 // columns (proficiencies, classPowers, raceAttributeChoices…) stay as strings
 // and are parsed on demand.
 type Character struct {
-	ID           int    `json:"id"`
-	Origin       string `json:"origin"`
-	GodPowers    string `json:"godPowers"`
-	Level        int    `json:"level"`
-	Strength     int    `json:"strength"`
-	Dexterity    int    `json:"dexterity"`
-	Constitution int    `json:"constitution"`
-	Intelligence int    `json:"intelligence"`
-	Wisdom       int    `json:"wisdom"`
-	Charisma     int    `json:"charisma"`
+	ID        int    `json:"id"`
+	Origin    string `json:"origin"`
+	GodPowers string `json:"godPowers"`
+	// PowerUses são os usos contados da ficha. O motor só lê os de cena, porque há poder que
+	// só vale depois de usado (as Presas Primordiais, p135).
+	PowerUses    []PowerUse `json:"powerUses"`
+	Level        int        `json:"level"`
+	Strength     int        `json:"strength"`
+	Dexterity    int        `json:"dexterity"`
+	Constitution int        `json:"constitution"`
+	Intelligence int        `json:"intelligence"`
+	Wisdom       int        `json:"wisdom"`
+	Charisma     int        `json:"charisma"`
 
 	// Tibar é o dinheiro do personagem, e ele é CARGA: cada mil moedas ocupam um
 	// espaço (p141). Por isso vive no motor e não só na tela.

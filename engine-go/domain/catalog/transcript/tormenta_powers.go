@@ -67,6 +67,7 @@ var TormentaPowers = []TormentaPower{
 		UID:                 "pwr_grv6zmo7by",
 	},
 	{
+		NaturalWeapon:       &NaturalWeapon{Name: "Mordida", Damage: "1d4", CritMult: 2, DamageType: "corte", ExtraPM: 1},
 		ID:                  "dentes-afiados",
 		Name:                "Dentes Afiados",
 		Description:         "Arma natural de mordida (dano 1d4, crítico x2, corte). Uma vez por rodada quando agride com outra arma, gasta 1 PM para ataque corpo a corpo extra com a mordida.",
@@ -133,6 +134,14 @@ var TormentaPowers = []TormentaPower{
 		UID:                 "pwr_u2blglemdr",
 	},
 	{
+		NaturalWeapon: &NaturalWeapon{
+			Name:         "Patas insetoides",
+			Damage:       "1d4",
+			CritMult:     2,
+			DamageType:   "corte",
+			ExtraPM:      2,
+			ExtraAttacks: 2,
+		},
 		ID:                  "membros-extras",
 		Name:                "Membros Extras",
 		Description:         "Duas armas naturais de patas insetoides das costas/ombros/flancos. Uma vez por rodada ao agredir com outra arma, gasta 2 PM para ataque corpo a corpo extra com cada uma (dano 1d4, crítico x2, corte). Com Ambidestria ou Estilo de Duas Armas: empunha armas leves nas patas (ainda paga 2 PM + sofre -2 em todos os ataques).",

@@ -35,6 +35,14 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 		BoostPowerID: setup.boost.powerID, BoostPM: setup.boost.pm, Charge: req.Charge,
 		WeaponID: setup.weapon.CatalogID, AttackerStances: setup.striker.Stances, TargetStances: setup.victim.Stances,
 	}
+	if natural := setup.weapon.Natural; natural != nil {
+		pending.NaturalSource = natural.SourceID
+		if req.ExtraStrike {
+			pending.ExtraOf, pending.ExtraLimit = natural.SourceID, natural.ExtraAttacks
+		}
+	}
+	// A INVESTIDA É OUTRA AÇÃO (p235), e o extra não é a ação agredir.
+	pending.OpensExtra = req.Charge == "" && !req.ExtraStrike
 	if req.TargetObject != nil {
 		pending.TargetTokenID, pending.TargetLabel = req.TargetObject.TokenID, req.TargetObject.Label
 	}

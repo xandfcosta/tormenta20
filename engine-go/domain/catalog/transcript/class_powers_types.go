@@ -20,6 +20,23 @@ type ClassPower struct {
 	Boost           *ClassPowerBoost `json:"boost,omitempty"`
 }
 
+// NaturalWeapon é a arma natural que uma habilidade ou poder dá (quadro de Ataques Desarmados
+// e Armas Naturais). ExtraPM é o que custa o ataque extra ao agredir com outra arma, e
+// ExtraAttacks diz quantos esse pagamento compra, quando é mais de um (Membros Extras, p137).
+// AwakenedByUse diz que ela só existe depois de usar o poder, até o fim da cena, e
+// StepsOnSameWeapon, que quem já tem arma natural desse nome soma os passos nela, em vez de
+// ganhar outra (p135).
+type NaturalWeapon struct {
+	Name              string `json:"name"`
+	Damage            string `json:"damage"`
+	CritMult          int    `json:"critMult"`
+	DamageType        string `json:"damageType"`
+	ExtraPM           int    `json:"extraPm"`
+	ExtraAttacks      int    `json:"extraAttacks,omitempty"`
+	AwakenedByUse     bool   `json:"awakenedByUse,omitempty"`
+	StepsOnSameWeapon int    `json:"stepsOnSameWeapon,omitempty"`
+}
+
 type PowerChoice struct {
 	Kind                 string              `json:"kind"`
 	Label                string              `json:"label"`
