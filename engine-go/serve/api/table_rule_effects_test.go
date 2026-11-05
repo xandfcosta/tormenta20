@@ -252,3 +252,45 @@ func TestTheWieldedRuleRefusesAnItemThatIsNotHeld(t *testing.T) {
 		t.Errorf("a recusa gravou %d regras", total)
 	}
 }
+
+// Quando a regra deixa de emprestar, o poder que só ela dava sai da ficha (decisão do dono). O de outro
+// deus que a ficha já guardava de antes fica, porque não foi a regra que o deu.
+func TestALentPowerLeavesWhenTheRuleStopsLending(t *testing.T) {
+	gestures := []struct {
+		name string
+		does func(t *testing.T, f sceneFixture, rule string)
+	}{
+		{"desligar", func(t *testing.T, f sceneFixture, rule string) {
+			f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/"+rule+"/ligar"), "")
+		}},
+		{"excluir", func(t *testing.T, f sceneFixture, rule string) {
+			f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/"+rule+"/excluir"), "")
+		}},
+		{"emprestar de outro deus", func(t *testing.T, f sceneFixture, rule string) {
+			savesRule(t, f, fmt.Sprintf(`{"table_rule_id":%q,"table_rule_name":"Tauron","table_rule_scope":"mesa","table_rule_count":1,"table_rule_kind_1":"devotion","table_rule_value_1":"tauron","table_rule_effect":"powers-of","table_rule_god":"khalmyr"}`, rule))
+		}},
+	}
+	for _, g := range gestures {
+		t.Run(g.name, func(t *testing.T) {
+			f := newSceneFixture(t)
+			id := devotedTo(t, f, "Guerreiro", "tauron")
+			inCampaign(t, f, id)
+			if _, err := f.s.db.ExecContext(context.Background(), "INSERT OR IGNORE INTO campaign_members (campaignId, characterId, addedAt) VALUES (?, ?, '2026-11-05T00:00:00.000Z')", f.campaignID, id); err != nil {
+				t.Fatal(err)
+			}
+			savesRule(t, f, `{"table_rule_name":"Tauron","table_rule_scope":"mesa","table_rule_count":1,"table_rule_kind_1":"devotion","table_rule_value_1":"tauron","table_rule_effect":"powers-of","table_rule_god":"arsenal"}`)
+			rule, _, _ := theOnlyRule(t, f)
+			f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/"+rule+"/ligar"), "")
+			if refusal := powerCommand(t, f, id, grantedPath("Sangue de Ferro"), ""); refusal != "" {
+				t.Fatal(refusal)
+			}
+			if _, err := f.s.db.ExecContext(context.Background(), `UPDATE characters SET godPowers = '["Sangue de Ferro","Dom da Verdade"]' WHERE id = ?`, id); err != nil {
+				t.Fatal(err)
+			}
+			g.does(t, f, rule)
+			if got := storedGrantedPowers(t, f, id); !slices.Equal(got, []string{"Dom da Verdade"}) {
+				t.Errorf("a regra deixou de emprestar Sangue de Ferro, e a ficha guarda %v", got)
+			}
+		})
+	}
+}

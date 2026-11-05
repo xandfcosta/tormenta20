@@ -120,6 +120,11 @@ func (s Scene) handleTableRuleSave(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	before, err := s.grantedOffersOfTheOwner(r.Context(), who, id)
+	if err != nil {
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+		return
+	}
 	err = s.life.SaveTableRule(r.Context(), who, id, draft.toSave())
 	var refusal campaign.TableRuleRefusal
 	if errors.As(err, &refusal) {
@@ -132,6 +137,7 @@ func (s Scene) handleTableRuleSave(w http.ResponseWriter, r *http.Request) {
 	}
 	// A regra nova nasce desligada, e não muda ficha nenhuma.
 	if draft.ID != "" {
+		s.dropWhatIsNoLongerLent(r.Context(), who, id, before)
 		s.wakeTableSheets(r.Context(), id)
 	}
 	_ = datastar.NewSSE(w, r).Redirect(routes.CampaignTab(id, "regras"))
@@ -143,12 +149,18 @@ func (s Scene) handleTableRuleFlip(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	before, err := s.grantedOffersOfTheOwner(r.Context(), who, id)
+	if err != nil {
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+		return
+	}
 	// A regra que sumiu não é erro aqui: a lista redesenhada já diz, e devolve o interruptor ao lugar.
 	var refusal campaign.TableRuleRefusal
 	if err := s.life.FlipTableRule(r.Context(), who, id, chi.URLParam(r, "regra")); err != nil && !errors.As(err, &refusal) {
 		refuse(w, err)
 		return
 	}
+	s.dropWhatIsNoLongerLent(r.Context(), who, id, before)
 	s.wakeTableSheets(r.Context(), id)
 	rows, err := s.tableRulesOf(r.Context(), id, true, 0)
 	if err != nil {
@@ -167,11 +179,17 @@ func (s Scene) handleTableRuleRemove(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	before, err := s.grantedOffersOfTheOwner(r.Context(), who, id)
+	if err != nil {
+		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
+		return
+	}
 	var refusal campaign.TableRuleRefusal
 	if err := s.life.RemoveTableRule(r.Context(), who, id, chi.URLParam(r, "regra")); err != nil && !errors.As(err, &refusal) {
 		refuse(w, err)
 		return
 	}
+	s.dropWhatIsNoLongerLent(r.Context(), who, id, before)
 	s.wakeTableSheets(r.Context(), id)
 	_ = datastar.NewSSE(w, r).Redirect(routes.CampaignTab(id, "regras"))
 }
