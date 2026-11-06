@@ -164,6 +164,21 @@ func (d *tableDisplays) StateOf(sessionID int64) displayState {
 	return st
 }
 
+// HowMany conta o que a tela desta sessão lembra — o recorte, o retrato e as
+// telas abertas —, para o `Watching` ter denominador.
+func (d *tableDisplays) HowMany(sessionID int64) int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	n := 0
+	if _, ok := d.framing[sessionID]; ok {
+		n++
+	}
+	if _, ok := d.frozen[sessionID]; ok {
+		n++
+	}
+	return n + d.watching[sessionID]
+}
+
 // Erase esquece a sessão inteira, quando ela é apagada.
 func (d *tableDisplays) Erase(sessionID int64) {
 	d.mu.Lock()

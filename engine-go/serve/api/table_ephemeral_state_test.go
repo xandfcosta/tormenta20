@@ -48,6 +48,26 @@ func TestADeletedSessionLeavesNoEphemeralTableState(t *testing.T) {
 	}
 }
 
+// A TELA DA MESA também é memória da sessão: o recorte do mestre e o retrato
+// congelado vão embora com ela. Caso próprio, com SÓ a tela, para o
+// denominador não vir da lente.
+func TestADeletedSessionForgetsTheDisplay(t *testing.T) {
+	f := newSceneFixture(t)
+	f.seedOpenBoard(t, "stone")
+	f.posts(t, f.gm, f.tableUrl()+"/tela/enquadramento", `{"x":1,"y":1,"width":10,"height":8}`)
+	f.posts(t, f.gm, f.tableUrl()+"/tela/congelar", "")
+	before := f.s.tableMemory.Watching(f.sessionID)
+	if before == 0 {
+		t.Fatalf("o recorte e o retrato não contam como memória da sessão: o caso mediria o nada")
+	}
+	if err := f.s.sessionLifecycle().Delete(context.Background(), app.Caller{ID: f.gm}, f.campaignID, f.sessionID); err != nil {
+		t.Fatalf("apagar a sessão: %v", err)
+	}
+	if left := f.s.tableMemory.Watching(f.sessionID); left != 0 {
+		t.Errorf("a sessão apagada deixou %d entradas da tela da mesa (eram %d)", left, before)
+	}
+}
+
 // E O ESQUECIMENTO É DE UMA SESSÃO, não do processo.
 //
 // Caso próprio porque o defeito simétrico é pior que o vazamento: um `Erase` que

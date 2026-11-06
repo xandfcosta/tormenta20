@@ -41,11 +41,12 @@ func (e *EphemeralTableState) SessionDeleted(sessionID int64) {
 	e.displays.Erase(sessionID)
 }
 
-// Watching diz de quantas PESSOAS esta sessão tem memória efêmera guardada.
+// Watching diz quantas entradas de memória efêmera esta sessão tem guardadas:
+// uma por pessoa na lente e na aba, e as da tela da mesa.
 //
 // É a resposta com DENOMINADOR: um guarda que só afirmasse "não sobrou nada"
 // depois de apagar não distinguiria o esquecimento de um caso que nunca guardou
 // nada. Quem pergunta antes tem o número para comparar.
 func (e *EphemeralTableState) Watching(sessionID int64) int {
-	return e.lenses.HowMany(sessionID) + e.chosenTabs.HowMany(sessionID)
+	return e.lenses.HowMany(sessionID) + e.chosenTabs.HowMany(sessionID) + e.displays.HowMany(sessionID)
 }
