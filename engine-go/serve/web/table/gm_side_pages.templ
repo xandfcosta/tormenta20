@@ -29,7 +29,7 @@ templ gmSidePages(v View) {
 		</span>
 		<span class="ds-gm-side-narrow">
 			<button type="button" class="ds-button" data-variant="secondary" popovertarget="gm-side-menu" aria-haspopup="menu">Ferramentas</button>
-			<div id="gm-side-menu" popover class="ds-gm-menu-pop" role="menu">
+			<div id="gm-side-menu" popover class="ds-gm-menu-pop ds-gm-side-menu" role="menu">
 				for _, l := range sidePageLinks {
 					<a role="menuitem" class="ds-gm-menu-row ds-gm-side-row" href={ templ.SafeURL(sidePageAddress(v, l.Path)) } target={ sidePageTarget(v, l.Path) } data-on:click="document.getElementById('gm-side-menu').hidePopover()">
 						<span>

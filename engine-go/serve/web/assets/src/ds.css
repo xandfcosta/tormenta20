@@ -3198,6 +3198,15 @@
   a.ds-gm-menu-row:hover {
     background: var(--ds-sunk);
   }
+  /* O menu do cabeçalho não está sobre o mapa, e não herda a superfície do
+   * cromo do tabuleiro (`.ds-board-float`): ela é escrita aqui. */
+  .ds-gm-side-menu {
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    box-shadow: 0 8px 24px #0002;
+  }
   .ds-gm-side-row {
     grid-template-columns: minmax(0, 1fr) 1rem;
     min-width: 17rem;
