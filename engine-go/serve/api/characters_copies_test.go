@@ -97,12 +97,13 @@ func TestTheSheetSaysWhichSheetItIs(t *testing.T) {
 	}
 }
 
-// O fluxo ao vivo da ficha é do dono, e quem não é dono é recusado ANTES de o fluxo abrir.
+// O fluxo ao vivo da ficha é de quem a alcança, e quem não alcança é recusado ANTES de o fluxo abrir.
 func TestTheSheetsLiveStreamIsTheOwners(t *testing.T) {
 	f := newSceneFixture(t)
-	rec := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d/ao-vivo", f.charID), "")
+	stranger := seedUser(t, f.s, "estranho@t.com")
+	rec := f.requests(t, stranger, http.MethodGet, fmt.Sprintf("/personagens/%d/ao-vivo", f.charID), "")
 	if rec.Code != http.StatusForbidden {
-		t.Errorf("o mestre abriu o fluxo da ficha do jogador: %d", rec.Code)
+		t.Errorf("quem não é da mesa abriu o fluxo da ficha do jogador: %d", rec.Code)
 	}
 	page := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", f.charID), "").Body.String()
 	if !strings.Contains(page, fmt.Sprintf("/personagens/%d/ao-vivo", f.charID)) {

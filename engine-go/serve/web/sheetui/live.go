@@ -27,7 +27,7 @@ func (s Scene) sheetLive(w http.ResponseWriter, r *http.Request) {
 	sub, stop := s.deps.Bus().Subscribe(events.OfCharacter(id))
 	defer stop()
 	// A recusa vem ANTES do `NewSSE`, que já escreve os cabeçalhos: quem não é dono merece um 403 legível.
-	row, status, err := s.ownedCharacter(r.Context(), id, s.deps.CurrentUserID(r))
+	row, status, err := s.reachableCharacter(r.Context(), id, s.deps.CurrentUserID(r))
 	if err != nil {
 		http.Error(w, err.Error(), status)
 		return
@@ -73,15 +73,24 @@ func standaloneRefetch(v View) string {
 	return sheetVersionGuard + sheetGet(v)
 }
 
-// ownedCharacter é a linha da ficha, se ela é de quem pede: a ficha e o fluxo dela perguntam o mesmo, e a
-// resposta é uma só (a ALE-614 vai abri-la ao mestre).
-func (s Scene) ownedCharacter(ctx context.Context, id, userID int64) (sqlcgen.Character, int, error) {
+// reachableCharacter é a linha da ficha, se quem pede a alcança: a ficha, os gestos e o fluxo dela perguntam
+// o mesmo, e a resposta é uma só.
+//
+// Alcança o DONO, e o MESTRE da campanha da cópia, que abre e edita a ficha do jogador pelo "Ficha" da fila
+// (decisão do dono). O rascunho continua só do jogador: ele não tem campanha, e não há mestre a perguntar.
+func (s Scene) reachableCharacter(ctx context.Context, id, userID int64) (sqlcgen.Character, int, error) {
 	row, err := s.deps.Queries().GetCharacter(ctx, id)
 	if err != nil {
 		return sqlcgen.Character{}, http.StatusNotFound, fmt.Errorf("personagem %d não existe", id)
 	}
-	if row.Ownerid != userID {
-		return sqlcgen.Character{}, http.StatusForbidden, fmt.Errorf("esta ficha não é sua")
+	if row.Ownerid == userID {
+		return row, http.StatusOK, nil
 	}
-	return row, http.StatusOK, nil
+	if row.CampaignId.Valid {
+		campaign, err := s.deps.Queries().GetCampaign(ctx, row.CampaignId.Int64)
+		if err == nil && campaign.Ownerid == userID {
+			return row, http.StatusOK, nil
+		}
+	}
+	return sqlcgen.Character{}, http.StatusForbidden, fmt.Errorf("esta ficha não é sua")
 }

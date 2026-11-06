@@ -250,6 +250,8 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		"manobra": "derrubar",
 	}
 
+	// O ESTRANHO é alguém de fora da mesa: o mestre dela alcança a cópia do jogador (ALE-614).
+	stranger := seedUser(t, f.s, "estranho@t.com")
 	var visited int
 	walk := func(method string, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
 		if method != http.MethodPost || !strings.HasPrefix(route, "/personagens/{id}/") {
@@ -270,9 +272,9 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 			path = strings.Replace(path, chunk, value, 1)
 		}
 		visited++
-		rec := f.requests(t, f.gm, http.MethodPost, path, "")
+		rec := f.requests(t, stranger, http.MethodPost, path, "")
 		if rec.Code != http.StatusForbidden {
-			t.Errorf("%s aceitou quem não é dono: %d — a rota não passa pelo `comandoDaFicha`",
+			t.Errorf("%s aceitou quem não é da mesa: %d — a rota não passa pelo `comandoDaFicha`",
 				route, rec.Code)
 		}
 		return nil

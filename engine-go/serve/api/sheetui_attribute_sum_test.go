@@ -64,11 +64,11 @@ func TestTheSheetDialogRefusesAWrongValue(t *testing.T) {
 	}
 }
 
-// Só o dono muda: o outro jogador leva a recusa.
+// Só quem alcança a ficha muda: quem é de fora da mesa leva a recusa.
 func TestOnlyTheOwnerChangesTheFreeValueAfterCreation(t *testing.T) {
 	f, id := barbaro(t, 5)
 	path := fmt.Sprintf("/personagens/%d/atributos/strength/1", id)
-	if code := f.requests(t, f.gm, http.MethodPost, path, "").Code; code != http.StatusForbidden {
+	if code := f.requests(t, seedUser(t, f.s, "estranho@t.com"), http.MethodPost, path, "").Code; code != http.StatusForbidden {
 		t.Errorf("quem não é dono mudou o valor livre: status %d", code)
 	}
 }

@@ -152,7 +152,7 @@ func TestAStrangeVitalOrStepIsRefused(t *testing.T) {
 
 func TestOnlyTheOwnerTouchesTheTemporaryPoints(t *testing.T) {
 	f, id := barbaro(t, 5)
-	rec := f.requests(t, f.gm, http.MethodPost, fmt.Sprintf("/personagens/%d/vitais/pv/temporarios/2", id), "")
+	rec := f.requests(t, seedUser(t, f.s, "estranho@t.com"), http.MethodPost, fmt.Sprintf("/personagens/%d/vitais/pv/temporarios/2", id), "")
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("a ficha de outra pessoa respondeu %d", rec.Code)
 	}

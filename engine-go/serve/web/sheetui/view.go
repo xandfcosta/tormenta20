@@ -199,7 +199,7 @@ func AskedTab(raw string) string {
 func (s Scene) Load(
 	ctx context.Context, userID int64, id int64, aba, search string, signals Signals,
 ) (View, int, error) {
-	row, status, err := s.ownedCharacter(ctx, id, userID)
+	row, status, err := s.reachableCharacter(ctx, id, userID)
 	if err != nil {
 		return View{}, status, err
 	}
