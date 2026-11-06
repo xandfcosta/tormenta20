@@ -152,6 +152,9 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	if twice := repeatedImprovement(signals.ItemImprovements); twice != "" {
 		return fmt.Errorf("a melhoria %q veio duas vezes: cada melhoria entra uma vez no item", twice)
 	}
+	if err := book.FitsImprovementCount(len(signals.ItemImprovements), signals.ItemMaterial != ""); err != nil {
+		return err
+	}
 	fromBook, fromTable := splitImprovementIDs(signals.ItemImprovements)
 	if err := fitsItemImprovement(catalog, fromBook, "improvement"); err != nil {
 		return err

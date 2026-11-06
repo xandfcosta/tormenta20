@@ -109,7 +109,7 @@ com `{"items":[]}` de propósito. **Validação de regra lê o embutido**; o
 
 Sintoma: a tela tranca e o servidor não. Progressão de círculo (`Spellcasting`
 em `transcript.Classes`), melhoria/material × item (`aceitaMelhoria`, no comando
-da ficha) e limite de texto da campanha (`domain/campaign/rules.go`) moram no
+da ficha), o teto de quatro melhorias (`book.FitsImprovementCount`) e limite de texto da campanha (`domain/campaign/rules.go`) moram no
 servidor; o filtro da tela é só conveniência.
 
 ### O rascunho e a cópia

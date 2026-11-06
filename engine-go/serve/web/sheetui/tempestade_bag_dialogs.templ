@@ -101,9 +101,12 @@ templ itemSheetFoot(v View, s itemSheet) {
 }
 
 // improvementsDs escolhe melhorias e material. As listas já vêm filtradas pela
-// família do item, e quem recusa o resto é o servidor (`fitsItemImprovement`).
+// família do item, e quem recusa o resto é o servidor (`fitsItemImprovement`,
+// `book.FitsImprovementCount`). A conta das quatro vagas fica no topo, e o que
+// passaria dela trava antes do Aplicar.
 templ improvementsDs(v View, s itemSheet) {
 	@sheetDialog(v, itemImprovementsID(s.Command), "Melhorias de "+s.Name, improvementsFoot(v, s)) {
+		<p class="ds-row-meta" data-text={ improvementsCountText }>{ writtenImprovementsCount(s) }</p>
 		@ds.BareList("Melhorias", "") {
 			for _, c := range s.Improvements {
 				<div class="ds-row ds-pick-row">
@@ -119,18 +122,19 @@ templ improvementsDs(v View, s itemSheet) {
 						}
 						<div class="ds-pick-detail">{ c.Effect }</div>
 					</div>
-					@ds.Switch("", c.Active, templ.Attributes{"aria-label": c.Name, "data-on:change": thatTogglesImprovementGesture(c), "data-effect": "el.checked = " + improvementSignal(c)})
+					@ds.Switch("", c.Active, templ.Attributes{"aria-label": c.Name, "data-on:change": thatTogglesImprovementGesture(c), "data-effect": "el.checked = " + improvementSignal(c), "data-attr:disabled": improvementLocked(c)})
 				</div>
 			}
 		}
 		<div class="ds-field">
 			<label for={ "material-" + s.Command }>Material</label>
-			<select class="ds-input" id={ "material-" + s.Command } data-bind:item_material>
+			<select class="ds-input" id={ "material-" + s.Command } aria-describedby={ "material-" + s.Command + "-help" } data-bind:item_material data-attr:disabled={ materialLocked }>
 				<option value="">Nenhum</option>
 				for _, c := range s.Materials {
 					<option value={ c.ID } selected?={ c.Active }>{ c.Name + " · T$ " + c.Price }</option>
 				}
 			</select>
+			<p class="ds-help" id={ "material-" + s.Command + "-help" }>Ocupa uma das quatro vagas de melhoria (p165).</p>
 		</div>
 	}
 }
