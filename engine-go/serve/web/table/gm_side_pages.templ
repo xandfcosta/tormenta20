@@ -51,10 +51,10 @@ templ gmGroupPage(v View) {
 	<main class="ds-gm-page" data-signals="{gm_group_search: ''}">
 		<h1 class="ds-sheet-name">{ sidePageTitle(v, "Grupo") }</h1>
 		<p class="ds-help">Ao lado da mesa, e se atualiza sozinho. A ficha de cada um abre em outra aba.</p>
-		if len(v.Group) > 0 {
-			@ds.FilterBar() {
-				@ds.SearchField("gm-group-search", "Buscar no grupo", templ.Attributes{"data-bind:gm_group_search": true})
-			}
+		// SEMPRE, e não só com gente no grupo: ela está fora da região, e o
+		// primeiro membro que chegasse com a página aberta ficaria sem busca.
+		@ds.FilterBar() {
+			@ds.SearchField("gm-group-search", "Buscar no grupo", templ.Attributes{"data-bind:gm_group_search": true})
 		}
 		@gmPageRefusal()
 		@gmGroup(v)
