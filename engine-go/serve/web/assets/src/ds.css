@@ -4970,21 +4970,11 @@
     }
   }
 
-  /* A JANELA À PARTE é para a segunda tela ou a TV da mesa: no celular não
-   * há segunda tela, e o botão some (decisão do dono). */
-  [data-board-window-opener] {
-    display: none;
-  }
   @media (min-width: 64rem) {
-    [data-board-window-opener] {
-      display: inline-flex;
-    }
     .ds-session-nav.ds-gm-nav {
       display: none;
     }
-    /* AS TRÊS COLUNAS e quem as recolhe. O tabuleiro numa janela à parte
-     * vira faixa também, e a largura dele vai para as Consultas — ou para a
-     * fila, quando as Consultas estão recolhidas. */
+    /* AS TRÊS COLUNAS e quem as recolhe. */
     .ds-gm-grid {
       --gm-queue: 22rem;
       --gm-board: minmax(0, 1fr);
@@ -4999,21 +4989,6 @@
     }
     .ds-gm-grid.ds-gm-no-consults {
       --gm-consults: 3rem;
-    }
-    .ds-gm-grid.ds-gm-board-away {
-      --gm-board: 3rem;
-      --gm-consults: minmax(0, 1fr);
-    }
-    .ds-gm-grid.ds-gm-board-away.ds-gm-no-consults {
-      --gm-queue: minmax(0, 1fr);
-      --gm-consults: 3rem;
-    }
-    .ds-gm-grid.ds-gm-board-away.ds-gm-no-consults.ds-gm-no-queue {
-      --gm-queue: 3rem;
-      --gm-board: minmax(0, 1fr);
-    }
-    .ds-gm-board-away > [data-gm-col='board'] {
-      display: none !important;
     }
     .ds-gm-col {
       display: flex !important;
@@ -5037,8 +5012,7 @@
       display: none;
     }
     .ds-gm-no-queue > [data-gm-rail='queue'],
-    .ds-gm-no-consults > [data-gm-rail='consults'],
-    .ds-gm-board-away > [data-gm-rail='board'] {
+    .ds-gm-no-consults > [data-gm-rail='consults'] {
       display: flex;
       flex-direction: column;
       align-items: center;

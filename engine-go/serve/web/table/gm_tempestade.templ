@@ -19,9 +19,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 		id="table"
 		class="ds-session"
 		data-attr:style={ dragOffsetStyle }
-		data-signals="{gm_queue_open: true, gm_consults_open: true, gm_board_away: false, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes', gm_group_search: '', gm_cast_search: '', gm_notes_editing: false}"
-		data-init={ seesTheBoardAway(v) }
-		data-on:storage__window={ watchesTheBoardWindow(v) }
+		data-signals="{gm_queue_open: true, gm_consults_open: true, gm_amount: 1, gm_add_tab: 'combatant', gm_terrain_open: false, gm_consult: 'notes', gm_group_search: '', gm_cast_search: '', gm_notes_editing: false}"
 	>
 		@newVersionNotice()
 		@gmHeader(v)
@@ -35,7 +33,7 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 				</button>
 			}
 		</nav>
-		<div class="ds-gm-grid" data-class="{'ds-gm-no-queue': !$gm_queue_open, 'ds-gm-no-consults': !$gm_consults_open, 'ds-gm-board-away': $gm_board_away}">
+		<div class="ds-gm-grid" data-class="{'ds-gm-no-queue': !$gm_queue_open, 'ds-gm-no-consults': !$gm_consults_open}">
 			<div class="ds-session-surface ds-gm-col" data-gm-col="queue" data-show={ surface(superficieDaMesa) }>
 				<div class="ds-session-scroll">
 					@gmQueue(v)
@@ -48,10 +46,6 @@ templ gmTempestadeScene(v View, b master.BestiaryView) {
 			<div class="ds-session-surface ds-gm-col" data-gm-col="board" data-show={ surface(superficieDoTabuleiro) }>
 				@gmBoardRegion(v)
 			</div>
-			<button type="button" class="ds-gm-rail" data-gm-rail="board" aria-label="O tabuleiro está numa janela à parte: trazê-la" data-on:click={ boardWindowOpens(v) }>
-				@ui.Icon("ExternalLink", "ds-icon")
-				<span>Tabuleiro na janela</span>
-			</button>
 			<div class="ds-session-surface ds-gm-col" data-gm-col="consults" data-show={ surface(superficieDasConsultas) }>
 				@gmConsults(v, b)
 			</div>

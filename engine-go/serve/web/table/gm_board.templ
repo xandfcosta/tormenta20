@@ -144,11 +144,6 @@ templ gmBoardBar(b BoardView, v View) {
 		<button type="button" class="ds-board-fbtn" aria-label="Pôr no mapa" title="Pôr no mapa — o clique direito põe só as fichas" data-on:click={ openMap() } data-on:contextmenu={ sheetsShortcut(b) }>
 			@ui.Icon("UserPlus", "ds-icon")
 		</button>
-		if !v.BoardWindow {
-			<button type="button" class="ds-board-fbtn" data-board-window-opener aria-label="Abrir o tabuleiro numa janela" title="Abrir o tabuleiro numa janela à parte — para a segunda tela ou a TV da mesa" data-on:click={ boardWindowOpens(v) }>
-				@ui.Icon("ExternalLink", "ds-icon")
-			</button>
-		}
 		<button type="button" class="ds-board-fbtn" aria-label="Encerrar o tabuleiro" title="Encerrar o tabuleiro" commandfor="close-board" command="show-modal">
 			@ui.Icon("X", "ds-icon")
 		</button>
@@ -445,15 +440,4 @@ templ gmArchive(v View) {
 			}
 		}
 	</div>
-}
-
-// gmBoardWindow é a JANELA À PARTE: só o mapa, para a segunda tela ou a TV da
-// mesa. O fluxo dela remenda só o tabuleiro.
-templ gmBoardWindow(v View) {
-	<main id="table" class="ds-session ds-gm-window" data-attr:style={ dragOffsetStyle } data-signals="{gm_terrain_open: false}" data-init={ takesTheBoard(v) } data-on:pagehide__window={ givesTheBoardBack(v) }>
-		@newVersionNotice()
-		@gmBoardRegion(v)
-		@gmPopulate(v)
-		@gmArchive(v)
-	</main>
 }

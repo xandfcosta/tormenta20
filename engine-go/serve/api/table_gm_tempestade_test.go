@@ -150,34 +150,15 @@ func TestTheParallelGmTableDrawsTheBoard(t *testing.T) {
 			t.Errorf("a barra do mestre não escreve %q: %q", want, textOf(tools))
 		}
 	}
-	for _, verb := range []string{"Fechar a cortina", "Ver a cena como a mesa vê", "Pôr no mapa", "Abrir o tabuleiro numa janela", "Encerrar o tabuleiro"} {
+	for _, verb := range []string{"Fechar a cortina", "Ver a cena como a mesa vê", "Pôr no mapa", "Encerrar o tabuleiro"} {
 		if findNode(board, "aria-label", verb) == nil {
 			t.Errorf("o tabuleiro do mestre não tem o verbo %q", verb)
 		}
 	}
-}
-
-// A JANELA À PARTE desenha só o mapa: é para a segunda tela ou a TV da mesa.
-func TestTheGmBoardOpensInAWindowOfItsOwn(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/tabuleiro/abrir",
-		`{"new_place":"Taverna do Javali","new_ground":"tavern"}`); rec.Code != http.StatusOK {
-		t.Fatalf("abrir o tabuleiro deu %d", rec.Code)
-	}
-	page := gmRequest(t, f, f.tableUrl()+"?janela=tabuleiro").Body.String()
-	doc, err := html.Parse(strings.NewReader(page))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if findNode(doc, "id", "board-scene") == nil {
-		t.Fatal("a janela do tabuleiro não desenha o mapa")
-	}
-	if findNode(doc, "id", "table-tracker") != nil {
-		t.Error("a janela do tabuleiro desenhou a fila, e ela é só o mapa")
-	}
-	if !strings.Contains(page, "/fluxo?janela=tabuleiro") {
-		t.Error("o fluxo da janela não leva a marca da janela: ele remendaria regiões que não existem nela")
+	// A JANELA À PARTE do tabuleiro saiu (ALE-608): com a mesa enxuta, o mapa
+	// tem a largura dele na própria aba, e a TV da mesa ganhou a TELA DA MESA.
+	if findNode(board, "aria-label", "Abrir o tabuleiro numa janela") != nil {
+		t.Error("o tabuleiro do mestre ainda oferece abrir numa janela à parte")
 	}
 }
 

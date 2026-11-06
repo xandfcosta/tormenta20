@@ -51,12 +51,9 @@ type View struct {
 	// Endless é a faixa SEM FIM da sessão do jogador: a fila inteira a partir de
 	// quem joga agora, e mais três da rodada seguinte (ver o GLOSSARY, "faixa").
 	Endless []turnAhead
-	// BoardWindow é a janela à parte do tabuleiro do mestre: a página desenha
-	// só o mapa, e o fluxo remenda só ele (ALE-522).
-	BoardWindow bool
-	Group       []Member
-	Queue       []tableRow
-	Eu          *tableMe
+	Group   []Member
+	Queue   []tableRow
+	Eu      *tableMe
 	// MySheet é a ficha do personagem DESTE jogador, desenhada dentro da
 	// sessão. Nil para o mestre e para quem não tem personagem na campanha — é a
 	// mesma trava do `Mestre`: o que a view não tem, a cena não desenha.

@@ -189,7 +189,7 @@ func draftHeader(v draftView) templ.Component {
 // mas um remendo mandado para o id errado é escrito no vazio e some SEM ERRO.
 //
 // As peças são as do tabuleiro do mestre, menos o que é de uma sessão: o seletor
-// de tabuleiros, a cortina, ver como a mesa vê, pôr no mapa, a janela à parte e
+// de tabuleiros, a cortina, ver como a mesa vê, pôr no mapa e
 // encerrar. Não há mesa para nada disso.
 func draftBoardRegion(v draftView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
