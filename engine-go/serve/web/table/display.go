@@ -156,11 +156,14 @@ func (s Scene) handleDisplayStream(w http.ResponseWriter, r *http.Request) {
 			last = digest
 		}
 	}
+	// O canal é pego ANTES de cada desenho: o `notifyLocked` fecha e apaga o
+	// canal que existe, e um recorte que chegasse durante o desenho, com o
+	// canal ainda por pegar, não acordaria ninguém até o batimento.
+	changed := s.displays.Changed(sessionID)
 	write()
 	beat := time.NewTicker(tableHeartbeat)
 	defer beat.Stop()
 	for {
-		changed := s.displays.Changed(sessionID)
 		select {
 		case <-r.Context().Done():
 			return
@@ -172,6 +175,7 @@ func (s Scene) handleDisplayStream(w http.ResponseWriter, r *http.Request) {
 		case <-changed:
 		case <-beat.C:
 		}
+		changed = s.displays.Changed(sessionID)
 		write()
 	}
 }
@@ -185,6 +189,7 @@ func (s Scene) handleDisplayFraming(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 	var f displayFraming
 	if err := datastar.ReadSignals(r, &f); err != nil {
 		http.Error(w, fmt.Sprintf("o enquadramento não é JSON: %v", err), http.StatusBadRequest)

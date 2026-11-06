@@ -161,8 +161,11 @@ func TestTheGmSeesTheFreezeSwitchOnlyWithADisplayOpen(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Authorization", "Bearer "+f.token(t, f.gm))
+	// O corpo fica ABERTO até o fim do caso: fechá-lo é fechar a tela, e o
+	// interruptor some junto.
 	go func() {
 		if resp, err := http.DefaultClient.Do(req); err == nil {
+			<-ctx.Done()
 			_ = resp.Body.Close()
 		}
 	}()

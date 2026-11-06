@@ -105,18 +105,18 @@ func (d *tableDisplays) Framing(sessionID int64) displayFraming {
 	return d.framing[sessionID]
 }
 
-// Freeze guarda o retrato, e devolve falso quando a tela JÁ estava congelada:
-// o segundo clique não tira outro retrato, porque veria o que o mestre acabou
-// de mexer escondido.
-func (d *tableDisplays) Freeze(sessionID int64, v displayView, at time.Time) bool {
+// Freeze guarda o retrato, e não faz nada com a tela JÁ congelada: o segundo
+// clique não tira outro retrato, porque veria o que o mestre acabou de mexer
+// escondido. O `freezeDisplay` pergunta antes só para não montar o tabuleiro à
+// toa; a garantia é esta, debaixo da trava.
+func (d *tableDisplays) Freeze(sessionID int64, v displayView, at time.Time) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if _, ok := d.frozen[sessionID]; ok {
-		return false
+		return
 	}
 	d.frozen[sessionID] = frozenDisplay{view: v, at: at}
 	d.notifyLocked(sessionID)
-	return true
 }
 
 // Thaw solta a tela, que volta a seguir o tabuleiro de agora.
