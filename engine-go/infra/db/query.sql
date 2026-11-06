@@ -23,8 +23,8 @@ RETURNING *;
 -- characters read model (B.3)
 
 -- name: ListCharactersByOwner :many
--- Roster = templates only; campaign snapshots (sourceCharacterId set) are
--- reached through their campaign, not the personal list (ALE-33).
+-- Os rascunhos: a copia de campanha (sourceCharacterId preenchido) vem pela ListCampaignCopiesOfOwner,
+-- como uma linha do cartao do rascunho dela (ALE-33, ALE-607).
 SELECT * FROM characters
 WHERE ownerId = ? AND sourceCharacterId IS NULL
 ORDER BY updatedAt DESC;
@@ -880,3 +880,10 @@ DELETE FROM campaign_improvements WHERE id = ? AND campaignId = ?;
 SELECT ci.id, ci.improvements, ci.material
 FROM character_items ci JOIN campaign_members m ON m.characterId = ci.characterId
 WHERE m.campaignId = ? AND ci.improvements <> '[]';
+
+-- name: ListCampaignCopiesOfOwner :many
+-- As copias de campanha de quem esta olhando. Sem apelido de tabela, como a ListCharactersByOwner:
+-- o sqlc nao enxerga as colunas que a 00002 acrescentou quando elas vem qualificadas.
+SELECT * FROM characters
+WHERE ownerId = ? AND sourceCharacterId IS NOT NULL
+ORDER BY id;

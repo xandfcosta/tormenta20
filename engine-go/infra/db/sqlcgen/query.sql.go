@@ -1975,6 +1975,65 @@ func (q *Queries) ListAllCampaigns(ctx context.Context) ([]Campaign, error) {
 	return items, nil
 }
 
+const listCampaignCopiesOfOwner = `-- name: ListCampaignCopiesOfOwner :many
+SELECT id, ownerid, name, origin, god, godpowers, tibar, level, strength, dexterity, constitution, intelligence, wisdom, charisma, size, displacement, proficiencies, raceabilitychoices, raceattributechoices, secondaryracechoices, originchoices, classchoices, activeconditions, createdat, updatedat, sourceCharacterId, campaignId FROM characters
+WHERE ownerId = ? AND sourceCharacterId IS NOT NULL
+ORDER BY id
+`
+
+// As copias de campanha de quem esta olhando. Sem apelido de tabela, como a ListCharactersByOwner:
+// o sqlc nao enxerga as colunas que a 00002 acrescentou quando elas vem qualificadas.
+func (q *Queries) ListCampaignCopiesOfOwner(ctx context.Context, ownerid int64) ([]Character, error) {
+	rows, err := q.db.QueryContext(ctx, listCampaignCopiesOfOwner, ownerid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Character{}
+	for rows.Next() {
+		var i Character
+		if err := rows.Scan(
+			&i.ID,
+			&i.Ownerid,
+			&i.Name,
+			&i.Origin,
+			&i.God,
+			&i.Godpowers,
+			&i.Tibar,
+			&i.Level,
+			&i.Strength,
+			&i.Dexterity,
+			&i.Constitution,
+			&i.Intelligence,
+			&i.Wisdom,
+			&i.Charisma,
+			&i.Size,
+			&i.Displacement,
+			&i.Proficiencies,
+			&i.Raceabilitychoices,
+			&i.Raceattributechoices,
+			&i.Secondaryracechoices,
+			&i.Originchoices,
+			&i.Classchoices,
+			&i.Activeconditions,
+			&i.Createdat,
+			&i.Updatedat,
+			&i.SourceCharacterId,
+			&i.CampaignId,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCampaignCreatures = `-- name: ListCampaignCreatures :many
 SELECT id, campaignid, name, block, createdat, updatedat FROM campaign_creatures WHERE campaignId = ? ORDER BY name
 `
@@ -2617,8 +2676,8 @@ ORDER BY updatedAt DESC
 `
 
 // characters read model (B.3)
-// Roster = templates only; campaign snapshots (sourceCharacterId set) are
-// reached through their campaign, not the personal list (ALE-33).
+// Os rascunhos: a copia de campanha (sourceCharacterId preenchido) vem pela ListCampaignCopiesOfOwner,
+// como uma linha do cartao do rascunho dela (ALE-33, ALE-607).
 func (q *Queries) ListCharactersByOwner(ctx context.Context, ownerid int64) ([]Character, error) {
 	rows, err := q.db.QueryContext(ctx, listCharactersByOwner, ownerid)
 	if err != nil {
