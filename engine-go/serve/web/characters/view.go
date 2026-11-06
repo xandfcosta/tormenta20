@@ -16,10 +16,23 @@ import (
 // servidor. A DEFESA sai da `ComputeSheet`, a mesma da ficha.
 
 type View struct {
-	Search      string
-	Heroes      []HeroCard
+	Search string
+	Heroes []HeroCard
+	// Orphans são as cópias de campanha sem rascunho: o rascunho foi apagado, ou ela nunca teve um. Elas
+	// seguem na lista, num grupo próprio, para não sumirem.
+	Orphans     []HeroCard
 	HasAny      bool
 	FilteredAll bool
+}
+
+// CampaignCopy é a cópia de um rascunho numa campanha: a linha "Nas mesas" do cartão dele.
+type CampaignCopy struct {
+	ID       int64
+	DraftID  int64
+	Campaign string
+	Level    int64
+	PV       string
+	Live     bool
 }
 
 type HeroCard struct {
@@ -61,6 +74,8 @@ type HeroCard struct {
 	DefenseVs string
 	NoMana    bool
 	Classes   string
+	// Copies são as mesas em que este rascunho joga, uma linha por cópia.
+	Copies []CampaignCopy
 }
 
 // Load monta a cena para um dono. Ela é EXPORTADA porque o consumidor hoje é
@@ -79,14 +94,25 @@ func (s Scene) Load(ctx context.Context, ownerID int64, query string) (View, err
 		return View{}, err
 	}
 
+	copies, err := s.deps.CampaignCopies(ctx, ownerID)
+	if err != nil {
+		return View{}, err
+	}
 	v := View{Search: query, HasAny: len(cast) > 0}
 	for _, c := range cast {
 		if !search.Matches(searchFields(c), query) {
 			continue
 		}
-		v.Heroes = append(v.Heroes, HeroCardOf(s.deps.Catalogs(), c))
+		card := HeroCardOf(s.deps.Catalogs(), c)
+		// A ficha que já está numa campanha não é rascunho: é a cópia que perdeu o dela.
+		if c.CampaignID.Valid {
+			v.Orphans = append(v.Orphans, card)
+			continue
+		}
+		card.Copies = slices.DeleteFunc(slices.Clone(copies), func(copy CampaignCopy) bool { return copy.DraftID != c.ID })
+		v.Heroes = append(v.Heroes, card)
 	}
-	v.FilteredAll = v.HasAny && len(v.Heroes) == 0
+	v.FilteredAll = v.HasAny && len(v.Heroes) == 0 && len(v.Orphans) == 0
 	return v, nil
 }
 

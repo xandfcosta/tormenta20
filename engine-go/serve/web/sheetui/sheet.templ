@@ -9,6 +9,11 @@ package sheetui
 // remendo não teria onde pousar.
 templ SceneBody(v View) {
 	<div id="sheet-scene" data-versao={ v.Version } class="flex min-h-0 flex-1 flex-col">
+		// O OUVIDO DA FICHA SOLTA mora dentro da cena, e é de propósito: o remendo o redesenha com a aba
+		// de agora. Na mesa quem ouve é a própria mesa.
+		if !v.Embedded {
+			<div data-on-signal-patch-filter="{include: /^sheet_version$/}" data-on-signal-patch__debounce.400ms={ standaloneRefetch(v) } hidden></div>
+		}
 		@tempestadeSheet(v)
 	</div>
 }

@@ -47,12 +47,22 @@ templ SceneBody(v View) {
 						</div>
 					}
 				} else {
-					<h2 class="ds-field-label">Rascunhos</h2>
-					<div class="ds-cast-grid" data-nav-region="personagens" data-nav-layout="grid">
-						for _, h := range v.Heroes {
-							@heroCardView(h)
-						}
-					</div>
+					if len(v.Heroes) > 0 {
+						<h2 class="ds-field-label">Rascunhos</h2>
+						<div class="ds-cast-grid" data-nav-region="personagens" data-nav-layout="grid">
+							for _, h := range v.Heroes {
+								@heroCardView(h)
+							}
+						</div>
+					}
+					if len(v.Orphans) > 0 {
+						<h2 class="ds-field-label">Sem rascunho</h2>
+						<div class="ds-cast-grid" data-nav-region="personagens-sem-rascunho" data-nav-layout="grid">
+							for _, h := range v.Orphans {
+								@heroCardView(h)
+							}
+						</div>
+					}
 				}
 			}
 		</div>
@@ -119,6 +129,26 @@ templ heroCardView(h HeroCard) {
 		</dl>
 		if h.Summary != "" {
 			<p class="ds-cast-line">{ h.Summary }</p>
+		}
+		if len(h.Copies) > 0 {
+			<div class="ds-cast-copies">
+				<span class="ds-field-label">Nas mesas</span>
+				for _, c := range h.Copies {
+					<a class="ds-cast-copy" href={ templ.SafeURL("/personagens/" + strconv.FormatInt(c.ID, 10)) } aria-label={ "Ficha de " + h.Name + " na mesa " + c.Campaign }>
+						<span class="min-w-0">
+							<span class="ds-row-title">{ c.Campaign }</span>
+							<span class="ds-row-meta">
+								if c.Live {
+									<span class="ds-cast-live">sessão em andamento</span>
+									·
+								}
+								{ "Nv " + strconv.FormatInt(c.Level, 10) + " · PV " + c.PV }
+							</span>
+						</span>
+						@ui.Icon("ChevronRight", "ds-icon")
+					</a>
+				}
+			</div>
 		}
 	</article>
 }

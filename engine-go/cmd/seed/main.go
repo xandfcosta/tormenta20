@@ -166,6 +166,9 @@ func main() {
 	if err := seedChronicles(database); err != nil {
 		log.Fatalf("chronicles: %v", err)
 	}
+	if err := seedCampaignCopy(database); err != nil {
+		log.Fatalf("copy: %v", err)
+	}
 	script, err := dump(database)
 	if err != nil {
 		log.Fatalf("dump: %v", err)

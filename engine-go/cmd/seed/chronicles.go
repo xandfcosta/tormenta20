@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+
+	"t20engine/app/campaign"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // Demo chronicles (kept in the seed and grown over time). Members reference a
@@ -342,4 +346,29 @@ func nullable(s string) any {
 		return nil
 	}
 	return s
+}
+
+// seedCampaignCopy senta um rascunho numa mesa pelo caso de uso de verdade, para a semente ter uma CÓPIA
+// de campanha: o elenco da semente senta sem copiar, e sem esta a linha "Nas mesas" da lista de
+// personagens só existiria depois de alguém entrar numa mesa à mão.
+func seedCampaignCopy(database *sql.DB) error {
+	heroID, err := characterID(database, "jogador@t20.local", "Aprendiz Nv1 Simples")
+	if err != nil {
+		return fmt.Errorf("a cópia de campanha: %w", err)
+	}
+	var campaignID, ownerID int64
+	if err := database.QueryRow(`SELECT c.id, ch.ownerId FROM campaigns c, characters ch WHERE c.name = ? AND ch.id = ?`,
+		"A Queda de Tauron", heroID).Scan(&campaignID, &ownerID); err != nil {
+		return fmt.Errorf("a mesa da cópia de campanha: %w", err)
+	}
+	seats := campaign.NewSeating(database, sqlcgen.New(database))
+	if err := seats.Seat(context.Background(), ownerID, campaignID, heroID, "seedtoken-02"); err != nil {
+		return fmt.Errorf("sentar o rascunho %d na mesa %d: %w", heroID, campaignID, err)
+	}
+	// A data de entrada é a do relógio, e o despejo tem de sair igual a cada geração.
+	if _, err := database.Exec(`UPDATE campaign_members SET addedAt = ? WHERE campaignId = ? AND characterId IN
+		(SELECT id FROM characters WHERE sourceCharacterId = ?)`, seedChronicleDate, campaignID, heroID); err != nil {
+		return fmt.Errorf("a data da cópia de campanha: %w", err)
+	}
+	return nil
 }

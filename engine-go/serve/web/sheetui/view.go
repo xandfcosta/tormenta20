@@ -30,13 +30,16 @@ type View struct {
 	Version string
 	// Draft diz que esta ficha é um rascunho, e é só um nome: ela aceita os mesmos gestos da cópia.
 	Draft bool
+	// Table é a mesa da cópia de campanha, e nil no rascunho. É o que a faixa sob o cabeçalho diz.
+	Table *sheetTable
 	// Embedded diz que esta ficha está sendo desenhada DENTRO da sessão.
 	//
-	// Ela muda duas coisas na tela, e as duas são sobre NAVEGAÇÃO: a barra com
-	// o "‹ Voltar" some (a sessão tem cabeçalho próprio, e voltar dali tiraria
-	// o jogador da mesa), e as abas deixam de ser links para virar comandos que
-	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
-	// quem só queria trocar de seção.
+	// Ela muda a NAVEGAÇÃO: a barra com o "‹ Voltar" some (a sessão tem cabeçalho
+	// próprio, e voltar dali tiraria o jogador da mesa), e as abas deixam de ser
+	// links para virar comandos que remendam a ficha no lugar. Um `<a href>` ali
+	// levaria embora da sessão quem só queria trocar de seção. E some o que é da
+	// ficha SOLTA: a faixa de qual ficha é, e o ouvido do fluxo dela, porque na
+	// mesa quem ouve é a mesa.
 	Embedded bool
 	// ColorMode é o modo de cor em vigor, para o seletor do ⋯ marcar o certo.
 	ColorMode ui.ColorMode
@@ -196,14 +199,15 @@ func AskedTab(raw string) string {
 func (s Scene) Load(
 	ctx context.Context, userID int64, id int64, aba, search string, signals Signals,
 ) (View, int, error) {
-	row, err := s.deps.Queries().GetCharacter(ctx, id)
+	row, status, err := s.ownedCharacter(ctx, id, userID)
 	if err != nil {
-		return View{}, 404, fmt.Errorf("personagem %d não existe", id)
-	}
-	if row.Ownerid != userID {
-		return View{}, 403, fmt.Errorf("esta ficha não é sua")
+		return View{}, status, err
 	}
 	dto, err := s.deps.LoadCharacter(ctx, row)
+	if err != nil {
+		return View{}, 500, err
+	}
+	table, err := s.tableOf(ctx, row)
 	if err != nil {
 		return View{}, 500, err
 	}
@@ -212,6 +216,7 @@ func (s Scene) Load(
 	v := View{
 		ID:           dto.ID,
 		Draft:        !dto.CampaignID.Valid,
+		Table:        table,
 		Name:         dto.Name,
 		Version:      row.Updatedat,
 		Initials:     card.Monogram,
@@ -417,10 +422,12 @@ func SheetRefetch(v View) string {
 	// A versão vem do DOM e não de um sinal porque quem a atualiza é o próprio
 	// remendo da ficha: um sinal teria de ser reescrito por fora, e é exatamente
 	// o tipo de segunda escrita que sai de sincronia.
-	return fmt.Sprintf(
-		"$sheet_version !== document.getElementById('sheet-scene').dataset.versao && "+
-			"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
+	return fmt.Sprintf(sheetVersionGuard+"@get('/personagens/%d?tab=' + $sheet_tab + '&embutida=1')", v.ID)
 }
+
+// sheetVersionGuard é a guarda dos dois ouvidos, o da mesa e o da ficha solta: só repede quando a versão
+// avisada não é a que já está na tela.
+const sheetVersionGuard = "$sheet_version !== document.getElementById('sheet-scene').dataset.versao && "
 
 // attributeCommand escreve o `@post` que repõe a perícia noutro atributo.
 //

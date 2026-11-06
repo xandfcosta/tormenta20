@@ -5,11 +5,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/assets"
 	"t20engine/serve/web/bookui"
+	"t20engine/serve/web/characters"
 	"t20engine/serve/web/finder"
 	"t20engine/serve/web/ui"
 
@@ -64,6 +67,38 @@ func (c sceneCore) CharacterList(ctx context.Context, ownerID int64) ([]sheet.Ch
 		}
 		out = append(out, dto)
 	}
+	return out, nil
+}
+
+// CampaignCopies são as cópias de campanha de quem pede, com a mesa, o nível e o PV de cada uma.
+func (c sceneCore) CampaignCopies(ctx context.Context, ownerID int64) ([]characters.CampaignCopy, error) {
+	rows, err := c.queries.ListCampaignCopiesOfOwner(ctx, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]characters.CampaignCopy, 0, len(rows))
+	for _, row := range rows {
+		if !row.CampaignId.Valid || !row.SourceCharacterId.Valid {
+			continue
+		}
+		campaign, err := c.queries.GetCampaign(ctx, row.CampaignId.Int64)
+		if err != nil {
+			return nil, fmt.Errorf("a mesa %d da cópia %d: %w", row.CampaignId.Int64, row.ID, err)
+		}
+		live, err := c.queries.HasLiveSessionForCharacter(ctx, row.ID)
+		if err != nil {
+			return nil, err
+		}
+		dto, err := sheet.Load(ctx, c.queries, c.catalogs, row)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, characters.CampaignCopy{
+			ID: row.ID, DraftID: row.SourceCharacterId.Int64, Campaign: campaign.Name, Level: dto.Level,
+			PV: characters.HeroCardOf(c.catalogs, dto).PV, Live: live,
+		})
+	}
+	slices.SortStableFunc(out, func(a, b characters.CampaignCopy) int { return strings.Compare(a.Campaign, b.Campaign) })
 	return out, nil
 }
 

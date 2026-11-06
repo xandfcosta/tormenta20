@@ -10,6 +10,7 @@ import (
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/events"
 	"t20engine/serve/web/sheetui"
 )
 
@@ -17,7 +18,8 @@ import (
 // onde as regras moram.
 type sheetHost struct {
 	sceneCore
-	rules sheetRules
+	rules   sheetRules
+	closing <-chan struct{}
 	// strike é o caso de uso de ATACAR, e ele entra aqui porque a superfície
 	// Ações rola daqui. É o MESMO que a cena da Mesa recebe — dois caminhos de
 	// ataque com montagens diferentes divergiriam no dia em que um deles
@@ -26,7 +28,7 @@ type sheetHost struct {
 }
 
 func (s *Server) sheetHost() sheetHost {
-	return sheetHost{sceneCore: s.sceneCore(), rules: s.sheetRules(), strike: s.combatStrike()}
+	return sheetHost{sceneCore: s.sceneCore(), rules: s.sheetRules(), strike: s.combatStrike(), closing: s.liveStreamsClosing}
 }
 
 // O adaptador cumprindo a porta da FICHA (`sheetui.Deps`).
@@ -40,8 +42,12 @@ func (h sheetHost) LoadCharacter(ctx context.Context, c sqlcgen.Character) (shee
 	return h.rules.LoadCharacter(ctx, c)
 }
 
-// CharacterChanged avisa a MESA que esta ficha mexeu.
+// CharacterChanged avisa a mesa e a ficha solta aberta que esta ficha mexeu.
 func (h sheetHost) CharacterChanged(characterID int64) { h.rules.characterChanged(characterID) }
+
+// Bus e LiveStreamsClosing alimentam o fluxo ao vivo da ficha solta.
+func (h sheetHost) Bus() *events.Bus                    { return h.rules.bus }
+func (h sheetHost) LiveStreamsClosing() <-chan struct{} { return h.closing }
 
 // ActionFitsOnTurn e SpendActionOnTurn levam o gesto da ficha ao turno da mesa
 // em que este personagem está.

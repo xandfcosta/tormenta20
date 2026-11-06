@@ -17,6 +17,8 @@ type Deps interface {
 	// CharacterList: a cena faz a PERGUNTA, o hospedeiro sabe de qual tabela ela
 	// sai.
 	CharacterList(ctx context.Context, ownerID int64) ([]sheet.CharacterDTO, error)
+	// CampaignCopies são as cópias de campanha dos rascunhos de quem pergunta, já com o PV de cada uma.
+	CampaignCopies(ctx context.Context, ownerID int64) ([]CampaignCopy, error)
 	// Catalogs pode vir NULO, e não é descuido: sem ele o cartão mostra
 	// travessão no lugar da Defesa e a lista continua de pé (ver `HeroCardOf`).
 	Catalogs() *engine.Catalogs
