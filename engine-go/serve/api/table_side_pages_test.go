@@ -168,8 +168,18 @@ func TestTheCastPageDrawsTheCastWithItsVerbs(t *testing.T) {
 	if !strings.Contains(page, f.tableUrl()+"/fluxo?pagina=elenco") {
 		t.Error("a página do Elenco não abre o fluxo com a marca dela")
 	}
-	if !strings.Contains(page, `data-text="$command_error"`) {
-		t.Error("a página do Elenco não tem onde dizer a recusa")
+	if !strings.Contains(page, `data-text="$command_error"`) || !strings.Contains(page, `data-text="$entry_sent"`) {
+		t.Error("a página do Elenco não tem onde dizer a recusa e o Pôr na fila")
+	}
+	var varek int64
+	for _, npc := range f.dbCast(t) {
+		if npc.Name == "Capitão Varek" {
+			varek = npc.ID
+		}
+	}
+	sent := f.posts(t, f.gm, fmt.Sprintf("%s/elenco/npc/%d/na-fila?pagina=elenco", f.tableUrl(), varek), "")
+	if !strings.Contains(sent, "Capitão Varek entrou na fila.") {
+		t.Errorf("o Pôr na fila do Elenco não diz que funcionou: %s", trechoDeSinais(sent))
 	}
 }
 
@@ -194,6 +204,13 @@ func TestTheBestiaryPageListsTheCreaturesAndSendsToTheQueue(t *testing.T) {
 	}
 	if !strings.Contains(page, f.tableUrl()+"/bestiario/enviar?pagina=bestiario") {
 		t.Error("o Pôr na fila não leva a marca da página")
+	}
+	// A recusa APAGA a frase do acerto anterior: "entrou na fila" ao lado do
+	// erro seria a confirmação certa sobre o gesto errado.
+	refused := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
+		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
+	if !strings.Contains(refused, `"entry_sent":""`) {
+		t.Errorf("a recusa deixou a frase do acerto acesa: %s", trechoDeSinais(refused))
 	}
 	sent := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
 		`{"creature":"ogro","entry_hp":30,"entry_initiative":7,"entry_copies":2}`)

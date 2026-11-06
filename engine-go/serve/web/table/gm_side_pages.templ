@@ -74,6 +74,7 @@ templ gmCastPage(v View) {
 	<main class="ds-gm-page" data-signals="{gm_cast_search: ''}">
 		<h1 class="ds-sheet-name">{ sidePageTitle(v, "Elenco") }</h1>
 		@gmPageRefusal()
+		<p class="ds-help" aria-live="polite" data-text="$entry_sent"></p>
 		@gmCastList(v)
 		@gmNpcEditor(v)
 	</main>

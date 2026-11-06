@@ -143,6 +143,9 @@ func castRefusal(err error, what string) error {
 // digitar o PV de novo ao trazê-lo seria pedir duas vezes o mesmo número — com
 // a segunda podendo discordar da primeira.
 func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	// A frase do acerto anterior sai já: numa recusa ela ficaria acesa ao lado
+	// do erro, confirmando o gesto errado.
+	c.Signals["entry_sent"] = ""
 	row, block, err := st.campaignNpc(c)
 	if err != nil {
 		return nil, err
@@ -169,7 +172,11 @@ func putNpcTracker(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		}
 		return state, err
 	}
-	return st.deps.Sessions().AddInitiativeEntry(c.R.Context(), c.SessionID, entry)
+	state, err := st.deps.Sessions().AddInitiativeEntry(c.R.Context(), c.SessionID, entry)
+	if err == nil {
+		c.Signals["entry_sent"] = entrySentPhrase(1, row.Name)
+	}
+	return state, err
 }
 
 // eraseNpc tira o NPC do elenco da campanha.

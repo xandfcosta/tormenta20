@@ -161,6 +161,8 @@ func (s Scene) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
 // O `monsterId` viaja junto porque é ele que liga a linha ao verbete do livro, e
 // é o que faz o painel do combatente mostrar o bloco depois.
 func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	// A frase do acerto anterior sai já — ver o `putNpcTracker`.
+	c.Signals["entry_sent"] = ""
 	send, err := envioDosSinais(c.R)
 	if err != nil {
 		return nil, err
