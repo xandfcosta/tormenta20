@@ -2,6 +2,7 @@ package api
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -46,5 +47,43 @@ func TestClosingLiveStreamsAbortsTheConnectionSoTheBrowserRetries(t *testing.T) 
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("o fluxo continuou aberto depois de CloseLiveStreams: o desligamento gastaria o prazo inteiro")
+	}
+}
+
+// O fluxo da ficha solta também aborta: fechar limpo deixaria a ficha aberta sem reconectar depois do deploy.
+func TestClosingLiveStreamsAbortsTheSheetsStreamToo(t *testing.T) {
+	f := newSceneFixture(t)
+	srv := httptest.NewServer(f.s.WebRouter())
+	defer srv.Close()
+
+	req, err := http.NewRequest(http.MethodGet, srv.URL+fmt.Sprintf("/personagens/%d/ao-vivo", f.charID), nil)
+	if err != nil {
+		t.Fatalf("montar pedido: %v", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+f.token(t, f.player))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("abrir o fluxo: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	reader := bufio.NewReader(resp.Body)
+	if frame := lerQuadro(t, reader); frame == "" {
+		t.Fatal("o fluxo não mandou a versão de agora: o caso mediria uma conexão morta")
+	}
+
+	f.s.CloseLiveStreams()
+
+	ended := make(chan error, 1)
+	go func() {
+		_, readErr := io.Copy(io.Discard, reader)
+		ended <- readErr
+	}()
+	select {
+	case readErr := <-ended:
+		if readErr == nil {
+			t.Error("o fluxo da ficha fechou limpo: o Datastar não reconectaria depois do deploy")
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("o fluxo da ficha não terminou depois de CloseLiveStreams: o desligamento esperaria o prazo")
 	}
 }

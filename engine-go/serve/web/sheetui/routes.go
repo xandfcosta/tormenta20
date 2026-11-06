@@ -23,6 +23,7 @@ import (
 
 func Routes(r chi.Router, s Scene) {
 	r.Get("/personagens/{id}", s.sheetHandle)
+	r.Get("/personagens/{id}/ao-vivo", s.sheetLive)
 	// O PASSO no CAMINHO e não no corpo. Quem segura essa escolha é o
 	// `sheetCommand` logo abaixo: ele lê os sinais uma vez e os entrega ao
 	// `s.Load`, que redesenha a cena INTEIRA. Como o `payload` do Datastar
@@ -152,10 +153,12 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		Title: view.Name + " · Tormenta 20",
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Shape: ui.ShellBare,
+		// O FLUXO AO VIVO: a ficha aberta acompanha o que muda nela por outro caminho (`sheetLive`).
+		Init: fmt.Sprintf("@get('/personagens/%d/ao-vivo')", view.ID),
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
-		Signals: "{detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
+		Signals: "{sheet_version: '', detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
 			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0, augment_quickened: 0, augment_amplified: 0, augment_discreet: 0," +
 			" spell_search: '', spell_circle: '', spell_school: '', grimoire_search: '', grimoire_circle: ''," +

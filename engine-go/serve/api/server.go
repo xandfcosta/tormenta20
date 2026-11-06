@@ -80,7 +80,8 @@ func (s *Server) SyncLevelChoices(ctx context.Context) error {
 	return s.characterPlays().SyncAllLevelChoices(ctx)
 }
 
-// CloseLiveStreams encerra os fluxos da mesa, e é o que deixa o `Shutdown` terminar.
+// CloseLiveStreams encerra os fluxos ao vivo, o da mesa e o da ficha solta, e é o que deixa o
+// `Shutdown` terminar.
 //
 // O `Shutdown` espera toda requisição em curso, e um fluxo aberto não termina sozinho:
 // com um jogador só conectado, o desligamento gastava o prazo inteiro e acabava forçado.
@@ -90,7 +91,7 @@ func (s *Server) CloseLiveStreams() {
 	s.closeStreamsOnce.Do(func() { close(s.liveStreamsClosing) })
 }
 
-// characterChanged avisa as mesas AO VIVO que uma ficha mudou.
+// characterChanged avisa as mesas AO VIVO e a ficha solta aberta que uma ficha mudou.
 //
 // Sem ele, o mestre aplica "Caído" pela ficha do combatente e a tela do jogador
 // não fica sabendo — e o motor deriva Defesa e perícias da condição, então os

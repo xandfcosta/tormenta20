@@ -130,6 +130,8 @@ data-on-signal-patch-filter="{include: /^sheet_version$/}"
 data-on-signal-patch="… @get('/personagens/13?tab=' + $sheet_tab + '&embutida=1')"
 ```
 
+- **A ficha SOLTA tem o fluxo dela** (`/personagens/{id}/ao-vivo`, o `sheetLive`): o mesmo carimbo, e
+  o ouvido mora DENTRO da cena (`StandaloneRefetch`), porque é a cena que sabe a aba de agora.
 - **UMA vez por mudança**, com a memória na CONEXÃO (`announceSheetChange`).
 - **Quem diz "mudou" é um EVENTO**, não comparar o carimbo a cada tique (ver
   "O barramento de eventos" (infra.md)).

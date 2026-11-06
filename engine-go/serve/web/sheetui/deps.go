@@ -10,6 +10,7 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/events"
 	"t20engine/serve/web/ui"
 )
 
@@ -45,6 +46,10 @@ type Deps interface {
 	// só — o funil dos comandos. Passam trinta mutações por ali, e a linha
 	// esquecida numa delas seria uma ficha que não atualiza só naquele gesto.
 	CharacterChanged(characterID int64)
+	// Bus e LiveStreamsClosing são do fluxo ao vivo da ficha solta (`sheetLive`): o aviso de que a ficha
+	// mudou, e a deixa de que o processo vai encerrar.
+	Bus() *events.Bus
+	LiveStreamsClosing() <-chan struct{}
 	// O TURNO DA MESA, para um gesto que sai da ficha (p233). São DUAS porque
 	// quem precisa RECUSAR pergunta antes de aplicar, e cobra depois de o gesto
 	// ter saído — cobrar antes tiraria a ação de alguém por uma magia que a

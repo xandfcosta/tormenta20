@@ -103,7 +103,7 @@ certa. Custo: os escritores serializam, a leitura segue livre (WAL), e o
   `cmd/api/main.go` antes de "consertar".
 - **Sinal encerra com ordem** (`signal.NotifyContext` + `Shutdown`, 10s): defer
   não roda em morte por sinal, e um `VACUUM INTO` morreria pela metade.
-- **O fluxo da mesa ABORTA ao encerrar** (`CloseLiveStreams`, `panic(http.ErrAbortHandler)`):
+- **Os fluxos ao vivo ABORTAM ao encerrar**, o da mesa e o da ficha solta (`CloseLiveStreams`, `panic(http.ErrAbortHandler)`):
   sem isso, uma conexão aberta prende o `Shutdown` até o prazo. E não pode ser `return`:
   fechar limpo é resposta completa para o Datastar, que não reconecta, e a mesa fica parada
   sem erro nenhum. Medido no navegador.
@@ -119,7 +119,8 @@ certa. Custo: os escritores serializam, a leitura segue livre (WAL), e o
 requisição; o que desce é um `text/event-stream` aberto. Vale para o próximo
 canal. A Mesa tem fluxo PRÓPRIO (`/campanhas/{campanha}/sessoes/{sessao}/fluxo`, em
 `serve/web/table/stream.go`) que assina o `events.Bus`; os comandos são rotas da
-CENA. Ele passa pelo `requirePage`, que lê a sessão do COOKIE — sem token na
+CENA. A ficha solta tem o dela (`/personagens/{id}/ao-vivo`, em `serve/web/sheetui/live.go`), que só
+avisa a versão nova da ficha. Ele passa pelo `requirePage`, que lê a sessão do COOKIE — sem token na
 query string. A queda do cliente vem do `r.Context()` cancelado, não de batida.
 
 > **O `SSEHub` (`domain/live`) só EMITE**: `SSEHub.Add` e o laço de leitura

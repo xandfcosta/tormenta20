@@ -37,6 +37,7 @@ var permitidos = map[string]bool{
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/domain/engine":    true, // os tipos computados que os painéis desenham
 	"t20engine/infra/db/dbvalue": true,
+	"t20engine/infra/events":     true, // o barramento, para o fluxo da ficha solta saber que ela mudou
 	// O `domain/search` é a DOBRA DE ACENTO das buscas desta cena, e ele entrou
 	// tirando uma cópia daqui: havia uma tabela de nove pares no
 	// `expertises.go`, com doze chamadores, enquanto o buscador do livro já
