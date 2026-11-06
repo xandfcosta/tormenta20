@@ -18,8 +18,8 @@ import (
 // São a MESMA cena e as mesmas regiões, penduradas noutro documento — o Grupo
 // é o `gmGroup`, o Elenco é o `gmCastList` —, e por isso o que muda entre a
 // mesa e uma página é só a MARCA (`?pagina=`), que viaja no fluxo e nos
-// comandos. Sem ela, a resposta de um − no Grupo remendaria as dez regiões da
-// mesa numa página que não tem nenhuma delas.
+// comandos. Sem ela, a resposta de um − no Grupo remendaria todas as regiões
+// da mesa numa página que não tem nenhuma delas.
 
 // sidePage é qual página à parte uma view desenha. O vazio é a mesa.
 type sidePage string

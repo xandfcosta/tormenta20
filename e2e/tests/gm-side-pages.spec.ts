@@ -36,11 +36,14 @@ test('no desktop as páginas ficam soltas no cabeçalho, e no celular num menu F
 })
 
 test('a página do Grupo se atualiza quando outro cliente fere alguém', async ({ page, browser }) => {
+  // O CONTROLE: o fluxo da página está aberto antes do golpe, senão a mudança
+  // chegaria pela carga e não pelo remendo. A RESPOSTA, e não o pedido: o
+  // cabeçalho do SSE só sai depois de o servidor assinar o barramento.
+  const streaming = page.waitForResponse((r) => r.url().includes('/fluxo?pagina=grupo'))
   await page.goto(`${MESA}/grupo`)
+  await streaming
   const row = page.locator('.ds-gm-member', { hasText: 'Guerreiro Veterano Nv8' })
   const vital = row.locator('.ds-gm-vital').first()
-  // O CONTROLE: o fluxo da página está aberto antes do golpe, senão a mudança
-  // chegaria pela carga e não pelo remendo.
   await expect(vital).toContainText('PV')
   const before = await vital.innerText()
 

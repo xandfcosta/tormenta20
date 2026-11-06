@@ -47,7 +47,7 @@ templ gmBoard(b BoardView, v View) {
 		<section class="ds-board" aria-label={ "Tabuleiro · " + b.Place }>
 			@boardScene(b, "ds-board-scene") {
 				@gmScenePick(b)
-				@gmBoardBar(b, v)
+				@gmBoardBar(b)
 				@gmNotices(b)
 				<div class="ds-board-foot">
 					@gmNewPieceBar(b)
@@ -128,7 +128,7 @@ templ gmScenePick(b BoardView) {
 
 // gmBoardBar é o enquadramento e os verbos da sessão numa barra só; ela desce
 // para baixo do seletor quando o mapa é estreito (o CSS mede o mapa).
-templ gmBoardBar(b BoardView, v View) {
+templ gmBoardBar(b BoardView) {
 	<div class="ds-board-float ds-gm-board-bar" role="group" aria-label="Enquadrar e montar o mapa">
 		@gmFraming(b)
 		<span class="ds-board-fsep" aria-hidden="true"></span>

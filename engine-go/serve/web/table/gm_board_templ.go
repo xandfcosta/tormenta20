@@ -208,7 +208,7 @@ func gmBoard(b BoardView, v View) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = gmBoardBar(b, v).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = gmBoardBar(b).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -531,7 +531,7 @@ func gmScenePick(b BoardView) templ.Component {
 
 // gmBoardBar é o enquadramento e os verbos da sessão numa barra só; ela desce
 // para baixo do seletor quando o mapa é estreito (o CSS mede o mapa).
-func gmBoardBar(b BoardView, v View) templ.Component {
+func gmBoardBar(b BoardView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

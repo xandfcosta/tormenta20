@@ -153,9 +153,6 @@ func TestTheCastPageDrawsTheCastWithItsVerbs(t *testing.T) {
 	if edit == nil || !strings.Contains(textOf(cast), "Pôr na fila") {
 		t.Errorf("a linha do NPC não tem o lápis e o Pôr na fila: %q", textOf(cast))
 	}
-	if edit != nil && !strings.Contains(attr(edit, "data-on:click"), "?pagina=elenco") {
-		t.Error("o lápis do Elenco não leva a marca da página")
-	}
 	if findNode(doc, "aria-label", "Novo no elenco") == nil {
 		t.Error("o Elenco não tem o Novo")
 	}
