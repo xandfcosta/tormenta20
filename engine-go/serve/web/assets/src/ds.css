@@ -278,6 +278,12 @@
   .ds-input::placeholder {
     color: var(--ds-ink-3);
   }
+  /* Travado como o botão travado: sem ele, o campo que não pode mudar (o
+   * material, com as quatro vagas de melhoria tomadas) parece só vazio. */
+  .ds-input:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
   .ds-field > .ds-help {
     font-size: var(--ds-t-xs);
     line-height: var(--ds-lh-xs);
@@ -1020,6 +1026,12 @@
   }
   .ds-switch > input:checked::after {
     left: calc(50% + 1.125rem - 1rem - 2px);
+  }
+  /* Travado como o botão travado: sem ele, o interruptor que não pode ligar
+   * (a quinta melhoria) parece só desligado. */
+  .ds-switch > input:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 
   .ds-stats {

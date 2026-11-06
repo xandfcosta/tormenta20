@@ -292,6 +292,47 @@ test('a mochila abre a ficha do item e o catálogo sem estourar o telefone', asy
 })
 
 /**
+ * AS QUATRO VAGAS DE MELHORIA (p164), com o material ocupando uma (p165). A
+ * recusa é do servidor, e quem a prende é o teste de handler. O navegador é a
+ * única testemunha da TRAVA NA TELA: ela é uma expressão do Datastar sobre os
+ * sinais do diálogo, e um erro nela não deixa rastro.
+ *
+ * Nada é gravado: o diálogo fecha sem o Aplicar, e a semente fica como estava.
+ */
+test('o diálogo de melhorias trava a quinta vaga, contando o material', async ({ page }) => {
+  const id = await oIdDoHeroi(page, TANQUE)
+  await page.goto(`/personagens/${id}?tab=bag`)
+  await page.getByRole('button', { name: 'Ações de Machado de batalha' }).click()
+  await page.getByRole('button', { name: 'Melhorias de Machado de batalha' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Melhorias de Machado de batalha' })
+  await expect(dialog).toBeVisible()
+  const switches = dialog.getByRole('switch')
+  const material = dialog.getByLabel('Material')
+
+  // DO ZERO: o que a semente já pôs no machado sai, só nos sinais.
+  for (const toggle of await switches.all()) {
+    if (await toggle.isChecked()) await toggle.click()
+  }
+  await material.selectOption('')
+  await expect(dialog.getByText('0 de 4 melhorias')).toBeVisible()
+  expect(await switches.count(), 'o machado oferece menos de cinco melhorias: a quinta vaga não seria medida').toBeGreaterThanOrEqual(5)
+
+  for (let i = 0; i < 3; i++) await switches.nth(i).click()
+  // O CONTROLE: com três, a quarta ainda liga. Sem ele, "travou" se explicaria
+  // por o interruptor nascer desabilitado.
+  await expect(switches.nth(3)).toBeEnabled()
+  await material.selectOption({ index: 1 })
+  await expect(dialog.getByText('4 de 4 melhorias')).toBeVisible()
+  await expect(switches.nth(3), 'com três e o material, a quarta melhoria ainda liga').toBeDisabled()
+  await expect(switches.nth(0), 'a ligada travou junto, e ela precisa poder sair').toBeEnabled()
+
+  await material.selectOption('')
+  await switches.nth(3).click()
+  await expect(material, 'com quatro melhorias, o material ainda escolhe').toBeDisabled()
+  await page.keyboard.press('Escape')
+})
+
+/**
  * A ABA PODERES ABERTA, com o diálogo de escolher.
  *
  * O caminhar pelas sete abas mede a lista; o que ele não alcança é o DIÁLOGO,
