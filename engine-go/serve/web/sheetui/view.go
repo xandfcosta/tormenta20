@@ -30,13 +30,15 @@ type View struct {
 	Version string
 	// Draft diz que esta ficha é um rascunho, e é só um nome: ela aceita os mesmos gestos da cópia.
 	Draft bool
+	// Table é a mesa da cópia de campanha, e nil no rascunho. É o que a faixa sob o cabeçalho diz.
+	Table *sheetTable
 	// Embedded diz que esta ficha está sendo desenhada DENTRO da sessão.
 	//
-	// Ela muda duas coisas na tela, e as duas são sobre NAVEGAÇÃO: a barra com
-	// o "‹ Voltar" some (a sessão tem cabeçalho próprio, e voltar dali tiraria
-	// o jogador da mesa), e as abas deixam de ser links para virar comandos que
-	// remendam a ficha no lugar. Um `<a href>` ali levaria embora da sessão
-	// quem só queria trocar de seção.
+	// Ela muda a NAVEGAÇÃO: a barra com o "‹ Voltar" some (a sessão tem cabeçalho
+	// próprio, e voltar dali tiraria o jogador da mesa), e as abas deixam de ser
+	// links para virar comandos que remendam a ficha no lugar. Um `<a href>` ali
+	// levaria embora da sessão quem só queria trocar de seção. E some a faixa de
+	// qual ficha é, porque na mesa a mesa já diz.
 	Embedded bool
 	// ColorMode é o modo de cor em vigor, para o seletor do ⋯ marcar o certo.
 	ColorMode ui.ColorMode
@@ -207,11 +209,16 @@ func (s Scene) Load(
 	if err != nil {
 		return View{}, 500, err
 	}
+	table, err := s.tableOf(ctx, row)
+	if err != nil {
+		return View{}, 500, err
+	}
 	card := characters.HeroCardOf(s.deps.Catalogs(), dto)
 	pvLevels, pmLevels := vitalLevelsOf(dto)
 	v := View{
 		ID:           dto.ID,
 		Draft:        !dto.CampaignID.Valid,
+		Table:        table,
 		Name:         dto.Name,
 		Version:      row.Updatedat,
 		Initials:     card.Monogram,

@@ -21,6 +21,7 @@ templ tempestadeSheet(v View) {
 		// a ficha troca a dela pela fileira de seções (ver o GLOSSARY).
 		if !v.Embedded {
 			@sheetHeader(v)
+			@sheetWhere(v)
 		}
 		<div class="ds-sheet-body">
 			@sheetRail(v)
@@ -84,9 +85,6 @@ templ sheetHeader(v View) {
 		<div class="min-w-0">
 			<h1 class="ds-sheet-name">{ v.Name }</h1>
 			<p class="ds-sheet-who">
-				if v.Draft {
-					<span class="ds-badge" data-variant="outline">rascunho</span>
-				}
 				{ whoLine(v) }
 			</p>
 		</div>
@@ -96,6 +94,25 @@ templ sheetHeader(v View) {
 		</div>
 		@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Quem é, nível e aparência", templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
 	</header>
+}
+
+// sheetWhere é a faixa sob o cabeçalho: de que mesa é esta ficha, ou que ela é o rascunho. Ela vale nas
+// duas larguras porque a linha do cabeçalho some no celular, e mexer na ficha errada custa caro.
+templ sheetWhere(v View) {
+	if v.Table != nil {
+		<a class="ds-sheet-where" href={ templ.SafeURL("/campanhas/" + strconv.FormatInt(v.Table.ID, 10)) }>
+			<span>Na mesa <b>{ v.Table.Name }</b></span>
+			if v.Table.Live {
+				<span class="ds-cast-live">em sessão</span>
+			}
+			@ui.Icon("ChevronRight", "ds-icon")
+		</a>
+	} else {
+		<p class="ds-sheet-where">
+			<span class="ds-badge" data-variant="outline">rascunho</span>
+			<span>o que muda aqui não chega às mesas</span>
+		</p>
+	}
 }
 
 // sheetRail é a coluna da ficha, no desktop.

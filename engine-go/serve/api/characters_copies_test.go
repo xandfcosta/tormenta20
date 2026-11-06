@@ -75,3 +75,24 @@ func TestACopyWithoutItsDraftStaysOnTheList(t *testing.T) {
 		t.Error("a cópia sem rascunho sumiu da lista, ou não está no grupo Sem rascunho")
 	}
 }
+
+// A faixa diz qual ficha é: a da mesa leva à mesa, e a do rascunho avisa que não é a das mesas.
+func TestTheSheetSaysWhichSheetItIs(t *testing.T) {
+	f := newSceneFixture(t)
+	draft := seedCharacterAtLevel(t, f.s, f.player, "Kharvos", "Guerreiro", 3, 0, 0)
+	campaignID, copyID := seatsACopy(t, f, draft, "A Queda de Tauron")
+
+	sheetOf := func(id int64) string {
+		return f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "").Body.String()
+	}
+	copySheet := sheetOf(copyID)
+	if !strings.Contains(copySheet, "A Queda de Tauron") || !strings.Contains(copySheet, fmt.Sprintf(`href="/campanhas/%d"`, campaignID)) {
+		t.Error("a ficha da cópia não diz de que mesa ela é, nem leva a ela")
+	}
+	if strings.Contains(copySheet, "não chega às mesas") {
+		t.Error("a ficha da cópia diz que é rascunho")
+	}
+	if !strings.Contains(sheetOf(draft), "o que muda aqui não chega às mesas") {
+		t.Error("a ficha do rascunho não avisa que ele não é a ficha das mesas")
+	}
+}
