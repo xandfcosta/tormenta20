@@ -894,7 +894,7 @@ func ApplyActiveConditionals(effects ItemEffects, activeIds map[string]bool) Ite
 		if c.Dice != "" {
 			// O DADO NÃO É PARCELA, pela mesma divisa do fator: ele vai para a
 			// carta da arma, que sabe rolá-lo, e não para um balde que soma.
-			extra = append(extra, ExtraDamage{Dice: c.Dice, Type: c.Target.DamageType})
+			extra = append(extra, ExtraDamage{Dice: c.Dice, Type: c.Target.DamageType, Scope: c.Target.Scope})
 			continue
 		}
 		if c.Factor != nil {

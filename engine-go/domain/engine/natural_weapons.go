@@ -100,7 +100,6 @@ func usedThisScene(ch Character, grantedID string) bool {
 }
 
 func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
-	none := TotalContribs{Contributions: []BreakdownContribution{}}
 	cards := []WeaponCard{}
 	for _, owned := range r.naturalWeaponsOf(ch, false) {
 		natural := owned.weapon
@@ -112,7 +111,7 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
 		scopes = append(scopes, WeaponDamageScope(owned.sourceID))
-		card := b.card(ch, natural.Name, w, scopes, none, owned.steps, false)
+		card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
 		card.Natural = &NaturalStrike{
 			SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1),
 		}
