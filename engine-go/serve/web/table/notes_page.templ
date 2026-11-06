@@ -1,0 +1,32 @@
+package table
+
+import "fmt"
+
+// A PÁGINA DAS NOTAS (ALE-218) — a mesma superfície, sem o mapa em volta. Era
+// a janela à parte de uma coluna; com a coluna das Consultas fora da mesa
+// (ALE-608), é o único lugar das notas, e o cabeçalho a abre em outra aba.
+//
+// O corpo é o `notesBody`, e a faixa de modos é a `modesRange`.
+//
+// É CENA, e não o nó movido, porque nó adotado por outro documento perde o Datastar.
+//
+// O que ela NÃO tem, e cada ausência é uma decisão:
+//
+//   - a DIVISA de largura, porque quem redimensiona a aba é o navegador;
+//   - o ✕ de fechar, porque fechar é o botão da aba — e um segundo jeito de
+//     fechar teria de decidir o que fazer com a aba em volta.
+templ notesPageBody(v View) {
+	<section
+		id="notes-page"
+		aria-label="Notas da sessão"
+		data-init={ seedNotesPage(v) }
+		class="ds-session ds-notes-page"
+	>
+		<header class="ds-notes-head">
+			<h1 class="ds-sheet-name">{ fmt.Sprintf("Notas · Sessão %d", v.SessionNum) }</h1>
+			@modesRange()
+			@autosaveState()
+		</header>
+		@notesBody(v)
+	</section>
+}

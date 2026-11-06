@@ -174,7 +174,7 @@ func listCommand(v View, list string, index int) string {
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v View) string {
-	return fmt.Sprintf("@post('%s/elenco/npc/rascunho/salvar')", v.SessionBase())
+	return fmt.Sprintf("@post('%s/elenco/npc/rascunho/salvar%s')", v.SessionBase(), v.pageMark())
 }
 
 // onTabExpr é a condição que mostra uma aba. Escrita aqui e não no `.templ` porque o

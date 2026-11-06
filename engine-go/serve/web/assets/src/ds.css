@@ -3177,6 +3177,68 @@
     height: 1rem;
     color: var(--ds-ink-2);
   }
+  /* AS PÁGINAS À PARTE (ALE-608): soltas no cabeçalho a partir de 64rem, que é
+   * onde a mesa do mestre troca de leiaute, e num menu "Ferramentas" abaixo. */
+  .ds-gm-side,
+  .ds-gm-side-wide {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ds-gm-side-wide {
+    display: none;
+  }
+  .ds-gm-side .ds-button > .ds-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+  a.ds-gm-menu-row {
+    text-decoration: none;
+  }
+  a.ds-gm-menu-row:hover {
+    background: var(--ds-sunk);
+  }
+  /* O menu do cabeçalho não está sobre o mapa, e não herda a superfície do
+   * cromo do tabuleiro (`.ds-board-float`): ela é escrita aqui. */
+  .ds-gm-side-menu {
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-r-surface);
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    box-shadow: 0 8px 24px #0002;
+  }
+  .ds-gm-side-row {
+    grid-template-columns: minmax(0, 1fr) 1rem;
+    min-width: 17rem;
+    padding: 0.25rem 0.75rem;
+  }
+  .ds-gm-side-row b {
+    display: block;
+    font-weight: 600;
+  }
+  @media (min-width: 64rem) {
+    .ds-gm-side-wide {
+      display: inline-flex;
+    }
+    .ds-gm-side-narrow {
+      display: none;
+    }
+  }
+  /* A PÁGINA À PARTE é uma coluna centrada sobre o fundo da cena: a busca presa
+   * no topo leva o mesmo fundo, e não o da superfície, para não virar uma faixa
+   * de outra cor. */
+  .ds-gm-page {
+    --ds-filter-stick: 0;
+    --ds-filter-above: 0.5rem;
+    --ds-filter-bg: var(--ds-bg);
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+    width: 100%;
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 1rem;
+  }
   .ds-gm-menu-sep {
     height: 1px;
     margin: 0.25rem;
@@ -3309,11 +3371,11 @@
     }
   }
 
-  /* A MESA DO MESTRE (ALE-522), pelo mockup `mestre.html`. No celular, a fila,
-   * o tabuleiro e as consultas são superfícies da barra de baixo, com a linha do
-   * turno logo acima dela; no desktop as três ficam lado a lado, e a fila e as
-   * consultas recolhem numa faixa estreita. O `!important` do desktop vence o
-   * `display:none` que o `data-show` escreve no estilo do nó. */
+  /* A MESA DO MESTRE (ALE-522), enxuta pela ALE-608. No celular, a fila e o
+   * tabuleiro são superfícies da barra de baixo, com a linha do turno logo
+   * acima dela; no desktop as duas ficam lado a lado, e a fila recolhe numa
+   * faixa estreita. O `!important` do desktop vence o `display:none` que o
+   * `data-show` escreve no estilo do nó. */
   .ds-gm-grid {
     display: flex;
     flex: 1;
@@ -3536,21 +3598,6 @@
     border-top: 1px solid var(--ds-line);
   }
 
-  /* AS CONSULTAS DO MESTRE (ALE-522, fatia 3). A cabeça leva as abas e o
-   * recolher; ela aparece nas duas larguras, ao contrário da `.ds-gm-col-head`,
-   * porque no celular as abas são a única navegação entre as quatro. */
-  .ds-gm-consult-head {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0 0.25rem 0 0.75rem;
-    border-bottom: 1px solid var(--ds-line);
-  }
-  .ds-gm-consult-tabs {
-    flex: 1;
-    gap: 1rem;
-    border-bottom: 0;
-  }
   .ds-tabs > button {
     flex: none;
     display: inline-flex;
@@ -3574,26 +3621,7 @@
     font-weight: 600;
     border-color: var(--ds-action);
   }
-  /* A busca e os filtros de cada aba ficam presos no topo de quem rola. */
-  .ds-gm-consult {
-    --ds-filter-stick: -0.75rem;
-    --ds-filter-above: 0.75rem;
-    --ds-filter-bg: var(--ds-surface);
-    display: flex;
-    flex: 1;
-    min-height: 0;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-  .ds-gm-notes {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .ds-notes-window {
+  .ds-notes-page {
     gap: 0.75rem;
     padding: 0.75rem;
     container-type: inline-size;
@@ -3661,30 +3689,6 @@
   .ds-note-error {
     color: var(--ds-danger);
   }
-  .ds-gm-notes-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  /* O CADERNO lê por padrão e escreve ao toque: as duas metades ocupam a
-   * coluna inteira, uma de cada vez. */
-  .ds-gm-notes-read {
-    flex: 1;
-    min-height: 16rem;
-    padding: 0.75rem;
-    border: 1px solid transparent;
-    border-radius: var(--ds-r-control);
-    cursor: text;
-  }
-  .ds-gm-notes-read:hover {
-    border-color: var(--ds-line);
-  }
-  .ds-gm-notes-pending {
-    color: var(--ds-ink-2);
-    font-size: var(--ds-t-sm);
-    white-space: pre-wrap;
-  }
   .ds-gm-notes-text {
     flex: 1;
     height: auto;
@@ -3699,14 +3703,6 @@
     display: grid;
     gap: 0.125rem;
     min-width: 0;
-  }
-  .ds-gm-notes-head > [aria-live] {
-    margin-left: auto;
-  }
-  .ds-gm-notes-body {
-    display: flex;
-    flex: 1;
-    min-height: 16rem;
   }
   .ds-gm-member,
   .ds-gm-npc {
@@ -3815,8 +3811,12 @@
       gap: 1rem;
     }
   }
+  /* NO MÁXIMO TRÊS por fileira, e cada caixa com pelo menos 8rem: o rótulo
+   * "Deslocamento" é a palavra mais larga do bloco, e numa terça parte de 390px
+   * ele saía da caixa com a face um pouco mais larga da primeira pintura. Abaixo
+   * disso a fileira cai para duas, em vez de abreviar o termo do livro. */
   .ds-gm-creature .ds-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(max(8rem, calc((100% - 1rem) / 3)), 1fr));
   }
   .ds-gm-creature-part {
     display: grid;
@@ -4970,50 +4970,20 @@
     }
   }
 
-  /* A JANELA À PARTE é para a segunda tela ou a TV da mesa: no celular não
-   * há segunda tela, e o botão some (decisão do dono). */
-  [data-board-window-opener] {
-    display: none;
-  }
   @media (min-width: 64rem) {
-    [data-board-window-opener] {
-      display: inline-flex;
-    }
     .ds-session-nav.ds-gm-nav {
       display: none;
     }
-    /* AS TRÊS COLUNAS e quem as recolhe. O tabuleiro numa janela à parte
-     * vira faixa também, e a largura dele vai para as Consultas — ou para a
-     * fila, quando as Consultas estão recolhidas. */
+    /* AS DUAS COLUNAS, e a fila recolhe. */
     .ds-gm-grid {
       --gm-queue: 22rem;
-      --gm-board: minmax(0, 1fr);
-      --gm-consults: 19rem;
       display: grid;
-      grid-template-columns: var(--gm-queue) var(--gm-board) var(--gm-consults);
+      grid-template-columns: var(--gm-queue) minmax(0, 1fr);
       gap: 0.75rem;
       padding: 0.75rem;
     }
     .ds-gm-grid.ds-gm-no-queue {
       --gm-queue: 3rem;
-    }
-    .ds-gm-grid.ds-gm-no-consults {
-      --gm-consults: 3rem;
-    }
-    .ds-gm-grid.ds-gm-board-away {
-      --gm-board: 3rem;
-      --gm-consults: minmax(0, 1fr);
-    }
-    .ds-gm-grid.ds-gm-board-away.ds-gm-no-consults {
-      --gm-queue: minmax(0, 1fr);
-      --gm-consults: 3rem;
-    }
-    .ds-gm-grid.ds-gm-board-away.ds-gm-no-consults.ds-gm-no-queue {
-      --gm-queue: 3rem;
-      --gm-board: minmax(0, 1fr);
-    }
-    .ds-gm-board-away > [data-gm-col='board'] {
-      display: none !important;
     }
     .ds-gm-col {
       display: flex !important;
@@ -5029,16 +4999,13 @@
     .ds-gm-col > .ds-session-scroll > .ds-gm-queue {
       padding: 0;
     }
-    .ds-gm-no-queue > [data-gm-col='queue'],
-    .ds-gm-no-consults > [data-gm-col='consults'] {
+    .ds-gm-no-queue > [data-gm-col='queue'] {
       display: none !important;
     }
     .ds-gm-rail {
       display: none;
     }
-    .ds-gm-no-queue > [data-gm-rail='queue'],
-    .ds-gm-no-consults > [data-gm-rail='consults'],
-    .ds-gm-board-away > [data-gm-rail='board'] {
+    .ds-gm-no-queue > [data-gm-rail='queue'] {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -5067,9 +5034,6 @@
       justify-content: space-between;
       padding: 0.25rem 0.25rem 0.25rem 0.75rem;
       border-bottom: 1px solid var(--ds-line);
-    }
-    .ds-gm-col[data-gm-col='consults'] {
-      flex-direction: column;
     }
   }
 
@@ -5226,6 +5190,51 @@
   }
   .ds-board-foot > * {
     pointer-events: auto;
+  }
+  /* A TELA DA MESA (ALE-608): o mapa ocupa o display inteiro e não responde a
+   * nada. INERTE pela folha e não só por não ter botão: a cena traz as camadas
+   * de clique e o arrasto da janela, e um toque no display aberto com a sessão
+   * do mestre postaria como o mestre. */
+  .ds-display {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    background: var(--ds-bg);
+  }
+  .ds-display-board {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+  .ds-display .board-scene {
+    pointer-events: none;
+  }
+  /* O INTERRUPTOR no pé do tabuleiro do mestre. Os cantos acompanham os do
+   * botão de dentro, com a mesma folga em volta. */
+  .ds-gm-display {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    max-width: 100%;
+    padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+    border: 1px solid var(--ds-line);
+    border-radius: calc(var(--ds-r-control) + 0.375rem);
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    font-size: var(--ds-t-sm);
+    box-shadow: 0 6px 18px #0003;
+  }
+  .ds-gm-display-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    background: var(--ds-good);
+  }
+  .ds-gm-display-dot[data-frozen] {
+    background: var(--ds-warn);
   }
   .ds-board-tools {
     bottom: 0.5rem;

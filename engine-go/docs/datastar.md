@@ -49,6 +49,17 @@ handler inteiro vira nada, inclusive o que já funcionava. Use
 `if (…) { … } else { … }`. E **`setPointerCapture` vai por ÚLTIMO**: ele LANÇA
 com o ponteiro inativo, e no meio engole o resto do gesto.
 
+**No `data-on-signal-patch`, a ÚLTIMA instrução é expressão, nunca `if`**: medido
+na ALE-608, `const r = …; if (r) { @post(…) }` ali é `SyntaxError: Unexpected
+token 'if'` no console e o ouvinte nasce morto, enquanto o mesmo texto no
+`data-init` do lado roda. Escreva o fim como `r && @post(…)`.
+
+**E para SEGUIR um sinal que o arrasto escreve, use `data-effect`**, que lê os
+sinais e reage como o `data-attr:style`: na mesma medição, o
+`data-on-signal-patch` com filtro disparou no zoom e calou no arrasto da vista,
+com a janela andando 260px e nenhum pedido saindo. O adiamento vai à mão, num
+temporizador no próprio nó (ver o `followsFraming`).
+
 ### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
 
 Onde a decisão é do navegador, o stream da mesa escreve num SINAL
@@ -165,7 +176,7 @@ Uma janela própria (Document Picture-in-Picture, `<iframe>`) que pega o nó viv
 com `appendChild` leva classes, texto e `data-*`, **mas não a reatividade**: o
 runtime observa o documento de origem. Sem exceção, sem console, tela perfeita.
 **Superfície que vai para janela própria é CENA com endereço**, com o runtime
-dela (ver o cabeçalho do `notes_window.templ`).
+dela (ver o cabeçalho do `notes_page.templ`).
 
 ## Onde a coordenada de um gesto do tabuleiro viaja
 

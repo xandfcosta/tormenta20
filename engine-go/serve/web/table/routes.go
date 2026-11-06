@@ -48,6 +48,8 @@ func Routes(r chi.Router, s Scene) {
 	r.Post(sessionPattern+"/sangramento/{die}", s.handleBleedingRoll)
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
+	s.SidePageRoutes(r)
+	s.DisplayRoutes(r)
 	s.MoveRoutes(r)
 	s.MovePreviewRoutes(r)
 	s.RulerRoutes(r)
@@ -101,7 +103,6 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view.MySheet = s.tablePlayerSheet(r, view)
-	view.dressBoardWindow(r)
 	stream := streamOfPage(view)
 	// A página é um retrato de agora, e o `WritePage` já a manda `no-store`:
 	// guardá-la serviria uma fila velha.
@@ -117,7 +118,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		// observador de mutação sobre o tabuleiro não tem o que fazer na ficha
 		// nem na porta. É a mesma divisão que o leitor do livro já usa.
 		Scripts: []string{s.deps.Asset("table.js")},
-	}, s.tableBody(r, view, campaignID, sessionID))
+	}, tableBody(view))
 }
 
 // tableSignalsExpr é o estado que mora no NAVEGADOR, agrupado por superfície.
@@ -226,7 +227,9 @@ func tableSignalsExpr(revision string) string {
 		"new_name: '', new_initiative: 10, new_hp: 0, new_type: 'npc'",
 		"edit_row: '', edit_name: '', edit_initiative: 0, edit_hp: 0, edit_hp_max: 0",
 		// O BESTIÁRIO e o elenco.
-		"draft_of: '', entry_hp: 0, entry_initiative: 10, entry_copies: 1, npc_name: ''",
+		// `entry_sent` é a frase do Pôr na fila, escrita pelo servidor: a fila
+		// está noutra aba, e sem ela o clique não teria resposta.
+		"draft_of: '', entry_hp: 0, entry_initiative: 10, entry_copies: 1, npc_name: '', entry_sent: ''",
 		// O EDITOR DE BLOCO. O `rascunho` nasce com a FORMA inteira e não vazio,
 		// e isso não é enfeite: `data-bind` num caminho que ainda não existe liga
 		// um sinal NOVO em vez de escrever no de baixo, e o campo ficaria mudo
@@ -266,12 +269,6 @@ func tableSignalsExpr(revision string) string {
 			shapeStartsAtIntersection(bookShapes[0])),
 		"template_x: 0, template_y: 0, template_aim_x: 0, template_aim_y: 0, template_phase: 0",
 		fmt.Sprintf("template_path: '', template_text: %q", emptyTemplateHint),
-		// As NOTAS da sessão.
-		"notes: '', notes_saved: '', notes_mode: 'duplo'",
-		// `notes_window` é o LUGAR das notas quando ele não é esta aba: verdadeiro
-		// enquanto a janela própria estiver com elas. Quem o escreve é o
-		// `storage`, e não o clique — ver `watchesTheNotesWindow`.
-		"notes_saving: false, notes_error: '', notes_window: false",
 		// A versão com que a página nasceu, e a que o fluxo diz. Ver `new_version.go`.
 		buildSignals(revision),
 	}, ", ") + "}"
@@ -289,15 +286,12 @@ func tableSignalsExpr(revision string) string {
 // combatente para manter em dia seria o defeito; duas ARRUMAÇÕES da mesma lista
 // não é.
 //
-// O painel do bestiário só nasce para quem pode abri-lo: não é a tela que
-// esconde, é a página que não o tem. Mandá-lo para todo mundo e escondê-lo por
-// CSS entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
-func (s Scene) tableBody(r *http.Request, view View, campaignID, sessionID int64) templ.Component {
-	if view.BoardWindow {
-		return gmBoardWindow(view)
-	}
+// O bestiário não está em nenhuma das duas: ele mora na página dele, que só o
+// mestre abre (`handleSidePage`). Mandá-lo para todo mundo e escondê-lo por CSS
+// entregaria as criaturas com PV e defesa a quem abrisse o inspetor.
+func tableBody(view View) templ.Component {
 	if view.GM != nil {
-		return gmTempestadeScene(view, s.forTableBestiary(r, campaignID, sessionID))
+		return gmTempestadeScene(view)
 	}
 	return tempestadeTableScene(view)
 }
@@ -435,6 +429,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		r := ofViewGm(st, members, present, true)
 		view.GM = &r
+		view.Display = s.displays.StateOf(sessionID)
 	}
 	return view, http.StatusOK, nil
 }

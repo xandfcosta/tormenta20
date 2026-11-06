@@ -1,7 +1,6 @@
 package table
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -21,11 +20,11 @@ import (
 // na mão — o botão escondido é cortesia para quem não pode, nunca a segurança.
 
 func (s Scene) RoutesNote(r chi.Router) {
-	base := sessionPattern + "/notas"
+	base := sessionPattern + "/" + notesPath
 	// O MESMO endereço serve a CENA e o comando. Não é economia de rota: a
-	// janela própria existe para o mestre pôr as notas no segundo monitor, e um
-	// endereço que ele possa favoritar é metade do que isso significa.
-	r.Get(base, s.notesWindowPage)
+	// página das notas abre em outra aba, às vezes no segundo monitor, e um
+	// endereço que o mestre possa favoritar é metade do que isso significa.
+	r.Get(base, s.notesPage)
 	r.Post(base, s.saveNoteSession)
 	r.Post(base+"/tarefa/{linha}/{estado}", s.toggleTask)
 }
@@ -171,23 +170,6 @@ func (s Scene) respondNotes(
 
 // ── as expressões que o Datastar executa ────────────────────────────────────
 
-// seedNotes põe na página o que o servidor sabe, UMA vez.
-//
-// O texto é serializado por `json.Marshal` e não concatenado à mão: uma aspa ou
-// uma quebra de linha na nota fecharia a expressão e derrubaria a página
-// inteira — e nota de mesa é feita de aspas e quebras de linha.
-func seedNotes(v View) string {
-	text, err := json.Marshal(v.Notes)
-	if err != nil {
-		text = []byte(`""`)
-	}
-	return fmt.Sprintf(
-		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; "+
-			"$notes_window = localStorage.getItem('%s') === '%d'",
-		text, text, notesModeKey, notesWindowKey, v.SessionID,
-	)
-}
-
 // notesModeKey guarda o arranjo escolhido: é preferência de trabalho, e o mestre
 // não deve reescolher a cada sessão.
 const notesModeKey = "t20:notas-view"
@@ -198,10 +180,14 @@ func pickNotesMode(value string) string {
 
 // notesAddress é o endereço das notas desta sessão, e ele tem UM lugar: três
 // grafias do mesmo caminho é como nasce a quarta que diverge — e o `@post` tem
-// guarda de endereço, mas o `window.open` não tem.
+// guarda de endereço, mas o `href` do cabeçalho não tem.
 func notesAddress(v View) string {
-	return v.SessionBase() + "/notas"
+	return sidePageAddress(v, notesPath)
 }
+
+// notesPath é o pedaço do endereço das notas depois da sessão: a rota, o
+// salvar e o elo do cabeçalho o leem daqui.
+const notesPath = "notas"
 
 func saveNotes(v View) string {
 	return fmt.Sprintf("@post('%s')", notesAddress(v))
@@ -215,6 +201,10 @@ func toggleTaskNote(v View, t markdown.Task) string {
 	return fmt.Sprintf("@post('%s/tarefa/%d/%s')", notesAddress(v), t.Row, state)
 }
 
+// marked devolve a STRING e não o booleano: o `data-attr` do Datastar trata
+// valor booleano como ATRIBUTO BOOLEANO, e um `aria-checked=""` não anuncia
+// estado nenhum. Aqui o valor é escrito direto no HTML, mas a palavra é a mesma
+// pela mesma razão.
 func marked(checked bool) string {
 	if checked {
 		return "true"

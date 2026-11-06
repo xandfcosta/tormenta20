@@ -36,6 +36,7 @@
       { "address": "/mestre/magias?circulo=1", "session": "gm" },
       { "address": "/mestre/deuses", "session": "gm" },
       { "address": "/mestre/bestiario", "session": "gm" },
+      { "address": "/mestre/bestiario?criatura=ogro&abrir=1", "session": "gm" },
       { "address": "/mestre/encontros?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4", "session": "gm" },
       { "address": "/mestre/encontros?nivel=5&grupo=4&c=ogro:2", "session": "gm" },
       { "address": "/mestre/encontros?nivel=6&grupo=4&c=ogro:2", "session": "gm" },
@@ -50,7 +51,11 @@
   "table": {
     "visits": [
       { "address": "/campanhas/1/sessoes/4", "session": "gm" },
-      { "address": "/campanhas/1/sessoes/4", "session": "player" }
+      { "address": "/campanhas/1/sessoes/4", "session": "player" },
+      { "address": "/campanhas/1/sessoes/4/notas", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4/grupo", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4/elenco", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4/bestiario?criatura=ogro&abrir=1", "session": "gm" }
     ]
   },
   "admin": { "visits": [{ "address": "/admin", "session": "gm" }] },

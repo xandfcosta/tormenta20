@@ -52,7 +52,7 @@ func TestTheSheetInTheSessionDoesNotNavigateOutOfIt(t *testing.T) {
 	}
 }
 
-// Ele tem as SUAS superfícies — Fila, Tabuleiro e Consultas —, e não o
+// Ele tem as SUAS superfícies — Fila e Tabuleiro —, e não o
 // seletor do jogador.
 func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	f := newSceneFixture(t)

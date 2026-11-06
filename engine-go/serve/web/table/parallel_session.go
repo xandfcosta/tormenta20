@@ -26,17 +26,8 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
 }
 
-// streamOfPage é o fluxo que a página abre. A janela à parte do tabuleiro leva a marca no fluxo, para
-// remendar só o mapa.
+// streamOfPage é o fluxo que a página abre, com a marca da página à parte: o
+// fluxo de uma página remenda só as regiões dela.
 func streamOfPage(view View) string {
-	if view.BoardWindow {
-		return view.SessionBase() + "/fluxo?janela=tabuleiro"
-	}
-	return view.SessionBase() + "/fluxo"
-}
-
-// dressBoardWindow liga a JANELA À PARTE do tabuleiro do mestre (ALE-522): a
-// mesma sessão desenhando só o mapa.
-func (v *View) dressBoardWindow(r *http.Request) {
-	v.BoardWindow = v.GM != nil && r.URL.Query().Get("janela") == "tabuleiro"
+	return view.SessionBase() + "/fluxo" + view.pageMark()
 }

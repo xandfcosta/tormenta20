@@ -38,10 +38,9 @@ func TestTheProneDefenseIsSplitOnTheSheetAndInTheCast(t *testing.T) {
 		t.Errorf("a ficha do caído não partiu a Defesa: %s", "(a caixa de Defesa não trouxe o par)")
 	}
 
-	// E o GRUPO das Consultas do mestre, que é onde ele confere a Defesa de um
-	// jogador para decidir se o ataque acerta — o lugar onde o custo do erro é
-	// maior.
-	onTable := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
+	// E o GRUPO do mestre, que é onde ele confere a Defesa de um jogador para
+	// decidir se o ataque acerta — o lugar onde o custo do erro é maior.
+	onTable := f.requests(t, f.gm, "GET", f.tableUrl()+"/grupo", "").Body.String()
 	if !strings.Contains(onTable, " CaC · ") {
 		t.Errorf("o Grupo do mestre não partiu a Defesa do caído: %s", "(o Grupo não trouxe o par)")
 	}

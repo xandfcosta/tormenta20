@@ -37,13 +37,14 @@ import (
 
 // tableBestiaryRoute é a base das rotas do painel, montada por mesa.
 func tableBestiaryRoute(campaignID, sessionID int64) string {
-	return routes.Session(campaignID, sessionID) + "/bestiario"
+	return routes.Session(campaignID, sessionID) + "/" + string(pageBestiary)
 }
 
 func (s Scene) TableBestiaryRoutes(r chi.Router) {
-	r.Get(sessionPattern+"/bestiario", s.handleBestiaryTable)
-	r.Post(sessionPattern+"/bestiario/tipo/{tipo}", s.handleKindBestiaryTable)
-	r.Post(sessionPattern+"/bestiario/enviar", s.gmCommand(sendsForTable))
+	base := sessionPattern + "/" + string(pageBestiary)
+	r.Get(base, s.handleBestiaryTable)
+	r.Post(base+"/tipo/{tipo}", s.handleKindBestiaryTable)
+	r.Post(base+"/enviar", s.gmCommand(sendsForTable))
 }
 
 // forTableBestiary monta a view do painel para esta mesa.
@@ -60,6 +61,13 @@ func (s Scene) forTableBestiary(r *http.Request, campaignID, sessionID int64) ma
 // busca — e pior, apagaria o que o mestre está digitando, porque o campo vive
 // dentro do painel.
 func (s Scene) handleBestiaryTable(w http.ResponseWriter, r *http.Request) {
+	// O NAVEGADOR que abre o endereço recebe a PÁGINA do Bestiário; o Datastar,
+	// que põe o cabeçalho, recebe o remendo do painel. É a mesma divisão da
+	// cena do mestre (`/mestre/bestiario`).
+	if r.Header.Get("datastar-request") == "" {
+		s.handleSidePage(pageBestiary)(w, r)
+		return
+	}
 	campaignID, sessionID, ok := s.tableGmOrRefusal(w, r)
 	if !ok {
 		return
@@ -153,6 +161,8 @@ func (s Scene) handleKindBestiaryTable(w http.ResponseWriter, r *http.Request) {
 // O `monsterId` viaja junto porque é ele que liga a linha ao verbete do livro, e
 // é o que faz o painel do combatente mostrar o bloco depois.
 func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	// A frase do acerto anterior sai já — ver o `putNpcTracker`.
+	c.Signals["entry_sent"] = ""
 	send, err := envioDosSinais(c.R)
 	if err != nil {
 		return nil, err
@@ -187,7 +197,16 @@ func sendsForTable(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 			return state, err
 		}
 	}
+	c.Signals["entry_sent"] = entrySentPhrase(send.Copies, m.Name)
 	return state, nil
+}
+
+// entrySentPhrase é o que a página do Bestiário diz depois do Pôr na fila.
+func entrySentPhrase(copies int, name string) string {
+	if copies == 1 {
+		return name + " entrou na fila."
+	}
+	return fmt.Sprintf("%d × %s entraram na fila.", copies, name)
 }
 
 // maxCopiasDeUmVerbete é o teto de cópias num gesto.

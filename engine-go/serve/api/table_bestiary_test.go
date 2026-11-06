@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -85,7 +86,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	panel := f.tableUrl() + "/bestiario"
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
-	opened := f.requests(t, f.gm, http.MethodGet, panel+signals(`{"creature":"zumbi","draft_of":""}`), "").Body.String()
+	opened := f.datastarGet(t, f.gm, panel+signals(`{"creature":"zumbi","draft_of":""}`))
 	if !strings.Contains(trechoDeSinais(opened), `"entry_hp":20`) {
 		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(opened))
 	}
@@ -95,8 +96,8 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 
 	// Segunda visita à MESMA criatura, agora com o rascunho já sendo dela: é o
 	// que acontece a cada tecla da busca, e não pode semear nada.
-	again := f.requests(t, f.gm, http.MethodGet,
-		panel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`), "").Body.String()
+	again := f.datastarGet(t, f.gm,
+		panel+signals(`{"creature":"zumbi","search":"zu","draft_of":"zumbi"}`))
 	// O CONTROLE: o painel FOI redesenhado, senão "não semeou" seria só "não
 	// respondeu".
 	if !strings.Contains(again, "table-bestiary") {
@@ -140,7 +141,19 @@ func TestTheTableBestiaryBelongsToTheGm(t *testing.T) {
 			t.Errorf("o HTML do jogador veio com %q", mark)
 		}
 	}
-	if forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(forGM, "table-bestiary") {
-		t.Error("o mestre não recebeu o painel")
+	if forGM := f.requests(t, f.gm, http.MethodGet, f.tableUrl()+"/bestiario", "").Body.String(); !strings.Contains(forGM, "table-bestiary") {
+		t.Error("o mestre não recebeu o painel na página do Bestiário")
 	}
+}
+
+// datastarGet é o GET que o DATASTAR faz, com o cabeçalho dele: o endereço do
+// Bestiário serve a página ao navegador e o remendo ao Datastar.
+func (f sceneFixture) datastarGet(t *testing.T, userID int64, path string) string {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	req.Header.Set("Authorization", "Bearer "+f.token(t, userID))
+	req.Header.Set("Datastar-Request", "true")
+	rec := httptest.NewRecorder()
+	f.s.WebRouter().ServeHTTP(rec, req)
+	return rec.Body.String()
 }

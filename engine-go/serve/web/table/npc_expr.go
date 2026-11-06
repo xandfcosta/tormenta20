@@ -12,7 +12,7 @@ import (
 // estão as ROTAS e o que decide, aqui está o que a tela dispara.
 
 func npcCommand(v View, npc castNpc, action string) string {
-	return fmt.Sprintf("@post('%s/elenco/npc/%d/%s')", v.SessionBase(), npc.ID, action)
+	return fmt.Sprintf("@post('%s/elenco/npc/%d/%s%s')", v.SessionBase(), npc.ID, action, v.pageMark())
 }
 
 // saveToCastPost LIMPA o campo do nome depois de postar, e isso não é
@@ -32,5 +32,5 @@ func npcCommand(v View, npc castNpc, action string) string {
 // notas teve por nascer de uma view sintética.
 func saveToCastPost(v master.BestiaryView) string {
 	base := strings.TrimSuffix(v.BestiaryBase(), "/bestiario")
-	return fmt.Sprintf("@post('%s/elenco/npc/do-verbete'); $npc_name = ''", base)
+	return fmt.Sprintf("@post('%s/elenco/npc/do-verbete%s'); $npc_name = ''", base, bestiaryPageMark)
 }

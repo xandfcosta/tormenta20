@@ -160,7 +160,7 @@ func TestThePatchedPreviewCarriesTheTableIds(t *testing.T) {
 // qualquer um pode digitar — e as notas da sessão não são do jogador. O guarda
 // existe porque uma cena NOVA não herda a trava de ninguém: a do `notesCommand`
 // protege o POST, e o GET nasceu com a sua própria.
-func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
+func TestTheNotesPageIsTheGmsAlone(t *testing.T) {
 	f := newSceneFixture(t)
 	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# O que o jogador não vê"}`)
 
@@ -179,17 +179,17 @@ func TestTheNotesWindowIsTheGmsAlone(t *testing.T) {
 }
 
 // Três coisas na mesma asserção, e nenhuma é redundante: a cena traz o TEXTO
-// (senão a janela abre vazia sobre uma nota que existe), traz a PRÉVIA já
+// (senão a página abre vazia sobre uma nota que existe), traz a PRÉVIA já
 // desenhada (é o markdown, não o cru), e traz o endereço de SALVAR com os ids
 // certos — a mesma armadilha do `TestThePatchedPreviewCarriesTheTableIds`.
-func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
+func TestTheNotesPageDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 	f := newSceneFixture(t)
 	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\nO ogro **fugiu**"}`)
 
 	rec := f.requests(t, f.gm, "GET", f.tableUrl()+"/notas", "")
 
 	if rec.Code != 200 {
-		t.Fatalf("a janela das notas respondeu %d", rec.Code)
+		t.Fatalf("a página das notas respondeu %d", rec.Code)
 	}
 	body := rec.Body.String()
 	if !strings.Contains(body, "O ogro **fugiu**") {
@@ -199,39 +199,13 @@ func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 		t.Errorf("a prévia não veio desenhada: o markdown chegou cru")
 	}
 	if !strings.Contains(body, f.tableUrl()+"/notas") {
-		t.Errorf("a janela não sabe para onde salvar — o endereço com os ids não está no HTML")
+		t.Errorf("a página não sabe para onde salvar — o endereço com os ids não está no HTML")
 	}
 }
 
-// As duas escrevem a MESMA coluna `sessions.notes`, e o autosave é de 1,2 s:
-// com as duas abertas, quem salvar por último apaga o parágrafo do outro sem
-// aviso, com as duas faixas dizendo "Salvo". A exclusão é um pacto entre
-// documentos, e o que este guarda prende é a METADE que o servidor desenha —
-// a janela ANUNCIA que tomou, e a Mesa ESCUTA.
-//
-// Ele afirma a chave literal de propósito: as duas pontas a escrevem em
-// arquivos diferentes, e um renome que alcançasse só uma quebraria a exclusão
-// sem quebrar compilação nenhuma. É a mesma forma dos sete canais de um sinal.
-func TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes(t *testing.T) {
-	f := newSceneFixture(t)
-
-	window := f.requests(t, f.gm, "GET", f.tableUrl()+"/notas", "").Body.String()
-	table := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
-
-	if !strings.Contains(window, "t20:notas-janela") {
-		t.Errorf("a janela não anuncia que tomou as notas: a coluna não teria como fechar")
-	}
-	if !strings.Contains(window, "pagehide") {
-		t.Errorf("a janela não devolve as notas ao fechar: a coluna ficaria trancada para sempre")
-	}
-	if !strings.Contains(table, "storage") || !strings.Contains(table, "t20:notas-janela") {
-		t.Errorf("a Mesa não escuta o anúncio da janela: as duas caixas ficariam vivas juntas")
-	}
-}
-
-// A janela veste o Tempestade, e o Lado a lado precisa da regra que abre as duas colunas: a folha
+// A página veste o Tempestade, e o Lado a lado precisa da regra que abre as duas colunas: a folha
 // antiga não a tinha mais, e o modo empilhava sem nada acusar.
-func TestTheNotesWindowWearsTheNewSystem(t *testing.T) {
+func TestTheNotesPageWearsTheNewSystem(t *testing.T) {
 	f := newSceneFixture(t)
 	f.posts(t, f.gm, f.tableUrl()+"/notas", `{"notes":"# Cena 1\n- [x] O ogro **fugiu**\n> voltarei"}`)
 
@@ -239,7 +213,7 @@ func TestTheNotesWindowWearsTheNewSystem(t *testing.T) {
 
 	for _, want := range []string{"scene-ds", "ds-segmented", "ds-notes-layout", "ds-note-title", "ds-note-quote", "ds-gm-notes-text"} {
 		if !strings.Contains(page, want) {
-			t.Errorf("a janela de notas não traz %q", want)
+			t.Errorf("a página das notas não traz %q", want)
 		}
 	}
 	css, err := os.ReadFile("../web/assets/src/ds.css")

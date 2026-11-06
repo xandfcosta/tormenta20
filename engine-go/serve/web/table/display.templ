@@ -1,0 +1,70 @@
+package table
+
+import (
+	"t20engine/serve/web/ds"
+)
+
+// A TELA DA MESA (ALE-608) — ver o `display.go`.
+
+// displayPage é a tela inteira: só o tabuleiro, sem controle nenhum. O
+// encaixe do recorte roda quando o recorte muda e quando a janela muda de
+// tamanho — a TV pode ser girada, o navegador pode sair da tela cheia.
+templ displayPage(v displayView) {
+	<main id="display" class="ds-display" data-effect={ displayFits } data-on:resize__window={ displayFits }>
+		@displayRegion(v)
+	</main>
+}
+
+// displayRegion é a região que o fluxo da tela remenda. O recorte viaja num
+// `data-signals` DELA, e é de propósito: ele reinicializa a cada remendo, e o
+// recorte é exatamente o que o servidor acabou de mandar.
+templ displayRegion(v displayView) {
+	<div id="table-display" class="ds-display-board" data-signals={ displayFramingSignals(v.Framing) }>
+		@displayBoard(v.Board)
+	</div>
+}
+
+// displayBoard é o mapa como a mesa o vê, ou a frase de quem espera — as
+// mesmas duas frases da sessão do jogador, porque é a mesma mesa olhando.
+templ displayBoard(b BoardView) {
+	if !b.Open {
+		<div class="ds-board-waiting">
+			@ds.Empty("O mestre ainda não abriu um tabuleiro.", "Quando ele abrir, o mapa aparece aqui.")
+		</div>
+	} else if b.Curtain {
+		<section class="ds-board-waiting" aria-label="Cortina">
+			@ds.Empty("O mestre está montando a cena.", "O mapa aparece quando ele abrir a cortina.")
+		</section>
+	} else {
+		<section class="ds-board" aria-label={ "Tabuleiro · " + b.Place }>
+			@boardScene(b, "ds-board-scene") {
+				<span class="ds-board-float ds-board-place">{ b.Place }</span>
+			}
+		</section>
+	}
+}
+
+// gmDisplaySwitch é o interruptor no tabuleiro do MESTRE, e ele só existe com
+// uma tela da mesa aberta: sem display, "segue este tabuleiro" seria uma
+// frase falsa. Junto vem quem MANDA o recorte — também só com a tela aberta,
+// porque sem ela cada arrasto do mapa seria um pedido que ninguém lê.
+templ gmDisplaySwitch(v View) {
+	if v.Display.Watching {
+		<div class="ds-gm-display" role="status">
+			if v.Display.Frozen {
+				<span class="ds-gm-display-dot" data-frozen aria-hidden="true"></span>
+				<span><b>Tela da mesa congelada</b> · a mesa vê o tabuleiro de { v.Display.FrozenAt }</span>
+				@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": thawCommand(v)}) {
+					Soltar
+				}
+			} else {
+				<span class="ds-gm-display-dot" aria-hidden="true"></span>
+				<span><b>Tela da mesa ao vivo</b> · segue este tabuleiro</span>
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": freezeCommand(v)}) {
+					Congelar
+				}
+			}
+			<span hidden data-effect={ followsFraming(v) }></span>
+		</div>
+	}
+}

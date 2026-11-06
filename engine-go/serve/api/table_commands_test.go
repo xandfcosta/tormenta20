@@ -638,7 +638,8 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 
 	// Fora da mesa primeiro, que é o estado de nascença: sem esta metade, "vi
 	// 'na mesa'" não distinguiria a ligação certa de uma frase fixa.
-	body := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	// O mestre vê o cartão na página do GRUPO (ALE-608), que é onde ele mora.
+	body := f.requests(t, f.gm, http.MethodGet, f.tableUrl()+"/grupo", "").Body.String()
 	if !strings.Contains(body, "fora da mesa") {
 		t.Fatalf("o mestre não viu a presença do grupo com ninguém conectado")
 	}
@@ -650,7 +651,7 @@ func TestBothTheGmAndThePlayerSeeWhoIsAtTheTable(t *testing.T) {
 		UserID: f.player, Name: "Jogador", Role: "player",
 	})
 
-	body = f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	body = f.requests(t, f.gm, http.MethodGet, f.tableUrl()+"/grupo", "").Body.String()
 	if !strings.Contains(body, "na mesa") || strings.Contains(body, "fora da mesa") {
 		t.Error("o dono do personagem entrou e o cartão dele não acendeu")
 	}
