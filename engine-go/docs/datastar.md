@@ -49,6 +49,12 @@ handler inteiro vira nada, inclusive o que já funcionava. Use
 `if (…) { … } else { … }`. E **`setPointerCapture` vai por ÚLTIMO**: ele LANÇA
 com o ponteiro inativo, e no meio engole o resto do gesto.
 
+**No `data-on-signal-patch`, a ÚLTIMA instrução é expressão, nunca `if`**: medido
+na ALE-608, `const r = …; if (r) { @post(…) }` ali é `SyntaxError: Unexpected
+token 'if'` no console e o ouvinte nasce morto, enquanto o mesmo texto no
+`data-init` do lado roda. Escreva o fim como `r && @post(…)` (ver o
+`sendsFraming`).
+
 ### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
 
 Onde a decisão é do navegador, o stream da mesa escreve num SINAL

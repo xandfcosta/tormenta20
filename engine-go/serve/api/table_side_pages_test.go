@@ -13,7 +13,8 @@ import (
 
 // AS PÁGINAS À PARTE DO MESTRE (ALE-608): a mesa enxuta fica com a fila, o
 // tabuleiro e a linha do turno, e o que era a coluna das Consultas abre cada um
-// numa aba do navegador — Notas, Grupo, Elenco e Bestiário.
+// numa aba do navegador — Notas, Grupo, Elenco e Bestiário —, ao lado da TELA
+// DA MESA, que é o tabuleiro para o display grande.
 
 // sidePages são as páginas que o cabeçalho abre, com o rótulo do botão e o
 // pedaço do endereço depois da sessão.
@@ -22,6 +23,7 @@ var sidePages = []struct{ Label, Path string }{
 	{"Grupo", "grupo"},
 	{"Elenco", "elenco"},
 	{"Bestiário", "bestiario"},
+	{"Tela da mesa", "tela"},
 }
 
 func gmTableDoc(t *testing.T, f sceneFixture) *html.Node {

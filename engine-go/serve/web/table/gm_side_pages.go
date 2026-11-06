@@ -40,14 +40,15 @@ type sidePageLink struct {
 	Label, Path, Hint string
 }
 
-// sidePageLinks são as páginas na ordem do cabeçalho. As NOTAS não são uma
-// `sidePage`: a cena delas já existia (`notesWindowPage`), com uma view mínima,
-// e não precisa da mesa inteira para desenhar uma caixa de texto.
+// sidePageLinks são as páginas na ordem do cabeçalho. As NOTAS e a TELA DA
+// MESA não são `sidePage`: cada uma tem a cena dela (`notesWindowPage`,
+// `handleDisplayPage`), com uma view mínima, e não precisa da mesa inteira.
 var sidePageLinks = []sidePageLink{
 	{"Notas", notesPath, "o texto da sessão"},
 	{"Grupo", string(pageGroup), "quem está na mesa, PV e PM"},
 	{"Elenco", string(pageCast), "os NPCs da campanha"},
 	{"Bestiário", string(pageBestiary), "as criaturas do livro"},
+	{"Tela da mesa", displayPath, "o tabuleiro para o display grande"},
 }
 
 // SidePageFor traduz o nome da marca na página, e devolve a mesa para o que

@@ -49,6 +49,7 @@ func Routes(r chi.Router, s Scene) {
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.SidePageRoutes(r)
+	s.DisplayRoutes(r)
 	s.MoveRoutes(r)
 	s.MovePreviewRoutes(r)
 	s.RulerRoutes(r)
@@ -428,6 +429,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		r := ofViewGm(st, members, present, true)
 		view.GM = &r
+		view.Display = s.displays.StateOf(sessionID)
 	}
 	return view, http.StatusOK, nil
 }

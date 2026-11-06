@@ -54,10 +54,13 @@ type View struct {
 	// Page é a PÁGINA À PARTE do mestre que esta view desenha, ou a mesa
 	// (vazio). Ela decide as regiões do fluxo e da resposta de um comando —
 	// ver `gm_side_pages.go`.
-	Page  sidePage
-	Group []Member
-	Queue []tableRow
-	Eu    *tableMe
+	Page sidePage
+	// Display é o que o tabuleiro do MESTRE sabe da tela da mesa: se há uma
+	// aberta e se está congelada. Vazio para o jogador.
+	Display displayState
+	Group   []Member
+	Queue   []tableRow
+	Eu      *tableMe
 	// MySheet é a ficha do personagem DESTE jogador, desenhada dentro da
 	// sessão. Nil para o mestre e para quem não tem personagem na campanha — é a
 	// mesma trava do `Mestre`: o que a view não tem, a cena não desenha.

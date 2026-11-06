@@ -240,6 +240,10 @@ func gmBoard(b BoardView, v View) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+				templ_7745c5c3_Err = gmDisplaySwitch(v).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -311,7 +315,7 @@ func gmScenePick(b BoardView) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(b.Place)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 73, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 74, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -329,7 +333,7 @@ func gmScenePick(b BoardView) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("· %d abertos", len(b.Tabs)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 75, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 76, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -372,7 +376,7 @@ func gmScenePick(b BoardView) templ.Component {
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(tab.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 88, Col: 18}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 89, Col: 18}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -390,7 +394,7 @@ func gmScenePick(b BoardView) templ.Component {
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue("Ver o tabuleiro " + tab.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 91, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 92, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
@@ -403,7 +407,7 @@ func gmScenePick(b BoardView) templ.Component {
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(tab.Command)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 91, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 92, Col: 121}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 				if templ_7745c5c3_Err != nil {
@@ -431,7 +435,7 @@ func gmScenePick(b BoardView) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(tab.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 97, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 98, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -451,7 +455,7 @@ func gmScenePick(b BoardView) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(b.Place)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 104, Col: 77}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 105, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -497,7 +501,7 @@ func gmScenePick(b BoardView) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(tab.ShowsTable)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 119, Col: 79}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 120, Col: 79}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 				if templ_7745c5c3_Err != nil {
@@ -563,7 +567,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(b.CurtainNotice))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 134, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 135, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -576,7 +580,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(gmCurtainLabel(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 134, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 135, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -589,7 +593,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(gmCurtainLabel(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 134, Col: 149}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 135, Col: 149}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -602,7 +606,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(curtainCommand(b, curtainTarget(b.CurtainNotice)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 134, Col: 217}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 135, Col: 217}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -623,7 +627,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(b.Lens))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 137, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 138, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -636,7 +640,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(gmLensLabel(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 137, Col: 109}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 138, Col: 109}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
@@ -649,7 +653,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(gmLensLabel(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 137, Col: 134}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 138, Col: 134}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -662,7 +666,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(lensCommand(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 137, Col: 167}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 138, Col: 167}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -690,7 +694,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(openMap())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 144, Col: 158}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 145, Col: 158}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 		if templ_7745c5c3_Err != nil {
@@ -703,7 +707,7 @@ func gmBoardBar(b BoardView, v View) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(sheetsShortcut(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 144, Col: 200}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 145, Col: 200}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -763,7 +767,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue(CenterTarget(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 156, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 157, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -776,7 +780,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(CenterTarget(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 156, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 157, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -789,7 +793,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(centerTokens(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 156, Col: 133}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 157, Col: 133}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 		if templ_7745c5c3_Err != nil {
@@ -810,7 +814,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(ZoomAtLimit(-ZoomStep))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 159, Col: 116}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 160, Col: 116}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
@@ -823,7 +827,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomMidScene(step(-ZoomStep)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 159, Col: 164}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 160, Col: 164}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 		if templ_7745c5c3_Err != nil {
@@ -844,7 +848,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var34 string
 		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(ZoomAtLimit(ZoomStep))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 162, Col: 117}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 163, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 		if templ_7745c5c3_Err != nil {
@@ -857,7 +861,7 @@ func gmFraming(b BoardView) templ.Component {
 		var templ_7745c5c3_Var35 string
 		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(zoomMidScene(step(ZoomStep)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 162, Col: 164}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 163, Col: 164}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 		if templ_7745c5c3_Err != nil {
@@ -958,7 +962,7 @@ func gmNotices(b BoardView) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(lensPhrase(b.HiddenTokens))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 182, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 183, Col: 37}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 			if templ_7745c5c3_Err != nil {
@@ -1054,7 +1058,7 @@ func gmTools(b BoardView) templ.Component {
 				var templ_7745c5c3_Var43 string
 				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.ResolveAttributeValue(t.Hint)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 200, Col: 19}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 201, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var43)
 				if templ_7745c5c3_Err != nil {
@@ -1067,7 +1071,7 @@ func gmTools(b BoardView) templ.Component {
 				var templ_7745c5c3_Var44 string
 				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(t.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 201, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 202, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 				if templ_7745c5c3_Err != nil {
@@ -1080,7 +1084,7 @@ func gmTools(b BoardView) templ.Component {
 				var templ_7745c5c3_Var45 string
 				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(onIsTool(t.ID) + " ? 'true' : 'false'")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 202, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 203, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
 				if templ_7745c5c3_Err != nil {
@@ -1093,7 +1097,7 @@ func gmTools(b BoardView) templ.Component {
 				var templ_7745c5c3_Var46 string
 				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickTool(t.ID) + "; $gm_terrain_open = false")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 203, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 204, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 				if templ_7745c5c3_Err != nil {
@@ -1114,7 +1118,7 @@ func gmTools(b BoardView) templ.Component {
 				var templ_7745c5c3_Var47 string
 				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(t.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 206, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 207, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 				if templ_7745c5c3_Err != nil {
@@ -1133,7 +1137,7 @@ func gmTools(b BoardView) templ.Component {
 		var templ_7745c5c3_Var48 string
 		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue(railKeyboard(true))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 211, Col: 133}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 212, Col: 133}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 		if templ_7745c5c3_Err != nil {
@@ -1170,7 +1174,7 @@ func gmTools(b BoardView) templ.Component {
 		var templ_7745c5c3_Var49 string
 		templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.ResolveAttributeValue(terrainPressed() + " ? 'true' : 'false'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 228, Col: 68}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 229, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var49)
 		if templ_7745c5c3_Err != nil {
@@ -1236,7 +1240,7 @@ func gmToolButton(id, icon, short, label, hint string) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.ResolveAttributeValue(hint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 247, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 248, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var51)
 		if templ_7745c5c3_Err != nil {
@@ -1249,7 +1253,7 @@ func gmToolButton(id, icon, short, label, hint string) templ.Component {
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 248, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 249, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 		if templ_7745c5c3_Err != nil {
@@ -1262,7 +1266,7 @@ func gmToolButton(id, icon, short, label, hint string) templ.Component {
 		var templ_7745c5c3_Var53 string
 		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(onIsTool(id) + " ? 'true' : 'false'")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 249, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 250, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
 		if templ_7745c5c3_Err != nil {
@@ -1275,7 +1279,7 @@ func gmToolButton(id, icon, short, label, hint string) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(pickTool(id) + "; $gm_terrain_open = false")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 250, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 251, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
@@ -1296,7 +1300,7 @@ func gmToolButton(id, icon, short, label, hint string) templ.Component {
 		var templ_7745c5c3_Var55 string
 		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(short)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 253, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 254, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 		if templ_7745c5c3_Err != nil {
@@ -1341,7 +1345,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 		var templ_7745c5c3_Var57 string
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(onIsTool(NewPieceTool))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 261, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 262, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 		if templ_7745c5c3_Err != nil {
@@ -1387,7 +1391,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 					var templ_7745c5c3_Var60 string
 					templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(a.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 271, Col: 14}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 272, Col: 14}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 					if templ_7745c5c3_Err != nil {
@@ -1418,7 +1422,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(t.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 280, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 281, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 			if templ_7745c5c3_Err != nil {
@@ -1431,7 +1435,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(t.Defense))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 280, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 281, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 			if templ_7745c5c3_Err != nil {
@@ -1444,7 +1448,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(t.ID + " · " + t.Side)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 280, Col: 92}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 281, Col: 92}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {
@@ -1467,7 +1471,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(e.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 			if templ_7745c5c3_Err != nil {
@@ -1480,7 +1484,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var65 string
 			templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue(e.Size)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 			if templ_7745c5c3_Err != nil {
@@ -1493,7 +1497,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var66 string
 			templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.ResolveAttributeValue(e.Material)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var66)
 			if templ_7745c5c3_Err != nil {
@@ -1506,7 +1510,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var67 string
 			templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(e.HitPoints))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var67)
 			if templ_7745c5c3_Err != nil {
@@ -1519,7 +1523,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var68 string
 			templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(objectDefenseOf(e.Size)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 165}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 165}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 			if templ_7745c5c3_Err != nil {
@@ -1532,7 +1536,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var69 string
 			templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(objectRdOf(e.Material)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 212}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 212}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 			if templ_7745c5c3_Err != nil {
@@ -1545,7 +1549,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var70 string
 			templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(e.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 289, Col: 223}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 290, Col: 223}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 			if templ_7745c5c3_Err != nil {
@@ -1568,7 +1572,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 297, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 298, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
 			if templ_7745c5c3_Err != nil {
@@ -1581,7 +1585,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var72 string
 			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue(fmt.Sprint(m.Rd))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 297, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 298, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 			if templ_7745c5c3_Err != nil {
@@ -1594,7 +1598,7 @@ func gmNewPieceBar(b BoardView) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s · RD %d", m.ID, m.Rd))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 297, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 298, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 			if templ_7745c5c3_Err != nil {
@@ -1642,7 +1646,7 @@ func gmPartyBar() templ.Component {
 		var templ_7745c5c3_Var75 string
 		templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(hasMarkedParty)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 312, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 313, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 		if templ_7745c5c3_Err != nil {
@@ -1663,7 +1667,7 @@ func gmPartyBar() templ.Component {
 		var templ_7745c5c3_Var76 string
 		templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(partyPhrase)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 314, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 315, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 		if templ_7745c5c3_Err != nil {
@@ -1676,7 +1680,7 @@ func gmPartyBar() templ.Component {
 		var templ_7745c5c3_Var77 string
 		templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(unmarkParty)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 315, Col: 104}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 316, Col: 104}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 		if templ_7745c5c3_Err != nil {
@@ -1727,7 +1731,7 @@ func gmClipboard(b BoardView) templ.Component {
 		var templ_7745c5c3_Var79 string
 		templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.ResolveAttributeValue(pasteInTheMiddleOfTheView(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 323, Col: 193}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 324, Col: 193}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var79)
 		if templ_7745c5c3_Err != nil {
@@ -1748,7 +1752,7 @@ func gmClipboard(b BoardView) templ.Component {
 		var templ_7745c5c3_Var80 string
 		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(emptiesTheClipboard)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 326, Col: 129}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 327, Col: 129}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var80)
 		if templ_7745c5c3_Err != nil {
@@ -1824,7 +1828,7 @@ func gmOpenBoard(b BoardView) templ.Component {
 				var templ_7745c5c3_Var83 string
 				templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.ResolveAttributeValue(floor.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 341, Col: 29}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 342, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var83)
 				if templ_7745c5c3_Err != nil {
@@ -1837,7 +1841,7 @@ func gmOpenBoard(b BoardView) templ.Component {
 				var templ_7745c5c3_Var84 string
 				templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(floor.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 341, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 342, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 				if templ_7745c5c3_Err != nil {
@@ -2004,7 +2008,7 @@ func gmTokenEdit(b BoardView) templ.Component {
 				var templ_7745c5c3_Var91 string
 				templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.ResolveAttributeValue(t.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 369, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 370, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var91)
 				if templ_7745c5c3_Err != nil {
@@ -2017,7 +2021,7 @@ func gmTokenEdit(b BoardView) templ.Component {
 				var templ_7745c5c3_Var92 string
 				templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinStringErrs(t.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 369, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 370, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 				if templ_7745c5c3_Err != nil {
@@ -2116,7 +2120,7 @@ func gmPopulate(v View) templ.Component {
 					var templ_7745c5c3_Var96 string
 					templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 389, Col: 18}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 390, Col: 18}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 					if templ_7745c5c3_Err != nil {
@@ -2142,7 +2146,7 @@ func gmPopulate(v View) templ.Component {
 						var templ_7745c5c3_Var98 string
 						templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs(cand.Name)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 394, Col: 18}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 395, Col: 18}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 						if templ_7745c5c3_Err != nil {
@@ -2155,7 +2159,7 @@ func gmPopulate(v View) templ.Component {
 						var templ_7745c5c3_Var99 string
 						templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinStringErrs(map[bool]string{true: "Ficha", false: "NPC"}[cand.Sheet])
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 395, Col: 91}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 396, Col: 91}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 						if templ_7745c5c3_Err != nil {
@@ -2277,7 +2281,7 @@ func gmArchive(v View) templ.Component {
 						var templ_7745c5c3_Var104 string
 						templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(l.Name)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 418, Col: 42}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 419, Col: 42}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 						if templ_7745c5c3_Err != nil {
@@ -2291,7 +2295,7 @@ func gmArchive(v View) templ.Component {
 							var templ_7745c5c3_Var105 string
 							templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs("nesta mesa agora · " + ui.TokenCount(l.Tokens))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 421, Col: 60}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 422, Col: 60}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 							if templ_7745c5c3_Err != nil {
@@ -2301,7 +2305,7 @@ func gmArchive(v View) templ.Component {
 							var templ_7745c5c3_Var106 string
 							templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%s · %s", ui.TokenCount(l.Tokens), l.When))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 423, Col: 68}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_board.templ`, Line: 424, Col: 68}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
 							if templ_7745c5c3_Err != nil {

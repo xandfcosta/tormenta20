@@ -5187,6 +5187,51 @@
   .ds-board-foot > * {
     pointer-events: auto;
   }
+  /* A TELA DA MESA (ALE-608): o mapa ocupa o display inteiro e não responde a
+   * nada. INERTE pela folha e não só por não ter botão: a cena traz as camadas
+   * de clique e o arrasto da janela, e um toque no display aberto com a sessão
+   * do mestre postaria como o mestre. */
+  .ds-display {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    background: var(--ds-bg);
+  }
+  .ds-display-board {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+  .ds-display .board-scene {
+    pointer-events: none;
+  }
+  /* O INTERRUPTOR no pé do tabuleiro do mestre. Os cantos acompanham os do
+   * botão de dentro, com a mesma folga em volta. */
+  .ds-gm-display {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    max-width: 100%;
+    padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+    border: 1px solid var(--ds-line);
+    border-radius: calc(var(--ds-r-control) + 0.375rem);
+    background: var(--ds-surface);
+    color: var(--ds-ink);
+    font-size: var(--ds-t-sm);
+    box-shadow: 0 6px 18px #0003;
+  }
+  .ds-gm-display-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    background: var(--ds-good);
+  }
+  .ds-gm-display-dot[data-frozen] {
+    background: var(--ds-warn);
+  }
   .ds-board-tools {
     bottom: 0.5rem;
     left: 50%;

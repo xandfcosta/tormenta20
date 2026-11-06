@@ -1,14 +1,15 @@
 package table
 
-// A MEMÓRIA EFÊMERA DA MESA: o que o servidor guarda por `(sessão, pessoa)` e
-// que morre com o processo.
+// A MEMÓRIA EFÊMERA DA MESA: o que o servidor guarda por sessão e que morre com
+// o processo.
 //
-// São dois mapas — quem está com a LENTE acesa (`lens.go`) e qual ABA cada
-// pessoa está olhando (`tabs.go`) —, e cada um explica no arquivo dele por que
-// não é sinal do navegador. O que este arquivo acrescenta é o FIM DA VIDA deles.
+// São três — quem está com a LENTE acesa (`lens.go`), qual ABA cada pessoa
+// está olhando (`tabs.go`) e o que a TELA DA MESA lembra (`display_state.go`)
+// —, e cada um explica no arquivo dele por que não é sinal do navegador. O que
+// este arquivo acrescenta é o FIM DA VIDA deles.
 
-// EphemeralTableState junta os dois mapas para que o fim de uma sessão alcance
-// os DOIS, e é a razão de eles não nascerem mais dentro do `table.New`.
+// EphemeralTableState junta os três para que o fim de uma sessão alcance
+// todos, e é a razão de eles não nascerem mais dentro do `table.New`.
 //
 // Enquanto nasciam lá, o único jeito de esvaziá-los era o `endBoard` — e ele só
 // os esvazia quando a ÚLTIMA cena fecha, que é certo para fechar uma aba e não
@@ -22,10 +23,14 @@ package table
 type EphemeralTableState struct {
 	lenses     *lenses
 	chosenTabs *chosenTabs
+	// displays é a TELA DA MESA, que é por sessão e não por pessoa — ver o
+	// `display_state.go`. Mora aqui pela mesma razão das outras duas: a sessão
+	// apagada tem de alcançá-la.
+	displays *tableDisplays
 }
 
 func NewEphemeralTableState() *EphemeralTableState {
-	return &EphemeralTableState{lenses: newLenses(), chosenTabs: newTabs()}
+	return &EphemeralTableState{lenses: newLenses(), chosenTabs: newTabs(), displays: newTableDisplays()}
 }
 
 // SessionDeleted cumpre a porta `session.MemoryOfASession`: a sessão deixou de
@@ -33,6 +38,7 @@ func NewEphemeralTableState() *EphemeralTableState {
 func (e *EphemeralTableState) SessionDeleted(sessionID int64) {
 	e.lenses.Erase(sessionID)
 	e.chosenTabs.Erase(sessionID)
+	e.displays.Erase(sessionID)
 }
 
 // Watching diz de quantas PESSOAS esta sessão tem memória efêmera guardada.
