@@ -11,6 +11,36 @@ import { disposableTable, openTheBoard } from './support/table'
 test.use({ storageState: '.auth/user.json' })
 
 /** O lado do quadrado que a tela está desenhando agora. */
+/**
+ * O quadrado do plano que está no MEIO da tela, a partir do que a cena
+ * desenha: o plano anda `translate(-janela)`, então o ponto sob o pixel `p` é
+ * `(p + janela) / quadrado`.
+ */
+async function centerOf(page: Page): Promise<{ x: number; y: number }> {
+  return page.locator('#board-scene').evaluate((el) => {
+    const style = getComputedStyle(el)
+    const square = Number.parseFloat(style.getPropertyValue('--quadrado'))
+    const box = el.getBoundingClientRect()
+    return {
+      x: (box.width / 2 + Number.parseFloat(style.getPropertyValue('--vista-x'))) / square,
+      y: (box.height / 2 + Number.parseFloat(style.getPropertyValue('--vista-y'))) / square,
+    }
+  })
+}
+
+/** Espera o meio da tela da mesa ser o meio do mestre, a um décimo de quadrado. */
+async function expectSameCenter(gm: Page, display: Page, message: string): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        const [a, b] = [await centerOf(gm), await centerOf(display)]
+        return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y))
+      },
+      { message },
+    )
+    .toBeLessThan(0.1)
+}
+
 async function squareOf(page: Page): Promise<string> {
   return page
     .locator('#board-scene')
@@ -47,6 +77,18 @@ async function followsAndFreezes(page: Page, context: BrowserContext, mesa: stri
   const before = await squareOf(display)
   await zoomIn.click()
   await expect.poll(() => squareOf(display), { message: 'a tela não seguiu o zoom do mestre' }).not.toBe(before)
+
+  // O MEIO, e não só o zoom: com o mapa ARRASTADO a janela deixa de ser zero,
+  // e uma conta com o sinal trocado só acertaria a dimensão que limita o
+  // quadrado — as telas têm proporções diferentes de propósito.
+  await page.getByRole('navigation', { name: 'Ferramentas do mapa' }).getByRole('button', { name: /^Arrastar a vista/ }).click()
+  const scene = await page.locator('#board-scene').boundingBox()
+  if (!scene) throw new Error('o tabuleiro do mestre não tem caixa')
+  await page.mouse.move(scene.x + scene.width / 2, scene.y + scene.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(scene.x + scene.width / 2 - 260, scene.y + scene.height / 2 - 140, { steps: 8 })
+  await page.mouse.up()
+  await expectSameCenter(page, display, 'o meio da tela da mesa não é o meio do mestre')
 
   await page.getByRole('button', { name: 'Congelar' }).click()
   await expect(page.getByText('Tela da mesa congelada')).toBeVisible()

@@ -64,12 +64,7 @@ templ gmDisplaySwitch(v View) {
 					Congelar
 				}
 			}
-			<span
-				hidden
-				data-init={ sendsFraming(v) }
-				data-on-signal-patch__debounce.300ms={ sendsFraming(v) }
-				data-on-signal-patch-filter="{include: /^(square|viewport_x|viewport_y)$/}"
-			></span>
+			<span hidden data-effect={ followsFraming(v) }></span>
 		</div>
 	}
 }

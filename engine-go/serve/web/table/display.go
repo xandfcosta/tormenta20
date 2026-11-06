@@ -84,7 +84,7 @@ func (s Scene) displayNow(ctx context.Context, userID, campaignID, sessionID int
 //
 // O estado da fila também passa pelo papel de jogador: é dele que sai a barra
 // de PV de cada peça, e o combatente cujo PV o mestre escondeu não pode ter a
-// barra na TV.
+// barra na tela da mesa.
 func (s Scene) displayBoard(ctx context.Context, gmID, campaignID, sessionID int64) (BoardView, error) {
 	if _, err := s.deps.Sessions().State(ctx, sessionID); err != nil {
 		return BoardView{}, err
@@ -232,28 +232,34 @@ func displayFramingSignals(f displayFraming) string {
 }
 
 // displayFits encaixa o recorte do mestre na tela: o quadrado é o maior que
-// faz o recorte inteiro caber, e a janela põe o meio dele no meio da tela.
+// faz o recorte inteiro caber, e a janela põe o meio dele no meio da tela. É a
+// conta do `planPoint` ao contrário — o plano anda `translate(-janela)` —, a
+// mesma do `centerViewport`.
 // Sem recorte ainda (o mestre não mexeu no mapa desde que a tela abriu), a
 // janela fica onde nasceu.
 //
 // Ele também roda no `data-on:resize__window`, e por isso a última instrução
-// não é um `if` — ver o `sendsFraming`.
+// não é um `if` — ver o `datastar.md`.
 const displayFits = "const r = document.getElementById('" + sceneId + "')?.getBoundingClientRect(); " +
 	"const sq = r && r.width > 0 && $display_width > 0 && $display_height > 0 ? Math.min(r.width / $display_width, r.height / $display_height) : 0; " +
-	"sq > 0 && ($square = sq, $" + sinalDaVistaX + " = r.width / 2 - $display_x * sq, $" + sinalDaVistaY + " = r.height / 2 - $display_y * sq)"
+	"sq > 0 && ($square = sq, $" + sinalDaVistaX + " = $display_x * sq - r.width / 2, $" + sinalDaVistaY + " = $display_y * sq - r.height / 2)"
 
-// sendsFraming é o lado do MESTRE: o meio e o tamanho do que ele está vendo,
+// followsFraming é o lado do MESTRE: o meio e o tamanho do que ele está vendo,
 // em quadrados, mandados quando a janela dele anda ou o zoom muda. Com o
 // tabuleiro escondido (o celular na Fila), a cena mede zero e nada sai.
 //
-// A ÚLTIMA instrução é uma EXPRESSÃO (`&&`), e não um `if`: o
-// `data-on-signal-patch` devolve o valor da última instrução, e um `if` ali é
-// erro de sintaxe que o Datastar engole — o ouvinte nasce morto e o recorte só
-// sai uma vez, pelo `data-init`.
-func sendsFraming(v View) string {
-	return fmt.Sprintf("const r = document.getElementById('%s')?.getBoundingClientRect(); "+
-		"r && r.width > 0 && $square > 0 && @post('%s/enquadramento', {payload: {x: (r.width / 2 - $%s) / $square, y: (r.height / 2 - $%s) / $square, width: r.width / $square, height: r.height / $square}})",
-		sceneId, displayAddress(v), sinalDaVistaX, sinalDaVistaY)
+// É um `data-effect` que LÊ os três sinais, e não um `data-on-signal-patch`:
+// medido na ALE-608, o ouvinte de remendo disparava no zoom e calava no
+// arrasto da vista, com a janela andando 260px e nenhum pedido saindo. O
+// efeito é a mesma reatividade que move o `style` do mapa, e ela não falha. O
+// adiamento de 300ms é à mão (`framingTimer` no próprio nó): um pedido por
+// quadro de arrasto seria um por pixel.
+func followsFraming(v View) string {
+	x, y := planPoint("r.width / 2", "r.height / 2")
+	return fmt.Sprintf("$square; $%s; $%s; clearTimeout(el.framingTimer); "+
+		"el.framingTimer = setTimeout(() => { const r = document.getElementById('%s')?.getBoundingClientRect(); "+
+		"r && r.width > 0 && $square > 0 && @post('%s/enquadramento', {payload: {x: %s, y: %s, width: r.width / $square, height: r.height / $square}}) }, 300)",
+		sinalDaVistaX, sinalDaVistaY, sceneId, displayAddress(v), x, y)
 }
 
 func freezeCommand(v View) string {

@@ -52,8 +52,13 @@ com o ponteiro inativo, e no meio engole o resto do gesto.
 **No `data-on-signal-patch`, a ÚLTIMA instrução é expressão, nunca `if`**: medido
 na ALE-608, `const r = …; if (r) { @post(…) }` ali é `SyntaxError: Unexpected
 token 'if'` no console e o ouvinte nasce morto, enquanto o mesmo texto no
-`data-init` do lado roda. Escreva o fim como `r && @post(…)` (ver o
-`sendsFraming`).
+`data-init` do lado roda. Escreva o fim como `r && @post(…)`.
+
+**E para SEGUIR um sinal que o arrasto escreve, use `data-effect`**, que lê os
+sinais e reage como o `data-attr:style`: na mesma medição, o
+`data-on-signal-patch` com filtro disparou no zoom e calou no arrasto da vista,
+com a janela andando 260px e nenhum pedido saindo. O adiamento vai à mão, num
+temporizador no próprio nó (ver o `followsFraming`).
 
 ### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
 

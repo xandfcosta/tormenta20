@@ -5,8 +5,10 @@ import "fmt"
 // A JANELA sobre um plano INFINITO.
 //
 // O servidor manda o que EXISTE, em coordenada absoluta do plano, e quem decide
-// o que aparece é a janela — que mora no NAVEGADOR, ao lado do zoom, e nunca vai
-// ao servidor.
+// o que aparece é a janela — que mora no NAVEGADOR, ao lado do zoom. A única que
+// vai ao servidor é a do MESTRE com a tela da mesa aberta, e vai traduzida em
+// quadrados (`followsFraming`): o servidor não recorta nada com ela, só a repassa
+// à tela.
 //
 // Não há moldura, e ela não volta: moldura CRESCE. Pintar perto da borda
 // expandia o retângulo e mexia na origem, então o mesmo ponto da tela virava
