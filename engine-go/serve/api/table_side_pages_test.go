@@ -128,6 +128,9 @@ func TestTheGroupPageDrawsThePartyAndKeepsItLive(t *testing.T) {
 	if findNode(doc, "id", "table-tracker") != nil {
 		t.Error("a página do Grupo desenhou a fila")
 	}
+	if !strings.Contains(page, `data-text="$command_error"`) {
+		t.Error("a página do Grupo não tem onde dizer a recusa: o − recusado não diria nada")
+	}
 	if !strings.Contains(page, f.tableUrl()+"/fluxo?pagina=grupo") {
 		t.Error("a página do Grupo não abre o fluxo com a marca dela: ela não se atualizaria sozinha")
 	}
@@ -164,6 +167,9 @@ func TestTheCastPageDrawsTheCastWithItsVerbs(t *testing.T) {
 	}
 	if !strings.Contains(page, f.tableUrl()+"/fluxo?pagina=elenco") {
 		t.Error("a página do Elenco não abre o fluxo com a marca dela")
+	}
+	if !strings.Contains(page, `data-text="$command_error"`) {
+		t.Error("a página do Elenco não tem onde dizer a recusa")
 	}
 }
 

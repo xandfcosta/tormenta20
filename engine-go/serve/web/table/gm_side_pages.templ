@@ -56,8 +56,16 @@ templ gmGroupPage(v View) {
 				@ds.SearchField("gm-group-search", "Buscar no grupo", templ.Attributes{"data-bind:gm_group_search": true})
 			}
 		}
+		@gmPageRefusal()
 		@gmGroup(v)
 	</main>
+}
+
+// gmPageRefusal é onde uma página à parte diz a recusa de um gesto dela. Na
+// mesa ela mora na linha do turno, que a página não tem; sem ela, o − recusado
+// no Grupo não faria nada e não diria nada.
+templ gmPageRefusal() {
+	<p class="ds-help ds-reg-error" aria-live="assertive" data-show="$command_error != ''" data-text="$command_error" style="display:none"></p>
 }
 
 // gmCastPage é o Elenco numa aba, com o editor do bloco que o lápis e o Novo
@@ -65,6 +73,7 @@ templ gmGroupPage(v View) {
 templ gmCastPage(v View) {
 	<main class="ds-gm-page" data-signals="{gm_cast_search: ''}">
 		<h1 class="ds-sheet-name">{ sidePageTitle(v, "Elenco") }</h1>
+		@gmPageRefusal()
 		@gmCastList(v)
 		@gmNpcEditor(v)
 	</main>
@@ -235,6 +244,6 @@ templ gmCreatureFoot(b master.BestiaryView) {
 		</div>
 		// A fila está noutra aba: sem esta frase, o clique não teria resposta.
 		<p class="ds-help" aria-live="polite" data-text="$entry_sent"></p>
-		<p class="ds-help ds-reg-error" aria-live="assertive" data-show="$command_error != ''" data-text="$command_error" style="display:none"></p>
+		@gmPageRefusal()
 	</div>
 }
