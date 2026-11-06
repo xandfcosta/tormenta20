@@ -3811,8 +3811,12 @@
       gap: 1rem;
     }
   }
+  /* NO MÁXIMO TRÊS por fileira, e cada caixa com pelo menos 8rem: o rótulo
+   * "Deslocamento" é a palavra mais larga do bloco, e numa terça parte de 390px
+   * ele saía da caixa com a face um pouco mais larga da primeira pintura. Abaixo
+   * disso a fileira cai para duas, em vez de abreviar o termo do livro. */
   .ds-gm-creature .ds-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(max(8rem, calc((100% - 1rem) / 3)), 1fr));
   }
   .ds-gm-creature-part {
     display: grid;
