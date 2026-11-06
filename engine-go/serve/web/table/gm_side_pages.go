@@ -92,9 +92,12 @@ func sidePageTarget(v View, path string) string {
 	return fmt.Sprintf("t20-%s-%d", path, v.SessionID)
 }
 
-// opensSidePage é o mesmo elo escrito como gesto, para quem não é `<a>`.
+// opensSidePage é o mesmo elo escrito como gesto, para quem não é `<a>`. O
+// `window.open` devolve nulo quando o navegador barra a aba, e essa é a única
+// pista: sem a frase, o clique não faria nada e não diria nada.
 func opensSidePage(v View, page sidePage) string {
-	return fmt.Sprintf("window.open('%s', '%s')", sidePageAddress(v, string(page)), sidePageTarget(v, string(page)))
+	return fmt.Sprintf("window.open('%s', '%s') || ($command_error = 'O navegador bloqueou a aba nova. Libere os pop-ups deste endereço.')",
+		sidePageAddress(v, string(page)), sidePageTarget(v, string(page)))
 }
 
 // sidePageTitle é o "Grupo · Sessão 4" do topo e da aba do navegador.
