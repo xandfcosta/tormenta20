@@ -199,13 +199,9 @@ func (s Scene) sheetCommand(
 		// `ReadSignals` consome o corpo do POST, então a segunda chamada
 		// receberia vazio sem erro nenhum. Ver `signals.go`.
 		signals := sheetSignals(r)
-		row, err := s.deps.Queries().GetCharacter(r.Context(), id)
+		row, status, err := s.reachableCharacter(r.Context(), id, s.deps.CurrentUserID(r))
 		if err != nil {
-			http.Error(w, "este personagem não existe", http.StatusNotFound)
-			return
-		}
-		if row.Ownerid != s.deps.CurrentUserID(r) {
-			http.Error(w, "esta ficha não é sua", http.StatusForbidden)
+			http.Error(w, err.Error(), status)
 			return
 		}
 		// A RECUSA VOLTA PELA CENA, e não por um status de erro: o cliente do

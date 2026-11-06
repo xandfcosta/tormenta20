@@ -139,19 +139,20 @@ func TestTheVitalClampsAtTheDeathThresholdAndAtTheMaximum(t *testing.T) {
 	}
 }
 
-// A FICHA É DO DONO. A trava é do servidor, e não da tela não oferecer o link:
-// quem digitar o endereço de outro personagem leva 403.
+// A FICHA É DE QUEM A ALCANÇA: o dono e, na cópia, o mestre da mesa (ALE-614). A trava é do servidor, e
+// não da tela não oferecer o link: quem é de fora e digitar o endereço leva 403.
 func TestSomeoneElsesSheetDoesNotOpen(t *testing.T) {
 	f, id := sheetOf(t, "Segredo", 3)
+	stranger := seedUser(t, f.s, "estranho@t.com")
 
-	rec := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
+	rec := f.requests(t, stranger, http.MethodGet, fmt.Sprintf("/personagens/%d", id), "")
 
 	if rec.Code != http.StatusForbidden {
 		t.Fatalf("a ficha de outra pessoa abriu com %d", rec.Code)
 	}
 	// E o gesto também: barrar a leitura e deixar a escrita passar seria pior
 	// que não barrar nada.
-	write := f.requests(t, f.gm, http.MethodPost,
+	write := f.requests(t, stranger, http.MethodPost,
 		fmt.Sprintf("/personagens/%d/vitais/pv/-5", id), "")
 	if write.Code != http.StatusForbidden {
 		t.Errorf("alguém feriu o personagem de outra pessoa: %d", write.Code)
