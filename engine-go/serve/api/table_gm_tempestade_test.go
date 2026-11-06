@@ -44,7 +44,7 @@ func TestTheGmTableIsTheTempestadeOneWithItsSessionSettings(t *testing.T) {
 	}
 }
 
-// A FILA DO MESTRE, pelo mockup aprovado `mestre.html`: as três superfícies na
+// A FILA DO MESTRE, pelo mockup aprovado `mestre.html`: as superfícies na
 // barra, cada linha com o − e o + de um PV e a folha do combatente, e a linha
 // do turno com o avanço.
 func TestTheParallelGmTableDrawsTheQueue(t *testing.T) {
@@ -59,7 +59,7 @@ func TestTheParallelGmTableDrawsTheQueue(t *testing.T) {
 	if nav == nil {
 		t.Fatal("a mesa do mestre não tem a barra das superfícies")
 	}
-	for _, s := range []string{"Fila", "Tabuleiro", "Consultas"} {
+	for _, s := range []string{"Fila", "Tabuleiro"} {
 		if !strings.Contains(textOf(nav), s) {
 			t.Errorf("a barra do mestre não tem %s", s)
 		}
@@ -176,54 +176,7 @@ func gmBoardRegion(t *testing.T, f sceneFixture) *html.Node {
 	return region
 }
 
-// AS CONSULTAS DO MESTRE (ALE-522, fatia 3): quatro abas no lugar do aviso — as
-// notas, o grupo com a ficha completa, o elenco com o Novo e o bestiário. As
-// rotas são as de hoje; muda onde cada coisa mora.
-func TestTheParallelGmTableDrawsTheConsults(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/do-verbete", `{"creature":"ogro","npc_name":"Capitão Varek"}`)
-	page := gmRequest(t, f, f.tableUrl()).Body.String()
-	if strings.Contains(page, "As Consultas ainda estão no palco de hoje") {
-		t.Fatal("as Consultas ainda levam ao palco de hoje")
-	}
-	doc, err := html.Parse(strings.NewReader(page))
-	if err != nil {
-		t.Fatal(err)
-	}
-	tabs := findNode(doc, "aria-label", "Consultas do mestre")
-	if tabs == nil {
-		t.Fatal("as Consultas não têm as abas")
-	}
-	for _, want := range []string{"Notas", "Grupo", "Elenco", "Bestiário"} {
-		if !strings.Contains(textOf(tabs), want) {
-			t.Errorf("as abas das Consultas não têm %s: %q", want, textOf(tabs))
-		}
-	}
-	if findNode(doc, "aria-label", "Notas da sessão") == nil {
-		t.Error("a aba Notas não tem o caderno")
-	}
-	if findNode(doc, "aria-label", "Abrir a ficha completa de Arcanista") == nil {
-		t.Error("o Grupo não leva à ficha completa do Arcanista")
-	}
-	cast := findNode(doc, "id", "table-npcs")
-	if cast == nil || !strings.Contains(textOf(cast), "Capitão Varek") {
-		t.Fatal("o Elenco não mostra o NPC guardado")
-	}
-	if findNode(cast, "aria-label", "Editar o bloco de Capitão Varek") == nil || !strings.Contains(textOf(cast), "Pôr na fila") {
-		t.Errorf("a linha do NPC não tem o lápis e o Pôr na fila: %q", textOf(cast))
-	}
-	if findNode(doc, "aria-label", "Novo no elenco") == nil {
-		t.Error("o Elenco não tem o Novo")
-	}
-	bestiary := findNode(doc, "id", "table-bestiary")
-	if bestiary == nil || !strings.Contains(textOf(bestiary), "Ogro") {
-		t.Fatal("a aba Bestiário não lista as criaturas")
-	}
-}
-
-// A CRIATURA ABERTA no bestiário volta no kit, com o ajuste e os dois verbos:
-// o remendo é o desenho da aba das Consultas.
+// A CRIATURA ABERTA no bestiário volta no kit, com o ajuste e os dois verbos.
 func TestTheGmBestiaryOpensTheCreatureInTheKit(t *testing.T) {
 	f := newSceneFixture(t)
 	body := gmRequest(t, f, f.tableUrl()+"/bestiario?criatura=ogro&abrir=1").Body.String()

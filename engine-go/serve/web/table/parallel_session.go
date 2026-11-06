@@ -26,7 +26,8 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
 }
 
-// streamOfPage é o fluxo que a página abre.
+// streamOfPage é o fluxo que a página abre, com a marca da página à parte: o
+// fluxo de uma página remenda só as regiões dela.
 func streamOfPage(view View) string {
-	return view.SessionBase() + "/fluxo"
+	return view.SessionBase() + "/fluxo" + view.pageMark()
 }

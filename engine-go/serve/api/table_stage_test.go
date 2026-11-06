@@ -20,7 +20,6 @@ var gmRegionNames = []string{
 	"table-board",
 	"table-populate",
 	"table-archive",
-	"table-npcs",
 	"table-session-config",
 }
 

@@ -26,12 +26,13 @@ import (
 // "Salvo" enquanto nada mais é gravado. O que funciona é a janela receber um
 // DOCUMENTO, com o runtime dela. Daí a cena.
 //
-// # Ela é EXCLUSIVA com a coluna, e isso não é gosto
+// # Ela é UMA, e o nome da aba é o que a torna única
 //
 // As notas não são região do stream de propósito (ver o cabeçalho do `.templ`):
 // são de um leitor só. Duas caixas sobre a mesma coluna `sessions.notes`
 // seriam o último-a-salvar-ganha, sem aviso, com as duas faixas dizendo
-// "Salvo". Quem fecha a coluna é o `storage` da janela — ver `takesTheNotes`.
+// "Salvo". O elo do cabeçalho abre num alvo com NOME (`sidePageTarget`), e um
+// segundo clique traz a aba que já está aberta em vez de abrir outra.
 //
 // A TRAVA é a mesma do comando: as notas são do mestre.
 func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
@@ -63,93 +64,27 @@ func (s Scene) notesWindowPage(w http.ResponseWriter, r *http.Request) {
 	}, notesWindow(v))
 }
 
-// notesWindowSignals é o estado que a JANELA tem, e ele é menor que o da Mesa.
-//
-// Fora fica o `notes_window`: ele diz que as notas estão NUMA janela, e esta
-// é a janela. Declarar sinal que ninguém lê é o que o
-// `TestEverySignalDeclaredByValueHasAReader` recusa, e com razão — ele viaja em
-// toda requisição.
+// notesWindowSignals é o estado que a página das notas tem, e ele é menor que o
+// da Mesa.
 func notesWindowSignals() string {
 	return "{notes: '', notes_saved: '', notes_error: '', notes_mode: 'duplo'}"
 }
 
-// seedNotesWindow é o mesmo semeador SEM o que descreve a coluna: a janela não
-// tem largura para guardar nem mapa para flutuar sobre.
+// seedNotesWindow põe na página o que o servidor sabe, UMA vez.
 //
-// O MODO vem da mesma chave da coluna, de propósito: quem escreve em "Lado a
-// lado" ao lado do mapa quer "Lado a lado" na janela também. É a mesma
-// preferência de trabalho, e ela não deveria depender de onde o painel está.
+// O texto é serializado por `json.Marshal` e não concatenado à mão: uma aspa ou
+// uma quebra de linha na nota fecharia a expressão e derrubaria a página
+// inteira — e nota de mesa é feita de aspas e quebras de linha.
+//
+// O MODO vem do `localStorage`: é preferência de trabalho, e o mestre não deve
+// reescolher a cada sessão.
 func seedNotesWindow(v View) string {
 	text, err := json.Marshal(v.Notes)
 	if err != nil {
 		text = []byte(`""`)
 	}
 	return fmt.Sprintf(
-		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'; %s",
-		text, text, notesModeKey, takesTheNotes(v),
+		"$notes = %s; $notes_saved = %s; $notes_mode = localStorage.getItem('%s') || 'duplo'",
+		text, text, notesModeKey,
 	)
 }
-
-// notesWindowKey diz QUAL sessão está com as notas numa janela, e é por ela que
-// as duas telas se excluem.
-//
-// `localStorage` e não `BroadcastChannel`: o evento `storage` chega a toda
-// janela da origem sem ninguém segurar um objeto vivo, e é o mesmo mecanismo
-// que as outras três preferências das notas já usam. O valor é o ID DA SESSÃO
-// porque uma janela aberta na sessão 4 não tem nada a dizer sobre a 7.
-const notesWindowKey = "t20:notas-janela"
-
-// notesWindowName é o nome da janela, e ele é o que a torna ÚNICA: um segundo
-// `window.open` com o mesmo nome acha a que já existe em vez de abrir outra.
-const notesWindowName = "t20-notas"
-
-// takesTheNotes é o anúncio da JANELA: "as notas agora são minhas".
-//
-// A coluna do lado do mapa não fecha porque quem clicou pediu; ela fecha porque
-// a janela TOMOU. A diferença aparece quando o navegador bloqueia o pop-up: ali
-// nada é tomado, e a coluna fica onde estava em vez de sumir sobre uma janela
-// que não abriu.
-func takesTheNotes(v View) string {
-	return fmt.Sprintf("localStorage.setItem('%s', '%d')", notesWindowKey, v.SessionID)
-}
-
-// givesTheNotesBack roda no `pagehide`, que é o evento que sobrevive ao fechar
-// a janela — `beforeunload` pede confirmação em alguns caminhos e `unload` é
-// pulado quando a página vai para o cache de ida e volta.
-//
-// A guarda do valor existe para o caso de DUAS sessões: se a janela da sessão 4
-// fechar depois de a da 7 ter tomado, ela não pode apagar a chave da outra.
-func givesTheNotesBack(v View) string {
-	return fmt.Sprintf("if (localStorage.getItem('%s') === '%d') { localStorage.removeItem('%s') }",
-		notesWindowKey, v.SessionID, notesWindowKey)
-}
-
-// watchesTheNotesWindow é o outro lado: a aba principal ouve o `storage` e
-// obedece.
-//
-// `evt.newValue` vem NULO quando a chave é removida, e `null === '4'` é falso —
-// então fechar a janela devolve a coluna sem um ramo próprio.
-func watchesTheNotesWindow(v View) string {
-	return fmt.Sprintf(
-		"if (evt.key === '%s') { $notes_window = evt.newValue === '%d' }",
-		notesWindowKey, v.SessionID)
-}
-
-// opensTheNotesWindow: o gesto da faixa.
-//
-// Ele AFIRMA o bloqueio em vez de supor que abriu. `window.open` devolve nulo
-// quando o navegador recusa o pop-up, e é a única pista que existe — sem esta
-// frase o clique não faria nada e não diria nada, que é a família de defeito
-// que esta base mais persegue.
-func opensTheNotesWindow(v View) string {
-	return fmt.Sprintf(
-		"const janela = window.open('%s', '%s', 'popup,width=620,height=840'); "+
-			"if (janela) { janela.focus(); $notes_error = '' } "+
-			"else { $notes_error = 'O navegador bloqueou a janela das notas. Libere os pop-ups deste endereço.' }",
-		notesAddress(v), notesWindowName)
-}
-
-// marked devolve a STRING e não o booleano: o `data-attr` do Datastar trata
-// valor booleano como ATRIBUTO BOOLEANO, e um `aria-checked=""` não anuncia
-// estado nenhum. Aqui o valor é escrito direto no HTML, mas a palavra é a mesma
-// pela mesma razão.

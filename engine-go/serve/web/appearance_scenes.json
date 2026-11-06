@@ -50,7 +50,11 @@
   "table": {
     "visits": [
       { "address": "/campanhas/1/sessoes/4", "session": "gm" },
-      { "address": "/campanhas/1/sessoes/4", "session": "player" }
+      { "address": "/campanhas/1/sessoes/4", "session": "player" },
+      { "address": "/campanhas/1/sessoes/4/notas", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4/grupo", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4/elenco", "session": "gm" },
+      { "address": "/campanhas/1/sessoes/4/bestiario", "session": "gm" }
     ]
   },
   "admin": { "visits": [{ "address": "/admin", "session": "gm" }] },

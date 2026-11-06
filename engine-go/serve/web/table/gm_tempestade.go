@@ -10,16 +10,11 @@ import (
 	"github.com/a-h/templ"
 )
 
-// superficieDasConsultas é a terceira superfície do MESTRE: notas, grupo,
-// elenco e bestiário (ALE-522).
-const superficieDasConsultas = "consultas"
-
-// gmSurfaces são as três superfícies do mestre, na ordem da barra. A Fila usa o
+// gmSurfaces são as superfícies do mestre, na ordem da barra. A Fila usa o
 // valor da Mesa do jogador porque é ela que abre, e o sinal nasce nele.
 var gmSurfaces = []playerSurface{
 	{superficieDaMesa, "Fila", "ListOrdered"},
 	{superficieDoTabuleiro, "Tabuleiro", "LayoutGrid"},
-	{superficieDasConsultas, "Consultas", "BookOpen"},
 }
 
 // gmWhere é a linha de onde a mesa está: "Sessão 1 · Rodada 2".

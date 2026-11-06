@@ -192,8 +192,7 @@ test.describe('A mesa do mestre', () => {
    */
   test('a busca do Grupo esconde quem não casa e devolve ao apagar', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(MESA)
-    await page.getByRole('navigation', { name: 'Consultas do mestre' }).getByRole('button', { name: 'Grupo' }).click()
+    await page.goto(`${MESA}/grupo`)
     const rows = page.locator('.ds-gm-member')
     // O CONTROLE: o Grupo tem gente, senão "ninguém visível" não prova nada.
     await expect(rows.first()).toBeVisible()
@@ -202,63 +201,5 @@ test.describe('A mesa do mestre', () => {
     await expect(rows.filter({ visible: true })).toHaveCount(0)
     await search.fill('')
     await expect(rows.first()).toBeVisible()
-  })
-
-  /**
-   * O CADERNO LÊ POR PADRÃO e escreve ao toque; o Esc e sair da caixa voltam à
-   * leitura. Só o navegador mede: é foco, `blur` e a tecla — e o Esc tem de
-   * ficar com o caderno, sem chegar ao "voltar" do documento.
-   */
-  test('as notas leem por padrão, escrevem ao toque e voltam à leitura com o Esc', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(MESA)
-    const reading = page.getByRole('button', { name: 'Editar as notas da sessão' })
-    const box = page.getByRole('textbox', { name: 'Notas da sessão' })
-    // O CONTROLE: abre lendo, sem a caixa.
-    await expect(reading).toBeVisible()
-    await expect(box).toBeHidden()
-
-    await reading.click()
-    await expect(box, 'o toque não abriu a caixa').toBeVisible()
-    await expect(box, 'a caixa abriu sem o cursor').toBeFocused()
-
-    await page.keyboard.press('Escape')
-    await expect(box, 'o Esc não voltou à leitura').toBeHidden()
-    await expect(reading).toBeVisible()
-    await expect(page, 'o Esc escapou do caderno e saiu da mesa').toHaveURL(new RegExp(`${MESA}$`))
-
-    await reading.click()
-    await expect(box).toBeFocused()
-    await page.getByRole('navigation', { name: 'Consultas do mestre' }).getByRole('button', { name: 'Notas' }).click()
-    await expect(box, 'sair da caixa não voltou à leitura').toBeHidden()
-  })
-
-  /**
-   * SAIR DA ESCRITA LOGO DEPOIS DE DIGITAR mostra o texto NOVO, e não o
-   * anterior: a prévia formatada só chega com a gravação, que espera a pausa
-   * da digitação. O orçamento curto é o caso — com folga, o defeito passa.
-   *
-   * A sessão é compartilhada: o caso devolve as notas ao que eram.
-   */
-  test('sair da escrita logo depois de digitar mostra o texto novo', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(MESA)
-    const reading = page.getByRole('button', { name: 'Editar as notas da sessão' })
-    const box = page.getByRole('textbox', { name: 'Notas da sessão' })
-    await reading.click()
-    const before = await box.inputValue()
-    const mark = `Marca do e2e ${Date.now()}`
-    try {
-      await box.fill(`${before}\n${mark}`)
-      await page.keyboard.press('Escape')
-      await expect(reading, 'a leitura mostrou o texto antigo depois de sair da escrita').toContainText(mark, {
-        timeout: 400,
-      })
-    } finally {
-      await reading.click()
-      await box.fill(before)
-      await page.keyboard.press('Escape')
-      await expect(reading).not.toContainText(mark)
-    }
   })
 })

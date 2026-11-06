@@ -50,6 +50,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), status)
 		return
 	}
+	view.dressPage(r)
 
 	// A PRESENÇA é registrada AQUI, e não numa rota própria.
 	//
@@ -126,6 +127,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// de piscar.
 			continue
 		}
+		view.dressPage(r)
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
 		if sheetTouched {
@@ -314,6 +316,18 @@ type tableRegion struct {
 // pergunta ao MESMO cálculo da produção quais regiões o stream mandaria para
 // cada papel, e este pacote não tem banco para montar a view de verdade.
 func TableRegions(v View) []tableRegion {
+	// UMA PÁGINA À PARTE tem só a região dela: mandar remendo para uma região
+	// que o documento não tem é escrever no vazio, e a lista e a página
+	// respondem à mesma `view`. O Bestiário não tem região viva — o livro não
+	// muda no meio da sessão.
+	switch v.Page {
+	case pageGroup:
+		return []tableRegion{{"table-group", gmGroup(v)}}
+	case pageCast:
+		return []tableRegion{{"table-npcs", gmCastList(v)}}
+	case pageBestiary:
+		return nil
+	}
 	if v.GM != nil {
 		return []tableRegion{
 			{"table-header", gmHeader(v)},
@@ -333,7 +347,6 @@ func TableRegions(v View) []tableRegion {
 			// O ACERVO pela mesma razão: a lista de lugares guardados muda duas
 			// vezes por sessão, e o mapa a cada peça que anda.
 			{"table-archive", gmArchive(v)},
-			{"table-npcs", gmCastList(v)},
 			// As CONFIGURAÇÕES mudam com o CICLO da sessão, que não é o ritmo
 			// de nenhuma das outras.
 			{"table-session-config", tableConfigSession(v)},

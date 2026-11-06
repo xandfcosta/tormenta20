@@ -203,32 +203,6 @@ func TestTheNotesWindowDrawsTheNoteAndTheWayToSaveIt(t *testing.T) {
 	}
 }
 
-// As duas escrevem a MESMA coluna `sessions.notes`, e o autosave é de 1,2 s:
-// com as duas abertas, quem salvar por último apaga o parágrafo do outro sem
-// aviso, com as duas faixas dizendo "Salvo". A exclusão é um pacto entre
-// documentos, e o que este guarda prende é a METADE que o servidor desenha —
-// a janela ANUNCIA que tomou, e a Mesa ESCUTA.
-//
-// Ele afirma a chave literal de propósito: as duas pontas a escrevem em
-// arquivos diferentes, e um renome que alcançasse só uma quebraria a exclusão
-// sem quebrar compilação nenhuma. É a mesma forma dos sete canais de um sinal.
-func TestTheNotesWindowAndTheColumnCannotBothHoldTheNotes(t *testing.T) {
-	f := newSceneFixture(t)
-
-	window := f.requests(t, f.gm, "GET", f.tableUrl()+"/notas", "").Body.String()
-	table := f.requests(t, f.gm, "GET", f.tableUrl(), "").Body.String()
-
-	if !strings.Contains(window, "t20:notas-janela") {
-		t.Errorf("a janela não anuncia que tomou as notas: a coluna não teria como fechar")
-	}
-	if !strings.Contains(window, "pagehide") {
-		t.Errorf("a janela não devolve as notas ao fechar: a coluna ficaria trancada para sempre")
-	}
-	if !strings.Contains(table, "storage") || !strings.Contains(table, "t20:notas-janela") {
-		t.Errorf("a Mesa não escuta o anúncio da janela: as duas caixas ficariam vivas juntas")
-	}
-}
-
 // A janela veste o Tempestade, e o Lado a lado precisa da regra que abre as duas colunas: a folha
 // antiga não a tinha mais, e o modo empilhava sem nada acusar.
 func TestTheNotesWindowWearsTheNewSystem(t *testing.T) {

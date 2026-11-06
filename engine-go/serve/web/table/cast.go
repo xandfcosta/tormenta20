@@ -125,5 +125,6 @@ func combatantFor(combatants []initiative.Combatant, characterID int64) *initiat
 func castVital(v View, m Member, pool, verb string) string {
 	base := fmt.Sprintf("%s/elenco/%d/vitais/%s/%s/",
 		v.SessionBase(), m.CharacterID, pool, verb)
-	return fmt.Sprintf("@post(evt.shiftKey ? '%s5' : '%s1')", base, base)
+	mark := v.pageMark()
+	return fmt.Sprintf("@post(evt.shiftKey ? '%s5%s' : '%s1%s')", base, mark, base, mark)
 }

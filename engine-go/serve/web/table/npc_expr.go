@@ -12,7 +12,7 @@ import (
 // estão as ROTAS e o que decide, aqui está o que a tela dispara.
 
 func npcCommand(v View, npc castNpc, action string) string {
-	return fmt.Sprintf("@post('%s/elenco/npc/%d/%s')", v.SessionBase(), npc.ID, action)
+	return fmt.Sprintf("@post('%s/elenco/npc/%d/%s%s')", v.SessionBase(), npc.ID, action, v.pageMark())
 }
 
 // saveToCastPost LIMPA o campo do nome depois de postar, e isso não é

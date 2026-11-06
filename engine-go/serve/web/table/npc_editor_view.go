@@ -151,9 +151,9 @@ func blockName(list string) string {
 // caminho.
 func openEditor(v View, npcID int64) string {
 	if npcID == 0 {
-		return fmt.Sprintf("@post('%s/elenco/npc/novo')", v.SessionBase())
+		return fmt.Sprintf("@post('%s/elenco/npc/novo%s')", v.SessionBase(), v.pageMark())
 	}
-	return fmt.Sprintf("@post('%s/elenco/npc/%d/editar')", v.SessionBase(), npcID)
+	return fmt.Sprintf("@post('%s/elenco/npc/%d/editar%s')", v.SessionBase(), npcID, v.pageMark())
 }
 
 // closeEditor é o Cancelar, e ele não fala com o servidor: o rascunho mora no
@@ -174,7 +174,7 @@ func listCommand(v View, list string, index int) string {
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v View) string {
-	return fmt.Sprintf("@post('%s/elenco/npc/rascunho/salvar')", v.SessionBase())
+	return fmt.Sprintf("@post('%s/elenco/npc/rascunho/salvar%s')", v.SessionBase(), v.pageMark())
 }
 
 // onTabExpr é a condição que mostra uma aba. Escrita aqui e não no `.templ` porque o
