@@ -3621,7 +3621,7 @@
     font-weight: 600;
     border-color: var(--ds-action);
   }
-  .ds-notes-window {
+  .ds-notes-page {
     gap: 0.75rem;
     padding: 0.75rem;
     container-type: inline-size;

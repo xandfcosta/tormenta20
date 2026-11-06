@@ -20,7 +20,7 @@ import (
 // no meio do combate e não vai lembrar de confirmar; salvam sozinhas depois da
 // pausa.
 //
-// ELAS MORAM NUMA PÁGINA SÓ, a das notas (`notesWindow`), que o cabeçalho da
+// ELAS MORAM NUMA PÁGINA SÓ, a das notas (`notesPageBody`), que o cabeçalho da
 // mesa do mestre abre em outra aba.
 //
 // ── A ARMADILHA QUE GOVERNA ESTE ARQUIVO ────────────────────────────────────
@@ -788,8 +788,7 @@ func notesMode(value, label string) templ.Component {
 // resposta que afirma "isto está no banco", e não o cliente supondo.
 //
 // O ERRO é TEXTO e não só cor: faixa vermelha sem frase deixa o mestre vendo que
-// algo deu errado sem ter onde ler o quê — e a janela bloqueada pelo navegador
-// chega por este mesmo canal.
+// algo deu errado sem ter onde ler o quê.
 func autosaveState() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context

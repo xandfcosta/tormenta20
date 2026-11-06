@@ -15,12 +15,12 @@ import "fmt"
 //   - a DIVISA de largura, porque quem redimensiona a aba é o navegador;
 //   - o ✕ de fechar, porque fechar é o botão da aba — e um segundo jeito de
 //     fechar teria de decidir o que fazer com a aba em volta.
-templ notesWindow(v View) {
+templ notesPageBody(v View) {
 	<section
-		id="notes-window"
+		id="notes-page"
 		aria-label="Notas da sessão"
-		data-init={ seedNotesWindow(v) }
-		class="ds-session ds-notes-window"
+		data-init={ seedNotesPage(v) }
+		class="ds-session ds-notes-page"
 	>
 		<header class="ds-notes-head">
 			<h1 class="ds-sheet-name">{ fmt.Sprintf("Notas · Sessão %d", v.SessionNum) }</h1>

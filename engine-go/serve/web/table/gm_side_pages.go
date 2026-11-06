@@ -41,7 +41,7 @@ type sidePageLink struct {
 }
 
 // sidePageLinks são as páginas na ordem do cabeçalho. As NOTAS e a TELA DA
-// MESA não são `sidePage`: cada uma tem a cena dela (`notesWindowPage`,
+// MESA não são `sidePage`: cada uma tem a cena dela (`notesPage`,
 // `handleDisplayPage`), com uma view mínima, e não precisa da mesa inteira.
 var sidePageLinks = []sidePageLink{
 	{"Notas", notesPath, "o texto da sessão"},

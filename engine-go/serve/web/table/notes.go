@@ -24,7 +24,7 @@ func (s Scene) RoutesNote(r chi.Router) {
 	// O MESMO endereço serve a CENA e o comando. Não é economia de rota: a
 	// página das notas abre em outra aba, às vezes no segundo monitor, e um
 	// endereço que o mestre possa favoritar é metade do que isso significa.
-	r.Get(base, s.notesWindowPage)
+	r.Get(base, s.notesPage)
 	r.Post(base, s.saveNoteSession)
 	r.Post(base+"/tarefa/{linha}/{estado}", s.toggleTask)
 }

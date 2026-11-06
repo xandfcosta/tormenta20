@@ -171,7 +171,7 @@ Uma janela própria (Document Picture-in-Picture, `<iframe>`) que pega o nó viv
 com `appendChild` leva classes, texto e `data-*`, **mas não a reatividade**: o
 runtime observa o documento de origem. Sem exceção, sem console, tela perfeita.
 **Superfície que vai para janela própria é CENA com endereço**, com o runtime
-dela (ver o cabeçalho do `notes_window.templ`).
+dela (ver o cabeçalho do `notes_page.templ`).
 
 ## Onde a coordenada de um gesto do tabuleiro viaja
 
