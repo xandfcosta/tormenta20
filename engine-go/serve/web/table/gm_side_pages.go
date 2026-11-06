@@ -79,6 +79,10 @@ func (v View) pageMark() string {
 	return "?" + pageParam + "=" + string(v.Page)
 }
 
+// bestiaryPageMark é a marca da página do Bestiário, que os gestos do painel
+// escrevem à mão: o painel só existe nela, e não há `View` no caminho deles.
+const bestiaryPageMark = "?" + pageParam + "=" + string(pageBestiary)
+
 // sidePageAddress é o endereço de uma página desta sessão.
 func sidePageAddress(v View, path string) string { return v.SessionBase() + "/" + path }
 

@@ -205,6 +205,9 @@ func TestTheBestiaryPageListsTheCreaturesAndSendsToTheQueue(t *testing.T) {
 	if !strings.Contains(page, f.tableUrl()+"/bestiario/enviar?pagina=bestiario") {
 		t.Error("o Pôr na fila não leva a marca da página")
 	}
+	if !strings.Contains(page, f.tableUrl()+"/elenco/npc/do-verbete?pagina=bestiario") {
+		t.Error("o Guardar no elenco não leva a marca da página")
+	}
 	// A recusa APAGA a frase do acerto anterior: "entrou na fila" ao lado do
 	// erro seria a confirmação certa sobre o gesto errado.
 	refused := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",

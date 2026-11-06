@@ -1113,7 +1113,7 @@ func gmCreatureFoot(b master.BestiaryView) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-indicator:sending": true, "data-attr:disabled": "$sending", "data-on:click": fmt.Sprintf("@post('%s/enviar?%s=%s')", b.BestiaryBase(), pageParam, pageBestiary)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-indicator:sending": true, "data-attr:disabled": "$sending", "data-on:click": fmt.Sprintf("@post('%s/enviar%s')", b.BestiaryBase(), bestiaryPageMark)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
