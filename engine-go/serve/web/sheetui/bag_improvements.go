@@ -48,7 +48,7 @@ func aceitaAFamilia(overlap book.Item, family string) bool {
 //
 // Ela confere três coisas de cada id: que ele existe no catálogo, que ele é da
 // categoria certa (melhoria não entra no campo do material e vice-versa), e que
-// ele serve à família do item.
+// ele serve ao item (`aceitaAFamilia`, `book.ImprovementFitsItem`).
 func fitsItemImprovement(catalog *book.Item, ids []string, category string) error {
 	if catalog == nil {
 		return fmt.Errorf("um item custom não recebe melhoria: ele não tem família no catálogo")
@@ -62,7 +62,7 @@ func fitsItemImprovement(catalog *book.Item, ids []string, category string) erro
 		if overlap == nil || overlap.Category != category {
 			return fmt.Errorf("%q não é uma %s do livro", id, categoryName(category))
 		}
-		if !aceitaAFamilia(*overlap, family) {
+		if !aceitaAFamilia(*overlap, family) || !book.ImprovementFitsItem(id, *catalog) {
 			return fmt.Errorf("%q não cabe em %q", overlap.Name, catalog.Name)
 		}
 	}
