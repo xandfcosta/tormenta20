@@ -34,6 +34,8 @@ type CatalogItem struct {
 	// Tabela 8-9 e da 8-11 (p337, p340). Quem o resolve é a primagem, e o
 	// porquê está no `composition.go`.
 	ComposedOf *Composition `json:"composedOf,omitempty"`
+	// SkillTies são as perícias a que o item está ligado sem somar número: ele tira uma penalidade (p158-159).
+	SkillTies []SkillTie `json:"skillTies,omitempty"`
 }
 
 // Item devolve o item do catálogo pelo id, ou nulo quando ele não existe — é o

@@ -66,6 +66,14 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  159,
 		UID:       "itm_dvxiw7nycq",
+		SkillTies: []SkillTie{
+			{Skill: "Adestramento", When: "em ambientes da corte"},
+			{Skill: "Atuação", When: "em ambientes da corte"},
+			{Skill: "Diplomacia", When: "em ambientes da corte"},
+			{Skill: "Enganação", When: "em ambientes da corte"},
+			{Skill: "Intimidação", When: "em ambientes da corte"},
+			{Skill: "Jogatina", When: "em ambientes da corte"},
+		},
 	},
 	{
 		ID:        "traje-viajante",
@@ -321,6 +329,7 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_urvcrsq7xe",
+		SkillTies: []SkillTie{{Skill: "Cura"}},
 	},
 	{
 		ID:       "luneta",

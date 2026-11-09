@@ -378,31 +378,6 @@ func overlaySummary(entry book.Item) string {
 	return "sem efeito mecânico"
 }
 
-// thatFitOverlays são as melhorias (ou materiais) que cabem no item.
-//
-// O filtro é a mesma regra que o servidor cobra ao gravar (`fitsItemImprovement`): a lista mostra o
-// que cabe, e quem recusa o resto é o servidor. A que já está no item fica mesmo sem caber, para
-// poder sair.
-func thatFitOverlays(category string, item book.Item, applied []string) []overlayChoice {
-	family := book.ItemFamily(item)
-	choices := []overlayChoice{}
-	for _, entry := range book.Catalogs().Items {
-		if entry.Category != category {
-			continue
-		}
-		fits := aceitaAFamilia(entry, family) && book.ImprovementFitsItem(entry.ID, item)
-		if !fits && !contemTraco(applied, entry.ID) {
-			continue
-		}
-		choices = append(choices, overlayChoice{
-			ID: entry.ID, Name: entry.Name, Effect: overlaySummary(entry),
-			Price: sheet.WithComma(entry.Price), Active: contemTraco(applied, entry.ID),
-		})
-	}
-	sort.SliceStable(choices, func(a, b int) bool { return choices[a].Name < choices[b].Name })
-	return choices
-}
-
 // carriedCategory são as categorias que uma pessoa CARREGA, e por isso as
 // únicas que o diálogo de acrescentar oferta.
 //

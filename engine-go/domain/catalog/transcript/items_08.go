@@ -242,7 +242,7 @@ var itemsPart08 = []Item{
 		Price:     300,
 		Equip:     "either",
 		Modifiers: []Modifier{},
-		BookPage:  165,
+		BookPage:  164,
 		UID:       "itm_5mug7fxicw",
 		AppliesTo: []string{"apparel"},
 	},

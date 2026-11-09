@@ -1,6 +1,9 @@
 package engine
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 // A camada de DECOMPOSIÇÃO: ela transforma os `ItemEffects` resolvidos num
 // `ComputedSheet` em que nenhum número viaja sozinho — cada um leva as
@@ -303,6 +306,10 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 	base := halfLevel + attrValue + training
 
 	stat := StatFor(e, ModifierTarget{K: "expertise", Name: state.Name})
+	if strings.HasPrefix(state.Name, CraftExpertise+" (") {
+		craft := StatFor(e, ModifierTarget{K: "expertise", Name: CraftExpertise})
+		stat.Contributions = concatContribs(stat.Contributions, craft.Contributions)
+	}
 	allStat := StatFor(e, ModifierTarget{K: "expertiseAll"})
 	byAttrStat := StatFor(e, ModifierTarget{K: "expertiseByAttribute", Attribute: state.Attribute})
 	// A RESISTÊNCIA entra só nas três, e entra na MESMA pilha: dois bônus de

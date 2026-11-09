@@ -70,6 +70,20 @@ func TestSomeImprovementsOnlyFitSomeItems(t *testing.T) {
 		{"Delicada em armadura leve", "couraca", "melhoria-delicada", false},
 		{"Selada em armadura pesada", "armadura-completa", "melhoria-selada", true},
 		{"Selada em armadura leve", "couraca", "melhoria-selada", false},
+		{"Aprimorado na luva de pelica", "luva-pelica", "melhoria-aprimorado", true},
+		{"Aprimorado na maleta", "maleta-medicamentos", "melhoria-aprimorado", true},
+		{"Aprimorado na gazua", "gazua", "melhoria-aprimorado", true},
+		{"Aprimorado no estojo", "estojo-de-disfarces", "melhoria-aprimorado", true},
+		{"Aprimorado no equipamento de viagem", "equipamento-de-viagem", "melhoria-aprimorado", true},
+		{"Aprimorado nos instrumentos de ofício", "instrumentos-de-oficio", "melhoria-aprimorado", true},
+		{"Aprimorado no instrumento musical", "instrumento-musical", "melhoria-aprimorado", true},
+		{"Aprimorado na sela", "sela", "melhoria-aprimorado", true},
+		{"Aprimorado no traje da corte", "traje-corte", "melhoria-aprimorado", true},
+		{"Aprimorado na coleção de livros", "coleccao-de-livros", "melhoria-aprimorado", true},
+		{"Aprimorado no manto élfico", "manto-elfico", "melhoria-aprimorado", true},
+		{"Aprimorado no traje de viajante, que não mexe em perícia", "traje-viajante", "melhoria-aprimorado", false},
+		{"Aprimorado nas botas reforçadas", "botas-reforcadas", "melhoria-aprimorado", false},
+		{"Aprimorado na corda", "corda", "melhoria-aprimorado", false},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f, id := fighterFixture(t)
@@ -80,6 +94,7 @@ func TestSomeImprovementsOnlyFitSomeItems(t *testing.T) {
 			}
 			name := map[string]string{
 				"melhoria-mira-telescopica": "Mira telescópica", "melhoria-delicada": "Delicada", "melhoria-selada": "Selada",
+				"melhoria-aprimorado": "Aprimorado",
 			}[c.improvement]
 			dialog := improvementDialog(t, f, id, item)
 			if got := strings.Contains(dialog, `aria-label="`+name+`"`); got != c.fits {
@@ -101,5 +116,14 @@ func TestAnImprovementThatNoLongerFitsStaysInTheListToComeOff(t *testing.T) {
 	}
 	if refusal := improvements(t, f, id, sword, `{"item_improvements":[]}`); refusal != "" {
 		t.Errorf("tirá-la foi recusado: %q", refusal)
+	}
+}
+
+// A lista diz em que perícia o item soma, e não "sem efeito mecânico".
+func TestTheImprovedLineSaysWhichSkill(t *testing.T) {
+	f, id := fighterFixture(t)
+	item := itemSemeia(t, f, id, "maleta-medicamentos", "Maleta de medicamentos", "")
+	if dialog := improvementDialog(t, f, id, item); !strings.Contains(dialog, "+1 em Cura") {
+		t.Error("a Aprimorado da maleta não diz +1 em Cura")
 	}
 }

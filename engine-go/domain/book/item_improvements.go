@@ -3,6 +3,9 @@ package book
 import (
 	"fmt"
 	"slices"
+	"strings"
+
+	"t20engine/domain/engine"
 )
 
 // MaxItemImprovements é o teto de melhorias de um item: itens superiores
@@ -105,14 +108,26 @@ func improvementName(id string) string {
 
 // ImprovementFitsItem é a restrição que a família não diz: o `appliesTo` fala de arma, e a Mira
 // telescópica é só de arma de disparo, "exceto fundas" (p166). A Delicada e a Selada são só de
-// armadura pesada (p164, p166). A Aprimorado, que pede item que modifique uma perícia (p164), não
-// entra: o catálogo não diz quais modificam, e uma lista à mão erraria em silêncio.
+// armadura pesada (p164, p166). A Aprimorado é de quem modifica uma perícia (p164).
 func ImprovementFitsItem(improvementID string, item Item) bool {
 	switch improvementID {
 	case "melhoria-mira-telescopica":
 		return item.Weapon != nil && item.Weapon.Purpose == "ranged" && item.ID != "funda"
 	case "melhoria-delicada", "melhoria-selada":
 		return item.Category == "armor-heavy"
+	case engine.ImprovedItemImprovement:
+		return len(engine.ImprovedSkillsOf(item.Modifiers, item.SkillTies)) > 0
 	}
 	return true
+}
+
+// ImprovedSummary é a frase da Aprimorado na lista daquele item: "+1 em Cura".
+func ImprovedSummary(item Item) string {
+	names := []string{}
+	for _, m := range engine.ImprovedSkillsOf(item.Modifiers, item.SkillTies) {
+		if !slices.Contains(names, m.Target.Name) {
+			names = append(names, m.Target.Name)
+		}
+	}
+	return "+1 em " + strings.Join(names, ", ")
 }
