@@ -220,6 +220,31 @@ func TestTheRaceAttributePendencyAppearsAndCloses(t *testing.T) {
 	}
 }
 
+// O PASSO DA RAÇA, na lista, diz numa palavra o que se escolhe, como os outros passos; a frase inteira
+// ("Distribua +1 em 3 atributos diferentes") é o rótulo do bloco, dentro do passo. Na lista ela quebrava em
+// três linhas no desktop.
+func TestTheRaceStepSaysWhatIsChosenAndTheBlockSaysTheRule(t *testing.T) {
+	cases := []struct {
+		race, step, meta, rule string
+	}{
+		{"humano", "Raça · Humano", "atributos", "Distribua +1 em 3 atributos diferentes"},
+		{"suraggel", "Raça · Suraggel", "ascendência", "Escolha a ascendência"},
+	}
+	for _, c := range cases {
+		t.Run(c.race, func(t *testing.T) {
+			f, id := barbaro(t, 1)
+			seedRaca(t, f.s, id, c.race)
+			screen := powerScreen(t, f, id)
+			if step := choiceStepTitled(t, screen, c.step); step.Meta != c.meta {
+				t.Errorf("o passo %q diz %q na lista, quer %q", c.step, step.Meta, c.meta)
+			}
+			if body := choiceStepBody(t, screen, c.step); !strings.Contains(body, c.rule) {
+				t.Errorf("o passo %q aberto não diz %q: %q", c.step, c.rule, body)
+			}
+		})
+	}
+}
+
 // A DISTRIBUIÇÃO REPETIDA é recusada — o livro pede atributos DIFERENTES.
 func TestARepeatedDistributionIsRefused(t *testing.T) {
 	f, id := barbaro(t, 1)
