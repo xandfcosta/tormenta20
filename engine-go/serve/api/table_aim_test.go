@@ -150,3 +150,58 @@ func TestTheAimLineIsAlsoForWhoThrows(t *testing.T) {
 		t.Error("a adaga arremessada paga o −5 e não tem a linha de Mirar")
 	}
 }
+
+// VOLTAR A VEZ desfaz um "Próximo": quem volta encontra o turno como o deixou, com o que já gastou, a mira
+// e o ataque a mais. Antes ele recebia o orçamento de quem estava na vez, e era uma ação de graça.
+func TestRewindingGivesTheTurnBackAsItWas(t *testing.T) {
+	f, id, goblin := archerBesideAFight(t)
+	store := f.s.sessions
+	if refusal := rollsFromTheActions(t, f, id, "mirar", goblin); refusal != "" {
+		t.Fatalf("mirar: %q", refusal)
+	}
+	before := sceneOf(t, f)
+	if before.MovementLeft || !before.StandardLeft || before.AimedAt != goblin {
+		t.Fatalf("o controle falhou: %+v", *before)
+	}
+	if _, err := store.NextTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatal(err)
+	}
+	if scene := sceneOf(t, f); !scene.MovementLeft || scene.AimedAt != "" {
+		t.Fatalf("o controle falhou: quem entrou na vez não tem o turno cheio: %+v", *scene)
+	}
+	if _, err := store.PreviousTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatal(err)
+	}
+	after := sceneOf(t, f)
+	if after.MovementLeft != before.MovementLeft || after.StandardLeft != before.StandardLeft || after.AimedAt != before.AimedAt {
+		t.Errorf("a vez voltou diferente: %+v, e tinha saído como %+v", *after, *before)
+	}
+	// E o "Próximo" de novo não deixa o gasto passar adiante.
+	if _, err := store.NextTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatal(err)
+	}
+	if scene := sceneOf(t, f); !scene.MovementLeft || !scene.StandardLeft || scene.AimedAt != "" {
+		t.Errorf("depois de voltar, o próximo não recebeu o turno cheio: %+v", *scene)
+	}
+}
+
+// Voltar para antes de qualquer "Próximo" guardado: o turno é cheio, e o que era de quem estava na vez não
+// passa para quem entrou nela.
+func TestRewindingPastTheHistoryGivesAFullTurn(t *testing.T) {
+	f, id, goblin := archerBesideAFight(t)
+	if refusal := rollsFromTheActions(t, f, id, "mirar", goblin); refusal != "" {
+		t.Fatalf("mirar: %q", refusal)
+	}
+	if _, err := f.s.sessions.PreviousTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.s.sessions.PreviousTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.s.sessions.PreviousTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatal(err)
+	}
+	if scene := sceneOf(t, f); scene.AimedAt != "" {
+		t.Errorf("a mira de quem estava na vez passou adiante: %+v", *scene)
+	}
+}
