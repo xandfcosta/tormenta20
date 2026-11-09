@@ -1,0 +1,91 @@
+package api
+
+import (
+	"context"
+	"strings"
+	"testing"
+
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/db/sqlcgen"
+)
+
+// AS ESCOLAS DO BARDO E DO DRUIDA (p44, p61): "Escolha três escolas de magia. Uma vez feita, essa escolha
+// não pode ser mudada. Você pode lançar magias arcanas [divinas, no druida] de 1º círculo que pertençam a
+// essas escolas."
+//
+// A escolha mora no poder Magias (1º círculo) da classe, como a escolha contada do Especialista, e decide
+// de que magias a ficha diz a CD — decisão do dono.
+
+// schoolCaster é um personagem de 1º nível de `class`, o ÚNICO do jogador na mesa: a mesa desenha o primeiro
+// personagem de quem olha, e um segundo faria a superfície Ações mostrar outra ficha.
+func schoolCaster(t *testing.T, class string) (sceneFixture, int64) {
+	t.Helper()
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t.com")
+	player := seedUser(t, s, "jogador@t.com")
+	campaignID := seedCampaign(t, s, gm)
+	sessionID := seedSession(t, s, campaignID)
+	id, err := s.queries.CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
+		OwnerId: player, Name: "Conjurador de escola", Origin: "artista", Level: 1,
+		Charisma: 3, Wisdom: 3,
+		Size: "Médio", Displacement: 9,
+		Proficiencies: "[]", RaceAttributeChoices: "{}", SecondaryRaceChoices: "[]",
+		OriginChoices: "[]", ClassChoices: "{}", CreatedAt: dbvalue.NowISO(), UpdatedAt: dbvalue.NowISO(),
+	})
+	if err != nil {
+		t.Fatalf("semear o %s: %v", class, err)
+	}
+	seedClasse(t, s, id, class, 1)
+	seedMember(t, s, campaignID, id)
+	return sceneFixture{s: s, gm: gm, player: player,
+		campaignID: campaignID, sessionID: sessionID, charID: id}, id
+}
+
+const (
+	bardSchoolsPath  = "escolha/class.bardo.magias-1-circulo/"
+	druidSchoolsPath = "escolha/class.druida.magias-1-circulo/"
+)
+
+// TRÊS ESCOLAS, distintas, e a ficha avisa enquanto faltam.
+func TestTheBardChoosesThreeSchools(t *testing.T) {
+	f, id := schoolCaster(t, "Bardo")
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Bardo · Magias (1° círculo)"); step.Tag != "0 de 3" {
+		t.Errorf("sem escola escolhida, o passo das escolas diz %q", step.Tag)
+	}
+	// O BLOCO diz quantas de quantas e o que o livro diz da escolha, e não o rodapé das perícias do
+	// Especialista, de quem ele empresta a forma.
+	page := powerScreen(t, f, id)
+	for _, want := range []string{`aria-label="Magias (1° círculo): Evocação"`, ">0 de 3<", "não pode ser mudada"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("o bloco das escolas não tem %q", want)
+		}
+	}
+	if strings.Contains(page, "Só as perícias treinadas") {
+		t.Error("o bloco das escolas diz o rodapé das perícias do Especialista")
+	}
+	for _, school := range []string{"evocacao", "ilusao", "abjuracao"} {
+		if refusal := powerCommand(t, f, id, bardSchoolsPath+school, ""); refusal != "" {
+			t.Fatalf("escolher %s foi recusado: %q", school, refusal)
+		}
+	}
+	if refusal := powerCommand(t, f, id, bardSchoolsPath+"necromancia", ""); !strings.Contains(refusal, "3 escolas") {
+		t.Errorf("a quarta escola foi aceita, ou a recusa não diz o limite: %q", refusal)
+	}
+	if got := storedPowerChoices(t, f, id); got != `{"class.bardo.magias-1-circulo":["evocacao","ilusao","abjuracao"]}` {
+		t.Errorf("powerChoices gravado = %s", got)
+	}
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Bardo · Magias (1° círculo)"); step.Tag != "feito" {
+		t.Errorf("com as três escolhidas, o passo das escolas diz %q", step.Tag)
+	}
+}
+
+// O druida escolhe as dele pelo mesmo gesto (p61).
+func TestTheDruidChoosesThreeSchools(t *testing.T) {
+	f, id := schoolCaster(t, "Druida")
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Druida · Magias (1° círculo)"); step.Tag != "0 de 3" {
+		t.Errorf("sem escola escolhida, o passo das escolas do druida diz %q", step.Tag)
+	}
+	if refusal := powerCommand(t, f, id, druidSchoolsPath+"abjuracao", ""); refusal != "" {
+		t.Fatalf("escolher abjuração foi recusado: %q", refusal)
+	}
+}
