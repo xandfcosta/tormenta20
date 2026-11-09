@@ -64,3 +64,42 @@ func TestSwitchingTheDamageTypeCostsFiveAndFlipsTheDamage(t *testing.T) {
 			danoTrocado, naoLetalTrocado)
 	}
 }
+
+// O Estilo Desarmado: "podem causar dano letal ou não letal (sem penalidades)" (p128). Vale para o
+// ataque desarmado, e a arma na mão de quem tem o poder segue pagando os −5.
+func TestUnarmedStyleSwitchesTheDamageTypeWithoutPenalty(t *testing.T) {
+	f, goblin := attackOnTurn(t)
+	seedPowerChoices(t, f.s, f.charID, `["estilo-desarmado"]`, "{}")
+
+	// O CONTROLE: com a espada na mão, o poder não muda nada.
+	rollNu, totalNu, _, _ := propoeGolpe(t, f, goblin, "")
+	rollTrocado, totalTrocado, _, _ := propoeGolpe(t, f, goblin, "/trocando")
+	if totalTrocado-rollTrocado != totalNu-rollNu-5 {
+		t.Fatalf("o controle já estava errado: com a espada, o golpe trocado somou %d e o nu, %d",
+			totalTrocado-rollTrocado, totalNu-rollNu)
+	}
+
+	if _, err := f.s.db.ExecContext(t.Context(), "UPDATE character_items SET equipped = NULL WHERE characterId = ?", f.charID); err != nil {
+		t.Fatalf("guardar a espada: %v", err)
+	}
+	rollNu, totalNu, _, _ = propoeGolpe(t, f, goblin, "")
+	rollTrocado, totalTrocado, _, _ = propoeGolpe(t, f, goblin, "/trocando")
+	if totalTrocado-rollTrocado != totalNu-rollNu {
+		t.Errorf("desarmado, o golpe trocado somou %d e o nu, %d: a p128 diz sem penalidades",
+			totalTrocado-rollTrocado, totalNu-rollNu)
+	}
+
+	// A TROCA SEGUE VALENDO, agora sem os −5: o dano sai do outro tipo. O nu do Estilo é letal.
+	rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/iniciativa/"+goblin+"/atacar/trocando", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("propor o golpe trocado deu %d", rec.Code)
+	}
+	gmRules(t, f, "acertou")
+	if refusal := gmRefusal(t, f, "/ataque/dano"); refusal != "" {
+		t.Fatalf("o dano foi recusado: %q", refusal)
+	}
+	pa := stateOf(t, f.s.sessions, f.sessionID).PendingAttack
+	if pa == nil || pa.Damage == 0 || pa.NonLethal != pa.Damage {
+		t.Errorf("o golpe trocado do Estilo Desarmado devia ser não letal: %+v", pa)
+	}
+}

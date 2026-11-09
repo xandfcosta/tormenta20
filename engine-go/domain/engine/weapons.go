@@ -36,6 +36,9 @@ type WeaponCard struct {
 	// Style é o ataque adicional que um estilo ligado dá a esta arma (p125). Fora do fio, como o
 	// `Natural`.
 	Style *StyleStrike `json:"-"`
+	// SwitchesDamageFreely é o ataque desarmado do Estilo Desarmado: letal ou não letal, "sem
+	// penalidades" (p128). Fora do fio, porque só o pedido de atacar o lê.
+	SwitchesDamageFreely bool `json:"-"`
 	// ItemID e Doses são a linha da mochila e o que a Injeção alquímica guarda (p165).
 	// Não vão para o fio, porque só o gesto de atacar e a tela os leem.
 	ItemID int64    `json:"-"`

@@ -54,7 +54,7 @@ func TestAFrozenStrikeRollsLikeTheCard(t *testing.T) {
 func TestEveryCardFieldOutOfTheWireIsDecided(t *testing.T) {
 	notInTheStrike := map[string]bool{
 		"CatalogID": true, "ItemID": true, "Doses": true, "OtherUse": true, "RefusesBoost": true,
-		"DexBy": true, "DexDamage": true, "Natural": true, "Style": true,
+		"DexBy": true, "DexDamage": true, "Natural": true, "Style": true, "SwitchesDamageFreely": true,
 		"ShootsIntoMelee": true, // este o FreezeStrike leva à parte
 	}
 	typed := reflect.TypeOf(WeaponCard{})

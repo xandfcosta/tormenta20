@@ -368,6 +368,12 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		}
 	}
 	if req.Maneuver == "" {
+		// O ESTILO DESARMADO troca o tipo "sem penalidades" (p128): sem o -5 da Tabela 5-3, o que
+		// sobra da troca é a natureza do golpe.
+		if req.SwitchesDamageType && setup.weapon.SwitchesDamageFreely {
+			setup.weapon.NonLethal = !setup.weapon.NonLethal
+			req.SwitchesDamageType = false
+		}
 		if setup.situations, err = s.specialSituations(ctx, req); err != nil {
 			return strikeSetup{}, err
 		}
