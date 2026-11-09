@@ -416,7 +416,7 @@ func TestAnOriginPowerBringsItsNaturalWeapon(t *testing.T) {
 	}
 }
 
-// Voltar a vez não renova o turno, e o extra aberto não passa para quem entrou nela.
+// O extra aberto não passa para quem entrou na vez ao voltar.
 func TestRewindingTheTurnClosesTheExtra(t *testing.T) {
 	f, id, goblin := minotaurOnTurn(t)
 	store := f.s.sessions

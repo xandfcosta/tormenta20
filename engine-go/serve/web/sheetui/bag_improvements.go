@@ -69,6 +69,23 @@ func fitsItemImprovement(catalog *book.Item, ids []string, category string) erro
 	return nil
 }
 
+// fitsTheImprovementRules confere o pedido contra as regras do livro, contando o que o verbete já traz. Quem
+// não pede nada passa: tirar é sempre possível, mesmo do item com as vagas estouradas.
+func fitsTheImprovementRules(catalog *book.Item, signals Signals) error {
+	if len(signals.ItemImprovements) == 0 && signals.ItemMaterial == "" {
+		return nil
+	}
+	builtIn, material := book.BuiltInOverlays(catalog)
+	if signals.ItemMaterial != "" && material != "" {
+		return fmt.Errorf("este item já é de %s, e o material é um só", book.ItemByID(material).Name)
+	}
+	withMaterial := signals.ItemMaterial != "" || material != ""
+	if err := book.FitsImprovementCount(len(signals.ItemImprovements)+len(builtIn), withMaterial); err != nil {
+		return err
+	}
+	return book.ImprovementSetProblem(signals.ItemImprovements, builtIn, withMaterial)
+}
+
 // repeatedImprovement é a melhoria que o pedido traz duas vezes. O diálogo nunca a manda assim, e a
 // do livro repetida não somaria; a da mesa somaria, então a recusa vale para as duas.
 func repeatedImprovement(ids []string) string {

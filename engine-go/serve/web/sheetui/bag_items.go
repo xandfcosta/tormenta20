@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,7 +48,9 @@ type itemSheet struct {
 	Oversized bool
 	// Overlayable diz se o item ACEITA melhoria: não se forja uma poção em
 	// aço-rubi, e um diálogo com duas listas vazias é pior que botão nenhum.
-	Overlayable  bool
+	Overlayable bool
+	// BuiltInSlots são as vagas de melhoria que o verbete já ocupa: o item específico vem com sobreposição.
+	BuiltInSlots int
 	Improvements []overlayChoice
 	Materials    []overlayChoice
 	// Command é o id como texto, para montar o `@post` sem conversão na tela.
@@ -141,8 +144,18 @@ func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
 	character.Overlayable = aceitaMelhoria(*catalog)
 	if character.Overlayable {
 		applied := savedImprovements(item.Improvements)
-		character.Improvements = thatFitOverlays("improvement", *catalog, applied)
+		builtIn, builtInMaterial := book.BuiltInOverlays(catalog)
+		character.Improvements = slices.DeleteFunc(thatFitOverlays("improvement", *catalog, applied), func(choice overlayChoice) bool {
+			return slices.Contains(builtIn, choice.ID) && !choice.Active
+		})
 		character.Materials = thatFitOverlays("material", *catalog, appliedMaterial(item))
+		if builtInMaterial != "" {
+			character.Materials = slices.DeleteFunc(character.Materials, func(choice overlayChoice) bool { return !choice.Active })
+		}
+		character.BuiltInSlots = len(builtIn)
+		if builtInMaterial != "" {
+			character.BuiltInSlots++
+		}
 	}
 	return character
 }

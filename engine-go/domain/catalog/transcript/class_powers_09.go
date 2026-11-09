@@ -92,7 +92,7 @@ var classPowersPart09 = []ClassPower{
 			{
 				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
 				Amount:    -2,
-				BonusType: "untyped",
+				BonusType: "ambidestria",
 				Condition: &ModifierCondition{
 					Kind:   "flagOn",
 					Flag:   "ataque-ambidestro",

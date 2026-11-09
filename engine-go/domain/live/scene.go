@@ -74,6 +74,9 @@ type Scene struct {
 	// combate corpo a corpo, "neste turno" e "contra aquele alvo" (p234).
 	AimedBy string `json:"aimedBy,omitempty"`
 	AimedAt string `json:"aimedAt,omitempty"`
+	// TurnsBehind é o turno de cada vez que passou, do mais antigo para o mais novo: é o que "voltar a vez"
+	// devolve a quem volta.
+	TurnsBehind []TurnLeftBehind `json:"turnsBehind,omitempty"`
 	// ExtraMovementLeft é a ação de movimento a mais do turno em curso, de quem
 	// entrou no primeiro turno do combate com Reflexos de Combate (p129).
 	ExtraMovementLeft bool `json:"extraMovementLeft,omitempty"`

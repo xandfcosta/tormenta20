@@ -103,3 +103,26 @@ func TestAmbidextrousAndTheStyleShareOneSwitch(t *testing.T) {
 		t.Error("com o poder geral, o interruptor da classe não devia existir")
 	}
 }
+
+// Quem tem a Ambidestria nas duas classes paga o -2 uma vez: são dois poderes para o mesmo gesto.
+func TestAmbidextrousInTwoClassesPaysOnce(t *testing.T) {
+	f, id, goblin := styleOnTurn(t, "ataque-poderoso", false, "espada-longa", "adaga")
+	seedClasse(t, f.s, id, "Guerreiro", 1)
+	seedClasse(t, f.s, id, "Caçador", 1)
+	seedPowerChoices(t, f.s, id, `["class.guerreiro.ambidestria","class.cacador.ambidestria"]`, "{}")
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
+		t.Fatalf("o golpe: %q", refusal)
+	}
+	off := pendingOf(t, f)
+	gmCancels(t, f)
+	if refusal := switchRefusal(t, f, id, "ataque-ambidestro"); refusal != "" {
+		t.Fatalf("ligar: %q", refusal)
+	}
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
+		t.Fatalf("o golpe: %q", refusal)
+	}
+	on := pendingOf(t, f)
+	if got := (on.Total - on.Roll) - (off.Total - off.Roll); got != -2 {
+		t.Errorf("o interruptor mudou o ataque em %+d, e o livro dá -2", got)
+	}
+}

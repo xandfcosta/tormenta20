@@ -283,9 +283,9 @@ func (st *Store) unitGesture(
 	return clone, nil
 }
 
-// PreviousTurn volta a vez. Ele também é gesto de turno — a mesma unidade —,
-// mas não desfaz o que a vez que passou consumiu: voltar é conserto de mesa, e
-// ressuscitar efeito expirado exigiria guardar o que foi derrubado.
+// PreviousTurn volta a vez. Ele também é gesto de turno — a mesma unidade. Quem volta
+// recebe o turno como o deixou, mas o efeito que a vez passada derrubou não
+// ressuscita: isso exigiria guardar tudo o que foi derrubado, e voltar é conserto de mesa.
 func (st *Store) PreviousTurn(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.turnGesture(ctx, sessionID, func(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 		live.RewindTurn(s)
