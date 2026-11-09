@@ -143,7 +143,17 @@ func (p Plays) Cast(
 	if available := dto.ManaAvailable(); int64(totalPm) > available {
 		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
 	}
-	return sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm)
+	if err := sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm); err != nil {
+		return err
+	}
+	// O RITUAL VALE PARA ESTA CONJURAÇÃO: é aqui e não no gesto porque ela pode ser recusada acima, e
+	// a recusa não gasta o interruptor. Ligado para sempre, a próxima magia sairia com o limite dobrado.
+	if active[RitualSwitch] {
+		return p.queries.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+			Characterid: dto.ID, Conditionalid: RitualSwitch,
+		})
+	}
+	return nil
 }
 
 // truqueEscolhido diz se um dos aprimoramentos pedidos é um truque.
@@ -265,6 +275,10 @@ func validatePowerAugments(
 		if bar := book.PowerAugmentBar(pick.PowerID, fromBook); bar != "" {
 			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, bar)
 		}
+		// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
+		if pick.PowerID == book.QuickenedSpellPower && CastsAsRitual(dto) {
+			return 0, fmt.Sprintf("o ritual e %s mudam a execução, e mudança não se acumula", augment.Name)
+		}
 		for _, spellPick := range spellPicks {
 			own := spell.Augments[spellPick.AugmentIndex]
 			if own.Exclusive {
@@ -283,12 +297,23 @@ func validatePowerAugments(
 	return total, ""
 }
 
-// CastExecution é a execução que esta conjuração cobra do turno: a da magia, ou
-// a ação livre da Magia Acelerada (p131).
+// RitualSwitch é o interruptor do Celebrar Ritual (p131).
+var RitualSwitch = engine.FlagGroupID("ritual")
+
+// CastsAsRitual diz se a próxima magia desta ficha é ritual.
+func CastsAsRitual(dto sheet.CharacterDTO) bool {
+	return sheet.ToStringSet(dto.Conditionals)[RitualSwitch]
+}
+
+// CastExecution é a execução que esta conjuração cobra do turno: a da magia, a ação livre da Magia
+// Acelerada, ou a hora do ritual (p131).
 //
 // Quem chama pergunta ANTES de conjurar, e um pedido sem o poder na ficha só passa
 // por aqui para ser recusado pelo `Cast` logo em seguida, sem gastar nada.
-func CastExecution(execution string, powerAugments []sheet.PowerAugmentPick) string {
+func CastExecution(execution string, ritual bool, powerAugments []sheet.PowerAugmentPick) string {
+	if ritual {
+		return string(engine.ActionLong)
+	}
 	for _, pick := range powerAugments {
 		if pick.PowerID == book.QuickenedSpellPower {
 			return string(engine.ActionFree)
