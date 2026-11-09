@@ -58,3 +58,27 @@ func TestTheOversizedMarkStaysOnItsOwnWeapon(t *testing.T) {
 		t.Errorf("as espadas rolam %q e %q, want 1d8 e 1d10", cards[0].Damage, cards[1].Damage)
 	}
 }
+
+// "O dano na tabela se refere a armas normais, para criaturas Pequenas e Médias" (p142), e as Grandes e
+// Enormes usam as aumentadas (p106). Uma categoria acima, o dado muda quando a categoria da ARMA muda:
+// a arma do Médio é a normal do Pequeno, e o Goblin paga o -5 sem ganhar o passo.
+func TestTheOversizedStepFollowsTheWielderSize(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	for _, c := range []struct {
+		size, damage string
+	}{
+		{"Minúsculo", "1d10"},
+		{"Pequeno", "1d8"},
+		{"Médio", "1d10"},
+		{"Grande", "1d8"},
+		{"Enorme", "1d10"},
+	} {
+		hero := switchHero(`[]`, 0, "espada-longa")
+		hero.Size = c.size
+		hero.Items[0].Oversized = true
+		card := world.ComputeWeaponCards(hero, nil)[0]
+		if card.Damage != c.damage {
+			t.Errorf("%s: a arma de categoria maior rola %q, want %q", c.size, card.Damage, c.damage)
+		}
+	}
+}

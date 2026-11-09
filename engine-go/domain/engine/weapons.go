@@ -142,6 +142,18 @@ const (
 	OversizedWeaponPenalty = -5
 )
 
+// oversizedStep são os passos de dano da arma feita para uma categoria acima de quem a usa. O passo é
+// da categoria da ARMA: reduzida para Minúsculo, normal para Pequeno e Médio (p142), aumentada para Grande
+// e Enorme, e gigante para Colossal (p106). A arma do Médio é a normal do Pequeno, e o Goblin paga o -5
+// sem ganhar o passo. Tamanho que a tabela não conhece é tratado como Médio, que é o caso comum.
+func oversizedStep(size string) int {
+	switch size {
+	case "Pequeno", "Grande":
+		return 0
+	}
+	return 1
+}
+
 // weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
 //
 // O tipo é o PROPÓSITO deste uso, um só: a machadinha corpo a corpo recebe o
@@ -216,9 +228,8 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
-		// "Armas aumentadas [...] causam um passo a mais de dano" (p143).
 		if it.Oversized {
-			steps++
+			steps += oversizedStep(ch.Size)
 		}
 		cardOf := func(name string, use *WeaponStats) WeaponCard {
 			scopes := append([]string{weaponScope, WieldedScope}, weaponKindScopes(use)...)

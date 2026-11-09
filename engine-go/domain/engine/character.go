@@ -34,7 +34,10 @@ type Character struct {
 	Tibar float64 `json:"tibar"`
 
 	// JSON-encoded columns, parsed lazily by the collect_parse.go helpers.
-	Proficiencies        string `json:"proficiencies"`
+	Proficiencies string `json:"proficiencies"`
+	// Size é a categoria de tamanho, por extenso como a ficha guarda ("Médio"): o dado da arma de categoria
+	// maior depende dela (p106, p142).
+	Size                 string `json:"size"`
 	RaceAbilityChoices   string `json:"raceAbilityChoices"`
 	RaceAttributeChoices string `json:"raceAttributeChoices"`
 	SecondaryRaceChoices string `json:"secondaryRaceChoices"`
