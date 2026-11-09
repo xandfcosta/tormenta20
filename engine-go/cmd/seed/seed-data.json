@@ -522,6 +522,15 @@
               {
                 "catalogId": "cosmetico",
                 "quantity": 2
+              },
+              {
+                "catalogId": "alaude-elfico"
+              },
+              {
+                "catalogId": "flauta-mistica"
+              },
+              {
+                "catalogId": "tambor-das-profundezas"
               }
             ]
           },
