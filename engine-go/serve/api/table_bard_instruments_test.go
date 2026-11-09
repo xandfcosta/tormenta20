@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -130,5 +131,27 @@ func TestTheDeepDrumWarnsThatTheRangeIsDoubled(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// A CD DE CADA MAGIA SOMA O QUE SOMA NA CD DA FICHA: a superfície Ações escreve "CD N" na linha de conjurar,
+// e com a Flauta Mística na mão o N sobe 1, como a CD da aba Magias (p158).
+//
+// Pela DIFERENÇA entre a flauta empunhada e a guardada, e não por um número fixo: o que se mede é o +1
+// chegar à linha, e não a conta de base, que é do motor e tem caso próprio.
+func TestTheMysticFluteRaisesTheDCOnTheSpellRow(t *testing.T) {
+	spellDC := func(wear string) int {
+		f, _ := bardWithInstrumentOnTurn(t, "flauta-mistica", wear)
+		learnSpell(t, f, "luz")
+		standard := entre(t, acoesDaMesa(t, f), "Ação padrão", "Ação de movimento")
+		found := regexp.MustCompile(`Conjurar · Luz.*?CD (\d+)`).FindStringSubmatch(standard)
+		if found == nil {
+			t.Fatalf("a linha de conjurar a Luz não diz a CD:\n%s", recorte(standard))
+		}
+		dc, _ := strconv.Atoi(found[1])
+		return dc
+	}
+	if held, stored := spellDC("wielded"), spellDC(""); held-stored != 1 {
+		t.Errorf("a linha da Luz diz CD %d com a flauta na mão e %d com ela guardada; o livro pede +1", held, stored)
 	}
 }

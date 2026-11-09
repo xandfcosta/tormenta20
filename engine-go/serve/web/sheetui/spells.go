@@ -183,10 +183,13 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 	return rows
 }
 
-// spellCdOf é a CD dos testes contra a magia, pelo atributo-chave da classe.
+// spellCdOf é a CD dos testes contra a magia, pelo atributo-chave da classe,
+// com os bônus de CD de item e de poder (a Flauta Mística, p158).
 //
 // Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
-// usa: uma segunda conta aqui daria dois números para a mesma pergunta.
+// usa: uma segunda conta aqui daria dois números para a mesma pergunta. O bônus
+// é o mesmo `SpellDCBonus` que a caixa soma; sem ele, a linha de conjurar dizia
+// uma CD abaixo da que a aba Magias diz.
 func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
 	sheet, _, ok := s.sheetForPanels(dto)
 	if !ok {
@@ -205,7 +208,7 @@ func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
 	if best == 0 {
 		return "—"
 	}
-	return strconv.Itoa(best)
+	return strconv.Itoa(best + sheet.SpellDCBonus.Total)
 }
 
 func aceitaAClasse(list []string, name string) bool {
