@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"html"
+	"net/url"
 	"os"
 	"slices"
 	"strings"
@@ -263,5 +265,32 @@ func TestTheMigrationKeepsTheGrantedPowerAsAList(t *testing.T) {
 		if got != want {
 			t.Errorf("ficha %d: %q, esperava %q", id, got, want)
 		}
+	}
+}
+
+// SAIR DO CLÉRIGO com os dois concedidos dele: a devoção do guerreiro dá um, e o outro passa a ocupar a vaga
+// de poder do 2º nível de Guerreiro (p124). A lista diz isso, e não "2 de 1".
+func TestLeavingTheClericKeepsTheSecondGrantedPowerInAPowerSlot(t *testing.T) {
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Guerreiro", "Guerreiro", 2, 0, 0)
+	if refusal := powerCommand(t, f, id, devotionPath("khalmyr"), ""); refusal != "" {
+		t.Fatalf("escolher o deus: %q", refusal)
+	}
+	sheetGesture(t, f, fmt.Sprintf("/personagens/%d/classes/%s/entra", id, url.PathEscape("Clérigo")))
+	for _, power := range []string{"Coragem Total", "Dom da Verdade"} {
+		if refusal := powerCommand(t, f, id, grantedPath(power), ""); refusal != "" {
+			t.Fatalf("%s: %q", power, refusal)
+		}
+	}
+
+	sheetGesture(t, f, fmt.Sprintf("/personagens/%d/nivel/%s/-1", id, url.PathEscape("Clérigo")))
+
+	screen := html.UnescapeString(powerScreen(t, f, id))
+	if !strings.Contains(screen, "1 de 1 · 1 em vaga de poder") || strings.Contains(screen, ">2 de 1<") {
+		t.Error("sem o Clérigo, a lista dos concedidos devia dizer que o segundo ocupa vaga de poder")
+	}
+	// Sem nenhum poder de Guerreiro escolhido, só o concedido enche a vaga: sem a regra, seria "0 de 1".
+	if step := choiceStepTitled(t, powerScreen(t, f, id), "Guerreiro 2"); step.Tag != "feito" {
+		t.Errorf("o segundo concedido devia ocupar a vaga do guerreiro 2: o passo diz %q", step.Tag)
 	}
 }
