@@ -30,20 +30,22 @@ import (
 // degrau.
 func usePower(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	id := chi.URLParam(r, "poder")
+	// A FICHA VEM ANTES DO PREÇO: a ação do poder é a de quem o usa, e um item empunhado a muda
+	// (`book.ActivationHeld`).
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
 	spec := book.ActivationOf(id, "")
 	cost := engine.ActionFree
 	steps := 0
-	if spec != nil && spec.Action != "" {
-		cost = engine.ActionCost(spec.Action)
+	if spec != nil {
+		cost = activationCost(*spec, dto)
 	}
 	if spec != nil && spec.Scaling != nil && signals.PowerSteps != nil {
 		steps = int(*signals.PowerSteps)
 	}
 	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
-		return err
-	}
-	dto, err := s.deps.LoadCharacter(r.Context(), row)
-	if err != nil {
 		return err
 	}
 	choice := character.UseChoice{Steps: steps, Doubled: signals.PreyFavored != nil && *signals.PreyFavored}
@@ -70,12 +72,12 @@ func enterStance(s Scene, r *http.Request, row sqlcgen.Character, signals Signal
 	// conjuração já tem escrita: entrar ainda pode ser recusado pelo PM ou
 	// pelos degraus, e cobrar antes tiraria o movimento de alguém por uma
 	// postura que não subiu.
-	cost := stanceActionCost(flag)
-	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
-		return err
-	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
+		return err
+	}
+	cost := stanceActionCost(flag, dto)
+	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
 		return err
 	}
 	steps := 0
@@ -88,17 +90,31 @@ func enterStance(s Scene, r *http.Request, row sqlcgen.Character, signals Signal
 	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)
 }
 
-// stanceActionCost é o que ASSUMIR aquela postura custa do turno.
+// stanceActionCost é o que ASSUMIR aquela postura custa do turno a esta ficha.
 //
 // Postura desconhecida cai em LIVRE, que não cobra nada: quem recusa a flag
 // que não existe é o `EnterStance`, com a frase dele, e recusar aqui daria
 // duas mensagens para o mesmo não.
-func stanceActionCost(flag string) engine.ActionCost {
-	spec, found := book.StancesFromCatalog()[flag]
-	if !found || spec.Action == "" {
+func stanceActionCost(flag string, dto sheet.CharacterDTO) engine.ActionCost {
+	stance, found := book.StancesFromCatalog()[flag]
+	if !found {
 		return engine.ActionFree
 	}
-	return engine.ActionCost(spec.Action)
+	spec := book.ActivationOf(stance.ID, "")
+	if spec == nil {
+		return engine.ActionFree
+	}
+	return activationCost(*spec, dto)
+}
+
+// activationCost é a ação que o poder custa a esta ficha, com o que os itens empunhados mudam nela
+// (o Alaúde Élfico, p158). Ação vazia é LIVRE.
+func activationCost(spec book.Activation, dto sheet.CharacterDTO) engine.ActionCost {
+	held, _ := book.ActivationHeld(spec, dto.WieldedCatalogIDs())
+	if held.Action == "" {
+		return engine.ActionFree
+	}
+	return engine.ActionCost(held.Action)
 }
 
 // ── AS ESCOLHAS, e a validação que virou fronteira ───────────────────────────

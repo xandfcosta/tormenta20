@@ -620,7 +620,10 @@ func isUnconditional(m Modifier) bool {
 // wornAsWielded é o vestido que uma regra da mesa faz valer como empunhado (`wornWear`).
 const wornAsWielded = "vested-as-wielded"
 
-func isWielded(equipped *string) bool {
+// IsWielded diz se o item está numa das mãos. A segunda mão (`wielded2`) também empunha.
+//
+//	engine.IsWielded(&wielded) // true
+func IsWielded(equipped *string) bool {
 	return equipped != nil && (*equipped == "wielded" || *equipped == "wielded2")
 }
 
@@ -643,7 +646,7 @@ func ContradictsWear(m Modifier, equipped *string) bool {
 	}
 	switch m.Condition.C {
 	case "wielded":
-		return !isWielded(equipped)
+		return !IsWielded(equipped)
 	case "vested":
 		return *equipped != "vested"
 	}
@@ -656,7 +659,7 @@ func conditionMet(m Modifier, equipped *string) bool {
 	}
 	switch m.Condition.C {
 	case "wielded":
-		return isWielded(equipped) || (equipped != nil && *equipped == wornAsWielded)
+		return IsWielded(equipped) || (equipped != nil && *equipped == wornAsWielded)
 	case "vested":
 		return equipped != nil && (*equipped == "vested" || *equipped == wornAsWielded)
 	case "inUse":

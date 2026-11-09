@@ -178,7 +178,7 @@ func stanceChips(power powerRow) []actionChip {
 			// que vai perder. Era preciso ir à aba Efeitos para descobrir.
 			Bonus:     bonusInEffect(stance),
 			Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
-			GroupCost: stanceGroupCost(stance.Flag),
+			GroupCost: stanceGroupCost(power),
 			Path:      "/efeitos/postura/" + stance.Flag,
 		}}
 	}
@@ -187,7 +187,7 @@ func stanceChips(power powerRow) []actionChip {
 		Cost:  strconv.Itoa(stance.BasePm) + " PM",
 		Can:   power.Can, Why: power.Why,
 		Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
-		GroupCost: stanceGroupCost(stance.Flag),
+		GroupCost: stanceGroupCost(power),
 		Before:    "$stance_degrees = 0; ", Path: "/poderes/postura/" + stance.Flag + "/entra",
 	}
 	if stance.MaxSteps > 0 {
@@ -250,12 +250,16 @@ func bonusInEffect(stance *stanceState) string {
 // vez CUSTA, e assumir uma postura custa — livre na Fúria, padrão na
 // Inspiração, movimento nas Posturas de Combate. O chip aparece onde a pessoa
 // procura o que fazer com aquela ação, que é onde ela decide.
-func stanceGroupCost(flag string) engine.ActionCost {
-	spec, found := book.StancesFromCatalog()[flag]
-	if !found || spec.Action == "" {
+//
+// A AÇÃO É A DA LINHA, e não a do catálogo: a linha já traz o que os itens
+// empunhados mudam nela, e com o Alaúde Élfico na mão a Inspiração custa
+// movimento (p158). Lendo o catálogo, o chip ficaria na padrão enquanto a vez
+// cobra o movimento.
+func stanceGroupCost(power powerRow) engine.ActionCost {
+	if power.Action == "" {
 		return engine.ActionFree
 	}
-	return engine.ActionCost(spec.Action)
+	return engine.ActionCost(power.Action)
 }
 
 // numbersMovedBy traduz alvos de modificador no vocabulário das linhas.

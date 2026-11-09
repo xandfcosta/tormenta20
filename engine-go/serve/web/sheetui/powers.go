@@ -81,6 +81,9 @@ type powerRow struct {
 	Degrees  *useDegrees
 	InEffect string
 	Command  string
+	// ItemNotes são os avisos dos itens empunhados que mudam este poder sem mudar número: "alcance dobrado
+	// (Tambor das Profundezas)". Ver `book.ActivationHeld`.
+	ItemNotes []string
 }
 
 // stanceState é o que a tela precisa saber de uma postura.
@@ -148,6 +151,10 @@ func powerRowFor(
 	if spec == nil {
 		return row
 	}
+	// O PODER COMO ELE FICA NA MÃO DE QUEM O USA: o item empunhado muda a ação (o Alaúde Élfico) ou deixa um
+	// aviso na linha (o Tambor das Profundezas), p158.
+	held, notes := book.ActivationHeld(*spec, dto.WieldedCatalogIDs())
+	spec, row.ItemNotes = &held, notes
 	row.ID, row.Command = spec.ID, spec.ID
 	row.Kind, row.Glyph = spec.Kind, activationGlyph(spec.Kind)
 	// O NOME DA AÇÃO é o da ATIVAÇÃO, e não o da linha do catálogo.
