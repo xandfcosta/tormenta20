@@ -129,6 +129,11 @@ func TestAGrantedPowerBeyondTheDevotionTakesAPowerSlot(t *testing.T) {
 	if !strings.Contains(html.UnescapeString(screen), "1 de 1 · +1 em vaga") {
 		t.Error("a lista dos concedidos não diz que um deles ocupa vaga de poder")
 	}
+	// O passo da classe diz o que ocupa a vaga, e onde se muda: sem isso, "1 de 2" com nenhum poder marcado
+	// na lista dele não se explica.
+	if body := choiceStepBody(t, screen, "Guerreiro 3"); !strings.Contains(body, "poder concedido de Khalmyr") || !strings.Contains(body, "Devoção") {
+		t.Errorf("o passo da classe não diz que um poder concedido ocupa a vaga: %q", body[:min(len(body), 300)])
+	}
 
 	if refusal := powerCommand(t, f, id, grantedPath("Espada Justiceira"), ""); refusal != "" {
 		t.Fatalf("o terceiro, na segunda vaga: %q", refusal)
