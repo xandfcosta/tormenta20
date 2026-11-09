@@ -176,7 +176,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 }
 
 // movementRows são mover e, para quem atira, mirar: "testes de Pontaria" (p234).
-func movementRows(combat panelCombat, computed engine.ComputedSheet) []actionRow {
+func movementRows(combat panelCombat, computed engine.ComputedSheet, sharpAim bool) []actionRow {
 	rows := []actionRow{movementRow(computed)}
 	shoots := func(weapon weaponTile) bool {
 		return weapon.Skill == "Pontaria" || (weapon.Other != nil && weapon.Other.Skill == "Pontaria" && !weapon.Other.Improvised)
@@ -184,12 +184,21 @@ func movementRows(combat panelCombat, computed engine.ComputedSheet) []actionRow
 	if slices.ContainsFunc(combat.Weapons, shoots) {
 		rows = append(rows, actionRow{
 			Name:   "Mirar",
-			Detail: "anula o −5 de atirar em quem está em combate corpo a corpo, neste turno · p234",
+			Detail: aimDetail(sharpAim),
 			Can:    true,
 			Rolls:  []actionRoll{{Label: "Mirar", Path: "/acoes/mirar", NeedsTarget: true}},
 		})
 	}
 	return rows
+}
+
+// aimDetail diz o que o gesto dá a esta ficha.
+func aimDetail(sharpAim bool) string {
+	detail := "anula o −5 de atirar em quem está em combate corpo a corpo, neste turno · p234"
+	if sharpAim {
+		detail += " · Mira Apurada: +2 no ataque e na margem de ameaça à distância · p128"
+	}
+	return detail
 }
 
 // movementRow é o deslocamento, em METROS.

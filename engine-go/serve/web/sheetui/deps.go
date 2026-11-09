@@ -85,7 +85,8 @@ type Deps interface {
 	// funcionar.
 	ProposeStrikeOnTable(ctx context.Context, characterID int64, strike ActionStrike) error
 	// AimOnTable é o gesto de Mirar (p234) do personagem que está na vez.
-	AimOnTable(ctx context.Context, characterID int64, targetEntryID string) error
+	// alsoSwitches é o interruptor que o gesto liga junto, ou vazio (a Mira Apurada, p128).
+	AimOnTable(ctx context.Context, characterID int64, targetEntryID, alsoSwitches string) error
 	// HasAttackInProgress diz se o personagem propôs um ataque que ainda não acabou
 	// em alguma mesa aberta. A mesa é o único lugar que sabe disso.
 	HasAttackInProgress(ctx context.Context, characterID int64) (bool, error)

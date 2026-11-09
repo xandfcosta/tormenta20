@@ -137,6 +137,9 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 	own = append(own, catalog.Modifiers...)
 	for _, id := range parseStringArray(it.Improvements) {
 		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
+		if id == ImprovedItemImprovement {
+			own = append(own, ImprovedSkillsOf(catalog.Modifiers, catalog.SkillTies)...)
+		}
 	}
 	if it.Material != nil {
 		own = append(own, overlayModsFor(r.getCatalogItem(*it.Material), catalog)...)

@@ -8,6 +8,10 @@ package engine
 // alvo dela é o ataque porque o chip mora sobre o número que o interruptor mexe. A flag
 // `tem-estilo-de-duas-armas` cala o interruptor da Ambidestria de classe: com os dois poderes há um só.
 
+// SharpAimPowerID é a Mira Apurada: "quando usa a ação mirar" (p128). O interruptor dela é ligado pelo gesto,
+// e não é oferecido: oferecido, dava o +2 a quem não mirou.
+const SharpAimPowerID = "mira-apurada"
+
 // As fontes do ataque adicional, que são os poderes e os interruptores deles.
 const (
 	TwoWeaponStylePowerID = "estilo-de-duas-armas"

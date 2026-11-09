@@ -26,6 +26,14 @@ type Item struct {
 	Requires    string           `json:"requires,omitempty"`
 	ComposedOf  *ItemComposition `json:"composedOf,omitempty"`
 	Artifact    bool             `json:"artifact,omitempty"`
+	SkillTies   []SkillTie       `json:"skillTies,omitempty"`
+}
+
+// SkillTie é a perícia a que uma ferramenta ou um vestuário está ligado sem somar número: ele tira uma
+// penalidade (p158-159). When é a situação em que a penalidade vale, quando o livro a limita.
+type SkillTie struct {
+	Skill string `json:"skill"`
+	When  string `json:"when,omitempty"`
 }
 
 type WeaponStats struct {

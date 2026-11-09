@@ -44,7 +44,7 @@ func SituationalGroupsOf(offered []engine.ConditionalEffect) []SituationalGroup 
 			groups = append(groups, SituationalGroup{Key: c.Term, Members: []engine.ConditionalEffect{c}})
 			continue
 		}
-		if _, isStance := stances[c.Flag]; isStance {
+		if _, isStance := stances[c.Flag]; isStance || c.Flag == engine.SharpAimPowerID {
 			continue
 		}
 		if at, seen := byFlag[c.Flag]; seen {

@@ -143,17 +143,27 @@ func (p Plays) Cast(
 	if available := dto.ManaAvailable(); int64(totalPm) > available {
 		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
 	}
-	if err := sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm); err != nil {
+	if !active[RitualSwitch] {
+		return sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm)
+	}
+	// O RITUAL VALE PARA ESTA CONJURAÇÃO: é aqui e não no gesto porque ela pode ser recusada acima, e a recusa
+	// não gasta o interruptor. E os dois saem na mesma transação: se desligar falhasse com o PM já cobrado, a
+	// tela diria erro, o interruptor ficaria ligado, e tentar de novo cobraria outra vez.
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("abrir a transação do ritual: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	q := p.queries.WithTx(tx)
+	if err := sheet.SpendLoadedMana(ctx, q, &dto, totalPm); err != nil {
 		return err
 	}
-	// O RITUAL VALE PARA ESTA CONJURAÇÃO: é aqui e não no gesto porque ela pode ser recusada acima, e
-	// a recusa não gasta o interruptor. Ligado para sempre, a próxima magia sairia com o limite dobrado.
-	if active[RitualSwitch] {
-		return p.queries.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
-			Characterid: dto.ID, Conditionalid: RitualSwitch,
-		})
+	if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+		Characterid: dto.ID, Conditionalid: RitualSwitch,
+	}); err != nil {
+		return fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
 	}
-	return nil
+	return tx.Commit()
 }
 
 // truqueEscolhido diz se um dos aprimoramentos pedidos é um truque.

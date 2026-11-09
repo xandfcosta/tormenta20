@@ -77,6 +77,7 @@ var itemsPart06 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_ldmvgxmstf",
+		SkillTies: []SkillTie{{Skill: "Sobrevivência", When: "para fazer um acampamento"}},
 	},
 	{
 		ID:        "estojo-de-disfarces",
@@ -88,6 +89,7 @@ var itemsPart06 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_jxy6golvzl",
+		SkillTies: []SkillTie{{Skill: "Enganação", When: "para disfarce"}},
 	},
 	{
 		ID:        "gazua",
@@ -99,6 +101,7 @@ var itemsPart06 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_te42ntllql",
+		SkillTies: []SkillTie{{Skill: "Ladinagem", When: "para abrir fechaduras"}},
 	},
 	{
 		ID:        "instrumentos-de-oficio",
@@ -110,6 +113,7 @@ var itemsPart06 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_amqtgd3wji",
+		SkillTies: []SkillTie{{Skill: "Ofício"}},
 	},
 	{
 		ID:        "instrumento-musical",
@@ -121,6 +125,7 @@ var itemsPart06 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_vskdw65mv7",
+		SkillTies: []SkillTie{{Skill: "Atuação"}},
 	},
 	{
 		ID:        "sela",
@@ -132,6 +137,7 @@ var itemsPart06 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  158,
 		UID:       "itm_chnjyikvfv",
+		SkillTies: []SkillTie{{Skill: "Cavalgar", When: "montado com a sela"}},
 	},
 	{
 		ID:        "agua-benta",

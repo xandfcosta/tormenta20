@@ -156,7 +156,7 @@ func actionsPanelFrom(
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
 	byCost := map[engine.ActionCost][]actionRow{
 		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
-		engine.ActionMovement: movementRows(combat, computed),
+		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
 		engine.ActionFree:     extraStrikeRows(combat, boosts),
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"sort"
 	"strings"
 
 	"t20engine/domain/book"
@@ -84,6 +85,35 @@ func fitsTheImprovementRules(catalog *book.Item, signals Signals) error {
 		return err
 	}
 	return book.ImprovementSetProblem(signals.ItemImprovements, builtIn, withMaterial)
+}
+
+// thatFitOverlays são as melhorias (ou materiais) que cabem no item.
+//
+// O filtro é a mesma regra que o servidor cobra ao gravar (`fitsItemImprovement`): a lista mostra o
+// que cabe, e quem recusa o resto é o servidor. A que já está no item fica mesmo sem caber, para
+// poder sair.
+func thatFitOverlays(category string, item book.Item, applied []string) []overlayChoice {
+	family := book.ItemFamily(item)
+	choices := []overlayChoice{}
+	for _, entry := range book.Catalogs().Items {
+		if entry.Category != category {
+			continue
+		}
+		fits := aceitaAFamilia(entry, family) && book.ImprovementFitsItem(entry.ID, item)
+		if !fits && !contemTraco(applied, entry.ID) {
+			continue
+		}
+		effect := overlaySummary(entry)
+		if entry.ID == engine.ImprovedItemImprovement && fits {
+			effect = book.ImprovedSummary(item)
+		}
+		choices = append(choices, overlayChoice{
+			ID: entry.ID, Name: entry.Name, Effect: effect,
+			Price: sheet.WithComma(entry.Price), Active: contemTraco(applied, entry.ID),
+		})
+	}
+	sort.SliceStable(choices, func(a, b int) bool { return choices[a].Name < choices[b].Name })
+	return choices
 }
 
 // repeatedImprovement é a melhoria que o pedido traz duas vezes. O diálogo nunca a manda assim, e a
