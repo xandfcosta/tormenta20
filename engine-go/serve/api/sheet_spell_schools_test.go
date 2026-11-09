@@ -154,3 +154,14 @@ func TestTheBardDoesNotCastDivineSpellsOfHisSchools(t *testing.T) {
 		t.Errorf("o bardo de abjuração tem CD %s no Santuário, que é divino", got)
 	}
 }
+
+// O CONTROLE: o arcanista lança toda arcana (p37), e o Especialista em Escola, que também escolhe escola,
+// não o torna um conjurador por escola. Sem este caso, uma regra que pegasse todo poder com escolha de
+// escola tiraria a CD de todo arcanista, e o resto da suíte passaria.
+func TestTheArcanistKeepsTheDCOfEveryArcaneSpell(t *testing.T) {
+	f, _ := schoolCaster(t, "Arcanista")
+	learnSpell(t, f, "explosao-de-chamas")
+	if got := spellDCOnTheTable(t, f, "Explosão de Chamas"); got == "—" {
+		t.Error("o arcanista perdeu a CD da Explosão de Chamas")
+	}
+}

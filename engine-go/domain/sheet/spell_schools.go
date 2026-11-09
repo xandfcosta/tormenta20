@@ -7,8 +7,10 @@ import (
 )
 
 // AS CLASSES QUE LANÇAM PELAS ESCOLAS QUE ESCOLHERAM (p44, p61): o bardo lança "magias arcanas […] que
-// pertençam a essas escolas", e o druida as divinas. A escolha mora no poder de classe cuja escolha é de
-// escola (`Kind: "school"`), e é ele que diz quem lança assim — não há lista de classes aqui.
+// pertençam a essas escolas", e o druida as divinas. A escolha mora no poder de classe que escolhe um
+// NÚMERO de escolas (`Kind: "school"` com `Count`), e é ele que diz quem lança assim — não há lista de
+// classes aqui. O `Count` é o que separa: o Especialista em Escola do arcanista também escolhe escola, mas
+// para somar na CD dela (p38), e o arcanista lança toda arcana.
 //
 // A TRADIÇÃO da magia sai das classes que o verbete lista, pela `list` de cada uma: a Explosão de Chamas
 // lista só o Arcanista, que é arcano, e por isso o bardo de evocação a lança. Pela lista inteira, não: ela
@@ -32,10 +34,10 @@ func CastsTheSpell(dto CharacterDTO, class, school string, classes []string) boo
 	return sameTradition && slices.Contains(PowerPicks(dto.PowerChoices)[power], school)
 }
 
-// schoolChoicePower é o poder em que a classe escolhe as escolas, ou vazio quando ela não escolhe.
+// schoolChoicePower é o poder em que a classe escolhe as escolas que lança, ou vazio quando ela não escolhe.
 func schoolChoicePower(class string) string {
 	for id, power := range book.ClassPowers() {
-		if power.ClassName == class && power.Choice != nil && power.Choice.Kind == "school" {
+		if power.ClassName == class && power.Choice != nil && power.Choice.Kind == "school" && power.Choice.Count > 0 {
 			return id
 		}
 	}
