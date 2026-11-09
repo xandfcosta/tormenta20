@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -119,5 +121,32 @@ func TestTheTargetBarSaysWhoIsAimedAt(t *testing.T) {
 	}
 	if !strings.Contains(acoesDaMesa(t, f), says) {
 		t.Error("a barra não diz em quem o personagem mira")
+	}
+}
+
+// "Não dá para agir" vale para mirar como vale para o golpe (p233).
+func TestAStunnedCharacterDoesNotAim(t *testing.T) {
+	f, id, goblin := archerBesideAFight(t)
+	f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/efeitos/condicao/atordoado", id), "")
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal == "" {
+		t.Fatal("o controle falhou: atordoado, o golpe devia ser recusado")
+	}
+	if refusal := rollsFromTheActions(t, f, id, "mirar", goblin); refusal == "" {
+		t.Error("atordoado, mirar foi aceito")
+	}
+	if !sceneOf(t, f).MovementLeft {
+		t.Error("a recusa gastou o movimento")
+	}
+}
+
+// Quem arremessa também faz teste de Pontaria, e a p234 fala desses testes.
+func TestTheAimLineIsAlsoForWhoThrows(t *testing.T) {
+	f, _, _ := styleOnTurn(t, "ataque-poderoso", false, "adaga")
+	surface := superficieDeAcoes(t, acoesDaMesa(t, f))
+	if !strings.Contains(surface, "/outro-uso") {
+		t.Fatal("o controle falhou: a adaga não tem o arremesso")
+	}
+	if !strings.Contains(surface, "Mirar") {
+		t.Error("a adaga arremessada paga o −5 e não tem a linha de Mirar")
 	}
 }

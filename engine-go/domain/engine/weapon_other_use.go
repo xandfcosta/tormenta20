@@ -49,6 +49,7 @@ func (u *weaponOtherUse) applied(card WeaponCard) WeaponCard {
 	if u.penaltySource == "" {
 		return card
 	}
+	card.Improvised = true
 	card.Attack += UnskilledUsePenalty
 	card.AttackOwn.Total += UnskilledUsePenalty
 	card.AttackOwn.Contributions = append(card.AttackOwn.Contributions,

@@ -48,6 +48,9 @@ type WeaponCard struct {
 	// que voa, a azagaia que bate (ver `otherUseOf`). Não vai para o fio, porque só
 	// o gesto de atacar e a conta da ficha a leem.
 	OtherUse *WeaponCard `json:"-"`
+	// Improvised é o uso que a arma não foi feita para ter, e que por isso paga a penalidade: a espada
+	// arremessada, a azagaia corpo a corpo. Fora do fio, como o `OtherUse`.
+	Improvised bool `json:"-"`
 	// RefusesBoost diz que o impulso pedido não vale neste uso: o Golpe Divino e a
 	// arma à distância. Não vai para o fio, porque só o pedido de atacar o lê.
 	RefusesBoost bool `json:"-"`
@@ -142,18 +145,6 @@ const (
 	OversizedWeaponPenalty = -5
 )
 
-// oversizedStep são os passos de dano da arma feita para uma categoria acima de quem a usa. O passo é
-// da categoria da ARMA: reduzida para Minúsculo, normal para Pequeno e Médio (p142), aumentada para Grande
-// e Enorme, e gigante para Colossal (p106). A arma do Médio é a normal do Pequeno, e o Goblin paga o -5
-// sem ganhar o passo. Tamanho que a tabela não conhece é tratado como Médio, que é o caso comum.
-func oversizedStep(size string) int {
-	switch size {
-	case "Pequeno", "Grande":
-		return 0
-	}
-	return 1
-}
-
 // weaponKindScopes são os escopos de dano por TIPO em que esta arma cai.
 //
 // O tipo é o PROPÓSITO deste uso, um só: a machadinha corpo a corpo recebe o
@@ -229,7 +220,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
 		if it.Oversized {
-			steps += oversizedStep(ch.Size)
+			steps += oversizedStep(r.raceSizeKey(ch))
 		}
 		cardOf := func(name string, use *WeaponStats) WeaponCard {
 			scopes := append([]string{weaponScope, WieldedScope}, weaponKindScopes(use)...)
@@ -251,7 +242,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			break
 		}
 	}
-	r.offerStyleStrikes(ch, activeConditionals, cards)
+	r.offerStyleStrikes(ch, activeConditionals, effects, cards)
 	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared)...)
 }
 

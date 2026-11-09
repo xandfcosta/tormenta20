@@ -401,14 +401,16 @@ func spellDcTotal(sheet engine.ComputedSheet) int {
 
 // weaponOtherUseTile são as duas contas do outro uso da arma, dentro da linha dela.
 type weaponOtherUseTile struct {
-	Verb      string
-	Label     string
-	Skill     string
-	Attack    string
-	Damage    string
-	Crit      string
-	AttackSum []ds.SumTerm
-	DamageSum []ds.SumTerm
+	// Improvised é o uso que paga a penalidade por a arma não ser feita para ele.
+	Improvised bool
+	Verb       string
+	Label      string
+	Skill      string
+	Attack     string
+	Damage     string
+	Crit       string
+	AttackSum  []ds.SumTerm
+	DamageSum  []ds.SumTerm
 }
 
 // weaponTiles são as armas empunhadas, no máximo duas — o motor já as limita.
@@ -423,6 +425,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			other = &weaponOtherUseTile{
 				Verb: otherUseVerb(use), Label: otherUseLabel(use), Skill: use.Skill, Attack: book.WithSign(use.Attack),
 				Damage: damageLabel(*use), Crit: critLabel(*use), AttackSum: otherAttack, DamageSum: otherDamage,
+				Improvised: use.Improvised,
 			}
 		}
 		tiles = append(tiles, weaponTile{
