@@ -3,12 +3,14 @@ package sheetui
 import (
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -79,7 +81,15 @@ func aimsAtTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signal
 	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, engine.ActionMovement); err != nil {
 		return err
 	}
-	return s.deps.AimOnTable(r.Context(), row.ID, target)
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	alsoSwitches := ""
+	if slices.ContainsFunc(sheet.OwnedPowers(dto), func(p sheet.OwnedPower) bool { return p.ID == engine.SharpAimPowerID }) {
+		alsoSwitches = engine.FlagGroupID(engine.SharpAimPowerID)
+	}
+	return s.deps.AimOnTable(r.Context(), row.ID, target, alsoSwitches)
 }
 
 // rollsManeuverOnTheTarget rola a manobra da vez contra o alvo escolhido

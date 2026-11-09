@@ -142,13 +142,13 @@ func (h sheetHost) ProposeStrikeOnTable(
 }
 
 // AimOnTable é o gesto de Mirar (p234), pelo mesmo caminho do golpe: quem mira é quem está na vez.
-func (h sheetHost) AimOnTable(ctx context.Context, characterID int64, targetEntryID string) error {
+func (h sheetHost) AimOnTable(ctx context.Context, characterID int64, targetEntryID, alsoSwitches string) error {
 	for _, table := range h.liveTablesOf(ctx, characterID) {
 		onTurn, err := h.characterOnTurn(ctx, table.SessionID, characterID)
 		if err != nil || onTurn == nil {
 			continue
 		}
-		_, err = h.rules.sessions.Aim(ctx, table.SessionID, onTurn.ID, targetEntryID)
+		_, err = h.rules.sessions.Aim(ctx, table.SessionID, characterID, onTurn.ID, targetEntryID, alsoSwitches)
 		return err
 	}
 	return fmt.Errorf("mirar é na sua vez (p234), e ela não está aberta em mesa nenhuma")

@@ -205,3 +205,64 @@ func TestRewindingPastTheHistoryGivesAFullTurn(t *testing.T) {
 		t.Errorf("a mira de quem estava na vez passou adiante: %+v", *scene)
 	}
 }
+
+// MIRA APURADA: "quando usa a ação mirar, você recebe +2 em testes de ataque e na margem de ameaça com ataques
+// à distância até o fim do turno" (p128). Quem liga é o gesto, e não há interruptor para ganhar o +2 sem mirar.
+func TestAimingAppliesTheSharpAim(t *testing.T) {
+	f, id, goblin := archerBesideAFight(t)
+	seedPowerChoices(t, f.s, id, `["mira-apurada"]`, "{}")
+	if chips := acoesDaMesa(t, f); strings.Contains(chips, "ao mirar") {
+		t.Error("a Mira Apurada ainda tem interruptor")
+	}
+	target := fmt.Sprintf("/personagens/%d/efeitos/situacao", id)
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, `{"conditional":"flag:mira-apurada"}`).Body.String()); refusal == "" {
+		t.Error("o interruptor escondido ainda liga pelo endereço")
+	}
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
+		t.Fatalf("o disparo: %q", refusal)
+	}
+	plain := pendingOf(t, f)
+	gmCancels(t, f)
+
+	if refusal := rollsFromTheActions(t, f, id, "mirar", goblin); refusal != "" {
+		t.Fatalf("mirar: %q", refusal)
+	}
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
+		t.Fatalf("o disparo mirado: %q", refusal)
+	}
+	aimed := pendingOf(t, f)
+	// +5 do combate corpo a corpo que a mira anula, +2 da Mira Apurada.
+	if got := (aimed.Total - aimed.Roll) - (plain.Total - plain.Roll); got != 7 {
+		t.Errorf("mirar mudou o ataque em %+d, e devia ser +7", got)
+	}
+	if got := plain.CritRange - aimed.CritRange; got != 2 {
+		t.Errorf("a margem de ameaça mudou %d, e o livro dá 2", got)
+	}
+	gmCancels(t, f)
+
+	// "Até o fim do turno".
+	for range 2 {
+		if _, err := f.s.sessions.NextTurn(t.Context(), f.sessionID); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
+		t.Fatalf("o disparo do turno seguinte: %q", refusal)
+	}
+	if next := pendingOf(t, f); next.Total-next.Roll != plain.Total-plain.Roll {
+		t.Errorf("o bônus durou além do turno: %+d contra %+d", next.Total-next.Roll, plain.Total-plain.Roll)
+	}
+}
+
+// Quem não tem o poder mira sem ganhar o bônus.
+func TestAimingWithoutTheSharpAimOnlyCancelsThePenalty(t *testing.T) {
+	f, id, goblin := archerBesideAFight(t)
+	before, _ := shoots(t, f, id, goblin)
+	gmCancels(t, f)
+	if refusal := rollsFromTheActions(t, f, id, "mirar", goblin); refusal != "" {
+		t.Fatalf("mirar: %q", refusal)
+	}
+	if after, _ := shoots(t, f, id, goblin); after != before+5 {
+		t.Errorf("o bônus foi de %+d a %+d, e sem o poder são só os 5", before, after)
+	}
+}

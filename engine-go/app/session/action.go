@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
 )
 
@@ -178,9 +179,12 @@ func (st *Store) characterMoment(ctx context.Context, characterID int64, onTurn 
 	return engine.MomentFor(onTurn, pool.HpCurrent, conditions)
 }
 
-// Aim guarda em quem o personagem da vez mirou, cobrando a ação de movimento (p234).
-func (st *Store) Aim(ctx context.Context, sessionID int64, attackerEntry, targetEntry string) (*live.SessionRuntimeState, error) {
-	return st.apply(ctx, sessionID, events.TurnAdvanced{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
+// Aim guarda em quem o personagem da vez mirou, cobrando a ação de movimento (p234). `alsoSwitches` é o
+// interruptor que o gesto liga (a Mira Apurada, p128), vazio em quem não o tem, e ele sai na mesma transação.
+func (st *Store) Aim(
+	ctx context.Context, sessionID, characterID int64, attackerEntry, targetEntry, alsoSwitches string,
+) (*live.SessionRuntimeState, error) {
+	clone, err := st.unitGesture(ctx, sessionID, func(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 		if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) || s.Initiative[s.TurnIndex].ID != attackerEntry {
 			return fmt.Errorf("só quem está na vez mira")
 		}
@@ -193,6 +197,17 @@ func (st *Store) Aim(ctx context.Context, sessionID int64, attackerEntry, target
 		if s.Scene != nil {
 			s.Scene.AimedBy, s.Scene.AimedAt = attackerEntry, targetEntry
 		}
-		return nil
+		if alsoSwitches == "" {
+			return nil
+		}
+		return u.InTx.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
+			Characterid: characterID, Conditionalid: alsoSwitches,
+		})
 	})
+	if err != nil {
+		return nil, err
+	}
+	st.bus.Publish(events.TurnAdvanced{SessionID: sessionID})
+	st.wakeTheSheet(&characterID)
+	return clone, nil
 }
