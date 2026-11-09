@@ -1,0 +1,30 @@
+package sheetui
+
+import "t20engine/serve/web/ds"
+
+// otherClassesList é a lista "Outra classe" do `+` do nível (p35). A classe que não serve ao deus da ficha
+// (p96) aparece sem o gesto e com o porquê, em vez de sumir: quem procura o Paladino acha a resposta onde
+// procurou.
+templ otherClassesList(v View, step int) {
+	<p class="ds-card-text">Entrar em outra classe dá os PV de um nível seguinte, e não dá as perícias nem as proficiências dela (p35).</p>
+	@ds.List("Outra classe", "") {
+		for _, class := range v.OtherClasses {
+			if class.Refusal != "" {
+				<div class="ds-row">
+					<div>
+						<div class="ds-row-title">{ class.Name }</div>
+						<div class="ds-row-meta">{ class.Refusal }</div>
+					</div>
+				</div>
+			} else {
+				<button
+					type="button"
+					class="ds-row w-full text-left"
+					data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + enterClassCommand(v, class.Name) }
+				>
+					<span class="ds-row-title">{ class.Name }</span>
+				</button>
+			}
+		}
+	}
+}

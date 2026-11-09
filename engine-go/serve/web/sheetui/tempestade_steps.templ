@@ -82,6 +82,9 @@ templ choiceStepSection(v View, step choiceStep) {
 				case "origin":
 					@originStepBody(v, *v.Choices.Origin)
 				case "powers":
+					if step.Class.GrantedNote != "" {
+						<p class="ds-card-text">{ step.Class.GrantedNote }</p>
+					}
 					@ds.List("", "") {
 						for _, power := range step.Class.Powers {
 							@powerPickRow(v, power, true)

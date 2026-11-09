@@ -53,6 +53,26 @@ type devotionChoice struct {
 	Changes []devotionChangeNotice
 }
 
+// Written é a ponta da lista dos concedidos: "1 de 2", ou "1 de 1 · +1 em vaga" quando há mais marcados do
+// que a devoção dá, e o que passa ocupa vaga de poder da classe (p124). A ponta é curta porque divide a
+// linha com o título a 390px; o rodapé (`SlotHint`) diz que vaga é essa.
+func (d devotionChoice) Written() string {
+	if d.Held <= d.Limit {
+		return strconv.Itoa(d.Held) + " de " + strconv.Itoa(d.Limit)
+	}
+	limit := strconv.Itoa(d.Limit)
+	return limit + " de " + limit + " · +" + strconv.Itoa(d.Held-d.Limit) + " em vaga"
+}
+
+// SlotHint é o rodapé da lista dos concedidos: quantos a devoção dá, e o que custa um a mais.
+func (d devotionChoice) SlotHint() string {
+	given := "A devoção dá 1"
+	if d.Limit != 1 {
+		given = "A devoção dá " + strconv.Itoa(d.Limit)
+	}
+	return given + ". Um a mais é um poder geral e ocupa uma vaga de poder da classe (p124)."
+}
+
 // devotionChangeNotice é o que muda na ficha ao trocar para Target. O Target `nenhum` é ficar sem deus.
 type devotionChangeNotice struct {
 	Target string
@@ -125,6 +145,9 @@ type classChoiceCard struct {
 	// Counted são as escolhas contadas por atributo dos poderes que a classe
 	// CONCEDEU — as perícias do Especialista (ALE-501).
 	Counted []countedChoice
+	// GrantedNote diz a vaga que um poder concedido a mais ocupa: sem ela, "1 de 2" com nenhum poder marcado
+	// na lista da classe não se explica.
+	GrantedNote string
 }
 
 // powerChoice é um poder que dá para escolher.
@@ -280,9 +303,10 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 	chosen := sheet.UnmarshalStrings(dto.ClassPowers)
 	choices := sheet.ClassChoiceSelections(dto)
 	cards := []classChoiceCard{}
+	note := grantedInSlotsNote(dto)
 	for _, class := range dto.Classes {
 		card := classChoiceCard{
-			ClassName: class.ClassName, Level: class.Level,
+			ClassName: class.ClassName, Level: class.Level, GrantedNote: note,
 			Slots:   sheet.PowerSlots(class.Level),
 			Used:    sheet.UsedPowerSlots(dto),
 			Powers:  thatChoosePowers(class.ClassName, chosen, sheet.PowerPicks(dto.PowerChoices), ownedOptionsOf(dto), search),
@@ -294,6 +318,20 @@ func classChoiceCards(dto sheet.CharacterDTO, search string) []classChoiceCard {
 		cards = append(cards, card)
 	}
 	return cards
+}
+
+// grantedInSlotsNote é a nota do passo da classe quando um poder concedido além do que a devoção dá ocupa
+// vaga (p124). Vazia no caso comum.
+func grantedInSlotsNote(dto sheet.CharacterDTO) string {
+	extra := sheet.ExtraGrantedPowers(dto)
+	if extra == 0 {
+		return ""
+	}
+	god := book.DevotionName(*dto.God)
+	if extra == 1 {
+		return "1 vaga ocupada por poder concedido de " + god + " além do que a devoção dá. Ele se escolhe e se tira no passo Devoção."
+	}
+	return strconv.Itoa(extra) + " vagas ocupadas por poderes concedidos de " + god + " além do que a devoção dá. Eles se escolhem e se tiram no passo Devoção."
 }
 
 // devotionChoiceOf monta o passo da devoção.

@@ -136,14 +136,18 @@ caminhos e deuses por classe se conferem na gravação, não só no diálogo.
 - **`powerChoices`**: só poder que a ficha tem, opção que o livro oferece, mais
   de uma só no repetível, que ocupa uma vaga por ESCOLHA
   (`sheet.UsedPowerSlots`).
+- **Poder concedido além do que a devoção dá** (um ao devoto, dois a clérigo,
+  druida e paladino, p96) é poder geral (p124) e ocupa uma vaga
+  (`sheet.ExtraGrantedPowers`, somado no `UsedPowerSlots`).
 - **Poder GERAL com escolha** (Foco em Perícia, Foco em Arma) passa por
   `book.PowerWithChoice`; a escolha vinda da origem é grátis
   (`sheet.FreePicks`).
 - **Contada por ATRIBUTO** (`countAttribute`, Especialista, p73): sem vaga,
   perícia treinada, até o atributo sem temporários
   (`Ruleset.PermanentAttribute`), mínimo 1. Gesto que mexe no N ou no treino
-  (treino, ofício, guardar/vestir/remover item, raça, forja) aplica numa cópia e
-  chama `sheet.ChangeKeepsChosenExpertises` antes de gravar.
+  (treino, ofício, guardar/vestir/remover item, raça, o valor livre do atributo no
+  `SetAttribute`) aplica numa cópia e chama `sheet.ChangeKeepsChosenExpertises`
+  antes de gravar.
 - **Contada por NÍVEL** (`countLevels`, terrenos do Explorador, p50): repete sem
   vaga; descer de nível confere `sheet.LevelCountedChoicesFit`.
 - **Contada por NÚMERO** (`count`, as três escolas das Magias do bardo e do

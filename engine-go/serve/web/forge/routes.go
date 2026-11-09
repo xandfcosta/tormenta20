@@ -2,18 +2,21 @@ package forge
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/url"
 	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/starfederation/datastar-go/datastar"
+	"github.com/go-chi/chi/v5"
+
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/wire"
 	"t20engine/serve/web/ui"
+
+	"github.com/starfederation/datastar-go/datastar"
 )
 
 // AS ROTAS DA FORJA.
@@ -53,7 +56,7 @@ func (s Scene) handleForgeAttributeStep(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	key := chi.URLParam(r, "atributo")
-	if !attributeKnown(key) {
+	if !slices.Contains(engine.AttributeKeys, key) {
 		http.Error(w, fmt.Sprintf("atributo %q não existe: são os seis do livro", key), http.StatusBadRequest)
 		return
 	}

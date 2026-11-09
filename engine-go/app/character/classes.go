@@ -15,7 +15,8 @@ import (
 // EnterClass dá ao personagem o 1º nível numa classe nova (multiclasse, p35).
 //
 // Grava só a linha do nível, e é isso que a regra pede: PV e PM derivam dos níveis de
-// classe, e "não ganha as perícias treinadas ou proficiências da nova classe".
+// classe, e "não ganha as perícias treinadas ou proficiências da nova classe". O PV a mais
+// pode levantar quem estava caído (p236), pela mesma regra da queda de nível.
 func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class string) error {
 	_, classes, _ := book.CharacterCatalogs()
 	if !slices.ContainsFunc(classes, func(c book.Class) bool { return c.Name == class }) {
@@ -35,7 +36,10 @@ func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class stri
 	if total+1 > 20 {
 		return fmt.Errorf("as classes somariam o nível %d, e o 20º é o último (p35)", total+1)
 	}
-	return p.inTx(ctx, "entrar em "+class, func(q *sqlcgen.Queries) error {
+	if err := sheet.EnteringClassKeepsTheDevotion(dto, class); err != nil {
+		return err
+	}
+	err = p.inTx(ctx, "entrar em "+class, func(q *sqlcgen.Queries) error {
 		if err := q.AddClassLevel(ctx, sqlcgen.AddClassLevelParams{Characterid: row.ID, Ref: class}); err != nil {
 			return fmt.Errorf("gravar a classe %s: %w", class, err)
 		}
@@ -46,6 +50,12 @@ func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class stri
 		}
 		return syncLevelChoices(ctx, q, p.catalogs, row)
 	})
+	if err != nil {
+		return err
+	}
+	projected := dto
+	projected.Classes = append(slices.Clone(dto.Classes), sheet.ClassDTO{ClassName: class, Level: 1})
+	return sheet.FollowMaximumChange(ctx, p.queries, dto, projected)
 }
 
 // LeaveClass tira da ficha uma classe que está no 1º nível. Quem diz se ela pode sair é o
