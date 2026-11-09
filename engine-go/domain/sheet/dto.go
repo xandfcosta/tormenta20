@@ -115,6 +115,20 @@ type ItemDTO struct {
 	Doses []string `json:"doses,omitempty"`
 }
 
+// WieldedCatalogIDs são os itens do livro que a ficha tem nas mãos — o que um poder pergunta quando um
+// item empunhado o muda (`book.ActivationHeld`, p158).
+//
+//	dto.WieldedCatalogIDs() // ["alaude-elfico"]
+func (c CharacterDTO) WieldedCatalogIDs() []string {
+	ids := []string{}
+	for _, item := range c.Items {
+		if item.CatalogID != nil && engine.IsWielded(item.Equipped) {
+			ids = append(ids, *item.CatalogID)
+		}
+	}
+	return ids
+}
+
 type EffectDTO struct {
 	ID        int64  `json:"id"`
 	CatalogID string `json:"catalogId"`

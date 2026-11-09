@@ -1,32 +1,42 @@
 package transcript
 
 type Item struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name"`
-	Category    string           `json:"category"`
-	Price       float64          `json:"price,omitempty"`
-	Slots       float64          `json:"slots,omitempty"`
-	Equip       string           `json:"equip,omitempty"`
-	Hands       int              `json:"hands,omitempty"`
-	Weapon      *WeaponStats     `json:"weapon,omitempty"`
-	Modifiers   []Modifier       `json:"modifiers"`
-	BookPage    int              `json:"bookPage,omitempty"`
-	UID         string           `json:"uid"`
-	Armor       *ArmorStats      `json:"armor,omitempty"`
-	Shield      *ArmorStats      `json:"shield,omitempty"`
-	Consumable  *Consumable      `json:"consumable,omitempty"`
-	AppliesTo   []string         `json:"appliesTo,omitempty"`
-	PriceByItem *PriceByItem     `json:"priceByItem,omitempty"`
-	Description string           `json:"description,omitempty"`
-	Modeled     []string         `json:"modeled,omitempty"`
-	Unmodeled   *ItemUnmodeled   `json:"unmodeled,omitempty"`
-	RollMin     int              `json:"rollMin,omitempty"`
-	RollMax     int              `json:"rollMax,omitempty"`
-	CountsAs    int              `json:"countsAs,omitempty"`
-	Requires    string           `json:"requires,omitempty"`
-	ComposedOf  *ItemComposition `json:"composedOf,omitempty"`
-	Artifact    bool             `json:"artifact,omitempty"`
-	SkillTies   []SkillTie       `json:"skillTies,omitempty"`
+	ID           string           `json:"id"`
+	Name         string           `json:"name"`
+	Category     string           `json:"category"`
+	Price        float64          `json:"price,omitempty"`
+	Slots        float64          `json:"slots,omitempty"`
+	Equip        string           `json:"equip,omitempty"`
+	Hands        int              `json:"hands,omitempty"`
+	Weapon       *WeaponStats     `json:"weapon,omitempty"`
+	Modifiers    []Modifier       `json:"modifiers"`
+	BookPage     int              `json:"bookPage,omitempty"`
+	UID          string           `json:"uid"`
+	Armor        *ArmorStats      `json:"armor,omitempty"`
+	Shield       *ArmorStats      `json:"shield,omitempty"`
+	Consumable   *Consumable      `json:"consumable,omitempty"`
+	AppliesTo    []string         `json:"appliesTo,omitempty"`
+	PriceByItem  *PriceByItem     `json:"priceByItem,omitempty"`
+	Description  string           `json:"description,omitempty"`
+	Modeled      []string         `json:"modeled,omitempty"`
+	Unmodeled    *ItemUnmodeled   `json:"unmodeled,omitempty"`
+	RollMin      int              `json:"rollMin,omitempty"`
+	RollMax      int              `json:"rollMax,omitempty"`
+	CountsAs     int              `json:"countsAs,omitempty"`
+	Requires     string           `json:"requires,omitempty"`
+	ComposedOf   *ItemComposition `json:"composedOf,omitempty"`
+	Artifact     bool             `json:"artifact,omitempty"`
+	SkillTies    []SkillTie       `json:"skillTies,omitempty"`
+	PowerChanges []PowerChange    `json:"powerChanges,omitempty"`
+}
+
+// PowerChange é o que o item EMPUNHADO muda em poderes de quem o empunha (p158). Powers são ids de
+// ativação; Action é a ação que eles passam a custar, e Note o aviso que a linha deles ganha quando a
+// mudança não é número que o motor guarde (o alcance).
+type PowerChange struct {
+	Powers []string `json:"powers"`
+	Action string   `json:"action,omitempty"`
+	Note   string   `json:"note,omitempty"`
 }
 
 // SkillTie é a perícia a que uma ferramenta ou um vestuário está ligado sem somar número: ele tira uma

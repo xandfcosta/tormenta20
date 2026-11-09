@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 3 de 18 de `Items` (items.go).
+// Parte 3 de 20 de `Items` (items.go).
 var itemsPart03 = []Item{
 	{
 		ID:       "machado-taurico",

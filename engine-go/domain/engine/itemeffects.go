@@ -47,8 +47,9 @@ type ModifierCondition struct {
 	// Ends diz quando o interruptor de um `flagOn` desliga sozinho na sessão ao vivo. Vazio fica ligado até
 	// alguém desligar.
 	Ends string `json:"ends,omitempty"`
-	// Requires e Unless são as flags que um `flagOn` pede, ou que o calam: "se também possuir Saque Rápido",
-	// "se possuir Ambidestria, em vez disso não sofre penalidade" (p125).
+	// Requires e Unless são as flags que o termo pede, ou que o calam, em qualquer condição: "se também
+	// possuir Saque Rápido", "se possuir Ambidestria, em vez disso não sofre penalidade" (p125), e "um bardo
+	// que empunhe" a Flauta Mística (p158).
 	Requires []string `json:"requires,omitempty"`
 	Unless   []string `json:"unless,omitempty"`
 }
@@ -619,7 +620,10 @@ func isUnconditional(m Modifier) bool {
 // wornAsWielded é o vestido que uma regra da mesa faz valer como empunhado (`wornWear`).
 const wornAsWielded = "vested-as-wielded"
 
-func isWielded(equipped *string) bool {
+// IsWielded diz se o item está numa das mãos. A segunda mão (`wielded2`) também empunha.
+//
+//	engine.IsWielded(&wielded) // true
+func IsWielded(equipped *string) bool {
 	return equipped != nil && (*equipped == "wielded" || *equipped == "wielded2")
 }
 
@@ -642,7 +646,7 @@ func ContradictsWear(m Modifier, equipped *string) bool {
 	}
 	switch m.Condition.C {
 	case "wielded":
-		return !isWielded(equipped)
+		return !IsWielded(equipped)
 	case "vested":
 		return *equipped != "vested"
 	}
@@ -655,7 +659,7 @@ func conditionMet(m Modifier, equipped *string) bool {
 	}
 	switch m.Condition.C {
 	case "wielded":
-		return isWielded(equipped) || (equipped != nil && *equipped == wornAsWielded)
+		return IsWielded(equipped) || (equipped != nil && *equipped == wornAsWielded)
 	case "vested":
 		return equipped != nil && (*equipped == "vested" || *equipped == wornAsWielded)
 	case "inUse":

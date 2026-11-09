@@ -110,6 +110,8 @@ type Item struct {
 	Modifiers  []engine.Modifier `json:"modifiers"`
 	// SkillTies são as perícias a que o item está ligado sem somar número (p158-159).
 	SkillTies []engine.SkillTie `json:"skillTies"`
+	// PowerChanges é o que o item EMPUNHADO muda num poder — ver `ActivationHeld`.
+	PowerChanges []PowerChange `json:"powerChanges"`
 	// RollMin e RollMax são a faixa de `d%` da tabela de SAQUE que sorteia este
 	// item (p335-345). Quase todo item mágico tem uma: é ela que separa a
 	// espada longa da Vingadora sagrada, e é por ela que o `masterOnly`

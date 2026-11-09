@@ -23,6 +23,11 @@ serializa para quem lê JSON (`transcript.ResourceJSON`).
   novo é uma linha no `layout.go`.
 - **`Modifier.Amount`, `Item.Price` e `Item.Slots` não distinguem ausente de
   zero.**
+- **A escolha feita na COMPRA é um verbete por opção** (decisão do dono): a coleção
+  de livros dá +1 numa perícia "definida quando comprada" (p158), e são cinco
+  verbetes, "Coleção de livros (Guerra)" e os outros. Escolher é escolher o
+  verbete: sem migração, sem campo no item da mochila, e a melhoria Aprimorado
+  segue a perícia sozinha.
 
 **O que a CAMPANHA acrescenta não mora no livro**, que é compilado, enquanto a
 mesa autora em tempo de execução: a `emenda de catálogo` vive em
@@ -96,7 +101,9 @@ representável. Vale para a POSTURA, o Folião, o terreno do Explorador e a
 O `flagOn` declara no `Ends` quando acaba, e o `Catalogs.SwitchesEndingAt` responde a quem gira a vez: `turn`
 sai quando a vez passa, e `own-turn` quando ela volta para o dono (p233). Fora de combate não há vez, e o fim
 de cena é a rede dos dois. Sem `Ends`, fica ligado até alguém desligar. `Requires` e `Unless` são o "se também
-possuir" do livro: o poder levanta uma flag, e o termo pede ou é calado por ela.
+possuir" do livro: o poder levanta uma flag, e o termo pede ou é calado por ela. Eles valem em toda condição, e
+não só no `flagOn`: a Flauta Mística é `wielded` e pede a flag `magias-de-bardo`, que o poder Magias do bardo
+levanta (p158).
 
 ### O catálogo chega ao processo por dois caminhos
 

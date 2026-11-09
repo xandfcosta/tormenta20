@@ -351,6 +351,7 @@ var classPowersPart02 = []ClassPower{
 				BonusType: "untyped",
 				Scale:     &ModifierScale{Per: "attribute", Attribute: "charisma"},
 			},
+			{Target: ModifierTarget{Kind: "flag", Name: "magias-de-bardo"}, Amount: 1, BonusType: "untyped"},
 		},
 	},
 	{

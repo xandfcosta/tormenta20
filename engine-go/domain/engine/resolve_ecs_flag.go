@@ -123,20 +123,19 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 		if c == nil {
 			return
 		}
-		if c.C == "flagOn" {
-			for _, flag := range c.Requires {
-				if !flags.set[flag] {
-					ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " não está posta"})
-					return
-				}
+		// O Requires e o Unless valem em toda condição, e não só no `flagOn`: a Flauta Mística é
+		// `wielded` e pede a flag do bardo (p158).
+		for _, flag := range c.Requires {
+			if !flags.set[flag] {
+				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " não está posta"})
+				return
 			}
-			for _, flag := range c.Unless {
-				if flags.set[flag] {
-					ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " o cala"})
-					return
-				}
+		}
+		for _, flag := range c.Unless {
+			if flags.set[flag] {
+				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " o cala"})
+				return
 			}
-			return
 		}
 		if c.C != "flagRequired" {
 			return
