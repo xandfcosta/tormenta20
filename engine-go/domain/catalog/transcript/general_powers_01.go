@@ -265,9 +265,10 @@ var generalPowersPart01 = []GeneralPower{
 				Amount:    2,
 				BonusType: "untyped",
 				Condition: &ModifierCondition{
-					Kind:  "flagOn",
-					Flag:  "estilo-de-uma-arma",
-					Label: "com arma em uma das mãos e nada na outra",
+					Kind:     "flagOn",
+					Flag:     "estilo-de-uma-arma",
+					Label:    "com arma em uma das mãos e nada na outra",
+					Requires: []string{"arma-em-uma-mao"},
 				},
 			},
 			{
@@ -275,9 +276,10 @@ var generalPowersPart01 = []GeneralPower{
 				Amount:    2,
 				BonusType: "untyped",
 				Condition: &ModifierCondition{
-					Kind:  "flagOn",
-					Flag:  "estilo-de-uma-arma",
-					Label: "com arma em uma das mãos e nada na outra",
+					Kind:     "flagOn",
+					Flag:     "estilo-de-uma-arma",
+					Label:    "com arma em uma das mãos e nada na outra",
+					Requires: []string{"arma-em-uma-mao"},
 				},
 			},
 		},

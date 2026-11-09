@@ -34,7 +34,7 @@ func (r *Ruleset) sheetEffects(ch Character, activeConditionals map[string]bool)
 // — o impulso de PM de UM ataque (`BoostedWeaponCards`), que vale para aquele
 // golpe e some depois.
 func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) ItemEffects {
-	items := append(r.ActiveItemsFor(ch), extra...)
+	items := append(append(r.ActiveItemsFor(ch), extra...), r.handsAsAnItem(ch)...)
 	plain, sums := splitAttributeSums(items)
 	first := ApplyActiveConditionals(ComputeItemEffects(plain), activeConditionals)
 	if len(sums) == 0 {
@@ -104,4 +104,35 @@ func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) 
 		out[i] = resolved
 	}
 	return out
+}
+
+// LoneWeaponFlag é a flag derivada de "uma arma corpo a corpo em uma das mãos e nada na outra" (p128), que
+// o Estilo de Uma Arma pede. É do que está na mão, como a `armadura-pesada` é do que está vestido.
+const LoneWeaponFlag = "arma-em-uma-mao"
+
+var wieldedInOneHand = "wielded"
+
+// handsAsAnItem levanta a flag quando há uma arma só nas mãos. Ela entra como fonte da ficha e não no item:
+// o `ActiveItemsFor` lista o que o catálogo e as melhorias dão, e esta flag não é de item nenhum.
+func (r *Ruleset) handsAsAnItem(ch Character) []ActiveItem {
+	inHand := 0
+	fits := false
+	for _, it := range ch.Items {
+		if it.Equipped == nil || (*it.Equipped != "wielded" && *it.Equipped != "wielded2") {
+			continue
+		}
+		inHand++
+		if it.CatalogID == nil {
+			continue
+		}
+		catalog := r.getCatalogItem(*it.CatalogID)
+		fits = *it.Equipped == "wielded" && catalog != nil && catalog.Weapon != nil &&
+			catalog.Weapon.Purpose == "melee" && catalog.Weapon.Hand != "two"
+	}
+	if inHand != 1 || !fits {
+		return nil
+	}
+	return []ActiveItem{{Source: "a arma na mão", Equipped: &wieldedInOneHand, Modifiers: []Modifier{{
+		Target: ModifierTarget{K: "flag", Name: LoneWeaponFlag}, Amount: 1, BonusType: "untyped",
+	}}}}
 }
