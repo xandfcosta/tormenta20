@@ -55,7 +55,8 @@ func PowerAugmentBar(powerID string, spell Spell) string {
 	case QuickenedSpellPower:
 		// "Você só pode aplicar este aprimoramento em magias com execução de
 		// movimento, padrão ou completa" (p131).
-		if !slices.Contains([]string{"movimento", "padrao", "completa"}, spell.Execution) {
+		// A execução longa é "completa" no campo, que é o que ela cobra, e a nota diz o resto.
+		if spell.ExecutionNote != "" || !slices.Contains([]string{"movimento", "padrao", "completa"}, spell.Execution) {
 			return "só em execução de movimento, padrão ou completa"
 		}
 	case AmplifiedSpellPower:
