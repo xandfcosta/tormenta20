@@ -97,7 +97,7 @@ func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem,
 	if catalog == nil {
 		return
 	}
-	if required := requiredProficiency(catalog); required != "" && !prof[required] {
+	if !HoldsProficiently(catalog, it.Equipped, prof) {
 		ecs.Set(w, e, Unproficient{})
 	}
 	if catalog.Weapon == nil {

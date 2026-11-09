@@ -176,8 +176,8 @@ func reachablePlaces(item sheet.ItemDTO, catalog *book.Item) []equipChoice {
 // devolve o que cabe, incluindo o guardar.
 //
 // As duas mãos só aparecem quando são OBRIGATÓRIAS (`hands: 2`) ou quando
-// mudam alguma coisa: uma arma versátil dá mais dano empunhada com as duas
-// (p150). Numa arma de uma mão só, ocupar as duas não ganha nada.
+// mudam alguma coisa: uma arma adaptável dá mais dano empunhada com as duas
+// (p143). Numa arma de uma mão só, ocupar as duas não ganha nada.
 func itemPlaces(catalog *book.Item) []equipChoice {
 	save := equipChoice{Slot: "", Label: "Guardar"}
 	if catalog == nil {
@@ -203,7 +203,7 @@ func itemHands(catalog book.Item) []equipChoice {
 		return []equipChoice{two}
 	}
 	one := equipChoice{Slot: "wielded", Label: "Empunhar (1 mão)"}
-	if catalog.Weapon != nil && contemTraco(catalog.Weapon.Traits, "versatil") {
+	if catalog.Weapon != nil && contemTraco(catalog.Weapon.Traits, engine.AdaptableTrait) {
 		return []equipChoice{one, two}
 	}
 	return []equipChoice{one}

@@ -29,9 +29,9 @@ func styleOnTurn(t *testing.T, power string, on bool, weapons ...string) (sceneF
 	if _, err := f.s.db.ExecContext(t.Context(), "DELETE FROM character_items WHERE characterId = ?", id); err != nil {
 		t.Fatalf("limpar as mãos: %v", err)
 	}
-	places := []string{"wielded", "wielded2"}
-	for i, weapon := range weapons {
-		itemSemeia(t, f, id, weapon, weapon, places[i])
+	place := "wielded"
+	for _, weapon := range weapons {
+		itemSemeia(t, f, id, weapon, weapon, place)
 	}
 	if on {
 		turnsOnStyle(t, f, id, power)

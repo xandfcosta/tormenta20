@@ -208,7 +208,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		if catalog == nil || catalog.Weapon == nil {
 			continue
 		}
-		w := catalog.Weapon
+		w := weaponInTheGrip(catalog.Weapon, *it.Equipped)
 		weaponScope := WeaponDamageScope(*it.CatalogID)
 		// O PASSO ANDA O DADO ANTES DE TUDO, e a ordem é da p231: o crítico
 		// multiplica "os dados de dano do ataque (INCLUINDO quaisquer aumentos
