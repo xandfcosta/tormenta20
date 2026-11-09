@@ -28,7 +28,9 @@ func TestTheAttributeDialogSeparatesTheFreeValueFromTheLevelOne(t *testing.T) {
 	for _, want := range []string{
 		"+1 livre +2 Aumento de Atributo",
 		"Força +3",
-		fmt.Sprintf("/personagens/%d/atributos/strength/2", id),
+		// O número do `+` sai do campo, no navegador (o attribute-stepper.spec.ts mede): aqui só a rota.
+		fmt.Sprintf("/personagens/%d/atributos/strength/", id),
+		`aria-label="Aumentar Força"`,
 		`aria-label="Valor de Força"`,
 	} {
 		if !strings.Contains(page, want) {

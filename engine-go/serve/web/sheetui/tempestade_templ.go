@@ -1978,10 +1978,10 @@ func attributeDialog(v View, attr attributeTile) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ds.ValueStepper(attr.Label, strconv.FormatInt(attr.Free, 10), attributeValueAttrs(v, attr, attr.Free-1), templ.Attributes{
+			templ_7745c5c3_Err = ds.ValueStepper(attr.Label, strconv.FormatInt(attr.Free, 10), attributeStepAttrs(v, attr.Key, -1), templ.Attributes{
 				"data-on:change":  attributeWrittenCommand(v, attr.Key),
 				"data-on:keydown": ds.EnterLeavesTheField,
-			}, attributeValueAttrs(v, attr, attr.Free+1)).Render(ctx, templ_7745c5c3_Buffer)
+			}, attributeStepAttrs(v, attr.Key, 1)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -2035,8 +2035,12 @@ func attributeDialog(v View, attr attributeTile) templ.Component {
 	})
 }
 
-func attributeValueAttrs(v View, attr attributeTile, value int64) templ.Attributes {
-	return templ.Attributes{"type": "button", "data-on:click": sheetPost(v, fmt.Sprintf("/atributos/%s/%d", attr.Key, value))}
+// attributeStepAttrs é o `−` ou o `+`: ele parte do que está ESCRITO no campo ao lado, e não do valor que a
+// página desenhou. Quem escreve 5 e toca `+` quer 6; com o valor do desenho, o `+` gravava o antigo mais
+// um e o 5 se perdia. O campo é texto, e o que não for número vale zero, como no `attributeWrittenCommand`.
+func attributeStepAttrs(v View, key string, step int) templ.Attributes {
+	written := "(parseInt(el.closest('.ds-value-stepper').querySelector('input').value, 10) || 0)"
+	return templ.Attributes{"type": "button", "data-on:click": sheetPostWith(v, "/atributos/"+key+"/§", fmt.Sprintf("(%s + %d)", written, step))}
 }
 
 // attributeWrittenCommand manda o que está no campo. Vazio vale zero, e o caminho não pode ficar sem o
@@ -2089,7 +2093,7 @@ func sheetMenuDialog(v View) templ.Component {
 			var templ_7745c5c3_Var88 string
 			templ_7745c5c3_Var88, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("background: " + v.Gradient)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 451, Col: 91}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 455, Col: 91}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 			if templ_7745c5c3_Err != nil {
@@ -2102,7 +2106,7 @@ func sheetMenuDialog(v View) templ.Component {
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(v.Initials)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 451, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 455, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 			if templ_7745c5c3_Err != nil {
@@ -2208,7 +2212,7 @@ func activeEffectDialog(v View, e activeEffect) templ.Component {
 			var templ_7745c5c3_Var93 string
 			templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.JoinStringErrs(e.Meta)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 472, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 476, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var93))
 			if templ_7745c5c3_Err != nil {
@@ -2226,7 +2230,7 @@ func activeEffectDialog(v View, e activeEffect) templ.Component {
 				var templ_7745c5c3_Var94 string
 				templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(e.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 474, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 478, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 				if templ_7745c5c3_Err != nil {
@@ -2301,7 +2305,7 @@ func activeEffectFoot(e activeEffect) templ.Component {
 			var templ_7745c5c3_Var97 string
 			templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs("Tirar " + e.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 486, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade.templ`, Line: 490, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 			if templ_7745c5c3_Err != nil {

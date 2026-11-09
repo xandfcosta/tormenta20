@@ -418,10 +418,10 @@ templ attributeDialog(v View, attr attributeTile) {
 	@sheetDialog(v, attributeDialogID(attr.Key), attr.Label+" "+attr.Value, nil) {
 		<div class="ds-field">
 			<span class="ds-field-label">Valor livre</span>
-			@ds.ValueStepper(attr.Label, strconv.FormatInt(attr.Free, 10), attributeValueAttrs(v, attr, attr.Free-1), templ.Attributes{
+			@ds.ValueStepper(attr.Label, strconv.FormatInt(attr.Free, 10), attributeStepAttrs(v, attr.Key, -1), templ.Attributes{
 				"data-on:change":  attributeWrittenCommand(v, attr.Key),
 				"data-on:keydown": ds.EnterLeavesTheField,
-			}, attributeValueAttrs(v, attr, attr.Free+1))
+			}, attributeStepAttrs(v, attr.Key, 1))
 		</div>
 		<p><b>{ attr.Sum }</b></p>
 		if attr.Warning != "" {
@@ -431,8 +431,12 @@ templ attributeDialog(v View, attr attributeTile) {
 	}
 }
 
-func attributeValueAttrs(v View, attr attributeTile, value int64) templ.Attributes {
-	return templ.Attributes{"type": "button", "data-on:click": sheetPost(v, fmt.Sprintf("/atributos/%s/%d", attr.Key, value))}
+// attributeStepAttrs é o `−` ou o `+`: ele parte do que está ESCRITO no campo ao lado, e não do valor que a
+// página desenhou. Quem escreve 5 e toca `+` quer 6; com o valor do desenho, o `+` gravava o antigo mais
+// um e o 5 se perdia. O campo é texto, e o que não for número vale zero, como no `attributeWrittenCommand`.
+func attributeStepAttrs(v View, key string, step int) templ.Attributes {
+	written := "(parseInt(el.closest('.ds-value-stepper').querySelector('input').value, 10) || 0)"
+	return templ.Attributes{"type": "button", "data-on:click": sheetPostWith(v, "/atributos/"+key+"/§", fmt.Sprintf("(%s + %d)", written, step))}
 }
 
 // attributeWrittenCommand manda o que está no campo. Vazio vale zero, e o caminho não pode ficar sem o
