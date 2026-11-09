@@ -170,7 +170,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Resistance:      book.SpellResistanceWritten(fromBook),
 			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:  learned.CatalogSpellID,
-			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
+			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
 		})
 	}

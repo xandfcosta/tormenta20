@@ -43,3 +43,19 @@ func schoolChoicePower(class string) string {
 	}
 	return ""
 }
+
+// CastingClasses são as classes de `classes` que lançam a magia, pela regra do `CastsTheSpell`. É o que se
+// passa no lugar da lista do verbete a quem pergunta "de qual classe esta magia vem": o tipo dela
+// (`SpellTradition`), o limite de PM por magia (p224) e a saída de uma classe. `classes` é parâmetro porque
+// a saída pergunta sobre as classes que SOBRAM.
+//
+//	sheet.CastingClasses(dto, dto.Classes, "evocacao", []string{"Arcanista"}) // ["Bardo", "Arcanista"]
+func CastingClasses(dto CharacterDTO, classes []ClassDTO, school string, listed []string) []string {
+	out := []string{}
+	for _, class := range classes {
+		if CastsTheSpell(dto, class.ClassName, school, listed) {
+			out = append(out, class.ClassName)
+		}
+	}
+	return out
+}

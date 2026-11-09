@@ -155,6 +155,24 @@ func TestTheBardDoesNotCastDivineSpellsOfHisSchools(t *testing.T) {
 	}
 }
 
+// TIRAR UMA CLASSE PERGUNTA A MESMA COISA: a magia que outra classe da ficha lança não segura ninguém. O
+// bardo de evocação lança a Bola de Fogo, que o verbete lista só para o Arcanista, e por isso o Guerreiro
+// que ele tem ao lado sai.
+func TestTheBardsSchoolSpellDoesNotHoldAnotherClass(t *testing.T) {
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Menestrel guerreiro", "Bardo", 3, 0, 0)
+	if refusal := powerCommand(t, f, id, bardSchoolsPath+"evocacao", ""); refusal != "" {
+		t.Fatalf("escolher evocação: %q", refusal)
+	}
+	if refusal := enterClass(t, f, id, "Guerreiro"); refusal != "" {
+		t.Fatalf("entrar no Guerreiro: %q", refusal)
+	}
+	learn(t, f, id, "bola-de-fogo")
+	if refusal := stepClass(t, f, id, "Guerreiro", -1); refusal != "" {
+		t.Errorf("a Bola de Fogo, que o bardo lança, segurou o Guerreiro: %q", refusal)
+	}
+}
+
 // O CONTROLE: o arcanista lança toda arcana (p37), e o Especialista em Escola, que também escolhe escola,
 // não o torna um conjurador por escola. Sem este caso, uma regra que pegasse todo poder com escolha de
 // escola tiraria a CD de todo arcanista, e o resto da suíte passaria.
