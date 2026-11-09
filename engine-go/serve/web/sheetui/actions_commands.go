@@ -64,6 +64,15 @@ func rollsExtraStrikeOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character
 	return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, ExtraStrike: true, Boost: chosenBoost(sig, weapon)}, sig)
 }
 
+// aimsAtTheTarget mira no alvo da barra (p234).
+func aimsAtTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+	target := strings.TrimSpace(sig.TurnTarget)
+	if target == "" {
+		return fmt.Errorf("escolha o alvo da vez na barra acima antes de mirar")
+	}
+	return s.deps.AimOnTable(r.Context(), row.ID, target)
+}
+
 // rollsManeuverOnTheTarget rola a manobra da vez contra o alvo escolhido
 // (p234).
 //

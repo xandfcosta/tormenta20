@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -175,4 +176,23 @@ func (st *Store) characterMoment(ctx context.Context, characterID int64, onTurn 
 		conditions = nil
 	}
 	return engine.MomentFor(onTurn, pool.HpCurrent, conditions)
+}
+
+// Aim guarda em quem o personagem da vez mirou, cobrando a ação de movimento (p234).
+func (st *Store) Aim(ctx context.Context, sessionID int64, attackerEntry, targetEntry string) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.TurnAdvanced{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
+		if s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) || s.Initiative[s.TurnIndex].ID != attackerEntry {
+			return fmt.Errorf("só quem está na vez mira")
+		}
+		if !slices.ContainsFunc(s.Initiative, func(entry live.InitiativeEntry) bool { return entry.ID == targetEntry }) {
+			return fmt.Errorf("o alvo %q saiu da fila: escolha outro na barra", targetEntry)
+		}
+		if err := chargeTurn(s, engine.ActionMovement); err != nil {
+			return err
+		}
+		if s.Scene != nil {
+			s.Scene.AimedBy, s.Scene.AimedAt = attackerEntry, targetEntry
+		}
+		return nil
+	})
 }

@@ -3,6 +3,7 @@ package sheetui
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -167,6 +168,20 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 // O motor o guarda em QUADRADOS de 1,5m porque é assim que o tabuleiro conta, e
 // a tela diz metros porque é assim que a mesa fala — a conversão mora aqui, de um
 // lado só.
+// movementRows são mover e, para quem atira, mirar: "testes de Pontaria" (p234).
+func movementRows(combat panelCombat, computed engine.ComputedSheet) []actionRow {
+	rows := []actionRow{movementRow(computed)}
+	if slices.ContainsFunc(combat.Weapons, func(weapon weaponTile) bool { return weapon.Skill == "Pontaria" }) {
+		rows = append(rows, actionRow{
+			Name:   "Mirar",
+			Detail: "anula o −5 de atirar em quem está em combate corpo a corpo, neste turno · p234",
+			Can:    true,
+			Rolls:  []actionRoll{{Label: "Mirar", Path: "/acoes/mirar", NeedsTarget: true}},
+		})
+	}
+	return rows
+}
+
 func movementRow(computed engine.ComputedSheet) actionRow {
 	meters := float64(computed.Displacement.Total) * 1.5
 	written := strconv.FormatFloat(meters, 'f', -1, 64)

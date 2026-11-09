@@ -119,38 +119,6 @@ func NewStrike(c Combatants, t Tables, s Situations, rollDie func(faces int) (in
 	return Strike{combatants: c, tables: t, situations: s, rollDie: rollDie}
 }
 
-// specialSituations pergunta ao tabuleiro, e cala quando não há um.
-//
-// A porta nula é tratada aqui e não em cada chamador: ela é opcional por
-// desenho — o combate existe sem mapa —, e um `if` por sítio seria a mesma
-// decisão escrita três vezes.
-func (s Strike) specialSituations(ctx context.Context, req Request) ([]engine.SpecialSituation, error) {
-	doTabuleiro, err := s.situationsOnTheBoard(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	// A ESCOLHA DO TIPO DE DANO não vem do mapa: ela é do gesto, e é por isso
-	// que ela se junta à lista AQUI e não no adaptador do tabuleiro. As duas
-	// viajam no mesmo vetor porque o mecanismo é o mesmo — deslocar o teste de
-	// ataque e dizer à mesa por quê.
-	if charging, is := engine.ChargeSituation(req.Charge); is {
-		doTabuleiro = append(doTabuleiro, charging)
-	}
-	if req.SwitchesDamageType {
-		return append(doTabuleiro, engine.AttackerSwitchesTheDamageType), nil
-	}
-	return doTabuleiro, nil
-}
-
-// situationsOnTheBoard são só as que o MAPA produz, e cala quando não há mapa.
-func (s Strike) situationsOnTheBoard(ctx context.Context, req Request) ([]engine.SpecialSituation, error) {
-	if s.situations == nil {
-		return nil, nil
-	}
-	return s.situations.Between(ctx, req.SessionID, req.AttackerEntryID,
-		board.AttackTargetOnTheBoard{EntryID: req.TargetEntryID, TokenID: req.TargetObjectTokenID()})
-}
-
 // Request é o pedido de ataque.
 type Request struct {
 	// CampaignID é a dona do bloco de criatura, e por isso ela entra: sem ela
@@ -368,13 +336,7 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		}
 	}
 	if req.Maneuver == "" {
-		// O ESTILO DESARMADO troca o tipo "sem penalidades" (p128): sem o -5 da Tabela 5-3, o que
-		// sobra da troca é a natureza do golpe.
-		if req.SwitchesDamageType && setup.weapon.SwitchesDamageFreely {
-			setup.weapon.NonLethal = !setup.weapon.NonLethal
-			req.SwitchesDamageType = false
-		}
-		if setup.situations, err = s.specialSituations(ctx, req); err != nil {
+		if err := s.settleSituations(ctx, req, &setup); err != nil {
 			return strikeSetup{}, err
 		}
 	}

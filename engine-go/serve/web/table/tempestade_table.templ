@@ -154,6 +154,9 @@ templ tempestadeTargetBar(v View) {
 		} else if attackIsOpen(v.Attack) {
 			<p class="ds-off-turn">Há um ataque em andamento. O próximo golpe abre quando ele acabar.</p>
 		}
+		if v.AimedAtLabel != "" && v.Turn.Kind != "other" {
+			<p class="ds-off-turn">Mirando em <b>{ v.AimedAtLabel }</b>: sem o −5 de atirar em quem está em combate corpo a corpo.</p>
+		}
 		if len(v.Queue) > 0 {
 			<label class="ds-target-bar">
 				<span class="ds-target-key">

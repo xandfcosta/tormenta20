@@ -299,6 +299,18 @@ func extraStrikeBarred(st *live.SessionRuntimeState) string {
 	return st.Scene.ExtraStrikeBarred
 }
 
+func aimedAtLabel(st *live.SessionRuntimeState) string {
+	if st == nil || st.Scene == nil || st.Scene.AimedAt == "" {
+		return ""
+	}
+	for _, entry := range st.Initiative {
+		if entry.ID == st.Scene.AimedAt {
+			return entry.Label
+		}
+	}
+	return ""
+}
+
 func extraStyle(st *live.SessionRuntimeState) string {
 	if st == nil || st.Scene == nil {
 		return ""
