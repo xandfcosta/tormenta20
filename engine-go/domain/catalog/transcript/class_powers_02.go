@@ -353,6 +353,7 @@ var classPowersPart02 = []ClassPower{
 			},
 			{Target: ModifierTarget{Kind: "flag", Name: "magias-de-bardo"}, Amount: 1, BonusType: "untyped"},
 		},
+		Choice: &PowerChoice{Kind: "school", Label: "Escolas", Count: 3},
 	},
 	{
 		ID: "class.bardo.ecletico",

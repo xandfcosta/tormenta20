@@ -71,8 +71,9 @@ type PowerChoice struct {
 	// quantas: o atributo sem temporários, mínimo 1 — as perícias do
 	// Especialista, p73 (ALE-501).
 	CountAttribute string `json:"countAttribute"`
-	// Count é o número fixo de opções (as duas perícias da Deformidade), e
-	// SwapFor o que pode tomar o lugar de UMA delas ("tormenta-power", p24).
+	// Count é o número fixo de opções DISTINTAS: as duas perícias da
+	// Deformidade, e as três escolas das Magias do bardo e do druida (p44, p61).
+	// SwapFor é o que pode tomar o lugar de UMA delas ("tormenta-power", p24).
 	Count   int    `json:"count"`
 	SwapFor string `json:"swapFor"`
 	// CountLevels são os níveis da classe em que se ganha uma escolha, e cada
@@ -119,6 +120,15 @@ func (c PowerChoice) Offered() []PowerChoiceOption {
 		out := []PowerChoiceOption{}
 		for _, spell := range Catalogs().Spells {
 			out = append(out, PowerChoiceOption{ID: spell.ID, Name: spell.Name})
+		}
+		return out
+	}
+	// A de ESCOLA (as Magias do bardo e do druida, p44 e p61) sai do catálogo
+	// das escolas.
+	if c.Kind == "school" {
+		out := []PowerChoiceOption{}
+		for _, school := range SpellSchools() {
+			out = append(out, PowerChoiceOption{ID: school.ID, Name: school.Name})
 		}
 		return out
 	}

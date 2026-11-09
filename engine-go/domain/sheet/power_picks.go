@@ -75,13 +75,14 @@ func FreePicks(dto CharacterDTO, power book.ClassPower) int {
 // WithPowerPick acrescenta uma escolha ao poder. No poder que NÃO se repete, a
 // escolha nova substitui a antiga: o Totem Espiritual tem um animal só. A
 // escolha contada por atributo acumula opções DISTINTAS — as perícias do
-// Especialista —, e quem a limita é o `ChosenExpertisesFit`.
+// Especialista —, e quem a limita é o `ChosenExpertisesFit`; a de quantidade
+// fixa também (as escolas, p44), e quem a limita é o `powerPicksFit`.
 func WithPowerPick(blob, power, option string, choice book.PowerChoice) string {
 	picks := PowerPicks(blob)
 	switch {
 	case choice.Repeatable || len(choice.CountLevels) > 0:
 		picks[power] = append(picks[power], option)
-	case choice.CountAttribute != "":
+	case choice.CountAttribute != "" || choice.Count > 0:
 		if !slices.Contains(picks[power], option) {
 			picks[power] = append(picks[power], option)
 		}
@@ -131,7 +132,11 @@ func powerPicksFit(dto CharacterDTO) error {
 		if power.Choice.CountAttribute != "" {
 			continue
 		}
-		if len(picks) > 1 && !power.Choice.Repeatable && len(power.Choice.CountLevels) == 0 {
+		if count := power.Choice.Count; count > 0 && len(picks) > count {
+			return fmt.Errorf("%s escolhe %d %ss, e ficariam %d: para mudar uma, use Trocar, em Por nível",
+				power.Name, count, countedNoun(power.Choice.Kind), len(picks))
+		}
+		if len(picks) > 1 && !power.Choice.Repeatable && len(power.Choice.CountLevels) == 0 && power.Choice.Count == 0 {
 			return fmt.Errorf("%q se escolhe uma vez só, e há %d escolhas", power.Name, len(picks))
 		}
 		if err := picksAreOptions(power, picks); err != nil {

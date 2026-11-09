@@ -141,7 +141,11 @@ func TestTheDeepDrumWarnsThatTheRangeIsDoubled(t *testing.T) {
 // chegar à linha, e não a conta de base, que é do motor e tem caso próprio.
 func TestTheMysticFluteRaisesTheDCOnTheSpellRow(t *testing.T) {
 	spellDC := func(wear string) int {
-		f, _ := bardWithInstrumentOnTurn(t, "flauta-mistica", wear)
+		f, bard := bardWithInstrumentOnTurn(t, "flauta-mistica", wear)
+		// A Luz é evocação, e o bardo só tem a CD das magias das escolas dele (p44).
+		if refusal := powerCommand(t, f, bard, bardSchoolsPath+"evocacao", ""); refusal != "" {
+			t.Fatalf("escolher evocação: %q", refusal)
+		}
 		learnSpell(t, f, "luz")
 		standard := entre(t, acoesDaMesa(t, f), "Ação padrão", "Ação de movimento")
 		found := regexp.MustCompile(`Conjurar · Luz.*?CD (\d+)`).FindStringSubmatch(standard)

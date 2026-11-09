@@ -217,6 +217,13 @@
           "sceneEffect": false,
           "create": {
             "name": "Druida Natureza Nv9",
+            "powerChoices": {
+              "class.druida.magias-1-circulo": [
+                "convocacao",
+                "transmutacao",
+                "abjuracao"
+              ]
+            },
             "races": [
               "dahllan"
             ],
@@ -471,6 +478,13 @@
           "sceneEffect": true,
           "create": {
             "name": "Bardo Versátil Nv7",
+            "powerChoices": {
+              "class.bardo.magias-1-circulo": [
+                "abjuracao",
+                "evocacao",
+                "encantamento"
+              ]
+            },
             "classPowers": [
               "class.bardo.esgrima-magica",
               "class.bardo.golpe-magico"

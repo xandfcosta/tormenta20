@@ -127,69 +127,6 @@ type classChoiceCard struct {
 	Counted []countedChoice
 }
 
-// countedChoice é o bloco do Especialista: as perícias treinadas, quantas de
-// quantas, e o atributo que dá o limite.
-type countedChoice struct {
-	ID      string
-	Name    string
-	Detail  string
-	Options []powerOption
-	Chosen  int
-	Limit   int
-	// Attribute é o que dá o limite ("Int", "nível") e Value o valor dele.
-	Attribute string
-	Value     int
-	// Repeats diz que tocar uma opção escolhida SOMA outra (o terreno
-	// repetido do Explorador), e o "−" tira — o padrão do Aumento de Atributo.
-	Repeats bool
-}
-
-// Hint é a nota de rodapé do bloco.
-func (c countedChoice) Hint() string {
-	if c.Repeats {
-		return "Escolher de novo soma +2 no mesmo terreno. Área de Tormenta a partir do 11º nível."
-	}
-	return "Só as perícias treinadas."
-}
-
-// Full diz que não cabe mais nenhuma: as não escolhidas se apagam.
-func (c countedChoice) Full() bool { return c.Chosen >= c.Limit }
-
-// Written é "1 de 2 · Int 2".
-func (c countedChoice) Written() string {
-	return strconv.Itoa(c.Chosen) + " de " + strconv.Itoa(c.Limit) + " · " + c.Attribute + " " + strconv.Itoa(c.Value)
-}
-
-// countedChoicesOf monta os blocos da classe a partir do que a ficha tem.
-func countedChoicesOf(dto sheet.CharacterDTO, class string) []countedChoice {
-	out := []countedChoice{}
-	for _, counted := range sheet.CountedChoices(dto) {
-		if counted.Power.ClassName != class {
-			continue
-		}
-		block := countedChoice{
-			ID: counted.Power.ID, Name: counted.Power.Name, Detail: counted.Power.Description,
-			Chosen: len(counted.Picks), Limit: counted.Limit, Value: counted.Value,
-			Attribute: counted.Basis, Repeats: counted.Repeats,
-		}
-		for _, option := range counted.Offered {
-			label := counted.Labels[option]
-			if label == "" {
-				label = option
-			}
-			count := 0
-			for _, pick := range counted.Picks {
-				if pick == option {
-					count++
-				}
-			}
-			block.Options = append(block.Options, powerOption{Value: option, Label: label, Count: count})
-		}
-		out = append(out, block)
-	}
-	return out
-}
-
 // powerChoice é um poder que dá para escolher.
 type powerChoice struct {
 	ID     string

@@ -69,7 +69,7 @@ func (p Plays) LeaveClass(ctx context.Context, row sqlcgen.Character, class stri
 	// A magia que só esta classe concede ficaria na ficha sem ninguém que a conjure.
 	for _, learned := range dto.Spells {
 		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
-		if known && sheet.SpellTradition(remaining, spell.Classes) == "" {
+		if known && len(sheet.CastingClasses(dto, remaining, spell.School, spell.Classes)) == 0 {
 			return fmt.Errorf("não dá para tirar %s: a magia %s veio dela", class, spell.Name)
 		}
 	}

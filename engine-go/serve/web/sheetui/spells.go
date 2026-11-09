@@ -170,7 +170,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Resistance:      book.SpellResistanceWritten(fromBook),
 			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:  learned.CatalogSpellID,
-			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, fromBook.Classes)),
+			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
 		})
 	}
@@ -191,33 +191,24 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 // é o mesmo `SpellDCBonus` que a caixa soma; sem ele, a linha de conjurar dizia
 // uma CD abaixo da que a aba Magias diz.
 func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
-	sheet, _, ok := s.sheetForPanels(dto)
+	computed, _, ok := s.sheetForPanels(dto)
 	if !ok {
 		return "—"
 	}
 	best := 0
 	for _, class := range dto.Classes {
 		prog, casts := book.SpellProgressions()[class.ClassName]
-		if !casts || !aceitaAClasse(spell.Classes, class.ClassName) {
+		if !casts || !sheet.CastsTheSpell(dto, class.ClassName, spell.School, spell.Classes) {
 			continue
 		}
-		if cd := sheet.SpellCdByAttribute[prog.Attribute]; cd > best {
+		if cd := computed.SpellCdByAttribute[prog.Attribute]; cd > best {
 			best = cd
 		}
 	}
 	if best == 0 {
 		return "—"
 	}
-	return strconv.Itoa(best + sheet.SpellDCBonus.Total)
-}
-
-func aceitaAClasse(list []string, name string) bool {
-	for _, c := range list {
-		if c == name {
-			return true
-		}
-	}
-	return false
+	return strconv.Itoa(best + computed.SpellDCBonus.Total)
 }
 
 // spellOfBook acha a magia no acervo já ordenado.

@@ -146,6 +146,10 @@ caminhos e deuses por classe se conferem na gravação, não só no diálogo.
   chama `sheet.ChangeKeepsChosenExpertises` antes de gravar.
 - **Contada por NÍVEL** (`countLevels`, terrenos do Explorador, p50): repete sem
   vaga; descer de nível confere `sheet.LevelCountedChoicesFit`.
+- **Contada por NÚMERO** (`count`, as três escolas das Magias do bardo e do
+  druida, p44 e p61): opções distintas, sem vaga, até o número do verbete; quem
+  recusa a que passa é o `powerPicksFit`. A escola sai do catálogo de escolas
+  (`kind: "school"`), e não do verbete.
 
 ### Schema pega FORMA, não número errado
 

@@ -129,10 +129,13 @@ func (p Plays) Cast(
 	// VAZIOS, e o custo, o mínimo e o teto saíam de um personagem que não é o
 	// que está conjurando (ALE-357).
 	active := sheet.ToStringSet(dto.Conditionals)
-	tradition := sheet.SpellTradition(dto.Classes, spell.Classes)
+	// QUEM LANÇA a magia é a pergunta das duas contas, e não a lista do verbete: o bardo de evocação lança a
+	// Bola de Fogo, que lista só o Arcanista (p44).
+	casting := sheet.CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
+	tradition := sheet.SpellTradition(dto.Classes, casting)
 	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, tradition, catalogSpellID)
 	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, tradition, catalogSpellID)
-	limit := dto.Ruleset.SpellPmLimitFor(ec, active, spell.Classes)
+	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}

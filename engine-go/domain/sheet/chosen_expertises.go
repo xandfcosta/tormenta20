@@ -167,6 +167,8 @@ type CountedChoice struct {
 	// repetido soma +2, p50); Noun é o que se escolhe ("perícia", "terreno").
 	Repeats bool
 	Noun    string
+	// Fixed diz que o limite é o número do verbete, e não um atributo nem o nível (as escolas, p44).
+	Fixed bool
 }
 
 // CountedChoices são as escolhas contadas por atributo dos poderes que a ficha
@@ -190,6 +192,10 @@ func CountedChoices(dto CharacterDTO) []CountedChoice {
 			out = append(out, levelCountedChoice(dto, power, picks[power.ID]))
 			continue
 		}
+		if power.Choice.Count > 0 {
+			out = append(out, fixedCountedChoice(power, picks[power.ID]))
+			continue
+		}
 		if power.Choice.CountAttribute == "" {
 			continue
 		}
@@ -203,6 +209,28 @@ func CountedChoices(dto CharacterDTO) []CountedChoice {
 		})
 	}
 	return out
+}
+
+// fixedCountedChoice monta a escolha de quantidade FIXA: as três escolas das Magias do bardo e do druida
+// (p44, p61). Não há o que dê o limite além do verbete, e por isso ela não tem Basis.
+func fixedCountedChoice(power book.ClassPower, picks []string) CountedChoice {
+	choice := CountedChoice{
+		Power: power, Picks: picks, Limit: power.Choice.Count,
+		Labels: map[string]string{}, Noun: countedNoun(power.Choice.Kind), Fixed: true,
+	}
+	for _, o := range power.Choice.Offered() {
+		choice.Offered = append(choice.Offered, o.ID)
+		choice.Labels[o.ID] = o.Name
+	}
+	return choice
+}
+
+// countedNoun é o nome do que a escolha toma, para a pendência ("3 escolas por escolher").
+func countedNoun(kind string) string {
+	if kind == "school" {
+		return "escola"
+	}
+	return "opção"
 }
 
 // levelCountedChoice monta a escolha contada por nível: as opções que o nível

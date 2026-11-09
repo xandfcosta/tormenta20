@@ -353,6 +353,7 @@ var classPowersPart07 = []ClassPower{
 				Scale:     &ModifierScale{Per: "attribute", Attribute: "wisdom"},
 			},
 		},
+		Choice: &PowerChoice{Kind: "school", Label: "Escolas", Count: 3},
 	},
 	{
 		ID:             "class.druida.caminho-dos-ermos",
