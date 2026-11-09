@@ -142,7 +142,7 @@ func chipsOffered(powers powersPanel, situational []situationalRow) []actionChip
 			Label: row.Label, On: row.Active, Can: true, Bonus: row.Dice,
 			Warns:  row.Warning != "",
 			Moves:  numbersMovedBy(row.Targets),
-			Before: fmt.Sprintf("$status = %q; ", row.Key), Path: "/efeitos/situacao",
+			Before: fmt.Sprintf("$conditional = %q; ", row.Key), Path: "/efeitos/situacao",
 		})
 	}
 	return chips
