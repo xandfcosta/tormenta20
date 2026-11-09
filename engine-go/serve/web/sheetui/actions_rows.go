@@ -53,21 +53,33 @@ func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
 // styleStrikeRow é o ataque a mais que o estilo ligado dá (p125): não gasta a vez nem PM, e
 // espera a resposta do mestre ao golpe de agredir.
 func styleStrikeRow(index int, weapon weaponTile, offered []attackBoost) actionRow {
-	how := "Disparo Rápido: depois de agredir com esta arma"
-	if weapon.Style.OtherWeapon {
-		how = "Estilo de Duas Armas: depois de agredir com a outra arma"
+	style := *weapon.Style
+	withWhat := "a outra ponta"
+	switch {
+	case style.OtherWeapon:
+		withWhat = "a outra arma"
+	case style.FullAction:
+		withWhat = "esta arma"
+	}
+	waits := styleStrikeWaits(style, weapon.ItemID)
+	rolls := []actionRoll{{
+		Label: "Rolar", Path: fmt.Sprintf("/acoes/ataque-extra/%d", index), NeedsTarget: true, Primary: true, AlsoWaits: waits,
+	}}
+	if weapon.Other != nil {
+		rolls = append(rolls, actionRoll{
+			Label: weapon.Other.Label, Path: fmt.Sprintf("/acoes/ataque-extra/%d/outro-uso", index), NeedsTarget: true, AlsoWaits: waits,
+			LabelExpr: boostPreviewExpr(index, offered, "otherUse", weapon.Other.Label),
+		})
 	}
 	return actionRow{
 		Weapon: index,
 		Boosts: offered,
+		Doses:  weapon.Doses,
 		Name:   "Ataque adicional · " + weapon.Name,
-		Detail: weapon.Damage + " · " + how,
+		Detail: weapon.Damage + " · " + style.Name + ": depois de agredir com " + withWhat,
 		Value:  weapon.Attack,
 		Can:    true,
-		Rolls: []actionRoll{{
-			Label: "Rolar", Path: fmt.Sprintf("/acoes/ataque-extra/%d", index), NeedsTarget: true, Primary: true,
-			AlsoWaits: styleStrikeWaits(*weapon.Style, weapon.ItemID),
-		}},
+		Rolls:  rolls,
 	}
 }
 
@@ -163,15 +175,13 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 	return rows
 }
 
-// movementRow é o deslocamento, em METROS.
-//
-// O motor o guarda em QUADRADOS de 1,5m porque é assim que o tabuleiro conta, e
-// a tela diz metros porque é assim que a mesa fala — a conversão mora aqui, de um
-// lado só.
 // movementRows são mover e, para quem atira, mirar: "testes de Pontaria" (p234).
 func movementRows(combat panelCombat, computed engine.ComputedSheet) []actionRow {
 	rows := []actionRow{movementRow(computed)}
-	if slices.ContainsFunc(combat.Weapons, func(weapon weaponTile) bool { return weapon.Skill == "Pontaria" }) {
+	shoots := func(weapon weaponTile) bool {
+		return weapon.Skill == "Pontaria" || (weapon.Other != nil && weapon.Other.Skill == "Pontaria" && !weapon.Other.Improvised)
+	}
+	if slices.ContainsFunc(combat.Weapons, shoots) {
 		rows = append(rows, actionRow{
 			Name:   "Mirar",
 			Detail: "anula o −5 de atirar em quem está em combate corpo a corpo, neste turno · p234",
@@ -182,6 +192,11 @@ func movementRows(combat panelCombat, computed engine.ComputedSheet) []actionRow
 	return rows
 }
 
+// movementRow é o deslocamento, em METROS.
+//
+// O motor o guarda em QUADRADOS de 1,5m porque é assim que o tabuleiro conta, e
+// a tela diz metros porque é assim que a mesa fala — a conversão mora aqui, de um
+// lado só.
 func movementRow(computed engine.ComputedSheet) actionRow {
 	meters := float64(computed.Displacement.Total) * 1.5
 	written := strconv.FormatFloat(meters, 'f', -1, 64)

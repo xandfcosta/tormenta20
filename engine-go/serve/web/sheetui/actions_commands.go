@@ -55,13 +55,19 @@ func chargesTheTarget(charge string) func(Scene, *http.Request, sqlcgen.Characte
 	}
 }
 
-// rollsExtraStrikeOnTheTarget rola o ataque extra da arma natural (p25) contra o alvo escolhido.
-func rollsExtraStrikeOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
-	weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
-	if err != nil {
-		return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
+// rollsExtraStrikeOnTheTarget rola o ataque que não gasta a vez contra o alvo escolhido: o extra da arma
+// natural (p25) ou o adicional do estilo ligado (p125), este também com o outro uso da arma.
+func rollsExtraStrikeOnTheTarget(otherUse bool) func(Scene, *http.Request, sqlcgen.Character, Signals) error {
+	return func(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+		weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
+		if err != nil {
+			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
+		}
+		strike := ActionStrike{
+			Weapon: weapon, ExtraStrike: true, OtherUse: otherUse, Dose: chosenDose(sig, weapon), Boost: chosenBoost(sig, weapon),
+		}
+		return s.proposeOnTheTable(r, row, strike, sig)
 	}
-	return s.proposeOnTheTable(r, row, ActionStrike{Weapon: weapon, ExtraStrike: true, Boost: chosenBoost(sig, weapon)}, sig)
 }
 
 // aimsAtTheTarget mira no alvo da barra (p234).
@@ -69,6 +75,9 @@ func aimsAtTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signal
 	target := strings.TrimSpace(sig.TurnTarget)
 	if target == "" {
 		return fmt.Errorf("escolha o alvo da vez na barra acima antes de mirar")
+	}
+	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, engine.ActionMovement); err != nil {
+		return err
 	}
 	return s.deps.AimOnTable(r.Context(), row.ID, target)
 }

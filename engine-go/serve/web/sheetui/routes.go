@@ -61,7 +61,8 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/acoes/atacar/{arma}/outro-uso", s.sheetCommand(rollsAttackOnTheTarget(true)))
 	r.Post("/personagens/{id}/acoes/manobra/{manobra}", s.sheetCommand(rollsManeuverOnTheTarget))
 	r.Post("/personagens/{id}/acoes/investida/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargePlain)))
-	r.Post("/personagens/{id}/acoes/ataque-extra/{arma}", s.sheetCommand(rollsExtraStrikeOnTheTarget))
+	r.Post("/personagens/{id}/acoes/ataque-extra/{arma}", s.sheetCommand(rollsExtraStrikeOnTheTarget(false)))
+	r.Post("/personagens/{id}/acoes/ataque-extra/{arma}/outro-uso", s.sheetCommand(rollsExtraStrikeOnTheTarget(true)))
 	r.Post("/personagens/{id}/acoes/mirar", s.sheetCommand(aimsAtTheTarget))
 	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargeReckless)))
 	// OS EFEITOS: quatro donos de estado, quatro caminhos.
