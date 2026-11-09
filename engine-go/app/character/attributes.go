@@ -14,8 +14,9 @@ import (
 // SetAttribute grava o valor livre de um atributo.
 //
 // A escolha é livre (p17), e a única recusa é a Inteligência que ficaria abaixo das perícias escolhidas no
-// Especialista (p73). A Constituição mexe no PV máximo, e não há nada a fazer sobre isso: o máximo é
-// derivado e o atual é `máximo − dano`, então o teto se move sozinho e a dívida fica.
+// Especialista (p73). A Constituição mexe no PV máximo: o máximo é derivado e o atual é `máximo − dano`,
+// então o teto se move sozinho, e quem chega a 0 ou menos cai (p236) pela mesma regra da queda de nível
+// (`sheet.FollowMaximumChange`).
 func (p Plays) SetAttribute(ctx context.Context, row sqlcgen.Character, key string, value int) error {
 	if !slices.Contains(engine.AttributeKeys, key) {
 		return fmt.Errorf("atributo %q não existe: são os seis do livro", key)
@@ -29,11 +30,12 @@ func (p Plays) SetAttribute(ctx context.Context, row sqlcgen.Character, key stri
 	if err != nil {
 		return err
 	}
+	withSpread := func(d *sheet.CharacterDTO) {
+		d.Strength, d.Dexterity, d.Constitution = spread["strength"], spread["dexterity"], spread["constitution"]
+		d.Intelligence, d.Wisdom, d.Charisma = spread["intelligence"], spread["wisdom"], spread["charisma"]
+	}
 	if sheet.HasExpertiseChoice(dto.PowerChoices) || sheet.HasRaceAbilityPicks(row.Raceattributechoices, row.Secondaryracechoices) {
-		if refused := sheet.ChangeKeepsChosenExpertises(dto, func(d *sheet.CharacterDTO) {
-			d.Strength, d.Dexterity, d.Constitution = spread["strength"], spread["dexterity"], spread["constitution"]
-			d.Intelligence, d.Wisdom, d.Charisma = spread["intelligence"], spread["wisdom"], spread["charisma"]
-		}); refused != nil {
+		if refused := sheet.ChangeKeepsChosenExpertises(dto, withSpread); refused != nil {
 			return refused
 		}
 	}
@@ -44,5 +46,7 @@ func (p Plays) SetAttribute(ctx context.Context, row sqlcgen.Character, key stri
 	}); err != nil {
 		return fmt.Errorf("gravar os atributos da ficha %d: %w", row.ID, err)
 	}
-	return nil
+	projected := dto
+	withSpread(&projected)
+	return sheet.FollowMaximumChange(ctx, p.queries, dto, projected)
 }
