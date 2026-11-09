@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/app/character"
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 	"t20engine/domain/search"
@@ -47,10 +48,12 @@ type spellbookPanel struct {
 	// TRANCA os aprimoramentos de círculo alto.
 	CastableCircle int
 	PmCurrent      int64
-	Search         string
-	Circle         string
-	School         string
-	Schools        []filterOption
+	// Ritual diz que a próxima magia é ritual, e o diálogo escreve a conta dele (p131).
+	Ritual  bool
+	Search  string
+	Circle  string
+	School  string
+	Schools []filterOption
 }
 
 type filterOption struct {
@@ -118,6 +121,7 @@ func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school s
 		RequiresPrep:   sheet.RequiresPreparation(dto.Classes, dto.ClassChoices),
 		CastableCircle: sheet.HighestCastableCircle(dto.Classes, 0),
 		PmCurrent:      dto.MpCurrent,
+		Ritual:         character.CastsAsRitual(dto),
 		Search:         search,
 		Circle:         circle,
 		School:         school,

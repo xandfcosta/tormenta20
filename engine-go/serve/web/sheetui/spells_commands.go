@@ -47,12 +47,16 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	// recusada pelo grimório, pela preparação ou pelo PM — cobrar antes tiraria
 	// a padrão de alguém por uma magia que nunca saiu.
 	powerAugments := signals.powerAugments()
-	cost := engine.ActionCost(character.CastExecution(spell.Execution, powerAugments))
-	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
-		return err
-	}
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
 	if err != nil {
+		return err
+	}
+	ritual := character.CastsAsRitual(dto)
+	cost := engine.ActionCost(character.CastExecution(spell.Execution, ritual, powerAugments))
+	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
+		if ritual {
+			return fmt.Errorf("como ritual, a magia leva 1 hora (p131), e ela não cabe numa cena de ação: desligue o Celebrar Ritual para conjurá-la na vez")
+		}
 		return err
 	}
 	if err := s.plays.Cast(r.Context(), dto, spellID, signals.augments(), powerAugments); err != nil {

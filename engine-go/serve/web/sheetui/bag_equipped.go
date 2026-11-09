@@ -156,8 +156,11 @@ func proficienteEh(item sheet.ItemDTO, proficiencies map[string]bool) bool {
 	if catalog == nil {
 		return true
 	}
-	required := engine.RequiredProficiency(&engine.CatalogItem{Category: catalog.Category})
-	return required == "" || proficiencies[required]
+	held := engine.CatalogItem{Category: catalog.Category}
+	if catalog.Weapon != nil {
+		held.Weapon = &engine.WeaponStats{Traits: catalog.Weapon.Traits}
+	}
+	return engine.HoldsProficiently(&held, item.Equipped, proficiencies)
 }
 
 // vestsByTableRule é a regra da mesa "vale como empunhado": ela deixa vestir o que o eixo do livro só

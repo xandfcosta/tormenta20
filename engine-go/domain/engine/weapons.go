@@ -33,6 +33,12 @@ type WeaponCard struct {
 	// Natural diz que esta é uma arma natural, e o que ela dá no ataque extra. Fora do fio:
 	// só o gesto de atacar e as Ações a leem.
 	Natural *NaturalStrike `json:"-"`
+	// Style é o ataque adicional que um estilo ligado dá a esta arma (p125). Fora do fio, como o
+	// `Natural`.
+	Style *StyleStrike `json:"-"`
+	// SwitchesDamageFreely é o ataque desarmado do Estilo Desarmado: letal ou não letal, "sem
+	// penalidades" (p128). Fora do fio, porque só o pedido de atacar o lê.
+	SwitchesDamageFreely bool `json:"-"`
 	// ItemID e Doses são a linha da mochila e o que a Injeção alquímica guarda (p165).
 	// Não vão para o fio, porque só o gesto de atacar e a tela os leem.
 	ItemID int64    `json:"-"`
@@ -42,6 +48,9 @@ type WeaponCard struct {
 	// que voa, a azagaia que bate (ver `otherUseOf`). Não vai para o fio, porque só
 	// o gesto de atacar e a conta da ficha a leem.
 	OtherUse *WeaponCard `json:"-"`
+	// Improvised é o uso que a arma não foi feita para ter, e que por isso paga a penalidade: a espada
+	// arremessada, a azagaia corpo a corpo. Fora do fio, como o `OtherUse`.
+	Improvised bool `json:"-"`
 	// RefusesBoost diz que o impulso pedido não vale neste uso: o Golpe Divino e a
 	// arma à distância. Não vai para o fio, porque só o pedido de atacar o lê.
 	RefusesBoost bool `json:"-"`
@@ -202,7 +211,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		if catalog == nil || catalog.Weapon == nil {
 			continue
 		}
-		w := catalog.Weapon
+		w := weaponInTheGrip(catalog.Weapon, *it.Equipped)
 		weaponScope := WeaponDamageScope(*it.CatalogID)
 		// O PASSO ANDA O DADO ANTES DE TUDO, e a ordem é da p231: o crítico
 		// multiplica "os dados de dano do ataque (INCLUINDO quaisquer aumentos
@@ -210,9 +219,8 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
-		// "Armas aumentadas [...] causam um passo a mais de dano" (p143).
 		if it.Oversized {
-			steps++
+			steps += oversizedStep(r.raceSizeKey(ch))
 		}
 		cardOf := func(name string, use *WeaponStats) WeaponCard {
 			scopes := append([]string{weaponScope, WieldedScope}, weaponKindScopes(use)...)
@@ -234,6 +242,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			break
 		}
 	}
+	r.offerStyleStrikes(ch, activeConditionals, effects, cards)
 	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared)...)
 }
 

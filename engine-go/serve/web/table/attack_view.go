@@ -299,10 +299,38 @@ func extraStrikeBarred(st *live.SessionRuntimeState) string {
 	return st.Scene.ExtraStrikeBarred
 }
 
+func aimedAtLabel(st *live.SessionRuntimeState) string {
+	if st == nil || st.Scene == nil || st.Scene.AimedAt == "" {
+		return ""
+	}
+	for _, entry := range st.Initiative {
+		if entry.ID == st.Scene.AimedAt {
+			return entry.Label
+		}
+	}
+	return ""
+}
+
+func extraStyle(st *live.SessionRuntimeState) string {
+	if st == nil || st.Scene == nil {
+		return ""
+	}
+	return st.Scene.ExtraStyle
+}
+
+func extraStyleItem(st *live.SessionRuntimeState) int64 {
+	if st == nil || st.Scene == nil {
+		return 0
+	}
+	return st.Scene.ExtraStyleItem
+}
+
 // writtenBoost é o impulso do golpe com o PM que a proposta pagou, ou "".
 func writtenBoost(pa live.PendingAttack) string {
 	parts := []string{}
-	if pa.ExtraOf != "" {
+	if pa.ExtraIsStyle {
+		parts = append(parts, "Ataque adicional")
+	} else if pa.ExtraOf != "" {
 		parts = append(parts, "Ataque extra")
 	}
 	if pa.BoostPowerID != "" {

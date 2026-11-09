@@ -141,6 +141,19 @@ func (h sheetHost) ProposeStrikeOnTable(
 	return fmt.Errorf("não é a vez de %s: quem age é quem está na vez (p231)", row.Name)
 }
 
+// AimOnTable é o gesto de Mirar (p234), pelo mesmo caminho do golpe: quem mira é quem está na vez.
+func (h sheetHost) AimOnTable(ctx context.Context, characterID int64, targetEntryID string) error {
+	for _, table := range h.liveTablesOf(ctx, characterID) {
+		onTurn, err := h.characterOnTurn(ctx, table.SessionID, characterID)
+		if err != nil || onTurn == nil {
+			continue
+		}
+		_, err = h.rules.sessions.Aim(ctx, table.SessionID, onTurn.ID, targetEntryID)
+		return err
+	}
+	return fmt.Errorf("mirar é na sua vez (p234), e ela não está aberta em mesa nenhuma")
+}
+
 // characterOnTurn devolve a linha da vez QUANDO ela é deste personagem, e nula
 // quando não é — inclusive fora de combate, que é o caso de `TurnIndex` fora da
 // faixa.

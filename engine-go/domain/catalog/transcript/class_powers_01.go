@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 1 de 13 de `ClassPowers` (class_powers.go).
+// Parte 1 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart01 = []ClassPower{
 	{
 		ID:             "class.arcanista.caminho-do-arcanista",

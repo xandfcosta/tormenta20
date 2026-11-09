@@ -39,6 +39,9 @@ const (
 	// ninguém decidiu deixaria o poder indisponível por uma conta que não
 	// existe.
 	ActionVaries ActionCost = "varia"
+	// ActionLong é o que leva mais que um turno: o ritual, de 1 hora (p131). Fora de cena de ação nada
+	// custa (p252), e dentro dela ele não cabe.
+	ActionLong ActionCost = "longa"
 )
 
 // ErrNoActionLeft é a recusa por falta de ação no turno. Ela é reconhecível
@@ -74,6 +77,9 @@ func (b TurnBudget) Spend(cost ActionCost) (TurnBudget, error) {
 	// passiva não é acionada, e a variável é decidida pela mesa.
 	case ActionFree, ActionReaction, ActionPassive, ActionVaries:
 		return b, nil
+
+	case ActionLong:
+		return b, fmt.Errorf("%w: isto leva mais que um turno", ErrNoActionLeft)
 
 	case ActionStandard:
 		if !b.Standard {
@@ -180,7 +186,7 @@ func UsableNow(cost ActionCost, moment ActionMoment) error {
 		return nil
 	case ActionPassive, ActionVaries:
 		return nil
-	case ActionStandard, ActionMovement, ActionFull, ActionFree:
+	case ActionStandard, ActionMovement, ActionFull, ActionFree, ActionLong:
 	default:
 		return unknownActionCost(cost)
 	}

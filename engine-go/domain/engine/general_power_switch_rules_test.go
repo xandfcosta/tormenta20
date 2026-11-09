@@ -41,7 +41,7 @@ func TestTheGeneralPowerSwitchesLandOnTheWeaponsTheBookNames(t *testing.T) {
 		{name: "Estilo de Arremesso (p125)", power: "estilo-de-arremesso", flag: "estilo-de-arremesso", weapon: "azagaia", damage: 2},
 		{name: "Estilo de Arremesso com Saque Rápido", power: "estilo-de-arremesso\",\"saque-rapido", flag: "estilo-de-arremesso", weapon: "azagaia", attack: 2, damage: 2},
 		{name: "Estilo de Uma Arma (p128)", power: "estilo-de-uma-arma", flag: "estilo-de-uma-arma", weapon: "espada-longa", attack: 2, defense: 2},
-		{name: "Estilo de Uma Arma não vale em duas mãos", power: "estilo-de-uma-arma", flag: "estilo-de-uma-arma", weapon: "montante", defense: 2},
+		{name: "Estilo de Uma Arma não vale em duas mãos", power: "estilo-de-uma-arma", flag: "estilo-de-uma-arma", weapon: "montante"},
 		{name: "Ataque Preciso (p124)", power: "ataque-preciso", flag: "ataque-preciso", weapon: "espada-longa", threat: 2, multiple: 1},
 		{name: "Ataque Preciso não vale em duas mãos", power: "ataque-preciso", flag: "ataque-preciso", weapon: "montante"},
 	} {
@@ -121,7 +121,30 @@ func TestTheSwitchesDeclareWhenTheyEnd(t *testing.T) {
 	if want := []string{"flag:ataque-poderoso", "flag:carga-de-cavalaria", "flag:mira-apurada"}; !slices.Equal(turn, want) {
 		t.Errorf("desligam ao passar a vez: %v, e devia ser %v", turn, want)
 	}
-	if want := []string{"flag:combate-defensivo", "flag:disparo-rapido", "flag:estilo-de-duas-armas"}; !slices.Equal(ownTurn, want) {
+	if want := []string{"flag:ataque-ambidestro", "flag:combate-defensivo", "flag:disparo-rapido", "flag:estilo-de-duas-armas"}; !slices.Equal(ownTurn, want) {
 		t.Errorf("desligam quando a vez volta: %v, e devia ser %v", ownTurn, want)
+	}
+}
+
+// "Se estiver usando uma arma corpo a corpo em uma das mãos e nada na outra" (p128): o escudo e a
+// segunda arma ocupam a outra, e o interruptor ligado não soma nada.
+func TestTheOneWeaponStyleAsksForAnEmptyHand(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	on := map[string]bool{FlagGroupID("estilo-de-uma-arma"): true}
+	sword := func(other string) (attack, defense int) {
+		hero := switchHero(`["estilo-de-uma-arma"]`, 0, "espada-longa")
+		if other != "" {
+			hero.Items = append(hero.Items, CharacterItem{CatalogID: &other, Name: other, Equipped: ptrTo("wielded"), Improvements: "[]"})
+		}
+		return world.ComputeWeaponCards(hero, on)[0].Attack - world.ComputeWeaponCards(hero, nil)[0].Attack,
+			world.ComputeSheet(hero, on).Defense.Total - world.ComputeSheet(hero, nil).Defense.Total
+	}
+	if attack, defense := sword(""); attack != 2 || defense != 2 {
+		t.Fatalf("o controle falhou: com a outra mão livre, ataque %+d e Defesa %+d", attack, defense)
+	}
+	for _, other := range []string{"escudo-leve", "adaga"} {
+		if attack, defense := sword(other); attack != 0 || defense != 0 {
+			t.Errorf("com %s na outra mão: ataque %+d e Defesa %+d, e o livro pede a mão vazia", other, attack, defense)
+		}
 	}
 }

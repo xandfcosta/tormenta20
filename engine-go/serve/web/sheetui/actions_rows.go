@@ -3,6 +3,7 @@ package sheetui
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -16,18 +17,21 @@ import (
 // como a superfície se MONTA; aqui, o que o livro dá para fazer na vez (p233-235),
 // que muda quando uma ação nova do livro entra.
 
-// extraStrikeRows é o ataque extra de cada arma natural (p25): não gasta a vez, e espera a
-// resposta do mestre ao golpe com outra arma. A mesa escreve os dois sinais.
+// extraStrikeRows é o ataque extra de cada arma natural (p25) e o adicional do estilo ligado (p125):
+// não gastam a vez, e esperam a resposta do mestre ao golpe. A mesa escreve os sinais.
 func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
 	rows := []actionRow{}
 	for i, weapon := range combat.Weapons {
-		natural := weapon.Natural
-		if natural == nil {
-			continue
-		}
 		var offered []attackBoost
 		if i < len(boosts) {
 			offered = boosts[i]
+		}
+		if weapon.Style != nil {
+			rows = append(rows, styleStrikeRow(i, weapon, offered))
+		}
+		natural := weapon.Natural
+		if natural == nil {
+			continue
 		}
 		rows = append(rows, actionRow{
 			Weapon: i,
@@ -46,9 +50,88 @@ func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
 	return rows
 }
 
+// styleStrikeRow é o ataque a mais que o estilo ligado dá (p125): não gasta a vez nem PM, e
+// espera a resposta do mestre ao golpe de agredir.
+func styleStrikeRow(index int, weapon weaponTile, offered []attackBoost) actionRow {
+	style := *weapon.Style
+	withWhat := "a outra ponta"
+	switch {
+	case style.OtherWeapon:
+		withWhat = "a outra arma"
+	case style.FullAction:
+		withWhat = "esta arma"
+	}
+	waits := styleStrikeWaits(style, weapon.ItemID)
+	rolls := []actionRoll{{
+		Label: "Rolar", Path: fmt.Sprintf("/acoes/ataque-extra/%d", index), NeedsTarget: true, Primary: true, AlsoWaits: waits,
+	}}
+	if weapon.Other != nil {
+		rolls = append(rolls, actionRoll{
+			Label: weapon.Other.Label, Path: fmt.Sprintf("/acoes/ataque-extra/%d/outro-uso", index), NeedsTarget: true, AlsoWaits: waits,
+			LabelExpr: boostPreviewExpr(index, offered, "otherUse", weapon.Other.Label),
+		})
+	}
+	return actionRow{
+		Weapon: index,
+		Boosts: offered,
+		Doses:  weapon.Doses,
+		Name:   "Ataque adicional · " + weapon.Name,
+		Detail: weapon.Damage + " · " + style.Name + ": depois de agredir com " + withWhat,
+		Value:  weapon.Attack,
+		Can:    true,
+		Rolls:  rolls,
+	}
+}
+
+func styleStrikeWaits(style engine.StyleStrike, item int64) string {
+	whichWeapon := "!=="
+	if style.OtherWeapon {
+		whichWeapon = "==="
+	}
+	return fmt.Sprintf("!$my_turn || !$extra_open || $extra_style !== '%[1]s' || $extra_style_item %[2]s %[3]d || $extra_used.includes('%[1]s')",
+		style.SourceID, whichWeapon, item)
+}
+
 func extraStrikeWaits(natural engine.NaturalStrike) string {
 	return fmt.Sprintf("!$my_turn || !$extra_open || $extra_barred === '%[1]s' || $extra_used.filter(source => source === '%[1]s').length >= %[2]d",
 		natural.SourceID, natural.ExtraAttacks)
+}
+
+// strikesWithTheFullAction é a arma do Disparo Rápido ligado: agredir com ela é ação completa
+// (p125), e a linha mora no grupo do que ela custa.
+func strikesWithTheFullAction(weapon weaponTile) bool {
+	return weapon.Style != nil && weapon.Style.FullAction
+}
+
+// attackRow é a linha de atacar com uma arma.
+func attackRow(index int, weapon weaponTile, boosts [][]attackBoost) actionRow {
+	var offered []attackBoost
+	if index < len(boosts) {
+		offered = boosts[index]
+	}
+	rolls := []actionRoll{{
+		Label: "Rolar", Path: fmt.Sprintf("/acoes/atacar/%d", index), NeedsTarget: true, Primary: true,
+	}}
+	if weapon.Other != nil {
+		rolls = append(rolls, actionRoll{
+			Label: weapon.Other.Label, Path: fmt.Sprintf("/acoes/atacar/%d/outro-uso", index), NeedsTarget: true,
+			LabelExpr: boostPreviewExpr(index, offered, "otherUse", weapon.Other.Label),
+		})
+	}
+	return actionRow{
+		Weapon: index,
+		Boosts: offered,
+		Doses:  weapon.Doses,
+		Name:   "Atacar · " + weapon.Name,
+		Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
+		Value:  weapon.Attack,
+		Can:    true,
+		Moves:  []string{"attack", "damage"},
+		// A ARMA VAI NO CAMINHO, pelo ÍNDICE: o `Propose` escolhe por índice
+		// e já recusa o que não existe, e um nome no endereço obrigaria o
+		// servidor a casar texto para achar de volta a mesma arma.
+		Rolls: rolls,
+	}
 }
 
 // standardRows são as ações padrão que toda ficha de combate tem.
@@ -59,33 +142,9 @@ func extraStrikeWaits(natural engine.NaturalStrike) string {
 func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, boosts [][]attackBoost) []actionRow {
 	rows := make([]actionRow, 0, len(combat.Weapons)+2)
 	for i, weapon := range combat.Weapons {
-		var offered []attackBoost
-		if i < len(boosts) {
-			offered = boosts[i]
+		if !strikesWithTheFullAction(weapon) {
+			rows = append(rows, attackRow(i, weapon, boosts))
 		}
-		rolls := []actionRoll{{
-			Label: "Rolar", Path: fmt.Sprintf("/acoes/atacar/%d", i), NeedsTarget: true, Primary: true,
-		}}
-		if weapon.Other != nil {
-			rolls = append(rolls, actionRoll{
-				Label: weapon.Other.Label, Path: fmt.Sprintf("/acoes/atacar/%d/outro-uso", i), NeedsTarget: true,
-				LabelExpr: boostPreviewExpr(i, offered, "otherUse", weapon.Other.Label),
-			})
-		}
-		rows = append(rows, actionRow{
-			Weapon: i,
-			Boosts: offered,
-			Doses:  weapon.Doses,
-			Name:   "Atacar · " + weapon.Name,
-			Detail: weapon.Damage + " · " + weapon.Crit + " · " + weapon.Skill,
-			Value:  weapon.Attack,
-			Can:    true,
-			Moves:  []string{"attack", "damage"},
-			// A ARMA VAI NO CAMINHO, pelo ÍNDICE: o `Propose` escolhe por índice
-			// e já recusa o que não existe, e um nome no endereço obrigaria o
-			// servidor a casar texto para achar de volta a mesma arma.
-			Rolls: rolls,
-		})
 	}
 	// A MANOBRA SÓ EXISTE COM ARMA CORPO A CORPO NA MÃO: *"não é possível fazer
 	// manobras de combate com ataques à distância"* (p234). Oferecê-la ao
@@ -116,6 +175,23 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 	return rows
 }
 
+// movementRows são mover e, para quem atira, mirar: "testes de Pontaria" (p234).
+func movementRows(combat panelCombat, computed engine.ComputedSheet) []actionRow {
+	rows := []actionRow{movementRow(computed)}
+	shoots := func(weapon weaponTile) bool {
+		return weapon.Skill == "Pontaria" || (weapon.Other != nil && weapon.Other.Skill == "Pontaria" && !weapon.Other.Improvised)
+	}
+	if slices.ContainsFunc(combat.Weapons, shoots) {
+		rows = append(rows, actionRow{
+			Name:   "Mirar",
+			Detail: "anula o −5 de atirar em quem está em combate corpo a corpo, neste turno · p234",
+			Can:    true,
+			Rolls:  []actionRoll{{Label: "Mirar", Path: "/acoes/mirar", NeedsTarget: true}},
+		})
+	}
+	return rows
+}
+
 // movementRow é o deslocamento, em METROS.
 //
 // O motor o guarda em QUADRADOS de 1,5m porque é assim que o tabuleiro conta, e
@@ -137,15 +213,23 @@ func movementRow(computed engine.ComputedSheet) actionRow {
 // O GOLPE DE MISERICÓRDIA fica de fora apesar de ser a terceira da p235: ele não
 // tem teste nem número — é crítico automático mais uma chance de morte que o
 // mestre rola —, e a decisão do dono é que linha sem número nem botão não entra.
-func fullRows(combat panelCombat, computed engine.ComputedSheet, reckless bool) []actionRow {
-	return []actionRow{chargeRow(combat, reckless), {
+func fullRows(combat panelCombat, computed engine.ComputedSheet, reckless bool, boosts [][]attackBoost) []actionRow {
+	rows := []actionRow{}
+	for i, weapon := range combat.Weapons {
+		if strikesWithTheFullAction(weapon) {
+			row := attackRow(i, weapon, boosts)
+			row.Detail += " · Disparo Rápido: dá um ataque adicional (p125)"
+			rows = append(rows, row)
+		}
+	}
+	return append(rows, chargeRow(combat, reckless), actionRow{
 		Name:   "Corrida",
 		Detail: "Atletismo · p235",
 		Value:  book.WithSign(expertiseOrZero(computed, "Atletismo", "strength").Total),
 		Can:    true,
 		Moves:  []string{"expertise:Atletismo"},
 		Rolls:  []actionRoll{expertiseRoll("Atletismo")},
-	}}
+	})
 }
 
 // chargeRow é a investida (p235), com a Imprudente (p42) para quem tem o poder.

@@ -141,9 +141,8 @@ func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
 	character.Overlayable = aceitaMelhoria(*catalog)
 	if character.Overlayable {
 		applied := savedImprovements(item.Improvements)
-		family := book.ItemFamily(*catalog)
-		character.Improvements = thatFitOverlays("improvement", family, applied)
-		character.Materials = thatFitOverlays("material", family, appliedMaterial(item))
+		character.Improvements = thatFitOverlays("improvement", *catalog, applied)
+		character.Materials = thatFitOverlays("material", *catalog, appliedMaterial(item))
 	}
 	return character
 }
@@ -177,8 +176,8 @@ func reachablePlaces(item sheet.ItemDTO, catalog *book.Item) []equipChoice {
 // devolve o que cabe, incluindo o guardar.
 //
 // As duas mãos só aparecem quando são OBRIGATÓRIAS (`hands: 2`) ou quando
-// mudam alguma coisa: uma arma versátil dá mais dano empunhada com as duas
-// (p150). Numa arma de uma mão só, ocupar as duas não ganha nada.
+// mudam alguma coisa: uma arma adaptável dá mais dano empunhada com as duas
+// (p143). Numa arma de uma mão só, ocupar as duas não ganha nada.
 func itemPlaces(catalog *book.Item) []equipChoice {
 	save := equipChoice{Slot: "", Label: "Guardar"}
 	if catalog == nil {
@@ -204,7 +203,7 @@ func itemHands(catalog book.Item) []equipChoice {
 		return []equipChoice{two}
 	}
 	one := equipChoice{Slot: "wielded", Label: "Empunhar (1 mão)"}
-	if catalog.Weapon != nil && contemTraco(catalog.Weapon.Traits, "versatil") {
+	if catalog.Weapon != nil && contemTraco(catalog.Weapon.Traits, engine.AdaptableTrait) {
 		return []equipChoice{one, two}
 	}
 	return []equipChoice{one}
@@ -366,15 +365,20 @@ func overlaySummary(entry book.Item) string {
 	return "sem efeito mecânico"
 }
 
-// thatFitOverlays são as melhorias (ou materiais) da FAMÍLIA do item.
+// thatFitOverlays são as melhorias (ou materiais) que cabem no item.
 //
-// O filtro é o `appliesTo` do catálogo, e ele é a mesma regra que o servidor
-// cobra ao gravar (`fitsItemImprovement`): a lista mostra o que cabe, e quem
-// recusa o resto é o servidor.
-func thatFitOverlays(category, family string, applied []string) []overlayChoice {
+// O filtro é a mesma regra que o servidor cobra ao gravar (`fitsItemImprovement`): a lista mostra o
+// que cabe, e quem recusa o resto é o servidor. A que já está no item fica mesmo sem caber, para
+// poder sair.
+func thatFitOverlays(category string, item book.Item, applied []string) []overlayChoice {
+	family := book.ItemFamily(item)
 	choices := []overlayChoice{}
 	for _, entry := range book.Catalogs().Items {
-		if entry.Category != category || !aceitaAFamilia(entry, family) {
+		if entry.Category != category {
+			continue
+		}
+		fits := aceitaAFamilia(entry, family) && book.ImprovementFitsItem(entry.ID, item)
+		if !fits && !contemTraco(applied, entry.ID) {
 			continue
 		}
 		choices = append(choices, overlayChoice{

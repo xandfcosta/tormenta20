@@ -119,6 +119,9 @@ templ spellSheet(v View, spell learnedSpellRow) {
 			}
 		}
 		<p class="ds-help">Custo <b data-text={ costPreview(spell) }></b> · { "você tem " + strconv.FormatInt(v.Spells.PmCurrent, 10) + " PM" }</p>
+		if v.Spells.Ritual {
+			<p class="ds-help" data-text={ ritualBillPreview(spell) }></p>
+		}
 		if spell.CostCut != "" {
 			<p class="ds-help">{ spell.CostCut }</p>
 		}

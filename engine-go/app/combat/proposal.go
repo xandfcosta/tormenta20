@@ -43,6 +43,12 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 	}
 	// A INVESTIDA É OUTRA AÇÃO (p235), e o extra não é a ação agredir.
 	pending.OpensExtra = req.Charge == "" && !req.ExtraStrike
+	if style := setup.weapon.Style; style != nil && req.ExtraStrike {
+		pending.ExtraOf, pending.ExtraLimit, pending.ExtraIsStyle = style.SourceID, 1, true
+		pending.ExtraOtherWeapon, pending.StyleItem = style.OtherWeapon, setup.weapon.ItemID
+	} else if pending.OpensExtra {
+		opensTheStyle(&pending, setup.weapon)
+	}
 	if req.TargetObject != nil {
 		pending.TargetTokenID, pending.TargetLabel = req.TargetObject.TokenID, req.TargetObject.Label
 	}

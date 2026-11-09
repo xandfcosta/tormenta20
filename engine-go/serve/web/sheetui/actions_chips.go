@@ -31,9 +31,9 @@ type actionChip struct {
 	On   bool
 	Can  bool
 	Why  string
-	// Warns diz que falta algo para a regra valer: o chip liga do mesmo jeito, e a
+	// WarnsWith diz o que falta para a regra valer: o chip liga do mesmo jeito, e a
 	// frase inteira mora na aba Efeitos.
-	Warns bool
+	WarnsWith string
 	// Note é o que o degrau compra ("+1 no bônus de Fúria"), vindo do catálogo.
 	Note string
 	// Path é o caminho do gesto, e ele é o MESMO das abas Poderes e Efeitos:
@@ -140,9 +140,9 @@ func chipsOffered(powers powersPanel, situational []situationalRow) []actionChip
 	for _, row := range situational {
 		chips = append(chips, actionChip{
 			Label: row.Label, On: row.Active, Can: true, Bonus: row.Dice,
-			Warns:  row.Warning != "",
-			Moves:  numbersMovedBy(row.Targets),
-			Before: fmt.Sprintf("$status = %q; ", row.Key), Path: "/efeitos/situacao",
+			WarnsWith: chipWarning(row),
+			Moves:     numbersMovedBy(row.Targets),
+			Before:    fmt.Sprintf("$conditional = %q; ", row.Key), Path: "/efeitos/situacao",
 		})
 	}
 	return chips
@@ -286,4 +286,17 @@ func groupOrderOf(title string) []engine.ActionCost {
 		}
 	}
 	return nil
+}
+
+// chipWarning é o aviso da aba Efeitos em duas palavras, que é o que cabe no chip.
+func chipWarning(row situationalRow) string {
+	switch {
+	case row.Warning == "":
+		return ""
+	case row.Key == engine.FlagGroupID(engine.RapidShotPowerID):
+		return "sem arco"
+	case row.Key == engine.FlagGroupID("estilo-de-uma-arma"):
+		return "sem a mão livre"
+	}
+	return "sem arma leve"
 }

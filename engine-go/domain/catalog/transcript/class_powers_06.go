@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 6 de 13 de `ClassPowers` (class_powers.go).
+// Parte 6 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart06 = []ClassPower{
 	{
 		ID:          "class.cacador.ervas-curativas",

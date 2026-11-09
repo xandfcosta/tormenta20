@@ -77,6 +77,15 @@ type PendingAttack struct {
 	NaturalSource string `json:"naturalSource,omitempty"`
 	ExtraOf       string `json:"extraOf,omitempty"`
 	ExtraLimit    int    `json:"extraLimit,omitempty"`
+	// OpensStyle é o estilo ligado neste golpe de agredir, que a resposta do mestre abre (p125), e
+	// StyleItem é a linha da mochila da arma, no golpe que abre e no adicional. FullAction diz que
+	// ele pagou a ação completa do Disparo Rápido. ExtraIsStyle diz que este golpe É o adicional,
+	// e ExtraOtherWeapon, que ele pede a outra arma.
+	OpensStyle       string `json:"opensStyle,omitempty"`
+	StyleItem        int64  `json:"styleItem,omitempty"`
+	FullAction       bool   `json:"fullAction,omitempty"`
+	ExtraIsStyle     bool   `json:"extraIsStyle,omitempty"`
+	ExtraOtherWeapon bool   `json:"extraOtherWeapon,omitempty"`
 	// Paid é o que a proposta pagou ao nascer, e é o que o cancelamento do mestre
 	// devolve. Nulo na proposta de antes desta regra, que não pagou nada.
 	Paid *AttackPaid `json:"paid,omitempty"`

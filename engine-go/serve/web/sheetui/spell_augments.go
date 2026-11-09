@@ -160,7 +160,9 @@ var powerAugmentSignals = map[string]string{
 // Aprimoramento TRANCADO fica de fora da soma: ele não tem contador, então o
 // sinal dele nunca sobe — mas somá-lo mostraria um custo que o servidor não
 // cobraria.
-func costPreview(spell learnedSpellRow) string {
+func costPreview(spell learnedSpellRow) string { return costNumber(spell) + " + ' PM'" }
+
+func costNumber(spell learnedSpellRow) string {
 	expr := strconv.Itoa(spell.BasePm)
 	for _, a := range spell.Augments {
 		if a.Locked {
@@ -174,10 +176,16 @@ func costPreview(spell learnedSpellRow) string {
 	// (ALE-339). A prévia continua sem decidir nada — ela só deixou de discordar.
 	for _, a := range spell.Augments {
 		if a.Cantrip {
-			return "(" + a.Signal + " ? 0 : (" + expr + ")) + ' PM'"
+			return "(" + a.Signal + " ? 0 : (" + expr + "))"
 		}
 	}
-	return "(" + expr + ") + ' PM'"
+	return "(" + expr + ")"
+}
+
+// ritualBillPreview é a conta do ritual: "T$ 10 por PM gasto" (p131). Ela só aparece, e o app não
+// cobra (decisão do dono).
+func ritualBillPreview(spell learnedSpellRow) string {
+	return "'Como ritual, T$ ' + " + costNumber(spell) + " * 10 + ' em oferendas e 1 hora de execução, ou o dobro (p131)'"
 }
 
 // augmentPriceWritten é a linha de baixo do aprimoramento: o que ele custa e o

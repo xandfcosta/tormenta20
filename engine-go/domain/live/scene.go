@@ -66,6 +66,14 @@ type Scene struct {
 	ExtraStrikeEntry  string   `json:"extraStrikeEntry,omitempty"`
 	ExtraStrikeBarred string   `json:"extraStrikeBarred,omitempty"`
 	ExtraStrikesUsed  []string `json:"extraStrikesUsed,omitempty"`
+	// ExtraStyle é o estilo que esse golpe abriu (p125), e ExtraStyleItem, a arma com que ele foi
+	// feito: as Duas Armas pedem a outra, e o Disparo Rápido, a mesma.
+	ExtraStyle     string `json:"extraStyle,omitempty"`
+	ExtraStyleItem int64  `json:"extraStyleItem,omitempty"`
+	// AimedBy e AimedAt são quem mirou nesta vez e em quem: anula o -5 de atirar em quem está em
+	// combate corpo a corpo, "neste turno" e "contra aquele alvo" (p234).
+	AimedBy string `json:"aimedBy,omitempty"`
+	AimedAt string `json:"aimedAt,omitempty"`
 	// ExtraMovementLeft é a ação de movimento a mais do turno em curso, de quem
 	// entrou no primeiro turno do combate com Reflexos de Combate (p129).
 	ExtraMovementLeft bool `json:"extraMovementLeft,omitempty"`
@@ -151,6 +159,8 @@ func RefreshTurn(st *SessionRuntimeState) {
 	}
 	st.Scene.StandardLeft, st.Scene.MovementLeft, st.Scene.ExtraMovementLeft = true, true, false
 	st.Scene.ExtraStrikeEntry, st.Scene.ExtraStrikeBarred, st.Scene.ExtraStrikesUsed = "", "", nil
+	st.Scene.ExtraStyle, st.Scene.ExtraStyleItem = "", 0
+	st.Scene.AimedBy, st.Scene.AimedAt = "", ""
 	// A MANUTENÇÃO DA VEZ ANTERIOR SAI JUNTO: ela é o extrato deste turno, e
 	// deixá-la faria a faixa dizer que a Velocidade de outra pessoa caiu agora.
 	st.Scene.Upkeep = nil

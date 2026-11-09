@@ -164,7 +164,7 @@ var generalPowersPart02 = []GeneralPower{
 				Condition: &ModifierCondition{
 					Kind:  "flagOn",
 					Flag:  "disparo-rapido",
-					Label: "no ataque adicional; dura até o seu próximo turno",
+					Label: "Disparo Rápido: ação completa e um ataque a mais, –2 até o seu próximo turno",
 					Ends:  "own-turn",
 				},
 			},

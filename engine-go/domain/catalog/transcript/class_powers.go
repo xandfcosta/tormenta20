@@ -16,4 +16,5 @@ var ClassPowers = concat(
 	classPowersPart11,
 	classPowersPart12,
 	classPowersPart13,
+	classPowersPart14,
 )

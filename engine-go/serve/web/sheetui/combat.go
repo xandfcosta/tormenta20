@@ -109,6 +109,9 @@ type weaponTile struct {
 	Other *weaponOtherUseTile
 	// Natural diz que esta é uma arma natural, e o que ela dá no ataque extra (p25).
 	Natural *engine.NaturalStrike
+	// Style é o ataque adicional que um estilo ligado dá (p125), e ItemID, a linha da mochila.
+	Style  *engine.StyleStrike
+	ItemID int64
 	// Doses são as da Injeção alquímica, da mais antiga à mais nova.
 	Doses  []doseChoice
 	Skill  string
@@ -398,14 +401,16 @@ func spellDcTotal(sheet engine.ComputedSheet) int {
 
 // weaponOtherUseTile são as duas contas do outro uso da arma, dentro da linha dela.
 type weaponOtherUseTile struct {
-	Verb      string
-	Label     string
-	Skill     string
-	Attack    string
-	Damage    string
-	Crit      string
-	AttackSum []ds.SumTerm
-	DamageSum []ds.SumTerm
+	// Improvised é o uso que paga a penalidade por a arma não ser feita para ele.
+	Improvised bool
+	Verb       string
+	Label      string
+	Skill      string
+	Attack     string
+	Damage     string
+	Crit       string
+	AttackSum  []ds.SumTerm
+	DamageSum  []ds.SumTerm
 }
 
 // weaponTiles são as armas empunhadas, no máximo duas — o motor já as limita.
@@ -420,6 +425,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			other = &weaponOtherUseTile{
 				Verb: otherUseVerb(use), Label: otherUseLabel(use), Skill: use.Skill, Attack: book.WithSign(use.Attack),
 				Damage: damageLabel(*use), Crit: critLabel(*use), AttackSum: otherAttack, DamageSum: otherDamage,
+				Improvised: use.Improvised,
 			}
 		}
 		tiles = append(tiles, weaponTile{
@@ -427,6 +433,8 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Name:        card.Name,
 			Other:       other,
 			Natural:     card.Natural,
+			Style:       card.Style,
+			ItemID:      card.ItemID,
 			Doses:       doseChoicesOf(card.Doses),
 			Skill:       card.Skill,
 			Attack:      book.WithSign(card.Attack),

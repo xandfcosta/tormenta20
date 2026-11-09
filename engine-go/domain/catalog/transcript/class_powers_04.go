@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 4 de 13 de `ClassPowers` (class_powers.go).
+// Parte 4 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart04 = []ClassPower{
 	{
 		ID: "class.bucaneiro.esgrimista",

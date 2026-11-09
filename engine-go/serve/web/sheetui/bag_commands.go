@@ -155,6 +155,9 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	if err := book.FitsImprovementCount(len(signals.ItemImprovements), signals.ItemMaterial != ""); err != nil {
 		return err
 	}
+	if err := book.ImprovementSetProblem(signals.ItemImprovements, signals.ItemMaterial != ""); err != nil {
+		return err
+	}
 	fromBook, fromTable := splitImprovementIDs(signals.ItemImprovements)
 	if err := fitsItemImprovement(catalog, fromBook, "improvement"); err != nil {
 		return err

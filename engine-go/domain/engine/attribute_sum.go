@@ -34,7 +34,7 @@ func (r *Ruleset) sheetEffects(ch Character, activeConditionals map[string]bool)
 // — o impulso de PM de UM ataque (`BoostedWeaponCards`), que vale para aquele
 // golpe e some depois.
 func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) ItemEffects {
-	items := append(r.ActiveItemsFor(ch), extra...)
+	items := append(append(r.ActiveItemsFor(ch), extra...), r.handsAsAnItem(ch)...)
 	plain, sums := splitAttributeSums(items)
 	first := ApplyActiveConditionals(ComputeItemEffects(plain), activeConditionals)
 	if len(sums) == 0 {
@@ -104,4 +104,44 @@ func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) 
 		out[i] = resolved
 	}
 	return out
+}
+
+// HandsNotFreeFlag diz que as mãos NÃO estão como o Estilo de Uma Arma pede: "uma arma corpo a corpo em uma
+// das mãos e nada na outra" (p128).
+//
+// É NEGATIVA de propósito, com o `Unless` do lado do poder. O interruptor é oferecido a partir do
+// `ActiveItemsFor`, e esta flag só entra na conta da ficha: com um `Requires` positivo, o poder nunca era
+// oferecido. Assim ele fica na tela e avisa (quem decide é o mestre), e o número é que não se mexe.
+const HandsNotFreeFlag = "maos-sem-arma-sozinha"
+
+var wieldedInOneHand = "wielded"
+
+// HoldsALoneWeapon diz se há uma arma corpo a corpo em uma das mãos, e nada na outra.
+func (r *Ruleset) HoldsALoneWeapon(ch Character) bool {
+	inHand := 0
+	fits := false
+	for _, it := range ch.Items {
+		if it.Equipped == nil || (*it.Equipped != "wielded" && *it.Equipped != "wielded2") {
+			continue
+		}
+		inHand++
+		if it.CatalogID == nil {
+			continue
+		}
+		catalog := r.getCatalogItem(*it.CatalogID)
+		fits = *it.Equipped == "wielded" && catalog != nil && catalog.Weapon != nil &&
+			catalog.Weapon.Purpose == "melee" && catalog.Weapon.Hand != "two"
+	}
+	return inHand == 1 && fits
+}
+
+// handsAsAnItem levanta a flag como fonte da ficha, e não num item: o `ActiveItemsFor` lista o que o
+// catálogo e as melhorias dão, e ela não é de item nenhum.
+func (r *Ruleset) handsAsAnItem(ch Character) []ActiveItem {
+	if r.HoldsALoneWeapon(ch) {
+		return nil
+	}
+	return []ActiveItem{{Source: "as mãos", Equipped: &wieldedInOneHand, Modifiers: []Modifier{{
+		Target: ModifierTarget{K: "flag", Name: HandsNotFreeFlag}, Amount: 1, BonusType: "untyped",
+	}}}}
 }

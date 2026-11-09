@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 2 de 13 de `ClassPowers` (class_powers.go).
+// Parte 2 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart02 = []ClassPower{
 	{
 		ID:             "class.barbaro.reducao-de-dano-4",

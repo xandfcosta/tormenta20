@@ -148,11 +148,14 @@ templ endlessStrip(v View) {
 // também ESCREVE DE QUEM É A VEZ (`my_turn`) a cada tique, e diz por que as
 // ações apagaram. Fora de combate a vez é de todos — conjurar não espera fila.
 templ tempestadeTargetBar(v View) {
-	<div id="table-turn-target" class="ds-target" data-signals={ fmt.Sprintf("{my_turn: %t, attack_open: %t, extra_open: %t, extra_barred: %q, extra_used: %s}", v.Turn.Kind != "other", attackIsOpen(v.Attack), v.ExtraStrikeOpen, v.ExtraStrikeBarred, v.ExtraStrikesUsed) }>
+	<div id="table-turn-target" class="ds-target" data-signals={ fmt.Sprintf("{my_turn: %t, attack_open: %t, extra_open: %t, extra_barred: %q, extra_used: %s, extra_style: %q, extra_style_item: %d}", v.Turn.Kind != "other", attackIsOpen(v.Attack), v.ExtraStrikeOpen, v.ExtraStrikeBarred, v.ExtraStrikesUsed, v.ExtraStyle, v.ExtraStyleItem) }>
 		if v.Turn.Kind == "other" {
 			<p class="ds-off-turn">É a vez de <b>{ v.Turn.Label }</b>. As ações abrem na sua vez.</p>
 		} else if attackIsOpen(v.Attack) {
 			<p class="ds-off-turn">Há um ataque em andamento. O próximo golpe abre quando ele acabar.</p>
+		}
+		if v.AimedAtLabel != "" && v.Turn.Kind != "other" {
+			<p class="ds-off-turn">Mirando em <b>{ v.AimedAtLabel }</b>: sem o −5 de atirar em quem está em combate corpo a corpo.</p>
 		}
 		if len(v.Queue) > 0 {
 			<label class="ds-target-bar">
