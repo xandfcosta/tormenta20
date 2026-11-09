@@ -97,7 +97,7 @@ func choiceStepsOf(v View) []choiceStep {
 		}
 		for _, counted := range card.Counted {
 			all = append(all, choiceStep{
-				ID: prefix + "-counted-" + counted.ID, Title: card.ClassName + " · " + counted.Name, Meta: counted.Detail,
+				ID: prefix + "-counted-" + counted.ID, Title: card.ClassName + " · " + counted.Name, Meta: counted.Nouns,
 				Count: strconv.Itoa(counted.Chosen) + " de " + strconv.Itoa(counted.Limit), Done: counted.Chosen >= counted.Limit,
 				Kind: "counted", Class: card, Counted: counted,
 			})

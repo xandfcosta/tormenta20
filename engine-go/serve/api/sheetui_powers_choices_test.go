@@ -423,6 +423,8 @@ func choiceStepTitled(t *testing.T, page, title string) choiceStepOnScreen {
 // toque, então "marcada" é o que oferece tirar.
 type choiceFieldOnScreen struct {
 	Written string
+	// Detail é a descrição do poder embaixo do cabeçalho do bloco, quando o bloco a tem.
+	Detail  string
 	Options map[string]bool
 	HTML    string
 }
@@ -453,6 +455,9 @@ func choiceFieldIn(t *testing.T, page, step, label string) (choiceFieldOnScreen,
 			if meta := nodesWithClassToken(heads[0], "ds-row-meta"); len(meta) > 0 {
 				read.Written = spacedText(meta[0])
 			}
+		}
+		if detail := nodesWithClassToken(field, "ds-pick-detail"); len(detail) > 0 {
+			read.Detail = spacedText(detail[0])
 		}
 		for _, option := range nodesWithClassToken(field, "ds-option") {
 			read.Options[attr(option, "aria-label")] = attr(option, "aria-pressed") == "true"

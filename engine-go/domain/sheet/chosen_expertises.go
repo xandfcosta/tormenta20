@@ -225,6 +225,15 @@ func fixedCountedChoice(power book.ClassPower, picks []string) CountedChoice {
 	return choice
 }
 
+// Nouns é o plural do Noun: a linha do passo no Escolher ("escolas") e a pendência ("3 escolas por
+// escolher").
+func (c CountedChoice) Nouns() string {
+	if c.Noun == "opção" {
+		return "opções"
+	}
+	return c.Noun + "s"
+}
+
 // countedNoun é o nome do que a escolha toma, para a pendência ("3 escolas por escolher").
 func countedNoun(kind string) string {
 	if kind == "school" {
