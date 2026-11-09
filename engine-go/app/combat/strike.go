@@ -160,8 +160,9 @@ type Request struct {
 	// Dose é o id da dose que quem ataca escolheu, entre as da arma. Vazio é a mais
 	// antiga, que é a única pergunta possível quando as duas são iguais.
 	Dose string
-	// ExtraStrike pede o ataque extra da arma natural `Weapon`: sem gastar ação, pelo PM dela
-	// (p25). Só existe depois de agredir com outra arma, e quem confere é o `ProposeAttack`.
+	// ExtraStrike pede o ataque que não gasta a vez com `Weapon`: o extra da arma natural, pelo PM dela
+	// (p25), ou o adicional do estilo ligado (p125). Só existe depois de agredir, e quem confere é o
+	// `ProposeAttack`.
 	ExtraStrike bool
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.

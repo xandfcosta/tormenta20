@@ -55,7 +55,7 @@ var improvementsThatExclude = [][2]string{
 // contra o estado anterior deixaria tirar o pré-requisito e manter a melhoria que depende dele
 // no mesmo pedido.
 //
-// @example book.ImprovementSetProblem([]string{"melhoria-atroz"}, false) // "Atroz pede Cruel (p164)"
+// @example book.ImprovementSetProblem([]string{"melhoria-atroz"}, false) // "Atroz pede Cruel no mesmo item"
 func ImprovementSetProblem(ids []string, withMaterial bool) error {
 	for _, id := range ids {
 		if needed, asks := improvementPrerequisites[id]; asks && !slices.Contains(ids, needed) {
