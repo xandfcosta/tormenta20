@@ -91,13 +91,3 @@ func sumWhenThereIsOne(base int, contributions []engine.SourceAmount) string {
 	}
 	return sheet.AttributeSum(base, contributions)
 }
-
-// attributeKnown diz se a chave é um dos seis.
-func attributeKnown(key string) bool {
-	for _, attribute := range book.AttributeOrder {
-		if attribute.Key == key {
-			return true
-		}
-	}
-	return false
-}
