@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -87,5 +88,69 @@ func TestTheDruidChoosesThreeSchools(t *testing.T) {
 	}
 	if refusal := powerCommand(t, f, id, druidSchoolsPath+"abjuracao", ""); refusal != "" {
 		t.Fatalf("escolher abjuração foi recusado: %q", refusal)
+	}
+}
+
+// spellDCOnTheTable é o que a linha de conjurar diz da CD da magia `name` na superfície Ações: o número, ou
+// "—".
+func spellDCOnTheTable(t *testing.T, f sceneFixture, name string) string {
+	t.Helper()
+	standard := entre(t, acoesDaMesa(t, f), "Ação padrão", "Ação de movimento")
+	found := regexp.MustCompile(`Conjurar · ` + regexp.QuoteMeta(name) + `.*?CD (\d+|—)`).FindStringSubmatch(standard)
+	if found == nil {
+		t.Fatalf("a linha de conjurar %s não diz a CD:\n%s", name, recorte(standard))
+	}
+	return found[1]
+}
+
+// A CD SEGUE AS ESCOLAS: a Explosão de Chamas é arcana de evocação, e o verbete a lista só para o
+// Arcanista. O bardo que escolheu evocação a lança e tem a CD dela; o que não escolheu, não.
+func TestTheBardsSpellDCFollowsHisSchools(t *testing.T) {
+	for _, c := range []struct {
+		name    string
+		schools []string
+		hasDC   bool
+	}{
+		{"com evocação", []string{"evocacao"}, true},
+		{"sem evocação", []string{"ilusao"}, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			f, id := schoolCaster(t, "Bardo")
+			for _, school := range c.schools {
+				if refusal := powerCommand(t, f, id, bardSchoolsPath+school, ""); refusal != "" {
+					t.Fatalf("escolher %s: %q", school, refusal)
+				}
+			}
+			learnSpell(t, f, "explosao-de-chamas")
+			if got := spellDCOnTheTable(t, f, "Explosão de Chamas"); (got != "—") != c.hasDC {
+				t.Errorf("a Explosão de Chamas diz CD %s; a CD tinha de estar lá: %v", got, c.hasDC)
+			}
+		})
+	}
+}
+
+// O DRUIDA LANÇA DIVINAS das escolas dele: o Santuário é divino de abjuração, e o verbete o lista para o
+// Clérigo e o Paladino.
+func TestTheDruidsSpellDCFollowsHisSchools(t *testing.T) {
+	f, id := schoolCaster(t, "Druida")
+	if refusal := powerCommand(t, f, id, druidSchoolsPath+"abjuracao", ""); refusal != "" {
+		t.Fatalf("escolher abjuração: %q", refusal)
+	}
+	learnSpell(t, f, "santuario")
+	if got := spellDCOnTheTable(t, f, "Santuário"); got == "—" {
+		t.Errorf("o druida de abjuração não tem a CD do Santuário")
+	}
+}
+
+// A ESCOLA SOZINHA NÃO BASTA: o bardo lança ARCANAS (p44), e o Santuário é divino de abjuração. O bardo de
+// abjuração não tem a CD dele.
+func TestTheBardDoesNotCastDivineSpellsOfHisSchools(t *testing.T) {
+	f, id := schoolCaster(t, "Bardo")
+	if refusal := powerCommand(t, f, id, bardSchoolsPath+"abjuracao", ""); refusal != "" {
+		t.Fatalf("escolher abjuração: %q", refusal)
+	}
+	learnSpell(t, f, "santuario")
+	if got := spellDCOnTheTable(t, f, "Santuário"); got != "—" {
+		t.Errorf("o bardo de abjuração tem CD %s no Santuário, que é divino", got)
 	}
 }
