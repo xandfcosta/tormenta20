@@ -746,15 +746,17 @@
    * o peso, e não só a cor — a diferença tem de sobreviver a quem não vê cor. */
   /* A largura mínima é a altura: a opção de um caractere ("1º") é um alvo
    * quadrado, e não uma fresta abaixo do piso de toque. */
+  /* A ALTURA É MÍNIMA: o interruptor de rótulo longo quebra em duas linhas, e com altura fixa o texto
+   * colava na borda. */
   .ds-option {
-    height: var(--ds-h-control);
+    min-height: var(--ds-h-control);
     min-width: var(--ds-h-control);
-    padding: 0 0.75rem;
+    padding: 0.25rem 0.75rem;
     border: 1px solid var(--ds-line-strong);
     border-radius: var(--ds-r-control);
     background: var(--ds-surface);
     color: var(--ds-ink);
-    font: 500 var(--ds-t-sm) / 1 var(--font-ds);
+    font: 500 var(--ds-t-sm) / 1.25 var(--font-ds);
     cursor: pointer;
   }
   .ds-option:hover {
