@@ -9,18 +9,18 @@ const AdaptableTrait = "adaptavel"
 // weaponInTheGrip é a arma como a MÃO a empunha. O catálogo escreve o dado da adaptável como
 // "1d10/1d12", uma mão e duas, e nas duas ela é arma de duas mãos para os estilos (p128). Devolve a
 // cópia: o verbete é de todo mundo.
+//
+// A ARMA DUPLA também escreve "1d6/1d6", uma ponta e a outra (p143). A carta rola uma ponta: a notação
+// inteira não é um dado, e a mesa recusava o dano. As duas do livro têm as pontas iguais.
 func weaponInTheGrip(w *WeaponStats, equipped string) *WeaponStats {
-	if !hasTrait(w.Traits, AdaptableTrait) {
-		return w
-	}
-	gripped := *w
-	oneHand, twoHands, split := strings.Cut(w.Damage, "/")
+	first, second, split := strings.Cut(w.Damage, "/")
 	if !split {
 		return w
 	}
-	gripped.Damage = oneHand
-	if equipped == "wielded2" {
-		gripped.Damage, gripped.Hand = twoHands, "two"
+	gripped := *w
+	gripped.Damage = first
+	if hasTrait(w.Traits, AdaptableTrait) && equipped == "wielded2" {
+		gripped.Damage, gripped.Hand = second, "two"
 	}
 	return &gripped
 }

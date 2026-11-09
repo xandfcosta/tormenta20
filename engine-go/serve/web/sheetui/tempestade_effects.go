@@ -76,7 +76,7 @@ func twoWeaponStyleWarning(key string, dto sheet.CharacterDTO) string {
 		}
 		if fromBook := book.ItemByID(*item.CatalogID); fromBook == nil || fromBook.Weapon == nil {
 			continue
-		} else if fromBook.Weapon.Hand == "light" {
+		} else if fromBook.Weapon.Hand == "light" || slices.Contains(fromBook.Weapon.Traits, engine.DoubleTrait) {
 			return ""
 		}
 	}

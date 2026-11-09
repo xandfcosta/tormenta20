@@ -7,6 +7,7 @@ package engine
 const (
 	TwoWeaponStylePowerID = "estilo-de-duas-armas"
 	RapidShotPowerID      = "disparo-rapido"
+	DoubleTrait           = "dupla"
 )
 
 // StyleStrike é o que um estilo ligado dá a esta carta.
@@ -27,6 +28,10 @@ type StyleStrike struct {
 func (r *Ruleset) offerStyleStrikes(ch Character, active map[string]bool, wielded []WeaponCard) {
 	owned := parseChoiceSet(ch.ClassPowers).has
 	switchedOn := func(power string) bool { return owned[power] && active[FlagGroupID(power)] }
+	if switchedOn(TwoWeaponStylePowerID) && len(wielded) == 1 && r.isDoubleWeapon(wielded[0]) {
+		wielded[0].Style = &StyleStrike{SourceID: TwoWeaponStylePowerID}
+		return
+	}
 	if switchedOn(TwoWeaponStylePowerID) && len(wielded) == 2 {
 		style := &StyleStrike{SourceID: TwoWeaponStylePowerID, OtherWeapon: true}
 		for i := range wielded {
@@ -45,4 +50,11 @@ func (r *Ruleset) offerStyleStrikes(ch Character, active map[string]bool, wielde
 			wielded[i].Style = &StyleStrike{SourceID: RapidShotPowerID, FullAction: true}
 		}
 	}
+}
+
+// isDoubleWeapon é a arma que "pode ser usada com Estilo de Duas Armas [...] como se fosse uma arma de
+// uma mão e uma arma leve", e cada ponta conta como uma arma (p143). O adicional é com a mesma carta.
+func (r *Ruleset) isDoubleWeapon(card WeaponCard) bool {
+	catalog := r.getCatalogItem(card.CatalogID)
+	return catalog != nil && catalog.Weapon != nil && hasTrait(catalog.Weapon.Traits, DoubleTrait)
 }

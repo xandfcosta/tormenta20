@@ -262,3 +262,26 @@ func TestTheStyleSwitchesSayWhatTheyDeclare(t *testing.T) {
 		t.Error("o chip do Disparo Rápido não diz o que ele declara")
 	}
 }
+
+// A arma dupla "pode ser usada com Estilo de Duas Armas [...] para fazer ataques adicionais, como se
+// fosse uma arma de uma mão e uma arma leve" (p143): uma só na mão já dá os dois ataques, e o
+// interruptor não avisa de arma leve nenhuma.
+func TestADoubleWeaponAloneGivesTheSecondAttack(t *testing.T) {
+	f, id, goblin := styleOnTurn(t, "estilo-de-duas-armas", true, "bordao")
+	if chips := acoesDaMesa(t, f); strings.Contains(chips, "sem arma leve") {
+		t.Error("o bordão ainda avisa que falta arma leve")
+	}
+	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
+		t.Fatalf("o primeiro golpe: %q", refusal)
+	}
+	gmRules(t, f, "acertou")
+	if refusal := gmRefusal(t, f, "/ataque/dano"); refusal != "" {
+		t.Fatalf("o dano do bordão foi recusado: %q", refusal)
+	}
+	if refusal := gmRefusal(t, f, "/ataque/confirmar"); refusal != "" {
+		t.Fatalf("o ✓: %q", refusal)
+	}
+	if refusal := extraStrike(t, f, id, 0, goblin); refusal != "" {
+		t.Errorf("a outra ponta do bordão foi recusada: %q", refusal)
+	}
+}
