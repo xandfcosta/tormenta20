@@ -89,3 +89,34 @@ func storedClassesOf(t *testing.T, f sceneFixture, id int64) string {
 	}
 	return strings.Join(written, ", ")
 }
+
+// A LISTA "OUTRA CLASSE" do + do nível diz, antes do toque, a classe que não serve ao deus da ficha, e não
+// leva o gesto de entrar nela: a recusa do servidor continua valendo, mas ninguém precisa tocar para saber.
+func TestTheOtherClassListMarksTheClassThatDoesNotServeTheGod(t *testing.T) {
+	for _, c := range []struct {
+		god    string
+		offers bool
+	}{
+		{"tenebra", false},
+		{"khalmyr", true},
+	} {
+		t.Run("deus "+c.god, func(t *testing.T) {
+			f, id := guerreiro(t)
+			if refusal := powerCommand(t, f, id, devotionPath(c.god), ""); refusal != "" {
+				t.Fatalf("escolher %s: %q", c.god, refusal)
+			}
+			page := f.requests(t, f.player, "GET", fmt.Sprintf("/personagens/%d?tab=combat", id), "").Body.String()
+			gesture := fmt.Sprintf("/personagens/%d/classes/Paladino/entra", id)
+			if got := strings.Contains(page, gesture); got != c.offers {
+				t.Errorf("devoto de %s: a lista oferece entrar em Paladino = %v, quer %v", c.god, got, c.offers)
+			}
+			if !c.offers && !strings.Contains(page, "Não serve a Tenebra") {
+				t.Error("a lista não diz que o Paladino não serve a Tenebra")
+			}
+			// O CONTROLE: a classe que serve a qualquer deus continua oferecida.
+			if !strings.Contains(page, fmt.Sprintf("/personagens/%d/classes/Ladino/entra", id)) {
+				t.Error("o controle falhou: a lista não oferece o Ladino")
+			}
+		})
+	}
+}

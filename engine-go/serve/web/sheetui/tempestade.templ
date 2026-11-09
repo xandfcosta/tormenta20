@@ -206,18 +206,7 @@ templ tempestadeClassChoice(v View, step int, title string) {
 				}
 			}
 			if step > 0 && len(v.OtherClasses) > 0 {
-				<p class="ds-card-text">Entrar em outra classe dá os PV de um nível seguinte, e não dá as perícias nem as proficiências dela (p35).</p>
-				@ds.List("Outra classe", "") {
-					for _, class := range v.OtherClasses {
-						<button
-							type="button"
-							class="ds-row w-full text-left"
-							data-on:click={ "document.getElementById('" + stepDialog(step) + "').close(); " + enterClassCommand(v, class) }
-						>
-							<span class="ds-row-title">{ class }</span>
-						</button>
-					}
-				}
+				@otherClassesList(v, step)
 			}
 		}
 	}

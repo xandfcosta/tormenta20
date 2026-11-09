@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
 	"t20engine/serve/web/ui"
@@ -69,7 +68,7 @@ type View struct {
 	// subir um nível é escolher QUAL classe o recebe.
 	AsClasses []sheetClass
 	// OtherClasses são as classes do livro em que ele ainda pode entrar (p35).
-	OtherClasses []string
+	OtherClasses []otherClass
 	// ByLevel é a vista "Por nível" da aba Poderes, LevelHistory o que ela mostra, e SwapDialog a
 	// troca aberta. LastLevel é o que o `−` tira.
 	ByLevel      bool
@@ -309,28 +308,6 @@ func stepClasses(dto sheet.CharacterDTO) []sheetClass {
 		})
 	}
 	return classes
-}
-
-// otherClasses são as classes do livro que a ficha ainda não tem. Vazio no teto, porque a
-// classe nova contaria o 21º nível.
-func otherClasses(dto sheet.CharacterDTO) []string {
-	var total int64
-	owned := map[string]bool{}
-	for _, cl := range dto.Classes {
-		total += cl.Level
-		owned[cl.ClassName] = true
-	}
-	if total >= 20 {
-		return nil
-	}
-	_, classes, _ := book.CharacterCatalogs()
-	names := make([]string, 0, len(classes))
-	for _, class := range classes {
-		if !owned[class.Name] {
-			names = append(names, class.Name)
-		}
-	}
-	return names
 }
 
 // thatCan filtra as classes elegíveis para um sentido do degrau.
