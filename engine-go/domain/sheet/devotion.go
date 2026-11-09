@@ -61,6 +61,28 @@ func DevotionRefusal(classes []ClassDTO, god string) error {
 	return nil
 }
 
+// EnteringClassKeepsTheDevotion recusa a classe nova que não serve ao deus da ficha: "a classe com menos
+// opções determina a que deve ser seguida" (p96). O livro deixa a devoção ser mudada nesse caso; o app
+// recusa e diz qual trocar, e o mestre contorna editando a ficha (decisão do dono). Quem não tem deus
+// entra, e a devoção fica pendente.
+//
+// O "se não houver devoções compatíveis, a multiclasse não pode ser feita" da mesma página não tem ramo
+// aqui: Tauron está em toda lista (`withTauron`), e nenhum par de classes do livro fica sem deus.
+//
+//	EnteringClassKeepsTheDevotion(guerreiroDeTenebra, "Paladino") // "Paladino não serve a Tenebra…"
+func EnteringClassKeepsTheDevotion(dto CharacterDTO, class string) error {
+	if dto.God == nil || *dto.God == "" {
+		return nil
+	}
+	classes := append(slices.Clone(dto.Classes), ClassDTO{ClassName: class, Level: 1})
+	if DevotionRefusal(classes, *dto.God) == nil {
+		return nil
+	}
+	god := book.DevotionName(*dto.God)
+	return fmt.Errorf("%s não serve a %s, o deus desta ficha: troque a devoção por um deus que %s aceite antes de entrar na classe (p96)",
+		class, god, class)
+}
+
 // devotionIsValid confere o deus da ficha contra as classes dela.
 func devotionIsValid(dto CharacterDTO) error {
 	if dto.God == nil {

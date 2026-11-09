@@ -36,6 +36,9 @@ func (p Plays) EnterClass(ctx context.Context, row sqlcgen.Character, class stri
 	if total+1 > 20 {
 		return fmt.Errorf("as classes somariam o nível %d, e o 20º é o último (p35)", total+1)
 	}
+	if err := sheet.EnteringClassKeepsTheDevotion(dto, class); err != nil {
+		return err
+	}
 	err = p.inTx(ctx, "entrar em "+class, func(q *sqlcgen.Queries) error {
 		if err := q.AddClassLevel(ctx, sqlcgen.AddClassLevelParams{Characterid: row.ID, Ref: class}); err != nil {
 			return fmt.Errorf("gravar a classe %s: %w", class, err)
