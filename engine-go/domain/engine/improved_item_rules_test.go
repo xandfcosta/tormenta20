@@ -39,6 +39,40 @@ func TestTheImprovedItemAddsOneToItsSkill(t *testing.T) {
 	}
 }
 
+// A COLEÇÃO DE LIVROS dá +1 numa perícia "definida quando o item é comprado" (p158): Conhecimento, Guerra,
+// Misticismo, Nobreza ou Religião. Cada escolha é um verbete, e cada um oferece o +1 só na sua perícia — com
+// a Aprimorado, +2 nela.
+func TestTheBookCollectionGivesTheSkillChosenAtPurchase(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	for _, c := range []struct{ item, skill string }{
+		{"coleccao-de-livros", "Conhecimento"},
+		{"colecao-de-livros-guerra", "Guerra"},
+		{"colecao-de-livros-misticismo", "Misticismo"},
+		{"colecao-de-livros-nobreza", "Nobreza"},
+		{"colecao-de-livros-religiao", "Religião"},
+	} {
+		for _, improved := range []bool{false, true} {
+			hero := switchHero(`[]`, 0, c.item)
+			if improved {
+				hero.Items[0].Improvements = `["melhoria-aprimorado"]`
+			}
+			offered := map[string]int{}
+			for _, term := range ComputeItemEffects(world.ActiveItemsFor(hero)).Conditional {
+				if term.Target.K == "expertise" {
+					offered[term.Target.Name] += int(term.Amount)
+				}
+			}
+			want := map[string]int{c.skill: 1}
+			if improved {
+				want[c.skill] = 2
+			}
+			if len(offered) != 1 || offered[c.skill] != want[c.skill] {
+				t.Errorf("%s (aprimorada: %v) oferece %v, e o livro pede %v", c.item, improved, offered, want)
+			}
+		}
+	}
+}
+
 // Onde o item só vale numa situação, o +1 vale nela: o interruptor é o mesmo do bônus do item, e a gazua
 // aprimorada não soma em todo teste de Ladinagem.
 func TestTheImprovedItemFollowsTheSituationOfTheItem(t *testing.T) {
