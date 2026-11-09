@@ -109,6 +109,9 @@ type weaponTile struct {
 	Other *weaponOtherUseTile
 	// Natural diz que esta é uma arma natural, e o que ela dá no ataque extra (p25).
 	Natural *engine.NaturalStrike
+	// Style é o ataque adicional que um estilo ligado dá (p125), e ItemID, a linha da mochila.
+	Style  *engine.StyleStrike
+	ItemID int64
 	// Doses são as da Injeção alquímica, da mais antiga à mais nova.
 	Doses  []doseChoice
 	Skill  string
@@ -427,6 +430,8 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Name:        card.Name,
 			Other:       other,
 			Natural:     card.Natural,
+			Style:       card.Style,
+			ItemID:      card.ItemID,
 			Doses:       doseChoicesOf(card.Doses),
 			Skill:       card.Skill,
 			Attack:      book.WithSign(card.Attack),

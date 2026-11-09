@@ -83,6 +83,24 @@ func twoWeaponStyleWarning(key string, dto sheet.CharacterDTO) string {
 	return "Nenhuma arma empunhada é leve (p125)"
 }
 
+// rapidShotWarning avisa que o Disparo Rápido pede arma que recarregue como ação livre (p125), e só
+// o arco faz isso: besta e funda recarregam com movimento, e pistola e mosquete, com a padrão
+// (p146-151). Não trava pela mesma razão do aviso acima.
+func rapidShotWarning(key string, dto sheet.CharacterDTO) string {
+	if key != engine.FlagGroupID(engine.RapidShotPowerID) {
+		return ""
+	}
+	for _, item := range dto.Items {
+		if item.Equipped == nil || sheet.HandsFor(*item.Equipped) == 0 {
+			continue
+		}
+		if item.CatalogID == nil || strings.HasPrefix(*item.CatalogID, "arco-") {
+			return ""
+		}
+	}
+	return "Só o arco recarrega como ação livre (p125)"
+}
+
 // situationalToggles é o gesto do interruptor: a chave vai no sinal.
 func situationalToggles(v View, row situationalRow) string {
 	return "$conditional = '" + row.Key + "'; " + sheetPost(v, "/efeitos/situacao")

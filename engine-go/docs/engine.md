@@ -103,6 +103,12 @@ ação agredir, a manobra inclusive: a investida não é agredir, e a arma natur
 "outra arma" para ela mesma, mas abre as outras. Ele é outra proposta, que não gasta ação e paga o
 PM da fonte uma vez por vez (`opensTheExtraStrike`, `takesTheExtraStrike`).
 
+**O ataque adicional dos estilos usa o mesmo caminho** (`offerStyleStrikes`, p125). O interruptor
+ligado é a declaração: o -2 vale nos dois ataques, e por isso o golpe só abre o segundo se já
+saiu com ele ligado. As Duas Armas pedem a outra arma empunhada, e o Disparo Rápido, a mesma,
+com o primeiro golpe pagando a ação completa. A falta da arma leve e a arma que não é arco só
+ganham aviso no interruptor: quem decide é o mestre.
+
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a
 decisão, no `attack_ruling_rules_test.go`. Os casos de regra do livro decidem

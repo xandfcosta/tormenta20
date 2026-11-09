@@ -177,7 +177,7 @@ var generalPowersPart01 = []GeneralPower{
 				Condition: &ModifierCondition{
 					Kind:   "flagOn",
 					Flag:   "estilo-de-duas-armas",
-					Label:  "com duas armas, uma delas leve; dura até o seu próximo turno",
+					Label:  "Duas Armas: um ataque com cada, –2 até o seu próximo turno",
 					Ends:   "own-turn",
 					Unless: []string{"ambidestria"},
 				},

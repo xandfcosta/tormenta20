@@ -80,7 +80,7 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 		}
 	} else if s.CountsRounds() && attackerIsOnTurn(s, *attack) {
 		before := *s.Scene
-		if err := chargeTurn(s, engine.StrikeAction(attack.Charge)); err != nil {
+		if err := chargeStrike(s, *attack); err != nil {
 			return err
 		}
 		paid.Standard = before.StandardLeft && !s.Scene.StandardLeft
@@ -90,13 +90,35 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 	return spendsOnTheAttack(ctx, u, s, paid.CharacterID, attack.BoostPM)
 }
 
+// chargeStrike cobra a ação do golpe. O Disparo Rápido é agredir com a ação completa (p125), e a
+// recusa diz isso: quem já andou ainda pode atirar, desligando o interruptor.
+func chargeStrike(s *live.SessionRuntimeState, attack live.PendingAttack) error {
+	if !attack.FullAction {
+		return chargeTurn(s, engine.StrikeAction(attack.Charge))
+	}
+	if err := chargeTurn(s, engine.ActionFull); err != nil {
+		return fmt.Errorf("o Disparo Rápido gasta a ação completa, e ela já não cabe nesta vez: desligue-o para atirar com a ação padrão: %w", err)
+	}
+	return nil
+}
+
 // takesTheExtraStrike confere e conta o ataque extra na vez, sob a trava. Ele não gasta ação.
 func takesTheExtraStrike(s *live.SessionRuntimeState, attack *live.PendingAttack) error {
 	if !s.CountsRounds() || s.Scene.ExtraStrikeEntry == "" || s.Scene.ExtraStrikeEntry != attack.AttackerEntryID ||
 		!attackerIsOnTurn(s, *attack) {
-		return fmt.Errorf("o ataque extra com %s vem depois de agredir com outra arma nesta vez, e da resposta do mestre", attack.Weapon)
+		return fmt.Errorf("o ataque com %s vem depois de agredir nesta vez, e da resposta do mestre", attack.Weapon)
 	}
-	if s.Scene.ExtraStrikeBarred == attack.ExtraOf {
+	if attack.ExtraIsStyle {
+		if s.Scene.ExtraStyle != attack.ExtraOf {
+			return fmt.Errorf("o ataque adicional com %s pede o estilo ligado antes de agredir (p125), porque o -2 vale nos dois", attack.Weapon)
+		}
+		if sameWeapon := s.Scene.ExtraStyleItem == attack.StyleItem; sameWeapon == attack.ExtraOtherWeapon {
+			if attack.ExtraOtherWeapon {
+				return fmt.Errorf("o ataque adicional é um com cada arma (p125), e %s acabou de atacar: use a outra arma", attack.Weapon)
+			}
+			return fmt.Errorf("o disparo adicional é com a mesma arma do primeiro (p125), e ele não foi com %s", attack.Weapon)
+		}
+	} else if s.Scene.ExtraStrikeBarred == attack.ExtraOf {
 		return fmt.Errorf("o ataque extra com %s pede que o golpe tenha sido com outra arma", attack.Weapon)
 	}
 	used := 0
@@ -117,6 +139,7 @@ func takesTheExtraStrike(s *live.SessionRuntimeState, attack *live.PendingAttack
 func opensTheExtraStrike(s *live.SessionRuntimeState, attack live.PendingAttack) {
 	if attack.OpensExtra && paidInThisTurn(s, attack) {
 		s.Scene.ExtraStrikeEntry, s.Scene.ExtraStrikeBarred = attack.AttackerEntryID, attack.NaturalSource
+		s.Scene.ExtraStyle, s.Scene.ExtraStyleItem = attack.OpensStyle, attack.StyleItem
 	}
 }
 

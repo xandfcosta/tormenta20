@@ -33,6 +33,9 @@ type WeaponCard struct {
 	// Natural diz que esta é uma arma natural, e o que ela dá no ataque extra. Fora do fio:
 	// só o gesto de atacar e as Ações a leem.
 	Natural *NaturalStrike `json:"-"`
+	// Style é o ataque adicional que um estilo ligado dá a esta arma (p125). Fora do fio, como o
+	// `Natural`.
+	Style *StyleStrike `json:"-"`
 	// ItemID e Doses são a linha da mochila e o que a Injeção alquímica guarda (p165).
 	// Não vão para o fio, porque só o gesto de atacar e a tela os leem.
 	ItemID int64    `json:"-"`
@@ -234,6 +237,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 			break
 		}
 	}
+	r.offerStyleStrikes(ch, activeConditionals, cards)
 	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared)...)
 }
 

@@ -447,6 +447,7 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
 		},
 	}
+	opensTheStyle(&pending, weapon)
 	return pending, nil
 }
 

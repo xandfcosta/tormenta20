@@ -45,6 +45,9 @@ type View struct {
 	ExtraStrikeOpen   bool
 	ExtraStrikeBarred string
 	ExtraStrikesUsed  string
+	// ExtraStyle e ExtraStyleItem são o estilo aberto e a arma do golpe que o abriu (p125).
+	ExtraStyle     string
+	ExtraStyleItem int64
 	// Upcoming é a faixa de quem vem depois: a vez e as duas seguintes, dando a
 	// volta. Vazia fora de combate.
 	Upcoming []turnAhead
@@ -390,6 +393,8 @@ func tableViewOf(
 		ExtraStrikesUsed:  writtenExtraStrikes(st),
 		ExtraStrikeOpen:   extraStrikeIsOpen(st),
 		ExtraStrikeBarred: extraStrikeBarred(st),
+		ExtraStyle:        extraStyle(st),
+		ExtraStyleItem:    extraStyleItem(st),
 		Upcoming:          turnStripOf(st, mine),
 		Endless:           endlessStripOf(st, mine),
 		Group:             group,

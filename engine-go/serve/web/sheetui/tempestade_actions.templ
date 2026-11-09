@@ -176,7 +176,7 @@ templ chipFigure(chip actionChip) {
 	} else if chip.Cost != "" {
 		<span class="ds-row-meta">{ chip.Cost }</span>
 	}
-	if chip.Warns {
-		<span class="ds-row-meta">sem arma leve</span>
+	if chip.WarnsWith != "" {
+		<span class="ds-row-meta">{ chip.WarnsWith }</span>
 	}
 }

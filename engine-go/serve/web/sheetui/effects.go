@@ -347,7 +347,7 @@ func situationalRowsOf(
 			row.Targets = append(row.Targets, c.Target)
 		}
 		row.Degrees, row.DegreesOf = degreeOptionsFor(g.Key, head, dto)
-		row.Warning = twoWeaponStyleWarning(g.Key, dto)
+		row.Warning = twoWeaponStyleWarning(g.Key, dto) + rapidShotWarning(g.Key, dto)
 		rows = append(rows, row)
 	}
 	return rows, nil
