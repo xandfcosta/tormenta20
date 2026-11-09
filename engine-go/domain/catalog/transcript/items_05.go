@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 5 de 19 de `Items` (items.go).
+// Parte 5 de 20 de `Items` (items.go).
 var itemsPart05 = []Item{
 	{
 		ID:       "robe-mistico",

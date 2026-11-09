@@ -425,6 +425,14 @@
             "per": "attribute",
             "attribute": "charisma"
           }
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "magias-de-bardo"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
         }
       ]
     }
@@ -508,7 +516,9 @@
         ]
       }
     },
-    "flags": [],
+    "flags": [
+      "magias-de-bardo"
+    ],
     "conditional": [
       {
         "term": "lefou::resistance::::against//lefeu e a Tormenta/",

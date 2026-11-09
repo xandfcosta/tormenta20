@@ -47,8 +47,9 @@ type ModifierCondition struct {
 	// Ends diz quando o interruptor de um `flagOn` desliga sozinho na sessão ao vivo. Vazio fica ligado até
 	// alguém desligar.
 	Ends string `json:"ends,omitempty"`
-	// Requires e Unless são as flags que um `flagOn` pede, ou que o calam: "se também possuir Saque Rápido",
-	// "se possuir Ambidestria, em vez disso não sofre penalidade" (p125).
+	// Requires e Unless são as flags que o termo pede, ou que o calam, em qualquer condição: "se também
+	// possuir Saque Rápido", "se possuir Ambidestria, em vez disso não sofre penalidade" (p125), e "um bardo
+	// que empunhe" a Flauta Mística (p158).
 	Requires []string `json:"requires,omitempty"`
 	Unless   []string `json:"unless,omitempty"`
 }
