@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 7 de 13 de `ClassPowers` (class_powers.go).
+// Parte 7 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart07 = []ClassPower{
 	{
 		ID:          "class.cavaleiro.caminho-montaria",

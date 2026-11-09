@@ -60,17 +60,23 @@ const (
 	SwitchEndsOwnTurn = "own-turn"
 )
 
-// SwitchesEndingAt são as chaves dos interruptores de poder geral que desligam neste momento.
+// SwitchesEndingAt são as chaves dos interruptores de poder geral e de classe que desligam neste momento.
 //
 //	catalogs.SwitchesEndingAt(SwitchEndsTurn) // ["flag:ataque-poderoso", ...]
 func (c *Catalogs) SwitchesEndingAt(end string) []string {
 	keys := []string{}
-	for _, power := range c.generalByID {
-		for _, m := range power.Modifiers {
+	collect := func(modifiers []Modifier) {
+		for _, m := range modifiers {
 			if m.Condition != nil && m.Condition.Ends == end && !slices.Contains(keys, FlagGroupID(m.Condition.Flag)) {
 				keys = append(keys, FlagGroupID(m.Condition.Flag))
 			}
 		}
+	}
+	for _, power := range c.generalByID {
+		collect(power.Modifiers)
+	}
+	for _, power := range c.classPowers {
+		collect(power.Modifiers)
 	}
 	return keys
 }

@@ -295,6 +295,8 @@ func chipWarning(row situationalRow) string {
 		return ""
 	case row.Key == engine.FlagGroupID(engine.RapidShotPowerID):
 		return "sem arco"
+	case row.Key == engine.FlagGroupID("estilo-de-uma-arma"):
+		return "sem a mão livre"
 	}
 	return "sem arma leve"
 }

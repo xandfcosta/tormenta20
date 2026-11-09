@@ -106,15 +106,18 @@ func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) 
 	return out
 }
 
-// LoneWeaponFlag é a flag derivada de "uma arma corpo a corpo em uma das mãos e nada na outra" (p128), que
-// o Estilo de Uma Arma pede. É do que está na mão, como a `armadura-pesada` é do que está vestido.
-const LoneWeaponFlag = "arma-em-uma-mao"
+// HandsNotFreeFlag diz que as mãos NÃO estão como o Estilo de Uma Arma pede: "uma arma corpo a corpo em uma
+// das mãos e nada na outra" (p128).
+//
+// É NEGATIVA de propósito, com o `Unless` do lado do poder. O interruptor é oferecido a partir do
+// `ActiveItemsFor`, e esta flag só entra na conta da ficha: com um `Requires` positivo, o poder nunca era
+// oferecido. Assim ele fica na tela e avisa (quem decide é o mestre), e o número é que não se mexe.
+const HandsNotFreeFlag = "maos-sem-arma-sozinha"
 
 var wieldedInOneHand = "wielded"
 
-// handsAsAnItem levanta a flag quando há uma arma só nas mãos. Ela entra como fonte da ficha e não no item:
-// o `ActiveItemsFor` lista o que o catálogo e as melhorias dão, e esta flag não é de item nenhum.
-func (r *Ruleset) handsAsAnItem(ch Character) []ActiveItem {
+// HoldsALoneWeapon diz se há uma arma corpo a corpo em uma das mãos, e nada na outra.
+func (r *Ruleset) HoldsALoneWeapon(ch Character) bool {
 	inHand := 0
 	fits := false
 	for _, it := range ch.Items {
@@ -129,10 +132,16 @@ func (r *Ruleset) handsAsAnItem(ch Character) []ActiveItem {
 		fits = *it.Equipped == "wielded" && catalog != nil && catalog.Weapon != nil &&
 			catalog.Weapon.Purpose == "melee" && catalog.Weapon.Hand != "two"
 	}
-	if inHand != 1 || !fits {
+	return inHand == 1 && fits
+}
+
+// handsAsAnItem levanta a flag como fonte da ficha, e não num item: o `ActiveItemsFor` lista o que o
+// catálogo e as melhorias dão, e ela não é de item nenhum.
+func (r *Ruleset) handsAsAnItem(ch Character) []ActiveItem {
+	if r.HoldsALoneWeapon(ch) {
 		return nil
 	}
-	return []ActiveItem{{Source: "a arma na mão", Equipped: &wieldedInOneHand, Modifiers: []Modifier{{
-		Target: ModifierTarget{K: "flag", Name: LoneWeaponFlag}, Amount: 1, BonusType: "untyped",
+	return []ActiveItem{{Source: "as mãos", Equipped: &wieldedInOneHand, Modifiers: []Modifier{{
+		Target: ModifierTarget{K: "flag", Name: HandsNotFreeFlag}, Amount: 1, BonusType: "untyped",
 	}}}}
 }

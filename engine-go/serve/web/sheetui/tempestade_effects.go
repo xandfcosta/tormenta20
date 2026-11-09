@@ -60,7 +60,7 @@ func situationalMeta(row situationalRow) string {
 //
 // Item feito à mão não diz se é leve, e aí a tela cala em vez de acusar.
 func twoWeaponStyleWarning(key string, dto sheet.CharacterDTO) string {
-	if key != engine.FlagGroupID("estilo-de-duas-armas") {
+	if key != engine.FlagGroupID(engine.TwoWeaponStylePowerID) && key != engine.FlagGroupID(engine.AmbidextrousSwitch) {
 		return ""
 	}
 	owned := sheet.OwnedPowers(dto)
@@ -99,6 +99,19 @@ func rapidShotWarning(key string, dto sheet.CharacterDTO) string {
 		}
 	}
 	return "Só o arco recarrega como ação livre (p125)"
+}
+
+// oneWeaponStyleWarning avisa que o Estilo de Uma Arma pede "uma arma corpo a corpo em uma das mãos e nada
+// na outra" (p128). O interruptor liga do mesmo jeito, e o número só se mexe com as mãos assim.
+func oneWeaponStyleWarning(key string, dto sheet.CharacterDTO) string {
+	if key != engine.FlagGroupID("estilo-de-uma-arma") || dto.Ruleset == nil {
+		return ""
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil || dto.Ruleset.HoldsALoneWeapon(ec) {
+		return ""
+	}
+	return "Pede uma arma corpo a corpo em uma das mãos e nada na outra (p128)"
 }
 
 // situationalToggles é o gesto do interruptor: a chave vai no sinal.

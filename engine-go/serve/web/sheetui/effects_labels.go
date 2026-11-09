@@ -248,6 +248,7 @@ var itemFlagLabel = map[string]string{
 	"disparo-preciso":            "Disparo Preciso",
 	"magia-ilimitada":            "Magia Ilimitada",
 	"ambidestria":                "Ambidestria",
+	"tem-estilo-de-duas-armas":   "Estilo de Duas Armas",
 	// As TRÊS do descanso da noite (p106, ALE-488), na voz do livro.
 	sheet.FlagRestOneCategoryUp:   "Descansa uma categoria acima",
 	sheet.FlagRestNeverBelowLevel: "Descanso nunca rende menos que o nível",

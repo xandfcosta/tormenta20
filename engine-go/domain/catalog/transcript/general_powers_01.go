@@ -182,6 +182,22 @@ var generalPowersPart01 = []GeneralPower{
 					Unless: []string{"ambidestria"},
 				},
 			},
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "wielded"},
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:     "flagOn",
+					Flag:     "estilo-de-duas-armas",
+					Label:    "Duas Armas: um ataque com cada, sem penalidade, até o seu próximo turno",
+					Ends:     "own-turn",
+					Requires: []string{"ambidestria"},
+				},
+			},
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "tem-estilo-de-duas-armas"},
+				Amount:    1,
+				BonusType: "untyped",
+			},
 		},
 	},
 	{
@@ -265,10 +281,10 @@ var generalPowersPart01 = []GeneralPower{
 				Amount:    2,
 				BonusType: "untyped",
 				Condition: &ModifierCondition{
-					Kind:     "flagOn",
-					Flag:     "estilo-de-uma-arma",
-					Label:    "com arma em uma das mãos e nada na outra",
-					Requires: []string{"arma-em-uma-mao"},
+					Kind:   "flagOn",
+					Flag:   "estilo-de-uma-arma",
+					Label:  "com arma em uma das mãos e nada na outra",
+					Unless: []string{"maos-sem-arma-sozinha"},
 				},
 			},
 			{
@@ -276,10 +292,10 @@ var generalPowersPart01 = []GeneralPower{
 				Amount:    2,
 				BonusType: "untyped",
 				Condition: &ModifierCondition{
-					Kind:     "flagOn",
-					Flag:     "estilo-de-uma-arma",
-					Label:    "com arma em uma das mãos e nada na outra",
-					Requires: []string{"arma-em-uma-mao"},
+					Kind:   "flagOn",
+					Flag:   "estilo-de-uma-arma",
+					Label:  "com arma em uma das mãos e nada na outra",
+					Unless: []string{"maos-sem-arma-sozinha"},
 				},
 			},
 		},

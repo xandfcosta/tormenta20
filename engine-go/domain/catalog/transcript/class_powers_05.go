@@ -1,9 +1,10 @@
 package transcript
 
-// Parte 5 de 13 de `ClassPowers` (class_powers.go).
+// Parte 5 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart05 = []ClassPower{
 	{
 		ID:          "class.cacador.ambidestria",
+		Modeled:     []string{"os dois ataques da ação agredir, um com cada arma, com -2 até o próximo turno"},
 		ClassName:   "Caçador",
 		Name:        "Ambidestria",
 		Description: "Ao usar duas armas (uma leve) na ação agredir, ataca com cada arma. Sofre -2 em todos testes de ataque até próximo turno.",
@@ -11,8 +12,19 @@ var classPowersPart05 = []ClassPower{
 		UID:         "pwr_3jvnagpp3d",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "flag", Name: "ambidestria"}, Amount: 1, BonusType: "untyped"},
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+				Amount:    -2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:   "flagOn",
+					Flag:   "ataque-ambidestro",
+					Label:  "Ambidestria: um ataque com cada, –2 até o seu próximo turno",
+					Ends:   "own-turn",
+					Unless: []string{"tem-estilo-de-duas-armas"},
+				},
+			},
 		},
-		Unmodeled:     "dois ataques com –2: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 2}},
 	},
 	{

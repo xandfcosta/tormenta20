@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 3 de 13 de `ClassPowers` (class_powers.go).
+// Parte 3 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart03 = []ClassPower{
 	{
 		ID:            "class.bardo.fascinar-em-massa",
