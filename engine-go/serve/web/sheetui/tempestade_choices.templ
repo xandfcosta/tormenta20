@@ -278,7 +278,7 @@ func devotionGesture(v View, d devotionChoice, target string) string {
 	if d.Gods.Chosen == "" {
 		return sheetPost(v, "/poderes/devocao/"+target)
 	}
-	if target == d.Gods.Chosen || (target == noDevotion && d.Gods.Chosen == "") {
+	if target == d.Gods.Chosen {
 		return "$devotion_target = ''"
 	}
 	return "$devotion_target = '" + target + "'"
