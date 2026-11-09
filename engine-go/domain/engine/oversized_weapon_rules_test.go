@@ -60,25 +60,27 @@ func TestTheOversizedMarkStaysOnItsOwnWeapon(t *testing.T) {
 }
 
 // "O dano na tabela se refere a armas normais, para criaturas Pequenas e Médias" (p142), e as Grandes e
-// Enormes usam as aumentadas (p106). Uma categoria acima, o dado muda quando a categoria da ARMA muda:
-// a arma do Médio é a normal do Pequeno, e o Goblin paga o -5 sem ganhar o passo.
+// Enormes usam as aumentadas (p106). O passo muda quando a categoria da ARMA muda: a arma do Médio é a
+// normal do Pequeno, e o Goblin paga o -5 sem ganhar o passo. O tamanho é o da raça, e não a coluna da
+// ficha, que é um espelho do nascimento.
 func TestTheOversizedStepFollowsTheWielderSize(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	for _, c := range []struct {
-		size, damage string
+		race, damage string
 	}{
-		{"Minúsculo", "1d10"},
-		{"Pequeno", "1d8"},
-		{"Médio", "1d10"},
-		{"Grande", "1d8"},
-		{"Enorme", "1d10"},
+		{"goblin", "1d8"},
+		{"humano", "1d10"},
 	} {
 		hero := switchHero(`[]`, 0, "espada-longa")
-		hero.Size = c.size
+		hero.Races = []CharacterRace{{Race: c.race}}
 		hero.Items[0].Oversized = true
-		card := world.ComputeWeaponCards(hero, nil)[0]
-		if card.Damage != c.damage {
-			t.Errorf("%s: a arma de categoria maior rola %q, want %q", c.size, card.Damage, c.damage)
+		if card := world.ComputeWeaponCards(hero, nil)[0]; card.Damage != c.damage {
+			t.Errorf("%s: a arma de categoria maior rola %q, want %q", c.race, card.Damage, c.damage)
+		}
+	}
+	for size, want := range map[string]int{"minusculo": 1, "pequeno": 0, "": 1, "grande": 0, "enorme": 1} {
+		if got := oversizedStep(size); got != want {
+			t.Errorf("%q: %d passos, want %d", size, got, want)
 		}
 	}
 }

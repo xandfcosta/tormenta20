@@ -29,11 +29,9 @@ var sizesOnTheSheet = map[string]sizeRow{
 	"colossal":  {stealth: -10, maneuver: 10, weaponSteps: 2},
 }
 
-// raceSizeItem é o tamanho da raça primária como fonte de modificador, ou nil
-// para o Médio e para a raça que o catálogo não conhece.
-//
-//	r.raceSizeItem(goblin) // Tamanho: Pequeno — Furtividade +2, manobras –2
-func (r *Ruleset) raceSizeItem(ch Character) *ActiveItem {
+// sizedRace é a raça que dá o tamanho: a primária, ou a emprestada. Nula para a que o catálogo não conhece,
+// que conta como Média.
+func (r *Ruleset) sizedRace(ch Character) *RaceAttributeEntry {
 	if len(ch.Races) == 0 {
 		return nil
 	}
@@ -41,7 +39,35 @@ func (r *Ruleset) raceSizeItem(ch Character) *ActiveItem {
 	if borrowed := r.borrowedSizeRace(ch); borrowed != "" {
 		sized = borrowed
 	}
-	race := r.raceEntryByID(sized)
+	return r.raceEntryByID(sized)
+}
+
+// raceSizeKey é o tamanho na forma normalizada, ou "" para a raça desconhecida.
+func (r *Ruleset) raceSizeKey(ch Character) string {
+	race := r.sizedRace(ch)
+	if race == nil {
+		return ""
+	}
+	return normalizeSizeKey(race.Size)
+}
+
+// oversizedStep são os passos de dano a mais da arma feita para uma categoria acima de quem a usa, sobre o
+// passo do tamanho que a ficha já soma. O passo é da categoria da ARMA: a do Médio é a normal do Pequeno
+// (p142), e a do Enorme é a aumentada do Grande (p106). O Goblin paga o -5 e rola o mesmo dado.
+func oversizedStep(sizeKey string) int {
+	switch sizeKey {
+	case "pequeno", "grande":
+		return 0
+	}
+	return 1
+}
+
+// raceSizeItem é o tamanho da raça primária como fonte de modificador, ou nil
+// para o Médio e para a raça que o catálogo não conhece.
+//
+//	r.raceSizeItem(goblin) // Tamanho: Pequeno — Furtividade +2, manobras –2
+func (r *Ruleset) raceSizeItem(ch Character) *ActiveItem {
+	race := r.sizedRace(ch)
 	if race == nil {
 		return nil
 	}
