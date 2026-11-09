@@ -12,7 +12,8 @@ import (
 )
 
 // OS PODERES CONCEDIDOS. Quem se torna devoto recebe um (p96), e clérigo (p57), druida (p61) e paladino
-// (p82) recebem dois. O passo Devoção marca e desmarca no mesmo botão.
+// (p82) recebem dois. Os concedidos são poderes gerais (p124): um a mais que a devoção dá ocupa uma vaga de
+// poder da classe (decisão do dono). O passo Devoção marca e desmarca no mesmo botão.
 
 func storedGrantedPowers(t *testing.T, f sceneFixture, id int64) []string {
 	t.Helper()
@@ -63,9 +64,10 @@ func TestTheClassesThatServeAGodChooseTwoGrantedPowers(t *testing.T) {
 		t.Errorf("guardou %v", got)
 	}
 
+	// O clérigo de 1º nível não tem vaga de poder (p33), e o terceiro não cabe.
 	refusal := powerCommand(t, f, id, grantedPath("Espada Justiceira"), "")
-	if !strings.Contains(refusal, "2") || !strings.Contains(refusal, "Espada Justiceira") {
-		t.Errorf("o terceiro devia ser recusado citando o limite e o poder, e veio %q", refusal)
+	if !strings.Contains(refusal, "vaga") || !strings.Contains(refusal, "Espada Justiceira") {
+		t.Errorf("o terceiro devia ser recusado citando a vaga e o poder, e veio %q", refusal)
 	}
 	if refusal := powerCommand(t, f, id, grantedPath("Coragem Total"), ""); refusal != "" {
 		t.Fatalf("tirar um: %q", refusal)
@@ -79,9 +81,10 @@ func TestTheClassesThatServeAGodChooseTwoGrantedPowers(t *testing.T) {
 	}
 }
 
-// Os outros devotos recebem um, e tocar em outro só troca.
+// Os outros devotos recebem um. Sem vaga de poder livre, tocar em outro só troca.
 func TestAnyOtherDevoteeHasOneGrantedPower(t *testing.T) {
-	f, id := guerreiro(t)
+	f := newSceneFixture(t)
+	id := seedCharacterAtLevel(t, f.s, f.player, "Guerreiro", "Guerreiro", 1, 0, 0)
 	if refusal := powerCommand(t, f, id, devotionPath("khalmyr"), ""); refusal != "" {
 		t.Fatalf("escolher o deus: %q", refusal)
 	}
@@ -94,10 +97,46 @@ func TestAnyOtherDevoteeHasOneGrantedPower(t *testing.T) {
 		}
 	}
 	if got := storedGrantedPowers(t, f, id); !slices.Equal(got, []string{"Dom da Verdade"}) {
-		t.Errorf("numa vaga só, o segundo devia trocar o primeiro, e ficou %v", got)
+		t.Errorf("sem vaga de poder, o segundo devia trocar o primeiro, e ficou %v", got)
 	}
 	if step := choiceStepTitled(t, powerScreen(t, f, id), "Devoção"); step.Tag != "feito" {
 		t.Errorf("com o poder, o passo diz %q", step.Tag)
+	}
+}
+
+// UM CONCEDIDO A MAIS OCUPA VAGA (p124, decisão do dono): o guerreiro de 3º nível tem duas vagas de poder
+// (p33), e o segundo concedido de Khalmyr entra numa delas — o passo da classe conta com ele. Sem vaga
+// livre, o próximo é recusado dizendo o que fazer.
+func TestAGrantedPowerBeyondTheDevotionTakesAPowerSlot(t *testing.T) {
+	f, id := guerreiro(t)
+	if refusal := powerCommand(t, f, id, devotionPath("khalmyr"), ""); refusal != "" {
+		t.Fatalf("escolher o deus: %q", refusal)
+	}
+	for _, power := range []string{"Coragem Total", "Dom da Verdade"} {
+		if refusal := powerCommand(t, f, id, grantedPath(power), ""); refusal != "" {
+			t.Fatalf("%s: %q", power, refusal)
+		}
+	}
+	if got := storedGrantedPowers(t, f, id); !slices.Equal(got, []string{"Coragem Total", "Dom da Verdade"}) {
+		t.Fatalf("com vaga de poder livre, o segundo devia somar, e ficou %v", got)
+	}
+	screen := powerScreen(t, f, id)
+	if step := choiceStepTitled(t, screen, "Guerreiro 3"); step.Tag != "1 de 2" {
+		t.Errorf("o concedido a mais devia ocupar uma das duas vagas do guerreiro: o passo diz %q", step.Tag)
+	}
+	if !strings.Contains(html.UnescapeString(screen), "1 de 1 · 1 em vaga de poder") {
+		t.Error("a lista dos concedidos não diz que um deles ocupa vaga de poder")
+	}
+
+	if refusal := powerCommand(t, f, id, grantedPath("Espada Justiceira"), ""); refusal != "" {
+		t.Fatalf("o terceiro, na segunda vaga: %q", refusal)
+	}
+	refusal := powerCommand(t, f, id, grantedPath("Reparar Injustiça"), "")
+	if !strings.Contains(refusal, "vaga") || !strings.Contains(refusal, "Reparar Injustiça") {
+		t.Errorf("sem vaga livre, o quarto devia ser recusado citando a vaga e o poder, e veio %q", refusal)
+	}
+	if got := storedGrantedPowers(t, f, id); len(got) != 3 {
+		t.Errorf("a recusa mexeu nos concedidos: %v", got)
 	}
 }
 

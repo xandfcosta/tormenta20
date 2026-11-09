@@ -1,7 +1,6 @@
 package sheetui
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 
@@ -242,7 +241,7 @@ templ devotionStepBody(v View, d devotionChoice) {
 		<p class="ds-help">{ d.NoGrant }</p>
 	}
 	if len(d.Powers) > 0 {
-		@ds.List("Poder concedido", fmt.Sprintf("%d de %d", d.Held, d.Limit)) {
+		@ds.List("Poder concedido", d.Written()) {
 			for _, power := range d.Powers {
 				<div class="ds-row ds-level-line">
 					<span class="ds-level-text">
@@ -255,6 +254,7 @@ templ devotionStepBody(v View, d devotionChoice) {
 				</div>
 			}
 		}
+		<p class="ds-help">{ d.SlotHint() }</p>
 	}
 	if len(d.OldPowers) > 0 {
 		@ds.List("De outro deus", "") {

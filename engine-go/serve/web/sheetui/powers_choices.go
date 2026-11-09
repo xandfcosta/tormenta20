@@ -53,6 +53,25 @@ type devotionChoice struct {
 	Changes []devotionChangeNotice
 }
 
+// Written é a ponta da lista dos concedidos: "1 de 2", ou "1 de 1 · 1 em vaga de poder" quando há mais
+// marcados do que a devoção dá, e o que passa ocupa vaga de poder da classe (p124).
+func (d devotionChoice) Written() string {
+	if d.Held <= d.Limit {
+		return strconv.Itoa(d.Held) + " de " + strconv.Itoa(d.Limit)
+	}
+	limit := strconv.Itoa(d.Limit)
+	return limit + " de " + limit + " · " + strconv.Itoa(d.Held-d.Limit) + " em vaga de poder"
+}
+
+// SlotHint é o rodapé da lista dos concedidos: quantos a devoção dá, e o que custa um a mais.
+func (d devotionChoice) SlotHint() string {
+	given := "A devoção dá 1"
+	if d.Limit != 1 {
+		given = "A devoção dá " + strconv.Itoa(d.Limit)
+	}
+	return given + ". Um a mais é um poder geral e ocupa uma vaga de poder da classe (p124)."
+}
+
 // devotionChangeNotice é o que muda na ficha ao trocar para Target. O Target `nenhum` é ficar sem deus.
 type devotionChangeNotice struct {
 	Target string

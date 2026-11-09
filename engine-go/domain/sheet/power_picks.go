@@ -40,13 +40,14 @@ func marshalPowerPicks(picks map[string][]string) string {
 }
 
 // UsedPowerSlots são as vagas de poder que a ficha ocupa: uma por poder
-// escolhido, e uma por ESCOLHA no poder repetível.
+// escolhido, uma por ESCOLHA no poder repetível, e uma por poder concedido além
+// dos que a devoção dá (`ExtraGrantedPowers`).
 //
 //	// Aumento de Atributo em Força e em Sabedoria, e o Golpe Poderoso
 //	UsedPowerSlots(dto) // 3
 func UsedPowerSlots(dto CharacterDTO) int {
 	picks := PowerPicks(dto.PowerChoices)
-	used := 0
+	used := ExtraGrantedPowers(dto)
 	for _, id := range UnmarshalStrings(dto.ClassPowers) {
 		power, chooses := book.PowerWithChoice(id)
 		if chooses && power.Choice.Repeatable && len(picks[id]) > 1 {
@@ -56,6 +57,15 @@ func UsedPowerSlots(dto CharacterDTO) int {
 		used++
 	}
 	return used
+}
+
+// FreePowerSlots são as vagas de poder que as classes abriram e nada ocupa.
+func FreePowerSlots(dto CharacterDTO) int {
+	slots := 0
+	for _, c := range dto.Classes {
+		slots += PowerSlots(c.Level)
+	}
+	return slots - UsedPowerSlots(dto)
 }
 
 // FreePicks são as escolhas do poder que NÃO custam vaga, porque o poder veio

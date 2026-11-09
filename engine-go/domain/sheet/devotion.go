@@ -69,7 +69,7 @@ func DevotionRefusal(classes []ClassDTO, god string) error {
 // O "se não houver devoções compatíveis, a multiclasse não pode ser feita" da mesma página não tem ramo
 // aqui: Tauron está em toda lista (`withTauron`), e nenhum par de classes do livro fica sem deus.
 //
-//	EnteringClassKeepsTheDevotion(guerreiroDeTenebra, "Paladino") // "Paladino não serve a Tenebra…"
+//	EnteringClassKeepsTheDevotion(dto, "Paladino") // com o deus Tenebra: "Paladino não serve a Tenebra…"
 func EnteringClassKeepsTheDevotion(dto CharacterDTO, class string) error {
 	if dto.God == nil || *dto.God == "" {
 		return nil
@@ -138,6 +138,28 @@ func GrantedPowerLimit(dto CharacterDTO, god string) int {
 		return 2
 	}
 	return 1
+}
+
+// ExtraGrantedPowers é quantos poderes concedidos do deus da ficha passam dos que a devoção dá. Os
+// concedidos são poderes gerais (p124), e cada um a mais ocupa uma vaga de poder da classe (decisão do
+// dono). O de outro deus, numa ficha de antes de a troca tirá-lo, não conta, como no `GrantedPowersMissing`.
+//
+//	ExtraGrantedPowers(dto) // 1, para o guerreiro devoto de Khalmyr com dois concedidos: a devoção dá um
+func ExtraGrantedPowers(dto CharacterDTO) int {
+	held := UnmarshalStrings(dto.GodPowers)
+	// Toda devoção com lista dá ao menos um: com um só marcado, não há o que contar, e a conta abaixo
+	// converte a ficha quando há regra da mesa.
+	if dto.God == nil || len(held) <= 1 {
+		return 0
+	}
+	ofTheGod := GrantedPowerNames(dto, *dto.God)
+	count := 0
+	for _, power := range held {
+		if slices.Contains(ofTheGod, power) {
+			count++
+		}
+	}
+	return max(count-GrantedPowerLimit(dto, *dto.God), 0)
 }
 
 // GrantedPowersMissing é quantos poderes do deus de agora faltam escolher. O de outro deus, numa ficha de

@@ -34,8 +34,10 @@ func pickDevotion(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) er
 }
 
 // pickGrantedPower marca ou desmarca um poder concedido. O marcado sai, seja de que deus for; o novo tem de
-// ser do deus da ficha, e cabe nas vagas dele (`sheet.GrantedPowerLimit`). Numa vaga só, ele troca o outro,
-// como numa escolha de um; com duas, tirar é um gesto, para ninguém perder um poder sem pedir.
+// ser do deus da ficha. Ele cabe nos que a devoção dá (`sheet.GrantedPowerLimit`) ou, além deles, numa vaga
+// de poder livre da classe, porque o concedido é um poder geral (p124). Sem vaga, na devoção que dá um só e
+// com ele marcado, o novo troca o outro, como numa escolha de um; no resto, tirar é um gesto, para ninguém
+// perder um poder sem pedir.
 func pickGrantedPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	power := pathParam(r, "poder")
 	dto, err := s.deps.LoadCharacter(r.Context(), row)
@@ -59,10 +61,16 @@ func pickGrantedPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 	ofTheGod := slices.DeleteFunc(slices.Clone(held), func(name string) bool { return !slices.Contains(offered, name) })
 	switch {
 	case len(ofTheGod) < limit:
-	case limit == 1:
+	case sheet.FreePowerSlots(dto) > 0:
+	case limit == 1 && len(ofTheGod) == 1:
 		held = slices.DeleteFunc(held, func(name string) bool { return slices.Contains(offered, name) })
 	default:
-		return fmt.Errorf("esta ficha recebe %d poderes concedidos de %s: tire um antes de escolher %s", limit, book.DevotionName(god), power)
+		given := "1 poder concedido"
+		if limit != 1 {
+			given = fmt.Sprintf("%d poderes concedidos", limit)
+		}
+		return fmt.Errorf("a devoção a %s dá %s, e um a mais ocupa uma vaga de poder da classe (p124), mas não há vaga livre: tire um antes de escolher %s",
+			book.DevotionName(god), given, power)
 	}
 	held = append(held, power)
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) { dto.GodPowers = sheet.MarshalStrings(&held) })
