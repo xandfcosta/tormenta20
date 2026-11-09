@@ -58,25 +58,40 @@ func chosenMaterial(sheet itemSheet) string {
 	return ""
 }
 
-// improvementsTakenExpr conta as vagas que o diálogo ocupa AGORA: as melhorias
-// ligadas e o material, que é uma delas (p165).
-const improvementsTakenExpr = "($item_improvements.length + ($item_material ? 1 : 0))"
+// improvementsTakenExpr conta as vagas que o diálogo ocupa AGORA: as melhorias ligadas, o material, que é
+// uma delas (p165), e o que o verbete já traz.
+func improvementsTakenExpr(sheet itemSheet) string {
+	return "(" + strconv.Itoa(sheet.BuiltInSlots) + " + $item_improvements.length + ($item_material ? 1 : 0))"
+}
 
-// improvementsFull é a expressão que diz que as quatro vagas (p164) estão
-// tomadas. A recusa é do servidor (`book.FitsImprovementCount`); isto é a tela
-// não oferecer o que ele recusaria.
-var improvementsFull = improvementsTakenExpr + " >= " + strconv.Itoa(book.MaxItemImprovements)
+// improvementsFull é a expressão que diz que as quatro vagas (p164) estão tomadas. A recusa é do servidor
+// (`book.FitsImprovementCount`); isto é a tela não oferecer o que ele recusaria.
+func improvementsFull(sheet itemSheet) string {
+	return improvementsTakenExpr(sheet) + " >= " + strconv.Itoa(book.MaxItemImprovements)
+}
 
-// improvementsOfMax é o fim do "3 de 4 melhorias", igual nas duas escritas abaixo.
-var improvementsOfMax = " de " + strconv.Itoa(book.MaxItemImprovements) + " melhorias · o material conta como uma"
+// improvementsOfMax é o fim do "3 de 4 melhorias", igual nas duas escritas abaixo. Só fala do material em
+// quem pode recebê-lo, e diz quando parte da conta veio no item.
+func improvementsOfMax(sheet itemSheet) string {
+	written := " de " + strconv.Itoa(book.MaxItemImprovements) + " melhorias"
+	if sheet.BuiltInSlots > 0 {
+		written += " · " + strconv.Itoa(sheet.BuiltInSlots) + " já no item"
+	}
+	if len(sheet.Materials) > 0 {
+		written += " · o material conta como uma"
+	}
+	return written
+}
 
 // improvementsCountText é o "3 de 4 melhorias" vivo do diálogo.
-var improvementsCountText = improvementsTakenExpr + " + '" + improvementsOfMax + "'"
+func improvementsCountText(sheet itemSheet) string {
+	return improvementsTakenExpr(sheet) + " + '" + improvementsOfMax(sheet) + "'"
+}
 
 // writtenImprovementsCount é a mesma frase escrita pelo servidor, para o
 // diálogo não nascer vazio antes de o Datastar avaliar.
 func writtenImprovementsCount(sheet itemSheet) string {
-	taken := 0
+	taken := sheet.BuiltInSlots
 	for _, choice := range sheet.Improvements {
 		if choice.Active {
 			taken++
@@ -85,15 +100,17 @@ func writtenImprovementsCount(sheet itemSheet) string {
 	if chosenMaterial(sheet) != "" {
 		taken++
 	}
-	return strconv.Itoa(taken) + improvementsOfMax
+	return strconv.Itoa(taken) + improvementsOfMax(sheet)
 }
 
 // improvementLocked trava o interruptor DESLIGADO quando as vagas acabaram. O
 // ligado não trava: ele precisa poder sair.
-func improvementLocked(choice overlayChoice) string {
-	return "!" + improvementSignal(choice) + " && " + improvementsFull
+func improvementLocked(choice overlayChoice, sheet itemSheet) string {
+	return "!" + improvementSignal(choice) + " && " + improvementsFull(sheet)
 }
 
 // materialLocked trava o material quando não há material e as quatro vagas
 // são de melhorias. Trocar um material por outro não muda a conta.
-var materialLocked = "$item_material === '' && " + improvementsFull
+func materialLocked(sheet itemSheet) string {
+	return "$item_material === '' && " + improvementsFull(sheet)
+}

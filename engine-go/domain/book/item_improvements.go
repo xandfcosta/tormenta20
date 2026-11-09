@@ -49,25 +49,48 @@ var improvementsThatExclude = [][2]string{
 	{"melhoria-delicada", "melhoria-reforcada"},
 }
 
-// ImprovementSetProblem diz o que está errado no conjunto pedido para um item.
+// BuiltInOverlays é o que o verbete já traz aplicado: o item específico é um item base com sobreposição
+// (p337, p340). Nada, para o item comum.
 //
-// Confere o CONJUNTO e não o que o item já tinha: quem grava manda a lista inteira, e conferir
-// contra o estado anterior deixaria tirar o pré-requisito e manter a melhoria que depende dele
-// no mesmo pedido.
+//	book.BuiltInOverlays(book.ItemByID("baluarte-anao")) // ["melhoria-reforcada"], "material-adamante"
+func BuiltInOverlays(item *Item) (improvements []string, material string) {
+	if item == nil || item.ComposedOf == nil {
+		return nil, ""
+	}
+	return item.ComposedOf.Improvements, item.ComposedOf.Material
+}
+
+// ImprovementSetProblem diz o que está errado no que se pede para um item, contando o que o verbete traz.
 //
-// @example book.ImprovementSetProblem([]string{"melhoria-atroz"}, false) // "Atroz pede Cruel no mesmo item"
-func ImprovementSetProblem(ids []string, withMaterial bool) error {
-	for _, id := range ids {
-		if needed, asks := improvementPrerequisites[id]; asks && !slices.Contains(ids, needed) {
+// Confere o CONJUNTO e não o que o item já tinha: quem grava manda a lista inteira, e conferir contra o
+// estado anterior deixaria tirar o pré-requisito e manter a melhoria que depende dele no mesmo pedido. Só
+// o PEDIDO é cobrado: o verbete que o livro entrega pronto não precisa cumprir o pré-requisito, e a
+// Espada-Deus tem a Atroz sem a Cruel.
+//
+// @example book.ImprovementSetProblem([]string{"melhoria-atroz"}, nil, false) // "Atroz pede Cruel no mesmo item"
+func ImprovementSetProblem(requested, builtIn []string, withMaterial bool) error {
+	all := append(slices.Clone(requested), builtIn...)
+	for _, id := range requested {
+		if slices.Contains(builtIn, id) {
+			return fmt.Errorf("este item já vem com %s, e cada melhoria entra uma vez no item (p164)", improvementName(id))
+		}
+		if needed, asks := improvementPrerequisites[id]; asks && !slices.Contains(all, needed) {
 			return fmt.Errorf("%s pede %s no mesmo item", improvementName(id), improvementName(needed))
 		}
-		if improvementsThatNeedAnother[id] && len(ids) < 2 && !withMaterial {
+		if improvementsThatNeedAnother[id] && len(all) < 2 && !withMaterial {
 			return fmt.Errorf("%s pede outra melhoria qualquer no mesmo item (p165)", improvementName(id))
 		}
-	}
-	for _, pair := range improvementsThatExclude {
-		if slices.Contains(ids, pair[0]) && slices.Contains(ids, pair[1]) {
-			return fmt.Errorf("um item não pode ser %s e %s ao mesmo tempo", improvementName(pair[0]), improvementName(pair[1]))
+		for _, pair := range improvementsThatExclude {
+			other := ""
+			switch id {
+			case pair[0]:
+				other = pair[1]
+			case pair[1]:
+				other = pair[0]
+			}
+			if other != "" && slices.Contains(all, other) {
+				return fmt.Errorf("um item não pode ser %s e %s ao mesmo tempo", improvementName(id), improvementName(other))
+			}
 		}
 	}
 	return nil
