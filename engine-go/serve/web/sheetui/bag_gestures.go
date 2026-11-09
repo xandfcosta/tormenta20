@@ -3,6 +3,8 @@ package sheetui
 import (
 	"strconv"
 	"strings"
+
+	"t20engine/domain/book"
 )
 
 // Os gestos e as frases dos diálogos da Mochila (`tempestade_bag_dialogs.templ`).
@@ -55,3 +57,43 @@ func chosenMaterial(sheet itemSheet) string {
 	}
 	return ""
 }
+
+// improvementsTakenExpr conta as vagas que o diálogo ocupa AGORA: as melhorias
+// ligadas e o material, que é uma delas (p165).
+const improvementsTakenExpr = "($item_improvements.length + ($item_material ? 1 : 0))"
+
+// improvementsFull é a expressão que diz que as quatro vagas (p164) estão
+// tomadas. A recusa é do servidor (`book.FitsImprovementCount`); isto é a tela
+// não oferecer o que ele recusaria.
+var improvementsFull = improvementsTakenExpr + " >= " + strconv.Itoa(book.MaxItemImprovements)
+
+// improvementsOfMax é o fim do "3 de 4 melhorias", igual nas duas escritas abaixo.
+var improvementsOfMax = " de " + strconv.Itoa(book.MaxItemImprovements) + " melhorias · o material conta como uma"
+
+// improvementsCountText é o "3 de 4 melhorias" vivo do diálogo.
+var improvementsCountText = improvementsTakenExpr + " + '" + improvementsOfMax + "'"
+
+// writtenImprovementsCount é a mesma frase escrita pelo servidor, para o
+// diálogo não nascer vazio antes de o Datastar avaliar.
+func writtenImprovementsCount(sheet itemSheet) string {
+	taken := 0
+	for _, choice := range sheet.Improvements {
+		if choice.Active {
+			taken++
+		}
+	}
+	if chosenMaterial(sheet) != "" {
+		taken++
+	}
+	return strconv.Itoa(taken) + improvementsOfMax
+}
+
+// improvementLocked trava o interruptor DESLIGADO quando as vagas acabaram. O
+// ligado não trava: ele precisa poder sair.
+func improvementLocked(choice overlayChoice) string {
+	return "!" + improvementSignal(choice) + " && " + improvementsFull
+}
+
+// materialLocked trava o material quando não há material e as quatro vagas
+// são de melhorias. Trocar um material por outro não muda a conta.
+var materialLocked = "$item_material === '' && " + improvementsFull
