@@ -68,7 +68,10 @@ var (
 	originMoneyDice = regexp.MustCompile(`^T\$ (\d+d\d+)`)
 	originPriceCap  = regexp.MustCompile(`até T\$ (\d+)`)
 	originChoiceEnd = regexp.MustCompile(`\s*\(escolha\)$`)
-	originChoiceSep = regexp.MustCompile(`,\s*|\s+ou\s+`)
+	// originChoiceInside é a escolha DENTRO do parêntese do item: "Coleção de livros (+1 em Conhecimento,
+	// Guerra, Misticismo ou Nobreza à escolha)". Cada alternativa é um verbete, "Coleção de livros (Guerra)".
+	originChoiceInside = regexp.MustCompile(`^(.+?) \(\+\d+ em (.+) à escolha\)$`)
+	originChoiceSep    = regexp.MustCompile(`,\s*|\s+ou\s+`)
 )
 
 // ParseOriginItem classifica uma frase da linha "Itens" de uma origem.
@@ -93,6 +96,13 @@ func ParseOriginItem(entry string) OriginItemGrant {
 		return OriginItemGrant{
 			Kind: OriginItemOneOf, Label: entry, Options: strings.Split(entry, " OU "),
 		}
+	}
+	if inside := originChoiceInside.FindStringSubmatch(entry); inside != nil {
+		options := []string{}
+		for _, skill := range withInitialCapital(originChoiceSep.Split(inside[2], -1)) {
+			options = append(options, inside[1]+" ("+skill+")")
+		}
+		return OriginItemGrant{Kind: OriginItemOneOf, Label: entry, Options: options}
 	}
 	if originChoiceEnd.MatchString(entry) {
 		list := originChoiceEnd.ReplaceAllString(entry, "")

@@ -65,6 +65,20 @@ func TestOriginGrantsAreClassified(t *testing.T) {
 				}
 			},
 		},
+		{
+			// A escolha DENTRO do parêntese é a perícia do item, e cada perícia é um verbete da
+			// coleção de livros (p158); o Estudioso escolhe entre quatro delas (p90).
+			"Coleção de livros (+1 em Conhecimento, Guerra, Misticismo ou Nobreza à escolha)", OriginItemOneOf,
+			func(t *testing.T, g OriginItemGrant) {
+				want := []string{
+					"Coleção de livros (Conhecimento)", "Coleção de livros (Guerra)",
+					"Coleção de livros (Misticismo)", "Coleção de livros (Nobreza)",
+				}
+				if !reflect.DeepEqual(g.Options, want) {
+					t.Errorf("alternativas: %v, esperado %v", g.Options, want)
+				}
+			},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.sentence, func(t *testing.T) {
@@ -103,7 +117,9 @@ func TestNoOriginGrantWithAChoiceIsBornFixed(t *testing.T) {
 		t.Fatalf("origens: %v", err)
 	}
 
-	marks := []string{" OU ", "até T$", "(escolha)"}
+	// "escolha)" pega as duas formas: a lista com "(escolha)" no fim e a escolha dentro do parêntese do
+	// item, "(+1 em Conhecimento, … à escolha)".
+	marks := []string{" OU ", "até T$", "escolha)"}
 	measured, choices := 0, 0
 	for _, origin := range origins {
 		for _, sentence := range origin.StartingItems {
