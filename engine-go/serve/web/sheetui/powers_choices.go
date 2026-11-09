@@ -53,14 +53,15 @@ type devotionChoice struct {
 	Changes []devotionChangeNotice
 }
 
-// Written é a ponta da lista dos concedidos: "1 de 2", ou "1 de 1 · 1 em vaga de poder" quando há mais
-// marcados do que a devoção dá, e o que passa ocupa vaga de poder da classe (p124).
+// Written é a ponta da lista dos concedidos: "1 de 2", ou "1 de 1 · +1 em vaga" quando há mais marcados do
+// que a devoção dá, e o que passa ocupa vaga de poder da classe (p124). A ponta é curta porque divide a
+// linha com o título a 390px; o rodapé (`SlotHint`) diz que vaga é essa.
 func (d devotionChoice) Written() string {
 	if d.Held <= d.Limit {
 		return strconv.Itoa(d.Held) + " de " + strconv.Itoa(d.Limit)
 	}
 	limit := strconv.Itoa(d.Limit)
-	return limit + " de " + limit + " · " + strconv.Itoa(d.Held-d.Limit) + " em vaga de poder"
+	return limit + " de " + limit + " · +" + strconv.Itoa(d.Held-d.Limit) + " em vaga"
 }
 
 // SlotHint é o rodapé da lista dos concedidos: quantos a devoção dá, e o que custa um a mais.

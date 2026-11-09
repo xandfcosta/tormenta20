@@ -126,7 +126,7 @@ func TestAGrantedPowerBeyondTheDevotionTakesAPowerSlot(t *testing.T) {
 	if step := choiceStepTitled(t, screen, "Guerreiro 3"); step.Tag != "1 de 2" {
 		t.Errorf("o concedido a mais devia ocupar uma das duas vagas do guerreiro: o passo diz %q", step.Tag)
 	}
-	if !strings.Contains(html.UnescapeString(screen), "1 de 1 · 1 em vaga de poder") {
+	if !strings.Contains(html.UnescapeString(screen), "1 de 1 · +1 em vaga") {
 		t.Error("a lista dos concedidos não diz que um deles ocupa vaga de poder")
 	}
 
@@ -286,7 +286,7 @@ func TestLeavingTheClericKeepsTheSecondGrantedPowerInAPowerSlot(t *testing.T) {
 	sheetGesture(t, f, fmt.Sprintf("/personagens/%d/nivel/%s/-1", id, url.PathEscape("Clérigo")))
 
 	screen := html.UnescapeString(powerScreen(t, f, id))
-	if !strings.Contains(screen, "1 de 1 · 1 em vaga de poder") || strings.Contains(screen, ">2 de 1<") {
+	if !strings.Contains(screen, "1 de 1 · +1 em vaga") || strings.Contains(screen, ">2 de 1<") {
 		t.Error("sem o Clérigo, a lista dos concedidos devia dizer que o segundo ocupa vaga de poder")
 	}
 	// Sem nenhum poder de Guerreiro escolhido, só o concedido enche a vaga: sem a regra, seria "0 de 1".
