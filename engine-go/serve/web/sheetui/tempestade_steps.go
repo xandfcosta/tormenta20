@@ -65,8 +65,13 @@ func choiceStepsOf(v View) []choiceStep {
 	var all []choiceStep
 	for i, card := range v.Choices.Races {
 		step := choiceStep{ID: "race-" + strconv.Itoa(i), Title: "Raça · " + card.Race, Meta: "habilidades da raça", Kind: "race", Race: card}
+		// A frase inteira ("Distribua +1 em 3 atributos diferentes") é o rótulo do bloco, dentro do passo;
+		// na lista, ela quebrava em três linhas.
 		if card.Attribute != nil {
-			step.Meta = attributeWrittenChoice(*card.Attribute)
+			step.Meta = "atributos"
+			if card.Attribute.Kind == "ascendencia" {
+				step.Meta = "ascendência"
+			}
 		}
 		if n := pendingIn(v, "raca"); n > 0 {
 			step.Count = "falta " + strconv.Itoa(n)
@@ -97,7 +102,7 @@ func choiceStepsOf(v View) []choiceStep {
 		}
 		for _, counted := range card.Counted {
 			all = append(all, choiceStep{
-				ID: prefix + "-counted-" + counted.ID, Title: card.ClassName + " · " + counted.Name, Meta: counted.Detail,
+				ID: prefix + "-counted-" + counted.ID, Title: card.ClassName + " · " + counted.Name, Meta: counted.Nouns,
 				Count: strconv.Itoa(counted.Chosen) + " de " + strconv.Itoa(counted.Limit), Done: counted.Chosen >= counted.Limit,
 				Kind: "counted", Class: card, Counted: counted,
 			})

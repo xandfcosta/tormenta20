@@ -218,7 +218,7 @@ func classPendings(dto sheet.CharacterDTO) []pendencia {
 		if missing <= 0 {
 			continue
 		}
-		word := " " + counted.Noun + "s por escolher"
+		word := " " + counted.Nouns() + " por escolher"
 		if missing == 1 {
 			word = " " + counted.Noun + " por escolher"
 		}

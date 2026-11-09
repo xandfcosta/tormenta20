@@ -284,14 +284,17 @@ func devotionGesture(v View, d devotionChoice, target string) string {
 	return "$devotion_target = '" + target + "'"
 }
 
-// countedChoiceDs é a escolha do poder concedido contada por atributo — as
-// perícias do Especialista (ALE-501), o terreno do Explorador (ALE-503).
+// countedChoiceDs é a escolha contada do poder concedido — as perícias do
+// Especialista, os terrenos do Explorador, as escolas do bardo e do druida —,
+// com a descrição do poder embaixo do cabeçalho: a lista dos passos diz só o que
+// se escolhe, e é aqui que a pessoa lê a regra antes de tocar.
 templ countedChoiceDs(v View, counted countedChoice) {
 	<div class="ds-field">
 		<div class="ds-pick-head">
 			<span class="ds-field-label">{ counted.Name }</span>
 			<span class="ds-row-meta">{ counted.Written() }</span>
 		</div>
+		<div class="ds-pick-detail">{ counted.Detail }</div>
 		<div class="ds-options">
 			for _, o := range counted.Options {
 				if counted.Repeats {

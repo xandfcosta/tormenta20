@@ -9,11 +9,14 @@ import (
 // A ESCOLHA CONTADA do poder que a classe concedeu: as perícias do Especialista (por atributo), os terrenos
 // do Explorador (por nível) e as escolas das Magias do bardo e do druida (pelo número do verbete).
 
-// countedChoice é o bloco do Especialista: as perícias treinadas, quantas de
-// quantas, e o atributo que dá o limite.
+// countedChoice é o bloco de uma escolha contada: as opções, quantas de quantas, e o que dá o limite — o
+// atributo, o nível ou, sem nenhum dos dois, o número do verbete.
 type countedChoice struct {
-	ID      string
-	Name    string
+	ID   string
+	Name string
+	// Nouns é o que se escolhe, no plural ("perícias"): a linha do passo na lista do Escolher. A
+	// descrição do poder (Detail) fica no bloco, onde a pessoa escolhe.
+	Nouns   string
 	Detail  string
 	Options []powerOption
 	Chosen  int
@@ -59,7 +62,7 @@ func countedChoicesOf(dto sheet.CharacterDTO, class string) []countedChoice {
 			continue
 		}
 		block := countedChoice{
-			ID: counted.Power.ID, Name: counted.Power.Name, Detail: counted.Power.Description,
+			ID: counted.Power.ID, Name: counted.Power.Name, Nouns: counted.Nouns(), Detail: counted.Power.Description,
 			Chosen: len(counted.Picks), Limit: counted.Limit, Value: counted.Value,
 			Attribute: counted.Basis, Repeats: counted.Repeats, Fixed: counted.Fixed,
 		}
