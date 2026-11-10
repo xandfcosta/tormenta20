@@ -35,6 +35,13 @@ func EnchantBoostID(itemID int64, enchant string) string {
 	return enchantBoostPrefix + strconv.FormatInt(itemID, 10) + ":" + enchant
 }
 
+// EnchantBoostItem é a arma de um gasto de encanto, e se o id é de um encanto: quem propõe o golpe confere
+// que ele é com essa arma.
+func EnchantBoostItem(id string) (int64, bool) {
+	itemID, _, isEnchant := enchantBoostOf(id)
+	return itemID, isEnchant
+}
+
 // enchantBoostOf lê o id de volta: a arma e o encanto, e se o id é de um encanto.
 func enchantBoostOf(id string) (int64, string, bool) {
 	rest, isEnchant := strings.CutPrefix(id, enchantBoostPrefix)
