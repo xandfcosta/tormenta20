@@ -274,8 +274,20 @@ func enchantMetaExpr(s itemSheet, c enchantChoice) string {
 
 // enchantMetaWritten é a mesma linha, no servidor, para o primeiro quadro.
 func enchantMetaWritten(s itemSheet, c enchantChoice) string {
+	if reasons := lockReasons(s, c); len(reasons) > 0 {
+		return strings.Join(reasons, " · ")
+	}
+	return c.Spend
+}
+
+// enchantLockedNow diz se o encanto está trancado no primeiro quadro, pela mesma conta do `enchantLockedExpr`.
+func enchantLockedNow(s itemSheet, c enchantChoice) bool { return len(lockReasons(s, c)) > 0 }
+
+// lockReasons são os motivos de o encanto não caber AGORA, no conjunto que o item já tem: o pré-requisito
+// fora dele e o peso que passaria do teto. O escolhido não tem motivo, para poder sair.
+func lockReasons(s itemSheet, c enchantChoice) []string {
 	if c.Active {
-		return c.Spend
+		return nil
 	}
 	reasons := []string{}
 	if c.Requires != "" && !slices.ContainsFunc(s.EnchantChoices, func(o enchantChoice) bool { return o.ID == c.Requires && o.Active }) {
@@ -284,10 +296,7 @@ func enchantMetaWritten(s itemSheet, c enchantChoice) string {
 	if chosenWeight(s)+c.Weight > book.EnchantSlots {
 		reasons = append(reasons, "sem espaço")
 	}
-	if len(reasons) == 0 {
-		return c.Spend
-	}
-	return strings.Join(reasons, " · ")
+	return reasons
 }
 
 func itemEnchantsID(command string) string { return "item-enchants-" + command }

@@ -13,7 +13,7 @@ templ enchantsDs(v View, s itemSheet) {
 		<p class="ds-row-meta" data-text={ enchantCountExpr(s) }>{ enchantCountWritten(s) }</p>
 		@ds.BareList("Encantos", "") {
 			for _, c := range s.EnchantChoices {
-				<div class="ds-row ds-pick-row">
+				<div class="ds-row ds-pick-row" data-locked?={ enchantLockedNow(s, c) } data-attr:data-locked={ enchantLockedExpr(s, c) }>
 					<div class="min-w-0">
 						<div class="ds-row-title">
 							{ c.Name }
