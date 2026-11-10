@@ -59,7 +59,7 @@ func itemOverlays(item sheet.ItemDTO) []string {
 	// próprio para o encanto, e pô-lo nos dois o escreveria duas vezes.
 	for _, id := range item.Enchants {
 		if entry := book.ItemByID(id); entry != nil {
-			names = append(names, entry.Name)
+			names = append(names, enchantBadgeName(*entry, item.EnchantChoices[id]))
 		}
 	}
 	return names
