@@ -65,20 +65,12 @@ type handTotal struct {
 	Dice string
 }
 
-// handMin e handMax são o intervalo do campo, pela notação: 6d6 vai de 6 a 36. Quem recusa o total fora dele
-// é o servidor (`character.RollsTheBlast`); o campo só não oferece o que os dados não tiram.
-func handMin(h handTotal) string {
-	lowest, _, err := engine.DiceRange(h.Dice)
+// Range é o intervalo do campo, pela notação: 6d6 vai de 6 a 36. Quem recusa o total fora dele é o servidor
+// (`character.RollsTheBlast`); o campo só não oferece o que os dados não tiram. Vazio na notação ilegível.
+func (h handTotal) Range() (lowest, highest string) {
+	low, high, err := engine.DiceRange(h.Dice)
 	if err != nil {
-		return ""
+		return "", ""
 	}
-	return strconv.Itoa(lowest)
-}
-
-func handMax(h handTotal) string {
-	_, highest, err := engine.DiceRange(h.Dice)
-	if err != nil {
-		return ""
-	}
-	return strconv.Itoa(highest)
+	return strconv.Itoa(low), strconv.Itoa(high)
 }
