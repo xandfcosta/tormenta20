@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // O GASTO DE 2 PM DO ENCANTO NA LINHA DE ATAQUE (p335-336). A tira "Com" da superfície Ações oferece o
@@ -141,5 +142,55 @@ func TestTheEnchantBoostIsOncePerRound(t *testing.T) {
 	}
 	if refusal := shoot("atacar", paid); refusal != "" {
 		t.Errorf("na vez seguinte do bárbaro, o disparo pago foi recusado: %q", refusal)
+	}
+}
+
+// O PV DA TUMULAR QUE SAIU DA POÇA TEMPORÁRIA VOLTA PARA ELA. A perda gasta os temporários primeiro (p106),
+// e o cancelamento desfaz o golpe que não aconteceu: devolver ao PV comum daria PV que não expira no lugar do
+// que expiraria no fim do dia — o mesmo motivo do recibo do PM.
+func TestTheTomblikeHitPointsComeBackToTheTemporaryPool(t *testing.T) {
+	f, barbaro, goblin := barbarianOnTurn(t)
+	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}); err != nil {
+		t.Fatalf("encantar a espada: %v", err)
+	}
+	seedTempHpPool(t, f.s, barbaro, 20)
+	tempHp := func() int {
+		t.Helper()
+		rows, err := f.s.queries.ListActiveEffectsByCharacter(context.Background(), barbaro)
+		if err != nil {
+			t.Fatalf("ler as poças: %v", err)
+		}
+		total := 0
+		for _, pool := range sheet.ParseTempHpPools(rows) {
+			total += pool.Amount
+		}
+		return total
+	}
+	tomblike := engine.EnchantBoostID(sword, "encanto-tumular")
+	screen := html.UnescapeString(f.posts(t, f.player, fmt.Sprintf("/personagens/%d/acoes/atacar/0?embutida=1", barbaro), ""))
+	found := regexp.MustCompile(`\$boost_weapon = (\d+); \$boost_power = "` + regexp.QuoteMeta(tomblike) + `"`).FindStringSubmatch(screen)
+	if found == nil {
+		t.Fatalf("a linha da espada não oferece o gasto da Tumular")
+	}
+	hpBefore := poolsOf(t, f.s, barbaro).HpCurrent
+
+	chosen := fmt.Sprintf(`{"turn_target":%q,"boost_weapon":%s,"boost_power":%q,"boost_steps":0,"boost_split":""}`,
+		goblin, found[1], tomblike)
+	if refusal := sceneRefusal(f.posts(t, f.player,
+		fmt.Sprintf("/personagens/%d/acoes/atacar/%s?embutida=1", barbaro, found[1]), chosen)); refusal != "" {
+		t.Fatalf("o golpe com o gasto da Tumular foi recusado: %q", refusal)
+	}
+	lost := stateOf(t, f.s.sessions, f.sessionID).PendingAttack.BoostHitPoints
+	if got := tempHp(); got != 20-lost {
+		t.Fatalf("a poça tem %d depois de perder %d, want %d — a perda gasta os temporários primeiro (p106)", got, lost, 20-lost)
+	}
+
+	gmCancels(t, f)
+	if got := tempHp(); got != 20 {
+		t.Errorf("depois do cancelamento a poça tem %d, want 20: o PV que saiu dela volta para ela", got)
+	}
+	if got := poolsOf(t, f.s, barbaro).HpCurrent; got != hpBefore {
+		t.Errorf("depois do cancelamento o PV comum é %d, want %d", got, hpBefore)
 	}
 }

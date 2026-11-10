@@ -91,8 +91,8 @@ a resposta do mestre não falha por um gesto posterior. O gasto de encanto é um
 quem ataca (`Scene.OncePerRoundUsed`, que sai quando a vez dessa linha recomeça), conferido antes
 da ação. O cancelamento do mestre devolve a ação
 (só ao turno de onde ela saiu), o PM do impulso e dos "rolar de novo" (cada ponto de onde saiu,
-ao poço ou à poça temporária, pelo `sheet.ManaReceipt`), o PV do gasto (ao PV atual: ele não tem
-recibo de poça), a vez da rodada do encanto e a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
+ao poço ou à poça temporária, pelo `sheet.PoolReceipt`), o PV do gasto (pelo mesmo recibo: o que a
+poça temporária pagou volta para ela), a vez da rodada do encanto e a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
 aconteceu, e fechar a leitura dele não devolve nada. O "rolar de novo" é conferido e pago na
 transação que troca o dado (`session.Store.RerollAttack`).
 

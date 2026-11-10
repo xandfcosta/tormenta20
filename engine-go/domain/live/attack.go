@@ -183,8 +183,9 @@ type AttackPaid struct {
 	ExtraMovement bool   `json:"extraMovement,omitempty"`
 	// Mana são os recibos do impulso e dos "rolar de novo" (`SheetVitals`).
 	Mana []json.RawMessage `json:"mana,omitempty"`
-	// HitPoints é o PV que o gasto do golpe tirou de quem ataca (a Tumular), para o cancelamento devolver.
-	HitPoints int `json:"hitPoints,omitempty"`
+	// HitPoints é o recibo do PV que o gasto do golpe tirou de quem ataca (a Tumular): o cancelamento o
+	// devolve de onde saiu, à poça temporária ou ao PV (`SheetVitals`).
+	HitPoints json.RawMessage `json:"hitPoints,omitempty"`
 }
 
 // AttackDose é a dose em jogo no golpe. Ela viaja escrita porque a faixa só recebe o
