@@ -1314,6 +1314,8 @@ INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (128, 37, 'armadura-couro', 'Armadura de couro', 1, 2, 'vested', '[]', NULL, '2026-01-01T00:00:00.000Z');
 
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (3, 'encanto-sanguinaria');
+INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (55, 'encanto-tumular');
+INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (56, 'encanto-venenosa');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (92, 'encanto-dancarina');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (92, 'encanto-flamejante');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (92, 'encanto-profana');
