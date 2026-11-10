@@ -216,3 +216,14 @@ func TestTheBoostCostTagSaysTheHitPointsToo(t *testing.T) {
 		t.Errorf("a etiqueta do gasto não diz o PV: %s", expr)
 	}
 }
+
+// DOIS DADOS DO MESMO TIPO E DAS MESMAS FACES somam na linha: com o gasto, a Tumular tem o d8 de trevas do
+// encanto e o do gasto, e o livro diz "o bônus de dano aumenta para +2d8" (p336).
+func TestTheWeaponLineAddsUpExtraDiceOfTheSameType(t *testing.T) {
+	card := engine.WeaponCard{Damage: "1d8", DamageBonus: 8, ExtraDamage: []engine.ExtraDamage{
+		{Dice: "1d8", Type: "trevas"}, {Dice: "1d6", Type: "fogo"}, {Dice: "1d8", Type: "trevas"},
+	}}
+	if got := damageLabel(card); got != "1d8+8 +2d8 de trevas +1d6 de fogo" {
+		t.Errorf("a linha da arma diz %q", got)
+	}
+}

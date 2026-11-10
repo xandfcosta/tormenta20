@@ -1,7 +1,9 @@
 package sheetui
 
 import (
+	"slices"
 	"strconv"
+	"strings"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -19,10 +21,35 @@ func damageLabel(card engine.WeaponCard) string {
 	if card.DamageBonus != 0 {
 		label += book.WithSign(card.DamageBonus)
 	}
+	// O MESMO DADO DO MESMO TIPO SOMA: o d8 de trevas do encanto e o do gasto da Tumular são "+2d8", como
+	// o livro escreve (p336). A ordem é a da primeira aparição.
+	type group struct {
+		faces, kind string
+		count       int
+	}
+	groups := []group{}
 	for _, extra := range card.ExtraDamage {
-		label += " +" + extra.Dice
-		if extra.Type != "" {
-			label += " de " + extra.Type
+		count, faces, ok := strings.Cut(extra.Dice, "d")
+		n, err := strconv.Atoi(count)
+		if !ok || err != nil {
+			groups = append(groups, group{faces: extra.Dice, kind: extra.Type})
+			continue
+		}
+		at := slices.IndexFunc(groups, func(g group) bool { return g.count > 0 && g.faces == faces && g.kind == extra.Type })
+		if at < 0 {
+			groups = append(groups, group{faces: faces, kind: extra.Type, count: n})
+			continue
+		}
+		groups[at].count += n
+	}
+	for _, g := range groups {
+		dice := g.faces
+		if g.count > 0 {
+			dice = strconv.Itoa(g.count) + "d" + g.faces
+		}
+		label += " +" + dice
+		if g.kind != "" {
+			label += " de " + g.kind
 		}
 	}
 	return label
