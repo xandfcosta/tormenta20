@@ -55,6 +55,9 @@ type Combatant struct {
 	// (`engine.BoostedWeaponCards`). Nulo para quem não tem ficha — o bloco de
 	// criatura não paga PM no golpe.
 	Boost func(engine.BoostChoice) ([]engine.WeaponCard, int, error)
+	// BoostHitPointCost é o dado de PV que o gasto pedido também cobra (o 1d8 da Tumular), ou vazio. Nulo
+	// para quem não tem ficha.
+	BoostHitPointCost func(engine.BoostChoice) string
 	// Stances são as posturas acesas agora, que a proposta guarda. Vazio para quem não
 	// tem ficha.
 	Stances []string
@@ -292,6 +295,13 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 	if err != nil {
 		return strikeSetup{}, err
 	}
+	if boost.powerID != "" && striker.BoostHitPointCost != nil {
+		if cost := striker.BoostHitPointCost(req.Boost); cost != "" {
+			if boost.hitPoints, err = engine.RollNotationWith(cost, s.rollDie); err != nil {
+				return strikeSetup{}, fmt.Errorf("rolar o PV do gasto: %w", err)
+			}
+		}
+	}
 	if weapon, err = chargedWeapon(striker, req, weapon); err != nil {
 		return strikeSetup{}, err
 	}
@@ -454,7 +464,7 @@ func entryOf(st *live.SessionRuntimeState, entryID string) (live.InitiativeEntry
 func foreseenOf(out engine.AttackOutcome) []live.ForeseenCondition {
 	ditas := make([]live.ForeseenCondition, 0, len(out.Announces))
 	for _, a := range out.Announces {
-		ditas = append(ditas, live.ForeseenCondition{Condition: a.Condition, Note: a.Note})
+		ditas = append(ditas, live.ForeseenCondition{Condition: a.Condition, Note: a.Note, Effect: a.Effect})
 	}
 	if len(ditas) == 0 {
 		return nil

@@ -74,6 +74,9 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 	if s.Scene != nil {
 		paid.Scene = s.Scene.Number
 	}
+	if err := takesTheEnchantBoostOfTheRound(s, *attack); err != nil {
+		return err
+	}
 	if attack.ExtraOf != "" {
 		if err := takesTheExtraStrike(s, attack); err != nil {
 			return err
@@ -87,7 +90,40 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 		paid.Movement = before.MovementLeft && !s.Scene.MovementLeft
 		paid.ExtraMovement = before.ExtraMovementLeft && !s.Scene.ExtraMovementLeft
 	}
-	return spendsOnTheAttack(ctx, u, s, paid.CharacterID, attack.BoostPM)
+	if err := spendsOnTheAttack(ctx, u, s, paid.CharacterID, attack.BoostPM); err != nil {
+		return err
+	}
+	return losesTheBoostHitPoints(ctx, u, s, paid)
+}
+
+// losesTheBoostHitPoints tira de quem ataca o PV que o gasto cobra — o 1d8 da Tumular, "você perde 1d8
+// pontos de vida" (p336) —, pela ordem de toda perda: os temporários saem primeiro (p106), e quem chega a 0
+// cai (p236). O recibo de onde cada ponto saiu fica na proposta, para o cancelamento devolver.
+func losesTheBoostHitPoints(ctx context.Context, u Unit, s *live.SessionRuntimeState, paid *live.AttackPaid) error {
+	attack := s.PendingAttack
+	if attack.BoostHitPoints <= 0 || paid.CharacterID == nil {
+		return nil
+	}
+	hp, mp, receipt, err := u.Sheet.LoseHitPointsKeepingReceipt(ctx, *paid.CharacterID, attack.BoostHitPoints)
+	if err != nil {
+		return fmt.Errorf("tirar o PV do gasto do golpe: %w", err)
+	}
+	paid.HitPoints = receipt
+	entry := attack.AttackerEntryID
+	return live.PatchEntryVitals(s, entry, hp, mp, hpFloorOf(s, entry))
+}
+
+// takesTheEnchantBoostOfTheRound confere e conta o gasto de 2 PM do encanto: "uma vez por rodada" (p335-336),
+// recusado com a iniciativa correndo (decisão do dono). Fora dela não há rodada para contar. Ele vem antes
+// da cobrança da ação, para o segundo golpe pago da vez ouvir a regra do encanto, e não "falta ação".
+func takesTheEnchantBoostOfTheRound(s *live.SessionRuntimeState, attack live.PendingAttack) error {
+	if _, _, isEnchant := engine.EnchantBoostParts(attack.BoostPowerID); !isEnchant || !s.CountsRounds() {
+		return nil
+	}
+	if !live.UsesOncePerRound(s, attack.AttackerEntryID, attack.BoostPowerID) {
+		return fmt.Errorf("o gasto de 2 PM do encanto de %s é uma vez por rodada (p335-336), e já foi feito nesta: ataque sem ele, ou espere a próxima vez", attack.Weapon)
+	}
+	return nil
 }
 
 // chargeStrike cobra a ação do golpe. O Disparo Rápido é agredir com a ação completa (p125), e a
@@ -216,10 +252,14 @@ func givesTheProposalBack(ctx context.Context, u Unit, s *live.SessionRuntimeSta
 		return nil, nil
 	}
 	givesTheTurnBack(s, *open)
+	live.GivesOncePerRoundBack(s, open.AttackerEntryID, open.BoostPowerID)
 	if err := returnsTheDose(ctx, u, open.Dose); err != nil {
 		return nil, err
 	}
 	if err := givesTheManaBack(ctx, u, s, *open); err != nil {
+		return nil, err
+	}
+	if err := givesTheHitPointsBack(ctx, u, s, *open); err != nil {
 		return nil, err
 	}
 	if open.Paid == nil {
@@ -241,6 +281,26 @@ func givesTheTurnBack(s *live.SessionRuntimeState, open live.PendingAttack) {
 	s.Scene.StandardLeft = s.Scene.StandardLeft || paid.Standard
 	s.Scene.MovementLeft = s.Scene.MovementLeft || paid.Movement
 	s.Scene.ExtraMovementLeft = s.Scene.ExtraMovementLeft || paid.ExtraMovement
+}
+
+// givesTheHitPointsBack devolve o PV que o gasto tirou (a Tumular), pelo recibo: o que saiu da poça
+// temporária volta para ela, e não ao PV comum, onde viraria ponto que não expira.
+func givesTheHitPointsBack(ctx context.Context, u Unit, s *live.SessionRuntimeState, open live.PendingAttack) error {
+	if open.Paid == nil || open.Paid.CharacterID == nil || len(open.Paid.HitPoints) == 0 {
+		return nil
+	}
+	hp, mp, err := u.Sheet.GiveHitPointsBack(ctx, *open.Paid.CharacterID, open.Paid.HitPoints)
+	// A FICHA APAGADA não tem para onde receber, e isso não pode prender o golpe na mesa.
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("devolver o PV do golpe cancelado: %w", err)
+	}
+	if live.FindEntryIndex(s, open.AttackerEntryID) < 0 {
+		return nil
+	}
+	return live.PatchEntryVitals(s, open.AttackerEntryID, hp, mp, hpFloorOf(s, open.AttackerEntryID))
 }
 
 // givesTheManaBack desfaz cada recibo: o PM do impulso e dos "rolar de novo" volta de onde

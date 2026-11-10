@@ -1,10 +1,6 @@
 package sheetui
 
-import (
-	"strconv"
-
-	"t20engine/serve/web/ds"
-)
+import "t20engine/serve/web/ds"
 
 // O IMPULSO DE PM NO ATAQUE das Ações do jogador (ALE-473, mockup
 // `paridade.html`): embaixo da linha do ataque, porque na coluna da direita ele
@@ -23,7 +19,7 @@ templ boostStripDs(row actionRow) {
 				data-on:click={ boostToggleCommand(row.Weapon, boost) }
 			>
 				{ boost.Name }
-				<span class="ds-row-meta" data-show={ "!(" + boostChosenExpr(row.Weapon, boost.PowerID) + ")" }>{ strconv.Itoa(boost.BasePM) + " PM" }</span>
+				<span class="ds-row-meta" data-show={ "!(" + boostChosenExpr(row.Weapon, boost.PowerID) + ")" }>{ boost.Price() }</span>
 			</button>
 			<span class="ds-boost-chosen" data-show={ boostChosenExpr(row.Weapon, boost.PowerID) }>
 				if boost.MaxSteps > 0 {
@@ -32,6 +28,9 @@ templ boostStripDs(row actionRow) {
 					}
 				}
 				<b class="ds-boost-step" data-text={ boostStepLabelExpr(boost) }></b>
+				if boost.Foresees != "" {
+					<span class="ds-row-meta">{ boost.Foresees }</span>
+				}
 				if boost.MaxSteps > 0 {
 					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-icon": true, "aria-label": "Mais um degrau de " + boost.Name, "data-on:click": boostStepCommand(boost, 1)}) {
 						+

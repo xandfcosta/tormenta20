@@ -148,11 +148,50 @@ func (v sheetVitals) GiveManaBack(
 	if err != nil {
 		return nil, nil, err
 	}
-	var receipt sheet.ManaReceipt
+	var receipt sheet.PoolReceipt
 	if err := json.Unmarshal(written, &receipt); err != nil {
 		return nil, nil, fmt.Errorf("ler o recibo do PM: %w", err)
 	}
 	pools, err := sheet.GiveManaBack(ctx, v.q, v.catalogs(), row, receipt)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &pools.HpCurrent, &pools.MpCurrent, nil
+}
+
+// LoseHitPointsKeepingReceipt tira PV pelo funil da ficha, e devolve o recibo escrito para a mesa guardar
+// sem abrir.
+func (v sheetVitals) LoseHitPointsKeepingReceipt(
+	ctx context.Context, charID int64, amount int,
+) (*int64, *int64, json.RawMessage, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	pools, receipt, err := sheet.LoseHitPointsKeepingReceipt(ctx, v.q, v.catalogs(), row, amount)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	written, err := json.Marshal(receipt)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("escrever o recibo do PV: %w", err)
+	}
+	return &pools.HpCurrent, &pools.MpCurrent, written, nil
+}
+
+// GiveHitPointsBack desfaz a perda do recibo.
+func (v sheetVitals) GiveHitPointsBack(
+	ctx context.Context, charID int64, written json.RawMessage,
+) (*int64, *int64, error) {
+	row, err := v.q.GetCharacter(ctx, charID)
+	if err != nil {
+		return nil, nil, err
+	}
+	var receipt sheet.PoolReceipt
+	if err := json.Unmarshal(written, &receipt); err != nil {
+		return nil, nil, fmt.Errorf("ler o recibo do PV: %w", err)
+	}
+	pools, err := sheet.GiveHitPointsBack(ctx, v.q, v.catalogs(), row, receipt)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -44,19 +44,19 @@ func SpendMana(
 func SpendManaKeepingReceipt(
 	ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs,
 	row sqlcgen.Character, amount int,
-) (Pools, ManaReceipt, error) {
+) (Pools, PoolReceipt, error) {
 	effects, err := q.ListActiveEffectsByCharacter(ctx, row.ID)
 	if err != nil {
-		return Pools{}, ManaReceipt{}, fmt.Errorf("ler as poças de PM da ficha %d: %w", row.ID, err)
+		return Pools{}, PoolReceipt{}, fmt.Errorf("ler as poças de PM da ficha %d: %w", row.ID, err)
 	}
 	var plan SpendPlan
-	var receipt ManaReceipt
+	var receipt PoolReceipt
 	pools, err := ApplyToPools(ctx, q, cat, row, func(pools Pools) (Pools, error) {
 		if amount <= 0 {
 			return pools, nil
 		}
 		plan = PlanSpend(ParseTempMpPools(effects), int(pools.MpCurrent), amount)
-		receipt = receiptOf(effects, plan, int(pools.MpCurrent)-plan.MpCurrent)
+		receipt = receiptOf(TempMpTarget, effects, plan.Drained, int(pools.MpCurrent)-plan.MpCurrent)
 		pools.MpCurrent = int64(plan.MpCurrent)
 		return pools, nil
 	})

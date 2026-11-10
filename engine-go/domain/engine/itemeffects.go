@@ -495,6 +495,10 @@ func targetKey(t ModifierTarget) string {
 		// não se somam: elas são ANÚNCIOS, e dois anúncios diferentes são duas
 		// linhas para o mestre ler.
 		return "announcedCondition:" + t.Name
+	case "announcedEffect":
+		// O EFEITO ANUNCIADO sai da pilha antes de somar (`harvestWeaponRiders`), e o texto dele mora na nota do
+		// modificador, não no alvo: a chave só precisa existir para o alvo ser conhecido.
+		return "announcedEffect"
 	case "critExtraIgnoreChance":
 		// A CHANCE do alvo de ignorar o dano EXTRA de um crítico (p166, p338).
 		// Chave única: o livro soma as fontes quando as declara cumulativas, e

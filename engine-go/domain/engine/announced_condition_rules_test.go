@@ -67,7 +67,9 @@ func TestTheAnnouncedConditionCarriesNoVerdict(t *testing.T) {
 		"Resisted": "o teste de resistência é rolado na mesa",
 		"Rounds":   "contar a duração é da mesa",
 	}
-	campos := map[string]bool{"Condition": true, "OnCritical": true, "Note": true}
+	// O Effect é o texto do livro para o que não é condição (o 4d4 de ácido da Corrosiva): a fórmula vai
+	// escrita, sem rolar e sem dizer se pegou — informa, como a Note.
+	campos := map[string]bool{"Condition": true, "OnCritical": true, "Note": true, "Effect": true}
 	tipo := anuncioType()
 	for i := 0; i < tipo.NumField(); i++ {
 		nome := tipo.Field(i).Name

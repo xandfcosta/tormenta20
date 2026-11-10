@@ -52,6 +52,13 @@ type SheetVitals interface {
 	// GiveManaBack desfaz o gasto do recibo, ponto a ponto, de volta de onde ele saiu.
 	GiveManaBack(ctx context.Context, charID int64, receipt json.RawMessage) (*int64, *int64, error)
 
+	// LoseHitPointsKeepingReceipt tira PV pela ordem do livro — os temporários primeiro (p106) — e devolve
+	// o recibo de onde cada ponto saiu: o PV do gasto da Tumular, que o cancelamento do golpe desfaz.
+	LoseHitPointsKeepingReceipt(ctx context.Context, charID int64, amount int) (*int64, *int64, json.RawMessage, error)
+
+	// GiveHitPointsBack desfaz a perda do recibo, ponto a ponto, de volta de onde ela saiu.
+	GiveHitPointsBack(ctx context.Context, charID int64, receipt json.RawMessage) (*int64, *int64, error)
+
 	// ApplyAbsolute grava PV/PM totais. Não drena pool temporário.
 	ApplyAbsolute(ctx context.Context, charID int64, hpCurrent, mpCurrent *int64) (*int64, *int64, error)
 

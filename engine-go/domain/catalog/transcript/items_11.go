@@ -402,9 +402,23 @@ var itemsPart11 = []Item{
 		UID:         "itm_qccuvhtwlj",
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma causa +1d6 de dano de frio. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima fica enredada por uma rodada. Uma arma congelante é coberta por uma camada de gelo e névoa.",
-		RollMin:     17,
-		RollMax:     21,
-		CountsAs:    1,
+		Modeled: []string{
+			"o +1d6 de dano de frio",
+			"o gasto de 2 PM no golpe, uma vez por rodada, só na arma do encanto",
+		},
+		RollMin:  17,
+		RollMax:  21,
+		CountsAs: 1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "announcedCondition", Name: "enredado"},
+					BonusType: "untyped",
+					Note:      "por uma rodada",
+				},
+			},
+		},
 	},
 	{
 		ID:          "encanto-conjuradora",
@@ -438,10 +452,23 @@ var itemsPart11 = []Item{
 		UID:         "itm_hsuxgtxyzr",
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma causa +1d6 de dano de ácido. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima sofre 4d4 pontos de dano de ácido na próxima rodada. Uma arma corrosiva exala vapores e goteja líquido tóxico.",
-		Modeled:     []string{"o +1d6 de dano de ácido"},
-		Unmodeled:   &ItemUnmodeled{Note: "o GESTO de 2 PM, e o 4d4 que ele deixa para a rodada seguinte: dano que acontece no turno de OUTRA criatura, e o motor de ficha não tem turno nem alvo"},
-		RollMin:     24,
-		RollMax:     28,
-		CountsAs:    1,
+		Modeled: []string{
+			"o +1d6 de dano de ácido",
+			"o gasto de 2 PM no golpe, uma vez por rodada, só na arma do encanto",
+		},
+		Unmodeled: &ItemUnmodeled{Note: "o 4d4 cai na rodada SEGUINTE, no turno de outra criatura: o golpe pago anuncia a fórmula, e quem rola e aplica é a mesa"},
+		RollMin:   24,
+		RollMax:   28,
+		CountsAs:  1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "announcedEffect"},
+					BonusType: "untyped",
+					Note:      "4d4 de dano de ácido na vítima, na próxima rodada",
+				},
+			},
+		},
 	},
 }

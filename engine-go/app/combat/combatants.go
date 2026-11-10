@@ -89,6 +89,9 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		Boost: func(choice engine.BoostChoice) ([]engine.WeaponCard, int, error) {
 			return dto.Ruleset.BoostedWeaponCards(ec, sheet.ToStringSet(dto.Conditionals), choice)
 		},
+		BoostHitPointCost: func(choice engine.BoostChoice) string {
+			return dto.Ruleset.BoostHitPointCost(choice.PowerID)
+		},
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed.Attributes)
 		},

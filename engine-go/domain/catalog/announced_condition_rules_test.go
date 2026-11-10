@@ -32,14 +32,20 @@ func TestEveryAnnouncedConditionExistsInTheConditionTable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ler items.json: %v", err)
 	}
+	type lido struct {
+		Target struct {
+			K    string `json:"k"`
+			Name string `json:"name"`
+		} `json:"target"`
+	}
+	// O GASTO DO ENCANTO também anuncia (a Venenosa, a Congelante — p335-336), e o anúncio dele mora no
+	// `boost`, fora dos modificadores do item: o guarda lê os dois.
 	var lidos []struct {
 		Name      string `json:"name"`
-		Modifiers []struct {
-			Target struct {
-				K    string `json:"k"`
-				Name string `json:"name"`
-			} `json:"target"`
-		} `json:"modifiers"`
+		Modifiers []lido `json:"modifiers"`
+		Boost     *struct {
+			Modifiers []lido `json:"modifiers"`
+		} `json:"boost"`
 	}
 	if err := json.Unmarshal(itens, &lidos); err != nil {
 		t.Fatalf("items.json: %v", err)
@@ -47,7 +53,11 @@ func TestEveryAnnouncedConditionExistsInTheConditionTable(t *testing.T) {
 
 	medidos := 0
 	for _, item := range lidos {
-		for _, m := range item.Modifiers {
+		mods := item.Modifiers
+		if item.Boost != nil {
+			mods = append(mods, item.Boost.Modifiers...)
+		}
+		for _, m := range mods {
 			if m.Target.K != "announcedCondition" {
 				continue
 			}

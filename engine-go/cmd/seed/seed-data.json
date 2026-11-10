@@ -844,7 +844,21 @@
               { "catalogId": "acido" },
               { "catalogId": "fogo-alquimico", "quantity": 2 }
             ]
-          }
+          },
+          "enchants": [
+            {
+              "item": "espada-curta",
+              "enchants": [
+                "encanto-tumular"
+              ]
+            },
+            {
+              "item": "azagaia",
+              "enchants": [
+                "encanto-venenosa"
+              ]
+            }
+          ]
         },
         {
           "sceneEffect": true,

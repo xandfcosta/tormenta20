@@ -450,24 +450,6 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 	return tiles
 }
 
-// damageLabel é "1d8+4": o dado da arma mais o que se soma a ele, e só o dado
-// quando não há soma nenhuma.
-func damageLabel(card engine.WeaponCard) string {
-	if card.DamageBonus == 0 {
-		return card.Damage
-	}
-	return card.Damage + book.WithSign(card.DamageBonus)
-}
-
-// critLabel é "19-20/x3". Margem 20 se escreve sozinha, e não como "20-20".
-func critLabel(card engine.WeaponCard) string {
-	margin := "20"
-	if card.CritRange < 20 {
-		margin = strconv.Itoa(card.CritRange) + "-20"
-	}
-	return margin + "/x" + strconv.Itoa(card.CritMult)
-}
-
 // isCaster diz se o personagem conjura por CLASSE.
 //
 // A pergunta é do motor e não de uma lista repetida aqui: `BestBaseSpellCd` é

@@ -195,3 +195,35 @@ func TestTheFinesseDamageRowSaysDexterity(t *testing.T) {
 		t.Errorf("a primeira parcela do dano com Acuidade não é DES +3: %+v", damage)
 	}
 }
+
+// O DADO EXTRA DA ARMA aparece na linha dela, com o tipo: a espada Tumular causa "+1d8 de dano de trevas"
+// (p336), e a linha que dizia só "1d8+8" escondia o dado que o encanto põe em todo golpe. O dado sem tipo (o
+// do Golpe Divino) sai sem ele.
+func TestTheWeaponLineWritesTheExtraDiceWithTheirType(t *testing.T) {
+	card := engine.WeaponCard{Damage: "1d8", DamageBonus: 8, ExtraDamage: []engine.ExtraDamage{
+		{Dice: "1d8", Type: "trevas"}, {Dice: "1d8"},
+	}}
+	if got := damageLabel(card); got != "1d8+8 +1d8 de trevas +1d8" {
+		t.Errorf("a linha da arma diz %q", got)
+	}
+}
+
+// A ETIQUETA AO LADO DO NÚMERO diz o preço inteiro do gasto escolhido: a Tumular custa "2 PM e 1d8 PV"
+// (p336), e a etiqueta que dizia só "2 PM" escondia a metade que tira vida.
+func TestTheBoostCostTagSaysTheHitPointsToo(t *testing.T) {
+	expr := boostCostExpr(0, []attackBoost{{PowerID: "encanto:7:encanto-tumular", BasePM: 2, HitPointCost: "1d8"}})
+	if !strings.Contains(expr, "' e 1d8 PV'") {
+		t.Errorf("a etiqueta do gasto não diz o PV: %s", expr)
+	}
+}
+
+// DOIS DADOS DO MESMO TIPO E DAS MESMAS FACES somam na linha: com o gasto, a Tumular tem o d8 de trevas do
+// encanto e o do gasto, e o livro diz "o bônus de dano aumenta para +2d8" (p336).
+func TestTheWeaponLineAddsUpExtraDiceOfTheSameType(t *testing.T) {
+	card := engine.WeaponCard{Damage: "1d8", DamageBonus: 8, ExtraDamage: []engine.ExtraDamage{
+		{Dice: "1d8", Type: "trevas"}, {Dice: "1d6", Type: "fogo"}, {Dice: "1d8", Type: "trevas"},
+	}}
+	if got := damageLabel(card); got != "1d8+8 +2d8 de trevas +1d6 de fogo" {
+		t.Errorf("a linha da arma diz %q", got)
+	}
+}

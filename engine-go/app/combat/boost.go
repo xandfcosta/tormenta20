@@ -11,6 +11,8 @@ import (
 type paidBoost struct {
 	powerID string
 	pm      int
+	// hitPoints é o PV que o gasto tira de quem ataca, já rolado (a Tumular).
+	hitPoints int
 }
 
 // weaponFor é a carta com que o golpe rola: a empunhada no índice pedido, já
@@ -47,6 +49,18 @@ func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, er
 			return engine.WeaponCard{}, boost, fmt.Errorf("%s não tem outro uso: %w", card.Name, app.ErrRefused)
 		}
 		card = *card.OtherUse
+	}
+	// O GASTO DE UM ENCANTO é da arma dele (p335-336): o anúncio da carta não tem escopo de arma, e
+	// sem esta conferência a outra mão pagaria e anunciaria o efeito do encanto que não tem.
+	if itemID, _, isEnchant := engine.EnchantBoostParts(boost.powerID); isEnchant && card.ItemID != itemID {
+		owner := "outra arma"
+		for _, c := range cards {
+			if c.ItemID == itemID {
+				owner = c.Name
+			}
+		}
+		return engine.WeaponCard{}, boost, fmt.Errorf(
+			"o gasto de 2 PM é do encanto de %s, e o golpe veio com %s: %w", owner, card.Name, app.ErrRefused)
 	}
 	if card.RefusesBoost {
 		return engine.WeaponCard{}, boost, fmt.Errorf(

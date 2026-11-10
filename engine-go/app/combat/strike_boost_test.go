@@ -108,3 +108,71 @@ func TestACombatantWithoutBoostsCannotAskForOne(t *testing.T) {
 		t.Errorf("impulso pedido por quem não tem impulso nenhum: err = %v, want recusa", err)
 	}
 }
+
+// O GASTO DE UM ENCANTO (p335-336) é da arma que tem o encanto: o golpe com a outra mão não o leva, e a
+// recusa diz de que arma ele é. Sem isso, a adaga pagaria 2 PM e anunciaria o veneno da espada, porque o
+// anúncio não tem escopo de arma.
+func TestAnEnchantBoostIsRefusedOnAnotherWeapon(t *testing.T) {
+	sword, dagger := aLongsword(), aLongsword()
+	sword.ItemID, dagger.ItemID, dagger.Name = 7, 8, "Adaga"
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{sword, dagger},
+			Boost: func(engine.BoostChoice) ([]engine.WeaponCard, int, error) {
+				return []engine.WeaponCard{sword, dagger}, 2, nil
+			}, ManaAvailable: 5},
+		"ogro": {EntryID: "ogro", Label: "Ogro", Defense: 10},
+	}, table, semTabuleiro{}, fixedDie(4))
+
+	venomous := engine.BoostChoice{PowerID: engine.EnchantBoostID(7, "encanto-venenosa")}
+	d20 := 10
+	_, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+		Weapon: 1, Boost: venomous,
+	})
+	if !errors.Is(err, app.ErrRefused) || !strings.Contains(err.Error(), "Adaga") {
+		t.Errorf("o gasto da espada num golpe de adaga: err = %v, want recusa que diz a arma", err)
+	}
+	// O CONTROLE: com a espada, o mesmo pedido passa.
+	table.state.PendingAttack = nil
+	if _, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+		Weapon: 0, Boost: venomous,
+	}); err != nil {
+		t.Errorf("o gasto da espada num golpe de espada foi recusado: %v", err)
+	}
+}
+
+// O PV DA TUMULAR (p336): "você perde 1d8 pontos de vida". O custo vem do gasto, acerte ou não, e a
+// proposta o rola com o mesmo rolador do golpe e o leva no provisório, para a sessão cobrar junto do PM
+// (decisão do dono). O gasto sem custo de PV não rola nada.
+func TestTheTomblikeBoostRollsItsHitPointCostIntoTheProposal(t *testing.T) {
+	for _, c := range []struct {
+		name, cost string
+		want       int
+	}{
+		{"com o 1d8 da Tumular", "1d8", 4},
+		{"sem custo de PV", "", 0},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			table := aTable(t)
+			strike := NewStrike(sheetDouble{
+				"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()},
+					Boost: boostedSword, ManaAvailable: 5,
+					BoostHitPointCost: func(engine.BoostChoice) string { return c.cost }},
+				"ogro": {EntryID: "ogro", Label: "Ogro", Defense: 10},
+			}, table, semTabuleiro{}, fixedDie(4))
+			d20 := 10
+			out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+				SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+				Boost: engine.BoostChoice{PowerID: "class.paladino.golpe-divino-1d8"},
+			})
+			if err != nil {
+				t.Fatalf("propor: %v", err)
+			}
+			if out.BoostHitPoints != c.want {
+				t.Errorf("o provisório leva %d de PV do gasto, want %d", out.BoostHitPoints, c.want)
+			}
+		})
+	}
+}

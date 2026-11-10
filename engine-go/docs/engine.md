@@ -85,10 +85,14 @@ jogador não retira a proposta, porque isso seria um d20 novo de graça. O "rola
 (p226) é a única troca que ela aceita, e só o dado muda.
 
 **A proposta paga ao nascer** (decisão do dono, `session.Store.ProposeAttack`): a ação e o PM do
-impulso saem ali, na mesma transação. Assim a postura que não couber é recusada na hora dela, e
-a resposta do mestre não falha por um gesto posterior. O cancelamento do mestre devolve a ação
+impulso saem ali, na mesma transação, e o PV que o gasto da Tumular cobra também (rolado na
+proposta, `PendingAttack.BoostHitPoints`). Assim a postura que não couber é recusada na hora dela, e
+a resposta do mestre não falha por um gesto posterior. O gasto de encanto é uma vez por rodada de
+quem ataca (`Scene.OncePerRoundUsed`, que sai quando a vez dessa linha recomeça), conferido antes
+da ação. O cancelamento do mestre devolve a ação
 (só ao turno de onde ela saiu), o PM do impulso e dos "rolar de novo" (cada ponto de onde saiu,
-ao poço ou à poça temporária, pelo `sheet.ManaReceipt`) e a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
+ao poço ou à poça temporária, pelo `sheet.PoolReceipt`), o PV do gasto (pelo mesmo recibo: o que a
+poça temporária pagou volta para ela), a vez da rodada do encanto e a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
 aconteceu, e fechar a leitura dele não devolve nada. O "rolar de novo" é conferido e pago na
 transação que troca o dado (`session.Store.RerollAttack`).
 

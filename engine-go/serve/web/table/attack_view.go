@@ -242,6 +242,11 @@ func writtenForeseen(pa live.PendingAttack) string {
 	}
 	ditas := make([]string, 0, len(pa.Announces))
 	for _, a := range pa.Announces {
+		if a.Condition == "" {
+			// O EFEITO que não é condição já é a frase do livro, com a fórmula (p335).
+			ditas = append(ditas, a.Effect)
+			continue
+		}
 		dita := book.ConditionName(a.Condition)
 		if a.Note != "" {
 			dita += " (" + a.Note + ")"
@@ -338,10 +343,18 @@ func writtenBoost(pa live.PendingAttack) string {
 		if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
 			name = power.Name
 		}
+		if _, enchant, isEnchant := engine.EnchantBoostParts(pa.BoostPowerID); isEnchant {
+			if item := book.ItemByID(enchant); item != nil {
+				name = item.Name
+			}
+		}
 		parts = append(parts, name)
 	}
 	if pa.BoostPM > 0 {
 		parts = append(parts, fmt.Sprintf("%d PM", pa.BoostPM))
+	}
+	if pa.BoostHitPoints > 0 {
+		parts = append(parts, fmt.Sprintf("%d PV", pa.BoostHitPoints))
 	}
 	return strings.Join(parts, " · ")
 }
