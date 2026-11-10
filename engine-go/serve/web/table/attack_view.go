@@ -347,10 +347,8 @@ func writtenBoost(pa live.PendingAttack) string {
 		if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
 			name = power.Name
 		}
-		if _, enchant, isEnchant := engine.EnchantBoostParts(pa.BoostPowerID); isEnchant {
-			if item := book.ItemByID(enchant); item != nil {
-				name = item.Name
-			}
+		if enchant, found := enchantNameOf(pa.BoostPowerID); found {
+			name = enchant
 		}
 		if pa.BoostAgainst != nil {
 			name += " contra " + book.ChosenKindName(pa.BoostAgainst.Chosen)
@@ -366,6 +364,19 @@ func writtenBoost(pa live.PendingAttack) string {
 	return strings.Join(parts, " · ")
 }
 
+// enchantNameOf é o nome do encanto de um gasto de encanto ("Anticriatura"), e se ele foi achado: o gasto de
+// poder e o encanto que o catálogo não conhece não têm, e quem chama fica com o que já escrevia.
+func enchantNameOf(powerID string) (string, bool) {
+	_, enchant, isEnchant := engine.EnchantBoostParts(powerID)
+	if !isEnchant {
+		return "", false
+	}
+	if item := book.ItemByID(enchant); item != nil {
+		return item.Name, true
+	}
+	return "", false
+}
+
 // writtenChosenKind é o que a mesa sabe do alvo contra o tipo escolhido no encanto do gasto (a Anticriatura,
 // p335), para o MESTRE: o gasto é oferecido contra qualquer alvo, e quem confere é ele (decisão do dono). O
 // jogador não lê isto — diria o tipo do alvo. Vazio no gasto que vale contra qualquer um.
@@ -376,11 +387,9 @@ func writtenChosenKind(pa live.PendingAttack) string {
 	against := *pa.BoostAgainst
 	target := book.CreatureNature{Kind: against.TargetKind, Race: against.TargetRace}
 	chosen, known := book.ChosenKindName(against.Chosen), book.TargetNatureName(against.Chosen, target)
-	enchant := "O gasto"
-	if _, id, isEnchant := engine.EnchantBoostParts(pa.BoostPowerID); isEnchant {
-		if item := book.ItemByID(id); item != nil {
-			enchant = item.Name
-		}
+	enchant, found := enchantNameOf(pa.BoostPowerID)
+	if !found {
+		enchant = "O gasto"
 	}
 	switch book.TargetOfTheChosenKind(against.Chosen, target) {
 	case book.TargetIsTheChosenKind:
