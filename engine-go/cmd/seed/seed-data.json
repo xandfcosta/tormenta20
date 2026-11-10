@@ -855,8 +855,12 @@
             {
               "item": "azagaia",
               "enchants": [
-                "encanto-venenosa"
-              ]
+                "encanto-venenosa",
+                "encanto-anticriatura"
+              ],
+              "choices": {
+                "encanto-anticriatura": "morto-vivo"
+              }
             }
           ]
         },

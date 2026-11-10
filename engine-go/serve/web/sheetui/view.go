@@ -262,7 +262,7 @@ func (s Scene) Load(
 		// ele reagrupa o Combate, os Poderes e as Magias, e montá-lo antes
 		// deles o deixaria lendo campos vazios.
 		v.Actions = actionsPanelFrom(dto.ID, sheet, v.Combat, v.Powers, v.Spells, v.Effects,
-			attackBoostsFor(dto, cards))
+			attackBoostsFor(dto, cards), blastRows(dto, sheet))
 	}
 	for _, item := range Tabs() {
 		item.Active = item.Value == aba

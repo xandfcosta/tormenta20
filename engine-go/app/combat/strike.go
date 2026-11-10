@@ -13,6 +13,7 @@ import (
 
 	"t20engine/app"
 	"t20engine/domain/board"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 )
@@ -58,6 +59,11 @@ type Combatant struct {
 	// BoostHitPointCost é o dado de PV que o gasto pedido também cobra (o 1d8 da Tumular), ou vazio. Nulo
 	// para quem não tem ficha.
 	BoostHitPointCost func(engine.BoostChoice) string
+	// BoostAgainst é o tipo de criatura contra o qual o gasto pedido vale (a Anticriatura, p335), ou vazio.
+	// Nulo para quem não tem ficha.
+	BoostAgainst func(engine.BoostChoice) string
+	// Nature é o que a mesa sabe do combatente como ALVO: o tipo de criatura e a raça.
+	Nature book.CreatureNature
 	// Stances são as posturas acesas agora, que a proposta guarda. Vazio para quem não
 	// tem ficha.
 	Stances []string
@@ -346,6 +352,7 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 			CritImmune:            setup.victim.CritImmune,
 		}
 	}
+	setup.boost.against = chosenKindAgainst(striker, req, setup.victim.Nature)
 	if req.Maneuver == "" {
 		if err := s.settleSituations(ctx, req, &setup); err != nil {
 			return strikeSetup{}, err

@@ -96,6 +96,9 @@ type SessionRuntimeState struct {
 	// teste que acabou de ser rolado. Uma notícia sem estado deixaria a faixa
 	// sumir no primeiro quadro seguinte.
 	LastSkillTest *SkillTestRoll `json:"lastSkillTest,omitempty"`
+	// LastBlast é o ÚLTIMO disparo de encanto em vez do golpe — a bola de fogo da Flamejante —, pela razão do
+	// teste: ele informa, e o próximo o substitui. Ver `blast.go`.
+	LastBlast *BlastRoll `json:"lastBlast,omitempty"`
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,

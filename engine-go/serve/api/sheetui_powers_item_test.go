@@ -55,7 +55,7 @@ func TestTheActivatableEnchantOfAWieldedItemIsAPower(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), sword, []string{"encanto-dancarina", "encanto-flamejante"},
+		context.Background(), sword, []string{"encanto-dancarina", "encanto-flamejante"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestUsingTheItemEnchantChargesItsMp(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "wielded")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), sword, []string{"encanto-dancarina"},
+		context.Background(), sword, []string{"encanto-dancarina"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}
@@ -111,7 +111,7 @@ func TestAStowedWeaponOffersNoEnchantPower(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), sword, []string{"encanto-dancarina"},
+		context.Background(), sword, []string{"encanto-dancarina"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}

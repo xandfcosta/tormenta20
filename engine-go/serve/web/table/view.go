@@ -90,7 +90,9 @@ type View struct {
 	// por isso não tem `Mine` nem precisa saber quem é o mestre. Um teste não
 	// muda nada; ele informa.
 	SkillTest *skillTestBand
-	GM        *viewGm
+	// Blast é o ÚLTIMO disparo de encanto em vez do golpe (a bola de fogo da Flamejante), nil quando não há.
+	Blast *blastBand
+	GM    *viewGm
 	// Notes é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
 	// mestre, pela mesma trava do resto — a view não tem o que desenhar, em vez
 	// de a tela esconder.

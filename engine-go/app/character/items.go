@@ -187,10 +187,12 @@ func (p Plays) SaveItemOverlays(
 // ela nunca pode preencher, e é assim que uma fronteira vira convenção.
 //
 // A REGRA É CONFERIDA AQUI e não na tela do mestre, pela razão de sempre:
-// filtro de tela não recusa nada. `enchants` vazio limpa a arma.
+// filtro de tela não recusa nada. `enchants` vazio limpa a arma. `choices` é a
+// escolha que o encanto pede, por encanto: o tipo de criatura da Anticriatura
+// (p335).
 //
-// @example plays.EnchantItem(ctx, itemID, []string{"encanto-formidavel"})
-func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string) error {
+// @example plays.EnchantItem(ctx, itemID, []string{"encanto-formidavel"}, nil)
+func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string, choices map[string]string) error {
 	row, err := sqlcgen.New(p.db).GetItem(ctx, itemID)
 	if err != nil {
 		return fmt.Errorf("ler o item %d para encantar: %w", itemID, err)
@@ -202,6 +204,9 @@ func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string)
 		catalog = book.ItemByID(row.Catalogid.String)
 	}
 	if err := book.FitsItemEnchants(catalog, enchants); err != nil {
+		return err
+	}
+	if err := book.FitsEnchantChoices(enchants, choices); err != nil {
 		return err
 	}
 	// GRAVAR É APAGAR E REESCREVER: quem chama manda o conjunto inteiro, como
@@ -219,6 +224,15 @@ func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string)
 		for _, id := range enchants {
 			if err := q.AddItemEnchant(ctx, sqlcgen.AddItemEnchantParams{
 				Itemid: itemID, Enchantid: id,
+			}); err != nil {
+				return err
+			}
+			chosen, chooses := choices[id]
+			if !chooses {
+				continue
+			}
+			if err := q.AddItemEnchantChoice(ctx, sqlcgen.AddItemEnchantChoiceParams{
+				Itemid: itemID, Enchantid: id, Choice: chosen,
 			}); err != nil {
 				return err
 			}

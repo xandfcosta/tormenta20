@@ -152,9 +152,10 @@ func partialSheetsForPools(
 	if err != nil {
 		return nil, fmt.Errorf("ler os encantos de %d fichas: %w", len(ids), err)
 	}
-	porItem := map[int64][]string{}
+	porItem, choices := map[int64][]string{}, enchantChoices{}
 	for _, row := range encantos {
 		porItem[row.Itemid] = append(porItem[row.Itemid], row.Enchantid)
+		choices.add(row.Itemid, row.Enchantid, row.Choice)
 	}
 	oversized, err := q.OversizedWeaponsOfCharacters(ctx, ids)
 	if err != nil {
@@ -166,7 +167,7 @@ func partialSheetsForPools(
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
-			Enchants: porItem[it.ID], Oversized: slices.Contains(oversized, it.ID),
+			Enchants: porItem[it.ID], EnchantChoices: choices[it.ID], Oversized: slices.Contains(oversized, it.ID),
 		})
 		partials[it.Characterid] = dto
 	}

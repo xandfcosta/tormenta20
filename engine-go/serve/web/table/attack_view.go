@@ -35,6 +35,9 @@ type attackProposal struct {
 	// Boost é o impulso de PM que o golpe leva e o que a proposta pagou —
 	// "Golpe Divino · 3 PM" (ALE-487).
 	Boost string
+	// Against é o que a mesa sabe do alvo contra o tipo escolhido no gasto (a Anticriatura), só para o
+	// mestre: o `forPlayer` não o copia.
+	Against string
 	// Dose diz o que a Injeção alquímica libera neste golpe (p165).
 	Dose string
 	// Guard é a guarda que a investida abre em quem investiu (p235). Para o
@@ -85,6 +88,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
 		Boost:    writtenBoost(*pa),
+		Against:  writtenChosenKind(*pa),
 		Dose:     writtenDose(*pa),
 		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:     pa.ByUserID == userID,
@@ -343,10 +347,11 @@ func writtenBoost(pa live.PendingAttack) string {
 		if power, known := book.ClassPowers()[pa.BoostPowerID]; known {
 			name = power.Name
 		}
-		if _, enchant, isEnchant := engine.EnchantBoostParts(pa.BoostPowerID); isEnchant {
-			if item := book.ItemByID(enchant); item != nil {
-				name = item.Name
-			}
+		if enchant, found := enchantNameOf(pa.BoostPowerID); found {
+			name = enchant
+		}
+		if pa.BoostAgainst != nil {
+			name += " contra " + book.ChosenKindName(pa.BoostAgainst.Chosen)
 		}
 		parts = append(parts, name)
 	}
@@ -357,6 +362,45 @@ func writtenBoost(pa live.PendingAttack) string {
 		parts = append(parts, fmt.Sprintf("%d PV", pa.BoostHitPoints))
 	}
 	return strings.Join(parts, " · ")
+}
+
+// enchantNameOf é o nome do encanto de um gasto de encanto ("Anticriatura"), e se ele foi achado: o gasto de
+// poder e o encanto que o catálogo não conhece não têm, e quem chama fica com o que já escrevia.
+func enchantNameOf(powerID string) (string, bool) {
+	_, enchant, isEnchant := engine.EnchantBoostParts(powerID)
+	if !isEnchant {
+		return "", false
+	}
+	if item := book.ItemByID(enchant); item != nil {
+		return item.Name, true
+	}
+	return "", false
+}
+
+// writtenChosenKind é o que a mesa sabe do alvo contra o tipo escolhido no encanto do gasto (a Anticriatura,
+// p335), para o MESTRE: o gasto é oferecido contra qualquer alvo, e quem confere é ele (decisão do dono). O
+// jogador não lê isto — diria o tipo do alvo. Vazio no gasto que vale contra qualquer um.
+func writtenChosenKind(pa live.PendingAttack) string {
+	if pa.BoostAgainst == nil {
+		return ""
+	}
+	against := *pa.BoostAgainst
+	target := book.CreatureNature{Kind: against.TargetKind, Race: against.TargetRace}
+	chosen, known := book.ChosenKindName(against.Chosen), book.TargetNatureName(against.Chosen, target)
+	enchant, found := enchantNameOf(pa.BoostPowerID)
+	if !found {
+		enchant = "O gasto"
+	}
+	switch book.TargetOfTheChosenKind(against.Chosen, target) {
+	case book.TargetIsTheChosenKind:
+		return fmt.Sprintf("%s: o alvo é %s.", enchant, chosen)
+	case book.TargetIsNotTheChosenKind:
+		return fmt.Sprintf("%s: o alvo é %s, e não %s.", enchant, known, chosen)
+	}
+	if known != "" {
+		return fmt.Sprintf("%s: o alvo é %s, e a mesa não sabe se é %s.", enchant, known, chosen)
+	}
+	return fmt.Sprintf("%s: a mesa não sabe se o alvo é %s.", enchant, chosen)
 }
 
 // writtenGuard é a penalidade que a investida deixa, ou "".

@@ -126,6 +126,9 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 				}
 			</div>
 		}
+		if row.Hand != nil {
+			@handTotalDs(v, group, *row.Hand, row.Name)
+		}
 		if len(row.Boosts) > 0 {
 			@boostStripDs(row)
 		}
@@ -133,6 +136,27 @@ templ actionRowDs(v View, group actionGroup, row actionRow) {
 			@doseStripDs(row.Weapon, choices)
 		}
 	</div>
+}
+
+// handTotalDs é o "ou rolei" da linha: o campo do total que a mesa rolou na mão e o Usar, que manda o mesmo
+// gesto do Rolar com o total. As três peças descem juntas, pela razão do teste de perícia: quebrar entre elas
+// deixa um botão órfão numa linha sozinha.
+templ handTotalDs(v View, group actionGroup, hand handTotal, name string) {
+	{{ lowest, highest := hand.Range() }}
+	<span class="ds-sum-line flex-nowrap ds-turn-action-rolls">
+		<span class="ds-row-meta">ou rolei</span>
+		<input
+			class="ds-input ds-table-die"
+			type="number"
+			min={ lowest }
+			max={ highest }
+			inputmode="numeric"
+			placeholder={ hand.Dice }
+			data-bind="blast_total"
+			aria-label={ "O total de " + hand.Dice + " que você rolou na mesa para " + name }
+		/>
+		@actionRollDs(v, group, actionRoll{Label: "Usar", Path: hand.Path, NeedsTarget: true}, ds.ButtonSecondary, "")
+	</span>
 }
 
 // actionRollDs é o gesto de rolar. Ele espera o ALVO quando precisa de um, e a

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"t20engine/app"
+	"t20engine/app/character"
 	"t20engine/app/combat"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -138,6 +139,33 @@ func (h sheetHost) ProposeStrikeOnTable(
 	// botão que só existe dentro de uma sessão, então chegar aqui sem vez quer
 	// dizer que o turno virou entre o desenho e o clique. Calar faria o botão
 	// parecer quebrado.
+	return fmt.Errorf("não é a vez de %s: quem age é quem está na vez (p231)", row.Name)
+}
+
+// FireBlastOnTable põe na mesa o que o encanto dispara em vez do golpe (a bola de fogo da Flamejante, p335),
+// pelo mesmo caminho do golpe: quem dispara é quem está na vez, e a mesa cobra a vez da rodada, a ação e o PM
+// numa transação só (`session.Store.FireBlast`).
+func (h sheetHost) FireBlastOnTable(
+	ctx context.Context, characterID int64, targetEntryID string, blast character.Blast,
+) error {
+	row, err := h.rules.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("carregar o personagem %d para a %s: %w", characterID, blast.Name, err)
+	}
+	for _, table := range h.liveTablesOf(ctx, characterID) {
+		onTurn, err := h.characterOnTurn(ctx, table.SessionID, characterID)
+		if err != nil || onTurn == nil {
+			continue
+		}
+		_, err = h.rules.sessions.FireBlast(ctx, table.SessionID, live.BlastRoll{
+			Who: row.Name, Weapon: blast.Weapon, Name: blast.Name,
+			AttackerEntryID: onTurn.ID, TargetEntryID: targetEntryID,
+			Dice: blast.Damage, Rolls: blast.Rolls, Total: blast.Total, ByHand: blast.ByHand,
+			DamageType: blast.DamageType, Range: blast.Range, Save: blast.Save, DC: blast.DC, OnSave: blast.OnSave,
+			BoostID: blast.ID, PM: blast.PM, CharacterID: characterID, ByUserID: row.Ownerid,
+		})
+		return err
+	}
 	return fmt.Errorf("não é a vez de %s: quem age é quem está na vez (p231)", row.Name)
 }
 

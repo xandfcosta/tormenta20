@@ -8,7 +8,9 @@ import (
 	"testing"
 
 	"t20engine/app"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 )
 
 // O IMPULSO DE PM NO GOLPE (ALE-487). O que o motor soma é do
@@ -174,5 +176,49 @@ func TestTheTomblikeBoostRollsItsHitPointCostIntoTheProposal(t *testing.T) {
 				t.Errorf("o provisório leva %d de PV do gasto, want %d", out.BoostHitPoints, c.want)
 			}
 		})
+	}
+}
+
+// O GASTO DA ANTICRIATURA vale contra o tipo escolhido no encanto (p335), e é oferecido contra qualquer alvo: a
+// proposta guarda o tipo e o que a mesa sabia do alvo no instante do d20, para a faixa do mestre dizer se ele é
+// desse tipo (decisão do dono). O gasto que vale contra qualquer um não guarda nada.
+func TestTheAnticreatureBoostCarriesWhatTheTableKnowsOfTheTarget(t *testing.T) {
+	sword := aLongsword()
+	sword.ItemID = 7
+	anticreature := engine.BoostChoice{PowerID: engine.EnchantBoostID(7, "encanto-anticriatura")}
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{sword},
+			Boost: func(engine.BoostChoice) ([]engine.WeaponCard, int, error) {
+				return []engine.WeaponCard{sword}, 2, nil
+			},
+			BoostAgainst: func(choice engine.BoostChoice) string {
+				if choice == anticreature {
+					return "morto-vivo"
+				}
+				return ""
+			}, ManaAvailable: 5},
+		"ogro": {EntryID: "ogro", Label: "Ogro zumbi", Defense: 10, Nature: book.CreatureNature{Kind: "morto-vivo"}},
+	}, table, semTabuleiro{}, fixedDie(4))
+
+	d20 := 10
+	propose := func(boost engine.BoostChoice) *live.ChosenKindRead {
+		t.Helper()
+		table.state.PendingAttack = nil
+		out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+			Boost: boost,
+		})
+		if err != nil {
+			t.Fatalf("propor com %q: %v", boost.PowerID, err)
+		}
+		return out.BoostAgainst
+	}
+	got := propose(anticreature)
+	if got == nil || *got != (live.ChosenKindRead{Chosen: "morto-vivo", TargetKind: "morto-vivo"}) {
+		t.Errorf("a proposta da Anticriatura guardou %+v; quer morto-vivo contra um alvo morto-vivo", got)
+	}
+	if got := propose(engine.BoostChoice{PowerID: engine.EnchantBoostID(7, "encanto-venenosa")}); got != nil {
+		t.Errorf("o gasto da Venenosa, que vale contra qualquer alvo, guardou %+v", got)
 	}
 }

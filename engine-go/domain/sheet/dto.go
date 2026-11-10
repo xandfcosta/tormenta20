@@ -108,7 +108,9 @@ type ItemDTO struct {
 	// JSON como as melhorias: eles moram numa TABELA, e o que sai de uma tabela
 	// já é lista.
 	Enchants []string `json:"enchants"`
-	Material *string  `json:"material"`
+	// EnchantChoices é a escolha que o encanto pediu ao mestre, por encanto — ver `engine.CharacterItem`.
+	EnchantChoices map[string]string `json:"enchantChoices,omitempty"`
+	Material       *string           `json:"material"`
 	// Oversized é a marca de arma de categoria maior — ver `engine.CharacterItem`.
 	Oversized bool `json:"oversized,omitempty"`
 	// Doses são as da Injeção alquímica (p165) — ver `doses.go`.

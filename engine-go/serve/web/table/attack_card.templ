@@ -47,6 +47,9 @@ templ gmAttack(v View) {
 				if v.Attack.Hint != "" {
 					<p class="ds-help">{ v.Attack.Hint }</p>
 				}
+				if v.Attack.Against != "" {
+					<p class="ds-help">{ v.Attack.Against }</p>
+				}
 				if v.Attack.Dose != "" {
 					<p class="ds-help">{ v.Attack.Dose }</p>
 				}

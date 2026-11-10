@@ -47,3 +47,23 @@ templ tempestadeSkillTest(v View) {
 		<section id="table-skill-test" hidden></section>
 	}
 }
+
+// tempestadeBlast é o disparo de um encanto em vez do golpe — a bola de fogo da Flamejante (p335) —, nas duas
+// sessões: a rolagem, o tipo do dano e a resistência que o mestre aplica. Sem verbos: ela informa.
+templ tempestadeBlast(v View) {
+	if v.Blast != nil {
+		<section id="table-blast" class="ds-strike" data-test role="status" aria-label="Disparo do encanto">
+			<div class="ds-strike-head">
+				@ds.Badge(v.Blast.Weapon, true)
+				<span class="ds-row-meta"><b>{ v.Blast.Head }</b></span>
+			</div>
+			<div class="ds-strike-roll" aria-live="polite">
+				<b class="ds-strike-verdict">{ strconv.Itoa(v.Blast.Total) }</b>
+				<span class="ds-strike-tally">{ v.Blast.Tally }</span>
+			</div>
+			<p class="ds-help">{ v.Blast.Save }</p>
+		</section>
+	} else {
+		<section id="table-blast" hidden></section>
+	}
+}

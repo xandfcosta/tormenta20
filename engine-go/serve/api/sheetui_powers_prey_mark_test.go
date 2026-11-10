@@ -169,7 +169,7 @@ func TestAPowerWithoutDegreesIgnoresALeftoverDegreeSignal(t *testing.T) {
 	f, id := fighterFixture(t)
 	armor := itemSemeia(t, f, id, "armadura-couro", "Armadura de couro", "vested")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), armor, []string{"encanto-caustica"},
+		context.Background(), armor, []string{"encanto-caustica"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a armadura: %v", err)
 	}

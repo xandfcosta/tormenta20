@@ -77,6 +77,8 @@ type seedSpell struct {
 type seedEnchant struct {
 	Item     string   `json:"item"`
 	Enchants []string `json:"enchants"`
+	// Choices é a escolha que um encanto pede, por encanto: o tipo de criatura da Anticriatura (p335).
+	Choices map[string]string `json:"choices,omitempty"`
 }
 
 // seedDose é um item carregado na Injeção alquímica de uma arma do elenco.
@@ -111,7 +113,7 @@ type casaDaSeed interface {
 	// EnchantItem escreve os encantos de um item, pela MESMA regra do mestre —
 	// é ele quem encanta no app (ALE-416), e a seed não ganha um caminho
 	// próprio que não recuse o que o livro recusa.
-	EnchantItem(ctx context.Context, itemID int64, enchants []string) error
+	EnchantItem(ctx context.Context, itemID int64, enchants []string, choices map[string]string) error
 	// ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
 	ToggleOversizedWeapon(ctx context.Context, itemID int64) error
 	// SaveItemOverlays escreve melhoria e MATERIAL, pelo mesmo caso de uso do
@@ -415,7 +417,7 @@ func applyEnchants(ctx context.Context, square casaDaSeed, id int64, items []she
 				"o `enchants` aponta para um `create.items[].catalogId` que não está lá",
 				id, want.Item, want.Enchants)
 		}
-		if err := square.EnchantItem(ctx, line, want.Enchants); err != nil {
+		if err := square.EnchantItem(ctx, line, want.Enchants, want.Choices); err != nil {
 			return fmt.Errorf("encantar o %q do personagem %d: %w", want.Item, id, err)
 		}
 	}

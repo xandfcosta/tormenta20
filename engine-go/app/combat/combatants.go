@@ -92,6 +92,16 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		BoostHitPointCost: func(choice engine.BoostChoice) string {
 			return dto.Ruleset.BoostHitPointCost(choice.PowerID)
 		},
+		BoostAgainst: func(choice engine.BoostChoice) string {
+			for _, offer := range dto.Ruleset.BoostOffers(ec) {
+				if offer.PowerID == choice.PowerID {
+					return offer.Against
+				}
+			}
+			return ""
+		},
+		// O PERSONAGEM tem raça e não tem tipo na mesa: a ficha não guarda um.
+		Nature: book.CreatureNature{Race: primaryRace(dto)},
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed.Attributes)
 		},
@@ -99,6 +109,14 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		ChargesRecklessly: sheet.OwnsClassPower(dto, engine.RecklessChargePowerID),
 		Stances:           stanceFlagsOf(dto),
 	}, nil
+}
+
+// primaryRace é a primeira raça da ficha, a que a ficha escreve como a dela; vazia na ficha sem raça.
+func primaryRace(dto sheet.CharacterDTO) string {
+	if len(dto.Races) == 0 {
+		return ""
+	}
+	return dto.Races[0].Race
 }
 
 func stanceFlagsOf(dto sheet.CharacterDTO) []string {
@@ -129,14 +147,14 @@ func (r Roster) fromBlock(
 	if err := json.Unmarshal([]byte(row.Block), &block); err != nil {
 		return Combatant{}, fmt.Errorf("o bloco de %s está ilegível: %w", e.Label, err)
 	}
-	return Combatant{EntryID: e.ID, Label: e.Label, Defense: block.Defense}, nil
+	return Combatant{EntryID: e.ID, Label: e.Label, Defense: block.Defense, Nature: book.CreatureNature{Kind: block.Kind}}, nil
 }
 
 // fromBestiary: o bestiário do livro.
 func (r Roster) fromBestiary(e live.InitiativeEntry) (Combatant, error) {
 	for _, entry := range book.Creatures() {
 		if entry.ID == *e.MonsterID {
-			return Combatant{EntryID: e.ID, Label: e.Label, Defense: entry.Defense}, nil
+			return Combatant{EntryID: e.ID, Label: e.Label, Defense: entry.Defense, Nature: book.CreatureNature{Kind: entry.Kind}}, nil
 		}
 	}
 	return Combatant{}, fmt.Errorf("o verbete %q não está no bestiário", *e.MonsterID)

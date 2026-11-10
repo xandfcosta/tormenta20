@@ -39,6 +39,24 @@ type ItemBoost struct {
 	PM           int        `json:"pm"`
 	Modifiers    []Modifier `json:"modifiers"`
 	HitPointCost string     `json:"hitPointCost,omitempty"`
+	// AgainstOneOf são as opções da escolha que o mestre faz ao encantar: o gasto só vale contra o tipo de
+	// criatura escolhido (a Anticriatura, p335). `raca-humanoide` aceita o id de qualquer raça.
+	AgainstOneOf []string `json:"againstOneOf,omitempty"`
+	// Instead é o que o gasto faz EM VEZ do golpe: "em vez do ataque normal você dispara uma bola de fogo"
+	// (a Flamejante, p335). O motor não o oferece na linha de ataque; é um gesto próprio.
+	Instead *BoostInstead `json:"instead,omitempty"`
+}
+
+// BoostInstead é o efeito que o gasto dispara no lugar do golpe. SaveAttributes são os atributos que o
+// portador escolhe para a CD ("CD For ou Des, à sua escolha"), e o maior vale.
+type BoostInstead struct {
+	Name           string   `json:"name"`
+	Damage         string   `json:"damage"`
+	DamageType     string   `json:"damageType"`
+	Range          string   `json:"range"`
+	Save           string   `json:"save"`
+	SaveAttributes []string `json:"saveAttributes"`
+	OnSave         string   `json:"onSave"`
 }
 
 // PowerChange é o que o item EMPUNHADO muda em poderes de quem o empunha (p158). Powers são ids de

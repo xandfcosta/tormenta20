@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"t20engine/app"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 )
 
 // paidBoost é o impulso que o golpe leva: o poder e o PM que a proposta paga.
@@ -13,6 +15,22 @@ type paidBoost struct {
 	pm      int
 	// hitPoints é o PV que o gasto tira de quem ataca, já rolado (a Tumular).
 	hitPoints int
+	// against é o tipo contra o qual o gasto vale e o que a mesa sabe do alvo (a Anticriatura).
+	against *live.ChosenKindRead
+}
+
+// chosenKindAgainst é o tipo de criatura escolhido no encanto do gasto pedido, com o que a mesa sabe do alvo,
+// ou nulo no gasto que vale contra qualquer um. O gasto não é recusado contra outro tipo: quem confere é o
+// mestre, pela faixa dele (decisão do dono), e recusar diria ao jogador o tipo do alvo.
+func chosenKindAgainst(striker Combatant, req Request, target book.CreatureNature) *live.ChosenKindRead {
+	if req.Boost.PowerID == "" || striker.BoostAgainst == nil {
+		return nil
+	}
+	chosen := striker.BoostAgainst(req.Boost)
+	if chosen == "" {
+		return nil
+	}
+	return &live.ChosenKindRead{Chosen: chosen, TargetKind: target.Kind, TargetRace: target.Race}
 }
 
 // weaponFor é a carta com que o golpe rola: a empunhada no índice pedido, já

@@ -192,6 +192,12 @@ type CharacterItemEnchant struct {
 	Enchantid string `json:"enchantid"`
 }
 
+type CharacterItemEnchantChoice struct {
+	Itemid    int64  `json:"itemid"`
+	Enchantid string `json:"enchantid"`
+	Choice    string `json:"choice"`
+}
+
 type CharacterLevelChoice struct {
 	ID          int64         `json:"id"`
 	Characterid int64         `json:"characterid"`

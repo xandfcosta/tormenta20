@@ -60,6 +60,9 @@ type weaponEnchant struct {
 	Unmodeled   string          `json:"unmodeled"`
 	Modeled     []string        `json:"modeled"`
 	Modifiers   json.RawMessage `json:"modifiers"`
+	// Boost é o gasto de 2 PM no golpe (p335-336): o que está nele o motor aplica no golpe pago, e um encanto
+	// cujo efeito inteiro é o gasto (a Anticriatura) aplica sem ter modificador fora dele.
+	Boost json.RawMessage `json:"boost"`
 }
 
 // A FAIXA DE d% LADRILHA 1..90, e é o denominador de graça desta tabela.
@@ -134,7 +137,7 @@ func eitherAppliesOrSaysWhyNot(t *testing.T, tabela tabelaDeEncanto) {
 	inteiro, emParte, soNota := 0, 0, 0
 
 	for _, e := range encantos {
-		aplica := len(e.Modifiers) > 2 // "[]" é o vazio
+		aplica := len(e.Modifiers) > 2 || len(e.Boost) > 0 // "[]" é o vazio, e o gasto ausente não vem
 		switch {
 		case aplica && e.Unmodeled != "" && len(e.Modeled) == 0:
 			t.Errorf("%s aplica alguma coisa, diz o que NÃO entrou (%q) e não diz o "+

@@ -357,7 +357,7 @@ func TestTheEnchantExemptsOneExpertiseFromTheArmorPenaltyOnScreen(t *testing.T) 
 	armadura := itemSemeia(t, f, id, "armadura-completa", "Armadura completa", "vested")
 	itemSemeia(t, f, id, "escudo-pesado", "Escudo pesado", "wielded")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), armadura, []string{"encanto-sombrio"},
+		context.Background(), armadura, []string{"encanto-sombrio"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a armadura: %v", err)
 	}

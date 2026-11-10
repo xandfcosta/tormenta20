@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 7 de 20 de `Items` (items.go).
+// Parte 7 de 21 de `Items` (items.go).
 var itemsPart07 = []Item{
 	{
 		ID:        "mochila",

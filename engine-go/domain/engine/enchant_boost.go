@@ -21,6 +21,24 @@ type ItemBoost struct {
 	PM           int        `json:"pm"`
 	Modifiers    []Modifier `json:"modifiers"`
 	HitPointCost string     `json:"hitPointCost,omitempty"`
+	// AgainstOneOf são as opções do tipo de criatura que o encanto escolhe (a Anticriatura, p335): o gasto
+	// só vale contra o tipo escolhido, e quem confere o alvo é o mestre.
+	AgainstOneOf []string `json:"againstOneOf,omitempty"`
+	// Instead é o que o gasto faz EM VEZ do golpe (a bola de fogo da Flamejante, p335): ele não é oferecido
+	// na linha de ataque, e vira um gesto próprio (`EnchantBlasts`).
+	Instead *BoostInstead `json:"instead,omitempty"`
+}
+
+// BoostInstead é o efeito que o gasto dispara no lugar do golpe: o dano, o alcance e a resistência do alvo,
+// com a CD feita do maior atributo da lista (p227).
+type BoostInstead struct {
+	Name           string   `json:"name"`
+	Damage         string   `json:"damage"`
+	DamageType     string   `json:"damageType"`
+	Range          string   `json:"range"`
+	Save           string   `json:"save"`
+	SaveAttributes []string `json:"saveAttributes"`
+	OnSave         string   `json:"onSave"`
 }
 
 // enchantBoostPrefix marca o id de um gasto de encanto no lugar do id do poder de classe.
@@ -57,17 +75,17 @@ func enchantBoostOf(id string) (int64, string, bool) {
 func (r *Ruleset) enchantBoostOffers(ch Character) []BoostOffer {
 	out := []BoostOffer{}
 	for _, it := range ch.Items {
-		if it.Equipped == nil || (*it.Equipped != "wielded" && *it.Equipped != "wielded2") {
+		if !inAHand(it) {
 			continue
 		}
 		for _, enchant := range it.Enchants {
 			catalog := r.getCatalogItem(enchant)
-			if catalog == nil || catalog.Boost == nil {
+			if catalog == nil || catalog.Boost == nil || catalog.Boost.Instead != nil {
 				continue
 			}
 			out = append(out, BoostOffer{
 				PowerID: EnchantBoostID(it.ID, enchant), Name: catalog.Name, BasePM: catalog.Boost.PM,
-				ItemID: it.ID, HitPointCost: catalog.Boost.HitPointCost,
+				ItemID: it.ID, HitPointCost: catalog.Boost.HitPointCost, Against: it.EnchantChoices[enchant],
 				Buys: []string{enchantBoostBuys(catalog.Boost)}, Foresees: enchantBoostForesees(catalog.Boost),
 			})
 		}
@@ -144,4 +162,41 @@ func (r *Ruleset) BoostHitPointCost(id string) string {
 		return catalog.Boost.HitPointCost
 	}
 	return ""
+}
+
+// EnchantBlast é o gesto que um encanto dispara EM VEZ do golpe (a bola de fogo da Flamejante, p335), numa arma
+// empunhada. O ID é o do gasto do encanto (`EnchantBoostID`): a vez da rodada é a mesma.
+type EnchantBlast struct {
+	BoostInstead
+	ID      string
+	ItemID  int64
+	Weapon  string
+	Enchant string
+	PM      int
+}
+
+// EnchantBlasts são os gestos que as armas empunhadas disparam em vez do golpe, um por encanto que tem um.
+func (r *Ruleset) EnchantBlasts(ch Character) []EnchantBlast {
+	out := []EnchantBlast{}
+	for _, it := range ch.Items {
+		if !inAHand(it) {
+			continue
+		}
+		for _, enchant := range it.Enchants {
+			catalog := r.getCatalogItem(enchant)
+			if catalog == nil || catalog.Boost == nil || catalog.Boost.Instead == nil {
+				continue
+			}
+			out = append(out, EnchantBlast{
+				BoostInstead: *catalog.Boost.Instead, ID: EnchantBoostID(it.ID, enchant), ItemID: it.ID,
+				Weapon: it.Name, Enchant: catalog.Name, PM: catalog.Boost.PM,
+			})
+		}
+	}
+	return out
+}
+
+// inAHand diz se o item está numa das mãos: o gasto do encanto é da arma em punho.
+func inAHand(it CharacterItem) bool {
+	return it.Equipped != nil && (*it.Equipped == "wielded" || *it.Equipped == "wielded2")
 }

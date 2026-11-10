@@ -27,12 +27,17 @@ serializa para quem lê JSON (`transcript.ResourceJSON`).
   `modifiers`: o que está nele só vale no golpe pago ("uma vez por rodada, quando
   ataca, você pode gastar 2 PM", p335-336). O efeito no acerto que não é condição
   usa o alvo `announcedEffect`, com a fórmula na nota; o guarda das condições
-  anunciadas lê os dois lugares.
+  anunciadas lê os dois lugares. O `againstOneOf` são as opções da escolha que o
+  encanto pede (o tipo da Anticriatura), e o `instead` é o que o gasto faz EM VEZ
+  do golpe (a bola de fogo da Flamejante): esse não é oferecido na linha de ataque.
 - **A escolha feita na COMPRA é um verbete por opção** (decisão do dono): a coleção
   de livros dá +1 numa perícia "definida quando comprada" (p158), e são cinco
   verbetes, "Coleção de livros (Guerra)" e os outros. Escolher é escolher o
   verbete: sem migração, sem campo no item da mochila, e a melhoria Aprimorado
-  segue a perícia sozinha.
+  segue a perícia sozinha. **A escolha do ENCANTO é a exceção** (decisão do
+  dono): o tipo da Anticriatura mora no encanto da arma, porque a faixa de d% da
+  tabela de sorteio é de um verbete só, e "uma raça de humanoides" abriria um
+  verbete por raça.
 
 **O que a CAMPANHA acrescenta não mora no livro**, que é compilado, enquanto a
 mesa autora em tempo de execução: a `emenda de catálogo` vive em

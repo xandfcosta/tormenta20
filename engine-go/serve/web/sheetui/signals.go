@@ -96,6 +96,9 @@ type Signals struct {
 	// único lugar em que a ficha rola, e a faixa da mesa diz de onde veio o
 	// número — sem a marca ninguém sabe se confia no app ou no dado.
 	ExpertiseD20 *int64 `json:"expertise_d20"`
+	// BlastTotal é o total que a mesa rolou na mão para o que o encanto dispara em vez do golpe (os 6d6 da
+	// bola de fogo da Flamejante, p335). O zero é "não informado", pela razão do d20: 6d6 não tira zero.
+	BlastTotal *int64 `json:"blast_total"`
 	// ExpertiseSpends são os gastos de PM marcados no diálogo do teste
 	// (ALE-489), pela chave de cada um (`book.SpendKey`) e o PM pedido. CRU de
 	// propósito: um valor que não seja número tem de virar "não pedido", e não

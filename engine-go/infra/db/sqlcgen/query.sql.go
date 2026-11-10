@@ -68,6 +68,21 @@ func (q *Queries) AddItemEnchant(ctx context.Context, arg AddItemEnchantParams) 
 	return err
 }
 
+const addItemEnchantChoice = `-- name: AddItemEnchantChoice :exec
+INSERT INTO character_item_enchant_choices (itemId, enchantId, choice) VALUES (?, ?, ?)
+`
+
+type AddItemEnchantChoiceParams struct {
+	Itemid    int64  `json:"itemid"`
+	Enchantid string `json:"enchantid"`
+	Choice    string `json:"choice"`
+}
+
+func (q *Queries) AddItemEnchantChoice(ctx context.Context, arg AddItemEnchantChoiceParams) error {
+	_, err := q.db.ExecContext(ctx, addItemEnchantChoice, arg.Itemid, arg.Enchantid, arg.Choice)
+	return err
+}
+
 const bumpCharacterPowerUse = `-- name: BumpCharacterPowerUse :exec
 INSERT INTO character_power_uses (characterId, powerId, scope, used)
 VALUES (?, ?, ?, 1)
@@ -1047,25 +1062,34 @@ func (q *Queries) DropCampaignRule(ctx context.Context, arg DropCampaignRulePara
 }
 
 const enchantsOfCharacter = `-- name: EnchantsOfCharacter :many
-SELECT e.itemId, e.enchantId
+SELECT e.itemId, e.enchantId, c.choice
 FROM character_item_enchants e
 JOIN character_items i ON i.id = e.itemId
+LEFT JOIN character_item_enchant_choices c ON c.itemId = e.itemId AND c.enchantId = e.enchantId
 WHERE i.characterId = ?
 ORDER BY e.itemId, e.enchantId
 `
 
+type EnchantsOfCharacterRow struct {
+	Itemid    int64          `json:"itemid"`
+	Enchantid string         `json:"enchantid"`
+	Choice    sql.NullString `json:"choice"`
+}
+
 // Em LOTE e nao uma por item: a ficha monta todos os itens de uma vez, e uma
 // consulta por arma seria N+1 numa mochila que a tela desenha inteira.
-func (q *Queries) EnchantsOfCharacter(ctx context.Context, characterid int64) ([]CharacterItemEnchant, error) {
+// A escolha do encanto (o tipo da Anticriatura) vem junto, nula no encanto que
+// nao pede escolha.
+func (q *Queries) EnchantsOfCharacter(ctx context.Context, characterid int64) ([]EnchantsOfCharacterRow, error) {
 	rows, err := q.db.QueryContext(ctx, enchantsOfCharacter, characterid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []CharacterItemEnchant{}
+	items := []EnchantsOfCharacterRow{}
 	for rows.Next() {
-		var i CharacterItemEnchant
-		if err := rows.Scan(&i.Itemid, &i.Enchantid); err != nil {
+		var i EnchantsOfCharacterRow
+		if err := rows.Scan(&i.Itemid, &i.Enchantid, &i.Choice); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1080,17 +1104,19 @@ func (q *Queries) EnchantsOfCharacter(ctx context.Context, characterid int64) ([
 }
 
 const enchantsOfCharacters = `-- name: EnchantsOfCharacters :many
-SELECT i.characterId, e.itemId, e.enchantId
+SELECT i.characterId, e.itemId, e.enchantId, c.choice
 FROM character_item_enchants e
 JOIN character_items i ON i.id = e.itemId
+LEFT JOIN character_item_enchant_choices c ON c.itemId = e.itemId AND c.enchantId = e.enchantId
 WHERE i.characterId IN (/*SLICE:ids*/?)
 ORDER BY e.itemId, e.enchantId
 `
 
 type EnchantsOfCharactersRow struct {
-	Characterid int64  `json:"characterid"`
-	Itemid      int64  `json:"itemid"`
-	Enchantid   string `json:"enchantid"`
+	Characterid int64          `json:"characterid"`
+	Itemid      int64          `json:"itemid"`
+	Enchantid   string         `json:"enchantid"`
+	Choice      sql.NullString `json:"choice"`
 }
 
 // O irmao em lote do `EnchantsOfCharacter`, para o caminho que monta N fichas.
@@ -1113,7 +1139,12 @@ func (q *Queries) EnchantsOfCharacters(ctx context.Context, ids []int64) ([]Ench
 	items := []EnchantsOfCharactersRow{}
 	for rows.Next() {
 		var i EnchantsOfCharactersRow
-		if err := rows.Scan(&i.Characterid, &i.Itemid, &i.Enchantid); err != nil {
+		if err := rows.Scan(
+			&i.Characterid,
+			&i.Itemid,
+			&i.Enchantid,
+			&i.Choice,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
