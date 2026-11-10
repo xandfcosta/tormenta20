@@ -1962,6 +1962,11 @@
   .ds-camp-crown {
     color: var(--ds-action);
   }
+  .ds-camp-row-end {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
   .ds-camp-more {
     grid-template-columns: minmax(0, 1fr) auto;
     color: var(--ds-action);

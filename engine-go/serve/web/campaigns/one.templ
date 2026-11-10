@@ -191,15 +191,21 @@ templ heroRow(h heroAtTable) {
 			<span class="ds-row-title">{ h.Name }</span>
 			<span class="ds-row-meta">{ h.Meta }</span>
 		</span>
-		if h.IsGM {
-			<span class="ds-camp-crown" role="img" aria-label="mestre da mesa">
-				@ui.Icon("Crown", "ds-icon")
+		// A COROA E O LINK DIVIDEM a última coluna da grade: lado a lado, como
+		// irmãos, o segundo descia para uma linha própria na linha do mestre.
+		if h.IsGM || h.Sheet != "" {
+			<span class="ds-camp-row-end">
+				if h.IsGM {
+					<span class="ds-camp-crown" role="img" aria-label="mestre da mesa">
+						@ui.Icon("Crown", "ds-icon")
+					</span>
+				}
+				if h.Sheet != "" {
+					<a href={ templ.SafeURL(h.Sheet) } class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + h.Name } title={ "Abrir a ficha completa de " + h.Name }>
+						@ui.Icon("ChevronRight", "ds-icon")
+					</a>
+				}
 			</span>
-		}
-		if h.Sheet != "" {
-			<a href={ templ.SafeURL(h.Sheet) } class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + h.Name } title={ "Abrir a ficha completa de " + h.Name }>
-				@ui.Icon("ChevronRight", "ds-icon")
-			</a>
 		}
 	</div>
 }
