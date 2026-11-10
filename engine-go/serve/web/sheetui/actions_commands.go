@@ -118,3 +118,22 @@ func (s Scene) proposeOnTheTable(
 	}
 	return s.deps.ProposeStrikeOnTable(r.Context(), row.ID, strike)
 }
+
+// firesTheBlastOnTheTarget dispara o que o encanto da arma faz em vez do golpe — a bola de fogo da Flamejante
+// (p335) — contra o alvo da vez. A arma vem pelo ID do ITEM e não pelo índice da carta: o disparo é do encanto
+// da arma, e não de uma linha de ataque. O total da mesa, quando veio, substitui os dados do app.
+func firesTheBlastOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
+	itemID, err := strconv.ParseInt(chi.URLParam(r, "item"), 10, 64)
+	if err != nil {
+		return fmt.Errorf("a arma vem pelo id do item no caminho, e veio %q", chi.URLParam(r, "item"))
+	}
+	target := strings.TrimSpace(sig.TurnTarget)
+	if target == "" {
+		return fmt.Errorf("escolha o alvo da vez na barra acima antes de disparar")
+	}
+	blast, err := s.plays.RollsTheBlast(r.Context(), row, itemID, theDieFromTheTable(sig.BlastTotal))
+	if err != nil {
+		return err
+	}
+	return s.deps.FireBlastOnTable(r.Context(), row.ID, target, blast)
+}

@@ -84,6 +84,10 @@ type Deps interface {
 	// pousar o provisório. Nada para fazer em silêncio seria o botão não
 	// funcionar.
 	ProposeStrikeOnTable(ctx context.Context, characterID int64, strike ActionStrike) error
+	// FireBlastOnTable põe na mesa o que um encanto dispara em vez do golpe — a bola de fogo da Flamejante
+	// (p335) —, contra o alvo da vez. Fora de uma sessão ela RECUSA, pela razão do golpe: sem mesa não há
+	// alvo, nem vez, nem onde a mesa leia o que caiu.
+	FireBlastOnTable(ctx context.Context, characterID int64, targetEntryID string, blast character.Blast) error
 	// AimOnTable é o gesto de Mirar (p234) do personagem que está na vez.
 	// alsoSwitches é o interruptor que o gesto liga junto, ou vazio (a Mira Apurada, p128).
 	AimOnTable(ctx context.Context, characterID int64, targetEntryID, alsoSwitches string) error

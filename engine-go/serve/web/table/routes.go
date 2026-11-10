@@ -349,6 +349,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// construtor puro não recebe o usuário.
 	view.Attack = s.attackProposalFor(ctx, st, userID, role, campaignID, sessionID)
 	view.SkillTest = s.skillTestBandFor(ctx, st, userID, campaignID, sessionID)
+	view.Blast = blastBandOf(st)
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Title = sess.Title.String

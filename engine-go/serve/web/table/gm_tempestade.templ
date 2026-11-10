@@ -25,6 +25,7 @@ templ gmTempestadeScene(v View) {
 		@gmHeader(v)
 		@gmAttack(v)
 		@tempestadeSkillTest(v)
+		@tempestadeBlast(v)
 		<nav class="ds-session-nav ds-gm-nav" aria-label="Superfícies do mestre">
 			for _, s := range gmSurfaces {
 				<button type="button" data-attr:aria-current={ fmt.Sprintf("%s ? 'page' : 'false'", surface(s.ID)) } data-on:click={ pickSurface(s.ID) }>

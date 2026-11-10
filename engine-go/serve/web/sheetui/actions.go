@@ -97,6 +97,8 @@ type actionRow struct {
 	Doses []doseChoice
 	// ClearsDose é a linha que leva a dose escolhida sem mostrá-la: a Investida.
 	ClearsDose bool
+	// Hand é o "ou rolei" da linha que rola dados de dano (a bola de fogo da Flamejante), ou nulo.
+	Hand *handTotal
 }
 
 // actionRoll é um gesto de rolar que sai de uma linha.
@@ -151,11 +153,11 @@ func rollCommand(v View, roll actionRoll, after string) string {
 func actionsPanelFrom(
 	id int64, computed engine.ComputedSheet,
 	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
-	boosts [][]attackBoost,
+	boosts [][]attackBoost, blasts []actionRow,
 ) actionsPanel {
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
 	byCost := map[engine.ActionCost][]actionRow{
-		engine.ActionStandard: standardRows(combat, melee, computed, boosts),
+		engine.ActionStandard: append(standardRows(combat, melee, computed, boosts), blasts...),
 		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
 		engine.ActionFree:     extraStrikeRows(combat, boosts),

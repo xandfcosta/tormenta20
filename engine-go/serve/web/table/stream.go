@@ -336,6 +336,7 @@ func TableRegions(v View) []tableRegion {
 			// cabeçalho nem o do mapa: ele nasce e morre várias vezes por turno.
 			{"table-attack", gmAttack(v)},
 			{"table-skill-test", tempestadeSkillTest(v)},
+			{"table-blast", tempestadeBlast(v)},
 			{"table-tracker", gmQueue(v)},
 			{"table-commands", gmTurnBar(v)},
 			{"table-board", gmBoardRegion(v)},
@@ -358,6 +359,7 @@ func TableRegions(v View) []tableRegion {
 		{"table-header", tempestadeHeader(v)},
 		{"table-attack", tempestadeAttack(v)},
 		{"table-skill-test", tempestadeSkillTest(v)},
+		{"table-blast", tempestadeBlast(v)},
 		{"table-turn-target", tempestadeTargetBar(v)},
 		{"table-register", tempestadeRegister(v)},
 		{"table-party", tempestadeParty(v)},
