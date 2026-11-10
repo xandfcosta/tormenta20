@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -159,5 +160,35 @@ func TestTheAnticreatureEnchantBuysFourD8AgainstTheChosenKind(t *testing.T) {
 	}
 	if len(cards[1].ExtraDamage) != len(plain[1].ExtraDamage) {
 		t.Errorf("a adaga ganhou os 4d8 da espada: %+v", cards[1].ExtraDamage)
+	}
+}
+
+// p335 "A arma causa +1d6 de dano de fogo. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer
+// isso, em vez do ataque normal você dispara uma bola de fogo contra um alvo em alcance médio. O alvo sofre
+// 6d6 pontos de dano. Um teste de Reflexos (CD For ou Des, à sua escolha) reduz à metade." O gasto TROCA o
+// golpe, e por isso não é oferecido na linha de ataque: é um gesto próprio, da arma que tem o encanto (decisão
+// do dono).
+func TestTheFlamingEnchantFiresABlastInsteadOfTheStrike(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	ch := enchanted("encanto-flamejante")
+	if _, found := enchantOffer(world, ch, "encanto-flamejante"); found {
+		t.Error("a bola de fogo da Flamejante foi oferecida como gasto do golpe; ela é em vez do golpe")
+	}
+	blasts := world.EnchantBlasts(ch)
+	if len(blasts) != 1 {
+		t.Fatalf("a espada flamejante dispara %d bolas de fogo; quer uma, só dela: %+v", len(blasts), blasts)
+	}
+	b := blasts[0]
+	want := BoostInstead{Name: "Bola de fogo", Damage: "6d6", DamageType: "fogo", Range: "médio", Save: "Reflexos",
+		SaveAttributes: []string{"strength", "dexterity"}, OnSave: "reduz à metade"}
+	if b.ID != EnchantBoostID(7, "encanto-flamejante") || b.ItemID != 7 || b.Weapon != "Espada longa" || b.PM != 2 ||
+		b.Name != want.Name || b.Damage != want.Damage || b.DamageType != want.DamageType || b.Range != want.Range ||
+		b.Save != want.Save || !slices.Equal(b.SaveAttributes, want.SaveAttributes) || b.OnSave != want.OnSave {
+		t.Errorf("a bola de fogo é %+v; quer a da espada (item 7) por 2 PM, com %+v", b, want)
+	}
+	// Guardada, a espada não dispara: a bola de fogo é da arma em punho, como o gasto do golpe.
+	ch.Items[0].Equipped = nil
+	if blasts := world.EnchantBlasts(ch); len(blasts) != 0 {
+		t.Errorf("a espada guardada dispara %+v", blasts)
 	}
 }
