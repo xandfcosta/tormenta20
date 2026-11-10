@@ -36,6 +36,8 @@ type CatalogItem struct {
 	ComposedOf *Composition `json:"composedOf,omitempty"`
 	// SkillTies são as perícias a que o item está ligado sem somar número: ele tira uma penalidade (p158-159).
 	SkillTies []SkillTie `json:"skillTies,omitempty"`
+	// Boost é o gasto de PM no golpe que o encanto oferece (p335-336) — ver `enchant_boost.go`.
+	Boost *ItemBoost `json:"boost,omitempty"`
 }
 
 // Item devolve o item do catálogo pelo id, ou nulo quando ele não existe — é o

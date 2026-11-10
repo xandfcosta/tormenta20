@@ -77,6 +77,9 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	if choice.PowerID == "" {
 		return plain, 0, nil
 	}
+	if _, _, isEnchant := enchantBoostOf(choice.PowerID); isEnchant {
+		return r.enchantBoostedCards(ch, activeConditionals, choice.PowerID)
+	}
 	power, classLevel := r.ownedBoostPower(ch, choice.PowerID)
 	if power == nil {
 		return nil, 0, fmt.Errorf("o personagem não tem um poder que se paga no ataque com o id %q", choice.PowerID)
@@ -118,6 +121,10 @@ type BoostOffer struct {
 	// "+1d8", "+2d8"… no Golpe Divino, "+4", "+8"… no Ataque Especial. É o
 	// rótulo do contador, saído dos mesmos modificadores que a carta soma.
 	Buys []string
+	// ItemID é a arma do gasto de um ENCANTO (p335-336): ele só vale nela. Zero no impulso de poder, que
+	// vale em toda arma que o livro deixa. HitPointCost é o dado de PV que o portador perde ao gastar.
+	ItemID       int64
+	HitPointCost string
 }
 
 // BoostOffers são os impulsos de PM que a ficha tem, na ordem das classes.
@@ -145,7 +152,7 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 			out = append(out, offer)
 		}
 	}
-	return out
+	return append(out, r.enchantBoostOffers(ch)...)
 }
 
 // ownedBoostPower é o poder de impulso que a ficha tem com esse id, e o nível na

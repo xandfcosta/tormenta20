@@ -28,6 +28,17 @@ type Item struct {
 	Artifact     bool             `json:"artifact,omitempty"`
 	SkillTies    []SkillTie       `json:"skillTies,omitempty"`
 	PowerChanges []PowerChange    `json:"powerChanges,omitempty"`
+	Boost        *ItemBoost       `json:"boost,omitempty"`
+}
+
+// ItemBoost é o gasto de PM no golpe que o ENCANTO oferece: "Uma vez por rodada, quando ataca, você pode
+// gastar 2 PM. Se fizer isso…" (p335-336). Os Modifiers só valem no golpe pago — o dado a mais, a condição
+// ou o efeito que a mesa aplica no acerto (`announcedEffect`, com a fórmula escrita). HitPointCost é o
+// dado de PV que o próprio portador perde ao gastar (a Tumular).
+type ItemBoost struct {
+	PM           int        `json:"pm"`
+	Modifiers    []Modifier `json:"modifiers"`
+	HitPointCost string     `json:"hitPointCost,omitempty"`
 }
 
 // PowerChange é o que o item EMPUNHADO muda em poderes de quem o empunha (p158). Powers são ids de

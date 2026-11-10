@@ -152,6 +152,10 @@ type AnnouncedCondition struct {
 	// evita, limite por cena. Texto do LIVRO, para o mestre arbitrar com a
 	// regra na frente.
 	Note string `json:"note,omitempty"`
+	// Effect é o que o livro prevê e que NÃO é condição: o "4d4 de ácido na próxima rodada" da Corrosiva,
+	// o raio de 3d8 da Elétrica noutra criatura (p335). Vem com a fórmula escrita e sem rolar: o dano cai
+	// noutra hora ou noutro alvo, que o app não escolhe (decisão do dono). Com ele, Condition fica vazia.
+	Effect string `json:"effect,omitempty"`
 }
 
 // O ATAQUE EM DOIS TEMPOS: `JudgeAttack` é o teste, e `RollAttackDamage` é o

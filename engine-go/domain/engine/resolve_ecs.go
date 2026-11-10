@@ -187,6 +187,13 @@ func harvestWeaponRiders(w *ecs.World) {
 			ecs.Set(w, e, Suppressed{Why: "é dado extra, e dado não soma na pilha"})
 			return
 		}
+		if t.Mod.Target.K == "announcedEffect" {
+			// O EFEITO ANUNCIADO segue o caminho da condição anunciada: sai da pilha e vai para a carta, com
+			// o texto do livro no lugar do id da condição.
+			riders.announced = append(riders.announced, AnnouncedCondition{Effect: t.Mod.Note})
+			ecs.Set(w, e, Suppressed{Why: "é anúncio de efeito, e anúncio não soma"})
+			return
+		}
 		if t.Mod.Target.K == "announcedCondition" {
 			// O ANÚNCIO não é número: ele sai da pilha inteiro e vai para a
 			// carta da arma, como o dado extra. Somá-lo daria um modificador

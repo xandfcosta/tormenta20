@@ -48,6 +48,8 @@ var alvosQueOMotorAplica = map[string]string{
 	"unarmedDamage":        "unarmed.go, o dado da carta do ataque desarmado (a Briga, p75-77, ALE-486)",
 	"announcedCondition": "weapons.go e attack.go, anunciando a condição que o livro " +
 		"reserva ao golpe — informação, nunca aplicação (p335-336, ALE-441)",
+	"announcedEffect": "resolve_ecs.go e attack.go, anunciando o efeito que o livro reserva ao " +
+		"golpe pago de um encanto e que não é condição, com a fórmula escrita e sem rolar (p335)",
 	"critExtraIgnoreChance": "breakdowns.go, na chance INFORMADA de ignorar o extra " +
 		"do crítico, e attack_ecs.go devolvendo o extra recortável (p166, ALE-436)",
 	"damageStep": "weapons.go, andando o DADO da carta pela Tabela 3-2 (p143, " +

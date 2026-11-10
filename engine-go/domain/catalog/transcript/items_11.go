@@ -405,6 +405,16 @@ var itemsPart11 = []Item{
 		RollMin:     17,
 		RollMax:     21,
 		CountsAs:    1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "announcedCondition", Name: "enredado"},
+					BonusType: "untyped",
+					Note:      "por uma rodada",
+				},
+			},
+		},
 	},
 	{
 		ID:          "encanto-conjuradora",
@@ -439,9 +449,19 @@ var itemsPart11 = []Item{
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma causa +1d6 de dano de ácido. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima sofre 4d4 pontos de dano de ácido na próxima rodada. Uma arma corrosiva exala vapores e goteja líquido tóxico.",
 		Modeled:     []string{"o +1d6 de dano de ácido"},
-		Unmodeled:   &ItemUnmodeled{Note: "o GESTO de 2 PM, e o 4d4 que ele deixa para a rodada seguinte: dano que acontece no turno de OUTRA criatura, e o motor de ficha não tem turno nem alvo"},
+		Unmodeled:   &ItemUnmodeled{Note: "o 4d4 cai na rodada SEGUINTE, no turno de outra criatura: o golpe pago anuncia a fórmula, e quem rola e aplica é a mesa"},
 		RollMin:     24,
 		RollMax:     28,
 		CountsAs:    1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "announcedEffect"},
+					BonusType: "untyped",
+					Note:      "a vítima sofre 4d4 de dano de ácido na próxima rodada",
+				},
+			},
+		},
 	},
 }

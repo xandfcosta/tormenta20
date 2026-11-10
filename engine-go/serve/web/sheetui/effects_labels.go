@@ -131,6 +131,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		// ataque da mesa, escolhida de propósito por INFORMAR em vez de decidir.
 		"critExtraIgnoreChance": "Ignora o extra de crítico",
 		"announcedCondition":    "O livro prevê",
+		"announcedEffect":       "O livro prevê",
 		"defenseAttribute":      "Atributo da Defesa",
 		"armorPenaltyExempt":    "Ignora a penalidade de armadura",
 		"nonLethalDamage":       "Dano não letal",

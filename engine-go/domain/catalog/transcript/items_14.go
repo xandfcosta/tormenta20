@@ -159,27 +159,29 @@ var itemsPart14 = []Item{
 		CountsAs:    1,
 	},
 	{
-		ID:       "encanto-venenosa",
-		Name:     "Venenosa",
-		Category: "weapon-enchant",
-		Equip:    "either",
-		Modifiers: []Modifier{
-			{
-				Target:    ModifierTarget{Kind: "announcedCondition", Name: "envenenado"},
-				BonusType: "untyped",
-				Note:      "1d12 PV por rodada, por 3 rodadas",
-				Condition: &ModifierCondition{Kind: "context", Note: "gastando 2 PM ao atacar"},
-			},
-		},
+		ID:          "encanto-venenosa",
+		Name:        "Venenosa",
+		Category:    "weapon-enchant",
+		Equip:       "either",
+		Modifiers:   []Modifier{},
 		BookPage:    336,
 		UID:         "itm_kcpwjnsarb",
 		AppliesTo:   []string{"weapon"},
 		Description: "Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima fica envenenada, perdendo 1d12 pontos de vida por rodada durante 3 rodadas. Uma arma venenosa verte um líquido verde e viscoso.",
-		Modeled:     []string{"o gesto, no acervo de poderes"},
-		Unmodeled:   &ItemUnmodeled{Note: "o GESTO de 2 PM, e o 1d12 por rodada durante 3 rodadas que ele impõe à vítima: dano com duração no ALVO, que é a mesma falta do `announcedCondition` — o anúncio sai, mas não o relógio"},
+		Unmodeled:   &ItemUnmodeled{Note: "o 1d12 por rodada durante 3 rodadas é dano com duração no ALVO: o golpe pago anuncia a condição com a fórmula, e o relógio é do mestre"},
 		RollMin:     89,
 		RollMax:     90,
 		CountsAs:    1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "announcedCondition", Name: "envenenado"},
+					BonusType: "untyped",
+					Note:      "1d12 PV por rodada, por 3 rodadas",
+				},
+			},
+		},
 	},
 	{
 		ID:       "avalanche",

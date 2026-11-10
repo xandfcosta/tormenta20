@@ -134,10 +134,20 @@ var itemsPart12 = []Item{
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma causa +1d6 de dano de eletricidade. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, um raio atinge outra criatura em alcance curto, causando 3d8 pontos de dano de eletricidade. Uma arma elétrica emite faíscas e é coberta de arcos voltaicos.",
 		Modeled:     []string{"o +1d6 de dano de eletricidade"},
-		Unmodeled:   &ItemUnmodeled{Note: "o GESTO de 2 PM, e o 3d8 que ele põe em OUTRA criatura em alcance curto — um segundo alvo, que não é nem o portador nem quem ele atacou"},
+		Unmodeled:   &ItemUnmodeled{Note: "o 3d8 do raio cai em OUTRA criatura em alcance curto, que o mestre escolhe: o golpe pago anuncia a fórmula, e quem rola e aplica é a mesa"},
 		RollMin:     41,
 		RollMax:     45,
 		CountsAs:    1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "announcedEffect"},
+					BonusType: "untyped",
+					Note:      "um raio atinge outra criatura em alcance curto: 3d8 de dano de eletricidade",
+				},
+			},
+		},
 	},
 	{
 		ID:       "encanto-energetica",
@@ -416,6 +426,18 @@ var itemsPart12 = []Item{
 		RollMin:     83,
 		RollMax:     84,
 		CountsAs:    1,
+		Boost: &ItemBoost{
+			PM: 2,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "damage", DamageType: "trevas"},
+					BonusType: "untyped",
+					Note:      "+1d8 de dano de trevas, e o bônus vai a +2d8",
+					Dice:      "1d8",
+				},
+			},
+			HitPointCost: "1d8",
+		},
 	},
 	{
 		ID:          "encanto-veloz",
