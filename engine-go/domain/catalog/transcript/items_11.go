@@ -459,7 +459,7 @@ var itemsPart11 = []Item{
 				{
 					Target:    ModifierTarget{Kind: "announcedEffect"},
 					BonusType: "untyped",
-					Note:      "a vítima sofre 4d4 de dano de ácido na próxima rodada",
+					Note:      "4d4 de dano de ácido na vítima, na próxima rodada",
 				},
 			},
 		},

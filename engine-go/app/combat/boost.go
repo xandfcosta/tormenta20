@@ -50,7 +50,7 @@ func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, er
 	}
 	// O GASTO DE UM ENCANTO é da arma dele (p335-336): o anúncio da carta não tem escopo de arma, e
 	// sem esta conferência a outra mão pagaria e anunciaria o efeito do encanto que não tem.
-	if itemID, isEnchant := engine.EnchantBoostItem(boost.powerID); isEnchant && card.ItemID != itemID {
+	if itemID, _, isEnchant := engine.EnchantBoostParts(boost.powerID); isEnchant && card.ItemID != itemID {
 		owner := "outra arma"
 		for _, c := range cards {
 			if c.ItemID == itemID {

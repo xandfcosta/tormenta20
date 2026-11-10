@@ -206,6 +206,9 @@ type ForeseenCondition struct {
 	Condition string `json:"condition"`
 	// Note é o que o verbete escreve ao lado — duração, teste que evita.
 	Note string `json:"note,omitempty"`
+	// Effect é o que o livro prevê e não é condição (o 4d4 de ácido da Corrosiva), com a fórmula escrita;
+	// com ele, Condition fica vazia.
+	Effect string `json:"effect,omitempty"`
 }
 
 // ManeuverRoll é o teste OPOSTO de uma manobra, do jeito que a mesa lê.

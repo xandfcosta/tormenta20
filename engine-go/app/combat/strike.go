@@ -454,7 +454,7 @@ func entryOf(st *live.SessionRuntimeState, entryID string) (live.InitiativeEntry
 func foreseenOf(out engine.AttackOutcome) []live.ForeseenCondition {
 	ditas := make([]live.ForeseenCondition, 0, len(out.Announces))
 	for _, a := range out.Announces {
-		ditas = append(ditas, live.ForeseenCondition{Condition: a.Condition, Note: a.Note})
+		ditas = append(ditas, live.ForeseenCondition{Condition: a.Condition, Note: a.Note, Effect: a.Effect})
 	}
 	if len(ditas) == 0 {
 		return nil

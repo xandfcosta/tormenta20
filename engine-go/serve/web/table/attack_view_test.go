@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 )
 
@@ -387,5 +388,26 @@ func TestTheNonLethalNoteNamesTheDamage(t *testing.T) {
 	})
 	if len(notes) != 1 || notes[0] != "Dano não letal (p236)" {
 		t.Errorf("as notas do dano não letal saíram %q", notes)
+	}
+}
+
+// O EFEITO QUE NÃO É CONDIÇÃO (a Corrosiva, a Elétrica, p335) sai na mesma linha do "o livro prevê", com a
+// fórmula escrita e sem número rolado (decisão do dono): o dano cai noutra hora ou noutro alvo.
+func TestTheAttackLineSaysTheEffectTheBookForesees(t *testing.T) {
+	line := attackLine(live.PendingAttack{
+		Roll: 14, Total: 19, Defense: 17, Hit: true,
+		Dice: []int{8}, Faces: 8, RawDamage: 8, Damage: 8,
+		Announces: []live.ForeseenCondition{{Effect: "4d4 de dano de ácido na vítima, na próxima rodada"}},
+	})
+	if !strings.HasSuffix(line, "o livro prevê: 4d4 de dano de ácido na vítima, na próxima rodada") {
+		t.Errorf("a linha = %q", line)
+	}
+}
+
+// O GASTO DE UM ENCANTO sai com o nome do encanto, e não com o id que o golpe carrega.
+func TestTheBoostOfAnEnchantIsWrittenWithItsName(t *testing.T) {
+	written := writtenBoost(live.PendingAttack{BoostPowerID: engine.EnchantBoostID(7, "encanto-tumular"), BoostPM: 2})
+	if written != "Tumular · 2 PM" {
+		t.Errorf("o gasto da Tumular saiu escrito %q", written)
 	}
 }

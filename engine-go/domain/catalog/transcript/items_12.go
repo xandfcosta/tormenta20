@@ -144,7 +144,7 @@ var itemsPart12 = []Item{
 				{
 					Target:    ModifierTarget{Kind: "announcedEffect"},
 					BonusType: "untyped",
-					Note:      "um raio atinge outra criatura em alcance curto: 3d8 de dano de eletricidade",
+					Note:      "3d8 de dano de eletricidade num raio em outra criatura, em alcance curto",
 				},
 			},
 		},
