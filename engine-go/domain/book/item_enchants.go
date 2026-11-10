@@ -2,6 +2,8 @@ package book
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"t20engine/domain/engine"
 )
@@ -20,6 +22,24 @@ import (
 //
 // Por isso não há tamanho a guardar na arma: a CONTAGEM é a categoria.
 const slotsDeEncanto = 2 + 1
+
+// EnchantSlots é o teto de encantos de um item, contado por peso, para a tela que o mostra ("2 de 3").
+const EnchantSlots = slotsDeEncanto
+
+// EnchantsThatFit são os encantos que a FAMÍLIA do item aceita, pelo nome: a Tabela 8-8 para a arma, a 8-10
+// para a armadura e o escudo (p335-339). Vazio para o item que não aceita encanto nenhum.
+//
+//	EnchantsThatFit(*ItemByID("espada-longa")) // Ameaçadora, Anticriatura, …, Venenosa
+func EnchantsThatFit(item Item) []Item {
+	out := []Item{}
+	for _, entry := range Catalogs().Items {
+		if encantoDeItem[entry.Category] && aceitaEncanto(item, entry) {
+			out = append(out, entry)
+		}
+	}
+	slices.SortStableFunc(out, func(a, b Item) int { return strings.Compare(a.Name, b.Name) })
+	return out
+}
 
 // encantoDeItem são as duas categorias de encanto do livro, uma por tabela.
 var encantoDeItem = map[string]bool{"weapon-enchant": true, "armor-enchant": true}

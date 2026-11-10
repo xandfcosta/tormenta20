@@ -94,3 +94,13 @@ func (s Scene) reachableCharacter(ctx context.Context, id, userID int64) (sqlcge
 	}
 	return sqlcgen.Character{}, http.StatusForbidden, fmt.Errorf("esta ficha não é sua")
 }
+
+// mastersTheCharacter diz se quem pede é o MESTRE da campanha da ficha. É ele quem encanta (p333), seja a
+// ficha de um jogador, seja a dele mesmo na mesa que ele mestra. A ficha fora de campanha não tem mestre.
+func (s Scene) mastersTheCharacter(ctx context.Context, row sqlcgen.Character, userID int64) bool {
+	if !row.CampaignId.Valid {
+		return false
+	}
+	campaign, err := s.deps.Queries().GetCampaign(ctx, row.CampaignId.Int64)
+	return err == nil && campaign.Ownerid == userID
+}

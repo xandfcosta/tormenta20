@@ -169,10 +169,10 @@ func applyOverlays(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	if err := fitsItemImprovement(catalog, materials, "material"); err != nil {
 		return err
 	}
-	// O ENCANTO NÃO PASSA POR AQUI, e a ausência é a regra: quem encanta uma
-	// arma é o MESTRE, e a escrita dele é o `characterPlays.EnchantItem`. Sem
-	// um `ItemEnchants` nos sinais, um pedido montado à mão não tem por onde
-	// entrar — a fronteira é a ausência do campo, não um `if` (ALE-416).
+	// O ENCANTO NÃO PASSA POR AQUI: quem encanta é o MESTRE, pelo gesto
+	// próprio (`enchantsTheItem`), que confere quem pede. Este gesto não lê o
+	// `ItemEnchants`, então um pedido de melhorias montado à mão com encantos
+	// não grava nenhum.
 	// Pelo `itemGesture`: a melhoria pode dar PV, e tirá-la com pouca vida derruba como guardar o item.
 	withOverlays := func(dto *sheet.CharacterDTO) {
 		for i := range dto.Items {

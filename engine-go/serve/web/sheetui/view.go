@@ -251,6 +251,11 @@ func (s Scene) Load(
 		Search: signals.ItemSearch, Category: signals.ItemCategory,
 		CatalogSearch: signals.CatalogSearch, CatalogCategory: signals.CatalogCategory,
 	})
+	// O DIÁLOGO DE ENCANTOS é do mestre (p333): a folha do jogador fica sem o gesto, e o servidor recusa o
+	// pedido dele de todo jeito (`enchantsTheItem`).
+	if s.mastersTheCharacter(ctx, row, userID) {
+		offerEnchants(v.Bag.Sheets, dto)
+	}
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet), dto)

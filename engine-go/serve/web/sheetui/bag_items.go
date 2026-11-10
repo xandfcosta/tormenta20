@@ -37,11 +37,16 @@ type itemSheet struct {
 	Book  *bookInfo
 	// Overlays são as melhorias e o material JÁ aplicados, com o que fazem.
 	Overlays []overlayRow
-	// Enchants são os encantos que a arma CARREGA, e a ficha só os LÊ: quem
-	// encanta é o mestre, porque encanto não se compra — se acha ou se fabrica
-	// (p333). Por isso eles não entram no `Overlays` nem viram `overlayChoice`:
-	// a lista do diálogo é de escolha, e esta é de leitura.
+	// Enchants são os encantos que o item CARREGA, para ler. Quem encanta é o
+	// mestre, porque encanto não se compra — se acha ou se fabrica (p333) —, e
+	// o diálogo dele é o `EnchantChoices`, que só a folha do mestre recebe.
 	Enchants []overlayRow
+	// Enchantable diz que a folha leva o mestre ao diálogo de encantos;
+	// EnchantChoices são os encantos da família do item, e EnchantAgainst o
+	// tipo já escolhido da Anticriatura (ver `bag_enchants.go`).
+	Enchantable    bool
+	EnchantChoices []enchantChoice
+	EnchantAgainst string
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
