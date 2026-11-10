@@ -89,7 +89,16 @@ impulso saem ali, na mesma transação, e o PV que o gasto da Tumular cobra tamb
 proposta, `PendingAttack.BoostHitPoints`). Assim a postura que não couber é recusada na hora dela, e
 a resposta do mestre não falha por um gesto posterior. O gasto de encanto é uma vez por rodada de
 quem ataca (`Scene.OncePerRoundUsed`, que sai quando a vez dessa linha recomeça), conferido antes
-da ação. O cancelamento do mestre devolve a ação
+da ação. O da Anticriatura vale contra o tipo escolhido no encanto, e a proposta guarda o tipo e o que
+a mesa sabia do alvo no instante do d20 (`PendingAttack.BoostAgainst`): o tipo do bestiário e do bloco
+do mestre, e a raça do personagem. Quem lê é o `book.TargetOfTheChosenKind`, e só a faixa do mestre o
+escreve.
+
+**O disparo do encanto não é proposta** (a bola de fogo da Flamejante, p335): ele troca o golpe e não
+tem d20 nem decisão. O motor o devolve em `EnchantBlasts`, fora das ofertas da linha de ataque, e o
+`session.Store.FireBlast` cobra numa transação a vez da rodada do encanto (o mesmo `EnchantBoostID`),
+a ação padrão de quem está na vez e o PM, e guarda o disparo em `LastBlast`. Ele não tem
+cancelamento: aconteceu, e o mestre aplica o dano e a resistência. O cancelamento do mestre devolve a ação
 (só ao turno de onde ela saiu), o PM do impulso e dos "rolar de novo" (cada ponto de onde saiu,
 ao poço ou à poça temporária, pelo `sheet.PoolReceipt`), o PV do gasto (pelo mesmo recibo: o que a
 poça temporária pagou volta para ela), a vez da rodada do encanto e a dose. Reiniciar o combate com a proposta sem resposta devolve do mesmo jeito. O erro
