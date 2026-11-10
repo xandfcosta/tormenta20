@@ -23,6 +23,11 @@ serializa para quem lê JSON (`transcript.ResourceJSON`).
   novo é uma linha no `layout.go`.
 - **`Modifier.Amount`, `Item.Price` e `Item.Slots` não distinguem ausente de
   zero.**
+- **O gasto de PM no golpe de um encanto mora no `boost` do verbete**, e não nos
+  `modifiers`: o que está nele só vale no golpe pago ("uma vez por rodada, quando
+  ataca, você pode gastar 2 PM", p335-336). O efeito no acerto que não é condição
+  usa o alvo `announcedEffect`, com a fórmula na nota; o guarda das condições
+  anunciadas lê os dois lugares.
 - **A escolha feita na COMPRA é um verbete por opção** (decisão do dono): a coleção
   de livros dá +1 numa perícia "definida quando comprada" (p158), e são cinco
   verbetes, "Coleção de livros (Guerra)" e os outros. Escolher é escolher o
