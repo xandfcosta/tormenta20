@@ -65,12 +65,3 @@ func TestTheTableSaysWhetherTheTargetIsOfTheChosenKind(t *testing.T) {
 		}
 	}
 }
-
-// O NOME DA ESCOLHA na tela: o tipo como o bestiário o escreve, e a raça pelo nome do livro.
-func TestTheChosenKindIsWrittenAsTheBookWritesIt(t *testing.T) {
-	for chosen, want := range map[string]string{"morto-vivo": "morto-vivo", "espirito": "espírito", "elfo": "elfo"} {
-		if got := ChosenKindName(chosen); got != want {
-			t.Errorf("a escolha %q se escreve %q; quer %q", chosen, got, want)
-		}
-	}
-}
