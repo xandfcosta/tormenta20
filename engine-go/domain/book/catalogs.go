@@ -137,6 +137,9 @@ type Item struct {
 	// Tabelas 8-9 e 8-11 (p337, p340). Quem o resolve é o `expandComposedItems`,
 	// e a regra dele mora no `engine.Composition`.
 	ComposedOf *engine.Composition `json:"composedOf"`
+	// Boost é o gasto de PM no golpe que o encanto oferece (p335-336); a escolha do tipo de criatura da
+	// Anticriatura mora nele (`enchant_choice.go`).
+	Boost *engine.ItemBoost `json:"boost"`
 	// Description é a regra do livro em prosa. Hoje só o encanto a traz, e é ela
 	// que o `cmd/audit/enchants` mede contra o verbete.
 	Description string `json:"description"`

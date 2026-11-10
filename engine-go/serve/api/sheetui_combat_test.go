@@ -273,7 +273,7 @@ func TestTheChanceToIgnoreTheCriticalExtraReachesTheDefenseTile(t *testing.T) {
 	f, id := fighterFixture(t)
 	armadura := itemSemeia(t, f, id, "armadura-completa", "Armadura completa", "vested")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), armadura, []string{"encanto-fortificado"},
+		context.Background(), armadura, []string{"encanto-fortificado"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a armadura: %v", err)
 	}
@@ -300,7 +300,7 @@ func TestTheFortifiedChanceFollowsThePieceItIsOn(t *testing.T) {
 	f, id := fighterFixture(t)
 	escudo := itemSemeia(t, f, id, "escudo-pesado", "Escudo pesado", "wielded")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), escudo, []string{"encanto-fortificado"},
+		context.Background(), escudo, []string{"encanto-fortificado"}, nil,
 	); err != nil {
 		t.Fatalf("encantar o escudo: %v", err)
 	}

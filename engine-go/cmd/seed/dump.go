@@ -46,6 +46,8 @@ var dumpTables = []string{
 	// acervo de poderes abria sem a ativação que o personagem existe para
 	// mostrar.
 	"character_item_enchants",
+	// Depois de `character_item_enchants`, que é o pai dela pela FK.
+	"character_item_enchant_choices",
 	"character_oversized_weapons",
 	"character_item_doses",
 	"character_spells",

@@ -762,9 +762,12 @@ SELECT enchantId FROM character_item_enchants WHERE itemId = ? ORDER BY enchantI
 -- name: EnchantsOfCharacter :many
 -- Em LOTE e nao uma por item: a ficha monta todos os itens de uma vez, e uma
 -- consulta por arma seria N+1 numa mochila que a tela desenha inteira.
-SELECT e.itemId, e.enchantId
+-- A escolha do encanto (o tipo da Anticriatura) vem junto, nula no encanto que
+-- nao pede escolha.
+SELECT e.itemId, e.enchantId, c.choice
 FROM character_item_enchants e
 JOIN character_items i ON i.id = e.itemId
+LEFT JOIN character_item_enchant_choices c ON c.itemId = e.itemId AND c.enchantId = e.enchantId
 WHERE i.characterId = ?
 ORDER BY e.itemId, e.enchantId;
 
@@ -774,11 +777,15 @@ DELETE FROM character_item_enchants WHERE itemId = ?;
 -- name: AddItemEnchant :exec
 INSERT INTO character_item_enchants (itemId, enchantId) VALUES (?, ?);
 
+-- name: AddItemEnchantChoice :exec
+INSERT INTO character_item_enchant_choices (itemId, enchantId, choice) VALUES (?, ?, ?);
+
 -- name: EnchantsOfCharacters :many
 -- O irmao em lote do `EnchantsOfCharacter`, para o caminho que monta N fichas.
-SELECT i.characterId, e.itemId, e.enchantId
+SELECT i.characterId, e.itemId, e.enchantId, c.choice
 FROM character_item_enchants e
 JOIN character_items i ON i.id = e.itemId
+LEFT JOIN character_item_enchant_choices c ON c.itemId = e.itemId AND c.enchantId = e.enchantId
 WHERE i.characterId IN (sqlc.slice('ids'))
 ORDER BY e.itemId, e.enchantId;
 

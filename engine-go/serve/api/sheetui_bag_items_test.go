@@ -316,7 +316,7 @@ func TestAWeaponTakesNoMoreThanThreeEnchants(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 	encanta := func(ids ...string) string {
-		err := f.s.characterPlays().EnchantItem(context.Background(), sword, ids)
+		err := f.s.characterPlays().EnchantItem(context.Background(), sword, ids, nil)
 		if err == nil {
 			return ""
 		}
@@ -360,7 +360,7 @@ func TestAnEnchantWithoutItsPrerequisiteIsRefused(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 	encanta := func(ids ...string) string {
-		err := f.s.characterPlays().EnchantItem(context.Background(), sword, ids)
+		err := f.s.characterPlays().EnchantItem(context.Background(), sword, ids, nil)
 		if err == nil {
 			return ""
 		}
@@ -398,7 +398,7 @@ func TestOnlyAWeaponTakesAnEnchant(t *testing.T) {
 	f, id := fighterFixture(t)
 	shield := itemSemeia(t, f, id, "escudo-leve", "Escudo leve", "")
 
-	err := f.s.characterPlays().EnchantItem(context.Background(), shield, []string{"encanto-flamejante"})
+	err := f.s.characterPlays().EnchantItem(context.Background(), shield, []string{"encanto-flamejante"}, nil)
 	if err == nil || !strings.Contains(err.Error(), "arma") {
 		t.Errorf("um escudo foi encantado, ou a recusa não diz por quê: %v", err)
 	}
@@ -451,7 +451,7 @@ func TestTheHandCardNamesTheEnchantsOfTheWeapon(t *testing.T) {
 		t.Fatalf("melhorar a espada: %v", err)
 	}
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), sword, []string{"encanto-flamejante"},
+		context.Background(), sword, []string{"encanto-flamejante"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}
@@ -491,7 +491,7 @@ func TestThePlayerSeesTheEnchantsOfTheirWeapon(t *testing.T) {
 	f, id := fighterFixture(t)
 	sword := itemSemeia(t, f, id, "espada-longa", "Espada longa", "")
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), sword, []string{"encanto-flamejante", "encanto-formidavel"},
+		context.Background(), sword, []string{"encanto-flamejante", "encanto-formidavel"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}

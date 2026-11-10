@@ -12,7 +12,7 @@ func TestTheCampaignCopyKeepsTheEnchantsOnTheirWeapon(t *testing.T) {
 	f := newSceneFixture(t)
 	itemSemeia(t, f, f.charID, "adaga", "Adaga comum", "")
 	enchanted := itemSemeia(t, f, f.charID, "adaga", "Adaga encantada", "wielded")
-	if err := f.s.characterPlays().EnchantItem(context.Background(), enchanted, []string{"encanto-formidavel"}); err != nil {
+	if err := f.s.characterPlays().EnchantItem(context.Background(), enchanted, []string{"encanto-formidavel"}, nil); err != nil {
 		t.Fatalf("encantar a adaga: %v", err)
 	}
 

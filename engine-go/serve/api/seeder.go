@@ -134,8 +134,8 @@ func (sd Seeder) SetHp(ctx context.Context, id, current int64) error {
 
 // EnchantItem encanta um item do elenco, pelo mesmo caso de uso do mestre: a
 // recusa do livro (arma, teto de peso, pré-requisito) vale para a seed também.
-func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []string) error {
-	return sd.plays.EnchantItem(ctx, itemID, enchants)
+func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []string, choices map[string]string) error {
+	return sd.plays.EnchantItem(ctx, itemID, enchants, choices)
 }
 
 // ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.

@@ -158,7 +158,7 @@ func TestTheAttackBannerSaysTheConditionTheBookForesees(t *testing.T) {
 		t.Fatal("o personagem da bancada não está com a espada longa")
 	}
 	if err := f.s.characterPlays().EnchantItem(
-		context.Background(), espada, []string{"encanto-sanguinaria"},
+		context.Background(), espada, []string{"encanto-sanguinaria"}, nil,
 	); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}

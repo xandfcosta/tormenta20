@@ -20,7 +20,7 @@ import (
 func TestTheEnchantBoostIsOfferedOnlyOnItsWeaponAndTravelsInTheStrike(t *testing.T) {
 	f, barbaro, goblin := barbarianOnTurn(t)
 	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
-	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-venenosa"}); err != nil {
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-venenosa"}, nil); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 	venomous := engine.EnchantBoostID(sword, "encanto-venenosa")
@@ -66,7 +66,7 @@ func TestTheEnchantBoostIsOfferedOnlyOnItsWeaponAndTravelsInTheStrike(t *testing
 func TestTheTomblikeBoostTakesHitPointsAndTheCancelGivesThemBack(t *testing.T) {
 	f, barbaro, goblin := barbarianOnTurn(t)
 	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
-	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}); err != nil {
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}, nil); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 	tomblike := engine.EnchantBoostID(sword, "encanto-tumular")
@@ -111,7 +111,7 @@ func TestTheEnchantBoostIsOncePerRound(t *testing.T) {
 		"SELECT id FROM character_items WHERE characterId = ?", id).Scan(&bow); err != nil {
 		t.Fatalf("achar o arco: %v", err)
 	}
-	if err := f.s.characterPlays().EnchantItem(context.Background(), bow, []string{"encanto-venenosa"}); err != nil {
+	if err := f.s.characterPlays().EnchantItem(context.Background(), bow, []string{"encanto-venenosa"}, nil); err != nil {
 		t.Fatalf("encantar o arco: %v", err)
 	}
 	paid := fmt.Sprintf(`{"turn_target":%q,"boost_weapon":0,"boost_power":%q,"boost_steps":0,"boost_split":""}`,
@@ -155,7 +155,7 @@ func TestTheEnchantBoostIsOncePerRound(t *testing.T) {
 func TestTheTomblikeHitPointsComeBackToTheTemporaryPool(t *testing.T) {
 	f, barbaro, goblin := barbarianOnTurn(t)
 	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
-	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}); err != nil {
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}, nil); err != nil {
 		t.Fatalf("encantar a espada: %v", err)
 	}
 	seedTempHpPool(t, f.s, barbaro, 20)

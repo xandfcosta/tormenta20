@@ -71,6 +71,9 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"item enchants", `INSERT INTO character_item_enchants (itemId, enchantId)
 			SELECT pair.copiedId, enchant.enchantId FROM ` + copiedItemPairs + ` pair
 			JOIN character_item_enchants enchant ON enchant.itemId = pair.originalId`, []any{destID, sourceID}},
+		{"item enchant choices", `INSERT INTO character_item_enchant_choices (itemId, enchantId, choice)
+			SELECT pair.copiedId, chosen.enchantId, chosen.choice FROM ` + copiedItemPairs + ` pair
+			JOIN character_item_enchant_choices chosen ON chosen.itemId = pair.originalId`, []any{destID, sourceID}},
 		{"oversized weapons", `INSERT INTO character_oversized_weapons (itemId)
 			SELECT pair.copiedId FROM ` + copiedItemPairs + ` pair
 			JOIN character_oversized_weapons mark ON mark.itemId = pair.originalId`, []any{destID, sourceID}},
