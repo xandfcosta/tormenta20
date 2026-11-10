@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/url"
 	"slices"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"t20engine/app"
 	"t20engine/domain/board"
 	"t20engine/infra/wire"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 	"time"
 
@@ -279,7 +279,7 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 			Meta: memberMeta(classes[m.Characterid], m.Charlevel, m.Playername),
 		})
 		if v.IsGM {
-			v.Heroes[len(v.Heroes)-1].Sheet = fmt.Sprintf("/personagens/%d", m.Characterid)
+			v.Heroes[len(v.Heroes)-1].Sheet = routes.Character(m.Characterid)
 		}
 	}
 

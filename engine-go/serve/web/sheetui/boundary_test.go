@@ -49,6 +49,7 @@ var permitidos = map[string]bool{
 	"t20engine/serve/web/characters": true, // a linha de classes do herói, uma só
 	"t20engine/serve/web/ui":         true, // o kit, a casca e a identidade visual
 	"t20engine/serve/web/ds":         true, // o kit do Tempestade, para a ficha (ALE-473)
+	"t20engine/serve/web/routes":     true, // o endereço desta cena, que o elenco, a forja, a campanha e a Mesa citam
 }
 
 // O `catalog` está na lista, e a linha é entre LEITURA CRUA e ACESSOR TIPADO.

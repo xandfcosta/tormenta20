@@ -24,12 +24,13 @@ import (
 // porta devolve. Ele não é usado para calcular nada aqui: quem calcula é o
 // `sheet.Compute`.
 var permitidos = map[string]bool{
-	"t20engine/domain/book":   true, // os rótulos de raça e de origem do cartão
-	"t20engine/domain/engine": true, // só o tipo `*Catalogs`, que a porta repassa
-	"t20engine/domain/search": true, // o casamento da busca da cena
-	"t20engine/domain/sheet":  true, // a forma da ficha e o `Compute` que dá a Defesa
-	"t20engine/serve/web/ds":  true, // as peças do Tempestade
-	"t20engine/serve/web/ui":  true, // a casca, os ícones e a escada do PV
+	"t20engine/domain/book":      true, // os rótulos de raça e de origem do cartão
+	"t20engine/domain/engine":    true, // só o tipo `*Catalogs`, que a porta repassa
+	"t20engine/domain/search":    true, // o casamento da busca da cena
+	"t20engine/domain/sheet":     true, // a forma da ficha e o `Compute` que dá a Defesa
+	"t20engine/serve/web/ds":     true, // as peças do Tempestade
+	"t20engine/serve/web/ui":     true, // a casca, os ícones e a escada do PV
+	"t20engine/serve/web/routes": true, // o endereço da ficha de cada herói
 }
 
 func TestTheCharacterListDoesNotImportItsHost(t *testing.T) {

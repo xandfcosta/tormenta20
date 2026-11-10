@@ -6,6 +6,7 @@ import (
 	"t20engine/domain/book"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/master"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
@@ -111,7 +112,7 @@ templ gmGroup(v View) {
 						</span>
 						<span class="ds-row-meta">{ memberMeta(m) }</span>
 					</span>
-					<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
+					<a href={ templ.SafeURL(routes.Character(m.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + m.Name } title={ "Abrir a ficha completa de " + m.Name }>
 						@ui.Icon("ExternalLink", "ds-icon")
 					</a>
 					// AS BARRAS descem para a largura toda da linha, com o − e o +

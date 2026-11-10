@@ -6,6 +6,7 @@ import (
 
 	"t20engine/domain/live"
 	"t20engine/serve/web/ds"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
@@ -211,7 +212,7 @@ templ gmCombatantSheet(v View, row tableRow) {
 			<span class="ds-row-meta">{ combatantMeta(row) }</span>
 			<span class="ds-gm-sheet-tools">
 				if row.CharacterID != 0 {
-					<a href={ templ.SafeURL(fmt.Sprintf("/personagens/%d", row.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + row.Label } title={ "Abrir a ficha completa de " + row.Label }>
+					<a href={ templ.SafeURL(routes.Character(row.CharacterID)) } target="_blank" rel="noopener" class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + row.Label } title={ "Abrir a ficha completa de " + row.Label }>
 						@ui.Icon("ExternalLink", "ds-icon")
 					</a>
 				}

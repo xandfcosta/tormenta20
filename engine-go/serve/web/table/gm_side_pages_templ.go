@@ -14,6 +14,7 @@ import (
 	"t20engine/domain/book"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/master"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
@@ -66,7 +67,7 @@ func gmSidePages(v View) templ.Component {
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(l.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 25, Col: 14}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 26, Col: 14}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -95,7 +96,7 @@ func gmSidePages(v View) templ.Component {
 			var templ_7745c5c3_Var4 templ.SafeURL
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(sidePageAddress(v, l.Path)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 34, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 35, Col: 110}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +109,7 @@ func gmSidePages(v View) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(sidePageTarget(v, l.Path))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 34, Col: 147}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 35, Col: 147}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -121,7 +122,7 @@ func gmSidePages(v View) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(l.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 36, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 37, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -134,7 +135,7 @@ func gmSidePages(v View) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(l.Hint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 37, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 38, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -192,7 +193,7 @@ func gmGroupPage(v View) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(sidePageTitle(v, "Grupo"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 52, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 53, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -302,7 +303,7 @@ func gmCastPage(v View) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(sidePageTitle(v, "Elenco"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 75, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 76, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -366,7 +367,7 @@ func gmBestiaryPage(v View, b master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(bestiaryPageDraft(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 86, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 87, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -379,7 +380,7 @@ func gmBestiaryPage(v View, b master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(sidePageTitle(v, "Bestiário"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 87, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 88, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -456,7 +457,7 @@ func gmGroup(v View) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(nameMatches("gm_group_search", m.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 103, Col: 87}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 104, Col: 87}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 					if templ_7745c5c3_Err != nil {
@@ -469,7 +470,7 @@ func gmGroup(v View) templ.Component {
 					var templ_7745c5c3_Var20 string
 					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(m.Initials)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 104, Col: 65}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 105, Col: 65}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 					if templ_7745c5c3_Err != nil {
@@ -497,7 +498,7 @@ func gmGroup(v View) templ.Component {
 						var templ_7745c5c3_Var21 string
 						templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Presence.Sentence)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 108, Col: 102}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 109, Col: 102}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 						if templ_7745c5c3_Err != nil {
@@ -511,7 +512,7 @@ func gmGroup(v View) templ.Component {
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 110, Col: 15}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 111, Col: 15}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -524,7 +525,7 @@ func gmGroup(v View) templ.Component {
 					var templ_7745c5c3_Var23 string
 					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(memberMeta(m))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 112, Col: 47}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 113, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 					if templ_7745c5c3_Err != nil {
@@ -535,9 +536,9 @@ func gmGroup(v View) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var24 templ.SafeURL
-					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/personagens/%d", m.CharacterID)))
+					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(routes.Character(m.CharacterID)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 114, Col: 75}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 115, Col: 61}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 					if templ_7745c5c3_Err != nil {
@@ -550,7 +551,7 @@ func gmGroup(v View) templ.Component {
 					var templ_7745c5c3_Var25 string
 					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a ficha completa de " + m.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 114, Col: 208}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 115, Col: 194}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 					if templ_7745c5c3_Err != nil {
@@ -563,7 +564,7 @@ func gmGroup(v View) templ.Component {
 					var templ_7745c5c3_Var26 string
 					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue("Abrir a ficha completa de " + m.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 114, Col: 256}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 115, Col: 242}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 					if templ_7745c5c3_Err != nil {
@@ -760,7 +761,7 @@ func gmCastList(v View) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(nameMatches("gm_cast_search", npc.Name))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 166, Col: 86}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 167, Col: 86}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 					if templ_7745c5c3_Err != nil {
@@ -773,7 +774,7 @@ func gmCastList(v View) templ.Component {
 					var templ_7745c5c3_Var33 string
 					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(npc.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 168, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 169, Col: 44}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 					if templ_7745c5c3_Err != nil {
@@ -791,7 +792,7 @@ func gmCastList(v View) templ.Component {
 						var templ_7745c5c3_Var34 string
 						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(npcMeta(npc))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 170, Col: 48}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 171, Col: 48}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 						if templ_7745c5c3_Err != nil {
@@ -940,7 +941,7 @@ func gmBestiary(b master.BestiaryView) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(master.BestiarySignals(b))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 212, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/gm_side_pages.templ`, Line: 213, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 		if templ_7745c5c3_Err != nil {

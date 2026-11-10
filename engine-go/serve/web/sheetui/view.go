@@ -8,6 +8,7 @@ import (
 
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/characters"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
@@ -282,9 +283,9 @@ func (s Scene) Load(
 // @example sheetRoute(7, "bag") // "/personagens/7?tab=bag"
 func sheetRoute(id int64, aba string) string {
 	if aba == "" {
-		return fmt.Sprintf("/personagens/%d", id)
+		return routes.Character(id)
 	}
-	return fmt.Sprintf("/personagens/%d?tab=%s", id, aba)
+	return routes.Character(id) + "?tab=" + aba
 }
 
 // stepClasses monta as classes com a elegibilidade de cada uma.
