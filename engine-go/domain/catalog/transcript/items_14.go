@@ -168,6 +168,7 @@ var itemsPart14 = []Item{
 		UID:         "itm_kcpwjnsarb",
 		AppliesTo:   []string{"weapon"},
 		Description: "Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, a vítima fica envenenada, perdendo 1d12 pontos de vida por rodada durante 3 rodadas. Uma arma venenosa verte um líquido verde e viscoso.",
+		Modeled:     []string{"o gasto de 2 PM no golpe, uma vez por rodada, só na arma do encanto"},
 		Unmodeled:   &ItemUnmodeled{Note: "o 1d12 por rodada durante 3 rodadas é dano com duração no ALVO: o golpe pago anuncia a condição com a fórmula, e o relógio é do mestre"},
 		RollMin:     89,
 		RollMax:     90,

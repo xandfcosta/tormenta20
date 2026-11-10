@@ -133,11 +133,14 @@ var itemsPart12 = []Item{
 		UID:         "itm_l3jc675vvm",
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma causa +1d6 de dano de eletricidade. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso e acertar o ataque, um raio atinge outra criatura em alcance curto, causando 3d8 pontos de dano de eletricidade. Uma arma elétrica emite faíscas e é coberta de arcos voltaicos.",
-		Modeled:     []string{"o +1d6 de dano de eletricidade"},
-		Unmodeled:   &ItemUnmodeled{Note: "o 3d8 do raio cai em OUTRA criatura em alcance curto, que o mestre escolhe: o golpe pago anuncia a fórmula, e quem rola e aplica é a mesa"},
-		RollMin:     41,
-		RollMax:     45,
-		CountsAs:    1,
+		Modeled: []string{
+			"o +1d6 de dano de eletricidade",
+			"o gasto de 2 PM no golpe, uma vez por rodada, só na arma do encanto",
+		},
+		Unmodeled: &ItemUnmodeled{Note: "o 3d8 do raio cai em OUTRA criatura em alcance curto, que o mestre escolhe: o golpe pago anuncia a fórmula, e quem rola e aplica é a mesa"},
+		RollMin:   41,
+		RollMax:   45,
+		CountsAs:  1,
 		Boost: &ItemBoost{
 			PM: 2,
 			Modifiers: []Modifier{
@@ -421,11 +424,14 @@ var itemsPart12 = []Item{
 		UID:         "itm_4y6mvoswho",
 		AppliesTo:   []string{"weapon"},
 		Description: "A arma causa +1d8 de dano de trevas. Uma vez por rodada, quando ataca, você pode gastar 2 PM. Se fizer isso, o bônus de dano aumenta para +2d8, mas você perde 1d8 pontos de vida. Uma arma tumular drena o calor ao redor.",
-		Modeled:     []string{"o +1d8 de dano de trevas"},
-		Unmodeled:   &ItemUnmodeled{Note: "o GESTO de 2 PM, que sobe o bônus de +1d8 para +2d8 e COBRA 1d8 de PV de quem o usa. São duas trocas num gesto só, e a segunda tira vida do portador — o motor não tem custo em PV"},
-		RollMin:     83,
-		RollMax:     84,
-		CountsAs:    1,
+		Modeled: []string{
+			"o +1d8 de dano de trevas",
+			"o gasto de 2 PM no golpe, uma vez por rodada, só na arma do encanto",
+			"o +2d8 e o 1d8 de PV que o gasto cobra de quem ataca",
+		},
+		RollMin:  83,
+		RollMax:  84,
+		CountsAs: 1,
 		Boost: &ItemBoost{
 			PM: 2,
 			Modifiers: []Modifier{
