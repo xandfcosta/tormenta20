@@ -84,7 +84,7 @@ func TestTheGMEnchantsAnArmorWithItsOwnTable(t *testing.T) {
 }
 
 // O ITEM ESPECÍFICO chega ao diálogo com o que o verbete já traz CONTADO (p334, p337): a Vingadora sagrada é
-// formidável, então o topo diz "1 de 3", a Formidável não se oferece de novo, e a Magnífica — que a pede — não
+// formidável, então o topo diz "1 de 3 encantos · já vem com Formidável", a Formidável não se oferece de novo, e a Magnífica — que a pede — não
 // tranca por ela. O servidor recusa o terceiro de peso por cima, que é o que o diálogo deixa de oferecer.
 func TestTheGMDialogCountsTheEnchantTheEntryAlreadyHas(t *testing.T) {
 	f := newSceneFixture(t)
@@ -95,7 +95,7 @@ func TestTheGMDialogCountsTheEnchantTheEntryAlreadyHas(t *testing.T) {
 		t.Fatal("o mestre não recebe o diálogo de encantos da Vingadora sagrada")
 	}
 	written := renderNode(t, dialog)
-	for _, want := range []string{"1 de 3 encantos", "Já vem com Formidável"} {
+	for _, want := range []string{"1 de 3 encantos", "já vem com Formidável"} {
 		if !strings.Contains(written, want) {
 			t.Errorf("o diálogo da Vingadora não escreve %q:\n%s", want, written)
 		}
