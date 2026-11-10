@@ -233,15 +233,15 @@ func boostStepCommand(boost attackBoost, delta int) string {
 // total — "+2d8 · 3 PM", "+8 · 2 PM". O gasto que só anuncia (a Venenosa) não
 // compra número, e fica só com o preço; o da Tumular diz também o PV.
 func boostStepLabelExpr(boost attackBoost) string {
-	hitPoints := ""
+	suffix := ""
 	if boost.HitPointCost != "" {
-		hitPoints = " e " + boost.HitPointCost + " PV"
+		suffix = " e " + boost.HitPointCost + " PV"
 	}
 	if boost.OncePerRound {
-		hitPoints += " · uma vez por rodada"
+		suffix += " · uma vez por rodada"
 	}
 	return fmt.Sprintf("((%s) ? %s + ' · ' : '') + (%d + %d * $%s) + ' PM%s'",
-		boostAmountExpr(boost), boostAmountExpr(boost), boost.BasePM, boost.StepPM, boostStepsSignal, hitPoints)
+		boostAmountExpr(boost), boostAmountExpr(boost), boost.BasePM, boost.StepPM, boostStepsSignal, suffix)
 }
 
 // boostAmountExpr escreve o que o degrau escolhido compra, pela tabela que o
