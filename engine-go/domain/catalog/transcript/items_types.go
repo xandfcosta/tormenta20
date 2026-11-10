@@ -39,6 +39,9 @@ type ItemBoost struct {
 	PM           int        `json:"pm"`
 	Modifiers    []Modifier `json:"modifiers"`
 	HitPointCost string     `json:"hitPointCost,omitempty"`
+	// AgainstOneOf são as opções da escolha que o mestre faz ao encantar: o gasto só vale contra o tipo de
+	// criatura escolhido (a Anticriatura, p335). `raca-humanoide` aceita o id de qualquer raça.
+	AgainstOneOf []string `json:"againstOneOf,omitempty"`
 }
 
 // PowerChange é o que o item EMPUNHADO muda em poderes de quem o empunha (p158). Powers são ids de

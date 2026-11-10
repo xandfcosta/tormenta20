@@ -95,7 +95,10 @@ type CharacterItem struct {
 	// três pelo mesmo vetor —, e ficam num campo próprio porque o livro os conta
 	// e os limita em separado: "quatro melhorias e três encantos" (p334).
 	Enchants []string `json:"enchants,omitempty"`
-	Material *string  `json:"material"`
+	// EnchantChoices é o que o mestre escolheu ao encantar, por encanto: o tipo de criatura da
+	// Anticriatura (p335). Só o encanto que pede escolha tem linha aqui.
+	EnchantChoices map[string]string `json:"enchantChoices,omitempty"`
+	Material       *string           `json:"material"`
 	// Oversized é a arma feita para uma categoria de tamanho maior (p106). O catálogo
 	// não dá tamanho por item, então é a mochila que guarda a marca.
 	Oversized bool `json:"oversized,omitempty"`

@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 8 de 20 de `Items` (items.go).
+// Parte 8 de 21 de `Items` (items.go).
 var itemsPart08 = []Item{
 	{
 		ID:         "balsamo-restaurador",

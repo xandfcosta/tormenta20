@@ -126,3 +126,38 @@ func TestTheEnchantAnnouncesWhatTheBookForeseesOnlyWhenPaid(t *testing.T) {
 		})
 	}
 }
+
+// p335 "A arma é letal contra um tipo de criatura (ou uma raça de humanoides). Uma vez por rodada, quando ataca
+// uma criatura desse tipo, você pode gastar 2 PM. Se fizer isso e acertar o ataque, causa +4d8 de dano." O tipo
+// é escolhido no encanto, e a oferta o leva para a tela dizer contra quem o gasto vale. Quem confere o alvo é o
+// mestre (decisão do dono): o gasto é oferecido contra qualquer alvo.
+func TestTheAnticreatureEnchantBuysFourD8AgainstTheChosenKind(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	ch := enchanted("encanto-anticriatura")
+	ch.Items[0].EnchantChoices = map[string]string{"encanto-anticriatura": "morto-vivo"}
+	offer, found := enchantOffer(world, ch, "encanto-anticriatura")
+	if !found {
+		t.Fatalf("a espada anticriatura não oferece o gasto de 2 PM; as ofertas são %+v", world.BoostOffers(ch))
+	}
+	if offer.BasePM != 2 || offer.Against != "morto-vivo" || len(offer.Buys) != 1 || offer.Buys[0] != "+4d8" {
+		t.Errorf("a oferta da Anticriatura é %+v; quer 2 PM, contra morto-vivo, comprando +4d8", offer)
+	}
+	d8s := func(card WeaponCard) []string {
+		out := []string{}
+		for _, extra := range card.ExtraDamage {
+			out = append(out, extra.Dice)
+		}
+		return out
+	}
+	plain := world.ComputeWeaponCards(ch, nil)
+	cards, _, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: offer.PowerID})
+	if err != nil {
+		t.Fatalf("gastar os 2 PM da Anticriatura: %v", err)
+	}
+	if got := d8s(cards[0]); len(got) != len(d8s(plain[0]))+1 || got[len(got)-1] != "4d8" {
+		t.Errorf("os dados extras da espada paga são %v, e sem o gasto %v; o livro dá +4d8", got, d8s(plain[0]))
+	}
+	if len(cards[1].ExtraDamage) != len(plain[1].ExtraDamage) {
+		t.Errorf("a adaga ganhou os 4d8 da espada: %+v", cards[1].ExtraDamage)
+	}
+}

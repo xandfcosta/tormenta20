@@ -21,6 +21,9 @@ type ItemBoost struct {
 	PM           int        `json:"pm"`
 	Modifiers    []Modifier `json:"modifiers"`
 	HitPointCost string     `json:"hitPointCost,omitempty"`
+	// AgainstOneOf são as opções do tipo de criatura que o encanto escolhe (a Anticriatura, p335): o gasto
+	// só vale contra o tipo escolhido, e quem confere o alvo é o mestre.
+	AgainstOneOf []string `json:"againstOneOf,omitempty"`
 }
 
 // enchantBoostPrefix marca o id de um gasto de encanto no lugar do id do poder de classe.
@@ -67,7 +70,7 @@ func (r *Ruleset) enchantBoostOffers(ch Character) []BoostOffer {
 			}
 			out = append(out, BoostOffer{
 				PowerID: EnchantBoostID(it.ID, enchant), Name: catalog.Name, BasePM: catalog.Boost.PM,
-				ItemID: it.ID, HitPointCost: catalog.Boost.HitPointCost,
+				ItemID: it.ID, HitPointCost: catalog.Boost.HitPointCost, Against: it.EnchantChoices[enchant],
 				Buys: []string{enchantBoostBuys(catalog.Boost)}, Foresees: enchantBoostForesees(catalog.Boost),
 			})
 		}

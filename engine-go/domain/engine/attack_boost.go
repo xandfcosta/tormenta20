@@ -125,6 +125,9 @@ type BoostOffer struct {
 	// vale em toda arma que o livro deixa. HitPointCost é o dado de PV que o portador perde ao gastar.
 	ItemID       int64
 	HitPointCost string
+	// Against é o tipo de criatura (ou a raça) contra o qual o gasto vale, escolhido no encanto da arma (a
+	// Anticriatura, p335). Vazio no gasto que vale contra qualquer alvo.
+	Against string
 	// Foresees é o que o golpe pago prevê no acerto (a condição da Venenosa, o efeito da Corrosiva), para a
 	// tela dizer antes de o jogador pagar.
 	Foresees []AnnouncedCondition
