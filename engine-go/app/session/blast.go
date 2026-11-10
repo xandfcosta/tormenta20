@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -25,12 +26,12 @@ func (st *Store) FireBlast(ctx context.Context, sessionID int64, blast live.Blas
 			}
 			if s.CountsRounds() {
 				if !live.UsesOncePerRound(s, blast.AttackerEntryID, blast.BoostID) {
-					return fmt.Errorf("a %s de %s é uma vez por rodada (p335), e já saiu nesta: espere a próxima vez",
-						blast.Name, blast.Weapon)
+					return fmt.Errorf("a %s é uma vez por rodada (p335), e %s já a disparou nesta: espere a próxima vez",
+						strings.ToLower(blast.Name), blast.Who)
 				}
 				if s.TurnIndex >= 0 && s.TurnIndex < len(s.Initiative) && s.Initiative[s.TurnIndex].ID == blast.AttackerEntryID {
 					if err := chargeTurn(s, engine.ActionStandard); err != nil {
-						return fmt.Errorf("a %s é em vez do ataque, e a ação padrão dele já não cabe nesta vez: %w", blast.Name, err)
+						return fmt.Errorf("a %s é em vez do ataque, e a ação padrão dele já não cabe nesta vez: %w", strings.ToLower(blast.Name), err)
 					}
 				}
 			}
@@ -55,11 +56,11 @@ func spendsOnTheBlast(ctx context.Context, u Unit, s *live.SessionRuntimeState, 
 		return fmt.Errorf("ler o PM de %s: %w", blast.Who, err)
 	}
 	if available := pools[blast.CharacterID].ManaAvailable(); int64(blast.PM) > available {
-		return fmt.Errorf("a %s pede %d PM, e sobram %d", blast.Name, blast.PM, available)
+		return fmt.Errorf("a %s pede %d PM, e sobram %d", strings.ToLower(blast.Name), blast.PM, available)
 	}
 	hp, mp, err := u.Sheet.SpendMana(ctx, blast.CharacterID, blast.PM)
 	if err != nil {
-		return fmt.Errorf("cobrar o PM da %s: %w", blast.Name, err)
+		return fmt.Errorf("cobrar o PM da %s: %w", strings.ToLower(blast.Name), err)
 	}
 	return live.PatchEntryVitals(s, blast.AttackerEntryID, hp, mp, hpFloorOf(s, blast.AttackerEntryID))
 }

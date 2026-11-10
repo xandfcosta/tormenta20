@@ -560,7 +560,7 @@ func handTotalDs(v View, group actionGroup, hand handTotal, name string) templ.C
 			templ_7745c5c3_Var20 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<span class=\"ds-sum-line flex-nowrap\"><span class=\"ds-row-meta\">ou rolei</span> <input class=\"ds-input ds-table-die\" type=\"number\" min=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<span class=\"ds-sum-line flex-nowrap ds-turn-action-rolls\"><span class=\"ds-row-meta\">ou rolei</span> <input class=\"ds-input ds-table-die\" type=\"number\" min=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

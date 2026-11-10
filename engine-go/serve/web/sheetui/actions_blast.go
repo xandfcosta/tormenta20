@@ -3,6 +3,7 @@ package sheetui
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
@@ -27,18 +28,20 @@ func blastRows(dto sheet.CharacterDTO, computed engine.ComputedSheet) []actionRo
 	for _, blast := range dto.Ruleset.EnchantBlasts(ec) {
 		path := "/acoes/bola-de-fogo/" + strconv.FormatInt(blast.ItemID, 10)
 		row := actionRow{
-			Name:   blast.Name + " · " + blast.Weapon,
-			Detail: writtenBlast(blast, sheet.BlastSaveDC(dto.Level, computed.Attributes, blast.SaveAttributes)),
-			Value:  blast.Damage,
-			Cost:   fmt.Sprintf("%d PM · uma vez por rodada", blast.PM),
-			Can:    blast.PM <= mana,
+			Name: blast.Name + " · " + blast.Weapon,
+			// O "UMA VEZ POR RODADA" vai no detalhe, e o número fica fora, e isto foi o OLHO a 390px: na coluna
+			// do custo, junto do "6d6" que o botão já diz, os dois espremiam o nome numa coluna de uma palavra.
+			Detail: writtenBlast(blast, sheet.BlastSaveDC(dto.Level, computed.Attributes, blast.SaveAttributes)) +
+				" · uma vez por rodada",
+			Cost: fmt.Sprintf("%d PM", blast.PM),
+			Can:  blast.PM <= mana,
 			Rolls: []actionRoll{{
 				Label: "Rolar " + blast.Damage, Path: path, NeedsTarget: true, Primary: true, Before: "$blast_total = 0; ",
 			}},
 			Hand: &handTotal{Path: path, Dice: blast.Damage},
 		}
 		if !row.Can {
-			row.Why = fmt.Sprintf("falta PM: a %s pede %d", blast.Name, blast.PM)
+			row.Why = fmt.Sprintf("falta PM: a %s pede %d", strings.ToLower(blast.Name), blast.PM)
 		}
 		rows = append(rows, row)
 	}

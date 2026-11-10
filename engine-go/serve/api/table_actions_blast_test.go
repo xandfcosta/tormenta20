@@ -27,7 +27,7 @@ func TestTheFlamingBlastGoesFromTheActionsToTheTable(t *testing.T) {
 	// A LINHA diz o que a bola de fogo faz e o que custa, com a CD da ficha: nível 6 e Força 4, a maior entre
 	// Força e Destreza, dão 10 + 3 + 4 = 17 (p227).
 	standard := entre(t, superficieDeAcoes(t, html.UnescapeString(acoesDaMesa(t, f))), "Ação padrão", "Ação de movimento")
-	for _, want := range []string{"Bola de fogo", "6d6 de fogo", "alcance médio", "Reflexos CD 17 reduz à metade", "2 PM · uma vez por rodada"} {
+	for _, want := range []string{"Bola de fogo", "6d6 de fogo", "alcance médio", "Reflexos CD 17 reduz à metade", "uma vez por rodada", "2 PM"} {
 		if !strings.Contains(standard, want) {
 			t.Errorf("a linha da bola de fogo na ação padrão não diz %q:\n%s", want, recorte(standard))
 		}
