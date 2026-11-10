@@ -196,6 +196,11 @@ templ heroRow(h heroAtTable) {
 				@ui.Icon("Crown", "ds-icon")
 			</span>
 		}
+		if h.Sheet != "" {
+			<a href={ templ.SafeURL(h.Sheet) } class="ds-button" data-variant="ghost" data-icon aria-label={ "Abrir a ficha completa de " + h.Name } title={ "Abrir a ficha completa de " + h.Name }>
+				@ui.Icon("ChevronRight", "ds-icon")
+			</a>
+		}
 	</div>
 }
 

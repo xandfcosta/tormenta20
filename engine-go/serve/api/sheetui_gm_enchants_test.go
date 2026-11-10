@@ -82,3 +82,19 @@ func TestTheGMEnchantsAnArmorWithItsOwnTable(t *testing.T) {
 		t.Errorf("o diálogo da armadura não é o da Tabela 8-10:\n%s", written)
 	}
 }
+
+// A ABA MEMBROS leva o MESTRE à ficha de cada herói, para encantar entre sessões. Para o jogador a linha
+// continua sem link.
+func TestTheMembersTabLinksTheGMToEachSheet(t *testing.T) {
+	f := newSceneFixture(t)
+	link := fmt.Sprintf(`href="/personagens/%d"`, f.charID)
+	members := func(who int64) string {
+		return f.requests(t, who, http.MethodGet, fmt.Sprintf("/campanhas/%d?tab=membros", f.campaignID), "").Body.String()
+	}
+	if !strings.Contains(members(f.gm), link) {
+		t.Error("a aba Membros não leva o mestre à ficha do herói")
+	}
+	if strings.Contains(members(f.player), link) {
+		t.Error("a aba Membros do jogador ganhou o link do mestre")
+	}
+}
