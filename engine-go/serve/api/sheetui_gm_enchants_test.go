@@ -83,6 +83,39 @@ func TestTheGMEnchantsAnArmorWithItsOwnTable(t *testing.T) {
 	}
 }
 
+// O ITEM ESPECÍFICO chega ao diálogo com o que o verbete já traz CONTADO (p334, p337): a Vingadora sagrada é
+// formidável, então o topo diz "1 de 3", a Formidável não se oferece de novo, e a Magnífica — que a pede — não
+// tranca por ela. O servidor recusa o terceiro de peso por cima, que é o que o diálogo deixa de oferecer.
+func TestTheGMDialogCountsTheEnchantTheEntryAlreadyHas(t *testing.T) {
+	f := newSceneFixture(t)
+	vingadora := itemSemeia(t, f, f.charID, "vingadora-sagrada", "Vingadora sagrada", "wielded")
+	screen := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=bag", f.charID), "").Body.String()
+	dialog := itemDialogOf(t, screen, "Encantos de Vingadora sagrada")
+	if dialog == nil {
+		t.Fatal("o mestre não recebe o diálogo de encantos da Vingadora sagrada")
+	}
+	written := renderNode(t, dialog)
+	for _, want := range []string{"1 de 3 encantos", "Já vem com Formidável"} {
+		if !strings.Contains(written, want) {
+			t.Errorf("o diálogo da Vingadora não escreve %q:\n%s", want, written)
+		}
+	}
+	if strings.Contains(written, `aria-label="Formidável"`) {
+		t.Error("o diálogo oferece de novo a Formidável que o verbete já traz")
+	}
+	if strings.Contains(written, "exige Formidável") {
+		t.Error("a Magnífica tranca pedindo a Formidável que a Vingadora já tem")
+	}
+
+	asked := `{"item_enchants":["encanto-ameacadora","encanto-veloz","encanto-venenosa"],"item_enchant_against":""}`
+	if refusal := enchantsAs(t, f, f.gm, vingadora, asked); !strings.Contains(refusal, "no máximo 3") {
+		t.Errorf("três de peso por cima da Formidável passaram, ou a recusa não fala do teto: %q", refusal)
+	}
+	if saved := itemEnchants(t, f, vingadora); len(saved) != 0 {
+		t.Errorf("a recusa gravou %v", saved)
+	}
+}
+
 // A ABA MEMBROS leva o MESTRE à ficha de cada herói, para encantar entre sessões. Para o jogador a linha
 // continua sem link.
 func TestTheMembersTabLinksTheGMToEachSheet(t *testing.T) {

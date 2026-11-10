@@ -94,3 +94,31 @@ func TestTheCeilingOfThreeDoesNotReachAnArtifact(t *testing.T) {
 		t.Errorf("a recusa de família não diz o que está errado: %v", err)
 	}
 }
+
+// O TETO CONTA O QUE O VERBETE JÁ TRAZ (p334, p337). A Vingadora sagrada é uma "espada longa formidável": a
+// Formidável dela ocupa um dos três, e o mestre que a encanta tem DOIS de peso, não três. Sem contar, ela
+// aceitaria três encantos por cima e chegaria a quatro.
+//
+// O mesmo encanto do verbete não entra de novo, e o pré-requisito que o verbete já cumpre não se pede outra vez:
+// a Magnífica pede a Formidável, e a Vingadora já é formidável.
+func TestTheCeilingCountsTheEnchantsTheEntryAlreadyHas(t *testing.T) {
+	vingadora := ItemByID("vingadora-sagrada")
+	if vingadora == nil || vingadora.ComposedOf == nil || len(vingadora.ComposedOf.Enchants) != 1 {
+		t.Fatal("a Vingadora sagrada não está no catálogo com a Formidável no verbete: o caso não mediria nada")
+	}
+	if err := FitsItemEnchants(vingadora, []string{"encanto-ameacadora", "encanto-veloz"}); err != nil {
+		t.Errorf("a Formidável mais dois de peso 1 enchem o teto e cabem, e a recusa veio: %v", err)
+	}
+	err := FitsItemEnchants(vingadora, []string{"encanto-ameacadora", "encanto-veloz", "encanto-venenosa"})
+	if err == nil {
+		t.Error("a Vingadora sagrada recebeu três encantos por cima da Formidável dela: peso 4 em silêncio")
+	} else if !strings.Contains(err.Error(), "no máximo 3") {
+		t.Errorf("a recusa não fala do teto: %v", err)
+	}
+	if err := FitsItemEnchants(vingadora, []string{"encanto-formidavel"}); err == nil {
+		t.Error("a Vingadora sagrada recebeu a Formidável que o verbete já traz")
+	}
+	if err := FitsItemEnchants(vingadora, []string{"encanto-magnifica"}); err != nil {
+		t.Errorf("a Magnífica pede a Formidável, e a Vingadora já é formidável; a recusa veio: %v", err)
+	}
+}

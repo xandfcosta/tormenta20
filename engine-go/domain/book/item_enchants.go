@@ -117,12 +117,62 @@ func aceitaEncanto(item, encanto Item) bool {
 // estado anterior deixaria tirar o pré-requisito e manter o dependente no mesmo
 // pedido.
 //
+// O ITEM ESPECÍFICO entra na conta com o que o verbete já traz (p337, p340): a
+// Vingadora sagrada é uma "espada longa formidável", e a Formidável dela ocupa
+// um dos três e cumpre o pré-requisito da Magnífica. O pedido traz só o que se
+// acrescenta, porque o verbete não se grava — e por isso o mesmo encanto do
+// verbete não entra de novo. O artefato continua sem teto, pela razão do
+// `FitsFoundItemEnchants`.
+//
 // @example book.FitsItemEnchants(book.ItemByID("espada-longa"), []string{"encanto-formidavel"})
 func FitsItemEnchants(catalog *Item, ids []string) error {
-	if err := cabeNaFamiliaEnoTeto(catalog, ids); err != nil {
+	builtIn := BuiltInEnchants(catalog)
+	for _, id := range ids {
+		if slices.Contains(builtIn, id) {
+			return fmt.Errorf("%q já vem com %q no verbete, e o mesmo encanto não entra duas vezes",
+				catalog.Name, enchantNameByID(id))
+		}
+	}
+	all := append(slices.Clone(builtIn), ids...)
+	if catalog != nil && catalog.Artifact {
+		if _, err := cabeNaFamilia(catalog, ids); err != nil {
+			return err
+		}
+	} else if err := cabeNaFamiliaEnoTeto(catalog, all); err != nil {
 		return err
 	}
-	return cumpreOsPreRequisitos(ids)
+	return cumpreOsPreRequisitos(ids, all)
+}
+
+// BuiltInEnchants são os encantos que o verbete do item específico já traz (p337, p340), que a ficha não grava
+// e o teto conta. Nada, para o item comum.
+//
+//	book.BuiltInEnchants(book.ItemByID("vingadora-sagrada")) // ["encanto-formidavel"]
+func BuiltInEnchants(item *Item) []string {
+	if item == nil || item.ComposedOf == nil {
+		return nil
+	}
+	return item.ComposedOf.Enchants
+}
+
+// EnchantWeight é o peso de um conjunto de encantos, como o teto o conta: os do asterisco pesam dois (p334).
+//
+//	book.EnchantWeight([]string{"encanto-formidavel", "encanto-magnifica"}) // 3
+func EnchantWeight(ids []string) int {
+	weight := 0
+	for _, id := range ids {
+		if enchant := ItemByID(id); enchant != nil {
+			weight += max(enchant.CountsAs, 1)
+		}
+	}
+	return weight
+}
+
+func enchantNameByID(id string) string {
+	if enchant := ItemByID(id); enchant != nil {
+		return enchant.Name
+	}
+	return id
 }
 
 // FitsFoundItemEnchants é a mesma recusa SEM o pré-requisito, para o item que o
@@ -211,23 +261,15 @@ func cabeNaFamiliaEnoTeto(catalog *Item, ids []string) error {
 	return nil
 }
 
-// cumpreOsPreRequisitos: o "Pré-requisito:" de três verbetes da Tabela 8-8,
-// conferido DENTRO do mesmo conjunto.
-func cumpreOsPreRequisitos(ids []string) error {
-	escolhidos := map[string]bool{}
-	for _, id := range ids {
-		escolhidos[id] = true
-	}
+// cumpreOsPreRequisitos: o "Pré-requisito:" de três verbetes da Tabela 8-8, cobrado de quem se PEDE e
+// conferido contra tudo o que o item terá (`present`), o que o verbete traz incluído.
+func cumpreOsPreRequisitos(ids, present []string) error {
 	for _, id := range ids {
 		encanto := ItemByID(id)
-		if encanto == nil || encanto.Requires == "" || escolhidos[encanto.Requires] {
+		if encanto == nil || encanto.Requires == "" || slices.Contains(present, encanto.Requires) {
 			continue
 		}
-		nome := encanto.Requires
-		if pre := ItemByID(encanto.Requires); pre != nil {
-			nome = pre.Name
-		}
-		return fmt.Errorf("%q exige %q na mesma arma (p335-336)", encanto.Name, nome)
+		return fmt.Errorf("%q exige %q na mesma arma (p335-336)", encanto.Name, enchantNameByID(encanto.Requires))
 	}
 	return nil
 }

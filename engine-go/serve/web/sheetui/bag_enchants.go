@@ -123,6 +123,9 @@ type enchantChoice struct {
 // offerEnchants dá a cada folha de item que aceita encanto o diálogo do mestre: a tabela da família dele
 // (8-8 para a arma, 8-10 para a armadura e o escudo), com o que o item já carrega ligado. Só a Load do mestre
 // chama isto; a folha do jogador fica sem o gesto.
+//
+// O que o verbete do item específico já traz não se oferece — o pedido leva só o que se acrescenta —, mas
+// pesa no teto e cumpre o pré-requisito, como no `FitsItemEnchants`.
 func offerEnchants(sheets []itemSheet, dto sheet.CharacterDTO) {
 	for i := range sheets {
 		at := slices.IndexFunc(dto.Items, func(it sheet.ItemDTO) bool { return it.ID == sheets[i].ID })
@@ -134,13 +137,22 @@ func offerEnchants(sheets []itemSheet, dto sheet.CharacterDTO) {
 		if catalog == nil {
 			continue
 		}
+		builtIn := book.BuiltInEnchants(catalog)
+		sheets[i].EnchantBase, sheets[i].EnchantUncapped = book.EnchantWeight(builtIn), catalog.Artifact
 		for _, entry := range book.EnchantsThatFit(*catalog) {
+			if slices.Contains(builtIn, entry.ID) {
+				sheets[i].EnchantBuiltIn = append(sheets[i].EnchantBuiltIn, entry.Name)
+				continue
+			}
 			choice := enchantChoice{
 				ID: entry.ID, Name: entry.Name, Effect: firstSentence(entry.Description), Weight: max(entry.CountsAs, 1),
 				Requires: entry.Requires, Active: slices.Contains(item.Enchants, entry.ID),
 				Against: book.ChosenKindOptions(entry.ID),
 			}
-			if required := book.ItemByID(entry.Requires); required != nil {
+			if slices.Contains(builtIn, entry.Requires) {
+				choice.Requires = ""
+			}
+			if required := book.ItemByID(choice.Requires); required != nil {
 				choice.RequiresName = required.Name
 			}
 			if entry.Boost != nil {
@@ -219,7 +231,8 @@ func thatTogglesEnchant(c enchantChoice) string {
 		"$item_enchants = escolhidos"
 }
 
-// enchantWeightExpr é o PESO do que está escolhido agora: os que "contam como dois" pesam 2 (p334).
+// enchantWeightExpr é o PESO do que está escolhido agora: os que "contam como dois" pesam 2 (p334), e a soma
+// parte do peso do que o verbete já traz.
 func enchantWeightExpr(s itemSheet) string {
 	heavy := []string{}
 	for _, c := range s.EnchantChoices {
@@ -227,21 +240,37 @@ func enchantWeightExpr(s itemSheet) string {
 			heavy = append(heavy, fmt.Sprintf("'%s': %d", c.ID, c.Weight))
 		}
 	}
-	return "$item_enchants.reduce((n, id) => n + ({" + strings.Join(heavy, ", ") + "}[id] ?? 1), 0)"
+	return "$item_enchants.reduce((n, id) => n + ({" + strings.Join(heavy, ", ") + "}[id] ?? 1), " +
+		strconv.Itoa(s.EnchantBase) + ")"
 }
 
-// enchantCountExpr é a contagem do topo: "2 de 3 encantos".
+// enchantCountExpr é a contagem do topo: "2 de 3 encantos", ou "4 encantos" no artefato, que não tem teto.
 func enchantCountExpr(s itemSheet) string {
-	return enchantWeightExpr(s) + " + ' de " + strconv.Itoa(book.EnchantSlots) + " encantos'"
+	return enchantWeightExpr(s) + " + '" + enchantCeilingWritten(s) + "'"
 }
 
 // enchantCountWritten é a mesma contagem, escrita no servidor para o primeiro quadro.
 func enchantCountWritten(s itemSheet) string {
-	return strconv.Itoa(chosenWeight(s)) + " de " + strconv.Itoa(book.EnchantSlots) + " encantos"
+	return strconv.Itoa(chosenWeight(s)) + enchantCeilingWritten(s)
+}
+
+func enchantCeilingWritten(s itemSheet) string {
+	if s.EnchantUncapped {
+		return " encantos"
+	}
+	return " de " + strconv.Itoa(book.EnchantSlots) + " encantos"
+}
+
+// enchantOverflowExpr diz se o encanto passaria do teto; nunca, no artefato.
+func enchantOverflowExpr(s itemSheet, c enchantChoice) string {
+	if s.EnchantUncapped {
+		return "false"
+	}
+	return fmt.Sprintf("%s + %d > %d", enchantWeightExpr(s), c.Weight, book.EnchantSlots)
 }
 
 func chosenWeight(s itemSheet) int {
-	weight := 0
+	weight := s.EnchantBase
 	for _, c := range s.EnchantChoices {
 		if c.Active {
 			weight += c.Weight
@@ -253,7 +282,7 @@ func chosenWeight(s itemSheet) int {
 // enchantLockedExpr tranca o encanto que não cabe AGORA: o pré-requisito fora do conjunto, ou o peso que
 // passaria do teto. O escolhido nunca tranca, para poder sair. Quem recusa de verdade é o servidor.
 func enchantLockedExpr(s itemSheet, c enchantChoice) string {
-	why := fmt.Sprintf("%s + %d > %d", enchantWeightExpr(s), c.Weight, book.EnchantSlots)
+	why := enchantOverflowExpr(s, c)
 	if c.Requires != "" {
 		why = "!$item_enchants.includes('" + c.Requires + "') || " + why
 	}
@@ -267,7 +296,7 @@ func enchantMetaExpr(s itemSheet, c enchantChoice) string {
 	if c.Requires != "" {
 		reasons = append(reasons, fmt.Sprintf("!$item_enchants.includes('%s') ? 'exige %s' : ''", c.Requires, c.RequiresName))
 	}
-	reasons = append(reasons, fmt.Sprintf("%s + %d > %d ? 'sem espaço' : ''", enchantWeightExpr(s), c.Weight, book.EnchantSlots))
+	reasons = append(reasons, enchantOverflowExpr(s, c)+" ? 'sem espaço' : ''")
 	return fmt.Sprintf("(%s ? '' : [%s].filter(Boolean).join(' · ')) || '%s'",
 		enchantChosen(c), strings.Join(reasons, ", "), c.Spend)
 }
@@ -293,7 +322,7 @@ func lockReasons(s itemSheet, c enchantChoice) []string {
 	if c.Requires != "" && !slices.ContainsFunc(s.EnchantChoices, func(o enchantChoice) bool { return o.ID == c.Requires && o.Active }) {
 		reasons = append(reasons, "exige "+c.RequiresName)
 	}
-	if chosenWeight(s)+c.Weight > book.EnchantSlots {
+	if !s.EnchantUncapped && chosenWeight(s)+c.Weight > book.EnchantSlots {
 		reasons = append(reasons, "sem espaço")
 	}
 	return reasons

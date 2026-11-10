@@ -47,6 +47,11 @@ type itemSheet struct {
 	Enchantable    bool
 	EnchantChoices []enchantChoice
 	EnchantAgainst string
+	// EnchantBuiltIn são os encantos que o verbete do item específico já traz, e EnchantBase o peso deles, que o
+	// teto conta (p337). EnchantUncapped é o artefato, que não tem teto (p346).
+	EnchantBuiltIn  []string
+	EnchantBase     int
+	EnchantUncapped bool
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
