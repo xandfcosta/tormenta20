@@ -190,7 +190,7 @@ func harvestWeaponRiders(w *ecs.World) {
 		if t.Mod.Target.K == "announcedEffect" {
 			// O EFEITO ANUNCIADO segue o caminho da condição anunciada: sai da pilha e vai para a carta, com
 			// o texto do livro no lugar do id da condição.
-			riders.announced = append(riders.announced, AnnouncedCondition{Effect: t.Mod.Note})
+			riders.announced = append(riders.announced, AnnouncedCondition{Effect: t.Mod.Note, Scope: t.Mod.Target.Scope})
 			ecs.Set(w, e, Suppressed{Why: "é anúncio de efeito, e anúncio não soma"})
 			return
 		}
@@ -203,6 +203,7 @@ func harvestWeaponRiders(w *ecs.World) {
 				Condition:  t.Mod.Target.Name,
 				OnCritical: t.Mod.Condition != nil && t.Mod.Condition.C == "onCritical",
 				Note:       t.Mod.Note,
+				Scope:      t.Mod.Target.Scope,
 			})
 			ecs.Set(w, e, Suppressed{Why: "é anúncio de condição, e anúncio não soma"})
 			return

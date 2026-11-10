@@ -156,6 +156,9 @@ type AnnouncedCondition struct {
 	// o raio de 3d8 da Elétrica noutra criatura (p335). Vem com a fórmula escrita e sem rolar: o dano cai
 	// noutra hora ou noutro alvo, que o app não escolhe (decisão do dono). Com ele, Condition fica vazia.
 	Effect string `json:"effect,omitempty"`
+	// Scope é a arma de que o anúncio é, como o do `ExtraDamage`: o sangramento da espada Sanguinária não sai
+	// do golpe da adaga. Vazio vale em toda carta. Não atravessa a carta: quem o lê é o filtro dela.
+	Scope string `json:"-"`
 }
 
 // O ATAQUE EM DOIS TEMPOS: `JudgeAttack` é o teste, e `RollAttackDamage` é o

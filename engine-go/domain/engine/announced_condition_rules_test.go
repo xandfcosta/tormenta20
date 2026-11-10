@@ -1,7 +1,9 @@
 package engine
 
 import (
+	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -68,8 +70,9 @@ func TestTheAnnouncedConditionCarriesNoVerdict(t *testing.T) {
 		"Rounds":   "contar a duração é da mesa",
 	}
 	// O Effect é o texto do livro para o que não é condição (o 4d4 de ácido da Corrosiva): a fórmula vai
-	// escrita, sem rolar e sem dizer se pegou — informa, como a Note.
-	campos := map[string]bool{"Condition": true, "OnCritical": true, "Note": true, "Effect": true}
+	// escrita, sem rolar e sem dizer se pegou — informa, como a Note. O Scope diz de que arma ele é, e não
+	// passa da carta.
+	campos := map[string]bool{"Condition": true, "OnCritical": true, "Note": true, "Effect": true, "Scope": true}
 	tipo := anuncioType()
 	for i := 0; i < tipo.NumField(); i++ {
 		nome := tipo.Field(i).Name
@@ -174,6 +177,43 @@ func TestTheDrainingCriticalAnnouncesTheTempHpAlongWithTheCondition(t *testing.T
 		if !strings.Contains(fraco.Note, quer) {
 			t.Errorf("a nota do crítico da Drenante não diz %q — o mestre lê a faixa e não "+
 				"fica sabendo do efeito. Veio: %q", quer, fraco.Note)
+		}
+	}
+}
+
+// O ANÚNCIO É DA ARMA QUE TEM O ENCANTO (p336). "Uma criatura viva atingida fica sangrando" fala do golpe
+// DESTA arma: com uma espada Sanguinária numa mão e uma adaga comum na outra, o golpe da adaga não anuncia
+// sangramento, e o ataque desarmado também não. É o caminho que o dano da Cruel já faz.
+func TestTheAnnouncedConditionStaysOnTheWeaponWithTheEnchant(t *testing.T) {
+	catalogs := primeBook(t)
+	ptr := func(s string) *string { return &s }
+	var oracle struct {
+		Char Character `json:"char"`
+	}
+	readJSON(t, filepath.Join(mustWd(t), "..", "..", "parity", "bardo-versatil-nv7.json"), &oracle)
+	ch := oracle.Char
+	ch.Items = []CharacterItem{
+		{CatalogID: ptr("espada-longa"), Name: "Espada longa", Equipped: ptr("wielded"), Improvements: "[]",
+			Enchants: []string{"encanto-sanguinaria"}},
+		{CatalogID: ptr("adaga"), Name: "Adaga", Equipped: ptr("wielded2"), Improvements: "[]"},
+	}
+	cards := BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{})
+
+	seen := map[string]bool{}
+	for _, card := range cards {
+		seen[card.Name] = true
+		bleeds := slices.ContainsFunc(card.Announces, func(a AnnouncedCondition) bool { return a.Condition == "sangrando" })
+		if card.Name == "Espada longa" && !bleeds {
+			t.Errorf("a espada Sanguinária não anuncia o sangramento: %+v", card.Announces)
+		}
+		if card.Name != "Espada longa" && bleeds {
+			t.Errorf("a carta %q anuncia o sangramento da Sanguinária da outra mão", card.Name)
+		}
+	}
+	// O DENOMINADOR: sem as três cartas, "ninguém mais anuncia" e "não havia mais ninguém" se confundem.
+	for _, want := range []string{"Espada longa", "Adaga", UnarmedName} {
+		if !seen[want] {
+			t.Errorf("a ficha não tem a carta %q, e o caso não a mede (cartas: %v)", want, seen)
 		}
 	}
 }

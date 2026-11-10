@@ -153,7 +153,8 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 // onThisWeapon prende à arma o dano, a margem e o multiplicador que ela mesma concede, com o verbete,
 // a melhoria, o material ou o encanto: "a arma fornece +1 nas rolagens de dano" (Cruel, p165), "a
 // margem de ameaça [desta arma] aumenta" (Precisa, p166). No escopo vazio ou no `this`, toda carta os
-// lia, e a Cruel da espada subia a adaga da outra mão e o ataque desarmado.
+// lia, e a Cruel da espada subia a adaga da outra mão e o ataque desarmado. O ANÚNCIO vai junto: "uma
+// criatura viva atingida fica sangrando" (Sanguinária, p336) é o golpe desta arma.
 //
 // O escopo é o do id do catálogo, como o do espelho de ataque: duas adagas iguais na mão o dividem.
 // O ataque fica de fora porque `mirrorWeaponAttackMods` já o leva, e o passo de dano porque
@@ -166,6 +167,7 @@ func onThisWeapon(mods []Modifier, catalog *CatalogItem) []Modifier {
 	for i, m := range out {
 		unscoped := m.Target.Scope == "" || m.Target.Scope == "this"
 		strike := m.Target.K == "critRange" || m.Target.K == "critMult" ||
+			m.Target.K == "announcedCondition" || m.Target.K == "announcedEffect" ||
 			(m.Target.K == "damage" && (m.Target.Scope == "this" || m.Dice != ""))
 		if unscoped && strike {
 			out[i].Target.Scope = WeaponDamageScope(catalog.ID)
@@ -224,9 +226,24 @@ func mirrorWeaponAttack(w *ecs.World) {
 func diceOfThisCard(extra []ExtraDamage, scopes []string) []ExtraDamage {
 	out := []ExtraDamage{}
 	for _, die := range extra {
-		if die.Scope == "" || die.Scope == "all" || slices.Contains(scopes, die.Scope) {
+		if reachesThisCard(die.Scope, scopes) {
 			out = append(out, die)
 		}
 	}
 	return out
+}
+
+// announcesOfThisCard são os anúncios que valem nesta carta, pela mesma régua do dado extra.
+func announcesOfThisCard(announced []AnnouncedCondition, scopes []string) []AnnouncedCondition {
+	out := []AnnouncedCondition{}
+	for _, a := range announced {
+		if reachesThisCard(a.Scope, scopes) {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+func reachesThisCard(scope string, scopes []string) bool {
+	return scope == "" || scope == "all" || slices.Contains(scopes, scope)
 }

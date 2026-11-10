@@ -365,7 +365,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		CritMult:        critMult,
 		NonLethal:       nonLethal,
 		ExtraDamage:     diceOfThisCard(b.effects.ExtraDamage, scopes),
-		Announces:       b.effects.Announced,
+		Announces:       announcesOfThisCard(b.effects.Announced, scopes),
 		CriticalBonus:   b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 	}
 }
