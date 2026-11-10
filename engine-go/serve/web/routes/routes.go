@@ -119,6 +119,14 @@ func Session(campaignID, sessionID int64) string {
 	return fmt.Sprintf("/campanhas/%d/sessoes/%d", campaignID, sessionID)
 }
 
+// Character é PARA ONDE se abre a ficha de um personagem. Citam-na o elenco, a forja que acabou de criá-lo, a
+// aba Membros da campanha e a Mesa; a própria ficha pendura a aba nela, no `sheetRoute`.
+//
+//	routes.Character(7) // "/personagens/7"
+func Character(characterID int64) string {
+	return fmt.Sprintf("/personagens/%d", characterID)
+}
+
 // PlaceDraft é PARA ONDE se entra num RASCUNHO DE LUGAR: a cena que o mestre
 // monta no acervo da campanha, fora da sessão.
 //

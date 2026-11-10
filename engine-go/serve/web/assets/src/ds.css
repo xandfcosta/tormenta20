@@ -941,6 +941,11 @@
   .ds-pick-options {
     margin-top: 0.5rem;
   }
+  /* A ESCOLHA TRANCADA continua à vista, com o nome apagado e o motivo embaixo
+   * (o encanto que não cabe agora): sumir seria esconder o livro do mestre. */
+  .ds-pick-row[data-locked] .ds-row-title {
+    color: var(--ds-ink-3);
+  }
   /* No desktop as duas camadas ficam lado a lado, e a lista dos passos é uma
    * coluna que não rola junto com o passo. */
   @media (min-width: 64rem) {
@@ -1961,6 +1966,11 @@
   }
   .ds-camp-crown {
     color: var(--ds-action);
+  }
+  .ds-camp-row-end {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
   }
   .ds-camp-more {
     grid-template-columns: minmax(0, 1fr) auto;

@@ -37,11 +37,21 @@ type itemSheet struct {
 	Book  *bookInfo
 	// Overlays são as melhorias e o material JÁ aplicados, com o que fazem.
 	Overlays []overlayRow
-	// Enchants são os encantos que a arma CARREGA, e a ficha só os LÊ: quem
-	// encanta é o mestre, porque encanto não se compra — se acha ou se fabrica
-	// (p333). Por isso eles não entram no `Overlays` nem viram `overlayChoice`:
-	// a lista do diálogo é de escolha, e esta é de leitura.
+	// Enchants são os encantos que o item CARREGA, para ler. Quem encanta é o
+	// mestre, porque encanto não se compra — se acha ou se fabrica (p333) —, e
+	// o diálogo dele é o `EnchantChoices`, que só a folha do mestre recebe.
 	Enchants []overlayRow
+	// Enchantable diz que a folha leva o mestre ao diálogo de encantos;
+	// EnchantChoices são os encantos da família do item, e EnchantAgainst o
+	// tipo já escolhido da Anticriatura (ver `bag_enchants.go`).
+	Enchantable    bool
+	EnchantChoices []enchantChoice
+	EnchantAgainst string
+	// EnchantBuiltIn são os encantos que o verbete do item específico já traz, e EnchantBase o peso deles, que o
+	// teto conta (p337). EnchantUncapped é o artefato, que não tem teto (p346).
+	EnchantBuiltIn  []string
+	EnchantBase     int
+	EnchantUncapped bool
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
@@ -339,24 +349,6 @@ func appliedImprovements(item sheet.ItemDTO) []overlayRow {
 	return rows
 }
 
-// appliedEnchants são os encantos que a arma carrega, na ordem do livro.
-//
-// Ordenados pelo NOME e não pela ordem de gravação: o `EnchantsOfItem` devolve
-// por id, e "encanto-ameacadora" antes de "encanto-formidavel" é a ordem do
-// slug, não a que se lê.
-func appliedEnchants(item sheet.ItemDTO) []overlayRow {
-	rows := []overlayRow{}
-	for _, id := range item.Enchants {
-		entry := book.ItemByID(id)
-		if entry == nil {
-			continue
-		}
-		rows = append(rows, overlayRow{Name: entry.Name, Effect: overlaySummary(*entry)})
-	}
-	sort.SliceStable(rows, func(a, b int) bool { return rows[a].Name < rows[b].Name })
-	return rows
-}
-
 // overlaySummary junta as notas do catálogo numa linha, SEM repetir.
 //
 // A Equilibrada carrega quatro modificadores de manobra que dividem a mesma
@@ -366,16 +358,21 @@ func overlaySummary(entry book.Item) string {
 	if entry.ID == sheet.AlchemicalInjection {
 		return "guarda " + strconv.Itoa(sheet.MaxDoses) + " doses, e o golpe que acerta libera uma"
 	}
+	if summary := modifierNotes(entry); summary != "" {
+		return summary
+	}
+	return "sem efeito mecânico"
+}
+
+// modifierNotes são as notas dos modificadores do verbete numa linha, sem repetir, ou vazio.
+func modifierNotes(entry book.Item) string {
 	notes := []string{}
 	for _, m := range entry.Modifiers {
 		if m.Note != "" {
 			notes = append(notes, m.Note)
 		}
 	}
-	if summary := strings.Join(repetidosSem(notes), ", "); summary != "" {
-		return summary
-	}
-	return "sem efeito mecânico"
+	return strings.Join(repetidosSem(notes), ", ")
 }
 
 // carriedCategory são as categorias que uma pessoa CARREGA, e por isso as

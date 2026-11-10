@@ -99,6 +99,11 @@ type Signals struct {
 	// BlastTotal é o total que a mesa rolou na mão para o que o encanto dispara em vez do golpe (os 6d6 da
 	// bola de fogo da Flamejante, p335). O zero é "não informado", pela razão do d20: 6d6 não tira zero.
 	BlastTotal *int64 `json:"blast_total"`
+	// ItemEnchants são os encantos escolhidos no diálogo do MESTRE, e ItemEnchantAgainst o tipo de criatura
+	// da Anticriatura (p335). Só o gesto do mestre os lê (`enchantsTheItem`); o diálogo de melhorias, que é
+	// do jogador, não.
+	ItemEnchants       []string `json:"item_enchants"`
+	ItemEnchantAgainst string   `json:"item_enchant_against"`
 	// ExpertiseSpends são os gastos de PM marcados no diálogo do teste
 	// (ALE-489), pela chave de cada um (`book.SpendKey`) e o PM pedido. CRU de
 	// propósito: um valor que não seja número tem de virar "não pedido", e não

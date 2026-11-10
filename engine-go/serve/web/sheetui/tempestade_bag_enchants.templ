@@ -1,0 +1,72 @@
+package sheetui
+
+import (
+	"strings"
+
+	"t20engine/serve/web/ds"
+)
+
+// enchantsDs é o diálogo de encantos do MESTRE, no molde do de melhorias (mockup aprovado): a contagem por
+// peso no topo, um interruptor por encanto da família do item, o "conta 2" dos que pesam dois, e o que não
+// cabe AGORA trancado com o motivo, em vez de sumir. A Anticriatura ligada abre o "Contra". Quem recusa de
+// verdade é o servidor (`enchantsTheItem` e o `EnchantItem`).
+templ enchantsDs(v View, s itemSheet) {
+	@sheetDialog(v, itemEnchantsID(s.Command), "Encantos de "+s.Name, enchantsFoot(v, s)) {
+		<p class="ds-row-meta">
+			<span data-text={ enchantCountExpr(s) }>{ enchantCountWritten(s) }</span>
+			if len(s.EnchantBuiltIn) > 0 {
+				· já vem com { strings.Join(s.EnchantBuiltIn, ", ") }
+			}
+		</p>
+		@ds.BareList("Encantos", "") {
+			for _, c := range s.EnchantChoices {
+				<div class="ds-row ds-pick-row" data-locked?={ enchantLockedNow(s, c) } data-attr:data-locked={ enchantLockedExpr(s, c) }>
+					<div class="min-w-0">
+						<div class="ds-row-title">
+							{ c.Name }
+							if c.Weight > 1 {
+								@ds.Badge("conta 2", true)
+							}
+						</div>
+						<div class="ds-row-meta" data-text={ enchantMetaExpr(s, c) }>{ enchantMetaWritten(s, c) }</div>
+						<div class="ds-pick-detail">{ c.Effect }</div>
+						if len(c.Against) > 0 {
+							<div class="ds-field" data-show={ enchantChosen(c) }>
+								<label for={ "against-" + s.Command }>Contra</label>
+								<select class="ds-input" id={ "against-" + s.Command } data-bind:item_enchant_against>
+									<option value="">Escolha o tipo</option>
+									for _, o := range c.Against {
+										if !o.Race {
+											<option value={ o.ID } selected?={ o.ID == s.EnchantAgainst }>{ o.Label }</option>
+										}
+									}
+									<optgroup label="Uma raça de humanoides">
+										for _, o := range c.Against {
+											if o.Race {
+												<option value={ o.ID } selected?={ o.ID == s.EnchantAgainst }>{ o.Label }</option>
+											}
+										}
+									</optgroup>
+								</select>
+							</div>
+						}
+					</div>
+					@ds.Switch("", c.Active, templ.Attributes{"aria-label": c.Name, "data-on:change": thatTogglesEnchant(c), "data-effect": "el.checked = " + enchantChosen(c), "data-attr:disabled": enchantLockedExpr(s, c)})
+				</div>
+			}
+		}
+	}
+}
+
+templ enchantsFoot(v View, s itemSheet) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "commandfor": itemEnchantsID(s.Command), "command": "close", "data-on:click": sheetPost(v, "/itens/"+s.Command+"/encantos")}) {
+		Aplicar
+	}
+}
+
+// enchantsOpener é o "Encantos" do pé da folha, que só a folha do mestre tem.
+templ enchantsOpener(s itemSheet) {
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encantos de " + s.Name, "commandfor": itemEnchantsID(s.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": enchantsOpens(s)}) {
+		Encantos
+	}
+}

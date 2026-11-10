@@ -1,0 +1,133 @@
+package api
+
+import (
+	"fmt"
+	"net/http"
+	"slices"
+	"strings"
+	"testing"
+)
+
+// O MESTRE ENCANTA PELA FOLHA DO ITEM (decisão do dono). Encanto não se compra, se acha ou se fabrica
+// (p333), e quem entrega o saque é o mestre: só ele vê o "Encantos" na folha, e só o pedido dele grava. O
+// jogador lê os encantos na mesma folha e não tem o gesto. As regras do conjunto (família, teto, pré-requisito,
+// a escolha da Anticriatura) são do `EnchantItem` e têm caso lá; aqui se prende QUEM e a LIGAÇÃO.
+
+// enchantsAs pede o "Aplicar" do diálogo de encantos como `who`, e devolve a recusa.
+func enchantsAs(t *testing.T, f sceneFixture, who, item int64, body string) string {
+	t.Helper()
+	path := fmt.Sprintf("/personagens/%d/itens/%d/encantos?tab=bag", f.charID, item)
+	return bagRefusal(t, f.requests(t, who, http.MethodPost, path, body).Body.String())
+}
+
+func TestOnlyTheGMEnchantsAWeaponFromTheItemSheet(t *testing.T) {
+	f := newSceneFixture(t)
+	sword := itemSemeia(t, f, f.charID, "espada-longa", "Espada longa", "wielded")
+	asked := `{"item_enchants":["encanto-anticriatura","encanto-venenosa"],"item_enchant_against":"morto-vivo"}`
+
+	// O JOGADOR não tem o gesto na folha, e o pedido montado à mão é recusado sem gravar nada.
+	playerSheet := renderNode(t, itemDialogOf(t, f.requests(t, f.player, http.MethodGet,
+		fmt.Sprintf("/personagens/%d?tab=bag", f.charID), "").Body.String(), "Espada longa"))
+	if strings.Contains(playerSheet, "Encantos de Espada longa") {
+		t.Errorf("a folha do jogador oferece o diálogo de encantos:\n%s", playerSheet)
+	}
+	if refusal := enchantsAs(t, f, f.player, sword, asked); !strings.Contains(refusal, "mestre") {
+		t.Errorf("o jogador encantou a própria arma, ou a recusa não diz quem encanta: %q", refusal)
+	}
+	if saved := itemEnchants(t, f, sword); len(saved) != 0 {
+		t.Fatalf("a recusa ao jogador gravou %v", saved)
+	}
+
+	// O MESTRE tem o gesto e o diálogo, com a tabela da família da arma.
+	gmScreen := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=bag", f.charID), "").Body.String()
+	if !strings.Contains(renderNode(t, itemDialogOf(t, gmScreen, "Espada longa")), "Encantos de Espada longa") {
+		t.Error("a folha da espada não leva o mestre ao diálogo de encantos")
+	}
+	dialog := itemDialogOf(t, gmScreen, "Encantos de Espada longa")
+	if dialog == nil {
+		t.Fatal("o mestre não recebe o diálogo de encantos da espada")
+	}
+	written := renderNode(t, dialog)
+	for _, want := range []string{"Anticriatura", "Flamejante", "Magnífica", "conta 2", "Contra", "morto-vivo"} {
+		if !strings.Contains(written, want) {
+			t.Errorf("o diálogo de encantos não escreve %q", want)
+		}
+	}
+	if strings.Contains(written, "Sombrio") {
+		t.Error("o diálogo da espada oferece um encanto de armadura (Tabela 8-10)")
+	}
+
+	if refusal := enchantsAs(t, f, f.gm, sword, asked); refusal != "" {
+		t.Fatalf("o mestre foi recusado: %q", refusal)
+	}
+	if saved := itemEnchants(t, f, sword); !slices.Equal(saved, []string{"encanto-anticriatura", "encanto-venenosa"}) {
+		t.Errorf("a espada ficou com %v; quer a Anticriatura e a Venenosa", saved)
+	}
+	if got := chosenKindOnTheSheet(t, f, f.charID, "Espada longa"); got != "morto-vivo" {
+		t.Errorf("a escolha da Anticriatura ficou %q; quer morto-vivo", got)
+	}
+}
+
+// A ARMADURA abre o mesmo diálogo, com a tabela dela (8-10, p338-339), e não a das armas.
+func TestTheGMEnchantsAnArmorWithItsOwnTable(t *testing.T) {
+	f := newSceneFixture(t)
+	itemSemeia(t, f, f.charID, "armadura-couro", "Armadura de couro", "vested")
+	screen := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=bag", f.charID), "").Body.String()
+	dialog := itemDialogOf(t, screen, "Encantos de Armadura de couro")
+	if dialog == nil {
+		t.Fatal("o mestre não recebe o diálogo de encantos da armadura")
+	}
+	written := renderNode(t, dialog)
+	if !strings.Contains(written, "Sombrio") || strings.Contains(written, "Flamejante") {
+		t.Errorf("o diálogo da armadura não é o da Tabela 8-10:\n%s", written)
+	}
+}
+
+// O ITEM ESPECÍFICO chega ao diálogo com o que o verbete já traz CONTADO (p334, p337): a Vingadora sagrada é
+// formidável, então o topo diz "1 de 3 encantos · já vem com Formidável", a Formidável não se oferece de novo, e a Magnífica — que a pede — não
+// tranca por ela. O servidor recusa o terceiro de peso por cima, que é o que o diálogo deixa de oferecer.
+func TestTheGMDialogCountsTheEnchantTheEntryAlreadyHas(t *testing.T) {
+	f := newSceneFixture(t)
+	vingadora := itemSemeia(t, f, f.charID, "vingadora-sagrada", "Vingadora sagrada", "wielded")
+	screen := f.requests(t, f.gm, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=bag", f.charID), "").Body.String()
+	dialog := itemDialogOf(t, screen, "Encantos de Vingadora sagrada")
+	if dialog == nil {
+		t.Fatal("o mestre não recebe o diálogo de encantos da Vingadora sagrada")
+	}
+	written := renderNode(t, dialog)
+	for _, want := range []string{"1 de 3 encantos", "já vem com Formidável"} {
+		if !strings.Contains(written, want) {
+			t.Errorf("o diálogo da Vingadora não escreve %q:\n%s", want, written)
+		}
+	}
+	if strings.Contains(written, `aria-label="Formidável"`) {
+		t.Error("o diálogo oferece de novo a Formidável que o verbete já traz")
+	}
+	if strings.Contains(written, "exige Formidável") {
+		t.Error("a Magnífica tranca pedindo a Formidável que a Vingadora já tem")
+	}
+
+	asked := `{"item_enchants":["encanto-ameacadora","encanto-veloz","encanto-venenosa"],"item_enchant_against":""}`
+	if refusal := enchantsAs(t, f, f.gm, vingadora, asked); !strings.Contains(refusal, "no máximo 3") {
+		t.Errorf("três de peso por cima da Formidável passaram, ou a recusa não fala do teto: %q", refusal)
+	}
+	if saved := itemEnchants(t, f, vingadora); len(saved) != 0 {
+		t.Errorf("a recusa gravou %v", saved)
+	}
+}
+
+// A ABA MEMBROS leva o MESTRE à ficha de cada herói, para encantar entre sessões. Para o jogador a linha
+// continua sem link.
+func TestTheMembersTabLinksTheGMToEachSheet(t *testing.T) {
+	f := newSceneFixture(t)
+	link := fmt.Sprintf(`href="/personagens/%d"`, f.charID)
+	members := func(who int64) string {
+		return f.requests(t, who, http.MethodGet, fmt.Sprintf("/campanhas/%d?tab=membros", f.campaignID), "").Body.String()
+	}
+	if !strings.Contains(members(f.gm), link) {
+		t.Error("a aba Membros não leva o mestre à ficha do herói")
+	}
+	if strings.Contains(members(f.player), link) {
+		t.Error("a aba Membros do jogador ganhou o link do mestre")
+	}
+}

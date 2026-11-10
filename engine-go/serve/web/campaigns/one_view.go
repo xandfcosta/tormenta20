@@ -11,6 +11,7 @@ import (
 	"t20engine/app"
 	"t20engine/domain/board"
 	"t20engine/infra/wire"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 	"time"
 
@@ -105,6 +106,9 @@ type heroAtTable struct {
 	Gradient string
 	// Meta é a linha de baixo: as classes com nível e de quem é o herói.
 	Meta string
+	// Sheet é o endereço da ficha, só para o MESTRE: é por ela que ele encanta entre sessões (p333). Vazio
+	// para o jogador, cuja linha continua sem gesto.
+	Sheet string
 }
 
 type sessionRow struct {
@@ -274,6 +278,9 @@ func (s Scene) LoadOne(ctx context.Context, euID int64, admin bool, id int64, ab
 			Initials: ui.Monogram(name), Gradient: ui.NameGradient(name),
 			Meta: memberMeta(classes[m.Characterid], m.Charlevel, m.Playername),
 		})
+		if v.IsGM {
+			v.Heroes[len(v.Heroes)-1].Sheet = routes.Character(m.Characterid)
+		}
 	}
 
 	sessions, err := s.deps.Queries().ListSessions(ctx, id)

@@ -67,7 +67,7 @@ templ itemSheetDs(v View, s itemSheet) {
 			@ds.Switch("Arma de categoria maior", s.Oversized, templ.Attributes{"data-on:change": sheetPost(v, "/itens/"+s.Command+"/categoria-maior")})
 			<p class="ds-help">–5 no ataque, ou –2 com Empunhadura Poderosa; um passo de dano a mais e um espaço a mais (p106, p125, p143).</p>
 		}
-		// O ENCANTO SÓ SE LÊ: quem encanta é o mestre (p333).
+		// O ENCANTO SE LÊ AQUI, e quem encanta é o mestre, pelo "Encantos" do pé (p333).
 		if len(s.Enchants) > 0 {
 			@ds.BareList("Encantos", "") {
 				for _, o := range s.Enchants {
@@ -78,6 +78,9 @@ templ itemSheetDs(v View, s itemSheet) {
 	}
 	if s.Overlayable {
 		@improvementsDs(v, s)
+	}
+	if s.Enchantable {
+		@enchantsDs(v, s)
 	}
 	@sheetDialog(v, itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))) {
 		@itemFormFields(itemEditID(s.Command))
@@ -94,6 +97,9 @@ templ itemSheetFoot(v View, s itemSheet) {
 		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Melhorias de " + s.Name, "commandfor": itemImprovementsID(s.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": improvementsOpens(s)}) {
 			Melhorias
 		}
+	}
+	if s.Enchantable {
+		@enchantsOpener(s)
 	}
 	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Editar " + s.Name, "commandfor": itemEditID(s.Command), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": editOpens(s)}) {
 		Editar

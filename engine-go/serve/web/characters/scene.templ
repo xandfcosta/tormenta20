@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"t20engine/serve/web/ds"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 )
 
@@ -94,7 +95,7 @@ templ castBar(v View) {
 // quem não tem mana: um "0/0" em destaque não diz nada a quem não conjura.
 templ heroCardView(h HeroCard) {
 	<article class="ds-cast-card">
-		<a class="ds-cast-head" href={ templ.SafeURL("/personagens/" + strconv.FormatInt(h.ID, 10)) } aria-label={ "Abrir ficha de " + h.Name }>
+		<a class="ds-cast-head" href={ templ.SafeURL(routes.Character(h.ID)) } aria-label={ "Abrir ficha de " + h.Name }>
 			<span class="ds-camp-cover" aria-hidden="true" style={ "background: " + h.Gradient }>{ h.Monogram }</span>
 			<span class="ds-camp-text">
 				<b>{ h.Name }</b>
@@ -134,7 +135,7 @@ templ heroCardView(h HeroCard) {
 			<div class="ds-cast-copies">
 				<span class="ds-field-label">Nas mesas</span>
 				for _, c := range h.Copies {
-					<a class="ds-cast-copy" href={ templ.SafeURL("/personagens/" + strconv.FormatInt(c.ID, 10)) } aria-label={ "Ficha de " + h.Name + " na mesa " + c.Campaign }>
+					<a class="ds-cast-copy" href={ templ.SafeURL(routes.Character(c.ID)) } aria-label={ "Ficha de " + h.Name + " na mesa " + c.Campaign }>
 						<span class="min-w-0">
 							<span class="ds-row-title">{ c.Campaign }</span>
 							<span class="ds-row-meta">

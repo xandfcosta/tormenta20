@@ -14,6 +14,7 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/wire"
+	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -131,7 +132,7 @@ func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
 	// 303 e não 302: depois de um POST, o `See Other` é o que garante que o
 	// navegador siga com GET — sem ele, recarregar a ficha forjaria um segundo
 	// herói igual.
-	http.Redirect(w, r, "/personagens/"+strconv.FormatInt(id, 10), http.StatusSeeOther)
+	http.Redirect(w, r, routes.Character(id), http.StatusSeeOther)
 }
 
 // answersFromForm lê as respostas do formulário.

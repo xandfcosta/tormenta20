@@ -158,3 +158,37 @@ func writtenOptions(options []string) string {
 	}
 	return strings.Join(out, ", ")
 }
+
+// EnchantChooses diz se o encanto pede uma escolha a quem encanta: a Anticriatura pede o tipo de criatura.
+func EnchantChooses(id string) bool { return len(enchantChoiceOptions(id)) > 0 }
+
+// ChosenKindOption é uma opção da escolha, escrita para a tela. Race marca a raça de humanoides, que a tela
+// agrupa sob "Uma raça de humanoides" (o 6 do d6, p335).
+type ChosenKindOption struct {
+	ID    string
+	Label string
+	Race  bool
+}
+
+// ChosenKindOptions são as opções da escolha do encanto, na ordem do d6, com as raças do livro no lugar de
+// `raca-humanoide`, pelo nome.
+//
+//	ChosenKindOptions("encanto-anticriatura") // Animal, Construto, Espírito, Monstro, Morto-vivo, Anão, …
+func ChosenKindOptions(id string) []ChosenKindOption {
+	out := []ChosenKindOption{}
+	for _, option := range enchantChoiceOptions(id) {
+		if option != anyHumanoidRace {
+			out = append(out, ChosenKindOption{ID: option, Label: TypeName(option)})
+			continue
+		}
+		races := []ChosenKindOption{}
+		for key, race := range RaceTraitsByKey() {
+			if key == race.ID {
+				races = append(races, ChosenKindOption{ID: race.ID, Label: race.Name, Race: true})
+			}
+		}
+		slices.SortFunc(races, func(a, b ChosenKindOption) int { return strings.Compare(a.Label, b.Label) })
+		out = append(out, races...)
+	}
+	return out
+}
