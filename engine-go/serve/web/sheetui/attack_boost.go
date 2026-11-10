@@ -52,6 +52,9 @@ type attackBoost struct {
 	Previews map[string]boostPreview
 	// HitPointCost é o dado de PV que o gasto também cobra (o 1d8 da Tumular, p336), vazio no resto.
 	HitPointCost string
+	// OncePerRound diz que o gasto é "uma vez por rodada" (o do encanto, p335-336). Com a iniciativa
+	// correndo a proposta recusa o segundo; fora dela não há rodada para contar, e a etiqueta é quem avisa.
+	OncePerRound bool
 }
 
 // Price é o que o gasto custa, para a etiqueta da tira: "2 PM", ou "2 PM e 1d8 PV" na Tumular.
@@ -102,7 +105,7 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 		boost := attackBoost{
 			PowerID: offer.PowerID, Name: offer.Name, BasePM: offer.BasePM, StepPM: offer.StepPM,
 			Split: offer.Split, Buys: offer.Buys, Can: offer.BasePM <= mana, Previews: map[string]boostPreview{},
-			HitPointCost: offer.HitPointCost,
+			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0,
 		}
 		if !boost.Can {
 			boost.Why = fmt.Sprintf("falta PM: %s pede %d", offer.Name, offer.BasePM)
@@ -233,6 +236,9 @@ func boostStepLabelExpr(boost attackBoost) string {
 	hitPoints := ""
 	if boost.HitPointCost != "" {
 		hitPoints = " e " + boost.HitPointCost + " PV"
+	}
+	if boost.OncePerRound {
+		hitPoints += " · uma vez por rodada"
 	}
 	return fmt.Sprintf("((%s) ? %s + ' · ' : '') + (%d + %d * $%s) + ' PM%s'",
 		boostAmountExpr(boost), boostAmountExpr(boost), boost.BasePM, boost.StepPM, boostStepsSignal, hitPoints)

@@ -34,6 +34,11 @@ func TestTheEnchantBoostIsOfferedOnlyOnItsWeaponAndTravelsInTheStrike(t *testing
 	if len(rows) != 1 {
 		t.Fatalf("o gasto da Venenosa está em %d linhas de ataque (%v); quer só na da espada:\n%s", len(rows), rows, recorte(screen))
 	}
+	// O AVISO DA RODADA vai na tira: fora da iniciativa nada recusa o segundo gasto, e é a linha que lembra
+	// a regra (decisão do dono).
+	if !strings.Contains(screen, "uma vez por rodada") {
+		t.Error("a tira do gasto da Venenosa não avisa que ele é uma vez por rodada")
+	}
 	var weapon int
 	for row := range rows {
 		weapon, _ = strconv.Atoi(row)
