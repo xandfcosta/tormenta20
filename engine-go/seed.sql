@@ -15,6 +15,7 @@ DELETE FROM character_level_choices;
 DELETE FROM character_spells;
 DELETE FROM character_item_doses;
 DELETE FROM character_oversized_weapons;
+DELETE FROM character_item_enchant_choices;
 DELETE FROM character_item_enchants;
 DELETE FROM character_items;
 DELETE FROM character_expertises;
@@ -1316,6 +1317,7 @@ INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (3, 'encanto-sanguinaria');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (55, 'encanto-tumular');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (56, 'encanto-venenosa');
+INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (56, 'encanto-anticriatura');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (92, 'encanto-dancarina');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (92, 'encanto-flamejante');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (92, 'encanto-profana');
@@ -1325,6 +1327,8 @@ INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (109, 'encant
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (112, 'encanto-opaco');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (112, 'encanto-defensor');
 INSERT INTO character_item_enchants ("itemId", "enchantId") VALUES (113, 'encanto-invulneravel');
+
+INSERT INTO character_item_enchant_choices ("itemId", "enchantId", "choice") VALUES (56, 'encanto-anticriatura', 'morto-vivo');
 
 INSERT INTO character_oversized_weapons ("itemId") VALUES (55);
 
