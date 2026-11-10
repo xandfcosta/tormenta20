@@ -28,6 +28,9 @@ templ boostStripDs(row actionRow) {
 					}
 				}
 				<b class="ds-boost-step" data-text={ boostStepLabelExpr(boost) }></b>
+				if boost.Foresees != "" {
+					<span class="ds-row-meta">{ boost.Foresees }</span>
+				}
 				if boost.MaxSteps > 0 {
 					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-icon": true, "aria-label": "Mais um degrau de " + boost.Name, "data-on:click": boostStepCommand(boost, 1)}) {
 						+

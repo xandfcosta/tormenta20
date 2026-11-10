@@ -55,6 +55,30 @@ type attackBoost struct {
 	// OncePerRound diz que o gasto é "uma vez por rodada" (o do encanto, p335-336). Com a iniciativa
 	// correndo a proposta recusa o segundo; fora dela não há rodada para contar, e a etiqueta é quem avisa.
 	OncePerRound bool
+	// Foresees é o que o golpe pago prevê no acerto, escrito: "no acerto: Envenenado (1d12 PV por rodada,
+	// por 3 rodadas)". Vazio no impulso que só soma número.
+	Foresees string
+}
+
+// foreseenWritten escreve o que o gasto prevê no acerto, com o nome da condição em português e a nota do
+// livro — as mesmas palavras da faixa do mestre.
+func foreseenWritten(foresees []engine.AnnouncedCondition) string {
+	said := []string{}
+	for _, a := range foresees {
+		if a.Condition == "" {
+			said = append(said, a.Effect)
+			continue
+		}
+		line := book.ConditionName(a.Condition)
+		if a.Note != "" {
+			line += " (" + a.Note + ")"
+		}
+		said = append(said, line)
+	}
+	if len(said) == 0 {
+		return ""
+	}
+	return "no acerto: " + strings.Join(said, ", ")
 }
 
 // Price é o que o gasto custa, para a etiqueta da tira: "2 PM", ou "2 PM e 1d8 PV" na Tumular.
@@ -105,7 +129,7 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 		boost := attackBoost{
 			PowerID: offer.PowerID, Name: offer.Name, BasePM: offer.BasePM, StepPM: offer.StepPM,
 			Split: offer.Split, Buys: offer.Buys, Can: offer.BasePM <= mana, Previews: map[string]boostPreview{},
-			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0,
+			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0, Foresees: foreseenWritten(offer.Foresees),
 		}
 		if !boost.Can {
 			boost.Why = fmt.Sprintf("falta PM: %s pede %d", offer.Name, offer.BasePM)
@@ -282,7 +306,17 @@ func boostCostExpr(weapon int, boosts []attackBoost) string {
 		parts = append(parts, fmt.Sprintf("(%s ? %d + %d * $%s : 0)",
 			boostChosenExpr(weapon, boost.PowerID), boost.BasePM, boost.StepPM, boostStepsSignal))
 	}
-	return "(" + strings.Join(parts, " + ") + ") + ' PM'"
+	suffix := []string{}
+	for _, boost := range boosts {
+		if boost.HitPointCost != "" {
+			suffix = append(suffix, fmt.Sprintf("(%s ? ' e %s PV' : '')", boostChosenExpr(weapon, boost.PowerID), boost.HitPointCost))
+		}
+	}
+	if len(suffix) == 0 {
+		return "(" + strings.Join(parts, " + ") + ") + ' PM'"
+	}
+	// O PV da Tumular vai junto do PM (p336): só um impulso se escolhe por vez, e o sufixo é o dele.
+	return "(" + strings.Join(parts, " + ") + ") + ' PM' + " + strings.Join(suffix, " + ")
 }
 
 // boostSplitCommand escolhe o lado.

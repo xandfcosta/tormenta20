@@ -68,8 +68,23 @@ func (r *Ruleset) enchantBoostOffers(ch Character) []BoostOffer {
 			out = append(out, BoostOffer{
 				PowerID: EnchantBoostID(it.ID, enchant), Name: catalog.Name, BasePM: catalog.Boost.PM,
 				ItemID: it.ID, HitPointCost: catalog.Boost.HitPointCost,
-				Buys: []string{enchantBoostBuys(catalog.Boost)},
+				Buys: []string{enchantBoostBuys(catalog.Boost)}, Foresees: enchantBoostForesees(catalog.Boost),
 			})
+		}
+	}
+	return out
+}
+
+// enchantBoostForesees é o que o golpe pago anuncia no acerto, pelas mesmas formas da colheita da carta
+// (`harvestWeaponRiders`): a condição com a nota, ou o efeito com a fórmula.
+func enchantBoostForesees(boost *ItemBoost) []AnnouncedCondition {
+	out := []AnnouncedCondition{}
+	for _, m := range boost.Modifiers {
+		switch m.Target.K {
+		case "announcedCondition":
+			out = append(out, AnnouncedCondition{Condition: m.Target.Name, Note: m.Note})
+		case "announcedEffect":
+			out = append(out, AnnouncedCondition{Effect: m.Note})
 		}
 	}
 	return out

@@ -125,6 +125,9 @@ type BoostOffer struct {
 	// vale em toda arma que o livro deixa. HitPointCost é o dado de PV que o portador perde ao gastar.
 	ItemID       int64
 	HitPointCost string
+	// Foresees é o que o golpe pago prevê no acerto (a condição da Venenosa, o efeito da Corrosiva), para a
+	// tela dizer antes de o jogador pagar.
+	Foresees []AnnouncedCondition
 }
 
 // BoostOffers são os impulsos de PM que a ficha tem, na ordem das classes.

@@ -207,3 +207,12 @@ func TestTheWeaponLineWritesTheExtraDiceWithTheirType(t *testing.T) {
 		t.Errorf("a linha da arma diz %q", got)
 	}
 }
+
+// A ETIQUETA AO LADO DO NÚMERO diz o preço inteiro do gasto escolhido: a Tumular custa "2 PM e 1d8 PV"
+// (p336), e a etiqueta que dizia só "2 PM" escondia a metade que tira vida.
+func TestTheBoostCostTagSaysTheHitPointsToo(t *testing.T) {
+	expr := boostCostExpr(0, []attackBoost{{PowerID: "encanto:7:encanto-tumular", BasePM: 2, HitPointCost: "1d8"}})
+	if !strings.Contains(expr, "' e 1d8 PV'") {
+		t.Errorf("a etiqueta do gasto não diz o PV: %s", expr)
+	}
+}

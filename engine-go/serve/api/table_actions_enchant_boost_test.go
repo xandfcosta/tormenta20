@@ -40,6 +40,10 @@ func TestTheEnchantBoostIsOfferedOnlyOnItsWeaponAndTravelsInTheStrike(t *testing
 	if !strings.Contains(screen, "uma vez por rodada") {
 		t.Error("a tira do gasto da Venenosa não avisa que ele é uma vez por rodada")
 	}
+	// O QUE O GOLPE PAGO PREVÊ vai na tira: quem não sabe o encanto de cor não precisa abrir o livro.
+	if !strings.Contains(screen, "no acerto: Envenenado (1d12 PV por rodada, por 3 rodadas)") {
+		t.Error("a tira do gasto da Venenosa não diz o que o golpe pago prevê")
+	}
 	var weapon int
 	for row := range rows {
 		weapon, _ = strconv.Atoi(row)
