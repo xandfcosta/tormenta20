@@ -49,3 +49,42 @@ func TestTheEnchantBoostIsOfferedOnlyOnItsWeaponAndTravelsInTheStrike(t *testing
 		t.Errorf("o provisório levou %+v; quer o gasto da Venenosa por 2 PM (p336)", pending)
 	}
 }
+
+// O PV DA TUMULAR SAI NA PROPOSTA, junto dos 2 PM, e o cancelamento do mestre devolve os dois (p336,
+// decisão do dono): um provisório cancelado não custa nada.
+func TestTheTomblikeBoostTakesHitPointsAndTheCancelGivesThemBack(t *testing.T) {
+	f, barbaro, goblin := barbarianOnTurn(t)
+	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}); err != nil {
+		t.Fatalf("encantar a espada: %v", err)
+	}
+	tomblike := engine.EnchantBoostID(sword, "encanto-tumular")
+	screen := html.UnescapeString(f.posts(t, f.player, fmt.Sprintf("/personagens/%d/acoes/atacar/0?embutida=1", barbaro), ""))
+	found := regexp.MustCompile(`\$boost_weapon = (\d+); \$boost_power = "` + regexp.QuoteMeta(tomblike) + `"`).FindStringSubmatch(screen)
+	if found == nil {
+		t.Fatalf("a linha da espada não oferece o gasto da Tumular:\n%s", recorte(screen))
+	}
+	before := poolsOf(t, f.s, barbaro)
+
+	chosen := fmt.Sprintf(`{"turn_target":%q,"boost_weapon":%s,"boost_power":%q,"boost_steps":0,"boost_split":""}`,
+		goblin, found[1], tomblike)
+	if refusal := sceneRefusal(f.posts(t, f.player,
+		fmt.Sprintf("/personagens/%d/acoes/atacar/%s?embutida=1", barbaro, found[1]), chosen)); refusal != "" {
+		t.Fatalf("o golpe com o gasto da Tumular foi recusado: %q", refusal)
+	}
+	pending := stateOf(t, f.s.sessions, f.sessionID).PendingAttack
+	if pending == nil || pending.BoostHitPoints < 1 || pending.BoostHitPoints > 8 {
+		t.Fatalf("o provisório leva %+v; quer o 1d8 de PV rolado", pending)
+	}
+	paid := poolsOf(t, f.s, barbaro)
+	if paid.HpCurrent != before.HpCurrent-int64(pending.BoostHitPoints) {
+		t.Errorf("a proposta deixou %d PV, want %d − %d", paid.HpCurrent, before.HpCurrent, pending.BoostHitPoints)
+	}
+
+	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/ataque/cancelar", ""); rec.Code != 200 {
+		t.Fatalf("cancelar o provisório deu %d", rec.Code)
+	}
+	if back := poolsOf(t, f.s, barbaro); back.HpCurrent != before.HpCurrent || back.MpCurrent != before.MpCurrent {
+		t.Errorf("depois do cancelamento a ficha tem %d PV e %d PM, want %d e %d", back.HpCurrent, back.MpCurrent, before.HpCurrent, before.MpCurrent)
+	}
+}

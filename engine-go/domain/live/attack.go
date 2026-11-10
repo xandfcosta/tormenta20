@@ -66,6 +66,9 @@ type PendingAttack struct {
 	// nascer (`Paid`).
 	BoostPowerID string `json:"boostPowerId,omitempty"`
 	BoostPM      int    `json:"boostPm,omitempty"`
+	// BoostHitPoints é o PV que o gasto tira de quem ataca, já rolado: o 1d8 da Tumular (p336). A proposta
+	// o cobra junto do PM, e o cancelamento devolve (decisão do dono).
+	BoostHitPoints int `json:"boostHitPoints,omitempty"`
 	// Charge é a investida que levou ao golpe (p235, p42): a proposta paga a ação
 	// COMPLETA dela, e o encerramento abre a guarda de quem investiu (ALE-499).
 	Charge string `json:"charge,omitempty"`
@@ -181,6 +184,8 @@ type AttackPaid struct {
 	ExtraMovement bool   `json:"extraMovement,omitempty"`
 	// Mana são os recibos do impulso e dos "rolar de novo" (`SheetVitals`).
 	Mana []json.RawMessage `json:"mana,omitempty"`
+	// HitPoints é o PV que o gasto do golpe tirou de quem ataca (a Tumular), para o cancelamento devolver.
+	HitPoints int `json:"hitPoints,omitempty"`
 }
 
 // AttackDose é a dose em jogo no golpe. Ela viaja escrita porque a faixa só recebe o

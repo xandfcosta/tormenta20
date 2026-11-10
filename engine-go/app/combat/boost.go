@@ -11,6 +11,8 @@ import (
 type paidBoost struct {
 	powerID string
 	pm      int
+	// hitPoints é o PV que o gasto tira de quem ataca, já rolado (a Tumular).
+	hitPoints int
 }
 
 // weaponFor é a carta com que o golpe rola: a empunhada no índice pedido, já

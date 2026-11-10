@@ -353,6 +353,9 @@ func writtenBoost(pa live.PendingAttack) string {
 	if pa.BoostPM > 0 {
 		parts = append(parts, fmt.Sprintf("%d PM", pa.BoostPM))
 	}
+	if pa.BoostHitPoints > 0 {
+		parts = append(parts, fmt.Sprintf("%d PV", pa.BoostHitPoints))
+	}
 	return strings.Join(parts, " · ")
 }
 

@@ -117,3 +117,16 @@ func (r *Ruleset) enchantBoostedCards(ch Character, activeConditionals map[strin
 	}
 	return nil, 0, fmt.Errorf("a arma %d não tem um encanto que se paga no ataque com o id %q", itemID, enchant)
 }
+
+// BoostHitPointCost é o dado de PV que o gasto pedido tira de quem ataca — o 1d8 da Tumular (p336) —, ou
+// vazio. Só o gasto de encanto tem custo de PV hoje.
+func (r *Ruleset) BoostHitPointCost(id string) string {
+	_, enchant, isEnchant := enchantBoostOf(id)
+	if !isEnchant {
+		return ""
+	}
+	if catalog := r.getCatalogItem(enchant); catalog != nil && catalog.Boost != nil {
+		return catalog.Boost.HitPointCost
+	}
+	return ""
+}

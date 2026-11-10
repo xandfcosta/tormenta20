@@ -142,3 +142,37 @@ func TestAnEnchantBoostIsRefusedOnAnotherWeapon(t *testing.T) {
 		t.Errorf("o gasto da espada num golpe de espada foi recusado: %v", err)
 	}
 }
+
+// O PV DA TUMULAR (p336): "você perde 1d8 pontos de vida". O custo vem do gasto, acerte ou não, e a
+// proposta o rola com o mesmo rolador do golpe e o leva no provisório, para a sessão cobrar junto do PM
+// (decisão do dono). O gasto sem custo de PV não rola nada.
+func TestTheTomblikeBoostRollsItsHitPointCostIntoTheProposal(t *testing.T) {
+	for _, c := range []struct {
+		name, cost string
+		want       int
+	}{
+		{"com o 1d8 da Tumular", "1d8", 4},
+		{"sem custo de PV", "", 0},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			table := aTable(t)
+			strike := NewStrike(sheetDouble{
+				"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()},
+					Boost: boostedSword, ManaAvailable: 5,
+					BoostHitPointCost: func(engine.BoostChoice) string { return c.cost }},
+				"ogro": {EntryID: "ogro", Label: "Ogro", Defense: 10},
+			}, table, semTabuleiro{}, fixedDie(4))
+			d20 := 10
+			out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+				SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+				Boost: engine.BoostChoice{PowerID: "class.paladino.golpe-divino-1d8"},
+			})
+			if err != nil {
+				t.Fatalf("propor: %v", err)
+			}
+			if out.BoostHitPoints != c.want {
+				t.Errorf("o provisório leva %d de PV do gasto, want %d", out.BoostHitPoints, c.want)
+			}
+		})
+	}
+}

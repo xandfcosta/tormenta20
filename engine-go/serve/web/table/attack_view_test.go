@@ -406,8 +406,8 @@ func TestTheAttackLineSaysTheEffectTheBookForesees(t *testing.T) {
 
 // O GASTO DE UM ENCANTO sai com o nome do encanto, e não com o id que o golpe carrega.
 func TestTheBoostOfAnEnchantIsWrittenWithItsName(t *testing.T) {
-	written := writtenBoost(live.PendingAttack{BoostPowerID: engine.EnchantBoostID(7, "encanto-tumular"), BoostPM: 2})
-	if written != "Tumular · 2 PM" {
-		t.Errorf("o gasto da Tumular saiu escrito %q", written)
+	written := writtenBoost(live.PendingAttack{BoostPowerID: engine.EnchantBoostID(7, "encanto-tumular"), BoostPM: 2, BoostHitPoints: 5})
+	if written != "Tumular · 2 PM · 5 PV" {
+		t.Errorf("o gasto da Tumular saiu escrito %q; quer o nome, o PM e o PV que ele tirou", written)
 	}
 }

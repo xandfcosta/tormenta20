@@ -78,17 +78,28 @@ func RollStartingMoney() (int, error) {
 // "Itens" de algumas origens concede dinheiro em vez de item — "T$ 2d6 (último
 // salário)", do Artesão —, e ele sai do mesmo catálogo, escrito do mesmo jeito.
 func RollDiceNotation(notation string) (int, error) {
+	return RollNotationWith(notation, func(faces int) (int, error) {
+		scroll, err := RollDie(faces)
+		return scroll.Value, err
+	})
+}
+
+// RollNotationWith rola "NdM" com o rolador dado: o do golpe, para o 1d8 de PV da Tumular sair do mesmo
+// dado que a mesa injeta nos testes.
+//
+//	RollNotationWith("1d8", rolar) // 4
+func RollNotationWith(notation string, rollDie func(faces int) (int, error)) (int, error) {
 	amount, faces, err := parseDiceNotation(notation)
 	if err != nil {
 		return 0, err
 	}
 	total := 0
 	for i := 0; i < amount; i++ {
-		scroll, err := RollDie(faces)
+		value, err := rollDie(faces)
 		if err != nil {
 			return 0, fmt.Errorf("rolar %s: %w", notation, err)
 		}
-		total += scroll.Value
+		total += value
 	}
 	return total, nil
 }

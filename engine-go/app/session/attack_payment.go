@@ -87,7 +87,28 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 		paid.Movement = before.MovementLeft && !s.Scene.MovementLeft
 		paid.ExtraMovement = before.ExtraMovementLeft && !s.Scene.ExtraMovementLeft
 	}
-	return spendsOnTheAttack(ctx, u, s, paid.CharacterID, attack.BoostPM)
+	if err := spendsOnTheAttack(ctx, u, s, paid.CharacterID, attack.BoostPM); err != nil {
+		return err
+	}
+	return losesTheBoostHitPoints(ctx, u, s, paid)
+}
+
+// losesTheBoostHitPoints tira de quem ataca o PV que o gasto cobra — o 1d8 da Tumular, "você perde 1d8
+// pontos de vida" (p336) —, pelo mesmo caminho de toda perda: os temporários saem primeiro (p106), e quem
+// chega a 0 cai (p236). O que saiu fica no recibo, para o cancelamento devolver.
+func losesTheBoostHitPoints(ctx context.Context, u Unit, s *live.SessionRuntimeState, paid *live.AttackPaid) error {
+	attack := s.PendingAttack
+	if attack.BoostHitPoints <= 0 || paid.CharacterID == nil {
+		return nil
+	}
+	loss := -int64(attack.BoostHitPoints)
+	hp, mp, err := u.Sheet.ApplyDelta(ctx, *paid.CharacterID, &loss, nil, 0)
+	if err != nil {
+		return fmt.Errorf("tirar o PV do gasto do golpe: %w", err)
+	}
+	paid.HitPoints = attack.BoostHitPoints
+	entry := attack.AttackerEntryID
+	return live.PatchEntryVitals(s, entry, hp, mp, hpFloorOf(s, entry))
 }
 
 // chargeStrike cobra a ação do golpe. O Disparo Rápido é agredir com a ação completa (p125), e a
@@ -222,6 +243,9 @@ func givesTheProposalBack(ctx context.Context, u Unit, s *live.SessionRuntimeSta
 	if err := givesTheManaBack(ctx, u, s, *open); err != nil {
 		return nil, err
 	}
+	if err := givesTheHitPointsBack(ctx, u, s, *open); err != nil {
+		return nil, err
+	}
 	if open.Paid == nil {
 		return nil, nil
 	}
@@ -241,6 +265,27 @@ func givesTheTurnBack(s *live.SessionRuntimeState, open live.PendingAttack) {
 	s.Scene.StandardLeft = s.Scene.StandardLeft || paid.Standard
 	s.Scene.MovementLeft = s.Scene.MovementLeft || paid.Movement
 	s.Scene.ExtraMovementLeft = s.Scene.ExtraMovementLeft || paid.ExtraMovement
+}
+
+// givesTheHitPointsBack devolve o PV que o gasto tirou (a Tumular). Ele volta ao PV atual: o PM tem recibo
+// de que poça saiu, e o PV não — o que um temporário absorveu volta como PV comum.
+func givesTheHitPointsBack(ctx context.Context, u Unit, s *live.SessionRuntimeState, open live.PendingAttack) error {
+	if open.Paid == nil || open.Paid.CharacterID == nil || open.Paid.HitPoints <= 0 {
+		return nil
+	}
+	back := int64(open.Paid.HitPoints)
+	hp, mp, err := u.Sheet.ApplyDelta(ctx, *open.Paid.CharacterID, &back, nil, 0)
+	// A FICHA APAGADA não tem para onde receber, e isso não pode prender o golpe na mesa.
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("devolver o PV do golpe cancelado: %w", err)
+	}
+	if live.FindEntryIndex(s, open.AttackerEntryID) < 0 {
+		return nil
+	}
+	return live.PatchEntryVitals(s, open.AttackerEntryID, hp, mp, hpFloorOf(s, open.AttackerEntryID))
 }
 
 // givesTheManaBack desfaz cada recibo: o PM do impulso e dos "rolar de novo" volta de onde
