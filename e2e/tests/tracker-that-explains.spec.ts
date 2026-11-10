@@ -96,11 +96,11 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
     //
     // Esperar a contagem chegar a ZERO torna o "apareceu" inequívoco.
     //
-    // A CAUSA RAIZ FOI ACHADA, e não era a sonda: o véu morava DENTRO da linha e
-    // o segundo remendo do gesto o levava embora. Medido em 50 piscadas antes do
-    // conserto — 43 truncadas em ~200ms, SEIS abaixo de 30ms, uma completa — e 50
-    // de 50 completas depois (ALE-322). A mensagem de falha continua carregando o
-    // estado: o que ela diagnostica agora é a próxima causa, não esta.
+    // O VÉU MORA FORA DA LINHA, filho do `<body>` (`piscarVital`): o remendo do
+    // gesto reconcilia a linha e não o alcança. A causa da reprovação intermitente
+    // que este caso já teve nunca foi reproduzida, e por isso a mensagem de falha
+    // carrega o estado do instante — os véus antes do gesto, o botão, o tempo —
+    // para a próxima vez chegar diagnosticada.
     const measurement = await page.evaluate(async () => {
       const veils = () => [...document.querySelectorAll('[data-vital-blink]')]
       const frame = () => new Promise((p) => requestAnimationFrame(p))
@@ -135,7 +135,7 @@ test('ferir um combatente pisca a LINHA dele, e curar pisca de outra cor', async
         'Se os véus antes forem > 0, o véu do DANO não tinha sumido; se o botão for ' +
         'false, o gesto não chegou a acontecer; se os dois estiverem certos, a ' +
         'piscada não foi disparada — e aí o suspeito é o MutationObserver de ' +
-        '`aria-valuenow` ou o morph apagando o véu na janela de um quadro (ALE-322).',
+        '`aria-valuenow`. O morph não alcança o véu, que mora fora da linha.',
     ).not.toBe('')
     // `--hp-full` é a cor de vida cheia; `--hp-critical` é a do dano. Elas têm
     // de ser DIFERENTES, senão o sinal não é sinal.
