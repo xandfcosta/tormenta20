@@ -50,6 +50,17 @@ type attackBoost struct {
 	// Previews são os números da linha com o impulso, pela chave
 	// `degraus|lado` ("1|" no que não divide, "2|half" no que divide).
 	Previews map[string]boostPreview
+	// HitPointCost é o dado de PV que o gasto também cobra (o 1d8 da Tumular, p336), vazio no resto.
+	HitPointCost string
+}
+
+// Price é o que o gasto custa, para a etiqueta da tira: "2 PM", ou "2 PM e 1d8 PV" na Tumular.
+func (b attackBoost) Price() string {
+	price := strconv.Itoa(b.BasePM) + " PM"
+	if b.HitPointCost != "" {
+		price += " e " + b.HitPointCost + " PV"
+	}
+	return price
 }
 
 // boostPreview é o que a linha mostra com um impulso escolhido.
@@ -91,6 +102,7 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 		boost := attackBoost{
 			PowerID: offer.PowerID, Name: offer.Name, BasePM: offer.BasePM, StepPM: offer.StepPM,
 			Split: offer.Split, Buys: offer.Buys, Can: offer.BasePM <= mana, Previews: map[string]boostPreview{},
+			HitPointCost: offer.HitPointCost,
 		}
 		if !boost.Can {
 			boost.Why = fmt.Sprintf("falta PM: %s pede %d", offer.Name, offer.BasePM)
@@ -102,6 +114,10 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 		previews := boostPreviewsOf(dto.Ruleset, ec, active, offer, boost.MaxSteps, cards)
 		for i := range cards {
 			if offer.MeleeOnly && !cards[i].IsMelee() {
+				continue
+			}
+			// O GASTO DE UM ENCANTO é da arma dele (p335-336), e só a linha dela o oferece.
+			if offer.ItemID != 0 && cards[i].ItemID != offer.ItemID {
 				continue
 			}
 			weaponBoost := boost
@@ -211,10 +227,15 @@ func boostStepCommand(boost attackBoost, delta int) string {
 }
 
 // boostStepLabelExpr é o que o contador mostra: o que o degrau compra e o PM
-// total — "+2d8 · 3 PM", "+8 · 2 PM".
+// total — "+2d8 · 3 PM", "+8 · 2 PM". O gasto que só anuncia (a Venenosa) não
+// compra número, e fica só com o preço; o da Tumular diz também o PV.
 func boostStepLabelExpr(boost attackBoost) string {
-	return fmt.Sprintf("%s + ' · ' + (%d + %d * $%s) + ' PM'",
-		boostAmountExpr(boost), boost.BasePM, boost.StepPM, boostStepsSignal)
+	hitPoints := ""
+	if boost.HitPointCost != "" {
+		hitPoints = " e " + boost.HitPointCost + " PV"
+	}
+	return fmt.Sprintf("((%s) ? %s + ' · ' : '') + (%d + %d * $%s) + ' PM%s'",
+		boostAmountExpr(boost), boostAmountExpr(boost), boost.BasePM, boost.StepPM, boostStepsSignal, hitPoints)
 }
 
 // boostAmountExpr escreve o que o degrau escolhido compra, pela tabela que o
