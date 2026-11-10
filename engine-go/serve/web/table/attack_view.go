@@ -35,6 +35,9 @@ type attackProposal struct {
 	// Boost é o impulso de PM que o golpe leva e o que a proposta pagou —
 	// "Golpe Divino · 3 PM" (ALE-487).
 	Boost string
+	// Against é o que a mesa sabe do alvo contra o tipo escolhido no gasto (a Anticriatura), só para o
+	// mestre: o `forPlayer` não o copia.
+	Against string
 	// Dose diz o que a Injeção alquímica libera neste golpe (p165).
 	Dose string
 	// Guard é a guarda que a investida abre em quem investiu (p235). Para o
@@ -85,6 +88,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		TargetEntryID: pa.TargetEntryID, Weapon: pa.Weapon,
 		Tally: attackLine(*pa), Situations: writtenSituations(*pa),
 		Boost:    writtenBoost(*pa),
+		Against:  writtenChosenKind(*pa),
 		Dose:     writtenDose(*pa),
 		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:     pa.ByUserID == userID,
@@ -348,6 +352,9 @@ func writtenBoost(pa live.PendingAttack) string {
 				name = item.Name
 			}
 		}
+		if pa.BoostAgainst != nil {
+			name += " contra " + book.ChosenKindName(pa.BoostAgainst.Chosen)
+		}
 		parts = append(parts, name)
 	}
 	if pa.BoostPM > 0 {
@@ -357,6 +364,34 @@ func writtenBoost(pa live.PendingAttack) string {
 		parts = append(parts, fmt.Sprintf("%d PV", pa.BoostHitPoints))
 	}
 	return strings.Join(parts, " · ")
+}
+
+// writtenChosenKind é o que a mesa sabe do alvo contra o tipo escolhido no encanto do gasto (a Anticriatura,
+// p335), para o MESTRE: o gasto é oferecido contra qualquer alvo, e quem confere é ele (decisão do dono). O
+// jogador não lê isto — diria o tipo do alvo. Vazio no gasto que vale contra qualquer um.
+func writtenChosenKind(pa live.PendingAttack) string {
+	if pa.BoostAgainst == nil {
+		return ""
+	}
+	against := *pa.BoostAgainst
+	target := book.CreatureNature{Kind: against.TargetKind, Race: against.TargetRace}
+	chosen, known := book.ChosenKindName(against.Chosen), book.TargetNatureName(against.Chosen, target)
+	enchant := "O gasto"
+	if _, id, isEnchant := engine.EnchantBoostParts(pa.BoostPowerID); isEnchant {
+		if item := book.ItemByID(id); item != nil {
+			enchant = item.Name
+		}
+	}
+	switch book.TargetOfTheChosenKind(against.Chosen, target) {
+	case book.TargetIsTheChosenKind:
+		return fmt.Sprintf("%s: o alvo é %s.", enchant, chosen)
+	case book.TargetIsNotTheChosenKind:
+		return fmt.Sprintf("%s: o alvo é %s, e não %s.", enchant, known, chosen)
+	}
+	if known != "" {
+		return fmt.Sprintf("%s: o alvo é %s, e a mesa não sabe se é %s.", enchant, known, chosen)
+	}
+	return fmt.Sprintf("%s: a mesa não sabe se o alvo é %s.", enchant, chosen)
 }
 
 // writtenGuard é a penalidade que a investida deixa, ou "".

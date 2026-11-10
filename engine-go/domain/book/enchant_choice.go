@@ -74,6 +74,20 @@ func ChosenKindName(chosen string) string {
 	return strings.ToLower(TypeName(chosen))
 }
 
+// TargetNatureName é o que a mesa sabe do alvo, escrito na régua da escolha: a raça, quando a escolha é uma
+// raça e o alvo tem uma; senão o tipo. Vazio quando a mesa não sabe nenhum dos dois.
+//
+//	TargetNatureName("elfo", CreatureNature{Kind: "humanoide"}) // "humanoide"
+func TargetNatureName(chosen string, target CreatureNature) string {
+	if isRace(chosen) && target.Race != "" {
+		return ChosenKindName(raceID(target.Race))
+	}
+	if target.Kind == "" {
+		return ""
+	}
+	return ChosenKindName(target.Kind)
+}
+
 // CreatureNature é o que a mesa sabe de um alvo: o tipo, do bestiário e do bloco do mestre, e a raça, do
 // personagem. Vazio quando a linha não diz.
 type CreatureNature struct {

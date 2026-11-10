@@ -68,6 +68,9 @@ type PendingAttack struct {
 	// BoostHitPoints é o PV que o gasto tira de quem ataca, já rolado: o 1d8 da Tumular (p336). A proposta
 	// o cobra junto do PM, e o cancelamento devolve (decisão do dono).
 	BoostHitPoints int `json:"boostHitPoints,omitempty"`
+	// BoostAgainst é o tipo de criatura contra o qual o gasto vale (a Anticriatura, p335) e o que a mesa
+	// sabia do alvo no instante do d20. A faixa do MESTRE diz se o alvo é desse tipo; quem decide é ele.
+	BoostAgainst *ChosenKindRead `json:"boostAgainst,omitempty"`
 	// Charge é a investida que levou ao golpe (p235, p42): a proposta paga a ação
 	// COMPLETA dela, e o encerramento abre a guarda de quem investiu (ALE-499).
 	Charge string `json:"charge,omitempty"`
@@ -282,4 +285,12 @@ type RolledGroup struct {
 type Attacker struct {
 	UserID int64
 	Role   string
+}
+
+// ChosenKindRead é o tipo escolhido no encanto e o que a mesa sabia do alvo: o tipo, do bestiário e do bloco
+// do mestre, e a raça, do personagem. Vazio quando a linha não diz.
+type ChosenKindRead struct {
+	Chosen     string `json:"chosen"`
+	TargetKind string `json:"targetKind,omitempty"`
+	TargetRace string `json:"targetRace,omitempty"`
 }

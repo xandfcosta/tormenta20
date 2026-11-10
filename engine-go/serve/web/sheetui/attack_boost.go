@@ -126,8 +126,12 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 	mana := int(dto.ManaAvailable())
 	out := make([][]attackBoost, len(cards))
 	for _, offer := range offers {
+		name := offer.Name
+		if offer.Against != "" {
+			name += " contra " + book.ChosenKindName(offer.Against)
+		}
 		boost := attackBoost{
-			PowerID: offer.PowerID, Name: offer.Name, BasePM: offer.BasePM, StepPM: offer.StepPM,
+			PowerID: offer.PowerID, Name: name, BasePM: offer.BasePM, StepPM: offer.StepPM,
 			Split: offer.Split, Buys: offer.Buys, Can: offer.BasePM <= mana, Previews: map[string]boostPreview{},
 			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0, Foresees: foreseenWritten(offer.Foresees),
 		}

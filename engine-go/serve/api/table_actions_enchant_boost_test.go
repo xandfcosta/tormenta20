@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -196,5 +197,47 @@ func TestTheTomblikeHitPointsComeBackToTheTemporaryPool(t *testing.T) {
 	}
 	if got := poolsOf(t, f.s, barbaro).HpCurrent; got != hpBefore {
 		t.Errorf("depois do cancelamento o PV comum é %d, want %d", got, hpBefore)
+	}
+}
+
+// O GASTO DA ANTICRIATURA É OFERECIDO CONTRA QUALQUER ALVO, e quem confere o tipo é o mestre (p335, decisão do
+// dono). A tira diz contra quem o gasto vale, e a faixa do MESTRE diz o que a mesa sabe do alvo: o Goblin do
+// bestiário é humanoide, e não morto-vivo. O jogador não vê essa leitura — ela diria o tipo do alvo.
+func TestTheAnticreatureBoostTellsOnlyTheGMWhetherTheTargetIsOfTheChosenKind(t *testing.T) {
+	f, barbaro, goblin := barbarianOnTurn(t)
+	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-anticriatura"},
+		map[string]string{"encanto-anticriatura": "morto-vivo"}); err != nil {
+		t.Fatalf("encantar a espada: %v", err)
+	}
+	anticreature := engine.EnchantBoostID(sword, "encanto-anticriatura")
+
+	screen := html.UnescapeString(f.posts(t, f.player, fmt.Sprintf("/personagens/%d/acoes/atacar/0?embutida=1", barbaro), ""))
+	if !strings.Contains(screen, "contra morto-vivo") {
+		t.Errorf("a tira do gasto da Anticriatura não diz contra quem ele vale:\n%s", recorte(screen))
+	}
+	found := regexp.MustCompile(`\$boost_weapon = (\d+); \$boost_power = "` + regexp.QuoteMeta(anticreature) + `"`).
+		FindStringSubmatch(screen)
+	if found == nil {
+		t.Fatalf("a linha da espada não oferece o gasto da Anticriatura:\n%s", recorte(screen))
+	}
+	chosen := fmt.Sprintf(`{"turn_target":%q,"boost_weapon":%s,"boost_power":%q,"boost_steps":0,"boost_split":""}`,
+		goblin, found[1], anticreature)
+	if refusal := sceneRefusal(f.posts(t, f.player,
+		fmt.Sprintf("/personagens/%d/acoes/atacar/%s?embutida=1", barbaro, found[1]), chosen)); refusal != "" {
+		t.Fatalf("o golpe com o gasto da Anticriatura contra o Goblin foi recusado: %q", refusal)
+	}
+
+	gm := attackSection(t, f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String())
+	if !strings.Contains(gm, "o alvo é humanoide, e não morto-vivo") {
+		t.Errorf("a faixa do mestre não diz que o Goblin é humanoide, e não morto-vivo:\n%s", gm)
+	}
+	player := attackSection(t, f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String())
+	if strings.Contains(player, "humanoide") {
+		t.Errorf("a faixa do jogador diz o tipo do alvo:\n%s", player)
+	}
+	// O CONTROLE: o jogador vê o próprio gasto, com o tipo que ele escolheu.
+	if !strings.Contains(player, "Anticriatura contra morto-vivo") {
+		t.Errorf("a faixa do jogador não diz o gasto que ele pagou:\n%s", player)
 	}
 }
