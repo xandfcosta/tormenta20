@@ -74,6 +74,9 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 	if s.Scene != nil {
 		paid.Scene = s.Scene.Number
 	}
+	if err := takesTheEnchantBoostOfTheRound(s, *attack); err != nil {
+		return err
+	}
 	if attack.ExtraOf != "" {
 		if err := takesTheExtraStrike(s, attack); err != nil {
 			return err
@@ -109,6 +112,19 @@ func losesTheBoostHitPoints(ctx context.Context, u Unit, s *live.SessionRuntimeS
 	paid.HitPoints = attack.BoostHitPoints
 	entry := attack.AttackerEntryID
 	return live.PatchEntryVitals(s, entry, hp, mp, hpFloorOf(s, entry))
+}
+
+// takesTheEnchantBoostOfTheRound confere e conta o gasto de 2 PM do encanto: "uma vez por rodada" (p335-336),
+// recusado com a iniciativa correndo (decisão do dono). Fora dela não há rodada para contar. Ele vem antes
+// da cobrança da ação, para o segundo golpe pago da vez ouvir a regra do encanto, e não "falta ação".
+func takesTheEnchantBoostOfTheRound(s *live.SessionRuntimeState, attack live.PendingAttack) error {
+	if _, _, isEnchant := engine.EnchantBoostParts(attack.BoostPowerID); !isEnchant || !s.CountsRounds() {
+		return nil
+	}
+	if !live.UsesOncePerRound(s, attack.AttackerEntryID, attack.BoostPowerID) {
+		return fmt.Errorf("o gasto de 2 PM do encanto de %s é uma vez por rodada (p335-336), e já foi feito nesta: ataque sem ele, ou espere a próxima vez", attack.Weapon)
+	}
+	return nil
 }
 
 // chargeStrike cobra a ação do golpe. O Disparo Rápido é agredir com a ação completa (p125), e a
@@ -237,6 +253,7 @@ func givesTheProposalBack(ctx context.Context, u Unit, s *live.SessionRuntimeSta
 		return nil, nil
 	}
 	givesTheTurnBack(s, *open)
+	live.GivesOncePerRoundBack(s, open.AttackerEntryID, open.BoostPowerID)
 	if err := returnsTheDose(ctx, u, open.Dose); err != nil {
 		return nil, err
 	}

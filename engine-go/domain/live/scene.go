@@ -1,6 +1,9 @@
 package live
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 // A CENA, como o livro a define (T20 p252).
 //
@@ -66,6 +69,10 @@ type Scene struct {
 	ExtraStrikeEntry  string   `json:"extraStrikeEntry,omitempty"`
 	ExtraStrikeBarred string   `json:"extraStrikeBarred,omitempty"`
 	ExtraStrikesUsed  []string `json:"extraStrikesUsed,omitempty"`
+	// OncePerRoundUsed são os gastos de "uma vez por rodada" já feitos, um por `linha|gasto` — o 2 PM de
+	// um encanto (p335-336). A rodada é de QUEM gastou, de uma vez dele até a próxima: a entrada sai quando
+	// a vez dessa linha começa de novo (`RefreshTurn`), e não a cada vez de qualquer um.
+	OncePerRoundUsed []string `json:"oncePerRoundUsed,omitempty"`
 	// ExtraStyle é o estilo que esse golpe abriu (p125), e ExtraStyleItem, a arma com que ele foi
 	// feito: as Duas Armas pedem a outra, e o Disparo Rápido, a mesma.
 	ExtraStyle     string `json:"extraStyle,omitempty"`
@@ -161,6 +168,11 @@ func RefreshTurn(st *SessionRuntimeState) {
 		return
 	}
 	st.Scene.StandardLeft, st.Scene.MovementLeft, st.Scene.ExtraMovementLeft = true, true, false
+	if st.TurnIndex >= 0 && st.TurnIndex < len(st.Initiative) {
+		mine := st.Initiative[st.TurnIndex].ID + "|"
+		st.Scene.OncePerRoundUsed = slices.DeleteFunc(slices.Clone(st.Scene.OncePerRoundUsed),
+			func(used string) bool { return strings.HasPrefix(used, mine) })
+	}
 	st.Scene.ExtraStrikeEntry, st.Scene.ExtraStrikeBarred, st.Scene.ExtraStrikesUsed = "", "", nil
 	st.Scene.ExtraStyle, st.Scene.ExtraStyleItem = "", 0
 	st.Scene.AimedBy, st.Scene.AimedAt = "", ""
@@ -209,4 +221,29 @@ func (s *Scene) BeginsFirstTurn(entryID string, round int) bool {
 	}
 	s.TurnsBegun = append(s.TurnsBegun, entryID)
 	return true
+}
+
+// UsesOncePerRound registra o gasto `key` de `entryID` nesta rodada dele, e diz se ele ainda cabia. O que
+// conta como "uma vez por rodada" é de quem chama; aqui mora só o registro e a rodada de quem gastou.
+func UsesOncePerRound(st *SessionRuntimeState, entryID, key string) bool {
+	if st.Scene == nil {
+		return true
+	}
+	used := entryID + "|" + key
+	if slices.Contains(st.Scene.OncePerRoundUsed, used) {
+		return false
+	}
+	st.Scene.OncePerRoundUsed = append(st.Scene.OncePerRoundUsed, used)
+	return true
+}
+
+// GivesOncePerRoundBack desfaz o registro: o golpe cancelado não gastou a vez da rodada.
+func GivesOncePerRoundBack(st *SessionRuntimeState, entryID, key string) {
+	if st.Scene == nil {
+		return
+	}
+	used := entryID + "|" + key
+	if at := slices.Index(st.Scene.OncePerRoundUsed, used); at >= 0 {
+		st.Scene.OncePerRoundUsed = slices.Delete(slices.Clone(st.Scene.OncePerRoundUsed), at, at+1)
+	}
 }

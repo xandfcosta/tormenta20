@@ -6,6 +6,7 @@ import (
 	"html"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"t20engine/domain/engine"
@@ -86,5 +87,54 @@ func TestTheTomblikeBoostTakesHitPointsAndTheCancelGivesThemBack(t *testing.T) {
 	}
 	if back := poolsOf(t, f.s, barbaro); back.HpCurrent != before.HpCurrent || back.MpCurrent != before.MpCurrent {
 		t.Errorf("depois do cancelamento a ficha tem %d PV e %d PM, want %d e %d", back.HpCurrent, back.MpCurrent, before.HpCurrent, before.MpCurrent)
+	}
+}
+
+// "UMA VEZ POR RODADA" (p335-336) é recusado com a iniciativa correndo (decisão do dono), como o ataque
+// extra das armas naturais. O caso de mesa é o Disparo Rápido: o disparo adicional é com o MESMO arco e não
+// gasta ação, e pagar de novo nele seria o segundo gasto da rodada. O cancelamento do mestre devolve o
+// gasto, e a vez seguinte de quem atacou o libera.
+func TestTheEnchantBoostIsOncePerRound(t *testing.T) {
+	f, id, goblin := styleOnTurn(t, "disparo-rapido", true, "arco-curto")
+	var bow int64
+	if err := f.s.db.QueryRowContext(context.Background(),
+		"SELECT id FROM character_items WHERE characterId = ?", id).Scan(&bow); err != nil {
+		t.Fatalf("achar o arco: %v", err)
+	}
+	if err := f.s.characterPlays().EnchantItem(context.Background(), bow, []string{"encanto-venenosa"}); err != nil {
+		t.Fatalf("encantar o arco: %v", err)
+	}
+	paid := fmt.Sprintf(`{"turn_target":%q,"boost_weapon":0,"boost_power":%q,"boost_steps":0,"boost_split":""}`,
+		goblin, engine.EnchantBoostID(bow, "encanto-venenosa"))
+	shoot := func(gesture, body string) string {
+		t.Helper()
+		return sceneRefusal(f.posts(t, f.player, fmt.Sprintf("/personagens/%d/acoes/%s/0?embutida=1", id, gesture), body))
+	}
+
+	// O CANCELADO NÃO CONTA: o mestre desfaz o golpe, e o gasto volta com o PM.
+	if refusal := shoot("atacar", paid); refusal != "" {
+		t.Fatalf("o primeiro disparo pago foi recusado: %q", refusal)
+	}
+	gmCancels(t, f)
+	if refusal := shoot("atacar", paid); refusal != "" {
+		t.Fatalf("depois do cancelamento, o disparo pago foi recusado: %q", refusal)
+	}
+	gmRules(t, f, "errou")
+	if refusal := shoot("ataque-extra", paid); !strings.Contains(refusal, "uma vez por rodada") {
+		t.Errorf("o adicional pagou o encanto de novo na mesma rodada, ou a recusa não diz a regra: %q", refusal)
+	}
+	// O CONTROLE: sem o gasto, o adicional passa — a recusa era do encanto, e não do disparo.
+	plain := fmt.Sprintf(`{"turn_target":%q}`, goblin)
+	if refusal := shoot("ataque-extra", plain); refusal != "" {
+		t.Fatalf("o adicional sem o gasto foi recusado: %q", refusal)
+	}
+	gmRules(t, f, "errou")
+	for range 2 { // o Goblin, e de novo o bárbaro
+		if _, err := f.s.sessions.NextTurn(context.Background(), f.sessionID); err != nil {
+			t.Fatalf("passar a vez: %v", err)
+		}
+	}
+	if refusal := shoot("atacar", paid); refusal != "" {
+		t.Errorf("na vez seguinte do bárbaro, o disparo pago foi recusado: %q", refusal)
 	}
 }
