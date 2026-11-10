@@ -162,7 +162,7 @@ func boostPreviewsOf(
 				}
 				out[i][key] = boostPreview{
 					Attack:   book.WithSign(cards[i].Attack),
-					Detail:   boostedWeaponDetail(cards[i], plain[i]),
+					Detail:   boostedWeaponDetail(cards[i]),
 					OtherUse: otherUseLabel(cards[i].OtherUse),
 				}
 			}
@@ -188,16 +188,10 @@ func otherUseLabel(other *engine.WeaponCard) string {
 	return otherUseVerb(other) + " " + book.WithSign(other.Attack)
 }
 
-// boostedWeaponDetail é a linha pequena sob o nome da arma — "1d8+3 · 20/x3 · Luta" —,
-// com os dados que o impulso pôs além dos da carta sem ele.
-func boostedWeaponDetail(card, plain engine.WeaponCard) string {
-	damage := damageLabel(card)
-	if len(card.ExtraDamage) > len(plain.ExtraDamage) {
-		for _, extra := range card.ExtraDamage[len(plain.ExtraDamage):] {
-			damage += " +" + extra.Dice
-		}
-	}
-	return damage + " · " + critLabel(card) + " · " + card.Skill
+// boostedWeaponDetail é a linha pequena sob o nome da arma — "1d8+3 · 20/x3 · Luta" —, com a carta
+// impulsionada: os dados que o impulso pôs saem junto dos da arma, com o tipo (`damageLabel`).
+func boostedWeaponDetail(card engine.WeaponCard) string {
+	return damageLabel(card) + " · " + critLabel(card) + " · " + card.Skill
 }
 
 // boostChosenExpr é a expressão que diz se ESTE impulso está escolhido nesta

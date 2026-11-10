@@ -450,13 +450,21 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 	return tiles
 }
 
-// damageLabel é "1d8+4": o dado da arma mais o que se soma a ele, e só o dado
-// quando não há soma nenhuma.
+// damageLabel é "1d8+4": o dado da arma mais o que se soma a ele, e os dados extras com o tipo — "1d8+8
+// +1d8 de trevas" na espada Tumular (p336). Sem os extras, a linha escondia o dado que o encanto põe em todo
+// golpe.
 func damageLabel(card engine.WeaponCard) string {
-	if card.DamageBonus == 0 {
-		return card.Damage
+	label := card.Damage
+	if card.DamageBonus != 0 {
+		label += book.WithSign(card.DamageBonus)
 	}
-	return card.Damage + book.WithSign(card.DamageBonus)
+	for _, extra := range card.ExtraDamage {
+		label += " +" + extra.Dice
+		if extra.Type != "" {
+			label += " de " + extra.Type
+		}
+	}
+	return label
 }
 
 // critLabel é "19-20/x3". Margem 20 se escreve sozinha, e não como "20-20".

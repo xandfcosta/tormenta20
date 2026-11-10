@@ -195,3 +195,15 @@ func TestTheFinesseDamageRowSaysDexterity(t *testing.T) {
 		t.Errorf("a primeira parcela do dano com Acuidade não é DES +3: %+v", damage)
 	}
 }
+
+// O DADO EXTRA DA ARMA aparece na linha dela, com o tipo: a espada Tumular causa "+1d8 de dano de trevas"
+// (p336), e a linha que dizia só "1d8+8" escondia o dado que o encanto põe em todo golpe. O dado sem tipo (o
+// do Golpe Divino) sai sem ele.
+func TestTheWeaponLineWritesTheExtraDiceWithTheirType(t *testing.T) {
+	card := engine.WeaponCard{Damage: "1d8", DamageBonus: 8, ExtraDamage: []engine.ExtraDamage{
+		{Dice: "1d8", Type: "trevas"}, {Dice: "1d8"},
+	}}
+	if got := damageLabel(card); got != "1d8+8 +1d8 de trevas +1d8" {
+		t.Errorf("a linha da arma diz %q", got)
+	}
+}
