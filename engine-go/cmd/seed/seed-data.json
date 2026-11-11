@@ -2066,6 +2066,37 @@
             "displacement": 9,
             "items": [{ "catalogId": "adaga", "equipped": "wielded" }]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Lefou Patas Nv6",
+            "races": ["lefou"],
+            "origin": "soldado",
+            "classes": [{ "className": "Guerreiro", "level": 6 }],
+            "god": "aharadak",
+            "classPowers": [
+              "membros-estendidos",
+              "mente-aberrante",
+              "olhos-vermelhos",
+              "pele-corrompida",
+              "membros-extras",
+              "estilo-de-duas-armas"
+            ],
+            "strength": 3,
+            "dexterity": 3,
+            "constitution": 2,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 4,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "espada-curta", "equipped": "leg" },
+              { "catalogId": "adaga" }
+            ]
+          }
         }
       ]
     },
