@@ -115,10 +115,16 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
 		scopes = append(scopes, NaturalScope, WeaponDamageScope(owned.sourceID))
-		card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
-		card.Natural = &NaturalStrike{
-			SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1),
+		strike := NaturalStrike{SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1)}
+		if owned.sourceID == ExtraLimbsPowerID {
+			legs := r.legCards(ch, b, strike)
+			cards = append(cards, legs...)
+			if len(legs) >= LegsLimit {
+				continue
+			}
 		}
+		card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
+		card.Natural = &strike
 		cards = append(cards, card)
 	}
 	return cards

@@ -1,6 +1,9 @@
 package engine
 
-// itemCard é a carta de uma arma do inventário empunhada em `slot`: numa mão ou nas duas. O que a arma tem de seu — passo, encanto, melhoria, a outra forma de usar —
+import "slices"
+
+// itemCard é a carta de uma arma do inventário empunhada em `slot`: numa mão, nas duas, ou numa
+// pata insetoide (p137). O que a arma tem de seu — passo, encanto, melhoria, a outra forma de usar —
 // vem com ela para onde quer que seja empunhada.
 func (r *Ruleset) itemCard(ch Character, it CharacterItem, catalog *CatalogItem, slot string,
 	effects ItemEffects, shared cardBasis) WeaponCard {
@@ -17,6 +20,10 @@ func (r *Ruleset) itemCard(ch Character, it CharacterItem, catalog *CatalogItem,
 	}
 	cardOf := func(name string, use *WeaponStats) WeaponCard {
 		scopes := append([]string{weaponScope, WieldedScope}, weaponKindScopes(use)...)
+		if slot == LegSlot {
+			// A pata não é "uma arma em uma das mãos" (p128).
+			scopes = slices.DeleteFunc(scopes, func(scope string) bool { return scope == MeleeOneHandedScope })
+		}
 		if it.Oversized {
 			scopes = append(scopes, OversizedWeaponScope)
 		}
