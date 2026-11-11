@@ -38,6 +38,12 @@ type bagPanel struct {
 	// vazias — ver quantas sobram é metade da informação.
 	Vested     []equippedPosition
 	VestedUsed int
+	// Legs são as patas insetoides da Membros Extras armadas (p137). A tira aparece para quem arma as
+	// patas, e também para quem tem arma numa pata sem poder mais: esconder o item seria pior.
+	Legs     []equippedPosition
+	LegsUsed int
+	LegsShow bool
+	LegsFree string
 	// Stowed é o que está guardado, já filtrado pela busca e pela categoria.
 	Stowed []stowedTile
 	// StowedTotal é o total ANTES do filtro, para a tela distinguir "mochila
@@ -126,13 +132,15 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	}
 	panel.Catalog = catalogItemRowsOf(filters.CatalogSearch, filters.CatalogCategory)
 	panel.CatalogTotal = len(panel.Catalog)
-	wielded, vested, saved := []sheet.ItemDTO{}, []sheet.ItemDTO{}, []sheet.ItemDTO{}
+	wielded, vested, legs, saved := []sheet.ItemDTO{}, []sheet.ItemDTO{}, []sheet.ItemDTO{}, []sheet.ItemDTO{}
 	for _, item := range dto.Items {
 		switch equippedSlotOf(item) {
 		case "wielded", "wielded2":
 			wielded = append(wielded, item)
 		case "vested":
 			vested = append(vested, item)
+		case engine.LegSlot:
+			legs = append(legs, item)
 		default:
 			saved = append(saved, item)
 		}
@@ -142,10 +150,13 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	}
 	panel.Hands, panel.HandsUsed = handPositionsOf(wielded, card)
 	panel.Vested, panel.VestedUsed = vestedPositionsOf(vested, card)
+	armable, naturalDamage := legsOfTheSheet(dto)
+	panel.Legs, panel.LegsUsed = legPositionsOf(legs, card)
+	panel.LegsShow, panel.LegsFree = armable || len(legs) > 0, legsFreeText(panel.LegsUsed, naturalDamage)
 	panel.StowedTotal = len(saved)
 	panel.Stowed = stowedTilesOf(dto.Ruleset, bagFiltered(saved, search, category))
 	sheet, _, ok := s.sheetForPanels(dto)
-	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet.Attributes)
+	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet.Attributes, armable)
 	if ok {
 		panel.Load = loadMeterOf(sheet)
 		panel.Load.DisplacementExemptBy = exempt[engine.DisplacementIgnoresLoad]

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 
 	"github.com/go-chi/chi/v5"
@@ -285,7 +286,11 @@ func equipItemFromSheet(s Scene, r *http.Request, row sqlcgen.Character, _ Signa
 	// DESLIGA sozinha com o catálogo vazio não é uma regra — um escudo passaria
 	// a ser vestível. O `catalog.Resource` é o livro compilado: ele existe
 	// sempre que o binário existe.
-	if _, refusal := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); refusal != "" {
+	if slot == engine.LegSlot {
+		if err := s.legRefusal(r, row, item); err != nil {
+			return err
+		}
+	} else if _, refusal := sheet.EquipAxisError(howEngineItem(book.ItemByID(itemCatalog(item))), slot); refusal != "" {
 		lent, err := s.vestsByTableRule(r, row, item.ID, slot)
 		if err != nil {
 			return err
@@ -318,9 +323,25 @@ func saveEquipped(r *http.Request, s Scene, row sqlcgen.Character, itemID int64,
 	return s.itemGesture(r, row, equippedAs(itemID, wear), func() error { return s.plays.SaveEquipped(r.Context(), itemID, place) })
 }
 
-// slotEquipEh aceita só os três lugares do livro.
+// slotEquipEh aceita só os lugares do livro: os três do corpo e a pata da Membros Extras (p137).
 func slotEquipEh(slot string) bool {
-	return slot == "vested" || slot == "wielded" || slot == "wielded2"
+	return slot == "vested" || slot == "wielded" || slot == "wielded2" || slot == engine.LegSlot
+}
+
+// legRefusal confere a pata: a ficha arma as patas, e a arma é leve corpo a corpo (p137).
+func (s Scene) legRefusal(r *http.Request, row sqlcgen.Character, item sqlcgen.GetItemRow) error {
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	if armable, _ := legsOfTheSheet(dto); !armable {
+		return fmt.Errorf("a pata insetoide só empunha arma com a Membros Extras e, junto, a Ambidestria ou o Estilo de Duas Armas (p137)")
+	}
+	catalog := book.ItemByID(itemCatalog(item))
+	if catalog == nil || catalog.Weapon == nil || !engine.FitsALeg(catalog.Weapon.Purpose, catalog.Weapon.Hand) {
+		return fmt.Errorf("a pata insetoide empunha só arma leve corpo a corpo (p137), e %q não é", item.Name)
+	}
+	return nil
 }
 
 // sheetItem lê o item do caminho e CONFERE que ele é desta ficha.

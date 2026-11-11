@@ -3,6 +3,7 @@ package sheetui
 import (
 	"strconv"
 
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/ds"
 	"t20engine/serve/web/ui"
@@ -37,6 +38,9 @@ templ tempestadeBag(v View) {
 		<div class="ds-bag-halves">
 			<div class="grid content-start gap-3">
 				@inUseList(v, "Mãos", v.Bag.Hands, v.Bag.HandsUsed, sheet.HandsLimit, freePlaces(v.Bag.HandsUsed, sheet.HandsLimit, "mão livre", "mãos livres"))
+				if v.Bag.LegsShow {
+					@inUseList(v, "Patas", v.Bag.Legs, v.Bag.LegsUsed, engine.LegsLimit, v.Bag.LegsFree)
+				}
 				@inUseList(v, "Vestidos", v.Bag.Vested, v.Bag.VestedUsed, sheet.VestedLimit, freePlaces(v.Bag.VestedUsed, sheet.VestedLimit, "lugar livre", "lugares livres"))
 			</div>
 			<div class="grid content-start gap-3">

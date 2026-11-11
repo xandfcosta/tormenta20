@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"strings"
 	"testing"
 
 	"t20engine/domain/engine"
@@ -55,5 +56,15 @@ func TestSlotsNotMultiple(t *testing.T) {
 		if !SlotsNotMultiple(bad) {
 			t.Errorf("%v should be rejected", bad)
 		}
+	}
+}
+
+// A PATA não é mão (p137): duas armas nas patas não tiram mão nenhuma, e a terceira passa do teto.
+func TestTheLegsHaveTheirOwnCeiling(t *testing.T) {
+	if msg := EquipLimitError([]string{"wielded", "wielded", engine.LegSlot}, engine.LegSlot); msg != "" {
+		t.Errorf("duas mãos e uma pata ocupadas: a segunda pata cabe, e veio %q", msg)
+	}
+	if msg := EquipLimitError([]string{engine.LegSlot, engine.LegSlot}, engine.LegSlot); !strings.Contains(msg, "2 patas") {
+		t.Errorf("a terceira arma nas patas devia passar do teto: %q", msg)
 	}
 }

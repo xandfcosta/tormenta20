@@ -28,22 +28,32 @@ type armedLeg struct {
 }
 
 // CanArmTheLegs diz se a ficha pode empunhar nas patas: a Membros Extras e, junto, a Ambidestria ou o
-// Estilo de Duas Armas. O `ambidextrous` é a flag `ambidestria`, que os verbetes de classe escrevem.
-func (r *Ruleset) CanArmTheLegs(ch Character, ambidextrous bool) bool {
+// Estilo de Duas Armas. É a pergunta da Mochila, que oferece a pata e recusa o gesto.
+//
+//	world.CanArmTheLegs(ch) // true com `membros-extras` e `estilo-de-duas-armas`
+func (r *Ruleset) CanArmTheLegs(ch Character) bool {
+	return r.canArmTheLegs(ch, grantsFlag(r.ActiveItemsFor(ch), "ambidestria"))
+}
+
+// canArmTheLegs é a mesma pergunta com o "possui Ambidestria" já respondido: a flag `ambidestria`, que
+// os verbetes de classe escrevem. Quem já tem as fontes ou os efeitos não as coleta de novo.
+func (r *Ruleset) canArmTheLegs(ch Character, ambidextrous bool) bool {
 	powers := r.chosenGeneralPowers(ch)
 	hasLimbs := powers.has[ExtraLimbsPowerID] || slices.Contains(r.originPickedPowerIds(ch), ExtraLimbsPowerID)
 	return hasLimbs && (powers.has[TwoWeaponStylePowerID] || ambidextrous)
 }
 
 // FitsALeg diz se a arma cabe numa pata: corpo a corpo e leve.
-func FitsALeg(w *WeaponStats) bool {
-	return w != nil && w.Purpose == "melee" && w.Hand == "light"
+//
+//	FitsALeg("melee", "light") // true: a adaga
+func FitsALeg(purpose, hand string) bool {
+	return purpose == "melee" && hand == "light"
 }
 
 // armedLegs são as armas nas patas que valem, até duas. A que não serve — arma que não é leve, ou a
 // ficha que perdeu o estilo — fica guardada para a regra, e a pata continua natural.
 func (r *Ruleset) armedLegs(ch Character, ambidextrous bool) []armedLeg {
-	if !r.CanArmTheLegs(ch, ambidextrous) {
+	if !r.canArmTheLegs(ch, ambidextrous) {
 		return nil
 	}
 	out := []armedLeg{}
@@ -52,7 +62,7 @@ func (r *Ruleset) armedLegs(ch Character, ambidextrous bool) []armedLeg {
 			continue
 		}
 		catalog := r.getCatalogItem(*it.CatalogID)
-		if catalog == nil || !FitsALeg(catalog.Weapon) {
+		if catalog == nil || catalog.Weapon == nil || !FitsALeg(catalog.Weapon.Purpose, catalog.Weapon.Hand) {
 			continue
 		}
 		out = append(out, armedLeg{item: it, catalog: catalog})

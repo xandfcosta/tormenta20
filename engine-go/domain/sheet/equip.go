@@ -88,12 +88,19 @@ func EquipAxisError(catalog *engine.CatalogItem, equipped string) (topMsg, field
 // EquipLimitError aplica os dois tetos do livro sobre os OUTROS itens já
 // equipados. Devolve "" quando cabe.
 func EquipLimitError(otherEquipped []string, incoming string) string {
-	vested, hands := 0, 0
+	vested, hands, legs := 0, 0, 0
 	for _, s := range otherEquipped {
 		if s == "vested" {
 			vested++
 		}
+		if s == engine.LegSlot {
+			legs++
+		}
 		hands += HandsFor(s)
+	}
+	// A PATA não é mão: as duas da Membros Extras têm teto próprio (p137).
+	if incoming == engine.LegSlot && legs+1 > engine.LegsLimit {
+		return fmt.Sprintf("Limite de %d patas atingido", engine.LegsLimit)
 	}
 	if incoming == "vested" {
 		vested++

@@ -117,13 +117,14 @@ type catalogItemRow struct {
 }
 
 func itemSheetsOf(
-	dto sheet.CharacterDTO, proficiencies map[string]bool, attributes map[string]engine.AttributeBreakdown,
+	dto sheet.CharacterDTO, proficiencies map[string]bool, attributes map[string]engine.AttributeBreakdown, armable bool,
 ) []itemSheet {
 	sheets := make([]itemSheet, 0, len(dto.Items))
 	// Sem a resposta, a folha só deixa de oferecer o Vestir da regra; o gesto, este sim, recusa com o erro.
 	worn, _ := sheet.ItemsWornAsWielded(dto)
 	for _, item := range dto.Items {
 		entry := itemSheetOf(item, proficiencies)
+		entry.Equip = append(entry.Equip, legChoice(armable, item)...)
 		offerTableImprovements(&entry, dto, item)
 		offerVesting(&entry, worn, item)
 		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
