@@ -28,11 +28,13 @@ type SituationalGroup struct {
 
 // SituationalGroupsOf parte os condicionais oferecidos em interruptores.
 //
-// # As POSTURAS ficam de fora, e não é cosmético
+// # As POSTURAS e as DECLARAÇÕES ficam de fora, e não é cosmético
 //
 // O interruptor delas mora nos Poderes porque entrar CUSTA PM. Deixá-las aqui é
 // dar ao jogador a Fúria de graça — medido: um POST com a chave da postura dava
-// +3 em ataque e dano com o PM intacto e sem linha de postura gravada.
+// +3 em ataque e dano com o PM intacto e sem linha de postura gravada. A
+// declaração (`book.DeclaredFlag`) se liga pelo Usar do poder, e a chave dela
+// aqui seria um segundo gesto para a mesma coisa.
 //
 // @example character.SituationalGroupsOf(effects.Conditional)
 func SituationalGroupsOf(offered []engine.ConditionalEffect) []SituationalGroup {
@@ -44,7 +46,7 @@ func SituationalGroupsOf(offered []engine.ConditionalEffect) []SituationalGroup 
 			groups = append(groups, SituationalGroup{Key: c.Term, Members: []engine.ConditionalEffect{c}})
 			continue
 		}
-		if _, isStance := stances[c.Flag]; isStance || c.Flag == engine.SharpAimPowerID {
+		if _, isStance := stances[c.Flag]; isStance || c.Flag == engine.SharpAimPowerID || book.IsDeclaredFlag(c.Flag) {
 			continue
 		}
 		if at, seen := byFlag[c.Flag]; seen {

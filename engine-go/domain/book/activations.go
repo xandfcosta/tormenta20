@@ -54,6 +54,9 @@ type Activation struct {
 	// A segurança que a derivação dava não se perdeu: ela desceu para o
 	// `TestEveryDeclaredStanceFlagMatchesItsModifiers`, que prende as duas ao
 	// mesmo valor quando há modificador.
+	//
+	// No instantâneo que concede `switch`, ela é a flag que USAR liga: a
+	// declaração do Estilo de Duas Armas (p125).
 	Flag string `json:"flag"`
 	// StanceGroup é o conjunto de posturas MUTUAMENTE EXCLUSIVAS a que esta
 	// pertence — *"você só pode manter uma postura por vez"* (p54).
@@ -135,9 +138,10 @@ type ActivationScale struct {
 	CapPm        int    `json:"capPm,omitempty"`
 }
 
-// PowerGrant é o que a ativação APLICA na ficha, em duas espécies: a RESERVA de
-// PV temporários (`temp-hp`, com o atributo que a dimensiona) e o EFEITO ATIVO
-// (`active-effect`, com os modificadores que ele liga).
+// PowerGrant é o que a ativação APLICA na ficha, em três espécies: a RESERVA de
+// PV temporários (`temp-hp`, com o atributo que a dimensiona), o EFEITO ATIVO
+// (`active-effect`, com os modificadores que ele liga) e a DECLARAÇÃO
+// (`switch`, que liga a `Flag` da ativação até o próximo turno — ver `DeclaredFlag`).
 //
 // Os `Modifiers` não existiam aqui, e o catálogo os trazia desde sempre: três
 // concessões escreviam a lista no JSON e o Go a DESCARTAVA na leitura, sem

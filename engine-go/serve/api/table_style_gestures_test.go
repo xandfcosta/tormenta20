@@ -57,50 +57,37 @@ func TestTheOneWeaponSwitchStaysAndWarnsWithAFullHand(t *testing.T) {
 // Sozinha, na classe: os mesmos dois ataques, com -2 (p50, p65).
 func TestAmbidextrousGivesTheSecondAttack(t *testing.T) {
 	for _, c := range []struct {
-		name, class, powers, flag, label string
-		penalty                          int
+		name, class, powers, use string
+		penalty                  int
 	}{
-		{"guerreiro com o estilo", "Guerreiro", `["estilo-de-duas-armas","class.guerreiro.ambidestria"]`, "estilo-de-duas-armas", "Duas Armas: um ataque com cada, sem penalidade", 0},
-		{"guerreiro sem o estilo", "Guerreiro", `["class.guerreiro.ambidestria"]`, "ataque-ambidestro", "Ambidestria: um ataque com cada", -2},
-		{"caçador sem o estilo", "Caçador", `["class.cacador.ambidestria"]`, "ataque-ambidestro", "Ambidestria: um ataque com cada", -2},
+		{"guerreiro com o estilo", "Guerreiro", `["estilo-de-duas-armas","class.guerreiro.ambidestria"]`, "estilo-de-duas-armas", 0},
+		{"guerreiro sem o estilo", "Guerreiro", `["class.guerreiro.ambidestria"]`, "class.guerreiro.ambidestria", -2},
+		{"caçador sem o estilo", "Caçador", `["class.cacador.ambidestria"]`, "class.cacador.ambidestria", -2},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f, id, goblin := styleOnTurn(t, "ataque-poderoso", false, "espada-longa", "adaga")
 			seedClasse(t, f.s, id, c.class, 1)
 			seedPowerChoices(t, f.s, id, c.powers, "{}")
-			if chips := acoesDaMesa(t, f); !strings.Contains(chips, c.label) {
-				t.Fatalf("as Ações não têm o chip %q", c.label)
-			}
 			if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
-				t.Fatalf("o golpe sem o interruptor: %q", refusal)
+				t.Fatalf("o golpe sem usar: %q", refusal)
 			}
 			off := pendingOf(t, f)
 			gmCancels(t, f)
-			if refusal := switchRefusal(t, f, id, c.flag); refusal != "" {
-				t.Fatalf("ligar foi recusado: %q", refusal)
+			if refusal := usesTheStyle(t, f, id, c.use); refusal != "" {
+				t.Fatalf("usar foi recusado: %q", refusal)
 			}
 			if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
 				t.Fatalf("o primeiro golpe: %q", refusal)
 			}
 			on := pendingOf(t, f)
 			if got := (on.Total - on.Roll) - (off.Total - off.Roll); got != c.penalty {
-				t.Errorf("o interruptor mudou o ataque em %+d, want %+d", got, c.penalty)
+				t.Errorf("usar mudou o ataque em %+d, want %+d", got, c.penalty)
 			}
 			gmRules(t, f, "errou")
 			if refusal := extraStrike(t, f, id, 1, goblin); refusal != "" {
 				t.Errorf("o segundo ataque foi recusado: %q", refusal)
 			}
 		})
-	}
-}
-
-// Com os dois poderes há um interruptor só: dois dariam dois -2, ou um que não faz nada.
-func TestAmbidextrousAndTheStyleShareOneSwitch(t *testing.T) {
-	f, id, _ := styleOnTurn(t, "ataque-poderoso", false, "espada-longa", "adaga")
-	seedClasse(t, f.s, id, "Guerreiro", 1)
-	seedPowerChoices(t, f.s, id, `["estilo-de-duas-armas","class.guerreiro.ambidestria"]`, "{}")
-	if strings.Contains(acoesDaMesa(t, f), "Ambidestria: um ataque com cada") {
-		t.Error("com o poder geral, o interruptor da classe não devia existir")
 	}
 }
 
@@ -115,14 +102,14 @@ func TestAmbidextrousInTwoClassesPaysOnce(t *testing.T) {
 	}
 	off := pendingOf(t, f)
 	gmCancels(t, f)
-	if refusal := switchRefusal(t, f, id, "ataque-ambidestro"); refusal != "" {
-		t.Fatalf("ligar: %q", refusal)
+	if refusal := usesTheStyle(t, f, id, "class.guerreiro.ambidestria"); refusal != "" {
+		t.Fatalf("usar: %q", refusal)
 	}
 	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
 		t.Fatalf("o golpe: %q", refusal)
 	}
 	on := pendingOf(t, f)
 	if got := (on.Total - on.Roll) - (off.Total - off.Roll); got != -2 {
-		t.Errorf("o interruptor mudou o ataque em %+d, e o livro dá -2", got)
+		t.Errorf("usar mudou o ataque em %+d, e o livro dá -2", got)
 	}
 }

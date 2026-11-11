@@ -36,6 +36,8 @@ type effectsPanel struct {
 	ConditionOptions []pickerOption
 	Stances          []stanceRow
 	Applied          []appliedEffectRow
+	// Declared são as declarações usadas e em curso — ver `powers_declarations.go`.
+	Declared []declaredRow
 	// BuffOptions são as magias que têm efeito aplicável, para o diálogo.
 	BuffOptions []pickerOption
 	Situational []situationalRow
@@ -176,11 +178,12 @@ func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect,
 		ConditionOptions: conditionOptionsFor(dto),
 		Stances:          stanceRowsOf(dto),
 		Applied:          appliedEffectRowsOf(dto),
+		Declared:         declaredRowsOf(dto),
 		BuffOptions:      buffOptions(),
 	}
 	panel.Situational, _ = situationalRowsOf(offered, active, dto)
 	panel.AlwaysOn = alwaysOnRowsOf(flags)
-	panel.Count = len(panel.Conditions) + len(panel.Applied) + len(panel.Stances) + activeCountOf(panel.Situational)
+	panel.Count = len(panel.Conditions) + len(panel.Applied) + len(panel.Stances) + len(panel.Declared) + activeCountOf(panel.Situational)
 	return panel
 }
 
@@ -347,7 +350,7 @@ func situationalRowsOf(
 			row.Targets = append(row.Targets, c.Target)
 		}
 		row.Degrees, row.DegreesOf = degreeOptionsFor(g.Key, head, dto)
-		row.Warning = twoWeaponStyleWarning(g.Key, dto) + rapidShotWarning(g.Key, dto) + oneWeaponStyleWarning(g.Key, dto)
+		row.Warning = oneWeaponStyleWarning(g.Key, dto)
 		rows = append(rows, row)
 	}
 	return rows, nil

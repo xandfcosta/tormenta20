@@ -84,6 +84,10 @@ type powerRow struct {
 	// ItemNotes são os avisos dos itens empunhados que mudam este poder sem mudar número: "alcance dobrado
 	// (Tambor das Profundezas)". Ver `book.ActivationHeld`.
 	ItemNotes []string
+	// Declares é a flag que usar este poder liga, quando ele é uma declaração (o Estilo de Duas Armas), e
+	// Declared diz se ela está em curso. Ver `powers_declarations.go`.
+	Declares string
+	Declared bool
 }
 
 // stanceState é o que a tela precisa saber de uma postura.
@@ -168,6 +172,9 @@ func powerRowFor(
 	}
 	if spec.BookPage > 0 {
 		row.Page = spec.BookPage
+	}
+	if flag := book.DeclaredFlag(*spec); flag != "" && !declarationOf(&row, dto, flag) {
+		return row
 	}
 	row.Limit = limitBadge(*spec)
 	// A POSTURA É RESOLVIDA ANTES DO PREÇO, e a ordem é a correção: o `+` do
@@ -294,16 +301,22 @@ func paidStances(dto sheet.CharacterDTO) map[string]int {
 // stanceRepeatedSem junta os DEGRAUS numa linha só.
 //
 // "Inspiração +1" até "+5" são cinco linhas do catálogo e UMA postura na mesa —
-// mostrar as cinco daria cinco botões de Ativar para a mesma coisa.
+// mostrar as cinco daria cinco botões de Ativar para a mesma coisa. A
+// declaração junta pela FLAG: a Ambidestria do guerreiro e a do caçador são dois
+// poderes para o mesmo Usar.
 func stanceRepeatedSem(rows []powerRow) []powerRow {
 	seen := map[string]bool{}
 	outside := []powerRow{}
 	for _, row := range rows {
 		if row.Kind == "stance" || row.Kind == "instant" {
-			if seen[row.ID] {
+			key := row.ID
+			if row.Declares != "" {
+				key = engine.FlagGroupID(row.Declares)
+			}
+			if seen[key] {
 				continue
 			}
-			seen[row.ID] = true
+			seen[key] = true
 		}
 		outside = append(outside, row)
 	}

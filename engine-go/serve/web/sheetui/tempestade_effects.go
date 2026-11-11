@@ -2,11 +2,9 @@ package sheetui
 
 import (
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 
-	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
@@ -52,53 +50,6 @@ func situationalMeta(row situationalRow) string {
 		meta += " · " + row.Warning
 	}
 	return meta
-}
-
-// twoWeaponStyleWarning avisa que o Estilo de Duas Armas pede uma arma leve: "se
-// estiver empunhando duas armas (e pelo menos uma delas for leve)" (p125). O Arma
-// Secundária Grande dispensa a leve (p124).
-//
-// Item feito à mão não diz se é leve, e aí a tela cala em vez de acusar.
-func twoWeaponStyleWarning(key string, dto sheet.CharacterDTO) string {
-	if key != engine.FlagGroupID(engine.TwoWeaponStylePowerID) && key != engine.FlagGroupID(engine.AmbidextrousSwitch) {
-		return ""
-	}
-	owned := sheet.OwnedPowers(dto)
-	if slices.ContainsFunc(owned, func(p sheet.OwnedPower) bool { return p.ID == "arma-secundaria-grande" }) {
-		return ""
-	}
-	for _, item := range dto.Items {
-		if item.Equipped == nil || sheet.HandsFor(*item.Equipped) == 0 {
-			continue
-		}
-		if item.CatalogID == nil {
-			return ""
-		}
-		if fromBook := book.ItemByID(*item.CatalogID); fromBook == nil || fromBook.Weapon == nil {
-			continue
-		} else if fromBook.Weapon.Hand == "light" || slices.Contains(fromBook.Weapon.Traits, engine.DoubleTrait) {
-			return ""
-		}
-	}
-	return "Nenhuma arma empunhada é leve (p125)"
-}
-
-// rapidShotWarning avisa que o Disparo Rápido pede arma que recarregue como ação livre (p125), e só
-// o arco faz isso: besta e funda recarregam com movimento, e pistola e mosquete, com a padrão
-// (p146-151). Não trava pela mesma razão do aviso acima.
-func rapidShotWarning(key string, dto sheet.CharacterDTO) string {
-	if key != engine.FlagGroupID(engine.RapidShotPowerID) {
-		return ""
-	}
-	for _, item := range dto.Items {
-		if item.Equipped == nil || sheet.HandsFor(*item.Equipped) == 0 {
-			continue
-		}
-		if item.CatalogID == nil || strings.HasPrefix(*item.CatalogID, "arco-") {
-			return ""
-		}
-	}
-	return "Só o arco recarrega como ação livre (p125)"
 }
 
 // oneWeaponStyleWarning avisa que o Estilo de Uma Arma pede "uma arma corpo a corpo em uma das mãos e nada

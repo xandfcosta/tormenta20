@@ -1,22 +1,23 @@
 package engine
 
-// OS ESTILOS QUE DÃO UM ATAQUE A MAIS NA AÇÃO AGREDIR (p125). O interruptor ligado é a declaração:
-// o -2 vale nos dois ataques, e por isso o primeiro golpe só abre o segundo com ele já ligado.
+// OS ESTILOS QUE DÃO UM ATAQUE A MAIS NA AÇÃO AGREDIR (p125). A flag ligada é a declaração, e quem a liga
+// é o Usar do poder (`book.DeclaredFlag`): o -2 vale nos dois ataques, e por isso o primeiro golpe só abre o
+// segundo com ela já ligada.
 //
 // A AMBIDESTRIA TIRA O -2 E NÃO O SEGUNDO ATAQUE (p125). O catálogo escreve o -2 com `Unless: ambidestria` e,
-// ao lado, uma linha de valor zero com `Requires: ambidestria`: sem ela o interruptor sumia junto com o -2. O
-// alvo dela é o ataque porque o chip mora sobre o número que o interruptor mexe. A flag
-// `tem-estilo-de-duas-armas` cala o interruptor da Ambidestria de classe: com os dois poderes há um só.
+// ao lado, uma linha de valor zero com `Requires: ambidestria`: sem ela a declaração sumia junto com o -2,
+// e o Usar não teria o que ligar. A flag `tem-estilo-de-duas-armas` cala a declaração da Ambidestria de
+// classe: com os dois poderes há um Usar só.
 
 // SharpAimPowerID é a Mira Apurada: "quando usa a ação mirar" (p128). O interruptor dela é ligado pelo gesto,
 // e não é oferecido: oferecido, dava o +2 a quem não mirou.
 const SharpAimPowerID = "mira-apurada"
 
-// As fontes do ataque adicional, que são os poderes e os interruptores deles.
+// As fontes do ataque adicional, que são os poderes e as flags que o Usar deles liga.
 const (
 	TwoWeaponStylePowerID = "estilo-de-duas-armas"
-	// AmbidextrousSwitch é o interruptor da Ambidestria de classe, que dá os mesmos dois ataques (p50, p65).
-	// A flag `ambidestria` já é o "possui Ambidestria" da p125, e não pode ser também o interruptor.
+	// AmbidextrousSwitch é a flag que o Usar da Ambidestria de classe liga, e dá os mesmos dois ataques (p50,
+	// p65). A flag `ambidestria` já é o "possui Ambidestria" da p125, e não pode ser também a declaração.
 	AmbidextrousSwitch = "ataque-ambidestro"
 	RapidShotPowerID   = "disparo-rapido"
 	DoubleTrait        = "dupla"
@@ -34,10 +35,10 @@ type StyleStrike struct {
 	FullAction bool
 }
 
-// offerStyleStrikes marca as cartas das armas empunhadas com o estilo ligado.
+// offerStyleStrikes marca as cartas das armas empunhadas com o estilo declarado.
 //
 // O DESARMADO E A ARMA NATURAL NÃO ENTRAM, porque o livro pede duas armas EMPUNHADAS. A falta da
-// arma leve não tira o ataque, nem a arma de disparo que não é arco: o interruptor avisa, e quem
+// arma leve não tira o ataque, nem a arma de disparo que não é arco: o Usar avisa, e quem
 // decide é o mestre.
 func (r *Ruleset) offerStyleStrikes(ch Character, active map[string]bool, effects ItemEffects, wielded []WeaponCard) {
 	owned := parseChoiceSet(ch.ClassPowers).has

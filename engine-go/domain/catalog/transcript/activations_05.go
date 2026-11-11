@@ -93,10 +93,12 @@ var activationsPart05 = []Activation{
 	{
 		ID:     "class.guerreiro.ambidestria",
 		Name:   "Ambidestria",
-		Kind:   "passive",
-		Action: "passivo",
+		Kind:   "instant",
+		Action: "livre",
 		PMCost: PMCost{Fixed: 0},
 		Uses:   nil,
+		Grant:  &ActivationGrant{Kind: "switch", Scope: ""},
+		Flag:   "ataque-ambidestro",
 	},
 	{
 		ID:     "class.guerreiro.arqueiro",

@@ -215,6 +215,9 @@ func (p Plays) UsePower(
 	if !sheet.OwnsActivation(dto, *spec) {
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
+	if flag := book.DeclaredFlag(*spec); flag != "" {
+		return p.declare(ctx, dto, *spec, flag)
+	}
 	uses := PowerUses(dto)[spec.ID]
 	can, reason := book.UseDecision(*spec, book.UseContext{
 		CurrentPM: int(dto.ManaAvailable()), UsedThisScene: uses.Scene, UsedToday: uses.Day,
