@@ -93,8 +93,12 @@ func styleStrikeWaits(style engine.StyleStrike, item int64) string {
 }
 
 func extraStrikeWaits(natural engine.NaturalStrike) string {
-	return fmt.Sprintf("!$my_turn || !$extra_open || $extra_barred === '%[1]s' || $extra_used.filter(source => source === '%[1]s').length >= %[2]d",
+	waits := fmt.Sprintf("!$my_turn || !$extra_open || $extra_barred === '%[1]s' || $extra_used.filter(source => source === '%[1]s').length >= %[2]d",
 		natural.SourceID, natural.ExtraAttacks)
+	if natural.Limb != "" {
+		waits += fmt.Sprintf(" || $extra_used.filter(source => source === '%s').length >= %d", natural.Limb, natural.LimbLimit)
+	}
+	return waits
 }
 
 // strikesWithTheFullAction é a arma do Disparo Rápido ligado: agredir com ela é ação completa

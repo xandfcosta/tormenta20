@@ -82,6 +82,10 @@ type PendingAttack struct {
 	NaturalSource string `json:"naturalSource,omitempty"`
 	ExtraOf       string `json:"extraOf,omitempty"`
 	ExtraLimit    int    `json:"extraLimit,omitempty"`
+	// ExtraLimb e ExtraLimbLimit são a pata deste extra e quantos ela dá na vez (p137), quando há
+	// pata armada — ver `engine.NaturalStrike.Limb`.
+	ExtraLimb      string `json:"extraLimb,omitempty"`
+	ExtraLimbLimit int    `json:"extraLimbLimit,omitempty"`
 	// OpensStyle é o estilo ligado neste golpe de agredir, que a resposta do mestre abre (p125), e
 	// StyleItem é a linha da mochila da arma, no golpe que abre e no adicional. FullAction diz que
 	// ele pagou a ação completa do Disparo Rápido. ExtraIsStyle diz que este golpe É o adicional,

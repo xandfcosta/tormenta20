@@ -40,6 +40,7 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 		pending.NaturalSource = natural.SourceID
 		if req.ExtraStrike {
 			pending.ExtraOf, pending.ExtraLimit = natural.SourceID, natural.ExtraAttacks
+			pending.ExtraLimb, pending.ExtraLimbLimit = natural.Limb, natural.LimbLimit
 		}
 	}
 	// A INVESTIDA É OUTRA AÇÃO (p235), e o extra não é a ação agredir.

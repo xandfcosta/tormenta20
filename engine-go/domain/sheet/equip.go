@@ -18,9 +18,10 @@ import (
 // permitidos deste pacote. Um `character` só para elas colidiria com o `sheet`
 // sem comprar nada.
 //
-// Os DOIS TETOS são do livro (p141): no máximo duas mãos ocupadas e quatro
-// vestidos. Não há casa de corpo em T20 — nada de elmo, botas e anel numa
-// boneca —, e é por isso que a regra conta mãos e vestidos em vez de posições.
+// Os TETOS são do livro: no máximo duas mãos ocupadas e quatro vestidos
+// (p141), e as duas patas insetoides de quem as arma (p137), que não são mão.
+// Não há casa de corpo em T20 — nada de elmo, botas e anel numa boneca —, e é
+// por isso que a regra conta mãos, vestidos e patas em vez de posições.
 
 const (
 	HandsLimit  = 2
@@ -88,12 +89,19 @@ func EquipAxisError(catalog *engine.CatalogItem, equipped string) (topMsg, field
 // EquipLimitError aplica os dois tetos do livro sobre os OUTROS itens já
 // equipados. Devolve "" quando cabe.
 func EquipLimitError(otherEquipped []string, incoming string) string {
-	vested, hands := 0, 0
+	vested, hands, legs := 0, 0, 0
 	for _, s := range otherEquipped {
 		if s == "vested" {
 			vested++
 		}
+		if s == engine.LegSlot {
+			legs++
+		}
 		hands += HandsFor(s)
+	}
+	// A PATA não é mão: as duas da Membros Extras têm teto próprio (p137).
+	if incoming == engine.LegSlot && legs+1 > engine.LegsLimit {
+		return fmt.Sprintf("Limite de %d patas atingido", engine.LegsLimit)
 	}
 	if incoming == "vested" {
 		vested++

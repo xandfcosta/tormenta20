@@ -157,17 +157,30 @@ func takesTheExtraStrike(s *live.SessionRuntimeState, attack *live.PendingAttack
 	} else if s.Scene.ExtraStrikeBarred == attack.ExtraOf {
 		return fmt.Errorf("o ataque extra com %s pede que o golpe tenha sido com outra arma", attack.Weapon)
 	}
-	used := 0
-	for _, source := range s.Scene.ExtraStrikesUsed {
-		if source == attack.ExtraOf {
-			used++
-		}
-	}
-	if used >= attack.ExtraLimit {
+	if timesIn(s.Scene.ExtraStrikesUsed, attack.ExtraOf) >= attack.ExtraLimit {
 		return fmt.Errorf("o ataque extra com %s é uma vez por rodada", attack.Weapon)
 	}
+	// A PATA entra na mesma lista, numa entrada só dela: a contagem pela fonte continua exata, e as
+	// Ações leem as duas do mesmo sinal.
+	if attack.ExtraLimb != "" && timesIn(s.Scene.ExtraStrikesUsed, attack.ExtraLimb) >= attack.ExtraLimbLimit {
+		return fmt.Errorf("o ataque extra das patas é um com cada uma (p137), e %s já atacou nesta rodada", attack.Weapon)
+	}
 	s.Scene.ExtraStrikesUsed = append(s.Scene.ExtraStrikesUsed, attack.ExtraOf)
+	if attack.ExtraLimb != "" {
+		s.Scene.ExtraStrikesUsed = append(s.Scene.ExtraStrikesUsed, attack.ExtraLimb)
+	}
 	return nil
+}
+
+// timesIn é quantas vezes a entrada aparece nos extras da vez.
+func timesIn(used []string, entry string) int {
+	times := 0
+	for _, each := range used {
+		if each == entry {
+			times++
+		}
+	}
+	return times
 }
 
 // opensTheExtraStrike é o que a resposta do mestre deixa: agredir abre o ataque extra das outras
@@ -274,8 +287,10 @@ func givesTheTurnBack(s *live.SessionRuntimeState, open live.PendingAttack) {
 	if !paidInThisTurn(s, open) {
 		return
 	}
-	if at := slices.Index(s.Scene.ExtraStrikesUsed, open.ExtraOf); open.ExtraOf != "" && at >= 0 {
-		s.Scene.ExtraStrikesUsed = slices.Delete(s.Scene.ExtraStrikesUsed, at, at+1)
+	for _, entry := range []string{open.ExtraOf, open.ExtraLimb} {
+		if at := slices.Index(s.Scene.ExtraStrikesUsed, entry); entry != "" && at >= 0 {
+			s.Scene.ExtraStrikesUsed = slices.Delete(s.Scene.ExtraStrikesUsed, at, at+1)
+		}
 	}
 	paid := open.Paid
 	s.Scene.StandardLeft = s.Scene.StandardLeft || paid.Standard

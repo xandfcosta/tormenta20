@@ -74,8 +74,9 @@ func enchantBoostOf(id string) (int64, string, bool) {
 // enchantBoostOffers são os gastos que as armas EMPUNHADAS oferecem, um por encanto com gasto.
 func (r *Ruleset) enchantBoostOffers(ch Character) []BoostOffer {
 	out := []BoostOffer{}
+	wields := r.wieldedBy(ch)
 	for _, it := range ch.Items {
-		if !inAHand(it) {
+		if !wields(it) {
 			continue
 		}
 		for _, enchant := range it.Enchants {
@@ -178,8 +179,9 @@ type EnchantBlast struct {
 // EnchantBlasts são os gestos que as armas empunhadas disparam em vez do golpe, um por encanto que tem um.
 func (r *Ruleset) EnchantBlasts(ch Character) []EnchantBlast {
 	out := []EnchantBlast{}
+	wields := r.wieldedBy(ch)
 	for _, it := range ch.Items {
-		if !inAHand(it) {
+		if !wields(it) {
 			continue
 		}
 		for _, enchant := range it.Enchants {
@@ -196,7 +198,16 @@ func (r *Ruleset) EnchantBlasts(ch Character) []EnchantBlast {
 	return out
 }
 
-// inAHand diz se o item está numa das mãos: o gasto do encanto é da arma em punho.
-func inAHand(it CharacterItem) bool {
-	return it.Equipped != nil && (*it.Equipped == "wielded" || *it.Equipped == "wielded2")
+// wieldedBy diz se o item está em punho: numa das mãos, ou numa pata armada (p137). O gasto do encanto é
+// da arma em punho, e a pata EMPUNHA (decisão do dono). A pata que não vale — sem o estilo, ou com arma
+// que não é leve — não conta.
+func (r *Ruleset) wieldedBy(ch Character) func(CharacterItem) bool {
+	legs := map[int64]bool{}
+	for _, leg := range r.armedLegs(ch, grantsFlag(r.ActiveItemsFor(ch), "ambidestria")) {
+		legs[leg.item.ID] = true
+	}
+	return func(it CharacterItem) bool {
+		inAHand := it.Equipped != nil && (*it.Equipped == "wielded" || *it.Equipped == "wielded2")
+		return inAHand || legs[it.ID]
+	}
 }

@@ -29,6 +29,11 @@ type NaturalStrike struct {
 	ExtraPM  int
 	// ExtraAttacks é quantos ataques o pagamento compra: um, ou um por pata (p137).
 	ExtraAttacks int
+	// Limb é a pata desta carta, quando há pata armada: "um ataque extra com cada uma" (p137) conta
+	// por pata, e não só pela fonte. LimbLimit é quantos ataques ela dá — um para a arma na pata, e
+	// as patas livres para a natural. Vazio, a fonte basta.
+	Limb      string
+	LimbLimit int
 }
 
 // NaturalScope é o escopo do que vale SÓ nas armas naturais: a margem da Presas Afiadas (p63).
@@ -115,10 +120,19 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
 		scopes = append(scopes, NaturalScope, WeaponDamageScope(owned.sourceID))
-		card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
-		card.Natural = &NaturalStrike{
-			SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1),
+		strike := NaturalStrike{SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1)}
+		if owned.sourceID == ExtraLimbsPowerID {
+			legs := r.legCards(ch, b, strike)
+			cards = append(cards, legs...)
+			if len(legs) >= LegsLimit {
+				continue
+			}
+			if len(legs) > 0 {
+				strike.Limb, strike.LimbLimit = ExtraLimbsPowerID+"@pata", LegsLimit-len(legs)
+			}
 		}
+		card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
+		card.Natural = &strike
 		cards = append(cards, card)
 	}
 	return cards
