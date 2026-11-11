@@ -154,7 +154,8 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 // a melhoria, o material ou o encanto: "a arma fornece +1 nas rolagens de dano" (Cruel, p165), "a
 // margem de ameaça [desta arma] aumenta" (Precisa, p166). No escopo vazio ou no `this`, toda carta os
 // lia, e a Cruel da espada subia a adaga da outra mão e o ataque desarmado. O ANÚNCIO vai junto: "uma
-// criatura viva atingida fica sangrando" (Sanguinária, p336) é o golpe desta arma.
+// criatura viva atingida fica sangrando" (Sanguinária, p336) é o golpe desta arma. E o NÃO LETAL: "todo o
+// dano causado" (Piedosa, p336) é o desta arma, e não o da adaga da outra mão.
 //
 // O escopo é o do id do catálogo, como o do espelho de ataque: duas adagas iguais na mão o dividem.
 // O ataque fica de fora porque `mirrorWeaponAttackMods` já o leva, e o passo de dano porque
@@ -167,7 +168,7 @@ func onThisWeapon(mods []Modifier, catalog *CatalogItem) []Modifier {
 	for i, m := range out {
 		unscoped := m.Target.Scope == "" || m.Target.Scope == "this"
 		strike := m.Target.K == "critRange" || m.Target.K == "critMult" ||
-			m.Target.K == "announcedCondition" || m.Target.K == "announcedEffect" ||
+			m.Target.K == "announcedCondition" || m.Target.K == "announcedEffect" || m.Target.K == "nonLethalDamage" ||
 			(m.Target.K == "damage" && (m.Target.Scope == "this" || m.Dice != ""))
 		if unscoped && strike {
 			out[i].Target.Scope = WeaponDamageScope(catalog.ID)
