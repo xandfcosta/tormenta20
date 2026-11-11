@@ -53,10 +53,31 @@ type ownedNaturalWeapon struct {
 // naturalWeaponsOf são as armas naturais da ficha: da raça, inclusive a habilidade tomada de
 // outra raça (p29), dos poderes da Tormenta e da devoção.
 func (r *Ruleset) naturalWeaponsOf(ch Character, evenAsleep bool) []ownedNaturalWeapon {
-	// NA FORMA SELVAGEM, o corpo é o da forma: as armas naturais são só as dela (decisão do dono).
+	// NA FORMA SELVAGEM, o corpo é o da forma: o que é do próprio corpo — a raça — sai, e entra a arma
+	// dela. O que vem de FORA e afeta o ser fica: a Tormenta e a devoção, que vem de um deus (decisão do
+	// dono).
+	out := []ownedNaturalWeapon{}
 	if shape, shaped := wildShapeWeapon(ch); shaped {
-		return []ownedNaturalWeapon{shape}
+		out = append(out, shape)
+	} else {
+		out = append(out, r.raceWeaponsOf(ch)...)
 	}
+	out = append(out, r.tormentaWeaponsOf(ch)...)
+	for _, name := range parseChoiceSet(ch.GodPowers).list {
+		power := r.grantedPowerByName(name)
+		if power == nil || power.NaturalWeapon == nil {
+			continue
+		}
+		if power.NaturalWeapon.AwakenedByUse && !evenAsleep && !usedThisScene(ch, power.ID) {
+			continue
+		}
+		out = withGrantedWeapon(out, power.ID, *power.NaturalWeapon)
+	}
+	return out
+}
+
+// raceWeaponsOf são as armas naturais da raça, inclusive a habilidade tomada de outra raça (p29).
+func (r *Ruleset) raceWeaponsOf(ch Character) []ownedNaturalWeapon {
 	out := []ownedNaturalWeapon{}
 	for _, applied := range r.appliedRaces(ch) {
 		abilities := slices.Clone(applied.race.Abilities)
@@ -69,20 +90,16 @@ func (r *Ruleset) naturalWeaponsOf(ch Character, evenAsleep bool) []ownedNatural
 			}
 		}
 	}
+	return out
+}
+
+// tormentaWeaponsOf são as armas naturais dos poderes da Tormenta, inclusive o tomado pela origem.
+func (r *Ruleset) tormentaWeaponsOf(ch Character) []ownedNaturalWeapon {
+	out := []ownedNaturalWeapon{}
 	for _, id := range append(r.chosenGeneralPowers(ch).list, r.originPickedPowerIds(ch)...) {
 		if weapon, found := r.book.tormentaNaturalWeapons[id]; found {
 			out = append(out, ownedNaturalWeapon{sourceID: id, weapon: weapon})
 		}
-	}
-	for _, name := range parseChoiceSet(ch.GodPowers).list {
-		power := r.grantedPowerByName(name)
-		if power == nil || power.NaturalWeapon == nil {
-			continue
-		}
-		if power.NaturalWeapon.AwakenedByUse && !evenAsleep && !usedThisScene(ch, power.ID) {
-			continue
-		}
-		out = withGrantedWeapon(out, power.ID, *power.NaturalWeapon)
 	}
 	return out
 }

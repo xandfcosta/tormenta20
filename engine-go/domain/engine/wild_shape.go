@@ -5,8 +5,9 @@ package engine
 //
 // A forma é uma FONTE DA FICHA, como as mãos e as patas: atributo, Defesa, redução de dano, tamanho e
 // deslocamento entram pelo caminho de todo modificador. O corpo é que muda inteiro: as armas de mão não
-// atacam ("não pode empunhar itens"), e as armas naturais são só as da forma — a forma animal não tem os
-// chifres da raça original (decisão do dono).
+// atacam ("não pode empunhar itens"), e a arma da forma toma o lugar das armas naturais do próprio corpo
+// — a forma animal não tem os chifres da raça original. O que vem de fora e afeta o ser fica: a Tormenta e
+// a devoção (decisão do dono).
 
 // WildForm é uma das cinco formas do quadro da p63.
 type WildForm string

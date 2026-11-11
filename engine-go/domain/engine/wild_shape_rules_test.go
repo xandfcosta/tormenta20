@@ -134,3 +134,34 @@ func TestTheShapeKeepsOnlyWhatIsWorn(t *testing.T) {
 			got, armor+5, shield)
 	}
 }
+
+// A TORMENTA AFETA O SER, e por isso a arma natural de um poder da Tormenta continua na forma animal (decisão
+// do dono); a da raça, não.
+func TestTheTormentaWeaponStaysInTheShape(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	ch := druidIn(&WildShape{Form: WildFerocious, Tier: WildTierNormal, DamageType: "corte"})
+	ch.ClassPowers = `["class.druida.forma-selvagem","dentes-afiados"]`
+	cards := world.ComputeWeaponCards(ch, nil)
+	if cardNamed(cards, "Mordida") == nil {
+		t.Error("a mordida dos Dentes Afiados continua na forma")
+	}
+	if cardNamed(cards, "Forma Feroz") == nil || cardNamed(cards, "Chifres") != nil {
+		t.Error("na forma, a arma da forma entra e os chifres da raça saem")
+	}
+}
+
+// A DEVOÇÃO TAMBÉM VEM DE FORA: o que um deus dá afeta o ser, e fica na forma, como o da Tormenta. O que é do
+// próprio corpo — a raça — sai com ele (decisão do dono).
+func TestTheDevotionWeaponStaysInTheShape(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	ch := druidIn(&WildShape{Form: WildFerocious, Tier: WildTierNormal, DamageType: "corte"})
+	ch.GodPowers = `["Presas Primordiais"]`
+	ch.PowerUses = []PowerUse{{PowerID: "deus.kallyadranoch.presas-primordiais", Scope: "scene", Used: 1}}
+	cards := world.ComputeWeaponCards(ch, nil)
+	if cardNamed(cards, "Mordida") == nil {
+		t.Error("as Presas Primordiais ativadas continuam na forma")
+	}
+	if cardNamed(cards, "Chifres") != nil {
+		t.Error("os chifres são do corpo da raça, e saem na forma")
+	}
+}
