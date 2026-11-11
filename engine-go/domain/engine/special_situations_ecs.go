@@ -91,15 +91,27 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 // dropWhatDoesNotReachThisWeapon mata a situação que só vale corpo a corpo
 // quando a arma é de disparo, e a que a arma ignora (a Caçadora, p335).
 //
+// A IGNORADA DEIXA O NOME: ela renasce como entidade só de rótulo ("cobertura
+// leve anulada pela Caçadora"), sem mecanismo nenhum. O mestre pintou a
+// cobertura no tabuleiro, e uma linha de ataque que a calasse o faria achar que
+// o app a esqueceu. A de corpo a corpo num disparo some calada, porque ali
+// ninguém anulou nada: a linha nunca alcançou a arma.
+//
 // DESPAWN e não um `if` em cada sistema que lê: a entidade deixa de existir, e
 // os três sistemas seguintes não precisam saber que ela existiu. É o mesmo
 // movimento da redação do tabuleiro — o que não vale SOME INTEIRO.
 func dropWhatDoesNotReachThisWeapon(card WeaponCard) ecs.System {
 	return func(w *ecs.World) {
 		ecs.Each(w, func(e ecs.Entity, row situationRow) {
-			if slices.Contains(card.IgnoresSituations, row.Row) {
-				w.Despawn(e)
+			at := slices.IndexFunc(card.IgnoresSituations, func(i IgnoredSituation) bool { return i.Row == row.Row })
+			if at < 0 {
+				return
 			}
+			w.Despawn(e)
+			annulled := w.Spawn()
+			ecs.Set(w, annulled, situationLabel{
+				Text: SpecialSituationLabel(row.Row) + " anulada pela " + card.IgnoresSituations[at].By,
+			})
 		})
 		if card.Skill != "Pontaria" || card.ShootsIntoMelee {
 			ecs.Each(w, func(e ecs.Entity, _ shootingIntoMelee) { w.Despawn(e) })

@@ -14,7 +14,9 @@ import (
 // hunting é a arma da `underCircumstances`, com a Caçadora.
 func hunting() WeaponCard {
 	card := aWeapon("1d8", 3, 20, 2, 5)
-	card.IgnoresSituations = []SpecialSituation{TargetUnderLightConcealment, TargetUnderTotalConcealment, TargetUnderLightCover}
+	for _, row := range []SpecialSituation{TargetUnderLightConcealment, TargetUnderTotalConcealment, TargetUnderLightCover} {
+		card.IgnoresSituations = append(card.IgnoresSituations, IgnoredSituation{Row: row, By: "Caçadora"})
+	}
 	return card
 }
 
@@ -28,8 +30,10 @@ func TestTheHuntingWeaponIgnoresLightCover(t *testing.T) {
 		t.Errorf("a arma Caçadora sofreu a cobertura leve: Defesa %d, acerto %v; a p335 a anula (Defesa 15)",
 			out.Defense, out.Hit)
 	}
-	if slices.Contains(out.Situations, "cobertura leve") {
-		t.Errorf("a linha de ataque nomeia a cobertura leve que a Caçadora anulou: %v", out.Situations)
+	// O MESTRE LÊ QUE A COBERTURA FOI ANULADA, e por quem: ele pintou a cobertura no tabuleiro, e uma linha que
+	// a calasse o faria achar que o app a esqueceu.
+	if !slices.Equal(out.Situations, []string{"cobertura leve anulada pela Caçadora"}) {
+		t.Errorf("a linha de ataque diz %q; quer a cobertura leve anulada pela Caçadora", out.Situations)
 	}
 }
 
@@ -42,6 +46,9 @@ func TestTheHuntingWeaponIgnoresConcealment(t *testing.T) {
 		}
 		if !out.Hit {
 			t.Errorf("a arma Caçadora errou por %s, e a p335 anula a chance de falha", s)
+		}
+		if want := SpecialSituationLabel(s) + " anulada pela Caçadora"; !slices.Equal(out.Situations, []string{want}) {
+			t.Errorf("a linha de ataque diz %q; quer %q", out.Situations, want)
 		}
 	}
 }
@@ -72,7 +79,13 @@ func TestTheHuntingEnchantStaysOnItsWeapon(t *testing.T) {
 	seen := map[string]bool{}
 	for _, card := range BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{}) {
 		seen[card.Name] = true
-		got := slices.Clone(card.IgnoresSituations)
+		got := []SpecialSituation{}
+		for _, ignored := range card.IgnoresSituations {
+			got = append(got, ignored.Row)
+			if ignored.By != "Caçadora" {
+				t.Errorf("a carta %q diz que %s é anulada por %q; quer a Caçadora", card.Name, ignored.Row, ignored.By)
+			}
+		}
 		slices.Sort(got)
 		if card.Name == "Espada longa" && !slices.Equal(got, sortedSituations(want)) {
 			t.Errorf("a espada Caçadora ignora %v; a p335 nomeia %v", got, want)

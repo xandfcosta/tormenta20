@@ -412,7 +412,7 @@ func writtenGuard(pa live.PendingAttack, attacker string) string {
 	return fmt.Sprintf("%s: –%d na Defesa até a próxima vez", attacker, -penalty)
 }
 
-// writtenSituations são as linhas da Tabela 5-3 que valeram, em prosa.
+// writtenSituations são as linhas da Tabela 5-3 que valeram, em prosa, e as que a arma anulou.
 //
 // FORA DA CONTA, e isso foi o OLHO a 390px que decidiu. Dentro dela o parêntese
 // ficava em monoespaçado no meio da aritmética e, com três situações, partia a

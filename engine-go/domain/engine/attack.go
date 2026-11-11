@@ -71,7 +71,9 @@ type AttackOutcome struct {
 	// Situations são os RÓTULOS das linhas da Tabela 5-3 que valeram, na ordem
 	// em que chegaram. Elas viajam porque o número sozinho DESMENTE o que a
 	// mesa sabe: a Defesa não é a da ficha, e um ataque que bateu a Defesa pode
-	// ter errado pela camuflagem (p238). Procedência, não enfeite.
+	// ter errado pela camuflagem (p238). Procedência, não enfeite. A linha que a
+	// arma anula também vem, dita assim ("cobertura leve anulada pela Caçadora",
+	// p335): o mestre a pintou no tabuleiro e precisa ler por que ela não agiu.
 	Situations []string `json:"situations,omitempty"`
 	// Defense é a Defesa que ESTE ataque enfrentou, depois da Tabela 5-3 — ela
 	// não é a da ficha quando o alvo está sob cobertura (p239). Viaja porque
