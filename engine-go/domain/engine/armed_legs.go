@@ -16,6 +16,9 @@ const LegSlot = "leg"
 // ExtraLimbsPowerID é o poder da Tormenta que dá as patas.
 const ExtraLimbsPowerID = "membros-extras"
 
+// LegSuffix é o que o nome da carta da arma na pata leva.
+const LegSuffix = " (pata)"
+
 // LegsLimit é quantas patas a Membros Extras dá.
 const LegsLimit = 2
 
@@ -101,6 +104,8 @@ func (r *Ruleset) legCards(ch Character, b cardBasis, limbs NaturalStrike) []Wea
 	cards := []WeaponCard{}
 	for _, leg := range r.armedLegs(ch, b.effects.Flags["ambidestria"]) {
 		card := r.itemCard(ch, leg.item, leg.catalog, LegSlot, b.effects, b)
+		// O "(pata)" separa a mesma arma na mão e na pata, na ficha e na faixa da mesa.
+		card.Name = leg.item.Name + LegSuffix
 		strike := limbs
 		card.Natural = &strike
 		cards = append(cards, card)

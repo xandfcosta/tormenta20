@@ -30,7 +30,7 @@ func TestTheArmedLegAttacksWithItsWeaponAndCostsTwoOnEveryAttack(t *testing.T) {
 	before := world.ComputeWeaponCards(bare, nil)
 	after := world.ComputeWeaponCards(armed, nil)
 
-	sword := cardNamed(after, "espada-curta")
+	sword := cardNamed(after, "espada-curta (pata)")
 	if sword == nil {
 		t.Fatalf("a espada curta na pata devia ter carta: %d cartas", len(after))
 	}
@@ -63,13 +63,13 @@ func TestTheLegHoldsNothingWithoutTheStyleOrAHeavyWeapon(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 
 	noStyle := inALeg(attributeSumHero("Guerreiro", 5, `["membros-extras"]`), "espada-curta")
-	if cardNamed(world.ComputeWeaponCards(noStyle, nil), "espada-curta") != nil {
+	if cardNamed(world.ComputeWeaponCards(noStyle, nil), "espada-curta (pata)") != nil {
 		t.Error("sem Ambidestria nem Estilo de Duas Armas, a pata não empunha arma")
 	}
 
 	heavy := inALeg(attributeSumHero("Guerreiro", 5, `["membros-extras","estilo-de-duas-armas"]`), "espada-longa")
 	cards := world.ComputeWeaponCards(heavy, nil)
-	if cardNamed(cards, "espada-longa") != nil {
+	if cardNamed(cards, "espada-longa (pata)") != nil {
 		t.Error("a pata empunha só arma leve")
 	}
 	if patas := cardNamed(cards, "Patas insetoides"); patas == nil {
@@ -80,7 +80,7 @@ func TestTheLegHoldsNothingWithoutTheStyleOrAHeavyWeapon(t *testing.T) {
 func TestTheWarriorAmbidexterityAlsoArmsTheLegs(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	ch := inALeg(attributeSumHero("Guerreiro", 5, `["membros-extras","class.guerreiro.ambidestria"]`), "espada-curta")
-	if cardNamed(world.ComputeWeaponCards(ch, nil), "espada-curta") == nil {
+	if cardNamed(world.ComputeWeaponCards(ch, nil), "espada-curta (pata)") == nil {
 		t.Error("a Ambidestria de classe também deixa empunhar na pata (p137)")
 	}
 }
