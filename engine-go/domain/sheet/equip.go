@@ -18,9 +18,10 @@ import (
 // permitidos deste pacote. Um `character` só para elas colidiria com o `sheet`
 // sem comprar nada.
 //
-// Os DOIS TETOS são do livro (p141): no máximo duas mãos ocupadas e quatro
-// vestidos. Não há casa de corpo em T20 — nada de elmo, botas e anel numa
-// boneca —, e é por isso que a regra conta mãos e vestidos em vez de posições.
+// Os TETOS são do livro: no máximo duas mãos ocupadas e quatro vestidos
+// (p141), e as duas patas insetoides de quem as arma (p137), que não são mão.
+// Não há casa de corpo em T20 — nada de elmo, botas e anel numa boneca —, e é
+// por isso que a regra conta mãos, vestidos e patas em vez de posições.
 
 const (
 	HandsLimit  = 2
