@@ -2052,7 +2052,7 @@
             "origin": "eremita",
             "classes": [{ "className": "Druida", "level": 5 }],
             "god": "allihanna",
-            "classPowers": ["class.druida.presas-afiadas"],
+            "classPowers": ["class.druida.presas-afiadas", "class.druida.forma-selvagem"],
             "powerChoices": {
               "class.druida.magias-1-circulo": ["convocacao", "transmutacao", "abjuracao"]
             },
