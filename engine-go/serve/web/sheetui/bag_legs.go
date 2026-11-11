@@ -61,6 +61,22 @@ func whyTheLegIsIdle(armable bool, item sheet.ItemDTO) string {
 	return ""
 }
 
+// keptByTheWildShape é a tira na Forma Selvagem: "na forma selvagem você não pode […] empunhar itens"
+// (p63). O item continua na posição dele, dizendo que a forma o guardou, e sem o chip de dano — a carta
+// dele já não ataca. As posições livres saem: não há o que empunhar.
+func keptByTheWildShape(positions []equippedPosition) []equippedPosition {
+	kept := []equippedPosition{}
+	for _, p := range positions {
+		if p.Card == nil {
+			continue
+		}
+		idle := *p.Card
+		idle.Chips = nil
+		kept = append(kept, equippedPosition{Card: &idle, Label: p.Label + " · guardada pela Forma Selvagem", Wide: p.Wide})
+	}
+	return kept
+}
+
 // legsFreeText é a linha das patas livres: elas continuam atacando como arma natural.
 func legsFreeText(used int, naturalDamage string) string {
 	free := freePlaces(used, engine.LegsLimit, "pata livre", "patas livres")

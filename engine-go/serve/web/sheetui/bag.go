@@ -34,6 +34,8 @@ type bagPanel struct {
 	// lugares.
 	Hands     []equippedPosition
 	HandsUsed int
+	// HandsFree é a linha das mãos livres, ou o aviso da Forma Selvagem, em que nada se empunha.
+	HandsFree string
 	// Vested são as posições do corpo, com as quatro do teto desenhadas mesmo
 	// vazias — ver quantas sobram é metade da informação.
 	Vested     []equippedPosition
@@ -149,6 +151,10 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 		return equippedCardOf(dto.Ruleset, item, proficiencies, exempt)
 	}
 	panel.Hands, panel.HandsUsed = handPositionsOf(wielded, card)
+	panel.HandsFree = freePlaces(panel.HandsUsed, sheet.HandsLimit, "mão livre", "mãos livres")
+	if dto.WildShape != nil {
+		panel.Hands, panel.HandsFree = keptByTheWildShape(panel.Hands), "na Forma Selvagem, nada se empunha"
+	}
 	panel.Vested, panel.VestedUsed = vestedPositionsOf(vested, card)
 	armable, naturalDamage := legsOfTheSheet(dto)
 	panel.Legs, panel.LegsUsed = legPositionsOf(legs, card, armable)

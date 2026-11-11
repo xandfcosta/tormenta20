@@ -710,6 +710,20 @@ DELETE FROM character_stances WHERE characterId = ? AND flag = ?;
 -- name: ClearCharacterStances :exec
 DELETE FROM character_stances WHERE characterId = ?;
 
+-- name: GetCharacterWildShape :many
+-- :many e nao :one para a ausencia ser lista vazia, e nao erro: fora da forma e o caso comum.
+SELECT form, tier, damageType, movement, pmPaid FROM character_wild_shape WHERE characterId = ?;
+
+-- name: SaveCharacterWildShape :exec
+INSERT INTO character_wild_shape (characterId, form, tier, damageType, movement, pmPaid)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT (characterId)
+DO UPDATE SET form = excluded.form, tier = excluded.tier, damageType = excluded.damageType,
+  movement = excluded.movement, pmPaid = excluded.pmPaid;
+
+-- name: ClearCharacterWildShape :exec
+DELETE FROM character_wild_shape WHERE characterId = ?;
+
 -- name: ListCampaignItemPatches :many
 -- A emenda de catalogo de UMA campanha: o mundo dela.
 --

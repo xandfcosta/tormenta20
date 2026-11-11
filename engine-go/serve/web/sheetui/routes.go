@@ -71,6 +71,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/efeitos/aplica/{magia}", s.sheetCommand(applySpellBuff))
 	r.Post("/personagens/{id}/efeitos/encerra/{efeito}", s.sheetCommand(endAppliedEffect))
 	r.Post("/personagens/{id}/efeitos/postura/{flag}", s.sheetCommand(endStance))
+	r.Post("/personagens/{id}/efeitos/forma-selvagem", s.sheetCommand(leaveWildShape))
 	// O SITUACIONAL manda a CHAVE do condicional, que é um encadeado com `::` e
 	// texto livre do catálogo dentro — por isso ela vai por SINAL e não no
 	// caminho. É a exceção da ficha, e a razão dela é o formato da chave.
@@ -103,6 +104,7 @@ func Routes(r chi.Router, s Scene) {
 	// OS PODERES.
 	r.Post("/personagens/{id}/poderes/usa/{poder}", s.sheetCommand(usePower))
 	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(enterStance))
+	r.Post("/personagens/{id}/poderes/forma-selvagem", s.sheetCommand(takeWildShape))
 	// AS ESCOLHAS do diálogo.
 	r.Post("/personagens/{id}/poderes/escolhe/{poder}", s.sheetCommand(pickPower))
 	r.Post("/personagens/{id}/poderes/escolha/{poder}/{opcao}", s.sheetCommand(pickPowerOption))
@@ -170,7 +172,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +
 			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: '', item_enchants: [], item_enchant_against: ''," +
-			" power_search: '', stance_degrees: 0, power: '', show_passives: false," +
+			" power_search: '', stance_degrees: 0, power: '', show_passives: false, wild_form: '', wild_tier: '', wild_damage: '', wild_move: ''," +
 			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', vital_temp_amount: '', " + ExpertiseSpendsDeclaration() + "}",
 	}, SceneBody(view))
 }

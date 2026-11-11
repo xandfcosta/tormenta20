@@ -300,6 +300,18 @@ func LoadPlayState(ctx context.Context, q *sqlcgen.Queries, id int64, dto *Chara
 	for _, st := range stances {
 		dto.Stances = append(dto.Stances, StanceDTO{Flag: st.Flag, Steps: st.Steps, PmPaid: st.Pmpaid})
 	}
+
+	shapes, err := q.GetCharacterWildShape(ctx, id)
+	if err != nil {
+		return err
+	}
+	for _, shape := range shapes {
+		dto.WildShape = &engine.WildShape{
+			Form: engine.WildForm(shape.Form), Tier: engine.WildTier(shape.Tier),
+			DamageType: shape.Damagetype, Movement: engine.WildMovement(shape.Movement),
+		}
+		dto.WildShapePaid = shape.Pmpaid
+	}
 	return nil
 }
 

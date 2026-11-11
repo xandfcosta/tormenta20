@@ -37,7 +37,7 @@ templ tempestadeBag(v View) {
 		}
 		<div class="ds-bag-halves">
 			<div class="grid content-start gap-3">
-				@inUseList(v, "Mãos", v.Bag.Hands, v.Bag.HandsUsed, sheet.HandsLimit, freePlaces(v.Bag.HandsUsed, sheet.HandsLimit, "mão livre", "mãos livres"))
+				@inUseList(v, "Mãos", v.Bag.Hands, v.Bag.HandsUsed, sheet.HandsLimit, v.Bag.HandsFree)
 				if v.Bag.LegsShow {
 					@inUseList(v, "Patas", v.Bag.Legs, v.Bag.LegsUsed, engine.LegsLimit, v.Bag.LegsFree)
 				}

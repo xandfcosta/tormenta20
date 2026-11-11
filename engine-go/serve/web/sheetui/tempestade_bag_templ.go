@@ -144,7 +144,7 @@ func tempestadeBag(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = inUseList(v, "Mãos", v.Bag.Hands, v.Bag.HandsUsed, sheet.HandsLimit, freePlaces(v.Bag.HandsUsed, sheet.HandsLimit, "mão livre", "mãos livres")).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = inUseList(v, "Mãos", v.Bag.Hands, v.Bag.HandsUsed, sheet.HandsLimit, v.Bag.HandsFree).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

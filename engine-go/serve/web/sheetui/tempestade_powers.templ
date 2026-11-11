@@ -80,6 +80,9 @@ templ tempestadePowers(v View) {
 		}
 	</section>
 	@tempestadeChoicesDialog(v)
+	if v.WildShape.Offered {
+		@wildShapeDialog(v)
+	}
 	for _, row := range powerSheetRows(v.Powers) {
 		@powerSheet(v, row, powerSheetID(row))
 		if row.Stance != nil && row.Stance.MaxSteps > 0 {
@@ -116,6 +119,10 @@ templ powerGesture(v View, row powerRow) {
 			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Ativar "+row.Name, templ.Attributes{"data-on:click": "$stance_degrees = 0; " + sheetPost(v, "/poderes/postura/"+row.Stance.Flag+"/entra")})) {
 				{ "Ativar · " + strconv.Itoa(row.Stance.BasePm) + " PM" }
 			}
+		}
+	} else if wildShapePowerIDs[row.ID] {
+		if opensWildShape(row) {
+			@wildShapeOpener(row)
 		}
 	} else if row.Kind == "instant" {
 		if row.Degrees != nil && row.Degrees.opensDialog() {
