@@ -377,10 +377,13 @@ Mente Criminosa não são).
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
   moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é
   uma só para a mão inteira, e um bônus nela sobe a arma da outra mão. O dano, a
-  margem, o multiplicador, a condição anunciada e o não letal que o item da arma
-  concede vão para o `weapon:<id>` dela (`onThisWeapon`): a Cruel, a Sanguinária
-  e a Piedosa da espada não sobem, não anunciam e não amansam a adaga da outra
-  mão, nem o ataque desarmado. Duas armas com o mesmo id dividem o escopo.
+  margem, o multiplicador, a condição anunciada, o não letal e as linhas da
+  Tabela 5-3 que a arma ignora (a Caçadora, p335) vão para o `weapon:<id>` dela
+  (`onThisWeapon`): a Cruel, a Sanguinária, a Piedosa e a Caçadora da espada não
+  valem para a adaga da outra mão, nem para o ataque desarmado. Duas armas com o
+  mesmo id dividem o escopo. A linha ignorada SOME do ataque antes da soma
+  (`dropWhatDoesNotReachThisWeapon`), como a de corpo a corpo num disparo; a
+  cobertura total não está entre elas, porque não é penalidade (p239).
 
 ### A devoção é fonte da coleta, e não só de PV e PM
 

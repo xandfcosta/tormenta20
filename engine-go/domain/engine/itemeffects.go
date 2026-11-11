@@ -495,6 +495,9 @@ func targetKey(t ModifierTarget) string {
 		// não se somam: elas são ANÚNCIOS, e dois anúncios diferentes são duas
 		// linhas para o mestre ler.
 		return "announcedCondition:" + t.Name
+	case "ignoresSituation":
+		// A LINHA DA TABELA 5-3 E A ARMA NA CHAVE: a Caçadora anula três linhas (p335), e só na arma dela.
+		return "ignoresSituation:" + t.Name + ":" + t.Scope
 	case "announcedEffect":
 		// O EFEITO ANUNCIADO sai da pilha antes de somar (`harvestWeaponRiders`), e o texto dele mora na nota do
 		// modificador, não no alvo: a chave só precisa existir para o alvo ser conhecido.

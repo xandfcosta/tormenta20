@@ -1,6 +1,9 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 // A TABELA 5-3, "Situações Especiais" (p239), no ataque.
 //
@@ -131,6 +134,21 @@ func SpecialSituationsOfTheBook() []SpecialSituation {
 	out := make([]SpecialSituation, 0, len(specialSituationTable))
 	for s := range specialSituationTable {
 		out = append(out, s)
+	}
+	return out
+}
+
+// situationsIgnoredBy são as linhas da tabela que a arma do escopo não sofre (a Caçadora, p335), em ordem fixa.
+func situationsIgnoredBy(effects ItemEffects, weaponScope string) []SpecialSituation {
+	out := []SpecialSituation{}
+	for _, s := range SpecialSituationsOfTheBook() {
+		if StatFor(effects, ModifierTarget{K: "ignoresSituation", Name: string(s), Scope: weaponScope}).Total > 0 {
+			out = append(out, s)
+		}
+	}
+	slices.Sort(out)
+	if len(out) == 0 {
+		return nil
 	}
 	return out
 }
