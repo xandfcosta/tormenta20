@@ -1,6 +1,9 @@
 package engine
 
-import "slices"
+import (
+	"fmt"
+	"slices"
+)
 
 // AS PATAS ARMADAS da Membros Extras (p137): "Se possuir Ambidestria ou Estilo de Duas Armas, pode empunhar
 // armas leves em suas patas insetoides (mas ainda precisa pagar 2 PM para atacar com elas e sofre a
@@ -107,6 +110,7 @@ func (r *Ruleset) legCards(ch Character, b cardBasis, limbs NaturalStrike) []Wea
 		// O "(pata)" separa a mesma arma na mão e na pata, na ficha e na faixa da mesa.
 		card.Name = leg.item.Name + LegSuffix
 		strike := limbs
+		strike.Limb, strike.LimbLimit = fmt.Sprintf("%s@pata:%d", ExtraLimbsPowerID, leg.item.ID), 1
 		card.Natural = &strike
 		cards = append(cards, card)
 	}
