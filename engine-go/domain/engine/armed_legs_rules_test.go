@@ -84,3 +84,25 @@ func TestTheWarriorAmbidexterityAlsoArmsTheLegs(t *testing.T) {
 		t.Error("a Ambidestria de classe também deixa empunhar na pata (p137)")
 	}
 }
+
+// A arma na pata é EMPUNHADA (p137), e o gasto do encanto é da arma em punho (decisão do dono): a pata armada
+// oferece o gasto e o disparo como a mão. A pata que não vale — sem o estilo — não oferece nada.
+func TestTheEnchantOnALegWeaponIsOffered(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	ptr := func(s string) *string { return &s }
+	leg := func(powers, enchant string) Character {
+		ch := attributeSumHero("Guerreiro", 5, powers)
+		ch.Items = []CharacterItem{{ID: 7, CatalogID: ptr("adaga"), Name: "Adaga", Equipped: ptr(LegSlot), Improvements: "[]", Enchants: []string{enchant}}}
+		return ch
+	}
+	armed := `["membros-extras","estilo-de-duas-armas"]`
+	if _, found := enchantOffer(world, leg(armed, "encanto-tumular"), "encanto-tumular"); !found {
+		t.Error("a adaga tumular na pata devia oferecer o gasto de 2 PM")
+	}
+	if blasts := world.EnchantBlasts(leg(armed, "encanto-flamejante")); len(blasts) != 1 {
+		t.Errorf("a adaga flamejante na pata devia disparar: %+v", blasts)
+	}
+	if _, found := enchantOffer(world, leg(`["membros-extras"]`, "encanto-tumular"), "encanto-tumular"); found {
+		t.Error("sem o estilo, a pata não empunha, e o encanto não oferece o gasto")
+	}
+}
