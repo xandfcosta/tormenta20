@@ -28,16 +28,37 @@ func legsOfTheSheet(dto sheet.CharacterDTO) (armable bool, naturalDamage string)
 }
 
 // legPositionsOf são as patas ocupadas, na ordem, e quantas.
-func legPositionsOf(items []sheet.ItemDTO, card func(sheet.ItemDTO) *equippedCard) ([]equippedPosition, int) {
+//
+// A ARMA SEM EFEITO continua na tira, porque esconder o item seria pior, mas a linha diz por quê e não
+// promete o dano: o motor já a ignora, e a pata ataca como arma natural.
+func legPositionsOf(items []sheet.ItemDTO, card func(sheet.ItemDTO) *equippedCard, armable bool) ([]equippedPosition, int) {
 	positions := []equippedPosition{}
 	for i, item := range items {
 		label := "Pata insetoide"
 		if i >= engine.LegsLimit {
 			label = "Acima do limite"
 		}
-		positions = append(positions, equippedPosition{Card: card(item), Label: label})
+		shown := card(item)
+		if why := whyTheLegIsIdle(armable, item); why != "" {
+			idle := *shown
+			idle.Chips = nil
+			shown, label = &idle, label+" · sem efeito: "+why
+		}
+		positions = append(positions, equippedPosition{Card: shown, Label: label})
 	}
 	return positions, len(items)
+}
+
+// whyTheLegIsIdle é o motivo de a arma na pata não valer, ou vazio quando ela vale.
+func whyTheLegIsIdle(armable bool, item sheet.ItemDTO) string {
+	if !armable {
+		return "falta a Ambidestria ou o Estilo de Duas Armas"
+	}
+	catalog := catalogItem(item)
+	if catalog == nil || catalog.Weapon == nil || !engine.FitsALeg(catalog.Weapon.Purpose, catalog.Weapon.Hand) {
+		return "a pata empunha só arma leve"
+	}
+	return ""
 }
 
 // legsFreeText é a linha das patas livres: elas continuam atacando como arma natural.

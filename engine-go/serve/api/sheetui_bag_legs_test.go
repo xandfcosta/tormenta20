@@ -54,3 +54,35 @@ func TestTheLegRefusesAHeavyWeaponAndAThirdOne(t *testing.T) {
 		t.Errorf("a terceira arma passa do teto de duas patas: %q", refusal)
 	}
 }
+
+// A ARMA SEM EFEITO NA PATA continua na tira, porque esconder o item seria pior, mas a tira diz por quê:
+// a ficha perdeu o estilo, ou a arma não é leve. O motor já a ignora, e a pata ataca natural.
+func TestTheLegStripWarnsAboutAWeaponWithoutEffect(t *testing.T) {
+	f, id := fighterFixture(t)
+	seedPowerChoices(t, f.s, id, `["membros-extras"]`, "{}")
+	itemSemeia(t, f, id, "espada-curta", "Espada curta", "leg")
+	if screen := bagScreen(t, f, id); !strings.Contains(screen, "Patas") || !strings.Contains(screen, "sem efeito: falta a Ambidestria ou o Estilo de Duas Armas") {
+		t.Error("a arma na pata de quem perdeu o estilo devia aparecer com o aviso")
+	}
+
+	g, other := fighterFixture(t)
+	seedPowerChoices(t, g.s, other, `["membros-extras","estilo-de-duas-armas"]`, "{}")
+	itemSemeia(t, g, other, "espada-longa", "Espada longa", "leg")
+	screen := bagScreen(t, g, other)
+	if !strings.Contains(screen, "sem efeito: a pata empunha só arma leve") {
+		t.Error("a arma que não é leve na pata devia aparecer com o aviso")
+	}
+	if strings.Contains(inUseRowsText(screen, "Espada longa"), "Dano") {
+		t.Error("a arma sem efeito não promete o dano dela")
+	}
+}
+
+// inUseRowsText é o texto da linha do item na tira, até a próxima linha.
+func inUseRowsText(screen, name string) string {
+	at := strings.Index(screen, ">"+name+"<")
+	if at < 0 {
+		return ""
+	}
+	end := min(len(screen), at+400)
+	return screen[at:end]
+}

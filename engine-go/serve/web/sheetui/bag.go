@@ -151,7 +151,7 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	panel.Hands, panel.HandsUsed = handPositionsOf(wielded, card)
 	panel.Vested, panel.VestedUsed = vestedPositionsOf(vested, card)
 	armable, naturalDamage := legsOfTheSheet(dto)
-	panel.Legs, panel.LegsUsed = legPositionsOf(legs, card)
+	panel.Legs, panel.LegsUsed = legPositionsOf(legs, card, armable)
 	panel.LegsShow, panel.LegsFree = armable || len(legs) > 0, legsFreeText(panel.LegsUsed, naturalDamage)
 	panel.StowedTotal = len(saved)
 	panel.Stowed = stowedTilesOf(dto.Ruleset, bagFiltered(saved, search, category))
