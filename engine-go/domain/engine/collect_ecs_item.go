@@ -169,6 +169,7 @@ func onThisWeapon(mods []Modifier, catalog *CatalogItem) []Modifier {
 		unscoped := m.Target.Scope == "" || m.Target.Scope == "this"
 		strike := m.Target.K == "critRange" || m.Target.K == "critMult" ||
 			m.Target.K == "announcedCondition" || m.Target.K == "announcedEffect" || m.Target.K == "nonLethalDamage" ||
+			m.Target.K == "ignoresSituation" ||
 			(m.Target.K == "damage" && (m.Target.Scope == "this" || m.Dice != ""))
 		if unscoped && strike {
 			out[i].Target.Scope = WeaponDamageScope(catalog.ID)

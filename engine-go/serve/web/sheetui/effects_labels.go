@@ -135,6 +135,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"defenseAttribute":      "Atributo da Defesa",
 		"armorPenaltyExempt":    "Ignora a penalidade de armadura",
 		"nonLethalDamage":       "Dano não letal",
+		"ignoresSituation":      "Ignora no ataque",
 		"source":                "Multiplica o que a fonte dá",
 		"tempHp":                "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
 	}
@@ -204,6 +205,10 @@ func targetComplement(t engine.ModifierTarget) string {
 	}
 	if t.K == "source" && t.Name != "" {
 		return effectDisplayName(t.Name)
+	}
+	// A LINHA DA TABELA 5-3 que a Caçadora anula (p335): o id é do motor, e a mesa lê "cobertura leve".
+	if t.K == "ignoresSituation" && t.Name != "" {
+		return engine.SpecialSituationLabel(engine.SpecialSituation(t.Name))
 	}
 	if t.Name != "" {
 		return t.Name

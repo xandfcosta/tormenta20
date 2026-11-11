@@ -1,6 +1,10 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
 // A TABELA 5-3, "Situações Especiais" (p239), no ataque.
 //
@@ -131,6 +135,41 @@ func SpecialSituationsOfTheBook() []SpecialSituation {
 	out := make([]SpecialSituation, 0, len(specialSituationTable))
 	for s := range specialSituationTable {
 		out = append(out, s)
+	}
+	return out
+}
+
+// situationsIgnoredBy são as linhas da tabela que a arma do escopo não sofre (a Caçadora, p335), em ordem fixa,
+// com o nome de quem as anula.
+//
+// O NOME VEM DA SOBREPOSIÇÃO DO ITEM, e não da procedência da soma: ela diz "Espada longa", que é o item, e o
+// mestre precisa ler "Caçadora", que é o encanto. Sem sobreposição que a escreva, a linha é do próprio verbete.
+func (r *Ruleset) situationsIgnoredBy(effects ItemEffects, weaponScope string, it CharacterItem, catalog *CatalogItem) []IgnoredSituation {
+	overlays := append([]string{}, it.Enchants...)
+	overlays = append(overlays, parseStringArray(it.Improvements)...)
+	if it.Material != nil {
+		overlays = append(overlays, *it.Material)
+	}
+	out := []IgnoredSituation{}
+	for _, s := range SpecialSituationsOfTheBook() {
+		if StatFor(effects, ModifierTarget{K: "ignoresSituation", Name: string(s), Scope: weaponScope}).Total <= 0 {
+			continue
+		}
+		by := catalog.Name
+		for _, id := range overlays {
+			overlay := r.getCatalogItem(id)
+			if overlay != nil && slices.ContainsFunc(overlay.Modifiers, func(m Modifier) bool {
+				return m.Target.K == "ignoresSituation" && m.Target.Name == string(s)
+			}) {
+				by = overlay.Name
+				break
+			}
+		}
+		out = append(out, IgnoredSituation{Row: s, By: by})
+	}
+	slices.SortFunc(out, func(a, b IgnoredSituation) int { return strings.Compare(string(a.Row), string(b.Row)) })
+	if len(out) == 0 {
+		return nil
 	}
 	return out
 }

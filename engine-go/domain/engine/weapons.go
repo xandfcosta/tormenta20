@@ -108,6 +108,16 @@ type WeaponCard struct {
 	// da ARMA e não parcela — a Piedosa diz "todo o dano causado", o que inclui
 	// a Força e as parcelas dos outros encantos.
 	NonLethal bool `json:"nonLethal,omitempty"`
+	// IgnoresSituations são as linhas da Tabela 5-3 que esta arma não sofre: a Caçadora anula "penalidades por
+	// camuflagem leve e total e por cobertura leve" (p335). Viaja no JSON porque o golpe congelado as lê.
+	IgnoresSituations []IgnoredSituation `json:"ignoresSituations,omitempty"`
+}
+
+// IgnoredSituation é uma linha da Tabela 5-3 que a arma não sofre, e QUEM a anula: o mestre lê "cobertura leve
+// anulada pela Caçadora" na linha do ataque, e não a ausência da cobertura que ele pintou.
+type IgnoredSituation struct {
+	Row SpecialSituation `json:"row"`
+	By  string           `json:"by"`
 }
 
 // WeaponDamageScope é o escopo de dano de UMA arma do catálogo — onde cai o
@@ -228,6 +238,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 				scopes = append(scopes, OversizedWeaponScope)
 			}
 			card := shared.card(ch, name, use, scopes, steps, nonLethal)
+			card.IgnoresSituations = r.situationsIgnoredBy(effects, weaponScope, it, catalog)
 			card.CatalogID = *it.CatalogID
 			card.ItemID, card.Doses = it.ID, it.Doses
 			return card

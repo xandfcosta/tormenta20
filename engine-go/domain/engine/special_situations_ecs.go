@@ -1,6 +1,10 @@
 package engine
 
-import "t20engine/domain/ecs"
+import (
+	"slices"
+
+	"t20engine/domain/ecs"
+)
 
 // A SITUAÇÃO ESPECIAL É UMA ENTIDADE, e cada mecanismo da Tabela 5-3 é um
 // sistema que só olha os componentes que lhe interessam.
@@ -37,6 +41,9 @@ type meleeOnly struct{}
 // situationLabel é a procedência que a mesa lê.
 type situationLabel struct{ Text string }
 
+// situationRow é a linha da tabela de que a entidade nasceu, para a arma que a ignora a achar.
+type situationRow struct{ Row SpecialSituation }
+
 // situationTally é o que a tabela inteira somou, e é o que o `judgeTheHit` lê.
 type situationTally struct {
 	Attack  int
@@ -58,6 +65,7 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 			}
 			e := w.Spawn()
 			ecs.Set(w, e, situationLabel{Text: rule.Label})
+			ecs.Set(w, e, situationRow{Row: s})
 			if rule.Attack != 0 {
 				ecs.Set(w, e, shiftsTheAttack{Amount: rule.Attack})
 			}
@@ -81,13 +89,30 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 }
 
 // dropWhatDoesNotReachThisWeapon mata a situação que só vale corpo a corpo
-// quando a arma é de disparo.
+// quando a arma é de disparo, e a que a arma ignora (a Caçadora, p335).
+//
+// A IGNORADA DEIXA O NOME: ela renasce como entidade só de rótulo ("cobertura
+// leve anulada pela Caçadora"), sem mecanismo nenhum. O mestre pintou a
+// cobertura no tabuleiro, e uma linha de ataque que a calasse o faria achar que
+// o app a esqueceu. A de corpo a corpo num disparo some calada, porque ali
+// ninguém anulou nada: a linha nunca alcançou a arma.
 //
 // DESPAWN e não um `if` em cada sistema que lê: a entidade deixa de existir, e
 // os três sistemas seguintes não precisam saber que ela existiu. É o mesmo
 // movimento da redação do tabuleiro — o que não vale SOME INTEIRO.
 func dropWhatDoesNotReachThisWeapon(card WeaponCard) ecs.System {
 	return func(w *ecs.World) {
+		ecs.Each(w, func(e ecs.Entity, row situationRow) {
+			at := slices.IndexFunc(card.IgnoresSituations, func(i IgnoredSituation) bool { return i.Row == row.Row })
+			if at < 0 {
+				return
+			}
+			w.Despawn(e)
+			annulled := w.Spawn()
+			ecs.Set(w, annulled, situationLabel{
+				Text: SpecialSituationLabel(row.Row) + " anulada pela " + card.IgnoresSituations[at].By,
+			})
+		})
 		if card.Skill != "Pontaria" || card.ShootsIntoMelee {
 			ecs.Each(w, func(e ecs.Entity, _ shootingIntoMelee) { w.Despawn(e) })
 		}

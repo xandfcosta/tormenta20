@@ -43,9 +43,11 @@ var alvosQueOMotorAplica = map[string]string{
 	"damage":               "weapons.go e attack_ecs.go, no dano",
 	"critRange":            "weapons.go, na margem de ameaça (ALE-411)",
 	"nonLethalDamage":      "weapons.go, na carta, e attack_ecs.go na parcela (ALE-423)",
-	"critMult":             "weapons.go, no multiplicador (ALE-411)",
-	"damageReduction":      "breakdowns.go, na RD",
-	"unarmedDamage":        "unarmed.go, o dado da carta do ataque desarmado (a Briga, p75-77, ALE-486)",
+	"ignoresSituation": "weapons.go, na carta, e special_situations_ecs.go tirando do ataque a linha " +
+		"da Tabela 5-3 que a arma não sofre (a Caçadora, p335)",
+	"critMult":        "weapons.go, no multiplicador (ALE-411)",
+	"damageReduction": "breakdowns.go, na RD",
+	"unarmedDamage":   "unarmed.go, o dado da carta do ataque desarmado (a Briga, p75-77, ALE-486)",
 	"announcedCondition": "weapons.go e attack.go, anunciando a condição que o livro " +
 		"reserva ao golpe — informação, nunca aplicação (p335-336, ALE-441)",
 	"announcedEffect": "resolve_ecs.go e attack.go, anunciando o efeito que o livro reserva ao " +
