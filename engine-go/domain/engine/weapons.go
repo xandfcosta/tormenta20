@@ -218,7 +218,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		// por passos)". Andar depois multiplicaria o dado de antes.
 		steps := DamageStepsOf(r.ownItemMods(it, catalog), it.Equipped) +
 			StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
-		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: "this"}).Total > 0
+		nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: weaponScope}).Total > 0
 		if it.Oversized {
 			steps += oversizedStep(r.raceSizeKey(ch))
 		}
@@ -365,7 +365,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		CritMult:        critMult,
 		NonLethal:       nonLethal,
 		ExtraDamage:     diceOfThisCard(b.effects.ExtraDamage, scopes),
-		Announces:       b.effects.Announced,
+		Announces:       announcesOfThisCard(b.effects.Announced, scopes),
 		CriticalBonus:   b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 	}
 }

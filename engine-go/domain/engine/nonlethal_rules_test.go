@@ -171,3 +171,33 @@ func TestTheAttackReportsHowMuchDamageWasNonLethal(t *testing.T) {
 		t.Errorf("uma espada comum reportou %d de dano não letal", comum.NonLethal)
 	}
 }
+
+// A PIEDOSA É DA ARMA QUE A TEM (p336): "todo o dano causado" é o dano DESTA arma. Uma espada Piedosa numa
+// mão não torna não letal a adaga comum da outra.
+func TestThePiedosaStaysOnTheWeaponWithTheEnchant(t *testing.T) {
+	catalogs := primeBook(t)
+	ptr := func(s string) *string { return &s }
+	var oracle struct {
+		Char Character `json:"char"`
+	}
+	readJSON(t, filepath.Join(mustWd(t), "..", "..", "parity", "bardo-versatil-nv7.json"), &oracle)
+	ch := oracle.Char
+	ch.Items = []CharacterItem{
+		{CatalogID: ptr("espada-longa"), Name: "Espada longa", Equipped: ptr("wielded"), Improvements: "[]",
+			Enchants: []string{"encanto-piedosa"}},
+		{CatalogID: ptr("adaga"), Name: "Adaga", Equipped: ptr("wielded2"), Improvements: "[]"},
+	}
+	seen := map[string]bool{}
+	for _, card := range BookRuleset(catalogs).ComputeWeaponCards(ch, map[string]bool{}) {
+		seen[card.Name] = true
+		if card.Name == "Espada longa" && !card.NonLethal {
+			t.Error("a espada Piedosa causa dano letal, e a p336 diz que todo o dano dela é não letal")
+		}
+		if card.Name == "Adaga" && card.NonLethal {
+			t.Error("a adaga comum ficou não letal pela Piedosa da espada da outra mão")
+		}
+	}
+	if !seen["Espada longa"] || !seen["Adaga"] {
+		t.Fatalf("a ficha não tem as duas cartas, e o caso não as mede (cartas: %v)", seen)
+	}
+}

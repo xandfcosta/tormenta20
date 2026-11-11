@@ -376,7 +376,11 @@ Mente Criminosa não são).
   corpo é recusado no uso à distância (`RefusesBoost`), para não cobrar PM em troca de nada.
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
   moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é
-  uma só para a mão inteira, e um bônus nela sobe a arma da outra mão.
+  uma só para a mão inteira, e um bônus nela sobe a arma da outra mão. O dano, a
+  margem, o multiplicador, a condição anunciada e o não letal que o item da arma
+  concede vão para o `weapon:<id>` dela (`onThisWeapon`): a Cruel, a Sanguinária
+  e a Piedosa da espada não sobem, não anunciam e não amansam a adaga da outra
+  mão, nem o ataque desarmado. Duas armas com o mesmo id dividem o escopo.
 
 ### A devoção é fonte da coleta, e não só de PV e PM
 
