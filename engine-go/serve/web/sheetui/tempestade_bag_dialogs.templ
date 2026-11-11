@@ -63,9 +63,14 @@ templ itemSheetDs(v View, s itemSheet) {
 				}
 			}
 		}
+		// O TEXTO NO `.ds-field`, como as linhas do livro logo acima: é ele que dá ao `.ds-help` o corpo pequeno e
+		// a tinta de ajuda. Solto, o texto saía no corpo do diálogo e gritava mais que o interruptor que explica. O
+		// interruptor fica FORA: um `label` filho do `.ds-field` vira rótulo de campo, e encolhia junto.
 		if s.Weapon {
 			@ds.Switch("Arma de categoria maior", s.Oversized, templ.Attributes{"data-on:change": sheetPost(v, "/itens/"+s.Command+"/categoria-maior")})
-			<p class="ds-help">–5 no ataque, ou –2 com Empunhadura Poderosa; um passo de dano a mais e um espaço a mais (p106, p125, p143).</p>
+			<div class="ds-field">
+				<p class="ds-help">–5 no ataque, ou –2 com Empunhadura Poderosa; um passo de dano a mais e um espaço a mais (p106, p125, p143).</p>
+			</div>
 		}
 		// O ENCANTO SE LÊ AQUI, e quem encanta é o mestre, pelo "Encantos" do pé (p333).
 		if len(s.Enchants) > 0 {
