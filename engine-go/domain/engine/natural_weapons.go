@@ -31,6 +31,10 @@ type NaturalStrike struct {
 	ExtraAttacks int
 }
 
+// NaturalScope é o escopo do que vale SÓ nas armas naturais: a margem da Presas Afiadas (p63).
+// O ataque desarmado não entra, porque o quadro os separa.
+const NaturalScope = "natural"
+
 type ownedNaturalWeapon struct {
 	sourceID string
 	weapon   NaturalWeapon
@@ -110,7 +114,7 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 		// Como o desarmado, ela não é "uma arma em uma das mãos" (p128). O escopo da fonte é o
 		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
-		scopes = append(scopes, WeaponDamageScope(owned.sourceID))
+		scopes = append(scopes, NaturalScope, WeaponDamageScope(owned.sourceID))
 		card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
 		card.Natural = &NaturalStrike{
 			SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1),

@@ -195,12 +195,15 @@ var classPowersPart08 = []ClassPower{
 	},
 	{
 		ID:          "class.druida.presas-afiadas",
+		Modeled:     []string{"a margem de ameaça +2, só nas cartas das armas naturais"},
 		ClassName:   "Druida",
 		Name:        "Presas Afiadas",
 		Description: "Margem de ameaça de suas armas naturais +2.",
 		BookPage:    63,
 		UID:         "pwr_kwhn6nxk4k",
-		Unmodeled:   "a margem de ameaça +2 nas armas naturais: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "critRange", Scope: "natural"}, Amount: 2, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:          "class.druida.segredos-da-natureza",
