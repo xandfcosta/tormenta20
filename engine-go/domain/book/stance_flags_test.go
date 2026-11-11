@@ -188,6 +188,7 @@ func TestEveryGrantHasSomeoneToApplyIt(t *testing.T) {
 	applied := map[string]string{
 		"flag+temp-hp":          "applyStanceGrants, ao entrar na postura",
 		"instant+active-effect": "writeGrantedEffect, ao usar o poder",
+		"instant+switch":        "UsePower, que liga o interruptor da declaração",
 		"passive+temp-hp":       "Party.StartScene, na varredura do início da cena",
 	}
 	measured := 0

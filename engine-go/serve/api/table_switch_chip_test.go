@@ -12,14 +12,14 @@ import (
 // qual efeito situacional alternar", e a recusa só existe na resposta.
 func TestTheSwitchChipAtTheTableSendsTheSignalTheServerReads(t *testing.T) {
 	f, id, _ := barbarianOnTurn(t)
-	seedPowerChoices(t, f.s, id, `["estilo-de-duas-armas"]`, "{}")
+	seedPowerChoices(t, f.s, id, `["ataque-poderoso"]`, "{}")
 	chips := acoesDaMesa(t, f)
-	found := regexp.MustCompile(`\$(\w+) = (?:&#34;|&quot;|")flag:estilo-de-duas-armas`).FindStringSubmatch(chips)
+	found := regexp.MustCompile(`\$(\w+) = (?:&#34;|&quot;|")flag:ataque-poderoso`).FindStringSubmatch(chips)
 	if found == nil {
-		t.Fatal("as Ações não têm o chip do Estilo de Duas Armas")
+		t.Fatal("as Ações não têm o chip do Ataque Poderoso")
 	}
 	target := fmt.Sprintf("/personagens/%d/efeitos/situacao", id)
-	body := fmt.Sprintf(`{%q:"flag:estilo-de-duas-armas"}`, found[1])
+	body := fmt.Sprintf(`{%q:"flag:ataque-poderoso"}`, found[1])
 	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, body).Body.String()); refusal != "" {
 		t.Errorf("o chip escreve $%s, e o servidor recusou: %q", found[1], refusal)
 	}

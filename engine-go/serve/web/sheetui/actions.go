@@ -235,6 +235,15 @@ func rowFromPower(power powerRow) actionRow {
 	if power.Stance != nil {
 		row.Live = power.Stance.Active
 	}
+	// A DECLARAÇÃO ganha o gesto aqui, porque é aqui que se agride: o Estilo de
+	// Duas Armas se usa antes do primeiro golpe, e ir aos Poderes no meio da
+	// luta seria o atrito que esta superfície existe para tirar.
+	if power.Declares != "" {
+		row.Live = power.Declared
+		row.Detail = strings.Join(power.ItemNotes, " · ")
+		row.Rolls = []actionRoll{{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: useResets}}
+		return row
+	}
 	// O INSTANTÂNEO QUE VENDE DEGRAU ganha o gesto aqui (a Marca da Presa,
 	// p50, ALE-487), e com o que está dando quando em curso. Os outros
 	// instantâneos continuam sem botão nesta superfície — usar é da aba Poderes.

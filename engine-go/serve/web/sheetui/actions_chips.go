@@ -292,15 +292,12 @@ func groupOrderOf(title string) []engine.ActionCost {
 	return nil
 }
 
-// chipWarning é o aviso da aba Efeitos em duas palavras, que é o que cabe no chip.
+// chipWarning é o aviso da aba Efeitos em duas palavras, que é o que cabe no chip. Só o Estilo de Uma
+// Arma avisa num chip: os estilos do ataque a mais se usam, e o aviso deles mora no Usar
+// (`declarationWarning`).
 func chipWarning(row situationalRow) string {
-	switch {
-	case row.Warning == "":
+	if row.Warning == "" || row.Key != engine.FlagGroupID("estilo-de-uma-arma") {
 		return ""
-	case row.Key == engine.FlagGroupID(engine.RapidShotPowerID):
-		return "sem arco"
-	case row.Key == engine.FlagGroupID("estilo-de-uma-arma"):
-		return "sem a mão livre"
 	}
-	return "sem arma leve"
+	return "sem a mão livre"
 }

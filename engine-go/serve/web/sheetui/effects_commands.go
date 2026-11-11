@@ -65,6 +65,16 @@ func endStance(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 	return s.plays.EndStance(r.Context(), row, dto, chi.URLParam(r, "flag"))
 }
 
+// endDeclaration desfaz o Usar de uma declaração — o Estilo de Duas Armas usado por engano. Usar é dos
+// Poderes e das Ações; aqui só se desfaz.
+func endDeclaration(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.EndDeclaration(r.Context(), dto, chi.URLParam(r, "flag"))
+}
+
 // toggleSituational liga ou desliga um condicional de contexto.
 func toggleSituational(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	key := ""

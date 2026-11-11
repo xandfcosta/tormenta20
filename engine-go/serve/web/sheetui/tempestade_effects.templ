@@ -27,7 +27,7 @@ templ tempestadeEffects(v View) {
 			if v.WildShape.Active != nil {
 				@wildShapeActiveRow(v, *v.WildShape.Active)
 			}
-			for _, e := range effectsOfKind(v, "stance", "applied") {
+			for _, e := range effectsOfKind(v, "stance", "declared", "applied") {
 				@ds.ActionRow(e.Name, e.Meta, e.Dialog) {
 					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + e.Name, "data-on:click": e.Remove}) {
 						Encerrar

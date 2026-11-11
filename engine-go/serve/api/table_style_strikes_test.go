@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -18,10 +17,10 @@ import (
 // Disparo Rápido: "se estiver empunhando uma arma de disparo que possa recarregar como ação
 // livre e gastar uma ação completa para agredir, pode fazer um ataque adicional com ela."
 //
-// O interruptor é a declaração: o -2 vale nos DOIS ataques, então ligá-lo depois do primeiro
+// Usar o poder é a declaração: o -2 vale nos DOIS ataques, então usá-lo depois do primeiro
 // não dá o segundo.
 
-// styleOnTurn é o bárbaro na vez, com o poder, as armas na mão e o interruptor como pedido.
+// styleOnTurn é o bárbaro na vez, com o poder, as armas na mão e o poder usado, quando pedido.
 func styleOnTurn(t *testing.T, power string, on bool, weapons ...string) (sceneFixture, int64, string) {
 	t.Helper()
 	f, id, goblin := barbarianOnTurn(t)
@@ -41,9 +40,8 @@ func styleOnTurn(t *testing.T, power string, on bool, weapons ...string) (sceneF
 
 func turnsOnStyle(t *testing.T, f sceneFixture, id int64, power string) {
 	t.Helper()
-	target := fmt.Sprintf("/personagens/%d/efeitos/situacao", id)
-	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, fmt.Sprintf(`{"conditional":"flag:%s"}`, power)).Body.String()); refusal != "" {
-		t.Fatalf("ligar o %s foi recusado: %q", power, refusal)
+	if refusal := usesTheStyle(t, f, id, power); refusal != "" {
+		t.Fatalf("usar o %s foi recusado: %q", power, refusal)
 	}
 }
 
@@ -86,7 +84,7 @@ func TestTwoWeaponStyleGivesOneAttackWithTheOtherWeapon(t *testing.T) {
 	}
 }
 
-func TestTheStyleSwitchMustBeOnBeforeTheFirstAttack(t *testing.T) {
+func TestTheStyleMustBeUsedBeforeTheFirstAttack(t *testing.T) {
 	f, id, goblin := styleOnTurn(t, "estilo-de-duas-armas", false, "espada-longa", "adaga")
 	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {
 		t.Fatalf("o primeiro golpe: %q", refusal)
@@ -127,7 +125,7 @@ func TestTheTwoWeaponAttackEndsWithTheTurn(t *testing.T) {
 }
 
 // Com uma arma só não há "um com cada arma", e a linha nem aparece. A falta da arma LEVE não
-// tira a linha: o interruptor já avisa, e quem decide é o mestre.
+// tira a linha: o Usar já avisa, e quem decide é o mestre.
 func TestWhenTheTwoWeaponLineShowsUp(t *testing.T) {
 	for _, c := range []struct {
 		name    string
@@ -135,10 +133,10 @@ func TestWhenTheTwoWeaponLineShowsUp(t *testing.T) {
 		weapons []string
 		shows   bool
 	}{
-		{"ligado, com duas armas", true, []string{"espada-longa", "adaga"}, true},
-		{"ligado, sem arma leve", true, []string{"espada-longa", "espada-longa"}, true},
-		{"desligado", false, []string{"espada-longa", "adaga"}, false},
-		{"ligado, com uma arma", true, []string{"espada-longa"}, false},
+		{"usado, com duas armas", true, []string{"espada-longa", "adaga"}, true},
+		{"usado, sem arma leve", true, []string{"espada-longa", "espada-longa"}, true},
+		{"sem usar", false, []string{"espada-longa", "adaga"}, false},
+		{"usado, com uma arma", true, []string{"espada-longa"}, false},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f, _, _ := styleOnTurn(t, "estilo-de-duas-armas", c.on, c.weapons...)
@@ -188,7 +186,7 @@ func TestRapidShotOffIsAStandardAttackWithNoExtra(t *testing.T) {
 	}
 }
 
-// A ação completa pede as duas: quem já andou atira do jeito normal, ou desliga o interruptor.
+// A ação completa pede as duas: quem já andou atira do jeito normal, ou encerra o uso.
 func TestRapidShotAfterMovingIsRefusedSayingWhy(t *testing.T) {
 	f, id, goblin := styleOnTurn(t, "disparo-rapido", true, "arco-curto")
 	if _, err := f.s.sessions.SpendAction(t.Context(), f.sessionID, engine.ActionMovement); err != nil {
@@ -199,7 +197,7 @@ func TestRapidShotAfterMovingIsRefusedSayingWhy(t *testing.T) {
 	}
 }
 
-// As Ações dizem o que o interruptor fez: o golpe muda de grupo, e o adicional aparece.
+// As Ações dizem o que o uso fez: o golpe muda de grupo, e o adicional aparece.
 func TestRapidShotMovesTheAttackToTheFullActions(t *testing.T) {
 	f, _, _ := styleOnTurn(t, "disparo-rapido", true, "arco-curto")
 	surface := superficieDeAcoes(t, acoesDaMesa(t, f))
@@ -213,34 +211,6 @@ func TestRapidShotMovesTheAttackToTheFullActions(t *testing.T) {
 	}
 }
 
-// "Que possa recarregar como ação livre" (p125): só o arco, e o resto recarrega por ação
-// (p146-151). A tela avisa e não trava, como no Estilo de Duas Armas.
-func TestTheRapidShotSwitchWarnsWithoutABow(t *testing.T) {
-	const warning = "Só o arco recarrega como ação livre"
-	for _, c := range []struct {
-		name   string
-		weapon string
-		warns  bool
-	}{
-		{"arco curto", "arco-curto", false},
-		{"arco longo", "arco-longo", false},
-		{"besta leve", "besta-leve", true},
-		{"funda", "funda", true},
-		{"pistola", "pistola", true},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			f, id, _ := styleOnTurn(t, "disparo-rapido", false, c.weapon)
-			page := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=conditionals", id), "").Body.String()
-			if !strings.Contains(page, "Situação · você liga quando vale") {
-				t.Fatal("o controle falhou: a aba Efeitos não desenhou os interruptores")
-			}
-			if got := strings.Contains(page, warning); got != c.warns {
-				t.Errorf("avisou = %v, want %v", got, c.warns)
-			}
-		})
-	}
-}
-
 func TestTheCardSaysItIsTheAdditionalAttack(t *testing.T) {
 	f, id, goblin := styleOnTurn(t, "estilo-de-duas-armas", true, "espada-longa", "adaga")
 	rollsFromTheActions(t, f, id, "atacar/0", goblin)
@@ -251,24 +221,12 @@ func TestTheCardSaysItIsTheAdditionalAttack(t *testing.T) {
 	}
 }
 
-// O interruptor é a declaração do ataque a mais, e o rótulo dele diz o que se está declarando.
-func TestTheStyleSwitchesSayWhatTheyDeclare(t *testing.T) {
-	f, _, _ := styleOnTurn(t, "estilo-de-duas-armas", false, "espada-longa", "adaga")
-	if chips := acoesDaMesa(t, f); !strings.Contains(chips, "Duas Armas: um ataque com cada") {
-		t.Error("o chip do Estilo de Duas Armas não diz o que ele declara")
-	}
-	f, _, _ = styleOnTurn(t, "disparo-rapido", false, "arco-curto")
-	if chips := acoesDaMesa(t, f); !strings.Contains(chips, "Disparo Rápido: ação completa") {
-		t.Error("o chip do Disparo Rápido não diz o que ele declara")
-	}
-}
-
 // A arma dupla "pode ser usada com Estilo de Duas Armas [...] para fazer ataques adicionais, como se
 // fosse uma arma de uma mão e uma arma leve" (p143): uma só na mão já dá os dois ataques, e o
-// interruptor não avisa de arma leve nenhuma.
+// Usar não avisa de arma leve nenhuma.
 func TestADoubleWeaponAloneGivesTheSecondAttack(t *testing.T) {
 	f, id, goblin := styleOnTurn(t, "estilo-de-duas-armas", true, "bordao")
-	if chips := acoesDaMesa(t, f); strings.Contains(chips, "sem arma leve") {
+	if chips := acoesDaMesa(t, f); strings.Contains(chips, "Nenhuma arma empunhada é leve") {
 		t.Error("o bordão ainda avisa que falta arma leve")
 	}
 	if refusal := rollsFromTheActions(t, f, id, "atacar/0", goblin); refusal != "" {

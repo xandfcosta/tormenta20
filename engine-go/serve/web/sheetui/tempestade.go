@@ -103,8 +103,8 @@ func tabByValue(v View, value string) Tab {
 // situacional fica de fora — ele é interruptor da aba Efeitos, e não algo que
 // "está em você".
 type activeEffect struct {
-	// Kind é "condition", "stance" ou "applied": a aba Efeitos separa a
-	// condição do que está em vigor.
+	// Kind é "condition", "stance", "declared" ou "applied": a aba Efeitos
+	// separa a condição do que está em vigor.
 	Kind   string
 	Name   string
 	Remove string
@@ -138,6 +138,12 @@ func activeEffects(v View) []activeEffect {
 		}
 		out = append(out, effect)
 	}
+	for _, d := range v.Effects.Declared {
+		out = append(out, activeEffect{
+			Kind: "declared", Name: d.Name, Remove: sheetPost(v, "/efeitos/declaracao/"+d.Flag),
+			Dialog: "effect-declared-" + d.Flag, Meta: declaredMeta(d), Text: declaredText(v, d.Flag),
+		})
+	}
 	for _, a := range v.Effects.Applied {
 		out = append(out, activeEffect{
 			Kind: "applied", Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command),
@@ -158,6 +164,16 @@ func stanceMeta(s stanceRow) string {
 		parts = append(parts, s.Bonus)
 	}
 	return strings.Join(parts, " · ")
+}
+
+// declaredText é o texto do poder que declarou, como a postura em curso usa o do poder dela.
+func declaredText(v View, flag string) string {
+	for _, row := range v.Powers.Actions {
+		if row.Declares == flag {
+			return row.Detail
+		}
+	}
+	return ""
 }
 
 // stancePower acha o poder que concede a postura, pela flag dela.
