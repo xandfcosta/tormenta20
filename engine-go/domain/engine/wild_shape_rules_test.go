@@ -110,3 +110,27 @@ func TestTheSwiftFormMovesAsChosen(t *testing.T) {
 		t.Errorf("Sorrateira superior voa 18m: %d", flying.FlySpeed)
 	}
 }
+
+// "Seu equipamento desaparece (mas você mantém os benefícios de quaisquer itens vestidos)" (p63): o escudo
+// empunhado deixa de dar Defesa na forma, e o vestido continua.
+func TestTheShapeKeepsOnlyWhatIsWorn(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	ptr := func(s string) *string { return &s }
+	gear := func(shape *WildShape) Character {
+		ch := druidIn(shape)
+		ch.Items = []CharacterItem{
+			{ID: 1, CatalogID: ptr("escudo-leve"), Name: "Escudo leve", Equipped: ptr("wielded"), Improvements: "[]"},
+			{ID: 2, CatalogID: ptr("armadura-couro"), Name: "Armadura de couro", Equipped: ptr("vested"), Improvements: "[]"},
+		}
+		return ch
+	}
+	bare := druidIn(nil)
+	bare.Items = nil
+	human, geared := world.ComputeSheet(bare, nil), world.ComputeSheet(gear(nil), nil)
+	shaped := world.ComputeSheet(gear(&WildShape{Form: WildResilient, Tier: WildTierNormal, DamageType: "impacto"}), nil)
+	shield, armor := 1, geared.Defense.Total-human.Defense.Total-1
+	if got := shaped.Defense.Total - human.Defense.Total; got != armor+5 {
+		t.Errorf("na forma: Defesa %+d sobre o druida nu, want %+d (a armadura vestida e os +5 da forma, sem os +%d do escudo)",
+			got, armor+5, shield)
+	}
+}
