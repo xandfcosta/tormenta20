@@ -68,7 +68,8 @@ func oversizedStep(sizeKey string) int {
 //	r.raceSizeItem(goblin) // Tamanho: Pequeno — Furtividade +2, manobras –2
 func (r *Ruleset) raceSizeItem(ch Character) *ActiveItem {
 	race := r.sizedRace(ch)
-	if race == nil {
+	// O tamanho da Forma Selvagem substitui o da raça, e entra pela forma (`wildShapeAsAnItem`).
+	if race == nil || formSizeReplacesTheRace(ch) {
 		return nil
 	}
 	row, differs := sizesOnTheSheet[normalizeSizeKey(race.Size)]

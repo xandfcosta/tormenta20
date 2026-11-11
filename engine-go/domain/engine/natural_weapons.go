@@ -44,11 +44,19 @@ type ownedNaturalWeapon struct {
 	sourceID string
 	weapon   NaturalWeapon
 	steps    int
+	// ofTheShape marca a arma da Forma Selvagem: ela é a arma do golpe, sem ataque extra pago, e a margem
+	// dela é a do quadro (critRange, zero é o 20).
+	ofTheShape bool
+	critRange  int
 }
 
 // naturalWeaponsOf são as armas naturais da ficha: da raça, inclusive a habilidade tomada de
 // outra raça (p29), dos poderes da Tormenta e da devoção.
 func (r *Ruleset) naturalWeaponsOf(ch Character, evenAsleep bool) []ownedNaturalWeapon {
+	// NA FORMA SELVAGEM, o corpo é o da forma: as armas naturais são só as dela (decisão do dono).
+	if shape, shaped := wildShapeWeapon(ch); shaped {
+		return []ownedNaturalWeapon{shape}
+	}
 	out := []ownedNaturalWeapon{}
 	for _, applied := range r.appliedRaces(ch) {
 		abilities := slices.Clone(applied.race.Abilities)
@@ -116,10 +124,17 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 			Damage: natural.Damage, CritRange: 20, CritMult: natural.CritMult, Type: natural.DamageType,
 			Hand: "light", Purpose: "melee",
 		}
+		if owned.critRange != 0 {
+			w.CritRange = owned.critRange
+		}
 		// Como o desarmado, ela não é "uma arma em uma das mãos" (p128). O escopo da fonte é o
 		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
 		scopes = append(scopes, NaturalScope, WeaponDamageScope(owned.sourceID))
+		if owned.ofTheShape {
+			cards = append(cards, b.card(ch, natural.Name, w, scopes, owned.steps, false))
+			continue
+		}
 		strike := NaturalStrike{SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1)}
 		if owned.sourceID == ExtraLimbsPowerID {
 			legs := r.legCards(ch, b, strike)

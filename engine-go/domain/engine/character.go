@@ -20,7 +20,9 @@ type Character struct {
 	God *string `json:"god"`
 	// PowerUses são os usos contados da ficha. O motor só lê os de cena, porque há poder que
 	// só vale depois de usado (as Presas Primordiais, p135).
-	PowerUses    []PowerUse `json:"powerUses"`
+	PowerUses []PowerUse `json:"powerUses"`
+	// WildShape é a Forma Selvagem em que o druida está, ou nil (p62-63).
+	WildShape    *WildShape `json:"wildShape,omitempty"`
 	Level        int        `json:"level"`
 	Strength     int        `json:"strength"`
 	Dexterity    int        `json:"dexterity"`

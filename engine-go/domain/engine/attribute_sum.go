@@ -36,6 +36,7 @@ func (r *Ruleset) sheetEffects(ch Character, activeConditionals map[string]bool)
 func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) ItemEffects {
 	items := append(append(r.ActiveItemsFor(ch), extra...), r.handsAsAnItem(ch)...)
 	items = append(items, r.armedLegsAsAnItem(ch, items)...)
+	items = append(items, r.wildShapeAsAnItem(ch)...)
 	plain, sums := splitAttributeSums(items)
 	first := ApplyActiveConditionals(ComputeItemEffects(plain), activeConditionals)
 	if len(sums) == 0 {

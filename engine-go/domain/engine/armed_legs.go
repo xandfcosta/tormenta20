@@ -59,7 +59,7 @@ func FitsALeg(purpose, hand string) bool {
 // armedLegs são as armas nas patas que valem, até duas. A que não serve — arma que não é leve, ou a
 // ficha que perdeu o estilo — fica guardada para a regra, e a pata continua natural.
 func (r *Ruleset) armedLegs(ch Character, ambidextrous bool) []armedLeg {
-	if !r.canArmTheLegs(ch, ambidextrous) {
+	if ch.WildShape != nil || !r.canArmTheLegs(ch, ambidextrous) {
 		return nil
 	}
 	out := []armedLeg{}

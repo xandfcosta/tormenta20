@@ -211,6 +211,10 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 
 	cards := []WeaponCard{}
 	for _, it := range ch.Items {
+		// "Na forma selvagem você não pode […] empunhar itens" (p63).
+		if ch.WildShape != nil {
+			break
+		}
 		if it.Equipped == nil || (*it.Equipped != "wielded" && *it.Equipped != "wielded2") {
 			continue
 		}
