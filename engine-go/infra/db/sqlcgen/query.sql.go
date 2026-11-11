@@ -216,6 +216,15 @@ func (q *Queries) ClearCharacterStances(ctx context.Context, characterid int64) 
 	return err
 }
 
+const clearCharacterWildShape = `-- name: ClearCharacterWildShape :exec
+DELETE FROM character_wild_shape WHERE characterId = ?
+`
+
+func (q *Queries) ClearCharacterWildShape(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterWildShape, characterid)
+	return err
+}
+
 const clearIgnoredRulesForCampaign = `-- name: ClearIgnoredRulesForCampaign :exec
 DELETE FROM campaign_ignored_rules WHERE campaignId = ?
 `
@@ -1495,6 +1504,48 @@ func (q *Queries) GetCharacterOwner(ctx context.Context, id int64) (int64, error
 	var ownerid int64
 	err := row.Scan(&ownerid)
 	return ownerid, err
+}
+
+const getCharacterWildShape = `-- name: GetCharacterWildShape :many
+SELECT form, tier, damageType, movement, pmPaid FROM character_wild_shape WHERE characterId = ?
+`
+
+type GetCharacterWildShapeRow struct {
+	Form       string `json:"form"`
+	Tier       string `json:"tier"`
+	Damagetype string `json:"damagetype"`
+	Movement   string `json:"movement"`
+	Pmpaid     int64  `json:"pmpaid"`
+}
+
+// :many e nao :one para a ausencia ser lista vazia, e nao erro: fora da forma e o caso comum.
+func (q *Queries) GetCharacterWildShape(ctx context.Context, characterid int64) ([]GetCharacterWildShapeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCharacterWildShape, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCharacterWildShapeRow{}
+	for rows.Next() {
+		var i GetCharacterWildShapeRow
+		if err := rows.Scan(
+			&i.Form,
+			&i.Tier,
+			&i.Damagetype,
+			&i.Movement,
+			&i.Pmpaid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getExpertiseMeta = `-- name: GetExpertiseMeta :one
@@ -4088,6 +4139,35 @@ type SaveCharacterDamageParams struct {
 
 func (q *Queries) SaveCharacterDamage(ctx context.Context, arg SaveCharacterDamageParams) error {
 	_, err := q.db.ExecContext(ctx, saveCharacterDamage, arg.Characterid, arg.Hpdamage, arg.Mpspent)
+	return err
+}
+
+const saveCharacterWildShape = `-- name: SaveCharacterWildShape :exec
+INSERT INTO character_wild_shape (characterId, form, tier, damageType, movement, pmPaid)
+VALUES (?, ?, ?, ?, ?, ?)
+ON CONFLICT (characterId)
+DO UPDATE SET form = excluded.form, tier = excluded.tier, damageType = excluded.damageType,
+  movement = excluded.movement, pmPaid = excluded.pmPaid
+`
+
+type SaveCharacterWildShapeParams struct {
+	Characterid int64  `json:"characterid"`
+	Form        string `json:"form"`
+	Tier        string `json:"tier"`
+	Damagetype  string `json:"damagetype"`
+	Movement    string `json:"movement"`
+	Pmpaid      int64  `json:"pmpaid"`
+}
+
+func (q *Queries) SaveCharacterWildShape(ctx context.Context, arg SaveCharacterWildShapeParams) error {
+	_, err := q.db.ExecContext(ctx, saveCharacterWildShape,
+		arg.Characterid,
+		arg.Form,
+		arg.Tier,
+		arg.Damagetype,
+		arg.Movement,
+		arg.Pmpaid,
+	)
 	return err
 }
 

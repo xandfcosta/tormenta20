@@ -99,6 +99,8 @@ type View struct {
 	// Effects é a aba homônima — tudo que está mexendo nos números AGORA, em
 	// quatro blocos que diferem por quem é dono do estado.
 	Effects effectsPanel
+	// WildShape é a Forma Selvagem: a escolha da aba Poderes e a forma em vigor dos Efeitos.
+	WildShape wildShapeView
 	// Spells é a aba homônima — o grimório, as concedidas por poder e o catálogo
 	// inteiro do Capítulo 4 para aprender.
 	Spells spellbookPanel
@@ -243,6 +245,7 @@ func (s Scene) Load(
 		Proficiencies: proficiencyGroupsOf(dto),
 	}
 	v.Effects = s.effectsPanelOf(dto)
+	v.WildShape = wildShapeViewOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, signals.SpellSearch, signals.SpellCircle, signals.SpellSchool)
 	v.GrimoireSearch, v.GrimoireCircle = signals.GrimoireSearch, signals.GrimoireCircle
 	v.EffectPicks = effectPickFilters{ConditionSearch: signals.ConditionSearch, BuffSearch: signals.BuffSearch, BuffCircle: signals.BuffCircle}

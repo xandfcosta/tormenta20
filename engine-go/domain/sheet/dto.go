@@ -78,6 +78,9 @@ type CharacterDTO struct {
 	Conditionals []string      `json:"conditionals"`
 	PowerUses    []PowerUseDTO `json:"powerUses"`
 	Stances      []StanceDTO   `json:"stances"`
+	// WildShape é a Forma Selvagem em que o druida está, e WildShapePaid, o PM que ela custou (p62).
+	WildShape     *engine.WildShape `json:"wildShape,omitempty"`
+	WildShapePaid int64             `json:"wildShapePaid,omitempty"`
 }
 
 type RaceDTO struct {

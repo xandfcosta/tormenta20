@@ -44,11 +44,40 @@ type ownedNaturalWeapon struct {
 	sourceID string
 	weapon   NaturalWeapon
 	steps    int
+	// ofTheShape marca a arma da Forma Selvagem: ela é a arma do golpe, sem ataque extra pago, e a margem
+	// dela é a do quadro (critRange, zero é o 20).
+	ofTheShape bool
+	critRange  int
 }
 
 // naturalWeaponsOf são as armas naturais da ficha: da raça, inclusive a habilidade tomada de
 // outra raça (p29), dos poderes da Tormenta e da devoção.
 func (r *Ruleset) naturalWeaponsOf(ch Character, evenAsleep bool) []ownedNaturalWeapon {
+	// NA FORMA SELVAGEM, o corpo é o da forma: o que é do próprio corpo — a raça — sai, e entra a arma
+	// dela. O que vem de FORA e afeta o ser fica: a Tormenta e a devoção, que vem de um deus (decisão do
+	// dono).
+	out := []ownedNaturalWeapon{}
+	if shape, shaped := wildShapeWeapon(ch); shaped {
+		out = append(out, shape)
+	} else {
+		out = append(out, r.raceWeaponsOf(ch)...)
+	}
+	out = append(out, r.tormentaWeaponsOf(ch)...)
+	for _, name := range parseChoiceSet(ch.GodPowers).list {
+		power := r.grantedPowerByName(name)
+		if power == nil || power.NaturalWeapon == nil {
+			continue
+		}
+		if power.NaturalWeapon.AwakenedByUse && !evenAsleep && !usedThisScene(ch, power.ID) {
+			continue
+		}
+		out = withGrantedWeapon(out, power.ID, *power.NaturalWeapon)
+	}
+	return out
+}
+
+// raceWeaponsOf são as armas naturais da raça, inclusive a habilidade tomada de outra raça (p29).
+func (r *Ruleset) raceWeaponsOf(ch Character) []ownedNaturalWeapon {
 	out := []ownedNaturalWeapon{}
 	for _, applied := range r.appliedRaces(ch) {
 		abilities := slices.Clone(applied.race.Abilities)
@@ -61,20 +90,16 @@ func (r *Ruleset) naturalWeaponsOf(ch Character, evenAsleep bool) []ownedNatural
 			}
 		}
 	}
+	return out
+}
+
+// tormentaWeaponsOf são as armas naturais dos poderes da Tormenta, inclusive o tomado pela origem.
+func (r *Ruleset) tormentaWeaponsOf(ch Character) []ownedNaturalWeapon {
+	out := []ownedNaturalWeapon{}
 	for _, id := range append(r.chosenGeneralPowers(ch).list, r.originPickedPowerIds(ch)...) {
 		if weapon, found := r.book.tormentaNaturalWeapons[id]; found {
 			out = append(out, ownedNaturalWeapon{sourceID: id, weapon: weapon})
 		}
-	}
-	for _, name := range parseChoiceSet(ch.GodPowers).list {
-		power := r.grantedPowerByName(name)
-		if power == nil || power.NaturalWeapon == nil {
-			continue
-		}
-		if power.NaturalWeapon.AwakenedByUse && !evenAsleep && !usedThisScene(ch, power.ID) {
-			continue
-		}
-		out = withGrantedWeapon(out, power.ID, *power.NaturalWeapon)
 	}
 	return out
 }
@@ -116,10 +141,17 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 			Damage: natural.Damage, CritRange: 20, CritMult: natural.CritMult, Type: natural.DamageType,
 			Hand: "light", Purpose: "melee",
 		}
+		if owned.critRange != 0 {
+			w.CritRange = owned.critRange
+		}
 		// Como o desarmado, ela não é "uma arma em uma das mãos" (p128). O escopo da fonte é o
 		// que o Foco em Arma escolhe.
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
 		scopes = append(scopes, NaturalScope, WeaponDamageScope(owned.sourceID))
+		if owned.ofTheShape {
+			cards = append(cards, b.card(ch, natural.Name, w, scopes, owned.steps, false))
+			continue
+		}
 		strike := NaturalStrike{SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1)}
 		if owned.sourceID == ExtraLimbsPowerID {
 			legs := r.legCards(ch, b, strike)

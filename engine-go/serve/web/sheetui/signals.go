@@ -120,6 +120,12 @@ type Signals struct {
 	// A caixa do Inimigo de (Criatura) no diálogo da Marca da Presa: a presa
 	// é do tipo escolhido, e o uso dobra (p51, ALE-509).
 	PreyFavored *bool `json:"prey_favored"`
+	// A escolha do diálogo da Forma Selvagem: a forma, o nível, o dano da arma natural e, na Veloz, o
+	// deslocamento (p63).
+	WildForm   string `json:"wild_form"`
+	WildTier   string `json:"wild_tier"`
+	WildDamage string `json:"wild_damage"`
+	WildMove   string `json:"wild_move"`
 	// O impulso de PM escolhido na linha de ataque — ver `attack_boost.go`. A
 	// arma vem junto porque a escolha é DAQUELA linha: o impulso ligado na
 	// espada não viaja no golpe do arco.

@@ -245,6 +245,15 @@ type CharacterStance struct {
 	Pmpaid      int64  `json:"pmpaid"`
 }
 
+type CharacterWildShape struct {
+	Characterid int64  `json:"characterid"`
+	Form        string `json:"form"`
+	Tier        string `json:"tier"`
+	Damagetype  string `json:"damagetype"`
+	Movement    string `json:"movement"`
+	Pmpaid      int64  `json:"pmpaid"`
+}
+
 type OpenBoard struct {
 	Sessionid int64  `json:"sessionid"`
 	Boardid   string `json:"boardid"`
