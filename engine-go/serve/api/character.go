@@ -17,7 +17,7 @@ import (
 func (s *Server) handleListCharacters(w http.ResponseWriter, r *http.Request) {
 	out, err := s.characterList(r.Context(), currentUser(r).ID)
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not list characters")
+		httpio.WriteServerError(w, "Could not list characters", err)
 		return
 	}
 	httpio.WriteJSON(w, http.StatusOK, out)

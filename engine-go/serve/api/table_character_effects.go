@@ -53,7 +53,7 @@ func (s *Server) assertGmAtLiveTable(w http.ResponseWriter, r *http.Request, id 
 		CharacterId: id, OwnerId: user.ID,
 	})
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not check the character's sessions")
+		httpio.WriteServerError(w, "Could not check the character's sessions", err)
 		return false
 	}
 	if !gm {

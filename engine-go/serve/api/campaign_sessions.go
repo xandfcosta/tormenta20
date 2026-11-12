@@ -61,7 +61,7 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not create session")
+		httpio.WriteServerError(w, "Could not create session", err)
 		return
 	}
 	httpio.WriteJSON(w, http.StatusCreated, sessionDTO(sess))

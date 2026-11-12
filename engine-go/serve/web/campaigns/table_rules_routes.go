@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"t20engine/infra/httpio"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -35,6 +36,7 @@ func (s Scene) ruleGate(w http.ResponseWriter, r *http.Request) (int64, bool) {
 func (s Scene) patchRuleEditor(w http.ResponseWriter, r *http.Request, id int64, draft ruleDraft, signals map[string]any, refusal string) {
 	v, err := s.ruleEditorOf(r.Context(), id, draft, refusal)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
@@ -72,6 +74,7 @@ func (s Scene) handleTableRuleEditor(w http.ResponseWriter, r *http.Request) {
 	if wanted := r.URL.Query().Get("regra"); wanted != "" {
 		rules, err := s.life.TableRules(r.Context(), id)
 		if err != nil {
+			httpio.RecordCause(w, err)
 			http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 			return
 		}
@@ -122,6 +125,7 @@ func (s Scene) handleTableRuleSave(w http.ResponseWriter, r *http.Request) {
 	}
 	before, err := s.grantedOffersOfTheOwner(r.Context(), who, id)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
@@ -151,6 +155,7 @@ func (s Scene) handleTableRuleFlip(w http.ResponseWriter, r *http.Request) {
 	}
 	before, err := s.grantedOffersOfTheOwner(r.Context(), who, id)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
@@ -164,6 +169,7 @@ func (s Scene) handleTableRuleFlip(w http.ResponseWriter, r *http.Request) {
 	s.wakeTableSheets(r.Context(), id)
 	rows, err := s.tableRulesOf(r.Context(), id, true, 0)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
@@ -181,6 +187,7 @@ func (s Scene) handleTableRuleRemove(w http.ResponseWriter, r *http.Request) {
 	}
 	before, err := s.grantedOffersOfTheOwner(r.Context(), who, id)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}

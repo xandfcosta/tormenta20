@@ -71,7 +71,7 @@ func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 func (s *Server) handleListCampaigns(w http.ResponseWriter, r *http.Request) {
 	seen, err := s.campaignDirectory().Visible(r.Context(), callerOf(currentUser(r)))
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not list campaigns")
+		httpio.WriteServerError(w, "Could not list campaigns", err)
 		return
 	}
 	httpio.WriteJSON(w, http.StatusOK, campaignListJSON(seen))
@@ -133,7 +133,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := s.campaignLifecycle().Open(r.Context(), currentUser(r).ID, name, descriptionText)
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
+		httpio.WriteServerError(w, "Could not create campaign", err)
 		return
 	}
 	// RELÊ a linha em vez de montar a resposta com o que foi enviado: o caso de
@@ -141,7 +141,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	// que existe e não da que foi pedida.
 	c, err := s.queries.GetCampaign(r.Context(), id)
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
+		httpio.WriteServerError(w, "Could not create campaign", err)
 		return
 	}
 	httpio.WriteJSON(w, http.StatusCreated, campaignScalars(c))
@@ -157,6 +157,7 @@ func (s *Server) handleDeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	// explicando-a nos dois lugares. Duas cópias de uma ordem são duas
 	// oportunidades de inverter uma delas (ALE-359).
 	if err := s.campaignLifecycle().Delete(r.Context(), callerOf(currentUser(r)), id); err != nil {
+		httpio.RecordCause(w, err)
 		httpio.WriteError(w, statusForAccess(err), "Could not delete campaign")
 		return
 	}

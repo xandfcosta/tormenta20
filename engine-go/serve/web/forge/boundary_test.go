@@ -47,6 +47,7 @@ var permitidos = map[string]bool{
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco
 	"t20engine/infra/db/dbvalue": true,
 	"t20engine/infra/wire":       true,
+	"t20engine/infra/httpio":     true, // a causa de um 500 vai para o log (`httpio.RecordCause`), não para a tela
 }
 
 func TestTheSceneDoesNotImportItsHost(t *testing.T) {
