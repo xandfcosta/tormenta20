@@ -1150,6 +1150,18 @@
                 "caminho": "bruxo"
               }
             },
+            "classPowers": [
+              "class.arcanista.especialista-em-escola",
+              "class.arcanista.mestre-em-escola"
+            ],
+            "powerChoices": {
+              "class.arcanista.especialista-em-escola": [
+                "evocacao"
+              ],
+              "class.arcanista.mestre-em-escola": [
+                "evocacao"
+              ]
+            },
             "items": [
               {
                 "catalogId": "cajado-do-poder",
