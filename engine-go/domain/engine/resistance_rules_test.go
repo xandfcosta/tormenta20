@@ -23,14 +23,14 @@ import "testing"
 // CONDIÇÃO que o modificador carrega. Um leitor só serve aos treze.
 func TestTheResistanceBonusLandsOnTheThreeSavingThrows(t *testing.T) {
 	vestida := "vested"
-	efeitos := ComputeItemEffects([]ActiveItem{{
+	efeitos := resolveInWorld([]ActiveItem{{
 		SourceID: "armadura", Source: "Couraça selada", Equipped: &vestida,
 		Modifiers: []Modifier{{
 			// A melhoria Selada: "+1 em testes de resistência" (p165).
 			Target: ModifierTarget{K: "resistance"}, Amount: 1,
 			BonusType: "enhancement", Condition: &ModifierCondition{C: "vested"},
 		}},
-	}})
+	}}, nil)
 
 	ch := Character{Level: 1, Constitution: 0, Dexterity: 0, Wisdom: 0}
 	semCarga := loadBreakdownOf(ch, 0)

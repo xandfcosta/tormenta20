@@ -41,7 +41,7 @@ func TestEffectWithoutModifiersIsNotCollected(t *testing.T) {
 		{CatalogID: "concede", Scope: "scene", Modifiers: `[{"target":{"k":"defense"},"amount":2,"bonusType":"untyped"}]`},
 	}}
 
-	got := BookRuleset(catalogs).ActiveItemsFor(ch)
+	got := withoutTheBody(BookRuleset(catalogs).ActiveItemsFor(ch))
 	if len(got) != 1 {
 		t.Fatalf("colheu %d fontes, esperava 1 — o efeito vazio entrou, ou o que concede "+
 			"ficou de fora.\nColhido: %+v", len(got), got)
@@ -49,4 +49,17 @@ func TestEffectWithoutModifiersIsNotCollected(t *testing.T) {
 	if len(got[0].Modifiers) != 1 {
 		t.Fatalf("a fonte colhida veio com %d modificadores, esperava 1: %+v", len(got[0].Modifiers), got[0])
 	}
+}
+
+// withoutTheBody tira da coleta as fontes do CORPO (as mãos, as patas armadas, a forma selvagem), que
+// entram em toda ficha conforme o que ela empunha. O caso que mede um item ou um efeito conta só o dele.
+func withoutTheBody(items []ActiveItem) []ActiveItem {
+	out := []ActiveItem{}
+	for _, item := range items {
+		if item.Source == "as mãos" {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out
 }

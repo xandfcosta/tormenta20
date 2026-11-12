@@ -7,8 +7,12 @@ package engine
 func (r *Ruleset) VitalContextFor(ch Character) VitalContext {
 	// Sem as somas de atributo: elas não miram vital nenhum, e resolvê-las aqui
 	// seria uma passada a mais para nada.
+	//
+	// Sem a FORMA SELVAGEM: ela é fonte da coleta e muda Força e Destreza, e o máximo de PV e PM é o do
+	// druida, que o animal não toca (p62).
+	ch.WildShape = nil
 	plain, _ := splitAttributeSums(r.ActiveItemsFor(ch))
-	effects := ComputeItemEffects(plain)
+	effects := resolveInWorld(plain, nil)
 	attrTotals := map[string]int{}
 	for _, a := range AttributeKeys {
 		attrTotals[a] = effectiveAttribute(ch, a, effects)

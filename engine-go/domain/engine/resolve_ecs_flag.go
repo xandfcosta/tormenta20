@@ -85,6 +85,14 @@ func eraseExemptFlags(w *ecs.World) {
 	})
 }
 
+// bodyStateFlags são as flags do ESTADO DO CORPO, que calam o número e não o interruptor.
+//
+// As outras flags de guarda escolhem a VARIANTE de um interruptor — o −2 do Duas Armas sem Ambidestria, a
+// Ambidestria de classe que some com o Estilo de Duas Armas —, e o termo calado por elas não é oferecido.
+// A das mãos é outra coisa: o Estilo de Uma Arma pede "nada na outra" mão (p128), e quem tem o poder
+// continua com o interruptor na tela, com o aviso; quem decide é o mestre. Ela só não mexe o número.
+var bodyStateFlags = map[string]bool{HandsNotFreeFlag: true}
+
 // dropWhatTheFlagTurnsOff cala o passivo do livro que se desliga enquanto a
 // flag está posta.
 func dropWhatTheFlagTurnsOff(w *ecs.World) {
@@ -133,6 +141,9 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 		}
 		for _, flag := range c.Unless {
 			if flags.set[flag] {
+				if bodyStateFlags[flag] && !isUnconditional(t.Mod) {
+					ecs.Set(w, e, Optional{})
+				}
 				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " o cala"})
 				return
 			}

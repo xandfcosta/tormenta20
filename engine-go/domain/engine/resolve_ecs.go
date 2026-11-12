@@ -17,7 +17,7 @@ import (
 //
 // # O que muda em relação à função que isto substitui
 //
-// O `ComputeItemEffects` descartava: o modificador que não cumpria condição, o
+// A função que isto substituiu descartava: o modificador que não cumpria condição, o
 // que perdia o empilhamento e o que virava fator saíam da lista e sumiam. Aqui
 // eles ficam no mundo com uma TAG (`Suppressed`), e quem soma pergunta quem
 // está vivo.
@@ -56,7 +56,7 @@ type Deferred struct{}
 // continua na lista dos oferecidos para a tela desenhar o interruptor aceso.
 //
 // O interruptor é ENTRADA da resolução, e não uma segunda passada sobre o resultado. Houve uma segunda
-// passada (`ApplyActiveConditionals`), que refazia o empilhamento por lista e colhia de novo fatores e
+// passada, que não existe mais: ela refazia o empilhamento por lista e colhia de novo fatores e
 // dados; ela esqueceu um campo duas vezes, e cada regra nova da resolução tinha de ser escrita nas duas.
 type SwitchedOn struct{}
 

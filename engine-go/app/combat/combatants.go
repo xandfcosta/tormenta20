@@ -73,9 +73,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, err
 	}
-	efeitos := engine.ApplyActiveConditionals(
-		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)),
-		sheet.ToStringSet(dto.Conditionals))
+	efeitos := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
 	return Combatant{
 		EntryID: e.ID, Label: e.Label,
 		Weapons:               dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),

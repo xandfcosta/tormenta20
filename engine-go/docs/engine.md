@@ -359,10 +359,9 @@ o `cap: classLevel` o limita ao nível NA CLASSE que concede o poder (p226), só
 onde o verbete escreve "limitado pelo seu nível" (a Presença Paralisante e a
 Mente Criminosa não são).
 
-- **Ela se resolve numa SEGUNDA passada** (`sheetEffects`), porque o número é o
+- **Ela se resolve numa SEGUNDA passada** (`EffectsOf`), porque o número é o
   atributo EFETIVO, com os itens. Por isso uma soma não mira atributo
-  (`TestNoAttributeSumTargetsAnAttribute`), e toda decomposição da ficha lê o
-  `sheetEffects`, não o `ComputeItemEffects`.
+  (`TestNoAttributeSumTargetsAnAttribute`).
 - **O atributo negativo SUBTRAI** (decisão do dono): o livro não tem regra
   própria e usa o valor como é — "10 + sua Destreza" (p106).
 - **A trava que nomeia duas coisas usa `flags`**: o `flagOff` cala se QUALQUER
@@ -440,10 +439,11 @@ e a divisão inteira em quadrados é o arredondamento que o Lento pede.
   com o degrau pago, base e degrau do balde `morale` dobram e o não-empilhamento
   escolhe o maior.
 
-**O fator de fonte tem DOIS sítios de aplicação**: o
-`scaleWhatTheSourceFactorHits` no caminho incondicional, no ECS, e o
-`ApplyActiveConditionals` na parcela DEFERIDA, que o ECS não multiplica —
-dobrar nos dois dobraria duas vezes. A Fúria é condicional: vai pelo segundo.
+**O fator de fonte se aplica num lugar só**, o `scaleWhatTheSourceFactorHits`,
+e é isso que impede de dobrar duas vezes. A Fúria é condicional, e chega a ele
+porque o interruptor ligado é ENTRADA da resolução (`SwitchedOn`): o termo
+ligado entra no mundo como qualquer outro, e a lista dos oferecidos o traz
+aceso.
 
 **Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem**, com ou
 sem condição — "aplique apenas o mais severo" (p394), *"reduções no custo de PM

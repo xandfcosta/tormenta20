@@ -25,10 +25,10 @@ func TestTheEnchantReachesTheWeaponCard(t *testing.T) {
 		Condition: &ModifierCondition{C: "onCritical"},
 	}
 	empunhada := "wielded"
-	efeitos := ComputeItemEffects([]ActiveItem{{
+	efeitos := resolveInWorld([]ActiveItem{{
 		SourceID: "espada", Source: "Espada longa", Equipped: &empunhada,
 		Modifiers: []Modifier{flamejante, dilacerante},
-	}})
+	}}, nil)
 
 	if len(efeitos.ExtraDamage) != 1 {
 		t.Fatalf("esperava uma parcela extra e vieram %d", len(efeitos.ExtraDamage))

@@ -100,7 +100,7 @@ func buildPayload(book *engine.Catalogs, f fixture) (oraclePayload, error) {
 	// o LIVRO, que é a única coisa que ele existe para prender (ALE-387).
 	c := engine.BookRuleset(book)
 	none := map[string]bool{}
-	effects := engine.ComputeItemEffects(c.ActiveItemsFor(f.Char))
+	effects := c.EffectsOf(f.Char, none)
 
 	// Todo opt-in que este personagem PODERIA ligar, em ordem estável — é a
 	// segunda passada que exercita a dobra dos condicionais.

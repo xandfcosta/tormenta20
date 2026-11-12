@@ -19,9 +19,9 @@ import (
 func TestTheManeuverPowersNeedNoSwitchAndTheSituationalOnesDo(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 
-	efeitosDe := func(id string) ItemEffects {
-		return ComputeItemEffects(world.ActiveItemsFor(
-			Character{Level: 1, ClassPowers: `["` + id + `"]`}))
+	efeitosDe := func(id string, ligados map[string]bool) ItemEffects {
+		return resolveInWorld(world.ActiveItemsFor(
+			Character{Level: 1, ClassPowers: `["` + id + `"]`}), ligados)
 	}
 
 	// ── manobra: vale sempre, e só na manobra que o livro nomeia ──
@@ -30,7 +30,7 @@ func TestTheManeuverPowersNeedNoSwitchAndTheSituationalOnesDo(t *testing.T) {
 		{"desarmar-aprimorado", "desarmar", "derrubar"},
 		{"quebrar-aprimorado", "quebrar", "derrubar"},
 	} {
-		efeitos := efeitosDe(caso.id)
+		efeitos := efeitosDe(caso.id, nil)
 		if got := StatFor(efeitos, ModifierTarget{K: "maneuver", Name: caso.manobra}).Total; got != 2 {
 			t.Errorf("%s: %s deu %d e o livro dá +2 em testes de ataque para %s (p125/p129)",
 				caso.id, caso.manobra, got, caso.manobra)
@@ -55,7 +55,7 @@ func TestTheManeuverPowersNeedNoSwitchAndTheSituationalOnesDo(t *testing.T) {
 		{"lobo-solitario", ModifierTarget{K: "defense"}, 1, "p130"},
 		{"torcida", ModifierTarget{K: "defense"}, 2, "p131"},
 	} {
-		desligado := efeitosDe(caso.id)
+		desligado := efeitosDe(caso.id, nil)
 		if got := StatFor(desligado, caso.alvo).Total; got != 0 {
 			t.Errorf("%s: %s vale %d DESLIGADO, e o livro o dá só na circunstância (%s)",
 				caso.id, caso.alvo.K, got, caso.pagina)
@@ -68,7 +68,7 @@ func TestTheManeuverPowersNeedNoSwitchAndTheSituationalOnesDo(t *testing.T) {
 			t.Errorf("%s: não ofereceu interruptor nenhum", caso.id)
 			continue
 		}
-		if got := StatFor(ApplyActiveConditionals(desligado, ligados), caso.alvo).Total; got != caso.quero {
+		if got := StatFor(efeitosDe(caso.id, ligados), caso.alvo).Total; got != caso.quero {
 			t.Errorf("%s: %s deu %d ligado e o livro dá +%d (%s)",
 				caso.id, caso.alvo.K, got, caso.quero, caso.pagina)
 		}

@@ -30,7 +30,7 @@ func TestTheModifierThatRequiresAFlagOnlyAppliesWhileItIsRaised(t *testing.T) {
 				CatalogID: ptr(item), Name: item, Equipped: ptr("vested"), Improvements: "[]",
 			}},
 		}
-		return ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+		return resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(ch), nil)
 	}
 
 	// COM ARMADURA PESADA: os dois poderes valem. +2 na Defesa (p125) e +2 em

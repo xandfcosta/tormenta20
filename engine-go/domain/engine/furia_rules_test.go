@@ -46,8 +46,8 @@ func TestFuryGivesAttackAndDamageAndNotResistances(t *testing.T) {
 			{Name: "Vontade", Attribute: "wisdom"},
 		},
 	}
-	efeitos := ComputeItemEffects(world.ActiveItemsFor(ch))
-	emFuria := ApplyActiveConditionals(efeitos, map[string]bool{FlagGroupID("furia"): true})
+	efeitos := resolveInWorld(world.ActiveItemsFor(ch), nil)
+	emFuria := resolveInWorld(world.ActiveItemsFor(ch), map[string]bool{FlagGroupID("furia"): true})
 
 	subiu := func(alvo ModifierTarget) int {
 		return StatFor(emFuria, alvo).Total - StatFor(efeitos, alvo).Total

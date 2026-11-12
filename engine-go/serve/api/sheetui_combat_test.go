@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -181,7 +180,7 @@ func ligaOCondicional(t *testing.T, f sceneFixture, id int64) {
 	if err != nil {
 		t.Fatalf("converter para o motor: %v", err)
 	}
-	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
+	offered := dto.Ruleset.EffectsOf(ec, nil).Conditional
 	if len(offered) != 1 {
 		t.Fatalf("o motor ofereceu %d condicionais e o caso precisa de exatamente 1: "+
 			"o efeito semeado não virou um opt-in, e ligar nada mediria o vazio", len(offered))

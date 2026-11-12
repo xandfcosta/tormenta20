@@ -535,6 +535,20 @@
           }
         }
       ]
+    },
+    {
+      "source": "as mãos",
+      "equipped": "wielded",
+      "modifiers": [
+        {
+          "target": {
+            "k": "flag",
+            "name": "maos-sem-arma-sozinha"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
+        }
+      ]
     }
   ],
   "itemEffects": {
@@ -643,7 +657,8 @@
       "cannot-apply-dex-to-defense",
       "displacement-ignores-armor",
       "displacement-ignores-load",
-      "fatigue-on-sleep"
+      "fatigue-on-sleep",
+      "maos-sem-arma-sozinha"
     ],
     "conditional": [
       {

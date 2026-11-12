@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -41,34 +42,37 @@ func TestAnItemTheWorldDoesNotKnowContributesNothing(t *testing.T) {
 	// O CONTROLE: as MESMAS sobreposições sobre um verbete que o mundo conhece
 	// entregam o que o livro manda. Sem ele, um motor que ignorasse toda
 	// sobreposição passaria verde no caso de baixo.
-	conhecido := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(Character{
+	conhecido := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(Character{
 		Level: 5,
 		Items: []CharacterItem{{
 			CatalogID: ptr("armadura-completa"), Name: "Armadura completa",
 			Equipped: ptr("vested"), Improvements: `["melhoria-reforcada"]`, Material: &adamante,
 		}},
-	}))
+	}), nil)
 	if StatFor(conhecido, ModifierTarget{K: "defense"}).Total == 0 {
 		t.Fatalf("o controle já estava errado: a armadura completa reforçada de "+
 			"adamante não deu Defesa nenhuma — %+v", conhecido.ByTarget)
 	}
 
 	// O ITEM CASEIRO: sem `catalogId`, nem a sobreposição vale.
-	caseiro := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(Character{
+	caseiro := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(Character{
 		Level: 5,
 		Items: []CharacterItem{{
 			Name: "Tábua caseira", Equipped: ptr("vested"),
 			Improvements: `["melhoria-reforcada"]`, Material: &adamante,
 		}},
-	}))
+	}), nil)
 	if len(caseiro.ByTarget) != 0 {
 		t.Errorf("o item caseiro entregou %d alvos à ficha, e a regra do dono diz que "+
 			"ele é cosmético.\nA sobreposição é uma linha que o livro escreve SOBRE "+
 			"um item; sem o item, ela não tem a que se aplicar.\n%+v",
 			len(caseiro.ByTarget), caseiro.ByTarget)
 	}
-	if len(caseiro.Flags) != 0 {
-		t.Errorf("o item caseiro acendeu as bandeiras %v", caseiro.FlagList())
+	// As bandeiras se comparam com as da MESMA ficha sem o item: as mãos livres acendem a delas em toda
+	// ficha, e o que se mede é o que o item acrescenta.
+	semItem := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(Character{Level: 5}), nil)
+	if !slices.Equal(caseiro.FlagList(), semItem.FlagList()) {
+		t.Errorf("o item caseiro acendeu bandeiras: %v, e sem ele são %v", caseiro.FlagList(), semItem.FlagList())
 	}
 }
 
@@ -83,13 +87,13 @@ func TestAnItemFromAnotherWorldContributesNothing(t *testing.T) {
 	ptr := func(s string) *string { return &s }
 	adamante := "material-adamante"
 
-	effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(Character{
+	effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(Character{
 		Level: 5,
 		Items: []CharacterItem{{
 			CatalogID: ptr("espada-da-mesa-do-vizinho"), Name: "Espada do vizinho",
 			Equipped: ptr("wielded"), Improvements: `["melhoria-reforcada"]`, Material: &adamante,
 		}},
-	}))
+	}), nil)
 	if len(effects.ByTarget) != 0 {
 		t.Errorf("um item de outro mundo entregou %d alvos: %+v",
 			len(effects.ByTarget), effects.ByTarget)

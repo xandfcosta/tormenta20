@@ -104,7 +104,7 @@ func TestOnlyTheFiveManeuversOfTheBookAreAccepted(t *testing.T) {
 // e este caso é o que impede a volta dele.
 func TestTheManeuverBonusKnowsWhichSideItHelps(t *testing.T) {
 	vestido := "vested"
-	efeitos := ComputeItemEffects([]ActiveItem{{
+	efeitos := resolveInWorld([]ActiveItem{{
 		SourceID: "origem", Source: "Escravo", Equipped: &vestido,
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{K: "maneuver", Name: "agarrar", Scope: "defense"},
@@ -112,7 +112,7 @@ func TestTheManeuverBonusKnowsWhichSideItHelps(t *testing.T) {
 			{Target: ModifierTarget{K: "maneuver", Name: "derrubar"},
 				Amount: 2, BonusType: "untyped"},
 		},
-	}})
+	}}, nil)
 
 	if got := ManeuverBonus(efeitos, "agarrar", ManeuverDefense); got != 5 {
 		t.Errorf("a defesa contra agarrar deu %d e o Desejo de Liberdade dá +5", got)

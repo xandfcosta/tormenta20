@@ -22,21 +22,24 @@ package engine
 // PV e PM ficam de fora: o `scale` por atributo deles é do `ComputeVitals`, que
 // o avalia com a conta própria dos vitais.
 
-// sheetEffects são os efeitos da ficha sob os condicionais ligados, com as
-// somas de atributo já resolvidas. É o que toda decomposição da ficha lê.
+// EffectsOf são os efeitos do personagem: todas as fontes que a coleta conhece, com os interruptores que
+// ele ligou (pelo endereço do termo ou do grupo da flag) e as somas de atributo resolvidas. É a ÚNICA
+// entrada para "o que vale para este personagem agora", e toda decomposição da ficha a lê. A lista dos
+// interruptores que ele pode ligar vem junto, em `Conditional`, ligados e desligados.
 //
-//	effects := r.sheetEffects(ch, activeConditionals)
-func (r *Ruleset) sheetEffects(ch Character, activeConditionals map[string]bool) ItemEffects {
-	return r.sheetEffectsWith(ch, activeConditionals, nil)
+// Havia três respostas para essa pergunta, cada uma com outras fontes, e a que não via a Forma Selvagem
+// mandava a manobra da Mesa sem o tamanho da forma.
+//
+//	effects := ruleset.EffectsOf(ch, sheet.ToStringSet(dto.Conditionals))
+func (r *Ruleset) EffectsOf(ch Character, switches map[string]bool) ItemEffects {
+	return r.sheetEffectsWith(ch, switches, nil)
 }
 
 // sheetEffectsWith são os efeitos da ficha com fontes A MAIS que não moram nela
 // — o impulso de PM de UM ataque (`BoostedWeaponCards`), que vale para aquele
 // golpe e some depois.
 func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) ItemEffects {
-	items := append(append(r.ActiveItemsFor(ch), extra...), r.handsAsAnItem(ch)...)
-	items = append(items, r.armedLegsAsAnItem(ch, items)...)
-	items = append(items, r.wildShapeAsAnItem(ch)...)
+	items := append(r.ActiveItemsFor(ch), extra...)
 	plain, sums := splitAttributeSums(items)
 	first := resolveInWorld(plain, activeConditionals)
 	if len(sums) == 0 {
@@ -111,9 +114,9 @@ func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) 
 // HandsNotFreeFlag diz que as mãos NÃO estão como o Estilo de Uma Arma pede: "uma arma corpo a corpo em uma
 // das mãos e nada na outra" (p128).
 //
-// É NEGATIVA de propósito, com o `Unless` do lado do poder. O interruptor é oferecido a partir do
-// `ActiveItemsFor`, e esta flag só entra na conta da ficha: com um `Requires` positivo, o poder nunca era
-// oferecido. Assim ele fica na tela e avisa (quem decide é o mestre), e o número é que não se mexe.
+// É NEGATIVA de propósito, com o `Unless` do lado do poder, e mora nas `bodyStateFlags`: ela cala o
+// número e não tira o interruptor da oferta. Assim ele fica na tela e avisa (quem decide é o mestre), e o
+// número é que não se mexe.
 const HandsNotFreeFlag = "maos-sem-arma-sozinha"
 
 var wieldedInOneHand = "wielded"

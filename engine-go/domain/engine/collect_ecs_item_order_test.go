@@ -34,7 +34,7 @@ func TestTheItemRulesLandInOrder(t *testing.T) {
 		Improvements: `["melhoria-equilibrada"]`,
 	}}}
 
-	items := BookRuleset(catalogs).ActiveItemsFor(ch)
+	items := withoutTheBody(BookRuleset(catalogs).ActiveItemsFor(ch))
 	if len(items) != 1 {
 		t.Fatalf("colhi %d fontes, esperava 1", len(items))
 	}

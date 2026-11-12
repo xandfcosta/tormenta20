@@ -78,10 +78,30 @@ func (r *Ruleset) collectionSystems(ch Character) []ecs.System {
 		spawnOne(func() *ActiveItem { return conditionActiveItem(ch) }),
 		spawnAll(func() []ActiveItem { return r.campaignGrants(ch) }),
 		spawnAll(func() []ActiveItem { return r.tableRuleItems(ch) }),
-		// O SILÊNCIO é o último sistema, e tem de ser: ele age sobre o que os
+		// O SILÊNCIO é o último sistema que CALA, e tem de ser: ele age sobre o que os
 		// anteriores penduraram, inclusive sobre uma concessão da própria mesa.
 		r.silenceSystem(ch),
+		// O ESTADO DO CORPO vem depois do silêncio, de propósito: as mãos ocupadas, as patas armadas e a
+		// Forma Selvagem não são item nem poder que a mesa cale, e sim o que o personagem está fazendo
+		// com o corpo agora. Elas eram acrescentadas por fora da coleta, só por quem lembrava delas.
+		spawnAll(func() []ActiveItem { return r.handsAsAnItem(ch) }),
+		r.armedLegsSystem(ch),
+		spawnAll(func() []ActiveItem { return r.wildShapeAsAnItem(ch) }),
 	)
+}
+
+// armedLegsSystem pendura o –2 das patas armadas, que precisa saber o que já foi coletado: é de lá que
+// sai o "possui Ambidestria".
+func (r *Ruleset) armedLegsSystem(ch Character) ecs.System {
+	return func(w *ecs.World) {
+		so := []ActiveItem{}
+		ecs.Each(w, func(_ ecs.Entity, g Grants) {
+			so = append(so, ActiveItem{SourceID: g.SourceID, Source: g.Source, Equipped: g.Wear, Modifiers: g.Modifiers})
+		})
+		for _, item := range r.armedLegsAsAnItem(ch, so) {
+			grant(w, item)
+		}
+	}
 }
 
 // grant pendura uma fonte no mundo. É o `append` do coletor velho.

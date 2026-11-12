@@ -57,7 +57,7 @@ func TestTheBookCollectionGivesTheSkillChosenAtPurchase(t *testing.T) {
 				hero.Items[0].Improvements = `["melhoria-aprimorado"]`
 			}
 			offered := map[string]int{}
-			for _, term := range ComputeItemEffects(world.ActiveItemsFor(hero)).Conditional {
+			for _, term := range resolveInWorld(world.ActiveItemsFor(hero), nil).Conditional {
 				if term.Target.K == "expertise" {
 					offered[term.Target.Name] += int(term.Amount)
 				}
@@ -94,7 +94,7 @@ func TestTheImprovedItemFollowsTheSituationOfTheItem(t *testing.T) {
 			t.Errorf("%s: o +1 em %s somou fora da situação do item", c.item, c.skill)
 		}
 		found := false
-		for _, offered := range ComputeItemEffects(world.ActiveItemsFor(hero)).Conditional {
+		for _, offered := range resolveInWorld(world.ActiveItemsFor(hero), nil).Conditional {
 			if offered.Target.K == "expertise" && offered.Target.Name == c.skill && offered.Amount == 1 {
 				found = true
 			}

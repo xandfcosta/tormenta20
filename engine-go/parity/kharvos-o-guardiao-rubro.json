@@ -717,6 +717,20 @@
           }
         }
       ]
+    },
+    {
+      "source": "as mãos",
+      "equipped": "wielded",
+      "modifiers": [
+        {
+          "target": {
+            "k": "flag",
+            "name": "maos-sem-arma-sozinha"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
+        }
+      ]
     }
   ],
   "itemEffects": {
@@ -953,6 +967,7 @@
     },
     "flags": [
       "armadura-leve",
+      "maos-sem-arma-sozinha",
       "rest-one-category-up"
     ],
     "conditional": [

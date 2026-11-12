@@ -7,7 +7,7 @@ import "testing"
 
 func expertiseBonus(t *testing.T, r *Ruleset, ch Character, skill string) int {
 	t.Helper()
-	return StatFor(ComputeItemEffects(r.ActiveItemsFor(ch)), ModifierTarget{K: "expertise", Name: skill}).Total
+	return StatFor(resolveInWorld(r.ActiveItemsFor(ch), nil), ModifierTarget{K: "expertise", Name: skill}).Total
 }
 
 func charismaFromTormenta(r *Ruleset, ch Character) int {
@@ -101,7 +101,7 @@ func TestTheMemoryBorrowsAnAbilityAndTheSizeOfAnotherRace(t *testing.T) {
 	if got := expertiseBonus(t, r, osteon, "Furtividade"); got != 2 {
 		t.Errorf("o osteon goblin é Pequeno e ganhou %+d em Furtividade, esperava +2 (Tab. 1-21)", got)
 	}
-	effects := ComputeItemEffects(r.ActiveItemsFor(osteon))
+	effects := resolveInWorld(r.ActiveItemsFor(osteon), nil)
 	if got := StatFor(effects, ModifierTarget{K: "attribute", Name: "dexterity"}).Total; got != 0 {
 		t.Errorf("o osteon goblin ganhou %+d de Destreza: a Memória empresta uma habilidade, e não os atributos", got)
 	}
@@ -109,7 +109,7 @@ func TestTheMemoryBorrowsAnAbilityAndTheSizeOfAnotherRace(t *testing.T) {
 	// A habilidade emprestada que pede escolha a guarda pela chave dela.
 	osteon.RaceAttributeChoices = `{"abilityPicks":{"osteon-memoria-postuma":["qareen-resistencia-elemental"],` +
 		`"qareen-resistencia-elemental":["qareen-res-fogo"]}}`
-	effects = ComputeItemEffects(r.ActiveItemsFor(osteon))
+	effects = resolveInWorld(r.ActiveItemsFor(osteon), nil)
 	if got := StatFor(effects, ModifierTarget{K: "damageReduction", DamageType: "fogo"}).Total; got != 10 {
 		t.Errorf("a Resistência Elemental emprestada com fogo deu RD %d a fogo, esperava 10", got)
 	}

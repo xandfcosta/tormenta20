@@ -60,13 +60,13 @@ func TestTheExemptionErasesTheFlagTheBaseRaises(t *testing.T) {
 	// E O RESTO DA ARMADURA PESADA FICA: a bandeira de peso continua no ar — é
 	// ela que o Encouraçado (p125) exige e a Pele de Ferro (p62) teme —, e a
 	// penalidade de armadura continua, com os 2 que o mitral devolve (p167).
-	effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(Character{
+	effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(Character{
 		Level: 5, Dexterity: 3, Proficiencies: `["armaduras-pesadas"]`,
 		Items: []CharacterItem{{
 			CatalogID: ptr("cota-elfica"), Name: "Cota élfica",
 			Equipped: ptr("vested"), Improvements: "[]",
 		}},
-	}))
+	}), nil)
 	if !effects.Flags["armadura-pesada"] {
 		t.Error("a cota élfica deixou de contar como armadura pesada: o livro troca " +
 			"a regra da DESTREZA, e não o peso do item")

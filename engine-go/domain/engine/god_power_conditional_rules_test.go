@@ -53,8 +53,8 @@ func TestTheConditionalGodPowersOfferTheirSwitch(t *testing.T) {
 		{"Rejeição Divina", ModifierTarget{K: "resistance"}, 5, "p135"},
 		{"Sangue Ofídico", ModifierTarget{K: "resistance"}, 5, "p135"},
 	} {
-		desligado := ComputeItemEffects(world.ActiveItemsFor(
-			Character{Level: 1, GodPowers: `["` + caso.poder + `"]`}))
+		desligado := resolveInWorld(world.ActiveItemsFor(
+			Character{Level: 1, GodPowers: `["` + caso.poder + `"]`}), nil)
 
 		if got := StatFor(desligado, caso.alvo).Total; got != 0 {
 			t.Errorf("%s: %s vale %d com o interruptor DESLIGADO, e o livro o dá só "+
@@ -74,7 +74,8 @@ func TestTheConditionalGodPowersOfferTheirSwitch(t *testing.T) {
 			continue
 		}
 
-		ligado := ApplyActiveConditionals(desligado, ligados)
+		ligado := resolveInWorld(world.ActiveItemsFor(
+			Character{Level: 1, GodPowers: `["` + caso.poder + `"]`}), ligados)
 		if got := StatFor(ligado, caso.alvo).Total; got != caso.quero {
 			t.Errorf("%s: %s deu %d com o interruptor ligado e o livro dá +%d (%s)",
 				caso.poder, caso.alvo.K, got, caso.quero, caso.pagina)

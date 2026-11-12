@@ -1,6 +1,9 @@
 package engine
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // O núcleo da resolução, caso a caso. Sem catálogo: todo `ActiveItem` é montado
 // aqui dentro.
@@ -152,7 +155,7 @@ func TestNonStacking(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			stat := StatFor(ComputeItemEffects(tt.items), tt.target)
+			stat := StatFor(resolveInWorld(tt.items, nil), tt.target)
 			if stat.Total != tt.wantTotal {
 				t.Errorf("total = %d, want %d", stat.Total, tt.wantTotal)
 			}
@@ -165,11 +168,11 @@ func TestNonStacking(t *testing.T) {
 
 func TestThreeSameTypeKeepsSourceB(t *testing.T) {
 	always := &ModifierCondition{C: "vested"}
-	stat := StatFor(ComputeItemEffects([]ActiveItem{
+	stat := StatFor(resolveInWorld([]ActiveItem{
 		vested("a", Modifier{Target: defenseTarget, Amount: 2, BonusType: "enhancement", Condition: always}),
 		vested("b", Modifier{Target: defenseTarget, Amount: 4, BonusType: "enhancement", Condition: always}),
 		vested("c", Modifier{Target: defenseTarget, Amount: 3, BonusType: "enhancement", Condition: always}),
-	}), defenseTarget)
+	}, nil), defenseTarget)
 	if len(stat.Contributions) != 1 || stat.Contributions[0].Source != "b" {
 		t.Fatalf("expected single contribution from source b, got %+v", stat.Contributions)
 	}
@@ -181,9 +184,9 @@ func TestEquipGating(t *testing.T) {
 	w := func() *ModifierCondition { return &ModifierCondition{C: "wielded"} }
 	v := func() *ModifierCondition { return &ModifierCondition{C: "vested"} }
 
-	if StatFor(ComputeItemEffects([]ActiveItem{
+	if StatFor(resolveInWorld([]ActiveItem{
 		vested("weapon-on-belt", Modifier{Target: damageThisTarget, Amount: 1, BonusType: "untyped", Condition: w()}),
-	}), damageThisTarget).Total != 0 {
+	}, nil), damageThisTarget).Total != 0 {
 		t.Error("wielded mod applied on vested item")
 	}
 
@@ -191,7 +194,7 @@ func TestEquipGating(t *testing.T) {
 	nullItem := ActiveItem{Source: "pack", Equipped: nil, Modifiers: []Modifier{
 		{Target: defenseTarget, Amount: 5, BonusType: "armor", Condition: v()},
 	}}
-	if StatFor(ComputeItemEffects([]ActiveItem{nullItem}), defenseTarget).Total != 0 {
+	if StatFor(resolveInWorld([]ActiveItem{nullItem}, nil), defenseTarget).Total != 0 {
 		t.Error("null-equipped item contributed")
 	}
 
@@ -199,14 +202,14 @@ func TestEquipGating(t *testing.T) {
 	offHand := ActiveItem{Source: "off-hand", Equipped: strp("wielded2"), Modifiers: []Modifier{
 		{Target: damageThisTarget, Amount: 1, BonusType: "untyped", Condition: w()},
 	}}
-	if StatFor(ComputeItemEffects([]ActiveItem{offHand}), damageThisTarget).Total != 1 {
+	if StatFor(resolveInWorld([]ActiveItem{offHand}, nil), damageThisTarget).Total != 1 {
 		t.Error("wielded2 did not count as wielded")
 	}
 
 	// E o simétrico.
-	if StatFor(ComputeItemEffects([]ActiveItem{
+	if StatFor(resolveInWorld([]ActiveItem{
 		wielded("vest-and-blade", Modifier{Target: defenseTarget, Amount: 2, BonusType: "armor", Condition: v()}),
-	}), defenseTarget).Total != 0 {
+	}, nil), defenseTarget).Total != 0 {
 		t.Error("vested mod applied on wielded item")
 	}
 }
@@ -215,26 +218,26 @@ func TestEquipGating(t *testing.T) {
 
 func TestAlwaysCondition(t *testing.T) {
 	always := &ModifierCondition{C: "always"}
-	if StatFor(ComputeItemEffects([]ActiveItem{
+	if StatFor(resolveInWorld([]ActiveItem{
 		vested("relic", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: always}),
-	}), defenseTarget).Total != 1 {
+	}, nil), defenseTarget).Total != 1 {
 		t.Error("always on vested item should apply")
 	}
-	if StatFor(ComputeItemEffects([]ActiveItem{
+	if StatFor(resolveInWorld([]ActiveItem{
 		wielded("amulet", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: always}),
-	}), defenseTarget).Total != 1 {
+	}, nil), defenseTarget).Total != 1 {
 		t.Error("always on wielded item should apply")
 	}
 	nullItem := ActiveItem{Source: "pack", Equipped: nil, Modifiers: []Modifier{
 		{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: always},
 	}}
-	if StatFor(ComputeItemEffects([]ActiveItem{nullItem}), defenseTarget).Total != 0 {
+	if StatFor(resolveInWorld([]ActiveItem{nullItem}, nil), defenseTarget).Total != 0 {
 		t.Error("always on null-equipped item should be suppressed")
 	}
 	// Sem condição nenhuma, o padrão é "sempre".
-	if StatFor(ComputeItemEffects([]ActiveItem{
+	if StatFor(resolveInWorld([]ActiveItem{
 		vested("ring", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped"}),
-	}), defenseTarget).Total != 1 {
+	}, nil), defenseTarget).Total != 1 {
 		t.Error("missing condition should default to always")
 	}
 }
@@ -242,9 +245,9 @@ func TestAlwaysCondition(t *testing.T) {
 // ─── flags ────────────────────────────────────────────────────────────
 
 func TestFlagModifiersPopulateFlagsSet(t *testing.T) {
-	effects := ComputeItemEffects([]ActiveItem{
+	effects := resolveInWorld([]ActiveItem{
 		vested("cota-malha", Modifier{Target: ModifierTarget{K: "flag", Name: "fatigue-on-sleep"}, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "vested"}}),
-	})
+	}, nil)
 	if !effects.Flags["fatigue-on-sleep"] {
 		t.Error("flag not set")
 	}
@@ -268,17 +271,17 @@ func brunea() ActiveItem {
 }
 
 func TestFlagOff(t *testing.T) {
-	if StatFor(ComputeItemEffects([]ActiveItem{peleDeFerro()}), defenseTarget).Total != 4 {
+	if StatFor(resolveInWorld([]ActiveItem{peleDeFerro()}, nil), defenseTarget).Total != 4 {
 		t.Error("flagOff should apply when flag absent")
 	}
-	if StatFor(ComputeItemEffects([]ActiveItem{peleDeFerro(), brunea()}), defenseTarget).Total != 5 {
+	if StatFor(resolveInWorld([]ActiveItem{peleDeFerro(), brunea()}, nil), defenseTarget).Total != 5 {
 		t.Error("flagOff should switch off with heavy armor (only brunea)")
 	}
 	// Independente da ORDEM: a passagem prévia junta as flags antes.
-	if StatFor(ComputeItemEffects([]ActiveItem{brunea(), peleDeFerro()}), defenseTarget).Total != 5 {
+	if StatFor(resolveInWorld([]ActiveItem{brunea(), peleDeFerro()}, nil), defenseTarget).Total != 5 {
 		t.Error("flagOff result should be order-independent")
 	}
-	if len(ComputeItemEffects([]ActiveItem{peleDeFerro()}).Conditional) != 0 {
+	if len(resolveInWorld([]ActiveItem{peleDeFerro()}, nil).Conditional) != 0 {
 		t.Error("flagOff must not become a togglable conditional")
 	}
 }
@@ -286,97 +289,109 @@ func TestFlagOff(t *testing.T) {
 // ─── conditional opt-ins ──────────────────────────────────────────────
 
 func TestConditionalDeferral(t *testing.T) {
-	effA := ComputeItemEffects([]ActiveItem{
+	effA := resolveInWorld([]ActiveItem{
 		wielded("material-aco-rubi", Modifier{Target: damageThisTarget, Amount: 2, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "vivos"}, Note: "+2 dano vs vivos"}),
-	})
+	}, nil)
 	if len(effA.Conditional) != 1 || StatFor(effA, damageThisTarget).Total != 0 {
 		t.Error("against condition should defer to conditional list")
 	}
 
-	effT := ComputeItemEffects([]ActiveItem{
+	effT := resolveInWorld([]ActiveItem{
 		vested("explorador-boots", Modifier{Target: ModifierTarget{K: "expertise", Name: "Sobrevivência"}, Amount: 2, BonusType: "item", Condition: &ModifierCondition{C: "terrain", Type: "floresta"}}),
-	})
+	}, nil)
 	if len(effT.Conditional) != 1 || effT.Conditional[0].Note != "terreno: floresta" {
 		t.Errorf("terrain note = %q", effT.Conditional[0].Note)
 	}
 
-	effC := ComputeItemEffects([]ActiveItem{
+	effC := resolveInWorld([]ActiveItem{
 		vested("item", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "context", Note: "ao usar manobra"}}),
-	})
+	}, nil)
 	if effC.Conditional[0].Note != "ao usar manobra" {
 		t.Errorf("context note = %q", effC.Conditional[0].Note)
 	}
 
-	effF := ComputeItemEffects([]ActiveItem{
+	effF := resolveInWorld([]ActiveItem{
 		wielded("amulet", Modifier{Target: damageThisTarget, Amount: 2, BonusType: "untyped", Condition: &ModifierCondition{C: "flagOn", Flag: "enraged", Label: "Enfurecido"}}),
-	})
+	}, nil)
 	if effF.Conditional[0].Flag != "enraged" || effF.Conditional[0].Note != "Enfurecido" {
 		t.Errorf("flagOn conditional = %+v", effF.Conditional[0])
 	}
 
 	// A descrição da condição, quando existe, vence o `note` do modificador.
-	effFb := ComputeItemEffects([]ActiveItem{
+	effFb := resolveInWorld([]ActiveItem{
 		vested("item", Modifier{Target: defenseTarget, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "against", Trait: ""}, Note: "fallback"}),
-	})
+	}, nil)
 	if effFb.Conditional[0].Note != "contra: " {
 		t.Errorf("expected 'contra: ', got %q", effFb.Conditional[0].Note)
 	}
 }
 
-// ─── applyActiveConditionals ──────────────────────────────────────────
+// ─── o interruptor ligado ─────────────────────────────────────────────
 
-func TestApplyActiveConditionals(t *testing.T) {
-	base := ComputeItemEffects([]ActiveItem{
+// O LIGADO entra na conta e continua na lista dos oferecidos: a aba Efeitos desenha o interruptor aceso,
+// e não some com ele. A conta diz de onde veio a parcela com o " (cond.)".
+func TestASwitchedOnConditionalCountsAndStaysOffered(t *testing.T) {
+	items := []ActiveItem{
 		wielded("material-aco-rubi", Modifier{Target: damageThisTarget, Amount: 2, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "vivos"}, Note: "+2 dano vs vivos"}),
-	})
-	id := base.Conditional[0].Term
-	next := ApplyActiveConditionals(base, map[string]bool{id: true})
-	if StatFor(next, damageThisTarget).Total != 2 || len(next.Conditional) != 0 {
-		t.Errorf("fold failed: total=%d remaining=%d", StatFor(next, damageThisTarget).Total, len(next.Conditional))
+	}
+	base := resolveInWorld(items, nil)
+	if StatFor(base, damageThisTarget).Total != 0 || len(base.Conditional) != 1 {
+		t.Fatalf("desligado: total=%d oferecidos=%d, queria 0 e 1", StatFor(base, damageThisTarget).Total, len(base.Conditional))
+	}
+	on := resolveInWorld(items, map[string]bool{base.Conditional[0].Term: true})
+	stat := StatFor(on, damageThisTarget)
+	if stat.Total != 2 || len(on.Conditional) != 1 {
+		t.Errorf("ligado: total=%d oferecidos=%d, queria 2 e 1", stat.Total, len(on.Conditional))
+	}
+	if len(stat.Contributions) != 1 || !strings.HasSuffix(stat.Contributions[0].Source, " (cond.)") {
+		t.Errorf("a parcela ligada devia dizer que é condicional: %+v", stat.Contributions)
 	}
 
-	same := ApplyActiveConditionals(base, map[string]bool{})
-	if len(same.Conditional) != len(base.Conditional) {
-		t.Error("empty active set should return original")
+	if empty := resolveInWorld(items, map[string]bool{}); StatFor(empty, damageThisTarget).Total != 0 {
+		t.Error("nenhum interruptor ligado é o mesmo que nenhum")
 	}
 
-	multi := ComputeItemEffects([]ActiveItem{
+	multi := []ActiveItem{
 		wielded("a",
 			Modifier{Target: damageThisTarget, Amount: 2, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "vivos"}},
 			Modifier{Target: damageThisTarget, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "terrain", Type: "urbano"}},
 		),
-	})
-	first := multi.Conditional[0].Term
-	if len(ApplyActiveConditionals(multi, map[string]bool{first: true}).Conditional) != 1 {
-		t.Error("unmatched conditional should remain")
+	}
+	first := resolveInWorld(multi, nil).Conditional[0].Term
+	one := resolveInWorld(multi, map[string]bool{first: true})
+	if StatFor(one, damageThisTarget).Total != 2 || len(one.Conditional) != 2 {
+		t.Errorf("ligar um não liga o outro: total=%d oferecidos=%d, queria 2 e 2",
+			StatFor(one, damageThisTarget).Total, len(one.Conditional))
 	}
 }
 
-func TestApplyActiveConditionalsReResolves(t *testing.T) {
-	base := ComputeItemEffects([]ActiveItem{
+// O LIGADO disputa o empilhamento com o que vale sempre: dois bônus de melhoria não somam (p226).
+func TestASwitchedOnConditionalCompetesInTheStacking(t *testing.T) {
+	items := []ActiveItem{
 		vested("base", Modifier{Target: defenseTarget, Amount: 1, BonusType: "enhancement", Condition: &ModifierCondition{C: "vested"}}),
 		wielded("blade", Modifier{Target: defenseTarget, Amount: 3, BonusType: "enhancement", Condition: &ModifierCondition{C: "against", Trait: "mortos-vivos"}}),
-	})
-	if StatFor(base, defenseTarget).Total != 1 {
-		t.Fatalf("base total = %d, want 1", StatFor(base, defenseTarget).Total)
 	}
-	next := ApplyActiveConditionals(base, map[string]bool{base.Conditional[0].Term: true})
-	def := StatFor(next, defenseTarget)
+	base := resolveInWorld(items, nil)
+	if StatFor(base, defenseTarget).Total != 1 {
+		t.Fatalf("desligado = %d, queria 1", StatFor(base, defenseTarget).Total)
+	}
+	def := StatFor(resolveInWorld(items, map[string]bool{base.Conditional[0].Term: true}), defenseTarget)
 	if def.Total != 3 || len(def.Contributions) != 1 || def.Contributions[0].Amount != 3 {
-		t.Errorf("conditional +3 should displace base +1, got %+v", def)
+		t.Errorf("o +3 ligado devia tirar o +1 do mesmo tipo, deu %+v", def)
 	}
 }
 
-func TestApplyActiveConditionalsIgnoresFlagTargets(t *testing.T) {
-	base := ComputeItemEffects([]ActiveItem{
+// A FLAG SOB CONDIÇÃO não acende pelo interruptor: quem a acende é a condição cumprida.
+func TestASwitchedOnFlagTargetDoesNotRaiseTheFlag(t *testing.T) {
+	items := []ActiveItem{
 		vested("weird", Modifier{Target: ModifierTarget{K: "flag", Name: "fatigue-on-sleep"}, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "context", Note: "durante a noite"}}),
-	})
-	next := ApplyActiveConditionals(base, map[string]bool{base.Conditional[0].Term: true})
-	if next.Flags["fatigue-on-sleep"] {
-		t.Error("flag-target conditional should not set the flag on fold")
 	}
-	if _, ok := next.ByTarget["flag:fatigue-on-sleep"]; ok {
-		t.Error("flag-target conditional should not bucket on fold")
+	on := resolveInWorld(items, map[string]bool{resolveInWorld(items, nil).Conditional[0].Term: true})
+	if on.Flags["fatigue-on-sleep"] {
+		t.Error("a flag sob condição acendeu pelo interruptor")
+	}
+	if _, ok := on.ByTarget["flag:fatigue-on-sleep"]; ok {
+		t.Error("a flag sob condição virou parcela na pilha")
 	}
 }
 
@@ -443,7 +458,7 @@ func TestResolveConditionalDisplayUntypedStacks(t *testing.T) {
 
 func TestEmptyInputs(t *testing.T) {
 	for _, items := range [][]ActiveItem{nil, {vested("empty")}} {
-		e := ComputeItemEffects(items)
+		e := resolveInWorld(items, nil)
 		if len(e.ByTarget) != 0 || len(e.Flags) != 0 || len(e.Conditional) != 0 {
 			t.Errorf("expected wholly-empty ItemEffects, got %+v", e)
 		}

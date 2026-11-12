@@ -11,9 +11,8 @@ import (
 // que toda decomposição bate com o oráculo (`sheet`) semanticamente.
 //
 // Cada personagem é conferido DUAS vezes: sem nenhum condicional ligado, e com
-// todos ligados. A segunda passada é a única cobertura de oráculo do
-// `ApplyActiveConditionals` — a dobra que reroda o `resolveStack` por alvo —, e
-// ela morde no `bardo-versatil-nv7`, cujos dois condicionais de Inspiração caem
+// todos ligados. A segunda é a única cobertura de oráculo dos interruptores
+// ligados entrando na resolução, e ela morde no `bardo-versatil-nv7`, cujos dois condicionais de Inspiração caem
 // no mesmo alvo com o mesmo `bonusType`: +1 e +2 têm de resolver para +2 nas 29
 // perícias, e não para +3.
 //
@@ -41,7 +40,7 @@ func TestSheetParity(t *testing.T) {
 				diffReport(t, "sheet", got, oracle.Sheet)
 			}
 
-			// A segunda passada só EXISTE para exercitar `ApplyActiveConditionals`:
+			// A segunda passada só EXISTE para exercitar os interruptores ligados:
 			// num personagem sem condicional nenhum ela repete a primeira e conta
 			// como cobertura. Rodar só onde há o que ligar deixa claro quantos
 			// realmente exercitam a dobra.
@@ -61,6 +60,6 @@ func TestSheetParity(t *testing.T) {
 	// dia NENHUM oráculo tiver condicional, a cobertura dela vira zero em
 	// silêncio — e é isso que esta linha impede.
 	if withConditionals == 0 {
-		t.Error("nenhum oráculo exercitou ApplyActiveConditionals — a dobra ficou sem prova")
+		t.Error("nenhum oráculo ligou interruptor — a resolução com os ligados ficou sem prova")
 	}
 }

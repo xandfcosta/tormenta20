@@ -215,7 +215,7 @@ func TestConditionPenaltiesOnOneSkillDoNotStackAcrossTargets(t *testing.T) {
 			mods = append(mods, conditionModifiers(id)...)
 		}
 		vested := "vested"
-		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
+		e := resolveInWorld([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}}, nil)
 		// Mochila vazia: este caso é sobre condições, e a sobrecarga não entra.
 		return expertiseBreakdown(ch, reflexes, e, loadBreakdownOf(ch, 10)).ItemBonus
 	}
@@ -319,7 +319,7 @@ func TestCaidoDefenseIsDirectionalAndCumulative(t *testing.T) {
 			mods = append(mods, conditionModifiers(id)...)
 		}
 		vested := "vested"
-		e := ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}})
+		e := resolveInWorld([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}}, nil)
 		e.Flags = map[string]bool{}
 		return defenseBreakdown(Character{Level: 1, Dexterity: 0}, e)
 	}
@@ -384,7 +384,7 @@ func TestIndefesoAutoFailsReflexos(t *testing.T) {
 		for _, id := range ids {
 			mods = append(mods, conditionModifiers(id)...)
 		}
-		return ComputeItemEffects([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}}).Flags
+		return resolveInWorld([]ActiveItem{{Source: "Condições", Equipped: &vested, Modifiers: mods}}, nil).Flags
 	}
 
 	if !flagsFor("indefeso")[autoFailReflexosFlag] {

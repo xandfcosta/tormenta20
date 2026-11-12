@@ -16,8 +16,8 @@ import (
 //   - FIXO entra na pilha sempre — o +2 em Atletismo do Gatuno;
 //   - SITUACIONAL vira um interruptor que o jogador liga, porque só a mesa sabe
 //     se a situação aconteceu — o +2 no subterrâneo do anão. O caso afirma que
-//     ele é OFERECIDO com o número do livro; que o ligado soma é o
-//     `ApplyActiveConditionals`, provado nos testes dele.
+//     ele é OFERECIDO com o número do livro; que o ligado soma é da resolução,
+//     provado no `TestASwitchedOnConditionalCountsAndStaysOffered`.
 type numberOnlyCase struct {
 	name     string
 	ch       Character
@@ -155,7 +155,7 @@ func TestTheNumberOnlyAbilitiesAddWhatTheBookSays(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		effects := ComputeItemEffects(world.ActiveItemsFor(c.ch))
+		effects := resolveInWorld(world.ActiveItemsFor(c.ch), nil)
 		for _, want := range c.fixed {
 			if got := StatFor(effects, want.target).Total; got != want.amount {
 				t.Errorf("%s: %s soma %+d, e o livro dá %+d", c.name, targetKey(want.target), got, want.amount)

@@ -36,7 +36,7 @@ func axeOfTheWilds() []Modifier {
 }
 
 func TestTheDiceOfASwitchedOnConditionalOnlyCountsWhenOn(t *testing.T) {
-	base := ComputeItemEffects(wornItemWith(axeOfTheWilds()))
+	base := resolveInWorld(wornItemWith(axeOfTheWilds()), nil)
 
 	// DESLIGADO é o controle, e é a metade que estava quebrada: sem ela, um
 	// dado que vale SEMPRE passaria no caso de baixo sem ninguém notar.
@@ -47,7 +47,7 @@ func TestTheDiceOfASwitchedOnConditionalOnlyCountsWhenOn(t *testing.T) {
 		t.Fatalf("o dado condicional não saiu para o opt-in: %d linhas", len(base.Conditional))
 	}
 
-	ligado := ApplyActiveConditionals(base, map[string]bool{base.Conditional[0].Term: true})
+	ligado := resolveInWorld(wornItemWith(axeOfTheWilds()), map[string]bool{base.Conditional[0].Term: true})
 	if len(ligado.ExtraDamage) != 1 {
 		t.Fatalf("o terreno ligado não trouxe o dado: %+v", ligado.ExtraDamage)
 	}
@@ -68,7 +68,7 @@ func TestTheUnconditionalDiceStillReachesTheCard(t *testing.T) {
 		BonusType: "enchantment",
 		Condition: &ModifierCondition{C: "wielded"},
 	}}
-	effects := ComputeItemEffects(wornItemWith(flaming))
+	effects := resolveInWorld(wornItemWith(flaming), nil)
 	if len(effects.ExtraDamage) != 1 {
 		t.Fatalf("o dado SEM condição parou de descer: %+v", effects.ExtraDamage)
 	}
@@ -79,8 +79,8 @@ func TestTheUnconditionalDiceStillReachesTheCard(t *testing.T) {
 
 // E LIGAR QUALQUER CONDICIONAL NÃO PODE APAGAR O DADO DE OUTRO ENCANTO.
 //
-// O `ApplyActiveConditionals` remonta o `ItemEffects` no `return` e não
-// repassava `ExtraDamage`, `Announced` nem `CriticalBonus`. Com NENHUM
+// A segunda passada que encaixava os ligados (que não existe mais) remontava o
+// `ItemEffects` no `return` e não repassava `ExtraDamage`, `Announced` nem `CriticalBonus`. Com NENHUM
 // condicional ligado ele devolve `effects` intacto, então o defeito só aparece
 // quando a pessoa liga alguma coisa — e aí o +1d6 de fogo da Flamejante some da
 // carta da arma sem nada acusar.
@@ -105,7 +105,7 @@ func TestSwitchingSomethingOnDoesNotEraseAnotherEnchantsDice(t *testing.T) {
 		}}},
 		{SourceID: "torre", Source: "Torre", Equipped: &wielded, Modifiers: stoppedByTheTower()},
 	}
-	base := ComputeItemEffects(items)
+	base := resolveInWorld(items, nil)
 	// O DENOMINADOR do arranjo: sem as três parcelas presentes ANTES, as
 	// asserções de baixo comparam zero com zero e passam sobre nada.
 	if len(base.ExtraDamage) != 1 || len(base.Announced) != 1 || len(base.CriticalBonus) != 1 {
@@ -113,7 +113,7 @@ func TestSwitchingSomethingOnDoesNotEraseAnotherEnchantsDice(t *testing.T) {
 			base.ExtraDamage, base.Announced, base.CriticalBonus)
 	}
 
-	ligado := ApplyActiveConditionals(base, map[string]bool{FlagGroupID("postura-torre"): true})
+	ligado := resolveInWorld(items, map[string]bool{FlagGroupID("postura-torre"): true})
 	if len(ligado.ExtraDamage) != 1 {
 		t.Errorf("ligar a postura apagou o dado da Flamejante: %+v", ligado.ExtraDamage)
 	}
@@ -226,7 +226,7 @@ func TestTheWeaponCardOnlyGetsTheDiceWithTheTerrainOn(t *testing.T) {
 	// A CHAVE vem do próprio opt-in, e não escrita à mão: o `TermID` é um
 	// endereço composto, e transcrevê-lo aqui seria derivar o esperado da
 	// implementação com um passo a mais.
-	efeitos := ComputeItemEffects(regra.ActiveItemsFor(ch))
+	efeitos := resolveInWorld(regra.ActiveItemsFor(ch), nil)
 	if len(efeitos.Conditional) != 1 {
 		t.Fatalf("o Machado não ofereceu o opt-in do terreno: %d", len(efeitos.Conditional))
 	}
