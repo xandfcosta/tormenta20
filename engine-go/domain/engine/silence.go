@@ -50,7 +50,7 @@ type Silence struct {
 
 // TermID é o endereço estável de um termo dentro de uma fonte.
 //
-// @example engine.TermID("medalhao-de-prata", mod) // "medalhao-de-prata::pmLimit::::wielded"
+// @example engine.TermID("medalhao-de-prata", mod) // "medalhao-de-prata::pmCost:pessoal::::wielded"
 func TermID(sourceID string, m Modifier) string {
 	address := []string{
 		sourceID, targetKey(m.Target), scaleAddress(m.Scale), conditionAddress(m.Condition),

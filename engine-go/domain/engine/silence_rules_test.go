@@ -175,8 +175,8 @@ func TestSilencingOneTermLeavesTheOthersOfTheSameSource(t *testing.T) {
 	if len(depois) != 1 {
 		t.Fatalf("depois do silêncio sobraram %d termos e esperava 1: %v", len(depois), depois)
 	}
-	if depois[0] != "pmLimit" {
-		t.Errorf("sobrou %q e o que tinha de sobrar é o `pmLimit` do LIVRO — o silêncio comeu o irmão errado",
+	if depois[0] != "pmCost:pessoal" {
+		t.Errorf("sobrou %q e o que tinha de sobrar é o corte de custo do LIVRO — o silêncio comeu o irmão errado",
 			depois[0])
 	}
 }

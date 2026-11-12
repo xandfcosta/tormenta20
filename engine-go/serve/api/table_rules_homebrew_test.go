@@ -7,10 +7,24 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"t20engine/domain/sheet"
 )
 
 // O HOMEBREW QUE SAIU DO CÓDIGO volta como duas regras da mesa, criadas DESLIGADAS pela migração nas
 // campanhas que têm ficha com o medalhão de prata ou com a Equilibrada. O mestre as liga.
+
+// medallionCutOf é quanto o medalhão corta do custo das magias pessoais (p160): o instrumento que diz se o
+// bônus de empunhar dele vale.
+func medallionCutOf(t *testing.T, f sceneFixture, id int64) int {
+	t.Helper()
+	dto, ec := loadedCharacter(t, f, id)
+	cut := 0
+	for _, c := range dto.Ruleset.PmCostCutsFor(ec, sheet.ToStringSet(dto.Conditionals), "pessoal") {
+		cut -= c.Amount
+	}
+	return cut
+}
 
 func runsTheHomebrewMigration(t *testing.T, f sceneFixture) {
 	t.Helper()
@@ -35,7 +49,7 @@ func TestTheHomebrewComesBackAsTwoRulesThatStartOff(t *testing.T) {
 	}
 	other := seedCampaign(t, f.s, f.gm)
 
-	plainLimit, plainAttack := pmLimitOf(t, f, id), attackByWeapon(t, f, id)["Machado táurico"]
+	plainCut, plainAttack := medallionCutOf(t, f, id), attackByWeapon(t, f, id)["Machado táurico"]
 	runsTheHomebrewMigration(t, f)
 
 	var total, enabled, elsewhere int
@@ -52,15 +66,15 @@ func TestTheHomebrewComesBackAsTwoRulesThatStartOff(t *testing.T) {
 	if elsewhere != 0 {
 		t.Errorf("a campanha sem medalhão nem Equilibrada ganhou %d regras", elsewhere)
 	}
-	if got := pmLimitOf(t, f, id); got != plainLimit {
-		t.Errorf("desligada, a regra do medalhão mudou o limite de PM: de %d a %d", plainLimit, got)
+	if got := medallionCutOf(t, f, id); got != plainCut {
+		t.Errorf("desligada, a regra do medalhão mudou o corte de custo: de %d a %d", plainCut, got)
 	}
 
 	if _, err := f.s.db.ExecContext(context.Background(), "UPDATE campaign_rules SET enabled = 1"); err != nil {
 		t.Fatal(err)
 	}
-	if got := pmLimitOf(t, f, id); got != plainLimit+1 {
-		t.Errorf("ligada, a regra devolve ao medalhão vestido o +1 de empunhar: de %d a %d", plainLimit, got)
+	if got := medallionCutOf(t, f, id); got != plainCut+1 {
+		t.Errorf("ligada, a regra devolve ao medalhão vestido o -1 PM de empunhar: de %d a %d", plainCut, got)
 	}
 	if got := attackByWeapon(t, f, id)["Machado táurico"]; got != plainAttack+2 {
 		t.Errorf("ligada, a Equilibrada anula a desbalanceada: o machado foi de %+d a %+d", plainAttack, got)
@@ -72,7 +86,7 @@ func TestWithoutTheRuleTheMedallionIsTheBooks(t *testing.T) {
 	f, id := fighterFixture(t)
 	inCampaign(t, f, id)
 	medal := itemSemeia(t, f, id, "medalhao-de-prata", "Medalhão de prata", "")
-	base := pmLimitOf(t, f, id)
+	base := medallionCutOf(t, f, id)
 	if _, err := f.s.db.ExecContext(context.Background(), "UPDATE character_items SET equipped = 'vested' WHERE id = ?", medal); err != nil {
 		t.Fatal(err)
 	}
@@ -80,8 +94,8 @@ func TestWithoutTheRuleTheMedallionIsTheBooks(t *testing.T) {
 		"INSERT INTO character_conditionals (characterId, conditionalId) VALUES (?, 'flag:homebrew-vestido-medalhao-de-prata')", id); err != nil {
 		t.Fatal(err)
 	}
-	if got := pmLimitOf(t, f, id); got != base {
-		t.Errorf("sem regra, o medalhão vestido deu o bônus de empunhar: de %d a %d", base, got)
+	if got := medallionCutOf(t, f, id); got != base {
+		t.Errorf("sem regra, o medalhão vestido deu o corte de empunhar: de %d a %d", base, got)
 	}
 	vest := fmt.Sprintf("/personagens/%d/itens/%d/equipa/vested?tab=bag", id, medal)
 	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, vest, "").Body.String()); refusal == "" {

@@ -206,10 +206,10 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmLimit"},
-				Amount:    1,
-				BonusType: "enhancement",
-				Note:      "+1 limite de PM em magias de alcance pessoal",
+				Target:    ModifierTarget{Kind: "pmCost", Scope: "pessoal"},
+				Amount:    -1,
+				BonusType: "untyped",
+				Note:      "-1 PM em magias de alcance pessoal",
 				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 		},

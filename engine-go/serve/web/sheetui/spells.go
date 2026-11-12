@@ -94,6 +94,8 @@ type learnedSpellRow struct {
 	// CostCut avisa que este custo vai sair cortado, e por quem — ver
 	// `costCutNote`. Vazio quando nada corta.
 	CostCut string
+	// RangeCut é quem corta o custo das magias deste alcance — o medalhão de prata nas pessoais (p160).
+	RangeCut string
 	// FocusCut diz que o Foco em Magia tira 1 PM desta magia — ver
 	// `spellFocusNote`. Vazio quando ela não foi escolhida.
 	FocusCut string
@@ -179,6 +181,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Command:  learned.CatalogSpellID,
 			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
+			RangeCut: rangeCutNote(dto, fromBook.Range),
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {

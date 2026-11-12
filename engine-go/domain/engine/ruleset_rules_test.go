@@ -47,7 +47,7 @@ func TestTheCampaignAmendmentAddsToTheBookEntryWithoutReplacingIt(t *testing.T) 
 		t.Fatalf("o item emendado tem %d modificadores, esperava 2 (o do livro + o da mesa): %+v",
 			len(emendado.Modifiers), emendado.Modifiers)
 	}
-	if emendado.Modifiers[0].Target.K != "pmLimit" {
+	if emendado.Modifiers[0].Target.K != "pmCost" {
 		t.Fatalf("o modificador do LIVRO não veio primeiro: %+v", emendado.Modifiers[0])
 	}
 	if emendado.Modifiers[1].Target.Name != "Luta" {

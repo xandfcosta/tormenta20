@@ -44,6 +44,8 @@ type Spell struct {
 	// seguia um segundo campo, escrito à mão e em inglês, que divergia em oito
 	// (ALE-365). Quem a traduz em duração de efeito é o `engine.EffectScope`.
 	Duration string `json:"duration"`
+	// Range é o alcance do livro (p172): o medalhão de prata corta o custo das de alcance "pessoal" (p160).
+	Range string `json:"range"`
 	// DurationNote é a MEDIDA da definida, que o livro imprime em prosa no
 	// verbete: "Definida. A duração pode ser medida em rodadas, horas, dias ou
 	// outra unidade de tempo" (p227) nomeia a espécie e deixa o número para a

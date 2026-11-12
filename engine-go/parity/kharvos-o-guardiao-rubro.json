@@ -484,14 +484,15 @@
       "modifiers": [
         {
           "target": {
-            "k": "pmLimit"
+            "k": "pmCost",
+            "scope": "pessoal"
           },
-          "amount": 1,
-          "bonusType": "enhancement",
+          "amount": -1,
+          "bonusType": "untyped",
           "condition": {
             "c": "wielded"
           },
-          "note": "+1 limite de PM em magias de alcance pessoal"
+          "note": "-1 PM em magias de alcance pessoal"
         },
         {
           "target": {
