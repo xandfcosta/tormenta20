@@ -126,14 +126,14 @@ var itemsPart05 = []Item{
 		Hands:    2,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmLimit"},
+				Target:    ModifierTarget{Kind: "pmLimit", Scope: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 limite de PM em magias arcanas",
 				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 			{
-				Target:    ModifierTarget{Kind: "spellDC"},
+				Target:    ModifierTarget{Kind: "spellDC", Scope: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 CD para resistir (arcanas)",
@@ -227,10 +227,10 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmLimit"},
+				Target:    ModifierTarget{Kind: "pmLimit", Scope: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
-				Note:      "+1 limite de PM em magias arcanas pessoais",
+				Note:      "+1 limite de PM em magias arcanas",
 				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 		},
@@ -248,10 +248,10 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "spellDC"},
+				Target:    ModifierTarget{Kind: "spellDC", Scope: "arcana"},
 				Amount:    2,
 				BonusType: "enhancement",
-				Note:      "+2 CD em uma escola de magia escolhida",
+				Note:      "+2 CD nas magias arcanas de uma escola escolhida",
 				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 		},
@@ -269,7 +269,7 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "spellDC"},
+				Target:    ModifierTarget{Kind: "spellDC", Scope: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 CD para resistir (arcanas)",

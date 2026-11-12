@@ -121,25 +121,26 @@ func addsAttributeToDamage(card engine.WeaponCard) bool {
 }
 
 // pmLimitRows é o teto de PM por magia.
-func pmLimitRows(sheet engine.ComputedSheet) []breakdownRow {
+func pmLimitRows(sheet engine.ComputedSheet, tradition string) []breakdownRow {
 	rows := []breakdownRow{{Label: "Nível de conjurador", Value: book.WithSign(sheet.PmLimit.Base)}}
-	return append(rows, rowsFromContributions(sheet.PmLimit.Contributions)...)
+	return append(rows, rowsFromContributions(sheet.SpellBonusFor("pmLimit", tradition).Contributions)...)
 }
 
 // spellDcRows é a CD das magias.
 //
 // A base vem do MOTOR — nível mais atributo-chave já resolvido —, e não de uma
 // releitura do atributo cru: lido cru, o conjurador Osteon saía 1 abaixo.
-func spellDcRows(sheet engine.ComputedSheet) []breakdownRow {
+func spellDcRows(sheet engine.ComputedSheet, tradition string) []breakdownRow {
 	base := 0
 	if sheet.BestBaseSpellCd != nil {
 		base = *sheet.BestBaseSpellCd
 	}
 	rows := []breakdownRow{{Label: "CD base (nível + atributo-chave)", Value: book.WithSign(base)}}
-	if sheet.SpellDCBonus.Total == 0 {
+	bonus := sheet.SpellBonusFor("spellDC", tradition)
+	if bonus.Total == 0 {
 		return append(rows, breakdownRow{Label: "Sem bônus de itens", Value: "+0", Muted: true})
 	}
-	return append(rows, rowsFromContributions(sheet.SpellDCBonus.Contributions)...)
+	return append(rows, rowsFromContributions(bonus.Contributions)...)
 }
 
 // pmCostRows é o que desconta (ou encarece) o custo de uma magia.

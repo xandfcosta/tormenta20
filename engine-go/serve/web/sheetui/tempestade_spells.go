@@ -24,11 +24,11 @@ type spellCasting struct {
 	Attribute string
 }
 
-func spellCastingOf(computed engine.ComputedSheet) spellCasting {
+func spellCastingOf(computed engine.ComputedSheet, tradition string) spellCasting {
 	if !isCaster(computed) {
 		return spellCasting{}
 	}
-	return spellCasting{CD: spellDcTotal(computed), Attribute: book.AttributeLabel(computed.BestSpellAttribute)}
+	return spellCasting{CD: spellDcTotal(computed, tradition), Attribute: book.AttributeLabel(computed.BestSpellAttribute)}
 }
 
 // spellCircleGroup é um círculo do grimório, já filtrado pela busca.

@@ -141,7 +141,7 @@ func (p Plays) Cast(
 	tradition := sheet.SpellTradition(dto.Classes, casting)
 	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, tradition, catalogSpellID)
 	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, tradition, catalogSpellID)
-	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting)
+	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting, tradition)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}

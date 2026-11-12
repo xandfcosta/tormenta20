@@ -205,7 +205,7 @@ func panelForCombat(sheet engine.ComputedSheet, cards []engine.WeaponCard, caste
 		Attributes:  attributeTiles(sheet, dto),
 		ShowWeapons: len(cards) > 0 || !caster,
 		Weapons:     weaponTiles(cards),
-		MagicTiles:  magicTiles(sheet, caster),
+		MagicTiles:  magicTiles(sheet, caster, mainTradition(dto)),
 	}
 }
 
@@ -374,29 +374,40 @@ func attributeTiles(computed engine.ComputedSheet, dto sheet.CharacterDTO) []att
 	return tiles
 }
 
-// magicTiles é a tripla do conjurador, ou nada.
-func magicTiles(sheet engine.ComputedSheet, caster bool) []statTile {
+// magicTiles é a tripla do conjurador, ou nada. A tradição é a da classe conjuradora principal
+// (`mainTradition`): o bônus que vale só numa lista entra na caixa dela.
+func magicTiles(sheet engine.ComputedSheet, caster bool, tradition string) []statTile {
 	if !caster {
 		return nil
 	}
 	return []statTile{
 		{Key: "pm-limit", Label: "Limite PM", Title: "Limite de PM por magia", Icon: "Zap",
-			Value: strconv.Itoa(sheet.PmLimit.Total), Rows: pmLimitRows(sheet)},
+			Value: strconv.Itoa(sheet.PmLimit.Total + sheet.PmLimitByTradition[tradition].Total), Rows: pmLimitRows(sheet, tradition)},
 		{Key: "spell-dc", Label: "CD Magia", Title: "CD dos testes de resistência das suas magias",
-			Icon: "Sparkles", Value: strconv.Itoa(spellDcTotal(sheet)), Rows: spellDcRows(sheet)},
+			Icon: "Sparkles", Value: strconv.Itoa(spellDcTotal(sheet, tradition)), Rows: spellDcRows(sheet, tradition)},
 		{Key: "pm-cost", Label: "Custo PM", Title: "Modificador de custo de PM", Icon: "Sparkles",
 			Value: book.WithSign(sheet.PmCostMod.Total), Rows: pmCostRows(sheet)},
 	}
 }
 
 // spellDcTotal é a CD que a mesa anuncia: a base do motor mais o que os itens
-// somam.
-func spellDcTotal(sheet engine.ComputedSheet) int {
+// somam, com o que vale só na tradição dada.
+func spellDcTotal(sheet engine.ComputedSheet, tradition string) int {
 	base := 0
 	if sheet.BestBaseSpellCd != nil {
 		base = *sheet.BestBaseSpellCd
 	}
-	return base + sheet.SpellDCBonus.Total
+	return base + sheet.SpellBonusFor("spellDC", tradition).Total
+}
+
+// mainTradition é a tradição da classe conjuradora de maior nível: a que as caixas de CD e de limite de PM
+// do Combate e a linha de CD da aba Magias resumem.
+func mainTradition(dto sheet.CharacterDTO) string {
+	names := make([]string, 0, len(dto.Classes))
+	for _, class := range dto.Classes {
+		names = append(names, class.ClassName)
+	}
+	return sheet.SpellTradition(dto.Classes, names)
 }
 
 // weaponOtherUseTile são as duas contas do outro uso da arma, dentro da linha dela.

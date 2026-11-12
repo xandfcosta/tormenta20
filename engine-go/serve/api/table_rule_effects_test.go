@@ -18,11 +18,13 @@ import (
 
 const wieldedMedallion = `{"kind":"wielded","target":{"k":""},"amount":0}`
 
-// pmLimitOf é o limite de PM com os interruptores que a ficha tem ligados.
+// pmLimitOf é o limite de PM das magias ARCANAS com os interruptores que a ficha tem ligados: o cajado que
+// estes testes usam como instrumento sobe o limite só delas (p160).
 func pmLimitOf(t *testing.T, f sceneFixture, id int64) int {
 	t.Helper()
 	dto, ec := loadedCharacter(t, f, id)
-	return dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals)).PmLimit.Total
+	computed := dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals))
+	return computed.PmLimit.Total + computed.PmLimitByTradition["arcana"].Total
 }
 
 // O medalhão vestido, com a regra, guarda o bônus de empunhar. Sem a regra, vestido não dá nada.

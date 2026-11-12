@@ -100,7 +100,7 @@ func TestUnlimitedMagicAddsTheKeyAttributeToThePmLimit(t *testing.T) {
 	if got := world.ComputeSheet(hero, nil).PmLimit.Total; got != 9 {
 		t.Errorf("a ficha diz limite %d, e o livro dá 9", got)
 	}
-	if got := world.SpellPmLimitFor(hero, nil, []string{"Clérigo"}); got != 9 {
+	if got := world.SpellPmLimitFor(hero, nil, []string{"Clérigo"}, "divina"); got != 9 {
 		t.Errorf("o conjurar aceita até %d, e o livro dá 9", got)
 	}
 }
@@ -125,7 +125,7 @@ func TestTheRitualSwitchDoublesThePmLimit(t *testing.T) {
 	if sum != sheet.PmLimit.Total {
 		t.Errorf("as parcelas somam %d, e o total é %d", sum, sheet.PmLimit.Total)
 	}
-	if got := world.SpellPmLimitFor(hero, on, []string{"Clérigo"}); got != 16 {
+	if got := world.SpellPmLimitFor(hero, on, []string{"Clérigo"}, "divina"); got != 16 {
 		t.Errorf("como ritual, o conjurar aceita até %d", got)
 	}
 }

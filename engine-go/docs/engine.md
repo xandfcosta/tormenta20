@@ -458,6 +458,14 @@ do multiclasse paga cheio a divina. Quem diz a lista é a `sheet.SpellTradition`
 porque **a tradição é da CLASSE, não da magia**: a Luz é arcana no arcanista e
 divina no clérigo.
 
+**O bônus de CD e de limite de PM também tem escopo**: os esotéricos arcanos valem
+"em magias arcanas" (p160), pelas chaves `spellDC:arcana` e `pmLimit:arcana`. A
+ficha guarda o geral (`SpellDCBonus`, `PmLimit`) e o de cada tradição à parte
+(`SpellDCByTradition`, `PmLimitByTradition`), e quem junta os dois é o
+`ComputedSheet.SpellBonusFor`, com a tradição da magia. As caixas do Combate e a
+linha de CD da aba Magias usam a da classe conjuradora de maior nível. Somados
+numa chave só, a varinha arcana subia a CD do druida.
+
 > **A ISENÇÃO não é terceira forma do fator — é FLAG.** O anão "não tem o
 > deslocamento reduzido por uso de armadura ou excesso de carga" (p20): o
 > `displacementBreakdown` lê `DisplacementIgnoresArmor` e
