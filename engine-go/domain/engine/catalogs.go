@@ -38,6 +38,8 @@ type CatalogItem struct {
 	SkillTies []SkillTie `json:"skillTies,omitempty"`
 	// Boost é o gasto de PM no golpe que o encanto oferece (p335-336) — ver `enchant_boost.go`.
 	Boost *ItemBoost `json:"boost,omitempty"`
+	// Esoteric é o esotérico (p159-160), que a Magia Natural deixa na mão da forma — ver `HeldInTheShape`.
+	Esoteric bool `json:"esoteric,omitempty"`
 }
 
 // Item devolve o item do catálogo pelo id, ou nulo quando ele não existe — é o

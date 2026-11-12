@@ -200,13 +200,15 @@ var classPowersPart08 = []ClassPower{
 		Unmodeled: "o alcance da magia um passo acima ao ar livre: é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 	},
 	{
-		ID:            "class.druida.magia-natural",
+		ID: "class.druida.magia-natural",
+		Modeled: []string{
+			"na forma, conjura e mantém o esotérico na mão; o catalisador se gasta da Mochila e não é empunhado",
+		},
 		ClassName:     "Druida",
 		Name:          "Magia Natural",
 		Description:   "Em forma selvagem pode lançar magias e empunhar catalisadores/esotéricos.",
 		BookPage:      62,
 		UID:           "pwr_r3nuk27235",
-		Unmodeled:     "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.druida.forma-selvagem"}},
 	},
 	{

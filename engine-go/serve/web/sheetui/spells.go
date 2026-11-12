@@ -9,6 +9,7 @@ import (
 	"t20engine/app/character"
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 )
@@ -49,11 +50,14 @@ type spellbookPanel struct {
 	CastableCircle int
 	PmCurrent      int64
 	// Ritual diz que a próxima magia é ritual, e o diálogo escreve a conta dele (p131).
-	Ritual  bool
-	Search  string
-	Circle  string
-	School  string
-	Schools []filterOption
+	Ritual bool
+	// ShapeSilence é a frase da forma que não conjura (p62), vazia fora dela ou com a Magia Natural: o
+	// Conjurar fica desabilitado, e o servidor recusa de todo jeito (`character.Plays.Cast`).
+	ShapeSilence string
+	Search       string
+	Circle       string
+	School       string
+	Schools      []filterOption
 }
 
 type filterOption struct {
@@ -127,6 +131,9 @@ func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school s
 		School:         school,
 		Schools:        schoolOptions(school),
 		Granted:        grantedSpellRowsOf(dto),
+	}
+	if ec, err := sheet.EngineCharacterFrom(dto); err == nil && !engine.CastsInTheShape(ec) {
+		panel.ShapeSilence = character.ShapeSilence
 	}
 	panel.Learned = learnedSpellRowsOf(s, dto, panel.CastableCircle)
 	// Quem não conjura não aprende, e por isso não paga o catálogo: a lista

@@ -40,6 +40,9 @@ templ tempestadeSpells(v View) {
 		if v.SpellCasting.CD > 0 {
 			<p class="ds-help">CD <b>{ strconv.Itoa(v.SpellCasting.CD) }</b> · { v.SpellCasting.Attribute + " · " + aprendidasEscrito(len(v.Spells.Learned)) }</p>
 		}
+		if v.Spells.ShapeSilence != "" {
+			<p class="ds-help">{ v.Spells.ShapeSilence }</p>
+		}
 		if len(v.Spells.Learned) == 0 && len(v.Spells.Granted) == 0 {
 			if v.Spells.IsCaster {
 				@ds.Empty("Nenhuma magia aprendida", "Use Aprender para escolher no livro.")
@@ -89,7 +92,11 @@ templ tempestadeSpells(v View) {
 // castGesture é o Conjurar da linha: abre a folha quando há aprimoramento a
 // escolher, e conjura direto quando não há.
 templ castGesture(v View, spell learnedSpellRow) {
-	if castOpensSheet(spell) {
+	if v.Spells.ShapeSilence != "" {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "disabled": true, "title": v.Spells.ShapeSilence}) {
+			Conjurar
+		}
+	} else if castOpensSheet(spell) {
 		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "commandfor": spellSheetID(spell), "command": "show-modal", "aria-haspopup": "dialog"}) {
 			Conjurar
 		}
@@ -135,7 +142,7 @@ templ spellSheetFootBody(v View, spell learnedSpellRow) {
 	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "aria-label": "Esquecer " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/esquece/"+spell.Command)}) {
 		Esquecer
 	}
-	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command)}) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command), "disabled": v.Spells.ShapeSilence != ""}) {
 		<span data-text={ "'Conjurar · ' + " + costPreview(spell) }>Conjurar</span>
 	}
 }

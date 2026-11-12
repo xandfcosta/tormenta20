@@ -74,6 +74,9 @@ func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpe
 	return fmt.Errorf("a magia %q não está no grimório", catalogSpellID)
 }
 
+// ShapeSilence é a recusa e o aviso da forma que não conjura (p62), uma frase para a tela e o servidor.
+const ShapeSilence = "na Forma Selvagem você não lança magias (p62); a Magia Natural libera"
+
 // Cast é a conjuração INTEIRA: as recusas do livro, o custo em PM e a baixa.
 //
 // Ela nasceu extraída na ALE-272 (fatia 6), quando a ficha em Datastar passou a
@@ -111,6 +114,9 @@ func (p Plays) Cast(
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return err
+	}
+	if !engine.CastsInTheShape(ec) {
+		return fmt.Errorf("%s", ShapeSilence)
 	}
 	basePm := sheet.SpellBasePmCost[spell.Circle]
 	// O TRUQUE zera a conjuração INTEIRA e não só a parte dele: "reduz seu custo

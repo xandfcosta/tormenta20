@@ -1,34 +1,36 @@
 package transcript
 
 type Item struct {
-	ID           string           `json:"id"`
-	Name         string           `json:"name"`
-	Category     string           `json:"category"`
-	Price        float64          `json:"price,omitempty"`
-	Slots        float64          `json:"slots,omitempty"`
-	Equip        string           `json:"equip,omitempty"`
-	Hands        int              `json:"hands,omitempty"`
-	Weapon       *WeaponStats     `json:"weapon,omitempty"`
-	Modifiers    []Modifier       `json:"modifiers"`
-	BookPage     int              `json:"bookPage,omitempty"`
-	UID          string           `json:"uid"`
-	Armor        *ArmorStats      `json:"armor,omitempty"`
-	Shield       *ArmorStats      `json:"shield,omitempty"`
-	Consumable   *Consumable      `json:"consumable,omitempty"`
-	AppliesTo    []string         `json:"appliesTo,omitempty"`
-	PriceByItem  *PriceByItem     `json:"priceByItem,omitempty"`
-	Description  string           `json:"description,omitempty"`
-	Modeled      []string         `json:"modeled,omitempty"`
-	Unmodeled    *ItemUnmodeled   `json:"unmodeled,omitempty"`
-	RollMin      int              `json:"rollMin,omitempty"`
-	RollMax      int              `json:"rollMax,omitempty"`
-	CountsAs     int              `json:"countsAs,omitempty"`
-	Requires     string           `json:"requires,omitempty"`
-	ComposedOf   *ItemComposition `json:"composedOf,omitempty"`
-	Artifact     bool             `json:"artifact,omitempty"`
-	SkillTies    []SkillTie       `json:"skillTies,omitempty"`
-	PowerChanges []PowerChange    `json:"powerChanges,omitempty"`
-	Boost        *ItemBoost       `json:"boost,omitempty"`
+	ID          string           `json:"id"`
+	Name        string           `json:"name"`
+	Category    string           `json:"category"`
+	Price       float64          `json:"price,omitempty"`
+	Slots       float64          `json:"slots,omitempty"`
+	Equip       string           `json:"equip,omitempty"`
+	Hands       int              `json:"hands,omitempty"`
+	Weapon      *WeaponStats     `json:"weapon,omitempty"`
+	Modifiers   []Modifier       `json:"modifiers"`
+	BookPage    int              `json:"bookPage,omitempty"`
+	UID         string           `json:"uid"`
+	Armor       *ArmorStats      `json:"armor,omitempty"`
+	Shield      *ArmorStats      `json:"shield,omitempty"`
+	Consumable  *Consumable      `json:"consumable,omitempty"`
+	AppliesTo   []string         `json:"appliesTo,omitempty"`
+	PriceByItem *PriceByItem     `json:"priceByItem,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Modeled     []string         `json:"modeled,omitempty"`
+	Unmodeled   *ItemUnmodeled   `json:"unmodeled,omitempty"`
+	RollMin     int              `json:"rollMin,omitempty"`
+	RollMax     int              `json:"rollMax,omitempty"`
+	CountsAs    int              `json:"countsAs,omitempty"`
+	Requires    string           `json:"requires,omitempty"`
+	ComposedOf  *ItemComposition `json:"composedOf,omitempty"`
+	Artifact    bool             `json:"artifact,omitempty"`
+	// Esoteric é o ESOTÉRICO (p159-160): a Magia Natural o deixa na mão do druida em forma (p62).
+	Esoteric     bool          `json:"esoteric,omitempty"`
+	SkillTies    []SkillTie    `json:"skillTies,omitempty"`
+	PowerChanges []PowerChange `json:"powerChanges,omitempty"`
+	Boost        *ItemBoost    `json:"boost,omitempty"`
 }
 
 // ItemBoost é o gasto de PM no golpe que o ENCANTO oferece: "Uma vez por rodada, quando ataca, você pode

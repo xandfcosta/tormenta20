@@ -114,6 +114,7 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  159,
 		UID:       "itm_rrlpsonida",
+		Esoteric:  true,
 	},
 	{
 		ID:       "cajado-arcano",
@@ -141,6 +142,7 @@ var itemsPart05 = []Item{
 		},
 		BookPage: 160,
 		UID:      "itm_mcsr75bfmg",
+		Esoteric: true,
 	},
 	{
 		ID:        "cetro-elemental",
@@ -153,6 +155,7 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  160,
 		UID:       "itm_balcr4rrvt",
+		Esoteric:  true,
 	},
 	{
 		ID:        "costela-de-lich",
@@ -165,6 +168,7 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  160,
 		UID:       "itm_tiqce5kjuc",
+		Esoteric:  true,
 	},
 	{
 		ID:        "dedo-de-ente",
@@ -177,6 +181,7 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  160,
 		UID:       "itm_j3jgdzz3bf",
+		Esoteric:  true,
 	},
 	{
 		ID:        "luva-de-ferro",
@@ -189,6 +194,7 @@ var itemsPart05 = []Item{
 		Modifiers: []Modifier{},
 		BookPage:  160,
 		UID:       "itm_ceruofr4w6",
+		Esoteric:  true,
 	},
 	{
 		ID:       "medalhao-de-prata",
@@ -209,6 +215,7 @@ var itemsPart05 = []Item{
 		},
 		BookPage: 160,
 		UID:      "itm_nmiveasi7z",
+		Esoteric: true,
 	},
 	{
 		ID:       "orbe-cristalino",
@@ -229,6 +236,7 @@ var itemsPart05 = []Item{
 		},
 		BookPage: 160,
 		UID:      "itm_desko6aqdv",
+		Esoteric: true,
 	},
 	{
 		ID:       "tomo-hermetico",
@@ -249,6 +257,7 @@ var itemsPart05 = []Item{
 		},
 		BookPage: 160,
 		UID:      "itm_6t5kgx747m",
+		Esoteric: true,
 	},
 	{
 		ID:       "varinha-arcana",
@@ -269,5 +278,6 @@ var itemsPart05 = []Item{
 		},
 		BookPage: 160,
 		UID:      "itm_vjcor3tbmz",
+		Esoteric: true,
 	},
 }

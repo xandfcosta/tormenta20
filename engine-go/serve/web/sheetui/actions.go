@@ -169,7 +169,11 @@ func actionsPanelFrom(
 	}
 	for _, spell := range spells.Learned {
 		cost := engine.ActionCost(spell.Execution)
-		byCost[cost] = append(byCost[cost], rowFromSpell(spell))
+		row := rowFromSpell(spell)
+		if spells.ShapeSilence != "" {
+			row.Can, row.Why = false, spells.ShapeSilence
+		}
+		byCost[cost] = append(byCost[cost], row)
 	}
 	for _, group := range groupOrder {
 		var rows []actionRow
