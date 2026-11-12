@@ -77,6 +77,9 @@ func TestNaturalMagicKeepsTheEsotericInHand(t *testing.T) {
 			if want := map[bool]int{true: 1, false: 2}[c.kept]; guarded != want {
 				t.Errorf("%d itens guardados pela forma, want %d (a adaga sempre; a varinha só sem a Magia Natural)", guarded, want)
 			}
+			if says := strings.Contains(bag, "nada se empunha"); says == c.kept {
+				t.Errorf("a linha das mãos diz \"nada se empunha\" = %v, e a varinha está na mão = %v", says, c.kept)
+			}
 		})
 	}
 }

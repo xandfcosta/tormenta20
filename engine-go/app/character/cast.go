@@ -75,7 +75,7 @@ func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpe
 }
 
 // ShapeSilence é a recusa e o aviso da forma que não conjura (p62), uma frase para a tela e o servidor.
-const ShapeSilence = "na Forma Selvagem você não lança magias (p62); a Magia Natural libera"
+const ShapeSilence = "Na Forma Selvagem você não lança magias (p62); a Magia Natural libera."
 
 // Cast é a conjuração INTEIRA: as recusas do livro, o custo em PM e a baixa.
 //

@@ -153,7 +153,11 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	panel.Hands, panel.HandsUsed = handPositionsOf(wielded, card)
 	panel.HandsFree = freePlaces(panel.HandsUsed, sheet.HandsLimit, "mão livre", "mãos livres")
 	if dto.WildShape != nil {
-		panel.Hands, panel.HandsFree = keptByTheWildShape(panel.Hands, heldInTheShape(dto)), "na Forma Selvagem, nada se empunha"
+		held := heldInTheShape(dto)
+		panel.Hands, panel.HandsFree = keptByTheWildShape(panel.Hands, held), "na Forma Selvagem, nada se empunha"
+		if len(held) > 0 {
+			panel.HandsFree = "na Forma Selvagem, só o esotérico fica na mão (Magia Natural, p62)"
+		}
 	}
 	panel.Vested, panel.VestedUsed = vestedPositionsOf(vested, card)
 	armable, naturalDamage := legsOfTheSheet(dto)
