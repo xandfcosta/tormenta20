@@ -24,7 +24,7 @@ func pmLimitOf(t *testing.T, f sceneFixture, id int64) int {
 	t.Helper()
 	dto, ec := loadedCharacter(t, f, id)
 	computed := dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals))
-	return computed.PmLimit.Total + computed.PmLimitByTradition["arcana"].Total
+	return computed.PmLimitFor(engine.SpellAt{Tradition: "arcana"}).Total
 }
 
 // O medalhão vestido, com a regra, guarda o bônus de empunhar. Sem a regra, vestido não dá nada.

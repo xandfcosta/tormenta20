@@ -87,14 +87,14 @@ var itemsPart16 = []Item{
 		Price:    180000,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmCost", Scope: "arcana"},
+				Target:    ModifierTarget{Kind: "pmCost", Tradition: "arcana"},
 				Amount:    -1,
 				BonusType: "untyped",
 				Note:      "–1 PM nas magias arcanas",
 				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 			{
-				Target:    ModifierTarget{Kind: "spellDC"},
+				Target:    ModifierTarget{Kind: "spellDC", Tradition: "arcana"},
 				Amount:    2,
 				BonusType: "untyped",
 				Note:      "+2 na CD para resistir",

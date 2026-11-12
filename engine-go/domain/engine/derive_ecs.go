@@ -54,9 +54,6 @@ type (
 		bestAttr    string
 		byAttribute map[string]int
 		dcBonus     TotalContribs
-		dcByList    map[string]TotalContribs
-		limitByList map[string]TotalContribs
-		dcBySchool  map[string]TotalContribs
 		costMod     TotalContribs
 	}
 	derivedCombat struct {
@@ -146,14 +143,11 @@ func deriveMagic(w *ecs.World) {
 	onSheet(w, func(e ecs.Entity, in sheetInput) {
 		bestAttr, bestBaseCd := bestSpellcasting(in.char, in.effects)
 		ecs.Set(w, e, derivedMagic{
-			pmLimit:     pmLimitBreakdown(in.char, in.effects),
+			pmLimit:     pmLimitBreakdown(in.char, in.effects, SpellAt{}),
 			bestBaseCd:  bestBaseCd,
 			bestAttr:    bestAttr,
 			byAttribute: spellCdByAttribute(in.char, in.effects),
 			dcBonus:     spellDCBonus(in.effects),
-			dcByList:    byTradition(in.effects, "spellDC"),
-			limitByList: byTradition(in.effects, "pmLimit"),
-			dcBySchool:  spellDCBySchool(in.effects),
 			costMod:     pmCostMod(in.effects),
 		})
 	})
@@ -187,7 +181,7 @@ func deriveExpertises(w *ecs.World) {
 // sheetFromWorld lê os componentes derivados e monta a ficha.
 func sheetFromWorld(w *ecs.World) ComputedSheet {
 	var out ComputedSheet
-	ecs.Each(w, func(e ecs.Entity, _ sheetInput) {
+	ecs.Each(w, func(e ecs.Entity, in sheetInput) {
 		load, _ := ecs.Get[derivedLoad](w, e)
 		attrs, _ := ecs.Get[derivedAttributes](w, e)
 		def, _ := ecs.Get[derivedDefense](w, e)
@@ -207,9 +201,6 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 			BestSpellAttribute:      magic.bestAttr,
 			SpellCdByAttribute:      magic.byAttribute,
 			SpellDCBonus:            magic.dcBonus,
-			SpellDCByTradition:      magic.dcByList,
-			PmLimitByTradition:      magic.limitByList,
-			SpellDCBySchool:         magic.dcBySchool,
 			PmCostMod:               magic.costMod,
 			AttackAll:               combat.attackAll,
 			DamageAll:               combat.damageAll,
@@ -218,6 +209,8 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 			TempHpFury:              combat.tempHpFury,
 			Expertises:              skills.rows,
 			AutoFailExpertises:      skills.autoFail,
+			char:                    in.char,
+			effects:                 in.effects,
 		}
 	})
 	return out

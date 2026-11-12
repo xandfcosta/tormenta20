@@ -126,14 +126,14 @@ var itemsPart05 = []Item{
 		Hands:    2,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmLimit", Scope: "arcana"},
+				Target:    ModifierTarget{Kind: "pmLimit", Tradition: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 limite de PM em magias arcanas",
 				Condition: &ModifierCondition{Kind: "wielded"},
 			},
 			{
-				Target:    ModifierTarget{Kind: "spellDC", Scope: "arcana"},
+				Target:    ModifierTarget{Kind: "spellDC", Tradition: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 CD para resistir (arcanas)",
@@ -206,7 +206,7 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmCost", Scope: "pessoal"},
+				Target:    ModifierTarget{Kind: "pmCost", Range: "pessoal"},
 				Amount:    -1,
 				BonusType: "untyped",
 				Note:      "-1 PM em magias de alcance pessoal",
@@ -227,7 +227,7 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmLimit", Scope: "arcana"},
+				Target:    ModifierTarget{Kind: "pmLimit", Tradition: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 limite de PM em magias arcanas",
@@ -248,7 +248,7 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:     ModifierTarget{Kind: "spellDC", Scope: "arcana"},
+				Target:     ModifierTarget{Kind: "spellDC", Tradition: "arcana"},
 				Amount:     2,
 				BonusType:  "enhancement",
 				Note:       "+2 CD nas magias arcanas de uma escola escolhida",
@@ -270,7 +270,7 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "spellDC", Scope: "arcana"},
+				Target:    ModifierTarget{Kind: "spellDC", Tradition: "arcana"},
 				Amount:    1,
 				BonusType: "enhancement",
 				Note:      "+1 CD para resistir (arcanas)",

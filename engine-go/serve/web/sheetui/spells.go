@@ -94,8 +94,9 @@ type learnedSpellRow struct {
 	// CostCut avisa que este custo vai sair cortado, e por quem — ver
 	// `costCutNote`. Vazio quando nada corta.
 	CostCut string
-	// RangeCut é quem corta o custo das magias deste alcance — o medalhão de prata nas pessoais (p160).
-	RangeCut string
+	// SpellCut é quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" do Combate já mostra:
+	// o medalhão de prata nas de alcance pessoal (p160).
+	SpellCut string
 	// FocusCut diz que o Foco em Magia tira 1 PM desta magia — ver
 	// `spellFocusNote`. Vazio quando ela não foi escolhida.
 	FocusCut string
@@ -159,20 +160,10 @@ func casterClassesOf(dto sheet.CharacterDTO) []string {
 
 // learnedSpellRowsOf é o grimório, por círculo e depois por nome.
 //
-// A FICHA É CALCULADA UMA VEZ para a lista inteira, e a nota de alcance uma vez por alcance: cada linha
-// refazia a ficha (com as cartas de arma) e a coleta inteira, e o grimório de um conjurador de nível alto
-// tem dezenas de magias.
+// A FICHA É CALCULADA UMA VEZ para a lista inteira, e cada linha pergunta a ela o que vale para a magia
+// (`ForSpell`): o grimório de um conjurador de nível alto tem dezenas de magias.
 func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow {
 	computed, computedOK := spellSheetOf(dto)
-	rangeNotes := map[string]string{}
-	rangeNote := func(spellRange string) string {
-		note, seen := rangeNotes[spellRange]
-		if !seen {
-			note = rangeCutNote(dto, spellRange)
-			rangeNotes[spellRange] = note
-		}
-		return note
-	}
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
 		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
@@ -180,11 +171,13 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow 
 			continue
 		}
 		fromBook := spellOfBook(learned.CatalogSpellID)
+		tradition := sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))
+		at := engine.SpellAt{Tradition: tradition, School: spell.School, Range: spell.Range, Spell: learned.CatalogSpellID}
 		rows = append(rows, learnedSpellRow{
 			ID: learned.CatalogSpellID, Name: fromBook.Name,
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
 			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
-			CD:        spellCdOf(dto, computed, computedOK, spell),
+			CD:        spellCdOf(dto, computed, computedOK, spell, at),
 			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, castable),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
@@ -193,9 +186,9 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow 
 			Resistance:      book.SpellResistanceWritten(fromBook),
 			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:  learned.CatalogSpellID,
-			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))),
+			CostCut:  costCutNote(dto, tradition),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
-			RangeCut: rangeNote(fromBook.Range),
+			SpellCut: onlyHereCutNote(computed, computedOK, at),
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {
@@ -212,9 +205,9 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow 
 //
 // Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
 // usa: uma segunda conta aqui daria dois números para a mesma pergunta. O bônus
-// é o mesmo que a caixa soma (`SpellBonusFor`), com a tradição da classe que lança: a varinha arcana
-// sobe a CD das arcanas e não a das divinas (p160).
-func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, spell catalog.Spell) string {
+// é o que alcança a magia (`ForSpell`), com a tradição da classe que lança: a varinha arcana
+// sobe a CD das arcanas e não a das divinas (p160), e o tomo hermético só a da escola dele.
+func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, spell catalog.Spell, at engine.SpellAt) string {
 	if !ok {
 		return "—"
 	}
@@ -224,7 +217,9 @@ func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, s
 		if !casts || !sheet.CastsTheSpell(dto, class.ClassName, spell.School, spell.Classes) {
 			continue
 		}
-		if cd := computed.SpellCdByAttribute[prog.Attribute] + computed.SpellDCFor(prog.List, spell.School).Total; cd > best {
+		byThisClass := at
+		byThisClass.Tradition = prog.List
+		if cd := computed.SpellCdByAttribute[prog.Attribute] + computed.ForSpell("spellDC", byThisClass).Total; cd > best {
 			best = cd
 		}
 	}

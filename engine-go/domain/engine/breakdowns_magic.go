@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"slices"
 	"sort"
 	"strings"
 )
@@ -71,11 +70,14 @@ func casterLevelForPmLimit(ch Character) int {
 // tile: the best level across the character's spellcasting classes. It is a
 // SUMMARY, not the cap for any given spell — for that, use SpellPmLimit below,
 // which asks which class grants THAT spell.
-func pmLimitBreakdown(ch Character, e ItemEffects) ValueBreakdown {
+//
+// O BÔNUS é o que alcança a magia `at` (`ForSpell`): o orbe cristalino sobe o limite das arcanas (p160).
+// A ficha o calcula com a magia vazia, que é o que vale para toda magia.
+func pmLimitBreakdown(ch Character, e ItemEffects, at SpellAt) ValueBreakdown {
 	base := max(1, casterLevelForPmLimit(ch))
-	stat := StatFor(e, ModifierTarget{K: "pmLimit"})
-	bonus := stat.Total
-	contributions := withNoteContribs(stat.Contributions)
+	reach := e.ForSpell("pmLimit", at)
+	bonus := reach.Total
+	contributions := reach.Contributions
 	// Magia Ilimitada: "soma seu atributo-chave no limite de PM" (p131).
 	if attribute, _ := bestSpellcasting(ch, e); attribute != "" && e.Flags["magia-ilimitada"] {
 		key := effectiveAttribute(ch, attribute, e)
@@ -143,85 +145,27 @@ func spellDCBonus(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "spellDC"})
 }
 
-// SpellTraditions são as duas listas de magia, arcana e divina (p170): o escopo com que um bônus de CD ou de
-// limite de PM vale só numa delas.
-var SpellTraditions = []string{"arcana", "divina"}
-
-// byTradition são os bônus de uma conta de magia (`spellDC`, `pmLimit`) que valem só numa tradição, sem
-// as vazias.
-func byTradition(e ItemEffects, kind string) map[string]TotalContribs {
-	out := map[string]TotalContribs{}
-	for _, tradition := range SpellTraditions {
-		if bonus := totalContribsFor(e, ModifierTarget{K: kind, Scope: tradition}); len(bonus.Contributions) > 0 {
-			out[tradition] = bonus
-		}
-	}
-	return out
-}
-
-// PmCostCutsFor são as reduções de custo que valem só nas magias deste alcance — o medalhão de prata nas
-// de alcance pessoal (p160) —, para a tela dizer quem corta o custo.
+// ForSpell é o que chega à magia `at` numa das três contas, com os efeitos com que a ficha foi calculada.
+// O mosaico da ficha pergunta só pela tradição da classe que conjura; a linha de cada magia, por ela
+// inteira.
 //
-//	world.PmCostCutsFor(ch, nil, "pessoal") // [{Medalhão de prata -1}]
-func (r *Ruleset) PmCostCutsFor(ch Character, conditionals map[string]bool, spellRange string) []BreakdownContribution {
-	if spellRange == "" {
-		return nil
-	}
-	return totalContribsFor(r.EffectsOf(ch, conditionals), ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions
+//	sheet.ForSpell("spellDC", SpellAt{Tradition: "arcana", School: "evocacao"}) // a varinha e o tomo
+func (s ComputedSheet) ForSpell(kind string, at SpellAt) SpellReach {
+	return s.effects.ForSpell(kind, at)
 }
 
-// spellDCBySchool são os bônus de CD de uma tradição E uma escola, por "tradição:escola". As escolas não
-// são uma lista do motor, então elas saem das chaves que existem.
-func spellDCBySchool(e ItemEffects) map[string]TotalContribs {
-	out := map[string]TotalContribs{}
-	for key, stat := range e.ByTarget {
-		rest, isDC := strings.CutPrefix(key, "spellDC:")
-		if !isDC || strings.Count(rest, ":") != 1 || len(stat.Contributions) == 0 {
-			continue
-		}
-		out[rest] = TotalContribs{Total: stat.Total, Contributions: withNoteContribs(stat.Contributions)}
-	}
-	return out
-}
-
-// SpellDCFor é o bônus de CD de UMA magia: o geral, o da tradição dela e o da escola dela naquela tradição
-// (o tomo hermético, p160).
+// PmLimitFor é o limite de PM por magia na magia `at`, com a decomposição: o nível de conjurador, o bônus
+// que a alcança, a Magia Ilimitada e o ritual. O `PmLimit` da ficha é o mesmo cálculo com a magia vazia.
 //
-//	sheet.SpellDCFor("arcana", "evocacao") // a varinha, o cajado e o tomo de evocação
-func (s ComputedSheet) SpellDCFor(tradition, school string) TotalContribs {
-	bonus := s.SpellBonusFor("spellDC", tradition)
-	scoped, found := s.SpellDCBySchool[tradition+":"+school]
-	if !found {
-		return bonus
-	}
-	return TotalContribs{
-		Total:         bonus.Total + scoped.Total,
-		Contributions: append(append([]BreakdownContribution{}, bonus.Contributions...), scoped.Contributions...),
-	}
+//	sheet.PmLimitFor(SpellAt{Tradition: "arcana"}) // com o orbe cristalino
+func (s ComputedSheet) PmLimitFor(at SpellAt) ValueBreakdown {
+	return pmLimitBreakdown(s.char, s.effects, at)
 }
 
-// SpellBonusFor é o bônus de uma conta de magia (`spellDC` ou `pmLimit`) para uma magia da tradição dada:
-// o geral, que a ficha já soma, e o da lista dela. Tradição vazia é o geral só.
-//
-//	sheet.SpellBonusFor("spellDC", "divina") // a varinha arcana não entra
-func (s ComputedSheet) SpellBonusFor(kind, tradition string) TotalContribs {
-	general, byList := s.SpellDCBonus, s.SpellDCByTradition
-	if kind == "pmLimit" {
-		general, byList = TotalContribs{Total: s.PmLimit.ItemBonus, Contributions: s.PmLimit.Contributions}, s.PmLimitByTradition
-	}
-	scoped, found := byList[tradition]
-	if !found {
-		return general
-	}
-	return TotalContribs{
-		Total:         general.Total + scoped.Total,
-		Contributions: append(append([]BreakdownContribution{}, general.Contributions...), scoped.Contributions...),
-	}
-}
-
-// pmCostMod: item pmCost modifier + contributions.
+// pmCostMod é o corte de custo que vale para toda magia, pela regra da p226 (`ForSpell`).
 func pmCostMod(e ItemEffects) TotalContribs {
-	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
+	reach := e.ForSpell("pmCost", SpellAt{})
+	return TotalContribs{Total: reach.Total, Contributions: reach.Contributions}
 }
 
 // characterDamageReduction é a RD geral do personagem, com a fonte de cada
@@ -345,16 +289,13 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 // os condicionais recebidos e pergunta ao MESMO `pmLimitBreakdown` que a ficha
 // usa, em vez de reconstruir a conta.
 //
-// A TRADIÇÃO da magia escolhe o bônus que vale só numa lista: o orbe cristalino sobe o limite das
-// arcanas (p160), e a divina do mesmo personagem fica no dela.
+// A MAGIA escolhe o bônus que vale só nela (`ForSpell`): o orbe cristalino sobe o limite das arcanas
+// (p160), e a divina do mesmo personagem fica no dela.
 func (r *Ruleset) SpellPmLimitFor(
-	ch Character, conditionals map[string]bool, spellClasses []string, tradition string,
+	ch Character, conditionals map[string]bool, spellClasses []string, at SpellAt,
 ) int {
 	effects := r.EffectsOf(ch, conditionals)
-	bonus := pmLimitBreakdown(ch, effects).ItemBonus
-	if tradition != "" {
-		bonus += totalContribsFor(effects, ModifierTarget{K: "pmLimit", Scope: tradition}).Total
-	}
+	bonus := pmLimitBreakdown(ch, effects, at).ItemBonus
 	return pmLimitFactor(effects).Applied(SpellPmLimit(ch, bonus, spellClasses))
 }
 
@@ -407,24 +348,20 @@ func resolvePmCostMod(contribs []Contribution) int {
 // reduções de custo": é a exceção escrita à p226, e por isso fica fora da
 // disputa do `resolvePmCostMod` (ALE-510).
 //
-// @example SpellPmCostFor(druida20, 3, 0, nil, "divina", "bola-de-fogo", "longo") // 1
+// O que alcança a magia é o `ForSpell`, com ela inteira: o cajado do poder corta as arcanas (p337), o
+// medalhão de prata as de alcance pessoal (p160), e todos entram na MESMA disputa da p226, porque o livro
+// não os diz cumulativos.
 //
-// O ALCANCE da magia traz a redução que só vale nele: o medalhão de prata corta 1 PM das de alcance
-// pessoal (p160), na chave `pmCost:pessoal`. Ela entra na MESMA disputa das outras reduções (p226), e não
-// por fora como o Foco em Magia, porque o livro não a diz cumulativa.
+// @example SpellPmCostFor(druida20, 3, 0, nil, SpellAt{Tradition: "divina", Spell: "bola-de-fogo"}) // 1
 func (r *Ruleset) SpellPmCostFor(
-	ch Character, basePm, augmentPm int, conditionals map[string]bool, tradition, spellID, spellRange string,
+	ch Character, basePm, augmentPm int, conditionals map[string]bool, at SpellAt,
 ) int {
 	raw := basePm + augmentPm
 	if raw <= 0 {
 		return 0
 	}
-	effects := r.EffectsOf(ch, conditionals)
-	contribs := StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions
-	if spellRange != "" {
-		contribs = append(slices.Clone(contribs), StatFor(effects, ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions...)
-	}
-	mod := resolvePmCostMod(contribs) - spellFocusCut(ch, spellID)
+	reach := r.EffectsOf(ch, conditionals).ForSpell("pmCost", at)
+	mod := reach.Total - spellFocusCut(ch, at.Spell)
 	// O FATOR É O ÚLTIMO, e o livro diz a ordem por extenso: a Alta Arcana
 	// reduz à metade "após aplicar aprimoramentos e quaisquer outros efeitos
 	// que reduzam custo" (p39). Antes da soma, o +1 do Alquebrado entraria
@@ -432,7 +369,7 @@ func (r *Ruleset) SpellPmCostFor(
 	//
 	// E o PISO continua por último de todos: metade de 1 PM é zero, e a p226
 	// não deixa descer abaixo de 1.
-	return max(1, pmCostFactor(effects, tradition).Applied(raw+mod))
+	return max(1, reach.Factor.Applied(raw+mod))
 }
 
 // spellFocusCut é quanto o Foco em Magia tira desta magia: 1 PM por escolha
@@ -445,19 +382,4 @@ func spellFocusCut(ch Character, spellID string) int {
 		}
 	}
 	return cut
-}
-
-// pmCostFactor é o fator que corta o custo desta magia: o que vale para toda
-// habilidade e o que vale só para a LISTA dela, com o mais severo vencendo.
-//
-// `severest` e não o produto dos dois, pela razão que o `factor.go` já dá: dois
-// fatores no mesmo alvo não compõem. Uma tradição vazia — magia que classe
-// nenhuma do personagem concede — lê só o fator geral, que é o lado seguro:
-// quem não tem lista não ganha o desconto da lista.
-func pmCostFactor(effects ItemEffects, tradition string) Ratio {
-	geral := effects.Factors[targetKey(ModifierTarget{K: "pmCost"})]
-	if tradition == "" {
-		return geral
-	}
-	return severest(geral, effects.Factors[targetKey(ModifierTarget{K: "pmCost", Scope: tradition})])
 }

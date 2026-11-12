@@ -66,7 +66,7 @@ var classPowersPart01 = []ClassPower{
 		UID:            "pwr_hcvv6pd3dm",
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmCost", Scope: "arcana"},
+				Target:    ModifierTarget{Kind: "pmCost", Tradition: "arcana"},
 				BonusType: "untyped",
 				Factor:    &ModifierFactor{Num: 1, Den: 2},
 			},

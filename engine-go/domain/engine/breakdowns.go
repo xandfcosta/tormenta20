@@ -100,16 +100,10 @@ type ComputedSheet struct {
 	// so a spell row can pick the CD for any of its applicable classes without
 	// re-deriving.
 	SpellCdByAttribute map[string]int `json:"spellCdByAttribute"`
-	SpellDCBonus       TotalContribs  `json:"spellDCBonus"`
-	// SpellDCByTradition e PmLimitByTradition são os bônus que valem só numa lista de magia, por
-	// tradição (`arcana`, `divina`): o da varinha arcana (p160). O `SpellDCBonus` e o `PmLimit` ficam com o
-	// geral; quem soma os dois é o `SpellBonusFor`, com a tradição da magia.
-	SpellDCByTradition map[string]TotalContribs `json:"spellDCByTradition,omitempty"`
-	PmLimitByTradition map[string]TotalContribs `json:"pmLimitByTradition,omitempty"`
-	// SpellDCBySchool é o bônus de CD que vale numa tradição e numa escola, por "tradição:escola": o tomo
-	// hermético (p160). Ver `SpellDCFor`.
-	SpellDCBySchool map[string]TotalContribs `json:"spellDCBySchool,omitempty"`
-	PmCostMod       TotalContribs            `json:"pmCostMod"`
+	// SpellDCBonus e PmCostMod são o que vale para TODA magia — o geral, sem tradição nem escola. O que
+	// vale numa magia pergunta-se ao `ForSpell`, com a tradição, a escola e o alcance dela.
+	SpellDCBonus TotalContribs `json:"spellDCBonus"`
+	PmCostMod    TotalContribs `json:"pmCostMod"`
 	// AttackAll/DamageAll are the {k:attack|damage, scope:all} globals (Fúria,
 	// Instinto Selvagem…) — the combat HUD adds them onto every weapon/attack.
 	AttackAll       TotalContribs `json:"attackAll"`
@@ -131,6 +125,11 @@ type ComputedSheet struct {
 	// Indefeso (p394). É o motor quem responde isso, e não a UI reinterpretando
 	// uma flag: a regra de quais condições implicam indefeso mora aqui.
 	AutoFailExpertises []string `json:"autoFailExpertises"`
+	// char e effects são o personagem e os efeitos com que a ficha foi calculada, fora do JSON: o
+	// `ForSpell` e o `PmLimitFor` os perguntam, e a tela que mostra o que vale para cada magia não volta
+	// ao pipeline.
+	char    Character
+	effects ItemEffects
 }
 
 // ComputeSheet monta a ficha decomposta de um `Character` cru sob os

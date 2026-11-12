@@ -329,6 +329,17 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 		conditional = append(conditional, o.ce)
 	}
 
+	// O ALVO DE CADA CHAVE, de todo termo do mundo: o fator sai da pilha antes de virar parcela, e a
+	// chave dele também precisa dizer o que alcança.
+	targets := []keyedTarget{}
+	known := map[string]bool{}
+	ecs.Each(w, func(_ ecs.Entity, t Term) {
+		if key := targetKey(t.Mod.Target); !known[key] {
+			known[key] = true
+			targets = append(targets, keyedTarget{key: key, target: t.Mod.Target})
+		}
+	})
+
 	byTarget := map[string]AggregatedStat{}
 	for _, key := range order {
 		total := 0
@@ -346,6 +357,7 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 		ExtraDamage: riders.extra, CriticalBonus: riders.critical,
 		Announced:   riders.announced,
 		Conditional: conditional,
+		targets:     targets,
 	}
 }
 

@@ -138,10 +138,12 @@ func (p Plays) Cast(
 	// QUEM LANÇA a magia é a pergunta das duas contas, e não a lista do verbete: o bardo de evocação lança a
 	// Bola de Fogo, que lista só o Arcanista (p44).
 	casting := sheet.CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
-	tradition := sheet.SpellTradition(dto.Classes, casting)
-	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, tradition, catalogSpellID, spell.Range)
-	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, tradition, catalogSpellID, spell.Range)
-	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting, tradition)
+	at := engine.SpellAt{
+		Tradition: sheet.SpellTradition(dto.Classes, casting), School: spell.School, Range: spell.Range, Spell: catalogSpellID,
+	}
+	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, at)
+	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, at)
+	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting, at)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
