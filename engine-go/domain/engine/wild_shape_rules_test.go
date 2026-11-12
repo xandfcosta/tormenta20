@@ -189,3 +189,30 @@ func TestTheDevotionWeaponStaysInTheShape(t *testing.T) {
 		t.Error("os chifres são do corpo da raça, e saem na forma")
 	}
 }
+
+// A Magia Natural (p62) deixa o druida "empunhar catalisadores e esotéricos" na forma: a varinha arcana
+// continua dando a CD dela; sem o poder, ela some com o resto do que está na mão.
+func TestNaturalMagicKeepsTheEsotericInTheShape(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	spellDC := func(ch Character) bool {
+		for _, item := range world.ActiveItemsFor(ch) {
+			for _, m := range item.Modifiers {
+				if m.Target.K == "spellDC" {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	shape := &WildShape{Form: WildFerocious, Tier: WildTierNormal, DamageType: "corte"}
+	without := wielding(attributeSumHero("Druida", 6, `["class.druida.forma-selvagem"]`), "varinha-arcana")
+	without.WildShape = shape
+	if spellDC(without) {
+		t.Error("sem a Magia Natural, a varinha na mão devia parar de valer na forma")
+	}
+	with := wielding(attributeSumHero("Druida", 6, `["class.druida.forma-selvagem","class.druida.magia-natural"]`), "varinha-arcana")
+	with.WildShape = shape
+	if !spellDC(with) {
+		t.Error("com a Magia Natural, a varinha é esotérico e continua valendo na forma")
+	}
+}

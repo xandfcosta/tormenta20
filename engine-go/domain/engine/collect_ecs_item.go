@@ -68,8 +68,9 @@ func (r *Ruleset) spawnWornItems(ch Character) ecs.System {
 				continue
 			}
 			// NA FORMA SELVAGEM "seu equipamento desaparece (mas você mantém os benefícios de quaisquer itens
-			// vestidos)" (p63): o que está na mão ou na pata para de valer.
-			if ch.WildShape != nil && *it.Equipped != "vested" {
+			// vestidos)" (p63): o que está na mão ou na pata para de valer, salvo o esotérico com a Magia
+			// Natural (p62).
+			if ch.WildShape != nil && *it.Equipped != "vested" && !r.HeldInTheShape(ch, it) {
 				continue
 			}
 			var catalog *CatalogItem

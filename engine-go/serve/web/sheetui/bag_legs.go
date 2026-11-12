@@ -63,11 +63,16 @@ func whyTheLegIsIdle(armable bool, item sheet.ItemDTO) string {
 
 // keptByTheWildShape é a tira na Forma Selvagem: "na forma selvagem você não pode […] empunhar itens"
 // (p63). O item continua na posição dele, dizendo que a forma o guardou, e sem o chip de dano — a carta
-// dele já não ataca. As posições livres saem: não há o que empunhar.
-func keptByTheWildShape(positions []equippedPosition) []equippedPosition {
+// dele já não ataca. As posições livres saem: não há o que empunhar. O esotérico com a Magia Natural
+// (p62) fica como está, porque continua na mão (`held`).
+func keptByTheWildShape(positions []equippedPosition, held map[int64]bool) []equippedPosition {
 	kept := []equippedPosition{}
 	for _, p := range positions {
 		if p.Card == nil {
+			continue
+		}
+		if held[p.Card.ID] {
+			kept = append(kept, p)
 			continue
 		}
 		idle := *p.Card
@@ -101,4 +106,20 @@ func legChoice(armable bool, item sheet.ItemDTO) []equipChoice {
 		return nil
 	}
 	return []equipChoice{{Slot: engine.LegSlot, Label: "Empunhar na pata"}}
+}
+
+// heldInTheShape são as linhas da Mochila que continuam na mão da forma: os esotéricos, com a Magia
+// Natural (p62).
+func heldInTheShape(dto sheet.CharacterDTO) map[int64]bool {
+	held := map[int64]bool{}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil || dto.Ruleset == nil {
+		return held
+	}
+	for _, it := range ec.Items {
+		if dto.Ruleset.HeldInTheShape(ec, it) {
+			held[it.ID] = true
+		}
+	}
+	return held
 }

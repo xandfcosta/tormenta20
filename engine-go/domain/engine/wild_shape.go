@@ -208,3 +208,27 @@ func formSizeReplacesTheRace(ch Character) bool {
 	stats, shaped := activeWildShape(ch)
 	return shaped && stats.Size != ""
 }
+
+// NaturalMagicPowerID é a Magia Natural: "em forma selvagem, você pode lançar magias e empunhar
+// catalisadores e esotéricos" (p62).
+const NaturalMagicPowerID = "class.druida.magia-natural"
+
+// CastsInTheShape diz se o personagem pode lançar magias agora: "na forma selvagem você não pode falar,
+// empunhar itens ou lançar magias" (p62), salvo com a Magia Natural.
+//
+//	engine.CastsInTheShape(ch) // false para o druida em forma sem a Magia Natural
+func CastsInTheShape(ch Character) bool {
+	return ch.WildShape == nil || parseChoiceSet(ch.ClassPowers).has[NaturalMagicPowerID]
+}
+
+// HeldInTheShape diz se o item na mão continua valendo na forma: só o esotérico, e só com a Magia
+// Natural. O catalisador não entra aqui porque não se empunha — ele se gasta da Mochila ao conjurar.
+//
+//	world.HeldInTheShape(ch, varinha) // true com a Magia Natural
+func (r *Ruleset) HeldInTheShape(ch Character, it CharacterItem) bool {
+	if ch.WildShape == nil || it.CatalogID == nil || !parseChoiceSet(ch.ClassPowers).has[NaturalMagicPowerID] {
+		return false
+	}
+	catalog := r.getCatalogItem(*it.CatalogID)
+	return catalog != nil && catalog.Esoteric
+}
