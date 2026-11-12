@@ -28,6 +28,30 @@ import { openTheBoard, disposableTable, putATokenOnTheMap, putTheTokenOnTurn } f
 test.use({ storageState: '.auth/user.json' })
 
 /**
+ * Quantas vezes a animação roda mais devagar durante a medida.
+ *
+ * O deslize dura 200ms, e a sonda só vê o que cai num QUADRO. No fim da suíte,
+ * com a máquina cheia, um quadro só já passou de 200ms: a peça foi pintada na
+ * origem, depois direto no destino, e a sonda leu teleporte sobre uma animação
+ * que existia. Desacelerar pelo relógio do navegador estica a animação sem
+ * tocar nela. A medida continua sendo a posição PINTADA, e um quadro atrasado
+ * deixa de cobrir o deslize inteiro.
+ *
+ * O caminho não tomado: baixar o limiar de "três posições" para "duas" mediria
+ * o teleporte como deslize, que é o defeito que o caso existe para pegar.
+ */
+const SLOWDOWN = 5
+
+/** A duração do deslize, a mesma do `token-move.ts`. */
+const SLIDE_MS = 200
+
+async function slowTheAnimations(page: Page): Promise<void> {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Animation.enable')
+  await cdp.send('Animation.setPlaybackRate', { playbackRate: 1 / SLOWDOWN })
+}
+
+/**
  * Amostra onde a peça é PINTADA, quadro a quadro, durante `ms` milissegundos.
  *
  * ELA É ARMADA DEPOIS DO ARRASTO E ANTES DO CONFIRMAR, e a ordem é o que separa
@@ -38,7 +62,7 @@ test.use({ storageState: '.auth/user.json' })
  * Depois do arrasto não há corrida: a animação só começa quando o remendo do
  * servidor chega, e isso é depois do clique.
  */
-async function posicoesPintadas(page: Page, gesture: () => Promise<void>, ms = 800): Promise<number[]> {
+async function posicoesPintadas(page: Page, gesture: () => Promise<void>, ms = SLIDE_MS * SLOWDOWN + 600): Promise<number[]> {
   await page.evaluate((limit) => {
     const w = window as unknown as { __x: number[] }
     w.__x = []
@@ -80,6 +104,7 @@ async function slideOnConfirm(page: Page, squares: number): Promise<number[]> {
 async function aBoardWithOneToken(page: Page) {
   const tableState = await disposableTable(page)
   await openTheBoard(page, tableState.mesa)
+  await slowTheAnimations(page)
   await putATokenOnTheMap(page)
   await putTheTokenOnTurn(page, tableState.mesa)
   await page.getByLabel('Centralizar nas peças').click()
