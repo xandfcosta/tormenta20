@@ -41,6 +41,9 @@ func (s *Server) WebRouter() http.Handler {
 	// roteador de verdade vê o que o navegador recebe, inclusive o fluxo ao vivo
 	// em gzip (ver `httpio.Gzip`).
 	r.Use(httpio.Gzip)
+	// DEPOIS do gzip, para ficar DENTRO dele: assim o começo do corpo de um 5xx
+	// chega ao log ainda legível.
+	r.Use(httpio.LogServerErrors(s.log))
 	// Os estáticos são ANÔNIMOS: são o bundle do Datastar e a folha de estilo, e
 	// exigir sessão para eles só quebraria o cache.
 	r.Handle("/static/*", http.StripPrefix("/static/", assets.Handler()))

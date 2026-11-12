@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -32,6 +33,9 @@ type Server struct {
 	// checkout. Ver `buildRevision`.
 	revision string
 
+	// log recebe o que um handler não pode responder ao cliente: a causa de um
+	// 500. É campo, e não o `slog` global, para o teste ler o que foi registrado.
+	log      *slog.Logger
 	cfg      config.Config
 	db       *sql.DB
 	queries  *sqlcgen.Queries
@@ -183,6 +187,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		liveStreamsClosing: make(chan struct{}),
 		revision:           buildRevision(),
 		cfg:                cfg, db: database, queries: q, catalogs: catalogs,
+		log: slog.Default(),
 		// Lido UMA vez, no boot: o dígito do endereço vem do `os.Stat`, e
 		// refazê-lo por requisição seria ir ao disco para responder um cabeçalho.
 		book:     openServedBook(cfg),

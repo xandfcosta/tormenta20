@@ -133,6 +133,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := s.campaignLifecycle().Open(r.Context(), currentUser(r).ID, name, descriptionText)
 	if err != nil {
+		s.log.Error("abrir a campanha", "error", err)
 		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return
 	}
@@ -141,6 +142,7 @@ func (s *Server) handleCreateCampaign(w http.ResponseWriter, r *http.Request) {
 	// que existe e não da que foi pedida.
 	c, err := s.queries.GetCampaign(r.Context(), id)
 	if err != nil {
+		s.log.Error("reler a campanha que acabou de abrir", "campaign", id, "error", err)
 		httpio.WriteError(w, http.StatusInternalServerError, "Could not create campaign")
 		return
 	}
