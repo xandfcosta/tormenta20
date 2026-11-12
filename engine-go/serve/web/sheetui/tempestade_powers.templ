@@ -122,10 +122,14 @@ templ powerGesture(v View, row powerRow) {
 		}
 	} else if wildShapePowerIDs[row.ID] {
 		if opensWildShape(row) {
-			if v.WildShape.AgileBoth != nil {
-				@agileBothButton(v, *v.WildShape.AgileBoth)
-			}
-			@wildShapeOpener(row)
+			// OS DOIS BOTÕES NUM GRUPO: soltos, a linha os trata como dois filhos, e a 390px o segundo
+			// cai sozinho embaixo, alinhado à esquerda.
+			<div class="flex flex-wrap justify-end gap-2">
+				if v.WildShape.AgileBoth != nil {
+					@agileBothButton(v, *v.WildShape.AgileBoth)
+				}
+				@wildShapeOpener(row)
+			</div>
 		}
 	} else if row.Kind == "instant" {
 		if row.Degrees != nil && row.Degrees.opensDialog() {
