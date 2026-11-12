@@ -5,12 +5,10 @@ import (
 	"net/http"
 	"strings"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/httpio"
 	"t20engine/infra/wire"
 
 	"t20engine/domain/catalog"
-	"t20engine/infra/db/sqlcgen"
 )
 
 // handleUpdateConditions replace the
@@ -41,10 +39,7 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 			"Unknown condition ids: %s — expected ids from the CONDITIONS catalog", strings.Join(unknown, ", ")))
 		return
 	}
-	activeConditions := sheet.MarshalStrings(&body.ActiveConditions)
-	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: activeConditions, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
-	}); err != nil {
+	if err := sheet.SaveConditions(r.Context(), s.queries, row.ID, body.ActiveConditions); err != nil {
 		httpio.WriteServerError(w, "Could not update conditions", err)
 		return
 	}
@@ -56,5 +51,5 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	// DEPOIS da escrita, nunca antes: avisar sobre algo que ainda pode falhar
 	// faria a mesa buscar o estado velho e acreditar nele.
 	s.sheetRules().characterChanged(row.ID)
-	httpio.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": activeConditions})
+	httpio.WriteJSON(w, http.StatusOK, map[string]string{"activeConditions": sheet.MarshalStrings(&body.ActiveConditions)})
 }

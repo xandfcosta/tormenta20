@@ -140,14 +140,11 @@ func (p Plays) ToggleBookCondition(
 	if !had {
 		after = append(after, condition)
 	}
-	if err := p.queries.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
-		ActiveConditions: sheet.MarshalStrings(&after),
-		UpdatedAt:        dbvalue.NowISO(),
-		ID:               row.ID,
-	}); err != nil {
-		return fmt.Errorf("gravar as condições da ficha %d: %w", row.ID, err)
-	}
-	return nil
+	// NUMA TRANSAÇÃO porque a Inconsciente desfaz a forma selvagem junto (ver `sheet.SaveConditions`):
+	// a condição gravada sem a forma revertida seria a metade do gesto.
+	return p.inTx(ctx, "marcar a condição "+condition, func(q *sqlcgen.Queries) error {
+		return sheet.SaveConditions(ctx, q, row.ID, after)
+	})
 }
 
 // EndAppliedEffect encerra um efeito em curso.

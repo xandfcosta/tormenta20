@@ -148,10 +148,8 @@ func followTheHitPoints(
 	if marshaled == dto.ActiveConditions {
 		return nil
 	}
-	if err := q.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
-		ActiveConditions: marshaled, UpdatedAt: dbvalue.NowISO(), ID: dto.ID,
-	}); err != nil {
-		return fmt.Errorf("gravar as condições que o PV da ficha %d pede: %w", dto.ID, err)
+	if err := SaveConditions(ctx, q, dto.ID, next); err != nil {
+		return fmt.Errorf("gravar as condições que o PV pede: %w", err)
 	}
 	dto.ActiveConditions = marshaled
 	return nil
