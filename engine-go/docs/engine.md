@@ -464,7 +464,11 @@ ficha guarda o geral (`SpellDCBonus`, `PmLimit`) e o de cada tradição à parte
 (`SpellDCByTradition`, `PmLimitByTradition`), e quem junta os dois é o
 `ComputedSheet.SpellBonusFor`, com a tradição da magia. As caixas do Combate e a
 linha de CD da aba Magias usam a da classe conjuradora de maior nível. Somados
-numa chave só, a varinha arcana subia a CD do druida.
+numa chave só, a varinha arcana subia a CD do druida. O tomo hermético desce mais
+um nível: +2 nas arcanas "dessa escola" (p160), na chave `spellDC:arcana:<escola>`.
+A escola é a escolha que o próprio item pede a quem o tem (`CharacterItem.Choice`,
+preenchida pelo `FromChoice: school` do verbete), e o `SpellDCFor` a junta só na
+CD de cada magia: a caixa "CD Magia" resume todas e não a leva.
 
 **A redução de custo também pode ter escopo de ALCANCE**: o medalhão de prata
 tira 1 PM "de magias de alcance pessoal" (p160), pela chave `pmCost:pessoal`. O

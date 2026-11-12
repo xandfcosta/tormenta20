@@ -140,7 +140,7 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 	if catalog == nil {
 		return own
 	}
-	own = append(own, catalog.Modifiers...)
+	own = append(own, chosenByTheItem(catalog.Modifiers, it.Choice)...)
 	for _, id := range parseStringArray(it.Improvements) {
 		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 		if id == ImprovedItemImprovement {
@@ -154,6 +154,25 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 	}
 	return onThisWeapon(own, catalog)
+}
+
+// chosenByTheItem preenche com a escolha do item o modificador que a pede: a escola do tomo hermético
+// (`FromChoice: school`, p160). Sem escolha ele sai — o +2 "dessa escola" sem escola não vale em nenhuma.
+func chosenByTheItem(mods []Modifier, choice string) []Modifier {
+	out := make([]Modifier, 0, len(mods))
+	for _, m := range mods {
+		if m.FromChoice != "school" {
+			out = append(out, m)
+			continue
+		}
+		if choice == "" {
+			continue
+		}
+		filled := m
+		filled.FromChoice, filled.Target.School = "", choice
+		out = append(out, filled)
+	}
+	return out
 }
 
 // onThisWeapon prende à arma o dano, a margem e o multiplicador que ela mesma concede, com o verbete,

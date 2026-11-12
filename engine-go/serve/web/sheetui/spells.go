@@ -211,7 +211,7 @@ func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
 		if !casts || !sheet.CastsTheSpell(dto, class.ClassName, spell.School, spell.Classes) {
 			continue
 		}
-		if cd := computed.SpellCdByAttribute[prog.Attribute] + computed.SpellBonusFor("spellDC", prog.List).Total; cd > best {
+		if cd := computed.SpellCdByAttribute[prog.Attribute] + computed.SpellDCFor(prog.List, spell.School).Total; cd > best {
 			best = cd
 		}
 	}

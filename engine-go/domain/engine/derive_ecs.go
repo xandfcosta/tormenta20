@@ -56,6 +56,7 @@ type (
 		dcBonus     TotalContribs
 		dcByList    map[string]TotalContribs
 		limitByList map[string]TotalContribs
+		dcBySchool  map[string]TotalContribs
 		costMod     TotalContribs
 	}
 	derivedCombat struct {
@@ -152,6 +153,7 @@ func deriveMagic(w *ecs.World) {
 			dcBonus:     spellDCBonus(in.effects),
 			dcByList:    byTradition(in.effects, "spellDC"),
 			limitByList: byTradition(in.effects, "pmLimit"),
+			dcBySchool:  spellDCBySchool(in.effects),
 			costMod:     pmCostMod(in.effects),
 		})
 	})
@@ -207,6 +209,7 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 			SpellDCBonus:            magic.dcBonus,
 			SpellDCByTradition:      magic.dcByList,
 			PmLimitByTradition:      magic.limitByList,
+			SpellDCBySchool:         magic.dcBySchool,
 			PmCostMod:               magic.costMod,
 			AttackAll:               combat.attackAll,
 			DamageAll:               combat.damageAll,

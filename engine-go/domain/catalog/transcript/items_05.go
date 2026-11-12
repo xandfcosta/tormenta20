@@ -248,11 +248,12 @@ var itemsPart05 = []Item{
 		Hands:    1,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "spellDC", Scope: "arcana"},
-				Amount:    2,
-				BonusType: "enhancement",
-				Note:      "+2 CD nas magias arcanas de uma escola escolhida",
-				Condition: &ModifierCondition{Kind: "wielded"},
+				Target:     ModifierTarget{Kind: "spellDC", Scope: "arcana"},
+				Amount:     2,
+				BonusType:  "enhancement",
+				Note:       "+2 CD nas magias arcanas de uma escola escolhida",
+				Condition:  &ModifierCondition{Kind: "wielded"},
+				FromChoice: "school",
 			},
 		},
 		BookPage: 160,

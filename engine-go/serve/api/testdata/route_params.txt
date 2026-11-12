@@ -47,6 +47,7 @@ deus
 die
 efeito
 entryId
+escola
 escolha
 estado
 ferramenta

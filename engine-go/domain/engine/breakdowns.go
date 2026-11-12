@@ -106,7 +106,10 @@ type ComputedSheet struct {
 	// geral; quem soma os dois é o `SpellBonusFor`, com a tradição da magia.
 	SpellDCByTradition map[string]TotalContribs `json:"spellDCByTradition,omitempty"`
 	PmLimitByTradition map[string]TotalContribs `json:"pmLimitByTradition,omitempty"`
-	PmCostMod          TotalContribs            `json:"pmCostMod"`
+	// SpellDCBySchool é o bônus de CD que vale numa tradição e numa escola, por "tradição:escola": o tomo
+	// hermético (p160). Ver `SpellDCFor`.
+	SpellDCBySchool map[string]TotalContribs `json:"spellDCBySchool,omitempty"`
+	PmCostMod       TotalContribs            `json:"pmCostMod"`
 	// AttackAll/DamageAll are the {k:attack|damage, scope:all} globals (Fúria,
 	// Instinto Selvagem…) — the combat HUD adds them onto every weapon/attack.
 	AttackAll       TotalContribs `json:"attackAll"`

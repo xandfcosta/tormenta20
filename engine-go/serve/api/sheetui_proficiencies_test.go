@@ -231,10 +231,11 @@ func TestNoSheetWriteAcceptsAStranger(t *testing.T) {
 		"magia":  "armadura-arcana",
 		"efeito": "1",
 		"flag":   "furia",
-		// Os três da Mochila.
+		// Os quatro da Mochila.
 		"item":     "1",
 		"slot":     "vested",
 		"catalogo": "adaga",
+		"escola":   "evocacao",
 		// Os dos Poderes — a `flag` já entrou com os Efeitos.
 		"poder":       "class.barbaro.brado-assustador",
 		"opcao":       "strength",
