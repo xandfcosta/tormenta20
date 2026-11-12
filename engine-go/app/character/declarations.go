@@ -11,8 +11,8 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// O USAR DE UMA DECLARAÇÃO liga a flag dela, e o "encerrar" da aba Efeitos a desliga (ver
-// `book.DeclaredFlag`). Não há PM, uso por cena nem efeito ativo a gravar: o que dura até o próximo
+// O USAR DE UMA DECLARAÇÃO — ou o gesto da Forma Ágil, que não tem poder próprio — liga a flag dela, e o
+// "encerrar" da aba Efeitos a desliga (ver `book.Declarations`). Não há PM, uso por cena nem efeito ativo a gravar: o que dura até o próximo
 // turno é o condicional da flag, e quem o desliga na volta da vez é a fila.
 
 // OffersTheDeclaration diz se a ficha tem o que declarar com esta flag. Com o Estilo de Duas Armas,
@@ -29,21 +29,47 @@ func OffersTheDeclaration(dto sheet.CharacterDTO, flag string) bool {
 	if err != nil {
 		return false
 	}
+	// A FORMA ÁGIL é a única que tem as duas armas naturais (p63). O -2 dela mora no poder da Forma
+	// Selvagem, que todo druida com a forma tem, e por isso o condicional é oferecido em qualquer forma:
+	// quem diz se há o que declarar é a forma em que ele está.
+	if flag == engine.WildAgileBothFlag && (ec.WildShape == nil || ec.WildShape.Form != engine.WildAgile) {
+		return false
+	}
 	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
 	return slices.ContainsFunc(offered, func(c engine.ConditionalEffect) bool { return c.Flag == flag })
 }
 
-// declare liga a flag que o poder usado declara.
-func (p Plays) declare(ctx context.Context, dto sheet.CharacterDTO, spec book.Activation, flag string) error {
+// Declare liga a declaração pela flag dela — o gesto da Forma Ágil, que não tem poder próprio para ter
+// um Usar (`book.Declarations`).
+//
+//	plays.Declare(ctx, dto, engine.WildAgileBothFlag)
+func (p Plays) Declare(ctx context.Context, dto sheet.CharacterDTO, flag string) error {
+	d, declared := book.DeclarationFor(flag)
+	if !declared {
+		return fmt.Errorf("%q não é uma declaração; esperava a flag de uma, como %q", flag, engine.WildAgileBothFlag)
+	}
+	return p.declare(ctx, dto, d.Name, flag)
+}
+
+// declare liga a flag da declaração.
+func (p Plays) declare(ctx context.Context, dto sheet.CharacterDTO, name, flag string) error {
 	if !OffersTheDeclaration(dto, flag) {
-		return fmt.Errorf("%s: a ficha não tem o que declarar com ele (com o Estilo de Duas Armas, a Ambidestria só tira o -2, p125)", spec.Name)
+		return fmt.Errorf("%s: a ficha não tem o que declarar agora (%s)", name, whyNothingToDeclare(flag))
 	}
 	if err := p.queries.AddCharacterConditional(ctx, sqlcgen.AddCharacterConditionalParams{
 		Characterid: dto.ID, Conditionalid: engine.FlagGroupID(flag),
 	}); err != nil {
-		return fmt.Errorf("declarar %s na ficha %d: %w", spec.Name, dto.ID, err)
+		return fmt.Errorf("declarar %s na ficha %d: %w", name, dto.ID, err)
 	}
 	return nil
+}
+
+// whyNothingToDeclare é o caso que a recusa explica.
+func whyNothingToDeclare(flag string) string {
+	if flag == engine.WildAgileBothFlag {
+		return "só a Forma Ágil tem as duas armas naturais, p63"
+	}
+	return "com o Estilo de Duas Armas, a Ambidestria só tira o -2, p125"
 }
 
 // EndDeclaration desfaz o uso de uma declaração antes de a vez voltar — o uso por engano.

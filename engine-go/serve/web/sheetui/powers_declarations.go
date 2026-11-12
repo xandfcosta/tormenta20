@@ -99,8 +99,8 @@ func declaredRowsOf(dto sheet.CharacterDTO) []declaredRow {
 		if !isFlag {
 			continue
 		}
-		if spec, declared := book.DeclarationFor(flag); declared {
-			rows = append(rows, declaredRow{Flag: flag, Name: spec.Name, Page: spec.BookPage})
+		if d, declared := book.DeclarationFor(flag); declared {
+			rows = append(rows, declaredRow{Flag: flag, Name: d.Name, Page: d.Page})
 		}
 	}
 	return rows

@@ -133,7 +133,7 @@ func usedThisScene(ch Character, grantedID string) bool {
 	})
 }
 
-func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
+func (r *Ruleset) naturalCards(ch Character, b cardBasis, active map[string]bool) []WeaponCard {
 	cards := []WeaponCard{}
 	for _, owned := range r.naturalWeaponsOf(ch, false) {
 		natural := owned.weapon
@@ -149,7 +149,9 @@ func (r *Ruleset) naturalCards(ch Character, b cardBasis) []WeaponCard {
 		scopes := slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool { return scope == MeleeOneHandedScope })
 		scopes = append(scopes, NaturalScope, WeaponDamageScope(owned.sourceID))
 		if owned.ofTheShape {
-			cards = append(cards, b.card(ch, natural.Name, w, scopes, owned.steps, false))
+			card := b.card(ch, natural.Name, w, scopes, owned.steps, false)
+			card.Style = agileShapeStrike(ch, active)
+			cards = append(cards, card)
 			continue
 		}
 		strike := NaturalStrike{SourceID: owned.sourceID, ExtraPM: natural.ExtraPM, ExtraAttacks: max(natural.ExtraAttacks, 1)}

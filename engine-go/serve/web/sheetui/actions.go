@@ -153,14 +153,14 @@ func rollCommand(v View, roll actionRoll, after string) string {
 func actionsPanelFrom(
 	id int64, computed engine.ComputedSheet,
 	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
-	boosts [][]attackBoost, blasts []actionRow,
+	boosts [][]attackBoost, blasts, shapeRows []actionRow,
 ) actionsPanel {
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
 	byCost := map[engine.ActionCost][]actionRow{
 		engine.ActionStandard: append(standardRows(combat, melee, computed, boosts), blasts...),
 		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
-		engine.ActionFree:     extraStrikeRows(combat, boosts),
+		engine.ActionFree:     append(extraStrikeRows(combat, boosts), shapeRows...),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {

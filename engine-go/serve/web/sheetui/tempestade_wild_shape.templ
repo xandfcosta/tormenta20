@@ -100,3 +100,13 @@ templ wildShapeActiveRow(v View, line wildShapeLine) {
 		}
 	</div>
 }
+
+// agileBothButton é o segundo botão do card na Forma Ágil: declarar o ataque com as duas armas naturais
+// (p63). Declarado, ele some: o que desfaz é o Encerrar dos Efeitos.
+templ agileBothButton(v View, state agileBothState) {
+	if !state.Declared {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Atacar com as duas armas naturais", "data-on:click": sheetPost(v, agileBothPath)}) {
+			As duas
+		}
+	}
+}

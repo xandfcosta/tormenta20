@@ -72,6 +72,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/efeitos/encerra/{efeito}", s.sheetCommand(endAppliedEffect))
 	r.Post("/personagens/{id}/efeitos/postura/{flag}", s.sheetCommand(endStance))
 	r.Post("/personagens/{id}/efeitos/declaracao/{flag}", s.sheetCommand(endDeclaration))
+	r.Post("/personagens/{id}/declara/{flag}", s.sheetCommand(declares))
 	r.Post("/personagens/{id}/efeitos/forma-selvagem", s.sheetCommand(leaveWildShape))
 	// O SITUACIONAL manda a CHAVE do condicional, que é um encadeado com `::` e
 	// texto livre do catálogo dentro — por isso ela vai por SINAL e não no

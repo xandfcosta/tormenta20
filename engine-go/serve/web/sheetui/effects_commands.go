@@ -65,6 +65,16 @@ func endStance(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error
 	return s.plays.EndStance(r.Context(), row, dto, chi.URLParam(r, "flag"))
 }
 
+// declares liga uma declaração pela flag: o gesto da Forma Ágil, que mora no card da Forma Selvagem e não
+// num poder com Usar. Não cobra a vez: a ação é a do agredir que vem depois.
+func declares(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.Declare(r.Context(), dto, chi.URLParam(r, "flag"))
+}
+
 // endDeclaration desfaz o Usar de uma declaração — o Estilo de Duas Armas usado por engano. Usar é dos
 // Poderes e das Ações; aqui só se desfaz.
 func endDeclaration(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {

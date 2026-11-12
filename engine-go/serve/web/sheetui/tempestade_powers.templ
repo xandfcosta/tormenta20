@@ -122,6 +122,9 @@ templ powerGesture(v View, row powerRow) {
 		}
 	} else if wildShapePowerIDs[row.ID] {
 		if opensWildShape(row) {
+			if v.WildShape.AgileBoth != nil {
+				@agileBothButton(v, *v.WildShape.AgileBoth)
+			}
 			@wildShapeOpener(row)
 		}
 	} else if row.Kind == "instant" {

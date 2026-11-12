@@ -216,7 +216,7 @@ func (p Plays) UsePower(
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
 	if flag := book.DeclaredFlag(*spec); flag != "" {
-		return p.declare(ctx, dto, *spec, flag)
+		return p.declare(ctx, dto, spec.Name, flag)
 	}
 	uses := PowerUses(dto)[spec.ID]
 	can, reason := book.UseDecision(*spec, book.UseContext{

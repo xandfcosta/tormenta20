@@ -143,12 +143,28 @@ var classPowersPart08 = []ClassPower{
 		MinLevel:      18,
 	},
 	{
-		ID:          "class.druida.forma-selvagem",
+		ID: "class.druida.forma-selvagem",
+		Modeled: []string{
+			"o -2 da Forma Ágil ao atacar com as duas armas naturais (p63), ligado pela declaração da forma",
+		},
 		ClassName:   "Druida",
 		Name:        "Forma Selvagem",
 		Description: "Ação completa + 3 PM: transforma-se em animal. Adquire características da forma escolhida. Equipamento desaparece. Pode reverter ao normal quando quiser. Formas: Ágil, Feroz, Resistente, Sorrateira, Veloz.",
 		BookPage:    62,
 		UID:         "pwr_ldhlcgzeu7",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+				Amount:    -2,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOn",
+					Flag:  "ataque-forma-agil",
+					Label: "Forma Ágil: as duas armas naturais, –2 até o seu próximo turno",
+					Ends:  "own-turn",
+				},
+			},
+		},
 	},
 	{
 		ID:            "class.druida.forma-selvagem-aprimorada",

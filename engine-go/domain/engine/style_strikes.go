@@ -21,6 +21,8 @@ const (
 	AmbidextrousSwitch = "ataque-ambidestro"
 	RapidShotPowerID   = "disparo-rapido"
 	DoubleTrait        = "dupla"
+	// WildAgileBothFlag é a declaração da Forma Ágil: "pode atacar com ambas" as armas naturais (p63).
+	WildAgileBothFlag = "ataque-forma-agil"
 )
 
 // StyleStrike é o que um estilo ligado dá a esta carta.
@@ -33,6 +35,9 @@ type StyleStrike struct {
 	OtherWeapon bool
 	// FullAction é o "gastar uma ação completa para agredir" do Disparo Rápido.
 	FullAction bool
+	// NaturalPair é o "atacar com ambas" da Forma Ágil (p63): as duas armas naturais são iguais, e o
+	// adicional sai da mesma carta, com a outra.
+	NaturalPair bool
 }
 
 // offerStyleStrikes marca as cartas das armas empunhadas com o estilo declarado.
@@ -79,4 +84,14 @@ func (r *Ruleset) offerStyleStrikes(ch Character, active map[string]bool, effect
 func (r *Ruleset) isDoubleWeapon(card WeaponCard) bool {
 	catalog := r.getCatalogItem(card.CatalogID)
 	return catalog != nil && catalog.Weapon != nil && hasTrait(catalog.Weapon.Traits, DoubleTrait)
+}
+
+// agileShapeStrike é o adicional da Forma Ágil declarada, na carta da arma da forma (p63). As duas armas
+// naturais dela são iguais, então elas são UMA carta, e o adicional sai dela de novo, como a outra
+// ponta da arma dupla.
+func agileShapeStrike(ch Character, active map[string]bool) *StyleStrike {
+	if ch.WildShape == nil || ch.WildShape.Form != WildAgile || !active[FlagGroupID(WildAgileBothFlag)] {
+		return nil
+	}
+	return &StyleStrike{SourceID: WildAgileBothFlag, Name: "Forma Ágil", NaturalPair: true}
 }
