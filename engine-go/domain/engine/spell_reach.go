@@ -30,15 +30,16 @@ func (at SpellAt) reachedBy(t ModifierTarget) bool {
 // SpellReach é o que chega a uma magia numa das três contas.
 type SpellReach struct {
 	// Total já sai pela regra da conta: no CUSTO, a p226 — reduções de fontes diferentes não se acumulam
-	// (`resolvePmCostMod`); na CD e no limite, a soma de cada alvo, cada um já empilhado pela resolução.
+	// (`pmCostDispute`); na CD e no limite, a soma de cada alvo, cada um já empilhado pela resolução.
 	Total         int
 	Contributions []BreakdownContribution
 	// OnlyHere é a parte que vale SÓ por causa desta magia — a escola, o alcance, a magia —, que o mosaico
 	// da ficha, perguntando só pela tradição, não mostra. É a nota da linha da magia na aba Magias.
 	OnlyHere []BreakdownContribution
 	// Factor é o fator que alcança a magia, o mais severo (ver `factor.go`): a Alta Arcana corta o custo
-	// das arcanas pela metade (p39).
-	Factor Ratio
+	// das arcanas pela metade (p39). FactorSource é o id de quem o pôs, para a tela nomeá-lo.
+	Factor       Ratio
+	FactorSource string
 }
 
 // ForSpell é o que chega à magia `at` na conta `kind` (`spellDC`, `pmLimit` ou `pmCost`).
@@ -58,29 +59,52 @@ func (e ItemEffects) ForSpell(kind string, at SpellAt) SpellReach {
 		return specificity(reached[a].target) < specificity(reached[b].target)
 	})
 
+	type part struct {
+		row      BreakdownContribution
+		source   string
+		specific bool
+	}
+	parts := []part{}
 	out := SpellReach{Contributions: []BreakdownContribution{}}
 	raw := []Contribution{}
 	for _, kt := range reached {
 		if factor, has := e.Factors[kt.key]; has {
-			out.Factor = severest(out.Factor, factor)
+			if won := severest(out.Factor, factor); won != out.Factor {
+				out.Factor, out.FactorSource = won, e.FactorSources[kt.key]
+			}
 		}
 		stat, has := e.ByTarget[kt.key]
 		if !has {
 			continue
 		}
-		rows := withNoteContribs(stat.Contributions)
 		raw = append(raw, stat.Contributions...)
 		out.Total += stat.Total
-		out.Contributions = append(out.Contributions, rows...)
-		if beyondTheTradition(kt.target) {
-			out.OnlyHere = append(out.OnlyHere, rows...)
+		for _, row := range rowsOf(stat) {
+			parts = append(parts, part{row: row, source: row.Source, specific: beyondTheTradition(kt.target)})
 		}
 	}
 	if kind == "pmCost" {
-		out.Total = resolvePmCostMod(raw)
+		total, losers := pmCostDispute(raw)
+		out.Total = total
+		for i := range parts {
+			if losers[parts[i].source] && !parts[i].row.Dropped {
+				parts[i].row.Dropped = true
+				parts[i].row.Note = costCutLossNote
+			}
+		}
+	}
+	for _, p := range parts {
+		out.Contributions = append(out.Contributions, p.row)
+		if p.specific {
+			out.OnlyHere = append(out.OnlyHere, p.row)
+		}
 	}
 	return out
 }
+
+// costCutLossNote é o motivo da redução de custo que perdeu a disputa: "Reduções no custo de PM não são
+// cumulativas" (p226), e vale a maior.
+const costCutLossNote = "não entra: reduções de custo não se acumulam, vale a maior (p226)"
 
 // specificity é quantos campos da magia o alvo pede: o geral é 0, o da tradição 1, o da tradição e da
 // escola 2.
@@ -98,4 +122,14 @@ func specificity(t ModifierTarget) int {
 // toda magia da lista.
 func beyondTheTradition(t ModifierTarget) bool {
 	return t.School != "" || t.Range != "" || t.Spell != ""
+}
+
+// FactorOn é o fator de um alvo e o id de quem o pôs, e falso quando nada o multiplica: a Fúria Titânica
+// dobra a parcela da Fúria, no alvo `{k: source, name: <id da Fúria>}` (p42).
+//
+//	factor, source, set := effects.FactorOn(ModifierTarget{K: "source", Name: "class.barbaro.furia"})
+func (e ItemEffects) FactorOn(target ModifierTarget) (Ratio, string, bool) {
+	key := targetKey(target)
+	factor, set := e.Factors[key]
+	return factor, e.FactorSources[key], set && factor.isSet()
 }

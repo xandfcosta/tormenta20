@@ -3,7 +3,6 @@ package engine
 import (
 	"sort"
 	"strconv"
-	"strings"
 
 	"t20engine/domain/ecs"
 )
@@ -22,9 +21,8 @@ import (
 // eles ficam no mundo com uma TAG (`Suppressed`), e quem soma pergunta quem
 // está vivo.
 //
-// Isso não é estética. A ficha existe para responder "por que 12?", e hoje ela
-// não consegue dizer "−2 de X, não aplicado por não empilhar" — o número que
-// perdeu não chega à tela. Com a tag, ele está lá para quando a tela quiser.
+// Isso não é estética. A ficha existe para responder "por que 12?", e o número que
+// perdeu o empilhamento chega à conta dela riscado, com o motivo (`OutOfTheSum`).
 //
 // # A ORDEM continua sendo a regra
 //
@@ -43,9 +41,12 @@ type Term struct {
 
 // Suppressed marca o termo que NÃO conta, e diz por quê.
 //
-// Tag e não remoção: o termo continua no mundo, e é isso que permite a uma tela
-// futura mostrar o que foi descartado. O `Why` é para ela, e para a mensagem de
-// falha de quem depurar.
+// Tag e não remoção: o termo continua no mundo. O `Why` é para quem depurar; o que a
+// ficha mostra é o `OutOfTheSum`, que só a parcela descartada recebe — o fator e o
+// dado extra também saem da pilha, e não foram descartados.
+//
+// O PRIMEIRO MOTIVO É O QUE FICA (`suppress`), na resolução e no ataque: um
+// sistema que passe depois não troca a razão que já foi escrita.
 type Suppressed struct{ Why string }
 
 // Deferred marca o termo que vira OPT-IN: ele não entra na conta, e aparece na
@@ -78,7 +79,12 @@ type sourceOrder struct{ seq int }
 // É o idioma de "recurso" do ECS: um dado que é do mundo inteiro, e não de uma
 // entidade em particular. Sem ele, um sistema teria de escrever numa variável
 // capturada — e aí ele deixaria de ser função do mundo, que é o contrato.
-type worldFactors struct{ byTarget map[string]Ratio }
+type worldFactors struct {
+	byTarget map[string]Ratio
+	// source é o id de quem pôs o fator que venceu em cada alvo — o mais severo, e no empate o primeiro —,
+	// para a tela nomeá-lo ("Alta Arcana corta este custo pela metade").
+	source map[string]string
+}
 
 // resolveInWorld dobra as fontes colhidas em `ItemEffects`, em sistemas, com os interruptores que o
 // jogador ligou: pelo endereço do termo (`TermID`) ou pelo do grupo da flag (`FlagGroupID`).
@@ -93,13 +99,12 @@ func resolutionWorld() (*ecs.World, ecs.Entity) {
 	w := ecs.NewWorld()
 	resource := w.Spawn()
 	ecs.Set(w, resource, worldFlags{set: map[string]bool{}, source: map[string]string{}})
-	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
+	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}, source: map[string]string{}})
 	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
 	return w, resource
 }
 
-// resolutionSystems é a ordem dos sistemas da resolução, que é a regra. Uma lista só: o caso que mede o
-// mundo por dentro (`worldAfterResolving`) a copiava, e a cópia já tinha perdido três sistemas.
+// resolutionSystems é a ordem dos sistemas da resolução, que é a regra.
 func resolutionSystems(items []ActiveItem, switches map[string]bool) []ecs.System {
 	return []ecs.System{
 		explodeIntoTerms(items, switches),
@@ -207,7 +212,7 @@ func dropWhatTheConditionRefuses(w *ecs.World) {
 		if dead(w, e) || deferred(w, e) || switched(w, e) || conditionMet(t.Mod, t.Wear) {
 			return
 		}
-		ecs.Set(w, e, Suppressed{Why: "a condição não se cumpre"})
+		suppress(w, e, "a condição não se cumpre")
 	})
 }
 
@@ -215,13 +220,18 @@ func dropWhatTheConditionRefuses(w *ecs.World) {
 // parcela dele — ver `factor.go`.
 func harvestFactors(w *ecs.World) {
 	factors := factorsOf(w)
+	var sources map[string]string
+	ecs.Each(w, func(_ ecs.Entity, f worldFactors) { sources = f.source })
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if dead(w, e) || deferred(w, e) || t.Mod.Factor == nil {
 			return
 		}
 		key := targetKey(t.Mod.Target)
-		factors[key] = severest(factors[key], *t.Mod.Factor)
-		ecs.Set(w, e, Suppressed{Why: "é fator, e fator não soma"})
+		if won := severest(factors[key], *t.Mod.Factor); won != factors[key] {
+			factors[key] = won
+			sources[key] = t.SourceID
+		}
+		suppress(w, e, "é fator, e fator não soma")
 	})
 }
 
@@ -261,6 +271,11 @@ func resolveStacking(w *ecs.World) {
 		amount int
 	}
 	winner := map[string]slot{}
+	type loss struct {
+		loser ecs.Entity
+		key   string
+	}
+	losses := []loss{}
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if dead(w, e) || deferred(w, e) || accumulates(t.Mod.BonusType) {
 			return
@@ -276,8 +291,34 @@ func resolveStacking(w *ecs.World) {
 			loser, amount = held.best, held.amount
 			winner[key] = slot{best: e, amount: t.Mod.Amount}
 		}
-		ecs.Set(w, loser, Suppressed{Why: "bônus de " + t.Mod.BonusType + " não empilha: " + strconv.Itoa(amount) + " perdeu"})
+		suppress(w, loser, "bônus de "+t.Mod.BonusType+" não empilha: "+strconv.Itoa(amount)+" perdeu")
+		losses = append(losses, loss{loser, key})
 	})
+	// O MOTIVO NOMEIA O VENCEDOR FINAL, e por isso sai depois da varredura: com +1, +2 e +3 do mesmo tipo,
+	// o +1 perdeu primeiro para o +2, que depois perdeu para o +3 — e a conta da ficha diz "não empilha com"
+	// quem está nela, não com outro que também ficou de fora.
+	for _, l := range losses {
+		won, _ := ecs.Get[Term](w, winner[l.key].best)
+		ecs.Set(w, l.loser, OutOfTheSum{Note: stackingLossNote(won.Source, won.Mod.BonusType)})
+	}
+}
+
+// OutOfTheSum marca a parcela que mirava um alvo e não entrou nele, com a frase que a conta da ficha mostra
+// (`AggregatedStat.Dropped`). Só a recebe o que a pessoa esperaria ver somado: o que perdeu o empilhamento.
+// O dado extra, o fator e a flag também saem da pilha, mas não foram descartados: foram para outro lugar.
+type OutOfTheSum struct{ Note string }
+
+// stackingLossNote é o motivo de uma parcela que perdeu o empilhamento. As duas pilhas — a da resolução e a
+// das perícias (`resolveStack`) — dizem com a mesma frase.
+//
+// A CONDIÇÃO tem regra e página próprias: "Condições com os mesmos efeitos não se acumulam; aplique apenas
+// os mais severos" (p394). Todas elas vêm de uma fonte só, "Condições", e por isso a frase não nomeia o
+// vencedor: "não empilha com Condições" não diria nada. O resto segue a p226, e o vencedor tem nome.
+func stackingLossNote(winner, bonusType string) string {
+	if bonusType == "condition" {
+		return "não entra: condições com os mesmos efeitos não se acumulam, vale a mais severa (p394)"
+	}
+	return "não entra: não empilha com " + winner + " (mesmo tipo de bônus, p226)"
 }
 
 // effectsFromWorld lê o mundo resolvido e monta os `ItemEffects`.
@@ -294,6 +335,15 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 		ce  ConditionalEffect
 	}
 	offers := []offer{}
+	dropped := map[string][]Contribution{}
+	ecs.Each(w, func(e ecs.Entity, t Term) {
+		if out, has := ecs.Get[OutOfTheSum](w, e); has && !deferred(w, e) {
+			key := targetKey(t.Mod.Target)
+			dropped[key] = append(dropped[key], Contribution{
+				SourceID: t.SourceID, Source: t.Source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount, Note: out.Note,
+			})
+		}
+	})
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		on := switched(w, e)
 		if _, optional := ecs.Get[Optional](w, e); optional {
@@ -346,14 +396,14 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 		for _, c := range buckets[key] {
 			total += c.Amount
 		}
-		byTarget[key] = AggregatedStat{Total: total, Contributions: buckets[key]}
+		byTarget[key] = AggregatedStat{Total: total, Contributions: buckets[key], Dropped: dropped[key]}
 	}
 	flags, _ := ecs.Get[worldFlags](w, resource)
 	factors, _ := ecs.Get[worldFactors](w, resource)
 	riders := ridersOf(w)
 	return ItemEffects{
 		ByTarget: byTarget, Flags: flags.set, FlagSources: flags.source,
-		Factors:     factors.byTarget,
+		Factors: factors.byTarget, FactorSources: factors.source,
 		ExtraDamage: riders.extra, CriticalBonus: riders.critical,
 		Announced:   riders.announced,
 		Conditional: conditional,
@@ -401,23 +451,4 @@ func factorsOf(w *ecs.World) map[string]Ratio {
 	var found map[string]Ratio
 	ecs.Each(w, func(_ ecs.Entity, f worldFactors) { found = f.byTarget })
 	return found
-}
-
-// worldAfterResolving devolve quantos termos o mundo tem e as razões dos que o
-// EMPILHAMENTO calou.
-//
-// Existe para o caso que prende a tag `Suppressed`: a saída da resolução é
-// byte a byte igual à de antes, então medir a saída não diria nada sobre ela.
-func worldAfterResolving(items []ActiveItem) (int, []string) {
-	w, _ := resolutionWorld()
-	ecs.Run(w, resolutionSystems(items, nil)...)
-
-	total, reasons := 0, []string{}
-	ecs.Each(w, func(e ecs.Entity, _ Term) {
-		total++
-		if s, has := ecs.Get[Suppressed](w, e); has && strings.Contains(s.Why, "não empilha") {
-			reasons = append(reasons, s.Why)
-		}
-	})
-	return total, reasons
 }

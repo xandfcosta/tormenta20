@@ -80,6 +80,8 @@ type breakdownRow struct {
 	// Note é o PORQUÊ do modificador ("desbalanceada: -2 em ataque"), e ela
 	// quebra linha em vez de truncar.
 	Note string
+	// Dropped é a parcela que não entrou no total, com o motivo na `Note` (ver `ds.SumTerm`).
+	Dropped bool
 }
 
 type extraBlock struct {

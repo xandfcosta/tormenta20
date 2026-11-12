@@ -13,11 +13,13 @@ import (
 
 // O QUE A TELA ESCREVE SOBRE FATOR.
 //
-// O fator do motor é um número por ALVO ou por FONTE, e ele não carrega
-// procedência nenhuma: quem sabe de onde ele veio é o acervo do personagem. As
-// duas telas que precisam disso fazem a MESMA varredura — a aba Magias, para o
-// custo cortado (p39), e o contador de degraus, para o bônus dobrado (p42) —, e
-// é por isso que elas moram juntas aqui em vez de uma cópia em cada painel.
+// O fator do motor é um número por ALVO ou por FONTE, e a resolução guarda quem o
+// pôs (`ItemEffects.FactorSources`). As duas telas que precisam disso — a aba
+// Magias, para o custo cortado (p39), e o contador de degraus, para o bônus
+// dobrado (p42) — perguntam ao motor e só escrevem a frase. Elas varriam o acervo
+// do personagem lendo o alvo de cada poder por conta própria, e a varredura
+// passou a prometer o corte da Alta Arcana em toda tradição quando o alvo ganhou
+// campo de tradição.
 //
 // # Por que a tela INFORMA em vez de calcular
 //
@@ -36,14 +38,16 @@ import (
 // corta este custo pela metade (p39)".
 //
 // Ela NOMEIA o poder porque "cai pela metade" sem dono manda procurar.
-func costCutNote(dto sheet.CharacterDTO, tradition string) string {
-	owned, factor, found := powerThatFactors(dto, func(m engine.Modifier) bool {
-		return cutsThisCost(m, tradition)
-	})
-	if !found {
+func costCutNote(computed engine.ComputedSheet, ok bool, tradition string) string {
+	if !ok {
 		return ""
 	}
-	return owned.Name + " corta este custo " + writtenRatio(factor) + writtenPage(owned.Page)
+	reach := computed.ForSpell("pmCost", engine.SpellAt{Tradition: tradition})
+	power, known := book.ClassPowers()[reach.FactorSource]
+	if reach.Factor == (engine.Ratio{}) || !known {
+		return ""
+	}
+	return power.Name + " corta este custo " + writtenRatio(reach.Factor) + writtenPage(power.BookPage)
 }
 
 // onlyHereCutNote é a frase de quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" já
@@ -81,49 +85,20 @@ func spellFocusNote(dto sheet.CharacterDTO, spellID string) string {
 // sai com +10 na ficha; sem a frase, a diferença seria um número aparecendo do
 // nada na aba Combate.
 func stanceBonusNote(dto sheet.CharacterDTO, stancePowerID string) string {
-	if stancePowerID == "" {
+	if stancePowerID == "" || dto.Ruleset == nil {
 		return ""
 	}
-	owned, factor, found := powerThatFactors(dto, func(m engine.Modifier) bool {
-		return scalesThisSource(m, stancePowerID)
-	})
-	if !found {
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
 		return ""
 	}
-	return owned.Name + " " + writtenScale(factor) + " este bônus" + writtenPage(owned.Page)
-}
-
-// powerThatFactors acha, no acervo do personagem, o poder cujo modificador
-// casa — e devolve o fator dele junto.
-//
-// O PRIMEIRO vence, e isso é verdade enquanto houver um só: quem decide entre
-// dois fatores no mesmo alvo é o `severest` do motor, e no dia em que dois
-// poderes cortarem o mesmo número esta função tem de perguntar a ele em vez de
-// parar no primeiro.
-func powerThatFactors(
-	dto sheet.CharacterDTO, matches func(engine.Modifier) bool,
-) (ownedPower, engine.Ratio, bool) {
-	byPower := map[string][]engine.Modifier{}
-	for _, p := range book.ClassPowersWithModifiers() {
-		byPower[p.ID] = p.Modifiers
+	effects := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
+	factor, source, set := effects.FactorOn(engine.ModifierTarget{K: "source", Name: stancePowerID})
+	power, known := book.ClassPowers()[source]
+	if !set || !known {
+		return ""
 	}
-	for _, owned := range ownedPowersOf(dto) {
-		for _, m := range byPower[owned.ID] {
-			if matches(m) {
-				return owned, *m.Factor, true
-			}
-		}
-	}
-	return ownedPower{}, engine.Ratio{}, false
-}
-
-// scalesThisSource diz se este modificador multiplica a parcela daquela FONTE —
-// o alvo que a Fúria Titânica usa para dobrar a Fúria e não o ataque inteiro.
-func scalesThisSource(m engine.Modifier, sourceID string) bool {
-	if m.Factor == nil || m.Condition != nil || m.Target.K != "source" {
-		return false
-	}
-	return m.Target.Name == sourceID
+	return power.Name + " " + writtenScale(factor) + " este bônus" + writtenPage(power.BookPage)
 }
 
 // writtenScale é o fator que CRESCE, em palavras. O que encolhe tem frase
@@ -138,17 +113,6 @@ func writtenScale(r engine.Ratio) string {
 	default:
 		return "multiplica por " + strconv.Itoa(r.Num) + "/" + strconv.Itoa(r.Den)
 	}
-}
-
-// cutsThisCost diz se este modificador corta o custo DESTA magia: ele é fator
-// de `pmCost`, não pende de interruptor, e o escopo dele — quando existe — é a
-// TRADIÇÃO da magia. A Alta Arcana corta as arcanas e deixa a divina do
-// multiclasse em paz (p39).
-func cutsThisCost(m engine.Modifier, tradition string) bool {
-	if m.Factor == nil || m.Condition != nil || m.Target.K != "pmCost" {
-		return false
-	}
-	return m.Target.Scope == "" || m.Target.Scope == tradition
 }
 
 // writtenRatio é o fator em palavras. A metade e o zero têm nome em português;

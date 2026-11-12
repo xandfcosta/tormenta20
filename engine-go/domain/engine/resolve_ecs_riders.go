@@ -31,7 +31,7 @@ func harvestWeaponRiders(w *ecs.World) {
 			// O DADO DA BRIGA não é dano extra de ataque nenhum: ele É o dado
 			// do ataque desarmado, que a carta lê dos poderes (`brawlDie`).
 			// Colhido como extra, cada degrau somaria em toda arma.
-			ecs.Set(w, e, Suppressed{Why: "é o dado do ataque desarmado, e quem o lê é a carta"})
+			suppress(w, e, "é o dado do ataque desarmado, e quem o lê é a carta")
 			return
 		}
 		if t.Mod.Dice != "" {
@@ -52,14 +52,14 @@ func harvestWeaponRiders(w *ecs.World) {
 			riders.extra = append(riders.extra, ExtraDamage{
 				Dice: t.Mod.Dice, Type: t.Mod.Target.DamageType, Scope: t.Mod.Target.Scope,
 			})
-			ecs.Set(w, e, Suppressed{Why: "é dado extra, e dado não soma na pilha"})
+			suppress(w, e, "é dado extra, e dado não soma na pilha")
 			return
 		}
 		if t.Mod.Target.K == "announcedEffect" {
 			// O EFEITO ANUNCIADO segue o caminho da condição anunciada: sai da pilha e vai para a carta, com
 			// o texto do livro no lugar do id da condição.
 			riders.announced = append(riders.announced, AnnouncedCondition{Effect: t.Mod.Note, Scope: t.Mod.Target.Scope})
-			ecs.Set(w, e, Suppressed{Why: "é anúncio de efeito, e anúncio não soma"})
+			suppress(w, e, "é anúncio de efeito, e anúncio não soma")
 			return
 		}
 		if t.Mod.Target.K == "announcedCondition" {
@@ -73,12 +73,12 @@ func harvestWeaponRiders(w *ecs.World) {
 				Note:       t.Mod.Note,
 				Scope:      t.Mod.Target.Scope,
 			})
-			ecs.Set(w, e, Suppressed{Why: "é anúncio de condição, e anúncio não soma"})
+			suppress(w, e, "é anúncio de condição, e anúncio não soma")
 			return
 		}
 		if c := t.Mod.Condition; c != nil && c.C == "onCritical" {
 			riders.critical[targetKey(t.Mod.Target)] += t.Mod.Amount
-			ecs.Set(w, e, Suppressed{Why: "só vale no crítico, e a pilha não sabe disso"})
+			suppress(w, e, "só vale no crítico, e a pilha não sabe disso")
 		}
 	})
 	setRiders(w, riders)

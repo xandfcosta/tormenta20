@@ -160,6 +160,7 @@ func rowsFromContributions(contributions []engine.BreakdownContribution) []break
 	for _, c := range contributions {
 		rows = append(rows, breakdownRow{
 			Label: c.Source, Value: book.WithSign(c.Amount), Note: noteUnlessEchoed(c.Source, c.Note),
+			Dropped: c.Dropped,
 		})
 	}
 	return rows

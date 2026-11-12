@@ -25,6 +25,9 @@ type BreakdownContribution struct {
 	Source string `json:"source"`
 	Amount int    `json:"amount"`
 	Note   string `json:"note,omitempty"`
+	// Dropped é a parcela que NÃO entrou no total: a tela a mostra apagada e riscada, com o motivo na
+	// `Note` (ver `rowsOf`). Quem soma as parcelas pula estas.
+	Dropped bool `json:"dropped,omitempty"`
 }
 
 // SourceAmount é uma linha {source, amount} — contribuição de atributo, de RD e
@@ -223,11 +226,11 @@ func displacementBreakdown(base int, e ItemEffects, load LoadBreakdown) ValueBre
 	exemptLoad := e.Flags[DisplacementIgnoresLoad]
 
 	stat := StatFor(e, ModifierTarget{K: "displacement"})
-	contribs := withNoteContribs(stat.Contributions)
+	contribs := rowsOf(stat)
 	bonus := stat.Total
 	if armor := StatFor(e, ModifierTarget{K: "displacement", Scope: "armor"}); !exemptArmor {
 		bonus += armor.Total
-		contribs = append(contribs, withNoteContribs(armor.Contributions)...)
+		contribs = rowsOf(stat, armor)
 	}
 	// A CARGA fala em METROS — é o que a tela da mochila mostra — e aqui a conta
 	// é em quadrados.
@@ -329,7 +332,8 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 	}
 	merged := resolveStack(concatContribs(
 		stat.Contributions, allStat.Contributions, byAttrStat.Contributions, resistStat.Contributions))
-	itemContribs := withNoteContribs(merged.Contributions)
+	merged.Dropped = append(merged.Dropped, concatContribs(stat.Dropped, allStat.Dropped, byAttrStat.Dropped, resistStat.Dropped)...)
+	itemContribs := rowsOf(merged)
 
 	armorPenaltyApplied := 0
 	for _, row := range armorPenaltyContribs(e, state, load) {
@@ -426,35 +430,6 @@ func armorPenaltyContribs(
 	}
 	if armorPenaltyExpertises[state.Name] && load.ArmorPenalty != 0 {
 		out = append(out, overloadContrib(load.ArmorPenalty))
-	}
-	return out
-}
-
-// totalContribsFor is the {total, contributions} shape for a single target
-// (spellDC, pmCost, attack/damage globals).
-func totalContribsFor(e ItemEffects, target ModifierTarget) TotalContribs {
-	stat := StatFor(e, target)
-	return TotalContribs{Total: stat.Total, Contributions: withNoteContribs(stat.Contributions)}
-}
-
-// withNoteContribs maps resolution Contributions to display rows, keeping note.
-func withNoteContribs(cs []Contribution) []BreakdownContribution {
-	out := []BreakdownContribution{}
-	for _, c := range cs {
-		bc := BreakdownContribution{Source: c.Source, Amount: c.Amount}
-		if c.Note != "" {
-			bc.Note = c.Note
-		}
-		out = append(out, bc)
-	}
-	return out
-}
-
-// sourceAmountContribs maps to {source, amount}, dropping note (attributes).
-func sourceAmountContribs(cs []Contribution) []SourceAmount {
-	out := []SourceAmount{}
-	for _, c := range cs {
-		out = append(out, SourceAmount{Source: c.Source, Amount: c.Amount})
 	}
 	return out
 }

@@ -230,8 +230,17 @@ custo. Um campo por componente seria a struct de volta, com cerimônia.
 - Os casos do livro prendem quase toda a ordem; que cada sistema escreveu o
   componente dele prende o `TestEveryAttackSystemWritesItsComponent`, com um
   CENÁRIO por sistema, porque alguns só agem numa metade do dado.
-- **Suprimir é write-once, e a PRIMEIRA razão é a que fica**: um sistema que
-  passe depois não troca o motivo que a mesa lê pelo dele.
+- **Suprimir é write-once, e a PRIMEIRA razão é a que fica** (`suppress`), no
+  ataque e na resolução: um sistema que passe depois não troca o motivo pelo dele.
+
+**A parcela que NÃO entrou vai para a conta da ficha**, e só ela: a que perdeu o
+empilhamento recebe `OutOfTheSum` com a frase, e chega à tela pelo
+`AggregatedStat.Dropped` e pelo `rowsOf`, marcada (`BreakdownContribution.Dropped`).
+A frase nomeia o vencedor (p226), menos na condição, que tem regra e página
+próprias (p394) e vem toda de uma fonte só. A redução de PM que perde a disputa
+sai marcada pelo `ForSpell`. **O fator, o dado extra e a flag também saem da
+pilha, e não são parcela descartada**: foram para outro lugar, e mostrá-los como
+"não entra" seria falso. Quem soma as parcelas da conta pula as marcadas.
 - **A notação de dano só é lida no tempo do dano**: julgar o teste não a lê, e o
   `RollAttackDamage` e o `DamageToRoll` falham num `"1d"` do catálogo sempre.
 
@@ -483,7 +492,7 @@ caiu entre os dois sem ninguém o ler.
   (`CharacterItem.Choice`). **O alcance** é o do medalhão de prata, "de alcance
   pessoal" (p160).
 - **No custo, o total já sai pela p226**: reduções de fontes diferentes não se
-  acumulam (`resolvePmCostMod`). O mosaico "Custo PM" e a conjuração leem o mesmo
+  acumulam (`pmCostDispute`), e a que perdeu aparece riscada na conta. O mosaico "Custo PM" e a conjuração leem o mesmo
   número; ele somava, e mostrava −3 onde a conjuração cobrava −2.
 - **O mosaico pergunta só pela tradição** da classe conjuradora de maior nível, e o
   que vale só numa escola ou num alcance não entra nele. A aba Magias pergunta pela

@@ -326,6 +326,10 @@ type Contribution struct {
 type AggregatedStat struct {
 	Total         int            `json:"total"`
 	Contributions []Contribution `json:"contributions"`
+	// Dropped são as parcelas que miravam este alvo e NÃO entraram, com o motivo na `Note`: a que perdeu o
+	// empilhamento (p226). Elas não somam no `Total`; existem para a conta da ficha dizer o que ficou de
+	// fora, e por quê.
+	Dropped []Contribution `json:"dropped,omitempty"`
 }
 
 type ConditionalEffect struct {
@@ -383,6 +387,9 @@ type ItemEffects struct {
 	// compõem (ver `factor.go`). Quem o APLICA é a decomposição, porque ele age
 	// sobre o total COM a base, e a base não passa por aqui.
 	Factors map[string]Ratio
+	// FactorSources é o id de quem pôs o fator de cada alvo (o mais severo, e no empate o primeiro): a
+	// tela nomeia o poder que corta o custo ou dobra a parcela, em vez de varrer o acervo à procura dele.
+	FactorSources map[string]string
 	// ExtraDamage são as parcelas em dado que os encantos somam, na ordem das
 	// fontes. Elas não entram no `ByTarget` porque não são somáveis: quem as
 	// aplica é a carta da arma, que sabe rolá-las.
@@ -769,27 +776,37 @@ func resolveStack(contribs []Contribution) AggregatedStat {
 		byType[c.BonusType] = append(byType[c.BonusType], c)
 	}
 
-	kept := []Contribution{}
+	kept, dropped := []Contribution{}, []Contribution{}
 	for _, bt := range order {
 		list := byType[bt]
 		if accumulates(bt) {
 			kept = append(kept, list...)
 			continue
 		}
-		best := list[0]
-		for _, e := range list {
-			if strongerThan(e.Amount, best.Amount) {
-				best = e
+		best := 0
+		for i, e := range list {
+			if strongerThan(e.Amount, list[best].Amount) {
+				best = i
 			}
 		}
-		kept = append(kept, best)
+		kept = append(kept, list[best])
+		// O QUE PERDEU vai para a conta com o motivo, como o perdedor da resolução (`stackingLossNote`).
+		for i, e := range list {
+			if i != best {
+				e.Note = stackingLossNote(list[best].Source, bt)
+				dropped = append(dropped, e)
+			}
+		}
 	}
 
 	total := 0
 	for _, c := range kept {
 		total += c.Amount
 	}
-	return AggregatedStat{Total: total, Contributions: kept}
+	if len(dropped) == 0 {
+		dropped = nil
+	}
+	return AggregatedStat{Total: total, Contributions: kept, Dropped: dropped}
 }
 
 // ConditionalDisplayInput é uma linha de efeito condicional entregue ao

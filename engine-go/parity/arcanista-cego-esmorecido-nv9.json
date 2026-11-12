@@ -1267,6 +1267,12 @@
           {
             "source": "Condições",
             "amount": -5
+          },
+          {
+            "source": "Condições",
+            "amount": -5,
+            "note": "não entra: condições com os mesmos efeitos não se acumulam, vale a mais severa (p394)",
+            "dropped": true
           }
         ],
         "armorPenaltyApplied": 0
@@ -1948,6 +1954,12 @@
           {
             "source": "Condições",
             "amount": -5
+          },
+          {
+            "source": "Condições",
+            "amount": -5,
+            "note": "não entra: condições com os mesmos efeitos não se acumulam, vale a mais severa (p394)",
+            "dropped": true
           }
         ],
         "armorPenaltyApplied": 0

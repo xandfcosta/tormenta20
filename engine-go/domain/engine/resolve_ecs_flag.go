@@ -80,7 +80,7 @@ func eraseExemptFlags(w *ecs.World) {
 	// primeira versão, e a bandeira voltava sem ninguém ver.
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if t.Mod.Target.K == "flag" && exempt[t.Mod.Target.Name] {
-			ecs.Set(w, e, Suppressed{Why: "a bandeira " + t.Mod.Target.Name + " está isenta"})
+			suppress(w, e, "a bandeira "+t.Mod.Target.Name+" está isenta")
 		}
 	})
 }
@@ -104,7 +104,7 @@ func dropWhatTheFlagTurnsOff(w *ecs.World) {
 		}
 		for _, flag := range c.AllFlags() {
 			if flags.set[flag] {
-				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " está posta"})
+				suppress(w, e, "a flag "+flag+" está posta")
 				return
 			}
 		}
@@ -135,7 +135,7 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 		// `wielded` e pede a flag do bardo (p158).
 		for _, flag := range c.Requires {
 			if !flags.set[flag] {
-				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " não está posta"})
+				suppress(w, e, "a flag "+flag+" não está posta")
 				return
 			}
 		}
@@ -144,7 +144,7 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 				if bodyStateFlags[flag] && !isUnconditional(t.Mod) {
 					ecs.Set(w, e, Optional{})
 				}
-				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " o cala"})
+				suppress(w, e, "a flag "+flag+" o cala")
 				return
 			}
 		}
@@ -153,7 +153,7 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 		}
 		for _, flag := range c.AllFlags() {
 			if !flags.set[flag] {
-				ecs.Set(w, e, Suppressed{Why: "a flag " + flag + " não está posta"})
+				suppress(w, e, "a flag "+flag+" não está posta")
 				return
 			}
 		}
@@ -171,11 +171,11 @@ func harvestFlags(w *ecs.World) {
 			// A FLAG SOB CONDIÇÃO NÃO ACENDE pelo interruptor: quem a acende é a condição cumprida
 			// (`raiseFlags`), e a segunda passada de antes a descartava do mesmo jeito. O interruptor
 			// que liga um grupo de flag é o `FlagGroupID`, e ele liga os termos que LEEM a flag.
-			ecs.Set(w, e, Suppressed{Why: "flag sob condição não acende pelo interruptor"})
+			suppress(w, e, "flag sob condição não acende pelo interruptor")
 			return
 		}
 		raiseFlagWithSource(flags, t)
-		ecs.Set(w, e, Suppressed{Why: "é flag, e flag não soma"})
+		suppress(w, e, "é flag, e flag não soma")
 	})
 }
 
