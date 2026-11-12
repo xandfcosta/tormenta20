@@ -7,8 +7,7 @@ import (
 // The top of the COLLECTION layer: ActiveItemsFor (the entry point) and the
 // item-level modifier assembly — catalog mods, overlays (melhorias/materiais),
 // non-proficiency penalties (p142) and weapon-attack mirroring. Together with collect_entities.go (race/origin/class/tormenta)
-// it produces the []ActiveItem the resolution engine (ComputeItemEffects)
-// consumes.
+// it produces the []ActiveItem the resolution (`resolveInWorld`) consumes.
 
 // vestedWear is the shared 'vested' wear-state pointer used by every
 // non-equipment ActiveItem (race/origin/class/effect). Read-only.

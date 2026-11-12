@@ -42,7 +42,7 @@ func TestTheRaceSizeShowsInStealthManeuversAndWeaponDamage(t *testing.T) {
 		return 0
 	}
 	manobra := func(ch Character, lado ManeuverRole) int {
-		return ManeuverBonus(ComputeItemEffects(world.ActiveItemsFor(ch)), "derrubar", lado)
+		return ManeuverBonus(resolveInWorld(world.ActiveItemsFor(ch), nil), "derrubar", lado)
 	}
 	dado := func(ch Character) string {
 		cards := wieldedCards(world.ComputeWeaponCards(ch, nil))

@@ -94,18 +94,23 @@ func TestAGroupSwitchFoldsEveryModifierOfTheFlag(t *testing.T) {
 			Condition: &ModifierCondition{C: "flagOn", Flag: "bencao-caseira", Label: "Bênção caseira"},
 		}
 	}
-	base := ComputeItemEffects([]ActiveItem{
+	base := resolveInWorld([]ActiveItem{
 		vested("amuleto-do-mestre",
 			naFlag(ModifierTarget{K: "attack", Scope: "all"}, 2),
 			naFlag(ModifierTarget{K: "damage", Scope: "all"}, 3),
 		),
-	})
+	}, nil)
 	if len(base.Conditional) != 2 {
 		t.Fatalf("o arranjo devia oferecer 2 condicionais e ofereceu %d — sem dois membros, "+
 			"ligar o grupo e ligar um termo dariam o mesmo resultado", len(base.Conditional))
 	}
 
-	ligado := ApplyActiveConditionals(base, map[string]bool{FlagGroupID("bencao-caseira"): true})
+	ligado := resolveInWorld([]ActiveItem{
+		vested("amuleto-do-mestre",
+			naFlag(ModifierTarget{K: "attack", Scope: "all"}, 2),
+			naFlag(ModifierTarget{K: "damage", Scope: "all"}, 3),
+		),
+	}, map[string]bool{FlagGroupID("bencao-caseira"): true})
 
 	ataque := StatFor(ligado, ModifierTarget{K: "attack", Scope: "all"}).Total
 	dano := StatFor(ligado, ModifierTarget{K: "damage", Scope: "all"}).Total
@@ -114,7 +119,8 @@ func TestAGroupSwitchFoldsEveryModifierOfTheFlag(t *testing.T) {
 			"Um dos dois zerado quer dizer que o interruptor dobrou só um membro — "+
 			"a ficha soma metade da regra com a tela dizendo que são duas.", ataque, dano)
 	}
-	if len(ligado.Conditional) != 0 {
-		t.Errorf("sobraram %d condicionais na oferta depois de o grupo ser ligado", len(ligado.Conditional))
+	// Ligado, o grupo continua oferecido com os dois membros: a aba Efeitos desenha o interruptor aceso.
+	if len(ligado.Conditional) != 2 {
+		t.Errorf("o grupo ligado ficou com %d membros na oferta, e são 2", len(ligado.Conditional))
 	}
 }

@@ -40,12 +40,12 @@ func TestTheGodPowerReachesTheSheet(t *testing.T) {
 		{Name: "Furtividade", Attribute: "dexterity"},
 		{Name: "Intuição", Attribute: "wisdom"},
 	}
-	semDevocao := ComputeItemEffects(world.ActiveItemsFor(
-		Character{Level: 1, Expertises: pericias}))
+	semDevocao := resolveInWorld(world.ActiveItemsFor(
+		Character{Level: 1, Expertises: pericias}), nil)
 
 	comPoder := func(poder string) ItemEffects {
-		return ComputeItemEffects(world.ActiveItemsFor(
-			Character{Level: 1, GodPowers: `["` + poder + `"]`, Expertises: pericias}))
+		return resolveInWorld(world.ActiveItemsFor(
+			Character{Level: 1, GodPowers: `["` + poder + `"]`, Expertises: pericias}), nil)
 	}
 	subiu := func(efeitos ItemEffects, alvo ModifierTarget) int {
 		return StatFor(efeitos, alvo).Total - StatFor(semDevocao, alvo).Total
@@ -93,8 +93,8 @@ func TestBothGrantedPowersReachTheSheet(t *testing.T) {
 	bare := Character{Level: 1, Classes: cleric}
 	both := Character{Level: 1, Classes: cleric, GodPowers: `["Escamas Dracônicas","Bênção do Mana"]`}
 	defense := ModifierTarget{K: "defense"}
-	before := StatFor(ComputeItemEffects(world.ActiveItemsFor(bare)), defense).Total
-	after := StatFor(ComputeItemEffects(world.ActiveItemsFor(both)), defense).Total
+	before := StatFor(resolveInWorld(world.ActiveItemsFor(bare), nil), defense).Total
+	after := StatFor(resolveInWorld(world.ActiveItemsFor(both), nil), defense).Total
 	if after-before != 2 {
 		t.Errorf("as Escamas Dracônicas deviam somar 2 na Defesa, e somaram %d", after-before)
 	}

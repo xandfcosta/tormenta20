@@ -137,7 +137,7 @@ func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school s
 	if ec, err := sheet.EngineCharacterFrom(dto); err == nil && !engine.CastsInTheShape(ec) {
 		panel.ShapeSilence = character.ShapeSilence
 	}
-	panel.Learned = learnedSpellRowsOf(s, dto, panel.CastableCircle)
+	panel.Learned = learnedSpellRowsOf(dto, panel.CastableCircle)
 	// Quem não conjura não aprende, e por isso não paga o catálogo: a lista
 	// inteira do Capítulo 4 viajaria em toda cena da ficha de um guerreiro.
 	if panel.IsCaster {
@@ -158,7 +158,21 @@ func casterClassesOf(dto sheet.CharacterDTO) []string {
 }
 
 // learnedSpellRowsOf é o grimório, por círculo e depois por nome.
-func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learnedSpellRow {
+//
+// A FICHA É CALCULADA UMA VEZ para a lista inteira, e a nota de alcance uma vez por alcance: cada linha
+// refazia a ficha (com as cartas de arma) e a coleta inteira, e o grimório de um conjurador de nível alto
+// tem dezenas de magias.
+func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow {
+	computed, computedOK := spellSheetOf(dto)
+	rangeNotes := map[string]string{}
+	rangeNote := func(spellRange string) string {
+		note, seen := rangeNotes[spellRange]
+		if !seen {
+			note = rangeCutNote(dto, spellRange)
+			rangeNotes[spellRange] = note
+		}
+		return note
+	}
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
 		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
@@ -170,7 +184,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			ID: learned.CatalogSpellID, Name: fromBook.Name,
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
 			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
-			CD:        s.spellCdOf(dto, spell),
+			CD:        spellCdOf(dto, computed, computedOK, spell),
 			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, castable),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
@@ -181,7 +195,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 			Command:  learned.CatalogSpellID,
 			CostCut:  costCutNote(dto, sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))),
 			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
-			RangeCut: rangeCutNote(dto, fromBook.Range),
+			RangeCut: rangeNote(fromBook.Range),
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {
@@ -200,8 +214,7 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 // usa: uma segunda conta aqui daria dois números para a mesma pergunta. O bônus
 // é o mesmo que a caixa soma (`SpellBonusFor`), com a tradição da classe que lança: a varinha arcana
 // sobe a CD das arcanas e não a das divinas (p160).
-func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
-	computed, _, ok := s.sheetForPanels(dto)
+func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, spell catalog.Spell) string {
 	if !ok {
 		return "—"
 	}
@@ -337,4 +350,17 @@ func schoolOptions(active string) []filterOption {
 		options = append(options, filterOption{Value: id, Label: schoolNames[id], Active: active == id})
 	}
 	return options
+}
+
+// spellSheetOf é a ficha com o opt-in do jogador, sem as cartas de arma que o `sheetForPanels` monta junto:
+// a CD da magia não as lê.
+func spellSheetOf(dto sheet.CharacterDTO) (engine.ComputedSheet, bool) {
+	if dto.Ruleset == nil {
+		return engine.ComputedSheet{}, false
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return engine.ComputedSheet{}, false
+	}
+	return dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals)), true
 }

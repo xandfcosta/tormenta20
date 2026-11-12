@@ -23,7 +23,7 @@ func TestAnOverlayOnlyLandsOnTheHostFamilyItNames(t *testing.T) {
 			CatalogID: ptr(item), Name: item, Equipped: ptr(equipped),
 			Improvements: "[]", Material: &adamante,
 		}}}
-		effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+		effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(ch), nil)
 		return StatFor(effects, ModifierTarget{K: "damageReduction"}).Total
 	}
 

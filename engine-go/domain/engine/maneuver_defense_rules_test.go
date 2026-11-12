@@ -52,7 +52,7 @@ func TestTheDefensiveManeuverBonusNeverReachesTheAttack(t *testing.T) {
 
 	// E o CONTROLE: o bônus existe mesmo — sem esta metade, um modificador que
 	// nunca chegou ao motor passaria por "não vaza".
-	efeitos := ComputeItemEffects(world.ActiveItemsFor(comPoder))
+	efeitos := resolveInWorld(world.ActiveItemsFor(comPoder), nil)
 	defesa := ModifierTarget{K: "maneuver", Name: "agarrar", Scope: "defense"}
 	if got := StatFor(efeitos, defesa).Total; got != 5 {
 		t.Errorf("resistir a agarrar vale %d e o livro dá +5 (p89) — o modificador "+

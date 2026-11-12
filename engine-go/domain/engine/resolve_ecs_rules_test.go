@@ -33,7 +33,7 @@ func TestAFactorWhoseConditionFailsDoesNotApply(t *testing.T) {
 		},
 	}}
 
-	effects := ComputeItemEffects(items)
+	effects := resolveInWorld(items, nil)
 
 	if got := StatFor(effects, ModifierTarget{K: "displacement"}).Total; got != 2 {
 		t.Fatalf("a parcela somou %d e esperava 2 — o controle já estava errado", got)
@@ -48,7 +48,7 @@ func TestAFactorWhoseConditionFailsDoesNotApply(t *testing.T) {
 	// Sem ele, um coletor que nunca colhe fator nenhum passaria no caso acima.
 	wielded := "wielded"
 	items[0].Equipped = &wielded
-	comFator := ComputeItemEffects(items)
+	comFator := resolveInWorld(items, nil)
 	fator := comFator.Factors[targetKey(ModifierTarget{K: "displacement"})]
 	if !fator.isSet() || fator.Num != 1 || fator.Den != 2 {
 		t.Errorf("empunhando, o fator devia ser 1/2 e veio %+v — o caso acima estaria "+
@@ -58,7 +58,7 @@ func TestAFactorWhoseConditionFailsDoesNotApply(t *testing.T) {
 
 // O TERMO QUE PERDE O EMPILHAMENTO CONTINUA NO MUNDO, com a razão escrita.
 //
-// É o que esta fatia compra além do refactor. O `ComputeItemEffects` antigo
+// É o que esta fatia compra além do refactor. A função que a resolução em sistemas substituiu
 // DESCARTAVA o perdedor, e a ficha — que existe para responder "por que 12?" —
 // não tinha como dizer "−2 de X, não aplicado por não empilhar".
 //
@@ -75,7 +75,7 @@ func TestTheTermThatLosesStackingStaysInTheWorldWithItsReason(t *testing.T) {
 	}}
 
 	// A conta: `armor` não empilha, vence o +5.
-	if got := StatFor(ComputeItemEffects(items), ModifierTarget{K: "defense"}).Total; got != 5 {
+	if got := StatFor(resolveInWorld(items, nil), ModifierTarget{K: "defense"}).Total; got != 5 {
 		t.Fatalf("a Defesa somou %d e o empilhamento manda valer o maior, 5", got)
 	}
 

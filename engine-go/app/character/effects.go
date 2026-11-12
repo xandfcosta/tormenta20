@@ -367,7 +367,7 @@ func (p Plays) refuseUnofferedSituational(dto sheet.CharacterDTO, key string) er
 	if err != nil {
 		return fmt.Errorf("montar o personagem do motor (%d): %w", dto.ID, err)
 	}
-	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
+	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
 	for _, g := range SituationalGroupsOf(offered) {
 		if g.Key == key {
 			return nil

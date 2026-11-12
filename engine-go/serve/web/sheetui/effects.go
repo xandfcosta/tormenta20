@@ -166,7 +166,7 @@ func (s Scene) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
 	if err != nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
-	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
+	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
 	return effectsPanelFor(dto, offered, dto.Ruleset.ComputeEquippedFlags(ec.Items))
 }
 

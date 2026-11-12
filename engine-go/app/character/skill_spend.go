@@ -97,7 +97,7 @@ func sheetFlags(dto sheet.CharacterDTO) map[string]bool {
 	if err != nil {
 		return nil
 	}
-	return engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Flags
+	return dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Flags
 }
 
 // trainedOnly diz se o livro só deixa rolar a perícia com treino (p115). O

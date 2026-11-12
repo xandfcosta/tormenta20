@@ -20,7 +20,7 @@ func TestThePermanentAttributeLeavesTheAppliedEffectOut(t *testing.T) {
 	if got := ruleset.PermanentAttribute(ch, "intelligence"); got != 3 {
 		t.Errorf("Inteligência sem temporários = %d, esperava 3 (2 da ficha + 1 dos brincos, sem o +2 da cena)", got)
 	}
-	whole := attributeBreakdown(ch, "intelligence", ComputeItemEffects(ruleset.ActiveItemsFor(ch)))
+	whole := attributeBreakdown(ch, "intelligence", resolveInWorld(ruleset.ActiveItemsFor(ch), nil))
 	if whole.Total != 5 {
 		t.Fatalf("controle: a Inteligência da ficha = %d, esperava 5 — o efeito ou o item não chegou à conta", whole.Total)
 	}

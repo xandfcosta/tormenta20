@@ -35,7 +35,7 @@ import (
 func TestEveryCollectorLandsInTheDeclaredOrder(t *testing.T) {
 	esperada := []string{
 		"item", "efeito", "raça", "origem", "classe", "geral", "devoção", "tormenta",
-		"condição", "mesa",
+		"condição", "mesa", "corpo",
 	}
 
 	dir := filepath.Clean(filepath.Join(mustWd(t), "..", "..", "parity"))
@@ -137,6 +137,10 @@ func everyCollectorWorld(t *testing.T, dir string) *Ruleset {
 // reconhece — e não reconhecer FALHA o caso, em vez de sair da conta.
 func collectorKindOf(item ActiveItem) string {
 	switch {
+	// O CORPO primeiro, porque a forma selvagem e as patas armadas têm id de poder de classe, e cairiam em
+	// "classe" pelo prefixo.
+	case item.Source == "as mãos":
+		return "corpo"
 	case strings.HasPrefix(item.SourceID, CampaignGrantSource):
 		return "mesa"
 	case item.Source == "Condições":

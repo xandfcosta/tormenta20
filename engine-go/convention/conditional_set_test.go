@@ -40,7 +40,7 @@ func TestNoCallerInventsAnEmptyConditionalSet(t *testing.T) {
 	receiveConditionals := map[string]bool{
 		"ComputeSheet": true, "ComputeWeaponCards": true,
 		"SpellPmCostFor": true, "SpellPmLimitFor": true,
-		"ApplyActiveConditionals": true,
+		"EffectsOf": true,
 	}
 
 	root, err := filepath.Abs("..")

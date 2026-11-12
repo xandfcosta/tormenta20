@@ -43,7 +43,7 @@ func TestTheOriginPointsAtTheGeneralPowerInsteadOfCopyingIt(t *testing.T) {
 	comPoder.OriginChoices = `["` + benefício + `"]`
 
 	efeito := func(ch Character, alvo ModifierTarget) int {
-		return StatFor(ComputeItemEffects(world.ActiveItemsFor(ch)), alvo).Total
+		return StatFor(resolveInWorld(world.ActiveItemsFor(ch), nil), alvo).Total
 	}
 	investigacao := ModifierTarget{K: "expertise", Name: "Investigação"}
 	percepcao := ModifierTarget{K: "expertise", Name: "Percepção"}

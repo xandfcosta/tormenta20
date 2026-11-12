@@ -19,7 +19,7 @@ func TestTheTitanicFuryDoublesTheFuryParcelAndNothingElse(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	furiaLigada := map[string]bool{FlagGroupID("furia"): true}
 	ataqueDe := func(ch Character, ligados map[string]bool) int {
-		efeitos := ApplyActiveConditionals(ComputeItemEffects(world.ActiveItemsFor(ch)), ligados)
+		efeitos := resolveInWorld(world.ActiveItemsFor(ch), ligados)
 		return StatFor(efeitos, ModifierTarget{K: "attack", Scope: "all"}).Total
 	}
 	barbaro := func(level int) Character {

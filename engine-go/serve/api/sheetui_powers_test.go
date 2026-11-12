@@ -829,10 +829,7 @@ func statOf(t *testing.T, f sceneFixture, id int64, target engine.ModifierTarget
 	if err != nil {
 		t.Fatalf("converter a ficha %d: %v", id, err)
 	}
-	effects := engine.ApplyActiveConditionals(
-		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)),
-		sheet.ToStringSet(dto.Conditionals),
-	)
+	effects := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
 	return engine.StatFor(effects, target).Total
 }
 

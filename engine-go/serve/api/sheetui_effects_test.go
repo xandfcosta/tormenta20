@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"t20engine/app/character"
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -383,7 +382,7 @@ func offeredSituationalKey(t *testing.T, f sceneFixture, id int64) string {
 		t.Fatalf("converter a ficha %d: %v", id, err)
 	}
 	groups := character.SituationalGroupsOf(
-		engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional)
+		dto.Ruleset.EffectsOf(ec, nil).Conditional)
 	if len(groups) == 0 {
 		t.Fatal("esta ficha não oferece situacional nenhum — o controle positivo não tem o que medir")
 	}

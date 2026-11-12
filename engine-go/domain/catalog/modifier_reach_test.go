@@ -11,14 +11,14 @@ import (
 // O QUE O CATÁLOGO DECLARA, O MOTOR TEM DE LER (ALE-423).
 //
 // O `scale` tem TRÊS leitores: o caminho dos VITAIS (`evalModifierScale`), a
-// SOMA DE ATRIBUTO (`per: attribute`, resolvida pelo `sheetEffects` desde a
+// SOMA DE ATRIBUTO (`per: attribute`, resolvida pelo `EffectsOf` desde a
 // ALE-485) e o DADO QUE CRESCE de um poder de classe (`growDice`, ALE-486). Fora deles ele é IGNORADO e o modificador vale o `amount` cru — não
 // estoura, não avisa, e o verbete passa a prometer um número que ninguém soma.
 // Foi assim que o "+Constituição na Defesa" da Torre Inabalável (p55) virou +1.
 //
 // O IRMÃO DELE JÁ SAIU: havia aqui um guarda contra `factor` sob condição, e o
-// defeito que ele descrevia foi consertado — o `ApplyActiveConditionals` passa
-// a aplicar o fator do condicional LIGADO. Quem protege aquilo agora é o
+// defeito que ele descrevia foi consertado — a resolução passa a aplicar o
+// fator do condicional LIGADO. Quem protege aquilo agora é o
 // `TestTheFactorOfASwitchedOnConditionalMultiplies`, no `domain/engine`, que é
 // a camada onde a regra mora.
 

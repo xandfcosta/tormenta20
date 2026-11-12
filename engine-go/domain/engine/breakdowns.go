@@ -143,7 +143,7 @@ type ComputedSheet struct {
 func (r *Ruleset) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
 	return deriveSheet(sheetInput{
 		char:        ch,
-		effects:     r.sheetEffects(ch, activeConditionals),
+		effects:     r.EffectsOf(ch, activeConditionals),
 		raceSquares: r.raceDisplacement(ch),
 	})
 }
@@ -488,6 +488,7 @@ func autoFailExpertises(e ItemEffects) []string {
 //
 //	ruleset.PermanentAttribute(ch, "intelligence") // 3
 func (r *Ruleset) PermanentAttribute(ch Character, attr string) int {
-	ch.ActiveEffects, ch.ActiveConditions = nil, "[]"
-	return attributeBreakdown(ch, attr, ComputeItemEffects(r.ActiveItemsFor(ch))).Total
+	// A FORMA SELVAGEM também é temporária: ela é fonte da coleta, e o animal não é o atributo do druida.
+	ch.ActiveEffects, ch.ActiveConditions, ch.WildShape = nil, "[]", nil
+	return attributeBreakdown(ch, attr, resolveInWorld(r.ActiveItemsFor(ch), nil)).Total
 }

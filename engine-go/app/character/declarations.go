@@ -35,7 +35,7 @@ func OffersTheDeclaration(dto sheet.CharacterDTO, flag string) bool {
 	if flag == engine.WildAgileBothFlag && (ec.WildShape == nil || ec.WildShape.Form != engine.WildAgile) {
 		return false
 	}
-	offered := engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional
+	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
 	return slices.ContainsFunc(offered, func(c engine.ConditionalEffect) bool { return c.Flag == flag })
 }
 

@@ -33,7 +33,7 @@ func TestOneExpertiseIsExemptFromTheArmorPenaltyOfItsItem(t *testing.T) {
 			Condition: &ModifierCondition{C: "vested"},
 		}},
 	}
-	effects := ComputeItemEffects([]ActiveItem{armadura, escudo})
+	effects := resolveInWorld([]ActiveItem{armadura, escudo}, nil)
 	ch := Character{Level: 1}
 	pericia := func(nome string) ExpertiseBreakdown {
 		return expertiseBreakdown(ch, CharacterExpertise{Name: nome, Attribute: "dexterity"},

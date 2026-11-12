@@ -56,7 +56,7 @@ func TestTheComposedWeaponBringsTheOverlaysTheBookWroteInItalics(t *testing.T) {
 			card.ExtraDamage)
 	}
 
-	effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+	effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(ch), nil)
 	// O NÚMERO E A PROCEDÊNCIA. O +2 de ataque é da Formidável (p336), e quem
 	// lê a decomposição tem de ver o nome DELA — "Avalanche +2" seria o número
 	// certo com a origem errada, e é a diferença entre informar e só somar.
@@ -122,7 +122,7 @@ func TestTheComposedArmorStacksTheBaseTheImprovementAndTheEnchant(t *testing.T) 
 	}
 	// A PENALIDADE também soma as duas: −5 da armadura e −1 da Reforçada, que
 	// é o preço que a melhoria cobra pelo +1 de Defesa (p166).
-	effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+	effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(ch), nil)
 	if penalty := StatFor(effects, ModifierTarget{K: "armorPenalty"}).Total; penalty != -6 {
 		t.Errorf("a penalidade de armadura deu %d, e é −5 da completa −1 da Reforçada",
 			penalty)

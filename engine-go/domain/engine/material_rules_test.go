@@ -131,12 +131,12 @@ func TestTheRedMatterChargesCharismaExceptIntimidation(t *testing.T) {
 	ptr := func(s string) *string { return &s }
 	vermelha := "material-materia-vermelha"
 
-	efeitos := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(Character{
+	efeitos := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(Character{
 		Items: []CharacterItem{{
 			CatalogID: ptr("espada-longa"), Name: "Espada longa",
 			Equipped: ptr("wielded"), Improvements: "[]", Material: &vermelha,
 		}},
-	}))
+	}), nil)
 
 	for _, pericia := range []string{"Adestramento", "Atuação", "Diplomacia", "Enganação", "Jogatina"} {
 		if got := StatFor(efeitos, ModifierTarget{K: "expertise", Name: pericia}).Total; got != -2 {
@@ -168,7 +168,7 @@ func TestTheEternalIceReducesFireByThePieceItIsOn(t *testing.T) {
 			CatalogID: ptr(item), Name: item, Equipped: ptr(equipped),
 			Improvements: "[]", Material: &gelo,
 		}}}
-		effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+		effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(ch), nil)
 		return StatFor(effects, ModifierTarget{K: "damageReduction", DamageType: "fogo"}).Total
 	}
 
@@ -209,7 +209,7 @@ func TestTheTollonWoodGivesMagicResistanceOnShieldAndCatalyst(t *testing.T) {
 			CatalogID: ptr(item), Name: item, Equipped: ptr(equipped),
 			Improvements: "[]", Material: &tollon,
 		}}}
-		effects := ComputeItemEffects(BookRuleset(catalogs).ActiveItemsFor(ch))
+		effects := resolveInWorld(BookRuleset(catalogs).ActiveItemsFor(ch), nil)
 		for _, c := range effects.Conditional {
 			if c.Target.K == "resistance" {
 				return c, true

@@ -8,7 +8,7 @@ import (
 )
 
 // TestItemEffectsParity feeds each seed character's real `activeItems` into
-// ComputeItemEffects and asserts the resolved ItemEffects match the oracle
+// the resolution and asserts the resolved ItemEffects match the oracle
 // semantically. It proves the resolution core on real data, not just the inline
 // unit cases.
 //
@@ -28,7 +28,7 @@ func TestItemEffectsParity(t *testing.T) {
 			}
 			readJSON(t, filepath.Join(dir, slug), &oracle)
 
-			got := roundTrip(t, ComputeItemEffects(oracle.ActiveItems))
+			got := roundTrip(t, resolveInWorld(oracle.ActiveItems, nil))
 			if !reflect.DeepEqual(got, oracle.ItemEffects) {
 				diffReport(t, "itemEffects", got, oracle.ItemEffects)
 			}

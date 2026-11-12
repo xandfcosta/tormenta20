@@ -276,7 +276,7 @@ func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
 		return outside
 	}
 	on := sheet.ToStringSet(dto.Conditionals)
-	for _, c := range engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional {
+	for _, c := range dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional {
 		if c.Flag != "" && on[engine.FlagGroupID(c.Flag)] {
 			outside[c.Flag] = true
 		}

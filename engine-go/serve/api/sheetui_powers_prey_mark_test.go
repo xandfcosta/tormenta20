@@ -130,7 +130,7 @@ func extraDiceOnTheFirstCard(t *testing.T, f sceneFixture, id int64) []engine.Ex
 func preyMarkSwitch(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	dto, ec := loadedCharacter(t, f, id)
-	groups := character.SituationalGroupsOf(engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Conditional)
+	groups := character.SituationalGroupsOf(dto.Ruleset.EffectsOf(ec, nil).Conditional)
 	labels := []string{}
 	for _, g := range groups {
 		for _, m := range g.Members {

@@ -23,9 +23,9 @@ func TestTheExplorerAddsWisdomInTheChosenTerrain(t *testing.T) {
 
 	// O que se mede é a DIFERENÇA que o interruptor faz: outras habilidades do
 	// caçador já somam em algumas destas perícias.
-	off := r.sheetEffects(ch, nil)
+	off := r.EffectsOf(ch, nil)
 	gain := func(on string, target ModifierTarget) int {
-		return StatFor(r.sheetEffects(ch, map[string]bool{FlagGroupID(on): true}), target).Total - StatFor(off, target).Total
+		return StatFor(r.EffectsOf(ch, map[string]bool{FlagGroupID(on): true}), target).Total - StatFor(off, target).Total
 	}
 	for _, target := range []ModifierTarget{{K: "defense"}, {K: "expertise", Name: "Furtividade"}, {K: "expertise", Name: "Sobrevivência"}} {
 		if got := gain("explorador:floresta", target); got != 5 {
@@ -41,7 +41,7 @@ func TestTheExplorerAddsWisdomInTheChosenTerrain(t *testing.T) {
 
 	// "mínimo +1": Sabedoria −1 ainda soma 1.
 	ch = explorerSheet(-1, `["floresta"]`)
-	off = r.sheetEffects(ch, nil)
+	off = r.EffectsOf(ch, nil)
 	if got := gain("explorador:floresta", ModifierTarget{K: "defense"}); got != 1 {
 		t.Errorf("Sabedoria −1 na floresta dá %+d na Defesa, esperava +1 (mínimo)", got)
 	}

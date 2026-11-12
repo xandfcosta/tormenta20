@@ -241,5 +241,5 @@ func (s Scopes) restTraitsOf(ctx context.Context, row sqlcgen.Character) (sheet.
 	if err != nil {
 		return sheet.RestTraits{}, fmt.Errorf("converter a ficha %d para o descanso: %w", row.ID, err)
 	}
-	return sheet.RestTraitsOf(engine.ComputeItemEffects(dto.Ruleset.ActiveItemsFor(ec)).Flags), nil
+	return sheet.RestTraitsOf(dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Flags), nil
 }

@@ -5,8 +5,8 @@ import "testing"
 // O FATOR DE UM CONDICIONAL LIGADO MULTIPLICA (ALE-423).
 //
 // O `harvestFactors` pula todo termo ADIADO, e todo condicional é adiado: um
-// fator sob `flagOn` nunca chegava ao mapa de fatores. O
-// `ApplyActiveConditionals` então o perdia de vez, com um comentário dizendo
+// fator sob `flagOn` nunca chegava ao mapa de fatores. A segunda passada que
+// encaixava os ligados (que não existe mais) então o perdia de vez, com um comentário dizendo
 // que *"nenhum condicional traz fator hoje"* — a Torre Inabalável do cavaleiro
 // (p55) trouxe, e o "você não pode se deslocar" dela não descia.
 //
@@ -32,7 +32,7 @@ func wornItemWith(mods []Modifier) []ActiveItem {
 }
 
 func TestTheFactorOfASwitchedOnConditionalMultiplies(t *testing.T) {
-	base := ComputeItemEffects(wornItemWith(stoppedByTheTower()))
+	base := resolveInWorld(wornItemWith(stoppedByTheTower()), nil)
 	// DESLIGADO não multiplica nada, e ele é o controle: sem esta metade, um
 	// fator aplicado SEMPRE passaria no caso de baixo.
 	if _, has := base.Factors[targetKey(ModifierTarget{K: "displacement"})]; has {
@@ -42,7 +42,7 @@ func TestTheFactorOfASwitchedOnConditionalMultiplies(t *testing.T) {
 		t.Fatalf("o condicional não saiu para o opt-in: %d", len(base.Conditional))
 	}
 
-	ligado := ApplyActiveConditionals(base, map[string]bool{FlagGroupID("postura-torre"): true})
+	ligado := resolveInWorld(wornItemWith(stoppedByTheTower()), map[string]bool{FlagGroupID("postura-torre"): true})
 	factor, has := ligado.Factors[targetKey(ModifierTarget{K: "displacement"})]
 	if !has {
 		t.Fatal("a postura ligada não trouxe o fator: o deslocamento não é zerado")
@@ -60,7 +60,7 @@ func TestTheFactorOfASwitchedOnConditionalMultiplies(t *testing.T) {
 // temia.
 func TestTheUnconditionalFactorSurvivesTheOptIn(t *testing.T) {
 	wielded := "wielded"
-	base := ComputeItemEffects([]ActiveItem{{
+	base := resolveInWorld([]ActiveItem{{
 		SourceID: "espada", Source: "Espada longa", Equipped: &wielded,
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{K: "critRange"}, Factor: &Ratio{Num: 2, Den: 1},
@@ -68,14 +68,22 @@ func TestTheUnconditionalFactorSurvivesTheOptIn(t *testing.T) {
 			{Target: ModifierTarget{K: "attack"}, Amount: 1, BonusType: "untyped",
 				Condition: &ModifierCondition{C: "flagOn", Flag: "qualquer"}},
 		},
-	}})
+	}}, nil)
 	// O `wielded` é INCONDICIONAL para o motor (ver `isUnconditional`), então
 	// este fator é colhido na passada principal — o encanto Ameaçadora (p336)
 	// é o caso real, e ele sempre funcionou.
 	if _, has := base.Factors[targetKey(ModifierTarget{K: "critRange"})]; !has {
 		t.Fatal("o fator de `wielded` não foi colhido: a bancada não mede o que vem medir")
 	}
-	ligado := ApplyActiveConditionals(base, map[string]bool{FlagGroupID("qualquer"): true})
+	ligado := resolveInWorld([]ActiveItem{{
+		SourceID: "espada", Source: "Espada longa", Equipped: &wielded,
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{K: "critRange"}, Factor: &Ratio{Num: 2, Den: 1},
+				Condition: &ModifierCondition{C: "wielded"}},
+			{Target: ModifierTarget{K: "attack"}, Amount: 1, BonusType: "untyped",
+				Condition: &ModifierCondition{C: "flagOn", Flag: "qualquer"}},
+		},
+	}}, map[string]bool{FlagGroupID("qualquer"): true})
 	if _, has := ligado.Factors[targetKey(ModifierTarget{K: "critRange"})]; !has {
 		t.Error("ligar um condicional perdeu o fator que já estava lá")
 	}

@@ -26,9 +26,9 @@ func (r *Ruleset) ComputeEquippedFlags(items []CharacterItem) []EquippedFlag {
 		if catalog == nil {
 			continue
 		}
-		effects := ComputeItemEffects([]ActiveItem{
+		effects := resolveInWorld([]ActiveItem{
 			{Source: it.Name, Equipped: it.Equipped, Modifiers: catalog.Modifiers},
-		})
+		}, nil)
 		flags := make([]string, 0, len(effects.Flags))
 		for f := range effects.Flags {
 			flags = append(flags, f)

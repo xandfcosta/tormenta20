@@ -205,8 +205,8 @@ func TestAssumingACombatStanceCostsTheMovementAction(t *testing.T) {
 // deslocar"* (p55).
 //
 // O fator dela (`deslocamento × 0`) nasceu inerte: o `harvestFactors` pula
-// todo termo adiado, e todo condicional é adiado. Hoje o
-// `ApplyActiveConditionals` o aplica quando a postura está ligada, e este caso
+// todo termo adiado, e todo condicional é adiado. Hoje a resolução o aplica
+// quando a postura está ligada, e este caso
 // é a prova de ponta a ponta — da linha do catálogo ao metro que a pessoa lê.
 //
 // A OUTRA METADE DELA AINDA NÃO DESCE: *"soma sua Constituição na Defesa"*

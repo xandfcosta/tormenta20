@@ -167,7 +167,7 @@ func (r *Ruleset) PmCostCutsFor(ch Character, conditionals map[string]bool, spel
 	if spellRange == "" {
 		return nil
 	}
-	return totalContribsFor(r.sheetEffects(ch, conditionals), ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions
+	return totalContribsFor(r.EffectsOf(ch, conditionals), ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions
 }
 
 // spellDCBySchool são os bônus de CD de uma tradição E uma escola, por "tradição:escola". As escolas não
@@ -350,7 +350,7 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 func (r *Ruleset) SpellPmLimitFor(
 	ch Character, conditionals map[string]bool, spellClasses []string, tradition string,
 ) int {
-	effects := r.sheetEffects(ch, conditionals)
+	effects := r.EffectsOf(ch, conditionals)
 	bonus := pmLimitBreakdown(ch, effects).ItemBonus
 	if tradition != "" {
 		bonus += totalContribsFor(effects, ModifierTarget{K: "pmLimit", Scope: tradition}).Total
@@ -419,7 +419,7 @@ func (r *Ruleset) SpellPmCostFor(
 	if raw <= 0 {
 		return 0
 	}
-	effects := r.sheetEffects(ch, conditionals)
+	effects := r.EffectsOf(ch, conditionals)
 	contribs := StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions
 	if spellRange != "" {
 		contribs = append(slices.Clone(contribs), StatFor(effects, ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions...)

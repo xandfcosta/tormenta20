@@ -213,7 +213,7 @@ func TestTheWeaponSumsLandOnlyOnTheWeaponsTheBookNames(t *testing.T) {
 }
 
 // TestNoAttributeSumTargetsAnAttribute prende a premissa da segunda passada do
-// `sheetEffects`: os atributos que ela lê são os da primeira, e uma soma que
+// `EffectsOf`: os atributos que ela lê são os da primeira, e uma soma que
 // mirasse um atributo os mudaria depois de lidos. O `isAttributeSum` a ignora
 // — e por isso ela tem de reprovar aqui, com o nome, e não valer zero em
 // silêncio na ficha.
