@@ -18,7 +18,7 @@ func TestEveryDeclarationLightsAFlagItsPowerReadsAndThatEnds(t *testing.T) {
 		}
 	}
 	measured := 0
-	for _, d := range Declarations() {
+	for _, d := range declarations() {
 		measured++
 		if !slices.Contains(ends[d.PowerID], d.Flag) {
 			t.Errorf("%s (%s) declara a flag %q, e nenhum modificador do poder a lê com fim (`Ends`): "+

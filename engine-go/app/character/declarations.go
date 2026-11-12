@@ -12,7 +12,7 @@ import (
 )
 
 // O USAR DE UMA DECLARAÇÃO — ou o gesto da Forma Ágil, que não tem poder próprio — liga a flag dela, e o
-// "encerrar" da aba Efeitos a desliga (ver `book.Declarations`). Não há PM, uso por cena nem efeito ativo a gravar: o que dura até o próximo
+// "encerrar" da aba Efeitos a desliga (ver `book.Declaration`). Não há PM, uso por cena nem efeito ativo a gravar: o que dura até o próximo
 // turno é o condicional da flag, e quem o desliga na volta da vez é a fila.
 
 // OffersTheDeclaration diz se a ficha tem o que declarar com esta flag. Com o Estilo de Duas Armas,
@@ -40,7 +40,7 @@ func OffersTheDeclaration(dto sheet.CharacterDTO, flag string) bool {
 }
 
 // Declare liga a declaração pela flag dela — o gesto da Forma Ágil, que não tem poder próprio para ter
-// um Usar (`book.Declarations`).
+// um Usar (`book.DeclarationFor`).
 //
 //	plays.Declare(ctx, dto, engine.WildAgileBothFlag)
 func (p Plays) Declare(ctx context.Context, dto sheet.CharacterDTO, flag string) error {

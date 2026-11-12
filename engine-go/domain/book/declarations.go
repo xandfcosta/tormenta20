@@ -1,7 +1,6 @@
 package book
 
 import (
-	"slices"
 	"sync"
 
 	"t20engine/domain/engine"
@@ -40,13 +39,7 @@ var shapeDeclarations = []Declaration{{
 	PowerID: engine.WildTierPowerID(engine.WildTierNormal), Page: 63,
 }}
 
-// Declarations são todas: as do Usar de um poder e as da forma.
-//
-//	book.Declarations() // o Estilo de Duas Armas, as Ambidestrias, o Disparo Rápido e a Forma Ágil
-func Declarations() []Declaration {
-	return slices.Clone(declarations())
-}
-
+// declarations são todas: as do Usar de um poder e as da forma.
 var declarations = sync.OnceValue(func() []Declaration {
 	out := []Declaration{}
 	for _, a := range Activations() {
