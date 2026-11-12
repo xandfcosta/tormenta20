@@ -406,7 +406,7 @@ func thatChoosePowers(
 		}
 		outside = append(outside, powerChoice{
 			ID: p.ID, Name: p.Name, Detail: p.Description, Requires: book.PowerRequirements(p.ID), Source: "Classe",
-			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks[p.ID], owned),
+			Chosen: contemTraco(chosen, p.ID), Options: optionsOf(p, picks, owned),
 		})
 	}
 	for _, p := range book.GeneralPowers() {
@@ -420,7 +420,7 @@ func thatChoosePowers(
 		// O poder geral que pede escolha (Foco em Perícia, Foco em Arma) se
 		// escolhe pela opção, como o de classe (ALE-510).
 		if withChoice, chooses := book.PowerWithChoice(p.ID); chooses {
-			choice.Options = optionsOf(withChoice, picks[p.ID], owned)
+			choice.Options = optionsOf(withChoice, picks, owned)
 		}
 		outside = append(outside, choice)
 	}

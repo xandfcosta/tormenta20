@@ -8,13 +8,13 @@ import "testing"
 //	 com outras reduções de custo)."
 //
 // É a exceção escrita à p226 ("Reduções no custo de PM não são cumulativas"):
-// o −1 soma por fora da disputa entre reduções, entra antes do fator e
-// respeita o piso de 1 PM.
+// o −1 entra por cima da redução que venceu a disputa, antes do fator, e
+// respeita o piso de 1 PM. Ele é do PODER: a escolha sem o poder não corta.
 func TestTheSpellFocusCutsOnePmFromTheChosenSpellOnTopOfOtherReductions(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	focused := `{"foco-em-magia":["bola-de-fogo"]}`
 	druida20 := Character{
-		Level: 20, Classes: []CharacterClass{{ClassName: "Druida", Level: 20}}, PowerChoices: focused,
+		Level: 20, Classes: []CharacterClass{{ClassName: "Druida", Level: 20}}, ClassPowers: `["foco-em-magia"]`, PowerChoices: focused,
 	}
 
 	// 6 PM, −2 da Força da Natureza (p63) e −1 do Foco: 3.
@@ -30,14 +30,14 @@ func TestTheSpellFocusCutsOnePmFromTheChosenSpellOnTopOfOtherReductions(t *testi
 	// quaisquer outros efeitos que reduzam custo" (p39). 9 − 1 = 8, e a metade
 	// é 4; com o −1 depois da metade seriam 9 / 2 = 4 e 4 − 1 = 3.
 	arcanista20 := Character{
-		Level: 20, Classes: []CharacterClass{{ClassName: "Arcanista", Level: 20}}, PowerChoices: focused,
+		Level: 20, Classes: []CharacterClass{{ClassName: "Arcanista", Level: 20}}, ClassPowers: `["foco-em-magia"]`, PowerChoices: focused,
 	}
 	if got := world.SpellPmCostFor(arcanista20, 9, 0, nil, SpellAt{Tradition: "arcana", Spell: "bola-de-fogo"}); got != 4 {
 		t.Errorf("com a Alta Arcana e o Foco, a magia de 9 PM saiu por %d PM; want 4 (o −1 antes da metade)", got)
 	}
 
 	// O PISO de 1 PM (p226): a magia de 1 PM continua custando 1.
-	druida1 := Character{Level: 1, Classes: []CharacterClass{{ClassName: "Druida", Level: 1}}, PowerChoices: focused}
+	druida1 := Character{Level: 1, Classes: []CharacterClass{{ClassName: "Druida", Level: 1}}, ClassPowers: `["foco-em-magia"]`, PowerChoices: focused}
 	if got := world.SpellPmCostFor(druida1, 1, 0, nil, SpellAt{Tradition: "divina", Spell: "bola-de-fogo"}); got != 1 {
 		t.Errorf("a magia de 1 PM com o Foco saiu por %d PM, e o piso da p226 é 1", got)
 	}

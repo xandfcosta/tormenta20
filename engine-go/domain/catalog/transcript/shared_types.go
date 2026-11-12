@@ -26,6 +26,11 @@ type Modifier struct {
 	Scale             *ModifierScale     `json:"scale,omitempty"`
 	FromChoice        string             `json:"fromChoice,omitempty"`
 	AppliesToCategory []string           `json:"appliesToCategory,omitempty"`
+	// StacksWith e StacksWithAll são as exceções que o livro escreve à p226 numa redução de custo de PM:
+	// o cajado do poder é "cumulativo com Mestre em Escola" (p337), pelo id da fonte, e o Foco em Magia
+	// "cumulativo com outras reduções de custo" (p131). Ver `pmCostDispute`, no motor.
+	StacksWith    []string `json:"stacksWith,omitempty"`
+	StacksWithAll bool     `json:"stacksWithAll,omitempty"`
 }
 
 type ModifierCondition struct {

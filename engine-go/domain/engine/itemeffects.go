@@ -183,6 +183,8 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Factor            *Ratio             `json:"factor,omitempty"`
 		AppliesToCategory []string           `json:"appliesToCategory,omitempty"`
 		From              string             `json:"from,omitempty"`
+		StacksWith        []string           `json:"stacksWith,omitempty"`
+		StacksWithAll     bool               `json:"stacksWithAll,omitempty"`
 	}
 	return json.Marshal(wire{
 		Target:            m.Target,
@@ -196,6 +198,8 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		Factor:            m.Factor,
 		AppliesToCategory: m.AppliesToCategory,
 		From:              m.From,
+		StacksWith:        m.StacksWith,
+		StacksWithAll:     m.StacksWithAll,
 	})
 }
 
@@ -220,6 +224,9 @@ type Modifier struct {
 	//	name   o nome do alvo — o atributo do Aumento de Atributo (p38)
 	//	scope  sufixo do escopo escrito — `weapon:` + o id da arma, na
 	//	       Especialização em Arma (p65)
+	//	school a escola da magia — o Especialista e o Mestre em Escola (p38), e o
+	//	       tomo hermético, cuja escolha é do item (`chosenByTheItem`)
+	//	spell  a magia — o Foco em Magia (p131)
 	FromChoice string             `json:"fromChoice,omitempty"`
 	BonusType  string             `json:"bonusType"`
 	Condition  *ModifierCondition `json:"condition,omitempty"`
@@ -258,6 +265,11 @@ type Modifier struct {
 	// Não é a NOTA com outro nome: a nota é prosa que uma errata reescreve, e
 	// por isso o endereço não a carrega. Isto é identificador.
 	From string `json:"from,omitempty"`
+	// StacksWith e StacksWithAll são as exceções que o livro escreve à p226 numa redução de custo de PM:
+	// "cumulativo com Mestre em Escola" (cajado do poder, p337), pelo id da fonte, e "cumulativo com
+	// outras reduções de custo" (Foco em Magia, p131). Quem as lê é o `pmCostDispute`.
+	StacksWith    []string `json:"stacksWith,omitempty"`
+	StacksWithAll bool     `json:"stacksWithAll,omitempty"`
 	// classLevel é o nível na classe que concedeu o poder, anotado pela coleta
 	// (`classActiveItems`) para o teto `classLevel` de um `scale` por atributo.
 	// Fora do fio: é procedência da ficha, e não dado do catálogo.
@@ -321,6 +333,10 @@ type Contribution struct {
 	BonusType string `json:"bonusType"`
 	Amount    int    `json:"amount"`
 	Note      string `json:"note,omitempty"`
+	// StacksWith e StacksWithAll atravessam a dobra vindos do modificador (ver `Modifier`), porque a
+	// disputa da p226 acontece sobre as parcelas, e não sobre o catálogo.
+	StacksWith    []string `json:"stacksWith,omitempty"`
+	StacksWithAll bool     `json:"stacksWithAll,omitempty"`
 }
 
 type AggregatedStat struct {

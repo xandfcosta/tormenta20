@@ -1,8 +1,6 @@
 package sheetui
 
 import (
-	"slices"
-
 	"strconv"
 	"strings"
 
@@ -51,29 +49,21 @@ func costCutNote(computed engine.ComputedSheet, ok bool, tradition string) strin
 }
 
 // onlyHereCutNote é a frase de quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" já
-// mostra: "Medalhão de prata tira 1 PM deste custo", nas de alcance pessoal (p160). Ela segue a regra do
-// `costCutNote`: o número da prévia é o cheio, e quem desconta é o servidor ao conjurar.
+// mostra: "Medalhão de prata tira 1 PM deste custo", nas de alcance pessoal (p160), e "Foco em Magia tira
+// 1 PM deste custo", na magia escolhida (p131). Ela segue a regra do `costCutNote`: o número da prévia é o
+// cheio, e quem desconta é o servidor ao conjurar. A redução que perdeu a disputa da p226 não corta, e
+// não entra na frase.
 func onlyHereCutNote(computed engine.ComputedSheet, ok bool, at engine.SpellAt) string {
 	if !ok {
 		return ""
 	}
 	notes := []string{}
 	for _, cut := range computed.ForSpell("pmCost", at).OnlyHere {
-		if cut.Amount < 0 {
+		if cut.Amount < 0 && !cut.Dropped {
 			notes = append(notes, cut.Source+" tira "+strconv.Itoa(-cut.Amount)+" PM deste custo")
 		}
 	}
 	return strings.Join(notes, " · ")
-}
-
-// spellFocusNote é a frase do Foco em Magia: "Foco em Magia tira 1 PM deste
-// custo (p131)". Ela segue a regra do `costCutNote`: o número grande da prévia
-// é o custo cheio, e quem desconta é o servidor ao conjurar (ALE-428, ALE-510).
-func spellFocusNote(dto sheet.CharacterDTO, spellID string) string {
-	if !slices.Contains(sheet.PowerPicks(dto.PowerChoices)["foco-em-magia"], spellID) {
-		return ""
-	}
-	return "Foco em Magia tira 1 PM deste custo (p131)"
 }
 
 // stanceBonusNote é a frase do contador de degraus: "Fúria Titânica dobra este

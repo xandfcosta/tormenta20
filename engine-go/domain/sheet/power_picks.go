@@ -167,8 +167,38 @@ func powerPicksFit(dto CharacterDTO) error {
 				return err
 			}
 		}
+		if err := amongPicksOfFit(dto, power, picks); err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+// amongPicksOfFit confere a escolha que só vale entre as de outro poder: o Mestre em Escola pede
+// "Especialista em Escola com a escola escolhida" (p38).
+func amongPicksOfFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
+	from := power.Choice.AmongPicksOf
+	if from == "" {
+		return nil
+	}
+	allowed := PowerPicks(dto.PowerChoices)[from]
+	for _, pick := range picks {
+		if !slices.Contains(allowed, pick) {
+			return fmt.Errorf("%s escolhe entre as escolhas de %s, e %s não é uma delas",
+				power.Name, book.ClassPowers()[from].Name, optionName(power, pick))
+		}
+	}
+	return nil
+}
+
+// optionName é o nome da opção na tela, ou o id quando a escolha não a conhece.
+func optionName(power book.ClassPower, pick string) string {
+	for _, o := range power.Choice.Offered() {
+		if o.ID == pick {
+			return o.Name
+		}
+	}
+	return pick
 }
 
 // picksAreOptions recusa a escolha que o livro não oferece, dizendo quais são.

@@ -468,10 +468,8 @@ aceso.
 
 **Dois fatores no mesmo alvo: vale o MAIS SEVERO, e eles não compõem**, com ou
 sem condição — "aplique apenas o mais severo" (p394), *"reduções no custo de PM
-não são cumulativas"* (p226); Lento mais Imóvel dá 0m. **O Foco em Magia é a
-exceção ESCRITA**: −1 PM na magia escolhida, *"cumulativo com outras reduções de
-custo"* (p131). Não é modificador `pmCost` (entraria na disputa da p226): o
-`SpellPmCostFor` o soma por fora, antes do fator e do piso.
+não são cumulativas"* (p226); Lento mais Imóvel dá 0m. As reduções que o livro
+diz cumulativas são parcelas, e não fatores — ver o custo, logo abaixo.
 
 **O que vale para uma magia é uma pergunta só: `ForSpell(conta, magia)`**, nos
 efeitos e na ficha calculada. As três contas são a CD (`spellDC`), o limite de PM
@@ -489,15 +487,23 @@ caiu entre os dois sem ninguém o ler.
   abençoado corta as divinas (p345).
 - **A escola** é a do tomo hermético, "dessa escola" (p160), preenchida pelo
   `FromChoice: school` do verbete com a escolha que o item pede
-  (`CharacterItem.Choice`). **O alcance** é o do medalhão de prata, "de alcance
+  (`CharacterItem.Choice`), e a do Especialista e do Mestre em Escola (p38), com a escolha do poder.
+  **A magia** é a do Foco em Magia (p131), pelo `FromChoice: spell`. **O alcance** é o do medalhão de prata, "de alcance
   pessoal" (p160).
 - **No custo, o total já sai pela p226**: reduções de fontes diferentes não se
   acumulam (`pmCostDispute`), e a que perdeu aparece riscada na conta. O mosaico "Custo PM" e a conjuração leem o mesmo
   número; ele somava, e mostrava −3 onde a conjuração cobrava −2.
+- **As exceções são do verbete, e o modificador as declara.** "Cumulativo com Mestre em Escola"
+  (cajado do poder, p337) é `StacksWith` com o id da outra fonte; "cumulativo com outras reduções de
+  custo" (Foco em Magia, p131) é `StacksWithAll`. **O livro não tem exemplo de três reduções juntas, e
+  esta é a leitura do dono:** as fontes ligadas somam e contam como UMA redução, que disputa inteira com
+  as outras — a dupla de −2 perde para um corte de −3, e as duas saem riscadas —; a que acumula com tudo
+  entra por cima da vencedora. A ligação vale nos dois sentidos: o cajado a declara, e o Mestre não a
+  repete.
 - **O mosaico pergunta só pela tradição** da classe conjuradora de maior nível, e o
-  que vale só numa escola ou num alcance não entra nele. A aba Magias pergunta pela
+  que vale só numa escola, num alcance ou numa magia não entra nele. A aba Magias pergunta pela
   magia inteira: a CD da linha leva o tomo, e a nota de custo lista o que corta só
-  ali (`SpellReach.OnlyHere`). O limite tem a decomposição própria
+  ali e venceu a disputa (`SpellReach.OnlyHere`) — o Foco em Magia sai nela, como o medalhão. O limite tem a decomposição própria
   (`ComputedSheet.PmLimitFor`), com o nível de conjurador, a Magia Ilimitada e o
   ritual.
 - **A chave de texto só separa os baldes** (`spellDC:arcana:evocacao`,

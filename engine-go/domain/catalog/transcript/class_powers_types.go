@@ -53,6 +53,9 @@ type PowerChoice struct {
 	// RequiresProficiency diz que a arma escolhida pede proficiência — o Foco
 	// em Arma (p128), e não a Especialização em Arma (p65).
 	RequiresProficiency bool `json:"requiresProficiency,omitempty"`
+	// AmongPicksOf é o poder cujas escolhas limitam esta: o Mestre em Escola escolhe uma escola que o
+	// Especialista em Escola já escolheu (p38).
+	AmongPicksOf string `json:"amongPicksOf,omitempty"`
 }
 
 type PowerChoiceOption struct {
