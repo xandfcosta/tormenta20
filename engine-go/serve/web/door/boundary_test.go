@@ -35,6 +35,7 @@ var permitidos = map[string]bool{
 	"t20engine/serve/web/ds":     true, // o kit do sistema novo, que a porta veste (ALE-524)
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco, que atravessam a porta
 	"t20engine/infra/wire":       true,
+	"t20engine/infra/httpio":     true, // a causa de um 500 vai para o log (`httpio.RecordCause`), não para a tela
 }
 
 func TestTheDoorDoesNotImportItsHost(t *testing.T) {

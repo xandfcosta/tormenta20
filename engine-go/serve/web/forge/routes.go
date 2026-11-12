@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/infra/httpio"
 
 	"github.com/go-chi/chi/v5"
 
@@ -126,6 +127,7 @@ func (s Scene) handleForgePost(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := s.birthHero(r, s.deps.CurrentUserID(r), answers)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, "não foi possível forjar o herói", http.StatusInternalServerError)
 		return
 	}

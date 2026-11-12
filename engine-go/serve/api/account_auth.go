@@ -38,7 +38,7 @@ func (a accountRules) authUser(u sqlcgen.User) AuthUser {
 func (a accountRules) issueSession(w http.ResponseWriter, user sqlcgen.User) bool {
 	token, err := a.gate.SignSession(user)
 	if err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not sign session")
+		httpio.WriteServerError(w, "Could not sign session", err)
 		return false
 	}
 	http.SetCookie(w, sessionCookie(a.cfg, token, int(a.gate.SessionTTL().Seconds())))

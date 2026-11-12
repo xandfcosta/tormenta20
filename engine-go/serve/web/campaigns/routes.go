@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/infra/httpio"
 
 	"t20engine/app"
 	"t20engine/app/campaign"
@@ -143,6 +144,7 @@ func (s Scene) handleNewPost(w http.ResponseWriter, r *http.Request) {
 	id, err := s.life.Open(r.Context(), s.deps.CurrentUserID(r), name, descriptionText)
 	if err != nil {
 		v.Notice = ui.NoticeInternal
+		httpio.RecordCause(w, err)
 		s.writeNewPage(w, r, http.StatusInternalServerError, v)
 		return
 	}
@@ -502,6 +504,7 @@ func refuse(w http.ResponseWriter, err error) {
 	case errors.Is(err, app.ErrForbidden):
 		http.Error(w, "Só quem mestra pode mudar a crônica.", http.StatusForbidden)
 	default:
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 	}
 }
@@ -573,6 +576,7 @@ func (s Scene) handleRemovePlace(w http.ResponseWriter, r *http.Request) {
 func (s Scene) redrawPlacesWithError(w http.ResponseWriter, r *http.Request, id int64, refusal error) {
 	v, err := s.LoadOne(r.Context(), s.deps.CurrentUserID(r), s.deps.RequesterIsAdmin(r), id, "lugares")
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}

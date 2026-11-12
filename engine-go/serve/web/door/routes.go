@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"t20engine/infra/httpio"
 
 	"t20engine/app/accounts"
 	"t20engine/domain/account"
@@ -131,6 +132,7 @@ func (s Scene) handleSignUpSubmit(w http.ResponseWriter, r *http.Request) {
 	user, err := s.gate.Register(r.Context(), body)
 	if err != nil {
 		notice, status := s.signUpRefusal(err)
+		httpio.RecordCause(w, err)
 		v.Notice = notice
 		s.writeDoor(w, r, status, signUpPage(v))
 		return

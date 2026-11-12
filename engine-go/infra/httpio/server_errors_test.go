@@ -3,6 +3,7 @@ package httpio
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -107,3 +108,49 @@ func TestTheFlushCrossesTheLog(t *testing.T) {
 		t.Error("o Flush não chegou ao writer de baixo")
 	}
 }
+
+// A frase genérica de um 500 ("Could not create campaign") não carrega a causa,
+// então quem a escreve ANEXA o erro, e ele sai na mesma linha do 500 — com a
+// rota e o tempo juntos, sem precisar casar duas linhas pelo relógio.
+func TestTheRecordedCauseRidesTheServerErrorLine(t *testing.T) {
+	lines := serveThroughTheLog(t, func(w http.ResponseWriter, _ *http.Request) {
+		WriteServerError(w, "Could not create campaign", errors.New("abrir a campanha: database is locked"))
+	})
+	if len(lines) != 1 {
+		t.Fatalf("o 500 deixou %d linhas no log: %v", len(lines), lines)
+	}
+	if cause, _ := lines[0]["cause"].(string); !strings.Contains(cause, "database is locked") {
+		t.Errorf("a linha do 500 não traz a causa anexada: cause=%q", lines[0]["cause"])
+	}
+}
+
+// Anexar a causa a uma resposta que acabou 4xx não deixa linha: a recusa da
+// regra não é erro do servidor, e o chamador de um mapeador de status pode
+// anexar sempre, sem saber de antemão qual número vai sair.
+func TestACauseOnARefusalLeavesNoLogLine(t *testing.T) {
+	lines := serveThroughTheLog(t, func(w http.ResponseWriter, _ *http.Request) {
+		RecordCause(w, errors.New("a campanha 9 não é sua"))
+		WriteError(w, http.StatusForbidden, "Forbidden")
+	})
+	if len(lines) != 0 {
+		t.Fatalf("um 403 com causa anexada deixou %d linhas no log: %v", len(lines), lines)
+	}
+}
+
+// O handler nem sempre recebe o observador na mão: o gzip, ou qualquer
+// embrulho com `Unwrap`, pode estar no meio. A causa tem de achá-lo assim mesmo.
+func TestTheCauseFindsTheWatchThroughAnotherWrapper(t *testing.T) {
+	lines := serveThroughTheLog(t, func(w http.ResponseWriter, _ *http.Request) {
+		WriteServerError(&unwrappingWriter{w}, "Could not list campaigns", errors.New("no such table: campaigns"))
+	})
+	if len(lines) != 1 {
+		t.Fatalf("o 500 deixou %d linhas no log: %v", len(lines), lines)
+	}
+	if cause, _ := lines[0]["cause"].(string); !strings.Contains(cause, "no such table") {
+		t.Errorf("a causa não atravessou o embrulho: cause=%q", lines[0]["cause"])
+	}
+}
+
+type unwrappingWriter struct{ http.ResponseWriter }
+
+func (u *unwrappingWriter) Unwrap() http.ResponseWriter { return u.ResponseWriter }

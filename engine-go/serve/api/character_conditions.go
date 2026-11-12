@@ -45,7 +45,7 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 	if err := s.queries.UpdateConditions(r.Context(), sqlcgen.UpdateConditionsParams{
 		ActiveConditions: activeConditions, UpdatedAt: dbvalue.NowISO(), ID: row.ID,
 	}); err != nil {
-		httpio.WriteError(w, http.StatusInternalServerError, "Could not update conditions")
+		httpio.WriteServerError(w, "Could not update conditions", err)
 		return
 	}
 	// Avisa a mesa AO VIVO (ALE-245). Sem isto o mestre aplica "Caído" num PC e a

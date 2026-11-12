@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"t20engine/infra/httpio"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -18,6 +19,7 @@ import (
 func (s Scene) patchImprovementEditor(w http.ResponseWriter, r *http.Request, id int64, draft improvementDraft, signals map[string]any, refusal string) {
 	v, err := s.improvementEditorOf(r.Context(), id, draft, refusal)
 	if err != nil {
+		httpio.RecordCause(w, err)
 		http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 		return
 	}
@@ -42,6 +44,7 @@ func (s Scene) handleTableImprovementEditor(w http.ResponseWriter, r *http.Reque
 	if wanted := r.URL.Query().Get("melhoria"); wanted != "" {
 		improvements, err := s.life.TableImprovements(r.Context(), id)
 		if err != nil {
+			httpio.RecordCause(w, err)
 			http.Error(w, ui.NoticeInternal, http.StatusInternalServerError)
 			return
 		}
