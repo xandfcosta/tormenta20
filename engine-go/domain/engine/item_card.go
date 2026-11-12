@@ -12,7 +12,7 @@ func (r *Ruleset) itemCard(ch Character, it CharacterItem, catalog *CatalogItem,
 	// O PASSO ANDA O DADO ANTES DE TUDO, e a ordem é da p231: o crítico
 	// multiplica "os dados de dano do ataque (INCLUINDO quaisquer aumentos
 	// por passos)". Andar depois multiplicaria o dado de antes.
-	steps := DamageStepsOf(r.ownItemMods(it, catalog), &slot) +
+	steps := DamageStepsOf(r.ownItemMods(it, catalog, devotionOf(ch)), &slot) +
 		StatFor(effects, ModifierTarget{K: "damageStep", Scope: weaponScope}).Total
 	nonLethal := StatFor(effects, ModifierTarget{K: "nonLethalDamage", Scope: weaponScope}).Total > 0
 	if it.Oversized {

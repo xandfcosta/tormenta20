@@ -227,6 +227,8 @@ type Modifier struct {
 	//	school a escola da magia — o Especialista e o Mestre em Escola (p38), e o
 	//	       tomo hermético, cuja escolha é do item (`chosenByTheItem`)
 	//	spell  a magia — o Foco em Magia (p131)
+	//	god    o deus do item, que não preenche o alvo: o modificador só vale
+	//	       para devoto dele — o símbolo sagrado (p157) (`chosenByTheItem`)
 	FromChoice string             `json:"fromChoice,omitempty"`
 	BonusType  string             `json:"bonusType"`
 	Condition  *ModifierCondition `json:"condition,omitempty"`

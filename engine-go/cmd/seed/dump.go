@@ -48,6 +48,8 @@ var dumpTables = []string{
 	"character_item_enchants",
 	// Depois de `character_item_enchants`, que é o pai dela pela FK.
 	"character_item_enchant_choices",
+	// Depois de `character_items`, que é o pai dela pela FK: o deus do símbolo sagrado (p157).
+	"character_item_choices",
 	"character_oversized_weapons",
 	"character_item_doses",
 	"character_spells",

@@ -292,6 +292,23 @@ var activationsPart04 = []Activation{
 		Action: "movimento",
 		PMCost: PMCost{Fixed: 1},
 		Uses:   ptr("cena"),
+		Grant: &ActivationGrant{
+			Kind:  "active-effect",
+			Scope: "scene",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "pmCost", Tradition: "divina"},
+					Amount:    -1,
+					BonusType: "untyped",
+					Note:      "−1 PM nas magias divinas",
+					Condition: &ModifierCondition{
+						Kind:  "flagRequired",
+						Flag:  "simbolo-sagrado-empunhado",
+						Label: "empunhando o símbolo sagrado do seu deus",
+					},
+				},
+			},
+		},
 	},
 	{
 		ID:     "class.druida.aspecto-da-primavera",

@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
 )
 
 // OS DIÁLOGOS DA MOCHILA PARALELA: a folha de cada item, as melhorias e o
@@ -71,6 +72,9 @@ templ itemSheetDs(v View, s itemSheet) {
 				</div>
 			</div>
 		}
+		if s.God != nil {
+			@itemGodField(v, s)
+		}
 		if len(s.Overlays) > 0 {
 			@ds.BareList("Melhorias e material", "") {
 				for _, o := range s.Overlays {
@@ -105,6 +109,45 @@ templ itemSheetDs(v View, s itemSheet) {
 	@sheetDialog(v, itemEditID(s.Command), "Editar "+s.Name, itemFormFoot(itemEditID(s.Command), "Salvar", sheetPost(v, "/itens/"+s.Command+"/edita"))) {
 		@itemFormFields(itemEditID(s.Command))
 	}
+}
+
+// itemGodField é o deus do símbolo sagrado (p157). O da ficha vem sozinho, com um toque, e os outros ficam
+// atrás de "Outro deus", aberto quando o escolhido é um deles (decisão do dono). A frase de cima diz se o +1
+// vale, porque é ela a pergunta que o jogador faz ao abrir a folha.
+templ itemGodField(v View, s itemSheet) {
+	<div class="ds-field">
+		<span class="ds-field-label">Deus · o +1 em resistência é de quem é devoto dele (p157)</span>
+		switch {
+			case s.God.Chosen == "":
+				<p class="ds-help">Escolha o deus do símbolo: sem ele, o +1 não vale.</p>
+			case s.God.Devout():
+				<p class="ds-help">{ s.God.ChosenName + " é o deus da ficha: o +1 em resistência vale." }</p>
+			case s.God.Own == "":
+				<p class="ds-help">{ "A ficha não é devota de " + s.God.ChosenName + ": o +1 em resistência não vale." }</p>
+			default:
+				<p class="ds-help">{ s.God.ChosenName + " não é o deus da ficha (" + s.God.OwnName + "): o +1 em resistência não vale." }</p>
+		}
+		if s.God.Own != "" {
+			<div class="ds-options" role="group" aria-label="Deus da ficha">
+				@ds.Option(s.God.Devout(), templ.Attributes{"data-on:click": sheetPost(v, "/itens/"+s.Command+"/deus/"+s.God.Own)}) {
+					{ s.God.OwnName + " · o seu" }
+				}
+			</div>
+		}
+		<details class="ds-more-options" open?={ s.God.Own == "" || (s.God.Chosen != "" && !s.God.Devout()) }>
+			<summary>
+				<span>{ "Outro deus (" + strconv.Itoa(len(s.God.Others)) + ")" }</span>
+				@ui.Icon("ChevronDown", "ds-icon")
+			</summary>
+			<div class="ds-options" role="group" aria-label="Outro deus">
+				for _, god := range s.God.Others {
+					@ds.Option(god.ID == s.God.Chosen, templ.Attributes{"data-on:click": sheetPost(v, "/itens/"+s.Command+"/deus/"+god.ID)}) {
+						{ god.Name }
+					}
+				}
+			</div>
+		</details>
+	</div>
 }
 
 // itemSheetFoot é o pé da folha: o Remover à esquerda, longe do resto, e o

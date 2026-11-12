@@ -83,8 +83,13 @@
             "charisma": 3,
             "size": "Médio",
             "displacement": 9,
-            "classPowers": ["magia-ilimitada", "celebrar-ritual"],
+            "classPowers": ["magia-ilimitada", "celebrar-ritual",
+              "class.clerigo.simbolo-sagrado-energizado"],
             "items": [
+              {
+                "catalogId": "simbolo-sagrado",
+                "equipped": "wielded"
+              },
               {
                 "catalogId": "adaga",
                 "equipped": "wielded"
@@ -103,6 +108,12 @@
               }
             ]
           },
+          "itemGods": [
+            {
+              "item": "simbolo-sagrado",
+              "god": "lena"
+            }
+          ],
           "spells": [
             {
               "id": "curar-ferimentos",
