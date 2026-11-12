@@ -96,6 +96,30 @@ func TestTheAgileFormThreatensOnNineteen(t *testing.T) {
 	}
 }
 
+// "Quando usa a ação agredir, pode atacar com ambas, mas sofre –2 em todos os testes de ataque até o seu
+// próximo turno" (p63). Declarado, o -2 vale em toda carta e a da forma abre o adicional nela mesma; a
+// Feroz, de uma arma só, não tem o que declarar.
+func TestTheAgileFormAttacksWithBoth(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	declared := map[string]bool{FlagGroupID(WildAgileBothFlag): true}
+	agile := druidIn(&WildShape{Form: WildAgile, Tier: WildTierNormal, DamageType: "corte"})
+	before := cardNamed(world.ComputeWeaponCards(agile, nil), "Forma Ágil")
+	claw := cardNamed(world.ComputeWeaponCards(agile, declared), "Forma Ágil")
+	if claw == nil || before == nil {
+		t.Fatal("a Forma Ágil não tem carta")
+	}
+	if claw.Style == nil || !claw.Style.NaturalPair || claw.Style.SourceID != WildAgileBothFlag {
+		t.Errorf("declarada, a carta da forma devia abrir o adicional com a outra arma natural: %+v", claw.Style)
+	}
+	if got := claw.Attack - before.Attack; got != -2 {
+		t.Errorf("declarada, o ataque mudou %+d, e o livro dá -2", got)
+	}
+	ferocious := druidIn(&WildShape{Form: WildFerocious, Tier: WildTierNormal, DamageType: "corte"})
+	if card := cardNamed(world.ComputeWeaponCards(ferocious, declared), "Forma Feroz"); card == nil || card.Style != nil {
+		t.Errorf("a Forma Feroz tem uma arma só, e não abre adicional: %+v", card)
+	}
+}
+
 func TestTheSwiftFormMovesAsChosen(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	// "Você recebe Destreza +2, uma arma natural que causa 1d6 pontos de dano e um dos benefícios a seguir:

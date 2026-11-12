@@ -231,7 +231,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		}
 	}
 	r.offerStyleStrikes(ch, activeConditionals, effects, cards)
-	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared)...)
+	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared, activeConditionals)...)
 }
 
 // cardBasis é o que toda carta da ficha divide: os bônus globais e os atributos

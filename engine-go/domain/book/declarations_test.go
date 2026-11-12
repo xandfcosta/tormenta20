@@ -18,15 +18,11 @@ func TestEveryDeclarationLightsAFlagItsPowerReadsAndThatEnds(t *testing.T) {
 		}
 	}
 	measured := 0
-	for _, a := range Activations() {
-		flag := DeclaredFlag(a)
-		if flag == "" {
-			continue
-		}
+	for _, d := range declarations() {
 		measured++
-		if !slices.Contains(ends[a.ID], flag) {
-			t.Errorf("%s declara a flag %q, e nenhum modificador do poder a lê com fim (`Ends`): "+
-				"o Usar ligaria uma flag inerte, ou que nunca desliga. Os do poder: %v", a.ID, flag, ends[a.ID])
+		if !slices.Contains(ends[d.PowerID], d.Flag) {
+			t.Errorf("%s (%s) declara a flag %q, e nenhum modificador do poder a lê com fim (`Ends`): "+
+				"o gesto ligaria uma flag inerte, ou que nunca desliga. Os do poder: %v", d.Name, d.PowerID, d.Flag, ends[d.PowerID])
 		}
 	}
 	if measured == 0 {

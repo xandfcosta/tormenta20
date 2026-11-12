@@ -58,6 +58,8 @@ func styleStrikeRow(index int, weapon weaponTile, offered []attackBoost) actionR
 	switch {
 	case style.OtherWeapon:
 		withWhat = "a outra arma"
+	case style.NaturalPair:
+		withWhat = "a outra arma natural"
 	case style.FullAction:
 		withWhat = "esta arma"
 	}

@@ -3,9 +3,11 @@ package sheetui
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
+	"t20engine/app/character"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 )
@@ -25,6 +27,13 @@ type wildShapeView struct {
 	Moves map[engine.WildTier][]wildMoveOption
 	// Active é a forma em vigor, ou nil.
 	Active *wildShapeLine
+	// AgileBoth é o "atacar com ambas" da Forma Ágil (p63), quando o druida está nela; Declared diz que
+	// ele já declarou.
+	AgileBoth *agileBothState
+}
+
+type agileBothState struct {
+	Declared bool
 }
 
 type wildTierOption struct {
@@ -91,7 +100,26 @@ func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 			view.Active = &wildShapeLine{Name: wildShapeName(*dto.WildShape), Meta: strings.Join(parts, " · ")}
 		}
 	}
+	if character.OffersTheDeclaration(dto, engine.WildAgileBothFlag) {
+		view.AgileBoth = &agileBothState{Declared: slices.Contains(dto.Conditionals, engine.FlagGroupID(engine.WildAgileBothFlag))}
+	}
 	return view
+}
+
+// agileBothPath é o gesto de declarar as duas armas naturais.
+var agileBothPath = "/declara/" + engine.WildAgileBothFlag
+
+// agileBothRows é a linha das Ações, entre as livres: a declaração se faz antes do golpe, e é ali que se
+// agride.
+func agileBothRows(w wildShapeView) []actionRow {
+	if w.AgileBoth == nil {
+		return nil
+	}
+	return []actionRow{{
+		Name: "Forma Ágil · as duas armas naturais", Detail: "–2 em todos os ataques até o seu próximo turno · p63",
+		Can: true, Live: w.AgileBoth.Declared,
+		Rolls: []actionRoll{{Label: "Usar", Path: agileBothPath}},
+	}}
 }
 
 // wildShapeName é "Forma Feroz", ou "Forma Feroz aprimorada".

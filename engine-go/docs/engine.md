@@ -122,7 +122,10 @@ por isso o golpe só abre o segundo se já saiu com ela ligada. A flag se deslig
 volta (o `Ends: own-turn` do modificador) e no fim da cena; o "encerrar" da aba Efeitos desfaz o uso
 por engano. As Duas Armas e a Ambidestria de classe pedem a outra arma empunhada ou a outra ponta da
 arma dupla, e o Disparo Rápido, a mesma, com o primeiro golpe pagando a ação completa. A falta da arma
-leve e a arma que não é arco só ganham aviso no Usar: quem decide é o mestre.
+leve e a arma que não é arco só ganham aviso no Usar: quem decide é o mestre. A Forma Ágil (p63) é a
+declaração sem poder próprio (`book.Declaration`): o gesto é o do card da Forma Selvagem, o -2 mora no
+poder da Forma Selvagem, e as duas armas naturais, iguais, são uma carta que abre o adicional nela
+mesma (`agileShapeStrike`). Só a Forma Ágil a oferece, e quem confere é o `OffersTheDeclaration`.
 
 A ordem e quem faz cada passo estão presas no `TestTheDamageIsRolledOnlyAfterTheGMRules`
 e no `TestTheGMsMissEndsTheAttackWithoutDamage`; a regra de dano sobre a

@@ -121,7 +121,7 @@ func TestTheSwitchesDeclareWhenTheyEnd(t *testing.T) {
 	if want := []string{"flag:ataque-poderoso", "flag:carga-de-cavalaria", "flag:mira-apurada"}; !slices.Equal(turn, want) {
 		t.Errorf("desligam ao passar a vez: %v, e devia ser %v", turn, want)
 	}
-	if want := []string{"flag:ataque-ambidestro", "flag:combate-defensivo", "flag:disparo-rapido", "flag:estilo-de-duas-armas"}; !slices.Equal(ownTurn, want) {
+	if want := []string{"flag:ataque-ambidestro", "flag:ataque-forma-agil", "flag:combate-defensivo", "flag:disparo-rapido", "flag:estilo-de-duas-armas"}; !slices.Equal(ownTurn, want) {
 		t.Errorf("desligam quando a vez volta: %v, e devia ser %v", ownTurn, want)
 	}
 }
