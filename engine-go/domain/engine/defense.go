@@ -57,7 +57,7 @@ func defenseBreakdown(ch Character, e ItemEffects) DefenseBreakdown {
 		AttributeBlockedBy: attribute.BlockedBy,
 		VsMelee:            total + melee.Total,
 		VsRanged:           total + ranged.Total,
-		Contributions:      withNoteContribs(concatContribs(contribs, melee.Contributions, ranged.Contributions)),
+		Contributions:      rowsOf(AggregatedStat{Contributions: contribs, Dropped: stat.Dropped}, melee, ranged),
 	}
 }
 

@@ -299,7 +299,7 @@ func (r *Ruleset) SpellPmLimitFor(
 	return pmLimitFactor(effects).Applied(SpellPmLimit(ch, bonus, spellClasses))
 }
 
-// resolvePmCostMod aplica a regra da p226 às contribuições de custo de PM:
+// pmCostDispute aplica a regra da p226 às contribuições de custo de PM, e diz quais fontes perderam:
 //
 //	"Reduções de Custo. Reduções no custo de PM não são cumulativas."
 //
@@ -309,8 +309,9 @@ func (r *Ruleset) SpellPmLimitFor(
 // ele compete por bonusType, e estas vêm todas como `untyped`.
 //
 // AUMENTOS (o Alquebrado, p394: "o custo em PM das habilidades aumenta em +1")
-// somam normalmente — o livro só proíbe o acúmulo das reduções.
-func resolvePmCostMod(contribs []Contribution) int {
+// somam normalmente — o livro só proíbe o acúmulo das reduções. As fontes de
+// redução que não venceram voltam à parte: a conta da ficha as mostra riscadas.
+func pmCostDispute(contribs []Contribution) (int, map[string]bool) {
 	bySource := map[string]int{}
 	order := []string{}
 	for _, c := range contribs {
@@ -320,17 +321,23 @@ func resolvePmCostMod(contribs []Contribution) int {
 		bySource[c.Source] += c.Amount
 	}
 
-	bestReduction, increases := 0, 0
+	best, bestReduction, increases := "", 0, 0
 	for _, source := range order {
 		amount := bySource[source]
 		if amount < bestReduction {
-			bestReduction = amount
+			best, bestReduction = source, amount
 		}
 		if amount > 0 {
 			increases += amount
 		}
 	}
-	return bestReduction + increases
+	losers := map[string]bool{}
+	for _, source := range order {
+		if bySource[source] < 0 && source != best {
+			losers[source] = true
+		}
+	}
+	return bestReduction + increases, losers
 }
 
 // SpellPmCostFor é o que a magia CUSTA de fato: o valor da Tabela 4-1 mais os
@@ -346,7 +353,7 @@ func resolvePmCostMod(contribs []Contribution) int {
 //
 // O FOCO EM MAGIA (p131) tira 1 PM da magia escolhida "cumulativo com outras
 // reduções de custo": é a exceção escrita à p226, e por isso fica fora da
-// disputa do `resolvePmCostMod` (ALE-510).
+// disputa do `pmCostDispute` (ALE-510).
 //
 // O que alcança a magia é o `ForSpell`, com ela inteira: o cajado do poder corta as arcanas (p337), o
 // medalhão de prata as de alcance pessoal (p160), e todos entram na MESMA disputa da p226, porque o livro
