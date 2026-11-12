@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"t20engine/domain/engine"
 	"testing"
 
 	"t20engine/domain/sheet"
@@ -20,7 +21,7 @@ func medallionCutOf(t *testing.T, f sceneFixture, id int64) int {
 	t.Helper()
 	dto, ec := loadedCharacter(t, f, id)
 	cut := 0
-	for _, c := range dto.Ruleset.PmCostCutsFor(ec, sheet.ToStringSet(dto.Conditionals), "pessoal") {
+	for _, c := range dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals)).ForSpell("pmCost", engine.SpellAt{Range: "pessoal"}).OnlyHere {
 		cut -= c.Amount
 	}
 	return cut

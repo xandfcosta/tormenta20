@@ -46,19 +46,15 @@ func costCutNote(dto sheet.CharacterDTO, tradition string) string {
 	return owned.Name + " corta este custo " + writtenRatio(factor) + writtenPage(owned.Page)
 }
 
-// rangeCutNote é a frase de quem corta o custo das magias deste alcance: "Medalhão de prata tira 1 PM
-// deste custo", nas de alcance pessoal (p160). Ela segue a regra do `costCutNote`: o número da prévia é o
-// cheio, e quem desconta é o servidor ao conjurar.
-func rangeCutNote(dto sheet.CharacterDTO, spellRange string) string {
-	if dto.Ruleset == nil {
-		return ""
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
-	if err != nil {
+// onlyHereCutNote é a frase de quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" já
+// mostra: "Medalhão de prata tira 1 PM deste custo", nas de alcance pessoal (p160). Ela segue a regra do
+// `costCutNote`: o número da prévia é o cheio, e quem desconta é o servidor ao conjurar.
+func onlyHereCutNote(computed engine.ComputedSheet, ok bool, at engine.SpellAt) string {
+	if !ok {
 		return ""
 	}
 	notes := []string{}
-	for _, cut := range dto.Ruleset.PmCostCutsFor(ec, sheet.ToStringSet(dto.Conditionals), spellRange) {
+	for _, cut := range computed.ForSpell("pmCost", at).OnlyHere {
 		if cut.Amount < 0 {
 			notes = append(notes, cut.Source+" tira "+strconv.Itoa(-cut.Amount)+" PM deste custo")
 		}

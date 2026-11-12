@@ -7,6 +7,12 @@ type ModifierTarget struct {
 	DamageType string `json:"damageType,omitempty"`
 	Attribute  string `json:"attribute,omitempty"`
 	School     string `json:"school,omitempty"`
+	// Tradition, Range e Spell dizem que magias um modificador de magia (CD, limite, custo) alcança, e
+	// vazio é "todas". São campos próprios porque o `Scope` queria dizer tradição num lugar e alcance no
+	// outro, e o −1 do cajado do poder caiu entre os dois.
+	Tradition string `json:"tradition,omitempty"`
+	Range     string `json:"range,omitempty"`
+	Spell     string `json:"spell,omitempty"`
 }
 
 type Modifier struct {

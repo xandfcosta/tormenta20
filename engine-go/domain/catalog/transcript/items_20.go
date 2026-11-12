@@ -26,7 +26,7 @@ var itemsPart20 = []Item{
 		Equip:    "vested",
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmCost", Scope: "divina"},
+				Target:    ModifierTarget{Kind: "pmCost", Tradition: "divina"},
 				Amount:    -1,
 				BonusType: "untyped",
 				Note:      "−1 PM nas magias divinas",

@@ -485,7 +485,7 @@
         {
           "target": {
             "k": "pmCost",
-            "scope": "pessoal"
+            "range": "pessoal"
           },
           "amount": -1,
           "bonusType": "untyped",

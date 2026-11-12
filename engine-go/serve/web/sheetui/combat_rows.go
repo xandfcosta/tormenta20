@@ -122,8 +122,9 @@ func addsAttributeToDamage(card engine.WeaponCard) bool {
 
 // pmLimitRows é o teto de PM por magia.
 func pmLimitRows(sheet engine.ComputedSheet, tradition string) []breakdownRow {
-	rows := []breakdownRow{{Label: "Nível de conjurador", Value: book.WithSign(sheet.PmLimit.Base)}}
-	return append(rows, rowsFromContributions(sheet.SpellBonusFor("pmLimit", tradition).Contributions)...)
+	limit := sheet.PmLimitFor(engine.SpellAt{Tradition: tradition})
+	rows := []breakdownRow{{Label: "Nível de conjurador", Value: book.WithSign(limit.Base)}}
+	return append(rows, rowsFromContributions(limit.Contributions)...)
 }
 
 // spellDcRows é a CD das magias.
@@ -136,19 +137,21 @@ func spellDcRows(sheet engine.ComputedSheet, tradition string) []breakdownRow {
 		base = *sheet.BestBaseSpellCd
 	}
 	rows := []breakdownRow{{Label: "CD base (nível + atributo-chave)", Value: book.WithSign(base)}}
-	bonus := sheet.SpellBonusFor("spellDC", tradition)
+	bonus := sheet.ForSpell("spellDC", engine.SpellAt{Tradition: tradition})
 	if bonus.Total == 0 {
 		return append(rows, breakdownRow{Label: "Sem bônus de itens", Value: "+0", Muted: true})
 	}
 	return append(rows, rowsFromContributions(bonus.Contributions)...)
 }
 
-// pmCostRows é o que desconta (ou encarece) o custo de uma magia.
-func pmCostRows(sheet engine.ComputedSheet) []breakdownRow {
-	if sheet.PmCostMod.Total == 0 {
+// pmCostRows é o que desconta (ou encarece) o custo das magias da tradição: o mesmo que a conjuração
+// cobra, pela regra da p226.
+func pmCostRows(sheet engine.ComputedSheet, tradition string) []breakdownRow {
+	cost := sheet.ForSpell("pmCost", engine.SpellAt{Tradition: tradition})
+	if cost.Total == 0 {
 		return []breakdownRow{{Label: "Sem mod de itens", Value: "+0", Muted: true}}
 	}
-	return rowsFromContributions(sheet.PmCostMod.Contributions)
+	return rowsFromContributions(cost.Contributions)
 }
 
 // rowsFromContributions traduz a contribuição do motor numa linha de tela.

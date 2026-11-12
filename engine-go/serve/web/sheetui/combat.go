@@ -382,11 +382,11 @@ func magicTiles(sheet engine.ComputedSheet, caster bool, tradition string) []sta
 	}
 	return []statTile{
 		{Key: "pm-limit", Label: "Limite PM", Title: "Limite de PM por magia", Icon: "Zap",
-			Value: strconv.Itoa(sheet.PmLimit.Total + sheet.PmLimitByTradition[tradition].Total), Rows: pmLimitRows(sheet, tradition)},
+			Value: strconv.Itoa(sheet.PmLimitFor(engine.SpellAt{Tradition: tradition}).Total), Rows: pmLimitRows(sheet, tradition)},
 		{Key: "spell-dc", Label: "CD Magia", Title: "CD dos testes de resistência das suas magias",
 			Icon: "Sparkles", Value: strconv.Itoa(spellDcTotal(sheet, tradition)), Rows: spellDcRows(sheet, tradition)},
 		{Key: "pm-cost", Label: "Custo PM", Title: "Modificador de custo de PM", Icon: "Sparkles",
-			Value: book.WithSign(sheet.PmCostMod.Total), Rows: pmCostRows(sheet)},
+			Value: book.WithSign(sheet.ForSpell("pmCost", engine.SpellAt{Tradition: tradition}).Total), Rows: pmCostRows(sheet, tradition)},
 	}
 }
 
@@ -397,7 +397,7 @@ func spellDcTotal(sheet engine.ComputedSheet, tradition string) int {
 	if sheet.BestBaseSpellCd != nil {
 		base = *sheet.BestBaseSpellCd
 	}
-	return base + sheet.SpellBonusFor("spellDC", tradition).Total
+	return base + sheet.ForSpell("spellDC", engine.SpellAt{Tradition: tradition}).Total
 }
 
 // mainTradition é a tradição da classe conjuradora de maior nível: a que as caixas de CD e de limite de PM

@@ -23,7 +23,12 @@ type ModifierTarget struct {
 	Name      string `json:"name,omitempty"`      // expertise, attribute, maneuver, flag
 	Attribute string `json:"attribute,omitempty"` // expertiseByAttribute
 	Scope     string `json:"scope,omitempty"`     // attack, damage ('this' | 'all')
-	School    string `json:"school,omitempty"`    // catalyst
+	School    string `json:"school,omitempty"`    // catalyst, e a escola das magias que um bônus de magia alcança
+	// Tradition, Range e Spell dizem que magias um modificador de magia (CD, limite, custo) alcança, e
+	// vazio é "todas" — ver `SpellAt.reachedBy`.
+	Tradition string `json:"tradition,omitempty"`
+	Range     string `json:"range,omitempty"`
+	Spell     string `json:"spell,omitempty"`
 	// DamageType é o TIPO da parcela extra — "fogo", "frio", "ácido". Ele só
 	// faz sentido com `Dice`, e existe para o tipo sobreviver até a mesa: é
 	// ele que dá à resistência a fogo onde agir.
@@ -391,6 +396,16 @@ type ItemEffects struct {
 	// parcela da pilha nem interruptor da tela: crítico não se liga.
 	CriticalBonus map[string]int
 	Conditional   []ConditionalEffect
+	// targets é o ALVO de cada chave, na ordem em que a chave apareceu. A chave é texto e só separa os
+	// baldes; quem precisa saber o que um balde alcança (`ForSpell`) lê o alvo daqui, em vez de desmontar
+	// a chave.
+	targets []keyedTarget
+}
+
+// keyedTarget é uma chave do `ByTarget` (ou do `Factors`) com o alvo que a produziu.
+type keyedTarget struct {
+	key    string
+	target ModifierTarget
 }
 
 // ItemEffectsWire é a forma que o ItemEffects assume NO FIO: as flags viram
@@ -478,29 +493,21 @@ func targetKey(t ModifierTarget) string {
 			return t.K
 		}
 		return t.K + ":" + t.Scope
-	case "pmLimit", "spellDC":
-		// A TRADIÇÃO NA CHAVE, como no `pmCost`: o cajado arcano sobe o limite e a CD "de magias arcanas"
-		// (p160), e somado no geral ele subia também a CD do druida. Quem junta as duas é o
-		// `ComputedSheet.SpellBonusFor`, com a tradição da magia.
-		if t.Scope != "" && t.School != "" {
-			// A ESCOLA vem depois da tradição: o tomo hermético sobe a CD "das magias arcanas dessa escola"
-			// (p160), e quem a junta à da magia é o `ComputedSheet.SpellDCFor`.
-			return t.K + ":" + t.Scope + ":" + t.School
+	case "pmLimit", "spellDC", "pmCost":
+		// O QUE A MAGIA PRECISA SER PARA O BÔNUS ALCANÇÁ-LA, na chave: a tradição (o cajado arcano sobe a CD
+		// "de magias arcanas", p160), a escola (o tomo hermético, "dessa escola"), o alcance (o medalhão de
+		// prata, "de alcance pessoal") e a magia. A chave só SEPARA os baldes; quem diz o que alcança cada
+		// magia é o alvo, que viaja junto (`ItemEffects.ForSpell`), e ninguém desmonta este texto.
+		//
+		// O formato é o de antes dos campos próprios — `spellDC:arcana:evocacao`, `pmCost:pessoal` —, e os
+		// valores não se confundem: nenhuma escola nem alcance se chama "arcana" ou "divina".
+		key := t.K
+		for _, part := range []string{t.Tradition, t.School, t.Range, t.Spell} {
+			if part != "" {
+				key += ":" + part
+			}
 		}
-		if t.Scope != "" {
-			return t.K + ":" + t.Scope
-		}
-		return t.K
-	case "pmCost":
-		// ESCOPO NA CHAVE porque o livro corta por LISTA: a Alta Arcana (p39)
-		// reduz "suas magias arcanas" e não toda habilidade que custa PM, e o
-		// druida do lado paga cheio pela divina dele. Sem chave própria, um
-		// fator de uma lista cairia sobre as duas — a mesma razão que separa o
-		// `displacement:armadura` do deslocamento geral.
-		if t.Scope != "" {
-			return "pmCost:" + t.Scope
-		}
-		return "pmCost"
+		return key
 	case "announcedCondition":
 		// A CONDIÇÃO NO NOME, porque uma arma pode reservar mais de uma e elas
 		// não se somam: elas são ANÚNCIOS, e dois anúncios diferentes são duas
