@@ -61,6 +61,24 @@ biblioteca.** O envelope expõe `Unwrap() http.ResponseWriter`: sem ele,
 `SetWriteDeadline` ou `Hijack` vindos de cima (via `http.ResponseController`)
 respondem `ErrNotSupported`, e quem chamou conclui que não há fluxo.
 
+## Todo 5xx deixa uma linha no log
+
+**O `httpio.LogServerErrors` é o segundo `Use` do `WebRouter`**, dentro do gzip
+para ler o corpo legível. Ele registra método, rota, status, milissegundos e o
+começo do corpo de toda resposta 5xx, inclusive a do `Recoverer`. Ele repassa
+`Flush` e `Unwrap` pela mesma razão do envelope do gzip.
+
+**Quem responde 500 com frase genérica ANEXA a causa**: `httpio.WriteServerError`
+na API JSON, `httpio.RecordCause(w, err)` antes do `ui.NoticeInternal` nas
+cenas. Sem o anexo, a linha diz que falhou e não por quê. A causa vai para o
+log e nunca para a resposta. Numa resposta 4xx ela é ignorada, então quem chama
+um mapeador de status pode anexar sempre. Prende o
+`TestACampaignThatFailsToOpenLogsTheCause`.
+
+O tempo na linha é o que separa uma consulta quebrada de uma espera pela trava
+de escrita: um 500 em 5000 ms é o `busy_timeout` inteiro (ver a seção da trava,
+abaixo).
+
 ## O `synchronous` do SQLite é `NORMAL`
 
 **O banco abre com `synchronous=NORMAL`**: o `FULL` padrão faz `fsync` a cada
