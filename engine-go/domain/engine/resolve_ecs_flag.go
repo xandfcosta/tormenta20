@@ -156,6 +156,13 @@ func harvestFlags(w *ecs.World) {
 		if dead(w, e) || deferred(w, e) || t.Mod.Target.K != "flag" {
 			return
 		}
+		if switched(w, e) {
+			// A FLAG SOB CONDIÇÃO NÃO ACENDE pelo interruptor: quem a acende é a condição cumprida
+			// (`raiseFlags`), e a segunda passada de antes a descartava do mesmo jeito. O interruptor
+			// que liga um grupo de flag é o `FlagGroupID`, e ele liga os termos que LEEM a flag.
+			ecs.Set(w, e, Suppressed{Why: "flag sob condição não acende pelo interruptor"})
+			return
+		}
 		raiseFlagWithSource(flags, t)
 		ecs.Set(w, e, Suppressed{Why: "é flag, e flag não soma"})
 	})

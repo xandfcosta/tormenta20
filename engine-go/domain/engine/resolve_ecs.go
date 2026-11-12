@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -51,6 +52,25 @@ type Suppressed struct{ Why string }
 // lista de condicionais para o jogador ligar.
 type Deferred struct{}
 
+// SwitchedOn marca o termo condicional que o jogador LIGOU: ele entra na conta como qualquer outro, e
+// continua na lista dos oferecidos para a tela desenhar o interruptor aceso.
+//
+// O interruptor é ENTRADA da resolução, e não uma segunda passada sobre o resultado. Houve uma segunda
+// passada (`ApplyActiveConditionals`), que refazia o empilhamento por lista e colhia de novo fatores e
+// dados; ela esqueceu um campo duas vezes, e cada regra nova da resolução tinha de ser escrita nas duas.
+type SwitchedOn struct{}
+
+// Optional marca o termo que a pessoa PODE ligar: o adiado e o já ligado. É a lista da aba Efeitos.
+//
+// Marca própria, e não "adiado ou ligado", porque o ligado pode ser calado depois de virar opção — o dado
+// extra sai da pilha para a carta — e continua sendo um interruptor aceso.
+type Optional struct{}
+
+// sourceOrder é a posição do termo na ordem das fontes. A lista dos oferecidos sai nessa ordem, e não na
+// do mundo: o termo ligado nasce no fim (ver `explodeIntoTerms`), e a lista da aba Efeitos não pode pular
+// quando alguém liga um interruptor.
+type sourceOrder struct{ seq int }
+
 // worldFactors é um dos dois acumuladores da resolução — o outro é o
 // `worldFlags`, que mora no `resolve_ecs_flag.go` —, e os dois são guardados
 // numa entidade SINGLETON.
@@ -60,25 +80,29 @@ type Deferred struct{}
 // capturada — e aí ele deixaria de ser função do mundo, que é o contrato.
 type worldFactors struct{ byTarget map[string]Ratio }
 
-// worldRiders são as parcelas que a CARTA DA ARMA aplica, e não a pilha: o dado
-// extra de um encanto e o bônus que só existe no crítico. Moram num recurso
-// pelo mesmo motivo dos fatores — são do mundo, não de um termo.
-type worldRiders struct {
-	extra     []ExtraDamage
-	critical  map[string]int
-	announced []AnnouncedCondition
+// resolveInWorld dobra as fontes colhidas em `ItemEffects`, em sistemas, com os interruptores que o
+// jogador ligou: pelo endereço do termo (`TermID`) ou pelo do grupo da flag (`FlagGroupID`).
+func resolveInWorld(items []ActiveItem, switches map[string]bool) ItemEffects {
+	w, resource := resolutionWorld()
+	ecs.Run(w, resolutionSystems(items, switches)...)
+	return effectsFromWorld(w, resource)
 }
 
-// resolveInWorld dobra as fontes colhidas em `ItemEffects`, em sistemas.
-func resolveInWorld(items []ActiveItem) ItemEffects {
+// resolutionWorld é o mundo vazio da resolução, com a entidade dos acumuladores.
+func resolutionWorld() (*ecs.World, ecs.Entity) {
 	w := ecs.NewWorld()
 	resource := w.Spawn()
 	ecs.Set(w, resource, worldFlags{set: map[string]bool{}, source: map[string]string{}})
 	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
 	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
+	return w, resource
+}
 
-	ecs.Run(w,
-		explodeIntoTerms(items),
+// resolutionSystems é a ordem dos sistemas da resolução, que é a regra. Uma lista só: o caso que mede o
+// mundo por dentro (`worldAfterResolving`) a copiava, e a cópia já tinha perdido três sistemas.
+func resolutionSystems(items []ActiveItem, switches map[string]bool) []ecs.System {
+	return []ecs.System{
+		explodeIntoTerms(items, switches),
 		raiseFlags,
 		// DEPOIS de acender e ANTES de qualquer um que leia flag: uma bandeira
 		// apagada não pode continuar calando o que ela calava.
@@ -105,115 +129,86 @@ func resolveInWorld(items []ActiveItem) ItemEffects {
 		// não-empilhamento escolher o maior (p42).
 		scaleWhatTheSourceFactorHits,
 		resolveStacking,
-	)
-	return effectsFromWorld(w, resource)
+	}
 }
 
 // explodeIntoTerms transforma cada fonte colhida em N entidades de termo.
 //
 // A fonte sem `Wear` não entra: item que não está vestido nem empunhado não
 // concede nada, e essa porta é a primeira da função antiga.
-func explodeIntoTerms(items []ActiveItem) ecs.System {
+//
+// O TERMO LIGADO NASCE DEPOIS DE TODOS OS OUTROS, e a ordem é a regra: a contribuição dele entra no fim
+// de cada alvo, o dado extra dele depois dos incondicionais, e no empate do empilhamento quem já estava
+// vence. É a ordem que a segunda passada de antes produzia, e o oráculo a guarda.
+func explodeIntoTerms(items []ActiveItem, switches map[string]bool) ecs.System {
 	return func(w *ecs.World) {
+		type late struct {
+			term Term
+			seq  int
+		}
+		later := []late{}
+		seq := 0
 		for _, item := range items {
 			if item.Equipped == nil {
 				continue
 			}
 			for _, m := range item.Modifiers {
-				ecs.Set(w, w.Spawn(), Term{
-					SourceID: item.SourceID, Source: item.Source, Wear: item.Equipped, Mod: m,
-				})
+				t := Term{SourceID: item.SourceID, Source: item.Source, Wear: item.Equipped, Mod: m}
+				seq++
+				if switchedOn(item.SourceID, m, switches) {
+					later = append(later, late{t, seq})
+					continue
+				}
+				e := w.Spawn()
+				ecs.Set(w, e, t)
+				ecs.Set(w, e, sourceOrder{seq: seq})
 			}
+		}
+		for _, l := range later {
+			e := w.Spawn()
+			ecs.Set(w, e, l.term)
+			ecs.Set(w, e, sourceOrder{seq: l.seq})
+			ecs.Set(w, e, SwitchedOn{})
 		}
 	}
 }
 
-// deferConditionals separa o que o jogador LIGA do que vale sozinho.
+// switchedOn diz se o jogador ligou este termo condicional: pelo endereço dele ou pelo do grupo da flag
+// que ele divide. O incondicional não tem interruptor, e um id ligado que casasse com ele não muda nada.
+func switchedOn(sourceID string, m Modifier, switches map[string]bool) bool {
+	if len(switches) == 0 || isUnconditional(m) {
+		return false
+	}
+	if switches[TermID(sourceID, m)] {
+		return true
+	}
+	c := m.Condition
+	return c != nil && c.C == "flagOn" && switches[FlagGroupID(c.Flag)]
+}
+
+// deferConditionals separa o que o jogador LIGA do que vale sozinho. O que ele já ligou não é adiado:
+// entra na conta.
 func deferConditionals(w *ecs.World) {
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if dead(w, e) || isUnconditional(t.Mod) {
 			return
 		}
-		ecs.Set(w, e, Deferred{})
+		ecs.Set(w, e, Optional{})
+		if !switched(w, e) {
+			ecs.Set(w, e, Deferred{})
+		}
 	})
 }
 
 // dropWhatTheConditionRefuses cala o termo cuja condição não se cumpre.
 func dropWhatTheConditionRefuses(w *ecs.World) {
 	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if dead(w, e) || deferred(w, e) || conditionMet(t.Mod, t.Wear) {
+		// O LIGADO NÃO É JULGADO: a condição dele é a circunstância que a pessoa disse que vale.
+		if dead(w, e) || deferred(w, e) || switched(w, e) || conditionMet(t.Mod, t.Wear) {
 			return
 		}
 		ecs.Set(w, e, Suppressed{Why: "a condição não se cumpre"})
 	})
-}
-
-// harvestWeaponRiders tira da pilha o que a CARTA DA ARMA aplica.
-//
-// São duas coisas que o `Amount` não sabe expressar: o dado extra de um encanto
-// (`+1d6 de fogo`) e o bônus que só vale no acerto crítico (`+10` do
-// Dilacerante). Nenhuma das duas é parcela somável — a primeira é um dado que
-// ainda vai rolar, a segunda depende de um resultado que a ficha não conhece.
-//
-// O sistema roda ANTES do `deferConditionals` de propósito: o `onCritical` é
-// uma condição que NÃO se liga, e deixá-lo chegar lá o ofereceria como
-// interruptor na aba Efeitos.
-func harvestWeaponRiders(w *ecs.World) {
-	riders := ridersOf(w)
-	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if dead(w, e) {
-			return
-		}
-		if t.Mod.Target.K == "unarmedDamage" {
-			// O DADO DA BRIGA não é dano extra de ataque nenhum: ele É o dado
-			// do ataque desarmado, que a carta lê dos poderes (`brawlDie`).
-			// Colhido como extra, cada degrau somaria em toda arma.
-			ecs.Set(w, e, Suppressed{Why: "é o dado do ataque desarmado, e quem o lê é a carta"})
-			return
-		}
-		if t.Mod.Dice != "" {
-			// SÓ O INCONDICIONAL SAI AQUI. O dado sob condição que a pessoa
-			// LIGA — o "+1d8 em ermo ao ar livre" do Machado silvestre (p338) —
-			// segue para o `deferConditionals` e vira interruptor, como
-			// qualquer outro condicional. Colhê-lo aqui o fazia valer SEMPRE, e
-			// a marca `Suppressed` ainda tirava dele a chance de ser oferecido:
-			// o dado valia de graça e não havia como desligá-lo (ALE-457).
-			if !isUnconditional(t.Mod) {
-				return
-			}
-			riders.extra = append(riders.extra, ExtraDamage{
-				Dice: t.Mod.Dice, Type: t.Mod.Target.DamageType, Scope: t.Mod.Target.Scope,
-			})
-			ecs.Set(w, e, Suppressed{Why: "é dado extra, e dado não soma na pilha"})
-			return
-		}
-		if t.Mod.Target.K == "announcedEffect" {
-			// O EFEITO ANUNCIADO segue o caminho da condição anunciada: sai da pilha e vai para a carta, com
-			// o texto do livro no lugar do id da condição.
-			riders.announced = append(riders.announced, AnnouncedCondition{Effect: t.Mod.Note, Scope: t.Mod.Target.Scope})
-			ecs.Set(w, e, Suppressed{Why: "é anúncio de efeito, e anúncio não soma"})
-			return
-		}
-		if t.Mod.Target.K == "announcedCondition" {
-			// O ANÚNCIO não é número: ele sai da pilha inteiro e vai para a
-			// carta da arma, como o dado extra. Somá-lo daria um modificador
-			// que existe e vale zero, que é a forma mais silenciosa de defeito
-			// deste motor.
-			riders.announced = append(riders.announced, AnnouncedCondition{
-				Condition:  t.Mod.Target.Name,
-				OnCritical: t.Mod.Condition != nil && t.Mod.Condition.C == "onCritical",
-				Note:       t.Mod.Note,
-				Scope:      t.Mod.Target.Scope,
-			})
-			ecs.Set(w, e, Suppressed{Why: "é anúncio de condição, e anúncio não soma"})
-			return
-		}
-		if c := t.Mod.Condition; c != nil && c.C == "onCritical" {
-			riders.critical[targetKey(t.Mod.Target)] += t.Mod.Amount
-			ecs.Set(w, e, Suppressed{Why: "só vale no crítico, e a pilha não sabe disso"})
-		}
-	})
-	setRiders(w, riders)
 }
 
 // harvestFactors tira os fatores da pilha: eles multiplicam o total, e não são
@@ -237,9 +232,8 @@ func harvestFactors(w *ecs.World) {
 // bônus que você recebe quando usa Fúria", e não o ataque inteiro — dobrar o
 // total levaria Luta, Força e o bônus da arma junto.
 //
-// O DEFERIDO FICA DE FORA, e isso não é esquecimento: o termo condicional sai
-// do mundo e volta no `ApplyActiveConditionals`, que o multiplica ao dobrá-lo
-// de volta. Multiplicado aqui também, ele sairia dobrado duas vezes.
+// O DEFERIDO FICA DE FORA, porque não entra na conta; o LIGADO entra, e é multiplicado aqui, uma vez —
+// a Fúria é condicional, e é o caso que o livro dá.
 func scaleWhatTheSourceFactorHits(w *ecs.World) {
 	factors := factorsOf(w)
 	ecs.Each(w, func(e ecs.Entity, t Term) {
@@ -295,24 +289,45 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 	buckets := map[string][]Contribution{}
 	conditional := []ConditionalEffect{}
 
+	type offer struct {
+		seq int
+		ce  ConditionalEffect
+	}
+	offers := []offer{}
 	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if deferred(w, e) {
-			conditional = append(conditional, conditionalFrom(t))
-			return
+		on := switched(w, e)
+		if _, optional := ecs.Get[Optional](w, e); optional {
+			at, _ := ecs.Get[sourceOrder](w, e)
+			offers = append(offers, offer{at.seq, conditionalFrom(t)})
 		}
-		if dead(w, e) {
+		if deferred(w, e) || dead(w, e) {
 			return
 		}
 		key := targetKey(t.Mod.Target)
 		if _, seen := buckets[key]; !seen {
 			order = append(order, key)
 		}
-		c := Contribution{SourceID: t.SourceID, Source: t.Source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount}
-		if t.Mod.Note != "" {
-			c.Note = t.Mod.Note
+		source := t.Source
+		if on {
+			// O LIGADO SE DIZ LIGADO na conta: a tela mostra de onde veio a parcela, e "(cond.)" é o que
+			// separa a Fúria acesa de um bônus que vale sempre.
+			source += " (cond.)"
+		}
+		c := Contribution{SourceID: t.SourceID, Source: source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount}
+		if note := t.Mod.Note; on {
+			// A NOTA DO LIGADO é a do interruptor ("Em Fúria", "no subterrâneo"): é ela que diz na conta por
+			// que a parcela vale agora.
+			c.Note = conditionalFrom(t).Note
+		} else if note != "" {
+			c.Note = note
 		}
 		buckets[key] = append(buckets[key], c)
 	})
+
+	sort.SliceStable(offers, func(a, b int) bool { return offers[a].seq < offers[b].seq })
+	for _, o := range offers {
+		conditional = append(conditional, o.ce)
+	}
 
 	byTarget := map[string]AggregatedStat{}
 	for _, key := range order {
@@ -365,17 +380,9 @@ func deferred(w *ecs.World, e ecs.Entity) bool {
 	return has
 }
 
-// ridersOf e setRiders: ao contrário do `worldFactors`, cujo mapa se muta no
-// lugar, a lista de parcelas CRESCE — e uma fatia acrescida dentro do `Each`
-// não volta para o componente sozinha. Por isso a leitura e a escrita são duas.
-func ridersOf(w *ecs.World) worldRiders {
-	var found worldRiders
-	ecs.Each(w, func(_ ecs.Entity, r worldRiders) { found = r })
-	return found
-}
-
-func setRiders(w *ecs.World, riders worldRiders) {
-	ecs.Each(w, func(e ecs.Entity, _ worldRiders) { ecs.Set(w, e, riders) })
+func switched(w *ecs.World, e ecs.Entity) bool {
+	_, has := ecs.Get[SwitchedOn](w, e)
+	return has
 }
 
 func factorsOf(w *ecs.World) map[string]Ratio {
@@ -390,14 +397,8 @@ func factorsOf(w *ecs.World) map[string]Ratio {
 // Existe para o caso que prende a tag `Suppressed`: a saída da resolução é
 // byte a byte igual à de antes, então medir a saída não diria nada sobre ela.
 func worldAfterResolving(items []ActiveItem) (int, []string) {
-	w := ecs.NewWorld()
-	resource := w.Spawn()
-	ecs.Set(w, resource, worldFlags{set: map[string]bool{}, source: map[string]string{}})
-	ecs.Set(w, resource, worldFactors{byTarget: map[string]Ratio{}})
-	ecs.Set(w, resource, worldRiders{critical: map[string]int{}})
-	ecs.Run(w, explodeIntoTerms(items), raiseFlags, dropWhatTheFlagTurnsOff,
-		harvestWeaponRiders, deferConditionals, dropWhatTheConditionRefuses,
-		harvestFactors, harvestFlags, resolveStacking)
+	w, _ := resolutionWorld()
+	ecs.Run(w, resolutionSystems(items, nil)...)
 
 	total, reasons := 0, []string{}
 	ecs.Each(w, func(e ecs.Entity, _ Term) {

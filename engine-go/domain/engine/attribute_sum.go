@@ -38,11 +38,11 @@ func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]b
 	items = append(items, r.armedLegsAsAnItem(ch, items)...)
 	items = append(items, r.wildShapeAsAnItem(ch)...)
 	plain, sums := splitAttributeSums(items)
-	first := ApplyActiveConditionals(ComputeItemEffects(plain), activeConditionals)
+	first := resolveInWorld(plain, activeConditionals)
 	if len(sums) == 0 {
 		return first
 	}
-	return ApplyActiveConditionals(ComputeItemEffects(append(plain, resolveAttributeSums(ch, sums, first)...)), activeConditionals)
+	return resolveInWorld(append(plain, resolveAttributeSums(ch, sums, first)...), activeConditionals)
 }
 
 // isAttributeSum diz se o modificador é uma soma de atributo que a ficha

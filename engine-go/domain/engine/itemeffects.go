@@ -833,7 +833,7 @@ func ResolveConditionalDisplay(effects []ConditionalDisplayInput) []ConditionalD
 //
 // @example engine.ComputeItemEffects(world.ActiveItemsFor(ch))
 func ComputeItemEffects(items []ActiveItem) ItemEffects {
-	return resolveInWorld(items)
+	return resolveInWorld(items, nil)
 }
 
 // firstNonEmpty devolve a primeira não vazia.
