@@ -161,13 +161,22 @@ func partialSheetsForPools(
 	if err != nil {
 		return nil, fmt.Errorf("ler as armas de categoria maior de %d fichas: %w", len(ids), err)
 	}
+	itemChoices, err := q.ItemChoicesOfCharacters(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("ler as escolhas dos itens de %d fichas: %w", len(ids), err)
+	}
+	choiceOf := map[int64]string{}
+	for _, row := range itemChoices {
+		choiceOf[row.Itemid] = row.Choice
+	}
 	for _, it := range items {
 		dto := partials[it.Characterid]
 		dto.Items = append(dto.Items, ItemDTO{
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
-			Enchants: porItem[it.ID], EnchantChoices: choices[it.ID], Oversized: slices.Contains(oversized, it.ID),
+			Enchants: porItem[it.ID], EnchantChoices: choices[it.ID], Choice: choiceOf[it.ID],
+			Oversized: slices.Contains(oversized, it.ID),
 		})
 		partials[it.Characterid] = dto
 	}

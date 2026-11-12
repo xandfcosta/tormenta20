@@ -803,6 +803,26 @@ LEFT JOIN character_item_enchant_choices c ON c.itemId = e.itemId AND c.enchantI
 WHERE i.characterId IN (sqlc.slice('ids'))
 ORDER BY e.itemId, e.enchantId;
 
+-- name: ItemChoicesOfCharacter :many
+-- A escolha que o item pede a quem o tem (a escola do tomo hermetico), em lote
+-- por ficha, pela mesma razao dos encantos.
+SELECT c.itemId, c.choice
+FROM character_item_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId = ?;
+
+-- name: ItemChoicesOfCharacters :many
+-- O irmao em lote do `ItemChoicesOfCharacter`, para o caminho que monta N fichas.
+SELECT i.characterId, c.itemId, c.choice
+FROM character_item_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId IN (sqlc.slice('ids'));
+
+-- name: SetItemChoice :exec
+-- Trocar e regravar: a escolha do item e uma so.
+INSERT INTO character_item_choices (itemId, choice) VALUES (?, ?)
+ON CONFLICT(itemId) DO UPDATE SET choice = excluded.choice;
+
 -- name: GetNonLethalDamage :one
 -- Ausencia de linha quer dizer ZERO, como no `character_damage`: so quem levou
 -- dano nao letal ganha registro.

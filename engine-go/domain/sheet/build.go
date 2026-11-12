@@ -78,6 +78,14 @@ func Load(
 	if err != nil {
 		return dto, err
 	}
+	itemChoices, err := q.ItemChoicesOfCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	choiceOf := map[int64]string{}
+	for _, row := range itemChoices {
+		choiceOf[row.Itemid] = row.Choice
+	}
 	doses, err := q.DosesOfCharacter(ctx, c.ID)
 	if err != nil {
 		return dto, err
@@ -91,7 +99,7 @@ func Load(
 			ID: it.ID, CatalogID: dbvalue.NullToPtr(it.Catalogid), Name: it.Name,
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
-			Enchants: enchants[it.ID], EnchantChoices: choices[it.ID],
+			Enchants: enchants[it.ID], EnchantChoices: choices[it.ID], Choice: choiceOf[it.ID],
 			Oversized: slices.Contains(oversized, it.ID), Doses: dosesByItem[it.ID],
 		})
 	}

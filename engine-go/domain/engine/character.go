@@ -100,7 +100,10 @@ type CharacterItem struct {
 	// EnchantChoices é o que o mestre escolheu ao encantar, por encanto: o tipo de criatura da
 	// Anticriatura (p335). Só o encanto que pede escolha tem linha aqui.
 	EnchantChoices map[string]string `json:"enchantChoices,omitempty"`
-	Material       *string           `json:"material"`
+	// Choice é a escolha que o próprio item pede a quem o tem: a escola do tomo hermético (p160). Ela
+	// preenche o modificador do verbete com `FromChoice: school` (`ownItemMods`).
+	Choice   string  `json:"choice,omitempty"`
+	Material *string `json:"material"`
 	// Oversized é a arma feita para uma categoria de tamanho maior (p106). O catálogo
 	// não dá tamanho por item, então é a mochila que guarda a marca.
 	Oversized bool `json:"oversized,omitempty"`
