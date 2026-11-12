@@ -142,6 +142,41 @@ func spellDCBonus(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "spellDC"})
 }
 
+// SpellTraditions são as duas listas de magia, arcana e divina (p170): o escopo com que um bônus de CD ou de
+// limite de PM vale só numa delas.
+var SpellTraditions = []string{"arcana", "divina"}
+
+// byTradition são os bônus de uma conta de magia (`spellDC`, `pmLimit`) que valem só numa tradição, sem
+// as vazias.
+func byTradition(e ItemEffects, kind string) map[string]TotalContribs {
+	out := map[string]TotalContribs{}
+	for _, tradition := range SpellTraditions {
+		if bonus := totalContribsFor(e, ModifierTarget{K: kind, Scope: tradition}); len(bonus.Contributions) > 0 {
+			out[tradition] = bonus
+		}
+	}
+	return out
+}
+
+// SpellBonusFor é o bônus de uma conta de magia (`spellDC` ou `pmLimit`) para uma magia da tradição dada:
+// o geral, que a ficha já soma, e o da lista dela. Tradição vazia é o geral só.
+//
+//	sheet.SpellBonusFor("spellDC", "divina") // a varinha arcana não entra
+func (s ComputedSheet) SpellBonusFor(kind, tradition string) TotalContribs {
+	general, byList := s.SpellDCBonus, s.SpellDCByTradition
+	if kind == "pmLimit" {
+		general, byList = TotalContribs{Total: s.PmLimit.ItemBonus, Contributions: s.PmLimit.Contributions}, s.PmLimitByTradition
+	}
+	scoped, found := byList[tradition]
+	if !found {
+		return general
+	}
+	return TotalContribs{
+		Total:         general.Total + scoped.Total,
+		Contributions: append(append([]BreakdownContribution{}, general.Contributions...), scoped.Contributions...),
+	}
+}
+
 // pmCostMod: item pmCost modifier + contributions.
 func pmCostMod(e ItemEffects) TotalContribs {
 	return totalContribsFor(e, ModifierTarget{K: "pmCost"})
@@ -267,11 +302,18 @@ func SpellPmLimit(ch Character, itemBonus int, spellClasses []string) int {
 // Hoje ela tem a mesma forma do `SpellPmCostFor` abaixo: resolve os efeitos com
 // os condicionais recebidos e pergunta ao MESMO `pmLimitBreakdown` que a ficha
 // usa, em vez de reconstruir a conta.
+//
+// A TRADIÇÃO da magia escolhe o bônus que vale só numa lista: o orbe cristalino sobe o limite das
+// arcanas (p160), e a divina do mesmo personagem fica no dela.
 func (r *Ruleset) SpellPmLimitFor(
-	ch Character, conditionals map[string]bool, spellClasses []string,
+	ch Character, conditionals map[string]bool, spellClasses []string, tradition string,
 ) int {
 	effects := r.sheetEffects(ch, conditionals)
-	return pmLimitFactor(effects).Applied(SpellPmLimit(ch, pmLimitBreakdown(ch, effects).ItemBonus, spellClasses))
+	bonus := pmLimitBreakdown(ch, effects).ItemBonus
+	if tradition != "" {
+		bonus += totalContribsFor(effects, ModifierTarget{K: "pmLimit", Scope: tradition}).Total
+	}
+	return pmLimitFactor(effects).Applied(SpellPmLimit(ch, bonus, spellClasses))
 }
 
 // resolvePmCostMod aplica a regra da p226 às contribuições de custo de PM:

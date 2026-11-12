@@ -478,8 +478,14 @@ func targetKey(t ModifierTarget) string {
 			return t.K
 		}
 		return t.K + ":" + t.Scope
-	case "pmLimit":
-		return "pmLimit"
+	case "pmLimit", "spellDC":
+		// A TRADIÇÃO NA CHAVE, como no `pmCost`: o cajado arcano sobe o limite e a CD "de magias arcanas"
+		// (p160), e somado no geral ele subia também a CD do druida. Quem junta as duas é o
+		// `ComputedSheet.SpellBonusFor`, com a tradição da magia.
+		if t.Scope != "" {
+			return t.K + ":" + t.Scope
+		}
+		return t.K
 	case "pmCost":
 		// ESCOPO NA CHAVE porque o livro corta por LISTA: a Alta Arcana (p39)
 		// reduz "suas magias arcanas" e não toda habilidade que custa PM, e o
@@ -523,8 +529,6 @@ func targetKey(t ModifierTarget) string {
 		return "damageReduction"
 	case "catalyst":
 		return "catalyst:" + t.School
-	case "spellDC":
-		return "spellDC"
 	case "inventorySlots":
 		return "inventorySlots"
 	case "displacement":

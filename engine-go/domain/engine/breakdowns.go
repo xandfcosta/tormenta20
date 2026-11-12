@@ -101,7 +101,12 @@ type ComputedSheet struct {
 	// re-deriving.
 	SpellCdByAttribute map[string]int `json:"spellCdByAttribute"`
 	SpellDCBonus       TotalContribs  `json:"spellDCBonus"`
-	PmCostMod          TotalContribs  `json:"pmCostMod"`
+	// SpellDCByTradition e PmLimitByTradition são os bônus que valem só numa lista de magia, por
+	// tradição (`arcana`, `divina`): o da varinha arcana (p160). O `SpellDCBonus` e o `PmLimit` ficam com o
+	// geral; quem soma os dois é o `SpellBonusFor`, com a tradição da magia.
+	SpellDCByTradition map[string]TotalContribs `json:"spellDCByTradition,omitempty"`
+	PmLimitByTradition map[string]TotalContribs `json:"pmLimitByTradition,omitempty"`
+	PmCostMod          TotalContribs            `json:"pmCostMod"`
 	// AttackAll/DamageAll are the {k:attack|damage, scope:all} globals (Fúria,
 	// Instinto Selvagem…) — the combat HUD adds them onto every weapon/attack.
 	AttackAll       TotalContribs `json:"attackAll"`

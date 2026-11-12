@@ -195,8 +195,8 @@ func learnedSpellRowsOf(s Scene, dto sheet.CharacterDTO, castable int) []learned
 //
 // Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
 // usa: uma segunda conta aqui daria dois números para a mesma pergunta. O bônus
-// é o mesmo `SpellDCBonus` que a caixa soma; sem ele, a linha de conjurar dizia
-// uma CD abaixo da que a aba Magias diz.
+// é o mesmo que a caixa soma (`SpellBonusFor`), com a tradição da classe que lança: a varinha arcana
+// sobe a CD das arcanas e não a das divinas (p160).
 func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
 	computed, _, ok := s.sheetForPanels(dto)
 	if !ok {
@@ -208,14 +208,14 @@ func (s Scene) spellCdOf(dto sheet.CharacterDTO, spell catalog.Spell) string {
 		if !casts || !sheet.CastsTheSpell(dto, class.ClassName, spell.School, spell.Classes) {
 			continue
 		}
-		if cd := computed.SpellCdByAttribute[prog.Attribute]; cd > best {
+		if cd := computed.SpellCdByAttribute[prog.Attribute] + computed.SpellBonusFor("spellDC", prog.List).Total; cd > best {
 			best = cd
 		}
 	}
 	if best == 0 {
 		return "—"
 	}
-	return strconv.Itoa(best + computed.SpellDCBonus.Total)
+	return strconv.Itoa(best)
 }
 
 // spellOfBook acha a magia no acervo já ordenado.

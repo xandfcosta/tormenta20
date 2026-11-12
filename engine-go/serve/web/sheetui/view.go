@@ -263,7 +263,7 @@ func (s Scene) Load(
 	// UMA conta do motor para os DOIS painéis que a leem.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet), dto)
-		v.SpellCasting = spellCastingOf(sheet)
+		v.SpellCasting = spellCastingOf(sheet, mainTradition(dto))
 		v.Expertises = expertisePanelFor(dto, sheet, search)
 		v.Choices.Training = classTrainingOf(dto, sheet)
 		v.Choices.Pending = append(v.Choices.Pending, trainingPendings(v.Choices.Training)...)

@@ -54,6 +54,8 @@ type (
 		bestAttr    string
 		byAttribute map[string]int
 		dcBonus     TotalContribs
+		dcByList    map[string]TotalContribs
+		limitByList map[string]TotalContribs
 		costMod     TotalContribs
 	}
 	derivedCombat struct {
@@ -148,6 +150,8 @@ func deriveMagic(w *ecs.World) {
 			bestAttr:    bestAttr,
 			byAttribute: spellCdByAttribute(in.char, in.effects),
 			dcBonus:     spellDCBonus(in.effects),
+			dcByList:    byTradition(in.effects, "spellDC"),
+			limitByList: byTradition(in.effects, "pmLimit"),
 			costMod:     pmCostMod(in.effects),
 		})
 	})
@@ -201,6 +205,8 @@ func sheetFromWorld(w *ecs.World) ComputedSheet {
 			BestSpellAttribute:      magic.bestAttr,
 			SpellCdByAttribute:      magic.byAttribute,
 			SpellDCBonus:            magic.dcBonus,
+			SpellDCByTradition:      magic.dcByList,
+			PmLimitByTradition:      magic.limitByList,
 			PmCostMod:               magic.costMod,
 			AttackAll:               combat.attackAll,
 			DamageAll:               combat.damageAll,
