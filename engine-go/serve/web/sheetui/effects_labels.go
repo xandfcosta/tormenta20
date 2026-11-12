@@ -261,6 +261,8 @@ var itemFlagLabel = map[string]string{
 	sheet.FlagRestOneCategoryUp:   "Descansa uma categoria acima",
 	sheet.FlagRestNeverBelowLevel: "Descanso nunca rende menos que o nível",
 	sheet.FlagRestAlwaysNormal:    "Descansa sempre em condição normal",
+	// A do símbolo sagrado (p157): é ela que o Símbolo Sagrado Energizado pede (p58).
+	"simbolo-sagrado-empunhado": "Empunha o símbolo sagrado do seu deus",
 	// A cena paga do Detetive (p91, ALE-500).
 	"detective-scene": "Investigação no lugar de Percepção e Intuição",
 }

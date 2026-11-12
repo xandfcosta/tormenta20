@@ -53,8 +53,10 @@ type itemSheet struct {
 	EnchantBase     int
 	EnchantUncapped bool
 	// School é a escolha de escola que o item pede a quem o tem — o tomo hermético (p160) —, nula no item
-	// que não a pede. Ver `bag_item_school.go`.
+	// que não a pede. Ver `bag_item_choice.go`.
 	School *itemSchool
+	// God é o deus que o símbolo sagrado pede (p157), nil no item que não pede.
+	God *itemGod
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
@@ -132,6 +134,7 @@ func itemSheetsOf(
 		offerVesting(&entry, worn, item)
 		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
 		entry.School = schoolOnTheItemSheet(item)
+		entry.God = godOnTheItemSheet(item, dto)
 		sheets = append(sheets, entry)
 	}
 	return sheets

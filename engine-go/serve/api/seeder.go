@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"t20engine/app/accounts"
 	"t20engine/app/character"
@@ -141,6 +142,15 @@ func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []strin
 // ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
 func (sd Seeder) ToggleOversizedWeapon(ctx context.Context, itemID int64) error {
 	return sd.plays.ToggleOversizedWeapon(ctx, itemID)
+}
+
+// ChooseItemGod grava o deus do símbolo sagrado, pelo caso de uso da Mochila.
+func (sd Seeder) ChooseItemGod(ctx context.Context, itemID int64, god string) error {
+	item, err := sd.queries.GetItem(ctx, itemID)
+	if err != nil {
+		return fmt.Errorf("ler o item %d: %w", itemID, err)
+	}
+	return sd.plays.ChooseItemGod(ctx, item, god)
 }
 
 // LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.

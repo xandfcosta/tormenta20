@@ -43,14 +43,15 @@ func TestThePowerStaffReachesOnlyTheArcaneSpells(t *testing.T) {
 	}
 }
 
-// O símbolo abençoado: "o custo de suas magias divinas diminui em –1 PM" (p345). Ninguém o lia.
+// O símbolo abençoado: "se você for devoto do deus, o custo de suas magias divinas diminui em –1 PM" (p345).
+// Ninguém o lia. A devoção tem teste próprio (`TestTheBlessedSymbolCountsAsAHolySymbolAndCutsOnlyForADevotee`).
 func TestTheBlessedSymbolCutsTheDivineSpells(t *testing.T) {
 	world := BookRuleset(primeBook(t))
-	cleric := wearing(attributeSumHero("Clérigo", 5, `[]`), "simbolo-abencoado")
+	cleric := holdingTheSymbol(devoteeOf(attributeSumHero("Clérigo", 5, `[]`), "wynna"), "simbolo-abencoado", "vested", "wynna")
 	if got := world.SpellPmCostFor(cleric, 3, 0, nil, SpellAt{Tradition: "divina"}); got != 2 {
 		t.Errorf("a divina de 3 PM custa %d com o símbolo abençoado, e o livro tira 1", got)
 	}
-	arcanist := wearing(attributeSumHero("Arcanista", 5, `[]`), "simbolo-abencoado")
+	arcanist := holdingTheSymbol(devoteeOf(attributeSumHero("Arcanista", 5, `[]`), "wynna"), "simbolo-abencoado", "vested", "wynna")
 	if got := world.SpellPmCostFor(arcanist, 3, 0, nil, SpellAt{Tradition: "arcana"}); got != 3 {
 		t.Errorf("a arcana de 3 PM custa %d com o símbolo, e ele é só das divinas", got)
 	}

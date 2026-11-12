@@ -77,7 +77,7 @@ func (r *Ruleset) spawnWornItems(ch Character) ecs.System {
 			if it.CatalogID != nil {
 				catalog = r.getCatalogItem(*it.CatalogID)
 			}
-			own := r.ownItemMods(it, catalog)
+			own := r.ownItemMods(it, catalog, devotionOf(ch))
 
 			e := w.Spawn()
 			ecs.Set(w, e, WornItem{Item: it, Catalog: catalog})
@@ -135,12 +135,12 @@ func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem,
 // A CENA JÁ RECUSA O GESTO (`fitsItemImprovement`: "um item custom não recebe
 // melhoria"), e continua sendo a fronteira dele. Esta porta é da CONTA: linha
 // antiga não passou por aquela recusa.
-func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier {
+func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem, devotion string) []Modifier {
 	own := []Modifier{}
 	if catalog == nil {
 		return own
 	}
-	own = append(own, chosenByTheItem(catalog.Modifiers, it.Choice)...)
+	own = append(own, chosenByTheItem(catalog.Modifiers, it.Choice, devotion)...)
 	for _, id := range parseStringArray(it.Improvements) {
 		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
 		if id == ImprovedItemImprovement {
@@ -156,23 +156,44 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem) []Modifier
 	return onThisWeapon(own, catalog)
 }
 
-// chosenByTheItem preenche com a escolha do item o modificador que a pede: a escola do tomo hermético
-// (`FromChoice: school`, p160). Sem escolha ele sai — o +2 "dessa escola" sem escola não vale em nenhuma.
-func chosenByTheItem(mods []Modifier, choice string) []Modifier {
+// chosenByTheItem aplica a escolha do item ao modificador que a pede:
+//
+//   - a escola do tomo hermético preenche o alvo (`FromChoice: school`, p160), e sem escolha ele sai — o +2
+//     "dessa escola" sem escola não vale em nenhuma;
+//   - o deus do símbolo sagrado decide se o modificador vale (`FromChoice: god`): "o símbolo sagrado de um
+//     deus do qual é devoto" (p157). Ele vale quando o deus escolhido é o da ficha (`devotion`), e sai
+//     quando não há deus escolhido ou ele é outro.
+func chosenByTheItem(mods []Modifier, choice, devotion string) []Modifier {
 	out := make([]Modifier, 0, len(mods))
 	for _, m := range mods {
-		if m.FromChoice != "school" {
+		switch m.FromChoice {
+		case "school":
+			if choice == "" {
+				continue
+			}
+			filled := m
+			filled.FromChoice, filled.Target.School = "", choice
+			out = append(out, filled)
+		case "god":
+			if choice == "" || choice != devotion {
+				continue
+			}
+			devout := m
+			devout.FromChoice = ""
+			out = append(out, devout)
+		default:
 			out = append(out, m)
-			continue
 		}
-		if choice == "" {
-			continue
-		}
-		filled := m
-		filled.FromChoice, filled.Target.School = "", choice
-		out = append(out, filled)
 	}
 	return out
+}
+
+// devotionOf é o deus de quem a ficha é devota, ou vazio.
+func devotionOf(ch Character) string {
+	if ch.God == nil {
+		return ""
+	}
+	return *ch.God
 }
 
 // onThisWeapon prende à arma o dano, a margem e o multiplicador que ela mesma concede, com o verbete,

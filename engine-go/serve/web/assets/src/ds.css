@@ -777,6 +777,27 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+  /* AS OPÇÕES QUE FICAM ATRÁS DE UM TOQUE: o deus do símbolo sagrado mostra o da ficha e guarda os outros
+   * dezenove. O `summary` é alvo de toque, e por isso tem a altura do piso (2.75rem), e não a da frase. */
+  .ds-more-options > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.75rem;
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--ds-t-sm);
+    color: var(--ds-ink-2);
+  }
+  .ds-more-options > summary::-webkit-details-marker {
+    display: none;
+  }
+  .ds-more-options[open] > summary > .ds-icon {
+    transform: rotate(180deg);
+  }
+  .ds-more-options > .ds-options {
+    margin-top: 0.25rem;
+  }
   /* O ESCOLHER EM PASSOS (ALE-473): a lista do que falta e um passo de cada
    * vez. A ALTURA É FIXA, e não a do conteúdo: trocar de passo não pode fazer o
    * diálogo pular de tamanho (decisão do dono). Quem rola é a lista dos passos

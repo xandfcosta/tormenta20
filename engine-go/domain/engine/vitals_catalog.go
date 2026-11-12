@@ -194,7 +194,7 @@ func (r *Ruleset) itemVitalGrants(ch Character) []vitalGrant {
 			continue
 		}
 		wear := r.wornWear(ch, it)
-		for _, m := range r.ownItemMods(it, catalog) {
+		for _, m := range r.ownItemMods(it, catalog, devotionOf(ch)) {
 			if (m.Target.K != "maxPv" && m.Target.K != "maxPm") || !conditionMet(m, wear) {
 				continue
 			}
