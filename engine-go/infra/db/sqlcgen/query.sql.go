@@ -1922,6 +1922,85 @@ func (q *Queries) IsGmAtLiveTableForCharacter(ctx context.Context, arg IsGmAtLiv
 	return gmatlivetable, err
 }
 
+const itemChoicesOfCharacter = `-- name: ItemChoicesOfCharacter :many
+SELECT c.itemId, c.choice
+FROM character_item_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId = ?
+`
+
+// A escolha que o item pede a quem o tem (a escola do tomo hermetico), em lote
+// por ficha, pela mesma razao dos encantos.
+func (q *Queries) ItemChoicesOfCharacter(ctx context.Context, characterid int64) ([]CharacterItemChoice, error) {
+	rows, err := q.db.QueryContext(ctx, itemChoicesOfCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterItemChoice{}
+	for rows.Next() {
+		var i CharacterItemChoice
+		if err := rows.Scan(&i.Itemid, &i.Choice); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const itemChoicesOfCharacters = `-- name: ItemChoicesOfCharacters :many
+SELECT i.characterId, c.itemId, c.choice
+FROM character_item_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId IN (/*SLICE:ids*/?)
+`
+
+type ItemChoicesOfCharactersRow struct {
+	Characterid int64  `json:"characterid"`
+	Itemid      int64  `json:"itemid"`
+	Choice      string `json:"choice"`
+}
+
+// O irmao em lote do `ItemChoicesOfCharacter`, para o caminho que monta N fichas.
+func (q *Queries) ItemChoicesOfCharacters(ctx context.Context, ids []int64) ([]ItemChoicesOfCharactersRow, error) {
+	query := itemChoicesOfCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ItemChoicesOfCharactersRow{}
+	for rows.Next() {
+		var i ItemChoicesOfCharactersRow
+		if err := rows.Scan(&i.Characterid, &i.Itemid, &i.Choice); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
 SELECT id, source, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC
@@ -4343,6 +4422,22 @@ func (q *Queries) SetInviteToken(ctx context.Context, arg SetInviteTokenParams) 
 	var i SetInviteTokenRow
 	err := row.Scan(&i.ID, &i.Invitetoken)
 	return i, err
+}
+
+const setItemChoice = `-- name: SetItemChoice :exec
+INSERT INTO character_item_choices (itemId, choice) VALUES (?, ?)
+ON CONFLICT(itemId) DO UPDATE SET choice = excluded.choice
+`
+
+type SetItemChoiceParams struct {
+	Itemid int64  `json:"itemid"`
+	Choice string `json:"choice"`
+}
+
+// Trocar e regravar: a escolha do item e uma so.
+func (q *Queries) SetItemChoice(ctx context.Context, arg SetItemChoiceParams) error {
+	_, err := q.db.ExecContext(ctx, setItemChoice, arg.Itemid, arg.Choice)
+	return err
 }
 
 const setItemOverlays = `-- name: SetItemOverlays :exec

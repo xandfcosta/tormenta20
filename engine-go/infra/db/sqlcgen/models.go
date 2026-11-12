@@ -181,6 +181,11 @@ type CharacterItem struct {
 	Createdat    string         `json:"createdat"`
 }
 
+type CharacterItemChoice struct {
+	Itemid int64  `json:"itemid"`
+	Choice string `json:"choice"`
+}
+
 type CharacterItemDose struct {
 	ID        int64  `json:"id"`
 	Itemid    int64  `json:"itemid"`

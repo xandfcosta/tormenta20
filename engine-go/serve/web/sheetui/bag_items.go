@@ -52,6 +52,9 @@ type itemSheet struct {
 	EnchantBuiltIn  []string
 	EnchantBase     int
 	EnchantUncapped bool
+	// School é a escolha de escola que o item pede a quem o tem — o tomo hermético (p160) —, nula no item
+	// que não a pede. Ver `bag_item_school.go`.
+	School *itemSchool
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
@@ -128,6 +131,7 @@ func itemSheetsOf(
 		offerTableImprovements(&entry, dto, item)
 		offerVesting(&entry, worn, item)
 		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
+		entry.School = schoolOnTheItemSheet(item)
 		sheets = append(sheets, entry)
 	}
 	return sheets

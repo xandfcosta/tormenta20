@@ -482,6 +482,11 @@ func targetKey(t ModifierTarget) string {
 		// A TRADIÇÃO NA CHAVE, como no `pmCost`: o cajado arcano sobe o limite e a CD "de magias arcanas"
 		// (p160), e somado no geral ele subia também a CD do druida. Quem junta as duas é o
 		// `ComputedSheet.SpellBonusFor`, com a tradição da magia.
+		if t.Scope != "" && t.School != "" {
+			// A ESCOLA vem depois da tradição: o tomo hermético sobe a CD "das magias arcanas dessa escola"
+			// (p160), e quem a junta à da magia é o `ComputedSheet.SpellDCFor`.
+			return t.K + ":" + t.Scope + ":" + t.School
+		}
 		if t.Scope != "" {
 			return t.K + ":" + t.Scope
 		}

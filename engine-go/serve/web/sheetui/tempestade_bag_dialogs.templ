@@ -56,6 +56,21 @@ templ itemSheetDs(v View, s itemSheet) {
 				}
 			</div>
 		}
+		if s.School != nil {
+			<div class="ds-field">
+				<span class="ds-field-label">Escola · +2 na CD das magias arcanas dela (p160)</span>
+				if s.School.Chosen == "" {
+					<p class="ds-help">Escolha a escola: sem ela, o tomo não muda nenhuma CD.</p>
+				}
+				<div class="ds-options" role="group" aria-label="Escola">
+					for _, school := range s.School.Options {
+						@ds.Option(school.ID == s.School.Chosen, templ.Attributes{"data-on:click": sheetPost(v, "/itens/"+s.Command+"/escola/"+school.ID)}) {
+							{ school.Name }
+						}
+					}
+				</div>
+			</div>
+		}
 		if len(s.Overlays) > 0 {
 			@ds.BareList("Melhorias e material", "") {
 				for _, o := range s.Overlays {

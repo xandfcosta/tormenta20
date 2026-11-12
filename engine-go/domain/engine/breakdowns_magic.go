@@ -170,6 +170,36 @@ func (r *Ruleset) PmCostCutsFor(ch Character, conditionals map[string]bool, spel
 	return totalContribsFor(r.sheetEffects(ch, conditionals), ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions
 }
 
+// spellDCBySchool são os bônus de CD de uma tradição E uma escola, por "tradição:escola". As escolas não
+// são uma lista do motor, então elas saem das chaves que existem.
+func spellDCBySchool(e ItemEffects) map[string]TotalContribs {
+	out := map[string]TotalContribs{}
+	for key, stat := range e.ByTarget {
+		rest, isDC := strings.CutPrefix(key, "spellDC:")
+		if !isDC || strings.Count(rest, ":") != 1 || len(stat.Contributions) == 0 {
+			continue
+		}
+		out[rest] = TotalContribs{Total: stat.Total, Contributions: withNoteContribs(stat.Contributions)}
+	}
+	return out
+}
+
+// SpellDCFor é o bônus de CD de UMA magia: o geral, o da tradição dela e o da escola dela naquela tradição
+// (o tomo hermético, p160).
+//
+//	sheet.SpellDCFor("arcana", "evocacao") // a varinha, o cajado e o tomo de evocação
+func (s ComputedSheet) SpellDCFor(tradition, school string) TotalContribs {
+	bonus := s.SpellBonusFor("spellDC", tradition)
+	scoped, found := s.SpellDCBySchool[tradition+":"+school]
+	if !found {
+		return bonus
+	}
+	return TotalContribs{
+		Total:         bonus.Total + scoped.Total,
+		Contributions: append(append([]BreakdownContribution{}, bonus.Contributions...), scoped.Contributions...),
+	}
+}
+
 // SpellBonusFor é o bônus de uma conta de magia (`spellDC` ou `pmLimit`) para uma magia da tradição dada:
 // o geral, que a ficha já soma, e o da lista dela. Tradição vazia é o geral só.
 //
