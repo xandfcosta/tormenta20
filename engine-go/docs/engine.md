@@ -417,6 +417,14 @@ Mente Criminosa não são).
 O poder concedido do devoto é FONTE da coleta (`godPowerActiveItems`) e chega a
 qualquer alvo; o `vitalGrantMods` continua somando PV e PM, sem duplicar.
 
+**O símbolo sagrado é de um deus, e só vale para o devoto dele** (p157). O deus é a escolha do item
+(`CharacterItem.Choice`), e o modificador que depende dele traz `FromChoice: god`: o `chosenByTheItem`
+o deixa passar quando o deus do item é o da ficha, e o tira quando não é ou quando ainda não há deus. Não
+é condição nem interruptor, porque a resposta não muda durante a cena: quem escolheu o deus foi o jogador,
+na Mochila. O Símbolo abençoado "conta como um símbolo sagrado" (p345) carregando no verbete os mesmos
+modificadores, e os dois acendem a flag `simbolo-sagrado-empunhado` quando estão na mão — é ela que o efeito
+de cena do Símbolo Sagrado Energizado pede (p58), e por isso o símbolo de outro deus não o energiza.
+
 ### Os acumuladores moram numa entidade SINGLETON
 
 Flags e fatores são do mundo inteiro e ficam numa entidade só (`worldFlags`,
