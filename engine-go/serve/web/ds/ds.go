@@ -65,6 +65,11 @@ type SumTerm struct {
 	// bloqueada pela armadura (ALE-444): sumir não diria por que a Defesa não
 	// subiu, e aparecer acesa leria como um bônus que existe.
 	Muted bool
+	// Dropped é a parcela que NÃO entrou no total — a que perdeu o empilhamento
+	// (p226, p394) —, com o motivo na nota. Ela sai apagada e com o valor riscado,
+	// no lugar dela: sumir deixaria a pessoa procurando o +1 que vestiu, e acesa
+	// faria a conta das linhas não fechar no total.
+	Dropped bool
 }
 
 // SumHead é a linha fechada da conta. Muted é o total que existe e não vale —

@@ -45,7 +45,7 @@ func sumTermsOf(rows []breakdownRow) []ds.SumTerm {
 	for _, row := range rows {
 		terms = append(terms, ds.SumTerm{
 			Label: row.Label, Note: row.Note, Value: row.Value,
-			Penalty: strings.HasPrefix(row.Value, "-"), Muted: row.Muted,
+			Penalty: strings.HasPrefix(row.Value, "-"), Muted: row.Muted, Dropped: row.Dropped,
 		})
 	}
 	return terms
@@ -81,8 +81,11 @@ func withContributions(terms []ds.SumTerm, total int, groups ...[]engine.Breakdo
 	shown := 0
 	for _, group := range groups {
 		for _, c := range group {
-			terms = append(terms, ds.SumTerm{Label: c.Source, Note: c.Note, Value: book.WithSign(c.Amount), Penalty: c.Amount < 0})
-			shown += c.Amount
+			terms = append(terms, ds.SumTerm{Label: c.Source, Note: c.Note, Value: book.WithSign(c.Amount), Penalty: c.Amount < 0, Dropped: c.Dropped})
+			// A QUE NÃO ENTROU não soma no que a conta já mostrou: somada, o "Outros" a desfaria.
+			if !c.Dropped {
+				shown += c.Amount
+			}
 		}
 	}
 	if rest := total - shown; rest != 0 {

@@ -628,6 +628,11 @@
     color: var(--ds-ink-3);
     font-weight: 400;
   }
+  /* A parcela que NÃO entrou no total fica no lugar dela, apagada, com o valor riscado como o total
+   * apagado da linha (`.ds-row-value[data-muted]`): as que entram fecham no total. */
+  .ds-sum-body dd[data-dropped] {
+    text-decoration: line-through;
+  }
   .ds-sum-total {
     display: flex;
     justify-content: space-between;

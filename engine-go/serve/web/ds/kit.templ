@@ -226,7 +226,7 @@ templ Sum(h SumHead, attrs templ.Attributes) {
 templ SumTerms(terms []SumTerm) {
 	<dl>
 		for _, t := range terms {
-			<dt data-muted?={ t.Muted }>
+			<dt data-muted?={ t.Muted || t.Dropped }>
 				{ t.Label }
 				if t.Note != "" {
 					<small>{ t.Note }</small>
@@ -236,7 +236,8 @@ templ SumTerms(terms []SumTerm) {
 				if t.Penalty {
 					data-penalty
 				}
-				data-muted?={ t.Muted }
+				data-muted?={ t.Muted || t.Dropped }
+				data-dropped?={ t.Dropped }
 			>{ t.Value }</dd>
 		}
 		{ children... }

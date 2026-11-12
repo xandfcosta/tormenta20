@@ -34,8 +34,10 @@ func expertiseSumTerms(ex engine.ExpertiseBreakdown) []ds.SumTerm {
 		shown += ex.Training
 	}
 	for _, c := range ex.ItemContributions {
-		terms = append(terms, ds.SumTerm{Label: c.Source, Note: c.Note, Value: book.WithSign(c.Amount), Penalty: c.Amount < 0})
-		shown += c.Amount
+		terms = append(terms, ds.SumTerm{Label: c.Source, Note: c.Note, Value: book.WithSign(c.Amount), Penalty: c.Amount < 0, Dropped: c.Dropped})
+		if !c.Dropped {
+			shown += c.Amount
+		}
 	}
 	if rest := ex.Total - shown; rest != 0 {
 		terms = append(terms, ds.SumTerm{Label: "Outros", Value: book.WithSign(rest), Penalty: rest < 0})
