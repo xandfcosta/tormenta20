@@ -464,30 +464,37 @@ exceção ESCRITA**: −1 PM na magia escolhida, *"cumulativo com outras reduç�
 custo"* (p131). Não é modificador `pmCost` (entraria na disputa da p226): o
 `SpellPmCostFor` o soma por fora, antes do fator e do piso.
 
-**O fator pode ter ESCOPO**: a Alta Arcana corta "suas magias arcanas" (p39),
-pela chave `pmCost:arcana` (mesma divisa do `displacement:armor`), e o clérigo
-do multiclasse paga cheio a divina. Quem diz a lista é a `sheet.SpellTradition`,
-porque **a tradição é da CLASSE, não da magia**: a Luz é arcana no arcanista e
-divina no clérigo.
+**O que vale para uma magia é uma pergunta só: `ForSpell(conta, magia)`**, nos
+efeitos e na ficha calculada. As três contas são a CD (`spellDC`), o limite de PM
+(`pmLimit`) e o custo (`pmCost`), e cada modificador delas diz o que alcança em
+campos próprios do alvo — `Tradition`, `School`, `Range`, `Spell` —, com vazio
+querendo dizer "todas". A magia chega como `SpellAt`, e o modificador a alcança
+quando ela tem cada campo que ele pede. **Nada de `Scope` nessas contas**: ele
+queria dizer tradição num lugar e alcance no outro, e o −1 PM do cajado do poder
+caiu entre os dois sem ninguém o ler.
 
-**O bônus de CD e de limite de PM também tem escopo**: os esotéricos arcanos valem
-"em magias arcanas" (p160), pelas chaves `spellDC:arcana` e `pmLimit:arcana`. A
-ficha guarda o geral (`SpellDCBonus`, `PmLimit`) e o de cada tradição à parte
-(`SpellDCByTradition`, `PmLimitByTradition`), e quem junta os dois é o
-`ComputedSheet.SpellBonusFor`, com a tradição da magia. As caixas do Combate e a
-linha de CD da aba Magias usam a da classe conjuradora de maior nível. Somados
-numa chave só, a varinha arcana subia a CD do druida. O tomo hermético desce mais
-um nível: +2 nas arcanas "dessa escola" (p160), na chave `spellDC:arcana:<escola>`.
-A escola é a escolha que o próprio item pede a quem o tem (`CharacterItem.Choice`,
-preenchida pelo `FromChoice: school` do verbete), e o `SpellDCFor` a junta só na
-CD de cada magia: a caixa "CD Magia" resume todas e não a leva.
-
-**A redução de custo também pode ter escopo de ALCANCE**: o medalhão de prata
-tira 1 PM "de magias de alcance pessoal" (p160), pela chave `pmCost:pessoal`. O
-`SpellPmCostFor` recebe o alcance da magia e põe esse corte na MESMA disputa das
-outras reduções (p226), porque o livro não o diz cumulativo. A aba Magias mostra
-o custo cheio e a nota de quem corta (`PmCostCutsFor`), como faz com o Foco em
-Magia.
+- **A tradição é da CLASSE, não da magia**: a Luz é arcana no arcanista e divina
+  no clérigo, e quem a diz é a `sheet.SpellTradition`. A Alta Arcana corta "suas
+  magias arcanas" (p39), os esotéricos arcanos sobem a CD e o limite "em magias
+  arcanas" (p160), o cajado do poder corta e sobe as arcanas (p337) e o símbolo
+  abençoado corta as divinas (p345).
+- **A escola** é a do tomo hermético, "dessa escola" (p160), preenchida pelo
+  `FromChoice: school` do verbete com a escolha que o item pede
+  (`CharacterItem.Choice`). **O alcance** é o do medalhão de prata, "de alcance
+  pessoal" (p160).
+- **No custo, o total já sai pela p226**: reduções de fontes diferentes não se
+  acumulam (`resolvePmCostMod`). O mosaico "Custo PM" e a conjuração leem o mesmo
+  número; ele somava, e mostrava −3 onde a conjuração cobrava −2.
+- **O mosaico pergunta só pela tradição** da classe conjuradora de maior nível, e o
+  que vale só numa escola ou num alcance não entra nele. A aba Magias pergunta pela
+  magia inteira: a CD da linha leva o tomo, e a nota de custo lista o que corta só
+  ali (`SpellReach.OnlyHere`). O limite tem a decomposição própria
+  (`ComputedSheet.PmLimitFor`), com o nível de conjurador, a Magia Ilimitada e o
+  ritual.
+- **A chave de texto só separa os baldes** (`spellDC:arcana:evocacao`,
+  `pmCost:pessoal`): o alvo viaja junto da chave nos efeitos, e ninguém a desmonta.
+  O guarda `TestEverySpellModifierReachesARealSpell` prende que todo modificador de
+  magia do catálogo alcança uma magia que existe.
 
 > **A ISENÇÃO não é terceira forma do fator — é FLAG.** O anão "não tem o
 > deslocamento reduzido por uso de armadura ou excesso de carga" (p20): o
