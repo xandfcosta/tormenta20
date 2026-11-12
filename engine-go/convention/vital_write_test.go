@@ -1,6 +1,7 @@
 package convention
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -44,52 +45,14 @@ func TestEveryVitalWriteGoesThroughTheFunnel(t *testing.T) {
 		"SaveCharacterDamage": true, "ClearCharacterDamage": true,
 	}
 
-	root, err := filepath.Abs("..")
-	if err != nil {
-		t.Fatalf("achar a raiz: %v", err)
-	}
-	set := token.NewFileSet()
-	measured, funnelCalls := 0, 0
-	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
-			strings.HasSuffix(path, "_templ.go") {
-			return err
-		}
-		rel, _ := filepath.Rel(root, path)
-		if strings.HasPrefix(rel, "infra/db/sqlcgen") || strings.HasSuffix(rel, "vital_write_test.go") {
-			return nil
-		}
-		file, err := parser.ParseFile(set, path, nil, 0)
-		if err != nil {
-			return err
-		}
-		measured++
-		ast.Inspect(file, func(n ast.Node) bool {
-			call, ok := n.(*ast.CallExpr)
-			if !ok {
-				return true
-			}
-			target, ok := call.Fun.(*ast.SelectorExpr)
-			if !ok || !vitalWrites[target.Sel.Name] {
-				return true
-			}
-			if rel == funnelFile {
-				funnelCalls++
-				return true
-			}
-			t.Errorf("%s:%d chama %s fora do funil.\n"+
-				"O que o banco guarda é o DANO: gravar o atual por aqui produz um número\n"+
-				"que a próxima leitura do agregado joga fora, sem erro nenhum. Use o\n"+
-				"`sheet.ApplyToPools` (ou `ApplyToLoadedPools`, se já tiver a ficha) e\n"+
-				"devolva o atual que a regra do seu gesto decidiu — o %s grava.",
-				rel, set.Position(call.Pos()).Line, target.Sel.Name, funnelFile)
-			return true
-		})
-		return nil
+	measured, funnelCalls := sweepForTheFunnel(t, vitalWrites, funnelFile, func(at, query string) {
+		t.Errorf("%s chama %s fora do funil.\n"+
+			"O que o banco guarda é o DANO: gravar o atual por aqui produz um número\n"+
+			"que a próxima leitura do agregado joga fora, sem erro nenhum. Use o\n"+
+			"`sheet.ApplyToPools` (ou `ApplyToLoadedPools`, se já tiver a ficha) e\n"+
+			"devolva o atual que a regra do seu gesto decidiu — o %s grava.",
+			at, query, funnelFile)
 	})
-	if err != nil {
-		t.Fatalf("caminhar a árvore: %v", err)
-	}
 
 	// O DENOMINADOR, nas duas pontas: uma varredura que não abriu arquivo nenhum
 	// e um funil que deixou de escrever se parecem com "nada reprovou".
@@ -160,4 +123,57 @@ func touchesVitalState(lowercaseBody string) bool {
 		}
 	}
 	return false
+}
+
+// sweepForTheFunnel caminha a árvore inteira, testes incluídos, e avisa cada chamada a uma das queries
+// de escrita feita fora do arquivo do funil. Devolve quantos arquivos leu e quantas chamadas o funil
+// faz, que são os dois denominadores de quem a usa.
+//
+// O `sqlcgen` fica de fora porque é onde as queries são DEFINIDAS, e os arquivos deste pacote porque
+// citam os nomes nas listas.
+func sweepForTheFunnel(
+	t *testing.T, writes map[string]bool, funnelFile string, outside func(at, query string),
+) (measured, funnelCalls int) {
+	t.Helper()
+	root, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatalf("achar a raiz: %v", err)
+	}
+	set := token.NewFileSet()
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") ||
+			strings.HasSuffix(path, "_templ.go") {
+			return err
+		}
+		rel, _ := filepath.Rel(root, path)
+		if strings.HasPrefix(rel, "infra/db/sqlcgen") || strings.HasPrefix(rel, "convention/") {
+			return nil
+		}
+		file, err := parser.ParseFile(set, path, nil, 0)
+		if err != nil {
+			return err
+		}
+		measured++
+		ast.Inspect(file, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			target, ok := call.Fun.(*ast.SelectorExpr)
+			if !ok || !writes[target.Sel.Name] {
+				return true
+			}
+			if rel == funnelFile {
+				funnelCalls++
+				return true
+			}
+			outside(fmt.Sprintf("%s:%d", rel, set.Position(call.Pos()).Line), target.Sel.Name)
+			return true
+		})
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("caminhar a árvore: %v", err)
+	}
+	return measured, funnelCalls
 }
