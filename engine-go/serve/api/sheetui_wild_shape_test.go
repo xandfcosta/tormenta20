@@ -69,3 +69,59 @@ func TestTheWildShapeRefusesATierTheDruidLacksAndABadChoice(t *testing.T) {
 		t.Errorf("o dano da arma da forma é corte, impacto ou perfuração: %q", refusal)
 	}
 }
+
+// "Cada transformação dura pelo tempo que você quiser, mas você reverte à forma normal se ficar
+// inconsciente ou morrer" (p63). Morrer de pé também liga a condição Inconsciente (p236), então é ela
+// que desfaz a forma, venha de onde vier: do dano que zera os PV ou da mão de quem a marca. A forma
+// não volta quando a condição sai: o livro diz que ela REVERTE, e o PM pago não volta.
+func TestTheWildShapeEndsWhenTheDruidFallsUnconscious(t *testing.T) {
+	for _, tc := range []struct{ name, fall, rise string }{
+		{"pelo dano que zera os PV", "/vitais/pv/-500", "/vitais/pv/600"},
+		{"pela condição marcada à mão", "/efeitos/condicao/inconsciente", "/efeitos/condicao/inconsciente"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f, id := wildDruid(t)
+			shape := `{"wild_form":"feroz","wild_tier":"normal","wild_damage":"perfuracao","wild_move":""}`
+			if refusal := powerCommand(t, f, id, "forma-selvagem", shape); refusal != "" {
+				t.Fatalf("a transformação foi recusada: %q", refusal)
+			}
+			if !inTheWildShape(t, f, id) {
+				t.Fatal("o druida devia estar na forma antes de cair")
+			}
+
+			if refusal := sheetPost(t, f, id, tc.fall, ""); refusal != "" {
+				t.Fatalf("cair foi recusado: %q", refusal)
+			}
+			if !strings.Contains(activeConditionsOf(t, f, id), "inconsciente") {
+				t.Fatalf("o caso precisa da condição Inconsciente na ficha, e ela tem %s", activeConditionsOf(t, f, id))
+			}
+			if inTheWildShape(t, f, id) {
+				t.Error("inconsciente, o druida reverte à forma normal (p63), e a forma continua gravada")
+			}
+			if strings.Contains(effectScreen(t, f, id), "Voltar ao normal") {
+				t.Error("a aba Efeitos ainda mostra a forma em vigor")
+			}
+
+			if refusal := sheetPost(t, f, id, tc.rise, ""); refusal != "" {
+				t.Fatalf("levantar foi recusado: %q", refusal)
+			}
+			if strings.Contains(activeConditionsOf(t, f, id), "inconsciente") {
+				t.Fatalf("o caso precisa tirar a condição Inconsciente, e ela continua: %s", activeConditionsOf(t, f, id))
+			}
+			if inTheWildShape(t, f, id) {
+				t.Error("a forma voltou junto com a consciência: o livro diz que ela reverte, e voltar é transformar de novo")
+			}
+		})
+	}
+}
+
+// inTheWildShape lê a tabela da forma, e não a tela: a tela poderia esconder uma forma que continua
+// valendo na ficha.
+func inTheWildShape(t *testing.T, f sceneFixture, id int64) bool {
+	t.Helper()
+	rows, err := f.s.queries.GetCharacterWildShape(t.Context(), id)
+	if err != nil {
+		t.Fatalf("ler a forma de %d: %v", id, err)
+	}
+	return len(rows) > 0
+}

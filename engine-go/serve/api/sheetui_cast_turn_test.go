@@ -8,8 +8,7 @@ import (
 	"testing"
 
 	"t20engine/domain/live"
-	"t20engine/infra/db/dbvalue"
-	"t20engine/infra/db/sqlcgen"
+	"t20engine/domain/sheet"
 )
 
 // CONJURAR CUSTA AÇÃO, E A REAÇÃO NÃO ESPERA A SUA VEZ (T20 p233).
@@ -167,9 +166,7 @@ func TestAnUnconsciousCharacterCannotReact(t *testing.T) {
 	if rec := learnAndCast(t, f, "queda-suave"); sceneRefusal(rec.Body) != "" {
 		t.Fatalf("o controle falhou: a reação de quem está de pé foi recusada: %q", sceneRefusal(rec.Body))
 	}
-	if err := f.s.queries.UpdateConditions(t.Context(), sqlcgen.UpdateConditionsParams{
-		ActiveConditions: `["inconsciente","sangrando"]`, UpdatedAt: dbvalue.NowISO(), ID: f.charID,
-	}); err != nil {
+	if err := sheet.SaveConditions(t.Context(), f.s.queries, f.charID, []string{"inconsciente", "sangrando"}); err != nil {
 		t.Fatalf("derrubar o personagem: %v", err)
 	}
 	cast := fmt.Sprintf("/personagens/%d/magias/conjura/queda-suave?tab=spells", f.charID)

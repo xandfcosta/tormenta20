@@ -10,7 +10,6 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -65,11 +64,7 @@ func (v sheetVitals) AddCondition(ctx context.Context, charID int64, condition s
 			return nil
 		}
 	}
-	depois := append(atuais, condition)
-	return v.q.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
-		ActiveConditions: sheet.MarshalStrings(&depois),
-		UpdatedAt:        dbvalue.NowISO(), ID: charID,
-	})
+	return sheet.SaveConditions(ctx, v.q, charID, append(atuais, condition))
 }
 
 // ApplyDelta move o PV/PM de um personagem por um delta e grava, devolvendo os
@@ -370,9 +365,7 @@ func (v sheetVitals) StabilizeBleeding(ctx context.Context, charID int64) error 
 			kept = append(kept, c)
 		}
 	}
-	return v.q.UpdateConditions(ctx, sqlcgen.UpdateConditionsParams{
-		ActiveConditions: sheet.MarshalStrings(&kept), UpdatedAt: dbvalue.NowISO(), ID: charID,
-	})
+	return sheet.SaveConditions(ctx, v.q, charID, kept)
 }
 
 // spellLabel é o nome que a MESA lê. Sem verbete, o id serve: um extrato que
