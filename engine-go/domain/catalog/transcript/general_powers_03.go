@@ -270,7 +270,17 @@ var generalPowersPart03 = []GeneralPower{
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Lançar magias"}},
 		BookPage:      131,
 		UID:           "pwr_iqlka2e4md",
-		Choice:        &PowerChoice{Kind: "spell", Label: "Magia", Repeatable: true},
+		Modifiers: []Modifier{
+			{
+				Target:        ModifierTarget{Kind: "pmCost"},
+				Amount:        -1,
+				BonusType:     "untyped",
+				Note:          "–1 PM na magia escolhida, cumulativo com outras reduções",
+				FromChoice:    "spell",
+				StacksWithAll: true,
+			},
+		},
+		Choice: &PowerChoice{Kind: "spell", Label: "Magia", Repeatable: true},
 	},
 	{
 		ID:            "magia-acelerada",

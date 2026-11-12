@@ -363,7 +363,8 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 			// separa a Fúria acesa de um bônus que vale sempre.
 			source += " (cond.)"
 		}
-		c := Contribution{SourceID: t.SourceID, Source: source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount}
+		c := Contribution{SourceID: t.SourceID, Source: source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount,
+			StacksWith: t.Mod.StacksWith, StacksWithAll: t.Mod.StacksWithAll}
 		if note := t.Mod.Note; on {
 			// A NOTA DO LIGADO é a do interruptor ("Em Fúria", "no subterrâneo"): é ela que diz na conta por
 			// que a parcela vale agora.

@@ -1,6 +1,8 @@
 package sheetui
 
 import (
+	"slices"
+
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 )
@@ -17,10 +19,14 @@ import (
 // Proficiência — oferecem só o que a ficha ainda não tem, mais o que elas
 // mesmas deram, para poder ser tirado. `owned` é o que a ficha já tem: as
 // perícias treinadas e as proficiências (`ownedOptionsOf`).
-func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []powerOption {
+//
+// A escolha que só vale entre as de outro poder oferece só aquelas: o Mestre em Escola, as escolas do
+// Especialista (p38). Por isso `allPicks` é o mapa inteiro, e não só as escolhas deste poder.
+func optionsOf(p book.ClassPower, allPicks map[string][]string, owned map[string]bool) []powerOption {
 	if p.Choice == nil {
 		return nil
 	}
+	picks := allPicks[p.ID]
 	offered := p.Choice.Offered()
 	out := make([]powerOption, 0, len(offered))
 	for _, o := range offered {
@@ -31,6 +37,9 @@ func optionsOf(p book.ClassPower, picks []string, owned map[string]bool) []power
 		}
 		// E o Foco em Arma só alcança a arma natural que a ficha tem.
 		if o.NaturalWeapon && !owned[o.ID] {
+			continue
+		}
+		if from := p.Choice.AmongPicksOf; from != "" && !slices.Contains(allPicks[from], o.ID) {
 			continue
 		}
 		count := 0

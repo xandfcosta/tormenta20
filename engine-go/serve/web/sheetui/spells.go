@@ -95,11 +95,8 @@ type learnedSpellRow struct {
 	// `costCutNote`. Vazio quando nada corta.
 	CostCut string
 	// SpellCut é quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" do Combate já mostra:
-	// o medalhão de prata nas de alcance pessoal (p160).
+	// o medalhão de prata nas de alcance pessoal (p160), o Foco em Magia na escolhida (p131).
 	SpellCut string
-	// FocusCut diz que o Foco em Magia tira 1 PM desta magia — ver
-	// `spellFocusNote`. Vazio quando ela não foi escolhida.
-	FocusCut string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -187,7 +184,6 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow 
 			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:  learned.CatalogSpellID,
 			CostCut:  costCutNote(computed, computedOK, tradition),
-			FocusCut: spellFocusNote(dto, learned.CatalogSpellID),
 			SpellCut: onlyHereCutNote(computed, computedOK, at),
 		})
 	}

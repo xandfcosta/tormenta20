@@ -159,7 +159,7 @@ func swapOptionsOf(dto sheet.CharacterDTO, row sheet.LevelChoiceDTO, class strin
 	out := []swapOption{}
 	power, chooses := book.PowerWithChoice(row.Ref)
 	if row.Kind == sheet.LevelKindPick && chooses && !power.Choice.Repeatable {
-		for _, option := range optionsOf(power, picks[row.Ref], owned) {
+		for _, option := range optionsOf(power, picks, owned) {
 			if option.Value != row.Pick {
 				out = append(out, swapOption{
 					Label: power.Name + ", " + option.Label, Target: row.Ref + "/" + url.PathEscape(option.Value),

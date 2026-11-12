@@ -194,9 +194,16 @@ func expandChoiceModifiers(mods []Modifier, picks []string, names map[string]str
 			copied.FromChoice = ""
 			// `scope` é PREFIXO + escolha: a Especialização em Arma escreve
 			// `weapon:` e a escolha completa com o id da arma (p65).
-			if m.FromChoice == "scope" {
+			// `school` e `spell` dizem que magia o modificador alcança (`ForSpell`): a escola do
+			// Especialista e do Mestre em Escola (p38), a magia do Foco em Magia (p131).
+			switch m.FromChoice {
+			case "scope":
 				copied.Target.Scope = m.Target.Scope + pick
-			} else {
+			case "school":
+				copied.Target.School = pick
+			case "spell":
+				copied.Target.Spell = pick
+			default:
 				copied.Target.Name = pick
 			}
 			out = append(out, copied)

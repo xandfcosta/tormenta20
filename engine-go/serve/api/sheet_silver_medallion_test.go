@@ -1,8 +1,12 @@
 package api
 
 import (
+	"context"
 	"strings"
 	"testing"
+
+	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // O MEDALHÃO DE PRATA "diminui em –1 PM o custo de magias de alcance pessoal" (p160). O Campo de Força é
@@ -36,6 +40,24 @@ func TestTheSilverMedallionCutsOnlyPersonalSpells(t *testing.T) {
 	}
 	if limit := pmLimitOf(t, f, f.charID); limit != 8 {
 		t.Errorf("o medalhão não sobe o limite de PM: o arcanista de 8º nível devia ter 8, e tem %d", limit)
+	}
+}
+
+// A nota só nomeia quem CORTA: com uma redução de −2 valendo em toda magia, o −1 do medalhão perde a
+// disputa da p226, e a linha do Campo de Força não pode prometer que ele tira 1 PM.
+func TestTheSpellCutNoteLeavesOutTheCutThatLost(t *testing.T) {
+	f := newSceneFixture(t)
+	itemSemeia(t, f, f.charID, "medalhao-de-prata", "Medalhão de prata", "wielded")
+	if _, err := f.s.sceneCore().Queries().CreateActiveEffect(context.Background(),
+		sqlcgen.CreateActiveEffectParams{
+			Characterid: f.charID, Catalogid: "corte-geral", Scope: "scene",
+			Modifiers: `[{"target":{"k":"pmCost"},"amount":-2,"bonusType":"untyped"}]`, Createdat: dbvalue.NowISO(),
+		}); err != nil {
+		t.Fatalf("semear o corte geral: %v", err)
+	}
+	learnSpell(t, f, "campo-de-forca")
+	if row := spellRowOf(spellScreen(t, f, f.charID), "campo-de-forca"); strings.Contains(row, "Medalhão de prata tira") {
+		t.Error("a linha do Campo de Força diz que o medalhão tira 1 PM, e ele perdeu para o corte de −2")
 	}
 }
 

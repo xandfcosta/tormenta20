@@ -308,36 +308,95 @@ func (r *Ruleset) SpellPmLimitFor(
 // se duplicando, não duas se acumulando. O `resolveStack` comum não serve aqui:
 // ele compete por bonusType, e estas vêm todas como `untyped`.
 //
+// AS EXCEÇÕES são do verbete, e o livro escreve duas formas:
+//
+//   - "cumulativo com Mestre em Escola" (cajado do poder, p337): a parcela diz o id da outra fonte
+//     (`StacksWith`), e as fontes LIGADAS somam e contam como uma redução só, que disputa com as outras;
+//   - "cumulativo com outras reduções de custo" (Foco em Magia, p131): a parcela acumula com tudo
+//     (`StacksWithAll`), e entra por cima da que venceu.
+//
+// O livro não tem exemplo de três reduções juntas; a leitura da dupla que disputa inteira é do dono.
+//
 // AUMENTOS (o Alquebrado, p394: "o custo em PM das habilidades aumenta em +1")
 // somam normalmente — o livro só proíbe o acúmulo das reduções. As fontes de
 // redução que não venceram voltam à parte: a conta da ficha as mostra riscadas.
 func pmCostDispute(contribs []Contribution) (int, map[string]bool) {
-	bySource := map[string]int{}
+	type cut struct {
+		amount     int
+		id         string
+		stacksWith []string
+		withAll    bool
+	}
+	bySource := map[string]*cut{}
 	order := []string{}
 	for _, c := range contribs {
-		if _, seen := bySource[c.Source]; !seen {
+		source, seen := bySource[c.Source]
+		if !seen {
+			source = &cut{id: c.SourceID}
+			bySource[c.Source] = source
 			order = append(order, c.Source)
 		}
-		bySource[c.Source] += c.Amount
+		source.amount += c.Amount
+		source.stacksWith = append(source.stacksWith, c.StacksWith...)
+		source.withAll = source.withAll || c.StacksWithAll
 	}
 
-	best, bestReduction, increases := "", 0, 0
-	for _, source := range order {
-		amount := bySource[source]
-		if amount < bestReduction {
-			best, bestReduction = source, amount
+	// A LIGAÇÃO vale nos dois sentidos — o cajado a declara, e o Mestre em Escola não precisa repeti-la —,
+	// e por isso as fontes ligadas se juntam num grupo, e não numa lista de pares.
+	group := map[string]string{}
+	var root func(string) string
+	root = func(source string) string {
+		if group[source] == source {
+			return source
 		}
-		if amount > 0 {
-			increases += amount
+		group[source] = root(group[source])
+		return group[source]
+	}
+	byID := map[string]string{}
+	onTop, increases := 0, 0
+	for _, source := range order {
+		c := bySource[source]
+		switch {
+		case c.amount > 0:
+			increases += c.amount
+		case c.amount < 0 && c.withAll:
+			onTop += c.amount
+		case c.amount < 0:
+			group[source] = source
+			if c.id != "" {
+				byID[c.id] = source
+			}
+		}
+	}
+	for _, source := range order {
+		if _, disputes := group[source]; !disputes {
+			continue
+		}
+		for _, id := range bySource[source].stacksWith {
+			if partner, has := byID[id]; has {
+				group[root(partner)] = root(source)
+			}
+		}
+	}
+
+	sums, best := map[string]int{}, ""
+	for _, source := range order {
+		if _, disputes := group[source]; disputes {
+			sums[root(source)] += bySource[source].amount
+		}
+	}
+	for _, source := range order {
+		if _, disputes := group[source]; disputes && (best == "" || sums[root(source)] < sums[best]) {
+			best = root(source)
 		}
 	}
 	losers := map[string]bool{}
 	for _, source := range order {
-		if bySource[source] < 0 && source != best {
+		if _, disputes := group[source]; disputes && root(source) != best {
 			losers[source] = true
 		}
 	}
-	return bestReduction + increases, losers
+	return sums[best] + onTop + increases, losers
 }
 
 // SpellPmCostFor é o que a magia CUSTA de fato: o valor da Tabela 4-1 mais os
@@ -351,13 +410,9 @@ func pmCostDispute(contribs []Contribution) (int, map[string]bool) {
 // calcular o modificador só para a ficha deixa o mosaico "Custo PM" dizendo −2
 // enquanto a conjuração cobra preço cheio.
 //
-// O FOCO EM MAGIA (p131) tira 1 PM da magia escolhida "cumulativo com outras
-// reduções de custo": é a exceção escrita à p226, e por isso fica fora da
-// disputa do `pmCostDispute` (ALE-510).
-//
 // O que alcança a magia é o `ForSpell`, com ela inteira: o cajado do poder corta as arcanas (p337), o
-// medalhão de prata as de alcance pessoal (p160), e todos entram na MESMA disputa da p226, porque o livro
-// não os diz cumulativos.
+// medalhão de prata as de alcance pessoal (p160), o Foco em Magia a magia escolhida (p131), e todos
+// entram na MESMA disputa da p226, com as exceções que o verbete escreve (`pmCostDispute`).
 //
 // @example SpellPmCostFor(druida20, 3, 0, nil, SpellAt{Tradition: "divina", Spell: "bola-de-fogo"}) // 1
 func (r *Ruleset) SpellPmCostFor(
@@ -368,7 +423,7 @@ func (r *Ruleset) SpellPmCostFor(
 		return 0
 	}
 	reach := r.EffectsOf(ch, conditionals).ForSpell("pmCost", at)
-	mod := reach.Total - spellFocusCut(ch, at.Spell)
+	mod := reach.Total
 	// O FATOR É O ÚLTIMO, e o livro diz a ordem por extenso: a Alta Arcana
 	// reduz à metade "após aplicar aprimoramentos e quaisquer outros efeitos
 	// que reduzam custo" (p39). Antes da soma, o +1 do Alquebrado entraria
@@ -377,16 +432,4 @@ func (r *Ruleset) SpellPmCostFor(
 	// E o PISO continua por último de todos: metade de 1 PM é zero, e a p226
 	// não deixa descer abaixo de 1.
 	return max(1, reach.Factor.Applied(raw+mod))
-}
-
-// spellFocusCut é quanto o Foco em Magia tira desta magia: 1 PM por escolha
-// dela, e a p131 manda escolher magias diferentes.
-func spellFocusCut(ch Character, spellID string) int {
-	cut := 0
-	for _, pick := range parsePowerChoices(ch.PowerChoices)["foco-em-magia"] {
-		if pick == spellID {
-			cut++
-		}
-	}
-	return cut
 }

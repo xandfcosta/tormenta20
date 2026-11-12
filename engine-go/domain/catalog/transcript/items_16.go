@@ -87,11 +87,12 @@ var itemsPart16 = []Item{
 		Price:    180000,
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmCost", Tradition: "arcana"},
-				Amount:    -1,
-				BonusType: "untyped",
-				Note:      "–1 PM nas magias arcanas",
-				Condition: &ModifierCondition{Kind: "wielded"},
+				Target:     ModifierTarget{Kind: "pmCost", Tradition: "arcana"},
+				Amount:     -1,
+				BonusType:  "untyped",
+				Note:       "–1 PM nas magias arcanas, cumulativo com Mestre em Escola",
+				Condition:  &ModifierCondition{Kind: "wielded"},
+				StacksWith: []string{"class.arcanista.mestre-em-escola"},
 			},
 			{
 				Target:    ModifierTarget{Kind: "spellDC", Tradition: "arcana"},
