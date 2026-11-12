@@ -57,6 +57,8 @@ type seedCharacter struct {
 	// OversizedWeapons são os `catalogId` das armas de categoria maior.
 	OversizedWeapons []string      `json:"oversizedWeapons"`
 	Overlays         []seedOverlay `json:"overlays"`
+	// ItemGods é o deus de um símbolo sagrado do elenco (p157), pelo mesmo gesto da Mochila.
+	ItemGods []seedItemGod `json:"itemGods"`
 	// Doses são os itens carregados na Injeção alquímica, depois dos `overlays`.
 	Doses       []seedDose `json:"doses"`
 	Simple      bool       `json:"simple"`
@@ -79,6 +81,12 @@ type seedEnchant struct {
 	Enchants []string `json:"enchants"`
 	// Choices é a escolha que um encanto pede, por encanto: o tipo de criatura da Anticriatura (p335).
 	Choices map[string]string `json:"choices,omitempty"`
+}
+
+// seedItemGod é o deus escolhido num símbolo sagrado do elenco: sem ele, o +1 em resistência não vale (p157).
+type seedItemGod struct {
+	Item string `json:"item"`
+	God  string `json:"god"`
 }
 
 // seedDose é um item carregado na Injeção alquímica de uma arma do elenco.
@@ -122,6 +130,8 @@ type casaDaSeed interface {
 	SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error
 	// LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.
 	LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error
+	// ChooseItemGod grava o deus do símbolo sagrado, pelo mesmo gesto da Mochila.
+	ChooseItemGod(ctx context.Context, itemID int64, god string) error
 }
 
 // standardTrained são as perícias que todo personagem não-simples treina, para a
@@ -360,6 +370,16 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 	}
 	if err := applyOverlays(ctx, square, id, sheet.Items, ch.Overlays); err != nil {
 		return err
+	}
+	for _, want := range ch.ItemGods {
+		line := lineOfCatalogItem(sheet.Items, want.Item)
+		if line == 0 {
+			return fmt.Errorf("o personagem %d não tem o item %q para dar o deus %q: "+
+				"o `itemGods` aponta para um `create.items[].catalogId` que não está lá", id, want.Item, want.God)
+		}
+		if err := square.ChooseItemGod(ctx, line, want.God); err != nil {
+			return fmt.Errorf("dar o deus %q ao %q do personagem %d: %w", want.God, want.Item, id, err)
+		}
 	}
 	for _, dose := range ch.Doses {
 		item, weapon := lineOfCatalogItem(sheet.Items, dose.Item), lineOfCatalogItem(sheet.Items, dose.Weapon)
