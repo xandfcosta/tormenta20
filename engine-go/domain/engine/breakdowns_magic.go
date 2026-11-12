@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"slices"
 	"sort"
 	"strings"
 )
@@ -156,6 +157,17 @@ func byTradition(e ItemEffects, kind string) map[string]TotalContribs {
 		}
 	}
 	return out
+}
+
+// PmCostCutsFor são as reduções de custo que valem só nas magias deste alcance — o medalhão de prata nas
+// de alcance pessoal (p160) —, para a tela dizer quem corta o custo.
+//
+//	world.PmCostCutsFor(ch, nil, "pessoal") // [{Medalhão de prata -1}]
+func (r *Ruleset) PmCostCutsFor(ch Character, conditionals map[string]bool, spellRange string) []BreakdownContribution {
+	if spellRange == "" {
+		return nil
+	}
+	return totalContribsFor(r.sheetEffects(ch, conditionals), ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions
 }
 
 // SpellBonusFor é o bônus de uma conta de magia (`spellDC` ou `pmLimit`) para uma magia da tradição dada:
@@ -365,16 +377,24 @@ func resolvePmCostMod(contribs []Contribution) int {
 // reduções de custo": é a exceção escrita à p226, e por isso fica fora da
 // disputa do `resolvePmCostMod` (ALE-510).
 //
-// @example SpellPmCostFor(druida20, 3, 0, nil, "divina", "bola-de-fogo") // 1
+// @example SpellPmCostFor(druida20, 3, 0, nil, "divina", "bola-de-fogo", "longo") // 1
+//
+// O ALCANCE da magia traz a redução que só vale nele: o medalhão de prata corta 1 PM das de alcance
+// pessoal (p160), na chave `pmCost:pessoal`. Ela entra na MESMA disputa das outras reduções (p226), e não
+// por fora como o Foco em Magia, porque o livro não a diz cumulativa.
 func (r *Ruleset) SpellPmCostFor(
-	ch Character, basePm, augmentPm int, conditionals map[string]bool, tradition, spellID string,
+	ch Character, basePm, augmentPm int, conditionals map[string]bool, tradition, spellID, spellRange string,
 ) int {
 	raw := basePm + augmentPm
 	if raw <= 0 {
 		return 0
 	}
 	effects := r.sheetEffects(ch, conditionals)
-	mod := resolvePmCostMod(StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions) - spellFocusCut(ch, spellID)
+	contribs := StatFor(effects, ModifierTarget{K: "pmCost"}).Contributions
+	if spellRange != "" {
+		contribs = append(slices.Clone(contribs), StatFor(effects, ModifierTarget{K: "pmCost", Scope: spellRange}).Contributions...)
+	}
+	mod := resolvePmCostMod(contribs) - spellFocusCut(ch, spellID)
 	// O FATOR É O ÚLTIMO, e o livro diz a ordem por extenso: a Alta Arcana
 	// reduz à metade "após aplicar aprimoramentos e quaisquer outros efeitos
 	// que reduzam custo" (p39). Antes da soma, o +1 do Alquebrado entraria

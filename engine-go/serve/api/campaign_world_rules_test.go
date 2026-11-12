@@ -253,17 +253,17 @@ func TestACampaignSilenceRemovesOneTermFromOneHero(t *testing.T) {
 			"O silêncio tinha `characterId` preenchido com a ficha DELA.", got, comEmenda)
 	}
 
-	// E O IRMÃO DE FONTE SOBREVIVE: o `pmLimit` do livro continua vindo do mesmo
+	// E O IRMÃO DE FONTE SOBREVIVE: o corte de custo do livro continua vindo do mesmo
 	// medalhão. Sem isto, calar o termo e calar a FONTE dariam o mesmo resultado
 	// nas duas asserções acima.
-	if !heroHasPmLimitFromTheMedallion(t, s, theirs) {
-		t.Error("o `pmLimit` do medalhão sumiu junto — o silêncio comeu a fonte inteira em vez do termo")
+	if !heroKeepsTheMedallionsBookTerm(t, s, theirs) {
+		t.Error("o corte de custo do medalhão sumiu junto — o silêncio comeu a fonte inteira em vez do termo")
 	}
 }
 
-// heroHasPmLimitFromTheMedallion pergunta à coleta se o outro termo do medalhão
-// continua de pé.
-func heroHasPmLimitFromTheMedallion(t *testing.T, s *Server, characterID int64) bool {
+// heroKeepsTheMedallionsBookTerm pergunta à coleta se o outro termo do medalhão,
+// o do livro (-1 PM nas magias pessoais, p160), continua de pé.
+func heroKeepsTheMedallionsBookTerm(t *testing.T, s *Server, characterID int64) bool {
 	t.Helper()
 	ctx := context.Background()
 	row, err := s.queries.GetCharacter(ctx, characterID)
@@ -283,7 +283,7 @@ func heroHasPmLimitFromTheMedallion(t *testing.T, s *Server, characterID int64) 
 			continue
 		}
 		for _, m := range item.Modifiers {
-			if m.Target.K == "pmLimit" {
+			if m.Target.K == "pmCost" {
 				return true
 			}
 		}

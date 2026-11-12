@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"strconv"
+	"strings"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -43,6 +44,26 @@ func costCutNote(dto sheet.CharacterDTO, tradition string) string {
 		return ""
 	}
 	return owned.Name + " corta este custo " + writtenRatio(factor) + writtenPage(owned.Page)
+}
+
+// rangeCutNote é a frase de quem corta o custo das magias deste alcance: "Medalhão de prata tira 1 PM
+// deste custo", nas de alcance pessoal (p160). Ela segue a regra do `costCutNote`: o número da prévia é o
+// cheio, e quem desconta é o servidor ao conjurar.
+func rangeCutNote(dto sheet.CharacterDTO, spellRange string) string {
+	if dto.Ruleset == nil {
+		return ""
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return ""
+	}
+	notes := []string{}
+	for _, cut := range dto.Ruleset.PmCostCutsFor(ec, sheet.ToStringSet(dto.Conditionals), spellRange) {
+		if cut.Amount < 0 {
+			notes = append(notes, cut.Source+" tira "+strconv.Itoa(-cut.Amount)+" PM deste custo")
+		}
+	}
+	return strings.Join(notes, " · ")
 }
 
 // spellFocusNote é a frase do Foco em Magia: "Foco em Magia tira 1 PM deste

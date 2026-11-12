@@ -135,6 +135,9 @@ templ spellSheet(v View, spell learnedSpellRow) {
 		if spell.FocusCut != "" {
 			<p class="ds-help">{ spell.FocusCut }</p>
 		}
+		if spell.RangeCut != "" {
+			<p class="ds-help">{ spell.RangeCut }</p>
+		}
 	}
 }
 

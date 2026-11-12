@@ -466,6 +466,13 @@ ficha guarda o geral (`SpellDCBonus`, `PmLimit`) e o de cada tradição à parte
 linha de CD da aba Magias usam a da classe conjuradora de maior nível. Somados
 numa chave só, a varinha arcana subia a CD do druida.
 
+**A redução de custo também pode ter escopo de ALCANCE**: o medalhão de prata
+tira 1 PM "de magias de alcance pessoal" (p160), pela chave `pmCost:pessoal`. O
+`SpellPmCostFor` recebe o alcance da magia e põe esse corte na MESMA disputa das
+outras reduções (p226), porque o livro não o diz cumulativo. A aba Magias mostra
+o custo cheio e a nota de quem corta (`PmCostCutsFor`), como faz com o Foco em
+Magia.
+
 > **A ISENÇÃO não é terceira forma do fator — é FLAG.** O anão "não tem o
 > deslocamento reduzido por uso de armadura ou excesso de carga" (p20): o
 > `displacementBreakdown` lê `DisplacementIgnoresArmor` e
