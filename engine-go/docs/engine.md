@@ -205,6 +205,18 @@ um mundo à parte. A entidade muda porque a pergunta muda:
 | **terreno sob a peça** (`situations_ecs.go`) | a PEÇA | que terreno ela está pisando, e o que ele faz com o ataque? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
+**"Que efeitos este personagem tem" tem UMA entrada: `Ruleset.EffectsOf`**, com
+os interruptores que ele ligou. Eles são ENTRADA da resolução (`SwitchedOn`), e
+não uma segunda passada sobre o resultado; a lista dos que ele pode ligar volta
+junto, acesos e apagados. Havia três respostas com fontes diferentes, e a que
+não via a Forma Selvagem mandou a manobra da Mesa sem o tamanho da forma.
+
+**O estado do CORPO é coletor**, depois do silêncio da mesa: as mãos ocupadas,
+as patas armadas e a forma não são item nem poder que a mesa cale. A flag das
+mãos está nas `bodyStateFlags`: ela cala o NÚMERO do Estilo de Uma Arma e não o
+interruptor, que fica na tela com o aviso. As outras guardas (`Unless`,
+`Requires`) escolhem a variante de um interruptor e tiram o termo da oferta.
+
 ### Os componentes são agrupados por PERGUNTA
 
 Um componente junta o que se lê junto: `derivedMagic` carrega limite de PM, CD e
