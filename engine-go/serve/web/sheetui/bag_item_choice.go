@@ -2,12 +2,10 @@ package sheetui
 
 import (
 	"net/http"
-	"slices"
 
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/book"
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -23,8 +21,7 @@ type itemSchool struct {
 
 // schoolOnTheItemSheet é a escolha do item que a pede, ou nil.
 func schoolOnTheItemSheet(item sheet.ItemDTO) *itemSchool {
-	entry := catalogItem(item)
-	if entry == nil || !slices.ContainsFunc(entry.Modifiers, func(m engine.Modifier) bool { return m.FromChoice == "school" }) {
+	if entry := catalogItem(item); entry == nil || !entry.AsksFor("school") {
 		return nil
 	}
 	return &itemSchool{Chosen: item.Choice, Options: book.SpellSchools()}
@@ -55,8 +52,7 @@ func (g itemGod) Devout() bool { return g.Chosen != "" && g.Chosen == g.Own }
 
 // godOnTheItemSheet é a escolha do item que pede deus, ou nil.
 func godOnTheItemSheet(item sheet.ItemDTO, dto sheet.CharacterDTO) *itemGod {
-	entry := catalogItem(item)
-	if entry == nil || !slices.ContainsFunc(entry.Modifiers, func(m engine.Modifier) bool { return m.FromChoice == "god" }) {
+	if entry := catalogItem(item); entry == nil || !entry.AsksFor("god") {
 		return nil
 	}
 	out := &itemGod{Chosen: item.Choice}
