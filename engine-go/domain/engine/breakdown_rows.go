@@ -3,8 +3,7 @@ package engine
 // AS LINHAS DA CONTA: como uma parcela resolvida vira linha da decomposição que a ficha mostra ao tocar um
 // número. As que entram fecham no total; as que não entraram vêm marcadas, com o motivo (`rowsOf`).
 
-// totalContribsFor is the {total, contributions} shape for a single target
-// (spellDC, pmCost, attack/damage globals).
+// totalContribsFor é a forma {total, linhas} de um alvo só: o ataque e o dano gerais, a CD de magia.
 func totalContribsFor(e ItemEffects, target ModifierTarget) TotalContribs {
 	stat := StatFor(e, target)
 	return TotalContribs{Total: stat.Total, Contributions: rowsOf(stat)}
@@ -16,32 +15,28 @@ func totalContribsFor(e ItemEffects, target ModifierTarget) TotalContribs {
 //
 //	rowsOf(StatFor(e, ModifierTarget{K: "defense"})) // as armaduras, e a que perdeu o empilhamento
 func rowsOf(stats ...AggregatedStat) []BreakdownContribution {
-	alive, out := []Contribution{}, []Contribution{}
+	counted, dropped := []Contribution{}, []Contribution{}
 	for _, stat := range stats {
-		alive = append(alive, stat.Contributions...)
-		out = append(out, stat.Dropped...)
+		counted = append(counted, stat.Contributions...)
+		dropped = append(dropped, stat.Dropped...)
 	}
-	rows := withNoteContribs(alive)
-	for _, c := range out {
+	rows := withNoteContribs(counted)
+	for _, c := range dropped {
 		rows = append(rows, BreakdownContribution{Source: c.Source, Amount: c.Amount, Note: c.Note, Dropped: true})
 	}
 	return rows
 }
 
-// withNoteContribs maps resolution Contributions to display rows, keeping note.
+// withNoteContribs são as parcelas da resolução como linhas da conta, com a nota.
 func withNoteContribs(cs []Contribution) []BreakdownContribution {
 	out := []BreakdownContribution{}
 	for _, c := range cs {
-		bc := BreakdownContribution{Source: c.Source, Amount: c.Amount}
-		if c.Note != "" {
-			bc.Note = c.Note
-		}
-		out = append(out, bc)
+		out = append(out, BreakdownContribution{Source: c.Source, Amount: c.Amount, Note: c.Note})
 	}
 	return out
 }
 
-// sourceAmountContribs maps to {source, amount}, dropping note (attributes).
+// sourceAmountContribs são as parcelas como {fonte, valor}, sem a nota: a conta dos atributos não a mostra.
 func sourceAmountContribs(cs []Contribution) []SourceAmount {
 	out := []SourceAmount{}
 	for _, c := range cs {

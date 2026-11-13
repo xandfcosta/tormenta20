@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"t20engine/domain/book"
-	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -15,11 +14,7 @@ import (
 //
 //	plays.ChooseItemSchool(ctx, item, "evocacao")
 func (p Plays) ChooseItemSchool(ctx context.Context, item sqlcgen.GetItemRow, school string) error {
-	var entry *book.Item
-	if item.Catalogid.Valid {
-		entry = book.ItemByID(item.Catalogid.String)
-	}
-	if entry == nil || !slices.ContainsFunc(entry.Modifiers, func(m engine.Modifier) bool { return m.FromChoice == "school" }) {
+	if entry := itemEntryOf(item); entry == nil || !entry.AsksFor("school") {
 		return fmt.Errorf("%s não pede escola; quem pede é o tomo hermético (p160)", item.Name)
 	}
 	if !slices.ContainsFunc(book.SpellSchools(), func(s book.SpellSchool) bool { return s.ID == school }) {
@@ -37,11 +32,7 @@ func (p Plays) ChooseItemSchool(ctx context.Context, item sqlcgen.GetItemRow, sc
 //
 //	plays.ChooseItemGod(ctx, item, "wynna")
 func (p Plays) ChooseItemGod(ctx context.Context, item sqlcgen.GetItemRow, god string) error {
-	var entry *book.Item
-	if item.Catalogid.Valid {
-		entry = book.ItemByID(item.Catalogid.String)
-	}
-	if entry == nil || !slices.ContainsFunc(entry.Modifiers, func(m engine.Modifier) bool { return m.FromChoice == "god" }) {
+	if entry := itemEntryOf(item); entry == nil || !entry.AsksFor("god") {
 		return fmt.Errorf("%s não pede deus; quem pede é o símbolo sagrado (p157) e o abençoado (p345)", item.Name)
 	}
 	if !slices.ContainsFunc(book.CatalogGods(), func(g book.God) bool { return g.ID == god }) {
@@ -51,4 +42,12 @@ func (p Plays) ChooseItemGod(ctx context.Context, item sqlcgen.GetItemRow, god s
 		return fmt.Errorf("gravar o deus do item %d: %w", item.ID, err)
 	}
 	return nil
+}
+
+// itemEntryOf é o verbete do livro de um item da mochila, ou nil no item próprio.
+func itemEntryOf(item sqlcgen.GetItemRow) *book.Item {
+	if !item.Catalogid.Valid {
+		return nil
+	}
+	return book.ItemByID(item.Catalogid.String)
 }

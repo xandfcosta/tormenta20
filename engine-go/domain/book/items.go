@@ -1,6 +1,7 @@
 package book
 
 import (
+	"slices"
 	"strings"
 
 	"t20engine/domain/engine"
@@ -29,6 +30,14 @@ func ItemByID(id string) *Item {
 // linha só não iriam para as duas mãos.
 func (i Item) StacksInTheBag() bool {
 	return i.Weapon == nil && i.Armor == nil && i.Shield == nil
+}
+
+// AsksFor diz se o item pede a escolha `kind` a quem o tem: a escola do tomo hermético (p160), o deus do
+// símbolo sagrado (p157). Quem pede é o modificador do verbete, pelo `FromChoice`.
+//
+//	book.ItemByID("simbolo-sagrado").AsksFor("god") // true
+func (i Item) AsksFor(kind string) bool {
+	return slices.ContainsFunc(i.Modifiers, func(m engine.Modifier) bool { return m.FromChoice == kind })
 }
 
 // ItemByName é a busca por NOME, sem diferenciar maiúsculas.
