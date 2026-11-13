@@ -153,6 +153,15 @@ func (sd Seeder) ChooseItemGod(ctx context.Context, itemID int64, god string) er
 	return sd.plays.ChooseItemGod(ctx, item, god)
 }
 
+// ChooseImprovementSpell grava a magia que a melhoria pede (o Harmonizado, p165), pelo caso de uso da Mochila.
+func (sd Seeder) ChooseImprovementSpell(ctx context.Context, itemID int64, improvement, spell string) error {
+	item, err := sd.queries.GetItem(ctx, itemID)
+	if err != nil {
+		return fmt.Errorf("ler o item %d: %w", itemID, err)
+	}
+	return sd.plays.ChooseImprovementSpell(ctx, item, improvement, spell)
+}
+
 // LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.
 func (sd Seeder) LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error {
 	return sd.plays.LoadDose(ctx, characterID, doseItemID, weaponItemID)

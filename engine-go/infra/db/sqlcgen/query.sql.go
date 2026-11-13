@@ -1070,6 +1070,20 @@ func (q *Queries) DropCampaignRule(ctx context.Context, arg DropCampaignRulePara
 	return result.RowsAffected()
 }
 
+const dropImprovementChoice = `-- name: DropImprovementChoice :exec
+DELETE FROM character_item_improvement_choices WHERE itemId = ? AND improvementId = ?
+`
+
+type DropImprovementChoiceParams struct {
+	Itemid        int64  `json:"itemid"`
+	Improvementid string `json:"improvementid"`
+}
+
+func (q *Queries) DropImprovementChoice(ctx context.Context, arg DropImprovementChoiceParams) error {
+	_, err := q.db.ExecContext(ctx, dropImprovementChoice, arg.Itemid, arg.Improvementid)
+	return err
+}
+
 const enchantsOfCharacter = `-- name: EnchantsOfCharacter :many
 SELECT e.itemId, e.enchantId, c.choice
 FROM character_item_enchants e
@@ -1783,6 +1797,118 @@ type IgnoreRuleInCampaignParams struct {
 func (q *Queries) IgnoreRuleInCampaign(ctx context.Context, arg IgnoreRuleInCampaignParams) error {
 	_, err := q.db.ExecContext(ctx, ignoreRuleInCampaign, arg.Campaignid, arg.Rule, arg.Updatedat)
 	return err
+}
+
+const improvementChoicesOfCharacter = `-- name: ImprovementChoicesOfCharacter :many
+SELECT c.itemId, c.improvementId, c.choice
+FROM character_item_improvement_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId = ?
+`
+
+// A escolha que a melhoria pede (a magia do Harmonizado), em lote por ficha,
+// pela mesma razao dos encantos.
+func (q *Queries) ImprovementChoicesOfCharacter(ctx context.Context, characterid int64) ([]CharacterItemImprovementChoice, error) {
+	rows, err := q.db.QueryContext(ctx, improvementChoicesOfCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CharacterItemImprovementChoice{}
+	for rows.Next() {
+		var i CharacterItemImprovementChoice
+		if err := rows.Scan(&i.Itemid, &i.Improvementid, &i.Choice); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const improvementChoicesOfCharacters = `-- name: ImprovementChoicesOfCharacters :many
+SELECT i.characterId, c.itemId, c.improvementId, c.choice
+FROM character_item_improvement_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId IN (/*SLICE:ids*/?)
+`
+
+type ImprovementChoicesOfCharactersRow struct {
+	Characterid   int64  `json:"characterid"`
+	Itemid        int64  `json:"itemid"`
+	Improvementid string `json:"improvementid"`
+	Choice        string `json:"choice"`
+}
+
+// O irmao em lote do `ImprovementChoicesOfCharacter`, para o caminho que monta N fichas.
+func (q *Queries) ImprovementChoicesOfCharacters(ctx context.Context, ids []int64) ([]ImprovementChoicesOfCharactersRow, error) {
+	query := improvementChoicesOfCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ImprovementChoicesOfCharactersRow{}
+	for rows.Next() {
+		var i ImprovementChoicesOfCharactersRow
+		if err := rows.Scan(
+			&i.Characterid,
+			&i.Itemid,
+			&i.Improvementid,
+			&i.Choice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const improvementChoicesOfItem = `-- name: ImprovementChoicesOfItem :many
+SELECT improvementId FROM character_item_improvement_choices WHERE itemId = ?
+`
+
+func (q *Queries) ImprovementChoicesOfItem(ctx context.Context, itemid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, improvementChoicesOfItem, itemid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var improvementid string
+		if err := rows.Scan(&improvementid); err != nil {
+			return nil, err
+		}
+		items = append(items, improvementid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertCampaignImprovement = `-- name: InsertCampaignImprovement :exec
@@ -4397,6 +4523,23 @@ type SetCharacterTibarParams struct {
 
 func (q *Queries) SetCharacterTibar(ctx context.Context, arg SetCharacterTibarParams) error {
 	_, err := q.db.ExecContext(ctx, setCharacterTibar, arg.Tibar, arg.UpdatedAt, arg.ID)
+	return err
+}
+
+const setImprovementChoice = `-- name: SetImprovementChoice :exec
+INSERT INTO character_item_improvement_choices (itemId, improvementId, choice) VALUES (?, ?, ?)
+ON CONFLICT(itemId, improvementId) DO UPDATE SET choice = excluded.choice
+`
+
+type SetImprovementChoiceParams struct {
+	Itemid        int64  `json:"itemid"`
+	Improvementid string `json:"improvementid"`
+	Choice        string `json:"choice"`
+}
+
+// Trocar e regravar: a melhoria pede uma escolha so.
+func (q *Queries) SetImprovementChoice(ctx context.Context, arg SetImprovementChoiceParams) error {
+	_, err := q.db.ExecContext(ctx, setImprovementChoice, arg.Itemid, arg.Improvementid, arg.Choice)
 	return err
 }
 

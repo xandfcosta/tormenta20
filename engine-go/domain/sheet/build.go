@@ -86,6 +86,14 @@ func Load(
 	for _, row := range itemChoices {
 		choiceOf[row.Itemid] = row.Choice
 	}
+	improvementRows, err := q.ImprovementChoicesOfCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	improvementChoices := overlayChoices{}
+	for _, row := range improvementRows {
+		improvementChoices.add(row.Itemid, row.Improvementid, sql.NullString{String: row.Choice, Valid: true})
+	}
 	doses, err := q.DosesOfCharacter(ctx, c.ID)
 	if err != nil {
 		return dto, err
@@ -100,7 +108,8 @@ func Load(
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
 			Enchants: enchants[it.ID], EnchantChoices: choices[it.ID], Choice: choiceOf[it.ID],
-			Oversized: slices.Contains(oversized, it.ID), Doses: dosesByItem[it.ID],
+			ImprovementChoices: improvementChoices[it.ID],
+			Oversized:          slices.Contains(oversized, it.ID), Doses: dosesByItem[it.ID],
 		})
 	}
 
@@ -330,12 +339,12 @@ func LoadPlayState(ctx context.Context, q *sqlcgen.Queries, id int64, dto *Chara
 // uma seria quadrático no que a tela desenha a cada clique.
 func enchantsByItem(
 	ctx context.Context, q *sqlcgen.Queries, charID int64,
-) (map[int64][]string, enchantChoices, error) {
+) (map[int64][]string, overlayChoices, error) {
 	rows, err := q.EnchantsOfCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
 	}
-	enchants, choices := map[int64][]string{}, enchantChoices{}
+	enchants, choices := map[int64][]string{}, overlayChoices{}
 	for _, row := range rows {
 		enchants[row.Itemid] = append(enchants[row.Itemid], row.Enchantid)
 		choices.add(row.Itemid, row.Enchantid, row.Choice)
@@ -343,11 +352,12 @@ func enchantsByItem(
 	return enchants, choices, nil
 }
 
-// enchantChoices são as escolhas dos encantos, por arma e por encanto. Só o encanto que pede escolha tem
-// linha: a arma sem nenhuma fica fora do mapa, e a ficha a lê como nula.
-type enchantChoices map[int64]map[string]string
+// overlayChoices são as escolhas das sobreposições, por item e por sobreposição: a do encanto (o tipo da
+// Anticriatura) e a da melhoria (a magia do Harmonizado). Só a que pede escolha tem linha: o item sem
+// nenhuma fica fora do mapa, e a ficha a lê como nula.
+type overlayChoices map[int64]map[string]string
 
-func (c enchantChoices) add(itemID int64, enchant string, choice sql.NullString) {
+func (c overlayChoices) add(itemID int64, enchant string, choice sql.NullString) {
 	if !choice.Valid {
 		return
 	}

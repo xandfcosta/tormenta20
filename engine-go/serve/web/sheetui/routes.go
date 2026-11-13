@@ -105,6 +105,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/itens/{item}/categoria-maior", s.sheetCommand(toggleOversizedWeapon))
 	r.Post("/personagens/{id}/itens/{item}/escola/{escola}", s.sheetCommand(choosesTheItemSchool))
 	r.Post("/personagens/{id}/itens/{item}/deus/{deus}", s.sheetCommand(choosesTheItemGod))
+	r.Post("/personagens/{id}/itens/{item}/melhorias/{melhoria}/magia/{magia}", s.sheetCommand(choosesTheImprovementSpell))
 	// OS PODERES.
 	r.Post("/personagens/{id}/poderes/usa/{poder}", s.sheetCommand(usePower))
 	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(enterStance))
@@ -174,7 +175,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" spell_search: '', spell_circle: '', spell_school: '', grimoire_search: '', grimoire_circle: ''," +
 			" condition_search: '', buff_search: '', buff_circle: ''," +
 			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +
-			" catalog_search: '', catalog_category: '', item_qty: 1, item_name: '', item_slots: 1," +
+			" catalog_search: '', catalog_category: '', improvement_spell_search: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: '', item_enchants: [], item_enchant_against: ''," +
 			" power_search: '', stance_degrees: 0, power: '', show_passives: false, wild_form: '', wild_tier: '', wild_damage: '', wild_move: ''," +
 			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', vital_temp_amount: '', " + ExpertiseSpendsDeclaration() + "}",

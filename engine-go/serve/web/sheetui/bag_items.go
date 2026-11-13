@@ -57,6 +57,8 @@ type itemSheet struct {
 	School *itemSchool
 	// God é o deus que o símbolo sagrado pede (p157), nil no item que não pede.
 	God *itemGod
+	// Spell é a magia que o Harmonizado pede (p165), nil no item sem ele.
+	Spell *improvementSpell
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
@@ -123,6 +125,7 @@ type catalogItemRow struct {
 
 func itemSheetsOf(
 	dto sheet.CharacterDTO, proficiencies map[string]bool, attributes map[string]engine.AttributeBreakdown, armable bool,
+	spellSearch string,
 ) []itemSheet {
 	sheets := make([]itemSheet, 0, len(dto.Items))
 	// Sem a resposta, a folha só deixa de oferecer o Vestir da regra; o gesto, este sim, recusa com o erro.
@@ -135,6 +138,9 @@ func itemSheetsOf(
 		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
 		entry.School = schoolOnTheItemSheet(item)
 		entry.God = godOnTheItemSheet(item, dto)
+		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil {
+			spellCutRow(entry.Overlays, entry.Spell.Improvement, entry.Spell.Chosen)
+		}
 		sheets = append(sheets, entry)
 	}
 	return sheets

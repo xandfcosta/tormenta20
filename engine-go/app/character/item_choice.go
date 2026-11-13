@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"t20engine/domain/book"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -40,6 +41,33 @@ func (p Plays) ChooseItemGod(ctx context.Context, item sqlcgen.GetItemRow, god s
 	}
 	if err := p.queries.SetItemChoice(ctx, sqlcgen.SetItemChoiceParams{Itemid: item.ID, Choice: god}); err != nil {
 		return fmt.Errorf("gravar o deus do item %d: %w", item.ID, err)
+	}
+	return nil
+}
+
+// ChooseImprovementSpell grava a magia que a melhoria pede: o Harmonizado diz "escolha uma magia. Seu custo
+// diminui em –1 PM" (p165). A lista é o livro inteiro, e não só o grimório (decisão do dono): o livro não
+// prende a escolha ao que a ficha sabe. Trocar é gravar de novo; o ritual de um dia e T$ 100 que a troca
+// pede é com o mestre.
+//
+//	plays.ChooseImprovementSpell(ctx, item, "melhoria-harmonizado-esoterico", "bola-de-fogo")
+func (p Plays) ChooseImprovementSpell(ctx context.Context, item sqlcgen.GetItemRow, improvement, spell string) error {
+	entry := book.ItemByID(improvement)
+	if entry == nil || !entry.AsksFor("spell") {
+		return fmt.Errorf("%q não pede magia; quem pede é o Harmonizado (p165)", improvement)
+	}
+	if !slices.Contains(sheet.UnmarshalStrings(item.Improvements), improvement) {
+		return fmt.Errorf("%s não tem a melhoria %s; aplique-a pelas Melhorias antes de escolher a magia",
+			item.Name, entry.Name)
+	}
+	if _, found := book.SpellByID(spell); !found {
+		return fmt.Errorf("%q não é uma magia do livro; esperava o id de uma delas, como \"bola-de-fogo\"", spell)
+	}
+	err := p.queries.SetImprovementChoice(ctx, sqlcgen.SetImprovementChoiceParams{
+		Itemid: item.ID, Improvementid: improvement, Choice: spell,
+	})
+	if err != nil {
+		return fmt.Errorf("gravar a magia da melhoria %s do item %d: %w", improvement, item.ID, err)
 	}
 	return nil
 }

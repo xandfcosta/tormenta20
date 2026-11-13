@@ -499,7 +499,10 @@ caiu entre os dois sem ninguém o ler.
 - **A escola** é a do tomo hermético, "dessa escola" (p160), preenchida pelo
   `FromChoice: school` do verbete com a escolha que o item pede
   (`CharacterItem.Choice`), e a do Especialista e do Mestre em Escola (p38), com a escolha do poder.
-  **A magia** é a do Foco em Magia (p131), pelo `FromChoice: spell`. **O alcance** é o do medalhão de prata, "de alcance
+  **A magia** é a do Foco em Magia (p131), pelo `FromChoice: spell`, e a do Harmonizado (p165), com a
+  escolha que a MELHORIA pede (`CharacterItem.ImprovementChoices`, por melhoria): o tomo hermético
+  harmonizado pede a escola e a magia, e uma escolha só não guardaria as duas. Sem magia escolhida, o
+  Harmonizado não corta nenhuma. **O alcance** é o do medalhão de prata, "de alcance
   pessoal" (p160).
 - **No custo, o total já sai pela p226**: reduções de fontes diferentes não se
   acumulam (`pmCostDispute`), e a que perdeu aparece riscada na conta. O mosaico "Custo PM" e a conjuração leem o mesmo

@@ -170,6 +170,20 @@ func (p Plays) SaveItemOverlays(
 		if err != nil {
 			return fmt.Errorf("gravar as melhorias do item %d: %w", itemID, err)
 		}
+		// A escolha da melhoria vai com ela: a melhoria mora num JSON, e a chave estrangeira não a alcança.
+		chosen, err := q.ImprovementChoicesOfItem(ctx, itemID)
+		if err != nil {
+			return fmt.Errorf("ler as escolhas das melhorias do item %d: %w", itemID, err)
+		}
+		for _, improvement := range chosen {
+			if slices.Contains(improvements, improvement) {
+				continue
+			}
+			err := q.DropImprovementChoice(ctx, sqlcgen.DropImprovementChoiceParams{Itemid: itemID, Improvementid: improvement})
+			if err != nil {
+				return fmt.Errorf("apagar a escolha da melhoria %s do item %d: %w", improvement, itemID, err)
+			}
+		}
 		if slices.Contains(improvements, sheet.AlchemicalInjection) {
 			return nil
 		}

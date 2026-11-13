@@ -254,6 +254,7 @@ func (s Scene) Load(
 	v.Bag = s.bagPanelOf(dto, bagFilters{
 		Search: signals.ItemSearch, Category: signals.ItemCategory,
 		CatalogSearch: signals.CatalogSearch, CatalogCategory: signals.CatalogCategory,
+		ImprovementSpellSearch: signals.ImprovementSpellSearch,
 	})
 	// O DIÁLOGO DE ENCANTOS é do mestre (p333): a folha do jogador fica sem o gesto, e o servidor recusa o
 	// pedido dele de todo jeito (`enchantsTheItem`).
