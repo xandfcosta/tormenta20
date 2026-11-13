@@ -165,7 +165,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		// `ui.ShellBare`: a cena desenha o próprio cabeçalho, com a volta e o nome.
 		Shape: ui.ShellBare,
 		// O FLUXO AO VIVO: a ficha aberta acompanha o que muda nela por outro caminho (`sheetLive`).
-		Init: fmt.Sprintf("@get('/personagens/%d/ao-vivo')", view.ID),
+		Init: ui.LiveStream(fmt.Sprintf("/personagens/%d/ao-vivo", view.ID)),
 		// Os sinais moram no <body> porque o <body> NUNCA é remendado: declarado
 		// dentro de um painel, o `@post` de qualquer gesto redeclararia o sinal a
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
