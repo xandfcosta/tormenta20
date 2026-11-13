@@ -37,9 +37,9 @@ type Entity uint32
 //
 // O registro de vivas saiu na ALE-381 e voltou na ALE-413, e o motivo das duas
 // vezes é o mesmo: chamador. A ficha é calculada montando o mundo, fundindo e
-// jogando fora — a coleta só ACRESCENTA —, e enquanto ela era o único mundo do
-// motor nada aqui matava uma entidade. O TABULEIRO mata: a peça sai do mapa, e
-// é ele quem chama o `Despawn`.
+// jogando fora — a coleta só ACRESCENTA —, e nada nela mata uma entidade. Quem
+// chama o `Despawn` é o ATAQUE: a situação especial que não alcança esta arma
+// sai do mundo inteira (`dropWhatDoesNotReachThisWeapon`).
 type World struct {
 	next   Entity
 	alive  map[Entity]bool

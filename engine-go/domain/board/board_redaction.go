@@ -42,6 +42,52 @@ func BoardForRole(role string, b *BoardState) *BoardState {
 	return redactBoardForPlayers(b)
 }
 
-// A REDAÇÃO em si mora no `board_ecs.go`: ela é o primeiro gesto do tabuleiro a
-// rodar como sistemas sobre um mundo, e o que o jogador não enxerga é
-// DESPAWN (ALE-413).
+// redactBoardForPlayers apaga da cópia do jogador o que o mestre escondeu.
+//
+// Some a coisa INTEIRA, e essa é a assimetria deliberada em relação ao
+// `hpHidden` da iniciativa, onde a linha fica sem os números: aqui a EXISTÊNCIA
+// é a informação. Uma peça "presente porém anônima" entregaria a emboscada do
+// mesmo jeito.
+//
+// A ORDEM que sobra é a de DESENHO (quem vem depois fica por cima), e ela
+// decide qual peça a tela oferece para mover: o filtro a preserva, e o
+// `TestTheRedactionKeepsTheDrawingOrder` e o `TestTheRedactionKeepsTheMarkerOrder`
+// a prendem.
+func redactBoardForPlayers(b *BoardState) *BoardState {
+	out := *b
+	out.Tokens = make([]BoardToken, 0, len(b.Tokens))
+	for _, token := range b.Tokens {
+		if !token.Hidden {
+			out.Tokens = append(out.Tokens, token)
+		}
+	}
+	out.Markers = make([]BoardMarker, 0, len(b.Markers))
+	for _, marker := range b.Markers {
+		if !marker.Hidden {
+			out.Markers = append(out.Markers, marker)
+		}
+	}
+
+	// O PROVISÓRIO DE QUEM NÃO SOBROU morre junto: um caminho desenhado saindo
+	// do nada é a peça sem o círculo, e entregaria a emboscada por outro
+	// caminho.
+	//
+	// A pergunta é "sobrou?" e não "estava escondida?", e as duas não são a
+	// mesma: a segunda deixaria passar um provisório apontando para peça que
+	// nem existe. Hoje não há como chegar nesse estado — o `RemoveToken` limpa
+	// o provisório junto —, e perguntar pelo sobrevivente é a forma que
+	// continua certa se um dia houver.
+	if out.Pending != nil && !hasTokenWithID(out.Tokens, out.Pending.TokenID) {
+		out.Pending = nil
+	}
+	return &out
+}
+
+func hasTokenWithID(tokens []BoardToken, tokenID string) bool {
+	for i := range tokens {
+		if tokens[i].ID == tokenID {
+			return true
+		}
+	}
+	return false
+}

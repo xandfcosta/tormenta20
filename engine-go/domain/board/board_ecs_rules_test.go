@@ -26,9 +26,10 @@ func engineSquare(x, y int) engine.Square { return engine.Square{X: x, Y: y} }
 // a ordem porque todos afirmavam CONTEÚDO, e conteúdo é o que sobrevive a um
 // embaralhamento.
 //
-// É a propriedade em volta da qual o `domain/ecs` foi desenhado — o
-// armazenamento guarda uma FATIA na ordem de inserção porque `map` em Go não a
-// tem —, e ela passou a valer aqui no dia em que a redação virou mundo.
+// Hoje a redação é um laço sobre a fatia, e preserva a ordem por construção. O
+// guarda fica porque trocar a fatia por outra estrutura — um `map`, um mundo
+// montado de outro jeito — a perderia em silêncio, que foi o que a sabotagem
+// mostrou.
 //
 // # Quantas peças o caso põe na tela
 //
