@@ -48,7 +48,9 @@
   reprova se o cabeçalho disser outra; fica FORA do `prebuild` — subir é ato
   deliberado, porque o reconciliador mantém as cenas vivas. Depois, o Playwright
   INTEIRO — o guarda do morph é `ferir duas vezes seguidas não apaga a piscada
-  da primeira`.
+  da primeira`, e o da reconexão, `live-stream-reconnects.spec.ts` — e a leitura
+  do diff das FONTES, pelo `.js.map` das duas tags: a reconexão mudou na 1.0.5
+  com a suíte inteira verde.
 - **Regra da casa que precisa GANHAR de utilitário mora em `@layer utilities`**,
   não em `components`: no Tailwind v4 a CAMADA decide antes da especificidade, e
   a regra descartada parece cálculo errado. Muda-se a camada, não o elemento.
