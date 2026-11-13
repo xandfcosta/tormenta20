@@ -33,16 +33,9 @@ func expertiseSumTerms(ex engine.ExpertiseBreakdown) []ds.SumTerm {
 		terms = append(terms, ds.SumTerm{Label: "Treinada", Note: strings.Join(ex.TrainedBy, ", "), Value: book.WithSign(ex.Training)})
 		shown += ex.Training
 	}
-	for _, c := range ex.ItemContributions {
-		terms = append(terms, ds.SumTerm{Label: c.Source, Note: c.Note, Value: book.WithSign(c.Amount), Penalty: c.Amount < 0, Dropped: c.Dropped})
-		if !c.Dropped {
-			shown += c.Amount
-		}
-	}
-	if rest := ex.Total - shown; rest != 0 {
-		terms = append(terms, ds.SumTerm{Label: "Outros", Value: book.WithSign(rest), Penalty: rest < 0})
-	}
-	return terms
+	// Os itens e o "Outros" são a mesma conta da aba Combate, sobre o que falta depois das três parcelas
+	// fixas.
+	return withContributions(terms, ex.Total-shown, ex.ItemContributions)
 }
 
 // expertiseHint é a nota debaixo do nome: o atributo e o estado do treino.
