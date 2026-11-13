@@ -181,28 +181,30 @@ Três famílias de inércia, três consertos:
 **Casar nome não é casar conceito**: o nome de um alvo num arquivo do motor pode
 ser outra coisa com a mesma grafia.
 
-## O motor é ECS, e a ENTIDADE muda de fase para fase
+## O motor usa ECS onde a consulta ATRAVESSA entidades
 
-**REGRA NOVA NASCE EM ECS. É o default, e o critério é APRENDER** (decisão do
-dono): pergunte *"quem é a ENTIDADE, que COMPONENTES ela carrega, e que SISTEMA
-os lê?"*, e não "que campo esta struct ganha". Regra sem entidade (formatador,
-consulta, tabela fechada que só se lê) não é ECS: ECS para o que COMPÕE, função
-para o que calcula. **Quem escolhe ECS paga o guarda de denominador junto**, um
-irmão do `TestEveryDerivationSystemWritesItsComponent` com a lista à mão.
+**ECS ONDE SE PAGA; função onde há uma entidade só** (decisão do dono, que
+trocou o critério de "aprender ECS"). A pergunta que decide é *"esta regra
+compõe o que VÁRIAS entidades concedem, ocupam ou sofrem?"*. Se compõe, ela é
+ECS: quem é a ENTIDADE, que COMPONENTES ela carrega, e que SISTEMA os lê. Se a
+pergunta tem uma entidade só, é função em linha reta — a assinatura é o
+escalonador, e o compilador cobra a ordem que, em sistemas, só um guarda
+cobraria. **Quem escolhe ECS paga o guarda de denominador junto**, um irmão do
+`TestEveryAttackSystemWritesItsComponent` com a lista à mão.
 
 O pipeline da ficha é coleta → resolução → derivação → decomposição; o ataque é
-um mundo à parte. A entidade muda porque a pergunta muda:
+um mundo à parte. Onde é ECS, a entidade muda porque a pergunta muda:
 
 | fase | entidade | pergunta |
 |---|---|---|
 | **coleta** (`collect_ecs.go`) | a FONTE | quem concede alguma coisa a este personagem? |
 | **resolução** (`resolve_ecs.go`) | o TERMO | quanto vale `defense`, e por quê? |
-| **derivação** (`derive_ecs.go`) | a FICHA | qual é o número final? |
+| derivação (`derive_sheet.go`) | — função: a ficha é uma só | qual é o número final? |
 | **ataque** (`attack_ecs.go`) | a PARCELA DE DANO | de que se soma este dano, e o que ficou de fora? |
 | **situação especial** (`special_situations_ecs.go`) | a LINHA da Tabela 5-3 | o que a cena em volta faz com este ataque? |
-| **redação do tabuleiro** (`board_ecs.go`) | a PEÇA | quem olha daqui enxerga isto? |
 | **ocupação do plano** (`board_occupancy_ecs.go`) | a PEÇA | que quadrado está tomado, e quem já tem peça na mesa? |
 | **terreno sob a peça** (`situations_ecs.go`) | a PEÇA | que terreno ela está pisando, e o que ele faz com o ataque? |
+| redação do tabuleiro (`board_redaction.go`) | — função: um filtro que preserva a ordem | quem olha daqui enxerga isto? |
 | decomposição (`breakdowns.go`) | — | como se explica o número na tela? |
 
 **"Que efeitos este personagem tem" tem UMA entrada: `Ruleset.EffectsOf`**, com
@@ -219,8 +221,8 @@ interruptor, que fica na tela com o aviso. As outras guardas (`Unless`,
 
 ### Os componentes são agrupados por PERGUNTA
 
-Um componente junta o que se lê junto: `derivedMagic` carrega limite de PM, CD e
-custo. Um campo por componente seria a struct de volta, com cerimônia.
+Um componente junta o que se lê junto: o `hitVerdict` do ataque carrega o d20, o
+total e se acertou. Um campo por componente seria a struct de volta, com cerimônia.
 
 ### O ataque em sistemas, e a única ordem que a rede NÃO pegava
 
@@ -250,8 +252,9 @@ O oráculo não cobre ordem (nenhuma fixture tem todas as fontes juntas). Guarda
 por fase: **coleta**, `TestEveryCollectorLandsInTheDeclaredOrder`; **resolução**,
 `TestAFactorWhoseConditionFailsDoesNotApply` (colher o fator antes de julgar a
 condição, preso pela CONSEQUÊNCIA, que sobrevive a uma reescrita dos sistemas);
-**derivação**, `TestTheLoadIsDerivedBeforeWhatReadsIt`; **redação do
-tabuleiro**, os dois guardas de ordem de desenho.
+a **derivação** é função, e o deslocamento não compila sem a carga; a **redação
+do tabuleiro** é filtro, e a ordem de desenho continua presa pelos dois guardas
+dela.
 
 **Acrescentar uma fonte NÃO faz o guarda da coleta reprovar**: ele só mede os
 pares que o DADO dele põe na mesma ficha, então o `everyCollectorCharacter`

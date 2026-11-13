@@ -13,7 +13,7 @@ trás, então não dá para descobrir depois.
 
 | vai mexer em | leia | o que costuma morder |
 |---|---|---|
-| regra do jogo, ficha, `domain/engine`, `domain/board`, `domain/live`, `app/combat` | [engine.md](docs/engine.md) | regra nova nasce em ECS, ordem dos sistemas, parcelas do dano, metro e quadrado |
+| regra do jogo, ficha, `domain/engine`, `domain/board`, `domain/live`, `app/combat` | [engine.md](docs/engine.md) | ECS onde a consulta atravessa entidades, ordem dos sistemas, parcelas do dano, metro e quadrado |
 | catálogo, `domain/catalog`, `domain/book`, `cmd/audit`, `cmd/seed` | [catalog.md](docs/catalog.md) | `transcriptfmt`, emendas da mesa, validação de escolha, rodar o auditor |
 | `.templ`, cena, `serve/web`, CSS | [screens.md](docs/screens.md) | `templ generate`, classe nova, ícone, porta da cena |
 | `data-*`, `@post`, sinal, remendo, gesto do tabuleiro | [datastar.md](docs/datastar.md) | recusa em 4xx some, `ReadSignals` antes do `NewSSE`, o morph, coordenada no corpo |

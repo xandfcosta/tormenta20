@@ -110,11 +110,24 @@ grafias antes de o kit ganhar as três receitas.
 
 O grafo tem uma aresta só (a carga alimenta o deslocamento e as perícias); o
 resto lê `(personagem, efeitos)`. **Um sistema que não roda deixa o componente
-ausente, e quem o lê recebe ZERO**, sem erro nem log. Pagam isso o
-`TestEveryDerivationSystemWritesItsComponent` (lista à mão, uma conferência por
-sistema, porque o `ecs` não diz quantos componentes uma entidade tem) e o
-`TestTheLoadIsDerivedBeforeWhatReadsIt`, que prende a aresta com o personagem
-SOBRECARREGADO: sem isso, a carga zerada e a de verdade dão o mesmo deslocamento.
+ausente, e quem o lê recebe ZERO**, sem erro nem log. Pagavam isso dois guardas:
+uma lista à mão com uma conferência por sistema, porque o `ecs` não diz quantos
+componentes uma entidade tem, e um caso com o personagem SOBRECARREGADO para
+prender a aresta — sem ele, a carga zerada e a de verdade davam o mesmo
+deslocamento.
+
+### A derivação e a redação voltaram a ser funções (2026-11)
+
+O critério de ECS era APRENDER, e a revisão de arquitetura perguntou se ele se
+pagava. Em dois lugares, não: a **derivação** tinha uma entidade só (a ficha) e
+sete sistemas de uma linha, e a **redação do tabuleiro** montava um mundo de
+índices para filtrar o escondido. Os dois viraram função em linha reta, com o
+oráculo intacto, e os dois guardas da derivação saíram com ela: em linha reta, o
+deslocamento não compila sem a carga, e o comportamento do sobrecarregado
+continua preso pelo `TestOverloadPenalizesDisplacementAndArmorExpertises`. O
+critério virou "ECS onde a consulta atravessa entidades" (decisão do dono):
+ficaram a coleta, a resolução, o ataque, as situações especiais, a ocupação e o
+terreno. O `Despawn` não saiu de novo: as situações especiais também o chamam.
 
 ### O que a resolução em sistemas comprou (saiu do guia em 2026-11)
 
