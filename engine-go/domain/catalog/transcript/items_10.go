@@ -186,11 +186,12 @@ var itemsPart10 = []Item{
 		Equip:    "either",
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "pmCost"},
-				Amount:    -1,
-				BonusType: "untyped",
-				Note:      "custo da magia escolhida -1 PM",
-				Condition: &ModifierCondition{Kind: "wielded"},
+				Target:     ModifierTarget{Kind: "pmCost"},
+				Amount:     -1,
+				BonusType:  "untyped",
+				Note:       "custo da magia escolhida -1 PM",
+				Condition:  &ModifierCondition{Kind: "wielded"},
+				FromChoice: "spell",
 			},
 		},
 		BookPage:  165,

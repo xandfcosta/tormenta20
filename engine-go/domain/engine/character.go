@@ -103,8 +103,12 @@ type CharacterItem struct {
 	// Choice é a escolha que o próprio item pede a quem o tem: a escola do tomo hermético (p160), que
 	// preenche o modificador com `FromChoice: school`, ou o deus do símbolo sagrado (p157), que decide se o
 	// modificador com `FromChoice: god` vale (`chosenByTheItem`).
-	Choice   string  `json:"choice,omitempty"`
-	Material *string `json:"material"`
+	Choice string `json:"choice,omitempty"`
+	// ImprovementChoices é a escolha que uma melhoria pede, por melhoria: a magia do Harmonizado (p165), que
+	// preenche o modificador com `FromChoice: spell`. Fica fora do `Choice` porque o mesmo item pede as duas:
+	// um tomo hermético harmonizado tem a escola dele e a magia da melhoria.
+	ImprovementChoices map[string]string `json:"improvementChoices,omitempty"`
+	Material           *string           `json:"material"`
 	// Oversized é a arma feita para uma categoria de tamanho maior (p106). O catálogo
 	// não dá tamanho por item, então é a mochila que guarda a marca.
 	Oversized bool `json:"oversized,omitempty"`

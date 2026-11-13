@@ -142,7 +142,7 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem, devotion s
 	}
 	own = append(own, chosenByTheItem(catalog.Modifiers, it.Choice, devotion)...)
 	for _, id := range parseStringArray(it.Improvements) {
-		own = append(own, overlayModsFor(r.getCatalogItem(id), catalog)...)
+		own = append(own, chosenByTheItem(overlayModsFor(r.getCatalogItem(id), catalog), it.ImprovementChoices[id], devotion)...)
 		if id == ImprovedItemImprovement {
 			own = append(own, ImprovedSkillsOf(catalog.Modifiers, catalog.SkillTies)...)
 		}
@@ -156,10 +156,12 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem, devotion s
 	return onThisWeapon(own, catalog)
 }
 
-// chosenByTheItem aplica a escolha do item ao modificador que a pede:
+// chosenByTheItem aplica a escolha do item, ou da melhoria, ao modificador que a pede:
 //
 //   - a escola do tomo hermético preenche o alvo (`FromChoice: school`, p160), e sem escolha ele sai — o +2
 //     "dessa escola" sem escola não vale em nenhuma;
+//   - a magia do Harmonizado preenche o alvo (`FromChoice: spell`, p165), pela escolha da MELHORIA e não do
+//     item, e sem escolha ele sai como a escola;
 //   - o deus do símbolo sagrado decide se o modificador vale (`FromChoice: god`): "o símbolo sagrado de um
 //     deus do qual é devoto" (p157). Ele vale quando o deus escolhido é o da ficha (`devotion`), e sai
 //     quando não há deus escolhido ou ele é outro.
@@ -173,6 +175,13 @@ func chosenByTheItem(mods []Modifier, choice, devotion string) []Modifier {
 			}
 			filled := m
 			filled.FromChoice, filled.Target.School = "", choice
+			out = append(out, filled)
+		case "spell":
+			if choice == "" {
+				continue
+			}
+			filled := m
+			filled.FromChoice, filled.Target.Spell = "", choice
 			out = append(out, filled)
 		case "god":
 			if choice == "" || choice != devotion {
