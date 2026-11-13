@@ -352,7 +352,7 @@ func pmCostDispute(contribs []Contribution) (int, map[string]bool) {
 		group[source] = root(group[source])
 		return group[source]
 	}
-	byID := map[string]string{}
+	disputing, byID := []string{}, map[string]string{}
 	onTop, increases := 0, 0
 	for _, source := range order {
 		c := bySource[source]
@@ -363,15 +363,13 @@ func pmCostDispute(contribs []Contribution) (int, map[string]bool) {
 			onTop += c.amount
 		case c.amount < 0:
 			group[source] = source
+			disputing = append(disputing, source)
 			if c.id != "" {
 				byID[c.id] = source
 			}
 		}
 	}
-	for _, source := range order {
-		if _, disputes := group[source]; !disputes {
-			continue
-		}
+	for _, source := range disputing {
 		for _, id := range bySource[source].stacksWith {
 			if partner, has := byID[id]; has {
 				group[root(partner)] = root(source)
@@ -379,20 +377,19 @@ func pmCostDispute(contribs []Contribution) (int, map[string]bool) {
 		}
 	}
 
-	sums, best := map[string]int{}, ""
-	for _, source := range order {
-		if _, disputes := group[source]; disputes {
-			sums[root(source)] += bySource[source].amount
-		}
+	sums := map[string]int{}
+	for _, source := range disputing {
+		sums[root(source)] += bySource[source].amount
 	}
-	for _, source := range order {
-		if _, disputes := group[source]; disputes && (best == "" || sums[root(source)] < sums[best]) {
-			best = root(source)
+	best := ""
+	for _, source := range disputing {
+		if r := root(source); best == "" || sums[r] < sums[best] {
+			best = r
 		}
 	}
 	losers := map[string]bool{}
-	for _, source := range order {
-		if _, disputes := group[source]; disputes && root(source) != best {
+	for _, source := range disputing {
+		if root(source) != best {
 			losers[source] = true
 		}
 	}
