@@ -877,6 +877,15 @@
         },
         {
           "sceneEffect": true,
+          "overlays": [
+            {
+              "item": "varinha-arcana",
+              "improvements": ["melhoria-harmonizado-esoterico"]
+            }
+          ],
+          "improvementSpells": [
+            { "item": "varinha-arcana", "improvement": "melhoria-harmonizado-esoterico", "spell": "relampago" }
+          ],
           "create": {
             "name": "Arcanista Erudito Nv9",
             "races": [
@@ -918,6 +927,10 @@
             "items": [
               {
                 "catalogId": "adaga",
+                "equipped": "wielded"
+              },
+              {
+                "catalogId": "varinha-arcana",
                 "equipped": "wielded"
               },
               {

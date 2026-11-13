@@ -59,6 +59,8 @@ type seedCharacter struct {
 	Overlays         []seedOverlay `json:"overlays"`
 	// ItemGods é o deus de um símbolo sagrado do elenco (p157), pelo mesmo gesto da Mochila.
 	ItemGods []seedItemGod `json:"itemGods"`
+	// ImprovementSpells é a magia do Harmonizado de um esotérico do elenco (p165), depois dos `overlays`.
+	ImprovementSpells []seedImprovementSpell `json:"improvementSpells"`
 	// Doses são os itens carregados na Injeção alquímica, depois dos `overlays`.
 	Doses       []seedDose `json:"doses"`
 	Simple      bool       `json:"simple"`
@@ -87,6 +89,12 @@ type seedEnchant struct {
 type seedItemGod struct {
 	Item string `json:"item"`
 	God  string `json:"god"`
+}
+
+type seedImprovementSpell struct {
+	Item        string `json:"item"`
+	Improvement string `json:"improvement"`
+	Spell       string `json:"spell"`
 }
 
 // seedDose é um item carregado na Injeção alquímica de uma arma do elenco.
@@ -132,6 +140,8 @@ type casaDaSeed interface {
 	LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error
 	// ChooseItemGod grava o deus do símbolo sagrado, pelo mesmo gesto da Mochila.
 	ChooseItemGod(ctx context.Context, itemID int64, god string) error
+	// ChooseImprovementSpell grava a magia do Harmonizado, pelo mesmo gesto da Mochila.
+	ChooseImprovementSpell(ctx context.Context, itemID int64, improvement, spell string) error
 }
 
 // standardTrained são as perícias que todo personagem não-simples treina, para a
@@ -379,6 +389,16 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 		}
 		if err := square.ChooseItemGod(ctx, line, want.God); err != nil {
 			return fmt.Errorf("dar o deus %q ao %q do personagem %d: %w", want.God, want.Item, id, err)
+		}
+	}
+	for _, want := range ch.ImprovementSpells {
+		line := lineOfCatalogItem(sheet.Items, want.Item)
+		if line == 0 {
+			return fmt.Errorf("o personagem %d não tem o item %q para dar a magia %q: "+
+				"o `improvementSpells` aponta para um `create.items[].catalogId` que não está lá", id, want.Item, want.Spell)
+		}
+		if err := square.ChooseImprovementSpell(ctx, line, want.Improvement, want.Spell); err != nil {
+			return fmt.Errorf("dar a magia %q ao %q do personagem %d: %w", want.Spell, want.Item, id, err)
 		}
 	}
 	for _, dose := range ch.Doses {
