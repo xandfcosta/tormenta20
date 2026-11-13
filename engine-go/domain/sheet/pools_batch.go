@@ -152,7 +152,7 @@ func partialSheetsForPools(
 	if err != nil {
 		return nil, fmt.Errorf("ler os encantos de %d fichas: %w", len(ids), err)
 	}
-	porItem, choices := map[int64][]string{}, enchantChoices{}
+	porItem, choices := map[int64][]string{}, overlayChoices{}
 	for _, row := range encantos {
 		porItem[row.Itemid] = append(porItem[row.Itemid], row.Enchantid)
 		choices.add(row.Itemid, row.Enchantid, row.Choice)
@@ -169,6 +169,14 @@ func partialSheetsForPools(
 	for _, row := range itemChoices {
 		choiceOf[row.Itemid] = row.Choice
 	}
+	improvementRows, err := q.ImprovementChoicesOfCharacters(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("ler as escolhas das melhorias de %d fichas: %w", len(ids), err)
+	}
+	improvementChoices := overlayChoices{}
+	for _, row := range improvementRows {
+		improvementChoices.add(row.Itemid, row.Improvementid, sql.NullString{String: row.Choice, Valid: true})
+	}
 	for _, it := range items {
 		dto := partials[it.Characterid]
 		dto.Items = append(dto.Items, ItemDTO{
@@ -176,7 +184,8 @@ func partialSheetsForPools(
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
 			Enchants: porItem[it.ID], EnchantChoices: choices[it.ID], Choice: choiceOf[it.ID],
-			Oversized: slices.Contains(oversized, it.ID),
+			ImprovementChoices: improvementChoices[it.ID],
+			Oversized:          slices.Contains(oversized, it.ID),
 		})
 		partials[it.Characterid] = dto
 	}

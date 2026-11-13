@@ -823,6 +823,32 @@ WHERE i.characterId IN (sqlc.slice('ids'));
 INSERT INTO character_item_choices (itemId, choice) VALUES (?, ?)
 ON CONFLICT(itemId) DO UPDATE SET choice = excluded.choice;
 
+-- name: ImprovementChoicesOfCharacter :many
+-- A escolha que a melhoria pede (a magia do Harmonizado), em lote por ficha,
+-- pela mesma razao dos encantos.
+SELECT c.itemId, c.improvementId, c.choice
+FROM character_item_improvement_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId = ?;
+
+-- name: ImprovementChoicesOfCharacters :many
+-- O irmao em lote do `ImprovementChoicesOfCharacter`, para o caminho que monta N fichas.
+SELECT i.characterId, c.itemId, c.improvementId, c.choice
+FROM character_item_improvement_choices c
+JOIN character_items i ON i.id = c.itemId
+WHERE i.characterId IN (sqlc.slice('ids'));
+
+-- name: ImprovementChoicesOfItem :many
+SELECT improvementId FROM character_item_improvement_choices WHERE itemId = ?;
+
+-- name: SetImprovementChoice :exec
+-- Trocar e regravar: a melhoria pede uma escolha so.
+INSERT INTO character_item_improvement_choices (itemId, improvementId, choice) VALUES (?, ?, ?)
+ON CONFLICT(itemId, improvementId) DO UPDATE SET choice = excluded.choice;
+
+-- name: DropImprovementChoice :exec
+DELETE FROM character_item_improvement_choices WHERE itemId = ? AND improvementId = ?;
+
 -- name: GetNonLethalDamage :one
 -- Ausencia de linha quer dizer ZERO, como no `character_damage`: so quem levou
 -- dano nao letal ganha registro.

@@ -82,6 +82,9 @@ templ itemSheetDs(v View, s itemSheet) {
 				}
 			}
 		}
+		if s.Spell != nil {
+			@itemSpellField(v, s)
+		}
 		// O TEXTO NO `.ds-field`, como as linhas do livro logo acima: é ele que dá ao `.ds-help` o corpo pequeno e
 		// a tinta de ajuda. Solto, o texto saía no corpo do diálogo e gritava mais que o interruptor que explica. O
 		// interruptor fica FORA: um `label` filho do `.ds-field` vira rótulo de campo, e encolhia junto.
@@ -147,6 +150,43 @@ templ itemGodField(v View, s itemSheet) {
 				}
 			</div>
 		</details>
+	</div>
+}
+
+// itemSpellField é a magia do Harmonizado (p165), embaixo das melhorias, que é onde ele se lê. A escolhida
+// fica à vista, e as outras se acham pela busca no livro inteiro (decisão do dono): 198 opções soltas não
+// cabem numa folha.
+templ itemSpellField(v View, s itemSheet) {
+	<div class="ds-field">
+		<span class="ds-field-label">Magia do Harmonizado · −1 PM no custo dela (p165)</span>
+		if s.Spell.Chosen == "" {
+			<p class="ds-help">Escolha a magia: sem ela, o Harmonizado não corta nenhuma.</p>
+		} else {
+			<p class="ds-help">{ s.Spell.ChosenName + " custa 1 PM a menos com o esotérico na mão." }</p>
+			if s.Spell.Search == "" {
+				<div class="ds-options" role="group" aria-label="Magia escolhida">
+					@ds.Option(true, templ.Attributes{"data-on:click": sheetPost(v, improvementSpellPath(s, s.Spell.Chosen))}) {
+						{ s.Spell.ChosenName }
+					}
+				</div>
+			}
+		}
+		@ds.SearchField("improvement-spell-search-"+s.Command, "Buscar magia no livro", templ.Attributes{
+			"value": s.Spell.Search, "data-bind:improvement_spell_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+		})
+		if s.Spell.Search != "" {
+			if len(s.Spell.Found) == 0 {
+				<p class="ds-help">{ "Nenhuma magia do livro com \"" + s.Spell.Search + "\"." }</p>
+			}
+			<div class="ds-options" role="group" aria-label="Magias achadas">
+				for _, spell := range s.Spell.Found {
+					@ds.Option(spell.ID == s.Spell.Chosen, templ.Attributes{"data-on:click": sheetPost(v, improvementSpellPath(s, spell.ID))}) {
+						{ spell.Name }
+					}
+				}
+			</div>
+		}
+		<p class="ds-help">Trocar a magia leva um ritual de um dia e T$ 100 (p165): o app troca, e o custo é do mestre.</p>
 	</div>
 }
 

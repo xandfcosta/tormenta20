@@ -116,6 +116,8 @@ type bagFilters struct {
 	Category        string
 	CatalogSearch   string
 	CatalogCategory string
+	// ImprovementSpellSearch é a busca da magia do Harmonizado, na folha do item.
+	ImprovementSpellSearch string
 }
 
 // bagPanelOf monta a aba.
@@ -166,7 +168,7 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	panel.StowedTotal = len(saved)
 	panel.Stowed = stowedTilesOf(dto.Ruleset, bagFiltered(saved, search, category))
 	sheet, _, ok := s.sheetForPanels(dto)
-	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet.Attributes, armable)
+	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet.Attributes, armable, filters.ImprovementSpellSearch)
 	if ok {
 		panel.Load = loadMeterOf(sheet)
 		panel.Load.DisplacementExemptBy = exempt[engine.DisplacementIgnoresLoad]

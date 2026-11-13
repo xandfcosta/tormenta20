@@ -2,10 +2,13 @@ package sheetui
 
 import (
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/book"
+	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -79,4 +82,69 @@ func choosesTheItemGod(s Scene, r *http.Request, row sqlcgen.Character, _ Signal
 		return err
 	}
 	return s.plays.ChooseItemGod(r.Context(), item, chi.URLParam(r, "deus"))
+}
+
+// A MAGIA QUE A MELHORIA PEDE: o Harmonizado diz "escolha uma magia. Seu custo diminui em –1 PM" (p165). A
+// escolha é da MELHORIA, e não do item, porque um tomo hermético harmonizado pede a escola e a magia. A lista
+// é o livro inteiro, por busca (decisão do dono): com a busca vazia, a folha mostra só a escolhida, e a busca
+// a lista também, marcada, para "bola" não dizer "nenhuma" com a Bola de Fogo escolhida.
+
+// improvementSpell é a escolha na folha: a melhoria que pede, a magia escolhida, e o que a busca achou.
+type improvementSpell struct {
+	Improvement        string
+	Chosen, ChosenName string
+	Search             string
+	Found              []book.Spell
+}
+
+// spellOnTheItemSheet é a escolha da melhoria aplicada que pede magia, ou nil. `query` é a busca da folha.
+func spellOnTheItemSheet(item sheet.ItemDTO, query string) *improvementSpell {
+	applied := savedImprovements(item.Improvements)
+	at := slices.IndexFunc(applied, func(id string) bool {
+		entry := book.ItemByID(id)
+		return entry != nil && entry.AsksFor("spell")
+	})
+	if at < 0 {
+		return nil
+	}
+	out := &improvementSpell{Improvement: applied[at], Chosen: item.ImprovementChoices[applied[at]], Search: query}
+	if out.Chosen != "" {
+		out.ChosenName = book.SpellName(out.Chosen)
+	}
+	if strings.TrimSpace(query) == "" {
+		return out
+	}
+	for _, spell := range book.Catalogs().Spells {
+		if strings.Contains(search.Fold(spell.Name), search.Fold(query)) {
+			out.Found = append(out.Found, spell)
+		}
+	}
+	return out
+}
+
+// spellCutRow troca, na linha da melhoria aplicada, o "custo da magia escolhida" pelo nome dela.
+func spellCutRow(rows []overlayRow, improvement string, chosen string) {
+	entry := book.ItemByID(improvement)
+	if entry == nil || chosen == "" {
+		return
+	}
+	for i := range rows {
+		if rows[i].Name == entry.Name {
+			rows[i].Effect = "−1 PM no custo de " + book.SpellName(chosen)
+		}
+	}
+}
+
+// improvementSpellPath é o endereço que escolhe `spell` para a melhoria da folha.
+func improvementSpellPath(s itemSheet, spell string) string {
+	return "/itens/" + s.Command + "/melhorias/" + s.Spell.Improvement + "/magia/" + spell
+}
+
+// choosesTheImprovementSpell grava a magia da melhoria.
+func choosesTheImprovementSpell(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	item, err := s.sheetItem(r, row.ID)
+	if err != nil {
+		return err
+	}
+	return s.plays.ChooseImprovementSpell(r.Context(), item, chi.URLParam(r, "melhoria"), chi.URLParam(r, "magia"))
 }
