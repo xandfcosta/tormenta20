@@ -138,16 +138,12 @@ type ComputedSheet struct {
 // ComputeSheet monta a ficha decomposta de um `Character` cru sob os
 // condicionais ligados — o caminho coleta → resolução → decomposição.
 //
-// As três fases são ECS desde a ALE-378, e a entidade muda entre elas: a FONTE
-// na coleta, o TERMO na resolução, a FICHA aqui. Ver `derive_ecs.go`.
+// A coleta e a resolução são ECS, com a entidade mudando entre elas (a FONTE, depois o TERMO); a derivação é
+// uma função, porque ali a entidade é uma só — ver `derive_sheet.go`.
 //
 // @example world.ComputeSheet(ch, nil)
 func (r *Ruleset) ComputeSheet(ch Character, activeConditionals map[string]bool) ComputedSheet {
-	return deriveSheet(sheetInput{
-		char:        ch,
-		effects:     r.EffectsOf(ch, activeConditionals),
-		raceSquares: r.raceDisplacement(ch),
-	})
+	return deriveSheet(ch, r.EffectsOf(ch, activeConditionals), r.raceDisplacement(ch))
 }
 
 // effectiveAttribute: o atributo cru mais os modificadores de `attribute`.

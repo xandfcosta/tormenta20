@@ -98,8 +98,8 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 // ninguém anulou nada: a linha nunca alcançou a arma.
 //
 // DESPAWN e não um `if` em cada sistema que lê: a entidade deixa de existir, e
-// os três sistemas seguintes não precisam saber que ela existiu. É o mesmo
-// movimento da redação do tabuleiro — o que não vale SOME INTEIRO.
+// os três sistemas seguintes não precisam saber que ela existiu: o que não vale
+// SOME INTEIRO.
 func dropWhatDoesNotReachThisWeapon(card WeaponCard) ecs.System {
 	return func(w *ecs.World) {
 		ecs.Each(w, func(e ecs.Entity, row situationRow) {
