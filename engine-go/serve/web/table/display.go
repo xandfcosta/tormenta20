@@ -119,7 +119,7 @@ func (s Scene) handleDisplayPage(w http.ResponseWriter, r *http.Request) {
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
 		Title:   fmt.Sprintf("Tela da mesa · Sessão %d", number),
 		Signals: tableSignalsExpr(s.deps.BuildRevision()),
-		Init:    fmt.Sprintf("@get('%s/%s/fluxo')", routes.Session(campaignID, sessionID), displayPath),
+		Init:    ui.LiveStream(routes.Session(campaignID, sessionID) + "/" + displayPath + "/fluxo"),
 	}, displayPage(v))
 }
 

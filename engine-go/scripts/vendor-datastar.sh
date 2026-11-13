@@ -13,15 +13,16 @@
 # entra no `prebuild`: subir de versão é ato deliberado, como regenerar o
 # oráculo, porque o reconciliador do Datastar é o que mantém as cenas vivas.
 #
-# Depois de rodar: `go test ./...` AQUI e o Playwright INTEIRO em `e2e/`. O
-# guarda que importa é `ferir duas vezes seguidas não apaga a piscada da
-# primeira` (ALE-322) — ele prende o comportamento do morph, que é o que uma
-# versão nova pode mudar em silêncio.
+# Depois de rodar: `go test ./...` AQUI e o Playwright INTEIRO em `e2e/`. Os
+# guardas que importam são `ferir duas vezes seguidas não apaga a piscada da
+# primeira` (ALE-322), que prende o morph, e o `live-stream-reconnects.spec.ts`,
+# que prende a reconexão do fluxo longo — as duas coisas que uma versão nova
+# pode mudar em silêncio. E leia o diff das FONTES entre as tags, pelo `.js.map`.
 set -euo pipefail
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # A ÚNICA linha a editar para subir de versão.
-DATASTAR_VERSION=v1.0.4
+DATASTAR_VERSION=v1.0.5
 
 # `bundles/datastar.js` da tag, e não o do CDN nem o `-aliased`: o aliased renomeia
 # os atributos `data-*` por um prefixo próprio, e todas as cenas escrevem `data-`.

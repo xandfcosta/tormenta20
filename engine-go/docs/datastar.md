@@ -60,6 +60,18 @@ sinais e reage como o `data-attr:style`: na mesma medição, o
 com a janela andando 260px e nenhum pedido saindo. O adiamento vai à mão, num
 temporizador no próprio nó (ver o `followsFraming`).
 
+### O fluxo longo reconecta pelo `ui.LiveStream`, ou desiste no meio da sessão
+
+Desde a 1.0.5, o Datastar conta as novas tentativas de um `@get` pela vida
+INTEIRA da página, e o intervalo só volta ao primeiro quando o servidor fecha o
+fluxo limpo — e o deploy aborta de propósito, para o navegador reconectar. Com o
+padrão, a espera dobra a cada queda até 30 s e, depois da décima, o fluxo não
+volta mais, sem console. **Todo fluxo longo abre pelo `ui.LiveStream(endereço)`**,
+que passa `retryMaxCount: Infinity` e `retryScaler: 1`: volta sempre, em ~1 s.
+O `TestEveryLiveStreamOpensThroughLiveStream` lê o `Init:` das páginas, e o
+`live-stream-reconnects.spec.ts` prova o runtime. A troca de versão não deixa
+erro: só a reconexão medida mostra.
+
 ### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
 
 Onde a decisão é do navegador, o stream da mesa escreve num SINAL

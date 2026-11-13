@@ -111,7 +111,7 @@ func (s Scene) handleTablePage(w http.ResponseWriter, r *http.Request) {
 		Signals: tableSignalsExpr(s.deps.BuildRevision()),
 		// O FLUXO LEVA A MARCA: é ele que redesenha o cabeçalho a cada tique, e
 		// sem ela o stream mandaria o cabeçalho de hoje para a sessão do jogador.
-		Init: fmt.Sprintf("@get('%s')", stream),
+		Init: ui.LiveStream(stream),
 		// A ILHA DA MESA: o que anima quando o estado chega pelo fio.
 		//
 		// Módulo PRÓPRIO e não `scene.js`, que carrega em toda página: um

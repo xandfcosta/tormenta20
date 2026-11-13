@@ -999,3 +999,15 @@ O `@post` de cada comando da ficha mandava só o endereço escrito nele, sem o
 `?tab=` da página. Mexer no PV com a Mochila aberta devolvia a cena na PRIMEIRA
 aba, sem nada falhar. Daí o `sheetPost` escrever o `?` em todo comando, e o
 `TestNoSheetCommandLosesTheTab`.
+
+### A 1.0.5 que desistia do fluxo (2026-11)
+
+Subir o Datastar de 1.0.4 para 1.0.5 passava a suíte inteira, e a leitura do
+`fetch.ts` pelo `.js.map` mostrou que o `retries = 0` da conexão aceita tinha
+saído (upstream #1234, "não tentar além do `retryMaxCount`"). Medido com treze
+reinícios do servidor: 0,6 s, 1,6 s, 3,6 s, 7,6 s, 15,5 s, 29,5 s… e depois da
+décima, morto; na 1.0.4, ~0,6 s todas. A primeira sonda mentiu duas vezes: o
+`setOffline` do Chromium não corta um fluxo aberto, e o servidor subido de
+dentro de `e2e/` lia outra chave de sessão e respondia a tela de login. Daí o
+`ui.LiveStream`, o guarda e o spec.
+
