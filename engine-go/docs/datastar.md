@@ -167,7 +167,7 @@ servidor.** Num formulário remendado, validação nativa briga com o redesenho.
 
 ### `data-on-signal-patch` SEM filtro escuta o remendo dos OUTROS sinais
 
-A ficha na sessão não é região do stream (recomputá-la a cada tique seria o
+A ficha na sessão não é região do stream (recomputá-la a cada evento seria o
 gasto mais caro da página): o servidor manda o carimbo `sheet_version` e o
 CLIENTE repede a ficha. **O `data-on-signal-patch` dispara em QUALQUER remendo
 de sinal** — um puxão (`surface`) repediria a ficha —, e o filtro mora num
