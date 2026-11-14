@@ -96,14 +96,13 @@ func newWriteWatch(t *testing.T, path string) *writeWatch {
 	return w
 }
 
-// observe pendura o gancho de escrita numa conexão do pool.
+// observe pendura os ganchos numa conexão do pool. A linha gravada fica PENDENTE na conexão até a
+// transação dela fechar: o commit a conta, e o rollback a esquece — o ritual que falha e desfaz a cobrança
+// gravou e voltou atrás, e não mudou nada que a Mesa mostre.
 func (w *writeWatch) observe(conn sqlite.HookRegisterer) {
+	var pending []tableWrite
+	unknown := map[string]bool{}
 	conn.RegisterPreUpdateHook(func(data sqlite.SQLitePreUpdateData) {
-		w.mu.Lock()
-		defer w.mu.Unlock()
-		if !w.active {
-			return
-		}
 		columns := w.columns[data.TableName]
 		values := make([]any, len(columns))
 		if data.Op == sqlite3.SQLITE_DELETE {
@@ -111,8 +110,8 @@ func (w *writeWatch) observe(conn sqlite.HookRegisterer) {
 		} else {
 			_ = data.New(values...)
 		}
-		// A REGRAVAÇÃO IGUAL não é mudança: o `UPDATE` que põe na linha o que ela já tinha (a hidratação da
-		// sessão num `GET`, por exemplo) não muda nada que a Mesa mostre, e não deve evento a ninguém.
+		// A REGRAVAÇÃO IGUAL não é mudança: o `UPDATE` que põe na linha o que ela já tinha não muda nada que
+		// a Mesa mostre, e não deve evento a ninguém.
 		if data.Op == sqlite3.SQLITE_UPDATE {
 			before := make([]any, len(columns))
 			_ = data.Old(before...)
@@ -127,14 +126,28 @@ func (w *writeWatch) observe(conn sqlite.HookRegisterer) {
 			}
 		}
 		write, seen := targetOf(data.TableName, row, columns)
-		if !seen {
-			return
+		switch {
+		case !seen:
+		case write.table == "":
+			unknown[data.TableName] = true
+		default:
+			pending = append(pending, write)
 		}
-		if write.table == "" {
-			w.unknown[data.TableName] = true
-			return
+	})
+	conn.RegisterCommitHook(func() int32 {
+		w.mu.Lock()
+		if w.active {
+			w.writes = append(w.writes, pending...)
+			for table := range unknown {
+				w.unknown[table] = true
+			}
 		}
-		w.writes = append(w.writes, write)
+		w.mu.Unlock()
+		pending, unknown = nil, map[string]bool{}
+		return 0
+	})
+	conn.RegisterRollbackHook(func() {
+		pending, unknown = nil, map[string]bool{}
 	})
 }
 
