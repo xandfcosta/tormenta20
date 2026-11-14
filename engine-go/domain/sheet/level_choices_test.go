@@ -1,6 +1,9 @@
 package sheet
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 const testIncrease = "class.barbaro.aumento-de-atributo"
 
@@ -12,18 +15,6 @@ func levelsOfKind(rows []LevelChoiceDTO, kind string) []int64 {
 		}
 	}
 	return out
-}
-
-func sameLevels(a, b []int64) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 // As linhas de classe sem nível entram em ordem, e cada nível de classe a partir do 2º dá uma
@@ -42,7 +33,7 @@ func TestTheFirstClassTakesTheFirstLevelsAndChoicesFillTheLowestSlot(t *testing.
 	}
 	rows := PlanLevelRows(dto)
 
-	if got := levelsOfKind(rows, LevelKindClass); !sameLevels(got, []int64{1, 2, 3, 4}) {
+	if got := levelsOfKind(rows, LevelKindClass); !slices.Equal(got, []int64{1, 2, 3, 4}) {
 		t.Fatalf("os níveis foram %v", got)
 	}
 	var classes []string
@@ -54,7 +45,7 @@ func TestTheFirstClassTakesTheFirstLevelsAndChoicesFillTheLowestSlot(t *testing.
 	if classes[0] != "Guerreiro" || classes[2] != "Guerreiro" || classes[3] != "Arcanista" {
 		t.Errorf("a sequência saiu %v, esperava a primeira classe primeiro", classes)
 	}
-	if got := levelsOfKind(rows, LevelKindPower); !sameLevels(got, []int64{2, 3}) {
+	if got := levelsOfKind(rows, LevelKindPower); !slices.Equal(got, []int64{2, 3}) {
 		t.Errorf("as escolhas foram para os níveis %v, esperava 2 e 3", got)
 	}
 }
@@ -74,10 +65,10 @@ func TestTheSameAttributeIncreaseLooksForAnotherTier(t *testing.T) {
 		},
 	}
 	rows := PlanLevelRows(dto)
-	if got := levelsOfKind(rows, LevelKindPick); !sameLevels(got, []int64{2, 5}) {
+	if got := levelsOfKind(rows, LevelKindPick); !slices.Equal(got, []int64{2, 5}) {
 		t.Errorf("as duas Forças foram para os níveis %v, esperava 2 e 5", got)
 	}
-	if got := levelsOfKind(rows, LevelKindPower); !sameLevels(got, []int64{2}) {
+	if got := levelsOfKind(rows, LevelKindPower); !slices.Equal(got, []int64{2}) {
 		t.Errorf("a linha do poder repetível ficou no nível %v, esperava o da primeira escolha", got)
 	}
 }
@@ -96,7 +87,7 @@ func TestAChoiceKeepsItsLevelAndThePlanIsIdempotent(t *testing.T) {
 		},
 	}
 	first := PlanLevelRows(dto)
-	if got := levelsOfKind(first, LevelKindPower); !sameLevels(got, []int64{4, 2}) {
+	if got := levelsOfKind(first, LevelKindPower); !slices.Equal(got, []int64{4, 2}) {
 		t.Fatalf("as escolhas ficaram nos níveis %v, esperava 4 e 2", got)
 	}
 	dto.LevelChoices = first
@@ -125,12 +116,12 @@ func TestRemovingAClassLevelMovesTheFollowingOnes(t *testing.T) {
 		},
 	}
 	rows := PlanLevelRows(dto)
-	if got := levelsOfKind(rows, LevelKindClass); !sameLevels(got, []int64{1, 2, 3, 4}) {
+	if got := levelsOfKind(rows, LevelKindClass); !slices.Equal(got, []int64{1, 2, 3, 4}) {
 		t.Fatalf("os níveis ficaram %v", got)
 	}
 	// O 4º virou 3º. O que estava no 3º, que saiu, foi para a vaga livre: o 2º do Ladino
 	// (nível 4 do personagem).
-	if got := levelsOfKind(rows, LevelKindPower); !sameLevels(got, []int64{3, 4}) {
+	if got := levelsOfKind(rows, LevelKindPower); !slices.Equal(got, []int64{3, 4}) {
 		t.Errorf("as escolhas ficaram nos níveis %v, esperava 3 e 4", got)
 	}
 }

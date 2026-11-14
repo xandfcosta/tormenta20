@@ -2,6 +2,7 @@ package live
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -45,26 +46,6 @@ func charEntry(label string, init int, charID int64) InitiativeEntry {
 	return InitiativeEntry{Label: label, Initiative: init, Type: "character", CharacterID: &c}
 }
 
-func labels(st *SessionRuntimeState) []string {
-	out := make([]string, len(st.Initiative))
-	for i, e := range st.Initiative {
-		out[i] = e.Label
-	}
-	return out
-}
-
-func eq(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
 func TestAddEntrySortsAndAssignsID(t *testing.T) {
 	st := EmptyRuntimeState()
 	id := counter()
@@ -73,7 +54,7 @@ func TestAddEntrySortsAndAssignsID(t *testing.T) {
 			t.Fatalf("AddEntry: %v", err)
 		}
 	}
-	if got := labels(st); !eq(got, []string{"B", "A", "C"}) {
+	if got := labels(st); !slices.Equal(got, []string{"B", "A", "C"}) {
 		t.Errorf("order=%v, want [B A C] (DESC by initiative)", got)
 	}
 	if st.Initiative[0].ID == "" {
@@ -86,7 +67,7 @@ func TestAddEntryTieBreakByLabel(t *testing.T) {
 	id := counter()
 	_ = AddEntry(st, npc("Zé", 10), id)
 	_ = AddEntry(st, npc("Ana", 10), id)
-	if got := labels(st); !eq(got, []string{"Ana", "Zé"}) {
+	if got := labels(st); !slices.Equal(got, []string{"Ana", "Zé"}) {
 		t.Errorf("order=%v, want [Ana Zé] (tie broken by label asc)", got)
 	}
 }
@@ -99,7 +80,7 @@ func TestAddEntryTieBreakCollation(t *testing.T) {
 	id := counter()
 	_ = AddEntry(st, npc("Bravo", 10), id)
 	_ = AddEntry(st, npc("Ávila", 10), id)
-	if got := labels(st); !eq(got, []string{"Ávila", "Bravo"}) {
+	if got := labels(st); !slices.Equal(got, []string{"Ávila", "Bravo"}) {
 		t.Errorf("order=%v, want [Ávila Bravo] (pt-BR collation, not byte order)", got)
 	}
 }
@@ -173,7 +154,7 @@ func TestUpdateEntry(t *testing.T) {
 	if err := UpdateEntry(st, aID, EntryPatch{Initiative: &newInit}); err != nil {
 		t.Fatalf("update: %v", err)
 	}
-	if !eq(labels(st), []string{"A", "B"}) {
+	if !slices.Equal(labels(st), []string{"A", "B"}) {
 		t.Errorf("after bump, order=%v want [A B]", labels(st))
 	}
 
@@ -718,4 +699,8 @@ func TestWithoutASceneTheTurnDoesNotAdvance(t *testing.T) {
 	if st.TurnIndex != 0 || st.Round != 1 {
 		t.Fatalf("em cena o avanço parou de funcionar: %+v", st)
 	}
+}
+
+func labels(st *SessionRuntimeState) []string {
+	return entryLabels(st.Initiative)
 }

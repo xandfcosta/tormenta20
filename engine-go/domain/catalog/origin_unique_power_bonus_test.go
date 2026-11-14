@@ -2,8 +2,9 @@ package catalog_test
 
 import (
 	"encoding/json"
+	"maps"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 
@@ -40,7 +41,7 @@ func TestNoCatalogScaleIsOneTheEngineCannotRead(t *testing.T) {
 				t.Errorf("%s: a escala `per: %q` não é nenhuma das que o "+
 					"`evalModifierScale` conhece (%s). Ela não estoura: cai no ramo de "+
 					"atributo, multiplica por zero, e o bônus some da ficha calado",
-					resource, per, strings.Join(sortedKeys(knownScales), ", "))
+					resource, per, strings.Join(slices.Sorted(maps.Keys(knownScales)), ", "))
 			}
 		})
 	}
@@ -68,15 +69,6 @@ func walkScales(node any, visit func(string)) {
 			walkScales(child, visit)
 		}
 	}
-}
-
-func sortedKeys(m map[string]bool) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
 }
 
 // O NÚMERO IMPRESSO NA DESCRIÇÃO DO PODER ÚNICO OU VIRA MODIFICADOR, OU ESTÁ

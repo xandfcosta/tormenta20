@@ -1,6 +1,7 @@
 package live
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -16,24 +17,12 @@ func fila(names ...string) []InitiativeEntry {
 	return outside
 }
 
-func rotulos(rows []InitiativeEntry) []string {
+func entryLabels(rows []InitiativeEntry) []string {
 	outside := make([]string, 0, len(rows))
 	for _, l := range rows {
 		outside = append(outside, l.Label)
 	}
 	return outside
-}
-
-func iguais(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 // A borda é o ÚLTIMO da fila.
@@ -43,11 +32,11 @@ func iguais(a, b []string) bool {
 func TestTheTurnStripIsCircular(t *testing.T) {
 	f := fila("Arwen", "Ogro", "Goblin")
 
-	if got := rotulos(UpcomingTurns(f, 0, 3)); !iguais(got, []string{"Arwen", "Ogro", "Goblin"}) {
+	if got := entryLabels(UpcomingTurns(f, 0, 3)); !slices.Equal(got, []string{"Arwen", "Ogro", "Goblin"}) {
 		t.Errorf("do começo veio %v", got)
 	}
 	// A borda: no ÚLTIMO turno, a tira volta ao primeiro.
-	if got := rotulos(UpcomingTurns(f, 2, 3)); !iguais(got, []string{"Goblin", "Arwen", "Ogro"}) {
+	if got := entryLabels(UpcomingTurns(f, 2, 3)); !slices.Equal(got, []string{"Goblin", "Arwen", "Ogro"}) {
 		t.Errorf("do último veio %v, quero a volta circular", got)
 	}
 	// Pedir mais que a fila não repete ninguém: a janela para no tamanho dela.

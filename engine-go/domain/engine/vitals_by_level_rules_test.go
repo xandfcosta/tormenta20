@@ -1,6 +1,9 @@
 package engine
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 // A CONTA DE PV E PM NÍVEL A NÍVEL (p34-35). Os números são os da tabela de classe e
 // do catálogo, escritos à mão.
@@ -13,18 +16,6 @@ func levelTotals(lines []VitalLevelLine) []int {
 	return totals
 }
 
-func sameInts(a, b []int) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
 // O guerreiro começa com 20 + Con, e cada nível soma 5 + Con (p34, p65).
 func TestEachWarriorLevelAddsItsClassAndConstitution(t *testing.T) {
 	world := BookRuleset(primeBook(t))
@@ -34,10 +25,10 @@ func TestEachWarriorLevelAddsItsClassAndConstitution(t *testing.T) {
 	}
 	got := world.VitalLevelsFor(ctx, []string{"Guerreiro", "Guerreiro", "Guerreiro"})
 
-	if want := []int{24, 9, 9}; !sameInts(levelTotals(got.PV), want) {
+	if want := []int{24, 9, 9}; !slices.Equal(levelTotals(got.PV), want) {
 		t.Errorf("PV por nível = %v, want %v", levelTotals(got.PV), want)
 	}
-	if want := []int{3, 3, 3}; !sameInts(levelTotals(got.PM), want) {
+	if want := []int{3, 3, 3}; !slices.Equal(levelTotals(got.PM), want) {
 		t.Errorf("PM por nível = %v, want %v", levelTotals(got.PM), want)
 	}
 	first := got.PV[0].Parts
@@ -58,13 +49,13 @@ func TestMulticlassLevelsFollowTheOrderTheyWereTaken(t *testing.T) {
 	got := world.VitalLevelsFor(ctx, []string{"Guerreiro", "Arcanista", "Guerreiro", "Guerreiro"})
 
 	// Guerreiro 20+1; Arcanista 2+1; Guerreiro 5+1 duas vezes.
-	if want := []int{21, 3, 6, 6}; !sameInts(levelTotals(got.PV), want) {
+	if want := []int{21, 3, 6, 6}; !slices.Equal(levelTotals(got.PV), want) {
 		t.Errorf("PV por nível = %v, want %v", levelTotals(got.PV), want)
 	}
 	if got.PV[1].ClassName != "Arcanista" || got.PV[1].Level != 2 {
 		t.Errorf("o 2º nível veio %+v, want Arcanista", got.PV[1])
 	}
-	if want := []int{3, 6, 3, 3}; !sameInts(levelTotals(got.PM), want) {
+	if want := []int{3, 6, 3, 3}; !slices.Equal(levelTotals(got.PM), want) {
 		t.Errorf("PM por nível = %v, want %v", levelTotals(got.PM), want)
 	}
 }
@@ -84,7 +75,7 @@ func TestALevelRecordThatDoesNotMatchTheClassesIsIgnored(t *testing.T) {
 		"o seed depois": {"Arcanista", "Guerreiro"},
 	} {
 		got := world.VitalLevelsFor(ctx, record)
-		if want := []int{20, 2}; !sameInts(levelTotals(got.PV), want) {
+		if want := []int{20, 2}; !slices.Equal(levelTotals(got.PV), want) {
 			t.Errorf("registro %s: PV por nível = %v, want %v", name, levelTotals(got.PV), want)
 		}
 	}
@@ -100,7 +91,7 @@ func TestALevelNeverGivesLessThanOneHitPoint(t *testing.T) {
 	got := world.VitalLevelsFor(ctx, []string{"Arcanista", "Arcanista"})
 
 	// O 1º nível não tem piso: 8 − 3.
-	if want := []int{5, 1}; !sameInts(levelTotals(got.PV), want) {
+	if want := []int{5, 1}; !slices.Equal(levelTotals(got.PV), want) {
 		t.Fatalf("PV por nível = %v, want %v", levelTotals(got.PV), want)
 	}
 	if got.PV[0].Floored || !got.PV[1].Floored {
@@ -120,7 +111,7 @@ func TestPowersLandOnTheLevelsTheirRuleAdds(t *testing.T) {
 	got := world.VitalLevelsFor(world.VitalContextFor(hero), []string{"Arcanista", "Arcanista", "Arcanista"})
 
 	// 6 + 5 + 1; 6; 6 + 1.
-	if want := []int{12, 6, 7}; !sameInts(levelTotals(got.PM), want) {
+	if want := []int{12, 6, 7}; !slices.Equal(levelTotals(got.PM), want) {
 		t.Fatalf("PM por nível = %v, want %v", levelTotals(got.PM), want)
 	}
 	if !hasPart(got.PM[0], "", "intelligence", 5) {
