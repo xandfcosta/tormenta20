@@ -52,6 +52,7 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	srv := NewServer(cfg, database, nil)
 	spy, stopSpy := srv.bus.Subscribe(events.EverythingForTests())
 	watch.events = spy
+	srv.watchRequests = watch.everyRequest
 	watches.Store(srv, watch)
 	t.Cleanup(func() { stopSpy(); watches.Delete(srv) })
 	// ESPERAR ANTES DE FECHAR. A persistência do estado da sessão roda em

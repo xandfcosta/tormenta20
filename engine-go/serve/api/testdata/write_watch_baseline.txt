@@ -1,2 +1,23 @@
 # A DÍVIDA do TestEveryWriteTheTableShowsPublishesItsEvent (write_watch_test.go): os pares
 # "rota grava em tabela" que ainda gravam sem o evento do alvo. Esta lista só encolhe.
+POST /admin/usuarios/{id}/apagar grava em campaign_members
+POST /admin/usuarios/{id}/apagar grava em campaigns
+POST /admin/usuarios/{id}/apagar grava em character_level_choices
+POST /admin/usuarios/{id}/apagar grava em characters
+POST /campanhas/entrar grava em character_expertises
+POST /campanhas/entrar grava em character_item_enchant_choices
+POST /campanhas/entrar grava em character_item_enchants
+POST /campanhas/entrar grava em character_items
+POST /campanhas/entrar grava em character_level_choices
+POST /campanhas/entrar grava em character_oversized_weapons
+POST /campanhas/entrar grava em characters
+POST /campanhas/nova grava em campaigns
+POST /campanhas/{id}/convite grava em campaigns
+POST /campanhas/{id}/editar grava em campaigns
+POST /campanhas/{id}/nova-sessao grava em sessions
+POST /campanhas/{id}/regras/carga grava em campaign_ignored_rules
+POST /personagens/nova grava em character_expertises
+POST /personagens/nova grava em character_items
+POST /personagens/nova grava em character_level_choices
+POST /personagens/nova grava em character_races
+POST /personagens/nova grava em characters

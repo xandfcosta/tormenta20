@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -117,4 +119,24 @@ func usersInDatabase(t *testing.T, path string) int {
 // saiu, sem migração rodando por cima para tapar um problema.
 func openSQLite(path string) (*sql.DB, error) {
 	return sql.Open("sqlite", path)
+}
+
+// O GESTO de apagar, pela rota: a conta some. A regra de para onde vão as mesas
+// é do caso acima; este é o transporte, e é por ele que o detector das gravações
+// sem evento vê o que o apagar faz com a Mesa aberta (ALE-644).
+func TestTheDeleteGestureRemovesTheAccount(t *testing.T) {
+	s := newTestServer(t, adminEmail)
+	admin := seedUser(t, s, adminEmail)
+	player := seedUser(t, s, "jogador@t20.local")
+	campaign := seedCampaign(t, s, player)
+	hero := seedCharacterAtLevel(t, s, player, "Yrla", "Arcanista", 2, 0, 0)
+	seedMember(t, s, campaign, hero)
+
+	rec := sceneFixture{s: s}.requests(t, admin, http.MethodPost, fmt.Sprintf("/admin/usuarios/%d/apagar", player), "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("apagar pela rota deu %d: %s", rec.Code, rec.Body.String())
+	}
+	if _, err := s.queries.GetUserByID(context.Background(), player); err == nil {
+		t.Errorf("a conta %d continuou de pé depois do gesto de apagar", player)
+	}
 }
