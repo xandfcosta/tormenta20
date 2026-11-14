@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"t20engine/infra/events"
 	"t20engine/serve/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -600,6 +601,11 @@ func (s Scene) respondGm(
 	userID int64, campaignID, sessionID int64, refusal error, signals map[string]any,
 	onlyRegions ...string,
 ) {
+	// O GESTO AVISA A MESA antes de responder a quem clicou: as outras telas só se redesenham no evento
+	// (`events.SessionChanged`). Também na recusa, porque o gesto pode ter pousado pela metade — o
+	// `bringParty` põe quatro de cinco e tropeça no quinto —, e o fluxo que acordar à toa compara pelo hash
+	// e não manda nada.
+	s.deps.Bus().Publish(events.SessionChanged{SessionID: sessionID})
 	sse := datastar.NewSSE(w, r)
 	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
 		view.dressPage(r)

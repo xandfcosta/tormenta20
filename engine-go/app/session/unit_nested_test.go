@@ -76,7 +76,7 @@ func TestANestedUnitReusesTheOpenTransaction(t *testing.T) {
 	database, queries, sessionID := benchWithASession(t)
 	effects := &nestingEffects{sessionID: sessionID}
 	units := NewUnits(database, queries,
-		func(q *sqlcgen.Queries) (live.SheetVitals, live.SheetTurnEffects) {
+		func(q *sqlcgen.Queries, _ func(func())) (live.SheetVitals, live.SheetTurnEffects) {
 			return nil, effects
 		})
 	effects.units = units

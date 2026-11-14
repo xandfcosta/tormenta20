@@ -175,12 +175,17 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 	// mesma conexão, e o que as separa é o motivo de mudar, não o número de
 	// structs.
 	engineOfNow := func() *engine.Catalogs { return srv.catalogs }
-	fromSheet := sheetVitals{q: q, catalogs: engineOfNow}
+	// A FICHA GRAVADA AVISA: fora da transação, na hora; dentro dela, depois do commit (`touched`).
+	fromSheet := sheetVitals{q: q, catalogs: engineOfNow, touched: func(characterID int64) {
+		bus.Publish(events.CharacterChanged{CharacterID: characterID})
+	}}
 	// A UNIDADE DE TRABALHO de um gesto da mesa (ALE-373). O contorno dela é do
 	// caso de uso; daqui vai só o que o hospedeiro sabe: como montar as portas
 	// da ficha a partir de um caderno de consultas.
-	units := session.NewUnits(database, q, func(inTx *sqlcgen.Queries) (live.SheetVitals, live.SheetTurnEffects) {
-		ports := sheetVitals{q: inTx, catalogs: engineOfNow}
+	units := session.NewUnits(database, q, func(inTx *sqlcgen.Queries, afterCommit func(func())) (live.SheetVitals, live.SheetTurnEffects) {
+		ports := sheetVitals{q: inTx, catalogs: engineOfNow, touched: func(characterID int64) {
+			afterCommit(func() { bus.Publish(events.CharacterChanged{CharacterID: characterID}) })
+		}}
 		return ports, ports
 	})
 	srv = &Server{
@@ -297,14 +302,14 @@ func (s *Server) sessionAccess() session.Access {
 }
 
 func (s *Server) restParty() rest.Party {
-	return rest.NewParty(s.queries, s.sessions, s.catalogs, s.characterPlays())
+	return rest.NewParty(s.queries, s.sessions, s.catalogs, s.characterPlays(), s.bus)
 }
 
 // sessionLifecycle é o ciclo com TODOS os mapas por sessão do processo: a fila
 // (que ele já tem), os tabuleiros, e a memória efêmera da Mesa. Um mapa que fique
 // fora desta lista sobrevive à sessão que o continha (ALE-377).
 func (s *Server) sessionLifecycle() session.Lifecycle {
-	return session.NewLifecycle(s.db, s.queries, s.sessions, s.boards, s.tableMemory)
+	return session.NewLifecycle(s.db, s.queries, s.sessions, s.bus, s.boards, s.tableMemory)
 }
 
 // sceneCore é montado por chamada e não guardado num campo: são três ponteiros

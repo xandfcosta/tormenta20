@@ -157,24 +157,26 @@ func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) (*
 	}
 	st.Mu.Lock()
 	defer st.Mu.Unlock()
-	saved, err := st.snapshotsFor(ctx).Mutate(ctx, sessionID, func(s *live.SessionRuntimeState) error {
-		for i := range s.Initiative {
-			e := &s.Initiative[i]
-			if e.CharacterID == nil {
-				continue
-			}
-			if fresh, ok := pools[*e.CharacterID]; ok {
-				e.HpMax, e.HpCurrent = live.PtrInt64(fresh.HpMax), live.PtrInt64(fresh.HpCurrent)
-				e.MpMax, e.MpCurrent = live.PtrInt64(fresh.MpMax), live.PtrInt64(fresh.MpCurrent)
-			}
-		}
-		return nil
-	})
+	cached, err := st.cachedLocked(ctx, sessionID)
 	if err != nil {
-		return nil, fmt.Errorf("gravar os poços refrescados da sessão %d: %w", sessionID, err)
+		return nil, err
 	}
-	st.States[sessionID] = saved
-	return live.CloneState(saved), nil
+	// O ESPELHO É REFEITO NA CÓPIA, e não gravado: a leitura não escreve (o CQRS da Mesa, ALE-639). Quem
+	// muda o poço de uma ficha escreve NA FICHA e espelha no próprio gesto (`DeltaVitals`, `PatchVitals`);
+	// a Mesa que desenha só precisa do espelho de agora, e o retrato guardado não depende dele — gravá-lo a
+	// cada leitura era uma escrita sem evento num `GET`.
+	fresh := live.CloneState(cached)
+	for i := range fresh.Initiative {
+		e := &fresh.Initiative[i]
+		if e.CharacterID == nil {
+			continue
+		}
+		if pool, ok := pools[*e.CharacterID]; ok {
+			e.HpMax, e.HpCurrent = live.PtrInt64(pool.HpMax), live.PtrInt64(pool.HpCurrent)
+			e.MpMax, e.MpCurrent = live.PtrInt64(pool.MpMax), live.PtrInt64(pool.MpCurrent)
+		}
+	}
+	return fresh, nil
 }
 
 func uniqueCharacterIDs(s *live.SessionRuntimeState) []int64 {

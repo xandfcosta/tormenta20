@@ -228,7 +228,9 @@ func (st Scene) opensTheGuard(c commandCtx, state *live.SessionRuntimeState, pen
 	if attacker == nil || attacker.CharacterID == nil {
 		return nil
 	}
-	return st.plays.OpenTheGuard(c.R.Context(), *attacker.CharacterID, pendente.Charge)
+	err := st.plays.OpenTheGuard(c.R.Context(), *attacker.CharacterID, pendente.Charge)
+	st.deps.CharacterChanged(*attacker.CharacterID)
+	return err
 }
 
 // raisesTheCumulativeBonus sobe o bônus de cena de quem ATACOU, quando o golpe
@@ -284,7 +286,9 @@ func (st Scene) bumpsTheAttacker(
 	if pendente.Melee {
 		triggers = append(triggers, "meleeHit")
 	}
-	return st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, pendente.AttackerStances, triggers...)
+	err := st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, pendente.AttackerStances, triggers...)
+	st.deps.CharacterChanged(*attacker.CharacterID)
+	return err
 }
 
 // bumpsTheTarget sobe o que quem APANHA ganha — hoje, o Foco de Batalha do
@@ -304,7 +308,9 @@ func (st Scene) bumpsTheTarget(
 	if target == nil || target.CharacterID == nil {
 		return nil
 	}
-	return st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, pendente.TargetStances, "attacked")
+	err := st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, pendente.TargetStances, "attacked")
+	st.deps.CharacterChanged(*target.CharacterID)
+	return err
 }
 
 // targetHitPoints é o PV do alvo ANTES da confirmação, ou nulo quando não há

@@ -78,7 +78,8 @@ O Datastar manda um sinal `null` como `""`, e o `[]string` do struct do servidor
 recusa o corpo INTEIRO: o `ReadSignals` falha e todo sinal daquele pedido cai —
 busca, filtro, aba. Na ficha, o `sheetSignals` deixa um aviso no log com a rota
 e o motivo (`TestASheetGestureWithUnreadableSignalsLogsTheCause`); a tela segue
-sem os sinais. Um `json.Marshal` de slice nil escreve `null`,
+sem os sinais. O corpo VAZIO é "sem sinais", como o `GET` sem o parâmetro
+`datastar` é para o SDK, e não deixa aviso. Um `json.Marshal` de slice nil escreve `null`,
 então **lista que vira expressão sai de um slice não nulo** (`choicesOpens`). O
 `TestTheChoicesOpenerNeverWritesANullList` prende o caso que mordeu.
 

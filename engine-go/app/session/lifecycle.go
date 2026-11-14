@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"t20engine/infra/events"
 
 	"t20engine/app"
 	"t20engine/domain/live"
@@ -40,15 +41,17 @@ type Lifecycle struct {
 	sessions *Store
 	memories []MemoryOfASession
 	access   Access
+	// bus avisa que a sessão sumiu (`events.SessionDeleted`), para quem está na Mesa dela.
+	bus *events.Bus
 }
 
 // NewLifecycle monta o ciclo. As `memories` são os OUTROS mapas por sessão — a
 // fila entra sozinha, porque ela já está aqui.
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, sessions *Store, memories ...MemoryOfASession,
+	db *sql.DB, q *sqlcgen.Queries, sessions *Store, bus *events.Bus, memories ...MemoryOfASession,
 ) Lifecycle {
 	return Lifecycle{
-		db: db, queries: q, sessions: sessions, access: NewAccess(q),
+		db: db, queries: q, sessions: sessions, access: NewAccess(q), bus: bus,
 		memories: append([]MemoryOfASession{sessions}, memories...),
 	}
 }
@@ -204,6 +207,7 @@ func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID, sessi
 		return fmt.Errorf("apagar a sessão %d: %w", sessionID, err)
 	}
 	l.ForgetSession(sessionID)
+	l.bus.Publish(events.SessionDeleted{SessionID: sessionID})
 	return nil
 }
 
