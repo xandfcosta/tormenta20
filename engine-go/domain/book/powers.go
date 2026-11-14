@@ -46,6 +46,9 @@ type ClassPower struct {
 	// Prerequisites são os pré-requisitos do verbete. A ficha lê os de poder, para
 	// recusar a troca de uma escolha da qual outra depende.
 	Prerequisites []PowerPrerequisite `json:"prerequisites"`
+	// MinLevel é o "Nº nível de <classe>" do pré-requisito: o nível DA CLASSE a partir do qual o
+	// poder pode ser escolhido (o Mestre em Escola pede o 8º de arcanista, p38).
+	MinLevel int `json:"minLevel"`
 }
 
 // PowerPrerequisite é um pré-requisito. `IDs` é "um destes" (o `ID` é um só).
@@ -234,6 +237,8 @@ type GeneralPower struct {
 	Choice *PowerChoice `json:"choice"`
 	// Prerequisites, como no poder de classe.
 	Prerequisites []PowerPrerequisite `json:"prerequisites"`
+	// MinLevel é o "Nº nível de personagem" do pré-requisito (o Ao Sabor do Destino pede o 6º).
+	MinLevel int `json:"minLevel"`
 	// SpellAugment é o preço e o efeito do poder que é aprimoramento (p131), que
 	// se escolhe ao conjurar. Nulo em todos os outros. Ver `PowerAugments`.
 	SpellAugment *SpellAugment `json:"spellAugment"`
