@@ -187,32 +187,12 @@ func (s Scene) gmBoardCommand(
 	return s.boardCommand(mutate, true)
 }
 
-// gmContinuousCommand é o irmão do de cima para o gesto que se REPETE enquanto
-// o dedo está no botão: pintar e apagar terreno arrastando.
-//
-// A diferença é o TAMANHO DA RESPOSTA, e ela é medida: o `respondGm` repinta
-// TODAS as regiões da Mesa, e um clique de pintura devolvia **353 KB**. No gesto
-// avulso isso é seguro — ninguém está no meio de um arrasto no instante em que
-// pediu outra coisa —, e a frase deixa de valer exatamente aqui: no gesto
-// contínuo a pessoa ESTÁ no meio de um arrasto, e um traço de vinte casas
-// custaria sete megabytes.
-//
-// A resposta fica no `mesa-tabuleiro` porque terreno não aparece em mais lugar
-// nenhum. Quem precisar de outra região não usa este atalho — é uma lista
-// explícita, não um padrão.
-func (s Scene) gmContinuousCommand(
-	mutate func(Scene, commandCtx) (*board.BoardState, error),
-) http.HandlerFunc {
-	return s.boardCommand(mutate, true, "table-board")
-}
-
 // boardCommand é o corpo dos dois. Separá-los em duas cópias seria repetir
-// resolver a mesa, mutar, publicar e redesenhar — e é numa delas que alguém
+// resolver a mesa, mutar, publicar e responder — e é numa delas que alguém
 // esquece de publicar e a mesa fica vendo a cena velha.
 func (s Scene) boardCommand(
 	mutate func(Scene, commandCtx) (*board.BoardState, error),
 	gmOnly bool,
-	onlyRegions ...string,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		campaignID, sessionID, ok := tableParams(w, r)
@@ -235,7 +215,7 @@ func (s Scene) boardCommand(
 		signals := map[string]any{}
 		aba, err := s.chosenTabOf(r.Context(), sessionID, userID)
 		if err != nil {
-			s.respondGm(w, r, userID, campaignID, sessionID, err, signals, onlyRegions...)
+			s.respondGm(w, r, sessionID, err, signals)
 			return
 		}
 		state, err := mutate(s, commandCtx{
@@ -252,7 +232,7 @@ func (s Scene) boardCommand(
 		}
 		if gmOnly {
 			// O `respondGm` escreve o `command_error` do rodapé sozinho.
-			s.respondGm(w, r, userID, campaignID, sessionID, err, signals, onlyRegions...)
+			s.respondGm(w, r, sessionID, err, signals)
 			return
 		}
 		// A recusa vai para `move_error` e NÃO para o `command_error` do
@@ -265,7 +245,7 @@ func (s Scene) boardCommand(
 			sentence = err.Error()
 		}
 		signals["move_error"] = sentence
-		s.respondGm(w, r, userID, campaignID, sessionID, nil, signals)
+		s.respondGm(w, r, sessionID, nil, signals)
 	}
 }
 

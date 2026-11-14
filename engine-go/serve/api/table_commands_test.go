@@ -39,26 +39,6 @@ func TestOnlyTheGmCommandsTheTable(t *testing.T) {
 	}
 }
 
-// O comando remenda a cena na resposta, em vez de esperar o tique do stream: o
-// avanço é o botão mais clicado da sessão, e o tique vai calar de todo jeito
-// porque o hash não muda depois do remendo.
-func TestTheCommandPatchesTheSceneRightAway(t *testing.T) {
-	f := newSceneFixture(t)
-
-	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", "")
-	if rec.Code != http.StatusOK {
-		t.Fatalf("iniciar cena deu %d", rec.Code)
-	}
-	if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/event-stream") {
-		t.Fatalf("Content-Type %q — o comando não remendou a cena", ct)
-	}
-	// A cena tem de voltar já com a cena ABERTA: se ela voltasse com o estado
-	// velho, o mestre veria "Iniciar cena" depois de tê-la iniciado.
-	if !strings.Contains(rec.Body.String(), "Encerrar a cena") {
-		t.Error("o remendo veio com o estado anterior")
-	}
-}
-
 // Uma escrita pela cena tem de chegar ao HUB: quem está ouvindo o stream fica
 // com o estado velho se ela não chegar.
 func TestTheCommandAnnouncesToTheWholeTable(t *testing.T) {

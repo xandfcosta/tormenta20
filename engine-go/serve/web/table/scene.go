@@ -41,18 +41,18 @@ func (s Scene) SceneRoutes(r chi.Router) {
 	// CLIQUE e não de um sinal da página que outro gesto pode ter mexido, e o
 	// `payload` do `@post` já é isso — ele SUBSTITUI os sinais por um corpo
 	// calculado no instante do clique. Sinal e corpo não são a mesma coisa.
-	r.Post(base+"/terreno", s.gmContinuousCommand(paintTerrain))
+	r.Post(base+"/terreno", s.gmBoardCommand(paintTerrain))
 	// A BORRACHA tem rota PRÓPRIA porque é a única que não nomeia espécie
 	// NENHUMA, nem no caminho nem no corpo — era a espécie que a fazia apagar a
 	// coisa errada em silêncio, e um corpo compartilhado com a pintura
 	// devolveria o campo, e o risco, de graça.
-	r.Post(base+"/terreno/limpar", s.gmContinuousCommand(clearTerrain))
+	r.Post(base+"/terreno/limpar", s.gmBoardCommand(clearTerrain))
 	// O RETÂNGULO: os mesmos dois cantos, outra FORMA. Rota própria e não uma
 	// query na de cima porque o que muda é o que o par de cantos NOMEIA — a
 	// linha entre eles ou tudo o que cabe dentro —, e isso é o significado do
 	// pedido, não um modo dele.
-	r.Post(base+"/terreno/retangulo", s.gmContinuousCommand(fillRect))
-	r.Post(base+"/terreno/limpar/retangulo", s.gmContinuousCommand(clearRect))
+	r.Post(base+"/terreno/retangulo", s.gmBoardCommand(fillRect))
+	r.Post(base+"/terreno/limpar/retangulo", s.gmBoardCommand(clearRect))
 	r.Post(base+"/pecas", s.gmBoardCommand(poeNoMapa))
 	r.Post(base+"/pecas/nova", s.gmBoardCommand(newLoosePiece))
 }

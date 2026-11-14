@@ -100,47 +100,6 @@ test.describe('A mesa do mestre', () => {
   })
 
   /**
-   * O COMANDO REMENDA A CENA SOZINHO, sem depender do stream.
-   *
-   * Medir "o remendo chega antes do batimento" seria VÁCUO: o stream acorda a
-   * cada mutação e entregaria a mesma tela igualmente rápido. O que o remendo
-   * compra é INDEPENDÊNCIA — então a forma honesta de medi-lo é cortar o
-   * stream: com o canal fechado, o único caminho para o DOM mudar é a resposta
-   * do POST.
-   *
-   * O verbo é o − e o + de um PV: os dois devolvem a linha ao que era, e a
-   * sessão é compartilhada por outros specs.
-   */
-  test('o comando redesenha a cena mesmo com o stream cortado', async ({ page }) => {
-    // REGEX e não glob: o `@get` do Datastar anexa os sinais como query string,
-    // e um glob terminado em `/fluxo` não casa — o teste passaria verde com o
-    // stream ABERTO. Quem denuncia isso é o controle abaixo.
-    let triedOpening = 0
-    await page.route(/\/campanhas\/\d+\/sessoes\/\d+\/fluxo(\?|$)/, async (route) => {
-      triedOpening++
-      await route.abort()
-    })
-
-    await page.goto(MESA)
-    await bringTheParty(page)
-
-    const row = page.locator('#table-tracker .ds-gm-row').filter({ hasText: 'Ficha' }).first()
-    const pv = row.locator('.ds-gm-vital .ds-row-meta').first()
-    await expect(pv).toBeVisible()
-    // O CONTROLE de que o canal está mesmo fechado: a página TENTOU abri-lo e
-    // foi barrada.
-    expect(triedOpening, 'a página nem tentou abrir o stream — o corte não prova nada').toBeGreaterThan(0)
-
-    const before = (await pv.textContent()) ?? ''
-    await row.getByRole('button', { name: /^Tirar 1 PV de / }).click()
-    await expect(pv, 'o − não redesenhou a linha com o stream cortado').not.toHaveText(before)
-
-    // Devolve a linha ao que era: a sessão é compartilhada.
-    await row.getByRole('button', { name: /^Devolver 1 PV a / }).click()
-    await expect(pv).toHaveText(before)
-  })
-
-  /**
    * NENHUM DIÁLOGO FECHADO ROUBA O CLIQUE DA CENA.
    *
    * O navegador dá `display:none` a `<dialog>` fechado, e um `display` da folha

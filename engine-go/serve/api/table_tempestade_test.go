@@ -125,18 +125,6 @@ func TestTheParallelSessionDrawsTheActionsInTempestade(t *testing.T) {
 	}
 }
 
-// O GESTO DA MESA NA SESSÃO DO JOGADOR responde com as regiões NOVAS. Os
-// comandos da mesa redesenham a mesa na hora, e sem a marca devolviam o
-// cabeçalho de hoje — o mesmo defeito do stream, por outro caminho.
-func TestAParallelSessionGestureAnswersWithTheNewRegions(t *testing.T) {
-	f := newSceneFixture(t)
-	f.scene(t)
-	answer := f.posts(t, f.player, f.tableUrl()+"/ataque/cancelar", "{}")
-	if !strings.Contains(answer, "ds-session-head") {
-		t.Errorf("o gesto da sessão do jogador respondeu com o cabeçalho de hoje:\n%s", firstRows(answer, 6))
-	}
-}
-
 // A MESA DA SESSÃO DO JOGADOR (ALE-473), pelo mockup aprovado `mesa.html`: em
 // combate, a fila com quem joga agora e o PV dos outros oculto; o registro
 // encolhido para quem já está na fila; e o grupo.

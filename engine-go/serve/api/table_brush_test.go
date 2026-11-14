@@ -127,30 +127,6 @@ func TestAForgedStrokeIsRefused(t *testing.T) {
 	}
 }
 
-// O guarda dos 353 KB: repintar TODAS as regiões a cada casa é proibitivo num
-// gesto CONTÍNUO — um traço de vinte casas mandaria sete megabytes enquanto o
-// mestre ainda arrasta o dedo.
-//
-// A asserção nomeia as duas metades: a região do mapa TEM de vir (senão o traço
-// não aparece) e a do acervo NÃO pode (é a maior da Mesa e não muda quando
-// alguém pinta uma casa).
-func TestTheBrushDoesNotReturnTheWholeTable(t *testing.T) {
-	f := newSceneFixture(t)
-	f.seedOpenBoard(t, "stone")
-
-	body := f.requests(t, f.gm, http.MethodPost,
-		f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
-
-	if !strings.Contains(body, `id="table-board"`) {
-		t.Error("a resposta do pincel não traz o mapa — a casa pintada não apareceria")
-	}
-	for _, region := range []string{"table-archive", "table-tracker", "table-party", "table-npcs"} {
-		if strings.Contains(body, `id="`+region+`"`) {
-			t.Errorf("a resposta do pincel repinta a região %q, que não muda ao pintar uma casa", region)
-		}
-	}
-}
-
 // Uma afirmação sobre a FORMA do que a página serve, e é o único jeito de
 // alcançar os três gestos de uma vez: `pointerdown`/`pointermove`/`pointerup` na
 // camada de pintura e o botão 2 caindo no caminho da borracha.
