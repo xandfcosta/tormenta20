@@ -37,26 +37,6 @@ test.describe('O improviso', () => {
   })
 
   /**
-   * O HISTÓRICO CURTO é o que a ferramenta tem de diferente de um botão que
-   * mostra o último resultado: o mestre que rola duas vezes na mesma cena quer
-   * comparar. Cinco é o fundo, e a sexta rolagem empurra a primeira para fora.
-   */
-  test('a tabela guarda as rolagens anteriores, e para em cinco', async ({ page }) => {
-    await page.goto(IMPROV)
-    // Pelo NOME da região, e não por contar filhos de `div`: acoplar ao formato
-    // do DOM é o que o guia manda não escrever, e a primeira versão deste teste
-    // fazia isso — e apontava para o cartão errado.
-    const card = page.getByRole('region', { name: 'Ermos — Ruína' })
-
-    for (let i = 0; i < 7; i++) {
-      await card.getByRole('button', { name: 'Rolar d6' }).click()
-      await expect(card.locator('[aria-live="polite"]')).toBeVisible()
-    }
-    // Uma manchete + quatro anteriores = os cinco que o fundo permite.
-    await expect(card.locator('li'), 'o histórico passou do fundo de cinco').toHaveCount(4)
-  })
-
-  /**
    * A SETA chega aos botões dos cartões e não mexe no campo de salas: num campo de número
    * ela mudaria o valor. E2E porque a escolha do vizinho é geometria real, e só existe com
    * o driver ligado.

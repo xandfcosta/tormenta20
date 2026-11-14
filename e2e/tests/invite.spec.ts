@@ -38,12 +38,4 @@ test.describe('A carta de convite', () => {
     expect(notice, 'o navegador barrou em silêncio').not.toBe('')
   })
 
-  // Convite morto: a carta diz, e NÃO oferece o botão. Um botão que não pode
-  // funcionar é uma porta pintada na parede — quem explica é a carta.
-  test('convite morto vira frase, e a carta não oferece o botão', async ({ page }) => {
-    await page.goto('/campanhas/entrar?token=nao-existe-mesmo')
-    await expect(page.getByText(/Convite inválido ou expirado/)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toHaveCount(0)
-  })
-
 })

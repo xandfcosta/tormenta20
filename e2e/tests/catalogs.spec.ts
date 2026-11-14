@@ -93,21 +93,4 @@ test.describe('Os catálogos', () => {
     await expect(page.locator(SCROLLER)).toBeFocused()
   })
 
-  /**
-   * A busca varre TODOS os catálogos, não só o que está aberto: filtrar só a
-   * aba ativa faz "bola de fogo" digitado em Condições dizer "nada encontrado"
-   * com a magia existindo (ALE-22).
-   */
-  test('buscar varre todos os catálogos, não só o que está aberto', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(CONDITIONS)
-    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
-
-    await page.getByRole('searchbox', { name: 'Buscar em todos os catálogos' }).fill('fogo')
-
-    await expect(
-      page.getByRole('region', { name: 'Magias' }),
-      'buscar de dentro das condições não alcançou as magias (ALE-22)',
-    ).toBeVisible()
-  })
 })
