@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -213,6 +214,40 @@ func TestTheSceneAnswersPageOrPatchDependingOnWhoAsks(t *testing.T) {
 	}
 	if !strings.Contains(patch, "campaigns-scene") {
 		t.Error("o remendo não trouxe o id que o morph casa")
+	}
+}
+
+// A BUSCA PELO FIO: o campo manda o sinal `search` no `?datastar=` de um GET,
+// e o remendo que volta é a lista já filtrada. O `LoadList` acima prende a
+// regra; este prende que a rota lê o SINAL (e não só o `?busca=` da carga fria)
+// e que o "não achei" sai escrito na tela.
+func TestTheSearchSignalFiltersTheDrawnList(t *testing.T) {
+	f := novaCena(t)
+	f.campanha(t, "A Queda de Tauron", "")
+	f.campanha(t, "Segredos de Wynlla", "")
+	tok, err := f.s.accountGate().SignSession(sqlcgen.User{ID: f.owner, Email: "mestre@t20.local"})
+	if err != nil {
+		t.Fatalf("assinar: %v", err)
+	}
+	searches := func(term string) string {
+		req := httptest.NewRequest(http.MethodGet,
+			"/campanhas?datastar="+url.QueryEscape(`{"search":"`+term+`"}`), nil)
+		req.AddCookie(&http.Cookie{Name: f.s.cfg.CookieName, Value: tok})
+		req.Header.Set("datastar-request", "true")
+		rec := httptest.NewRecorder()
+		f.s.WebRouter().ServeHTTP(rec, req)
+		return rec.Body.String()
+	}
+
+	found := searches("queda")
+	if !strings.Contains(found, "A Queda de Tauron") {
+		t.Errorf("a busca por \"queda\" perdeu a campanha que casa:\n%s", found)
+	}
+	if strings.Contains(found, "Segredos de Wynlla") {
+		t.Error("a busca por \"queda\" deixou na lista a campanha que não casa")
+	}
+	if nothing := searches("zzzzz"); !strings.Contains(nothing, "Nenhuma campanha casa com") {
+		t.Errorf("a busca sem resultado não diz que nada casou:\n%s", nothing)
 	}
 }
 

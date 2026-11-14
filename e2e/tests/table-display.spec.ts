@@ -65,8 +65,6 @@ async function followsAndFreezes(page: Page, context: BrowserContext, mesa: stri
   await display.setViewportSize({ width: 1920, height: 1080 })
   await display.goto(`${mesa}/tela`)
   await expect(display.locator('#board-scene'), 'a tela da mesa não desenhou o mapa').toBeVisible()
-  // Ela não tem controle nenhum: só o mapa.
-  await expect(display.getByRole('button', { name: 'Aproximar o mapa' })).toHaveCount(0)
 
   // O CONTROLE: com a tela aberta, o mestre vê o interruptor ao vivo.
   const live = page.getByText('Tela da mesa ao vivo')

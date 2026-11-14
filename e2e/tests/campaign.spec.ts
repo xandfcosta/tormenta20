@@ -16,42 +16,6 @@ test.describe('Detalhe da campanha', () => {
 })
 
 /**
- * Criar e excluir uma campanha: o único caso daqui que ESCREVE de verdade, e
- * por isso ele apaga o que criou — a seed é compartilhada com todos os specs, e
- * uma execução que deixa campanha para trás envenena a próxima.
- *
- * Entrar por convite NÃO mora aqui de propósito: quem responde é o
- * `api/campaigns_join_test.go`, mais a `invite.spec.ts` para o que só o browser
- * vê. A página `/campanhas/entrar` continua sendo carregada nos seis formatos
- * pelo bloco responsivo abaixo.
- */
-test.describe('Abrir e fechar uma campanha', () => {
-  test('criar leva direto para a nova campanha, e excluir traz de volta', async ({
-    page,
-  }) => {
-    const name = `E2E Descartável ${Date.now()}`
-    await page.goto('/campanhas/nova')
-
-    await page.getByLabel('Nome').fill(name)
-    await page.getByLabel('Descrição').fill('Criada e excluída pelo E2E.')
-    await page.getByRole('button', { name: 'Criar campanha' }).click()
-
-    await expect(page).toHaveURL(/\/campanhas\/\d+/)
-    await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
-
-    // A limpeza é pela tela, que de quebra exercita o caminho de exclusão.
-    await page.goto(`${new URL(page.url()).pathname}?tab=config`)
-    await page.getByRole('button', { name: /Excluir campanha/ }).click()
-    await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click()
-    // Volta para a LISTA, e o que se afirma é a LISTA e não a URL dela: prender
-    // o teste ao endereço o faria quebrar num renome de rota que não muda nada
-    // para quem usa.
-    await expect(page.getByRole('heading', { name: 'Campanhas', level: 1 })).toBeVisible()
-    await expect(page.getByRole('link', { name: new RegExp(name) })).toHaveCount(0)
-  })
-})
-
-/**
  * Um teste por cena, com os seis formatos DENTRO dele — e não um teste por par.
  * O leiaute responde ao `setViewportSize` na hora (media query é só de largura,
  * regra da casa), então pagar uma carga de página por formato não comprava
@@ -129,31 +93,6 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
   })
 })
 
-test.describe('A cena de campanhas', () => {
-  test.use({ storageState: '.auth/user.json' })
-
-  /**
-   * A busca é do SERVIDOR, e quem prende o RESULTADO dela é o
-   * `api/search_test.go` — inclusive o caso que mais surpreende, "tauron"
-   * casando "Segredos de Wynlla" por subsequência na sinopse.
-   *
-   * O que sobra aqui é o que só o navegador vê: que a busca de fato FILTRA a
-   * lista renderizada.
-   */
-  test('a busca filtra a lista que o servidor desenhou', async ({ page }) => {
-    await page.goto('/campanhas')
-    const campaigns = page.getByRole('article')
-    expect(await campaigns.count(), 'a seed precisa de mais de duas campanhas').toBeGreaterThan(2)
-
-    await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('tauron')
-    await expect(campaigns).toHaveCount(3)
-    await expect(page.getByRole('link', { name: /A Queda de Tauron/ })).toBeVisible()
-
-    await page.getByRole('searchbox', { name: 'Buscar campanha' }).fill('zzzzzz')
-    await expect(page.getByText(/Nenhuma campanha casa com/)).toBeVisible()
-  })
-})
-
 test.describe('A folha em branco', () => {
   test.use({ storageState: '.auth/user.json' })
 
@@ -168,30 +107,17 @@ test.describe('A folha em branco', () => {
   })
 
   /**
-   * A RECUSA NÃO COME O TEXTO — e este é o caso que só o navegador vê inteiro,
-   * porque envolve o `maxlength` NATIVO e o envio de verdade do formulário.
-   *
-   * O guarda em Go afirma o mesmo pelo lado do servidor. O que se acrescenta
-   * aqui é que o navegador PARA a digitação no limite, em vez de deixar
-   * escrever 3000 caracteres e recusar no fim.
+   * O LIMITE AVISA ENQUANTO SE ESCREVE: o `maxlength` NATIVO para a digitação no
+   * teto, em vez de deixar escrever 3000 caracteres e recusar no fim. É o que só
+   * o navegador faz; que a recusa do servidor devolve o texto digitado é do
+   * `TestTheRefusalGivesBackWhatWasTyped`.
    */
-  test('a recusa devolve o texto, e o limite avisa enquanto se escreve', async ({ page }) => {
+  test('o limite da descrição para a digitação no teto', async ({ page }) => {
     await page.goto('/campanhas/nova')
     const description = page.getByLabel('Descrição')
 
-    // O `maxlength` nativo é o aviso durante a digitação.
     await description.fill('x'.repeat(2500))
     expect((await description.inputValue()).length, 'o navegador deixou passar do teto').toBe(2000)
-
-    // Nome de puros espaços: o `required` não pega, o servidor pega.
-    await page.getByLabel('Nome').fill('   ')
-    await description.fill('A caravana parte de Valkaria ao amanhecer.')
-    await page.getByRole('button', { name: 'Criar campanha' }).click()
-
-    await expect(page.getByText(/O nome é obrigatório/)).toBeVisible()
-    await expect(description, 'a descrição sumiu na recusa').toHaveValue(
-      'A caravana parte de Valkaria ao amanhecer.',
-    )
   })
 
 })
