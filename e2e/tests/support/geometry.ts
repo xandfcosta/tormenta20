@@ -417,7 +417,7 @@ export async function expectColunasMonotonicas(
  * quem escreveu. O teto existe para uma animação INFINITA — o ponto do "AO VIVO"
  * pulsa para sempre — não pendurar a suíte.
  */
-async function esperaAsAnimacoesPararem(page: Page): Promise<void> {
+export async function untilAnimationsSettle(page: Page): Promise<void> {
   await page
     .waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), null, {
       timeout: 3000,
@@ -471,7 +471,7 @@ export async function measureSidewaysClipping(
   page: Page,
   root: string,
 ): Promise<{ cortados: string[]; medidos: number }> {
-  await esperaAsAnimacoesPararem(page)
+  await untilAnimationsSettle(page)
   const measure = await page.evaluate((rootSelector) => {
     const root = document.querySelector(rootSelector as string)
     if (!root) return null

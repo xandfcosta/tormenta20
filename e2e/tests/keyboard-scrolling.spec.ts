@@ -52,6 +52,10 @@ for (const scene of CENAS) {
         desenhou: document.querySelectorAll('[data-slot="scene-shell"]').length > 0,
         documentoRola:
           document.documentElement.scrollHeight > document.documentElement.clientHeight,
+        // O DENOMINADOR: quantas caixas rolam. Sem ele, uma cena que coube na
+        // janela e não rola em lugar nenhum passa com "nenhuma presa" — verde
+        // sobre nada.
+        rolam: [...document.querySelectorAll('*')].filter(scrolls).length,
         presas: [...document.querySelectorAll('*')]
           .filter(scrolls)
           .filter((e) => (e as HTMLElement).tabIndex < 0)
@@ -71,6 +75,10 @@ for (const scene of CENAS) {
     // acusar uma cena que mudou de casca por um motivo legítimo.
     if (measure.documentoRola) return
 
+    expect(
+      measure.rolam,
+      `nada rola na cena de ${scene.nome} a 1200×700: o guarda não teria caixa nenhuma para medir`,
+    ).toBeGreaterThan(0)
     expect(
       measure.presas,
       `caixas que rolam sem foco nem descendente focável em ${scene.nome}: ` +

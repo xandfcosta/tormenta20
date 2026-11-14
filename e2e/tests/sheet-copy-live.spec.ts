@@ -49,6 +49,10 @@ test('o rascunho entra na mesa, a cópia aparece na lista e a ficha dela acompan
     })
     await page.getByRole('button', { name: 'Menos 1 PV' }).locator('visible=true').first().click()
     await expect.poll(hp).toBe(String(before - 1))
+    // Uma AUSÊNCIA só prova depois do tempo em que a coisa viria: o repedido sai
+    // 400 ms depois do aviso do fluxo (o `__debounce` do `sheet.templ`), e o aviso
+    // ainda tem de atravessar o fluxo. Que o canal está vivo, o dano dado pela
+    // outra aba prova logo abaixo.
     await page.waitForTimeout(1500)
     expect(refetches, 'o gesto da própria aba repediu a ficha').toEqual([])
 

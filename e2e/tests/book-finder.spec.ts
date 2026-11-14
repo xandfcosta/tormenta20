@@ -83,17 +83,32 @@ test('o Enter no campo abre o primeiro achado sem passar pelas setas', async ({ 
 
 test('o Esc fecha a caixa e devolve a cena', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/mestre/bestiario')
+  // Uma cena COM `data-voltar`: é o que dá ao Esc um lugar para onde levar, e é
+  // isso que o caso protege. O bestiário, que ele usava, não tem, e lá o Esc não
+  // navegava nunca — a asserção não tinha como falhar.
+  await page.goto('/campanhas/nova')
+  await expect(
+    page.locator('[data-slot="scene-shell"]'),
+    'a cena perdeu o data-voltar: o Esc não teria para onde levar, e o caso não mediria nada',
+  ).toHaveAttribute('data-voltar', '/campanhas')
   await page.keyboard.press('Control+k')
   await page.keyboard.type('abal')
   await expect(page.locator(ACHADO).first()).toBeVisible()
 
+  // E a cena continua onde estava: o Esc do diálogo não pode subir para o
+  // `data-voltar` da casca e levar a pessoa para o Hub. Ler o endereço não
+  // basta: logo depois do Esc a navegação já SAIU, mas o endereço ainda é o
+  // velho. O que a denuncia é o pedido de documento, que o `onEscape` dispara
+  // dentro do próprio `keydown`.
+  const navigations: string[] = []
+  page.on('request', (r) => {
+    if (r.isNavigationRequest() && r.frame() === page.mainFrame()) navigations.push(r.url())
+  })
   await page.keyboard.press('Escape')
 
-  expect(await page.locator(CAIXA).evaluate((d: HTMLDialogElement) => d.open)).toBe(false)
-  // E a cena continua onde estava: o Esc do diálogo não pode subir para o
-  // `data-voltar` da casca e levar a pessoa para o Hub.
-  expect(page.url()).toContain('/mestre/bestiario')
+  await expect(page.locator(CAIXA)).not.toHaveAttribute('open')
+  expect(navigations, 'o Esc da caixa subiu para a casca e navegou').toEqual([])
+  expect(page.url()).toContain('/campanhas/nova')
 })
 
 /**

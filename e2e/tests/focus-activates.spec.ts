@@ -148,13 +148,12 @@ test('com o foco na ficha, as setas rolam o painel', async ({ page }) => {
 
   const before = await panel.evaluate((e) => e.scrollTop)
   for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown')
-  await page.waitForTimeout(200)
-  const after = await panel.evaluate((e) => e.scrollTop)
 
-  expect(
-    after,
-    `a ficha não rolou com o foco nela (${before} → ${after}): o driver de navegação comeu a seta`,
-  ).toBeGreaterThan(before)
+  await expect
+    .poll(() => panel.evaluate((e) => e.scrollTop), {
+      message: `a ficha não rolou com o foco nela (partiu de ${before}): o driver de navegação comeu a seta`,
+    })
+    .toBeGreaterThan(before)
 })
 
 /**

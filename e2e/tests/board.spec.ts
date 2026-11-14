@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, type Request, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
+import { expectDentroDaJanela, untilAnimationsSettle } from './support/geometry'
 import { openTheBoard, disposableTable, pickBrush, putACombatantInTheTracker, putATokenOnTheMap, putTheTokenOnTurn, showTheBoard } from './support/table'
 
 /**
@@ -539,8 +539,11 @@ test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ 
       await page.mouse.down()
       await page.mouse.move(box.x + box.width / 2 + dx, box.y + box.height / 2, { steps: 8 })
       await expect(page.locator('#table'), 'a peça não seguiu o dedo').not.toHaveAttribute('style', /--arrasto-x:0px/)
+      // Soltar a peça manda UM gesto (mover ou propor parada), e é a volta dele
+      // que fecha a coleta.
+      const dropped = page.waitForEvent('requestfinished', { predicate: (r) => r.method() === 'POST', timeout: 5000 })
       await page.mouse.up()
-      await page.waitForTimeout(400)
+      await dropped
       page.off('request', listen)
       return posts.join(' ')
     }
@@ -605,7 +608,7 @@ test('a barra de verbos do mestre cabe a 390px', async ({ page }) => {
     await openTheBoard(page, table)
     await page.setViewportSize({ width: 390, height: 844 })
     await showTheBoard(page)
-    await page.waitForTimeout(300)
+    await untilAnimationsSettle(page)
 
     // O CONTROLE: a barra e o seletor estão na tela. Sem isto, o guarda abaixo
     // passaria verde sobre um mapa que não desenhou o cromo.
@@ -711,9 +714,10 @@ test('o submenu de duplicar só entra no caminho do teclado quando é aberto', a
       )
       await page.locator('.board-token').first().click({ button: 'right' })
       await page.getByRole('button', { name: /^Duplicar / }).click()
-      await page.waitForTimeout(300)
+      await expect(page.locator('.board-token-copy[aria-label^="O que a cópia"]')).toBeVisible()
+      await untilAnimationsSettle(page)
       const escaped = await page.evaluate(() => {
-        const p = document.querySelector('.board-token-copy')!.getBoundingClientRect()
+        const p = document.querySelector('.board-token-copy[aria-label^="O que a cópia"]')!.getBoundingClientRect()
         return {
           abaixo: Math.round(p.bottom - window.innerHeight),
           direita: Math.round(p.right - window.innerWidth),
