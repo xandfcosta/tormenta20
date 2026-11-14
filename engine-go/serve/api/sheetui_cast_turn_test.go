@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 )
 
@@ -32,34 +31,11 @@ func learnAndCast(t *testing.T, f sceneFixture, spellID string) *responseRecorde
 
 // startCombatWithSomeoneElseOnTurn põe a cena de ação no ar com a vez de OUTRO.
 //
-// O outro é um NPC sem ficha, e ele existe para que a vez possa ser de alguém:
-// com um combatente só, "não é a sua vez" não tem como acontecer, e o caso
-// mediria a metade em que o defeito é invisível.
+// O outro é o Goblin do `actionSceneWithTheGoblinFirst`, que diz por que ele
+// existe.
 func startCombatWithSomeoneElseOnTurn(t *testing.T, f sceneFixture) {
 	t.Helper()
-	store := f.s.sessions
-	if _, err := store.State(t.Context(), f.sessionID); err != nil {
-		t.Fatalf("carregar a sessão: %v", err)
-	}
-	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
-		t.Fatalf("começar a cena de ação: %v", err)
-	}
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
-		ID: "npc", Label: "Goblin", Initiative: 20, Type: "npc",
-	}); err != nil {
-		t.Fatalf("pôr o NPC na fila: %v", err)
-	}
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID,
-		sheetCombatant("Arcanista", 5, f.charID)); err != nil {
-		t.Fatalf("pôr o personagem na fila: %v", err)
-	}
-	if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
-		t.Fatalf("girar para a primeira vez: %v", err)
-	}
-	state := stateOf(t, store, f.sessionID)
-	if who := state.Initiative[state.TurnIndex]; who.CharacterID != nil {
-		t.Fatalf("o controle falhou: a vez é do personagem (%s), e o caso precisa dela ser de outro", who.Label)
-	}
+	f.actionSceneWithTheGoblinFirst(t, "Arcanista", f.charID, 1)
 }
 
 // FORA DA SUA VEZ, A PADRÃO RECUSA E A REAÇÃO PASSA.

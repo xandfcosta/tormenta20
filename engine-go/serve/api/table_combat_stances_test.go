@@ -85,38 +85,10 @@ func knightOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 			t.Fatalf("escolher %s: %s", power, refused)
 		}
 	}
-	startActionSceneOnTurnOf(t, f, "Postural")
+	f.actionSceneWithTheGoblinFirst(t, "Postural", f.charID, 2)
 	cavaleiro := entryLabeled(t, stateOf(t, f.s.sessions, f.sessionID), "Postural")
 	goblin := entryLabeled(t, stateOf(t, f.s.sessions, f.sessionID), "Goblin")
 	return f, id, cavaleiro, goblin
-}
-
-// startActionSceneOnTurnOf abre uma cena de ação com um Goblin na frente e a
-// ficha `f.charID`, com o nome `label`, na vez.
-func startActionSceneOnTurnOf(t *testing.T, f sceneFixture, label string) {
-	t.Helper()
-	store := f.s.sessions
-	if _, err := store.State(t.Context(), f.sessionID); err != nil {
-		t.Fatalf("carregar a sessão: %v", err)
-	}
-	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
-		t.Fatalf("começar a cena: %v", err)
-	}
-	goblin := "goblin-salteador"
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
-		Label: "Goblin", Initiative: 20, Type: "npc", MonsterID: &goblin,
-	}); err != nil {
-		t.Fatalf("pôr o Goblin na fila: %v", err)
-	}
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID,
-		sheetCombatant(label, 5, f.charID)); err != nil {
-		t.Fatalf("pôr %s na fila: %v", label, err)
-	}
-	for range 2 { // a primeira vez é do Goblin, a segunda da ficha
-		if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
-			t.Fatalf("girar a vez: %v", err)
-		}
-	}
 }
 
 // assumes entra numa postura pela rota da ficha, e devolve a recusa.

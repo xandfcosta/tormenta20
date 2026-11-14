@@ -75,7 +75,7 @@ func TestThePreyMarkBuysTheTableDieAndAddsItAgainstTheMarkedCreature(t *testing.
 func TestThePreyMarkSpendsTheMovementAction(t *testing.T) {
 	f, id := hunterFixture(t, 1)
 	f.charID = id
-	startActionSceneOnTurnOf(t, f, "Caçadora")
+	f.actionSceneWithTheGoblinFirst(t, "Caçadora", f.charID, 2)
 
 	if refusal := powerCommand(t, f, id, "usa/class.cacador.marca-da-presa-1d4", `{"stance_degrees":0}`); refusal != "" {
 		t.Fatalf("marcar na vez foi recusado: %q", refusal)
