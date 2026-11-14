@@ -143,8 +143,7 @@ func startActionSceneWithTheBardOnTurn(t *testing.T, f sceneFixture) {
 // sheetTab é a ficha aberta numa aba.
 func sheetTab(t *testing.T, f sceneFixture, id int64, tab string) string {
 	t.Helper()
-	return f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=%s", id, tab), "").Body.String()
+	return sheetTabOpen(t, f, id, tab)
 }
 
 // manaOnTheSheet é o par (atual, máximo) do crachá de PM, e a RESERVA ao lado.

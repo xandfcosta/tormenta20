@@ -44,8 +44,7 @@ func arcanistaDeNivel(t *testing.T, level int64) (sceneFixture, int64) {
 
 func spellScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=spells", id), "").Body.String()
+	return sheetTabOpen(t, f, id, "spells")
 }
 
 func spell(t *testing.T, f sceneFixture, id int64, path string) int {

@@ -59,6 +59,9 @@ type Signals struct {
 	AugmentQuickened *int `json:"augment_quickened"`
 	AugmentAmplified *int `json:"augment_amplified"`
 	AugmentDiscreet  *int `json:"augment_discreet"`
+	// SheetDialog é o diálogo PESADO aberto agora (`spell-learn`, `item-add`, `power-choices`), ou vazio:
+	// o corpo dele só se desenha com ele aberto. Ver `lazyBody`.
+	SheetDialog string `json:"sheet_dialog"`
 	// Os filtros do catálogo de magias.
 	SpellSearch string `json:"spell_search"`
 	SpellCircle string `json:"spell_circle"`
@@ -186,9 +189,14 @@ func (s Signals) powerAugments() []sheet.PowerAugmentPick {
 //
 // A queda para a query serve a quem abre o endereço à mão — e serve à bancada,
 // que precisa poder pedir uma aba filtrada sem montar um corpo de Datastar.
-func sheetSignals(r *http.Request) Signals {
+func (s Scene) sheetSignals(r *http.Request) Signals {
 	signals := Signals{}
+	// O RECUO fica — sem sinal, a cena ainda desenha, com a aba e os filtros da query —, mas não CALADO:
+	// um sinal de tipo errado derruba o corpo inteiro, e o `$race_attributes = null` do Escolher viveu
+	// anos assim, apagando filtros sem ninguém ver.
 	if err := datastar.ReadSignals(r, &signals); err != nil {
+		s.log.Warn("os sinais do gesto não se leram, e a ficha seguiu sem nenhum deles",
+			"path", r.URL.Path, "error", err.Error())
 		signals = Signals{}
 	}
 	signals.ByLevel = r.URL.Query().Get("visao") == "nivel"

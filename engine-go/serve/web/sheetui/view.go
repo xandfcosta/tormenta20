@@ -107,6 +107,8 @@ type View struct {
 	// GrimoireSearch, GrimoireCircle e SpellCasting são da aba Magias: a busca e o círculo que filtram o grimório, e a CD e o atributo
 	// que o topo diz uma vez.
 	GrimoireSearch string
+	// OpenDialog é o `$sheet_dialog`: o diálogo pesado que está aberto, e o único cujo corpo se desenha.
+	OpenDialog     string
 	GrimoireCircle string
 	SpellCasting   spellCasting
 	// EffectPicks são as buscas dos escolhedores da aba Efeitos.
@@ -248,6 +250,7 @@ func (s Scene) Load(
 	v.WildShape = wildShapeViewOf(dto)
 	v.Spells = s.spellbookPanelOf(dto, signals.SpellSearch, signals.SpellCircle, signals.SpellSchool)
 	v.GrimoireSearch, v.GrimoireCircle = signals.GrimoireSearch, signals.GrimoireCircle
+	v.OpenDialog = signals.SheetDialog
 	v.EffectPicks = effectPickFilters{ConditionSearch: signals.ConditionSearch, BuffSearch: signals.BuffSearch, BuffCircle: signals.BuffCircle}
 	v.Powers = s.powersPanelOf(dto, signals.PowerSearch)
 	v.Choices = s.choicesPanelOf(dto, signals.PowerSearch)

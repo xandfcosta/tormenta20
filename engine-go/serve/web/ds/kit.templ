@@ -387,7 +387,17 @@ templ RollView(r Roll) {
 // `foot` leva os botões; o corpo é filho. O toque no fundo fecha: ver
 // `dialogBackdropCloses`.
 templ Dialog(id, title string, foot templ.Component) {
-	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" } data-preserve-attr="open" data-on:click={ dialogBackdropCloses }>
+	@DialogWith(id, title, foot, nil) {
+		{ children... }
+	}
+}
+
+// DialogWith é o `Dialog` com atributos a mais no `<dialog>`: o ouvido do `close` de quem precisa saber
+// que ele fechou.
+//
+//	@ds.DialogWith("x", "Título", nil, templ.Attributes{"data-on:close": "$aberto = ''"}) { … }
+templ DialogWith(id, title string, foot templ.Component, attrs templ.Attributes) {
+	<dialog class="ds-dialog" id={ id } aria-labelledby={ id + "-title" } data-preserve-attr="open" data-on:click={ dialogBackdropCloses } { attrs... }>
 		<div class="ds-dialog-head">
 			<h2 class="ds-dialog-title" id={ id + "-title" }>{ title }</h2>
 			<form method="dialog">

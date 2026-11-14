@@ -50,8 +50,7 @@ func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int
 
 func powerScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
-	return f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=abilities", id), "").Body.String()
+	return sheetTabOpen(t, f, id, "abilities")
 }
 
 func powerCommand(t *testing.T, f sceneFixture, id int64, path, body string) string {

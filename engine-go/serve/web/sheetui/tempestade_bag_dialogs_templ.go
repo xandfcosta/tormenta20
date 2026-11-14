@@ -1426,7 +1426,7 @@ func itemAddDialog(v View) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = sheetDialog(v, "item-add", "Adicionar item", itemAddFoot()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetLazyDialog(v, "item-add", "Adicionar item", itemAddFoot()).Render(templ.WithChildren(ctx, templ_7745c5c3_Var53), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

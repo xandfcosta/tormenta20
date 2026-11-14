@@ -42,8 +42,8 @@ var (
 	// um `id="x"` escrito: o kit o escreve no `<dialog>`, e o guarda lê a fonte.
 	idDeclarations = []*regexp.Regexp{
 		regexp.MustCompile(`(?:^|\s)id="([a-zA-Z][\w-]*)"`),
-		regexp.MustCompile(`ds\.Dialog\("([a-zA-Z][\w-]*)"`),
-		regexp.MustCompile(`sheetDialog\(v, "([a-zA-Z][\w-]*)"`),
+		regexp.MustCompile(`ds\.Dialog(?:With)?\("([a-zA-Z][\w-]*)"`),
+		regexp.MustCompile(`sheet(?:Lazy)?Dialog\(v, "([a-zA-Z][\w-]*)"`),
 		regexp.MustCompile(`ds\.SearchField\("([a-zA-Z][\w-]*)"`),
 	}
 	idReferences = []*regexp.Regexp{

@@ -260,7 +260,7 @@ templ improvementsFoot(v View, s itemSheet) {
 // fixas e só a lista rolando, e no pé o item próprio, para o que o livro não
 // tem — Catálogo e Custom viraram um gesto só (decisão do dono).
 templ itemAddDialog(v View) {
-	@sheetDialog(v, "item-add", "Adicionar item", itemAddFoot()) {
+	@sheetLazyDialog(v, "item-add", "Adicionar item", itemAddFoot()) {
 		@ds.FilterBar() {
 			@ds.SearchField("catalog-search", "Buscar no livro", templ.Attributes{
 				"value": v.Bag.CatalogSearch, "data-bind:catalog_search": true, "data-on:input__debounce.250ms": sheetGet(v),

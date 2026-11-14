@@ -16,36 +16,38 @@ import (
 // diálogo, com a seta de voltar; no desktop as duas camadas ficam lado a lado,
 // e a lista não rola junto com o passo.
 templ tempestadeChoicesDialog(v View) {
-	@ds.Dialog("power-choices", "Escolher", nil) {
-		<div class="ds-steps" data-attr:data-step-open="String($choice_step !== '')">
-			{{ steps := choiceStepsOf(v) }}
-			<nav class="ds-steps-list" aria-label="Escolhas">
-				if len(steps) == 0 {
-					<p class="ds-help">Esta ficha não pede escolha.</p>
-				} else {
-					@ds.List(stepsTitle(steps), "") {
-						for _, step := range steps {
-							<button
-								type="button"
-								class="ds-row ds-step-row"
-								data-on:click={ "$choice_step = '" + step.ID + "'" }
-								data-attr:aria-current={ "$choice_step === '" + step.ID + "' ? 'step' : 'false'" }
-							>
-								<span class="min-w-0">
-									<span class="ds-row-title">{ step.Title }</span>
-									<span class="ds-row-meta">{ step.Meta }</span>
-								</span>
-								<span class="ds-step-tag" data-done?={ step.Done }>{ step.Tag() }</span>
-								@ui.Icon("ChevronRight", "ds-icon")
-							</button>
+	@ds.DialogWith("power-choices", "Escolher", nil, lazyDialogCloses) {
+		@lazyBody(v, "power-choices") {
+			<div class="ds-steps" data-attr:data-step-open="String($choice_step !== '')">
+				{{ steps := choiceStepsOf(v) }}
+				<nav class="ds-steps-list" aria-label="Escolhas">
+					if len(steps) == 0 {
+						<p class="ds-help">Esta ficha não pede escolha.</p>
+					} else {
+						@ds.List(stepsTitle(steps), "") {
+							for _, step := range steps {
+								<button
+									type="button"
+									class="ds-row ds-step-row"
+									data-on:click={ "$choice_step = '" + step.ID + "'" }
+									data-attr:aria-current={ "$choice_step === '" + step.ID + "' ? 'step' : 'false'" }
+								>
+									<span class="min-w-0">
+										<span class="ds-row-title">{ step.Title }</span>
+										<span class="ds-row-meta">{ step.Meta }</span>
+									</span>
+									<span class="ds-step-tag" data-done?={ step.Done }>{ step.Tag() }</span>
+									@ui.Icon("ChevronRight", "ds-icon")
+								</button>
+							}
 						}
 					}
+				</nav>
+				for _, step := range steps {
+					@choiceStepSection(v, step)
 				}
-			</nav>
-			for _, step := range steps {
-				@choiceStepSection(v, step)
-			}
-		</div>
+			</div>
+		}
 	}
 }
 
