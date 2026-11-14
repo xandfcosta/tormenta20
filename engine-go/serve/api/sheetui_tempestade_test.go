@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"regexp"
 	"strings"
 	"testing"
@@ -17,7 +18,7 @@ import (
 func parallelSheet(t *testing.T, f sceneFixture, id int64, tab string) string {
 	t.Helper()
 	rec := f.requests(t, f.player, http.MethodGet,
-		fmt.Sprintf("/personagens/%d?tab=%s", id, tab), "")
+		fmt.Sprintf("/personagens/%d?tab=%s&datastar=%s", id, tab, url.QueryEscape(openDialogSignals(tab))), "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("ficha, aba %q: status %d", tab, rec.Code)
 	}

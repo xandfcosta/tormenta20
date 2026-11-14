@@ -1,0 +1,25 @@
+package sheetui
+
+import "t20engine/serve/web/ds"
+
+// sheetLazyDialog é o `sheetDialog` do diálogo PESADO, cujo corpo só se desenha aberto (`lazyBody`).
+templ sheetLazyDialog(v View, id, title string, foot templ.Component) {
+	@ds.DialogWith(id, title, foot, lazyDialogCloses) {
+		@refusalInDialog(v)
+		@lazyBody(v, id) {
+			{ children... }
+		}
+	}
+}
+
+// lazyBody desenha o corpo do diálogo `id` só quando ele está aberto (`$sheet_dialog`). Fechado, ele
+// era desenhado a cada vez que a aba aparecia e a cada gesto nela — o Aprender magia, o catálogo do
+// livro inteiro, pesava 125 KB numa cena de 235. Quem abre escreve o sinal e pede a cena
+// (`opensLazyDialog`); até ela chegar, o diálogo diz que está carregando.
+templ lazyBody(v View, id string) {
+	if v.OpenDialog == id {
+		{ children... }
+	} else {
+		<p class="ds-help" id={ id + "-loading" } role="status">Carregando…</p>
+	}
+}

@@ -19,7 +19,7 @@ const twoPowersRefusal = "troca só uma das perícias"
 func refusedOnTab(t *testing.T, f sceneFixture, id int64, tab string) *html.Node {
 	t.Helper()
 	body := f.requests(t, f.player, http.MethodPost,
-		fmt.Sprintf("/personagens/%d/poderes/raca/humano-versatil/sortudo?tab=%s", id, tab), "").Body.String()
+		fmt.Sprintf("/personagens/%d/poderes/raca/humano-versatil/sortudo?tab=%s", id, tab), openDialogSignals(tab)).Body.String()
 	if !strings.Contains(sceneRefusal(body), twoPowersRefusal) {
 		t.Fatalf("a aba %s não trouxe a recusa: %q", tab, sceneRefusal(body))
 	}

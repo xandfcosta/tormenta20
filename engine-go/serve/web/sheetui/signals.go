@@ -59,6 +59,9 @@ type Signals struct {
 	AugmentQuickened *int `json:"augment_quickened"`
 	AugmentAmplified *int `json:"augment_amplified"`
 	AugmentDiscreet  *int `json:"augment_discreet"`
+	// SheetDialog é o diálogo PESADO aberto agora (`spell-learn`, `item-add`, `power-choices`), ou vazio:
+	// o corpo dele só se desenha com ele aberto. Ver `lazyBody`.
+	SheetDialog string `json:"sheet_dialog"`
 	// Os filtros do catálogo de magias.
 	SpellSearch string `json:"spell_search"`
 	SpellCircle string `json:"spell_circle"`

@@ -43,7 +43,7 @@ templ tempestadeByLevel(v View) {
 				<div class="ds-row ds-level-line">
 					<span class="ds-row-title">Escolha pendente</span>
 					<span class="ds-level-actions">
-						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal"}) {
+						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal", "data-on:click": opensLazyDialog(v, "power-choices")}) {
 							Escolher
 						}
 					</span>

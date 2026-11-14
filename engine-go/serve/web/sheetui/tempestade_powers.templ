@@ -28,7 +28,7 @@ templ tempestadePowers(v View) {
 						"data-on:input__debounce.250ms": sheetGet(v),
 					})
 				</div>
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": choicesOpens(v)}) {
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "power-choices", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": choicesOpens(v) + "; " + opensLazyDialog(v, "power-choices")}) {
 					Escolher
 					if n := len(v.Choices.Pending); n > 0 {
 						<span class="ds-badge" aria-hidden="true">{ strconv.Itoa(n) }</span>

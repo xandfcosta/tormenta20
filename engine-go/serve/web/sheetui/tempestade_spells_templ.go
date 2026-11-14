@@ -88,7 +88,7 @@ func tempestadeSpells(v View) templ.Component {
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "spell-learn", "command": "show-modal", "aria-haspopup": "dialog"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "spell-learn", "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": opensLazyDialog(v, "spell-learn")}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1118,7 +1118,7 @@ func learnSpellSheet(v View) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = sheetDialog(v, "spell-learn", "Aprender magia", nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = sheetLazyDialog(v, "spell-learn", "Aprender magia", nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

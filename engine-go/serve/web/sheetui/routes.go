@@ -171,7 +171,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		// cada toque e fecharia o diálogo que o jogador acabou de abrir.
 		Signals: "{sheet_version: '', detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
-			" learn_dialog: false, augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0, augment_quickened: 0, augment_amplified: 0, augment_discreet: 0," +
+			" sheet_dialog: '', augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0, augment_quickened: 0, augment_amplified: 0, augment_discreet: 0," +
 			" spell_search: '', spell_circle: '', spell_school: '', grimoire_search: '', grimoire_circle: ''," +
 			" condition_search: '', buff_search: '', buff_circle: ''," +
 			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +
