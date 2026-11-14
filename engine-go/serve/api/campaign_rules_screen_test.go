@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 // A ABA REGRAS DA MESA: só o mestre escreve, e o jogador lê as regras ligadas.
@@ -276,4 +278,50 @@ func TestEveryTargetAddsToItsNumber(t *testing.T) {
 			t.Errorf("a margem foi de %d a %d, e a regra alarga em 2", before, got)
 		}
 	})
+}
+
+// A RAÇA COMO CONDIÇÃO, inteira: a prévia diz a raça e o efeito juntos.
+func TestThePreviewNamesTheRace(t *testing.T) {
+	f := newSceneFixture(t)
+	body := f.posts(t, f.gm, rulesURL(f, "/rascunho"), `{"table_rule_name":"Couro duro","table_rule_scope":"mesa","table_rule_count":1,
+		"table_rule_kind_1":"race","table_rule_value_1":"minotauro","table_rule_target":"defense","table_rule_amount":2}`)
+	if !strings.Contains(body, "da raça Minotauro: +2 na Defesa") {
+		t.Errorf("a prévia não diz a raça e o efeito:\n%s", body)
+	}
+}
+
+// O INTERRUPTOR É DESENHADO no estado da regra, e o editor reabre com o nome
+// dela. O banco ligar já é do TestTheSwitchTurnsTheRuleOnAndTheSheetFollows; aqui
+// é a tela que precisa dizer o mesmo que o banco.
+func TestTheRuleIsDrawnAsItIsSaved(t *testing.T) {
+	f := newSceneFixture(t)
+	f.posts(t, f.gm, rulesURL(f, "/gravar"), espadaDaCasa)
+	rule, _, _ := theOnlyRule(t, f)
+	switchOn := func() bool {
+		t.Helper()
+		doc, err := html.Parse(strings.NewReader(rulesTab(t, f, f.gm)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		key := findNode(doc, "aria-label", "Ligar Espada da casa")
+		if key == nil {
+			t.Fatal("a lista não desenha o interruptor da regra")
+		}
+		for _, a := range key.Attr {
+			if a.Key == "checked" {
+				return true
+			}
+		}
+		return false
+	}
+	if switchOn() {
+		t.Error("a regra nasce desligada, e o interruptor foi desenhado ligado")
+	}
+	f.posts(t, f.gm, rulesURL(f, "/"+rule+"/ligar"), "{}")
+	if !switchOn() {
+		t.Error("ligada a regra, o interruptor continua desenhado desligado")
+	}
+	if body := f.posts(t, f.gm, rulesURL(f, "/editor?regra="+rule), "{}"); !strings.Contains(body, `"table_rule_name":"Espada da casa"`) {
+		t.Errorf("abrir a regra não traz o nome dela:\n%s", body)
+	}
 }

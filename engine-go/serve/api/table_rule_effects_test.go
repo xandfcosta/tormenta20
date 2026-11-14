@@ -130,6 +130,28 @@ func TestChangingToTauronKeepsWhatTheRuleLends(t *testing.T) {
 	}
 }
 
+// O TIPO DE EFEITO troca os campos do editor: "escolhe poderes de" pede o deus
+// e esconde o "Em quê"; "soma em" faz o contrário. Sem deus escolhido, o editor
+// já nasce com Arsenal, e a prévia o diz.
+func TestTheEffectKindSwapsTheEditorFields(t *testing.T) {
+	f := newSceneFixture(t)
+	draft := func(effect string) string {
+		return f.posts(t, f.gm, rulesURL(f, "/rascunho"), fmt.Sprintf(
+			`{"table_rule_name":"R","table_rule_scope":"mesa","table_rule_count":0,"table_rule_effect":%q}`, effect))
+	}
+	powers := draft("powers-of")
+	if !strings.Contains(powers, `aria-label="De qual deus"`) || strings.Contains(powers, `aria-label="Em quê"`) {
+		t.Error("escolher poderes não troca o \"Em quê\" pelo \"De qual deus\"")
+	}
+	if !strings.Contains(powers, "escolhe poderes de Arsenal") {
+		t.Error("sem deus escolhido, a prévia não diz o Arsenal com que o editor nasce")
+	}
+	adds := draft("adds")
+	if strings.Contains(adds, `aria-label="De qual deus"`) || !strings.Contains(adds, `aria-label="Em quê"`) {
+		t.Error("voltar a somar não devolve o \"Em quê\" nem tira o \"De qual deus\"")
+	}
+}
+
 func TestTheEditorWritesTheNewEffects(t *testing.T) {
 	f := newSceneFixture(t)
 	wielded := `{"table_rule_name":"Cajado","table_rule_scope":"mesa","table_rule_count":1,"table_rule_kind_1":"item","table_rule_value_1":"cajado-arcano","table_rule_effect":"wielded"}`
