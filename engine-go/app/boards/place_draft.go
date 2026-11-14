@@ -247,7 +247,7 @@ func (bs *Store) NewPlace(ctx context.Context, campaignID int64, name, terrain s
 		Campaignid: campaignID, Name: name, State: string(blob),
 		Createdat: now, Updatedat: now,
 	})
-	if err != nil {
+	if err := bs.placesChanged(err, campaignID); err != nil {
 		return board.Place{}, err
 	}
 	return board.Place{ID: row.ID, Name: row.Name, Tokens: 0, UpdatedAt: row.Updatedat}, nil

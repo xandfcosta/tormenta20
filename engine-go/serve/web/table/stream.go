@@ -117,7 +117,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			// A ficha só é relida quando o evento diz que ELA mudou: reler a cada
 			// tique é uma linha por segundo por jogador conectado, quase sempre para
 			// descobrir que nada mudou.
-			sheetTouched = sheetTouched || sheetChanged(ev)
+			sheetTouched = sheetTouched || sheetChanged(ev, view)
 		case <-beat.C:
 		}
 		view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID)
@@ -167,14 +167,18 @@ func PushForMap(s Scene, sse *datastar.ServerSentEventGenerator, sessionID, user
 	return seq
 }
 
-// readerInterests diz o que este stream quer receber: a mesa, sempre; a
-// ficha, só de quem tem uma aqui.
+// readerInterests diz o que este stream quer receber: tudo o que a Mesa MOSTRA. A sessão (a fila, a cena,
+// o tabuleiro); a campanha (as regras, os lugares, o elenco); e a ficha de cada um do Grupo, porque o PV
+// do outro jogador muda pela ficha dele, por HTTP, e a Mesa de todos o desenha.
 //
 // Uma LISTA e não um canal nulo por store: não pedir o interesse diz a mesma
 // coisa sem exigir que quem lê saiba que um canal nulo num `select` nunca
 // dispara.
 func readerInterests(view View) []events.Interest {
-	interests := []events.Interest{events.OfSession(view.SessionID)}
+	interests := []events.Interest{events.OfSession(view.SessionID), events.OfCampaign(view.CampaignID)}
+	for _, member := range view.Group {
+		interests = append(interests, events.OfCharacter(member.CharacterID))
+	}
 	if view.GM == nil && view.Eu != nil {
 		interests = append(interests, events.OfCharacter(view.Eu.CharacterID))
 	}
@@ -192,12 +196,15 @@ func readerInterests(view View) []events.Interest {
 // (`ConditionApplied`, que não existe mais). Ela saiu com o automatismo — hoje quem marca condição é o
 // mestre, pelo gesto da fila, e esse caminho acorda a ficha pelo evento de
 // personagem mexido como qualquer outra edição.
-func sheetChanged(ev events.Event) bool {
+func sheetChanged(ev events.Event, view View) bool {
+	if view.Eu == nil {
+		return false
+	}
 	switch e := ev.(type) {
 	case events.CharacterChanged:
-		return true
+		return e.CharacterID == view.Eu.CharacterID
 	case events.VitalsChanged:
-		return e.CharacterID != 0
+		return e.CharacterID != 0 && e.CharacterID == view.Eu.CharacterID
 	}
 	return false
 }

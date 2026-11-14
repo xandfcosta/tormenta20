@@ -273,7 +273,7 @@ func (s *Server) characterPlays() character.Plays {
 // campaignCast é o ELENCO de NPCs de uma campanha, montado com a mesma TRAVA
 // que os outros gestos da campanha usam.
 func (s *Server) campaignCast() campaign.Cast {
-	return campaign.NewCast(s.queries, s.sessionAccess())
+	return campaign.NewCast(s.queries, s.sessionAccess(), s.bus)
 }
 
 // campaignDirectory é o acervo de campanhas: quais existem para quem pede.
@@ -284,7 +284,7 @@ func (s *Server) campaignDirectory() campaign.Directory {
 // campaignLifecycle é o ciclo de uma campanha: abrir, renomear, cunhar convite,
 // escolher as regras opcionais. Ele recebe a TRAVA e autoriza sozinho.
 func (s *Server) campaignLifecycle() campaign.Lifecycle {
-	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess(), s.sessionLifecycle())
+	return campaign.NewLifecycle(s.db, s.queries, s.sessionAccess(), s.sessionLifecycle(), s.bus)
 }
 
 // campaignSeating senta alguém à mesa: as travas, a cópia do herói e o membro.

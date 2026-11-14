@@ -38,7 +38,7 @@ func (bs *Store) Archive(ctx context.Context, campaignID int64, state *board.Boa
 		_, err = bs.q.UpdateCampaignPlace(ctx, sqlcgen.UpdateCampaignPlaceParams{
 			State: string(blob), Updatedat: now, ID: existing.ID,
 		})
-		return err
+		return bs.placesChanged(err, campaignID)
 	}
 	_, err = bs.q.SaveCampaignPlace(ctx, sqlcgen.SaveCampaignPlaceParams{
 		Campaignid: campaignID,
@@ -47,6 +47,15 @@ func (bs *Store) Archive(ctx context.Context, campaignID int64, state *board.Boa
 		Createdat:  now,
 		Updatedat:  now,
 	})
+	return bs.placesChanged(err, campaignID)
+}
+
+// placesChanged publica que o acervo da campanha mudou quando a gravação deu certo, e devolve o erro
+// dela: a Mesa do mestre desenha o acervo, e só se redesenha quando um evento avisa.
+func (bs *Store) placesChanged(err error, campaignID int64) error {
+	if err == nil {
+		bs.bus.Publish(events.PlacesChanged{CampaignID: campaignID})
+	}
 	return err
 }
 
@@ -211,7 +220,7 @@ func (bs *Store) SavePlaceScene(ctx context.Context, campaignID, placeID int64, 
 	_, err = bs.q.UpdateCampaignPlace(ctx, sqlcgen.UpdateCampaignPlaceParams{
 		State: string(blob), Updatedat: time.Now().UTC().Format(time.RFC3339), ID: placeID,
 	})
-	return err
+	return bs.placesChanged(err, campaignID)
 }
 
 // sanitizeScene aplica à cena que chegou do cliente as MESMAS regras que o
@@ -279,7 +288,7 @@ func (bs *Store) RemovePlace(ctx context.Context, campaignID, placeID int64) err
 	if row.Campaignid != campaignID {
 		return errPlaceFromAnotherCampaign
 	}
-	return bs.q.DeleteCampaignPlace(ctx, placeID)
+	return bs.placesChanged(bs.q.DeleteCampaignPlace(ctx, placeID), campaignID)
 }
 
 var errPlaceFromAnotherCampaign = errors.New("este lugar é de outra crônica")

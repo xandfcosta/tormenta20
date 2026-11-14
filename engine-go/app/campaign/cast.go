@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"t20engine/infra/events"
 
 	"t20engine/app"
 	"t20engine/app/session"
@@ -35,10 +36,12 @@ import (
 type Cast struct {
 	queries *sqlcgen.Queries
 	access  session.Access
+	// bus leva o ato do elenco à Mesa do mestre (`events.CastChanged`).
+	bus *events.Bus
 }
 
-func NewCast(q *sqlcgen.Queries, lock session.Access) Cast {
-	return Cast{queries: q, access: lock}
+func NewCast(q *sqlcgen.Queries, lock session.Access, bus *events.Bus) Cast {
+	return Cast{queries: q, access: lock, bus: bus}
 }
 
 // Save grava um NPC NOVO no elenco e devolve o id dele.
@@ -64,6 +67,7 @@ func (c Cast) Save(
 	if err != nil {
 		return 0, fmt.Errorf("guardar %q no elenco da campanha %d: %w", name, campaignID, err)
 	}
+	c.bus.Publish(events.CastChanged{CampaignID: campaignID})
 	return row.ID, nil
 }
 
@@ -83,6 +87,7 @@ func (c Cast) Update(
 	}); err != nil {
 		return fmt.Errorf("atualizar o npc %d da campanha %d: %w", npcID, campaignID, err)
 	}
+	c.bus.Publish(events.CastChanged{CampaignID: campaignID})
 	return nil
 }
 
@@ -99,6 +104,7 @@ func (c Cast) Erase(ctx context.Context, who app.Caller, campaignID, npcID int64
 	if err := c.queries.DeleteCampaignCreature(ctx, npcID); err != nil {
 		return "", fmt.Errorf("apagar o npc %d da campanha %d: %w", npcID, campaignID, err)
 	}
+	c.bus.Publish(events.CastChanged{CampaignID: campaignID})
 	return row.Name, nil
 }
 
@@ -163,6 +169,7 @@ func (c Cast) CloneBlock(
 	if err != nil {
 		return 0, fmt.Errorf("copiar o npc %d da campanha %d: %w", npcID, campaignID, err)
 	}
+	c.bus.Publish(events.CastChanged{CampaignID: campaignID})
 	return dup.ID, nil
 }
 

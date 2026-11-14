@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"t20engine/infra/events"
 	"time"
 
 	"t20engine/app"
@@ -90,17 +91,18 @@ func (l Lifecycle) SaveTableRule(ctx context.Context, who app.Caller, campaignID
 	if err != nil {
 		return fmt.Errorf("escrever o efeito da regra: %w", err)
 	}
+	ruleChanged := events.TableRuleChanged{CampaignID: campaignID}
 	if draft.ID == "" {
-		return l.queries.InsertCampaignRule(ctx, sqlcgen.InsertCampaignRuleParams{
+		return l.announced(l.queries.InsertCampaignRule(ctx, sqlcgen.InsertCampaignRuleParams{
 			ID: newTableRuleID(), Campaignid: campaignID, Characterid: character, Name: draft.Name,
 			Conditions: string(conditions), Effect: string(effect), Updatedat: dbvalue.NowISO(),
-		})
+		}), ruleChanged)
 	}
 	changed, err := l.queries.RewriteCampaignRule(ctx, sqlcgen.RewriteCampaignRuleParams{
 		Characterid: character, Name: draft.Name, Conditions: string(conditions), Effect: string(effect),
 		Updatedat: dbvalue.NowISO(), ID: draft.ID, Campaignid: campaignID,
 	})
-	return oneRuleChanged(changed, err, draft.ID)
+	return l.announced(oneRuleChanged(changed, err, draft.ID), ruleChanged)
 }
 
 // FlipTableRule liga a regra desligada, e desliga a ligada.
@@ -111,7 +113,7 @@ func (l Lifecycle) FlipTableRule(ctx context.Context, who app.Caller, campaignID
 	changed, err := l.queries.FlipCampaignRule(ctx, sqlcgen.FlipCampaignRuleParams{
 		Updatedat: dbvalue.NowISO(), ID: ruleID, Campaignid: campaignID,
 	})
-	return oneRuleChanged(changed, err, ruleID)
+	return l.announced(oneRuleChanged(changed, err, ruleID), events.TableRuleChanged{CampaignID: campaignID})
 }
 
 // RemoveTableRule apaga a regra.
@@ -120,7 +122,7 @@ func (l Lifecycle) RemoveTableRule(ctx context.Context, who app.Caller, campaign
 		return err
 	}
 	changed, err := l.queries.DropCampaignRule(ctx, sqlcgen.DropCampaignRuleParams{ID: ruleID, Campaignid: campaignID})
-	return oneRuleChanged(changed, err, ruleID)
+	return l.announced(oneRuleChanged(changed, err, ruleID), events.TableRuleChanged{CampaignID: campaignID})
 }
 
 // StampTableSheets carimba as fichas da mesa e diz quais são. A regra muda a conta delas sem tocar na

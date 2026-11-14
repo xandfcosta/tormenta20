@@ -167,6 +167,20 @@ mudou. **Não é event sourcing: o banco é o estado.** As regras são conta
   está nos permitidos do `domain/live` e do `domain/board`, e importar a ficha
   ali daria a ficha aos dois com o guarda de lá verde.
 
+- **Toda gravação que a Mesa MOSTRA publica o evento do alvo dela** — a ficha
+  (`OfCharacter`), a sessão (`OfSession`) ou a campanha (`OfCampaign`, para as
+  regras, as melhorias, os lugares e o elenco). O fluxo da Mesa escuta os três
+  (`readerInterests`), e a gravação sem evento deixa a tela de todo mundo
+  parada, sem erro. **Quem cobra é o `TestEveryWriteTheTableShowsPublishesItsEvent`**:
+  na bancada, o gancho de escrita do SQLite (`db.OpenObserved`) anota cada linha
+  gravada num pedido, e o pedido que gravou sem o evento do alvo reprova a suíte
+  com a rota e a tabela. A dívida mora em `serve/api/testdata/write_watch_baseline.txt`,
+  que só encolhe. **O gancho é o detector, nunca o despertador**: o vocabulário
+  continua por ATO. E gesto novo pede teste, porque rota que nenhum teste
+  exercita não é medida.
+- **Escutar TUDO é só da bancada** (`events.EverythingForTests`);
+  `TestNoProductionCodeListensToEverything` o recusa fora de `_test.go`.
+
 A PORTA não serve aqui: ela só casa com tipos do consumidor, um vocabulário por
 contexto. O que legitima o compartilhamento é ser *shared kernel* — pequeno,
 sem dependências, de todos porque não é de ninguém.
