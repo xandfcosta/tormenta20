@@ -75,8 +75,10 @@ erro: só a reconexão medida mostra.
 ### Sinal de LISTA nunca recebe `null`, ou o pedido chega sem sinal nenhum
 
 O Datastar manda um sinal `null` como `""`, e o `[]string` do struct do servidor
-recusa o corpo INTEIRO: o `ReadSignals` falha e todo sinal daquele pedido cai,
-em silêncio — busca, filtro, aba. Um `json.Marshal` de slice nil escreve `null`,
+recusa o corpo INTEIRO: o `ReadSignals` falha e todo sinal daquele pedido cai —
+busca, filtro, aba. Na ficha, o `sheetSignals` deixa um aviso no log com a rota
+e o motivo (`TestASheetGestureWithUnreadableSignalsLogsTheCause`); a tela segue
+sem os sinais. Um `json.Marshal` de slice nil escreve `null`,
 então **lista que vira expressão sai de um slice não nulo** (`choicesOpens`). O
 `TestTheChoicesOpenerNeverWritesANullList` prende o caso que mordeu.
 
@@ -87,7 +89,7 @@ item e o Escolher eram mais da metade da cena da aba, desenhados e remendados a
 cada gesto. **Diálogo grande usa o `sheetLazyDialog`** (ou o `lazyBody`, no
 Escolher), e **quem o abre usa o `opensLazyDialog`**: o clique escreve o
 `$sheet_dialog` e pede a cena, o corpo chega no remendo e, até lá, o diálogo
-diz "Carregando…". Fechar por qualquer caminho limpa o sinal (`close` do
+diz "Carregando…", já na altura máxima, para não saltar quando o corpo chega. Fechar por qualquer caminho limpa o sinal (`close` do
 `<dialog>`). **O teste que lê o corpo ABRE o diálogo antes**, como o jogador
 (`sheetTabOpen`, `openDialogSignals`).
 
