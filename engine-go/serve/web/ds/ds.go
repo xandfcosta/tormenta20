@@ -168,17 +168,14 @@ func rollTermText(t RollTerm) string {
 const dialogBackdropCloses = "evt.target === el && ((r) => evt.clientX < r.left || evt.clientX > r.right || " +
 	"evt.clientY < r.top || evt.clientY > r.bottom)(el.getBoundingClientRect()) && el.close()"
 
-// SoftNav é a TROCA MACIA de aba (ver o GLOSSARY): o link guarda o endereço no
-// histórico e pede a cena pelo `@get`, sem recarregar a página. Com Ctrl, Cmd
-// ou Shift ele volta a ser link comum, para abrir noutra guia. A entrada de
-// onde se saiu também é marcada, senão o voltar até ela não recarregaria (ver
-// o `popstate` do `scene.ts`).
+// SoftNav é a TROCA MACIA de aba (ver o GLOSSARY): o link pede a cena pelo
+// `@get`, sem recarregar a página, e o ENDEREÇO quem troca é a resposta do
+// servidor (`sse.ReplaceURL`), e não o cliente — o histórico é do navegador.
+// Com Ctrl, Cmd ou Shift ele volta a ser link comum, para abrir noutra guia.
 //
 //	@ds.Tab(href, current, ds.SoftNav())
 func SoftNav() templ.Attributes {
 	return templ.Attributes{"data-on:click": softNavigation}
 }
 
-const softNavigation = "!(evt.ctrlKey || evt.metaKey || evt.shiftKey) && (evt.preventDefault(), " +
-	"history.state?.softNav || history.replaceState({softNav: true}, ''), " +
-	"history.pushState({softNav: true}, '', el.href), @get(el.href))"
+const softNavigation = "!(evt.ctrlKey || evt.metaKey || evt.shiftKey) && (evt.preventDefault(), @get(el.href))"

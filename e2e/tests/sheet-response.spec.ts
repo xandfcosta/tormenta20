@@ -6,7 +6,9 @@ import { expect, type Page, test } from '@playwright/test'
  * `datastar-fetch` com o elemento que disparou) e o HISTÓRICO da aba.
  *
  * O servidor já responde em ~30ms; o que se sentia era o botão sem retorno
- * nenhum até a resposta, e a troca de aba recarregando a página inteira.
+ * nenhum até a resposta, e a troca de aba recarregando a página inteira. A
+ * aba troca só a cena, e o ENDEREÇO quem troca é o servidor (ALE-637): o
+ * cliente não escreve no histórico, e o voltar sai da ficha.
  */
 test.use({ storageState: '.auth/user.json' })
 
@@ -55,7 +57,7 @@ for (const [where, width, nav] of [
   ['no desktop, pelas abas', 1440, 'Seções da ficha'],
   ['no celular, pela barra de baixo', 390, 'Seções da ficha'],
 ] as const) {
-  test(`trocar de aba não recarrega a página, e o voltar devolve a aba (${where})`, async ({ page }) => {
+  test(`trocar de aba não recarrega a página, o endereço acompanha, e o voltar sai da ficha (${where})`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     const id = await tanqueId(page)
     await page.goto(`/personagens/${id}?tab=expertises&tempestade=1`)
@@ -75,8 +77,8 @@ for (const [where, width, nav] of [
       'a troca de aba recarregou a página',
     ).toBe(true)
 
+    // O voltar SAI da ficha (decisão do dono): a troca de aba substitui o endereço, e não empilha.
     await page.goBack()
-    await expect(page).toHaveURL(/tab=expertises/)
-    await expect(page.getByRole('region', { name: 'Perícias' })).toBeVisible()
+    await expect(page).toHaveURL(/\/personagens$/)
   })
 }

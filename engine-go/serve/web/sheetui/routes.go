@@ -158,6 +158,12 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		sse := datastar.NewSSE(w, r)
 		_ = sse.PatchElements(fragment)
 		patchActionsAlong(r, sse, view)
+		// O ENDEREÇO É DO SERVIDOR: a aba trocou só a cena, e a resposta põe o endereço dela no lugar do
+		// atual, para o F5 e o link guardado abrirem a aba certa. Substitui, e não empilha: o voltar sai da
+		// ficha (decisão do dono). Dentro da Mesa o endereço é o da sessão, e não muda.
+		if !view.Embedded {
+			_ = sse.ReplaceURL(addressOfTheTab(r))
+		}
 		return
 	}
 	s.deps.WritePage(w, r, http.StatusOK, ui.Page{
@@ -180,6 +186,16 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" power_search: '', stance_degrees: 0, power: '', show_passives: false, wild_form: '', wild_tier: '', wild_damage: '', wild_move: ''," +
 			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', vital_temp_amount: '', " + ExpertiseSpendsDeclaration() + "}",
 	}, SceneBody(view))
+}
+
+// addressOfTheTab é o endereço que a página mostra para esta aba: o do pedido, sem os sinais que o `@get`
+// manda na query.
+func addressOfTheTab(r *http.Request) url.URL {
+	address := url.URL{Path: r.URL.Path}
+	query := r.URL.Query()
+	query.Del("datastar")
+	address.RawQuery = query.Encode()
+	return address
 }
 
 // insideSessionAsked diz se este pedido veio da superfície "Minha ficha" da
