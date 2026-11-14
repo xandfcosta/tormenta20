@@ -123,7 +123,7 @@ func TestThePlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	body := f.requests(t, f.player, "POST",
 		f.tableUrl()+"/tabuleiro/"+ogre+"/parada", `{"from":{"X":6,"Y":5}}`).Body.String()
 	if !strings.Contains(body, "não é sua") {
-		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", trechoDeSinais(body))
+		t.Errorf("a recusa não explica de quem é a peça; sinais = %s", signalsLine(body))
 	}
 	if boardRead(f.s.tableHost().Boards().Get(context.Background(), f.sessionID, defaultTab)).Pending != nil {
 		t.Error("o movimento recusado virou proposta mesmo assim")
@@ -221,12 +221,12 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	if proposal.Code != http.StatusOK {
 		t.Fatalf("a parada cara deu %d: sem provisório não há trecho vermelho para desenhar", proposal.Code)
 	}
-	if signals := trechoDeSinais(proposal.Body.String()); !strings.Contains(signals, `"move_error":""`) {
+	if signals := signalsLine(proposal.Body.String()); !strings.Contains(signals, `"move_error":""`) {
 		t.Errorf("a parada cara acendeu uma recusa que já não é dela; sinais = %s", signals)
 	}
 
 	refused := f.requests(t, f.player, "POST", base+"/confirmar", "").Body.String()
-	sig := trechoDeSinais(refused)
+	sig := signalsLine(refused)
 	if !strings.Contains(sig, "move_error") {
 		t.Errorf("a recusa não saiu no sinal do movimento; sinais = %s", sig)
 	}
@@ -237,8 +237,8 @@ func TestARefusedStopSpeaksOnTheBoard(t *testing.T) {
 	// E APAGA no acerto: um sinal que só se escreve quando dá errado deixa a
 	// recusa de duas paradas atrás acesa sobre uma que funcionou.
 	accepted := f.requests(t, f.player, "POST", base+"/parada", `{"from":{"X":2,"Y":0}}`).Body.String()
-	if !strings.Contains(trechoDeSinais(accepted), `"move_error":""`) {
-		t.Errorf("a parada válida não apagou a recusa anterior; sinais = %s", trechoDeSinais(accepted))
+	if !strings.Contains(signalsLine(accepted), `"move_error":""`) {
+		t.Errorf("a parada válida não apagou a recusa anterior; sinais = %s", signalsLine(accepted))
 	}
 }
 

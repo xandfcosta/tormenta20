@@ -14,6 +14,12 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Os guardas da aba PODERES (ALE-272, fatia 8).
+//
+// O que eles prendem é a REGRA — o que o personagem possui, o que ele pode
+// ativar agora, e o que entrar numa postura custa — e a decisão de tela que
+// separa o que se USA do que só está lá.
+
 func barbaro(t *testing.T, level int64) (sceneFixture, int64) {
 	t.Helper()
 	return barbarianWithMpSpent(t, level, 0)

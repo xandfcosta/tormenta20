@@ -36,7 +36,7 @@ func TestTheGmOpensTheSceneThroughTheDialog(t *testing.T) {
 	// O formulário volta ao zero: sem isto a cena seguinte nasce com o nome da
 	// anterior, e no fim da noite ninguém confere o campo antes de clicar.
 	if !strings.Contains(rec.Body.String(), `"new_place":""`) {
-		t.Errorf("o campo do lugar não foi limpo; sinais = %s", trechoDeSinais(rec.Body.String()))
+		t.Errorf("o campo do lugar não foi limpo; sinais = %s", signalsLine(rec.Body.String()))
 	}
 }
 

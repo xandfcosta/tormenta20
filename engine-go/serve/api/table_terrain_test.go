@@ -161,6 +161,6 @@ func TestPaintingWithoutABoardRefusesWithASentence(t *testing.T) {
 	f := newSceneFixture(t)
 	body := f.requests(t, f.gm, "POST", f.tableUrl()+"/tabuleiro/terreno", stroke("dificil", 1, 1, 1, 1)).Body.String()
 	if !strings.Contains(body, "esta sessão não tem tabuleiro aberto") {
-		t.Errorf("a recusa não explica o que faltou; sinais = %s", trechoDeSinais(body))
+		t.Errorf("a recusa não explica o que faltou; sinais = %s", signalsLine(body))
 	}
 }

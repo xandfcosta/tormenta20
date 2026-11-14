@@ -16,7 +16,7 @@ func TestThePreviewDrawsWithoutTouchingTheScene(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("a prévia deu %d", rec.Code)
 	}
-	signals := trechoDeSinais(rec.Body.String())
+	signals := signalsLine(rec.Body.String())
 
 	// Cinco casas para o leste custam 5, que cabem no deslocamento de 6: fio de
 	// uma faixa só, e a frase nomeando a ação.
@@ -55,7 +55,7 @@ func TestThePreviewExtendsThePathAlreadyDrawn(t *testing.T) {
 	if rec := f.requests(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
 		t.Fatalf("a primeira parada deu %d", rec.Code)
 	}
-	signals := trechoDeSinais(f.requests(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
+	signals := signalsLine(f.requests(t, f.player, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
 
 	// Três mais três: o total é 6, e não 3. Recomeçar daria "3 de 6".
 	if !strings.Contains(signals, "6 de 6 quadrados") {
@@ -77,7 +77,7 @@ func TestThePreviewPaintsTheThreeBands(t *testing.T) {
 	tokenID := f.onBoardAt(t, 0, 0)
 	f.turnPlayer(t)
 
-	signals := trechoDeSinais(f.requests(t, f.player, http.MethodPost,
+	signals := signalsLine(f.requests(t, f.player, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
 	for _, wire := range []string{"preview_arrow_fits", "preview_arrow_second", "preview_arrow_beyond"} {
@@ -98,7 +98,7 @@ func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 	f := newSceneFixture(t)
 	tokenID := f.onBoardAt(t, 0, 0)
 
-	signals := trechoDeSinais(f.requests(t, f.gm, http.MethodPost,
+	signals := signalsLine(f.requests(t, f.gm, http.MethodPost,
 		f.tableUrl()+"/tabuleiro/"+tokenID+"/previa", `{"from":{"X":15,"Y":0}}`).Body.String())
 
 	if !strings.Contains(signals, `"preview_arrow_second":""`) || !strings.Contains(signals, `"preview_arrow_beyond":""`) {

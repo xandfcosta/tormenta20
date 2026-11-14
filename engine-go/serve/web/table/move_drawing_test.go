@@ -18,7 +18,7 @@ import (
 // O que estes guardas prendem é o NÚMERO: em que ponto do plano cada cor começa.
 // Se o fio azul é azul mesmo, quem responde é a folha de estilo e o olho.
 
-func quadrados(pares ...[2]int) []engine.Square {
+func squaresAt(pares ...[2]int) []engine.Square {
 	qs := make([]engine.Square, len(pares))
 	for i, p := range pares {
 		qs[i] = engine.Square{X: p[0], Y: p[1]}
@@ -28,7 +28,7 @@ func quadrados(pares ...[2]int) []engine.Square {
 
 func brejoEm(pares ...[2]int) engine.MoveTerrain {
 	hard := map[engine.Square]bool{}
-	for _, q := range quadrados(pares...) {
+	for _, q := range squaresAt(pares...) {
 		hard[q] = true
 	}
 	return engine.MoveTerrain{Difficult: hard}
@@ -41,7 +41,7 @@ func brejoEm(pares ...[2]int) engine.MoveTerrain {
 // peça também para. O resto é AZUL e não vermelho: 9 cabe em 12, ou seja, cabe
 // na segunda ação de movimento.
 func TestTheGoldEndsWhereTheMoveActionEnds(t *testing.T) {
-	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{9, 0}), []int{9}, 6)
+	gold, blue, red := moveWires(squaresAt([2]int{0, 0}, [2]int{9, 0}), []int{9}, 6)
 
 	if gold != "M 0.5 0.5 L 6.5 0.5" {
 		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", gold)
@@ -59,7 +59,7 @@ func TestTheGoldEndsWhereTheMoveActionEnds(t *testing.T) {
 // Vinte casas rasas com deslocamento de 6: o ouro vai até 6, o azul de 6 a 12, e
 // o que passa de 12 não cabe no turno — não há terceira ação de movimento.
 func TestTheRedStartsAfterBothActions(t *testing.T) {
-	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{20, 0}), []int{20}, 6)
+	gold, blue, red := moveWires(squaresAt([2]int{0, 0}, [2]int{20, 0}), []int{20}, 6)
 
 	if gold != "M 0.5 0.5 L 6.5 0.5" {
 		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", gold)
@@ -78,7 +78,7 @@ func TestTheRedStartsAfterBothActions(t *testing.T) {
 // Sem ele, "achei ouro" não se distingue de "o ouro é o caminho inteiro sempre",
 // e as duas tesouras poderiam estar cortando em qualquer lugar.
 func TestThePathThatFitsInTheMoveActionIsPureGold(t *testing.T) {
-	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{3, 0}), []int{3}, 6)
+	gold, blue, red := moveWires(squaresAt([2]int{0, 0}, [2]int{3, 0}), []int{3}, 6)
 
 	if blue != "" || red != "" {
 		t.Errorf("três quadrados sobre um deslocamento de seis pintaram %q de azul e %q de vermelho", blue, red)
@@ -94,7 +94,7 @@ func TestThePathThatFitsInTheMoveActionIsPureGold(t *testing.T) {
 // Oito cabe em doze, então o resto é azul: este é o caminho que antes era
 // RECUSADO pelo servidor, e hoje é um movimento legítimo que custa o turno todo.
 func TestTheBookDiagonalDecidesTheFirstTurn(t *testing.T) {
-	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{4, 4}), []int{8}, 6)
+	gold, blue, red := moveWires(squaresAt([2]int{0, 0}, [2]int{4, 4}), []int{8}, 6)
 
 	if gold != "M 0.5 0.5 L 3.5 3.5" {
 		t.Errorf("o ouro saiu %q, esperado até o centro de (3,3)", gold)
@@ -112,7 +112,7 @@ func TestTheBookDiagonalDecidesTheFirstTurn(t *testing.T) {
 // Sem vez não há ação padrão para trocar por movimento, então azul e vermelho
 // não querem dizer nada: desenhá-los inventaria um teto que a cena não tem.
 func TestOutOfCombatTheArrowIsGoldAllTheWay(t *testing.T) {
-	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{40, 0}), []int{40}, -1)
+	gold, blue, red := moveWires(squaresAt([2]int{0, 0}, [2]int{40, 0}), []int{40}, -1)
 
 	if blue != "" || red != "" {
 		t.Errorf("sem orçamento a seta pintou %q de azul e %q de vermelho", blue, red)
@@ -131,7 +131,7 @@ func TestOutOfCombatTheArrowIsGoldAllTheWay(t *testing.T) {
 // de traduzir o índice e é aqui que ela se perderia, com a linha continuando a
 // sair, só que com as cores no lugar errado.
 func TestBothTurnsOnTheSameLeg(t *testing.T) {
-	gold, blue, red := moveWires(quadrados([2]int{0, 0}, [2]int{30, 0}), []int{30}, 6)
+	gold, blue, red := moveWires(squaresAt([2]int{0, 0}, [2]int{30, 0}), []int{30}, 6)
 
 	if gold != "M 0.5 0.5 L 6.5 0.5" {
 		t.Errorf("o ouro saiu %q", gold)
@@ -153,7 +153,7 @@ func TestBothTurnsOnTheSameLeg(t *testing.T) {
 // pontas perderia a dobra e a seta azul viraria uma reta por cima do mapa.
 func TestOnThePolylineTheBlueCrossesTheBend(t *testing.T) {
 	gold, blue, red := moveWires(
-		quadrados([2]int{0, 0}, [2]int{8, 0}, [2]int{8, 8}), []int{8, 8}, 6)
+		squaresAt([2]int{0, 0}, [2]int{8, 0}, [2]int{8, 8}), []int{8, 8}, 6)
 
 	if gold != "M 0.5 0.5 L 6.5 0.5" {
 		t.Errorf("o ouro saiu %q, esperado até o centro de (6,0)", gold)
@@ -181,7 +181,7 @@ func TestOnThePolylineTheBlueCrossesTheBend(t *testing.T) {
 // para poria 50% de dourado sob um rótulo que pede 67%, e as duas metades se
 // desmentiriam na mesma linha. Quem mostra as casas percorridas é a TRILHA.
 func TestTheMarshShortensTheGoldByCost(t *testing.T) {
-	gold, _, _ := moveWires(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{9}, 6)
+	gold, _, _ := moveWires(squaresAt([2]int{0, 0}, [2]int{6, 0}), []int{9}, 6)
 
 	if gold != "M 0.5 0.5 L 4.5 0.5" {
 		t.Errorf("com a perna custando 9 e a ação de movimento pagando 6, o ouro saiu %q, esperado em dois terços da linha", gold)
@@ -193,7 +193,7 @@ func TestTheMarshShortensTheGoldByCost(t *testing.T) {
 // Seis casas para o leste custam 6 e cabem num deslocamento de 6. Sem ele, "o
 // ouro parou em 4,5" não se distingue de "o ouro para sempre em dois terços".
 func TestWithoutTheMarshTheSameLegFitsWhole(t *testing.T) {
-	gold, blue, _ := moveWires(quadrados([2]int{0, 0}, [2]int{6, 0}), []int{6}, 6)
+	gold, blue, _ := moveWires(squaresAt([2]int{0, 0}, [2]int{6, 0}), []int{6}, 6)
 
 	if blue != "" {
 		t.Errorf("seis casas rasas sobre um deslocamento de seis pintaram %q de azul", blue)
@@ -211,7 +211,7 @@ func TestWithoutTheMarshTheSameLegFitsWhole(t *testing.T) {
 // linha. A divergência é aceita porque o metro do rótulo precisa ser o mesmo
 // metro do deslocamento: é ele que explica onde cada cor começa.
 func TestTheLegLabelCountsTheCostAndNotTheGeometry(t *testing.T) {
-	folds := quadrados([2]int{0, 0}, [2]int{4, 0})
+	folds := squaresAt([2]int{0, 0}, [2]int{4, 0})
 	swamp := brejoEm([2]int{1, 0}, [2]int{2, 0}, [2]int{3, 0}, [2]int{4, 0})
 
 	legs := moveLegs(folds, legsCosts(folds, swamp))
@@ -232,7 +232,7 @@ func TestTheLegLabelCountsTheCostAndNotTheGeometry(t *testing.T) {
 // Sem isto, uma polilinha ganharia um número só — e o pedido é a distância
 // "entre paradas", que é justamente o que uma soma esconde.
 func TestEachLegGetsItsOwnLabel(t *testing.T) {
-	folds := quadrados([2]int{0, 0}, [2]int{2, 0}, [2]int{2, 4})
+	folds := squaresAt([2]int{0, 0}, [2]int{2, 0}, [2]int{2, 4})
 
 	legs := moveLegs(folds, legsCosts(folds, engine.MoveTerrain{}))
 

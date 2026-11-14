@@ -13,7 +13,7 @@ func TestSendingToTheTablePutsOneRowPerCopy(t *testing.T) {
 	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":3}`)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("mandar para a mesa deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
+		t.Fatalf("mandar para a mesa deu %d: %s", rec.Code, signalsLine(rec.Body.String()))
 	}
 
 	queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
@@ -50,7 +50,7 @@ func TestTheCopyCeilingIsEnforcedOnTheServer(t *testing.T) {
 
 	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"goblin-salteador","entry_hp":4,"entry_initiative":13,"entry_copies":99}`)
-	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "99") {
+	if body := signalsLine(rec.Body.String()); !strings.Contains(body, "99") {
 		t.Errorf("a recusa não citou o valor ofensivo; sinais = %s", body)
 	}
 	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 0 {
@@ -66,7 +66,7 @@ func TestAnInventedCreatureIsRefused(t *testing.T) {
 
 	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
-	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "grifo-de-neon") {
+	if body := signalsLine(rec.Body.String()); !strings.Contains(body, "grifo-de-neon") {
 		t.Errorf("a recusa não citou a criatura; sinais = %s", body)
 	}
 	if n := len(stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative); n != 0 {
@@ -87,11 +87,11 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 
 	// Primeira abertura: o rascunho na tela não é de ninguém ainda.
 	opened := f.datastarGet(t, f.gm, panel+signals(`{"creature":"zumbi","draft_of":""}`))
-	if !strings.Contains(trechoDeSinais(opened), `"entry_hp":20`) {
-		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", trechoDeSinais(opened))
+	if !strings.Contains(signalsLine(opened), `"entry_hp":20`) {
+		t.Errorf("abrir o Zumbi não semeou o PV do livro (20); sinais = %s", signalsLine(opened))
 	}
-	if !strings.Contains(trechoDeSinais(opened), `"draft_of":"zumbi"`) {
-		t.Errorf("o rascunho não ficou marcado como do Zumbi; sinais = %s", trechoDeSinais(opened))
+	if !strings.Contains(signalsLine(opened), `"draft_of":"zumbi"`) {
+		t.Errorf("o rascunho não ficou marcado como do Zumbi; sinais = %s", signalsLine(opened))
 	}
 
 	// Segunda visita à MESMA criatura, agora com o rascunho já sendo dela: é o
@@ -107,7 +107,7 @@ func TestThePanelSeedsTheDraftOnlyWhenAnotherCreatureOpens(t *testing.T) {
 	// palavra `pvdoverbete` também aparece no HTML, no `data-bind` do campo de
 	// ajuste. Procurá-la no corpo casava com o desenho e acusava o código por um
 	// defeito que era do teste.
-	if signals := trechoDeSinais(again); strings.Contains(signals, "entry_hp") {
+	if signals := signalsLine(again); strings.Contains(signals, "entry_hp") {
 		t.Errorf("filtrar semeou o rascunho de novo e apagaria o ajuste do mestre; sinais = %s", signals)
 	}
 }

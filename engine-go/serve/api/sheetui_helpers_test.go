@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-// Os ajudantes de leitura da cena da ficha, COPIADOS de `web/sheetui`.
+// Os ajudantes de leitura da cena da ficha.
 //
-// A cópia é deliberada: importar o ajudante do pacote que está sendo testado faz
-// o teste andar junto com o defeito. Eles leem HTML servido e não dependem de
-// uma linha da cena.
+// Eles moram aqui e não em `web/sheetui` de propósito: importar o ajudante do
+// pacote que está sendo testado faz o teste andar junto com o defeito. Eles leem
+// HTML servido e não dependem de uma linha da cena.
 
 // sceneAlert acha a frase da recusa: a cena responde 200 com a página inteira
 // redesenhada, e a única marca do "não deu" é o `role="alert"`. Ver a armadilha
@@ -29,7 +29,7 @@ func actionsSlice(screen string) string {
 	}
 	return screen[start : start+end]
 }
-func existe(m map[string]bool, key string) bool {
+func hasKey(m map[string]bool, key string) bool {
 	_, found := m[key]
 	return found
 }
@@ -79,6 +79,8 @@ var panelTitle = map[string]string{
 	"abilities":     "Poderes",
 }
 
+// powerPanel corta a LISTA, deixando de fora os diálogos que vêm depois
+// dela — o de escolher poderes mostra o catálogo inteiro de opções.
 func powerPanel(screen string) string {
 	// O CORTE é no ABRIR do primeiro diálogo, e não no primeiro `</section>`: as
 	// duas seções da lista são `<section>` ANINHADAS, e cortar no primeiro
@@ -104,6 +106,14 @@ func sceneRefusal(body string) string {
 	return html.UnescapeString(found[1])
 }
 
+// screenSaved recorta só a GRADE, e o recorte não é preciosismo: o nome de
+// um item aparece também nos crachás da tira e em CADA diálogo de ficha de
+// item, que são desenhados logo depois do painel. Procurar na tela inteira
+// acharia justamente o que o filtro escondeu, e o teste passaria dizendo o
+// contrário do que mede.
+//
+// O corte vai da grade até o fim da SEÇÃO, que é onde o painel acaba e os
+// diálogos começam.
 func screenSaved(screen string) string {
 	start := strings.Index(screen, "grid-cols-3")
 	if start < 0 {

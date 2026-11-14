@@ -13,6 +13,13 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Os guardas da MOCHILA (ALE-272, fatia 7).
+//
+// O que eles prendem é a REGRA e a DECISÃO de tela: os dois tetos da p141, o
+// eixo de equipar, a conta do dinheiro, e o que a tira faz com um item que já
+// está fora do teto. Os números da carga não são reafirmados aqui — eles vêm do
+// motor e têm guarda de regra própria em `engine/load_rules_test.go`.
+
 func bagScreen(t *testing.T, f sceneFixture, id int64) string {
 	t.Helper()
 	return f.requests(t, f.player, http.MethodGet,

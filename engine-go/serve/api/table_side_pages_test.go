@@ -176,7 +176,7 @@ func TestTheCastPageDrawsTheCastWithItsVerbs(t *testing.T) {
 	}
 	sent := f.posts(t, f.gm, fmt.Sprintf("%s/elenco/npc/%d/na-fila?pagina=elenco", f.tableUrl(), varek), "")
 	if !strings.Contains(sent, "Capitão Varek entrou na fila.") {
-		t.Errorf("o Pôr na fila do Elenco não diz que funcionou: %s", trechoDeSinais(sent))
+		t.Errorf("o Pôr na fila do Elenco não diz que funcionou: %s", signalsLine(sent))
 	}
 }
 
@@ -210,7 +210,7 @@ func TestTheBestiaryPageListsTheCreaturesAndSendsToTheQueue(t *testing.T) {
 	refused := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
 	if !strings.Contains(refused, `"entry_sent":""`) {
-		t.Errorf("a recusa deixou a frase do acerto acesa: %s", trechoDeSinais(refused))
+		t.Errorf("a recusa deixou a frase do acerto acesa: %s", signalsLine(refused))
 	}
 	sent := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
 		`{"creature":"ogro","entry_hp":30,"entry_initiative":7,"entry_copies":2}`)
