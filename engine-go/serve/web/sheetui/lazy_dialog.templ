@@ -20,6 +20,6 @@ templ lazyBody(v View, id string) {
 	if v.OpenDialog == id {
 		{ children... }
 	} else {
-		<p class="ds-help" id={ id + "-loading" } role="status">Carregando…</p>
+		<p class="ds-help ds-dialog-loading" id={ id + "-loading" } role="status">Carregando…</p>
 	}
 }

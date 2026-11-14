@@ -1355,6 +1355,11 @@
   .ds-dialog::backdrop {
     background: rgb(0 0 0 / 0.4);
   }
+  /* O CORPO QUE AINDA VEM (`lazyBody`): o diálogo abre já na altura máxima, que é a que os diálogos
+   * pesados ocupam carregados, em vez de abrir com uma linha e saltar quando o remendo chega. */
+  .ds-dialog:has(.ds-dialog-loading) {
+    height: calc(100dvh - 2rem);
+  }
   @media (max-width: 40rem) {
     .ds-dialog {
       width: 100vw;
