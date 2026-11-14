@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"t20engine/infra/events"
 
 	"t20engine/app"
 	"t20engine/app/character"
@@ -30,15 +31,24 @@ type Party struct {
 	// plays entra por fora porque ele precisa do `*sql.DB` para as transações
 	// dele, e este pacote não tem — quem monta os dois é o `serve/api`.
 	plays character.Plays
+	// bus avisa cada ficha que o gesto do grupo tocou (`sheetTouched`).
+	bus *events.Bus
 }
 
 func NewParty(
-	q *sqlcgen.Queries, sessions *session.Store, catalogs *engine.Catalogs, plays character.Plays,
+	q *sqlcgen.Queries, sessions *session.Store, catalogs *engine.Catalogs, plays character.Plays, bus *events.Bus,
 ) Party {
 	return Party{
 		queries: q, sessions: sessions,
-		scopes: NewScopes(q, catalogs), access: session.NewAccess(q), plays: plays,
+		scopes: NewScopes(q, catalogs), access: session.NewAccess(q), plays: plays, bus: bus,
 	}
+}
+
+// sheetTouched avisa que o gesto do grupo passou pela ficha `characterID` — a ficha aberta e a Mesa só
+// se redesenham no evento. Também na ficha cuja parte falhou: o gesto pode ter pousado pela metade, e o
+// fluxo que acordar à toa compara a versão e não manda nada.
+func (p Party) sheetTouched(characterID int64) {
+	p.bus.Publish(events.CharacterChanged{CharacterID: characterID})
 }
 
 // StartScene é o gesto "Iniciar cena" INTEIRO: a cena abre E o grupo recebe o
@@ -86,6 +96,7 @@ func (p Party) grantsWhatBeginsWithTheScene(ctx context.Context, campaignID, ses
 			log.Printf("sessão %d: a concessão de início de cena do personagem %d falhou (%v)",
 				sessionID, id, err)
 		}
+		p.sheetTouched(id)
 	}
 }
 
@@ -148,6 +159,7 @@ func (p Party) RestForTheDay(
 		if p.restOne(ctx, who, sessionID, id, condition) {
 			done++
 		}
+		p.sheetTouched(id)
 	}
 	return done, len(sheets), nil
 }
@@ -162,7 +174,9 @@ func (p Party) expireScene(
 		return 0, 0, err
 	}
 	for _, id := range sheets {
-		if err := p.scopes.EndScene(ctx, who, id); err != nil {
+		err := p.scopes.EndScene(ctx, who, id)
+		p.sheetTouched(id)
+		if err != nil {
 			log.Printf("campanha %d: encerrar a cena do personagem %d falhou (%v)", campaignID, id, err)
 			continue
 		}

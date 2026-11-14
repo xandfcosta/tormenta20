@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"t20engine/app"
 	"t20engine/domain/markdown"
+	"t20engine/infra/events"
 	"t20engine/serve/web/ui"
 
 	"github.com/go-chi/chi/v5"
@@ -120,6 +121,10 @@ func (s Scene) notesCommand(
 	}
 	if readErr == nil && ruleErr == nil {
 		ruleErr = s.saveNote(r, campaignID, sessionID, novo)
+	}
+	if readErr == nil && ruleErr == nil {
+		// As notas moram na linha da sessão, e a Mesa do mestre em outra aba só se redesenha no evento.
+		s.deps.Bus().Publish(events.SessionChanged{SessionID: sessionID})
 	}
 	s.respondNotes(w, r, campaignID, sessionID, novo, primeiroErro(readErr, ruleErr))
 }

@@ -246,10 +246,15 @@ func (l Lifecycle) Delete(ctx context.Context, who app.Caller, campaignID int64)
 	if _, err := l.access.OwnedCampaign(ctx, who, campaignID); err != nil {
 		return err
 	}
-	l.forgetSessionsInMemory(ctx, campaignID)
+	sessions := l.forgetSessionsInMemory(ctx, campaignID)
 	if err := l.queries.DeleteCampaign(ctx, campaignID); err != nil {
 		return fmt.Errorf("apagar a campanha %d: %w", campaignID, err)
 	}
+	// DEPOIS de apagar: quem acordar lê a ausência. As sessões saíram pela cascata, e cada uma avisa.
+	for _, sessionID := range sessions {
+		l.bus.Publish(events.SessionDeleted{SessionID: sessionID})
+	}
+	l.bus.Publish(events.CampaignDeleted{CampaignID: campaignID})
 	return nil
 }
 
@@ -273,14 +278,17 @@ func (l Lifecycle) NewSession(ctx context.Context, who app.Caller, campaignID in
 }
 
 // forgetSessionsInMemory tira do mapa o estado vivo de toda sessão da campanha.
-func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campaignID int64) {
+func (l Lifecycle) forgetSessionsInMemory(ctx context.Context, campaignID int64) []int64 {
 	sessions, err := l.queries.ListSessions(ctx, campaignID)
 	if err != nil {
 		log.Printf("campanha %d: não deu para listar as sessões antes de apagar (%v); "+
 			"o estado em memória delas fica até o reinício", campaignID, err)
-		return
+		return nil
 	}
+	ids := make([]int64, 0, len(sessions))
 	for _, sess := range sessions {
 		l.sessions.ForgetSession(sess.ID)
+		ids = append(ids, sess.ID)
 	}
+	return ids
 }

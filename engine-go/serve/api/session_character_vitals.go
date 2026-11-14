@@ -38,6 +38,16 @@ import (
 type sheetVitals struct {
 	q        *sqlcgen.Queries
 	catalogs func() *engine.Catalogs
+	// touched avisa que a ficha foi gravada — o `CharacterChanged` dela, publicado na hora ou depois do
+	// commit da unidade, conforme quem montou o adaptador. Todo método que grava a ficha chama o `touch`.
+	touched func(characterID int64)
+}
+
+// touch avisa que a ficha `charID` foi gravada.
+func (v sheetVitals) touch(charID int64) {
+	if v.touched != nil {
+		v.touched(charID)
+	}
 }
 
 // AddCondition acende uma condição na ficha, sem apagar as que já estão.
@@ -51,6 +61,7 @@ type sheetVitals struct {
 // REPETIDA não duplica: derrubar quem já está caído confirma o estado em vez de
 // escrever "caido" duas vezes numa lista que a tela desenha como crachás.
 func (v sheetVitals) AddCondition(ctx context.Context, charID int64, condition string) error {
+	defer v.touch(charID)
 	if !catalog.IsCondition(condition) {
 		return fmt.Errorf("condição desconhecida: %q — esperava um id do catálogo", condition)
 	}
@@ -75,6 +86,7 @@ func (v sheetVitals) AddCondition(ctx context.Context, charID int64, condition s
 func (v sheetVitals) ApplyDelta(
 	ctx context.Context, charID int64, hpDelta, mpDelta *int64, nonLethal int64,
 ) (*int64, *int64, error) {
+	defer v.touch(charID)
 	return v.applyRule(ctx, charID, func(p sheet.Pools) (sheet.Pools, error) {
 		if hpDelta != nil && *hpDelta < 0 {
 			plan, err := sheet.DrainTempHpAndHit(ctx, v.q, charID, p.HpCurrent, int(-*hpDelta))
@@ -104,6 +116,7 @@ func (v sheetVitals) ApplyDelta(
 func (v sheetVitals) SpendMana(
 	ctx context.Context, charID int64, amount int,
 ) (*int64, *int64, error) {
+	defer v.touch(charID)
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
@@ -120,6 +133,7 @@ func (v sheetVitals) SpendMana(
 func (v sheetVitals) SpendManaKeepingReceipt(
 	ctx context.Context, charID int64, amount int,
 ) (*int64, *int64, json.RawMessage, error) {
+	defer v.touch(charID)
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, nil, err
@@ -139,6 +153,7 @@ func (v sheetVitals) SpendManaKeepingReceipt(
 func (v sheetVitals) GiveManaBack(
 	ctx context.Context, charID int64, written json.RawMessage,
 ) (*int64, *int64, error) {
+	defer v.touch(charID)
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
@@ -159,6 +174,7 @@ func (v sheetVitals) GiveManaBack(
 func (v sheetVitals) LoseHitPointsKeepingReceipt(
 	ctx context.Context, charID int64, amount int,
 ) (*int64, *int64, json.RawMessage, error) {
+	defer v.touch(charID)
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, nil, err
@@ -178,6 +194,7 @@ func (v sheetVitals) LoseHitPointsKeepingReceipt(
 func (v sheetVitals) GiveHitPointsBack(
 	ctx context.Context, charID int64, written json.RawMessage,
 ) (*int64, *int64, error) {
+	defer v.touch(charID)
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return nil, nil, err
@@ -199,6 +216,7 @@ func (v sheetVitals) GiveHitPointsBack(
 func (v sheetVitals) ApplyAbsolute(
 	ctx context.Context, charID int64, hpCurrent, mpCurrent *int64,
 ) (*int64, *int64, error) {
+	defer v.touch(charID)
 	return v.applyRule(ctx, charID, func(p sheet.Pools) (sheet.Pools, error) {
 		if hpCurrent != nil {
 			p.HpCurrent = *hpCurrent
@@ -276,6 +294,7 @@ func (v sheetVitals) SustainedOf(ctx context.Context, charID int64) ([]live.Sust
 
 // EndSustained derruba o efeito que não foi pago.
 func (v sheetVitals) EndSustained(ctx context.Context, charID int64, catalogID string) error {
+	defer v.touch(charID)
 	return v.q.DeleteEffectsByCatalog(ctx, sqlcgen.DeleteEffectsByCatalogParams{
 		Characterid: charID, Catalogid: catalogID,
 	})
@@ -283,6 +302,7 @@ func (v sheetVitals) EndSustained(ctx context.Context, charID int64, catalogID s
 
 // ExpireTurnEffects derruba o que durava a vez que acabou.
 func (v sheetVitals) ExpireTurnEffects(ctx context.Context, charID int64) error {
+	defer v.touch(charID)
 	if err := v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
 		Characterid: charID, Scope: engine.TurnScope(),
 	}); err != nil {
@@ -304,6 +324,7 @@ func (v sheetVitals) turnSwitchesOff(ctx context.Context, charID int64, end stri
 }
 
 func (v sheetVitals) ExpireOwnTurnEffects(ctx context.Context, charID int64) error {
+	defer v.touch(charID)
 	if err := v.q.DeleteEffectsByScope(ctx, sqlcgen.DeleteEffectsByScopeParams{
 		Characterid: charID, Scope: engine.OwnTurnScope(),
 	}); err != nil {
@@ -355,6 +376,7 @@ func (v sheetVitals) ConstitutionOf(ctx context.Context, charID int64) (int, err
 
 // StabilizeBleeding tira a condição Sangrando da ficha.
 func (v sheetVitals) StabilizeBleeding(ctx context.Context, charID int64) error {
+	defer v.touch(charID)
 	row, err := v.q.GetCharacter(ctx, charID)
 	if err != nil {
 		return err

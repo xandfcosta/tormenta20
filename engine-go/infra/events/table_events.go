@@ -174,3 +174,29 @@ type PlacesChanged struct {
 }
 
 func (e PlacesChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
+
+// SessionChanged — um gesto da Mesa mudou a sessão: a fila, o ataque, a cena, as notas.
+//
+// Publicado pelo GATEWAY dos comandos da Mesa, como o `CharacterChanged` o é pelo da ficha: passam dezenas
+// de gestos por ali, e o esquecido num deles seria a Mesa que não se redesenha só naquele gesto. Os atos
+// próprios (`TurnAdvanced`, `AttackSettled`…) continuam: este é o piso, não o vocabulário.
+type SessionChanged struct {
+	SessionID int64
+}
+
+func (e SessionChanged) Target() Target { return Target{SessionID: e.SessionID} }
+
+// SessionDeleted — a sessão foi apagada, sozinha ou com a campanha. Publicado DEPOIS de apagar: quem acordar
+// lê a ausência, e não a linha que ainda estava lá.
+type SessionDeleted struct {
+	SessionID int64
+}
+
+func (e SessionDeleted) Target() Target { return Target{SessionID: e.SessionID} }
+
+// CampaignDeleted — a campanha foi apagada, com as sessões dela.
+type CampaignDeleted struct {
+	CampaignID int64
+}
+
+func (e CampaignDeleted) Target() Target { return Target{CampaignID: e.CampaignID} }

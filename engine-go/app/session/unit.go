@@ -88,7 +88,10 @@ type Units interface {
 // CONTORNO do gesto é daqui, e o `TestNoPresentationLayerOpensATransaction`
 // cobra exatamente isso — quem decide o que é um gesto não é quem sabe o que é
 // um `http.ResponseWriter`.
-type SheetPorts func(*sqlcgen.Queries) (live.SheetVitals, live.SheetTurnEffects)
+//
+// O `afterCommit` é o mesmo do `Unit.AfterCommit`: o adaptador que grava uma ficha registra ali o aviso dela
+// (o `CharacterChanged`), para a Mesa só saber da ficha nova depois que o disco a aceitou.
+type SheetPorts func(q *sqlcgen.Queries, afterCommit func(install func())) (live.SheetVitals, live.SheetTurnEffects)
 
 // NewUnits monta a unidade de trabalho sobre o banco deste app.
 func NewUnits(database *sql.DB, q *sqlcgen.Queries, ports SheetPorts) Units {
@@ -132,11 +135,12 @@ func (u storedUnits) Do(ctx context.Context, work func(Unit) error) error {
 	defer func() { _ = tx.Rollback() }()
 
 	inTx := u.q.WithTx(tx)
-	sheetPort, turnPort := u.ports(inTx)
 	var pending []func()
+	afterCommit := func(install func()) { pending = append(pending, install) }
+	sheetPort, turnPort := u.ports(inTx, afterCommit)
 	unit := Unit{
 		Snapshots: NewSnapshots(inTx), Sheet: sheetPort, TurnEffects: turnPort, InTx: inTx,
-		AfterCommit: func(install func()) { pending = append(pending, install) },
+		AfterCommit: afterCommit,
 	}
 	if err := work(unit); err != nil {
 		return err

@@ -56,6 +56,8 @@ func rerollsSkillTest(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 		return nil, err
 	}
 	rolled, err := st.plays.RerollSkillTest(ctx, row, *test, chi.URLParam(c.R, "gasto"), d20)
+	// O GASTO grava na ficha (a sorte, o PM), e a ficha aberta só se redesenha no evento.
+	st.deps.CharacterChanged(row.ID)
 	if err != nil {
 		return nil, err
 	}
