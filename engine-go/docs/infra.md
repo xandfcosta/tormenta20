@@ -174,10 +174,20 @@ mudou. **Não é event sourcing: o banco é o estado.** As regras são conta
   parada, sem erro. **Quem cobra é o `TestEveryWriteTheTableShowsPublishesItsEvent`**:
   na bancada, o gancho de escrita do SQLite (`db.OpenObserved`) anota cada linha
   gravada num pedido, e o pedido que gravou sem o evento do alvo reprova a suíte
-  com a rota e a tabela. A dívida mora em `serve/api/testdata/write_watch_baseline.txt`,
-  que só encolhe. **O gancho é o detector, nunca o despertador**: o vocabulário
-  continua por ATO. E gesto novo pede teste, porque rota que nenhum teste
-  exercita não é medida.
+  com a rota e a tabela. Ele conta a linha só quando a transação dela faz
+  commit: o gesto que grava e desfaz não mudou nada. A linha de base
+  (`serve/api/testdata/write_watch_baseline.txt`) está VAZIA, e assim fica.
+  **O gancho é o detector, nunca o despertador**: o vocabulário continua por
+  ATO. E gesto novo pede teste, porque rota que nenhum teste exercita não é
+  medida.
+- **Os pisos, por gateway**: o comando da Mesa publica `SessionChanged` (no
+  `respondGm`), como o da ficha publica `CharacterChanged`; a porta da ficha
+  dentro da unidade de trabalho (`sheetVitals`) avisa a ficha gravada DEPOIS do
+  commit (`Unit.AfterCommit`). Os atos próprios continuam; o piso é o que cobre
+  o gesto esquecido.
+- **A leitura não escreve**: o `LoadView` refaz o espelho de PV e PM da fila
+  numa cópia (`RefreshCharacterVitals`), sem gravar — a ficha é a autoridade,
+  e quem muda o poço espelha no próprio gesto.
 - **Escutar TUDO é só da bancada** (`events.EverythingForTests`);
   `TestNoProductionCodeListensToEverything` o recusa fora de `_test.go`.
 
