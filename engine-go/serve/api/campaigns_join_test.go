@@ -175,6 +175,9 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitor := seedUser(t, s, "visitante@t20.local")
+	// COM herói: sem nenhum, a carta esconde o botão por falta de quem entrar, e
+	// o caso passaria sem medir a regra do convite.
+	seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
 
 	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadJoin(context.Background(), visitor, "nao-existe")
 	if err != nil {
