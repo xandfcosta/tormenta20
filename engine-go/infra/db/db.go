@@ -7,14 +7,16 @@
 package db
 
 import (
+	"context"
 	"database/sql"
+	"database/sql/driver"
 	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/pressly/goose/v3"
-	_ "modernc.org/sqlite" // pure-Go SQLite driver (no cgo) — registers "sqlite"
+	"modernc.org/sqlite" // pure-Go SQLite driver (no cgo)
 )
 
 //go:embed migrations/*.sql
@@ -23,7 +25,18 @@ var migrationsFS embed.FS
 // Open opens the SQLite database at path with foreign keys enforced + WAL, then
 // applies all pending goose migrations. Uses the pure-Go modernc driver so the
 // server cross-compiles cleanly like the rest of engine-go.
-func Open(path string) (*sql.DB, error) {
+func Open(path string) (*sql.DB, error) { return OpenObserved(path, nil) }
+
+// ConnectionObserver recebe cada conexão física que o pool abre, para pendurar nela os ganchos do SQLite
+// (o de escrita, `RegisterPreUpdateHook`).
+type ConnectionObserver func(sqlite.HookRegisterer)
+
+// OpenObserved é o `Open` com um observador em cada conexão. Quem usa é a BANCADA de teste, que vê pelo
+// gancho de escrita quais tabelas um pedido gravou e cobra o evento da Mesa (ver o
+// `TestEveryWriteTheTableShowsPublishesItsEvent`). A produção abre sem observador.
+//
+//	database, err := db.OpenObserved(path, func(c sqlite.HookRegisterer) { c.RegisterPreUpdateHook(…) })
+func OpenObserved(path string, observe ConnectionObserver) (*sql.DB, error) {
 	// Production keeps its database in its own directory, which does
 	// not exist on a first boot — and SQLite reports the missing directory as a
 	// plain "unable to open database file", which reads like a corrupt file.
@@ -64,10 +77,14 @@ func Open(path string) (*sql.DB, error) {
 			"&_pragma=synchronous(1)&_pragma=busy_timeout(5000)&_txlock=immediate",
 		path,
 	)
-	sqlDB, err := sql.Open("sqlite", dsn)
+	// Pelo CONECTOR, e não pelo `sql.Open("sqlite", …)`: é o mesmo driver (o `NewConnector` o documenta
+	// como equivalente), e é o único jeito de pôr algo entre o pool e cada conexão sem registrar um nome
+	// novo no `database/sql`, que é global e não se desfaz.
+	connector, err := sqlite.NewConnector(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite %q: %w", path, err)
 	}
+	sqlDB := sql.OpenDB(observedConnector{Connector: connector, observe: observe})
 	if err := sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("ping sqlite %q: %w", path, err)
 	}
@@ -93,4 +110,21 @@ func migrate(sqlDB *sql.DB) error {
 		return fmt.Errorf("goose up: %w", err)
 	}
 	return nil
+}
+
+// observedConnector entrega cada conexão nova ao observador antes de o pool usá-la.
+type observedConnector struct {
+	driver.Connector
+	observe ConnectionObserver
+}
+
+func (c observedConnector) Connect(ctx context.Context) (driver.Conn, error) {
+	conn, err := c.Connector.Connect(ctx)
+	if err != nil || c.observe == nil {
+		return conn, err
+	}
+	if hooks, ok := conn.(sqlite.HookRegisterer); ok {
+		c.observe(hooks)
+	}
+	return conn, nil
 }

@@ -19,7 +19,8 @@ import (
 // O que ficou aqui é o que é DESTE pacote: o `TestMain` de uma linha e o atalho
 // `bancoDeTeste`, que os quarenta e seis arquivos de teste chamam.
 
-func TestMain(m *testing.M) { os.Exit(testdb.Run(m)) }
+// TestMain roda a suíte e, depois dela, o detector das gravações sem evento (`reportWriteWatch`).
+func TestMain(m *testing.M) { os.Exit(reportWriteWatch(testdb.Run(m))) }
 
 // bancoDeTeste devolve um banco migrado e VIRGEM.
 func bancoDeTeste(t *testing.T) string {

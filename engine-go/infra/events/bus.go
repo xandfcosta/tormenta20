@@ -42,6 +42,8 @@ type Interest struct {
 	session   int64
 	character int64
 	campaign  int64
+	// everything existe só para o detector da bancada (`EverythingForTests`).
+	everything bool
 }
 
 // OfSession pede tudo que acontece numa mesa: a fila, a cena, o tabuleiro.
@@ -58,7 +60,16 @@ func OfCharacter(characterID int64) Interest { return Interest{character: charac
 // NPCs.
 func OfCampaign(campaignID int64) Interest { return Interest{campaign: campaignID} }
 
+// EverythingForTests é o interesse em TUDO, e o nome diz para quem ele existe: o detector da bancada, que
+// confere se cada gravação que a Mesa mostra publicou o evento dela. Em produção, escutar tudo é o
+// ouvinte que acorda a cada tecla em qualquer mesa (ver `Subscribe`), e o
+// `TestNoProductionCodeListensToEverything` o recusa fora de `_test.go`.
+func EverythingForTests() Interest { return Interest{everything: true} }
+
 func (i Interest) matches(t Target) bool {
+	if i.everything {
+		return true
+	}
 	if i.session != 0 && i.session == t.SessionID {
 		return true
 	}

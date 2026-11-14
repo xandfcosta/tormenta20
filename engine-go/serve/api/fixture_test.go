@@ -75,7 +75,16 @@ func (f sceneFixture) requests(t *testing.T, userID int64, method, path, body st
 		req.Header.Set("Content-Type", "application/json")
 	}
 	rec := httptest.NewRecorder()
+	watch := watchOf(f.s)
+	if watch != nil {
+		watch.begin()
+	}
 	f.s.WebRouter().ServeHTTP(rec, req)
+	if watch != nil {
+		for _, violation := range watch.check(method, path) {
+			recordViolation(violation)
+		}
+	}
 	return rec
 }
 

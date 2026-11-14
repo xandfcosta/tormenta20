@@ -11,6 +11,7 @@ import (
 	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db/dbvalue"
+	"t20engine/infra/events"
 	"testing"
 
 	"t20engine/infra/db"
@@ -26,7 +27,9 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 	// Copiado do molde já migrado, e não migrado do zero (ver `db/testdb`): são
 	// ~3.400 migrações a menos na suíte.
 	path := bancoDeTeste(t)
-	database, err := db.Open(path)
+	// O DETECTOR das gravações sem evento (`write_watch_test.go`) pendura o gancho em cada conexão.
+	watch := newWriteWatch(t, path)
+	database, err := db.OpenObserved(path, watch.observe)
 	if err != nil {
 		t.Fatalf("Open test db: %v", err)
 	}
@@ -47,6 +50,10 @@ func newTestServer(t *testing.T, adminEmails ...string) *Server {
 		AdminEmails: adminEmails, DatabasePath: path,
 	}
 	srv := NewServer(cfg, database, nil)
+	spy, stopSpy := srv.bus.Subscribe(events.EverythingForTests())
+	watch.events = spy
+	watches.Store(srv, watch)
+	t.Cleanup(func() { stopSpy(); watches.Delete(srv) })
 	// ESPERAR ANTES DE FECHAR. A persistência do estado da sessão roda em
 	// goroutine (`table_live_publish.go`), e fechar o banco debaixo dela produz
 	// dois sintomas que não se parecem com a causa: um `Persist failed (sql:
