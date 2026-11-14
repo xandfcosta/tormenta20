@@ -37,6 +37,9 @@ import (
 // depois o que exige sessão.
 func (s *Server) WebRouter() http.Handler {
 	r := chi.NewRouter()
+	if s.watchRequests != nil {
+		r.Use(s.watchRequests)
+	}
 	// A COMPRESSÃO mora aqui, e não no `cmd`: assim o teste que bate no
 	// roteador de verdade vê o que o navegador recebe, inclusive o fluxo ao vivo
 	// em gzip (ver `httpio.Gzip`).

@@ -35,6 +35,9 @@ import (
 // desenham HTML.
 func (s *Server) Router() http.Handler {
 	r := chi.NewRouter()
+	if s.watchRequests != nil {
+		r.Use(s.watchRequests)
+	}
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	// Sem origem configurada, NENHUM middleware de CORS — que é produção: o

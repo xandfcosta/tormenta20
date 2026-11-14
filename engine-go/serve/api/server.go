@@ -55,6 +55,10 @@ type Server struct {
 	// sessão, que a esvazia quando a sessão deixa de existir. Um `table.New` que
 	// a montasse por dentro não teria como ser esquecido (ALE-377).
 	tableMemory *table.EphemeralTableState
+	// watchRequests embrulha cada pedido dos dois roteadores, e só a BANCADA o preenche: é por onde o
+	// detector das gravações sem evento (`write_watch_test.go`) vigia todo pedido, inclusive o que um teste
+	// manda direto ao roteador. Em produção fica nulo, e o roteador nem o pendura.
+	watchRequests func(http.Handler) http.Handler
 	// units abre a unidade de trabalho de um gesto: uma transação para a fila, a
 	// ficha e o TABULEIRO juntos (ALE-373, ALE-376). O servidor a guarda porque
 	// mais de um caso de uso a pede.

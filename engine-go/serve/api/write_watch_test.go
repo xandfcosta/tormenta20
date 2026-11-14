@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"os"
 	"reflect"
 	"regexp"
@@ -22,7 +23,7 @@ import (
 // O fluxo da Mesa só se redesenha quando um evento avisa (CQRS, decisão do dono): uma gravação sem evento
 // deixa a tela de todo mundo parada, sem erro em lugar nenhum. Este detector é o guarda disso, e ele vê o
 // que o código FAZ, e não o que ele diz: o gancho de escrita do SQLite (`db.OpenObserved`) anota cada
-// linha gravada durante um pedido da bancada (`sceneFixture.requests`), um espião anota cada evento
+// linha gravada durante um pedido da bancada (`everyRequest`, em todo pedido aos roteadores), um espião anota cada evento
 // publicado, e no fim do pedido toda gravação numa tabela que a Mesa mostra precisa ter o evento do ALVO
 // dela — a ficha, a sessão ou a campanha. As violações juntam-se e reprovam a suíte no fim, no `TestMain`,
 // com a rota e a tabela.
@@ -183,6 +184,36 @@ func targetOf(table string, row map[string]int64, columns []string) (tableWrite,
 		return tableWrite{table: table, campaign: row["campaignId"]}, true
 	}
 	return tableWrite{}, true
+}
+
+// everyRequest é o middleware que os roteadores da bancada penduram (`Server.watchRequests`): cada
+// pedido abre a janela e a fecha, venha ele do `f.requests`, do `f.posts` ou de um teste que chama o
+// roteador direto. Ficar no ROTEADOR, e não num helper da bancada, é o que o impede de ficar cego para o
+// próximo teste que chamar o roteador por fora — foi assim que o `Seat` gravou sem evento (ALE-645).
+//
+// O FLUXO LONGO fica de fora: ele fica aberto enquanto a tela estiver, e a janela dele engoliria o que os
+// pedidos de outros gestos gravam ao mesmo tempo. Ele só lê.
+//
+// A janela é UMA por servidor. Dois pedidos ao mesmo tempo (o `TestSimultaneousJoinsCreateOneMember`) se atropelam: o
+// segundo `begin` esquece o que o primeiro gravou, e o detector deixa de ver, sem acusar à toa.
+func (w *writeWatch) everyRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		if liveStreamPath(r.URL.Path) {
+			next.ServeHTTP(rw, r)
+			return
+		}
+		w.begin()
+		next.ServeHTTP(rw, r)
+		for _, violation := range w.check(r.Method, r.URL.Path) {
+			recordViolation(violation)
+		}
+	})
+}
+
+// liveStreamPath diz se o endereço é de um fluxo que fica aberto: o da Mesa, o da tela da mesa e o da
+// ficha solta.
+func liveStreamPath(path string) bool {
+	return strings.HasSuffix(path, "/fluxo") || strings.HasSuffix(path, "/ao-vivo")
 }
 
 // begin abre a janela de um pedido: esquece o que veio antes, de outro pedido ou de trabalho de fundo.

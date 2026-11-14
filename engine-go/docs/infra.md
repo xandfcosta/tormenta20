@@ -178,9 +178,12 @@ mudou. **Não é event sourcing: o banco é o estado.** As regras são conta
   parada, sem erro. **Quem cobra é o `TestEveryWriteTheTableShowsPublishesItsEvent`**:
   na bancada, o gancho de escrita do SQLite (`db.OpenObserved`) anota cada linha
   gravada num pedido, e o pedido que gravou sem o evento do alvo reprova a suíte
-  com a rota e a tabela. Ele conta a linha só quando a transação dela faz
-  commit: o gesto que grava e desfaz não mudou nada. A linha de base
-  (`serve/api/testdata/write_watch_baseline.txt`) está VAZIA, e assim fica.
+  com a rota e a tabela. A janela abre em TODO pedido aos dois roteadores
+  (`Server.watchRequests`, que só a bancada preenche), e não num helper: o teste
+  que chama o roteador por fora também é vigiado. Ele conta a linha só quando a
+  transação dela faz commit: o gesto que grava e desfaz não mudou nada. A linha
+  de base (`serve/api/testdata/write_watch_baseline.txt`) é a DÍVIDA, e só
+  encolhe: par novo reprova, e par que deixou de violar também, para sair dela.
   **O gancho é o detector, nunca o despertador**: o vocabulário continua por
   ATO. E gesto novo pede teste, porque rota que nenhum teste exercita não é
   medida.
