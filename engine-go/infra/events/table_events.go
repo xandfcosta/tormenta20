@@ -200,3 +200,66 @@ type CampaignDeleted struct {
 }
 
 func (e CampaignDeleted) Target() Target { return Target{CampaignID: e.CampaignID} }
+
+// MemberSeated — um herói sentou à mesa da campanha pelo convite: a cópia dele entrou no Grupo.
+//
+// Do alvo da CAMPANHA, e não da ficha nova: quem tem a Mesa aberta ainda não assina aquela ficha — é este
+// evento que o acorda para refazer o Grupo, e com ele os interesses.
+type MemberSeated struct {
+	CampaignID  int64
+	CharacterID int64
+}
+
+func (e MemberSeated) Target() Target { return Target{CampaignID: e.CampaignID} }
+
+// O QUE SÓ EXISTE EM MEMÓRIA: nenhum deles grava, e cada um muda o que a Mesa mostra. Sem eles, quem os
+// desenha só saberia no próximo evento de outra coisa.
+
+// PresenceJoined — alguém abriu a Mesa: o fluxo dele entrou no registro de presença.
+type PresenceJoined struct {
+	SessionID int64
+}
+
+func (e PresenceJoined) Target() Target { return Target{SessionID: e.SessionID} }
+
+// PresenceLeft — alguém fechou a Mesa, trocou de página ou caiu da rede.
+type PresenceLeft struct {
+	SessionID int64
+}
+
+func (e PresenceLeft) Target() Target { return Target{SessionID: e.SessionID} }
+
+// TableDisplayOpened — uma tela da mesa abriu o fluxo dela.
+type TableDisplayOpened struct {
+	SessionID int64
+}
+
+func (e TableDisplayOpened) Target() Target { return Target{SessionID: e.SessionID} }
+
+// TableDisplayClosed — uma tela da mesa fechou.
+type TableDisplayClosed struct {
+	SessionID int64
+}
+
+func (e TableDisplayClosed) Target() Target { return Target{SessionID: e.SessionID} }
+
+// TableDisplayFramed — o tabuleiro do mestre mandou um recorte novo para a tela da mesa.
+type TableDisplayFramed struct {
+	SessionID int64
+}
+
+func (e TableDisplayFramed) Target() Target { return Target{SessionID: e.SessionID} }
+
+// TableDisplayFrozen — o mestre congelou a tela da mesa no que ela mostrava.
+type TableDisplayFrozen struct {
+	SessionID int64
+}
+
+func (e TableDisplayFrozen) Target() Target { return Target{SessionID: e.SessionID} }
+
+// TableDisplayThawed — o mestre soltou a tela da mesa, que volta a seguir o recorte dele.
+type TableDisplayThawed struct {
+	SessionID int64
+}
+
+func (e TableDisplayThawed) Target() Target { return Target{SessionID: e.SessionID} }

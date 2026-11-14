@@ -172,8 +172,8 @@ func TestTheTableStreamCompresses(t *testing.T) {
 	// que ela CHEGA comprimida.
 	//
 	// Ler um buffer de tamanho fixo continua não servindo: um buffer curto corta
-	// o fragmento no meio, e um longo bloquearia esperando quadros que só o
-	// batimento traria.
+	// o fragmento no meio, e um longo bloquearia esperando quadros que só um
+	// próximo evento traria.
 	reader := bufio.NewScanner(zr)
 	reader.Buffer(make([]byte, 0, 64*1024), 1<<20)
 	var all strings.Builder

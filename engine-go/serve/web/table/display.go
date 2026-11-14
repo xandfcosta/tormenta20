@@ -124,10 +124,10 @@ func (s Scene) handleDisplayPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleDisplayStream é o fluxo da tela. Ele CONTA a tela enquanto ela está
-// aberta — é o que acende o interruptor no tabuleiro do mestre — e acorda por
-// três coisas: o barramento da sessão (uma peça andou), o enquadramento e o
-// congelamento (`displays.Changed`), e o batimento, que cobre o que muda fora
-// dos stores, como o PV que vem da ficha.
+// aberta — é o que acende o interruptor no tabuleiro do mestre — e acorda só no
+// evento: o da sessão (uma peça andou, o mestre recortou ou congelou), o da
+// campanha, e o da ficha de cada combatente da fila, porque a barra de PV de uma
+// peça vem da ficha dela.
 func (s Scene) handleDisplayStream(w http.ResponseWriter, r *http.Request) {
 	campaignID, sessionID, userID, _, ok := s.displayGm(w, r)
 	if !ok {
@@ -135,8 +135,8 @@ func (s Scene) handleDisplayStream(w http.ResponseWriter, r *http.Request) {
 	}
 	s.displays.Join(sessionID)
 	defer s.displays.Leave(sessionID)
-	sub, stop := s.deps.Bus().Subscribe(events.OfSession(sessionID))
-	defer stop()
+	subscription := subscribeStream(s.deps.Bus(), s.displayInterests(r.Context(), campaignID, sessionID))
+	defer subscription.close()
 
 	sse := datastar.NewSSE(w, r)
 	var last [32]byte
@@ -144,46 +144,58 @@ func (s Scene) handleDisplayStream(w http.ResponseWriter, r *http.Request) {
 		v, err := s.displayNow(r.Context(), userID, campaignID, sessionID)
 		if err != nil {
 			// Erro passageiro: a tela fica no último quadro bom, e o próximo
-			// ciclo tenta de novo.
+			// evento tenta de novo.
 			return
 		}
 		fragment, err := ui.RenderFragment(r.Context(), displayRegion(v))
 		if err != nil {
 			return
 		}
-		// Congelada, o retrato é o mesmo a cada ciclo, e a digital cala.
+		// Congelada, o retrato é o mesmo a cada evento, e a digital cala.
 		if digest := sha256.Sum256([]byte(fragment)); digest != last && sse.PatchElements(fragment) == nil {
 			last = digest
 		}
 	}
-	// O canal é pego ANTES de cada desenho: o `notifyLocked` fecha e apaga o
-	// canal que existe, e um recorte que chegasse durante o desenho, com o
-	// canal ainda por pegar, não acordaria ninguém até o batimento.
-	changed := s.displays.Changed(sessionID)
 	write()
-	beat := time.NewTicker(tableHeartbeat)
-	defer beat.Stop()
+	again := false
 	for {
-		select {
-		case <-r.Context().Done():
-			return
-		case <-s.deps.LiveStreamsClosing():
-			// ABORTA como o fluxo da mesa: fechar limpo é resposta completa, e a
-			// tela não reconectaria depois do deploy.
-			panic(http.ErrAbortHandler)
-		case <-sub.C:
-		case <-changed:
-		case <-beat.C:
+		if !again {
+			select {
+			case <-r.Context().Done():
+				return
+			case <-s.deps.LiveStreamsClosing():
+				// ABORTA como o fluxo da mesa: fechar limpo é resposta completa, e a
+				// tela não reconectaria depois do deploy.
+				panic(http.ErrAbortHandler)
+			case <-subscription.woke():
+			}
 		}
-		changed = s.displays.Changed(sessionID)
 		write()
+		again = subscription.follow(s.displayInterests(r.Context(), campaignID, sessionID))
 	}
+}
+
+// displayInterests é o que a tela desenha: a sessão, a campanha e a ficha de
+// cada combatente da fila. A fila é lida da MEMÓRIA da sessão, que é o mesmo
+// lugar de onde o `displayBoard` tira as peças.
+func (s Scene) displayInterests(ctx context.Context, campaignID, sessionID int64) []events.Interest {
+	interests := []events.Interest{events.OfSession(sessionID), events.OfCampaign(campaignID)}
+	state, err := s.deps.Sessions().State(ctx, sessionID)
+	if err != nil {
+		return interests
+	}
+	for _, entry := range state.Initiative {
+		if entry.CharacterID != nil {
+			interests = append(interests, events.OfCharacter(*entry.CharacterID))
+		}
+	}
+	return interests
 }
 
 // handleDisplayFraming guarda o recorte que o tabuleiro do mestre manda.
 //
 // Responde 204 e nada mais: o mestre não tem o que redesenhar, e a tela acorda
-// pelo `displays.Changed`.
+// pelo `TableDisplayFramed` que o `Frame` publica.
 func (s Scene) handleDisplayFraming(w http.ResponseWriter, r *http.Request) {
 	_, sessionID, _, _, ok := s.displayGm(w, r)
 	if !ok {
@@ -204,8 +216,9 @@ func (s Scene) handleDisplayFraming(w http.ResponseWriter, r *http.Request) {
 }
 
 // freezeDisplay tira o retrato do que a mesa está vendo AGORA. Não muda a
-// cena — como a lente, devolve nil e não acorda a mesa —, e o que redesenha o
-// interruptor do mestre é a resposta do próprio comando.
+// cena — como a lente, devolve nil —; o `Freeze` publica o `TableDisplayFrozen`,
+// que acorda a tela, e o interruptor do mestre redesenha pela resposta do
+// próprio comando.
 func freezeDisplay(st Scene, c commandCtx) (*board.BoardState, error) {
 	if _, frozen := st.displays.Frozen(c.SessionID); frozen {
 		return nil, nil

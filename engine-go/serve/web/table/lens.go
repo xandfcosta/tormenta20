@@ -112,9 +112,10 @@ func (s Scene) LensRoutes(r chi.Router) {
 
 // toggleLens acende ou apaga a lente de quem clicou.
 //
-// Devolve o tabuleiro SEM MUDÁ-LO — a lente não é mutação da cena, e publicá-la
-// acordaria a mesa inteira para um modo que é de uma pessoa só. O que redesenha
-// a tela de quem clicou é a resposta do próprio comando.
+// Devolve `nil`, e o tabuleiro fica como estava: a lente não é mutação da cena,
+// e um quadro do tabuleiro publicado por ela seria uma peça que não andou. As
+// outras abas de quem clicou sabem pelo piso do comando (`SessionChanged`, no
+// `respondGm`), e as telas dos outros, que não mudaram, o hash cala.
 func toggleLens(st Scene, c commandCtx) (*board.BoardState, error) {
 	st.lenses.Toggle(c.SessionID, c.User)
 	return nil, nil

@@ -31,7 +31,7 @@ import (
 //
 // A fila viva mora em memória e tem vários sítios de escrita; o que o mestre lê
 // é o que a CENA DA MESA desenha, e ela passa pelo `RefreshCharacterVitals` a
-// cada desenho — inclusive no batimento de um segundo do stream. Afirmar sobre
+// cada desenho — inclusive no de cada evento do stream. Afirmar sobre
 // o `State` cru seria afirmar sobre um passo intermediário e deixar de fora
 // justamente o passo que conserta.
 //
