@@ -1024,3 +1024,17 @@ sob demanda se esvaziava no primeiro gesto: o `$race_attributes = null` de um
 humano sem atributo derrubava todos os sinais do pedido, defeito que já existia
 e só apagava filtros sem ninguém notar.
 
+### A aba como página inteira, e a CPU que dormia (2026-11)
+
+A leitura do Tao que pôs a aba como link de página inteira estava errada: a
+navegação do Tao é entre PÁGINAS, e a aba é um pedaço da mesma, que o morph
+troca (decisão do dono). Medida do toque à pintura no celular emulado, a página
+inteira custava ~115 ms a mais por troca (94 → 213 ms no Wi-Fi): desmontar o
+documento, ler o HTML, estilizar e subir o Datastar de novo, o piso de todo
+documento novo. A primeira medida tinha dado só ~70 ms porque partia do
+`page.goto`, sem o clique e sem descarregar a página velha. No caminho, o
+servidor alternava entre 22 e 55 ms para a mesma ficha: não era cabeçalho, fluxo
+aberto, GC nem pool, e sim o governador `powersave` da máquina (que é a da
+produção) — 21 ms com pedidos colados, até 65 ms depois de a CPU parar um
+instante.
+

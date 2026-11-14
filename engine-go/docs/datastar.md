@@ -110,7 +110,9 @@ O handler descobre o que desenhar lendo a própria requisição, e a URL da PÁG
 a cena volta na PRIMEIRA aba sem nada falhar. **O servidor escreve o `?` no
 comando**, porque sabe o estado ao renderizar: o `sheetPost` monta todo `@post`
 da ficha, e o `TestNoSheetCommandLosesTheTab` falha no comando de qualquer aba
-que sair sem ele. Sinal do cliente resolveria e some no F5.
+que sair sem ele. Sinal do cliente resolveria e some no F5. **E é o servidor
+quem põe a aba no endereço da página**, na resposta do `@get`
+(`sse.ReplaceURL`): o cliente não escreve no histórico.
 
 ### Dois pedidos de UM gesto: quem CHEGA por último manda
 
