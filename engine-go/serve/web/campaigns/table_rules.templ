@@ -10,11 +10,15 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A ABA REGRAS DA MESA, pelo mockup aprovado. As regras opcionais do livro seguem em
-// Configurações: elas são o livro, e estas são o que a mesa muda nele.
+// A ABA REGRAS DA MESA, pelo mockup aprovado. As regras OPCIONAIS do livro vêm primeiro, e
+// depois o que a mesa muda nele: o mestre liga e desliga regra num lugar só (decisão do dono).
+// Elas moravam em Configurações, e o mestre procurava regra em dois lugares com nomes parecidos.
+//
+// O interruptor opcional é só do MESTRE: a rota dele recusa o jogador, que nunca o teve.
 templ tableRulesTab(v oneView) {
 	<div class="ds-camp-form">
 		if v.IsGM {
+			@rulesPanel(v)
 			<div hidden data-signals={ tableRulesSignals() }></div>
 			<div hidden data-signals={ tableImprovementsSignals() }></div>
 			<p class="ds-help">O que esta mesa muda no livro. Nenhuma regra vem ligada, e os jogadores leem as que estão ligadas.</p>

@@ -167,7 +167,7 @@ test.describe('A crônica', () => {
    * para o próximo teste.
    */
   test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
-    await page.goto('/campanhas/1?tab=config')
+    await page.goto('/campanhas/1?tab=regras')
     const key = page.getByRole('switch', { name: 'Limites de carga' })
     const before = await key.isChecked()
 

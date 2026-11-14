@@ -343,13 +343,11 @@ templ membersTab(v oneView) {
 	}
 }
 
-// A aba de CONFIGURAÇÕES: o cadastro, o link, as regras opcionais e o excluir —
-// nesta ordem. Regra opcional é ajuste CORRIQUEIRO e não destruição, então ela
-// fica antes do que apaga; posta depois, herdaria o tom de risco.
+// A aba de CONFIGURAÇÕES: o cadastro, o link e o excluir — nesta ordem. As
+// regras opcionais moram na aba Regras da mesa (`tableRulesTab`).
 templ configTab(v oneView) {
 	@campaignForm(v)
 	@invitePanel(v)
-	@rulesPanel(v)
 	@dangerZone(v)
 }
 

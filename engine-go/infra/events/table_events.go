@@ -154,6 +154,14 @@ type TableRuleChanged struct {
 
 func (e TableRuleChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
 
+// OptionalRulesChanged — o mestre ligou ou desligou uma regra que o livro deixa a critério dele (a carga,
+// p141): o motor recalcula a ficha de cada um da campanha.
+type OptionalRulesChanged struct {
+	CampaignID int64
+}
+
+func (e OptionalRulesChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
+
 // TableImprovementChanged — o mestre criou, reescreveu ou apagou uma melhoria da mesa.
 type TableImprovementChanged struct {
 	CampaignID int64
