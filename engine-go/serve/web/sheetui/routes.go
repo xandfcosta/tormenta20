@@ -132,7 +132,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	pageSignals := sheetSignals(r)
+	pageSignals := s.sheetSignals(r)
 	view, status, err := s.Load(
 		r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")),
 		pageSignals.term(), pageSignals)
@@ -209,7 +209,7 @@ func (s Scene) sheetCommand(
 		// UMA leitura de sinais por requisição, e ela vem ANTES de tudo: o
 		// `ReadSignals` consome o corpo do POST, então a segunda chamada
 		// receberia vazio sem erro nenhum. Ver `signals.go`.
-		signals := sheetSignals(r)
+		signals := s.sheetSignals(r)
 		row, status, err := s.reachableCharacter(r.Context(), id, s.deps.CurrentUserID(r))
 		if err != nil {
 			http.Error(w, err.Error(), status)

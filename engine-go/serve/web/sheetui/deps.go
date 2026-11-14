@@ -2,6 +2,7 @@ package sheetui
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -107,9 +108,14 @@ type Scene struct {
 	// há ciclo para desviar com uma interface. É o mesmo desenho que a forja
 	// tem com o `character.Births`.
 	plays character.Plays
+	// log recebe o que a cena não pode deixar passar calado: os sinais que um gesto mandou e não se leram
+	// (`sheetSignals`).
+	log *slog.Logger
 }
 
-func New(d Deps, gestures character.Plays) Scene { return Scene{deps: d, plays: gestures} }
+func New(d Deps, gestures character.Plays, log *slog.Logger) Scene {
+	return Scene{deps: d, plays: gestures, log: log}
+}
 
 // ActionStrike é o gesto de combate que saiu da superfície Ações.
 //

@@ -106,7 +106,7 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 // silenciosa de propósito: estar numa mesa é mais importante que ver a própria
 // ficha dentro dela.
 func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View {
-	sheet, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays).Load(
+	sheet, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays, h.rules.sheetLog).Load(
 		r.Context(), currentUser(r).ID, characterID, sheetui.AskedTab(""), "", sheetui.Signals{})
 	if err != nil {
 		return nil

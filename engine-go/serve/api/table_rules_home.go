@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"log/slog"
 
 	"t20engine/app/boards"
 	"t20engine/app/character"
@@ -53,6 +54,7 @@ type tableRules struct {
 	// gestos dela, e o painel embutido só LÊ. Passá-lo zerado seria guardar um
 	// ponteiro nulo esperando o primeiro gesto que alguém chamasse daqui.
 	sheetPlays character.Plays
+	sheetLog   *slog.Logger
 }
 
 func (s *Server) tableRules() tableRules {
@@ -62,6 +64,6 @@ func (s *Server) tableRules() tableRules {
 		boards: s.boards, sessions: s.sessions, presence: s.presence,
 		sse: s.sse, bus: s.bus, liveStreamsClosing: s.liveStreamsClosing, revision: func() string { return s.revision },
 		campaign: s.campaignRules(), sheet: s.sheetRules(),
-		sheetScene: s.sheetHost(), sheetPlays: s.characterPlays(),
+		sheetScene: s.sheetHost(), sheetPlays: s.characterPlays(), sheetLog: s.log,
 	}
 }
