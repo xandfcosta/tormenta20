@@ -21,6 +21,10 @@ func TestTheGMOpensAndEditsThePlayersCopy(t *testing.T) {
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Kharvos") {
 		t.Fatalf("o mestre não abriu a cópia do jogador: %d", rec.Code)
 	}
+	// É a CÓPIA da mesa, e não o rascunho: a ficha diz em que mesa ela está.
+	if !strings.Contains(rec.Body.String(), "Na mesa <b>A Queda de Tauron</b>") {
+		t.Error("a ficha que o mestre abriu não diz que é a cópia da mesa")
+	}
 	before := poolsOf(t, f.s, copyID).HpCurrent
 	edit := f.requests(t, f.gm, http.MethodPost, fmt.Sprintf("/personagens/%d/vitais/pv/-1?tab=combat", copyID), "{}")
 	if edit.Code != http.StatusOK || sceneRefusal(edit.Body.String()) != "" {

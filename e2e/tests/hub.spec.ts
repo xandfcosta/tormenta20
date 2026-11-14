@@ -1,24 +1,5 @@
 import { expect, test } from '@playwright/test'
 
-/**
- * O ÚNICO e2e do Hub, e o que ele guarda é a PARTIDA: chegar em `/` sem dizer
- * mais nada e cair autenticado no Hub, que é uma página do servidor alcançada
- * por desvio no mux — nenhuma outra camada atravessa esse caminho inteiro.
- *
- * O clique no menu ficou junto porque ele é uma navegação de VERDADE entre duas
- * páginas do servidor. O bloco `O Hub`, mais abaixo, afirma os destinos do menu
- * pelas setas; aqui se afirma que o clique chega lá e que a cena desenhou.
- */
-test('o Hub sobe autenticado e o menu leva ao elenco', async ({ page }) => {
-  await page.goto('/')
-  await expect(page.getByRole('heading', { name: /^Olá, / })).toBeVisible()
-  await expect(page.getByText('Ferramentas do mestre')).toBeVisible()
-
-  await page.getByText('Meus heróis').click()
-  await expect(page).toHaveURL(/\/personagens$/)
-  await expect(page.getByRole('heading', { name: 'Personagens', level: 1 })).toBeVisible()
-})
-
 test.describe('O Hub', () => {
   test.use({ storageState: '.auth/user.json' })
 

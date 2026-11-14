@@ -118,8 +118,11 @@ func TestTheGroupPageDrawsThePartyAndKeepsItLive(t *testing.T) {
 	if group == nil {
 		t.Fatal("a página do Grupo não tem a região do grupo")
 	}
-	if findNode(group, "aria-label", "Abrir a ficha completa de Arcanista") == nil {
+	sheetLink := findNode(group, "aria-label", "Abrir a ficha completa de Arcanista")
+	if sheetLink == nil {
 		t.Errorf("o Grupo não leva à ficha completa do Arcanista: %q", textOf(group))
+	} else if href, want := attr(sheetLink, "href"), fmt.Sprintf("/personagens/%d", f.charID); href != want {
+		t.Errorf("o \"Ficha\" do Arcanista leva a %q, e a ficha dele é %q", href, want)
 	}
 	minus := findNode(group, "aria-label", "Tirar 1 PV de Arcanista")
 	if minus == nil || !strings.Contains(attr(minus, "data-on:click"), "?pagina=grupo") {

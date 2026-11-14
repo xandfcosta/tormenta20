@@ -4,10 +4,13 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/serve/web/routes"
 	"testing"
+
+	"golang.org/x/net/html"
 
 	"t20engine/infra/db/sqlcgen"
 )
@@ -41,6 +44,36 @@ func pedeHub(t *testing.T, s *Server, userID int64, method, path string) *httpte
 	rec := httptest.NewRecorder()
 	s.WebRouter().ServeHTTP(rec, req)
 	return rec
+}
+
+// A PARTIDA: `/` com a sessão no cookie cai no Hub, que é página do servidor
+// alcançada por desvio no mux, e o "Meus heróis" leva ao elenco, que desenha.
+// O clique em si é um `<a>` comum; o que pode quebrar é o destino e as duas
+// páginas, e é isso que se afirma.
+func TestTheHubGreetsAndItsMenuLeadsToTheCast(t *testing.T) {
+	s, owner := hubFixture(t)
+	heading := regexp.MustCompile(`<h1[^>]*>([^<]*)</h1>`)
+
+	hub := pedeHub(t, s, owner, http.MethodGet, "/")
+	if hub.Code != http.StatusOK {
+		t.Fatalf("o Hub respondeu %d", hub.Code)
+	}
+	if found := heading.FindStringSubmatch(hub.Body.String()); found == nil || !strings.HasPrefix(found[1], "Olá, ") {
+		t.Errorf("o Hub não cumprimenta: o <h1> é %q", found)
+	}
+	doc, err := html.Parse(strings.NewReader(hub.Body.String()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cast := findNode(doc, "href", "/personagens")
+	if cast == nil || !strings.Contains(textOf(cast), "Meus heróis") {
+		t.Fatal("o menu do Hub não leva o \"Meus heróis\" a /personagens")
+	}
+
+	list := pedeHub(t, s, owner, http.MethodGet, "/personagens")
+	if found := heading.FindStringSubmatch(list.Body.String()); found == nil || found[1] != "Personagens" {
+		t.Errorf("o destino do menu não desenhou o elenco: o <h1> é %q", found)
+	}
 }
 
 // ── "Continuar sessão" ───────────────────────────────────────────────────────
