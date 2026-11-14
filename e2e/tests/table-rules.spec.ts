@@ -1,5 +1,17 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { tidyUp } from './support/tidy'
+
+/** Apaga pela tela a regra deste nome, se ela ainda estiver na campanha 1. */
+async function removeRule(page: Page, name: string): Promise<void> {
+  await page.goto('/campanhas/1?tab=regras')
+  const row = page.locator('.ds-table-rule', { hasText: name })
+  if ((await row.count()) === 0) return
+  await row.getByRole('button', { name: 'Editar' }).click()
+  await page.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
+  await page.getByRole('dialog', { name: 'Excluir esta regra?' }).getByRole('button', { name: 'Excluir' }).click()
+  await expect(row).toHaveCount(0, { timeout: 5000 })
+}
+
 
 // EXCLUIR PEDE CONFIRMAÇÃO num `<dialog>` aberto por cima do editor, que também é `<dialog>`: o Cancelar
 // tem de fechar só o de cima. É o empilhamento nativo de diálogos, e só o navegador o tem. O que o editor
@@ -28,14 +40,7 @@ test('excluir a regra pede confirmação, e cancelar devolve ao editor', async (
     await confirm.getByRole('button', { name: 'Excluir' }).click()
     await expect(row).toHaveCount(0)
   } finally {
-    await tidyUp(`a regra "${name}" na campanha 1`, async () => {
-      await page.goto('/campanhas/1?tab=regras')
-      if ((await row.count()) === 0) return
-      await row.getByRole('button', { name: 'Editar' }).click()
-      await editor.getByRole('button', { name: 'Excluir' }).click()
-      await confirm.getByRole('button', { name: 'Excluir' }).click()
-      await expect(row).toHaveCount(0, { timeout: 5000 })
-    })
+    await tidyUp(`a regra "${name}" na campanha 1`, () => removeRule(page, name))
   }
 })
 
@@ -124,6 +129,8 @@ test('ligar e excluir a regra chega na ficha aberta do jogador', async ({ browse
       .poll(sheetHP, { timeout: 8000, message: 'a ficha aberta não soube da regra excluída' })
       .toBe(String(before))
   } finally {
+    // LIGADA, a regra dá +5 PV a toda ficha da campanha 1: o próximo spec mediria a ficha errada.
+    await tidyUp('a regra "Vigor da mesa" na campanha 1', async () => removeRule(await gm.newPage(), 'Vigor da mesa'))
     await gm.close().catch(() => {})
     await player.close().catch(() => {})
   }
@@ -170,12 +177,18 @@ test('ligar a regra chega na fila do mestre', async ({ browser }) => {
     await rulesScreen.getByRole('dialog', { name: 'Excluir esta regra?' }).getByRole('button', { name: 'Excluir' }).click()
     await expect(rulesScreen.locator('.ds-table-rule', { hasText: 'Vigor na fila' })).toHaveCount(0)
     await expect.poll(queueHP, { timeout: 8000, message: 'a fila do mestre não soube da regra excluída' }).toBe(String(before))
-
-    // A sessão 5 é dividida com o spec dos dois clientes, então ela volta como estava.
-    await table.getByRole('button', { name: 'Cena, descanso e sessão' }).click()
-    await table.getByRole('button', { name: 'Encerrar a cena' }).click()
-    await expect(table.getByRole('button', { name: 'Iniciar uma cena de Ação' })).toBeVisible()
   } finally {
+    await tidyUp('a regra "Vigor na fila" na campanha 1', async () => removeRule(await gm.newPage(), 'Vigor na fila'))
+    // A sessão 5 é dividida com o spec dos dois clientes, então ela volta como estava.
+    await tidyUp('a cena de ação aberta na sessão 5', async () => {
+      const table = await gm.newPage()
+      await table.goto('/campanhas/1/sessoes/5')
+      const start = table.getByRole('button', { name: 'Iniciar uma cena de Ação' })
+      if (await start.count()) return
+      await table.getByRole('button', { name: 'Cena, descanso e sessão' }).click()
+      await table.getByRole('button', { name: 'Encerrar a cena' }).click()
+      await expect(start).toBeVisible({ timeout: 5000 })
+    })
     await gm.close().catch(() => {})
   }
 })
