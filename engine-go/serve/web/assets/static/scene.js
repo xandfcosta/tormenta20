@@ -475,9 +475,7 @@ window.cena = {
 	},
 	cue: Q,
 	copyText: e
-}, r(document), window.addEventListener("popstate", (e) => {
-	e.state?.softNav && window.location.reload();
-});
+}, r(document);
 var $ = () => document.querySelector("[data-slot=\"scene-shell\"]");
 h({
 	root: $,
