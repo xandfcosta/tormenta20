@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"t20engine/infra/events"
 
 	"t20engine/app"
 	"t20engine/app/session"
@@ -40,12 +41,24 @@ type Lifecycle struct {
 	queries  *sqlcgen.Queries
 	access   session.Access
 	sessions SessionsForgotten
+	// bus leva o ATO da campanha a quem está na Mesa: o fluxo dela só se redesenha quando um evento avisa.
+	bus *events.Bus
 }
 
 func NewLifecycle(
-	db *sql.DB, q *sqlcgen.Queries, lock session.Access, sessions SessionsForgotten,
+	db *sql.DB, q *sqlcgen.Queries, lock session.Access, sessions SessionsForgotten, bus *events.Bus,
 ) Lifecycle {
-	return Lifecycle{db: db, queries: q, access: lock, sessions: sessions}
+	return Lifecycle{db: db, queries: q, access: lock, sessions: sessions, bus: bus}
+}
+
+// announced publica o ato quando a gravação deu certo, e devolve o erro dela. A Mesa só se redesenha
+// quando um evento avisa: a gravação que não publica deixa a tela parada (o
+// `TestEveryWriteTheTableShowsPublishesItsEvent` a acusa).
+func (l Lifecycle) announced(err error, ev events.Event) error {
+	if err == nil {
+		l.bus.Publish(ev)
+	}
+	return err
 }
 
 // Open abre uma mesa, e ela nasce COM link de convite.

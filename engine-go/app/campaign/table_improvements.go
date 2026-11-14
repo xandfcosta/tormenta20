@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"slices"
 	"strconv"
+	"t20engine/infra/events"
 	"time"
 
 	"t20engine/app"
@@ -103,13 +104,14 @@ func (l Lifecycle) SaveTableImprovement(ctx context.Context, who app.Caller, cam
 		}); err != nil {
 			return fmt.Errorf("gravar a melhoria %q: %w", draft.Name, err)
 		}
+		l.bus.Publish(events.TableImprovementChanged{CampaignID: campaignID})
 		return nil
 	}
 	changed, err := l.queries.RewriteCampaignImprovement(ctx, sqlcgen.RewriteCampaignImprovementParams{
 		Characterid: character, Name: draft.Name, Family: draft.Family, Effect: string(effect),
 		Updatedat: dbvalue.NowISO(), ID: draft.ID, Campaignid: campaignID,
 	})
-	return oneImprovementChanged(changed, err, draft.ID)
+	return l.announced(oneImprovementChanged(changed, err, draft.ID), events.TableImprovementChanged{CampaignID: campaignID})
 }
 
 // RemoveTableImprovement tira a melhoria de todo item da mesa e a apaga, numa transação: um "Aplicar"
@@ -147,6 +149,7 @@ func (l Lifecycle) RemoveTableImprovement(ctx context.Context, who app.Caller, c
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("gravar a exclusão da melhoria %q: %w", improvementID, err)
 	}
+	l.bus.Publish(events.TableImprovementChanged{CampaignID: campaignID})
 	return nil
 }
 

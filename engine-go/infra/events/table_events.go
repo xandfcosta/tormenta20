@@ -143,3 +143,34 @@ type CharacterChanged struct {
 }
 
 func (e CharacterChanged) Target() Target { return Target{CharacterID: e.CharacterID} }
+
+// OS ATOS DA CAMPANHA: o que o mestre muda fora de uma sessão e vale em toda sessão dela. Carregam só o
+// `CampaignID`, e quem os alcança é o `OfCampaign` — o fluxo da Mesa assina a campanha da sessão.
+
+// TableRuleChanged — o mestre escreveu, ligou, desligou ou apagou uma regra da mesa.
+type TableRuleChanged struct {
+	CampaignID int64
+}
+
+func (e TableRuleChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
+
+// TableImprovementChanged — o mestre criou, reescreveu ou apagou uma melhoria da mesa.
+type TableImprovementChanged struct {
+	CampaignID int64
+}
+
+func (e TableImprovementChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
+
+// CastChanged — o elenco de NPCs da campanha mudou: um entrou, mudou, saiu ou foi copiado.
+type CastChanged struct {
+	CampaignID int64
+}
+
+func (e CastChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
+
+// PlacesChanged — o acervo de lugares da campanha mudou: um lugar foi guardado, editado ou apagado.
+type PlacesChanged struct {
+	CampaignID int64
+}
+
+func (e PlacesChanged) Target() Target { return Target{CampaignID: e.CampaignID} }
