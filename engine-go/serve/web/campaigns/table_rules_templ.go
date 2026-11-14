@@ -18,8 +18,11 @@ import (
 	"t20engine/serve/web/ui"
 )
 
-// A ABA REGRAS DA MESA, pelo mockup aprovado. As regras opcionais do livro seguem em
-// Configurações: elas são o livro, e estas são o que a mesa muda nele.
+// A ABA REGRAS DA MESA, pelo mockup aprovado. As regras OPCIONAIS do livro vêm primeiro, e
+// depois o que a mesa muda nele: o mestre liga e desliga regra num lugar só (decisão do dono).
+// Elas moravam em Configurações, e o mestre procurava regra em dois lugares com nomes parecidos.
+//
+// O interruptor opcional é só do MESTRE: a rota dele recusa o jogador, que nunca o teve.
 func tableRulesTab(v oneView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -46,14 +49,18 @@ func tableRulesTab(v oneView) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if v.IsGM {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div hidden data-signals=\"")
+			templ_7745c5c3_Err = rulesPanel(v).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, " <div hidden data-signals=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableRulesSignals())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 18, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 22, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -66,7 +73,7 @@ func tableRulesTab(v oneView) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(tableImprovementsSignals())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 19, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 23, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -208,7 +215,7 @@ func tableRulesList(v oneView) templ.Component {
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(rule.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 56, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 60, Col: 44}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 					if templ_7745c5c3_Err != nil {
@@ -221,7 +228,7 @@ func tableRulesList(v oneView) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(rule.Meta)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 57, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 61, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -325,7 +332,7 @@ func ruleSelect(onChange, label, signal, current string, options []book.RuleOpti
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 89, Col: 20}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 93, Col: 20}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -351,7 +358,7 @@ func ruleSelect(onChange, label, signal, current string, options []book.RuleOpti
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(option.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 93, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 97, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -374,7 +381,7 @@ func ruleSelect(onChange, label, signal, current string, options []book.RuleOpti
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(option.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 93, Col: 79}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 97, Col: 79}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -429,7 +436,7 @@ func ruleEditorForm(v ruleEditorView) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(v.Refusal)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 104, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 108, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -608,7 +615,7 @@ func ruleEditorForm(v ruleEditorView) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(draftPost(v, ""))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 162, Col: 139}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 166, Col: 139}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 			if templ_7745c5c3_Err != nil {
@@ -626,7 +633,7 @@ func ruleEditorForm(v ruleEditorView) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(draftPost(v, ""))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 166, Col: 170}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 170, Col: 170}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 				if templ_7745c5c3_Err != nil {
@@ -649,7 +656,7 @@ func ruleEditorForm(v ruleEditorView) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(v.Preview)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 176, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 180, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -662,7 +669,7 @@ func ruleEditorForm(v ruleEditorView) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(v.Reaches)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 177, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/campaigns/table_rules.templ`, Line: 181, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {

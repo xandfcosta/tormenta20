@@ -461,7 +461,7 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 	// carimbo é o que faz a ficha aberta na Mesa se reler.
 	s.wakeTableSheets(r.Context(), id)
 
-	v, err := s.LoadOne(r.Context(), who.ID, who.IsAdmin, id, "config")
+	v, err := s.LoadOne(r.Context(), who.ID, who.IsAdmin, id, "regras")
 	if err != nil {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
