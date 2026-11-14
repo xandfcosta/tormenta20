@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
+import { tidyUp } from './support/tidy'
 
 const CAMPAIGN = '/campanhas/1' // Snapshot Test ALE-33 (seed)
 
@@ -235,9 +236,9 @@ test.describe('A crônica', () => {
    * E2E porque o remendo é SSE trocando um pedaço do DOM — o guarda em Go
    * prova o estado do banco, e este prova que a tela acompanhou sem recarregar.
    *
-   * Ele DEVOLVE o interruptor ao estado original no fim: a regra é do banco de
-   * desenvolvimento, e deixá-la desligada mudaria a carga de todo personagem da
-   * campanha 1 para o próximo teste.
+   * Ele DEVOLVE o interruptor ao estado original, num `finally`: a regra é da
+   * semente, e deixá-la trocada mudaria a carga de todo personagem da campanha 1
+   * para o próximo teste.
    */
   test('alternar a regra opcional troca o estado sem recarregar a página', async ({ page }) => {
     await page.goto('/campanhas/1?tab=config')
@@ -249,15 +250,20 @@ test.describe('A crônica', () => {
       ;(window as unknown as { __mesmaPagina: boolean }).__mesmaPagina = true
     })
 
-    await key.click()
-    await expect(key, 'o interruptor não trocou de estado').toBeChecked({ checked: !before })
-    expect(
-      await page.evaluate(() => (window as unknown as { __mesmaPagina?: boolean }).__mesmaPagina),
-      'a página recarregou — o remendo virou navegação',
-    ).toBe(true)
-
-    await key.click()
-    await expect(key, 'o teste não devolveu a regra ao estado original').toBeChecked({ checked: before })
+    try {
+      await key.click()
+      await expect(key, 'o interruptor não trocou de estado').toBeChecked({ checked: !before })
+      expect(
+        await page.evaluate(() => (window as unknown as { __mesmaPagina?: boolean }).__mesmaPagina),
+        'a página recarregou — o remendo virou navegação',
+      ).toBe(true)
+    } finally {
+      await tidyUp('os Limites de carga da campanha 1 trocados', async () => {
+        if ((await key.isChecked()) === before) return
+        await key.click()
+        await expect(key).toBeChecked({ checked: before, timeout: 5000 })
+      })
+    }
   })
 
 })

@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
+import { tidyUp } from './support/tidy'
 
 /**
  * A FICHA PARALELA RESPONDE AO TOQUE NA HORA (ALE-520) — e os dois mecanismos
@@ -39,18 +40,31 @@ test('o botão diz que está trabalhando enquanto o gesto não volta', async ({ 
   })
 
   const less = page.locator('.ds-vitals').getByRole('button', { name: 'Menos 1 PV' })
-  await less.click()
-  await expect(less, 'o botão não marcou o pedido em curso').toHaveAttribute('aria-busy', 'true')
+  const spent = page.waitForResponse('**/vitais/pv/**')
+  let clicked = false
+  try {
+    await less.click()
+    clicked = true
+    await expect(less, 'o botão não marcou o pedido em curso').toHaveAttribute('aria-busy', 'true')
 
-  release()
-  await expect(page.locator('.ds-vitals').getByRole('button', { name: 'Menos 1 PV' })).not.toHaveAttribute(
-    'aria-busy',
-    'true',
-  )
-
-  // Devolve o PV, para a semente seguir como estava.
-  await page.unroute('**/vitais/pv/**')
-  await page.locator('.ds-vitals').getByRole('button', { name: 'Mais 1 PV' }).click()
+    release()
+    await expect(page.locator('.ds-vitals').getByRole('button', { name: 'Menos 1 PV' })).not.toHaveAttribute(
+      'aria-busy',
+      'true',
+    )
+  } finally {
+    // Solto ANTES da faxina: com a resposta presa, o PV devolvido ficaria preso
+    // atrás dela.
+    release()
+    await tidyUp(`1 PV a menos no ${TANQUE}`, async () => {
+      await page.unroute('**/vitais/pv/**')
+      if (!clicked) return
+      await spent
+      const given = page.waitForResponse('**/vitais/pv/**')
+      await page.locator('.ds-vitals').getByRole('button', { name: 'Mais 1 PV' }).click()
+      await given
+    })
+  }
 })
 
 for (const [where, width, nav] of [
