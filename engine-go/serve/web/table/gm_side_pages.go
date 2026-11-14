@@ -17,9 +17,9 @@ import (
 //
 // São a MESMA cena e as mesmas regiões, penduradas noutro documento — o Grupo
 // é o `gmGroup`, o Elenco é o `gmCastList` —, e por isso o que muda entre a
-// mesa e uma página é só a MARCA (`?pagina=`), que viaja no fluxo e nos
-// comandos. Sem ela, a resposta de um − no Grupo remendaria todas as regiões
-// da mesa numa página que não tem nenhuma delas.
+// mesa e uma página é só a MARCA (`?pagina=`), que viaja no FLUXO. Sem ela, o
+// fluxo de uma página mandaria as regiões da mesa para um documento que não tem
+// nenhuma delas. Os comandos não a levam: a resposta deles não traz cena.
 
 // sidePage é qual página à parte uma view desenha. O vazio é a mesa.
 type sidePage string
@@ -71,17 +71,13 @@ func (v *View) dressPage(r *http.Request) {
 	v.Page = SidePageFor(r.URL.Query().Get(pageParam))
 }
 
-// pageMark é a marca que o fluxo e os comandos desta view levam, ou "" na mesa.
+// pageMark é a marca que o fluxo desta view leva, ou "" na mesa.
 func (v View) pageMark() string {
 	if v.Page == pageTable {
 		return ""
 	}
 	return "?" + pageParam + "=" + string(v.Page)
 }
-
-// bestiaryPageMark é a marca da página do Bestiário, que os gestos do painel
-// escrevem à mão: o painel só existe nela, e não há `View` no caminho deles.
-const bestiaryPageMark = "?" + pageParam + "=" + string(pageBestiary)
 
 // sidePageAddress é o endereço de uma página desta sessão.
 func sidePageAddress(v View, path string) string { return v.SessionBase() + "/" + path }

@@ -240,7 +240,7 @@ templ gmCreatureFoot(b master.BestiaryView) {
 			@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": saveToCastPost(b)}) {
 				Guardar no elenco
 			}
-			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-indicator:sending": true, "data-attr:disabled": "$sending", "data-on:click": fmt.Sprintf("@post('%s/enviar%s')", b.BestiaryBase(), bestiaryPageMark)}) {
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-indicator:sending": true, "data-attr:disabled": "$sending", "data-on:click": fmt.Sprintf("@post('%s/enviar')", b.BestiaryBase())}) {
 				<span data-text="'Pôr ' + $entry_copies + ' na fila'">Pôr na fila</span>
 			}
 		</div>

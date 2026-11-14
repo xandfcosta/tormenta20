@@ -124,9 +124,8 @@ func TestTheGroupPageDrawsThePartyAndKeepsItLive(t *testing.T) {
 	} else if href, want := attr(sheetLink, "href"), fmt.Sprintf("/personagens/%d", f.charID); href != want {
 		t.Errorf("o \"Ficha\" do Arcanista leva a %q, e a ficha dele é %q", href, want)
 	}
-	minus := findNode(group, "aria-label", "Tirar 1 PV de Arcanista")
-	if minus == nil || !strings.Contains(attr(minus, "data-on:click"), "?pagina=grupo") {
-		t.Error("o − do Grupo não leva a marca da página: a resposta remendaria a mesa inteira numa página que não a tem")
+	if findNode(group, "aria-label", "Tirar 1 PV de Arcanista") == nil {
+		t.Error("o Grupo não oferece o − do PV do Arcanista")
 	}
 	if findNode(doc, "id", "table-tracker") != nil {
 		t.Error("a página do Grupo desenhou a fila")
@@ -177,7 +176,7 @@ func TestTheCastPageDrawsTheCastWithItsVerbs(t *testing.T) {
 			varek = npc.ID
 		}
 	}
-	sent := f.posts(t, f.gm, fmt.Sprintf("%s/elenco/npc/%d/na-fila?pagina=elenco", f.tableUrl(), varek), "")
+	sent := f.posts(t, f.gm, fmt.Sprintf("%s/elenco/npc/%d/na-fila", f.tableUrl(), varek), "")
 	if !strings.Contains(sent, "Capitão Varek entrou na fila.") {
 		t.Errorf("o Pôr na fila do Elenco não diz que funcionou: %s", signalsLine(sent))
 	}
@@ -202,20 +201,20 @@ func TestTheBestiaryPageListsTheCreaturesAndSendsToTheQueue(t *testing.T) {
 	if root := findNode(doc, "class", "ds-gm-page"); root == nil || !strings.Contains(attr(root, "data-signals"), `"entry_hp":130`) {
 		t.Error("a criatura aberta pelo endereço não semeou o PV do livro no ajuste")
 	}
-	if !strings.Contains(page, f.tableUrl()+"/bestiario/enviar?pagina=bestiario") {
-		t.Error("o Pôr na fila não leva a marca da página")
+	if !strings.Contains(page, f.tableUrl()+"/bestiario/enviar&#39;") {
+		t.Error("o Pôr na fila não posta para o envio do Bestiário")
 	}
-	if !strings.Contains(page, f.tableUrl()+"/elenco/npc/do-verbete?pagina=bestiario") {
-		t.Error("o Guardar no elenco não leva a marca da página")
+	if !strings.Contains(page, f.tableUrl()+"/elenco/npc/do-verbete&#39;") {
+		t.Error("o Guardar no elenco não posta para o elenco da campanha")
 	}
 	// A recusa APAGA a frase do acerto anterior: "entrou na fila" ao lado do
 	// erro seria a confirmação certa sobre o gesto errado.
-	refused := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
+	refused := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
 	if !strings.Contains(refused, `"entry_sent":""`) {
 		t.Errorf("a recusa deixou a frase do acerto acesa: %s", signalsLine(refused))
 	}
-	sent := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
+	sent := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar",
 		`{"creature":"ogro","entry_hp":30,"entry_initiative":7,"entry_copies":2}`)
 	if strings.Contains(sent, `id="table-tracker"`) {
 		t.Error("o Pôr na fila remendou a fila numa página que não a tem")
