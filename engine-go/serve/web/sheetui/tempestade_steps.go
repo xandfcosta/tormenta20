@@ -214,6 +214,11 @@ func choicesOpens(v View) string {
 			chosen = card.Attribute.Chosen
 		}
 	}
+	// NUNCA `null`: sem atributo gravado, o `attributeSavedChoices` devolve nil, o Datastar manda o sinal
+	// nulo como `""`, e o `[]string` do servidor recusa o corpo INTEIRO — todo sinal do pedido cai junto.
+	if chosen == nil {
+		chosen = []string{}
+	}
 	written, _ := json.Marshal(chosen)
 	first := ""
 	if steps := choiceStepsOf(v); len(steps) > 0 {
