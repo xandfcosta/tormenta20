@@ -198,6 +198,8 @@ func (l Lifecycle) SaveIgnoredRules(
 			return fmt.Errorf("desligar a regra %q na campanha %d: %w", rule, campaignID, err)
 		}
 	}
+	// A carga muda a ficha de cada um da campanha, e quem está com a Mesa aberta só sabe pelo evento.
+	l.bus.Publish(events.OptionalRulesChanged{CampaignID: campaignID})
 	return nil
 }
 

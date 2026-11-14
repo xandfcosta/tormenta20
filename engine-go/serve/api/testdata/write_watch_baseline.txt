@@ -15,7 +15,6 @@ POST /campanhas/nova grava em campaigns
 POST /campanhas/{id}/convite grava em campaigns
 POST /campanhas/{id}/editar grava em campaigns
 POST /campanhas/{id}/nova-sessao grava em sessions
-POST /campanhas/{id}/regras/carga grava em campaign_ignored_rules
 POST /personagens/nova grava em character_expertises
 POST /personagens/nova grava em character_items
 POST /personagens/nova grava em character_level_choices

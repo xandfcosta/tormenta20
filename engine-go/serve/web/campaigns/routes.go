@@ -457,6 +457,9 @@ func (s Scene) handleToggleRule(w http.ResponseWriter, r *http.Request) {
 		_ = sse.MarshalAndPatchSignals(map[string]string{"rule_error": ui.NoticeInternal})
 		return
 	}
+	// A carga muda a CONTA de cada ficha da campanha sem tocar na linha dela, como a regra da mesa: o
+	// carimbo é o que faz a ficha aberta na Mesa se reler.
+	s.wakeTableSheets(r.Context(), id)
 
 	v, err := s.LoadOne(r.Context(), who.ID, who.IsAdmin, id, "config")
 	if err != nil {
