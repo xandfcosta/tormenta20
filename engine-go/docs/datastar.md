@@ -72,6 +72,14 @@ O `TestEveryLiveStreamOpensThroughLiveStream` lê o `Init:` das páginas, e o
 `live-stream-reconnects.spec.ts` prova o runtime. A troca de versão não deixa
 erro: só a reconexão medida mostra.
 
+### Sinal de LISTA nunca recebe `null`, ou o pedido chega sem sinal nenhum
+
+O Datastar manda um sinal `null` como `""`, e o `[]string` do struct do servidor
+recusa o corpo INTEIRO: o `ReadSignals` falha e todo sinal daquele pedido cai,
+em silêncio — busca, filtro, aba. Um `json.Marshal` de slice nil escreve `null`,
+então **lista que vira expressão sai de um slice não nulo** (`choicesOpens`). O
+`TestTheChoicesOpenerNeverWritesANullList` prende o caso que mordeu.
+
 ### O diálogo PESADO se desenha aberto, e só aberto
 
 Diálogo fechado também é HTML: o Aprender magia (o livro inteiro), o Adicionar
