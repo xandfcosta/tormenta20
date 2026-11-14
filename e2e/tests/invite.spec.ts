@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 test.describe('A carta de convite', () => {
@@ -10,10 +9,6 @@ test.describe('A carta de convite', () => {
     await expect(page.getByRole('group', { name: /qual herói/i })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**

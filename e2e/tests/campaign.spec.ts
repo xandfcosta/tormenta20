@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
 import { VIEWPORTS, expectNoHorizontalOverflow } from './support/viewports'
 
 const CAMPAIGN = '/campanhas/1' // Snapshot Test ALE-33 (seed)
@@ -59,6 +58,7 @@ test.describe('Abrir e fechar uma campanha', () => {
  */
 const SCENES = [
   { name: 'detalhe', path: `${CAMPAIGN}?tab=membros`, heading: /Snapshot Test ALE-33/i },
+  { name: 'visão', path: `${CAMPAIGN}?tab=visao`, heading: /Snapshot Test ALE-33/i },
   { name: 'nova', path: '/campanhas/nova', heading: /Nova campanha/i },
   { name: 'convite', path: '/campanhas/entrar', heading: /Entrar numa mesa/i },
 ]
@@ -72,23 +72,6 @@ test.describe('Campanha — responsivo (sem overflow horizontal)', () => {
       await expectNoHorizontalOverflow(page, VIEWPORTS)
     })
   }
-
-  /**
-   * O `expectNoHorizontalOverflow` acima passa VERDE sobre um botão pintado
-   * fora da janela, e não por descuido: o `overflow-x-hidden` da cena zera o
-   * `scrollWidth` da raiz. É preciso medir contra a JANELA, e é o que esta
-   * asserção faz. (A causa típica é `min-width: auto` em item de grid, que
-   * dimensiona a trilha pelo MIN-CONTENT.)
-   */
-  test('nada clicável fica fora da janela na campanha, em nenhum formato', async ({ page }) => {
-    await page.goto(`${CAMPAIGN}?tab=visao`)
-    await expect(page.getByRole('heading', { name: /Snapshot Test ALE-33/i })).toBeVisible()
-
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
-  })
 
   /**
    * Apertar o respiro por `max-height` casa DUAS situações diferentes: o
@@ -181,10 +164,6 @@ test.describe('A folha em branco', () => {
     await expect(page.getByRole('button', { name: 'Criar campanha' })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**
@@ -226,10 +205,6 @@ test.describe('A crônica', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**

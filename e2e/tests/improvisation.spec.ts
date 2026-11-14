@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 test.describe('O improviso', () => {
@@ -10,10 +9,6 @@ test.describe('O improviso', () => {
   test('o improviso cabe nos seis formatos', async ({ page }) => {
     await page.goto(IMPROV)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**

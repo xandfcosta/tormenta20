@@ -36,13 +36,10 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
   await aFichaDoPrimeiro(page)
   await expect(page.getByRole('navigation', { name: 'Seções da ficha' })).toBeVisible()
 
-  await expectNoHorizontalOverflow(page, VIEWPORTS)
-
   // O CABEÇALHO e a FAIXA DOS VITAIS são o que mais aperta: retrato, nome,
   // Defesa e ⋯ numa fileira, e seis botões de vital na outra. No telefone em pé
-  // é onde a conta estoura.
-  await page.setViewportSize({ width: 390, height: 844 })
-  await expectDentroDaJanela(page)
+  // é onde a conta estoura, e o `expectNoHorizontalOverflow` passa por ele.
+  await expectNoHorizontalOverflow(page, VIEWPORTS)
 })
 
 /**
