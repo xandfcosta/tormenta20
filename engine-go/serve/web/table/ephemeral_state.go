@@ -1,5 +1,7 @@
 package table
 
+import "t20engine/infra/events"
+
 // A MEMÓRIA EFÊMERA DA MESA: o que o servidor guarda por sessão e que morre com
 // o processo.
 //
@@ -29,8 +31,11 @@ type EphemeralTableState struct {
 	displays *tableDisplays
 }
 
-func NewEphemeralTableState() *EphemeralTableState {
-	return &EphemeralTableState{lenses: newLenses(), chosenTabs: newTabs(), displays: newTableDisplays()}
+// NewEphemeralTableState monta as três memórias. O barramento é da TELA DA MESA,
+// que publica o que muda nela; a lente e a aba escolhida mudam só por comando da
+// Mesa, e o piso dele (`SessionChanged`, no `respondGm`) já acorda quem as desenha.
+func NewEphemeralTableState(bus *events.Bus) *EphemeralTableState {
+	return &EphemeralTableState{lenses: newLenses(), chosenTabs: newTabs(), displays: newTableDisplays(bus)}
 }
 
 // SessionDeleted cumpre a porta `session.MemoryOfASession`: a sessão deixou de

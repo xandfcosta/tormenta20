@@ -201,12 +201,12 @@ func TestARefusedMutationTellsNobody(t *testing.T) {
 
 // "O store avisa" e "a tela recebe" são perguntas diferentes, e só a segunda é a
 // que o mestre sente — os casos acima passavam verdes com a peça levando o
-// batimento inteiro para andar um quadrado.
+// batimento inteiro de 1s, que existia, para andar um quadrado.
 //
-// Este abre um stream de VERDADE por HTTP, move uma peça, e exige o quadro em bem
-// menos que o batimento. O limite é 400ms: folgado para um round-trip local, e
-// menos da metade do batimento, então um verde aqui não pode ser o relógio.
-func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T) {
+// Este abre um stream de VERDADE por HTTP, move uma peça, e exige o quadro em
+// 400ms: folgado para um round-trip local. Hoje não há relógio nenhum, e o
+// quadro que não viesse pelo evento não viria.
+func TestMovingATokenReachesTheStreamRightAway(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
 	// O id vem do SERVIDOR (`bs.newID`) e não do que se passa: dois clientes
@@ -288,7 +288,7 @@ func TestMovingATokenReachesTheStreamWithoutWaitingForTheHeartbeat(t *testing.T)
 				return
 			}
 		case <-limit:
-			t.Fatal("a peça não chegou em 400ms — a tela está esperando o batimento do stream")
+			t.Fatal("a peça não chegou em 400ms: o movimento não acordou o stream")
 		}
 	}
 }

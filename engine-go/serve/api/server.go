@@ -204,7 +204,7 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 		sse:      live.NewSSEHub(),
 		// ANTES da cena e ANTES do ciclo, porque os dois a recebem: é o que faz
 		// o fim de uma sessão alcançar a lente e a aba escolhida.
-		tableMemory: table.NewEphemeralTableState(),
+		tableMemory: table.NewEphemeralTableState(bus),
 	}
 	// A CENA DA MESA é montada UMA vez e o servidor guarda a instância: ela lê e
 	// escreve a `tableMemory`, e um `table.New` por requisição daria um estado
@@ -294,7 +294,7 @@ func (s *Server) campaignLifecycle() campaign.Lifecycle {
 
 // campaignSeating senta alguém à mesa: as travas, a cópia do herói e o membro.
 func (s *Server) campaignSeating() campaign.Seating {
-	return campaign.NewSeating(s.db, s.queries)
+	return campaign.NewSeating(s.db, s.queries, s.bus)
 }
 
 func (s *Server) sessionAccess() session.Access {

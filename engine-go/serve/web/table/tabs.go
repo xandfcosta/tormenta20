@@ -259,9 +259,9 @@ func (s Scene) TabRoutes(r chi.Router) {
 // Devolve `nil` como a lente e a troca, e é a MESMA razão apesar de o alcance
 // ser outro: puxar não muda a CENA. Nenhuma peça andou, nenhum terreno foi
 // pintado — o que mudou foi para onde cada pessoa está olhando, e isso não é um
-// quadro do tabuleiro. Quem leva o puxão às outras telas é o batimento do
-// stream, que redesenha a cena de cada um a cada batimento e já pergunta ao
-// `pullTab` qual aba vale.
+// quadro do tabuleiro. Quem leva o puxão às outras telas é o piso do comando
+// (`SessionChanged`, no `respondGm`): o fluxo de cada um acorda, redesenha, e o
+// `PushForMap` empurra a superfície.
 func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
 	target := chi.URLParam(c.R, "tabuleiroId")
 	// Puxar para uma aba que não existe deixaria a mesa inteira caindo no padrão
@@ -288,8 +288,9 @@ func showTableIsTab(st Scene, c commandCtx) (*board.BoardState, error) {
 // resolve aqui é o verbo dizer o que se troca.
 //
 // Devolve `nil` como a lente, e pelo mesmo motivo: trocar de aba NÃO é mutação
-// da cena. Publicar aqui acordaria a mesa inteira para uma escolha que é de uma
-// pessoa só. Quem redesenha a tela de quem clicou é a resposta do comando.
+// da cena, e um quadro do tabuleiro publicado aqui seria uma peça que não andou.
+// Quem redesenha a tela de quem clicou é a resposta do comando; as outras abas
+// dele sabem pelo piso (`SessionChanged`), e o hash cala as telas dos outros.
 //
 // Não confere se o id existe, e isso não é descuido: quem confere é o `chosenTabOf`,
 // a cada leitura, porque a aba pode morrer DEPOIS da escolha. Uma conferência

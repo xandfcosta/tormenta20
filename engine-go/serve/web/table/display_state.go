@@ -3,6 +3,8 @@ package table
 import (
 	"sync"
 	"time"
+
+	"t20engine/infra/events"
 )
 
 // O QUE A TELA DA MESA LEMBRA, por sessão (ALE-608): o enquadramento que o
@@ -52,51 +54,28 @@ type tableDisplays struct {
 	framing  map[int64]displayFraming
 	frozen   map[int64]frozenDisplay
 	watching map[int64]int
-	// changed é um canal por sessão que FECHA a cada mudança e é trocado por
-	// um novo: quem espera acorda junto, sem ninguém precisar saber quantos
-	// esperam. É o que leva o enquadramento à tela na hora — o batimento de 1s
-	// do fluxo seguiria o mestre com um segundo de atraso a cada arrasto.
-	changed map[int64]chan struct{}
+	// bus leva cada mudança a quem a desenha: a tela da mesa segue o recorte do
+	// mestre a cada arrasto, e o tabuleiro dele acende o "ao vivo" quando uma
+	// tela abre. Publicar acontece FORA da trava, senão quem acorda para ler
+	// espera o escritor.
+	bus *events.Bus
 }
 
-func newTableDisplays() *tableDisplays {
+func newTableDisplays(bus *events.Bus) *tableDisplays {
 	return &tableDisplays{
 		framing:  map[int64]displayFraming{},
 		frozen:   map[int64]frozenDisplay{},
 		watching: map[int64]int{},
-		changed:  map[int64]chan struct{}{},
-	}
-}
-
-// Changed devolve o canal que fecha na próxima mudança desta sessão.
-func (d *tableDisplays) Changed(sessionID int64) <-chan struct{} {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	return d.changedLocked(sessionID)
-}
-
-func (d *tableDisplays) changedLocked(sessionID int64) chan struct{} {
-	ch, ok := d.changed[sessionID]
-	if !ok {
-		ch = make(chan struct{})
-		d.changed[sessionID] = ch
-	}
-	return ch
-}
-
-func (d *tableDisplays) notifyLocked(sessionID int64) {
-	if ch, ok := d.changed[sessionID]; ok {
-		close(ch)
-		delete(d.changed, sessionID)
+		bus:      bus,
 	}
 }
 
 // Frame guarda o recorte que o mestre está olhando.
 func (d *tableDisplays) Frame(sessionID int64, f displayFraming) {
 	d.mu.Lock()
-	defer d.mu.Unlock()
 	d.framing[sessionID] = f
-	d.notifyLocked(sessionID)
+	d.mu.Unlock()
+	d.bus.Publish(events.TableDisplayFramed{SessionID: sessionID})
 }
 
 func (d *tableDisplays) Framing(sessionID int64) displayFraming {
@@ -111,20 +90,22 @@ func (d *tableDisplays) Framing(sessionID int64) displayFraming {
 // toa; a garantia é esta, debaixo da trava.
 func (d *tableDisplays) Freeze(sessionID int64, v displayView, at time.Time) {
 	d.mu.Lock()
-	defer d.mu.Unlock()
-	if _, ok := d.frozen[sessionID]; ok {
-		return
+	_, already := d.frozen[sessionID]
+	if !already {
+		d.frozen[sessionID] = frozenDisplay{view: v, at: at}
 	}
-	d.frozen[sessionID] = frozenDisplay{view: v, at: at}
-	d.notifyLocked(sessionID)
+	d.mu.Unlock()
+	if !already {
+		d.bus.Publish(events.TableDisplayFrozen{SessionID: sessionID})
+	}
 }
 
 // Thaw solta a tela, que volta a seguir o tabuleiro de agora.
 func (d *tableDisplays) Thaw(sessionID int64) {
 	d.mu.Lock()
-	defer d.mu.Unlock()
 	delete(d.frozen, sessionID)
-	d.notifyLocked(sessionID)
+	d.mu.Unlock()
+	d.bus.Publish(events.TableDisplayThawed{SessionID: sessionID})
 }
 
 // Frozen devolve o retrato, se a tela está congelada.
@@ -139,18 +120,20 @@ func (d *tableDisplays) Frozen(sessionID int64) (displayView, bool) {
 // único que sabe quando ela fecha — o `r.Context()` cancelado.
 func (d *tableDisplays) Join(sessionID int64) {
 	d.mu.Lock()
-	defer d.mu.Unlock()
 	d.watching[sessionID]++
+	d.mu.Unlock()
+	d.bus.Publish(events.TableDisplayOpened{SessionID: sessionID})
 }
 
 func (d *tableDisplays) Leave(sessionID int64) {
 	d.mu.Lock()
-	defer d.mu.Unlock()
 	// APAGA a entrada no zero, como a lente: uma sessão que guardasse um zero
 	// por tela que já fechou nunca devolveria a memória.
 	if d.watching[sessionID]--; d.watching[sessionID] <= 0 {
 		delete(d.watching, sessionID)
 	}
+	d.mu.Unlock()
+	d.bus.Publish(events.TableDisplayClosed{SessionID: sessionID})
 }
 
 // StateOf é o que o interruptor do mestre desenha.
@@ -186,5 +169,4 @@ func (d *tableDisplays) Erase(sessionID int64) {
 	delete(d.framing, sessionID)
 	delete(d.frozen, sessionID)
 	delete(d.watching, sessionID)
-	d.notifyLocked(sessionID)
 }

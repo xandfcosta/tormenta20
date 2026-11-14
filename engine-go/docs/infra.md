@@ -180,6 +180,17 @@ mudou. **Não é event sourcing: o banco é o estado.** As regras são conta
   **O gancho é o detector, nunca o despertador**: o vocabulário continua por
   ATO. E gesto novo pede teste, porque rota que nenhum teste exercita não é
   medida.
+- **O que muda só em MEMÓRIA também publica**, porque **não há relógio**: o
+  fluxo só redesenha no evento, e o que muda sem publicar fica parado na tela
+  dos outros. A presença publica no próprio fluxo, ao abrir e ao fechar; a tela
+  da mesa (`tableDisplays`), um evento por ato; o herói que senta pelo convite,
+  o `MemberSeated`. A lente, a aba escolhida e o puxão só mudam por comando da
+  Mesa, e o piso dele os cobre. Quem cobra é o `table_memory_events_test.go`,
+  com prazo de 400ms e fluxo de verdade.
+- **A assinatura ACOMPANHA a view** (`streamSubscription.follow`): os
+  interesses saem do Grupo e da fila, que mudam com a Mesa aberta. A nova
+  assinatura entra antes de a velha sair, e o evento que ficou na fila da velha
+  faz o fluxo redesenhar de novo.
 - **Os pisos, por gateway**: o comando da Mesa publica `SessionChanged` (no
   `respondGm`), como o da ficha publica `CharacterChanged`; a porta da ficha
   dentro da unidade de trabalho (`sheetVitals`) avisa a ficha gravada DEPOIS do

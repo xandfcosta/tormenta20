@@ -7,6 +7,7 @@ import (
 
 	"t20engine/app/campaign"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/events"
 )
 
 // Demo chronicles (kept in the seed and grown over time). Members reference a
@@ -361,7 +362,8 @@ func seedCampaignCopy(database *sql.DB) error {
 		"A Queda de Tauron", heroID).Scan(&campaignID, &ownerID); err != nil {
 		return fmt.Errorf("a mesa da cópia de campanha: %w", err)
 	}
-	seats := campaign.NewSeating(database, sqlcgen.New(database))
+	// Um barramento sem ouvinte: a semente não tem Mesa aberta para avisar.
+	seats := campaign.NewSeating(database, sqlcgen.New(database), &events.Bus{})
 	if err := seats.Seat(context.Background(), ownerID, campaignID, heroID, "seedtoken-02"); err != nil {
 		return fmt.Errorf("sentar o rascunho %d na mesa %d: %w", heroID, campaignID, err)
 	}

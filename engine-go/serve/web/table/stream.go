@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 	"t20engine/infra/events"
-	"time"
 
 	"github.com/a-h/templ"
 
@@ -28,13 +27,12 @@ import (
 // roteador, não o SDK: quadros sucessivos são quase idênticos, e essa
 // redundância é exatamente o que um compressor de stream come.
 //
-// A CADÊNCIA não é só relógio: os stores avisam quem escuta a cada mutação,
-// então o caminho comum acorda na hora em vez de esperar o próximo tique. O
-// relógio continua como BATIMENTO de reserva, e não é redundância — mudanças
-// que a Mesa mostra nascem FORA dos stores (o PV do Grupo vem da ficha,
-// alterado por HTTP), e nenhum aviso as cobriria. Por isso ele é de 1s e não de
-// 200ms: o aviso paga a latência, o batimento paga a abrangência.
-const tableHeartbeat = time.Second
+// A CADÊNCIA é o EVENTO, e só ele: toda gravação que a Mesa mostra publica o
+// do alvo dela, e o que muda só em memória (a presença, a tela da mesa) também.
+// Não há relógio. Aqui morava um batimento de 1s que redesenhava a cada tique,
+// para cobrir o que mudava sem avisar; cada Mesa ociosa pagava ~7 ms de CPU por
+// segundo para descobrir que nada tinha mudado, e o que ele cobria virou evento
+// (ALE-639). Nem para a queda ele servia: ela vem do `r.Context()` cancelado.
 
 func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	campaignID, sessionID, ok := tableParams(w, r)
@@ -64,25 +62,28 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	// ao registro porque quem abre duas abas conta uma vez só, e a dedupe promove a
 	// pessoa a mestre se QUALQUER conexão dela for de mestre.
 	//
-	// Não há evento novo: o `writeTable` só manda bytes quando o HTML MUDA, e o
-	// batimento de 1s já leva a mudança às outras abas.
+	// A CHEGADA E A SAÍDA são notícia: o Grupo do mestre desenha quem está na
+	// mesa, e nada além deste fluxo sabe quando alguém abre ou fecha a aba.
 	role := "player"
 	if view.GM != nil {
 		role = "gm"
 	}
 	connection := live.NewUUID()
 	s.deps.Presence().Join(sessionID, connection, live.PresenceUser{UserID: userID, Role: role})
-	defer s.deps.Presence().Leave(sessionID, connection)
+	s.deps.Bus().Publish(events.PresenceJoined{SessionID: sessionID})
+	defer func() {
+		s.deps.Presence().Leave(sessionID, connection)
+		s.deps.Bus().Publish(events.PresenceLeft{SessionID: sessionID})
+	}()
 
 	// A ASSINATURA vem ANTES do primeiro quadro, senão uma mutação que caia entre
-	// render e assinatura se perde e a tela fica velha até o batimento.
+	// render e assinatura se perde e a tela fica velha até o próximo evento.
 	//
-	// UMA, com os interesses de quem está olhando. Um canal por store obrigaria um
-	// `case` por store no `select` abaixo, só para juntar de novo o que está
-	// separado por acidente de onde o estado mora. Quem não tem ficha nesta mesa (o
-	// mestre, e quem só assiste) simplesmente não pede o interesse dela.
-	sub, stop := s.deps.Bus().Subscribe(readerInterests(view)...)
-	defer stop()
+	// UMA, com os interesses de quem está olhando, e ela ACOMPANHA a view: quem
+	// senta à mesa depois de a página abrir entra no Grupo, e a ficha dele passa a
+	// interessar (`streamSubscription.follow`).
+	subscription := subscribeStream(s.deps.Bus(), readerInterests(view))
+	defer subscription.close()
 
 	sse := datastar.NewSSE(w, r)
 	// A VERSÃO DO SERVIDOR, uma vez por conexão: o fluxo reconecta sozinho depois de um
@@ -99,34 +100,36 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 	sheetAnnounced := sheetVersion(s, r.Context(), view)
 	sheetTouched := false
 
-	beat := time.NewTicker(tableHeartbeat)
-	defer beat.Stop()
+	again := false
 	for {
-		select {
-		case <-r.Context().Done():
-			// A aba fechou, o jogador trocou de superfície ou a rede caiu. Sair
-			// aqui é o que impede a goroutine de sobreviver ao leitor.
-			return
-		case <-s.deps.LiveStreamsClosing():
-			// O processo vai encerrar. ABORTA em vez de `return`: fechar limpo é uma
-			// resposta completa para o Datastar, que não reconectaria, e a mesa ficaria
-			// parada depois do deploy. Conexão cortada é erro de rede, e dele ele se
-			// recupera sozinho.
-			panic(http.ErrAbortHandler)
-		case ev := <-sub.C:
-			// A ficha só é relida quando o evento diz que ELA mudou: reler a cada
-			// tique é uma linha por segundo por jogador conectado, quase sempre para
-			// descobrir que nada mudou.
-			sheetTouched = sheetTouched || sheetChanged(ev, view)
-		case <-beat.C:
+		if !again {
+			select {
+			case <-r.Context().Done():
+				// A aba fechou, o jogador trocou de superfície ou a rede caiu. Sair
+				// aqui é o que impede a goroutine de sobreviver ao leitor.
+				return
+			case <-s.deps.LiveStreamsClosing():
+				// O processo vai encerrar. ABORTA em vez de `return`: fechar limpo é uma
+				// resposta completa para o Datastar, que não reconectaria, e a mesa ficaria
+				// parada depois do deploy. Conexão cortada é erro de rede, e dele ele se
+				// recupera sozinho.
+				panic(http.ErrAbortHandler)
+			case ev := <-subscription.woke():
+				// A ficha só é relida quando o evento diz que ELA mudou: reler a cada
+				// evento é uma linha por jogador conectado, quase sempre para descobrir
+				// que nada mudou.
+				sheetTouched = sheetTouched || sheetChanged(ev, view)
+			}
 		}
-		view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID)
+		again = false
+		next, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID)
 		if err != nil {
 			// Um erro passageiro (banco ocupado) não derruba o stream: o próximo
-			// ciclo tenta de novo, e a tela continua no último estado bom em vez
+			// evento tenta de novo, e a tela continua no último estado bom em vez
 			// de piscar.
 			continue
 		}
+		view = next
 		view.dressPage(r)
 		last = writeTable(r.Context(), sse, view, last)
 		pushedPull = PushForMap(s, sse, sessionID, userID, pushedPull)
@@ -134,6 +137,7 @@ func (s Scene) handleTableStream(w http.ResponseWriter, r *http.Request) {
 			sheetAnnounced = announceSheetChange(s, r.Context(), sse, view, sheetAnnounced)
 			sheetTouched = false
 		}
+		again = subscription.follow(readerInterests(view))
 	}
 }
 

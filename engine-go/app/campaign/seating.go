@@ -9,6 +9,7 @@ import (
 	"t20engine/app"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
+	"t20engine/infra/events"
 )
 
 // AS RECUSAS DE SENTAR À MESA, e elas são EXPORTADAS.
@@ -44,10 +45,13 @@ var (
 type Seating struct {
 	db      *sql.DB
 	queries *sqlcgen.Queries
+	// bus avisa quem tem a Mesa aberta de que o Grupo cresceu: a cópia é ficha
+	// nova, que o fluxo de ninguém assinava.
+	bus *events.Bus
 }
 
-func NewSeating(db *sql.DB, q *sqlcgen.Queries) Seating {
-	return Seating{db: db, queries: q}
+func NewSeating(db *sql.DB, q *sqlcgen.Queries, bus *events.Bus) Seating {
+	return Seating{db: db, queries: q, bus: bus}
 }
 
 // Seat aplica as travas e faz o instantâneo.
@@ -156,6 +160,7 @@ func (s Seating) seat(ctx context.Context, heroID, campaignID int64) error {
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("fechar a transação de sentar à mesa: %w", err)
 	}
+	s.bus.Publish(events.MemberSeated{CampaignID: campaignID, CharacterID: copyID})
 	return nil
 }
 
