@@ -137,8 +137,12 @@ certa. Custo: os escritores serializam, a leitura segue livre (WAL), e o
 requisição; o que desce é um `text/event-stream` aberto. Vale para o próximo
 canal. A Mesa tem fluxo PRÓPRIO (`/campanhas/{campanha}/sessoes/{sessao}/fluxo`, em
 `serve/web/table/stream.go`) que assina o `events.Bus`; os comandos são rotas da
-CENA. A ficha solta tem o dela (`/personagens/{id}/ao-vivo`, em `serve/web/sheetui/live.go`), que só
-avisa a versão nova da ficha. Ele passa pelo `requirePage`, que lê a sessão do COOKIE — sem token na
+CENA. **O comando responde só os SINAIS** — a recusa e os que limpam o formulário
+(`respondGm`) —, e quem entrega a cena, inclusive a quem clicou, é o fluxo: a
+Mesa inteira na resposta desenhava cada gesto duas vezes. O gesto depende do
+fluxo de pé, e a reconexão traz a Mesa de agora. A ficha solta tem o dela
+(`/personagens/{id}/ao-vivo`, em `serve/web/sheetui/live.go`), que só avisa a
+versão nova da ficha. Ele passa pelo `requirePage`, que lê a sessão do COOKIE — sem token na
 query string. A queda do cliente vem do `r.Context()` cancelado, não de batida.
 
 > **O `SSEHub` (`domain/live`) só EMITE**: `SSEHub.Add` e o laço de leitura
