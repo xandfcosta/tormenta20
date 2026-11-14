@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/net/html"
+
 	"t20engine/domain/sheet"
 	"t20engine/infra/events"
 )
@@ -416,10 +418,44 @@ func TestTheTabListsTheImprovements(t *testing.T) {
 	}
 }
 
+// A LINHA DO MESTRE diz onde a melhoria cabe e em quantos itens ela está, e o
+// diálogo do jogador a separa das do livro com o "da mesa". É o que o mestre lê
+// antes de excluir: a confirmação repete o "em 1 item" (`TestRemovingAnImprovementTakesItOffEveryItem`).
+func TestTheImprovementRowSaysWhereItFitsAndHowManyCarryIt(t *testing.T) {
+	f, id := fighterFixture(t)
+	inCampaign(t, f, id)
+	medal := itemSemeia(t, f, id, "medalhao-de-prata", "Medalhão de prata", "vested")
+	insignia := createsImprovement(t, f, improvementSignals("Insígnia", "apparel", "expertise", "Luta", 1))
+	row := func() string {
+		t.Helper()
+		doc, err := html.Parse(strings.NewReader(rulesTab(t, f, f.gm)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		found := findNodeWithText(doc, "ds-table-rule", "Insígnia")
+		if found == nil {
+			t.Fatal("a lista do mestre não tem a linha da Insígnia")
+		}
+		return textOf(found)
+	}
+
+	if text := row(); !strings.Contains(text, "cabe em vestuário e esotérico") || !strings.Contains(text, "em nenhum item") {
+		t.Errorf("recém-criada, a linha devia dizer onde cabe e que não está em item nenhum: %q", text)
+	}
+	if dialog := improvementDialog(t, f, id, medal); !strings.Contains(dialog, "da mesa") {
+		t.Error("o diálogo do jogador não marca a melhoria como da mesa")
+	}
+	placesImprovements(t, f, f.player, id, medal, insignia)
+	if text := row(); !strings.Contains(text, "em 1 item") {
+		t.Errorf("posta no medalhão, a linha devia dizer em 1 item: %q", text)
+	}
+}
+
 // A prévia diz onde a melhoria cabe, o que ela soma e quem a vê.
 func TestTheImprovementPreviewSaysWhatItDoes(t *testing.T) {
 	f := newSceneFixture(t)
-	body := f.requests(t, f.gm, http.MethodPost, improvementsURL(f, "/rascunho"), improvementSignals("A", "apparel", "expertise", "Luta", 1)).Body.String()
+	// Pelo SERVIDOR DE VERDADE, pela ordem `ReadSignals` antes do `NewSSE` (ver o `posts`).
+	body := f.posts(t, f.gm, improvementsURL(f, "/rascunho"), improvementSignals("A", "apparel", "expertise", "Luta", 1))
 	for _, want := range []string{"vestuário", "+1 em Luta", "enquanto o item está em uso", "Todos da mesa"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("a prévia não diz %q", want)
