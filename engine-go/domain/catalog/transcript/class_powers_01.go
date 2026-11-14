@@ -184,9 +184,8 @@ var classPowersPart01 = []ClassPower{
 			{Kind: "anyPower", IDs: []string{"class.arcanista.caminho-bruxo", "class.arcanista.caminho-mago"}},
 		},
 		Choice: &PowerChoice{
-			Kind:       "school",
-			Label:      "Escola",
-			Repeatable: true,
+			Kind:  "school",
+			Label: "Escola",
 			Options: []PowerChoiceOption{
 				{ID: "abjuracao", Name: "Abjuração"},
 				{ID: "adivinhacao", Name: "Adivinhação"},
