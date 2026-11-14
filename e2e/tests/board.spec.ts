@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from '@playwright/test'
+import { expect, type Locator, type Page, type Request, test } from '@playwright/test'
 import { expectDentroDaJanela } from './support/geometry'
 import { openTheBoard, disposableTable, pickBrush, putACombatantInTheTracker, putATokenOnTheMap, putTheTokenOnTurn, showTheBoard } from './support/table'
 
@@ -340,11 +340,24 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     const dragEnd = { x: dragStart.x + 120, y: dragStart.y + 90 }
 
     // O CONTROLE: o MESMO arrasto sem Shift pinta uma linha, não uma área.
+    //
+    // Contado só quando o ÚLTIMO segmento voltou: o traço posta um segmento a
+    // cada passo do arrasto, e lido no instante do `up` ele pode estar pela
+    // metade. Um controle subcontado baixa a barra, e "mais que o dobro do
+    // traço" passaria com o Shift ignorado.
+    let segmentsInFlight = 0
+    const isSegment = (r: Request) => r.method() === 'POST' && new URL(r.url()).pathname.endsWith('/terreno')
+    page.on('request', (r) => isSegment(r) && segmentsInFlight++)
+    page.on('requestfinished', (r) => isSegment(r) && segmentsInFlight--)
+    page.on('requestfailed', (r) => isSegment(r) && segmentsInFlight--)
     await page.mouse.move(dragStart.x, dragStart.y)
     await page.mouse.down()
     await page.mouse.move(dragEnd.x, dragEnd.y, { steps: 10 })
     await page.mouse.up()
-    const strokeOf = await page.locator('.board-terrain.board-difficult').count()
+    await expect.poll(() => segmentsInFlight, { message: 'um segmento do traço não voltou' }).toBe(0)
+    const difficult = page.locator('.board-terrain.board-difficult')
+    const strokeOf = await difficult.count()
+    expect(strokeOf, 'o traço sem Shift não pintou nada: o controle não mediria').toBeGreaterThan(0)
 
     // E agora COM Shift, num pedaço virgem do plano.
     const deB = { x: box.x + 420, y: box.y + 120 }
@@ -360,9 +373,7 @@ test('Shift + arrasto enche o retângulo, e sem Shift continua traço', async ({
     await page.keyboard.up('Shift')
 
     await expect
-      .poll(() => page.locator('.board-terrain.board-difficult').count(), {
-        message: 'o retângulo não encheu a área',
-      })
+      .poll(() => difficult.count(), { message: 'o retângulo não encheu a área' })
       .toBeGreaterThan(strokeOf * 2)
 
     // E o laço some quando o dedo solta — ele é intenção, não resultado.
