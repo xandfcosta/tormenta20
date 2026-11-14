@@ -33,7 +33,7 @@ import (
 func (s Scene) PartyRoutes(r chi.Router) {
 	base := sessionPattern + "/tabuleiro"
 	r.Post(base+"/marcar-area", s.handleMarcarArea)
-	r.Post(base+"/grupo/mover", s.gmContinuousCommand(movePartyTable))
+	r.Post(base+"/grupo/mover", s.gmBoardCommand(movePartyTable))
 }
 
 // handleMarcarArea devolve os ids das peças dentro do laço.

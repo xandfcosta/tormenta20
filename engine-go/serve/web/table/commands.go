@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"t20engine/infra/events"
-	"t20engine/serve/web/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
@@ -578,12 +576,20 @@ func (s Scene) stateCommand(
 		if state != nil {
 			s.deps.PublishSessionState(sessionID, state)
 		}
-		s.respondGm(w, r, userID, campaignID, sessionID, err, signals)
+		s.respondGm(w, r, sessionID, err, signals)
 	}
 }
 
-// respondGm devolve a cena remendada E a frase da recusa — as duas sempre, e as
-// duas por SSE.
+// respondGm responde a quem clicou com os SINAIS do gesto: a frase da recusa e
+// os que limpam o formulário. A CENA não vem aqui: quem a entrega é o fluxo.
+//
+// O gesto PUBLICA antes de responder (`events.SessionChanged`), e o fluxo de
+// cada tela — inclusive o de quem clicou — acorda, relê e manda só a região que
+// mudou. Aqui morava o redesenho da Mesa inteira na resposta: ~353 KB por clique,
+// e o fluxo redesenhava de novo logo depois, então cada gesto era desenhado duas
+// vezes. No arrasto do pincel era por casa cruzada. Decisão do dono: o gesto do
+// mestre depende do fluxo de pé (ALE-640). Com o fluxo caído, o Datastar
+// reconecta, e a carga da reconexão traz a Mesa de agora.
 //
 // A recusa NÃO pode ser um `http.Error`: o Datastar não desenha corpo de
 // resposta 4xx, então ela não chegaria a lugar nenhum e o mestre clicaria
@@ -591,43 +597,14 @@ func (s Scene) stateCommand(
 //
 // O 403 é a exceção e continua sendo `http.Error`: ele é para quem posta na mão,
 // e a tela de quem não é mestre nunca teve o botão.
-//
-// A cena é remendada NA HORA em vez de esperar o próximo tique do stream, que
-// avisa-e-relê e calaria pelo hash. E o remendo vale também na recusa:
-// redesenhar mostra que a cena continua ABERTA, que é a verdade que o mestre
-// precisa ver ao lado da frase.
 func (s Scene) respondGm(
-	w http.ResponseWriter, r *http.Request,
-	userID int64, campaignID, sessionID int64, refusal error, signals map[string]any,
-	onlyRegions ...string,
+	w http.ResponseWriter, r *http.Request, sessionID int64, refusal error, signals map[string]any,
 ) {
-	// O GESTO AVISA A MESA antes de responder a quem clicou: as outras telas só se redesenham no evento
-	// (`events.SessionChanged`). Também na recusa, porque o gesto pode ter pousado pela metade — o
-	// `bringParty` põe quatro de cinco e tropeça no quinto —, e o fluxo que acordar à toa compara pelo hash
-	// e não manda nada.
+	// Também na recusa, porque o gesto pode ter pousado pela metade — o
+	// `bringParty` põe quatro de cinco e tropeça no quinto —, e o fluxo que
+	// acordar à toa compara pelo hash e não manda nada.
 	s.deps.Bus().Publish(events.SessionChanged{SessionID: sessionID})
 	sse := datastar.NewSSE(w, r)
-	if view, _, err := s.LoadView(r.Context(), userID, campaignID, sessionID); err == nil {
-		view.dressPage(r)
-		// Por PADRÃO manda TODAS as regiões e não só as que mudaram, ao contrário
-		// do stream: aqui não há digital anterior para comparar — este caminho
-		// responde a um pedido, não mantém uma conexão. Vale porque quem recebe
-		// acabou de CLICAR.
-		//
-		// O GESTO CONTÍNUO é a exceção que criou o `onlyRegions`: no arrasto do
-		// pincel cada casa cruzada devolveria a Mesa inteira, 353 KB por casa.
-		// Falhar ao redesenhar não desfaz a mutação, que já aconteceu e já foi
-		// transmitida; o stream corrige no próximo tique. Por isso é best-effort e
-		// a frase sai de qualquer jeito.
-		for _, region := range TableRegions(view) {
-			if !pedidaOuTodas(region.ID, onlyRegions) {
-				continue
-			}
-			if fragment, err := ui.RenderFragment(r.Context(), region.No); err == nil {
-				_ = sse.PatchElements(fragment)
-			}
-		}
-	}
 	sentence := ""
 	if refusal != nil {
 		sentence = refusal.Error()
@@ -637,13 +614,4 @@ func (s Scene) respondGm(
 	// a recusa de dois cliques atrás acesa sobre um comando que funcionou.
 	signals["command_error"] = sentence
 	_ = sse.MarshalAndPatchSignals(signals)
-}
-
-// pedidaOuTodas: lista vazia quer dizer "a Mesa inteira", que é o padrão de
-// quase todo comando.
-func pedidaOuTodas(id string, requested []string) bool {
-	if len(requested) == 0 {
-		return true
-	}
-	return slices.Contains(requested, id)
 }

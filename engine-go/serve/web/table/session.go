@@ -184,7 +184,7 @@ func (s Scene) answersTheGesture(
 	if state != nil {
 		s.deps.PublishSessionState(sessionID, state)
 	}
-	s.respondGm(w, r, who.ID, campaignID, sessionID, refusal, map[string]any{})
+	s.respondGm(w, r, sessionID, refusal, map[string]any{})
 }
 
 // statusOf traduz a recusa TIPADA do caso de uso no número que o navegador
