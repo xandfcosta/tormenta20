@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"fmt"
 	"slices"
 	"testing"
 )
@@ -147,5 +148,79 @@ func TestTheBlobsComeFromTheRowsAndTheDiffOnlyTouchesWhatChanged(t *testing.T) {
 	diff := DiffChoiceBlobs(rows, nil, &fewer)
 	if len(diff.RemoveIDs) != 1 || diff.RemoveIDs[0] != 3 || len(diff.Add) != 0 {
 		t.Errorf("tirar uma Força deu %+v, esperava apagar a linha 3", diff)
+	}
+}
+
+// O poder SEM NÍVEL vai para a vaga mais baixa em que ele PODE estar: não antes do nível mínimo
+// dele, nem antes do poder que ele pede (p38). O Mestre em Escola pede o 8º nível de arcanista
+// e o Especialista em Escola; o Arcanista Pleno da semente saía com o Mestre no 2º nível e o
+// Especialista no 3º. As linhas são as da semente, na ordem dela: o poder e a escola de cada um.
+func TestAPowerWithoutLevelWaitsForItsMinimumAndItsPrerequisite(t *testing.T) {
+	const specialist, master = "class.arcanista.especialista-em-escola", "class.arcanista.mestre-em-escola"
+	choices := []LevelChoiceDTO{}
+	for i := int64(1); i <= 10; i++ {
+		choices = append(choices, LevelChoiceDTO{ID: i, Kind: LevelKindClass, Ref: "Arcanista"})
+	}
+	choices = append(choices,
+		LevelChoiceDTO{ID: 11, Kind: LevelKindPower, Ref: specialist},
+		LevelChoiceDTO{ID: 12, Kind: LevelKindPower, Ref: master},
+		LevelChoiceDTO{ID: 13, Kind: LevelKindPick, Ref: specialist, Pick: "evocacao"},
+		LevelChoiceDTO{ID: 14, Kind: LevelKindPick, Ref: master, Pick: "evocacao"},
+	)
+	rows := PlanLevelRows(CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 10}}, LevelChoices: choices})
+
+	levelOf := map[string]int64{}
+	for _, row := range rows {
+		if row.Kind == LevelKindPower || row.Kind == LevelKindPick {
+			levelOf[row.Kind+" "+row.Ref] = row.Level
+		}
+	}
+	// O CONTROLE: os dois poderes ganharam nível. Sem ele, "o Mestre não está no 2º" seria
+	// verdade com o Mestre sem nível nenhum.
+	if levelOf["power "+specialist] == 0 || levelOf["power "+master] == 0 {
+		t.Fatalf("um dos poderes ficou sem nível: %v", levelOf)
+	}
+	if levelOf["power "+master] < 8 {
+		t.Errorf("o Mestre em Escola ficou no %dº nível, e ele pede o 8º de arcanista (p38)", levelOf["power "+master])
+	}
+	if levelOf["power "+specialist] >= levelOf["power "+master] {
+		t.Errorf("o Especialista em Escola ficou no %dº nível e o Mestre no %dº, e o Mestre pede o Especialista antes (p38)",
+			levelOf["power "+specialist], levelOf["power "+master])
+	}
+	if levelOf["pick "+master] != levelOf["power "+master] {
+		t.Errorf("a escola do Mestre ficou no %dº nível e o poder no %dº: a escolha anda com o poder",
+			levelOf["pick "+master], levelOf["power "+master])
+	}
+}
+
+// O PRÉ-REQUISITO decide sozinho quando o nível mínimo já não separa os dois: do 2º ao 8º nível
+// a ficha está cheia, e sobram o 9º e o 10º. O Mestre em Escola, gravado primeiro, pegaria o 9º
+// pelo nível mínimo; ele espera o Especialista, que fica com o 9º, e vai para o 10º (p38).
+func TestAPowerWithoutLevelGoesAfterThePowerItAsks(t *testing.T) {
+	const specialist, master = "class.arcanista.especialista-em-escola", "class.arcanista.mestre-em-escola"
+	choices := []LevelChoiceDTO{}
+	for i := int64(1); i <= 10; i++ {
+		choices = append(choices, LevelChoiceDTO{ID: i, Kind: LevelKindClass, Ref: "Arcanista"})
+	}
+	for level := int64(2); level <= 8; level++ {
+		choices = append(choices, LevelChoiceDTO{ID: 100 + level, Kind: LevelKindPower, Level: level, Ref: fmt.Sprintf("poder-do-%d", level)})
+	}
+	choices = append(choices,
+		LevelChoiceDTO{ID: 11, Kind: LevelKindPower, Ref: master},
+		LevelChoiceDTO{ID: 12, Kind: LevelKindPick, Ref: master, Pick: "evocacao"},
+		LevelChoiceDTO{ID: 13, Kind: LevelKindPower, Ref: specialist},
+		LevelChoiceDTO{ID: 14, Kind: LevelKindPick, Ref: specialist, Pick: "evocacao"},
+	)
+	rows := PlanLevelRows(CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 10}}, LevelChoices: choices})
+
+	levelOf := map[string]int64{}
+	for _, row := range rows {
+		if row.Kind == LevelKindPower {
+			levelOf[row.Ref] = row.Level
+		}
+	}
+	if levelOf[specialist] != 9 || levelOf[master] != 10 {
+		t.Errorf("o Especialista ficou no %dº e o Mestre no %dº; com o 2º ao 8º ocupados, eram o 9º e o 10º (p38)",
+			levelOf[specialist], levelOf[master])
 	}
 }

@@ -247,8 +247,9 @@ func levelWhereClassReached(levels []LevelChoiceDTO, class string, classLevel in
 // situate dá nível a quem ainda não tem, na ordem em que foram gravados.
 //
 // Cada nível de classe a partir do 2º dá uma vaga de poder (p33). A escolha vai para a vaga
-// livre mais baixa, e o Aumento de Atributo evita o patamar em que aquele atributo já foi
-// escolhido (p38). Sem vaga, ela fica no último nível: a ficha antiga pode ter mais do que
+// livre mais baixa EM QUE ELA PODE ESTAR: não antes do nível mínimo do poder, nem antes do
+// poder que ela pede (o Mestre em Escola, p38). O Aumento de Atributo evita o patamar em que
+// aquele atributo já foi escolhido (p38). Sem vaga, ela fica no último nível: a ficha antiga pode ter mais do que
 // cabe, e isto só situa; quem recusa é a conferência das escolhas.
 func situate(rows []LevelChoiceDTO, levels, automatic []LevelChoiceDTO) []LevelChoiceDTO {
 	slots := powerSlotLevels(levels)
@@ -275,10 +276,12 @@ func situate(rows []LevelChoiceDTO, levels, automatic []LevelChoiceDTO) []LevelC
 	if last == 0 {
 		last = 1
 	}
-	freeSlot := func(row LevelChoiceDTO) int64 {
+	// freeSlot é a vaga livre mais baixa a partir de `floor`: o nível mínimo do poder e o
+	// do poder que ele pede vêm antes dela (`floorOf`).
+	freeSlot := func(row LevelChoiceDTO, floor int64) int64 {
 		first := int64(0)
 		for _, level := range slots {
-			if taken[level] {
+			if taken[level] || level < floor {
 				continue
 			}
 			if first == 0 {
@@ -295,12 +298,34 @@ func situate(rows []LevelChoiceDTO, levels, automatic []LevelChoiceDTO) []LevelC
 		return last
 	}
 
-	// Primeiro quem ocupa vaga, porque os outros seguem o nível dele.
+	// Primeiro quem ocupa vaga, porque os outros seguem o nível dele. Quem pede um poder que
+	// ainda está sem nível espera a vez dele: o Mestre em Escola gravado antes do Especialista
+	// não pode pegar a vaga que o Especialista vai ter (p38). Um laço de pré-requisitos, que o
+	// livro não tem, sai pelo fim: cada um vai para a vaga a partir do nível mínimo.
+	waiting := []int{}
 	for i := range rows {
 		if rows[i].Level == 0 && consumesSlot(rows[i]) {
-			rows[i].Level = freeSlot(rows[i])
-			note(rows[i])
+			waiting = append(waiting, i)
 		}
+	}
+	for placed := true; placed && len(waiting) > 0; {
+		placed = false
+		still := waiting[:0]
+		for _, i := range waiting {
+			floor, ready := floorOf(rows[i], rows, levels, automatic)
+			if !ready {
+				still = append(still, i)
+				continue
+			}
+			rows[i].Level = freeSlot(rows[i], floor)
+			note(rows[i])
+			placed = true
+		}
+		waiting = still
+	}
+	for _, i := range waiting {
+		rows[i].Level = freeSlot(rows[i], minimumLevelOf(rows[i].Ref, levels))
+		note(rows[i])
 	}
 	levelOf := map[string]int64{}
 	for _, row := range automatic {
@@ -337,6 +362,72 @@ func situate(rows []LevelChoiceDTO, levels, automatic []LevelChoiceDTO) []LevelC
 		}
 	}
 	return rows
+}
+
+// floorOf é o nível mais baixo em que a linha pode ficar: o do nível mínimo do poder, e o
+// seguinte ao do poder que ele pede, se a ficha o tem. `ready` é falso enquanto um poder pedido
+// que a ficha tem ainda não ganhou nível — quem pede espera.
+func floorOf(row LevelChoiceDTO, rows, levels, automatic []LevelChoiceDTO) (floor int64, ready bool) {
+	floor = minimumLevelOf(row.Ref, levels)
+	for _, requirement := range prerequisitesOf(row.Ref) {
+		var asked []string
+		switch requirement.Kind {
+		case "power":
+			asked = []string{requirement.ID}
+		case "anyPower":
+			asked = requirement.IDs
+		default:
+			continue
+		}
+		earliest, held := int64(0), false
+		for _, id := range asked {
+			level, has := levelHeld(id, rows, automatic)
+			if !has {
+				continue
+			}
+			held = true
+			if level == 0 {
+				return 0, false
+			}
+			if earliest == 0 || level < earliest {
+				earliest = level
+			}
+		}
+		if held && earliest+1 > floor {
+			floor = earliest + 1
+		}
+	}
+	return floor, true
+}
+
+// levelHeld diz se a ficha tem o poder e o nível mais baixo dele (0 enquanto ele não tem nível).
+func levelHeld(id string, rows, automatic []LevelChoiceDTO) (int64, bool) {
+	level, held := int64(0), false
+	for _, row := range slices.Concat(rows, automatic) {
+		if row.Ref != id || (row.Kind != LevelKindPower && row.Kind != LevelKindPick && row.Kind != LevelKindAutomatic) {
+			continue
+		}
+		held = true
+		if row.Level > 0 && (level == 0 || row.Level < level) {
+			level = row.Level
+		}
+	}
+	return level, held
+}
+
+// minimumLevelOf é o nível do personagem a partir do qual o poder pode estar: o nível da classe
+// que o poder de classe pede, contado nos níveis da ficha, ou o nível de personagem do geral.
+func minimumLevelOf(id string, levels []LevelChoiceDTO) int64 {
+	if power, found := book.ClassPowers()[id]; found {
+		if power.MinLevel > 1 {
+			return levelWhereClassReached(levels, power.ClassName, int64(power.MinLevel))
+		}
+		return 1
+	}
+	if general, found := book.GeneralPowers()[id]; found && general.MinLevel > 1 {
+		return int64(general.MinLevel)
+	}
+	return 1
 }
 
 // countedPickLevel é o nível que deu esta escolha contada: o 2º terreno do Explorador é do 7º
