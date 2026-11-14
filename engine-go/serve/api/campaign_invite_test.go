@@ -35,7 +35,7 @@ func TestACampaignBornOnScreenLetsAPlayerIn(t *testing.T) {
 	if err := s.campaignSeating().Seat(context.Background(), player, id, hero, invite); err != nil {
 		t.Fatalf("o jogador foi recusado (%v) com o link que a própria mesa cunhou", err)
 	}
-	if n := membrosDaMesa(t, s, id); n != 1 {
+	if n := membersAtTable(t, s, id); n != 1 {
 		t.Errorf("a mesa ficou com %d membros, esperado 1", n)
 	}
 }
@@ -67,7 +67,7 @@ func TestALinkOnlyOpensItsOwnTable(t *testing.T) {
 	}
 }
 
-func membrosDaMesa(t *testing.T, s *Server, campaignID int64) int {
+func membersAtTable(t *testing.T, s *Server, campaignID int64) int {
 	t.Helper()
 	var n int
 	if err := s.db.QueryRowContext(context.Background(),

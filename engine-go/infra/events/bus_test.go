@@ -3,6 +3,7 @@ package events
 import (
 	"sync"
 	"testing"
+	"time"
 )
 
 // O RECORTE é a regra deste pacote, e é o que se prende primeiro.
@@ -133,17 +134,25 @@ func TestFullQueueDropsAndCounts(t *testing.T) {
 func TestSlowListenerDoesNotBlockTheWriter(t *testing.T) {
 	var b Bus
 	_, stop := b.Subscribe(OfSession(7))
-	defer stop()
 
-	pronto := make(chan struct{})
+	published := make(chan struct{})
 	go func() {
 		for i := 0; i < 1000; i++ {
 			b.Publish(BoardChanged{SessionID: 7})
 		}
-		close(pronto)
+		close(published)
 	}()
 
-	<-pronto // sem ninguém drenando a fila: se `Publish` bloqueasse, isto travava
+	// Sem ninguém drenando a fila: se `Publish` bloqueasse, a suíte inteira
+	// travava até o timeout do `go test` em vez de reprovar ESTE teste.
+	// O `stop` fica fora de `defer`: ele pega o mesmo mutex que um `Publish`
+	// travado segura, e o `t.Fatal` ficaria preso nele.
+	select {
+	case <-published:
+		stop()
+	case <-time.After(5 * time.Second):
+		t.Fatal("Publish bloqueou com um ouvinte que não drena: 1000 publicações não terminaram em 5s")
+	}
 }
 
 // A BAIXA limpa o registro. Sem ela, cada aba fechada deixa um canal para sempre
