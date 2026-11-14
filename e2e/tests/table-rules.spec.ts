@@ -1,94 +1,47 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
+import { tidyUp } from './support/tidy'
 
-// O mestre monta a regra no editor guiado, liga e apaga. Os selects dependem uns dos outros, e
-// é por isso que este caminho é medido no navegador.
-test('o mestre monta, liga e apaga uma regra da mesa', async ({ page }) => {
+/** Apaga pela tela a regra deste nome, se ela ainda estiver na campanha 1. */
+async function removeRule(page: Page, name: string): Promise<void> {
   await page.goto('/campanhas/1?tab=regras')
-  await page.getByRole('button', { name: 'Nova regra' }).click()
-  const editor = page.locator('dialog[open]')
-  await expect(editor.getByLabel('Nome')).toBeVisible()
-
-  await editor.getByLabel('Nome').fill('Regra do teste')
-  await editor.getByRole('button', { name: 'Condição' }).click()
-  const kind = editor.getByLabel('Tipo da condição 1')
-  await expect(kind).toBeVisible()
-  await kind.selectOption({ label: 'Raça' })
-  const value = editor.getByLabel('Qual, na condição 1')
-  await expect(value.locator('option', { hasText: 'Minotauro' })).toHaveCount(1)
-  await value.selectOption({ label: 'Minotauro' })
-  await expect(editor.getByText('da raça Minotauro')).toBeVisible()
-
-  await editor.getByLabel('Em quê').selectOption({ label: 'Defesa' })
-  await editor.getByLabel('Quanto').fill('2')
-  await editor.getByLabel('Quanto').blur()
-  await expect(editor.getByText('da raça Minotauro: +2 na Defesa')).toBeVisible()
-  await editor.getByRole('button', { name: 'Gravar' }).click()
-
-  const row = page.locator('.ds-table-rule', { hasText: 'Regra do teste' })
-  await expect(row).toContainText('+2 na Defesa')
-  const toggle = row.getByRole('switch')
-  await expect(toggle).not.toBeChecked()
-  await toggle.click()
-  await expect(page.locator('.ds-table-rule', { hasText: 'Regra do teste' }).getByRole('switch')).toBeChecked()
-
-  await page.reload()
-  await expect(page.locator('.ds-table-rule', { hasText: 'Regra do teste' }).getByRole('switch')).toBeChecked()
-
-  await page.locator('.ds-table-rule', { hasText: 'Regra do teste' }).getByRole('button', { name: 'Editar' }).click()
-  await expect(page.locator('dialog[open]').getByLabel('Nome')).toHaveValue('Regra do teste')
-  // Excluir pede confirmação: a regra ligada está na ficha dos jogadores.
+  const row = page.locator('.ds-table-rule', { hasText: name })
+  if ((await row.count()) === 0) return
+  await row.getByRole('button', { name: 'Editar' }).click()
   await page.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
+  await page.getByRole('dialog', { name: 'Excluir esta regra?' }).getByRole('button', { name: 'Excluir' }).click()
+  await expect(row).toHaveCount(0, { timeout: 5000 })
+}
+
+
+// EXCLUIR PEDE CONFIRMAÇÃO num `<dialog>` aberto por cima do editor, que também é `<dialog>`: o Cancelar
+// tem de fechar só o de cima. É o empilhamento nativo de diálogos, e só o navegador o tem. O que o editor
+// grava, desenha e reabre é dos `campaign_rules_*_test.go` em Go.
+test('excluir a regra pede confirmação, e cancelar devolve ao editor', async ({ page }) => {
+  const name = `Regra do e2e ${Date.now()}`
+  const saved = await page.request.post('/campanhas/1/regras-da-mesa/gravar', {
+    headers: { 'datastar-request': 'true' },
+    data: { table_rule_name: name, table_rule_scope: 'mesa', table_rule_count: 0, table_rule_target: 'defense', table_rule_amount: 2 },
+  })
+  expect(saved.ok(), `gravar a regra do caso respondeu ${saved.status()}`).toBeTruthy()
+  const row = page.locator('.ds-table-rule', { hasText: name })
+  const editor = page.locator('dialog[open]')
   const confirm = page.getByRole('dialog', { name: 'Excluir esta regra?' })
-  await confirm.getByRole('button', { name: 'Cancelar' }).click()
-  await expect(confirm).toBeHidden()
-  await expect(page.locator('dialog[open]').getByLabel('Nome')).toHaveValue('Regra do teste')
-  await page.locator('dialog[open]').getByRole('button', { name: 'Excluir' }).click()
-  await confirm.getByRole('button', { name: 'Excluir' }).click()
-  await expect(page.locator('.ds-table-rule', { hasText: 'Regra do teste' })).toHaveCount(0)
-})
+  try {
+    await page.goto('/campanhas/1?tab=regras')
+    await row.getByRole('button', { name: 'Editar' }).click()
+    await expect(editor.getByLabel('Nome')).toHaveValue(name)
 
-// O campo de limite nasce e some conforme o que a regra olha: os sinais vão e voltam a cada troca.
-test('o limite aparece só onde a regra soma por item', async ({ page }) => {
-  await page.goto('/campanhas/1?tab=regras')
-  await page.getByRole('button', { name: 'Nova regra' }).click()
-  const editor = page.locator('dialog[open]')
-  await expect(editor.getByLabel('Nome')).toBeVisible()
-  const limit = editor.getByLabel('Até quantos itens')
-  await editor.getByLabel('Em quê').selectOption({ label: 'Defesa' })
-  await expect(limit).toHaveCount(0)
+    await editor.getByRole('button', { name: 'Excluir' }).click()
+    await confirm.getByRole('button', { name: 'Cancelar' }).click()
+    await expect(confirm).toBeHidden()
+    await expect(editor.getByLabel('Nome'), 'cancelar a exclusão fechou o editor junto').toHaveValue(name)
 
-  await editor.getByRole('button', { name: 'Condição' }).click()
-  await editor.getByLabel('Tipo da condição 1').selectOption({ label: 'Está vestido' })
-  await expect(limit).toBeVisible()
-  await expect(editor.getByText('+1 na Defesa por item')).toBeVisible()
-
-  await limit.fill('3')
-  await limit.blur()
-  await expect(editor.getByText('+1 na Defesa por item, até +3')).toBeVisible()
-  await expect(limit).toHaveValue('3')
-
-  await editor.getByLabel('Em quê').selectOption({ label: 'Ataque' })
-  await expect(limit).toHaveCount(0)
-})
-
-// O tipo de efeito troca os campos do editor: o deus aparece no "escolhe poderes de", e a soma volta.
-test('o tipo de efeito troca os campos do editor', async ({ page }) => {
-  await page.goto('/campanhas/1?tab=regras')
-  await page.getByRole('button', { name: 'Nova regra' }).click()
-  const editor = page.locator('dialog[open]')
-  await expect(editor.getByLabel('Em quê')).toBeVisible()
-
-  await editor.getByLabel('Tipo de efeito').selectOption({ label: 'Escolhe poderes de' })
-  await expect(editor.getByLabel('De qual deus')).toBeVisible()
-  await expect(editor.getByLabel('Em quê')).toHaveCount(0)
-  await expect(editor.getByText('escolhe poderes de Arsenal')).toBeVisible()
-
-  await editor.getByLabel('Tipo de efeito').selectOption({ label: 'Vale como empunhado' })
-  await expect(editor.getByLabel('De qual deus')).toHaveCount(0)
-  await expect(editor.getByText('vestido, vale como empunhado')).toBeVisible()
-
-  await editor.getByLabel('Tipo de efeito').selectOption({ label: 'Soma em' })
-  await expect(editor.getByLabel('Em quê')).toBeVisible()
+    await editor.getByRole('button', { name: 'Excluir' }).click()
+    await confirm.getByRole('button', { name: 'Excluir' }).click()
+    await expect(row).toHaveCount(0)
+  } finally {
+    await tidyUp(`a regra "${name}" na campanha 1`, () => removeRule(page, name))
+  }
 })
 
 // A resposta de um rascunho pode chegar depois de a pessoa ter seguido escrevendo. Se ela trouxer de
@@ -176,6 +129,8 @@ test('ligar e excluir a regra chega na ficha aberta do jogador', async ({ browse
       .poll(sheetHP, { timeout: 8000, message: 'a ficha aberta não soube da regra excluída' })
       .toBe(String(before))
   } finally {
+    // LIGADA, a regra dá +5 PV a toda ficha da campanha 1: o próximo spec mediria a ficha errada.
+    await tidyUp('a regra "Vigor da mesa" na campanha 1', async () => removeRule(await gm.newPage(), 'Vigor da mesa'))
     await gm.close().catch(() => {})
     await player.close().catch(() => {})
   }
@@ -222,12 +177,18 @@ test('ligar a regra chega na fila do mestre', async ({ browser }) => {
     await rulesScreen.getByRole('dialog', { name: 'Excluir esta regra?' }).getByRole('button', { name: 'Excluir' }).click()
     await expect(rulesScreen.locator('.ds-table-rule', { hasText: 'Vigor na fila' })).toHaveCount(0)
     await expect.poll(queueHP, { timeout: 8000, message: 'a fila do mestre não soube da regra excluída' }).toBe(String(before))
-
-    // A sessão 5 é dividida com o spec dos dois clientes, então ela volta como estava.
-    await table.getByRole('button', { name: 'Cena, descanso e sessão' }).click()
-    await table.getByRole('button', { name: 'Encerrar a cena' }).click()
-    await expect(table.getByRole('button', { name: 'Iniciar uma cena de Ação' })).toBeVisible()
   } finally {
+    await tidyUp('a regra "Vigor na fila" na campanha 1', async () => removeRule(await gm.newPage(), 'Vigor na fila'))
+    // A sessão 5 é dividida com o spec dos dois clientes, então ela volta como estava.
+    await tidyUp('a cena de ação aberta na sessão 5', async () => {
+      const table = await gm.newPage()
+      await table.goto('/campanhas/1/sessoes/5')
+      const start = table.getByRole('button', { name: 'Iniciar uma cena de Ação' })
+      if (await start.count()) return
+      await table.getByRole('button', { name: 'Cena, descanso e sessão' }).click()
+      await table.getByRole('button', { name: 'Encerrar a cena' }).click()
+      await expect(start).toBeVisible({ timeout: 5000 })
+    })
     await gm.close().catch(() => {})
   }
 })

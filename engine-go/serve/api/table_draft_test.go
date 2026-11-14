@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
@@ -423,13 +424,13 @@ func TestTheDraftBrushPaintsWhereTheBodySays(t *testing.T) {
 		t.Errorf("o traço (3,4)→(6,4) pintou %d casas, e a linha tem 4: %v", len(squares), squares)
 	}
 	for _, tip := range []engine.Square{{X: 3, Y: 4}, {X: 6, Y: 4}} {
-		if !contem(squares, tip) {
+		if !slices.Contains(squares, tip) {
 			t.Errorf("a casa %v não foi pintada — o traço não chegou onde o corpo mandou", tip)
 		}
 	}
 	// E NADA NA ORIGEM. É o controle contra o `from` que parou de ser lido: (0,0)
 	// é o valor-zero do struct, então um corpo ignorado pinta exatamente ali.
-	if contem(squares, engine.Square{X: 0, Y: 0}) {
+	if slices.Contains(squares, engine.Square{X: 0, Y: 0}) {
 		t.Errorf("o traço pintou (0,0), que é o valor-zero do corpo: a coordenada não foi lida")
 	}
 }
@@ -477,11 +478,11 @@ func TestTheDraftRectangleFillsTheBoxAndTheEraserEmptiesIt(t *testing.T) {
 		t.Errorf("o retângulo (2,3)→(4,5) encheu %d casas, e a caixa tem 9: %v", len(squares), squares)
 	}
 	for _, corner := range []engine.Square{{X: 2, Y: 3}, {X: 4, Y: 3}, {X: 2, Y: 5}, {X: 4, Y: 5}} {
-		if !contem(squares, corner) {
+		if !slices.Contains(squares, corner) {
 			t.Errorf("a quina %v ficou de fora da caixa", corner)
 		}
 	}
-	if contem(squares, engine.Square{X: 0, Y: 0}) {
+	if slices.Contains(squares, engine.Square{X: 0, Y: 0}) {
 		t.Errorf("a caixa alcançou (0,0), que é o valor-zero do corpo: um canto não foi lido")
 	}
 

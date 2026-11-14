@@ -9,6 +9,19 @@ import (
 	"testing"
 )
 
+// Os guardas da FICHA em Datastar (ALE-272, fatia 1).
+//
+// O que eles prendem é o que a casca PROMETE: o endereço das abas, a posse, e os
+// dois gestos que o crachá tem. Painel nenhum foi portado ainda — o que existe
+// aqui é o envoltório, e é ele que precisa estar certo antes de sete painéis se
+// pendurarem nele.
+
+// O ENDEREÇO DAS ABAS é contrato, e ele veio da SPA inteiro.
+//
+// `?tab=` é link compartilhado e favorito: `abilities` continua sendo Poderes
+// (o valor sobreviveu de propósito ao renome Habilidades→Poderes), e os dois
+// nomes velhos da Mochila continuam chegando nela. Lixo cai na primeira aba, e
+// não numa tela em branco.
 func TestTheSheetTabAddressSurvives(t *testing.T) {
 	for _, tc := range []struct{ requested, want string }{
 		{"abilities", "abilities"},
@@ -25,6 +38,10 @@ func TestTheSheetTabAddressSurvives(t *testing.T) {
 // propósito: não existe mais aba sem painel, e quem cobra painel de TODA aba é o
 // `TestEverySheetTabDrawsSomething`.
 
+// sheetOf monta uma ficha alcançável, com classe (o degrau precisa de uma).
+//
+// Ela NÃO se chama `sheet`: o pacote da cena importa o `sheet` de verdade, e uma
+// função com o nome do pacote o esconde do arquivo inteiro.
 func sheetOf(t *testing.T, name string, level int64) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)

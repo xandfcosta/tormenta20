@@ -65,8 +65,11 @@ func TestTheGmDoesNotGetTheSelector(t *testing.T) {
 	if !strings.Contains(html, `aria-label="Superfícies do mestre"`) {
 		t.Fatal("o mestre não recebeu a mesa dele — a página não é o que este teste pensa que é")
 	}
-	if strings.Contains(html, "O que ver na sessão") {
-		t.Error("o mestre recebeu o seletor de superfícies do jogador")
+	// O RÓTULO de hoje da barra do jogador. Aqui morava o "O que ver na sessão",
+	// que a barra perdeu na ALE-473: procurado depois disso, ele não estava em
+	// página nenhuma, e o caso passava com o mestre recebendo a barra inteira.
+	if strings.Contains(html, `aria-label="Superfícies da sessão"`) {
+		t.Error("o mestre recebeu a barra de superfícies do jogador")
 	}
 }
 

@@ -10,6 +10,22 @@ import (
 	"golang.org/x/net/html"
 )
 
+// Os guardas do FANTASMA e da SETA.
+//
+// O pedido do dono: ao soltar a peça ela é desenhada onde foi solta, o início do
+// movimento fica marcado por uma peça transparente, e a seta liga os dois pontos.
+//
+// O que se prende aqui é a DIVISA: a peça é DESENHADA no fim
+// do caminho e continua GRAVADA na origem. As duas metades precisam de guarda,
+// porque cada uma sozinha passa verde sobre o defeito da outra — desenhar sem
+// gravar seria a peça andando sem confirmação, e gravar sem desenhar é o defeito
+// que o dono relatou.
+
+// onBoardAt põe a peça do jogador numa casa escolhida, e devolve o id dela.
+//
+// Irmã da `onBoard`, que sempre põe em 0,0: aqui a origem precisa ser um
+// número que não se confunda com "não preenchido" — com a peça em 0,0 um
+// fantasma desenhado na quina do plano por engano passaria despercebido.
 func (f sceneFixture) onBoardAt(t *testing.T, x, y int) string {
 	t.Helper()
 	f.seedOpenBoard(t, "stone")
@@ -235,7 +251,7 @@ func TestEveryClassPositionedByColAndRowHasABox(t *testing.T) {
 			continue
 		}
 		positioned++
-		if !temAlgumaClasse(attrs["class"], withBox) {
+		if !hasAnyClass(attrs["class"], withBox) {
 			t.Errorf("o elemento de classe %q é posicionado por --col e NENHUMA classe dele recebe caixa na folha: ele sai 0x0 e a tinta não desenha", attrs["class"])
 		}
 	}

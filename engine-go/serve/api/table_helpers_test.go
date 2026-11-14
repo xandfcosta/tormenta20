@@ -13,14 +13,19 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Os ajudantes de leitura da cena da Mesa, COPIADOS de `web/table`.
+// Os ajudantes de leitura da cena da Mesa.
 //
-// A cópia é deliberada: importar o ajudante do pacote que está sendo testado faz
-// o teste andar junto com o defeito.
+// Eles moram aqui e não em `web/table` de propósito: importar o ajudante do
+// pacote que está sendo testado faz o teste andar junto com o defeito.
 
-const blocoMinimo = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
+const minimalBlock = `"nd":1,"tipo":"humanoide","size":"medio","hp":10,"defesa":10,` +
 	`"deslocamento":"9m (6q)","attacks":[],"skills":[],"specialAbilities":[]`
 
+// bodyDraft monta o corpo de sinais que o navegador mandaria.
+//
+// Escrito como TEXTO e não `json.Marshal` de um `npcDraft`: marshalar a
+// struct faria o teste mandar exatamente o que o servidor espera, e um campo
+// renomeado passaria verde nos dois lados. Aqui o teste fala a língua do FIO.
 func bodyDraft(inside string) string {
 	return `{"draft":{` + inside + `}}`
 }
@@ -110,22 +115,13 @@ func gmBoardPlace(t *testing.T, screen string) string {
 	return textOf(pick)
 }
 
-func contem(squares []engine.Square, target engine.Square) bool {
-	for _, c := range squares {
-		if c == target {
-			return true
-		}
-	}
-	return false
-}
-
 // element acha o primeiro elemento cujo atributo `attribute` contém `excerpt`,
 // e devolve os atributos dele.
 //
-// Um parser de HTML de verdade e não uma expressão regular, e a razão é o guarda
-// do fim deste arquivo: as expressões do Datastar carregam `<`, `>` e aspas
-// dentro dos valores, e um `<[^>]*>` corta um elemento no meio de um `data-on:`
-// sem avisar — a busca devolveria menos e a ausência viraria conclusão.
+// Um parser de HTML de verdade e não uma expressão regular: as expressões do
+// Datastar carregam `<`, `>` e aspas dentro dos valores, e um `<[^>]*>` corta um
+// elemento no meio de um `data-on:` sem avisar — a busca devolveria menos e a
+// ausência viraria conclusão.
 func element(t *testing.T, screen, attribute, excerpt string) map[string]string {
 	t.Helper()
 	z := html.NewTokenizer(strings.NewReader(screen))
@@ -157,16 +153,16 @@ func firstRows(s string, n int) string {
 	return strings.Join(rows, "\n")
 }
 
-// primeirosAtributos encurta a tag para a mensagem caber na saída do teste.
-func primeirosAtributos(tag string) string {
+// shortTag encurta a tag para a mensagem caber na saída do teste.
+func shortTag(tag string) string {
 	if len(tag) > 160 {
 		return tag[:160] + "…"
 	}
 	return tag
 }
-func quadrados(pares ...[2]int) []engine.Square {
-	qs := make([]engine.Square, len(pares))
-	for i, p := range pares {
+func squaresAt(pairs ...[2]int) []engine.Square {
+	qs := make([]engine.Square, len(pairs))
+	for i, p := range pairs {
 		qs[i] = engine.Square{X: p[0], Y: p[1]}
 	}
 	return qs
@@ -212,10 +208,10 @@ func signals(json string) string {
 	return "?datastar=" + url.QueryEscape(json)
 }
 
-// temAlgumaClasse: basta UMA classe posicionada, porque o elemento veste várias —
+// hasAnyClass: basta UMA classe posicionada, porque o elemento veste várias —
 // o fantasma é `board-token board-token-ghost`, e quem lhe dá caixa é a
 // primeira.
-func temAlgumaClasse(list string, sought map[string]bool) bool {
+func hasAnyClass(list string, sought map[string]bool) bool {
 	for _, c := range strings.Fields(list) {
 		if sought[c] {
 			return true
@@ -224,9 +220,9 @@ func temAlgumaClasse(list string, sought map[string]bool) bool {
 	return false
 }
 
-// trechoDaSemeadura tira só o pedaço da expressão que semeia o nome, porque a
+// nameSeedExcerpt tira só o pedaço da expressão que semeia o nome, porque a
 // página inteira enterra a asserção em vários KB de HTML.
-func trechoDaSemeadura(body string) string {
+func nameSeedExcerpt(body string) string {
 	i := strings.Index(body, "$edit_name = ")
 	if i < 0 {
 		return "(a semeadura do nome não está na página)"
@@ -238,9 +234,9 @@ func trechoDaSemeadura(body string) string {
 	return body[i:end]
 }
 
-// trechoDeSinais tira só a linha dos sinais da resposta SSE, porque o quadro
+// signalsLine tira só a linha dos sinais da resposta SSE, porque o quadro
 // inteiro traz a cena e enterra a asserção em 8 KB de HTML.
-func trechoDeSinais(body string) string {
+func signalsLine(body string) string {
 	for _, row := range strings.Split(body, "\n") {
 		if strings.HasPrefix(row, "data: signals ") {
 			return row

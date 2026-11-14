@@ -4,32 +4,7 @@ import (
 	"testing"
 
 	"t20engine/domain/board"
-	"t20engine/domain/engine"
 )
-
-// Os guardas do GESTO CONTÍNUO do pincel.
-//
-// A aritmética do traço não é medida aqui: `board.StrokeSquares` tem guarda
-// próprio, e ele prende a regra ("o traço não tem buraco") no lugar mais barato.
-// O que se prende deste lado é o que só existe deste lado — que a rota pinta o
-// SEGMENTO numa gravação só, que a resposta não devolve a Mesa inteira, e que a
-// tela liga os gestos que fazem o traço acontecer.
-
-// O caso mede o SEGMENTO, e não o número de gravações.
-//
-// Uma asserção sobre a `Version` do tabuleiro mediria a coisa errada: o
-// `PaintTerrain` sobe a versão POR CASA, então um traço de dez casas sobe dez,
-// dentro de um `apply` só. Quem garante a gravação única é a estrutura
-// (`PaintStroke` chama `apply` uma vez, e o `boardCommand` publica uma vez), e
-// um teste que afirme o contrário fica vermelho sobre um app correto.
-func contem(squares []engine.Square, target engine.Square) bool {
-	for _, c := range squares {
-		if c == target {
-			return true
-		}
-	}
-	return false
-}
 
 // O guarda que paga o preço de o desenho morar fora do domínio: `drawing`
 // entra em pânico numa espécie sem entrada, e este caso faz o pânico acontecer
@@ -53,12 +28,4 @@ func TestEveryKindHasADrawing(t *testing.T) {
 		}
 		corners[d.Canto] = string(brush.ID)
 	}
-}
-
-// primeirosAtributos encurta a tag para a mensagem caber na saída do teste.
-func primeirosAtributos(tag string) string {
-	if len(tag) > 160 {
-		return tag[:160] + "…"
-	}
-	return tag
 }

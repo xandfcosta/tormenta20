@@ -3,6 +3,7 @@ import { medeOContraste } from './support/contrast'
 import { expectOneFocusRing } from './support/focus'
 import { expectDentroDaJanela, expectNadaRolaDeLado } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
+import { tidyUp } from './support/tidy'
 
 /**
  * A FICHA — o que só o navegador mede: LEIAUTE REAL nos seis formatos.
@@ -36,13 +37,10 @@ test('a ficha cabe nos seis formatos, e nenhum botão do crachá sai da janela',
   await aFichaDoPrimeiro(page)
   await expect(page.getByRole('navigation', { name: 'Seções da ficha' })).toBeVisible()
 
-  await expectNoHorizontalOverflow(page, VIEWPORTS)
-
   // O CABEÇALHO e a FAIXA DOS VITAIS são o que mais aperta: retrato, nome,
   // Defesa e ⋯ numa fileira, e seis botões de vital na outra. No telefone em pé
-  // é onde a conta estoura.
-  await page.setViewportSize({ width: 390, height: 844 })
-  await expectDentroDaJanela(page)
+  // é onde a conta estoura, e o `expectNoHorizontalOverflow` passa por ele.
+  await expectNoHorizontalOverflow(page, VIEWPORTS)
 })
 
 /**
@@ -211,41 +209,54 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto(`/personagens/${id}?tab=spells`)
 
-  await page.getByRole('button', { name: 'Aprender', exact: true }).click()
-  const learn = page.getByRole('dialog', { name: 'Aprender magia' })
-  await learn.getByRole('searchbox').fill('Explosão de Chamas')
-  await learn.getByRole('button', { name: 'Aprender Explosão de Chamas' }).click()
-  await expect(
-    page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }),
-    'a magia com truque não entrou no grimório: não há o que medir abaixo',
-  ).toBeVisible()
-  await learn.getByRole('button', { name: 'Fechar' }).click()
+  try {
+    await page.getByRole('button', { name: 'Aprender', exact: true }).click()
+    const learn = page.getByRole('dialog', { name: 'Aprender magia' })
+    await learn.getByRole('searchbox').fill('Explosão de Chamas')
+    await learn.getByRole('button', { name: 'Aprender Explosão de Chamas' }).click()
+    await expect(
+      page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }),
+      'a magia com truque não entrou no grimório: não há o que medir abaixo',
+    ).toBeVisible()
+    await learn.getByRole('button', { name: 'Fechar' }).click()
 
-  await page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }).click()
-  const cast = page.getByRole('dialog', { name: 'Explosão de Chamas' })
-  // A prévia é o `<b>` do "Custo … · você tem … PM": o rodapé repete o número
-  // no botão de conjurar, e um `getByText` de "N PM" casaria os dois.
-  const cost = cast.locator('p', { hasText: /^Custo/ }).locator('b')
-  const moreDamage = cast.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
-  // Pelo NOME, e não pelo primeiro: quem prepara magia tem o "Preparada" antes
-  // dos aprimoramentos, e ele também é um interruptor.
-  const cantrip = cast.getByRole('switch', { name: /^Truque:/ })
+    await page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }).click()
+    const cast = page.getByRole('dialog', { name: 'Explosão de Chamas' })
+    // A prévia é o `<b>` do "Custo … · você tem … PM": o rodapé repete o número
+    // no botão de conjurar, e um `getByText` de "N PM" casaria os dois.
+    const cost = cast.locator('p', { hasText: /^Custo/ }).locator('b')
+    const moreDamage = cast.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
+    // Pelo NOME, e não pelo primeiro: quem prepara magia tem o "Preparada" antes
+    // dos aprimoramentos, e ele também é um interruptor.
+    const cantrip = cast.getByRole('switch', { name: /^Truque:/ })
 
-  // O CONTROLE em duas medidas: o mostrador tem de MUDAR antes do que eu vim
-  // medir, senão um repouso igual ao sucesso não testemunha nada (ALE-218).
-  await expect(cost, 'a Explosão de Chamas é de 1º círculo: 1 PM de base').toHaveText('1 PM')
-  await moreDamage.click()
-  await expect(cost, 'o aprimoramento de +1 PM não entrou na prévia').toHaveText('2 PM')
+    // O CONTROLE em duas medidas: o mostrador tem de MUDAR antes do que eu vim
+    // medir, senão um repouso igual ao sucesso não testemunha nada (ALE-218).
+    await expect(cost, 'a Explosão de Chamas é de 1º círculo: 1 PM de base').toHaveText('1 PM')
+    await moreDamage.click()
+    await expect(cost, 'o aprimoramento de +1 PM não entrou na prévia').toHaveText('2 PM')
 
-  await cantrip.click()
-  await expect(cost, 'o truque não zerou a prévia: a tela cobra o que o servidor não cobra (p171)').toHaveText('0 PM')
-  await expect(cantrip, 'o truque não ficou ligado').toBeChecked()
-  // E o aprimoramento que estava ligado tem de ter SUMIDO da escolha: a tela não
-  // pode oferecer uma combinação que o servidor recusa.
-  await expect(
-    cast.getByText('0', { exact: true }),
-    'o contador do aprimoramento comum não voltou a zero ao ligar o truque',
-  ).toBeVisible()
+    await cantrip.click()
+    await expect(cost, 'o truque não zerou a prévia: a tela cobra o que o servidor não cobra (p171)').toHaveText('0 PM')
+    await expect(cantrip, 'o truque não ficou ligado').toBeChecked()
+    // E o aprimoramento que estava ligado tem de ter SUMIDO da escolha: a tela não
+    // pode oferecer uma combinação que o servidor recusa.
+    await expect(
+      cast.getByText('0', { exact: true }),
+      'o contador do aprimoramento comum não voltou a zero ao ligar o truque',
+    ).toBeVisible()
+  } finally {
+    // A magia aprendida é para sempre na semente: sem esquecê-la, o próximo caso
+    // que abre o grimório deste herói acha uma magia que ninguém lhe deu.
+    await tidyUp('a Explosão de Chamas no grimório do conjurador', async () => {
+      await page.goto(`/personagens/${id}?tab=spells`)
+      const cast = page.getByRole('button', { name: 'Conjurar Explosão de Chamas' })
+      if ((await cast.count()) === 0) return
+      await cast.click()
+      await page.getByRole('button', { name: 'Esquecer Explosão de Chamas' }).click()
+      await expect(cast).toHaveCount(0, { timeout: 5000 })
+    })
+  }
 })
 
 /**

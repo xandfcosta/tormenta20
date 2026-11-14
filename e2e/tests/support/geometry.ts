@@ -227,9 +227,9 @@ export async function expectDentroDaJanela(page: Page, root = 'body'): Promise<v
 /**
  * Nenhum contêiner DENTRO da cena rola de lado (ALE-178).
  *
- * A regra da casa é que a cena não rola horizontalmente, e o
- * `expectNoHorizontalOverflow` a afirma — só que na RAIZ. Quando o estouro
- * acontece num painel interno, a raiz continua limpa e a asserção passa.
+ * A regra da casa é que a cena não rola horizontalmente. Quando o estouro
+ * acontece num painel interno, a raiz continua limpa, e é por isso que a
+ * medida desce aos contêineres.
  *
  * E o `expectDentroDaJanela` também não pega: um ✕ de encerrar empurrado para
  * x=466 numa tela de 390 é ALCANÇÁVEL se o painel rola, então aquele guarda
@@ -417,7 +417,7 @@ export async function expectColunasMonotonicas(
  * quem escreveu. O teto existe para uma animação INFINITA — o ponto do "AO VIVO"
  * pulsa para sempre — não pendurar a suíte.
  */
-async function esperaAsAnimacoesPararem(page: Page): Promise<void> {
+export async function untilAnimationsSettle(page: Page): Promise<void> {
   await page
     .waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'), null, {
       timeout: 3000,
@@ -439,11 +439,11 @@ async function esperaAsAnimacoesPararem(page: Page): Promise<void> {
  *     ele não rola em lugar nenhum, e a casca (`h-dvh overflow-hidden`) o
  *     recorta em silêncio. O que passa da borda não existe para quem lê.
  *
- * O terceiro guarda do eixo, o `expectNoHorizontalOverflow`, não alcança nenhuma
- * das duas: ele lê `documentElement.scrollWidth`, e a casca garante que o
- * documento nunca cresce. Medido a 390px nos catálogos — o cartão media 352px
- * numa caixa de 308, três palavras cortadas no meio, e o documento em 390 de
- * 390.
+ * A leitura de `documentElement.scrollWidth` não alcança nenhuma das duas: a
+ * casca garante que o documento nunca cresce. Medido a 390px nos catálogos — o
+ * cartão media 352px numa caixa de 308, três palavras cortadas no meio, e o
+ * documento em 390 de 390. O `expectNoHorizontalOverflow` junta as três medidas
+ * do eixo, formato a formato.
  *
  * O DENOMINADOR vem junto porque uma lista de reprovados vazia e um seletor que
  * não casa com nada se parecem no terminal.
@@ -471,7 +471,7 @@ export async function measureSidewaysClipping(
   page: Page,
   root: string,
 ): Promise<{ cortados: string[]; medidos: number }> {
-  await esperaAsAnimacoesPararem(page)
+  await untilAnimationsSettle(page)
   const measure = await page.evaluate((rootSelector) => {
     const root = document.querySelector(rootSelector as string)
     if (!root) return null

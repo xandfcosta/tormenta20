@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectNothingIsClippedSideways } from './support/geometry'
 import {
   expectNoHorizontalOverflow,
   expectOnlyTheScrollerScrolls,
@@ -48,14 +47,6 @@ test.describe('Os catálogos', () => {
 
     await expectOnlyTheScrollerScrolls(page, SCROLLER, VIEWPORTS)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-
-    // E o eixo horizontal PELA CENA, porque o do documento é inerte aqui: a
-    // casca é `overflow-hidden`, então o cartão que passava 44px da caixa a
-    // 390px era recortado sem o documento crescer um pixel (ALE-337).
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectNothingIsClippedSideways(page, '#catalogs')
-    }
   })
 
   /**
@@ -102,21 +93,4 @@ test.describe('Os catálogos', () => {
     await expect(page.locator(SCROLLER)).toBeFocused()
   })
 
-  /**
-   * A busca varre TODOS os catálogos, não só o que está aberto: filtrar só a
-   * aba ativa faz "bola de fogo" digitado em Condições dizer "nada encontrado"
-   * com a magia existindo (ALE-22).
-   */
-  test('buscar varre todos os catálogos, não só o que está aberto', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto(CONDITIONS)
-    await expect(page.getByRole('navigation', { name: 'Ferramentas do mestre' })).toBeVisible()
-
-    await page.getByRole('searchbox', { name: 'Buscar em todos os catálogos' }).fill('fogo')
-
-    await expect(
-      page.getByRole('region', { name: 'Magias' }),
-      'buscar de dentro das condições não alcançou as magias (ALE-22)',
-    ).toBeVisible()
-  })
 })

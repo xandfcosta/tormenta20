@@ -118,8 +118,11 @@ func TestTheGroupPageDrawsThePartyAndKeepsItLive(t *testing.T) {
 	if group == nil {
 		t.Fatal("a página do Grupo não tem a região do grupo")
 	}
-	if findNode(group, "aria-label", "Abrir a ficha completa de Arcanista") == nil {
+	sheetLink := findNode(group, "aria-label", "Abrir a ficha completa de Arcanista")
+	if sheetLink == nil {
 		t.Errorf("o Grupo não leva à ficha completa do Arcanista: %q", textOf(group))
+	} else if href, want := attr(sheetLink, "href"), fmt.Sprintf("/personagens/%d", f.charID); href != want {
+		t.Errorf("o \"Ficha\" do Arcanista leva a %q, e a ficha dele é %q", href, want)
 	}
 	minus := findNode(group, "aria-label", "Tirar 1 PV de Arcanista")
 	if minus == nil || !strings.Contains(attr(minus, "data-on:click"), "?pagina=grupo") {
@@ -176,7 +179,7 @@ func TestTheCastPageDrawsTheCastWithItsVerbs(t *testing.T) {
 	}
 	sent := f.posts(t, f.gm, fmt.Sprintf("%s/elenco/npc/%d/na-fila?pagina=elenco", f.tableUrl(), varek), "")
 	if !strings.Contains(sent, "Capitão Varek entrou na fila.") {
-		t.Errorf("o Pôr na fila do Elenco não diz que funcionou: %s", trechoDeSinais(sent))
+		t.Errorf("o Pôr na fila do Elenco não diz que funcionou: %s", signalsLine(sent))
 	}
 }
 
@@ -210,7 +213,7 @@ func TestTheBestiaryPageListsTheCreaturesAndSendsToTheQueue(t *testing.T) {
 	refused := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
 		`{"creature":"grifo-de-neon","entry_hp":10,"entry_initiative":10,"entry_copies":1}`)
 	if !strings.Contains(refused, `"entry_sent":""`) {
-		t.Errorf("a recusa deixou a frase do acerto acesa: %s", trechoDeSinais(refused))
+		t.Errorf("a recusa deixou a frase do acerto acesa: %s", signalsLine(refused))
 	}
 	sent := f.posts(t, f.gm, f.tableUrl()+"/bestiario/enviar?pagina=bestiario",
 		`{"creature":"ogro","entry_hp":30,"entry_initiative":7,"entry_copies":2}`)

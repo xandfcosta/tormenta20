@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 test.describe('O improviso', () => {
@@ -10,10 +9,6 @@ test.describe('O improviso', () => {
   test('o improviso cabe nos seis formatos', async ({ page }) => {
     await page.goto(IMPROV)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**
@@ -39,26 +34,6 @@ test.describe('O improviso', () => {
     )
     await page.goBack()
     await expect(page, 'o Voltar desfez uma rolagem em vez de sair').toHaveURL(/\/$/)
-  })
-
-  /**
-   * O HISTÓRICO CURTO é o que a ferramenta tem de diferente de um botão que
-   * mostra o último resultado: o mestre que rola duas vezes na mesma cena quer
-   * comparar. Cinco é o fundo, e a sexta rolagem empurra a primeira para fora.
-   */
-  test('a tabela guarda as rolagens anteriores, e para em cinco', async ({ page }) => {
-    await page.goto(IMPROV)
-    // Pelo NOME da região, e não por contar filhos de `div`: acoplar ao formato
-    // do DOM é o que o guia manda não escrever, e a primeira versão deste teste
-    // fazia isso — e apontava para o cartão errado.
-    const card = page.getByRole('region', { name: 'Ermos — Ruína' })
-
-    for (let i = 0; i < 7; i++) {
-      await card.getByRole('button', { name: 'Rolar d6' }).click()
-      await expect(card.locator('[aria-live="polite"]')).toBeVisible()
-    }
-    // Uma manchete + quatro anteriores = os cinco que o fundo permite.
-    await expect(card.locator('li'), 'o histórico passou do fundo de cinco').toHaveCount(4)
   })
 
   /**

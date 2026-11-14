@@ -3,7 +3,8 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"testing"
 
 	"t20engine/domain/catalog/transcript"
@@ -79,7 +80,7 @@ func TestNoEntityStacksWithItself(t *testing.T) {
 				key := stackingBucket(m)
 				seen[key] = append(seen[key], m.Amount)
 			}
-			for _, key := range sortedKeys(seen) {
+			for _, key := range slices.Sorted(maps.Keys(seen)) {
 				if len(seen[key]) > 1 {
 					t.Errorf("%s: %q declara %d modificadores não-condicionais em %s (%v) — "+
 						"o motor os SOMA, e a p226 diz que efeitos da mesma habilidade não acumulam",
@@ -158,7 +159,7 @@ func collectModifierOwners(node any, path string) []modifierOwner {
 				out = append(out, modifierOwner{id: label, modifiers: mods})
 			}
 		}
-		for _, key := range sortedAnyKeys(v) {
+		for _, key := range slices.Sorted(maps.Keys(v)) {
 			if key == "modifiers" {
 				continue
 			}
@@ -169,23 +170,5 @@ func collectModifierOwners(node any, path string) []modifierOwner {
 			out = append(out, collectModifierOwners(item, path)...)
 		}
 	}
-	return out
-}
-
-func sortedKeys(m map[string][]int) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
-}
-
-func sortedAnyKeys(m map[string]any) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
 	return out
 }

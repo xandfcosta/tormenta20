@@ -514,7 +514,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	now := "2026-01-01T00:00:00Z"
 	block, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: f.campaignID, Name: "Zumbi",
-		Block:     `{` + blocoMinimo + `}`,
+		Block:     `{` + minimalBlock + `}`,
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
@@ -558,7 +558,7 @@ func TestTheCopyWithItsOwnBlockClonesTheCreature(t *testing.T) {
 	if err != nil {
 		t.Fatalf("o bloco copiado não está no acervo: %v", err)
 	}
-	if dup.Block != `{`+blocoMinimo+`}` {
+	if dup.Block != `{`+minimalBlock+`}` {
 		t.Errorf("o bloco copiado veio diferente do original:\n%s", dup.Block)
 	}
 	// O NOME do bloco acompanha o da linha, e este é o ponto: com dois "Zumbi"

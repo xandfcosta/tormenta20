@@ -80,7 +80,7 @@ func TestASpellEntersTheSpellbookIsPreparedAndLeaves(t *testing.T) {
 	if got := spell(t, f, id, "aprende/bola-de-fogo"); got != http.StatusOK {
 		t.Fatalf("aprender respondeu %d", got)
 	}
-	if grimoire := spellbook(t, f, id); !existe(grimoire, "bola-de-fogo") {
+	if grimoire := spellbook(t, f, id); !hasKey(grimoire, "bola-de-fogo") {
 		t.Fatal("a magia não entrou no grimório")
 	}
 
@@ -94,7 +94,7 @@ func TestASpellEntersTheSpellbookIsPreparedAndLeaves(t *testing.T) {
 	}
 
 	spell(t, f, id, "esquece/bola-de-fogo")
-	if grimoire := spellbook(t, f, id); existe(grimoire, "bola-de-fogo") {
+	if grimoire := spellbook(t, f, id); hasKey(grimoire, "bola-de-fogo") {
 		t.Error("a magia sobreviveu ao esquecer")
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"golang.org/x/net/html"
 )
 
 // Os guardas do CONSTRUTOR DE ENCONTROS (ALE-259).
@@ -98,5 +100,40 @@ func TestAnEmptyEncounterHasNoDifficultySeal(t *testing.T) {
 	full := pedeNoMestre(t, s, eu, "GET", "/mestre/encontros?c=ogro:1", "").Body.String()
 	if !strings.Contains(full, `class="ds-seal"`) {
 		t.Error("o encontro com criatura perdeu o selo")
+	}
+}
+
+// O LINK DE COPIAR REABRE O MESMO ENCONTRO, pelo fio inteiro: a cena leva o
+// endereço no `data-url`, e abri-lo devolve o mesmo veredito. Nível e grupo saem
+// dos padrões de propósito — um link que os perdesse reabriria a composição
+// certa com a conta errada, e as criaturas sozinhas não acusariam.
+func TestTheCopyLinkOfTheSceneReopensTheSameEncounter(t *testing.T) {
+	s := newTestServer(t)
+	gm := seedUser(t, s, "mestre@t20.local")
+	encounter := func(path string) (*html.Node, string) {
+		t.Helper()
+		doc, err := html.Parse(strings.NewReader(pedeNoMestre(t, s, gm, "GET", path, "").Body.String()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		scene := findNode(doc, "id", "encounters")
+		if scene == nil {
+			t.Fatalf("%s não desenhou a cena dos encontros", path)
+		}
+		return scene, textOf(scene)
+	}
+
+	scene, before := encounter("/mestre/encontros?nivel=3&grupo=4&c=ogro:2")
+	// O CONTROLE: o encontro chegou montado. Sem ele, dois vereditos vazios
+	// seriam iguais e o caso passaria sem medir nada.
+	if !strings.Contains(before, "Ogro") {
+		t.Fatalf("o encontro não tem o ogro que o endereço pediu: %q", before)
+	}
+	link := attr(scene, "data-url")
+	if !strings.Contains(link, "nivel=3") || !strings.Contains(link, "grupo=4") {
+		t.Errorf("o data-url perdeu o nível ou o grupo: %q", link)
+	}
+	if _, after := encounter(link); after != before {
+		t.Errorf("o encontro voltou diferente pelo link %q:\nantes  %q\ndepois %q", link, before, after)
 	}
 }

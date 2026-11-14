@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 test.describe('A carta de convite', () => {
@@ -10,10 +9,6 @@ test.describe('A carta de convite', () => {
     await expect(page.getByRole('group', { name: /qual herói/i })).toBeVisible()
 
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**
@@ -41,14 +36,6 @@ test.describe('A carta de convite', () => {
     )
     const notice = await radios.first().evaluate((el: HTMLInputElement) => el.validationMessage)
     expect(notice, 'o navegador barrou em silêncio').not.toBe('')
-  })
-
-  // Convite morto: a carta diz, e NÃO oferece o botão. Um botão que não pode
-  // funcionar é uma porta pintada na parede — quem explica é a carta.
-  test('convite morto vira frase, e a carta não oferece o botão', async ({ page }) => {
-    await page.goto('/campanhas/entrar?token=nao-existe-mesmo')
-    await expect(page.getByText(/Convite inválido ou expirado/)).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Entrar na mesa' })).toHaveCount(0)
   })
 
 })

@@ -339,11 +339,15 @@ func TestThePreviewSaysHowTheRuleCounts(t *testing.T) {
 		{"até um", signals(vested, "defense", "1"), "vestido: +1 na Defesa<", true},
 		{"o item nomeado é um só", signals(named, "defense", ""), "com Espada longa: +1 na Defesa<", false},
 		{"o golpe é de cada arma", signals(vested, "attack", ""), "vestido: +1 no ataque<", false},
+		{"sem condição não há item a contar", `{"table_rule_name":"R","table_rule_scope":"mesa","table_rule_count":0,"table_rule_target":"defense","table_rule_amount":1,"table_rule_limit":""}`, "+1 na Defesa", false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			f := newSceneFixture(t)
-			body := f.requests(t, f.gm, http.MethodPost, rulesURL(f, "/rascunho"), c.signals).Body.String()
+			// Pelo SERVIDOR DE VERDADE: o rascunho lê os sinais de um POST, e é a
+			// ordem `ReadSignals` antes do `NewSSE` que o recorder não reproduz
+			// (ver o `posts`).
+			body := f.posts(t, f.gm, rulesURL(f, "/rascunho"), c.signals)
 			if !strings.Contains(body, c.says) {
 				t.Errorf("a prévia devia dizer %q", c.says)
 			}

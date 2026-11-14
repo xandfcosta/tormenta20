@@ -24,7 +24,8 @@ O `NewSSE` ASSUME a resposta e fecha o corpo do pedido: `ReadSignals` depois
 dele chega sem sinal. **O `httptest.NewRequest` não reproduz esse ciclo**, então
 o teste de handler passa e só o navegador quebra; num `GET` não morde, e nasce
 quando o gesto vira `POST`. **O corpo se lê UMA vez** — o segundo leitor pega
-vazio, sem erro.
+vazio, sem erro. O teste que lê sinais de um `POST` vai pelo `f.posts` do
+`serve/api`, um servidor HTTP de verdade, que reproduz o ciclo.
 
 ### `data-show` + `data-attr:style` no MESMO nó CONGELA a aba
 

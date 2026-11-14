@@ -42,33 +42,7 @@ func barbarianOnTurn(t *testing.T) (sceneFixture, int64, string) {
 	if rec := f.requests(t, f.gm, http.MethodPatch, f.tableUrl(), `{"status":"active"}`); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar a sessão deu %d", rec.Code)
 	}
-	store := f.s.sessions
-	if _, err := store.State(t.Context(), f.sessionID); err != nil {
-		t.Fatalf("carregar a sessão: %v", err)
-	}
-	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
-		t.Fatalf("começar a cena de ação: %v", err)
-	}
-	goblin := "goblin-salteador"
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
-		Label: "Goblin", Initiative: 20, Type: "npc", MonsterID: &goblin,
-	}); err != nil {
-		t.Fatalf("pôr o Goblin na fila: %v", err)
-	}
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID,
-		sheetCombatant("Furioso", 5, barbaro)); err != nil {
-		t.Fatalf("pôr o bárbaro na fila: %v", err)
-	}
-	for range 2 { // a primeira vez é do Goblin, a segunda do bárbaro
-		if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
-			t.Fatalf("girar a vez: %v", err)
-		}
-	}
-	state := stateOf(t, store, f.sessionID)
-	if state.Initiative[state.TurnIndex].CharacterID == nil {
-		t.Fatalf("a vez tinha de ser do bárbaro, e é de %q", state.Initiative[state.TurnIndex].Label)
-	}
-	return f, barbaro, entryLabeled(t, state, "Goblin")
+	return f, barbaro, f.actionSceneWithTheGoblinFirst(t, "Furioso", barbaro, 2)
 }
 
 // entryLabeled acha a linha da fila pelo rótulo, e FALHA quando não acha: uma

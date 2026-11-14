@@ -109,7 +109,7 @@ func TestWithTheRightInviteTheVisitorEnters(t *testing.T) {
 	s := newTestServer(t)
 	owner := seedUser(t, s, "dono@t20.local")
 	visitor := seedUser(t, s, "visitante@t20.local")
-	_ = seedCampanha(t, s, owner, "Mesa aberta", "o-token-certo")
+	campaign := seedCampanha(t, s, owner, "Mesa aberta", "o-token-certo")
 	hero := seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
 
 	rec := postaCarta(t, s, visitor, url.Values{
@@ -119,6 +119,12 @@ func TestWithTheRightInviteTheVisitorEnters(t *testing.T) {
 
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, queria 303\n%s", rec.Code, rec.Body.String())
+	}
+	// O 303 sozinho não prova a entrada: ele sai depois do `Seat`, e um `Seat`
+	// que não gravasse o membro devolveria o mesmo 303. O que prova é a mesa
+	// ganhar o membro.
+	if n := membersAtTable(t, s, campaign); n != 1 {
+		t.Errorf("a mesa tem %d membros depois do convite certo, queria 1", n)
 	}
 }
 
@@ -169,6 +175,9 @@ func TestTheCardAlreadyCarriesTheTableName(t *testing.T) {
 func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	s := newTestServer(t)
 	visitor := seedUser(t, s, "visitante@t20.local")
+	// COM herói: sem nenhum, a carta esconde o botão por falta de quem entrar, e
+	// o caso passaria sem medir a regra do convite.
+	seedCharacterAtLevel(t, s, visitor, "Yrla", "Arcanista", 4, 4, 4)
 
 	v, err := campaigns.New(s.campaignsHost(), s.sessionAccess(), s.campaignDirectory(), s.campaignLifecycle(), s.campaignSeating(), s.boards).LoadJoin(context.Background(), visitor, "nao-existe")
 	if err != nil {

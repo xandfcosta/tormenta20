@@ -64,18 +64,21 @@ async function slowTheAnimations(page: Page): Promise<void> {
  */
 async function posicoesPintadas(page: Page, gesture: () => Promise<void>, ms = SLIDE_MS * SLOWDOWN + 600): Promise<number[]> {
   await page.evaluate((limit) => {
-    const w = window as unknown as { __x: number[] }
+    const w = window as unknown as { __x: number[]; __xDone?: boolean }
     w.__x = []
+    w.__xDone = false
     const start = performance.now()
     const step = () => {
       const token = document.querySelector('.board-token')
       if (token) w.__x.push(Math.round(token.getBoundingClientRect().x))
       if (performance.now() - start < limit) requestAnimationFrame(step)
+      else w.__xDone = true
     }
     requestAnimationFrame(step)
   }, ms)
   await gesture()
-  await page.waitForTimeout(ms + 100)
+  // A JANELA é a da sonda, e é ela que diz quando acabou.
+  await page.waitForFunction(() => (window as unknown as { __xDone?: boolean }).__xDone, null, { timeout: ms + 5000 })
   const xs = await page.evaluate(() => (window as unknown as { __x: number[] }).__x)
   return [...new Set(xs)]
 }

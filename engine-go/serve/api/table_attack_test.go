@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-
-	"t20engine/domain/live"
 )
 
 // O ATAQUE NO TURNO: agredir é ação PADRÃO (p233), e quem não pode agir não
@@ -23,38 +21,7 @@ func attackOnTurn(t *testing.T) (sceneFixture, string) {
 	t.Helper()
 	f := newSceneFixture(t)
 	itemSemeia(t, f, f.charID, "espada-longa", "Espada longa", "wielded")
-	store := f.s.sessions
-	if _, err := store.State(t.Context(), f.sessionID); err != nil {
-		t.Fatalf("carregar a sessão: %v", err)
-	}
-	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
-		t.Fatalf("começar a cena de ação: %v", err)
-	}
-	goblin := "goblin-salteador"
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
-		Label: "Goblin", Initiative: 20, Type: "npc", MonsterID: &goblin,
-	}); err != nil {
-		t.Fatalf("pôr o Goblin na fila: %v", err)
-	}
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, sheetCombatant("Arcanista", 5, f.charID)); err != nil {
-		t.Fatalf("pôr o personagem na fila: %v", err)
-	}
-	for range 2 { // a primeira vez é do Goblin, a segunda do personagem
-		if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
-			t.Fatalf("girar a vez: %v", err)
-		}
-	}
-	state := stateOf(t, store, f.sessionID)
-	if state.Initiative[state.TurnIndex].CharacterID == nil {
-		t.Fatalf("a vez tinha de ser do personagem, e é de %q", state.Initiative[state.TurnIndex].Label)
-	}
-	for _, e := range state.Initiative {
-		if e.Label == "Goblin" {
-			return f, e.ID
-		}
-	}
-	t.Fatal("o Goblin não está na fila")
-	return f, ""
+	return f, f.actionSceneWithTheGoblinFirst(t, "Arcanista", f.charID, 2)
 }
 
 var commandErrorSignal = regexp.MustCompile(`"command_error":("(?:[^"\\]|\\.)*")`)

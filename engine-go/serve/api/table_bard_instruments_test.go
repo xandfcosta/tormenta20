@@ -58,7 +58,7 @@ func bardWithInstrumentOnTurn(t *testing.T, item, wear string) (sceneFixture, in
 	if refused := powerCommand(t, f, id, "escolhe/class.bardo.musica-balada-fascinante", ""); refused != "" {
 		t.Fatalf("escolher a Balada Fascinante: %s", refused)
 	}
-	startActionSceneOnTurnOf(t, f, "Menestrel")
+	f.actionSceneWithTheGoblinFirst(t, "Menestrel", f.charID, 2)
 	return f, id
 }
 

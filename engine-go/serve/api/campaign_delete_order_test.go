@@ -53,6 +53,10 @@ func TestDeletingACampaignForgetsItsSessionsFirst(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("excluir respondeu %d, queria 303", rec.Code)
 	}
+	// Excluída a mesa, a página dela não existe mais: quem excluiu volta à LISTA.
+	if destination := rec.Header().Get("Location"); destination != "/campanhas" {
+		t.Errorf("excluir mandou para %q, e a lista é /campanhas", destination)
+	}
 
 	// A LINHA SUMIU do banco com a cascata, então a leitura tem de FALHAR. Se ela
 	// responder, respondeu de MEMÓRIA — e memória que sobrevive à exclusão é

@@ -4,12 +4,28 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+	"slices"
 	"strings"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"testing"
 )
 
+// Os guardas do GESTO CONTÍNUO do pincel.
+//
+// A aritmética do traço não é medida aqui: `board.StrokeSquares` tem guarda
+// próprio, e ele prende a regra ("o traço não tem buraco") no lugar mais barato.
+// O que se prende aqui, pela rota, é a rota pinta o
+// SEGMENTO numa gravação só, que a resposta não devolve a Mesa inteira, e que a
+// tela liga os gestos que fazem o traço acontecer.
+
+// O caso mede o SEGMENTO, e não o número de gravações.
+//
+// Uma asserção sobre a `Version` do tabuleiro mediria a coisa errada: o
+// `PaintTerrain` sobe a versão POR CASA, então um traço de dez casas sobe dez,
+// dentro de um `apply` só. Quem garante a gravação única é a estrutura
+// (`PaintStroke` chama `apply` uma vez, e o `boardCommand` publica uma vez), e
+// um teste que afirme o contrário fica vermelho sobre um app correto.
 func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	f := newSceneFixture(t)
 	f.seedOpenBoard(t, "stone")
@@ -37,7 +53,7 @@ func TestTheStrokePaintsTheWholeSegment(t *testing.T) {
 	// última casa do segmento estão lá. O meio é problema do `StrokeSquares`, que
 	// tem guarda próprio.
 	for _, tip := range []engine.Square{{X: 2, Y: 2}, {X: 8, Y: 5}} {
-		if !contem(squares, tip) {
+		if !slices.Contains(squares, tip) {
 			t.Errorf("a casa %v não foi pintada: o traço não chega às pontas", tip)
 		}
 	}
@@ -286,7 +302,7 @@ func TestNoNodeHasDataShowAndDataAttrStyleTogether(t *testing.T) {
 	for _, tag := range regexp.MustCompile(`<[a-zA-Z][^>]*>`).FindAllString(screen, -1) {
 		if strings.Contains(tag, "data-show=") && strings.Contains(tag, "data-attr:style=") {
 			t.Errorf("um nó tem `data-show` e `data-attr:style` juntos e vai CONGELAR a aba "+
-				"em laço de escrita: %s", primeirosAtributos(tag))
+				"em laço de escrita: %s", shortTag(tag))
 		}
 	}
 }

@@ -69,7 +69,7 @@ func TestTheDisplayDrawsTheBoardAsTheTableSeesItWithNoActions(t *testing.T) {
 	if strings.Contains(page, "Ogro emboscado") {
 		t.Error("a tela da mesa mostrou a peça escondida")
 	}
-	for _, chrome := range []string{"Ferramentas do mapa", "Fechar a cortina", "Pôr no mapa", "Encerrar o tabuleiro", "table-tracker"} {
+	for _, chrome := range []string{"Ferramentas do mapa", "Fechar a cortina", "Pôr no mapa", "Encerrar o tabuleiro", "table-tracker", "Aproximar o mapa"} {
 		if strings.Contains(page, chrome) {
 			t.Errorf("a tela da mesa tem %q, e ela não tem ação nenhuma", chrome)
 		}

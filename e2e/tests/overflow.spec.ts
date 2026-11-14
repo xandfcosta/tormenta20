@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
+import { tidyUp } from './support/tidy'
 
 /**
  * NADA transborda o cartão. O caso real é a barra sem espaço — a magia que lista
@@ -172,27 +173,38 @@ test('o crachá da Defesa partida cabe no cabeçalho da ficha a 390px', async ({
   await expect(badge).toBeVisible()
   const short = await badge.evaluate((el) => el.getBoundingClientRect().width)
 
-  await page.getByRole('button', { name: 'Aplicar condição' }).click()
-  await page.getByRole('button', { name: 'Aplicar condição: Caído' }).click()
-  await expect(badge).toContainText('CaC')
+  try {
+    await page.getByRole('button', { name: 'Aplicar condição' }).click()
+    await page.getByRole('button', { name: 'Aplicar condição: Caído' }).click()
+    await expect(badge).toContainText('CaC')
 
-  const measurement = await badge.evaluate((el) => {
-    const box = el.getBoundingClientRect()
-    const row = el.parentElement as HTMLElement
-    const father = row.getBoundingClientRect()
-    const label = row.querySelector('h1') as HTMLElement | null
-    return {
-      largura: box.width,
-      foraPelaDireita: box.right - father.right,
-      recorteDaLinha: row.scrollWidth - row.clientWidth,
-      nomeVisivel: label ? label.getBoundingClientRect().width : -1,
-    }
-  })
+    const measurement = await badge.evaluate((el) => {
+      const box = el.getBoundingClientRect()
+      const row = el.parentElement as HTMLElement
+      const father = row.getBoundingClientRect()
+      const label = row.querySelector('h1') as HTMLElement | null
+      return {
+        largura: box.width,
+        foraPelaDireita: box.right - father.right,
+        recorteDaLinha: row.scrollWidth - row.clientWidth,
+        nomeVisivel: label ? label.getBoundingClientRect().width : -1,
+      }
+    })
 
-  expect(measurement.largura, 'o crachá não cresceu: o caso não está medindo a Defesa partida')
-    .toBeGreaterThan(short)
-  expect(measurement.foraPelaDireita, 'o crachá saiu pela direita da linha').toBeLessThanOrEqual(1)
-  expect(measurement.recorteDaLinha, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
-  // O nome não pode ser espremido a nada: truncar é o desenho, sumir não é.
-  expect(measurement.nomeVisivel, 'o crachá espremeu o nome do herói até sumir').toBeGreaterThan(24)
+    expect(measurement.largura, 'o crachá não cresceu: o caso não está medindo a Defesa partida')
+      .toBeGreaterThan(short)
+    expect(measurement.foraPelaDireita, 'o crachá saiu pela direita da linha').toBeLessThanOrEqual(1)
+    expect(measurement.recorteDaLinha, 'a linha recortou o próprio conteúdo').toBeLessThanOrEqual(1)
+    // O nome não pode ser espremido a nada: truncar é o desenho, sumir não é.
+    expect(measurement.nomeVisivel, 'o crachá espremeu o nome do herói até sumir').toBeGreaterThan(24)
+  } finally {
+    // O personagem 1 é o da semente que outros specs abrem: caído, ele muda a
+    // Defesa e o cabeçalho de quem vier depois.
+    await tidyUp('o Caído do personagem 1', async () => {
+      const takeOff = page.getByRole('button', { name: 'Tirar Caído' })
+      if ((await takeOff.count()) === 0) return
+      await takeOff.first().click()
+      await expect(badge).not.toContainText('CaC', { timeout: 5000 })
+    })
+  }
 })

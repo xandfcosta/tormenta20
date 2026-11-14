@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
+import { tidyUp } from './support/tidy'
 
 /**
  * O `−` E O `+` DO ATRIBUTO PARTEM DO QUE ESTÁ NO CAMPO, e não do valor que a
@@ -41,19 +42,24 @@ test('escrever 5 e tocar + grava 6, e não o valor antigo mais um', async ({ pag
 
   // O CAMPO É ESCRITO SEM SAIR DELE: o toque no `+` é o que tira o foco, e é
   // aí que os dois pedidos saem — o do campo e o do botão.
-  await field.fill(String(written))
-  const both = Promise.all([page.waitForResponse(strengthPost), page.waitForResponse(strengthPost)])
-  await page.getByRole('button', { name: 'Aumentar Força' }).click()
-  await both
+  try {
+    await field.fill(String(written))
+    const both = Promise.all([page.waitForResponse(strengthPost), page.waitForResponse(strengthPost)])
+    await page.getByRole('button', { name: 'Aumentar Força' }).click()
+    await both
 
-  field = await strengthField(page, id)
-  await expect(field, `escrito ${written} e tocado o +, a Força livre devia ser ${written + 1}`).toHaveValue(
-    String(written + 1),
-  )
-
-  // Devolve a Força, para a semente seguir como estava.
-  const restored = page.waitForResponse(strengthPost)
-  await field.fill(before)
-  await field.press('Enter')
-  await restored
+    field = await strengthField(page, id)
+    await expect(field, `escrito ${written} e tocado o +, a Força livre devia ser ${written + 1}`).toHaveValue(
+      String(written + 1),
+    )
+  } finally {
+    await tidyUp(`a Força do ${TANQUE} fora do valor da semente`, async () => {
+      field = await strengthField(page, id)
+      if ((await field.inputValue()) === before) return
+      const restored = page.waitForResponse(strengthPost)
+      await field.fill(before)
+      await field.press('Enter')
+      await restored
+    })
+  }
 })

@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { expectDentroDaJanela } from './support/geometry'
 import { expectNoHorizontalOverflow, VIEWPORTS } from './support/viewports'
 
 test.describe('O construtor de encontros', () => {
@@ -10,10 +9,6 @@ test.describe('O construtor de encontros', () => {
   test('o construtor cabe nos seis formatos', async ({ page }) => {
     await page.goto(`${ENCOUNTERS}?nivel=1&grupo=4&c=ogro:2,goblin-salteador:4`)
     await expectNoHorizontalOverflow(page, VIEWPORTS)
-    for (const viewport of VIEWPORTS) {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height })
-      await expectDentroDaJanela(page)
-    }
   })
 
   /**
@@ -45,25 +40,6 @@ test.describe('O construtor de encontros', () => {
 
     await page.goBack()
     await expect(page, 'o Voltar desfez um clique em vez de sair da tela').toHaveURL(/\/$/)
-  })
-
-  /**
-   * O LINK COPIADO reabre o encontro. A ida está prendida em Go
-   * (`TestTheCopiedLinkReopensTheEncounter`); o que só o browser vê é o `data-url`
-   * que a cena carrega chegando ao endereço certo depois de uma navegação de
-   * verdade — que é o que alguém faz ao colar no chat da mesa.
-   */
-  test('o link do botão de copiar reabre o mesmo encontro', async ({ page }) => {
-    await page.goto(`${ENCOUNTERS}?nivel=3&grupo=4&c=ogro:2`)
-    const verdict = page.locator('#encounters')
-    const before = await verdict.textContent()
-
-    await expect(page.getByRole('button', { name: 'Copiar link' })).toBeVisible()
-    const link = await verdict.getAttribute('data-url')
-    expect(link, 'o botão não carrega o endereço do encontro').toBeTruthy()
-
-    await page.goto(link as string)
-    expect(await verdict.textContent(), 'o encontro voltou diferente pelo link').toBe(before)
   })
 
   /**

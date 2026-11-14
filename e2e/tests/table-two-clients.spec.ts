@@ -71,35 +71,6 @@ async function encerraACena(page: Page) {
   await page.getByRole('button', { name: 'Encerrar a cena' }).click()
 }
 
-test('cada papel recebe a SUA cena, e não a do outro', async ({ browser }) => {
-  const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)
-  try {
-    // A BARRA DA SESSÃO é do jogador: ele escolhe entre as Ações, a própria
-    // ficha, a mesa e o tabuleiro. O mestre vê tudo junto, no palco dele.
-    await expect(
-      playerScreen.getByRole('navigation', { name: 'Superfícies da sessão' }),
-      'o jogador não recebeu a cena do jogador',
-    ).toBeVisible()
-    await expect(
-      gmScreen.getByRole('navigation', { name: 'Superfícies da sessão' }),
-      'o mestre recebeu a cena do JOGADOR',
-    ).toHaveCount(0)
-
-    // E os COMANDOS são do mestre. A trava é na view (`v.GM` nil), então o
-    // que se afirma aqui é que ela chegou íntegra até o navegador do jogador.
-    await expect(
-      gmScreen.getByRole('button', { name: 'Adicionar à fila' }),
-      'o mestre não recebeu os comandos do mestre',
-    ).toBeVisible()
-    await expect(
-      playerScreen.getByRole('button', { name: 'Adicionar à fila' }),
-      'o jogador recebeu os comandos do MESTRE',
-    ).toHaveCount(0)
-  } finally {
-    await closes()
-  }
-})
-
 test('o que o mestre põe na fila aparece na tela do jogador', async ({ browser }) => {
   const echo = `Eco de teste ${Date.now()}`
   const { telaDoMestre: gmScreen, telaDoJogador: playerScreen, fecha: closes } = await asDuasTelas(browser)

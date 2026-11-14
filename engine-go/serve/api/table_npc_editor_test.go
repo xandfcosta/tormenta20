@@ -11,6 +11,15 @@ import (
 	"testing"
 )
 
+// Os guardas do EDITOR DE BLOCO (ALE-269).
+//
+// A forma do bloco tem guarda em `creature/block.go` (a validação) e a cópia do
+// livro tem o oráculo do `piloto_verbete_para_bloco`. O que se prende aqui é o
+// que só existe DESDE o editor: que o rascunho atravessa os gestos de forma sem
+// perder o que estava digitado, que a AUSÊNCIA de mana sobrevive à ida e à volta
+// pelo formulário, que a recusa fala DENTRO do editor, e que o id do rascunho não
+// alcança o elenco de outra campanha.
+
 // dbNpc lê o bloco guardado pelo nome, para as asserções não dependerem do
 // id que o banco escolheu.
 func dbNpc(t *testing.T, f sceneFixture, name string) creature.Block {
@@ -50,7 +59,7 @@ func TestTheShapeGestureNeitherSavesNorLosesWhatWasTyped(t *testing.T) {
 
 	response := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/nova",
-		bodyDraft(`"id":0,"nome":"Ogro Capitão","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		bodyDraft(`"id":0,"nome":"Ogro Capitão","conjura":false,"bloco":{`+minimalBlock+`}`))
 
 	if cast := f.s.tableScene.CampaignCast(context.Background(), f.campaignID); len(cast) != 0 {
 		t.Errorf("acrescentar um ataque GRAVOU no elenco: %+v", cast)
@@ -112,7 +121,7 @@ func TestARowThatDoesNotExistRefusesInsteadOfBlowingUp(t *testing.T) {
 	f := newSceneFixture(t)
 	response := f.posts(t, f.gm,
 		f.tableUrl()+"/elenco/npc/rascunho/ataque/7/remover",
-		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+minimalBlock+`}`))
 	if !strings.Contains(response, "draft_error") {
 		t.Errorf("a linha inexistente não recusou:\n%s", response)
 	}
@@ -130,14 +139,14 @@ func TestTheAbsenceOfManaSurvivesTheForm(t *testing.T) {
 
 	// Sem conjurar: o número no formulário é ignorado e o bloco fica SEM a linha.
 	f.posts(t, f.gm, base,
-		bodyDraft(`"id":0,"nome":"Bandido","conjura":false,"bloco":{`+blocoMinimo+`,"pm":7}`))
+		bodyDraft(`"id":0,"nome":"Bandido","conjura":false,"bloco":{`+minimalBlock+`,"pm":7}`))
 	if pm := dbNpc(t, f, "Bandido").PM; pm != nil {
 		t.Errorf("o Bandido guardou %d PM sem conjurar — a ausência virou número", *pm)
 	}
 
 	// Conjurando: o número atravessa.
 	f.posts(t, f.gm, base,
-		bodyDraft(`"id":0,"nome":"Centauro Xamã","conjura":true,"bloco":{`+blocoMinimo+`,"pm":20}`))
+		bodyDraft(`"id":0,"nome":"Centauro Xamã","conjura":true,"bloco":{`+minimalBlock+`,"pm":20}`))
 	pm := dbNpc(t, f, "Centauro Xamã").PM
 	if pm == nil || *pm != 20 {
 		t.Errorf("o Centauro Xamã guardou %v PM, esperado 20", pm)
@@ -175,7 +184,7 @@ func TestTheFormIsNotBornWithTheWordUndefined(t *testing.T) {
 func TestSavingWithoutANameSpeaksInsideTheEditor(t *testing.T) {
 	f := newSceneFixture(t)
 	response := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
-		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		bodyDraft(`"id":0,"nome":"","conjura":false,"bloco":{`+minimalBlock+`}`))
 
 	if !strings.Contains(response, "draft_error") || !strings.Contains(response, "precisa de um nome") {
 		t.Errorf("a recusa não falou no editor:\n%s", response)
@@ -196,7 +205,7 @@ func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	now := "2026-01-01T00:00:00Z"
 	row, err := f.s.queries.CreateCampaignCreature(context.Background(), sqlcgen.CreateCampaignCreatureParams{
 		Campaignid: neighbor, Name: "Vilão da vizinha",
-		Block:     `{` + blocoMinimo + `}`,
+		Block:     `{` + minimalBlock + `}`,
 		Createdat: now, Updatedat: now,
 	})
 	if err != nil {
@@ -204,7 +213,7 @@ func TestTheEditorDoesNotReachAnotherCampaignsCast(t *testing.T) {
 	}
 
 	response := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
-		bodyDraft(`"id":`+strconv.FormatInt(row.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		bodyDraft(`"id":`+strconv.FormatInt(row.ID, 10)+`,"nome":"Sequestrado","conjura":false,"bloco":{`+minimalBlock+`}`))
 
 	if !strings.Contains(response, "não é desta campanha") {
 		t.Errorf("o editor aceitou reescrever o elenco da vizinha:\n%s", response)
@@ -227,7 +236,7 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 		"/elenco/npc/rascunho/salvar",
 	} {
 		rec := f.requests(t, f.player, http.MethodPost, f.tableUrl()+path,
-			bodyDraft(`"id":0,"nome":"Intruso","conjura":false,"bloco":{`+blocoMinimo+`}`))
+			bodyDraft(`"id":0,"nome":"Intruso","conjura":false,"bloco":{`+minimalBlock+`}`))
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("o jogador alcançou %s: %d", path, rec.Code)
 		}
@@ -240,7 +249,7 @@ func TestOnlyTheGmTouchesTheCast(t *testing.T) {
 func TestCreatingFromScratchAndEditingAreTheSameForm(t *testing.T) {
 	f := newSceneFixture(t)
 	f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/salvar",
-		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+blocoMinimo+`}`))
+		bodyDraft(`"id":0,"nome":"Ogro","conjura":false,"bloco":{`+minimalBlock+`}`))
 
 	doZero := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/novo", "{}")
 	fromCopy := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/"+npcId(t, f, "Ogro")+"/editar", "{}")

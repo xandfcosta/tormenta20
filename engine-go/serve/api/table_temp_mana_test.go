@@ -95,7 +95,7 @@ func bardOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 	// A INSPIRAÇÃO É AÇÃO PADRÃO (p44), então entrar nela PEDE A VEZ — e desde
 	// que assumir postura cobra do turno, a ordem da bancada importa: entra na
 	// postura na vez dele, e só DEPOIS a vez passa para o Goblin.
-	startActionSceneWithTheBardOnTurn(t, f)
+	f.actionSceneWithTheGoblinFirst(t, "Trovador", f.charID, 2)
 	if refused := powerCommand(t, f, id, "postura/inspiracao/entra", ""); refused != "" {
 		t.Fatalf("entrar em Inspiração: %s", refused)
 	}
@@ -109,35 +109,6 @@ func bardOnTurn(t *testing.T) (sceneFixture, int64, string, string) {
 	bardo := entryLabeled(t, stateOf(t, f.s.sessions, f.sessionID), "Trovador")
 	goblin := entryLabeled(t, stateOf(t, f.s.sessions, f.sessionID), "Goblin")
 	return f, id, bardo, goblin
-}
-
-// startActionSceneWithTheBardOnTurn abre a cena de ação com o bardo NA VEZ e um
-// Goblin esperando.
-func startActionSceneWithTheBardOnTurn(t *testing.T, f sceneFixture) {
-	t.Helper()
-	store := f.s.sessions
-	if _, err := store.State(t.Context(), f.sessionID); err != nil {
-		t.Fatalf("carregar a sessão: %v", err)
-	}
-	if _, err := store.StartScene(context.Background(), f.sessionID, live.SceneAction); err != nil {
-		t.Fatalf("começar a cena: %v", err)
-	}
-	goblin := "goblin-salteador"
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID, live.InitiativeEntry{
-		Label: "Goblin", Initiative: 20, Type: "npc", MonsterID: &goblin,
-	}); err != nil {
-		t.Fatalf("pôr o Goblin na fila: %v", err)
-	}
-	if _, err := store.AddInitiativeEntry(context.Background(), f.sessionID,
-		sheetCombatant("Trovador", 5, f.charID)); err != nil {
-		t.Fatalf("pôr o bardo na fila: %v", err)
-	}
-	// DUAS VEZES: a primeira é do Goblin (iniciativa 20), a segunda do bardo.
-	for range 2 {
-		if _, err := store.NextTurn(context.Background(), f.sessionID); err != nil {
-			t.Fatalf("girar a vez: %v", err)
-		}
-	}
 }
 
 // sheetTab é a ficha aberta numa aba.

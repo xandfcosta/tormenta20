@@ -24,9 +24,6 @@ func TestTheParallelSessionDressesThePlayerSheetInTempestade(t *testing.T) {
 	if !strings.Contains(page, "scene-ds") {
 		t.Fatal("a sessão do jogador não veste o Tempestade")
 	}
-	if strings.Contains(page, "O que ver na sessão") {
-		t.Error("a sessão do jogador ainda desenha o seletor de superfície de hoje")
-	}
 	doc, err := html.Parse(strings.NewReader(page))
 	if err != nil {
 		t.Fatal(err)

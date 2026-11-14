@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { expectEveryToggleDrawsItsState } from './support/geometry'
+import { expectEveryToggleDrawsItsState, untilAnimationsSettle } from './support/geometry'
 
 /**
  * OS CONTROLES DE ESTADO DESENHAM O ESTADO QUE DECLARAM.
@@ -72,7 +72,9 @@ const THE_SCREENS: Screen[] = [
 for (const screen of THE_SCREENS) {
   test(`todo controle de ${screen.nome} desenha o estado que declara`, async ({ page }) => {
     await page.goto(screen.rota)
-    await page.waitForTimeout(900)
+    // O palco entra DESLIZANDO: medido no meio da entrada, o computado de antes
+    // do clique é um quadro da animação, e não o estado.
+    await untilAnimationsSettle(page)
     if (screen.abre) await screen.abre(page)
     await expectEveryToggleDrawsItsState(page, screen.raiz ?? 'body')
   })

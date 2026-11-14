@@ -1,4 +1,5 @@
 import { type Page, expect } from '@playwright/test'
+import { expectDentroDaJanela, expectNadaRolaDeLado, expectNothingIsClippedSideways } from './geometry'
 
 // As asserções de RELAÇÃO (alinhamento, proporção, containment, alcance) moram
 // em `geometry.ts`. Aqui ficam a lista de formatos e as duas asserções de
@@ -20,29 +21,41 @@ export const DESK_VIEWPORTS = VIEWPORTS.filter((v) => v.width >= 1280)
 
 /**
  * Redimensiona por todos os formatos na página ATUAL e falha no primeiro em que
- * o documento rola para o lado.
+ * algo escapa da cena PELO LADO.
  *
  * Um `goto` e seis redimensionamentos, e não seis navegações: as consultas de
  * mídia da casa chaveiam só por LARGURA, então o leiaute se refaz ao vivo e não
  * há o que rebuscar entre os tamanhos. Uma carga de página por formato por cena
  * custava 198s — 48% da suíte e2e inteira — por uma expressão repetida.
  *
- * Honesto sobre o que prova: só que o BODY não rola na horizontal. Ele não prova
- * que o conteúdo não é recortado dentro de um contêiner, nem que a cena "preenche
- * a tela" — isso seria outra asserção.
+ * O eixo horizontal se fecha com três medidas, e as três olham DENTRO da cena:
+ *
+ *   - `expectDentroDaJanela`: nada clicável fora da janela sem rolagem que
+ *     chegue lá (a causa típica é `min-width: auto` em item de grid, que
+ *     dimensiona a trilha pelo MIN-CONTENT);
+ *   - `expectNadaRolaDeLado`: nenhum painel rola de lado;
+ *   - `expectNothingIsClippedSideways`: nada transborda de uma caixa que não
+ *     rola, onde a casca o recortaria em silêncio.
+ *
+ * Aqui morava uma leitura de `documentElement.scrollWidth`, e ela era inerte em
+ * toda cena: a casca é `h-dvh overflow-hidden`, então o documento nunca cresce
+ * de lado, aconteça o que acontecer por dentro.
+ *
+ * Honesto sobre o que NÃO prova: que a cena "preenche a tela". Isso é outra
+ * asserção.
  *
  * @example await expectNoHorizontalOverflow(page, VIEWPORTS)
  */
 export async function expectNoHorizontalOverflow(
   page: Page,
   viewports: readonly { name: string; width: number; height: number }[],
+  root = 'body',
 ): Promise<void> {
   for (const vp of viewports) {
     await page.setViewportSize({ width: vp.width, height: vp.height })
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    )
-    expect(overflow, `rolagem horizontal @ ${vp.name} (${vp.width}×${vp.height})`).toBeLessThanOrEqual(1)
+    await expectDentroDaJanela(page, root)
+    await expectNadaRolaDeLado(page, root)
+    await expectNothingIsClippedSideways(page, root)
   }
 }
 

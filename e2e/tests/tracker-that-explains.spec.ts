@@ -37,7 +37,7 @@ async function trackerAnimations(
   ms = 2500,
 ): Promise<{ veus: number; linhasAnimando: number }> {
   await page.evaluate((limit) => {
-    const w = window as unknown as { __f: { veus: number; linhas: number } }
+    const w = window as unknown as { __f: { veus: number; linhas: number; done?: boolean } }
     w.__f = { veus: 0, linhas: 0 }
     const start = performance.now()
     const step = () => {
@@ -52,11 +52,16 @@ async function trackerAnimations(
         if (row.getAnimations().length > 0) w.__f.linhas++
       }
       if (performance.now() - start < limit) requestAnimationFrame(step)
+      else w.__f.done = true
     }
     requestAnimationFrame(step)
   }, ms)
   await gestureName()
-  await page.waitForTimeout(ms + 100)
+  // A JANELA é a da sonda, e é ela que diz quando acabou: um tempo fixo por cima
+  // seria um segundo relógio, que acerta só na máquina de quem o escolheu.
+  await page.waitForFunction(() => (window as unknown as { __f: { done?: boolean } }).__f.done, null, {
+    timeout: ms + 5000,
+  })
   const m = await page.evaluate(() => (window as unknown as { __f: { veus: number; linhas: number } }).__f)
   return { veus: m.veus, linhasAnimando: m.linhas }
 }
@@ -281,7 +286,7 @@ test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
   const { apagar: erase } = await aTrackerWithTwo(page)
   try {
     await page.evaluate(() => {
-      const w = window as unknown as { __c: number }
+      const w = window as unknown as { __c: number; __cDone?: boolean }
       w.__c = 0
       const t0 = performance.now()
       const step = () => {
@@ -289,6 +294,7 @@ test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
           if (c.getAnimations().length > 0) w.__c++
         }
         if (performance.now() - t0 < 900) requestAnimationFrame(step)
+        else w.__cDone = true
       }
       requestAnimationFrame(step)
     })
@@ -296,7 +302,7 @@ test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
     await page.getByRole('button', { name: 'Abrir Ogro do E2E' }).click()
     await page.locator('dialog[open]').getByRole('button', { name: '+ Aplicar condição' }).click()
     await page.locator('#gm-conditions').getByRole('button', { name: 'Abalado', exact: true }).click()
-    await page.waitForTimeout(1000)
+    await page.waitForFunction(() => (window as unknown as { __cDone?: boolean }).__cDone, null, { timeout: 5000 })
 
     const tiles = await page.evaluate(() => (window as unknown as { __c: number }).__c)
     expect(

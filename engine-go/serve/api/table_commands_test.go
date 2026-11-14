@@ -456,7 +456,7 @@ func TestTheVitalStepComesFromThePathUpToTheCeiling(t *testing.T) {
 			t.Fatalf("curar em %s deu %d", step, rec.Code)
 		}
 	}
-	refusal := trechoDeSinais(f.requests(t, f.gm, "POST", base+"ferir/1000", "").Body.String())
+	refusal := signalsLine(f.requests(t, f.gm, "POST", base+"ferir/1000", "").Body.String())
 	if !strings.Contains(refusal, "1000") || !strings.Contains(refusal, "999") {
 		t.Errorf("a recusa do passo 1000 não citou o valor e o teto; sinais = %q", refusal)
 	}
@@ -754,10 +754,10 @@ func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	accepted := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
 		`{"new_name":"Goblin","new_initiative":17,"new_hp":12,"new_type":"character"}`).Body.String()
 	if !strings.Contains(accepted, `"new_name":""`) {
-		t.Errorf("o formulário não se limpou depois do aceite; corpo = %s", trechoDeSinais(accepted))
+		t.Errorf("o formulário não se limpou depois do aceite; corpo = %s", signalsLine(accepted))
 	}
 	if !strings.Contains(accepted, `"new_type":"npc"`) {
-		t.Errorf("o tipo não voltou para npc; corpo = %s", trechoDeSinais(accepted))
+		t.Errorf("o tipo não voltou para npc; corpo = %s", signalsLine(accepted))
 	}
 
 	refused := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/adicionar",
@@ -765,7 +765,7 @@ func TestTheFormOnlyClearsWhenTheServerAccepts(t *testing.T) {
 	// O CONTROLE: a recusa TEM de ter acontecido, senão "não limpou" seria só
 	// "não houve resposta nenhuma".
 	if !strings.Contains(refused, "400") {
-		t.Fatalf("a recusa não chegou; corpo = %s", trechoDeSinais(refused))
+		t.Fatalf("a recusa não chegou; corpo = %s", signalsLine(refused))
 	}
 	// Quem garante isto é a ORDEM — a mutação só escreve nos sinais depois de a
 	// própria escrita ter dado certo —, e não um descarte na resposta. O teste
@@ -789,7 +789,7 @@ func TestEditingFixesInitiativeAndHpAtOnce(t *testing.T) {
 	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":21,"edit_hp":7}`)
 	if rec.Code != http.StatusOK {
-		t.Fatalf("editar deu %d: %s", rec.Code, trechoDeSinais(rec.Body.String()))
+		t.Fatalf("editar deu %d: %s", rec.Code, signalsLine(rec.Body.String()))
 	}
 
 	order := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative
@@ -817,7 +817,7 @@ func TestEditingUsesTheSameInitiativeRangeAsAdding(t *testing.T) {
 
 	rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/iniciativa/"+entryID+"/editar",
 		`{"edit_initiative":41,"edit_hp":10}`)
-	if body := trechoDeSinais(rec.Body.String()); !strings.Contains(body, "41") {
+	if body := signalsLine(rec.Body.String()); !strings.Contains(body, "41") {
 		t.Errorf("a recusa não citou a iniciativa ofensiva; sinais = %s", body)
 	}
 	if queue := stateOf(t, f.s.tableHost().Sessions(), f.sessionID).Initiative; queue[0].Initiative != 0 {
@@ -878,7 +878,7 @@ func TestACombatantWithAQuoteInTheNameDoesNotBreakTheExpression(t *testing.T) {
 	// O literal tem de sair como JSON: aspas ESCAPADAS dentro dele, e não uma
 	// aspa crua fechando a string no meio do nome.
 	if !strings.Contains(body, `$edit_name = &#34;O&#39;Brien, o \&#34;Justo\&#34;&#34;`) {
-		t.Errorf("o nome com aspas não virou literal seguro; a semeadura saiu como: %s", trechoDaSemeadura(body))
+		t.Errorf("o nome com aspas não virou literal seguro; a semeadura saiu como: %s", nameSeedExcerpt(body))
 	}
 }
 
