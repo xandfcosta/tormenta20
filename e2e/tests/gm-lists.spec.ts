@@ -77,18 +77,9 @@ test('alargar a janela nunca tira uma coluna do catálogo', async ({ page }) => 
     '.ds-catalog-grid',
     [1920, 1440, 1200, 1100, 1024, 1000, 900, 844, 768, 600, 390],
   )
-
-  // A grade é nativa e preenche sozinha, então fileira com vazio à direita não
-  // pode existir. O risco é o oposto, e é o que se afirma: a grade declarando
-  // MAIS colunas do que cabem para ler.
-  await page.setViewportSize({ width: 1920, height: 1080 })
-  const cols = await page.evaluate(() => {
-    const grade = document.querySelector('.ds-catalog-grid')
-    if (!grade) return null
-    return getComputedStyle(grade).gridTemplateColumns.split(' ').filter(Boolean).length
-  })
-  expect(cols, 'nenhuma grade pintou em 1920').not.toBeNull()
-  expect(cols, 'o teto de três colunas é medida de leitura (ALE-170)').toBeLessThanOrEqual(3)
+  // O TETO de três colunas, a contagem exata em cada largura, é do
+  // `catalogs.spec` ("a grade nunca passa de três colunas"). Aqui é só a
+  // direção: alargar nunca tira coluna.
 })
 
 /**

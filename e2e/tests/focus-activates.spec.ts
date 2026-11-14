@@ -16,35 +16,18 @@ import { expect, test } from '@playwright/test'
  */
 test.use({ storageState: '.auth/user.json' })
 
-test('a seta anda na lista e a ficha segue junto', async ({ page }) => {
-  await page.setViewportSize({ width: 1400, height: 900 })
-  await page.goto('/mestre/bestiario')
-  await page.waitForLoadState('networkidle')
-
-  const sideSheet = page.locator('[data-nav-region="ficha"]')
-  const first = page.locator('a[href*="criatura="]').first()
-  await first.focus()
-  await expect(sideSheet).toContainText(/\S/)
-  const before = (await sideSheet.innerText()).slice(0, 40)
-
-  // O CONTROLE: a região está declarada. Sem ela o driver não tem o que dirigir,
-  // e "a seta não andou" seria verdade sobre uma tela sem teclado nenhum — que é
-  // um defeito diferente e a mensagem apontaria o lugar errado.
-  await expect(page.locator('[data-nav-region="lista"]')).toHaveCount(1)
-
-  await page.keyboard.press('ArrowDown')
-  await expect
-    .poll(async () => (await sideSheet.innerText()).slice(0, 40), { timeout: 4000 })
-    .not.toBe(before)
-})
-
 test('cada passo da seta desenha a ficha sem espera perceptível', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto('/mestre/bestiario')
   await page.waitForLoadState('networkidle')
 
   const sheet = page.locator('[data-nav-region="ficha"]')
+  // O CONTROLE: a região está declarada. Sem ela o driver não tem o que dirigir,
+  // e "a seta não andou" seria verdade sobre uma tela sem teclado nenhum — que é
+  // um defeito diferente e a mensagem apontaria o lugar errado.
+  await expect(page.locator('[data-nav-region="lista"]')).toHaveCount(1)
   await page.locator('a[href*="criatura="]').first().focus()
+  await expect(sheet, 'a ficha não desenhou a primeira criatura').toContainText(/\S/)
 
   // PASSO DELIBERADO custa uma ida ao servidor por linha, e isso é o CERTO: quem
   // anda de linha em linha quer ver cada criatura. O `__debounce` não serve para
