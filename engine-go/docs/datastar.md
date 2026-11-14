@@ -72,6 +72,17 @@ O `TestEveryLiveStreamOpensThroughLiveStream` lê o `Init:` das páginas, e o
 `live-stream-reconnects.spec.ts` prova o runtime. A troca de versão não deixa
 erro: só a reconexão medida mostra.
 
+### O diálogo PESADO se desenha aberto, e só aberto
+
+Diálogo fechado também é HTML: o Aprender magia (o livro inteiro), o Adicionar
+item e o Escolher eram mais da metade da cena da aba, desenhados e remendados a
+cada gesto. **Diálogo grande usa o `sheetLazyDialog`** (ou o `lazyBody`, no
+Escolher), e **quem o abre usa o `opensLazyDialog`**: o clique escreve o
+`$sheet_dialog` e pede a cena, o corpo chega no remendo e, até lá, o diálogo
+diz "Carregando…". Fechar por qualquer caminho limpa o sinal (`close` do
+`<dialog>`). **O teste que lê o corpo ABRE o diálogo antes**, como o jogador
+(`sheetTabOpen`, `openDialogSignals`).
+
 ### O servidor escrevendo num SINAL pelo stream: uma vez, nunca a cada quadro
 
 Onde a decisão é do navegador, o stream da mesa escreve num SINAL

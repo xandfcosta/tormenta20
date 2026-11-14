@@ -1011,3 +1011,16 @@ décima, morto; na 1.0.4, ~0,6 s todas. A primeira sonda mentiu duas vezes: o
 dentro de `e2e/` lia outra chave de sessão e respondia a tela de login. Daí o
 `ui.LiveStream`, o guarda e o spec.
 
+### A aba pesava pelos diálogos fechados (2026-11)
+
+A troca de aba demorava 140–280 ms com o servidor respondendo em ~25 ms. O resto
+era volume: na aba Magias, 223 dos 248 KB e 2240 dos 2513 nós estavam em
+diálogos FECHADOS, e só o Aprender magia pesava 125 KB. Desenhados sob demanda,
+a troca macia caiu de ~148 para ~114 ms (Magias) e de ~142 para ~87 ms
+(Poderes). A primeira medida da página inteira mentiu: o "pronto" era a barra de
+baixo aparecer, que depende da ordem da leitura do HTML, e mostrou Magias 30 ms
+mais lenta com metade do HTML; o FCP, que é a pintura, deu igual. E o Escolher
+sob demanda se esvaziava no primeiro gesto: o `$race_attributes = null` de um
+humano sem atributo derrubava todos os sinais do pedido, defeito que já existia
+e só apagava filtros sem ninguém notar.
+
