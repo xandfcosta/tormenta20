@@ -18,9 +18,9 @@ import (
 // O que estes guardas prendem é o NÚMERO: em que ponto do plano cada cor começa.
 // Se o fio azul é azul mesmo, quem responde é a folha de estilo e o olho.
 
-func squaresAt(pares ...[2]int) []engine.Square {
-	qs := make([]engine.Square, len(pares))
-	for i, p := range pares {
+func squaresAt(pairs ...[2]int) []engine.Square {
+	qs := make([]engine.Square, len(pairs))
+	for i, p := range pairs {
 		qs[i] = engine.Square{X: p[0], Y: p[1]}
 	}
 	return qs

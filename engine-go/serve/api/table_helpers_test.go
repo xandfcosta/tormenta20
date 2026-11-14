@@ -160,9 +160,9 @@ func shortTag(tag string) string {
 	}
 	return tag
 }
-func squaresAt(pares ...[2]int) []engine.Square {
-	qs := make([]engine.Square, len(pares))
-	for i, p := range pares {
+func squaresAt(pairs ...[2]int) []engine.Square {
+	qs := make([]engine.Square, len(pairs))
+	for i, p := range pairs {
 		qs[i] = engine.Square{X: p[0], Y: p[1]}
 	}
 	return qs
