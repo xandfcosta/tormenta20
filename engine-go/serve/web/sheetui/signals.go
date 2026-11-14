@@ -194,7 +194,10 @@ func (s Scene) sheetSignals(r *http.Request) Signals {
 	// O RECUO fica — sem sinal, a cena ainda desenha, com a aba e os filtros da query —, mas não CALADO:
 	// um sinal de tipo errado derruba o corpo inteiro, e o `$race_attributes = null` do Escolher viveu
 	// anos assim, apagando filtros sem ninguém ver.
-	if err := datastar.ReadSignals(r, &signals); err != nil {
+	// O CORPO VAZIO é "sem sinais", como o `GET` sem o parâmetro `datastar` é para o próprio SDK: não há o
+	// que ler, e não há erro a contar. O log é para o sinal que VEIO e não se leu.
+	emptyBody := r.Method != http.MethodGet && r.Method != http.MethodDelete && r.ContentLength == 0
+	if err := datastar.ReadSignals(r, &signals); err != nil && !emptyBody {
 		s.log.Warn("os sinais do gesto não se leram, e a ficha seguiu sem nenhum deles",
 			"path", r.URL.Path, "error", err.Error())
 		signals = Signals{}

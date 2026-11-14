@@ -28,3 +28,17 @@ func TestASheetGestureWithUnreadableSignalsLogsTheCause(t *testing.T) {
 		t.Errorf("o log não diz qual sinal não se leu (race_attributes):\n%s", out)
 	}
 }
+
+// O CORPO VAZIO é "sem sinais", como o `GET` sem o parâmetro `datastar` é para o SDK, e não um erro: o
+// log é para o sinal que veio e não se leu.
+func TestASheetGestureWithAnEmptyBodyLogsNothing(t *testing.T) {
+	f := newSceneFixture(t)
+	var logged bytes.Buffer
+	f.s.log = slog.New(slog.NewJSONHandler(&logged, nil))
+
+	f.requests(t, f.player, http.MethodPost, fmt.Sprintf("/personagens/%d/vitais/pv/1?tab=combat", f.charID), "")
+
+	if logged.Len() > 0 {
+		t.Errorf("o gesto sem corpo deixou aviso no log:\n%s", logged.String())
+	}
+}
