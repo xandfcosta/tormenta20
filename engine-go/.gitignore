@@ -14,3 +14,8 @@ bin/
 *.db
 *.db-shm
 *.db-wal
+# O binário de `go build ./cmd/seed`, ANCORADO como o `/data/`: sem a barra, o
+# padrão pegaria a pasta `cmd/seed`, que é o código do gerador. Ele chegou a ser
+# versionado (ALE-493), e o gerador de CSS, que varre a árvore atrás de classes,
+# lia o executável e mudava a folha de estilo de quem o recompilasse.
+/seed
