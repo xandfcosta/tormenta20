@@ -30,6 +30,9 @@ type countedChoice struct {
 	// Fixed diz que o limite é o número do verbete (as três escolas, p44): não
 	// há atributo nem nível a escrever ao lado dele.
 	Fixed bool
+	// Locked diz que o livro trava a escolha feita: as escolas do bardo e do druida (p44, p62). A
+	// Balística também tem número fixo (p69), e o livro não a trava.
+	Locked bool
 }
 
 // Hint é a nota de rodapé do bloco.
@@ -37,8 +40,11 @@ func (c countedChoice) Hint() string {
 	if c.Repeats {
 		return "Escolher de novo soma +2 no mesmo terreno. Área de Tormenta a partir do 11º nível."
 	}
-	if c.Fixed {
+	if c.Locked {
 		return "O livro diz: uma vez feita, essa escolha não pode ser mudada."
+	}
+	if c.Fixed {
+		return ""
 	}
 	return "Só as perícias treinadas."
 }
@@ -65,6 +71,7 @@ func countedChoicesOf(dto sheet.CharacterDTO, class string) []countedChoice {
 			ID: counted.Power.ID, Name: counted.Power.Name, Nouns: counted.Nouns(), Detail: counted.Power.Description,
 			Chosen: len(counted.Picks), Limit: counted.Limit, Value: counted.Value,
 			Attribute: counted.Basis, Repeats: counted.Repeats, Fixed: counted.Fixed,
+			Locked: counted.Power.Choice != nil && counted.Power.Choice.Kind == "school",
 		}
 		for _, option := range counted.Offered {
 			label := counted.Labels[option]

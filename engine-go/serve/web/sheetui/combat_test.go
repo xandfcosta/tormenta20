@@ -262,3 +262,14 @@ func TestTheIntelligenceAttackSaysWhoPutIt(t *testing.T) {
 		t.Errorf("a nota do ataque com o Armeiro diz %q", got)
 	}
 }
+
+// "UMA VEZ FEITA, ESSA ESCOLHA NÃO PODE SER MUDADA" é das escolas do bardo e do druida (p44, p62), e não de toda
+// escolha de número fixo: a Balística escolhe uma proficiência (p69) e o livro não a trava.
+func TestOnlyTheSchoolChoiceSaysItCannotChange(t *testing.T) {
+	if hint := (countedChoice{Fixed: true}).Hint(); hint != "" {
+		t.Errorf("a escolha fixa da Balística diz %q, e o livro não a trava", hint)
+	}
+	if hint := (countedChoice{Fixed: true, Locked: true}).Hint(); !strings.Contains(hint, "não pode ser mudada") {
+		t.Errorf("a escolha das escolas diz %q; want que não pode ser mudada", hint)
+	}
+}
