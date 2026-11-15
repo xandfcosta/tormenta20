@@ -182,3 +182,15 @@ func SpecialSituationLabel(s SpecialSituation) string {
 // errTotalCover é a recusa da cobertura total. Erro e não "acertou zero":
 // o gesto tem de PARAR antes de rolar nada, e a mesa tem de ler por quê.
 var errTotalCover = fmt.Errorf("o alvo está sob cobertura total e não pode ser atacado (p239)")
+
+// shootsIntoMeleeHere diz se um alvo `shootsIntoMelee` alcança esta carta: o Grudar o Cano, com a arma de fogo
+// contra o oponente adjacente (p48). Alvo, e não bandeira, porque ele vem de um interruptor, e a bandeira sob
+// condição não acende pelo interruptor (`TestASwitchedOnFlagTargetDoesNotRaiseTheFlag`).
+func shootsIntoMeleeHere(effects ItemEffects, scopes []string) bool {
+	for _, scope := range scopes {
+		if StatFor(effects, ModifierTarget{K: "shootsIntoMelee", Scope: scope}).Total > 0 {
+			return true
+		}
+	}
+	return false
+}

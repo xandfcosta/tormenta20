@@ -510,6 +510,9 @@ func targetKey(t ModifierTarget) string {
 		// A Fúria Titânica (p42) dobra "o bônus da Fúria", que vive em dois
 		// alvos (ataque e dano) e em duas parcelas (a base e o degrau pago).
 		return "source:" + t.Name
+	case "shootsIntoMelee":
+		// O ESCOPO no nome: o Grudar o Cano vale só com a arma de fogo (p48).
+		return "shootsIntoMelee:" + t.Scope
 	case "boostCost":
 		// O PODER no nome: o corte da Harmonizada é de uma habilidade só (p165).
 		return "boostCost:" + t.Name

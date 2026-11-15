@@ -86,8 +86,7 @@ var uniquePowersWithoutAModifier = map[string]string{
 		"motor não aplica essa penalidade. Um +5 valeria SEMPRE para um –5 que vale " +
 		"raramente. Mesmo desenho do poder geral `Disparo Preciso`, que também nega um " +
 		"–5 e não tem modificador",
-	"Pão e Circo": "nega a penalidade de –5 do dano não letal (p90); veja `Água no Feijão`",
-	"Gororoba":    "nega a penalidade de –5 do prato especial adicional (p94); veja `Água no Feijão`",
+	"Gororoba": "nega a penalidade de –5 do prato especial adicional (p94); veja `Água no Feijão`",
 	"Vendedor de Carcaças": "dá +5 num teste que o livro NÃO define — `extrair recursos` " +
 		"aparece uma vez no PDF inteiro, no texto deste poder (p92). Sem teste nomeado " +
 		"não há alvo",
