@@ -23,6 +23,10 @@ type blastBand struct {
 	Tally string
 	// Save é a resistência: "Reflexos CD 17 reduz à metade · alcance médio".
 	Save string
+	// TargetCharacterID é a ficha atrás do alvo, zero no NPC, e Taken as frases de como o dano a atinge
+	// (ALE-650) — só na faixa do MESTRE, que o `LoadView` preenche no ramo dele.
+	TargetCharacterID int64
+	Taken             []string
 }
 
 // blastBandOf traduz o disparo do regime na faixa, ou nil quando não há. O alvo sai da FILA, pela razão do
@@ -44,9 +48,13 @@ func blastBandOf(st *live.SessionRuntimeState) *blastBand {
 	if b.ByHand {
 		tally += " · da mesa"
 	}
-	return &blastBand{
+	band := &blastBand{
 		Head:   fmt.Sprintf("%s · %s → %s", b.Who, b.Name, entryLabel(st, b.TargetEntryID)),
 		Weapon: b.Weapon, Total: b.Total, Tally: tally,
 		Save: fmt.Sprintf("%s CD %d %s · alcance %s", b.Save, b.DC, b.OnSave, b.Range),
 	}
+	if i := live.FindEntryIndex(st, b.TargetEntryID); i >= 0 && st.Initiative[i].CharacterID != nil {
+		band.TargetCharacterID = *st.Initiative[i].CharacterID
+	}
+	return band
 }

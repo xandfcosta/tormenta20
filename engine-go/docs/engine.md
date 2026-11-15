@@ -374,6 +374,9 @@ dado daquele tipo: Ossos Frágeis, Sangue Frio), `damageImmunity` e
   `theTargetsBodyTakesIt` aplica: a imunidade come a parcela do tipo, o +1
   por dado soma ao tipo dele, e só então vem a RD. A cura pelo dano mágico não
   entra — o golpe não diz se o dano é mágico.
+- **Fora do golpe** o dano chega pela mão do mestre, sem tipo, e o app DIZ em
+  vez de aplicar: a folha do combatente na mesa e a faixa da bola de fogo
+  mostram ao mestre como o dano atinge aquela ficha. Só ao mestre.
 
 ### A escala por PATAMAR, e o `default` que engole o `per` desconhecido
 

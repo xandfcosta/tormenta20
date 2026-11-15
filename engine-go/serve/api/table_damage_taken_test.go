@@ -1,7 +1,10 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -34,5 +37,57 @@ func TestTheClubHitsTheKlirenOnePointHarderPerDie(t *testing.T) {
 	}
 	if len(pa.Taken) != 1 || pa.Taken[0].Label != "Ossos Frágeis" || pa.Taken[0].Amount != 1 {
 		t.Errorf("a conta não diz de onde veio o ponto a mais: %+v", pa.Taken)
+	}
+}
+
+// O MESTRE LÊ COMO O DANO ATINGE A FICHA onde ele aplica o dano: na folha do combatente, ao lado do editor de
+// PV (ALE-650). Quase todo dano chega pela mão dele, sem tipo; o app não tem como aplicar ali o +1 por dado, e
+// por isso o diz. O JOGADOR não lê a folha de outra entidade.
+func TestTheGMReadsHowTheDamageHitsTheKliren(t *testing.T) {
+	f := newSceneFixture(t)
+	f.actionSceneWithTheGoblinFirst(t, "Arcanista", f.charID, 2)
+	kliren := seedCharacter(t, f.s, f.gm, "Engrenagem")
+	seedRaca(t, f.s, kliren, "kliren")
+	umPersonagemNaFila(t, f, kliren, "Engrenagem")
+
+	gm := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	if want := "+1 por dado de impacto (Ossos Frágeis)"; !strings.Contains(gm, want) {
+		t.Errorf("a folha do combatente não diz ao mestre %q", want)
+	}
+	player := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if strings.Contains(player, "Ossos Frágeis") {
+		t.Error("o jogador leu como o dano atinge outra ficha")
+	}
+}
+
+// A BOLA DE FOGO NO GOLEM DO FOGO: a faixa do mestre diz que ele é imune e que o dano mágico de fogo o cura
+// (Fonte Elemental, p27). A bola de fogo da Flamejante é mágica, e quem aplica é o mestre.
+func TestTheBlastBandTellsTheGMTheFireGolemIsImmune(t *testing.T) {
+	f, barbaro, _ := barbarianOnTurn(t)
+	sword := itemSemeia(t, f, barbaro, "espada-longa", "Espada longa", "wielded")
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-flamejante"}, nil); err != nil {
+		t.Fatalf("encantar a espada: %v", err)
+	}
+	golem := seedCharacter(t, f.s, f.gm, "Fornalha")
+	seedRaca(t, f.s, golem, "golem")
+	if _, err := f.s.db.ExecContext(context.Background(),
+		`UPDATE characters SET raceAbilityChoices = '["golem-fonte-fogo"]' WHERE id = ?`, golem); err != nil {
+		t.Fatalf("escolher a fonte do fogo: %v", err)
+	}
+	alvo := umPersonagemNaFila(t, f, golem, "Fornalha")
+	if refusal := sceneRefusal(f.posts(t, f.player, fmt.Sprintf("/personagens/%d/acoes/bola-de-fogo/%d?embutida=1", barbaro, sword),
+		fmt.Sprintf(`{"turn_target":%q,"blast_total":21}`, alvo))); refusal != "" {
+		t.Fatalf("a bola de fogo no golem foi recusada: %q", refusal)
+	}
+
+	gm := entre(t, f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(), `id="table-blast"`, "</section>")
+	for _, want := range []string{"imune a fogo (Fonte Elemental)", "dano mágico de fogo cura metade"} {
+		if !strings.Contains(gm, want) {
+			t.Errorf("a faixa do mestre não diz %q:\n%s", want, gm)
+		}
+	}
+	player := entre(t, f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String(), `id="table-blast"`, "</section>")
+	if strings.Contains(player, "Fonte Elemental") {
+		t.Errorf("a faixa do jogador contou a ficha do alvo:\n%s", player)
 	}
 }

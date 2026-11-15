@@ -429,6 +429,9 @@ type viewGm struct {
 	SeesVitals bool
 	// Connected são os personagens de quem está com a aba aberta agora.
 	Connected map[int64]bool
+	// DamageTaken são as frases de como o dano atinge cada ficha na mesa (ALE-650), pela ficha. A folha do
+	// combatente as mostra ao lado do editor de PV, que é onde o mestre aplica o dano.
+	DamageTaken map[int64][]string
 	// CanAdvance separa "não há para onde ir" de "o botão está quebrado": sem
 	// cena aberta o avanço não existe, e um botão aceso que recusa é pior que um
 	// apagado que explica.

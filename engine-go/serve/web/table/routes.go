@@ -429,6 +429,10 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	marcaAPresenca(view.Group, connected)
 	if role == "gm" {
 		r := ofViewGm(st, members, present, true)
+		r.DamageTaken = s.damageTakenOf(ctx, onTable)
+		if view.Blast != nil {
+			view.Blast.Taken = r.DamageTaken[view.Blast.TargetCharacterID]
+		}
 		view.GM = &r
 		view.Display = s.displays.StateOf(sessionID)
 	}
