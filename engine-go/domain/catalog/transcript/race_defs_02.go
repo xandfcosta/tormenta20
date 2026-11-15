@@ -175,7 +175,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Asas de Borboleta",
 				Description: "Seu tamanho é Minúsculo. Pode pairar a 1,5m do chão com deslocamento 9m, ignorando terreno difícil e imune a dano por queda. Gastando 1 PM por rodada, voa com deslocamento 12m.",
 				UID:         "rac_ljzrjw3hlq",
-				Unmodeled:   "o pairar e o voo de 12m: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "o pairar e o voo de 12m: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 			},
 			{
 				ID:          "silfide-espirito-da-natureza",
@@ -183,7 +183,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Espírito da Natureza",
 				Description: "Você é uma criatura do tipo espírito, recebe visão na penumbra e pode falar com animais livremente.",
 				UID:         "rac_yspdaw2jpl",
-				Unmodeled:   "espírito: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia; a visão na penumbra e a fala com animais são prosa",
+				Unmodeled:   "espírito: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650); a visão na penumbra e a fala com animais são prosa",
 			},
 			{
 				ID:          "silfide-magia-das-fadas",
@@ -224,7 +224,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Mestre do Tridente",
 				Description: "Para você, o tridente é uma arma simples. Você recebe +2 em rolagens de dano com azagaias, lanças e tridentes.",
 				UID:         "rac_rojbbpkrph",
-				Unmodeled:   "tridente como arma simples e +2 no dano com azagaia, lança e tridente: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "tridente como arma simples e +2 no dano com azagaia, lança e tridente: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 			},
 			{
 				ID:          "sereia-transformacao-anfibia",
@@ -232,7 +232,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Transformação Anfíbia",
 				Description: "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
 				UID:         "rac_axjfztusy3",
-				Unmodeled:   "natação de 12m: é uma forma de movimento que o motor ainda não tem, sem fatia; e o PM sem água é do mestre, que sabe se houve água (decisão do dono)",
+				Unmodeled:   "natação de 12m: é uma forma de movimento que o motor ainda não tem (ALE-654); e o PM sem água é do mestre, que sabe se houve água (decisão do dono)",
 			},
 		},
 		UID: "rac_kcyddre5st",
@@ -298,7 +298,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Natureza Esquelética",
 				Description: "Criatura do tipo morto-vivo. Visão no escuro e imunidade a cansaço, metabólicos, trevas e veneno. Não precisa respirar, comer ou dormir. Efeitos mágicos de cura de luz causam dano; dano de trevas recupera PV.",
 				UID:         "rac_f64irbsgi3",
-				Unmodeled:   "morto-vivo: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia; a cura de luz que fere e as trevas que curam são do mestre",
+				Unmodeled:   "morto-vivo: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650); a cura de luz que fere e as trevas que curam são do mestre",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "immunity", Text: "Imune a cansaço, metabólicos, trevas e veneno"},
@@ -338,7 +338,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Cria de Megalokk",
 				Description: "Você é uma criatura do tipo monstro e recebe visão no escuro.",
 				UID:         "rac_ma2nx5ov6h",
-				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia",
+				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650)",
 				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 			},
 			{
@@ -400,7 +400,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Ossos Frágeis",
 				Description: "Você sofre 1 ponto de dano adicional por dado de dano de impacto.",
 				UID:         "rac_bvxnjgjfnv",
-				Unmodeled:   "+1 de dano por dado de impacto sofrido: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "+1 de dano por dado de impacto sofrido: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 			},
 			{
 				ID:          "kliren-vanguardista",
@@ -435,7 +435,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Arremessador",
 				Description: "Quando faz um ataque à distância com uma funda ou uma arma de arremesso, seu dano aumenta em um passo.",
 				UID:         "rac_rdh4sutt2c",
-				Unmodeled:   "um passo de dano com funda e arma de arremesso: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "um passo de dano com funda e arma de arremesso: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 			},
 			{
 				ID: "hynne-pequeno-e-rechonchudo",
@@ -448,7 +448,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Pequeno e Rechonchudo",
 				Description: "Seu tamanho é Pequeno e seu deslocamento é 6m. Recebe +2 em Enganação e pode usar Destreza como atributo-chave de Atletismo (em vez de Força).",
 				UID:         "rac_eief7ymkwz",
-				Unmodeled:   "Destreza como atributo de Atletismo: é uma forma que o motor ainda não tem, sem fatia",
+				Unmodeled:   "Destreza como atributo de Atletismo: é uma forma que o motor ainda não tem (ALE-655)",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "expertise", Name: "Enganação"}, Amount: 2, BonusType: "untyped"},
 				},
@@ -459,7 +459,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Sorte Salvadora",
 				Description: "Quando faz um teste de resistência, você pode gastar 1 PM para rolar este teste novamente.",
 				UID:         "rac_fljkqob7lk",
-				Unmodeled:   "rolar de novo o teste de resistência por 1 PM: o rolar de novo do teste existe (o do Resoluto), e este ainda é só o gesto que cobra, sem fatia",
+				Unmodeled:   "rolar de novo o teste de resistência por 1 PM: o rolar de novo do teste existe (o do Resoluto), e este ainda é só o gesto que cobra (ALE-652)",
 			},
 		},
 		UID: "rac_76vs5luayw",

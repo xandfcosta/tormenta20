@@ -29,7 +29,7 @@ var classPowersPart09 = []ClassPower{
 		GrantedAtLevel: 6,
 		BookPage:       66,
 		UID:            "pwr_h57ulszyub",
-		Unmodeled:      "o ataque adicional por 2 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo, sem fatia",
+		Unmodeled:      "o ataque adicional por 2 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo (ALE-651)",
 	},
 	{
 		ID:             "class.guerreiro.ataque-especial-12",
@@ -154,7 +154,7 @@ var classPowersPart09 = []ClassPower{
 		Description:   "Quando causa dano corpo-a-corpo com arma de duas mãos, pode rolar novamente qualquer 1 ou 2 da rolagem de dano.",
 		BookPage:      65,
 		UID:           "pwr_6pmfc5jyqn",
-		Unmodeled:     "rolar de novo 1 e 2 no dano: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:     "rolar de novo 1 e 2 no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}},
 	},
 	{

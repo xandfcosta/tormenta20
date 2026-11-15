@@ -236,7 +236,7 @@ var classPowersPart01 = []ClassPower{
 		BookPage:    38,
 		UID:         "pwr_fmxf6ytyki",
 		Modifiers:   []Modifier{{Target: ModifierTarget{Kind: "spellDC"}, Amount: 1, BonusType: "untyped"}},
-		Unmodeled:   "+2 em vez de +1 quando lança magias de 4º círculo: o círculo não é condição de modificador, sem fatia",
+		Unmodeled:   "+2 em vez de +1 quando lança magias de 4º círculo: o círculo não é condição de modificador (ALE-465)",
 		MinLevel:    5,
 	},
 	{

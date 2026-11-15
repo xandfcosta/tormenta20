@@ -273,7 +273,7 @@ var classPowersPart06 = []ClassPower{
 		Description:   "Início de cena, você e aliados que possam ver estandarte recebem PV temporários = Carisma (mín 1). Duram até fim da cena.",
 		BookPage:      54,
 		UID:           "pwr_xiws6noxt5",
-		Unmodeled:     "PV temporários iguais ao Carisma no início da cena, para você e os aliados que veem o estandarte: gatilho no início da cena, sem fatia",
+		Unmodeled:     "PV temporários iguais ao Carisma no início da cena, para você e os aliados que veem o estandarte: gatilho no início da cena (ALE-653)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.cavaleiro.titulo"}},
 		MinLevel:      14,
 	},
@@ -416,7 +416,7 @@ var classPowersPart06 = []ClassPower{
 		Description: "Se está usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência.",
 		BookPage:    55,
 		UID:         "pwr_nliuayfffj",
-		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 	},
 	{
 		ID:            "class.cavaleiro.titulo",

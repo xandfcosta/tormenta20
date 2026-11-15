@@ -362,7 +362,7 @@ var classPowersPart07 = []ClassPower{
 		GrantedAtLevel: 2,
 		BookPage:       63,
 		UID:            "pwr_6uiwktxrwi",
-		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 	},
 	{
 		ID:             "class.druida.magias-2-circulo",

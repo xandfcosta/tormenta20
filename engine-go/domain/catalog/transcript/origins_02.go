@@ -136,7 +136,7 @@ var originsPart02 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-curandeiro-unique",
-			Unmodeled:   "a Sabedoria somada à cura mundana: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+			Unmodeled:   "a Sabedoria somada à cura mundana: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-655)",
 			Name:        "Médico de Campo",
 			Kind:        "poder",
 			Description: "Você soma sua Sabedoria aos PV restaurados por suas habilidades e itens mundanos de cura.",

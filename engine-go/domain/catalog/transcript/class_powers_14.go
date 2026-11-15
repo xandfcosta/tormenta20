@@ -88,7 +88,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Quando usa Golpe Divino com arma preferida da divindade, dado de dano do Golpe Divino aumenta para d12.",
 		BookPage:    82,
 		UID:         "pwr_zuax7jor6g",
-		Unmodeled:   "o d12 no dado do Golpe Divino com a arma preferida da divindade: o impulso não troca o dado pela arma, sem fatia",
+		Unmodeled:   "o d12 no dado do Golpe Divino com a arma preferida da divindade: o impulso não troca o dado pela arma (ALE-652)",
 		Prerequisites: []Prerequisite{
 			{
 				Kind:      "classChoice",
@@ -252,7 +252,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Custo de habilidades de paladino que tenham aliado como alvo é reduzido em -1 PM.",
 		BookPage:    83,
 		UID:         "pwr_5clwvtahye",
-		Unmodeled:   "–1 PM nas habilidades de paladino com aliado como alvo: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "–1 PM nas habilidades de paladino com aliado como alvo: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-647)",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-castidade",
@@ -270,7 +270,7 @@ var classPowersPart14 = []ClassPower{
 				Condition: &ModifierCondition{Kind: "flagOn", Flag: "castidade", Label: "para perceber blefes"},
 			},
 		},
-		Unmodeled: "a imunidade a encantamento: é uma forma que o motor ainda não tem, sem fatia",
+		Unmodeled: "a imunidade a encantamento: é uma forma que o motor ainda não tem (ALE-650)",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-compaixao",
@@ -279,7 +279,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Pode usar Cura pelas Mãos em alcance curto. Para cada PM gasto, cura 2d6+1 (em vez de 1d8+1).",
 		BookPage:    83,
 		UID:         "pwr_3veknkiyye",
-		Unmodeled:   "a Cura pelas Mãos em alcance curto e 2d6+1 por PM: o gesto da Cura ainda diz 1d8+1, sem fatia",
+		Unmodeled:   "a Cura pelas Mãos em alcance curto e 2d6+1 por PM: o gesto da Cura ainda diz 1d8+1 (ALE-652)",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-humildade",
@@ -388,7 +388,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Instintos apurados — nunca fica surpreendido.",
 		BookPage:    42,
 		UID:         "pwr_gnu2wcfdba",
-		Unmodeled:   "nunca fica surpreendido: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "nunca fica surpreendido: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 	},
 	{
 		ID:          "poder.impeto",
@@ -403,7 +403,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
 		BookPage:    47,
 		UID:         "pwr_enoa4lwutn",
-		Unmodeled:   "Reflexos que zera o dano: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "Reflexos que zera o dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 	},
 	{
 		ID:          "poder.autoridade-feudal",

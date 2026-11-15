@@ -331,7 +331,7 @@ var originsPart01 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-batedor-unique",
-			Unmodeled:   "clima ruim e terreno difícil natural não penalizam deslocamento nem Sobrevivência: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+			Unmodeled:   "clima ruim e terreno difícil natural não penalizam deslocamento nem Sobrevivência: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 			Name:        "À Prova de Tudo",
 			Kind:        "poder",
 			Description: "Você não sofre penalidade em deslocamento e Sobrevivência por clima ruim e por terreno difícil natural.",

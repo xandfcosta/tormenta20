@@ -47,7 +47,7 @@ var originsPart03 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-gladiador-unique",
-			Unmodeled:   "dano não letal sem a penalidade de –5: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+			Unmodeled:   "dano não letal sem a penalidade de –5: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 			Name:        "Pão e Circo",
 			Kind:        "poder",
 			Description: "Por seu treino em combates de exibição, você sabe “bater sem machucar”: pode escolher causar dano não letal sem sofrer a penalidade de –5.",
