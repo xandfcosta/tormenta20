@@ -404,7 +404,8 @@ Mente Criminosa não são).
   corpo é recusado no uso à distância (`RefusesBoost`), para não cobrar PM em troca de nada.
 - **O preço do impulso é da CARTA** (`WeaponCard.BoostPM`): a arma Harmonizada tira 1 PM da
   habilidade escolhida nela, só no golpe com ela (p165, `boostCost` com o poder no `Name`, preenchido
-  pelo `FromChoice: boost`). Os cortes não se acumulam e o custo não desce de 1 PM, como no da magia
+  pelo `FromChoice: boost`). A habilidade é um poder com impulso ou um encanto da própria arma com gasto
+  (decisão do dono); no encanto, o `Name` é o id do encanto, porque a arma já é a da melhoria. Os cortes não se acumulam e o custo não desce de 1 PM, como no da magia
   (p226). A proposta cobra a carta do golpe, e a linha de ataque mostra o preço de cada degrau naquela
   arma, porque o piso tira a conta da linha reta.
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência

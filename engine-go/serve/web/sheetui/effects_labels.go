@@ -205,6 +205,10 @@ func targetComplement(t engine.ModifierTarget) string {
 		return book.ConditionName(t.Name)
 	}
 	if (t.K == "source" || t.K == "boostCost") && t.Name != "" {
+		// O corte da Harmonizada pode ser do gasto de um ENCANTO da arma, e o encanto é item do catálogo.
+		if enchant := book.ItemByID(t.Name); t.K == "boostCost" && enchant != nil {
+			return enchant.Name
+		}
 		return effectDisplayName(t.Name)
 	}
 	// A LINHA DA TABELA 5-3 que a Caçadora anula (p335): o id é do motor, e a mesa lê "cobertura leve".

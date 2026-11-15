@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"regexp"
@@ -117,5 +118,34 @@ func TestTheHarmonizedAbilityRefusesWhatDoesNotFit(t *testing.T) {
 	path := fmt.Sprintf("itens/%d/melhorias/melhoria-certeira/habilidade/%s", sword, specialAttack)
 	if refusal := bagCommand(t, f, f.charID, path); !strings.Contains(refusal, "não pede habilidade") {
 		t.Errorf("escolher habilidade para uma melhoria que não pede deu %q; want a recusa", refusal)
+	}
+}
+
+// O GASTO DO ENCANTO DESTA ARMA entra na lista (decisão do dono), e só o dela: o gasto de outra arma nunca
+// sai com esta.
+func TestTheHarmonizedWeaponOffersItsOwnEnchantSpend(t *testing.T) {
+	f := newSceneFixture(t)
+	sword := harmonizedSword(t, f, f.charID)
+	if strings.Contains(itemSheetSearching(t, f, sword, ""), harmonizedAbilityPath(sword, "encanto-")) {
+		t.Error("a espada sem encanto oferece o gasto de um encanto")
+	}
+	if err := f.s.characterPlays().EnchantItem(context.Background(), sword, []string{"encanto-tumular"}, nil); err != nil {
+		t.Fatalf("encantar a espada: %v", err)
+	}
+	sheet := itemSheetSearching(t, f, sword, "")
+	if !strings.Contains(sheet, harmonizedAbilityPath(sword, "encanto-tumular")) || !strings.Contains(sheet, "Tumular") {
+		t.Fatal("a espada tumular harmonizada não oferece o gasto da Tumular")
+	}
+	if refusal := bagCommand(t, f, f.charID, harmonizedAbilityPath(sword, "encanto-venenosa")); !strings.Contains(refusal, "ataque") {
+		t.Errorf("escolher a Venenosa, que a espada não tem, deu %q; want a recusa", refusal)
+	}
+	if refusal := bagCommand(t, f, f.charID, harmonizedAbilityPath(sword, "encanto-tumular")); refusal != "" {
+		t.Fatalf("escolher a Tumular foi recusado: %q", refusal)
+	}
+	if got := storedChoiceOf(t, f, sword, harmonizedWeaponImprovement); got != "encanto-tumular" {
+		t.Errorf("a escolha gravada foi %q; want encanto-tumular", got)
+	}
+	if !strings.Contains(itemSheetSearching(t, f, sword, ""), "Tumular custa 1 PM a menos") {
+		t.Error("com a Tumular escolhida, a folha não diz qual custa menos")
 	}
 }

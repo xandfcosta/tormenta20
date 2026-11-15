@@ -227,3 +227,16 @@ func TestTheWeaponLineAddsUpExtraDiceOfTheSameType(t *testing.T) {
 		t.Errorf("a linha da arma diz %q", got)
 	}
 }
+
+// O CORTE DA HARMONIZADA na aba Efeitos diz o nome da habilidade, seja um poder ou o encanto da arma (p165):
+// o id do catálogo cru seria a chave do motor na tela.
+func TestTheHarmonizedCutSaysTheAbilityName(t *testing.T) {
+	for id, want := range map[string]string{
+		"class.paladino.golpe-divino-1d8": "Custo em PM no golpe (Golpe Divino)",
+		"encanto-tumular":                 "Custo em PM no golpe (Tumular)",
+	} {
+		if got := targetLabel(engine.ModifierTarget{K: "boostCost", Name: id}); got != want {
+			t.Errorf("o corte de %s diz %q; want %q", id, got, want)
+		}
+	}
+}

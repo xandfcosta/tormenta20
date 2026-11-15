@@ -73,8 +73,9 @@ func (p Plays) ChooseImprovementSpell(ctx context.Context, item sqlcgen.GetItemR
 }
 
 // ChooseImprovementAbility grava a habilidade que a arma Harmonizada corta: "Escolha uma habilidade ativada ao
-// se fazer um ataque […] e que custe pontos de mana" (p165). A lista é a do livro, e não só o que a ficha tem,
-// pela mesma razão da magia do Harmonizado: o livro não prende a escolha ao que o portador sabe.
+// se fazer um ataque […] e que custe pontos de mana" (p165). Valem os poderes do livro que se pagam no golpe —
+// a lista é a do livro, e não só o que a ficha tem, pela mesma razão da magia do Harmonizado — e o gasto de
+// um encanto DESTA arma (decisão do dono), que é o único que sai com ela.
 //
 //	plays.ChooseImprovementAbility(ctx, item, "melhoria-harmonizada-arma", "class.paladino.golpe-divino-1d8")
 func (p Plays) ChooseImprovementAbility(ctx context.Context, item sqlcgen.GetItemRow, improvement, power string) error {
@@ -86,17 +87,35 @@ func (p Plays) ChooseImprovementAbility(ctx context.Context, item sqlcgen.GetIte
 		return fmt.Errorf("%s não tem a melhoria %s; aplique-a pelas Melhorias antes de escolher a habilidade",
 			item.Name, entry.Name)
 	}
-	if found, ok := book.ClassPowers()[power]; !ok || found.Boost == nil {
-		return fmt.Errorf("%q não é uma habilidade que se paga no ataque; esperava o id de uma delas, como %q",
-			power, "class.paladino.golpe-divino-1d8")
+	paid, err := p.paidOnAttackWith(ctx, item, power)
+	if err != nil {
+		return err
 	}
-	err := p.queries.SetImprovementChoice(ctx, sqlcgen.SetImprovementChoiceParams{
+	if !paid {
+		return fmt.Errorf("%q não é uma habilidade que se paga no ataque com %s; esperava um poder como %q, ou o "+
+			"encanto desta arma que se paga no golpe", power, item.Name, "class.paladino.golpe-divino-1d8")
+	}
+	err = p.queries.SetImprovementChoice(ctx, sqlcgen.SetImprovementChoiceParams{
 		Itemid: item.ID, Improvementid: improvement, Choice: power,
 	})
 	if err != nil {
 		return fmt.Errorf("gravar a habilidade da melhoria %s do item %d: %w", improvement, item.ID, err)
 	}
 	return nil
+}
+
+// paidOnAttackWith diz se `power` se paga no golpe com o item: um poder de classe com impulso, ou um encanto
+// do item com gasto (p335-336).
+func (p Plays) paidOnAttackWith(ctx context.Context, item sqlcgen.GetItemRow, power string) (bool, error) {
+	if found, ok := book.ClassPowers()[power]; ok {
+		return found.Boost != nil, nil
+	}
+	enchants, err := p.queries.EnchantsOfItem(ctx, item.ID)
+	if err != nil {
+		return false, fmt.Errorf("ler os encantos do item %d: %w", item.ID, err)
+	}
+	entry := book.ItemByID(power)
+	return slices.Contains(enchants, power) && entry != nil && entry.Boost != nil, nil
 }
 
 // itemEntryOf é o verbete do livro de um item da mochila, ou nil no item próprio.

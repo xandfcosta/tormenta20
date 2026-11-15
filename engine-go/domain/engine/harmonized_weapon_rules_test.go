@@ -71,3 +71,27 @@ func TestTheHarmonizedWeaponDoesNotTakeABoostBelowOnePM(t *testing.T) {
 		t.Errorf("o Ataque Especial com a espada harmonizada custou %d PM, e o piso é 1", got)
 	}
 }
+
+// O GASTO DO ENCANTO DA PRÓPRIA ARMA também se escolhe (decisão do dono): a Tumular da espada harmonizada
+// para ela custa 1 PM, e não 2 (p165, p336). A escolha é o id do encanto, porque o gasto só vale na arma que
+// o tem, e a arma é a da melhoria.
+func TestTheHarmonizedWeaponCutsItsOwnEnchantSpend(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	for _, c := range []struct {
+		chosen string
+		want   int
+	}{{"encanto-tumular", 1}, {"encanto-venenosa", 2}, {"", 2}} {
+		ch := enchanted("encanto-tumular")
+		ch.Items[0].Improvements = `["melhoria-certeira","` + harmonizedWeapon + `"]`
+		if c.chosen != "" {
+			ch.Items[0].ImprovementChoices = map[string]string{harmonizedWeapon: c.chosen}
+		}
+		cards, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: EnchantBoostID(7, "encanto-tumular")})
+		if err != nil {
+			t.Fatalf("gastar a Tumular: %v", err)
+		}
+		if got := cards[0].BoostPM; got != c.want {
+			t.Errorf("com a Harmonizada escolhendo %q, o gasto da Tumular custou %d PM; want %d", c.chosen, got, c.want)
+		}
+	}
+}

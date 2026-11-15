@@ -151,14 +151,20 @@ func choosesTheImprovementSpell(s Scene, r *http.Request, row sqlcgen.Character,
 }
 
 // A HABILIDADE QUE A ARMA HARMONIZADA PEDE: "escolha uma habilidade ativada ao se fazer um ataque […] e que
-// custe pontos de mana" (p165). São poucas no livro, e a folha as mostra todas, sem busca; como a magia do
-// Harmonizado, a lista é o livro e não o que a ficha tem.
+// custe pontos de mana" (p165). São os poderes do livro que se pagam no golpe — a lista é o livro e não o que a
+// ficha tem, como a magia do Harmonizado — e o gasto dos encantos DESTA arma (decisão do dono), que só sai com
+// ela. São poucos, e a folha os mostra todos, sem busca.
 
-// improvementAbility é a escolha na folha: a melhoria que pede, a habilidade escolhida e as do livro.
+// improvementAbility é a escolha na folha: a melhoria que pede, a habilidade escolhida e as que se oferecem.
 type improvementAbility struct {
 	Improvement        string
 	Chosen, ChosenName string
-	Options            []book.ClassPower
+	Options            []abilityOption
+}
+
+// abilityOption é uma habilidade que a Harmonizada pode cortar: o id do poder ou do encanto, e o rótulo.
+type abilityOption struct {
+	ID, Label, Name string
 }
 
 // abilityOnTheItemSheet é a escolha da melhoria aplicada que pede habilidade, ou nil.
@@ -171,11 +177,19 @@ func abilityOnTheItemSheet(item sheet.ItemDTO) *improvementAbility {
 	if at < 0 {
 		return nil
 	}
-	out := &improvementAbility{
-		Improvement: applied[at], Chosen: item.ImprovementChoices[applied[at]], Options: book.PaidOnAttackPowers(),
+	out := &improvementAbility{Improvement: applied[at], Chosen: item.ImprovementChoices[applied[at]]}
+	for _, power := range book.PaidOnAttackPowers() {
+		out.Options = append(out.Options, abilityOption{ID: power.ID, Name: power.Name, Label: power.Name + " (" + power.ClassName + ")"})
 	}
-	if power, ok := book.ClassPowers()[out.Chosen]; ok {
-		out.ChosenName = power.Name
+	for _, enchant := range item.Enchants {
+		if entry := book.ItemByID(enchant); entry != nil && entry.Boost != nil {
+			out.Options = append(out.Options, abilityOption{ID: enchant, Name: entry.Name, Label: entry.Name + " (encanto desta arma)"})
+		}
+	}
+	for _, option := range out.Options {
+		if option.ID == out.Chosen {
+			out.ChosenName = option.Name
+		}
 	}
 	return out
 }

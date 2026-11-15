@@ -194,7 +194,7 @@ templ itemSpellField(v View, s itemSheet) {
 }
 
 // itemAbilityField é a habilidade da arma Harmonizada (p165), embaixo das melhorias como a magia do
-// Harmonizado. As do livro cabem soltas, e por isso não há busca.
+// Harmonizado. As opções cabem soltas, e por isso não há busca.
 templ itemAbilityField(v View, s itemSheet) {
 	<div class="ds-field">
 		<span class="ds-field-label">Habilidade da Harmonizada · −1 PM no custo dela com esta arma (p165)</span>
@@ -204,9 +204,9 @@ templ itemAbilityField(v View, s itemSheet) {
 			<p class="ds-help">{ s.Ability.ChosenName + " custa 1 PM a menos com esta arma, e nunca menos de 1 PM." }</p>
 		}
 		<div class="ds-options" role="group" aria-label="Habilidades que se pagam no ataque">
-			for _, power := range s.Ability.Options {
-				@ds.Option(power.ID == s.Ability.Chosen, templ.Attributes{"data-on:click": sheetPost(v, improvementAbilityPath(s, power.ID))}) {
-					{ power.Name + " (" + power.ClassName + ")" }
+			for _, option := range s.Ability.Options {
+				@ds.Option(option.ID == s.Ability.Chosen, templ.Attributes{"data-on:click": sheetPost(v, improvementAbilityPath(s, option.ID))}) {
+					{ option.Label }
 				}
 			}
 		</div>

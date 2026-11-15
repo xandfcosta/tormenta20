@@ -78,10 +78,10 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	if choice.PowerID == "" {
 		return plain, nil
 	}
-	if _, _, isEnchant := enchantBoostOf(choice.PowerID); isEnchant {
+	if _, enchant, isEnchant := enchantBoostOf(choice.PowerID); isEnchant {
 		cards, pm, err := r.enchantBoostedCards(ch, activeConditionals, choice.PowerID)
 		for i := range cards {
-			pricedAt(&cards[i], pm)
+			pricedAt(&cards[i], r.boostCostWith(ch, cards[i].ItemID, enchant, pm))
 		}
 		return cards, err
 	}
@@ -126,7 +126,8 @@ func pricedAt(card *WeaponCard, pm int) {
 }
 
 // boostCostWith é o custo do impulso `powerID` pago com a arma `itemID`: o `pm` de toda arma, menos o corte
-// que ela leva para aquele poder (a Harmonizada, p165).
+// que ela leva para aquele poder (a Harmonizada, p165). No gasto de um encanto, `powerID` é o id do encanto,
+// que é o que a Harmonizada guarda: a arma já é a dela.
 //
 // Os cortes NÃO SE ACUMULAM e o custo não desce de 1 PM — a regra do custo da magia (p226), que o livro dá
 // para o custo de qualquer habilidade. Vale o maior corte, e não a soma, porque duas fontes de "–1 PM" na

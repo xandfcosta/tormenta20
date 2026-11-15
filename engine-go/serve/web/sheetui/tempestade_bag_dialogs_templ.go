@@ -797,7 +797,7 @@ func itemSpellField(v View, s itemSheet) templ.Component {
 }
 
 // itemAbilityField é a habilidade da arma Harmonizada (p165), embaixo das melhorias como a magia do
-// Harmonizado. As do livro cabem soltas, e por isso não há busca.
+// Harmonizado. As opções cabem soltas, e por isso não há busca.
 func itemAbilityField(v View, s itemSheet) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -851,7 +851,7 @@ func itemAbilityField(v View, s itemSheet) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, power := range s.Ability.Options {
+		for _, option := range s.Ability.Options {
 			templ_7745c5c3_Var33 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -865,9 +865,9 @@ func itemAbilityField(v View, s itemSheet) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				var templ_7745c5c3_Var34 string
-				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(power.Name + " (" + power.ClassName + ")")
+				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(option.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_bag_dialogs.templ`, Line: 209, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_bag_dialogs.templ`, Line: 209, Col: 19}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -875,7 +875,7 @@ func itemAbilityField(v View, s itemSheet) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = ds.Option(power.ID == s.Ability.Chosen, templ.Attributes{"data-on:click": sheetPost(v, improvementAbilityPath(s, power.ID))}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.Option(option.ID == s.Ability.Chosen, templ.Attributes{"data-on:click": sheetPost(v, improvementAbilityPath(s, option.ID))}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
