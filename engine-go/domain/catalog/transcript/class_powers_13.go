@@ -440,13 +440,17 @@ var classPowersPart13 = []ClassPower{
 		UID:            "pwr_ungr6x647i",
 	},
 	{
-		ID:             "class.paladino.aura-sagrada",
+		ID: "class.paladino.aura-sagrada",
+		Modeled: []string{
+			"o Carisma nas resistências do paladino enquanto a aura dura, pelo gesto de 1 PM, sustentado",
+		},
 		ClassName:      "Paladino",
 		Name:           "Aura Sagrada",
 		Description:    "Gasta 1 PM para gerar aura com 9m de raio. Você e aliados na aura somam Carisma em testes de resistência. Aura emite luz dourada. Duração sustentada.",
 		GrantedAtLevel: 3,
 		BookPage:       84,
 		UID:            "pwr_sqzzm4njkq",
+		Unmodeled:      "o Carisma nas resistências dos aliados dentro da aura: é do mestre, que sabe quem está nela",
 	},
 	{
 		ID:             "class.paladino.bencao-da-justica",
