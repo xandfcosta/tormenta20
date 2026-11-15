@@ -2,8 +2,10 @@ package sheetui
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 )
 
@@ -59,6 +61,10 @@ type sheetProficiency struct {
 	// Sources são as classes e raças que concedem, para a etiqueta explicar de
 	// onde vem.
 	Sources []string
+	// Partial é a PARTE da categoria que um poder ou uma habilidade de raça dá, escrita: "Armeiro: as corpo
+	// a corpo" (p68). Ela não marca a linha — a categoria inteira a pessoa não sabe —, e a arma que ela
+	// alcança perde o –5 no motor (`engine.ProficiencyOf`).
+	Partial []string
 }
 
 // Badge é o selo de fábrica: "classe", ou "raça" quando só a raça concede.
@@ -85,6 +91,7 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	byRace := raceProficiencySources(dto)
 	byPower := powerProficiencySources(dto)
 	needed := sheet.ProficienciesTheChoicesNeed(dto)
+	partial := partialProficienciesOf(dto)
 
 	byGroup := map[string]*proficiencyGroup{}
 	order := []string{book.WeaponGroup, book.ArmorGroup}
@@ -93,15 +100,23 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 	}
 	for _, cat := range book.ProficiencyCategories {
 		g := byGroup[cat.Group]
+		has := found[cat.Key] || len(grantedWholeSources(dto)[cat.Key]) > 0
+		// A PARTE só se diz a quem não tem a categoria inteira: na anã guerreira, que sabe as marciais, a
+		// nota do Heredrimm repetiria o que a linha já diz.
+		notes := partial[cat.Key]
+		if has {
+			notes = nil
+		}
 		g.Rows = append(g.Rows, sheetProficiency{
 			Key:       cat.Key,
 			Label:     cat.Label,
-			Has:       found[cat.Key],
+			Has:       has,
 			FromClass: len(sources[cat.Key]) > 0,
 			FromRace:  len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) > 0,
 			FromPower: len(sources[cat.Key]) == 0 && len(byRace[cat.Key]) == 0 && len(byPower[cat.Key]) > 0,
 			Sources:   grantersOf(dto, cat.Key),
-			Origin:    lockedOrigin(found[cat.Key], grantersOf(dto, cat.Key), needed[cat.Key]),
+			Origin:    lockedOrigin(has, grantersOf(dto, cat.Key), needed[cat.Key]),
+			Partial:   notes,
 		})
 	}
 	return []proficiencyGroup{*byGroup[book.WeaponGroup], *byGroup[book.ArmorGroup]}
@@ -116,6 +131,21 @@ func proficiencyGroupsOf(dto sheet.CharacterDTO) []proficiencyGroup {
 // desenhar.
 func savedProficiencies(blob string) map[string]bool {
 	return sheet.ToStringSet(sheet.UnmarshalStrings(blob))
+}
+
+// proficiencyOfTheSheet é a proficiência que o motor usa, para a Mochila avisar do mesmo item que ele
+// penaliza: a coluna gravada e o que os poderes e as habilidades de raça concedem (`engine.ProficiencyOf`).
+// Sem o motor, ou com a ficha ilegível, fica a coluna: avisar a mais é melhor que calar uma penalidade.
+func proficiencyOfTheSheet(dto sheet.CharacterDTO) engine.Proficiency {
+	saved := engine.Proficiency{Saved: savedProficiencies(dto.Proficiencies)}
+	if dto.Ruleset == nil {
+		return saved
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return saved
+	}
+	return dto.Ruleset.ProficiencyOf(ec)
 }
 
 // proficiencySources diz, por categoria, QUAIS classes a concedem.
@@ -189,12 +219,64 @@ func powerProficiencySources(dto sheet.CharacterDTO) map[string][]string {
 	return out
 }
 
-// grantersOf são as ORIGENS da categoria — classes, raças e o poder —, na
-// ordem em que a etiqueta as diz.
+// grantersOf são as ORIGENS da categoria — classes, raças, o poder Proficiência e o que um poder de classe
+// ou uma habilidade de raça dá inteira (o Pistoleiro, p48) —, na ordem em que a etiqueta as diz.
 func grantersOf(dto sheet.CharacterDTO, key string) []string {
 	out := append([]string{}, proficiencySources(dto)[key]...)
 	out = append(out, raceProficiencySources(dto)[key]...)
-	return append(out, powerProficiencySources(dto)[key]...)
+	out = append(out, powerProficiencySources(dto)[key]...)
+	return append(out, grantedWholeSources(dto)[key]...)
+}
+
+// grantedWholeSources diz, por categoria, quem a dá INTEIRA pelo motor: a categoria entra marcada e travada,
+// e sai com o poder, sem passar pela coluna (ALE-649, decisão do dono).
+func grantedWholeSources(dto sheet.CharacterDTO) map[string][]string {
+	out := map[string][]string{}
+	for _, granted := range proficiencyOfTheSheet(dto).Granted {
+		if granted.Whole() && !slices.Contains(out[granted.Category], granted.Source) {
+			out[granted.Category] = append(out[granted.Category], granted.Source)
+		}
+	}
+	return out
+}
+
+// partialProficienciesOf diz, por categoria, a PARTE que um poder ou uma habilidade dá: um propósito dela (o
+// Armeiro, p68) ou armas nomeadas, que contam na categoria de cada uma (a Tradição de Heredrimm, p20).
+func partialProficienciesOf(dto sheet.CharacterDTO) map[string][]string {
+	out := map[string][]string{}
+	for _, granted := range proficiencyOfTheSheet(dto).Granted {
+		if granted.Whole() {
+			continue
+		}
+		note := granted.Source + ": " + granted.Label
+		categories := []string{granted.Category}
+		if len(granted.Weapons) > 0 {
+			categories = weaponCategories(granted.Weapons)
+		}
+		for _, key := range categories {
+			if !slices.Contains(out[key], note) {
+				out[key] = append(out[key], note)
+			}
+		}
+	}
+	return out
+}
+
+// weaponCategories são as categorias de proficiência das armas nomeadas, sem repetir e na ordem do livro.
+func weaponCategories(weapons []string) []string {
+	found := map[string]bool{}
+	for _, id := range weapons {
+		if item := book.ItemByID(id); item != nil {
+			found[engine.ProficiencyForCategory(item.Category)] = true
+		}
+	}
+	out := []string{}
+	for _, cat := range book.ProficiencyCategories {
+		if found[cat.Key] {
+			out = append(out, cat.Key)
+		}
+	}
+	return out
 }
 
 // lockedOrigin é a frase da linha que não se desmarca na mão: a que a ficha

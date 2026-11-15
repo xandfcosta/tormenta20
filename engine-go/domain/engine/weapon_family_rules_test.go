@@ -27,9 +27,12 @@ func thrownCardOf(t *testing.T, cards []WeaponCard, catalogID string) WeaponCard
 	return card
 }
 
+// barbarian sabe usar as armas simples e marciais, como a classe dá (p40): sem isso o –5 de quem não sabe usar
+// entra nas comparações, e a proficiência da raça (a do anão com o machado) apareceria como bônus.
 func barbarian(powers string, ids ...string) Character {
 	ch := wielding(attributeSumHero("Bárbaro", 10, powers), ids...)
 	ch.Strength = 3
+	ch.Proficiencies = `["armas-simples","armas-marciais"]`
 	return ch
 }
 

@@ -130,7 +130,7 @@ func vestedPositionsOf(
 // O RÓTULO DO LUGAR não entra aqui: ele é da POSIÇÃO, e não do item. Enquanto
 // o cartão o carregava, o mesmo nome existia em dois campos — o da posição
 // vazia e o do cartão —, e dois campos para um conceito divergem.
-func equippedCardOf(world *engine.Ruleset, item sheet.ItemDTO, proficiencies map[string]bool, exempt wearerExemptions) *equippedCard {
+func equippedCardOf(world *engine.Ruleset, item sheet.ItemDTO, proficiencies engine.Proficiency, exempt wearerExemptions) *equippedCard {
 	overlays := []itemChip{}
 	for _, name := range append(tableImprovementNames(world, item), itemOverlays(item)...) {
 		overlays = append(overlays, itemChip{Text: name})
@@ -151,16 +151,16 @@ func equippedCardOf(world *engine.Ruleset, item sheet.ItemDTO, proficiencies map
 // sobre um item e um motor que penaliza outro. Item custom e item fora do
 // catálogo contam como proficientes — não há categoria de onde tirar exigência,
 // e acusar o que não se sabe seria pior que calar.
-func proficienteEh(item sheet.ItemDTO, proficiencies map[string]bool) bool {
+func proficienteEh(item sheet.ItemDTO, proficiencies engine.Proficiency) bool {
 	catalog := catalogItem(item)
 	if catalog == nil {
 		return true
 	}
-	held := engine.CatalogItem{Category: catalog.Category}
+	held := engine.CatalogItem{ID: catalog.ID, Category: catalog.Category, ComposedOf: catalog.ComposedOf}
 	if catalog.Weapon != nil {
-		held.Weapon = &engine.WeaponStats{Traits: catalog.Weapon.Traits}
+		held.Weapon = &engine.WeaponStats{Traits: catalog.Weapon.Traits, Purpose: catalog.Weapon.Purpose}
 	}
-	return engine.HoldsProficiently(&held, item.Equipped, proficiencies)
+	return proficiencies.Holds(&held, item.Equipped)
 }
 
 // vestsByTableRule é a regra da mesa "vale como empunhado": ela deixa vestir o que o eixo do livro só

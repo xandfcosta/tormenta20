@@ -126,7 +126,7 @@ type catalogItemRow struct {
 }
 
 func itemSheetsOf(
-	dto sheet.CharacterDTO, proficiencies map[string]bool, attributes map[string]engine.AttributeBreakdown, armable bool,
+	dto sheet.CharacterDTO, proficiencies engine.Proficiency, attributes map[string]engine.AttributeBreakdown, armable bool,
 	spellSearch string,
 ) []itemSheet {
 	sheets := make([]itemSheet, 0, len(dto.Items))
@@ -151,7 +151,7 @@ func itemSheetsOf(
 	return sheets
 }
 
-func itemSheetOf(item sheet.ItemDTO, proficiencies map[string]bool) itemSheet {
+func itemSheetOf(item sheet.ItemDTO, proficiencies engine.Proficiency) itemSheet {
 	catalog := catalogItem(item)
 	character := itemSheet{
 		ID: item.ID, Name: item.Name, Quantity: item.Quantity,

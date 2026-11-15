@@ -1,23 +1,25 @@
 package transcript
 
 type ClassPower struct {
-	ID              string           `json:"id"`
-	Modeled         []string         `json:"modeled,omitempty"`
-	ClassName       string           `json:"className,omitempty"`
-	Name            string           `json:"name,omitempty"`
-	Description     string           `json:"description,omitempty"`
-	GrantedAtLevel  int              `json:"grantedAtLevel,omitempty"`
-	BookPage        int              `json:"bookPage,omitempty"`
-	UID             string           `json:"uid"`
-	PowerUID        string           `json:"powerUid,omitempty"`
-	Modifiers       []Modifier       `json:"modifiers,omitzero"`
-	Unmodeled       string           `json:"unmodeled,omitempty"`
-	Prerequisites   []Prerequisite   `json:"prerequisites,omitempty"`
-	Choice          *PowerChoice     `json:"choice,omitempty"`
-	MinLevel        int              `json:"minLevel,omitempty"`
-	GrantedByChoice *ChoiceGrant     `json:"grantedByChoice,omitempty"`
-	Degrees         *PMScaling       `json:"degrees,omitempty"`
-	Boost           *ClassPowerBoost `json:"boost,omitempty"`
+	ID             string     `json:"id"`
+	Modeled        []string   `json:"modeled,omitempty"`
+	ClassName      string     `json:"className,omitempty"`
+	Name           string     `json:"name,omitempty"`
+	Description    string     `json:"description,omitempty"`
+	GrantedAtLevel int        `json:"grantedAtLevel,omitempty"`
+	BookPage       int        `json:"bookPage,omitempty"`
+	UID            string     `json:"uid"`
+	PowerUID       string     `json:"powerUid,omitempty"`
+	Modifiers      []Modifier `json:"modifiers,omitzero"`
+	Unmodeled      string     `json:"unmodeled,omitempty"`
+	// ProficientWith é a proficiência que o poder dá e que o motor calcula — ver `engine.ProficiencyOf`.
+	ProficientWith  []ProficiencyReach `json:"proficientWith,omitempty"`
+	Prerequisites   []Prerequisite     `json:"prerequisites,omitempty"`
+	Choice          *PowerChoice       `json:"choice,omitempty"`
+	MinLevel        int                `json:"minLevel,omitempty"`
+	GrantedByChoice *ChoiceGrant       `json:"grantedByChoice,omitempty"`
+	Degrees         *PMScaling         `json:"degrees,omitempty"`
+	Boost           *ClassPowerBoost   `json:"boost,omitempty"`
 }
 
 // NaturalWeapon é a arma natural que uma habilidade ou poder dá (quadro de Ataques Desarmados
