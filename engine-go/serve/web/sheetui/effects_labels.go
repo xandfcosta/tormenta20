@@ -139,6 +139,10 @@ func targetLabel(t engine.ModifierTarget) string {
 		"ignoresSituation":      "Ignora no ataque",
 		"source":                "Multiplica o que a fonte dá",
 		"tempHp":                "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
+		// O DANO QUE O PERSONAGEM SOFRE (ALE-650), com o tipo no complemento.
+		"damageTakenPerDie": "Dano sofrido a mais por dado",
+		"damageImmunity":    "Imune a dano",
+		"magicDamageHeals":  "Dano mágico que cura",
 	}
 	// FLAG é booleana e o rótulo dela é uma frase inteira ("Fadiga ao dormir"),
 	// não um alvo com complemento — por isso ela sai antes do resto.
@@ -259,6 +263,8 @@ var itemFlagLabel = map[string]string{
 	"arremesso-potente":          "Arremesso Potente",
 	"disparo-preciso":            "Disparo Preciso",
 	"nunca-surpreendido":         "Nunca fica surpreendido",
+	"evasao":                     "Reflexos que zera o dano à metade",
+	"evasao-aprimorada":          "Reflexos que zera o dano à metade, e a falha só sofre metade",
 	"pao-e-circo":                "Não letal sem a penalidade",
 	"armeiro":                    "Inteligência no ataque corpo a corpo",
 	"balistica":                  "Inteligência no ataque à distância",

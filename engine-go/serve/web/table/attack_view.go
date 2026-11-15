@@ -207,13 +207,20 @@ func attackLine(pa live.PendingAttack) string {
 	line += notationStep + damageSum(pa)
 	// SEM RD AGINDO o total É o dano, e escrever os dois repete o número: a
 	// seta só existe quando há de onde para onde.
-	if pa.Absorbed == 0 {
+	if pa.Absorbed == 0 && len(pa.Taken) == 0 {
 		return line + fmt.Sprintf(" = %d de dano%s%s%s",
 			pa.Damage, writtenNonLethal(pa), writtenCritChance(pa), writtenForeseen(pa))
 	}
-	return line + fmt.Sprintf(" = %d vs RD (%d) → %d de dano%s%s%s",
-		pa.RawDamage, pa.Absorbed, pa.Damage, writtenNonLethal(pa), writtenCritChance(pa),
-		writtenForeseen(pa))
+	line += fmt.Sprintf(" = %d", pa.RawDamage)
+	// O QUE O CORPO DO ALVO MUDOU vem antes da RD, na ordem em que o motor aplica (ALE-650).
+	for _, taken := range pa.Taken {
+		line += fmt.Sprintf(" %s %s", signed(int64(taken.Amount)), taken.Label)
+	}
+	if pa.Absorbed != 0 {
+		line += fmt.Sprintf(" vs RD (%d)", pa.Absorbed)
+	}
+	return line + fmt.Sprintf(" → %d de dano%s%s%s",
+		pa.Damage, writtenNonLethal(pa), writtenCritChance(pa), writtenForeseen(pa))
 }
 
 // writtenCritChance é a chance de o alvo ignorar o que o crítico acrescentou.

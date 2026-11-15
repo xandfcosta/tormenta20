@@ -47,6 +47,17 @@ type AttackTarget struct {
 	CritExtraIgnoreChance int
 	// CritImmune: "certas criaturas são imunes a acertos críticos" (p231).
 	CritImmune bool
+	// TakenPerDie e ImmuneTo são o que o CORPO do alvo faz com o dano que chega (ALE-650): o +1 por dado
+	// dos Ossos Frágeis e do Sangue Frio, e a imunidade a um tipo da Fonte Elemental. Ver
+	// `theTargetsBodyTakesIt`.
+	TakenPerDie []DamageTakenLine `json:"takenPerDie,omitempty"`
+	ImmuneTo    []DamageTakenLine `json:"immuneTo,omitempty"`
+}
+
+// TakenRow é uma linha da conta que o corpo do alvo mudou no dano: "Ossos Frágeis +2", "imune a fogo −6".
+type TakenRow struct {
+	Label  string `json:"label"`
+	Amount int    `json:"amount"`
 }
 
 // ExtraRoll é uma parcela extra já rolada.
@@ -92,6 +103,8 @@ type AttackOutcome struct {
 	// mais 1d6 de fogo deu 4", e um total sozinho apagaria o tipo de dano.
 	Extra     []ExtraRoll `json:"extra,omitempty"`
 	RawDamage int         `json:"rawDamage"` // dados + bônus, antes da RD
+	// Taken é o que o corpo do alvo mudou no dano, antes da RD — ver `AttackTarget.TakenPerDie`.
+	Taken []TakenRow `json:"taken,omitempty"`
 	// NonLethal é quanto do `Damage` não conta para sangrar nem para morrer
 	// (p236). Ou TUDO, quando a arma é Piedosa, ou nada — a propriedade é da
 	// arma, e o livro não dá meio-termo.

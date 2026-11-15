@@ -363,6 +363,18 @@ x2 com arma flamejante é 2d8 + 1d6, e 2d8 + 2d6 também dá total plausível. P
 isso o dublê do `attack_rules_test.go` estoura quando a regra pede um dado a
 mais do que o caso preparou.
 
+### O DANO QUE O ALVO SOFRE passa pelo corpo dele antes da RD
+
+Três alvos com o tipo de dano no `damageType`: `damageTakenPerDie` (+N por
+dado daquele tipo: Ossos Frágeis, Sangue Frio), `damageImmunity` e
+`magicDamageHeals` (Fonte Elemental). A Evasão é flag (`evasao`,
+`evasao-aprimorada`). O `DamageTakenOf` lê os quatro de uma vez.
+
+- **No golpe de uma ficha em outra** o app sabe o tipo e os dados, e o
+  `theTargetsBodyTakesIt` aplica: a imunidade come a parcela do tipo, o +1
+  por dado soma ao tipo dele, e só então vem a RD. A cura pelo dano mágico não
+  entra — o golpe não diz se o dano é mágico.
+
 ### A escala por PATAMAR, e o `default` que engole o `per` desconhecido
 
 `scale.per: patamar` multiplica pelo ORDINAL do patamar (1 iniciante, 2
@@ -395,7 +407,9 @@ Mente Criminosa não são).
 - **A trava que nomeia duas coisas usa `flags`**: o `flagOff` cala se QUALQUER
   uma estiver posta ("de armadura pesada ou na condição imóvel", p47); o
   `flagRequired` pede todas. A condição Imóvel (e quem a contém) levanta a flag
-  `imovel`.
+  `imovel`. **Uma FLAG com essa trava** (a Evasão) só acende no fim, pelo
+  `harvestFlags`: o `raiseFlags` pula a flag que pergunta por outras flags,
+  senão ela ficaria acesa mesmo calada.
 - **O dano por TIPO de arma** cai nos escopos `melee-light-or-agile` e `ranged`
   (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`. O
   ATAQUE por escopo de arma (o `weapon:<id>` do Foco em Arma) é o `AttackOwn`,

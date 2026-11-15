@@ -110,6 +110,10 @@ func TestEveryAttackSystemWritesItsComponent(t *testing.T) {
 			_, has := ecs.Get[rawTally](w, theResource(w))
 			return has
 		}},
+		{"theTargetsBodyTakesIt", acerto, func(w *ecs.World) bool {
+			_, has := ecs.Get[bodyTally](w, theResource(w))
+			return has
+		}},
 		{"absorbWithDamageReduction", acerto, func(w *ecs.World) bool {
 			_, has := ecs.Get[absorbedTally](w, theResource(w))
 			return has

@@ -453,6 +453,29 @@
           "note": "uma vez por rodada; quem é imune a crítico é imune a furtivo"
         }
       ]
+    },
+    {
+      "sourceId": "class.ladino.evasao",
+      "source": "Evasão",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "flag",
+            "name": "evasao"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOff",
+            "flag": "armadura-pesada",
+            "flags": [
+              "imovel"
+            ],
+            "label": "sem armadura pesada e sem estar imóvel"
+          }
+        }
+      ]
     }
   ],
   "itemEffects": {
@@ -650,7 +673,8 @@
       }
     },
     "flags": [
-      "armadura-leve"
+      "armadura-leve",
+      "evasao"
     ],
     "conditional": [
       {

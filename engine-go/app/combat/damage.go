@@ -90,6 +90,10 @@ func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, ses
 	pending.RawDamage, pending.Absorbed, pending.Damage, pending.NonLethal = out.RawDamage, out.Absorbed, out.Damage, out.NonLethal
 	pending.CriticalExtra, pending.CritExtraIgnoreChance = out.CriticalExtra, out.CritExtraIgnoreChance
 	pending.Announces = foreseenOf(out)
+	pending.Taken = nil
+	for _, row := range out.Taken {
+		pending.Taken = append(pending.Taken, live.TakenRow{Label: row.Label, Amount: row.Amount})
+	}
 	if _, err := s.tables.RecordAttackDamage(ctx, sessionID, attacker, pending); err != nil {
 		return live.PendingAttack{}, err
 	}
