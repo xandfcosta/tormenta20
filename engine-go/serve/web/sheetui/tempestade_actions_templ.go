@@ -1087,7 +1087,7 @@ func rollSheetFootBody(v View, group actionGroup, sheet rollSheet) templ.Compone
 		})
 		templ_7745c5c3_Err = ds.Button(ds.ButtonPrimary, rollAttrs(v, group, sheet.Roll, templ.Attributes{
 			"aria-label": "Rolar " + sheet.Title, "commandfor": sheet.ID, "command": "close",
-			"data-on:click": rollCommand(v, sheet.Roll, ""),
+			"data-on:click": rollCommand(v, sheet.Roll, sheet.After),
 		})).Render(templ.WithChildren(ctx, templ_7745c5c3_Var48), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

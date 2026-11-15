@@ -104,11 +104,13 @@ type actionRow struct {
 	Sheet *rollSheet
 }
 
-// rollSheet é a folha do Rolar: o título, a linha do que se rola, o interruptor e o gesto do pé.
+// rollSheet é a folha do Rolar: o título, a linha do que se rola, o interruptor e o gesto do pé. After é o que
+// o Rolar da folha roda depois de mandar o gesto, como o da linha (`rollAfter`).
 type rollSheet struct {
 	ID, Title, Detail string
 	Switch            rollSwitch
 	Roll              actionRoll
+	After             string
 }
 
 // rollSwitch é um interruptor da folha, preso a um sinal booleano.

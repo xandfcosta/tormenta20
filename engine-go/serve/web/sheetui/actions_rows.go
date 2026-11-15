@@ -84,7 +84,7 @@ func paidExtraRow(index int, weapon weaponTile, paid engine.PaidExtraStrike, off
 			Detail: "um dado de dano a mais, do mesmo tipo; –5 na Defesa até o início do seu próximo turno (p77)",
 		},
 	}
-	sheet.Roll.Before = ""
+	sheet.Roll.Before, sheet.After = "", rollAfter(row)
 	row.Rolls[0].Dialog = sheet.ID
 	row.Sheet = sheet
 	return row
