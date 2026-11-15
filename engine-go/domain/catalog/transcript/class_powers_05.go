@@ -66,7 +66,7 @@ var classPowersPart05 = []ClassPower{
 		Description: "Soma Sabedoria nas rolagens de dano e CD de suas armadilhas (cumulativo).",
 		BookPage:    50,
 		UID:         "pwr_eytcnqz4t3",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "a Sabedoria no dano e na CD das armadilhas: é do mestre, porque as armadilhas são gestos que ele aplica",
 		Prerequisites: []Prerequisite{
 			{
 				Kind: "anyPower",
@@ -229,7 +229,7 @@ var classPowersPart05 = []ClassPower{
 				Dice:      "1d8",
 			},
 		},
-		Unmodeled:     "não vale com armadura pesada, e o dano é só corpo a corpo e alcance curto: o interruptor não confere, sem fatia",
+		Unmodeled:     "não vale com armadura pesada, e o dano é só corpo a corpo e alcance curto: o interruptor não confere (ALE-652)",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 2}},
 		MinLevel:      6,
 	},
@@ -240,7 +240,7 @@ var classPowersPart05 = []ClassPower{
 		Description:   "Bônus de Escaramuça sobe para +5 Defesa/Reflexos e +1d12 dano.",
 		BookPage:      51,
 		UID:           "pwr_jy67j6o5jl",
-		Unmodeled:     "os bônus da Escaramuça \"aumentam para\" +5 e +1d12: é troca de número, e o interruptor não troca um condicional por outro, sem fatia",
+		Unmodeled:     "os bônus da Escaramuça \"aumentam para\" +5 e +1d12: é troca de número, e o interruptor não troca um condicional por outro (ALE-652)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.cacador.escaramuca"}},
 		MinLevel:      12,
 	},

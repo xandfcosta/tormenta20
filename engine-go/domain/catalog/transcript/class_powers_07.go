@@ -191,7 +191,6 @@ var classPowersPart07 = []ClassPower{
 		Description:   "Quando usa Canalizar Energia, gasta +2 PM para aumentar alcance para médio.",
 		BookPage:      58,
 		UID:           "pwr_4klchyaoc2",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 	},
 	{
@@ -363,7 +362,7 @@ var classPowersPart07 = []ClassPower{
 		GrantedAtLevel: 2,
 		BookPage:       63,
 		UID:            "pwr_6uiwktxrwi",
-		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 	},
 	{
 		ID:             "class.druida.magias-2-circulo",

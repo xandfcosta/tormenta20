@@ -35,7 +35,7 @@ var classPowersPart06 = []ClassPower{
 		Description: "Pode usar Marca da Presa em criaturas em alcance longo.",
 		BookPage:    51,
 		UID:         "pwr_ooyc34wl3m",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
+		Unmodeled:   "a Marca da Presa em alcance longo: é do mestre, porque o app não confere o alcance da Marca",
 	},
 	{
 		ID: "class.cacador.ponto-fraco",
@@ -154,7 +154,6 @@ var classPowersPart06 = []ClassPower{
 		GrantedAtLevel: 7,
 		BookPage:       53,
 		UID:            "pwr_oazz44hwxh",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.cavaleiro.resoluto",
@@ -164,7 +163,6 @@ var classPowersPart06 = []ClassPower{
 		GrantedAtLevel: 11,
 		BookPage:       55,
 		UID:            "pwr_dxzxjqsjyh",
-		Unmodeled:      "1 PM para refazer resistência contra condição, com +5: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.cavaleiro.baluarte-aliados-em-alcance-curto",
@@ -174,7 +172,6 @@ var classPowersPart06 = []ClassPower{
 		GrantedAtLevel: 15,
 		BookPage:       53,
 		UID:            "pwr_vbtwjlnffd",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.cavaleiro.bravura-final",
@@ -184,7 +181,6 @@ var classPowersPart06 = []ClassPower{
 		GrantedAtLevel: 20,
 		BookPage:       55,
 		UID:            "pwr_7jx6gneaj7",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.cavaleiro.armadura-da-honra",
@@ -277,13 +273,16 @@ var classPowersPart06 = []ClassPower{
 		Description:   "Início de cena, você e aliados que possam ver estandarte recebem PV temporários = Carisma (mín 1). Duram até fim da cena.",
 		BookPage:      54,
 		UID:           "pwr_xiws6noxt5",
-		Unmodeled:     "PV temporários iguais ao Carisma no início da cena: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:     "PV temporários iguais ao Carisma no início da cena, para você e os aliados que veem o estandarte: gatilho no início da cena (ALE-653)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.cavaleiro.titulo"}},
 		MinLevel:      14,
 	},
 	{
-		ID:          "class.cavaleiro.etiqueta",
-		Modeled:     []string{"o +2 em Diplomacia e Nobreza"},
+		ID: "class.cavaleiro.etiqueta",
+		Modeled: []string{
+			"o +2 em Diplomacia e Nobreza",
+			"o rolar de novo por 1 PM no teste de Diplomacia e Nobreza",
+		},
 		ClassName:   "Cavaleiro",
 		Name:        "Etiqueta",
 		Description: "+2 Diplomacia e Nobreza. Em teste dessas perícias, gasta 1 PM para rolá-lo novamente.",
@@ -293,7 +292,6 @@ var classPowersPart06 = []ClassPower{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Diplomacia"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "expertise", Name: "Nobreza"}, Amount: 2, BonusType: "untyped"},
 		},
-		Unmodeled: "rolar de novo por 1 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.cavaleiro.investida-destruidora",
@@ -418,7 +416,7 @@ var classPowersPart06 = []ClassPower{
 		Description: "Se está usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência.",
 		BookPage:    55,
 		UID:         "pwr_nliuayfffj",
-		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 	},
 	{
 		ID:            "class.cavaleiro.titulo",

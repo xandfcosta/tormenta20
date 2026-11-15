@@ -306,6 +306,7 @@ var originsPart04 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-selvagem-unique",
+			Modeled:     []string{"a recuperação do descanso nunca abaixo do nível"},
 			Unmodeled:   "a imunidade a efeitos prejudiciais de itens ingeríveis é prosa do mestre",
 			Name:        "Vida Rústica",
 			Kind:        "poder",

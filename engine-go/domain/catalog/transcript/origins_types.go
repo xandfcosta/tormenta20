@@ -21,6 +21,7 @@ type OriginBenefit struct {
 
 type OriginUniquePower struct {
 	ID          string     `json:"id"`
+	Modeled     []string   `json:"modeled,omitempty"`
 	Unmodeled   string     `json:"unmodeled,omitempty"`
 	Name        string     `json:"name"`
 	Kind        string     `json:"kind"`

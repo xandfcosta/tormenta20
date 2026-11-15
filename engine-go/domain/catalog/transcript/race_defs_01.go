@@ -108,7 +108,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				Name:        "Tradição de Heredrimm",
 				Description: "Você é perito nas armas tradicionais anãs. Para você, todos os machados, martelos, marretas e picaretas são armas simples. Recebe +2 em ataques com essas armas.",
 				UID:         "rac_6yvby3oao3",
-				Unmodeled:   "machado, martelo, marreta e picareta como armas simples, com +2 no ataque: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "machado, martelo, marreta e picareta como armas simples, com +2 no ataque: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 			},
 		},
 		UID: "rac_hg27fnvss3",
@@ -129,11 +129,11 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			},
 			{
 				ID:          "dahllan-armadura-de-allihanna",
+				Modeled:     []string{"o +2 na Defesa até o fim da cena, pelo gesto de 1 PM"},
 				RaceID:      "dahllan",
 				Name:        "Armadura de Allihanna",
 				Description: "Você pode gastar uma ação de movimento e 1 PM para transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da cena.",
 				UID:         "rac_z62ya34txk",
-				Unmodeled:   "1 PM por +2 na Defesa até o fim da cena: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 			},
 			{
 				ID:          "dahllan-empatia-selvagem",
@@ -224,7 +224,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				Name:        "Espelunqueiro",
 				Description: "Você recebe visão no escuro e deslocamento de escalada igual ao seu deslocamento terrestre.",
 				UID:         "rac_ijbtrkclx6",
-				Unmodeled:   "o deslocamento de escalada: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+				Unmodeled:   "o deslocamento de escalada: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "movement", Text: "Escalada = deslocamento terrestre"},
@@ -282,7 +282,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				Name:        "Cria da Tormenta",
 				Description: "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
 				UID:         "rac_jqrbr6pho5",
-				Unmodeled:   "monstro: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650)",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "resistance"},

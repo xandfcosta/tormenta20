@@ -81,7 +81,7 @@ var classPowersPart12 = []ClassPower{
 		Description:   "CD para resistir aos venenos que você usa aumenta em +5.",
 		BookPage:      74,
 		UID:           "pwr_a4i5boqbyd",
-		Unmodeled:     "a CD +5 do veneno que você usa: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:     "a CD +5 do veneno que você usa: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-655)",
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Treinado em Ofício (alquimista)"}},
 	},
 	{
@@ -103,7 +103,7 @@ var classPowersPart12 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       76,
 		UID:            "pwr_wrq6v7bmzz",
-		Unmodeled:      "1 PM por um ataque desarmado adicional: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "o ataque desarmado adicional por 1 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo (ALE-651)",
 	},
 	{
 		ID: "class.lutador.casca-grossa-con",
@@ -254,7 +254,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Pode atacar com armas improvisadas como ataques desarmados, mas dano aumenta um passo. Ação de movimento + teste Percepção CD 20: encontra arma improvisada. Frágeis (se erra + d20 ímpar, arma quebra).",
 		BookPage:    76,
 		UID:         "pwr_qzvyjp3x5v",
-		Unmodeled:   "um passo de dano com arma improvisada: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "um passo de dano com arma improvisada: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 	},
 	{
 		ID:          "class.lutador.ate-acertar",
@@ -263,7 +263,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Quando erra ataque desarmado, recebe +2 cumulativo em ataque e dano desarmado contra mesmo oponente até acertar ou fim cena.",
 		BookPage:    76,
 		UID:         "pwr_xemedow23h",
-		Unmodeled:   "o +2 cumulativo a cada erro contra o mesmo oponente: é contagem de rodadas, sem fatia",
+		Unmodeled:   "o +2 cumulativo a cada erro contra o mesmo oponente: é contagem de rodadas (ALE-653)",
 	},
 	{
 		ID:        "class.lutador.aumento-de-atributo",
@@ -309,7 +309,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Se está agarrando criatura e faz teste de manobra para causar dano, dano desarmado aumenta um passo.",
 		BookPage:    76,
 		UID:         "pwr_xouzwe2kf5",
-		Unmodeled:   "um passo de dano ao causar dano agarrando: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "um passo de dano ao causar dano agarrando: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "intelligence", Min: 1},
 			{Kind: "power", ID: "class.lutador.lutador-de-chao"},
@@ -323,7 +323,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Quando inimigo erra ataque corpo-a-corpo, recebe 2 PM temp (cumulativos). Máx = nível por cena. Desaparecem fim cena.",
 		BookPage:    76,
 		UID:         "pwr_pj36cpvnsh",
-		Unmodeled:   "PM temporários quando o inimigo erra: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "2 PM temporários quando o inimigo erra um ataque corpo a corpo: gatilho na decisão do mestre sobre o ataque do outro (ALE-653)",
 		MinLevel:    8,
 	},
 	{
@@ -364,7 +364,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Quando usa Golpe Relâmpago, ataca de forma impulsiva. Ataques desarmados recebem dado de dano extra do mesmo tipo, mas sofre -5 Defesa.",
 		BookPage:    77,
 		UID:         "pwr_3sxxkknclq",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
+		Unmodeled:   "o dado de dano a mais e o –5 na Defesa no Golpe Relâmpago: depende do ataque adicional (ALE-651)",
 	},
 	{
 		ID:            "class.lutador.imobilizacao",
@@ -400,7 +400,7 @@ var classPowersPart12 = []ClassPower{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "agarrar"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "maneuver", Name: "derrubar"}, Amount: 2, BonusType: "untyped"},
 		},
-		Unmodeled: "a manobra derrubar livre por 1 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled: "a manobra derrubar como ação livre por 1 PM: o gesto cobra, e a manobra continua gastando a ação padrão (ALE-651)",
 	},
 	{
 		ID:          "class.lutador.nome-na-arena",
@@ -418,7 +418,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Ataques desarmados ignoram 10 pontos de redução de dano do alvo.",
 		BookPage:    77,
 		UID:         "pwr_3wab3xx5em",
-		Unmodeled:   "ignorar 10 de RD no desarmado: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "ignorar 10 de RD no desarmado: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
 		MinLevel:    8,
 	},
 	{

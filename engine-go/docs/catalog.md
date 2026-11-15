@@ -219,7 +219,10 @@ rode o auditor dele.** É um por seção do sumário, e o que os distingue é a
 contra o MOTOR — quanto vira número, gesto ou nota do mestre. O balde é
 DECLARADO (`modeled`/`unmodeled`), a nota cita a issue da fatia que a resolve,
 `--destino` agrupa por ela, e verbete sem efeito nem `unmodeled` reprova (sem
-guarda em Go, por decisão do dono). O `cmd/audit/pointers` lista arquivos
+guarda em Go, por decisão do dono). O gesto se liga ao verbete como a ficha o
+liga (`book.ActivationOf`: pelo id, pelo nome ou pelo nome sem o degrau), porque
+cada catálogo grafa o id do seu jeito; juntar só pelo id contava o gesto de raça
+como só nota. O `cmd/audit/pointers` lista arquivos
 citados em comentário de teste que sumiram — candidatos, não veredito.
 
 ### O que vale para todo auditor

@@ -130,7 +130,7 @@ var classPowersPart02 = []ClassPower{
 		Description: "Multiplicador de crítico com armas corpo-a-corpo aumenta em +1. Ex: x3 vira x4.",
 		BookPage:    41,
 		UID:         "pwr_k7lsvzqp2p",
-		Unmodeled:   "o multiplicador de crítico +1 em corpo a corpo: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "o multiplicador de crítico +1 em corpo a corpo: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		MinLevel:    6,
 	},
 	{
@@ -140,7 +140,7 @@ var classPowersPart02 = []ClassPower{
 		Description:   "Em dano corpo-a-corpo com arma de duas mãos, pode rolar novamente resultados 1 ou 2 da rolagem de dano.",
 		BookPage:      41,
 		UID:           "pwr_iba73nb2qc",
-		Unmodeled:     "rolar de novo 1 e 2 no dano: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:     "rolar de novo 1 e 2 no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}},
 	},
 	{
@@ -183,7 +183,7 @@ var classPowersPart02 = []ClassPower{
 		BookPage:    42,
 		UID:         "pwr_mvlz73jbrw",
 		Modifiers:   []Modifier{{Target: ModifierTarget{Kind: "displacement"}, Amount: 3, BonusType: "untyped"}},
-		Unmodeled:   "o bônus da Fúria também em armas de arremesso: a Fúria soma em ataque e dano gerais, e não por arma, sem fatia",
+		Unmodeled:   "o bônus da Fúria também em armas de arremesso: a Fúria soma em ataque e dano gerais, e não por arma (ALE-649)",
 	},
 	{
 		ID:          "class.barbaro.furia-raivosa",
@@ -399,7 +399,7 @@ var classPowersPart02 = []ClassPower{
 		GrantedAtLevel: 20,
 		BookPage:       45,
 		UID:            "pwr_xvc2mvxdj2",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "a metade do custo das habilidades de bardo sob a Inspiração é custo de habilidade (ALE-647); a Inspiração como ação livre é do mestre",
 	},
 	{
 		ID:          "class.bardo.arte-magica",

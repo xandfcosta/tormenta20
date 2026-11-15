@@ -56,7 +56,7 @@ var classPowersPart04 = []ClassPower{
 		Description: "Em ataque a distância com arma de fogo contra oponente adjacente, sem penalidade de -5 e dano aumenta em um passo.",
 		BookPage:    48,
 		UID:         "pwr_wkod7fruhg",
-		Unmodeled:   "sem –5 e um passo de dano com arma de fogo adjacente: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "sem –5 e um passo de dano com arma de fogo adjacente: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Luta"},
 			{Kind: "power", ID: "class.bucaneiro.pistoleiro"},
@@ -83,7 +83,7 @@ var classPowersPart04 = []ClassPower{
 		Description: "Proficiência com armas de fogo. +2 nas rolagens de dano com armas de fogo.",
 		BookPage:    48,
 		UID:         "pwr_qmvnhn3abq",
-		Unmodeled:   "a proficiência e o +2 no dano com armas de fogo: o dano não tem escopo por CATEGORIA de arma, sem fatia",
+		Unmodeled:   "a proficiência e o +2 no dano com armas de fogo: o dano não tem escopo por CATEGORIA de arma (ALE-649)",
 	},
 	{
 		ID:          "class.bucaneiro.presenca-paralisante",
@@ -239,7 +239,7 @@ var classPowersPart04 = []ClassPower{
 		GrantedAtLevel: 5,
 		BookPage:       51,
 		UID:            "pwr_roegwmfedx",
-		Unmodeled:      "terreno difícil sem redução no terreno de Explorador: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:      "terreno difícil sem redução no terreno de Explorador: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 	},
 	{
 		ID: "class.cacador.marca-da-presa-1d12",

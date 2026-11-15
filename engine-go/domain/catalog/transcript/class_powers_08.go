@@ -138,7 +138,7 @@ var classPowersPart08 = []ClassPower{
 		Description:   "Em Forma Selvagem, transforma-se em fera primal: recebe benefícios de DOIS tipos de animais (bônus iguais não acumulam).",
 		BookPage:      62,
 		UID:           "pwr_rkhek5tdnr",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:     "os benefícios de DOIS animais na Forma Selvagem: a forma escolhe um animal só (ALE-655)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.druida.forma-selvagem"}},
 		MinLevel:      18,
 	},

@@ -3,8 +3,11 @@ package transcript
 // Parte 10 de 14 de `ClassPowers` (class_powers.go).
 var classPowersPart10 = []ClassPower{
 	{
-		ID:          "class.guerreiro.mestre-em-arma",
-		Modeled:     []string{"o passo de dano na arma escolhida, pelo escopo `weapon:<id>` (`fromChoice: scope`)"},
+		ID: "class.guerreiro.mestre-em-arma",
+		Modeled: []string{
+			"o passo de dano na arma escolhida, pelo escopo `weapon:<id>` (`fromChoice: scope`)",
+			"o rolar de novo o ataque por 2 PM, na arma escolhida, no provisório",
+		},
 		ClassName:   "Guerreiro",
 		Name:        "Mestre em Arma",
 		Description: "Com arma escolhida, dano aumenta em um passo. Quando faz teste de ataque, gasta 2 PM para rolá-lo novamente.",
@@ -18,7 +21,6 @@ var classPowersPart10 = []ClassPower{
 				FromChoice: "scope",
 			},
 		},
-		Unmodeled:     "rolar de novo o ataque por 2 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.guerreiro.especializacao-em-arma"}},
 		Choice:        &PowerChoice{Kind: "weapon", Label: "Arma"},
 		MinLevel:      12,
@@ -40,7 +42,7 @@ var classPowersPart10 = []ClassPower{
 		Description: "Quando faz Ataque Especial, paga 1 PM adicional para ignorar 10 pontos de redução de dano.",
 		BookPage:    66,
 		UID:         "pwr_yq5zeb5dbo",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
+		Unmodeled:   "ignorar 10 de RD no Ataque Especial por +1 PM: o impulso não tem acréscimo pago (ALE-652)",
 	},
 	{
 		ID:          "class.guerreiro.solidez",
@@ -49,7 +51,7 @@ var classPowersPart10 = []ClassPower{
 		Description: "Se usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência.",
 		BookPage:    55,
 		UID:         "pwr_xkujfbzmw7",
-		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 	},
 	{
 		ID:          "class.guerreiro.tornado-de-dor",
@@ -164,7 +166,7 @@ var classPowersPart10 = []ClassPower{
 		GrantedAtLevel: 10,
 		BookPage:       70,
 		UID:            "pwr_bf7eexzqik",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
 	{
 		ID:             "class.inventor.fabricar-item-superior-4-melhorias",
@@ -213,7 +215,6 @@ var classPowersPart10 = []ClassPower{
 		Description:   "Quando usa preparado alquímico que cause dano, gasta PM (limitado por Int) para cada PM adicionar 1 dado de dano do mesmo tipo.",
 		BookPage:      68,
 		UID:           "pwr_pec72q46ga",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Treinado em Ofício (alquimista)"}},
 	},
 	{
@@ -232,7 +233,7 @@ var classPowersPart10 = []ClassPower{
 		Description:   "Quando usa preparado alquímico ou poção que cause dano, soma Inteligência na rolagem de dano.",
 		BookPage:      68,
 		UID:           "pwr_z3r3obbqtu",
-		Unmodeled:     "a Inteligência no dano do preparado alquímico: soma um atributo com teto no nível, e essa forma só existe por caso especial (ALE-485)",
+		Unmodeled:     "a Inteligência no dano do preparado alquímico e da poção: o dano do item não soma atributo (ALE-655)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.alquimista-iniciado"}},
 	},
 	{
@@ -256,7 +257,7 @@ var classPowersPart10 = []ClassPower{
 		Description: "Proficiência com armas marciais corpo a corpo. Quando empunha arma corpo a corpo, usa Inteligência em vez de Força nos ataques e rolagens de dano.",
 		BookPage:    68,
 		UID:         "pwr_5nxcqin5sx",
-		Unmodeled:   "Inteligência no lugar de Força no ataque e no dano: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "Inteligência no lugar de Força no ataque e no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Luta"},
 			{Kind: "note", Description: "Treinado em Ofício (armeiro)"},
@@ -269,7 +270,6 @@ var classPowersPart10 = []ClassPower{
 		Description:   "Ao ativar engenhoca com ação padrão, paga 2 PM para ativá-la com ação de movimento (em vez disto), uma vez por rodada.",
 		BookPage:      68,
 		UID:           "pwr_mabr6qr4be",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.engenhoqueiro"}},
 		MinLevel:      7,
 	},
@@ -305,7 +305,7 @@ var classPowersPart10 = []ClassPower{
 		Description: "Proficiência com armas marciais de ataque à distância e armas de fogo. Quando usa arma de ataque à distância, soma Inteligência em vez de Destreza nos testes de ataque.",
 		BookPage:    69,
 		UID:         "pwr_zuskbji6cp",
-		Unmodeled:   "Inteligência no lugar de Destreza no ataque à distância: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:   "Inteligência no lugar de Destreza no ataque à distância: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Pontaria"},
 			{Kind: "note", Description: "Treinado em Ofício (armeiro)"},
@@ -336,7 +336,7 @@ var classPowersPart10 = []ClassPower{
 		Description:   "Em arma de disparo feita por você mesmo, recebe +1 na margem de ameaça.",
 		BookPage:      69,
 		UID:           "pwr_jrnulvjh2p",
-		Unmodeled:     "a margem +1 em arma feita por você: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:     "a margem +1 em arma feita por você: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.balistica"}},
 		MinLevel:      5,
 	},
@@ -405,7 +405,6 @@ var classPowersPart10 = []ClassPower{
 		Description: "Quando usa item alquímico que cure PV, gasta PM (limitado por Int) para cada PM curar dado adicional.",
 		BookPage:    69,
 		UID:         "pwr_erhio2nims",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "wisdom", Min: 1},
 			{Kind: "note", Description: "Treinado em Ofício (alquimista)"},
@@ -418,7 +417,7 @@ var classPowersPart10 = []ClassPower{
 		Description:   "Quando usa arma corpo-a-corpo feita por você mesmo, dano dela aumenta um passo.",
 		BookPage:      69,
 		UID:           "pwr_is5if32vsd",
-		Unmodeled:     "um passo de dano em arma feita por você: é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:     "um passo de dano em arma feita por você: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.armeiro"}},
 		MinLevel:      5,
 	},
@@ -429,7 +428,7 @@ var classPowersPart10 = []ClassPower{
 		Description:   "Pode arremessar itens alquímicos e poções em alcance médio. Soma Int para calcular CD desses itens.",
 		BookPage:      69,
 		UID:           "pwr_oga2a252ko",
-		Unmodeled:     "é uma forma de ataque ou movimento que o motor ainda não tem, sem fatia",
+		Unmodeled:     "é uma forma de ataque ou movimento que o motor ainda não tem (ALE-655)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.alquimista-de-batalha"}},
 	},
 }
