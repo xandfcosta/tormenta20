@@ -177,3 +177,31 @@ func TestTheHumanCharacterTakesPoison(t *testing.T) {
 		t.Errorf("envenenar o humano jogador foi recusado: %q", recusa)
 	}
 }
+
+// A ESQUIVA SOBRENATURAL É IMUNIDADE QUE VEM DE PODER (ALE-650): "Você nunca fica surpreendido" (p42, e a do
+// ladino no 4º nível, p74). O mestre que marca a condição nele ouve por quê, como na imunidade pelo tipo.
+func TestTheRogueWithUncannyDodgeIsNeverSurprised(t *testing.T) {
+	f := newSceneFixture(t)
+	seedRaca(t, f.s, f.charID, "Humano")
+	seedClasse(t, f.s, f.charID, "Ladino", 4)
+	ladino := umPersonagemNaFila(t, f, f.charID, "Sombra")
+	recusa := marcaCondicao(t, f, ladino, "surpreendido")
+	if !strings.Contains(recusa, "Esquiva Sobrenatural") {
+		t.Errorf("surpreender o ladino de 4º nível não foi recusado pela Esquiva Sobrenatural: %q", recusa)
+	}
+	// O CONTROLE: a recusa é da ESQUIVA, e não de toda condição — o ladino ainda cai.
+	if recusa := marcaCondicao(t, f, ladino, "caido"); recusa != "" {
+		t.Errorf("derrubar o ladino foi recusado: %q", recusa)
+	}
+}
+
+// O CONTROLE pelo nível: no 3º o ladino ainda não tem a Esquiva Sobrenatural (p74).
+func TestTheRogueBelowFourthLevelCanBeSurprised(t *testing.T) {
+	f := newSceneFixture(t)
+	seedRaca(t, f.s, f.charID, "Humano")
+	seedClasse(t, f.s, f.charID, "Ladino", 3)
+	ladino := umPersonagemNaFila(t, f, f.charID, "Aprendiz")
+	if recusa := marcaCondicao(t, f, ladino, "surpreendido"); recusa != "" {
+		t.Errorf("surpreender o ladino de 3º nível foi recusado: %q", recusa)
+	}
+}

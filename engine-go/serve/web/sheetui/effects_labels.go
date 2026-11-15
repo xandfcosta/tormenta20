@@ -258,6 +258,7 @@ var itemFlagLabel = map[string]string{
 	"saque-rapido":               "Saque Rápido",
 	"arremesso-potente":          "Arremesso Potente",
 	"disparo-preciso":            "Disparo Preciso",
+	"nunca-surpreendido":         "Nunca fica surpreendido",
 	"pao-e-circo":                "Não letal sem a penalidade",
 	"armeiro":                    "Inteligência no ataque corpo a corpo",
 	"balistica":                  "Inteligência no ataque à distância",

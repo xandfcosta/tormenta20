@@ -274,7 +274,9 @@ var classPowersPart16 = []ClassPower{
 		Description: "Instintos apurados — nunca fica surpreendido.",
 		BookPage:    42,
 		UID:         "pwr_gnu2wcfdba",
-		Unmodeled:   "nunca fica surpreendido: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "flag", Name: "nunca-surpreendido"}, Amount: 1, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:          "poder.impeto",
