@@ -254,7 +254,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Pode atacar com armas improvisadas como ataques desarmados, mas dano aumenta um passo. Ação de movimento + teste Percepção CD 20: encontra arma improvisada. Frágeis (se erra + d20 ímpar, arma quebra).",
 		BookPage:    76,
 		UID:         "pwr_qzvyjp3x5v",
-		Unmodeled:   "um passo de dano com arma improvisada: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+		Unmodeled:   "um passo de dano com arma improvisada: o app não tem arma improvisada (ALE-655)",
 	},
 	{
 		ID:          "class.lutador.ate-acertar",
@@ -309,7 +309,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Se está agarrando criatura e faz teste de manobra para causar dano, dano desarmado aumenta um passo.",
 		BookPage:    76,
 		UID:         "pwr_xouzwe2kf5",
-		Unmodeled:   "um passo de dano ao causar dano agarrando: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+		Unmodeled:   "um passo de dano ao causar dano agarrando: a manobra não causa dano no app (ALE-655)",
 		Prerequisites: []Prerequisite{
 			{Kind: "attribute", Attr: "intelligence", Min: 1},
 			{Kind: "power", ID: "class.lutador.lutador-de-chao"},

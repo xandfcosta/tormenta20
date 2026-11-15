@@ -56,7 +56,20 @@ var classPowersPart04 = []ClassPower{
 		Description: "Em ataque a distância com arma de fogo contra oponente adjacente, sem penalidade de -5 e dano aumenta em um passo.",
 		BookPage:    48,
 		UID:         "pwr_wkod7fruhg",
-		Unmodeled:   "sem –5 e um passo de dano com arma de fogo adjacente: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damageStep", Scope: "firearm"},
+				Amount:    1,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "grudar-o-cano", Label: "contra oponente adjacente"},
+			},
+			{
+				Target:    ModifierTarget{Kind: "shootsIntoMelee", Scope: "firearm"},
+				Amount:    1,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "grudar-o-cano", Label: "contra oponente adjacente"},
+			},
+		},
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Luta"},
 			{Kind: "power", ID: "class.bucaneiro.pistoleiro"},
