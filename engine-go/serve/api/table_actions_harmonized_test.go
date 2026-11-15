@@ -149,3 +149,39 @@ func TestTheHarmonizedWeaponOffersItsOwnEnchantSpend(t *testing.T) {
 		t.Error("com a Tumular escolhida, a folha não diz qual custa menos")
 	}
 }
+
+// O ACRÉSCIMO NA ARMA HARMONIZADA (ALE-652): o Romper Resistências põe 1 PM a mais no Ataque Especial, e o corte
+// da Harmonizada é sobre o custo INTEIRO, com o piso de 1 (p165, p226) — 1 + 1 − 1 = 1. A tira não pode somar o
+// PM do acréscimo por cima do preço já cortado: diria 2 e a proposta cobraria 1. Por isso o preço com o acréscimo
+// também é do motor, por degrau, e aqui se prende que o que a tela mostra é o que a proposta cobra.
+func TestTheBreakResistancesOnTheHarmonizedWeaponShowsWhatItCharges(t *testing.T) {
+	f, barbaro, goblin := barbarianOnTurn(t)
+	seedClasse(t, f.s, barbaro, "Guerreiro", 5)
+	seedPowerChoices(t, f.s, barbaro, `["class.guerreiro.romper-resistencias"]`, "{}")
+	sword := harmonizedSword(t, f, barbaro)
+	if refusal := bagCommand(t, f, barbaro, harmonizedAbilityPath(sword, specialAttack)); refusal != "" {
+		t.Fatalf("escolher o Ataque Especial na Harmonizada foi recusado: %q", refusal)
+	}
+	const breaking = "class.guerreiro.romper-resistencias"
+	screen := html.UnescapeString(f.posts(t, f.player, fmt.Sprintf("/personagens/%d/acoes/atacar/0?embutida=1", barbaro), ""))
+	for _, row := range boostRowsOffering(t, screen, specialAttack) {
+		// O preço por degrau da espada harmonizada: [1,2] com o Romper (1 + 1 − 1, e 2 + 1 − 1) e [1,1] sem ele.
+		harmonized := fmt.Sprintf(`$boost_weapon === %s && $boost_power === "%s" ? ($boost_addon === "%s" ? [1,2] : [1,1])`,
+			row, specialAttack, breaking)
+		if !strings.Contains(screen, harmonized) {
+			continue
+		}
+		chosen := fmt.Sprintf(`{"turn_target":%q,"boost_weapon":%s,"boost_power":%q,"boost_steps":0,"boost_split":"attack","boost_addon":%q}`,
+			goblin, row, specialAttack, breaking)
+		if refusal := sceneRefusal(f.posts(t, f.player,
+			fmt.Sprintf("/personagens/%d/acoes/atacar/%s?embutida=1", barbaro, row), chosen)); refusal != "" {
+			t.Fatalf("o golpe com o Romper Resistências na espada harmonizada foi recusado: %q", refusal)
+		}
+		pending := stateOf(t, f.s.sessions, f.sessionID).PendingAttack
+		if pending == nil || pending.BoostAddOn != breaking || pending.BoostPM != 1 || pending.IgnoredReduction != 10 {
+			t.Errorf("o provisório levou %+v; want o Romper por 1 PM no total, ignorando 10 de RD", pending)
+		}
+		return
+	}
+	t.Fatalf("nenhuma linha mostra o preço cortado pela Harmonizada, com e sem o Romper Resistências:\n%s", recorte(screen))
+}

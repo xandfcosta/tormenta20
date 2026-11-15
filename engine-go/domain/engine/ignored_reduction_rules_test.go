@@ -6,6 +6,8 @@ import "testing"
 //
 //   - Punhos de Adamante (lutador, p77): "Seus ataques desarmados ignoram 10 pontos de redução de dano do alvo, se
 //     houver."
+//   - Romper Resistências (guerreiro, p66): "Quando faz um Ataque Especial, você pode gastar 1 PM adicional para
+//     ignorar 10 pontos de redução de dano."
 //
 // "Ignorar 10 pontos" é a RD do alvo valer 10 a menos: a RD 12 vira 2, e a RD 5 não absorve nada — não há RD
 // negativa que some dano.
@@ -53,5 +55,42 @@ func TestTheIgnoredReductionAbsorbsTenLess(t *testing.T) {
 			t.Errorf("golpe de %d contra RD %d (impacto %d) ignorando 10: absorveu %d e ficou %d de dano, want %d e %d",
 				c.damage, c.general, c.impact, out.Absorbed, out.Damage, c.absorbed, c.damage-c.absorbed)
 		}
+	}
+}
+
+func TestTheBreakResistancesIsAPaidAddOnOfTheSpecialAttack(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	fighter := wielding(attributeSumHero("Guerreiro", 6, `["class.guerreiro.romper-resistencias"]`), "espada-longa")
+	special := BoostChoice{PowerID: "class.guerreiro.ataque-especial-4", Split: BoostToAttack}
+	plain, plainCost, err := boostedCard(t, world, fighter, "espada-longa", special)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plain.IgnoresDamageReduction != 0 {
+		t.Errorf("o Ataque Especial sem o acréscimo ignorou %d de RD", plain.IgnoresDamageReduction)
+	}
+	special.AddOn = "class.guerreiro.romper-resistencias"
+	broken, brokenCost, err := boostedCard(t, world, fighter, "espada-longa", special)
+	if err != nil {
+		t.Fatalf("o Romper Resistências no Ataque Especial foi recusado: %v", err)
+	}
+	if broken.IgnoresDamageReduction != 10 || brokenCost != plainCost+1 {
+		t.Errorf("o Romper Resistências ignora 10 de RD por +1 PM, e deu %d de RD por %d PM (o Ataque Especial custa %d)",
+			broken.IgnoresDamageReduction, brokenCost, plainCost)
+	}
+
+	without := wielding(attributeSumHero("Guerreiro", 6, `[]`), "espada-longa")
+	if _, err := world.BoostedWeaponCards(without, nil, special); err == nil {
+		t.Error("o acréscimo foi aceito de quem não tem o Romper Resistências")
+	}
+
+	var offer *BoostOffer
+	for _, o := range world.BoostOffers(fighter) {
+		if o.PowerID == "class.guerreiro.ataque-especial-4" {
+			offer = &o
+		}
+	}
+	if offer == nil || len(offer.AddOns) != 1 || offer.AddOns[0].PowerID != "class.guerreiro.romper-resistencias" || offer.AddOns[0].PM != 1 {
+		t.Errorf("a oferta do Ataque Especial não traz o acréscimo do Romper Resistências por 1 PM: %+v", offer)
 	}
 }

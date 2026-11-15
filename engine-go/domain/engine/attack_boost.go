@@ -65,6 +65,8 @@ type BoostChoice struct {
 	PowerID string
 	Steps   int
 	Split   string
+	// AddOn é o acréscimo pago pedido junto (o Romper Resistências no Ataque Especial, p66), ou vazio.
+	AddOn string
 }
 
 // BoostedWeaponCards são as cartas de arma com o impulso pedido, cada uma com o PM que ele custa NELA
@@ -101,7 +103,17 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	}
 	mods := boostModifiers(boost, 1+choice.Steps, choice.Split, classLevel)
 	item := ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods}
-	boosted := r.weaponCardsWith(ch, activeConditionals, []ActiveItem{item})
+	items := []ActiveItem{item}
+	addOnPM := 0
+	if choice.AddOn != "" {
+		addOn := r.ownedBoostAddOn(ch, choice.AddOn, power.ID)
+		if addOn == nil {
+			return nil, fmt.Errorf("%s: o acréscimo %q não é de um poder que a ficha tenha para este impulso", power.Name, choice.AddOn)
+		}
+		items = append(items, ActiveItem{SourceID: addOn.ID, Source: addOn.Name, Equipped: &vestedWear, Modifiers: addOn.BoostAddOn.Modifiers})
+		addOnPM = addOn.BoostAddOn.PM
+	}
+	boosted := r.weaponCardsWith(ch, activeConditionals, items)
 	if boost.MeleeOnly {
 		for i := range boosted {
 			if i < len(plain) {
@@ -109,7 +121,7 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 			}
 		}
 	}
-	pm := boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM
+	pm := boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM + addOnPM
 	for i := range boosted {
 		pricedAt(&boosted[i], r.boostCostWith(ch, boosted[i].ItemID, power.ID, pm))
 	}
@@ -177,6 +189,9 @@ type BoostOffer struct {
 	// Foresees é o que o golpe pago prevê no acerto (a condição da Venenosa, o efeito da Corrosiva), para a
 	// tela dizer antes de o jogador pagar.
 	Foresees []AnnouncedCondition
+	// AddOns são os acréscimos pagos que a ficha tem para este impulso (o Romper Resistências no Ataque
+	// Especial, p66).
+	AddOns []BoostAddOnOffer
 }
 
 // BoostOffers são os impulsos de PM que a ficha tem, na ordem das classes.
@@ -200,6 +215,11 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 			}
 			for steps := 0; steps <= offer.MaxSteps; steps++ {
 				offer.Buys = append(offer.Buys, boostBuys(power.Boost, 1+steps))
+			}
+			for _, addOn := range r.ownedBoostAddOns(ch, power.ID) {
+				offer.AddOns = append(offer.AddOns, BoostAddOnOffer{
+					PowerID: addOn.ID, Name: addOn.Name, PM: addOn.BoostAddOn.PM, Buys: addOnBuys(addOn.BoostAddOn),
+				})
 			}
 			out = append(out, offer)
 		}

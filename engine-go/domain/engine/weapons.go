@@ -105,8 +105,8 @@ type WeaponCard struct {
 	//   - o TIPO tem de sobreviver até a mesa, porque é ele que dá a
 	//     resistência a fogo onde agir.
 	ExtraDamage []ExtraDamage `json:"extraDamage,omitempty"`
-	// IgnoresDamageReduction é quanto da RD do alvo este golpe ignora: o desarmado do Punhos de Adamante (p77).
-	// Ver `ignored_reduction.go`.
+	// IgnoresDamageReduction é quanto da RD do alvo este golpe ignora: o desarmado do Punhos de Adamante (p77), o
+	// Ataque Especial com o Romper Resistências (p66). Ver `ignored_reduction.go`.
 	IgnoresDamageReduction int `json:"ignoresDamageReduction,omitempty"`
 	// CriticalBonus é o dano que só existe no acerto crítico — os "+10 pontos
 	// de dano" do encanto Dilacerante (p336). É bônus numérico, então não

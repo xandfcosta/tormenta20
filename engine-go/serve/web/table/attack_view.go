@@ -366,6 +366,9 @@ func writtenBoost(pa live.PendingAttack) string {
 		if pa.BoostAgainst != nil {
 			name += " contra " + book.ChosenKindName(pa.BoostAgainst.Chosen)
 		}
+		if addOn, known := book.ClassPowers()[pa.BoostAddOn]; known {
+			name += " + " + addOn.Name
+		}
 		parts = append(parts, name)
 	}
 	if pa.BoostPM > 0 {

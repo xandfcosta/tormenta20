@@ -188,6 +188,9 @@ type ClassPower struct {
 	// ExtraStrike é o ataque pago que não gasta a vez (o Ataque Extra, o Golpe Relâmpago) — ver
 	// `PaidExtraStrike`.
 	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
+	// BoostAddOn é o acréscimo pago que este poder põe num impulso de outro (o Romper Resistências no Ataque
+	// Especial) — ver `ClassPowerBoostAddOn`.
+	BoostAddOn *ClassPowerBoostAddOn `json:"boostAddOn,omitempty"`
 	// FollowUp é a manobra livre que o poder dá depois de outro gesto declarado (o Lutador de Chão, a Mão na
 	// Boca) — ver `FollowUpManeuver`.
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`

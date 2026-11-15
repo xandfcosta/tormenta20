@@ -40,7 +40,7 @@ func chosenBoost(sig Signals, weapon int) engine.BoostChoice {
 	if sig.BoostPower == "" || sig.BoostWeapon == nil || int(*sig.BoostWeapon) != weapon {
 		return engine.BoostChoice{}
 	}
-	return engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit}
+	return engine.BoostChoice{PowerID: sig.BoostPower, Steps: int(sig.BoostSteps), Split: sig.BoostSplit, AddOn: sig.BoostAddOn}
 }
 
 // chargesTheTarget rola a investida (p235) — ou a Imprudente (p42) — da vez

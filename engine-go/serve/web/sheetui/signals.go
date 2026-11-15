@@ -138,6 +138,8 @@ type Signals struct {
 	BoostPower  string `json:"boost_power"`
 	BoostSteps  int64  `json:"boost_steps"`
 	BoostSplit  string `json:"boost_split"`
+	// BoostAddOn é o acréscimo pago escolhido junto do impulso (o Romper Resistências, p66), ou vazio.
+	BoostAddOn string `json:"boost_addon"`
 	// A dose escolhida na linha de ataque, quando a arma guarda duas diferentes. A arma
 	// vem junto pela mesma razão do impulso.
 	DoseWeapon *int64 `json:"dose_weapon"`

@@ -400,7 +400,8 @@ dado daquele tipo: Ossos Frágeis, Sangue Frio), `damageImmunity` e
   por dado soma ao tipo dele, e só então vem a RD. A cura pelo dano mágico não
   entra — o golpe não diz se o dano é mágico.
 - **A RD que o golpe IGNORA sai da RD, e não do que ela absorveu** (`WeaponCard.IgnoresDamageReduction`,
-  alvo `ignoresDamageReduction`): o Punhos de Adamante no desarmado (p77). A RD 12 ignorando 10 é RD 2 ANTES de encontrar o dano — tirar os 10 do que a RD 12 já comeu
+  alvo `ignoresDamageReduction`): o Punhos de Adamante no desarmado (p77) e o Romper Resistências no Ataque
+  Especial (p66). A RD 12 ignorando 10 é RD 2 ANTES de encontrar o dano — tirar os 10 do que a RD 12 já comeu
   zera a absorção de um golpe de 7, que é o caso que o teste prende. Os pontos saem da geral primeiro e o resto
   das RDs por tipo (`withoutIgnoredReduction`). A carta do mestre escreve "ignorando 10" na linha da RD mesmo
   quando ela não come nada, para ele saber por quê.
@@ -470,6 +471,10 @@ Mente Criminosa não são).
   (decisão do dono); no encanto, o `Name` é o id do encanto, porque a arma já é a da melhoria. Os cortes não se acumulam e o custo não desce de 1 PM, como no da magia
   (p226). A proposta cobra a carta do golpe, e a linha de ataque mostra o preço de cada degrau naquela
   arma, porque o piso tira a conta da linha reta.
+- **O acréscimo pago do impulso é um poder com `BoostAddOn`**: o Romper Resistências (p66) diz o impulso em
+  que entra, o PM a mais e os modificadores que liga. O pedido leva `BoostChoice.AddOn`, o motor soma os
+  modificadores à carta como mais um item e o PM ao `BoostPM`, e recusa o acréscimo de um poder que a ficha
+  não tem. A oferta do impulso o lista (`BoostOffer.AddOns`), e só é oferecido a quem o tem.
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
   moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é
   uma só para a mão inteira, e um bônus nela sobe a arma da outra mão. O dano, a

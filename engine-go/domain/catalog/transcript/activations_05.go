@@ -214,14 +214,6 @@ var activationsPart05 = []Activation{
 		Uses:   ptr("dia"),
 	},
 	{
-		ID:     "class.guerreiro.romper-resistencias",
-		Name:   "Romper Resistências",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
-		Uses:   nil,
-	},
-	{
 		ID:     "class.guerreiro.solidez",
 		Name:   "Solidez",
 		Kind:   "passive",
