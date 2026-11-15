@@ -21,6 +21,14 @@ package engine
 //
 // PV e PM ficam de fora: o `scale` por atributo deles é do `ComputeVitals`, que
 // o avalia com a conta própria dos vitais.
+//
+// A DEFESA DO ESCUDO tem a mesma forma, e por isso mora na mesma passada. A
+// Solidez soma "o bônus na Defesa recebido pelo escudo em testes de resistência"
+// (p55, p66), e esse bônus é o do ITEM resolvido — o escudo, e a melhoria e o
+// encanto postos nele ("o bônus na Defesa ... do item aumenta em 1", p165); o
+// que está na mochila não dá nada. O número sai das parcelas da Defesa que vêm
+// de um escudo, depois da primeira passada — e a soma mira a RESISTÊNCIA, que a
+// Defesa não lê, então a segunda passada não muda o que a primeira mediu.
 
 // EffectsOf são os efeitos do personagem: todas as fontes que a coleta conhece, com os interruptores que
 // ele ligou (pelo endereço do termo ou do grupo da flag) e as somas de atributo resolvidas. É a ÚNICA
@@ -40,30 +48,40 @@ func (r *Ruleset) EffectsOf(ch Character, switches map[string]bool) ItemEffects 
 // golpe e some depois.
 func (r *Ruleset) sheetEffectsWith(ch Character, activeConditionals map[string]bool, extra []ActiveItem) ItemEffects {
 	items := append(r.ActiveItemsFor(ch), extra...)
-	plain, sums := splitAttributeSums(items)
+	plain, sums := splitSecondPassSums(items)
 	first := resolveInWorld(plain, activeConditionals)
 	if len(sums) == 0 {
 		return first
 	}
-	return resolveInWorld(append(plain, resolveAttributeSums(ch, sums, first)...), activeConditionals)
+	return resolveInWorld(append(plain, r.resolveSecondPassSums(ch, sums, first)...), activeConditionals)
 }
 
-// isAttributeSum diz se o modificador é uma soma de atributo que a ficha
-// resolve — e não a escala de um vital, que é do `ComputeVitals`.
-func isAttributeSum(m Modifier) bool {
-	if m.Scale == nil || m.Scale.Per != "attribute" {
+// shieldDefenseScale é a escala da Solidez: o modificador vale o que o escudo empunhado dá à Defesa.
+const shieldDefenseScale = "shieldDefense"
+
+// isSecondPassSum diz se o modificador é uma soma que a ficha resolve na
+// segunda passada — a de atributo, que não seja a escala de um vital (essa é do
+// `ComputeVitals`), ou a da Defesa do escudo.
+func isSecondPassSum(m Modifier) bool {
+	if m.Scale == nil {
 		return false
 	}
-	return m.Target.K != "maxPv" && m.Target.K != "maxPm" && m.Target.K != "attribute"
+	switch m.Scale.Per {
+	case "attribute":
+		return m.Target.K != "maxPv" && m.Target.K != "maxPm" && m.Target.K != "attribute"
+	case shieldDefenseScale:
+		return true
+	}
+	return false
 }
 
-// splitAttributeSums separa, item a item, os modificadores que são soma de
-// atributo dos outros. O item que só tinha somas some da primeira lista.
-func splitAttributeSums(items []ActiveItem) (plain, sums []ActiveItem) {
+// splitSecondPassSums separa, item a item, os modificadores que são soma de
+// segunda passada dos outros. O item que só tinha somas some da primeira lista.
+func splitSecondPassSums(items []ActiveItem) (plain, sums []ActiveItem) {
 	for _, it := range items {
 		var rest, scaled []Modifier
 		for _, m := range it.Modifiers {
-			if isAttributeSum(m) {
+			if isSecondPassSum(m) {
 				scaled = append(scaled, m)
 			} else {
 				rest = append(rest, m)
@@ -85,14 +103,24 @@ func splitAttributeSums(items []ActiveItem) (plain, sums []ActiveItem) {
 	return plain, sums
 }
 
-// resolveAttributeSums põe em cada soma o número dela: o atributo efetivo, com
-// o teto quando o verbete o escreve.
-func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) []ActiveItem {
+// resolveSecondPassSums põe em cada soma o número dela: o atributo efetivo, com
+// o teto quando o verbete o escreve, ou a Defesa do escudo empunhado. A soma
+// do escudo que dá zero — não há escudo na mão — sai, em vez de virar uma linha
+// "+0" na conta da resistência.
+func (r *Ruleset) resolveSecondPassSums(ch Character, sums []ActiveItem, effects ItemEffects) []ActiveItem {
 	out := make([]ActiveItem, len(sums))
 	for i, it := range sums {
 		resolved := it
-		resolved.Modifiers = make([]Modifier, len(it.Modifiers))
-		for j, m := range it.Modifiers {
+		resolved.Modifiers = make([]Modifier, 0, len(it.Modifiers))
+		for _, m := range it.Modifiers {
+			if m.Scale.Per == shieldDefenseScale {
+				m.Amount *= r.wieldedShieldDefense(ch, effects)
+				m.Scale = nil
+				if m.Amount != 0 {
+					resolved.Modifiers = append(resolved.Modifiers, m)
+				}
+				continue
+			}
 			amount := effectiveAttribute(ch, m.Scale.Attribute, effects)
 			if m.Scale.Cap == "classLevel" {
 				amount = min(amount, m.classLevel)
@@ -104,11 +132,34 @@ func resolveAttributeSums(ch Character, sums []ActiveItem, effects ItemEffects) 
 			}
 			m.Amount = amount + m.Scale.plus
 			m.Scale = nil
-			resolved.Modifiers[j] = m
+			resolved.Modifiers = append(resolved.Modifiers, m)
 		}
 		out[i] = resolved
 	}
 	return out
+}
+
+// wieldedShieldDefense é o que os escudos em uso põem na Defesa, pelas parcelas
+// que sobreviveram ao empilhamento. A parcela se reconhece pelo verbete de onde
+// veio (`SourceID`): a do escudo, a da melhoria e a do encanto postos nele
+// chegam todas com o id do escudo.
+func (r *Ruleset) wieldedShieldDefense(ch Character, effects ItemEffects) int {
+	shields := map[string]bool{}
+	for _, it := range ch.Items {
+		if it.Equipped == nil || it.CatalogID == nil {
+			continue
+		}
+		if catalog := r.getCatalogItem(*it.CatalogID); catalog != nil && catalog.Category == "shield" {
+			shields[*it.CatalogID] = true
+		}
+	}
+	total := 0
+	for _, c := range StatFor(effects, ModifierTarget{K: "defense"}).Contributions {
+		if shields[c.SourceID] {
+			total += c.Amount
+		}
+	}
+	return total
 }
 
 // HandsNotFreeFlag diz que as mãos NÃO estão como o Estilo de Uma Arma pede: "uma arma corpo a corpo em uma

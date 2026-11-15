@@ -107,7 +107,7 @@ type VitalScale struct {
 	// Cap é o TETO de um `per: attribute`: `classLevel` limita o atributo ao
 	// nível na classe que concede o poder (p226, "Limites de Nível"). Vazio é
 	// sem teto — a p226 diz que ALGUMAS habilidades são limitadas, e só as que
-	// o escrevem. Ver `resolveAttributeSums`.
+	// o escrevem. Ver `resolveSecondPassSums`.
 	Cap string `json:"cap,omitempty"`
 	// Min e RepeatBonus: ver o `ModifierScale` do catálogo (p50). O `plus` é o
 	// que as repetições somaram, posto na expansão da escolha.

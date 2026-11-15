@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 5 de 14 de `ClassPowers` (class_powers.go).
+// Parte 5 de 16 de `ClassPowers` (class_powers.go).
 var classPowersPart05 = []ClassPower{
 	{
 		ID:          "class.cacador.ambidestria",

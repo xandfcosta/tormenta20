@@ -22,6 +22,8 @@ import (
 var knownScales = map[string]bool{
 	"flat": true, "level": true, "levelStep": true, "attribute": true,
 	"patamar": true,
+	// A Defesa do escudo empunhado (a Solidez): quem a lê é a segunda passada do `EffectsOf`.
+	"shieldDefense": true,
 }
 
 func TestNoCatalogScaleIsOneTheEngineCannotRead(t *testing.T) {
