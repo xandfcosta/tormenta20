@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 8 de 11 de `Activations` (activations.go).
+// Parte 8 de 12 de `Activations` (activations.go).
 var activationsPart08 = []Activation{
 	{
 		ID:       "class.paladino.julgamento-zelo",
@@ -95,7 +95,7 @@ var activationsPart08 = []Activation{
 		Kind:     "instant",
 		Action:   "movimento",
 		PMCost:   PMCost{Fixed: 1},
-		Uses:     ptr("cena"),
+		Uses:     nil,
 		BookPage: 21,
 		Grant: &ActivationGrant{
 			Kind:  "active-effect",

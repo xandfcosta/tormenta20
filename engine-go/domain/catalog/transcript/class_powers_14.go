@@ -74,12 +74,14 @@ var classPowersPart14 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.vingador-sagrado",
+		Modeled:        []string{"o voo 18m e a RD 20 até o fim da cena, pelo gesto de 10 PM"},
 		ClassName:      "Paladino",
 		Name:           "Vingador Sagrado",
 		Description:    "Capstone: ação completa + 10 PM. Cobre-se de energia divina, assume forma de vingador sagrado até fim cena. Deslocamento de voo 18m e RD 20. Golpe Divino custa metade e causa +2 dados de dano.",
 		GrantedAtLevel: 20,
 		BookPage:       84,
 		UID:            "pwr_rafdglc4h7",
+		Unmodeled:      "o Golpe Divino pela metade do custo e com dois dados a mais na forma de vingador (ALE-652)",
 	},
 	{
 		ID:          "class.paladino.arma-sagrada",

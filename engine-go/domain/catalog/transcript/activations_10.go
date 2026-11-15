@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 10 de 11 de `Activations` (activations.go).
+// Parte 10 de 12 de `Activations` (activations.go).
 var activationsPart10 = []Activation{
 	{
 		ID:     "deus.lin-wu.coragem-total",
