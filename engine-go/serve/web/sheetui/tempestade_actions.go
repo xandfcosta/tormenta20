@@ -96,3 +96,14 @@ func dialogOpens(roll actionRoll) string {
 	}
 	return useResets
 }
+
+// rowPicksATarget diz que a linha tem um gesto que pede alvo: é ela que o painel das ações no tabuleiro mostra
+// (ALE-660), e as outras ficam na aba Ações.
+func rowPicksATarget(row actionRow) bool {
+	for _, roll := range row.Rolls {
+		if roll.NeedsTarget {
+			return true
+		}
+	}
+	return false
+}

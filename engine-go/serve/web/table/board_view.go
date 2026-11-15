@@ -207,6 +207,10 @@ type boardToken struct {
 	// Hidden é a peça que o mestre escondeu da mesa. Ela só existe na view dele:
 	// o `BoardForRole` já a tirou da do jogador.
 	Hidden bool
+	// PicksTarget: tocar nesta peça escolhe o alvo da vez do JOGADOR, e Reach é a
+	// distância até ela, em frase (`board_target.go`, ALE-660).
+	PicksTarget bool
+	Reach       string
 	// IsObject desenha a peça QUADRADA em vez de redonda: redondo é criatura em
 	// toda mesa de VTT, e uma porta redonda pede tradução.
 	//
@@ -328,6 +332,7 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, health map[s
 	// segundo alvo em cima do primeiro.
 	v.Ghost = dropWasWhereLandsToken(v.Tokens, v.Movement, v.GM)
 	v.DragsToken = v.MoveTarget
+	picksTargets(&v, b, st, mine)
 	return v
 }
 

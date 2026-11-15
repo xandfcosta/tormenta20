@@ -189,6 +189,8 @@ func tableSignalsExpr(revision string) string {
 		"extra_unarmed: false, impulsive_strike: false",
 		// A MANOBRA EM SEGUIDA: o poder dela que a decisão do mestre abriu (ALE-651, ALE-659).
 		"follow_up_open: ''",
+		// O PAINEL DAS AÇÕES NO TABULEIRO, que o toque na peça do alvo abre (ALE-660).
+		"board_panel: false",
 		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
 		// diálogo da perícia também é desenhado dentro da Mesa.
 		sheetui.ExpertiseSpendsDeclaration(),

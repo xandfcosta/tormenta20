@@ -5133,6 +5133,83 @@
     position: absolute;
     z-index: 7;
   }
+  /* O PAINEL DAS AÇÕES NO TABULEIRO (ALE-660, mockup aprovado). A superfície Ações
+   * do jogador, no tabuleiro, flutua por cima do mapa e mostra só as linhas que
+   * pedem alvo; o cabeçalho (contra quem, a que distância) mora no tabuleiro,
+   * logo acima dela, e os dois se leem como uma peça só. No celular é uma folha
+   * que sobe de baixo, deixando o alvo à vista em cima; no desktop, um painel à
+   * direita, abaixo do enquadrar. A camada fica abaixo da carta do ataque (40),
+   * que é o que a mesa tem de decidir agora. */
+  .ds-board-panel,
+  .ds-board-target-head {
+    --ds-board-panel-head: 4.5rem;
+    position: fixed;
+    z-index: 30;
+    border: 1px solid var(--ds-line-strong);
+    background: var(--ds-bg);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+  }
+  .ds-board-panel {
+    left: 0;
+    right: 0;
+    bottom: calc(3.5rem + env(safe-area-inset-bottom));
+    height: 52vh;
+    border-top: 0;
+  }
+  .ds-board-target-head {
+    left: 0;
+    right: 0;
+    bottom: calc(3.5rem + env(safe-area-inset-bottom) + 52vh);
+    height: var(--ds-board-panel-head);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 0;
+    border-radius: var(--ds-r-surface) var(--ds-r-surface) 0 0;
+    color: var(--ds-ink);
+    font-family: var(--font-ds);
+  }
+  .ds-board-target-who {
+    min-width: 0;
+  }
+  .ds-board-target-name {
+    overflow: hidden;
+    font-size: var(--ds-t-lg);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ds-board-panel > .ds-target,
+  .ds-board-panel .ds-turn-action:not([data-targets]),
+  .ds-board-panel .ds-action-group:not(:has([data-targets])),
+  .ds-board-panel details.ds-action-group {
+    display: none;
+  }
+  @media (min-width: 64rem) {
+    .ds-board-panel,
+    .ds-board-target-head {
+      left: auto;
+      right: 1rem;
+      width: 26rem;
+    }
+    .ds-board-target-head {
+      top: 12rem;
+      bottom: auto;
+    }
+    .ds-board-panel {
+      top: calc(12rem + var(--ds-board-panel-head));
+      bottom: auto;
+      height: auto;
+      max-height: calc(100vh - 13rem - var(--ds-board-panel-head));
+      border-radius: 0 0 var(--ds-r-surface) var(--ds-r-surface);
+    }
+    .ds-board-panel .ds-actions {
+      grid-template-columns: 1fr;
+      padding: 0.5rem 0.75rem 0.75rem;
+    }
+  }
   .ds-board-place {
     top: 0.5rem;
     left: 0.5rem;
