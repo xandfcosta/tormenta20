@@ -46,6 +46,11 @@ templ tempestadeActionsBody(v View) {
 						@actionRowDs(v, group, row)
 					}
 				}
+				for _, row := range group.Rows {
+					if row.Sheet != nil {
+						@rollSheetDs(v, group, *row.Sheet)
+					}
+				}
 			</section>
 		}
 		// AS PASSIVAS, listadas e recolhidas: não há gesto a fazer com elas, mas
@@ -164,7 +169,7 @@ templ handTotalDs(v View, group actionGroup, hand handTotal, name string) {
 // O `after` roda depois de mandar o gesto — o ataque zera o impulso escolhido.
 templ actionRollDs(v View, group actionGroup, roll actionRoll, look ds.ButtonVariant, after string) {
 	if roll.Dialog != "" {
-		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"commandfor": roll.Dialog, "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": useResets})) {
+		@ds.Button(look, rollAttrs(v, group, roll, templ.Attributes{"commandfor": roll.Dialog, "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": dialogOpens(roll)})) {
 			{ roll.Label }
 		}
 	} else {
@@ -202,5 +207,31 @@ templ chipFigure(chip actionChip) {
 	}
 	if chip.WarnsWith != "" {
 		<span class="ds-row-meta">{ chip.WarnsWith }</span>
+	}
+}
+
+// rollSheetDs é a folha do Rolar: o que se rola, o interruptor do que se liga neste golpe e o Rolar no pé — a
+// forma dos aprimoramentos de uma magia (`spellSheet`). O Rolar espera o alvo e a abertura como o da linha.
+templ rollSheetDs(v View, group actionGroup, sheet rollSheet) {
+	@sheetDialog(v, sheet.ID, sheet.Title, rollSheetFoot(v, group, sheet)) {
+		<p class="ds-row-meta">{ sheet.Detail }</p>
+		@ds.List("Com", "") {
+			<div class="ds-row">
+				<div>
+					<div class="ds-row-title">{ sheet.Switch.Label }</div>
+					<div class="ds-row-meta">{ sheet.Switch.Detail }</div>
+				</div>
+				@ds.Switch("", false, templ.Attributes{"aria-label": sheet.Switch.Label, "data-bind:" + sheet.Switch.Signal: true})
+			</div>
+		}
+	}
+}
+
+templ rollSheetFootBody(v View, group actionGroup, sheet rollSheet) {
+	@ds.Button(ds.ButtonPrimary, rollAttrs(v, group, sheet.Roll, templ.Attributes{
+		"aria-label": "Rolar " + sheet.Title, "commandfor": sheet.ID, "command": "close",
+		"data-on:click": rollCommand(v, sheet.Roll, ""),
+	})) {
+		Rolar
 	}
 }

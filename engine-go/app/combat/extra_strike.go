@@ -49,3 +49,18 @@ func paidExtraOf(card engine.WeaponCard, power string) (engine.PaidExtraStrike, 
 	}
 	return engine.PaidExtraStrike{}, false
 }
+
+// impulsiveWeapon é a carta do Golpe Imprudente (p77): ele só existe no Golpe Relâmpago, de quem tem o poder,
+// e dá um dado a mais do mesmo tipo. A guarda aberta pousa no ✓ do mestre, como a da investida.
+func impulsiveWeapon(striker Combatant, req Request, weapon engine.WeaponCard) (engine.WeaponCard, error) {
+	if !req.Impulsive {
+		return weapon, nil
+	}
+	if !striker.StrikesImpulsively {
+		return weapon, fmt.Errorf("%s não tem o Golpe Imprudente (p77): %w", striker.Label, app.ErrRefused)
+	}
+	if paid, found := paidExtraOf(weapon, req.ExtraPower); !found || !paid.Unarmed {
+		return weapon, fmt.Errorf("o Golpe Imprudente é atacar de forma impulsiva no Golpe Relâmpago (p77): %w", app.ErrRefused)
+	}
+	return engine.ImpulsiveStrikeCard(weapon)
+}

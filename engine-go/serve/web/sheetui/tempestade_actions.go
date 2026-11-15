@@ -82,3 +82,17 @@ func chipAttrs(group actionGroup, chip actionChip, gesture templ.Attributes) tem
 	}
 	return attrs
 }
+
+// rollSheetFoot é o pé da folha do Rolar.
+func rollSheetFoot(v View, group actionGroup, sheet rollSheet) templ.Component {
+	return rollSheetFootBody(v, group, sheet)
+}
+
+// dialogOpens é o que o gesto zera ao abrir o diálogo dele: o `Before` da linha quando ela diz — a folha do
+// Golpe Relâmpago desliga o Golpe Imprudente —, e o contador de degraus quando não.
+func dialogOpens(roll actionRoll) string {
+	if roll.Before != "" {
+		return roll.Before
+	}
+	return useResets
+}

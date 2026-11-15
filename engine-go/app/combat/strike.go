@@ -64,7 +64,8 @@ type Combatant struct {
 	BoostAgainst func(engine.BoostChoice) string
 	// Nature é o que a mesa sabe do combatente como ALVO: o tipo de criatura e a raça.
 	Nature book.CreatureNature
-
+	// StrikesImpulsively diz que a ficha tem o Golpe Imprudente (p77). Falso para quem não tem ficha.
+	StrikesImpulsively bool
 	// DamageTaken é o que o corpo do combatente faz com o dano que sofre (ALE-650). Vazio para quem não tem
 	// ficha: o bloco do mestre não escreve Ossos Frágeis.
 	DamageTaken engine.DamageTaken
@@ -180,6 +181,8 @@ type Request struct {
 	// ExtraPower é o poder que paga ESTE extra — o Ataque Extra, o Golpe Relâmpago (ALE-651) —, entre os
 	// `PaidExtras` da carta. Vazio é o extra da arma natural ou do estilo.
 	ExtraPower string
+	// Impulsive é o Golpe Imprudente ligado no Golpe Relâmpago (p77): um dado a mais, e a guarda aberta.
+	Impulsive bool
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -316,6 +319,9 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		}
 	}
 	if weapon, err = chargedWeapon(striker, req, weapon); err != nil {
+		return strikeSetup{}, err
+	}
+	if weapon, err = impulsiveWeapon(striker, req, weapon); err != nil {
 		return strikeSetup{}, err
 	}
 	setup := strikeSetup{attacker: attackerEntry, striker: striker, weapon: weapon, boost: boost}

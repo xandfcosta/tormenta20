@@ -1879,7 +1879,8 @@
             "classPowers": [
               "class.lutador.bracos-calejados",
               "class.lutador.sarado",
-              "class.lutador.trincado"
+              "class.lutador.trincado",
+              "class.lutador.golpe-imprudente"
             ],
             "items": []
           }

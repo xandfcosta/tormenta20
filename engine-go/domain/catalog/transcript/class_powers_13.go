@@ -364,6 +364,5 @@ var classPowersPart13 = []ClassPower{
 		Description: "Quando usa Golpe Relâmpago, ataca de forma impulsiva. Ataques desarmados recebem dado de dano extra do mesmo tipo, mas sofre -5 Defesa.",
 		BookPage:    77,
 		UID:         "pwr_3sxxkknclq",
-		Unmodeled:   "o dado de dano a mais e o –5 na Defesa no Golpe Relâmpago: depende do ataque adicional (ALE-651)",
 	},
 }

@@ -20,7 +20,7 @@ import (
 // extraStrikeRows é o ataque extra de cada arma natural (p25), o adicional do estilo ligado (p125) e o
 // ataque pago dos poderes (o Ataque Extra, o Golpe Relâmpago, ALE-651): não gastam a vez, e esperam a
 // resposta do mestre ao golpe. A mesa escreve os sinais.
-func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
+func extraStrikeRows(combat panelCombat, boosts [][]attackBoost, impulsive bool) []actionRow {
 	rows := []actionRow{}
 	for i, weapon := range combat.Weapons {
 		var offered []attackBoost
@@ -31,7 +31,7 @@ func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
 			rows = append(rows, styleStrikeRow(i, weapon, offered))
 		}
 		for _, paid := range weapon.PaidExtras {
-			rows = append(rows, paidExtraRow(i, weapon, paid, offered))
+			rows = append(rows, paidExtraRow(i, weapon, paid, offered, impulsive))
 		}
 		natural := weapon.Natural
 		if natural == nil {
@@ -56,8 +56,9 @@ func extraStrikeRows(combat panelCombat, boosts [][]attackBoost) []actionRow {
 
 // paidExtraRow é o ataque que um poder vende depois de agredir (ALE-651): o Ataque Extra com qualquer arma
 // (p66), o Golpe Relâmpago só desarmado e depois de agredir desarmado (p76). Ele espera a abertura como o da
-// arma natural, e conta pela fonte — o poder.
-func paidExtraRow(index int, weapon weaponTile, paid engine.PaidExtraStrike, offered []attackBoost) actionRow {
+// arma natural, e conta pela fonte — o poder. Com o Golpe Imprudente (p77), o Golpe Relâmpago abre uma folha
+// com o interruptor dele antes de rolar (decisão do dono).
+func paidExtraRow(index int, weapon weaponTile, paid engine.PaidExtraStrike, offered []attackBoost, impulsive bool) actionRow {
 	detail := weapon.Damage + " · depois de agredir"
 	waits := fmt.Sprintf("!$my_turn || !$extra_open || $extra_used.includes('%s')", paid.PowerID)
 	if paid.Unarmed {
@@ -66,14 +67,32 @@ func paidExtraRow(index int, weapon weaponTile, paid engine.PaidExtraStrike, off
 	}
 	roll := actionRoll{
 		Label: "Rolar", Path: fmt.Sprintf("/acoes/ataque-pago/%d/%s", index, paid.PowerID), NeedsTarget: true, Primary: true,
-		AlsoWaits: waits,
+		AlsoWaits: waits, Before: impulsiveOff,
 	}
-	return actionRow{
+	row := actionRow{
 		Weapon: index, Boosts: offered, Doses: weapon.Doses,
 		Name: paid.Name + " · " + weapon.Name, Detail: detail, Value: weapon.Attack,
 		Cost: strconv.Itoa(paid.PM) + " PM", Can: true, Rolls: []actionRoll{roll},
 	}
+	if !paid.Unarmed || !impulsive {
+		return row
+	}
+	sheet := &rollSheet{
+		ID: fmt.Sprintf("paid-extra-%d", index), Title: paid.Name, Detail: detail, Roll: roll,
+		Switch: rollSwitch{
+			Label: "Golpe Imprudente", Signal: "impulsive_strike",
+			Detail: "um dado de dano a mais, do mesmo tipo; –5 na Defesa até o início do seu próximo turno (p77)",
+		},
+	}
+	sheet.Roll.Before = ""
+	row.Rolls[0].Dialog = sheet.ID
+	row.Sheet = sheet
+	return row
 }
+
+// impulsiveOff desliga o Golpe Imprudente antes de rolar sem a folha: um interruptor esquecido ligado não
+// pode viajar num golpe que não o mostrou.
+const impulsiveOff = "$impulsive_strike = false; "
 
 // styleStrikeRow é o ataque a mais que o estilo ligado dá (p125): não gasta a vez nem PM, e
 // espera a resposta do mestre ao golpe de agredir.

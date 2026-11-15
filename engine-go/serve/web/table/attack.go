@@ -220,17 +220,26 @@ func (st Scene) afterTheStrike(
 // voltar (p235, ALE-499). Depois do commit: o golpe cancelado não abriu a guarda
 // de ninguém. O NPC que investe não tem ficha onde a penalidade more, e a faixa a
 // diz ao mestre.
+//
+// O GOLPE IMPRUDENTE abre a dele pelo mesmo caminho (p77, ALE-651).
 func (st Scene) opensTheGuard(c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack) error {
-	if pendente == nil || pendente.Charge == "" {
+	if pendente == nil || (pendente.Charge == "" && !pendente.ImpulsiveGuard) {
 		return nil
 	}
 	attacker := entryByID(state, pendente.AttackerEntryID)
 	if attacker == nil || attacker.CharacterID == nil {
 		return nil
 	}
-	err := st.plays.OpenTheGuard(c.R.Context(), *attacker.CharacterID, pendente.Charge)
-	st.deps.CharacterChanged(*attacker.CharacterID)
-	return err
+	defer st.deps.CharacterChanged(*attacker.CharacterID)
+	if pendente.Charge != "" {
+		if err := st.plays.OpenTheGuard(c.R.Context(), *attacker.CharacterID, pendente.Charge); err != nil {
+			return err
+		}
+	}
+	if pendente.ImpulsiveGuard {
+		return st.plays.OpenTheImpulsiveGuard(c.R.Context(), *attacker.CharacterID)
+	}
+	return nil
 }
 
 // raisesTheCumulativeBonus sobe o bônus de cena de quem ATACOU, quando o golpe

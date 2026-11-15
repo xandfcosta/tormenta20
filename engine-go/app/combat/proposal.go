@@ -45,6 +45,7 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 	}
 	if paid, found := paidExtraOf(setup.weapon, req.ExtraPower); req.ExtraStrike && found {
 		pending.ExtraOf, pending.ExtraLimit, pending.ExtraNeedsUnarmed = paid.PowerID, 1, paid.Unarmed
+		pending.ImpulsiveGuard = req.Impulsive
 	}
 	// A INVESTIDA É OUTRA AÇÃO (p235), e o extra não é a ação agredir.
 	pending.OpensExtra = req.Charge == "" && !req.ExtraStrike

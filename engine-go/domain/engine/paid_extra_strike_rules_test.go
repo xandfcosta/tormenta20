@@ -42,3 +42,24 @@ func TestThePaidExtraStrikeRidesTheCardsItReaches(t *testing.T) {
 		t.Errorf("o Golpe Relâmpago é desarmado, e a adaga veio com %+v", got["adaga"])
 	}
 }
+
+// O GOLPE IMPRUDENTE no Golpe Relâmpago: "seus ataques desarmados recebem um dado de dano extra do mesmo tipo
+// (por exemplo, se o seu dano é 2d6, você causa 3d6), mas você sofre –5 na Defesa até o início de seu próximo
+// turno" (p77). O dado é "extra", e dado extra não multiplica no crítico (p231).
+func TestTheImpulsiveStrikeAddsOneDieOfTheSameKind(t *testing.T) {
+	card := WeaponCard{Name: UnarmedName, Damage: "1d8", DamageType: "impacto"}
+	got, err := ImpulsiveStrikeCard(card)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []ExtraDamage{{Dice: "1d8", Type: "impacto"}}
+	if !reflect.DeepEqual(got.ExtraDamage, want) {
+		t.Errorf("o Golpe Imprudente deu %+v, e o livro dá um d8 a mais do mesmo tipo", got.ExtraDamage)
+	}
+	if len(card.ExtraDamage) != 0 {
+		t.Errorf("o Golpe Imprudente mexeu na carta de origem: %+v", card.ExtraDamage)
+	}
+	if mods := ImpulsiveStrikeGuardModifiers(); len(mods) != 1 || mods[0].Amount != -5 || mods[0].Target.K != "defense" {
+		t.Errorf("a guarda do Golpe Imprudente é –5 na Defesa, e veio %+v", mods)
+	}
+}

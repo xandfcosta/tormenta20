@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -87,7 +88,48 @@ func TestTheLightningStrikeFollowsAnUnarmedStrike(t *testing.T) {
 	}
 }
 
-// AS AÇÕES OFERECEM O ATAQUE PAGO, e a linha espera a abertura como a do extra da arma natural.
+// O GOLPE IMPRUDENTE no Golpe Relâmpago: um dado a mais do mesmo tipo, e –5 na Defesa até o próximo turno
+// (p77). O dado vale no golpe que sai do Golpe Relâmpago, e a guarda abre no ✓ do mestre.
+func TestTheImpulsiveStrikeAddsADieAndOpensTheGuard(t *testing.T) {
+	f, id, goblin := barbarianOnTurn(t)
+	seedClasse(t, f.s, id, "Lutador", 1)
+	seedPowerChoices(t, f.s, id, `["class.lutador.golpe-imprudente"]`, "{}")
+	unarmed := naturalIndex(t, f, "Ataque desarmado")
+	if refusal := rollsFromTheActions(t, f, id, fmt.Sprintf("atacar/%d", unarmed), goblin); refusal != "" {
+		t.Fatalf("agredir desarmado foi recusado: %q", refusal)
+	}
+	gmChecks(t, f)
+
+	if refusal := paidExtra(t, f, id, unarmed, lightningStrik, goblin, `,"impulsive_strike":true`); refusal != "" {
+		t.Fatalf("o Golpe Relâmpago imprudente foi recusado: %q", refusal)
+	}
+	if pa := pendingOf(t, f); pa == nil || pa.ExtraOf != lightningStrik {
+		t.Fatalf("o Golpe Relâmpago imprudente não virou o extra do poder: %+v", pa)
+	}
+	gmRules(t, f, "acertou")
+	pa := pendingOf(t, f)
+	if pa.DamageToRoll == nil || len(pa.DamageToRoll.Dice) != 2 || pa.DamageToRoll.Dice[1].Faces != pa.DamageToRoll.Dice[0].Faces {
+		t.Fatalf("o Golpe Imprudente pede um dado a mais do mesmo tipo, e o dano a rolar ficou %+v", pa.DamageToRoll)
+	}
+	if refusal := gmRefusal(t, f, "/ataque/dano"); refusal != "" {
+		t.Fatalf("o dano foi recusado: %q", refusal)
+	}
+	if refusal := gmRefusal(t, f, "/ataque/confirmar"); refusal != "" {
+		t.Fatalf("o ✓ foi recusado: %q", refusal)
+	}
+	var guards int
+	if err := f.s.db.QueryRowContext(context.Background(),
+		"SELECT COUNT(*) FROM active_effects WHERE characterId = ? AND catalogId = 'rule.golpe-imprudente'", id).Scan(&guards); err != nil {
+		t.Fatal(err)
+	}
+	if guards != 1 {
+		t.Errorf("o Golpe Imprudente confirmado deixou %d guardas abertas, e deixa uma (–5 na Defesa)", guards)
+	}
+}
+
+// AS AÇÕES OFERECEM O ATAQUE PAGO, e a linha espera a abertura como a do extra da arma natural. O Golpe
+// Relâmpago de quem tem o Golpe Imprudente abre uma FOLHA com o interruptor dele (decisão do dono), como os
+// aprimoramentos de uma magia.
 func TestTheActionsOfferThePaidExtraStrikes(t *testing.T) {
 	f, id, _ := barbarianOnTurn(t)
 	seedClasse(t, f.s, id, "Guerreiro", 6)
@@ -100,10 +142,11 @@ func TestTheActionsOfferThePaidExtraStrikes(t *testing.T) {
 
 	g, lutador, _ := barbarianOnTurn(t)
 	seedClasse(t, g.s, lutador, "Lutador", 1)
+	seedPowerChoices(t, g.s, lutador, `["class.lutador.golpe-imprudente"]`, "{}")
 	surface = superficieDeAcoes(t, acoesDaMesa(t, g))
-	for _, want := range []string{"Golpe Relâmpago · Ataque desarmado", "depois de agredir desarmado"} {
+	for _, want := range []string{"Golpe Relâmpago · Ataque desarmado", "depois de agredir desarmado", "Golpe Imprudente", "impulsive_strike"} {
 		if !strings.Contains(surface, want) {
-			t.Errorf("as Ações do lutador não dizem %q", want)
+			t.Errorf("as Ações do lutador imprudente não dizem %q", want)
 		}
 	}
 	if strings.Contains(surface, "Golpe Relâmpago · Machado de batalha") {
@@ -111,10 +154,11 @@ func TestTheActionsOfferThePaidExtraStrikes(t *testing.T) {
 	}
 }
 
-// A espera do agredir desarmado é sinal TIPADO, e a mesa o declara: sem a declaração ele nasce texto vazio, e
-// o golpe chegaria sem o alvo (ver o caso das Ações).
+// O interruptor do Golpe Imprudente e a espera do agredir desarmado são sinais TIPADOS, e a mesa os declara:
+// sem a declaração eles nascem texto vazio, e o golpe chegaria sem o alvo (ver o caso das Ações).
 func TestTheLightningStrikeSignalsAreDeclaredByTheTable(t *testing.T) {
 	f, lutador, _ := barbarianOnTurn(t)
 	seedClasse(t, f.s, lutador, "Lutador", 1)
-	expectTypedSignalsDeclared(t, acoesDaMesa(t, f), "$extra_unarmed")
+	seedPowerChoices(t, f.s, lutador, `["class.lutador.golpe-imprudente"]`, "{}")
+	expectTypedSignalsDeclared(t, acoesDaMesa(t, f), "$impulsive_strike", "$extra_unarmed")
 }

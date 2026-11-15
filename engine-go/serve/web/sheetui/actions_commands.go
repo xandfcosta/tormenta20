@@ -73,14 +73,15 @@ func rollsExtraStrikeOnTheTarget(otherUse bool) func(Scene, *http.Request, sqlcg
 }
 
 // rollsPaidExtraOnTheTarget rola o ataque pago que um poder dá depois de agredir — o Ataque Extra (p66), o
-// Golpe Relâmpago (p76). O PM sai junto da proposta, como o da arma natural.
+// Golpe Relâmpago (p76) —, com o Golpe Imprudente quando ele vem ligado da folha (p77). O PM sai junto da
+// proposta, como o da arma natural.
 func rollsPaidExtraOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
 	weapon, err := strconv.Atoi(chi.URLParam(r, "arma"))
 	if err != nil {
 		return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 	}
 	strike := ActionStrike{
-		Weapon: weapon, ExtraStrike: true, ExtraPower: chi.URLParam(r, "poder"),
+		Weapon: weapon, ExtraStrike: true, ExtraPower: chi.URLParam(r, "poder"), Impulsive: sig.ImpulsiveStrike,
 		Dose: chosenDose(sig, weapon), Boost: chosenBoost(sig, weapon),
 	}
 	return s.proposeOnTheTable(r, row, strike, sig)

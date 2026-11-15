@@ -459,12 +459,24 @@ func (p Plays) OpenTheGuard(ctx context.Context, characterID int64, charge strin
 	if len(mods) == 0 {
 		return nil
 	}
+	return p.writeTheGuard(ctx, characterID, engine.ChargeEffectID, mods)
+}
+
+// OpenTheImpulsiveGuard grava o –5 na Defesa que o Golpe Imprudente confirmado deixa "até o início de seu
+// próximo turno" (p77, ALE-651), pelo mesmo caminho da guarda da investida e com a chave dele: as duas são
+// guardas diferentes, e o livro não diz que uma cobre a outra.
+func (p Plays) OpenTheImpulsiveGuard(ctx context.Context, characterID int64) error {
+	return p.writeTheGuard(ctx, characterID, engine.ImpulsiveStrikeEffectID, engine.ImpulsiveStrikeGuardModifiers())
+}
+
+// writeTheGuard grava uma guarda aberta, que a volta da vez de quem a abriu expira.
+func (p Plays) writeTheGuard(ctx context.Context, characterID int64, effectID string, mods []engine.Modifier) error {
 	blob, err := json.Marshal(mods)
 	if err != nil {
-		return fmt.Errorf("escrever a guarda aberta da investida %q: %w", charge, err)
+		return fmt.Errorf("escrever a guarda aberta %q: %w", effectID, err)
 	}
 	if _, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
-		Characterid: characterID, Source: "rule", Catalogid: engine.ChargeEffectID,
+		Characterid: characterID, Source: "rule", Catalogid: effectID,
 		Scope: engine.OwnTurnScope(), Modifiers: string(blob), Createdat: dbvalue.NowISO(),
 	}); err != nil {
 		return fmt.Errorf("gravar a guarda aberta do personagem %d: %w", characterID, err)

@@ -104,9 +104,10 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed.Attributes)
 		},
-		ManaAvailable:     int(dto.ManaAvailable()),
-		ChargesRecklessly: sheet.OwnsClassPower(dto, engine.RecklessChargePowerID),
-		Stances:           stanceFlagsOf(dto),
+		ManaAvailable:      int(dto.ManaAvailable()),
+		ChargesRecklessly:  sheet.OwnsClassPower(dto, engine.RecklessChargePowerID),
+		StrikesImpulsively: sheet.OwnsClassPower(dto, engine.ImpulsiveStrikePowerID),
+		Stances:            stanceFlagsOf(dto),
 	}, nil
 }
 

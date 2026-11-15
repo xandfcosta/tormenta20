@@ -99,6 +99,21 @@ type actionRow struct {
 	ClearsDose bool
 	// Hand é o "ou rolei" da linha que rola dados de dano (a bola de fogo da Flamejante), ou nulo.
 	Hand *handTotal
+	// Sheet é a folha que o Rolar abre antes de mandar o gesto, com o interruptor do que se liga NESTE golpe —
+	// o Golpe Imprudente no Golpe Relâmpago (p77) —, como os aprimoramentos de uma magia. Nulo é rolar direto.
+	Sheet *rollSheet
+}
+
+// rollSheet é a folha do Rolar: o título, a linha do que se rola, o interruptor e o gesto do pé.
+type rollSheet struct {
+	ID, Title, Detail string
+	Switch            rollSwitch
+	Roll              actionRoll
+}
+
+// rollSwitch é um interruptor da folha, preso a um sinal booleano.
+type rollSwitch struct {
+	Label, Detail, Signal string
 }
 
 // actionRoll é um gesto de rolar que sai de uma linha.
@@ -160,7 +175,7 @@ func actionsPanelFrom(
 		engine.ActionStandard: append(standardRows(combat, melee, computed, boosts), blasts...),
 		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
-		engine.ActionFree:     append(extraStrikeRows(combat, boosts), shapeRows...),
+		engine.ActionFree:     append(extraStrikeRows(combat, boosts, ownsPower(powers, engine.ImpulsiveStrikePowerID)), shapeRows...),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {
