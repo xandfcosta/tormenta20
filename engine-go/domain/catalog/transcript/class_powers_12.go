@@ -394,6 +394,7 @@ var classPowersPart12 = []ClassPower{
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "agarrar"}, Amount: 2, BonusType: "untyped"},
 		},
+		Unmodeled:     "a criatura agarrada por ela não pode falar: é o mestre que aplica, como a condição",
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Luta"}},
 		FollowUp:      &ClassPowerFollowUp{Maneuver: "agarrar", NeedsFlag: "ataque-furtivo"},
 	},
