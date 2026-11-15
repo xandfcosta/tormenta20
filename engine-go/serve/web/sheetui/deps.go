@@ -133,10 +133,8 @@ type ActionStrike struct {
 	// Golpe Imprudente ligado nele (p77). Vazio é o extra da arma natural ou do estilo.
 	ExtraPower string
 	Impulsive  bool
-	// DeclaresFollowUp declara neste gesto a manobra em seguida que o poder dá depois dele, e TakesFollowUp é
-	// o poder da manobra em seguida que este gesto faz (ALE-651).
-	DeclaresFollowUp bool
-	TakesFollowUp    string
+	// TakesFollowUp é o poder da manobra em seguida que este gesto faz, aberta pela decisão do mestre (ALE-659).
+	TakesFollowUp string
 	// TargetEntryID é a linha da FILA mirada, e ela vem do sinal que a barra da
 	// Mesa escreve.
 	TargetEntryID string

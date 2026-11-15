@@ -133,7 +133,7 @@ func (h sheetHost) ProposeStrikeOnTable(
 			ExtraStrike:     strike.ExtraStrike,
 			ExtraPower:      strike.ExtraPower,
 			Impulsive:       strike.Impulsive,
-			FollowUp:        combat.FollowUpAsk{Declares: strike.DeclaresFollowUp, Takes: strike.TakesFollowUp},
+			TakesFollowUp:   strike.TakesFollowUp,
 			OwnsAttacker:    true,
 		})
 		return err

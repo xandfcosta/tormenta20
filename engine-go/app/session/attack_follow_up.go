@@ -6,32 +6,22 @@ import (
 	"t20engine/domain/live"
 )
 
-// A MANOBRA EM SEGUIDA (ALE-651, `engine.FollowUpManeuver`): o gesto que a declara a leva na proposta, o ✓ do
-// mestre a abre na vez, e ela sai livre — sem gastar ação —, uma por gesto declarado e contra o mesmo alvo.
-
-// opensTheFollowUp é o que o ✓ do mestre deixa: a manobra em seguida declarada no gesto, se a vez ainda é a do
-// turno em que ele nasceu. O golpe que errou não passa por aqui: o ✓ é do acerto.
-func opensTheFollowUp(s *live.SessionRuntimeState, attack live.PendingAttack) {
-	if attack.FollowUp == nil || attack.TargetEntryID == "" || !paidInThisTurn(s, attack) {
-		return
-	}
-	s.Scene.FollowUpOpen = &live.OpenFollowUp{
-		FollowUp: *attack.FollowUp, EntryID: attack.AttackerEntryID, TargetID: attack.TargetEntryID,
-	}
-}
+// A MANOBRA EM SEGUIDA (ALE-651, `engine.FollowUpManeuver`): o gesto rolado a arma na proposta, a decisão do
+// mestre sobre ele a abre na vez (`opensWhatTheRulingOpens`), e ela sai livre — sem gastar ação —, uma por gesto
+// decidido e contra o mesmo alvo.
 
 // takesTheFollowUp confere e gasta a manobra em seguida aberta, sob a trava. Ela não gasta ação.
 func takesTheFollowUp(s *live.SessionRuntimeState, attack *live.PendingAttack) error {
 	taken := attack.FollowUpOf
 	if !s.CountsRounds() || !attackerIsOnTurn(s, *attack) {
-		return fmt.Errorf("%s: a manobra em seguida é na vez de quem a declarou", taken.Name)
+		return fmt.Errorf("%s: a manobra em seguida é na vez de quem a abriu", taken.Name)
 	}
 	open := s.Scene.FollowUpOpen
 	if open == nil || open.EntryID != attack.AttackerEntryID || open.PowerID != taken.PowerID {
-		return fmt.Errorf("%s: a manobra em seguida vem depois de um gesto que a declarou nesta vez, e do ✓ do mestre a ele", taken.Name)
+		return fmt.Errorf("%s: a manobra em seguida vem %s, nesta vez", taken.Name, taken.When)
 	}
 	if open.TargetID != attack.TargetEntryID {
-		return fmt.Errorf("%s: a manobra em seguida é contra o mesmo alvo do gesto que a declarou", taken.Name)
+		return fmt.Errorf("%s: a manobra em seguida é contra o mesmo alvo do gesto que a abriu", taken.Name)
 	}
 	s.Scene.FollowUpOpen = nil
 	return nil

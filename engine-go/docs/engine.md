@@ -46,8 +46,10 @@ mão não saberia quantos dados pegar.
   o `RollAttackDamage` troca a sugestão pela decisão (`applyTheRuling`) e rola.
   Na mão, o `DiceRolledByHand` entrega os dados na mesma ordem, confere cada um
   contra as faces e o caso de uso recusa os que sobram.
-- **O ✓ exige decisão e dano** (`AttackToCommit`); a manobra não rola dano, e
-  o ✓ dela é a decisão.
+- **O ✓ exige decisão e dano** (`AttackToCommit`). A manobra não tem ✓: a
+  decisão dela é **Sucesso** ou **Falha** (`success`, `failure`,
+  `live.RuleManeuver`), e ela se encerra ali, porque não rola dano. A Falha
+  mantém a ação gasta, como o erro.
 - **O erro ENCERRA o golpe**: a ação e o PM pagos na proposta ficam pagos, e ele
   deixa o que o ✓ deixaria — guarda da investida, gatilhos cumulativos
   (`afterTheStrike`). O provisório fica com a decisão, para o
@@ -114,19 +116,24 @@ encerrada, o bônus fica até a cena acabar, ou até a próxima fúria acabar.
 declara em `NaturalWeapon`. O ataque extra delas (p25) abre com a resposta do mestre ao golpe da
 ação agredir, a manobra inclusive: a investida não é agredir, e a arma natural do golpe não é
 "outra arma" para ela mesma, mas abre as outras. Ele é outra proposta, que não gasta ação e paga o
-PM da fonte uma vez por vez (`opensTheExtraStrike`, `takesTheExtraStrike`).
+PM da fonte uma vez por vez (`takesTheExtraStrike`).
+
+**O que a decisão do mestre abre mora num lugar só** (`opensWhatTheRulingOpens`, ALE-659): o erro do golpe,
+o ✓ do acerto e o Sucesso ou a Falha da manobra chamam a mesma função, que lê a decisão gravada na proposta.
+O ataque extra abre com qualquer resposta a agredir; a manobra em seguida, com a decisão que o verbete dela
+pede. Nada que dependa de um desfecho é rolado antes dele.
 
 **O ataque pago dos poderes também** (`paid_extra_strike.go`, ALE-651): o Ataque Extra e o Golpe
 Relâmpago declaram o preço no verbete (`ClassPower.ExtraStrike`), a carta os leva em `PaidExtras`, e a
 trava da mesa conta pela fonte, que é o poder. O Golpe Relâmpago só sai depois de agredir desarmado — a
 cena guarda isso em `ExtraOpenedUnarmed`, que o "voltar a vez" devolve junto do resto do extra.
 
-**A manobra em seguida é a irmã dele** (`follow_up_maneuver.go`, ALE-651): o Lutador de Chão e a Mão na
-Boca declaram no verbete (`ClassPower.FollowUp`) a manobra livre, o gesto que a abre e o interruptor que ele
-pede. O jogador a declara antes de rolar, e a proposta a leva (`PendingAttack.FollowUp`). O ✓ do mestre a
-abre na cena (`Scene.FollowUpOpen`, `opensTheFollowUp`), e a manobra que a faz sai sem gastar ação, contra o
-mesmo alvo, pelo PM do poder (`takesTheFollowUp`). O cancelamento a devolve aberta, e o "voltar a vez"
-também.
+**A manobra em seguida é a irmã dele** (`follow_up_maneuver.go`, ALE-651, ALE-659): o Lutador de Chão e a
+Mão na Boca declaram no verbete (`ClassPower.FollowUp`) a manobra livre, o gesto que vem antes, a decisão
+dele que a abre (`On`: o acerto do golpe, o Sucesso da manobra) e o interruptor que o gesto pede. O gesto
+rolado a ARMA na proposta (`PendingAttack.FollowUps`) — é ali que o Ataque Furtivo ligado é conferido —, e a
+decisão a abre na cena (`Scene.FollowUpOpen`). A manobra que a faz sai sem gastar ação, contra o mesmo alvo,
+pelo PM do poder (`takesTheFollowUp`). O cancelamento a devolve aberta, e o "voltar a vez" também.
 
 **O ataque adicional dos estilos usa o mesmo caminho** (`offerStyleStrikes`, p125). Ele é uma
 **declaração**: o Usar do poder liga a flag dele (`book.DeclaredFlag`), o -2 vale nos dois ataques, e

@@ -108,6 +108,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		out.Duel, note = maneuverDuel(*pa)
 		out.Tally = maneuverLine(*pa)
 		out.Rows = maneuverConsequence(*pa)
+		out.Verdicts = verdictsOf(*pa)
 		// O EFEITO DA MARGEM DE 5 já está na consequência; a nota só fala
 		// sozinha no empate, que é o "outro teste" da p234.
 		if note != "" && pa.Maneuver.Margin < 5 {

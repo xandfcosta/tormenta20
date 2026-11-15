@@ -46,7 +46,7 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
 		},
 		// A MANOBRA EM SEGUIDA é livre, e não a ação agredir: ela não abre o extra nem o estilo.
-		BoostPM: setup.boost.pm, FollowUp: setup.followUp, FollowUpOf: setup.followUpOf, OpensExtra: setup.followUpOf == nil,
+		BoostPM: setup.boost.pm, FollowUps: setup.followUps, FollowUpOf: setup.followUpOf, OpensExtra: setup.followUpOf == nil,
 	}
 	if pending.OpensExtra {
 		opensTheStyle(&pending, weapon)

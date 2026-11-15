@@ -107,16 +107,17 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 		return PendingAttack{}, fmt.Errorf("só o mestre põe o dano na ficha: o seu ataque é um rascunho para a mesa ver")
 	}
 	// O GOLPE PASSA PELOS DOIS TEMPOS antes do ✓: a decisão do mestre e o dano
-	// que ela pede. A manobra não tem dano, e o ✓ dela é a decisão.
-	if attack.Maneuver == nil {
-		switch {
-		case attack.Ruling == RulingMiss:
-			return PendingAttack{}, fmt.Errorf("o mestre já disse que este ataque errou: não há dano a aplicar")
-		case attack.Ruling == "":
-			return PendingAttack{}, fmt.Errorf("decida antes se o ataque errou, acertou ou foi crítico: o dano só existe depois")
-		case !attack.DamageRolled:
-			return PendingAttack{}, fmt.Errorf("o dano ainda não foi rolado")
-		}
+	// que ela pede. A manobra não tem ✓: ela se encerra na decisão (`RuleManeuver`).
+	if attack.Maneuver != nil {
+		return PendingAttack{}, fmt.Errorf("a manobra se encerra com a decisão do mestre: Sucesso ou Falha")
+	}
+	switch {
+	case attack.Ruling == RulingMiss:
+		return PendingAttack{}, fmt.Errorf("o mestre já disse que este ataque errou: não há dano a aplicar")
+	case attack.Ruling == "":
+		return PendingAttack{}, fmt.Errorf("decida antes se o ataque errou, acertou ou foi crítico: o dano só existe depois")
+	case !attack.DamageRolled:
+		return PendingAttack{}, fmt.Errorf("o dano ainda não foi rolado")
 	}
 	// O ALVO É CONFERIDO DE NOVO: entre rolar e confirmar ele pode ter saído da
 	// fila, e o que vale é a mesa no instante em que o PV muda.
@@ -172,7 +173,7 @@ func RuleAttack(st *SessionRuntimeState, who Attacker, ruling string, toRoll *Da
 		return fmt.Errorf("quem decide se o ataque acertou é o mestre")
 	}
 	if attack.Maneuver != nil {
-		return fmt.Errorf("a manobra não rola dano: confirme ou cancele")
+		return fmt.Errorf("a manobra não rola dano, e a decisão dela é Sucesso ou Falha")
 	}
 	if attack.Ruling != "" {
 		return fmt.Errorf("o mestre já decidiu este ataque (%s)", attack.Ruling)
@@ -189,6 +190,29 @@ func RuleAttack(st *SessionRuntimeState, who Attacker, ruling string, toRoll *Da
 	default:
 		return fmt.Errorf("a decisão %q não existe: é %q, %q ou %q", ruling, RulingMiss, RulingHit, RulingCritical)
 	}
+	return nil
+}
+
+// RuleManeuver guarda a decisão do mestre sobre a manobra: Sucesso ou Falha (ALE-659). É ela que diz se o que
+// depende da manobra abre — a derrubada do Lutador de Chão vem do agarrar que venceu. A manobra não rola dano, e
+// quem a encerra logo depois é o `session.Store.RuleManeuver`.
+//
+// O ✓ que vinha antes dizia só "aceito", na vitória e na falha, e deixava o que depende dela sem saber se abria.
+func RuleManeuver(st *SessionRuntimeState, who Attacker, ruling string) error {
+	attack := st.PendingAttack
+	if attack == nil {
+		return fmt.Errorf("não há manobra na mesa para decidir")
+	}
+	if who.Role != "gm" {
+		return fmt.Errorf("quem decide se a manobra venceu é o mestre")
+	}
+	if attack.Maneuver == nil {
+		return fmt.Errorf("o golpe se decide por errou, acertou ou crítico, e não por Sucesso ou Falha")
+	}
+	if ruling != RulingSuccess && ruling != RulingFailure {
+		return fmt.Errorf("a decisão %q não existe para a manobra: é %q ou %q", ruling, RulingSuccess, RulingFailure)
+	}
+	attack.Ruling = ruling
 	return nil
 }
 

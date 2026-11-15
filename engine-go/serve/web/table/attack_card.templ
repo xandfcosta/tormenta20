@@ -53,7 +53,7 @@ templ gmAttack(v View) {
 				if v.Attack.Dose != "" {
 					<p class="ds-help">{ v.Attack.Dose }</p>
 				}
-				// A MANOBRA EM SEGUIDA DECLARADA fica à vista: o ✓ do mestre é que a abre.
+				// O QUE A DECISÃO ABRE fica à vista: é a consequência do botão que o mestre vai tocar.
 				if v.Attack.FollowUp != "" {
 					<p class="ds-help">{ v.Attack.FollowUp }</p>
 				}
@@ -75,7 +75,8 @@ templ gmAttack(v View) {
 						Detalhes
 					}
 					@ds.IconButton(ds.ButtonSecondary, "X", "Cancelar o ataque", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "cancelar")})
-					if v.Attack.Stage == stageConfirm || v.Attack.Stage == stageManeuver {
+					// A MANOBRA NÃO TEM ✓: ela se encerra no Sucesso ou na Falha, que são os veredictos acima.
+					if v.Attack.Stage == stageConfirm {
 						@ds.IconButton(ds.ButtonPrimary, "Check", "Confirmar e aplicar", templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "confirmar")})
 					}
 				</div>

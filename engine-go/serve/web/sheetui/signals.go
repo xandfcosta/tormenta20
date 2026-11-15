@@ -143,11 +143,8 @@ type Signals struct {
 	DoseWeapon *int64 `json:"dose_weapon"`
 	DoseChoice string `json:"dose_choice"`
 	// ImpulsiveStrike é o Golpe Imprudente ligado na folha do Golpe Relâmpago (p77, ALE-651).
-	ImpulsiveStrike bool `json:"impulsive_strike"`
-	// FollowUp é a manobra em seguida declarada na folha do gesto que a abre: o Lutador de Chão no agarrar
-	// (p77), a Mão na Boca no golpe com o Ataque Furtivo (p74, ALE-651).
-	FollowUp    bool   `json:"follow_up"`
-	PowerSearch string `json:"power_search"`
+	ImpulsiveStrike bool   `json:"impulsive_strike"`
+	PowerSearch     string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
 	RaceAttributes []string `json:"race_attributes"`
 	// TurnTarget é o ALVO DA VEZ, e ele é o único sinal desta cena DECLARADO

@@ -185,8 +185,9 @@ type Request struct {
 	ExtraPower string
 	// Impulsive é o Golpe Imprudente ligado no Golpe Relâmpago (p77): um dado a mais, e a guarda aberta.
 	Impulsive bool
-	// FollowUp é a manobra em seguida: a declarada neste gesto, ou a que ele faz (`follow_up.go`).
-	FollowUp FollowUpAsk
+	// TakesFollowUp é o poder da manobra em seguida que este gesto faz, aberta pela decisão do mestre sobre o
+	// gesto anterior (`follow_up.go`). Vazio é gesto comum.
+	TakesFollowUp string
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -241,7 +242,7 @@ func (s Strike) strikerFor(
 	// a mesa vê e que nunca poderia ter acontecido.
 	if attackerEntry.CharacterID != nil {
 		cost := engine.StrikeAction(req.Charge)
-		if req.ExtraStrike || req.FollowUp.Takes != "" {
+		if req.ExtraStrike || req.TakesFollowUp != "" {
 			cost = engine.ActionFree
 		}
 		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, cost); err != nil {
@@ -293,8 +294,9 @@ type strikeSetup struct {
 	target     engine.AttackTarget
 	targetID   string
 	situations []engine.SpecialSituation
-	// followUp é a manobra em seguida declarada neste gesto, e followUpOf a que ele faz.
-	followUp, followUpOf *live.FollowUp
+	// followUps são as manobras em seguida que a decisão sobre este gesto pode abrir, e followUpOf a que ele faz.
+	followUps  []live.FollowUp
+	followUpOf *live.FollowUp
 }
 
 // setUp confere quem ataca e o alvo, e monta a arma.

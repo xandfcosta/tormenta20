@@ -214,8 +214,8 @@ func TestWhatOpensTheExtraAttack(t *testing.T) {
 		if refusal := rollsFromTheActions(t, f, id, "manobra/derrubar", goblin); refusal != "" {
 			t.Fatalf("a manobra: %q", refusal)
 		}
-		if refusal := gmRefusal(t, f, "/ataque/confirmar"); refusal != "" {
-			t.Fatalf("o ✓ da manobra: %q", refusal)
+		if refusal := gmRefusal(t, f, "/ataque/julgar/falha"); refusal != "" {
+			t.Fatalf("a Falha da manobra: %q", refusal)
 		}
 		if refusal := extraStrike(t, f, id, naturalIndex(t, f, "Chifres"), goblin); refusal != "" {
 			t.Errorf("a manobra substitui o ataque do agredir, e veio %q", refusal)
