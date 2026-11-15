@@ -29,6 +29,8 @@ type RaceAbility struct {
 	// GrantsProficiency são as proficiências que a habilidade dá (o
 	// Vanguardista, armas de fogo).
 	GrantsProficiency []string `json:"grantsProficiency,omitempty"`
+	// ProficientWith é a proficiência que a habilidade dá e que o motor calcula — ver `engine.ProficiencyOf`.
+	ProficientWith []ProficiencyReach `json:"proficientWith,omitempty"`
 }
 
 type RaceAbilityVariant struct {

@@ -219,13 +219,15 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
 			{
-				ID:          "sereia-mestre-do-tridente",
-				Modeled:     []string{"o +2 no dano com azagaias, lanças e tridentes, e os itens específicos feitos deles"},
+				ID: "sereia-mestre-do-tridente",
+				Modeled: []string{
+					"o +2 no dano com azagaias, lanças e tridentes, e os itens específicos feitos deles",
+					"a proficiência com o tridente, como arma simples",
+				},
 				RaceID:      "sereia-tritao",
 				Name:        "Mestre do Tridente",
 				Description: "Para você, o tridente é uma arma simples. Você recebe +2 em rolagens de dano com azagaias, lanças e tridentes.",
 				UID:         "rac_rojbbpkrph",
-				Unmodeled:   "o tridente como arma simples: a habilidade não concede proficiência (ALE-649)",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:azagaia"}, Amount: 2, BonusType: "untyped"},
 					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:lanca"}, Amount: 2, BonusType: "untyped"},
@@ -236,6 +238,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 					},
 					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:tridente"}, Amount: 2, BonusType: "untyped"},
 				},
+				ProficientWith: []ProficiencyReach{{Weapons: []string{"tridente"}, Label: "o tridente"}},
 			},
 			{
 				ID:          "sereia-transformacao-anfibia",

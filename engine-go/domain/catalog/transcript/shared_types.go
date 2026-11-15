@@ -89,6 +89,14 @@ type Prerequisite struct {
 	Forbidden   []string `json:"forbidden,omitempty"`
 }
 
+// ProficiencyReach é o que uma concessão de proficiência alcança — ver `engine.ProficiencyReach`.
+type ProficiencyReach struct {
+	Category string   `json:"category,omitempty"`
+	Purpose  string   `json:"purpose,omitempty"`
+	Weapons  []string `json:"weapons,omitempty"`
+	Label    string   `json:"label,omitempty"`
+}
+
 type ModifierScale struct {
 	Per       string `json:"per"`
 	Attribute string `json:"attribute,omitempty"`

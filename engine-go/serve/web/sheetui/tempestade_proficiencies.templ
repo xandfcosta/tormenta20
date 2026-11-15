@@ -27,7 +27,12 @@ templ tempestadeProficiencies(v View) {
 				@ds.List(group.Title, "") {
 					for _, row := range group.Rows {
 						<div class="ds-row">
-							<span class="ds-row-title">{ row.Label }</span>
+							<span class="grid">
+								<span class="ds-row-title">{ row.Label }</span>
+								for _, note := range row.Partial {
+									<span class="ds-row-meta">{ note }</span>
+								}
+							</span>
 							if row.Origin != "" {
 								<span class="ds-locked">
 									@ui.Icon("Lock", "ds-icon")

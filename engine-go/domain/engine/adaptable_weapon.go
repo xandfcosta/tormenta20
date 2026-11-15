@@ -25,14 +25,22 @@ func weaponInTheGrip(w *WeaponStats, equipped string) *WeaponStats {
 	return &gripped
 }
 
-// HoldsProficiently diz se a pessoa sabe usar o item como ele está na mão. A exótica adaptável "pode ser
-// usada como uma arma marcial de duas mãos" (p147), então em duas mãos a marcial também serve.
-func HoldsProficiently(item *CatalogItem, equipped *string, proficiencies map[string]bool) bool {
+// Holds diz se a pessoa sabe usar o item como ele está na mão: pela categoria gravada, ou pelo que um poder
+// ou uma habilidade de raça alcança. A exótica adaptável "pode ser usada como uma arma marcial de duas mãos"
+// (p147), então em duas mãos a marcial também serve.
+//
+//	proficiency.Holds(espadaLonga, &wielded) // false sem marciais, true com o Armeiro
+func (p Proficiency) Holds(item *CatalogItem, equipped *string) bool {
 	required := requiredProficiency(item)
-	if required == "" || proficiencies[required] {
+	if required == "" || p.Saved[required] {
 		return true
 	}
-	return required == "armas-exoticas" && proficiencies["armas-marciais"] &&
+	for _, granted := range p.Granted {
+		if granted.reaches(item, required) {
+			return true
+		}
+	}
+	return required == "armas-exoticas" && p.Saved["armas-marciais"] &&
 		item.Weapon != nil && hasTrait(item.Weapon.Traits, AdaptableTrait) &&
 		equipped != nil && *equipped == "wielded2"
 }

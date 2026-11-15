@@ -155,8 +155,13 @@ func RequiredProficiency(item *CatalogItem) string { return requiredProficiency(
 
 // requiredProficiency é a tabela: a proficiência que um item exige para ser
 // usado sem penalidade, ou "" para nenhuma.
-func requiredProficiency(item *CatalogItem) string {
-	switch item.Category {
+func requiredProficiency(item *CatalogItem) string { return ProficiencyForCategory(item.Category) }
+
+// ProficiencyForCategory é a proficiência que a categoria do item pede (p142, p148), vazia quando não pede.
+//
+//	engine.ProficiencyForCategory("weapon-martial") // "armas-marciais"
+func ProficiencyForCategory(category string) string {
+	switch category {
 	case "weapon-simple":
 		return "armas-simples"
 	case "weapon-martial":

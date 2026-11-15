@@ -76,6 +76,7 @@ type RaceDefinition struct {
 
 type RaceAbility struct {
 	ID        string               `json:"id"`
+	Name      string               `json:"name"`
 	Modifiers []Modifier           `json:"modifiers"`
 	Variants  []RaceAbilityVariant `json:"variants"`
 	// Choice é a escolha da habilidade (a Deformidade, o Vanguardista, a
@@ -85,6 +86,9 @@ type RaceAbility struct {
 	// Ancestry: a habilidade só vale na ascendência escolhida (p31, ALE-505).
 	Ancestry      string         `json:"ancestry"`
 	NaturalWeapon *NaturalWeapon `json:"naturalWeapon"`
+	// ProficientWith é a proficiência que a habilidade dá: "para você, [estas armas] são armas simples"
+	// (a Tradição de Heredrimm, p20). Ver `ProficiencyOf`.
+	ProficientWith []ProficiencyReach `json:"proficientWith,omitempty"`
 }
 
 // RaceAbilityChoice é o que o motor lê da escolha de uma habilidade de raça.
@@ -181,6 +185,9 @@ type ClassPower struct {
 	// porque ele não vale na ficha: só no golpe em que o jogador o paga (ver
 	// `BoostedWeaponCards`).
 	Boost *ClassPowerBoost `json:"boost,omitempty"`
+	// ProficientWith é a proficiência que o poder dá: a categoria inteira (o Pistoleiro, p48) ou parte dela
+	// (o Armeiro, "armas marciais corpo a corpo", p68). Ver `ProficiencyOf`.
+	ProficientWith []ProficiencyReach `json:"proficientWith,omitempty"`
 	// Choice traz os NOMES das opções, para o rótulo do interruptor que a
 	// escolha cria ("no terreno: Floresta", ALE-503).
 	Choice *ClassPowerChoice `json:"choice,omitempty"`

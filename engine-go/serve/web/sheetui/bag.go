@@ -123,7 +123,7 @@ type bagFilters struct {
 // bagPanelOf monta a aba.
 func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	search, category := filters.Search, filters.Category
-	proficiencies := savedProficiencies(dto.Proficiencies)
+	proficiencies := proficiencyOfTheSheet(dto)
 	exempt := exemptionsOf(dto)
 	panel := bagPanel{
 		Search:            search,

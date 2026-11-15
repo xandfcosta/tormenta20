@@ -62,7 +62,7 @@ func (r *Ruleset) itemSystems(ch Character) []ecs.System {
 // Item sem estado de uso não entra: uma espada na mochila não modifica nada.
 func (r *Ruleset) spawnWornItems(ch Character) ecs.System {
 	return func(w *ecs.World) {
-		proficiencies := parseProficiencySet(ch.Proficiencies)
+		proficiency := r.ProficiencyOf(ch)
 		for _, it := range ch.Items {
 			if it.Equipped == nil {
 				continue
@@ -93,17 +93,17 @@ func (r *Ruleset) spawnWornItems(ch Character) ecs.System {
 				Modifiers: append([]Modifier{}, own...),
 			})
 
-			r.classifyWornItem(w, e, it, catalog, proficiencies)
+			r.classifyWornItem(w, e, it, catalog, proficiency)
 		}
 	}
 }
 
 // classifyWornItem responde, de uma vez, as perguntas que os sistemas fariam.
-func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem, catalog *CatalogItem, prof map[string]bool) {
+func (r *Ruleset) classifyWornItem(w *ecs.World, e ecs.Entity, it CharacterItem, catalog *CatalogItem, proficiency Proficiency) {
 	if catalog == nil {
 		return
 	}
-	if !HoldsProficiently(catalog, it.Equipped, prof) {
+	if !proficiency.Holds(catalog, it.Equipped) {
 		ecs.Set(w, e, Unproficient{})
 	}
 	if catalog.Weapon == nil {
