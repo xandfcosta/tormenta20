@@ -32,9 +32,12 @@ func TestThePowerProficiencyLiftsThePenaltyWhereItReaches(t *testing.T) {
 		{"o Pistoleiro com a pistola", attributeSumHero("Bucaneiro", 5, `["class.bucaneiro.pistoleiro"]`), "pistola", true},
 		{"o Armeiro com a espada longa", attributeSumHero("Inventor", 5, `["class.inventor.armeiro"]`), "espada-longa", true},
 		{"o Armeiro com o arco longo", attributeSumHero("Inventor", 5, `["class.inventor.armeiro"]`), "arco-longo", false},
-		{"a Balística com o arco longo", attributeSumHero("Inventor", 5, `["class.inventor.balistica"]`), "arco-longo", true},
-		{"a Balística com a pistola", attributeSumHero("Inventor", 5, `["class.inventor.balistica"]`), "pistola", true},
-		{"a Balística com a espada longa", attributeSumHero("Inventor", 5, `["class.inventor.balistica"]`), "espada-longa", false},
+		{"a Balística escolhendo as marciais, com o arco longo", ballistics("armas-marciais-distancia"), "arco-longo", true},
+		{"a Balística escolhendo as marciais, com a pistola", ballistics("armas-marciais-distancia"), "pistola", false},
+		{"a Balística escolhendo as de fogo, com a pistola", ballistics("armas-de-fogo"), "pistola", true},
+		{"a Balística escolhendo as de fogo, com o arco longo", ballistics("armas-de-fogo"), "arco-longo", false},
+		{"a Balística sem escolha, com a pistola", ballistics(""), "pistola", false},
+		{"a Balística com a espada longa", ballistics("armas-marciais-distancia"), "espada-longa", false},
 		{"o anão com o machado de batalha", ofRace(attributeSumHero("Inventor", 5, `[]`), "anao"), "machado-batalha", true},
 		{"o anão com o machado anão, que é exótico", ofRace(attributeSumHero("Inventor", 5, `[]`), "anao"), "machado-anao", true},
 		{"o anão com a espada longa", ofRace(attributeSumHero("Inventor", 5, `[]`), "anao"), "espada-longa", false},
@@ -53,4 +56,14 @@ func TestThePowerProficiencyLiftsThePenaltyWhereItReaches(t *testing.T) {
 			t.Errorf("%s: só com armas simples gravadas, o ataque fica %d abaixo; want %d", c.why, got, want)
 		}
 	}
+}
+
+// ballistics é um inventor com a Balística e a proficiência que ela escolhe: "armas marciais de ataque à
+// distância OU com armas de fogo" (p69) — uma das duas, escolhida no poder (decisão do dono).
+func ballistics(pick string) Character {
+	ch := attributeSumHero("Inventor", 5, `["class.inventor.balistica"]`)
+	if pick != "" {
+		ch.PowerChoices = `{"class.inventor.balistica":["` + pick + `"]}`
+	}
+	return ch
 }

@@ -95,6 +95,7 @@ type ProficiencyReach struct {
 	Purpose  string   `json:"purpose,omitempty"`
 	Weapons  []string `json:"weapons,omitempty"`
 	Label    string   `json:"label,omitempty"`
+	Option   string   `json:"option,omitempty"`
 }
 
 type ModifierScale struct {

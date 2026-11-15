@@ -308,6 +308,8 @@ templ countedChoiceDs(v View, counted countedChoice) {
 				}
 			}
 		</div>
-		<span class="ds-help">{ counted.Hint() }</span>
+		if hint := counted.Hint(); hint != "" {
+			<span class="ds-help">{ hint }</span>
+		}
 	</div>
 }

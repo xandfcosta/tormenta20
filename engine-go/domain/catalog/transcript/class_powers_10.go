@@ -306,12 +306,12 @@ var classPowersPart10 = []ClassPower{
 	{
 		ID: "class.inventor.balistica",
 		Modeled: []string{
-			"a proficiência com armas marciais de ataque à distância e com armas de fogo",
+			"a proficiência com armas marciais de ataque à distância ou com armas de fogo, a escolhida",
 			"a Inteligência no lugar da Destreza no ataque à distância com a arma empunhada, quando ela é maior",
 		},
 		ClassName:   "Inventor",
 		Name:        "Balística",
-		Description: "Proficiência com armas marciais de ataque à distância e armas de fogo. Quando usa arma de ataque à distância, soma Inteligência em vez de Destreza nos testes de ataque.",
+		Description: "Proficiência com armas marciais de ataque à distância ou com armas de fogo, à escolha. Quando usa arma de ataque à distância, soma Inteligência em vez de Destreza nos testes de ataque.",
 		BookPage:    69,
 		UID:         "pwr_zuskbji6cp",
 		Modifiers: []Modifier{
@@ -319,12 +319,26 @@ var classPowersPart10 = []ClassPower{
 		},
 		Unmodeled: "a Inteligência no lugar da Destreza no dano, com o Estilo de Disparo: o estilo soma a Destreza por escala, e trocá-la pede forma (ALE-655)",
 		ProficientWith: []ProficiencyReach{
-			{Category: "armas-marciais", Purpose: "ranged", Label: "as de ataque à distância"},
-			{Category: "armas-de-fogo"},
+			{
+				Category: "armas-marciais",
+				Purpose:  "ranged",
+				Label:    "as de ataque à distância",
+				Option:   "armas-marciais-distancia",
+			},
+			{Category: "armas-de-fogo", Option: "armas-de-fogo"},
 		},
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Pontaria"},
 			{Kind: "note", Description: "Treinado em Ofício (armeiro)"},
+		},
+		Choice: &PowerChoice{
+			Kind:  "weapon-proficiency",
+			Label: "Proficiência",
+			Options: []PowerChoiceOption{
+				{ID: "armas-marciais-distancia", Name: "Armas marciais de ataque à distância"},
+				{ID: "armas-de-fogo", Name: "Armas de fogo"},
+			},
+			Count: 1,
 		},
 	},
 	{

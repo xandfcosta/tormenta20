@@ -18,6 +18,9 @@ type ProficiencyReach struct {
 	Purpose  string   `json:"purpose,omitempty"`
 	Weapons  []string `json:"weapons,omitempty"`
 	Label    string   `json:"label,omitempty"`
+	// Option é a opção da escolha do poder que traz esta concessão: a Balística dá as marciais à distância
+	// OU as de fogo (p69), e só a escolhida vale. Vazio é a concessão sem escolha.
+	Option string `json:"option,omitempty"`
 }
 
 // Whole diz se a concessão é a categoria inteira, que o painel mostra como marcada.
@@ -64,9 +67,13 @@ func (r *Ruleset) ProficiencyOf(ch Character) Proficiency {
 	out := Proficiency{Saved: parseProficiencySet(ch.Proficiencies)}
 	chosen := parseChoiceSet(ch.ClassPowers)
 	choices := parseClassChoices(ch.ClassChoices)
+	picks := parsePowerChoices(ch.PowerChoices)
 	for _, entry := range ch.Classes {
 		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
 			for _, reach := range power.ProficientWith {
+				if reach.Option != "" && !slices.Contains(picks[power.ID], reach.Option) {
+					continue
+				}
 				out.Granted = append(out.Granted, GrantedProficiency{Source: power.Name, ProficiencyReach: reach})
 			}
 		}
