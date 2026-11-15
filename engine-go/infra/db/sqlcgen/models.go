@@ -209,6 +209,10 @@ type CharacterItemImprovementChoice struct {
 	Choice        string `json:"choice"`
 }
 
+type CharacterItemMadeByOwner struct {
+	Itemid int64 `json:"itemid"`
+}
+
 type CharacterLevelChoice struct {
 	ID          int64         `json:"id"`
 	Characterid int64         `json:"characterid"`

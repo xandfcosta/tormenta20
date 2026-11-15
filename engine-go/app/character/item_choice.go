@@ -118,6 +118,27 @@ func (p Plays) paidOnAttackWith(ctx context.Context, item sqlcgen.GetItemRow, po
 	return slices.Contains(enchants, power) && entry != nil && entry.Boost != nil, nil
 }
 
+// ToggleItemMadeByOwner liga ou desliga a marca "feita por mim" do item: o app não sabe quem fabricou a arma, e
+// o Ferreiro e o Cano Raiado valem na "arma feita por você mesmo" (p69). Quem diz é o jogador (decisão do dono).
+//
+//	plays.ToggleItemMadeByOwner(ctx, espada)
+func (p Plays) ToggleItemMadeByOwner(ctx context.Context, item sqlcgen.GetItemRow) error {
+	marked, err := p.queries.ItemsMadeByOwnerOfCharacter(ctx, item.Characterid)
+	if err != nil {
+		return fmt.Errorf("ler as marcas de feita por mim da ficha %d: %w", item.Characterid, err)
+	}
+	if slices.Contains(marked, item.ID) {
+		if err := p.queries.UnmarkItemMadeByOwner(ctx, item.ID); err != nil {
+			return fmt.Errorf("tirar a marca de feita por mim do item %d: %w", item.ID, err)
+		}
+		return nil
+	}
+	if err := p.queries.MarkItemMadeByOwner(ctx, item.ID); err != nil {
+		return fmt.Errorf("marcar o item %d como feito por quem o tem: %w", item.ID, err)
+	}
+	return nil
+}
+
 // itemEntryOf é o verbete do livro de um item da mochila, ou nil no item próprio.
 func itemEntryOf(item sqlcgen.GetItemRow) *book.Item {
 	if !item.Catalogid.Valid {

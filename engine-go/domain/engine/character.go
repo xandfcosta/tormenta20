@@ -108,7 +108,10 @@ type CharacterItem struct {
 	// preenche o modificador com `FromChoice: spell`. Fica fora do `Choice` porque o mesmo item pede as duas:
 	// um tomo hermético harmonizado tem a escola dele e a magia da melhoria.
 	ImprovementChoices map[string]string `json:"improvementChoices,omitempty"`
-	Material           *string           `json:"material"`
+	// MadeByOwner é a marca "feita por mim" da folha do item (decisão do dono): o app não sabe quem fabricou
+	// a arma, e o Ferreiro e o Cano Raiado valem na "arma feita por você mesmo" (p69).
+	MadeByOwner bool    `json:"madeByOwner,omitempty"`
+	Material    *string `json:"material"`
 	// Oversized é a arma feita para uma categoria de tamanho maior (p106). O catálogo
 	// não dá tamanho por item, então é a mochila que guarda a marca.
 	Oversized bool `json:"oversized,omitempty"`

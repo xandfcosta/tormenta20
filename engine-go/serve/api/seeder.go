@@ -139,6 +139,15 @@ func (sd Seeder) EnchantItem(ctx context.Context, itemID int64, enchants []strin
 	return sd.plays.EnchantItem(ctx, itemID, enchants, choices)
 }
 
+// ToggleItemMadeByOwner marca a arma "feita por mim" (p69), pelo caso de uso da folha do item.
+func (sd Seeder) ToggleItemMadeByOwner(ctx context.Context, itemID int64) error {
+	item, err := sd.queries.GetItem(ctx, itemID)
+	if err != nil {
+		return fmt.Errorf("ler o item %d: %w", itemID, err)
+	}
+	return sd.plays.ToggleItemMadeByOwner(ctx, item)
+}
+
 // ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
 func (sd Seeder) ToggleOversizedWeapon(ctx context.Context, itemID int64) error {
 	return sd.plays.ToggleOversizedWeapon(ctx, itemID)

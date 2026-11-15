@@ -55,8 +55,10 @@ type seedCharacter struct {
 	Spells   []seedSpell     `json:"spells"`
 	Enchants []seedEnchant   `json:"enchants"`
 	// OversizedWeapons são os `catalogId` das armas de categoria maior.
-	OversizedWeapons []string      `json:"oversizedWeapons"`
-	Overlays         []seedOverlay `json:"overlays"`
+	OversizedWeapons []string `json:"oversizedWeapons"`
+	// MadeByOwner são os `catalogId` das armas marcadas "feita por mim" (o Ferreiro e o Cano Raiado, p69).
+	MadeByOwner []string      `json:"madeByOwner"`
+	Overlays    []seedOverlay `json:"overlays"`
 	// ItemGods é o deus de um símbolo sagrado do elenco (p157), pelo mesmo gesto da Mochila.
 	ItemGods []seedItemGod `json:"itemGods"`
 	// ImprovementSpells é a magia do Harmonizado de um esotérico do elenco (p165), depois dos `overlays`.
@@ -140,6 +142,8 @@ type casaDaSeed interface {
 	EnchantItem(ctx context.Context, itemID int64, enchants []string, choices map[string]string) error
 	// ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
 	ToggleOversizedWeapon(ctx context.Context, itemID int64) error
+	// ToggleItemMadeByOwner marca a arma "feita por mim", pelo mesmo gesto da folha do item.
+	ToggleItemMadeByOwner(ctx context.Context, itemID int64) error
 	// SaveItemOverlays escreve melhoria e MATERIAL, pelo mesmo caso de uso do
 	// jogador: o material é o que anda o dado da arma (p166), e o elenco
 	// precisa dele para a mecânica existir na tela.
@@ -299,7 +303,7 @@ func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch 
 			log.Printf("personagem %d, magia %q: %v", id, sp.ID, err)
 		}
 	}
-	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 && len(ch.OversizedWeapons) == 0 && len(ch.Doses) == 0 {
+	if ch.HpFraction == nil && !ch.SceneEffect && len(ch.Enchants) == 0 && len(ch.Overlays) == 0 && len(ch.OversizedWeapons) == 0 && len(ch.MadeByOwner) == 0 && len(ch.Doses) == 0 {
 		return nil
 	}
 	return enrichLiveState(ctx, square, id, ch)
@@ -379,47 +383,14 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 	if err := applyEnchants(ctx, square, id, sheet.Items, ch.Enchants); err != nil {
 		return err
 	}
-	for _, weapon := range ch.OversizedWeapons {
-		line := lineOfCatalogItem(sheet.Items, weapon)
-		if line == 0 {
-			return fmt.Errorf("o personagem %d não tem a arma %q para marcar como de categoria maior", id, weapon)
-		}
-		if err := square.ToggleOversizedWeapon(ctx, line); err != nil {
-			return fmt.Errorf("marcar a %q do personagem %d: %w", weapon, id, err)
-		}
+	if err := markItems(ctx, square, id, sheet.Items, ch); err != nil {
+		return err
 	}
 	if err := applyOverlays(ctx, square, id, sheet.Items, ch.Overlays); err != nil {
 		return err
 	}
-	for _, want := range ch.ItemGods {
-		line := lineOfCatalogItem(sheet.Items, want.Item)
-		if line == 0 {
-			return fmt.Errorf("o personagem %d não tem o item %q para dar o deus %q: "+
-				"o `itemGods` aponta para um `create.items[].catalogId` que não está lá", id, want.Item, want.God)
-		}
-		if err := square.ChooseItemGod(ctx, line, want.God); err != nil {
-			return fmt.Errorf("dar o deus %q ao %q do personagem %d: %w", want.God, want.Item, id, err)
-		}
-	}
-	for _, want := range ch.ImprovementSpells {
-		line := lineOfCatalogItem(sheet.Items, want.Item)
-		if line == 0 {
-			return fmt.Errorf("o personagem %d não tem o item %q para dar a magia %q: "+
-				"o `improvementSpells` aponta para um `create.items[].catalogId` que não está lá", id, want.Item, want.Spell)
-		}
-		if err := square.ChooseImprovementSpell(ctx, line, want.Improvement, want.Spell); err != nil {
-			return fmt.Errorf("dar a magia %q ao %q do personagem %d: %w", want.Spell, want.Item, id, err)
-		}
-	}
-	for _, want := range ch.ImprovementAbilities {
-		line := lineOfCatalogItem(sheet.Items, want.Item)
-		if line == 0 {
-			return fmt.Errorf("o personagem %d não tem o item %q para dar a habilidade %q: "+
-				"o `improvementAbilities` aponta para um `create.items[].catalogId` que não está lá", id, want.Item, want.Ability)
-		}
-		if err := square.ChooseImprovementAbility(ctx, line, want.Improvement, want.Ability); err != nil {
-			return fmt.Errorf("dar a habilidade %q ao %q do personagem %d: %w", want.Ability, want.Item, id, err)
-		}
+	if err := chooseOnItems(ctx, square, id, sheet.Items, ch); err != nil {
+		return err
 	}
 	for _, dose := range ch.Doses {
 		item, weapon := lineOfCatalogItem(sheet.Items, dose.Item), lineOfCatalogItem(sheet.Items, dose.Weapon)

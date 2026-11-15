@@ -823,6 +823,27 @@ WHERE i.characterId IN (sqlc.slice('ids'));
 INSERT INTO character_item_choices (itemId, choice) VALUES (?, ?)
 ON CONFLICT(itemId) DO UPDATE SET choice = excluded.choice;
 
+-- name: ItemsMadeByOwnerOfCharacter :many
+-- Os itens com a marca "feita por mim" (o Ferreiro e o Cano Raiado, p69), por ficha.
+SELECT m.itemId
+FROM character_item_made_by_owner m
+JOIN character_items i ON i.id = m.itemId
+WHERE i.characterId = ?;
+
+-- name: ItemsMadeByOwnerOfCharacters :many
+-- O irmao em lote do `ItemsMadeByOwnerOfCharacter`, para o caminho que monta N fichas.
+SELECT i.characterId, m.itemId
+FROM character_item_made_by_owner m
+JOIN character_items i ON i.id = m.itemId
+WHERE i.characterId IN (sqlc.slice('ids'));
+
+-- name: MarkItemMadeByOwner :exec
+INSERT INTO character_item_made_by_owner (itemId) VALUES (?)
+ON CONFLICT(itemId) DO NOTHING;
+
+-- name: UnmarkItemMadeByOwner :exec
+DELETE FROM character_item_made_by_owner WHERE itemId = ?;
+
 -- name: ImprovementChoicesOfCharacter :many
 -- A escolha que a melhoria pede (a magia do Harmonizado), em lote por ficha,
 -- pela mesma razao dos encantos.

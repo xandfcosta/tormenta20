@@ -90,6 +90,14 @@ func Load(
 	if err != nil {
 		return dto, err
 	}
+	madeRows, err := q.ItemsMadeByOwnerOfCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	madeByOwner := map[int64]bool{}
+	for _, id := range madeRows {
+		madeByOwner[id] = true
+	}
 	improvementChoices := overlayChoices{}
 	for _, row := range improvementRows {
 		improvementChoices.add(row.Itemid, row.Improvementid, sql.NullString{String: row.Choice, Valid: true})
@@ -108,8 +116,8 @@ func Load(
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
 			Enchants: enchants[it.ID], EnchantChoices: choices[it.ID], Choice: choiceOf[it.ID],
-			ImprovementChoices: improvementChoices[it.ID],
-			Oversized:          slices.Contains(oversized, it.ID), Doses: dosesByItem[it.ID],
+			ImprovementChoices: improvementChoices[it.ID], MadeByOwner: madeByOwner[it.ID],
+			Oversized: slices.Contains(oversized, it.ID), Doses: dosesByItem[it.ID],
 		})
 	}
 

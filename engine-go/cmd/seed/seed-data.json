@@ -579,8 +579,10 @@
           ]
         },
         {
+          "madeByOwner": ["clava"],
           "create": {
             "name": "Inventor Genial Nv6",
+            "classPowers": ["class.inventor.armeiro", "class.inventor.ferreiro"],
             "races": [
               "kliren"
             ],
