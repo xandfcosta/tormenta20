@@ -57,13 +57,16 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Choice:      &PowerChoice{Kind: "trained-or-power", Label: "Perícia ou poder geral", Count: 1},
 			},
 			{
-				ID:          "osteon-natureza-esqueletica",
-				Modeled:     []string{"a visão no escuro e as imunidades aparecem como fato"},
+				ID: "osteon-natureza-esqueletica",
+				Modeled: []string{
+					"a visão no escuro e as imunidades aparecem como fato",
+					"o tipo morto-vivo na mesa: o alvo da Anticriatura e as imunidades do tipo (p228)",
+				},
 				RaceID:      "osteon",
 				Name:        "Natureza Esquelética",
 				Description: "Criatura do tipo morto-vivo. Visão no escuro e imunidade a cansaço, metabólicos, trevas e veneno. Não precisa respirar, comer ou dormir. Efeitos mágicos de cura de luz causam dano; dano de trevas recupera PV.",
 				UID:         "rac_f64irbsgi3",
-				Unmodeled:   "morto-vivo: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650); a cura de luz que fere e as trevas que curam são do mestre",
+				Unmodeled:   "a cura de luz que fere e as trevas que curam são do mestre",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "immunity", Text: "Imune a cansaço, metabólicos, trevas e veneno"},
@@ -97,13 +100,15 @@ var raceDefinitionsPart03 = []RaceDefinition{
 		AttributeBonuses: OrderedMap[int]{{"dexterity", 2}, {"charisma", 1}},
 		Abilities: []RaceAbility{
 			{
-				ID:          "medusa-cria-de-megalokk",
-				Modeled:     []string{"a visão no escuro aparece como fato"},
+				ID: "medusa-cria-de-megalokk",
+				Modeled: []string{
+					"a visão no escuro aparece como fato",
+					"o tipo monstro na mesa: o alvo da Anticriatura e as imunidades do tipo (p228)",
+				},
 				RaceID:      "medusa",
 				Name:        "Cria de Megalokk",
 				Description: "Você é uma criatura do tipo monstro e recebe visão no escuro.",
 				UID:         "rac_ma2nx5ov6h",
-				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650)",
 				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 			},
 			{
@@ -266,12 +271,13 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Modeled: []string{
 					"a visão no escuro e as imunidades aparecem como fato",
 					"descansa sempre em condição normal",
+					"o tipo construto na mesa: o alvo da Anticriatura e as imunidades do tipo (p228)",
 				},
 				RaceID:      "golem",
 				Name:        "Criatura Artificial",
 				Description: "Você é uma criatura do tipo construto. Visão no escuro e imunidade a cansaço, metabólicos e veneno. Não respira, alimenta-se ou dorme, mas não se beneficia de cura mundana ou itens de alimentação. Precisa ficar inerte 8h por dia para recarregar (descansa em condições normais sempre).",
 				UID:         "rac_enocpcdpss",
-				Unmodeled:   "construto: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650); a cura mundana que não vale é do mestre",
+				Unmodeled:   "a cura mundana que não vale é do mestre",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "immunity", Text: "Imune a cansaço, metabólicos e veneno"},
@@ -333,13 +339,16 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				NaturalWeapon: &NaturalWeapon{Name: "Mordida", Damage: "1d6", CritMult: 2, DamageType: "perfuracao", ExtraPM: 1},
 			},
 			{
-				ID:          "trog-reptiliano",
-				Modeled:     []string{"+1 na Defesa", "o +5 em Furtividade, que o jogador liga"},
+				ID: "trog-reptiliano",
+				Modeled: []string{
+					"+1 na Defesa",
+					"o +5 em Furtividade, que o jogador liga",
+					"o tipo monstro na mesa: o alvo da Anticriatura e as imunidades do tipo (p228)",
+				},
 				RaceID:      "trog",
 				Name:        "Reptiliano",
 				Description: "Criatura do tipo monstro, visão no escuro, +1 na Defesa e, se estiver sem armadura ou roupas pesadas, +5 em Furtividade.",
 				UID:         "rac_7seadwuucv",
-				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650)",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "defense"}, Amount: 1, BonusType: "untyped", Note: "Reptiliano"},
 					{

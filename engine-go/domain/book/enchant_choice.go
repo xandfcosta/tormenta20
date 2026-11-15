@@ -88,6 +88,18 @@ func TargetNatureName(chosen string, target CreatureNature) string {
 	return ChosenKindName(target.Kind)
 }
 
+// CharacterNature é o que a mesa sabe de um PERSONAGEM: a raça que a ficha guarda e o tipo de criatura dela —
+// o osteon é morto-vivo, o golem é construto (p27, p29; ALE-650). Raça que o livro não conhece fica sem tipo.
+//
+//	book.CharacterNature("osteon") // {Kind: "morto-vivo", Race: "osteon"}
+func CharacterNature(race string) CreatureNature {
+	nature := CreatureNature{Race: race}
+	if traits, found := RaceTraitsByKey()[race]; found {
+		nature.Kind = traits.Type
+	}
+	return nature
+}
+
 // CreatureNature é o que a mesa sabe de um alvo: o tipo, do bestiário e do bloco do mestre, e a raça, do
 // personagem. Vazio quando a linha não diz.
 type CreatureNature struct {

@@ -12,6 +12,7 @@ import (
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
+	"t20engine/infra/db/sqlcgen"
 )
 
 // AS CONDIÇÕES do combatente na Mesa.
@@ -111,8 +112,8 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 // refuseIfImmune recusa a condição que a criatura não pode receber (p228).
 //
 // A recusa diz QUAL tipo de efeito barrou — "imune a veneno" explica; "imune"
-// manda procurar — e quem ela alcança é só o NPC: um personagem é humanoide com
-// mente, e nenhuma das cinco cláusulas da p228 o toca.
+// manda procurar. O personagem passa pelo `refuseIfTheCharacterIsImmune`, pelo
+// tipo da raça dele.
 //
 // AS DUAS PROCEDÊNCIAS NÃO SÃO IGUAIS, e a diferença é do dado e não do desenho.
 // O VERBETE do bestiário guarda a Inteligência como ponteiro, então ele sabe
@@ -127,13 +128,32 @@ func (st Scene) refuseIfImmune(c commandCtx, entry live.InitiativeEntry, conditi
 	if !achou {
 		return nil
 	}
-	porque, imune := engine.ImmuneToCondition(
-		engine.ImmunitiesOfCreature(tipo, inteligencia), conditionTags(condition))
+	return immunityRefusal(entry.Label, engine.ImmunitiesOfCreature(tipo, inteligencia), condition)
+}
+
+// refuseIfTheCharacterIsImmune é a mesma recusa para o PERSONAGEM, pelo tipo da raça dele (ALE-650): o osteon é
+// morto-vivo e o golem é construto (p27, p29), e a p228 barra veneno, cansaço e metabolismo aos dois. A mente ele
+// tem — é personagem —, e por isso o medo e o mental entram.
+func (st Scene) refuseIfTheCharacterIsImmune(c commandCtx, row sqlcgen.Character, condition string) error {
+	races, err := st.deps.Queries().ListRacesByCharacter(c.R.Context(), row.ID)
+	if err != nil {
+		return fmt.Errorf("ler a raça da ficha %d: %w", row.ID, err)
+	}
+	if len(races) == 0 {
+		return nil
+	}
+	mind := int(row.Intelligence)
+	return immunityRefusal(row.Name, engine.ImmunitiesOfCreature(book.CharacterNature(races[0]).Kind, &mind), condition)
+}
+
+// immunityRefusal é a recusa da condição a quem é imune ao tipo de efeito dela, ou nil.
+func immunityRefusal(label string, immunities []string, condition string) error {
+	porque, imune := engine.ImmuneToCondition(immunities, conditionTags(condition))
 	if !imune {
 		return nil
 	}
 	return fmt.Errorf("%s é imune a efeitos de %s, e %s é um deles (p228)",
-		entry.Label, porque, book.ConditionName(condition))
+		label, porque, book.ConditionName(condition))
 }
 
 // creatureNatureOf devolve o TIPO e a Inteligência da criatura por trás da
@@ -184,6 +204,12 @@ func toggleSheetCondition(st Scene, c commandCtx, characterID int64, id string) 
 	row, err := st.deps.Queries().GetCharacter(c.R.Context(), characterID)
 	if err != nil {
 		return nil, fmt.Errorf("ler a ficha %d: %w", characterID, err)
+	}
+	// A IMUNIDADE só barra o que ENTRA, como na linha do NPC.
+	if !slices.Contains(sheet.UnmarshalStrings(row.Activeconditions), id) {
+		if err := st.refuseIfTheCharacterIsImmune(c, row, id); err != nil {
+			return nil, err
+		}
 	}
 	if err := st.plays.ToggleBookCondition(c.R.Context(), row, id); err != nil {
 		return nil, err

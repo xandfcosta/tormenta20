@@ -328,13 +328,15 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				UID:         "rac_oet5hty4e2",
 			},
 			{
-				ID:          "lefou-cria-da-tormenta",
-				Modeled:     []string{"a resistência contra lefeu e a Tormenta +5"},
+				ID: "lefou-cria-da-tormenta",
+				Modeled: []string{
+					"a resistência contra lefeu e a Tormenta +5",
+					"o tipo monstro na mesa: o alvo da Anticriatura e as imunidades do tipo (p228)",
+				},
 				RaceID:      "lefou",
 				Name:        "Cria da Tormenta",
 				Description: "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
 				UID:         "rac_jqrbr6pho5",
-				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650)",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "resistance"},

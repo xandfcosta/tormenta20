@@ -98,8 +98,8 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 			}
 			return ""
 		},
-		// O PERSONAGEM tem raça e não tem tipo na mesa: a ficha não guarda um.
-		Nature: book.CreatureNature{Race: primaryRace(dto)},
+		// O PERSONAGEM tem a raça e o tipo dela (o osteon é morto-vivo, ALE-650).
+		Nature: book.CharacterNature(primaryRace(dto)),
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed.Attributes)
 		},
