@@ -45,6 +45,8 @@ type View struct {
 	ExtraStrikeOpen   bool
 	ExtraStrikeBarred string
 	ExtraStrikesUsed  string
+	// ExtraUnarmed diz que o golpe que abriu o extra foi desarmado: o Golpe Relâmpago espera por ele (p76).
+	ExtraUnarmed bool
 	// ExtraStyle e ExtraStyleItem são o estilo aberto e a arma do golpe que o abriu (p125).
 	ExtraStyle     string
 	ExtraStyleItem int64
@@ -397,6 +399,7 @@ func tableViewOf(
 		ExtraStrikesUsed:  writtenExtraStrikes(st),
 		ExtraStrikeOpen:   extraStrikeIsOpen(st),
 		ExtraStrikeBarred: extraStrikeBarred(st),
+		ExtraUnarmed:      extraStrikeIsOpen(st) && st.Scene.ExtraOpenedUnarmed,
 		ExtraStyle:        extraStyle(st),
 		ExtraStyleItem:    extraStyleItem(st),
 		AimedAtLabel:      aimedAtLabel(st),

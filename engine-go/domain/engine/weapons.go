@@ -38,6 +38,11 @@ type WeaponCard struct {
 	// Style é o ataque adicional que um estilo ligado dá a esta arma (p125). Fora do fio, como o
 	// `Natural`.
 	Style *StyleStrike `json:"-"`
+	// PaidExtras são os ataques pagos que um poder dá depois de agredir — o Ataque Extra, o Golpe Relâmpago
+	// (`paid_extra_strike.go`). Fora do fio, como o `Natural`.
+	PaidExtras []PaidExtraStrike `json:"-"`
+	// Unarmed marca a carta do ataque desarmado, que é a única que o Golpe Relâmpago alcança (p76).
+	Unarmed bool `json:"-"`
 	// SwitchesDamageFreely é o ataque desarmado do Estilo Desarmado: letal ou não letal, "sem
 	// penalidades" (p128). Fora do fio, porque só o pedido de atacar o lê.
 	SwitchesDamageFreely bool `json:"-"`
@@ -182,7 +187,9 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 		}
 	}
 	r.offerStyleStrikes(ch, activeConditionals, effects, cards)
-	return append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared, activeConditionals)...)
+	cards = append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared, activeConditionals)...)
+	offerPaidExtraStrikes(cards, r.paidExtraStrikes(ch))
+	return cards
 }
 
 // cardBasis é o que toda carta da ficha divide: os bônus globais e os atributos

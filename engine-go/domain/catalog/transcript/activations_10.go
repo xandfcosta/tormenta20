@@ -437,24 +437,4 @@ var activationsPart10 = []Activation{
 		PMCost: PMCost{Fixed: 2},
 		Uses:   nil,
 	},
-	{
-		ID:     "item.encanto-caustica",
-		Name:   "Cáustica",
-		Kind:   "instant",
-		Action: "movimento",
-		PMCost: PMCost{Fixed: 2},
-		Uses:   nil,
-		Grant: &ActivationGrant{
-			Kind:  "active-effect",
-			Scope: "scene",
-			Modifiers: []Modifier{
-				{
-					Target:    ModifierTarget{Kind: "damage", DamageType: "ácido"},
-					BonusType: "untyped",
-					Note:      "Cáustica",
-					Dice:      "1d4",
-				},
-			},
-		},
-	},
 }

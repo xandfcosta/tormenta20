@@ -157,6 +157,9 @@ func takesTheExtraStrike(s *live.SessionRuntimeState, attack *live.PendingAttack
 	} else if s.Scene.ExtraStrikeBarred == attack.ExtraOf {
 		return fmt.Errorf("o ataque extra com %s pede que o golpe tenha sido com outra arma", attack.Weapon)
 	}
+	if attack.ExtraNeedsUnarmed && !s.Scene.ExtraOpenedUnarmed {
+		return fmt.Errorf("o Golpe Relâmpago vem depois de agredir com um ataque desarmado (p76), e o golpe desta vez foi armado")
+	}
 	if timesIn(s.Scene.ExtraStrikesUsed, attack.ExtraOf) >= attack.ExtraLimit {
 		return fmt.Errorf("o ataque extra com %s é uma vez por rodada", attack.Weapon)
 	}
@@ -188,6 +191,7 @@ func timesIn(used []string, entry string) int {
 func opensTheExtraStrike(s *live.SessionRuntimeState, attack live.PendingAttack) {
 	if attack.OpensExtra && paidInThisTurn(s, attack) {
 		s.Scene.ExtraStrikeEntry, s.Scene.ExtraStrikeBarred = attack.AttackerEntryID, attack.NaturalSource
+		s.Scene.ExtraOpenedUnarmed = attack.OpensUnarmed
 		s.Scene.ExtraStyle, s.Scene.ExtraStyleItem = attack.OpensStyle, attack.StyleItem
 	}
 }

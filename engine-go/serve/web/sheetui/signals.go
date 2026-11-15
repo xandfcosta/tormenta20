@@ -140,9 +140,11 @@ type Signals struct {
 	BoostSplit  string `json:"boost_split"`
 	// A dose escolhida na linha de ataque, quando a arma guarda duas diferentes. A arma
 	// vem junto pela mesma razão do impulso.
-	DoseWeapon  *int64 `json:"dose_weapon"`
-	DoseChoice  string `json:"dose_choice"`
-	PowerSearch string `json:"power_search"`
+	DoseWeapon *int64 `json:"dose_weapon"`
+	DoseChoice string `json:"dose_choice"`
+	// ImpulsiveStrike é o Golpe Imprudente ligado na folha do Golpe Relâmpago (p77, ALE-651).
+	ImpulsiveStrike bool   `json:"impulsive_strike"`
+	PowerSearch     string `json:"power_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
 	RaceAttributes []string `json:"race_attributes"`
 	// TurnTarget é o ALVO DA VEZ, e ele é o único sinal desta cena DECLARADO

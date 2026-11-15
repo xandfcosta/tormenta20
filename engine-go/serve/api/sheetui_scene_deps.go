@@ -131,6 +131,8 @@ func (h sheetHost) ProposeStrikeOnTable(
 			Dose:            strike.Dose,
 			Charge:          strike.Charge,
 			ExtraStrike:     strike.ExtraStrike,
+			ExtraPower:      strike.ExtraPower,
+			Impulsive:       strike.Impulsive,
 			OwnsAttacker:    true,
 		})
 		return err

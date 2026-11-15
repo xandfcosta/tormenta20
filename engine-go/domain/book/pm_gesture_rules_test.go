@@ -21,6 +21,9 @@ var notAGesture = map[string]string{
 	"trog-mordida":      "o ataque extra é a linha da arma natural",
 	"dentes-afiados":    "o ataque extra é a linha da arma natural",
 	"membros-extras":    "o ataque extra é a linha da arma natural",
+	// O PM do ataque pago sai com ele, na linha que a carta monta, como o da arma natural (ALE-651).
+	"class.guerreiro.ataque-extra":  "o ataque pago é a linha da carta",
+	"class.lutador.golpe-relampago": "o ataque pago é a linha da carta",
 	// o PM deles se paga no diálogo de conjurar, somado ao custo da magia (p131)
 	QuickenedSpellPower: "aprimoramento", AmplifiedSpellPower: "aprimoramento", DiscreetSpellPower: "aprimoramento",
 	// o TOTAL de PM

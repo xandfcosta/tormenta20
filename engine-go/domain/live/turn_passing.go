@@ -87,6 +87,7 @@ type TurnLeftBehind struct {
 	ExtraStrikeEntry  string   `json:"extraStrikeEntry,omitempty"`
 	ExtraStrikeBarred string   `json:"extraStrikeBarred,omitempty"`
 	ExtraStrikesUsed  []string `json:"extraStrikesUsed,omitempty"`
+	ExtraUnarmed      bool     `json:"extraUnarmed,omitempty"`
 	ExtraStyle        string   `json:"extraStyle,omitempty"`
 	ExtraStyleItem    int64    `json:"extraStyleItem,omitempty"`
 	AimedBy           string   `json:"aimedBy,omitempty"`
@@ -106,7 +107,7 @@ func leavesTheTurnBehind(st *SessionRuntimeState) {
 	st.Scene.TurnsBehind = append(st.Scene.TurnsBehind, TurnLeftBehind{
 		EntryID: st.Initiative[st.TurnIndex].ID, StandardLeft: s.StandardLeft, MovementLeft: s.MovementLeft,
 		ExtraMovementLeft: s.ExtraMovementLeft, ExtraStrikeEntry: s.ExtraStrikeEntry, ExtraStrikeBarred: s.ExtraStrikeBarred,
-		ExtraStrikesUsed: s.ExtraStrikesUsed, ExtraStyle: s.ExtraStyle, ExtraStyleItem: s.ExtraStyleItem,
+		ExtraStrikesUsed: s.ExtraStrikesUsed, ExtraUnarmed: s.ExtraOpenedUnarmed, ExtraStyle: s.ExtraStyle, ExtraStyleItem: s.ExtraStyleItem,
 		AimedBy: s.AimedBy, AimedAt: s.AimedAt,
 	})
 	if extra := len(s.TurnsBehind) - turnsKeptBehind; extra > 0 {
@@ -131,6 +132,7 @@ func takesTheTurnBack(st *SessionRuntimeState) {
 	s.TurnsBehind = slices.Clip(s.TurnsBehind[:last])
 	s.StandardLeft, s.MovementLeft, s.ExtraMovementLeft = turn.StandardLeft, turn.MovementLeft, turn.ExtraMovementLeft
 	s.ExtraStrikeEntry, s.ExtraStrikeBarred, s.ExtraStrikesUsed = turn.ExtraStrikeEntry, turn.ExtraStrikeBarred, turn.ExtraStrikesUsed
+	s.ExtraOpenedUnarmed = turn.ExtraUnarmed
 	s.ExtraStyle, s.ExtraStyleItem = turn.ExtraStyle, turn.ExtraStyleItem
 	s.AimedBy, s.AimedAt = turn.AimedBy, turn.AimedAt
 }

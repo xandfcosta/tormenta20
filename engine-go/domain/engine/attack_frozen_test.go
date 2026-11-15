@@ -56,6 +56,8 @@ func TestEveryCardFieldOutOfTheWireIsDecided(t *testing.T) {
 		"CatalogID": true, "ItemID": true, "Doses": true, "OtherUse": true, "RefusesBoost": true, "BoostPM": true, "IntBy": true, "IntDamage": true,
 		"DexBy": true, "DexDamage": true, "Natural": true, "Style": true, "SwitchesDamageFreely": true, "Improvised": true,
 		"ShootsIntoMelee": true, // este o FreezeStrike leva à parte
+		// O ataque pago e a marca do desarmado são da PROPOSTA (o PM, a abertura), e não da conta do dano.
+		"PaidExtras": true, "Unarmed": true,
 	}
 	typed := reflect.TypeOf(WeaponCard{})
 	for i := range typed.NumField() {

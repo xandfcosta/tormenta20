@@ -51,6 +51,7 @@ func (r *Ruleset) unarmedCard(ch Character, b cardBasis) WeaponCard {
 	})...)
 	card := b.card(ch, UnarmedName, w, scopes, 0, nonLethal)
 	card.SwitchesDamageFreely = parseChoiceSet(ch.ClassPowers).has["estilo-desarmado"]
+	card.Unarmed = true
 	return card
 }
 

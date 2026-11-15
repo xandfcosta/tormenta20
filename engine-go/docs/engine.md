@@ -116,6 +116,11 @@ ação agredir, a manobra inclusive: a investida não é agredir, e a arma natur
 "outra arma" para ela mesma, mas abre as outras. Ele é outra proposta, que não gasta ação e paga o
 PM da fonte uma vez por vez (`opensTheExtraStrike`, `takesTheExtraStrike`).
 
+**O ataque pago dos poderes também** (`paid_extra_strike.go`, ALE-651): o Ataque Extra e o Golpe
+Relâmpago declaram o preço no verbete (`ClassPower.ExtraStrike`), a carta os leva em `PaidExtras`, e a
+trava da mesa conta pela fonte, que é o poder. O Golpe Relâmpago só sai depois de agredir desarmado — a
+cena guarda isso em `ExtraOpenedUnarmed`, que o "voltar a vez" devolve junto do resto do extra.
+
 **O ataque adicional dos estilos usa o mesmo caminho** (`offerStyleStrikes`, p125). Ele é uma
 **declaração**: o Usar do poder liga a flag dele (`book.DeclaredFlag`), o -2 vale nos dois ataques, e
 por isso o golpe só abre o segundo se já saiu com ela ligada. A flag se desliga sozinha quando a vez
