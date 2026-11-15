@@ -65,6 +65,9 @@ type PendingAttack struct {
 	// nascer (`Paid`).
 	BoostPowerID string `json:"boostPowerId,omitempty"`
 	BoostPM      int    `json:"boostPm,omitempty"`
+	// IgnoredReduction é quanto da RD do alvo o golpe ignora — para a carta do mestre dizer por que a RD comeu
+	// menos.
+	IgnoredReduction int `json:"ignoredReduction,omitempty"`
 	// BoostHitPoints é o PV que o gasto tira de quem ataca, já rolado: o 1d8 da Tumular (p336). A proposta
 	// o cobra junto do PM, e o cancelamento devolve (decisão do dono).
 	BoostHitPoints int `json:"boostHitPoints,omitempty"`

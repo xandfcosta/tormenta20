@@ -399,6 +399,11 @@ dado daquele tipo: Ossos Frágeis, Sangue Frio), `damageImmunity` e
   `theTargetsBodyTakesIt` aplica: a imunidade come a parcela do tipo, o +1
   por dado soma ao tipo dele, e só então vem a RD. A cura pelo dano mágico não
   entra — o golpe não diz se o dano é mágico.
+- **A RD que o golpe IGNORA sai da RD, e não do que ela absorveu** (`WeaponCard.IgnoresDamageReduction`,
+  alvo `ignoresDamageReduction`): o Punhos de Adamante no desarmado (p77). A RD 12 ignorando 10 é RD 2 ANTES de encontrar o dano — tirar os 10 do que a RD 12 já comeu
+  zera a absorção de um golpe de 7, que é o caso que o teste prende. Os pontos saem da geral primeiro e o resto
+  das RDs por tipo (`withoutIgnoredReduction`). A carta do mestre escreve "ignorando 10" na linha da RD mesmo
+  quando ela não come nada, para ele saber por quê.
 - **Fora do golpe** o dano chega pela mão do mestre, sem tipo, e o app DIZ em
   vez de aplicar: a folha do combatente na mesa e a faixa da bola de fogo
   mostram ao mestre como o dano atinge aquela ficha. Só ao mestre.

@@ -125,7 +125,7 @@ func damageSystems(
 		rollTheDice(rollDie),
 		sumTheParcels(card),
 		theTargetsBodyTakesIt(target),
-		absorbWithDamageReduction(target),
+		absorbWithDamageReduction(target, card.IgnoresDamageReduction),
 	}
 }
 

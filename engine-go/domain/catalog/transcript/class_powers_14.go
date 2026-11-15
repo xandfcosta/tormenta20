@@ -49,13 +49,20 @@ var classPowersPart14 = []ClassPower{
 	},
 	{
 		ID:          "class.lutador.punhos-de-adamante",
+		Modeled:     []string{"ignorar 10 de RD no desarmado"},
 		ClassName:   "Lutador",
 		Name:        "Punhos de Adamante",
 		Description: "Ataques desarmados ignoram 10 pontos de redução de dano do alvo.",
 		BookPage:    77,
 		UID:         "pwr_3wab3xx5em",
-		Unmodeled:   "ignorar 10 de RD no desarmado: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
-		MinLevel:    8,
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "ignoresDamageReduction", Scope: "unarmed"},
+				Amount:    10,
+				BonusType: "untyped",
+			},
+		},
+		MinLevel: 8,
 	},
 	{
 		ID:          "class.lutador.rasteira",

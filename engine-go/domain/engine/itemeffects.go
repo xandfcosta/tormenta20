@@ -544,6 +544,9 @@ func targetKey(t ModifierTarget) string {
 		// não se somam: elas são ANÚNCIOS, e dois anúncios diferentes são duas
 		// linhas para o mestre ler.
 		return "announcedCondition:" + t.Name
+	case "ignoresDamageReduction":
+		// O ESCOPO NA CHAVE, como no dano: o Punhos de Adamante ignora RD só no desarmado (p77).
+		return "ignoresDamageReduction:" + t.Scope
 	case "ignoresSituation":
 		// A LINHA DA TABELA 5-3 E A ARMA NA CHAVE: a Caçadora anula três linhas (p335), e só na arma dela.
 		return "ignoresSituation:" + t.Name + ":" + t.Scope
