@@ -103,7 +103,7 @@ var classPowersPart13 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       76,
 		UID:            "pwr_wrq6v7bmzz",
-		Unmodeled:      "o ataque desarmado adicional por 1 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo (ALE-651)",
+		ExtraStrike:    &ClassPowerExtraStrike{PM: 1, Unarmed: true},
 	},
 	{
 		ID: "class.lutador.casca-grossa-con",

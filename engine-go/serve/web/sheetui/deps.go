@@ -129,6 +129,9 @@ func New(d Deps, gestures character.Plays, log *slog.Logger) Scene {
 type ActionStrike struct {
 	// ExtraStrike é o ataque extra da arma natural `Weapon` (p25).
 	ExtraStrike bool
+	// ExtraPower é o poder que paga o extra — o Ataque Extra, o Golpe Relâmpago (ALE-651). Vazio é o extra
+	// da arma natural ou do estilo.
+	ExtraPower string
 	// TargetEntryID é a linha da FILA mirada, e ela vem do sinal que a barra da
 	// Mesa escreve.
 	TargetEntryID string

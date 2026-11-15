@@ -185,6 +185,9 @@ type ClassPower struct {
 	// porque ele não vale na ficha: só no golpe em que o jogador o paga (ver
 	// `BoostedWeaponCards`).
 	Boost *ClassPowerBoost `json:"boost,omitempty"`
+	// ExtraStrike é o ataque pago que não gasta a vez (o Ataque Extra, o Golpe Relâmpago) — ver
+	// `PaidExtraStrike`.
+	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
 	// ProficientWith é a proficiência que o poder dá: a categoria inteira (o Pistoleiro, p48) ou parte dela
 	// (o Armeiro, "armas marciais corpo a corpo", p68). Ver `ProficiencyOf`.
 	ProficientWith []ProficiencyReach `json:"proficientWith,omitempty"`

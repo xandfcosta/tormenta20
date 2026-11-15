@@ -29,7 +29,7 @@ var classPowersPart09 = []ClassPower{
 		GrantedAtLevel: 6,
 		BookPage:       66,
 		UID:            "pwr_h57ulszyub",
-		Unmodeled:      "o ataque adicional por 2 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo (ALE-651)",
+		ExtraStrike:    &ClassPowerExtraStrike{PM: 2},
 	},
 	{
 		ID:             "class.guerreiro.ataque-especial-12",

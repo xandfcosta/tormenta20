@@ -114,6 +114,8 @@ type weaponTile struct {
 	// Style é o ataque adicional que um estilo ligado dá (p125), e ItemID, a linha da mochila.
 	Style  *engine.StyleStrike
 	ItemID int64
+	// PaidExtras são os ataques pagos que um poder dá depois de agredir com esta arma (ALE-651).
+	PaidExtras []engine.PaidExtraStrike
 	// Doses são as da Injeção alquímica, da mais antiga à mais nova.
 	Doses  []doseChoice
 	Skill  string
@@ -447,6 +449,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			Other:       other,
 			Natural:     card.Natural,
 			Style:       card.Style,
+			PaidExtras:  card.PaidExtras,
 			ItemID:      card.ItemID,
 			Doses:       doseChoicesOf(card.Doses),
 			Skill:       card.Skill,

@@ -3,6 +3,26 @@ package transcript
 // Parte 11 de 12 de `Activations` (activations.go).
 var activationsPart11 = []Activation{
 	{
+		ID:     "item.encanto-caustica",
+		Name:   "Cáustica",
+		Kind:   "instant",
+		Action: "movimento",
+		PMCost: PMCost{Fixed: 2},
+		Uses:   nil,
+		Grant: &ActivationGrant{
+			Kind:  "active-effect",
+			Scope: "scene",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "damage", DamageType: "ácido"},
+					BonusType: "untyped",
+					Note:      "Cáustica",
+					Dice:      "1d4",
+				},
+			},
+		},
+	},
+	{
 		ID:     "item.encanto-gelido",
 		Name:   "Gélido",
 		Kind:   "instant",
@@ -178,22 +198,6 @@ var activationsPart11 = []Activation{
 		Uses:   nil,
 	},
 	{
-		ID:     "class.guerreiro.ataque-extra",
-		Name:   "Ataque Extra",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 2},
-		Uses:   ptr("rodada"),
-	},
-	{
-		ID:     "class.lutador.golpe-relampago",
-		Name:   "Golpe Relâmpago",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
-		Uses:   nil,
-	},
-	{
 		ID:     "class.nobre.gritar-ordens",
 		Name:   "Gritar Ordens",
 		Kind:   "instant",
@@ -231,5 +235,25 @@ var activationsPart11 = []Activation{
 		Action: "reacao",
 		PMCost: PMCost{Fixed: 2},
 		Uses:   nil,
+	},
+	{
+		ID:     "class.paladino.aura-sagrada",
+		Name:   "Aura Sagrada",
+		Kind:   "instant",
+		Action: "livre",
+		PMCost: PMCost{Fixed: 1},
+		Uses:   nil,
+		Grant: &ActivationGrant{
+			Kind:  "active-effect",
+			Scope: "sustained",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "resistance"},
+					BonusType: "untyped",
+					Note:      "Aura Sagrada",
+					Scale:     &ModifierScale{Per: "attribute", Attribute: "charisma"},
+				},
+			},
+		},
 	},
 }

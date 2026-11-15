@@ -63,6 +63,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/acoes/investida/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargePlain)))
 	r.Post("/personagens/{id}/acoes/ataque-extra/{arma}", s.sheetCommand(rollsExtraStrikeOnTheTarget(false)))
 	r.Post("/personagens/{id}/acoes/ataque-extra/{arma}/outro-uso", s.sheetCommand(rollsExtraStrikeOnTheTarget(true)))
+	r.Post("/personagens/{id}/acoes/ataque-pago/{arma}/{poder}", s.sheetCommand(rollsPaidExtraOnTheTarget))
 	r.Post("/personagens/{id}/acoes/mirar", s.sheetCommand(aimsAtTheTarget))
 	r.Post("/personagens/{id}/acoes/bola-de-fogo/{item}", s.sheetCommand(firesTheBlastOnTheTarget))
 	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargeReckless)))

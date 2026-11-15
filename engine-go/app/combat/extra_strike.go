@@ -12,8 +12,15 @@ import (
 // extraStrikeOf devolve o PM do ataque extra de uma arma natural (p25): o primeiro ataque da
 // fonte paga, e o segundo das patas já está pago (p137). Se ele abriu, qual o limite e se a
 // ficha paga é conferido sob a trava, no `session.Store.ProposeAttack`. O adicional de um estilo
-// (p125) não cobra PM.
-func extraStrikeOf(state *live.SessionRuntimeState, card engine.WeaponCard) (int, error) {
+// (p125) não cobra PM, e o de um poder cobra o dele (ALE-651).
+func extraStrikeOf(state *live.SessionRuntimeState, card engine.WeaponCard, power string) (int, error) {
+	if power != "" {
+		paid, found := paidExtraOf(card, power)
+		if !found {
+			return 0, fmt.Errorf("%s não faz o ataque pago %q: %w", card.Name, power, app.ErrRefused)
+		}
+		return paid.PM, nil
+	}
 	if card.Style != nil {
 		return 0, nil
 	}
@@ -31,4 +38,14 @@ func opensTheStyle(pending *live.PendingAttack, card engine.WeaponCard) {
 	if card.Style != nil {
 		pending.OpensStyle, pending.StyleItem, pending.FullAction = card.Style.SourceID, card.ItemID, card.Style.FullAction
 	}
+}
+
+// paidExtraOf é o ataque pago desse poder entre os que a carta alcança.
+func paidExtraOf(card engine.WeaponCard, power string) (engine.PaidExtraStrike, bool) {
+	for _, paid := range card.PaidExtras {
+		if paid.PowerID == power {
+			return paid, true
+		}
+	}
+	return engine.PaidExtraStrike{}, false
 }

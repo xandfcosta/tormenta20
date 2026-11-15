@@ -38,14 +38,18 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 	}
 	if natural := setup.weapon.Natural; natural != nil {
 		pending.NaturalSource = natural.SourceID
-		if req.ExtraStrike {
+		if req.ExtraStrike && req.ExtraPower == "" {
 			pending.ExtraOf, pending.ExtraLimit = natural.SourceID, natural.ExtraAttacks
 			pending.ExtraLimb, pending.ExtraLimbLimit = natural.Limb, natural.LimbLimit
 		}
 	}
+	if paid, found := paidExtraOf(setup.weapon, req.ExtraPower); req.ExtraStrike && found {
+		pending.ExtraOf, pending.ExtraLimit, pending.ExtraNeedsUnarmed = paid.PowerID, 1, paid.Unarmed
+	}
 	// A INVESTIDA É OUTRA AÇÃO (p235), e o extra não é a ação agredir.
 	pending.OpensExtra = req.Charge == "" && !req.ExtraStrike
-	if style := setup.weapon.Style; style != nil && req.ExtraStrike {
+	pending.OpensUnarmed = pending.OpensExtra && setup.weapon.Unarmed
+	if style := setup.weapon.Style; style != nil && req.ExtraStrike && req.ExtraPower == "" {
 		pending.ExtraOf, pending.ExtraLimit, pending.ExtraIsStyle = style.SourceID, 1, true
 		pending.ExtraOtherWeapon, pending.StyleItem = style.OtherWeapon, setup.weapon.ItemID
 	} else if pending.OpensExtra {

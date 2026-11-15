@@ -20,6 +20,15 @@ type ClassPower struct {
 	GrantedByChoice *ChoiceGrant       `json:"grantedByChoice,omitempty"`
 	Degrees         *PMScaling         `json:"degrees,omitempty"`
 	Boost           *ClassPowerBoost   `json:"boost,omitempty"`
+	// ExtraStrike é o ataque pago que não gasta a vez — ver `engine.PaidExtraStrike`.
+	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
+}
+
+// ClassPowerExtraStrike é o ataque adicional que o poder vende ao agredir, por PM: o Ataque Extra (p66) com
+// qualquer arma, o Golpe Relâmpago (p76) só desarmado.
+type ClassPowerExtraStrike struct {
+	PM      int  `json:"pm"`
+	Unarmed bool `json:"unarmed,omitempty"`
 }
 
 // NaturalWeapon é a arma natural que uma habilidade ou poder dá (quadro de Ataques Desarmados

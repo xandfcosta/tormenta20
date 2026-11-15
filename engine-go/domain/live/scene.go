@@ -69,6 +69,9 @@ type Scene struct {
 	ExtraStrikeEntry  string   `json:"extraStrikeEntry,omitempty"`
 	ExtraStrikeBarred string   `json:"extraStrikeBarred,omitempty"`
 	ExtraStrikesUsed  []string `json:"extraStrikesUsed,omitempty"`
+	// ExtraOpenedUnarmed diz que o golpe que abriu o extra foi desarmado: o Golpe Relâmpago só vem depois
+	// de um assim (p76).
+	ExtraOpenedUnarmed bool `json:"extraOpenedUnarmed,omitempty"`
 	// OncePerRoundUsed são os gastos de "uma vez por rodada" já feitos, um por `linha|gasto` — o 2 PM de
 	// um encanto (p335-336). A rodada é de QUEM gastou, de uma vez dele até a próxima: a entrada sai quando
 	// a vez dessa linha começa de novo (`RefreshTurn`), e não a cada vez de qualquer um.
@@ -174,6 +177,7 @@ func RefreshTurn(st *SessionRuntimeState) {
 			func(used string) bool { return strings.HasPrefix(used, mine) })
 	}
 	st.Scene.ExtraStrikeEntry, st.Scene.ExtraStrikeBarred, st.Scene.ExtraStrikesUsed = "", "", nil
+	st.Scene.ExtraOpenedUnarmed = false
 	st.Scene.ExtraStyle, st.Scene.ExtraStyleItem = "", 0
 	st.Scene.AimedBy, st.Scene.AimedAt = "", ""
 	// A MANUTENÇÃO DA VEZ ANTERIOR SAI JUNTO: ela é o extrato deste turno, e

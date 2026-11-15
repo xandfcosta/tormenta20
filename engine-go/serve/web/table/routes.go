@@ -184,6 +184,8 @@ func tableSignalsExpr(revision string) string {
 		"extra_open: false",
 		"extra_barred: ''",
 		"extra_used: []",
+		// O GOLPE RELÂMPAGO espera o agredir desarmado (p76, ALE-651).
+		"extra_unarmed: false",
 		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
 		// diálogo da perícia também é desenhado dentro da Mesa.
 		sheetui.ExpertiseSpendsDeclaration(),

@@ -64,6 +64,7 @@ type Combatant struct {
 	BoostAgainst func(engine.BoostChoice) string
 	// Nature é o que a mesa sabe do combatente como ALVO: o tipo de criatura e a raça.
 	Nature book.CreatureNature
+
 	// DamageTaken é o que o corpo do combatente faz com o dano que sofre (ALE-650). Vazio para quem não tem
 	// ficha: o bloco do mestre não escreve Ossos Frágeis.
 	DamageTaken engine.DamageTaken
@@ -176,6 +177,9 @@ type Request struct {
 	// (p25), ou o adicional do estilo ligado (p125). Só existe depois de agredir, e quem confere é o
 	// `ProposeAttack`.
 	ExtraStrike bool
+	// ExtraPower é o poder que paga ESTE extra — o Ataque Extra, o Golpe Relâmpago (ALE-651) —, entre os
+	// `PaidExtras` da carta. Vazio é o extra da arma natural ou do estilo.
+	ExtraPower string
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -320,7 +324,7 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		if err != nil {
 			return strikeSetup{}, err
 		}
-		extraPM, err := extraStrikeOf(state, weapon)
+		extraPM, err := extraStrikeOf(state, weapon, req.ExtraPower)
 		if err != nil {
 			return strikeSetup{}, err
 		}

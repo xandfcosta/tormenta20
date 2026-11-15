@@ -95,6 +95,10 @@ type PendingAttack struct {
 	FullAction       bool   `json:"fullAction,omitempty"`
 	ExtraIsStyle     bool   `json:"extraIsStyle,omitempty"`
 	ExtraOtherWeapon bool   `json:"extraOtherWeapon,omitempty"`
+	// OpensUnarmed diz que este golpe de agredir foi DESARMADO, e ExtraNeedsUnarmed que este extra só
+	// vem depois de um assim: o Golpe Relâmpago (p76, ALE-651).
+	OpensUnarmed      bool `json:"opensUnarmed,omitempty"`
+	ExtraNeedsUnarmed bool `json:"extraNeedsUnarmed,omitempty"`
 	// Paid é o que a proposta pagou ao nascer, e é o que o cancelamento do mestre
 	// devolve. Nulo na proposta de antes desta regra, que não pagou nada.
 	Paid *AttackPaid `json:"paid,omitempty"`
