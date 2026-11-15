@@ -10,7 +10,6 @@ var classPowersPart09 = []ClassPower{
 		GrantedAtLevel: 3,
 		BookPage:       66,
 		UID:            "pwr_tnpwdbnfca",
-		Unmodeled:      "3 PM para reduzir o dano à metade: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.guerreiro.ataque-especial-8",
@@ -30,7 +29,7 @@ var classPowersPart09 = []ClassPower{
 		GrantedAtLevel: 6,
 		BookPage:       66,
 		UID:            "pwr_h57ulszyub",
-		Unmodeled:      "2 PM por um ataque adicional: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "o ataque adicional por 2 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo, sem fatia",
 	},
 	{
 		ID:             "class.guerreiro.ataque-especial-12",

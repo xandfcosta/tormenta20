@@ -103,7 +103,7 @@ var classPowersPart12 = []ClassPower{
 		GrantedAtLevel: 1,
 		BookPage:       76,
 		UID:            "pwr_wrq6v7bmzz",
-		Unmodeled:      "1 PM por um ataque desarmado adicional: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "o ataque desarmado adicional por 1 PM: o gesto cobra, e a mesa recusa o segundo Agredir na vez; o ataque que não gasta a vez só existe para arma natural e estilo, sem fatia",
 	},
 	{
 		ID: "class.lutador.casca-grossa-con",
@@ -323,7 +323,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Quando inimigo erra ataque corpo-a-corpo, recebe 2 PM temp (cumulativos). Máx = nível por cena. Desaparecem fim cena.",
 		BookPage:    76,
 		UID:         "pwr_pj36cpvnsh",
-		Unmodeled:   "PM temporários quando o inimigo erra: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "2 PM temporários quando o inimigo erra um ataque corpo a corpo: gatilho na decisão do mestre sobre o ataque do outro, sem fatia",
 		MinLevel:    8,
 	},
 	{
@@ -364,7 +364,7 @@ var classPowersPart12 = []ClassPower{
 		Description: "Quando usa Golpe Relâmpago, ataca de forma impulsiva. Ataques desarmados recebem dado de dano extra do mesmo tipo, mas sofre -5 Defesa.",
 		BookPage:    77,
 		UID:         "pwr_3sxxkknclq",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
+		Unmodeled:   "o dado de dano a mais e o –5 na Defesa no Golpe Relâmpago: depende do ataque adicional, sem fatia",
 	},
 	{
 		ID:            "class.lutador.imobilizacao",
@@ -400,7 +400,7 @@ var classPowersPart12 = []ClassPower{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "agarrar"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "maneuver", Name: "derrubar"}, Amount: 2, BonusType: "untyped"},
 		},
-		Unmodeled: "a manobra derrubar livre por 1 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled: "a manobra derrubar como ação livre por 1 PM: o gesto cobra, e a manobra continua gastando a ação padrão, sem fatia",
 	},
 	{
 		ID:          "class.lutador.nome-na-arena",

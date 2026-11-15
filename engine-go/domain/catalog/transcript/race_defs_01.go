@@ -129,11 +129,11 @@ var raceDefinitionsPart01 = []RaceDefinition{
 			},
 			{
 				ID:          "dahllan-armadura-de-allihanna",
+				Modeled:     []string{"o +2 na Defesa até o fim da cena, pelo gesto de 1 PM"},
 				RaceID:      "dahllan",
 				Name:        "Armadura de Allihanna",
 				Description: "Você pode gastar uma ação de movimento e 1 PM para transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da cena.",
 				UID:         "rac_z62ya34txk",
-				Unmodeled:   "1 PM por +2 na Defesa até o fim da cena: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 			},
 			{
 				ID:          "dahllan-empatia-selvagem",
@@ -282,7 +282,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				Name:        "Cria da Tormenta",
 				Description: "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
 				UID:         "rac_jqrbr6pho5",
-				Unmodeled:   "monstro: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "resistance"},

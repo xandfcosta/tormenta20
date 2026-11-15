@@ -4,13 +4,13 @@ package transcript
 var classPowersPart14 = []ClassPower{
 	{
 		ID:             "class.paladino.cura-pelas-maos-2d8-2-pv",
+		Modeled:        []string{"o degrau: quem paga e cura é a Cura pelas Mãos, +1 PM por +1d8+1"},
 		ClassName:      "Paladino",
 		Name:           "Cura pelas Mãos (2d8+2 PV)",
 		Description:    "Cura base sobe para 2d8+2 PV.",
 		GrantedAtLevel: 6,
 		BookPage:       82,
 		UID:            "pwr_y43e5nwihm",
-		Unmodeled:      "a cura sobe com o nível (ALE-486): é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.paladino.golpe-divino-3d8",
@@ -24,13 +24,13 @@ var classPowersPart14 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-3d8-3-pv",
+		Modeled:        []string{"o degrau: quem paga e cura é a Cura pelas Mãos, +1 PM por +1d8+1"},
 		ClassName:      "Paladino",
 		Name:           "Cura pelas Mãos (3d8+3 PV)",
 		Description:    "Cura base sobe para 3d8+3 PV.",
 		GrantedAtLevel: 10,
 		BookPage:       82,
 		UID:            "pwr_7dlb6inrjb",
-		Unmodeled:      "a cura sobe com o nível (ALE-486): é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.paladino.golpe-divino-4d8",
@@ -44,13 +44,13 @@ var classPowersPart14 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-4d8-4-pv",
+		Modeled:        []string{"o degrau: quem paga e cura é a Cura pelas Mãos, +1 PM por +1d8+1"},
 		ClassName:      "Paladino",
 		Name:           "Cura pelas Mãos (4d8+4 PV)",
 		Description:    "Cura base sobe para 4d8+4 PV.",
 		GrantedAtLevel: 14,
 		BookPage:       82,
 		UID:            "pwr_hhoxk33haa",
-		Unmodeled:      "a cura sobe com o nível (ALE-486): é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.paladino.golpe-divino-5d8",
@@ -64,13 +64,13 @@ var classPowersPart14 = []ClassPower{
 	},
 	{
 		ID:             "class.paladino.cura-pelas-maos-5d8-5-pv",
+		Modeled:        []string{"o degrau: quem paga e cura é a Cura pelas Mãos, +1 PM por +1d8+1"},
 		ClassName:      "Paladino",
 		Name:           "Cura pelas Mãos (5d8+5 PV)",
 		Description:    "Cura base sobe para 5d8+5 PV.",
 		GrantedAtLevel: 18,
 		BookPage:       82,
 		UID:            "pwr_5xl4nnzurp",
-		Unmodeled:      "a cura sobe com o nível (ALE-486): é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:             "class.paladino.vingador-sagrado",
@@ -80,7 +80,6 @@ var classPowersPart14 = []ClassPower{
 		GrantedAtLevel: 20,
 		BookPage:       84,
 		UID:            "pwr_rafdglc4h7",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.arma-sagrada",
@@ -89,7 +88,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Quando usa Golpe Divino com arma preferida da divindade, dado de dano do Golpe Divino aumenta para d12.",
 		BookPage:    82,
 		UID:         "pwr_zuax7jor6g",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
+		Unmodeled:   "o d12 no dado do Golpe Divino com a arma preferida da divindade: o impulso não troca o dado pela arma, sem fatia",
 		Prerequisites: []Prerequisite{
 			{
 				Kind:      "classChoice",
@@ -114,7 +113,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Sua aura ativa: você e aliados dentro podem rolar novamente teste de resistência contra magia recém realizado.",
 		BookPage:    82,
 		UID:         "pwr_pfmravren6",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "é do mestre enquanto a Aura Sagrada dura: o efeito é em quem está na aura",
 		MinLevel:    14,
 	},
 	{
@@ -124,7 +123,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Sua aura ativa: início de cada turno, espíritos e mortos-vivos dentro sofrem dano de luz = 5 + Carisma.",
 		BookPage:    83,
 		UID:         "pwr_55hw6ijhcz",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "é do mestre enquanto a Aura Sagrada dura: o efeito é em quem está na aura",
 		MinLevel:    10,
 	},
 	{
@@ -134,7 +133,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Sua aura ativa: início dos turnos, você e aliados a sua escolha dentro curam PV = 5 + Carisma.",
 		BookPage:    83,
 		UID:         "pwr_jbros4mc2f",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "é do mestre enquanto a Aura Sagrada dura: o efeito é em quem está na aura",
 		MinLevel:    6,
 	},
 	{
@@ -144,7 +143,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Sua aura ativa: ignora primeiro dano que sofrer na cena. Mesmo para aliados dentro da aura.",
 		BookPage:    83,
 		UID:         "pwr_z23hqdng7w",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "é do mestre enquanto a Aura Sagrada dura: o efeito é em quem está na aura",
 		MinLevel:    18,
 	},
 	{
@@ -154,7 +153,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Raio da sua aura aumenta para 30m.",
 		BookPage:    83,
 		UID:         "pwr_jcwzkxxaen",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "é do mestre: o raio da aura, que o app não mede",
 		MinLevel:    6,
 	},
 	{
@@ -164,7 +163,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Quando usa Golpe Divino, todos inimigos em alcance curto ficam ofuscados até início do próximo turno.",
 		BookPage:    83,
 		UID:         "pwr_6v6vurhfe6",
-		Unmodeled:   "é gastar PM no ataque por bônus (ALE-487)",
+		Unmodeled:   "ofuscar os inimigos em alcance curto no Golpe Divino: é do mestre, que aplica a condição nos outros",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-arrependimento",
@@ -173,7 +172,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 2 PM para marcar inimigo em alcance curto. Próxima vez que esse inimigo acertar ataque em você/aliado, Vontade CD Car ou atordoado no próximo turno dele. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_kplrgtxhlx",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-autoridade",
@@ -182,7 +180,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 1 PM para comandar criatura em alcance curto. Teste Diplomacia oposto Vontade. Vencer = criatura obedece a comando simples (uma vez/cena). Mental. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_iwnnolpfbo",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-coragem",
@@ -191,7 +188,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 2 PM para inspirar coragem em criatura em alcance curto (incluindo você). Imune a medo e +2 ataque contra inimigo com maior ND na cena. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_ni7zmsruk3",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-iluminacao",
@@ -200,7 +196,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 2 PM para marcar inimigo em alcance curto. Quando acertar ataque corpo-a-corpo nesse inimigo, recebe 2 PM temp. 1x/cena. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_upeo25avzf",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-justica",
@@ -209,7 +204,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 2 PM para marcar inimigo em alcance curto. Próxima vez que esse inimigo causar dano a você ou aliado, deve fazer teste de Vontade CD Car. Falhar = sofre dano de luz = metade do dano causado. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_rre2uzmy7k",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-libertacao",
@@ -218,7 +212,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 5 PM para cancelar uma condição negativa qualquer (abalado, paralisado etc.) afetando criatura em alcance curto. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_urlhgxzqkk",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-salvacao",
@@ -227,7 +220,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 2 PM para marcar inimigo em alcance curto. Até fim da cena, quando acertar ataque corpo-a-corpo nesse inimigo, recupera 5 PV. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_x22tqzvi7t",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-vindicacao",
@@ -236,7 +228,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 2 PM para marcar inimigo que causou dano a você/aliado. +1 ataque e +1d8 dano contra ele, mas -5 ataque contra outros. L5+: paga +1 PM para aumentar ataque em +1 e dano em +1d8. Termina se alvo inconsciente. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_hhatxgjxyz",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.julgamento-divino-zelo",
@@ -245,7 +236,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 1 PM para marcar alvo em alcance longo. Pelo restante cena, sempre que se mover em direção a esse alvo, dobra deslocamento. Julgamento.",
 		BookPage:    83,
 		UID:         "pwr_ugd2jo3may",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.orar",
@@ -289,7 +279,7 @@ var classPowersPart14 = []ClassPower{
 		Description: "Pode usar Cura pelas Mãos em alcance curto. Para cada PM gasto, cura 2d6+1 (em vez de 1d8+1).",
 		BookPage:    83,
 		UID:         "pwr_3veknkiyye",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "a Cura pelas Mãos em alcance curto e 2d6+1 por PM: o gesto da Cura ainda diz 1d8+1, sem fatia",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-humildade",
@@ -298,7 +288,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Na primeira rodada de combate, gasta ação completa para rezar/pedir orientação. Recebe PM temporários iguais ao Carisma (duram fim cena).",
 		BookPage:    83,
 		UID:         "pwr_xnvf73rjaf",
-		Unmodeled:   "PM temporários iguais ao Carisma rezando na primeira rodada: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-temperanca",
@@ -407,7 +396,6 @@ var classPowersPart14 = []ClassPower{
 		Description: "Gasta 1 PM para aumentar deslocamento em +6m por uma rodada.",
 		BookPage:    42,
 		UID:         "pwr_ycwgrnb6oa",
-		Unmodeled:   "1 PM por +6m de deslocamento numa rodada: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "poder.evasao",

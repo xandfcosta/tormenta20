@@ -19,7 +19,6 @@ var classPowersPart11 = []ClassPower{
 		Description: "Quando usa item ou engenhoca fabricado por você mesmo, paga 1 PM para aumentar em +2 a CD para resistir a ele.",
 		BookPage:    69,
 		UID:         "pwr_5dc4353j2p",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.inventor.maestria-em-pericia",
@@ -72,7 +71,6 @@ var classPowersPart11 = []ClassPower{
 		Description:   "Quando usa item alquímico ou poção, gasta 2 PM para dobrar área de efeito.",
 		BookPage:      69,
 		UID:           "pwr_olunoch3gp",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.alquimista-iniciado"}},
 		MinLevel:      5,
 	},
@@ -441,7 +439,7 @@ var classPowersPart11 = []ClassPower{
 		Description:   "Quando causa dano com AF, para cada 1d6 de dano do AF, recebe 1 PM temp e criatura perde 1 PM (se tiver). Uma vez por cena contra uma mesma criatura.",
 		BookPage:      74,
 		UID:           "pwr_nokkrlzsmp",
-		Unmodeled:     "PM temporários por dado do Ataque Furtivo: é um dado que cresce com o nível (ALE-486)",
+		Unmodeled:     "PM temporários por dado do Ataque Furtivo que acertou, e a perda de PM do alvo: gatilho no dano do ataque, sem fatia",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
 	},
 }

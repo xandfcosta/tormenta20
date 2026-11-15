@@ -9,7 +9,6 @@ var classPowersPart03 = []ClassPower{
 		Description:   "Música: Balada Fascinante afeta todas criaturas em alcance da música por +2 PM.",
 		BookPage:      44,
 		UID:           "pwr_ktdorfd5vw",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.bardo.musica-balada-fascinante"}},
 	},
 	{
@@ -64,7 +63,6 @@ var classPowersPart03 = []ClassPower{
 		Description: "Manipular afeta todas criaturas fascinadas em alcance curto por +2 PM.",
 		BookPage:    45,
 		UID:         "pwr_djt5ehdka7",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{
 			{Kind: "power", ID: "class.bardo.fascinar-em-massa"},
 			{Kind: "power", ID: "class.bardo.manipular"},
@@ -117,7 +115,6 @@ var classPowersPart03 = []ClassPower{
 		Description:   "Quando usa Música Melodia Curativa, gasta +2 PM para remover 1 condição escolhida (abalado, alquebrado, apavorado, atordoado, cego, confuso, exausto, fatigado etc.).",
 		BookPage:      45,
 		UID:           "pwr_eefyrqeist",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.bardo.musica-melodia-curativa"}},
 	},
 	{
@@ -210,7 +207,7 @@ var classPowersPart03 = []ClassPower{
 		GrantedAtLevel: 5,
 		BookPage:       48,
 		UID:            "pwr_pgqhjqd6nr",
-		Unmodeled:      "recuperar 1 PM no crítico ou ao derrubar: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "recuperar 1 PM no crítico ou ao derrubar um inimigo: gatilho na decisão do mestre sobre o ataque, sem fatia",
 	},
 	{
 		ID:             "class.bucaneiro.esquiva-sagaz-2",
@@ -322,7 +319,6 @@ var classPowersPart03 = []ClassPower{
 		GrantedAtLevel: 20,
 		BookPage:       48,
 		UID:            "pwr_52yt4pvlrt",
-		Unmodeled:      "5 PM para refazer o teste: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 	},
 	{
 		ID:          "class.bucaneiro.abusar-dos-fracos",

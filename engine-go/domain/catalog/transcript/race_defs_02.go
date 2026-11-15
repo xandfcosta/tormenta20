@@ -131,6 +131,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 			},
 			{
 				ID:          "suraggel-luz-sagrada",
+				Modeled:     []string{"o +2 em Diplomacia e Intuição"},
 				RaceID:      "suraggel",
 				Name:        "Luz Sagrada",
 				Description: "Aggelus. Você recebe +2 em Diplomacia e Intuição. Além disso, pode lançar Luz (como uma magia divina; atributo-chave Carisma). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
@@ -144,6 +145,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 			},
 			{
 				ID:          "suraggel-sombras-profanas",
+				Modeled:     []string{"o +2 em Enganação e Furtividade"},
 				RaceID:      "suraggel",
 				Name:        "Sombras Profanas",
 				Description: "Sulfure. Você recebe +2 em Enganação e Furtividade. Além disso, pode lançar Escuridão (como uma magia divina; atributo-chave Inteligência). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
@@ -181,7 +183,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Espírito da Natureza",
 				Description: "Você é uma criatura do tipo espírito, recebe visão na penumbra e pode falar com animais livremente.",
 				UID:         "rac_yspdaw2jpl",
-				Unmodeled:   "espírito; a visão na penumbra e a fala com animais são prosa: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "espírito: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia; a visão na penumbra e a fala com animais são prosa",
 			},
 			{
 				ID:          "silfide-magia-das-fadas",
@@ -230,7 +232,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Transformação Anfíbia",
 				Description: "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
 				UID:         "rac_axjfztusy3",
-				Unmodeled:   "natação de 12m: é uma forma de movimento que o motor ainda não tem, sem fatia; e o PM sem água é do mestre, que sabe se houve água (decisão do dono, ALE-488)",
+				Unmodeled:   "natação de 12m: é uma forma de movimento que o motor ainda não tem, sem fatia; e o PM sem água é do mestre, que sabe se houve água (decisão do dono)",
 			},
 		},
 		UID: "rac_kcyddre5st",
@@ -281,12 +283,12 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				ID: "osteon-memoria-postuma",
 				Modeled: []string{
 					"a perícia escolhida se marca treinada na coluna da ficha, que é o lugar da escolha livre",
+					"a habilidade emprestada de outra raça humanoide, e o tamanho dela",
 				},
 				RaceID:      "osteon",
 				Name:        "Memória Póstuma",
 				Description: "Você se torna treinado em uma perícia (não precisa ser da sua classe) ou recebe um poder geral a sua escolha. Alternativamente, escolha uma habilidade de outra raça humanoide (que não humano); herda também o tamanho dessa raça se diferente de Médio.",
 				UID:         "rac_ewrcutxhsw",
-				Unmodeled:   "a habilidade de outra raça humanoide, e o tamanho dela: o catálogo não diz o tipo de criatura das raças (ALE-504)",
 				Choice:      &PowerChoice{Kind: "trained-or-power", Label: "Perícia ou poder geral", Count: 1},
 			},
 			{
@@ -296,7 +298,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Natureza Esquelética",
 				Description: "Criatura do tipo morto-vivo. Visão no escuro e imunidade a cansaço, metabólicos, trevas e veneno. Não precisa respirar, comer ou dormir. Efeitos mágicos de cura de luz causam dano; dano de trevas recupera PV.",
 				UID:         "rac_f64irbsgi3",
-				Unmodeled:   "morto-vivo; cura de luz que fere e trevas que curam: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "morto-vivo: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia; a cura de luz que fere e as trevas que curam são do mestre",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "immunity", Text: "Imune a cansaço, metabólicos, trevas e veneno"},
@@ -336,7 +338,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Cria de Megalokk",
 				Description: "Você é uma criatura do tipo monstro e recebe visão no escuro.",
 				UID:         "rac_ma2nx5ov6h",
-				Unmodeled:   "monstro: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia",
 				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 			},
 			{
@@ -346,7 +348,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Natureza Venenosa",
 				Description: "Recebe resistência a veneno +5 e pode gastar uma ação de movimento e 1 PM para envenenar uma arma. A arma causa perda de 1d12 PV adicional. Veneno dura até acertar um ataque ou fim da cena.",
 				UID:         "rac_3dyes2cszk",
-				Unmodeled:   "envenenar a arma por 1 PM: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+				Unmodeled:   "o veneno na arma (perda de 1d12 PV) é do mestre: o gesto cobra o PM",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "resistance"},
@@ -362,7 +364,6 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Olhar Atordoante",
 				Description: "Pode gastar uma ação de movimento e 1 PM para forçar uma criatura em alcance curto a fazer Fortitude (CD Car). Se falhar, fica atordoada por uma rodada (apenas uma vez por cena).",
 				UID:         "rac_m45ak3bgq6",
-				Unmodeled:   "1 PM, Fortitude contra atordoado, uma vez por cena: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 			},
 		},
 		UID: "rac_7ynliohbbn",
@@ -458,7 +459,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Sorte Salvadora",
 				Description: "Quando faz um teste de resistência, você pode gastar 1 PM para rolar este teste novamente.",
 				UID:         "rac_fljkqob7lk",
-				Unmodeled:   "1 PM para rolar de novo um teste de resistência: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+				Unmodeled:   "rolar de novo o teste de resistência por 1 PM: o rolar de novo do teste existe (o do Resoluto), e este ainda é só o gesto que cobra, sem fatia",
 			},
 		},
 		UID: "rac_76vs5luayw",

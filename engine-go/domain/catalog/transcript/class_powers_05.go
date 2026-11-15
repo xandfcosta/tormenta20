@@ -66,7 +66,7 @@ var classPowersPart05 = []ClassPower{
 		Description: "Soma Sabedoria nas rolagens de dano e CD de suas armadilhas (cumulativo).",
 		BookPage:    50,
 		UID:         "pwr_eytcnqz4t3",
-		Unmodeled:   "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:   "a Sabedoria no dano e na CD das armadilhas: é do mestre, porque as armadilhas são gestos que ele aplica",
 		Prerequisites: []Prerequisite{
 			{
 				Kind: "anyPower",

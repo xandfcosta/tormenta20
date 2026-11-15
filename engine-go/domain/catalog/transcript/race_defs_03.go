@@ -41,7 +41,7 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Name:        "Criatura Artificial",
 				Description: "Você é uma criatura do tipo construto. Visão no escuro e imunidade a cansaço, metabólicos e veneno. Não respira, alimenta-se ou dorme, mas não se beneficia de cura mundana ou itens de alimentação. Precisa ficar inerte 8h por dia para recarregar (descansa em condições normais sempre).",
 				UID:         "rac_enocpcdpss",
-				Unmodeled:   "construto e sem cura mundana: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "construto: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia; a cura mundana que não vale é do mestre",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "immunity", Text: "Imune a cansaço, metabólicos e veneno"},
@@ -92,7 +92,6 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Name:        "Mau Cheiro",
 				Description: "Pode gastar uma ação padrão e 2 PM para expelir um gás fétido. Criaturas (exceto trogs) em alcance curto devem passar em Fortitude contra veneno (CD Con) ou ficam enjoadas por 1d6 rodadas. Quem passar fica imune por um dia.",
 				UID:         "rac_5szvbiermh",
-				Unmodeled:   "2 PM, Fortitude contra enjoado: é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 			},
 			{
 				ID:            "trog-mordida",
@@ -110,7 +109,7 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Name:        "Reptiliano",
 				Description: "Criatura do tipo monstro, visão no escuro, +1 na Defesa e, se estiver sem armadura ou roupas pesadas, +5 em Furtividade.",
 				UID:         "rac_7seadwuucv",
-				Unmodeled:   "monstro e visão no escuro: é o TIPO de criatura da raça, que a ficha não declara (ALE-469)",
+				Unmodeled:   "monstro: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228), sem fatia",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "defense"}, Amount: 1, BonusType: "untyped", Note: "Reptiliano"},
 					{

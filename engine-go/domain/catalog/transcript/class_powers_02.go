@@ -399,7 +399,7 @@ var classPowersPart02 = []ClassPower{
 		GrantedAtLevel: 20,
 		BookPage:       45,
 		UID:            "pwr_xvc2mvxdj2",
-		Unmodeled:      "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
+		Unmodeled:      "a metade do custo das habilidades de bardo sob a Inspiração é custo de habilidade (ALE-647); a Inspiração como ação livre é do mestre",
 	},
 	{
 		ID:          "class.bardo.arte-magica",

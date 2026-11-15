@@ -191,7 +191,6 @@ var classPowersPart07 = []ClassPower{
 		Description:   "Quando usa Canalizar Energia, gasta +2 PM para aumentar alcance para médio.",
 		BookPage:      58,
 		UID:           "pwr_4klchyaoc2",
-		Unmodeled:     "é gastar PM num gesto que a aba Ações não oferece (ALE-492)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.clerigo.canalizar-energia-positiva-negativa"}},
 	},
 	{
