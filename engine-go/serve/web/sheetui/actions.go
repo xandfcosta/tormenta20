@@ -155,7 +155,7 @@ func actionsPanelFrom(
 	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
 	boosts [][]attackBoost, blasts, shapeRows []actionRow,
 ) actionsPanel {
-	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackAll.Total
+	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackMelee.Total
 	byCost := map[engine.ActionCost][]actionRow{
 		engine.ActionStandard: append(standardRows(combat, melee, computed, boosts), blasts...),
 		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),

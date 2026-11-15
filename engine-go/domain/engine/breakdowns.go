@@ -109,8 +109,11 @@ type ComputedSheet struct {
 	PmCostMod    TotalContribs `json:"pmCostMod"`
 	// AttackAll/DamageAll are the {k:attack|damage, scope:all} globals (Fúria,
 	// Instinto Selvagem…) — the combat HUD adds them onto every weapon/attack.
-	AttackAll       TotalContribs `json:"attackAll"`
-	DamageAll       TotalContribs `json:"damageAll"`
+	AttackAll TotalContribs `json:"attackAll"`
+	DamageAll TotalContribs `json:"damageAll"`
+	// AttackMelee é o que soma em todo ataque CORPO A CORPO fora da arma: o geral e a Fúria, que é só corpo a
+	// corpo (p40). É o número da caixa de Luta e das manobras das Ações; o da Pontaria fica com o `AttackAll`.
+	AttackMelee     TotalContribs `json:"attackMelee"`
 	DamageReduction RdBreakdown   `json:"damageReduction"`
 	// CritExtraIgnoreChance é a chance, em PORCENTO, de o alvo ignorar o dano
 	// EXTRA de um acerto crítico (p166, p338).

@@ -611,7 +611,7 @@
         {
           "target": {
             "k": "attack",
-            "scope": "all"
+            "scope": "rage"
           },
           "amount": 2,
           "bonusType": "morale",
@@ -624,7 +624,7 @@
         {
           "target": {
             "k": "damage",
-            "scope": "all"
+            "scope": "rage"
           },
           "amount": 2,
           "bonusType": "morale",
@@ -983,7 +983,7 @@
         }
       },
       {
-        "term": "class.barbaro.furia::attack:all::::flagOn///furia",
+        "term": "class.barbaro.furia::attack:rage::::flagOn///furia",
         "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
@@ -991,12 +991,12 @@
         "note": "Em Fúria",
         "target": {
           "k": "attack",
-          "scope": "all"
+          "scope": "rage"
         },
         "flag": "furia"
       },
       {
-        "term": "class.barbaro.furia::damage:all::::flagOn///furia",
+        "term": "class.barbaro.furia::damage:rage::::flagOn///furia",
         "sourceId": "class.barbaro.furia",
         "source": "Fúria",
         "bonusType": "morale",
@@ -1004,7 +1004,7 @@
         "note": "Em Fúria",
         "target": {
           "k": "damage",
-          "scope": "all"
+          "scope": "rage"
         },
         "flag": "furia"
       }
@@ -1138,6 +1138,10 @@
           "amount": 1
         }
       ]
+    },
+    "attackMelee": {
+      "total": 0,
+      "contributions": []
     },
     "damageReduction": {
       "total": 2,
@@ -1602,8 +1606,8 @@
     "autoFailExpertises": []
   },
   "activeConditionals": [
-    "class.barbaro.furia::attack:all::::flagOn///furia",
-    "class.barbaro.furia::damage:all::::flagOn///furia",
+    "class.barbaro.furia::attack:rage::::flagOn///furia",
+    "class.barbaro.furia::damage:rage::::flagOn///furia",
     "lefou::resistance::::against//lefeu e a Tormenta/"
   ],
   "sheetWithConditionals": {
@@ -1723,22 +1727,21 @@
       "contributions": []
     },
     "attackAll": {
-      "total": 2,
-      "contributions": [
-        {
-          "source": "Fúria (cond.)",
-          "amount": 2,
-          "note": "Em Fúria"
-        }
-      ]
+      "total": 0,
+      "contributions": []
     },
     "damageAll": {
-      "total": 3,
+      "total": 1,
       "contributions": [
         {
           "source": "Instinto Selvagem +1",
           "amount": 1
-        },
+        }
+      ]
+    },
+    "attackMelee": {
+      "total": 2,
+      "contributions": [
         {
           "source": "Fúria (cond.)",
           "amount": 2,
@@ -2245,35 +2248,16 @@
         "armorPenaltyApplied": 0
       },
       "attackAll": {
-        "total": 2,
-        "contributions": [
-          {
-            "source": "Fúria (cond.)",
-            "amount": 2,
-            "note": "Em Fúria"
-          }
-        ]
+        "total": 0,
+        "contributions": []
       },
       "attackOwn": {
-        "total": -2,
+        "total": 0,
         "contributions": [
           {
             "source": "Machado táurico",
             "amount": -2,
             "note": "desbalanceada: -2 em ataque"
-          }
-        ]
-      },
-      "damage": "2d8",
-      "damageType": "corte",
-      "strDamage": 5,
-      "damageBonus": 8,
-      "damageAll": {
-        "total": 3,
-        "contributions": [
-          {
-            "source": "Instinto Selvagem +1",
-            "amount": 1
           },
           {
             "source": "Fúria (cond.)",
@@ -2282,9 +2266,28 @@
           }
         ]
       },
+      "damage": "2d8",
+      "damageType": "corte",
+      "strDamage": 5,
+      "damageBonus": 8,
+      "damageAll": {
+        "total": 1,
+        "contributions": [
+          {
+            "source": "Instinto Selvagem +1",
+            "amount": 1
+          }
+        ]
+      },
       "damageOwn": {
-        "total": 0,
-        "contributions": []
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Fúria (cond.)",
+            "amount": 2,
+            "note": "Em Fúria"
+          }
+        ]
       },
       "critRange": 20,
       "critMult": 3
@@ -2309,6 +2312,10 @@
         "armorPenaltyApplied": 0
       },
       "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "attackOwn": {
         "total": 2,
         "contributions": [
           {
@@ -2323,22 +2330,23 @@
       "strDamage": 5,
       "damageBonus": 8,
       "damageAll": {
-        "total": 3,
+        "total": 1,
         "contributions": [
           {
             "source": "Instinto Selvagem +1",
             "amount": 1
-          },
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 2,
+        "contributions": [
           {
             "source": "Fúria (cond.)",
             "amount": 2,
             "note": "Em Fúria"
           }
         ]
-      },
-      "damageOwn": {
-        "total": 0,
-        "contributions": []
       },
       "critRange": 20,
       "critMult": 2,
@@ -2364,6 +2372,10 @@
         "armorPenaltyApplied": 0
       },
       "attackAll": {
+        "total": 0,
+        "contributions": []
+      },
+      "attackOwn": {
         "total": 2,
         "contributions": [
           {
@@ -2378,22 +2390,23 @@
       "strDamage": 5,
       "damageBonus": 8,
       "damageAll": {
-        "total": 3,
+        "total": 1,
         "contributions": [
           {
             "source": "Instinto Selvagem +1",
             "amount": 1
-          },
+          }
+        ]
+      },
+      "damageOwn": {
+        "total": 2,
+        "contributions": [
           {
             "source": "Fúria (cond.)",
             "amount": 2,
             "note": "Em Fúria"
           }
         ]
-      },
-      "damageOwn": {
-        "total": 0,
-        "contributions": []
       },
       "critRange": 20,
       "critMult": 2

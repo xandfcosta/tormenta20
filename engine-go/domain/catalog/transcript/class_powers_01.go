@@ -410,13 +410,13 @@ var classPowersPart01 = []ClassPower{
 		UID:            "pwr_5j67glhldf",
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "attack", Scope: "all"},
+				Target:    ModifierTarget{Kind: "attack", Scope: "rage"},
 				Amount:    2,
 				BonusType: "morale",
 				Condition: &ModifierCondition{Kind: "flagOn", Flag: "furia", Label: "Em Fúria"},
 			},
 			{
-				Target:    ModifierTarget{Kind: "damage", Scope: "all"},
+				Target:    ModifierTarget{Kind: "damage", Scope: "rage"},
 				Amount:    2,
 				BonusType: "morale",
 				Condition: &ModifierCondition{Kind: "flagOn", Flag: "furia", Label: "Em Fúria"},

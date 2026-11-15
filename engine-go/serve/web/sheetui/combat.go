@@ -217,7 +217,7 @@ func defenseAndAttackTiles(sheet engine.ComputedSheet) []statTile {
 	aim := expertiseOrZero(sheet, "Pontaria", "dexterity")
 	return []statTile{
 		defenseTile(sheet),
-		attackTile("attack-melee", "Atq CaC", "Ataque Corpo a Corpo (Luta)", fight, sheet.AttackAll),
+		attackTile("attack-melee", "Atq CaC", "Ataque Corpo a Corpo (Luta)", fight, sheet.AttackMelee),
 		attackTile("attack-ranged", "Atq Dist", "Ataque à Distância (Pontaria)", aim, sheet.AttackAll),
 	}
 }

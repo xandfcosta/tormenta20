@@ -78,12 +78,16 @@ var classPowersPart04 = []ClassPower{
 	},
 	{
 		ID:          "class.bucaneiro.pistoleiro",
+		Modeled:     []string{"o +2 no dano com armas de fogo"},
 		ClassName:   "Bucaneiro",
 		Name:        "Pistoleiro",
 		Description: "Proficiência com armas de fogo. +2 nas rolagens de dano com armas de fogo.",
 		BookPage:    48,
 		UID:         "pwr_qmvnhn3abq",
-		Unmodeled:   "a proficiência e o +2 no dano com armas de fogo: o dano não tem escopo por CATEGORIA de arma (ALE-649)",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "damage", Scope: "firearm"}, Amount: 2, BonusType: "untyped"},
+		},
+		Unmodeled: "a proficiência com armas de fogo: o poder não concede proficiência (ALE-649)",
 	},
 	{
 		ID:          "class.bucaneiro.presenca-paralisante",

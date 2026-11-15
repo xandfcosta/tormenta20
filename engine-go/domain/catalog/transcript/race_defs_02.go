@@ -220,11 +220,17 @@ var raceDefinitionsPart02 = []RaceDefinition{
 			},
 			{
 				ID:          "sereia-mestre-do-tridente",
+				Modeled:     []string{"o +2 no dano com azagaias, lanças e tridentes, e os itens específicos feitos deles"},
 				RaceID:      "sereia-tritao",
 				Name:        "Mestre do Tridente",
 				Description: "Para você, o tridente é uma arma simples. Você recebe +2 em rolagens de dano com azagaias, lanças e tridentes.",
 				UID:         "rac_rojbbpkrph",
-				Unmodeled:   "tridente como arma simples e +2 no dano com azagaia, lança e tridente: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+				Unmodeled:   "o tridente como arma simples: a habilidade não concede proficiência (ALE-649)",
+				Modifiers: []Modifier{
+					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:azagaia"}, Amount: 2, BonusType: "untyped"},
+					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:lanca"}, Amount: 2, BonusType: "untyped"},
+					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:tridente"}, Amount: 2, BonusType: "untyped"},
+				},
 			},
 			{
 				ID:          "sereia-transformacao-anfibia",
@@ -435,7 +441,10 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Arremessador",
 				Description: "Quando faz um ataque à distância com uma funda ou uma arma de arremesso, seu dano aumenta em um passo.",
 				UID:         "rac_rdh4sutt2c",
-				Unmodeled:   "um passo de dano com funda e arma de arremesso: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+				Modifiers: []Modifier{
+					{Target: ModifierTarget{Kind: "damageStep", Scope: "thrown"}, Amount: 1, BonusType: "untyped"},
+					{Target: ModifierTarget{Kind: "damageStep", Scope: "weapon:funda"}, Amount: 1, BonusType: "untyped"},
+				},
 			},
 			{
 				ID: "hynne-pequeno-e-rechonchudo",

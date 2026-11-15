@@ -810,12 +810,14 @@ func defenseOf(t *testing.T, f sceneFixture, id int64) int {
 	return statOf(t, f, id, engine.ModifierTarget{K: "defense"})
 }
 
+// O que soma num golpe CORPO A CORPO além da arma: o geral e o da Fúria, que é só corpo a corpo (p40).
 func combatNumbersOf(t *testing.T, f sceneFixture, id int64) combatNumbers {
 	t.Helper()
-	return combatNumbers{
-		attack: statOf(t, f, id, engine.ModifierTarget{K: "attack", Scope: "all"}),
-		damage: statOf(t, f, id, engine.ModifierTarget{K: "damage", Scope: "all"}),
+	melee := func(k string) int {
+		return statOf(t, f, id, engine.ModifierTarget{K: k, Scope: "all"}) +
+			statOf(t, f, id, engine.ModifierTarget{K: k, Scope: engine.RageScope})
 	}
+	return combatNumbers{attack: melee("attack"), damage: melee("damage")}
 }
 
 // statOf monta a ficha e lê UM alvo com os efeitos em vigor.
