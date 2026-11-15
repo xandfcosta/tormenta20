@@ -240,3 +240,25 @@ func TestTheHarmonizedCutSaysTheAbilityName(t *testing.T) {
 		}
 	}
 }
+
+// COM O ARMEIRO, A PARCELA DO DANO É A INTELIGÊNCIA (p68), e o rótulo a segue, como o da Acuidade.
+func TestTheArmorerDamageRowSaysIntelligence(t *testing.T) {
+	_, damage := weaponRows(engine.WeaponCard{Skill: "Luta", StrDamage: 4, IntDamage: true, IntBy: "Armeiro"})
+	if len(damage) == 0 || damage[0].Label != "INT" || damage[0].Value != "+4" {
+		t.Errorf("a primeira parcela do dano com o Armeiro não é INT +4: %+v", damage)
+	}
+	_, terms := weaponSumTerms(engine.WeaponCard{Skill: "Luta", StrDamage: 4, IntDamage: true, IntBy: "Armeiro", DamageBonus: 4})
+	if len(terms) == 0 || terms[0].Label != "Inteligência" || terms[0].Note != "Armeiro" {
+		t.Errorf("a conta do dano com o Armeiro não diz Inteligência pelo Armeiro: %+v", terms)
+	}
+}
+
+// A NOTA DO ATAQUE diz quem pôs a Inteligência, como diz quem pôs a Destreza.
+func TestTheIntelligenceAttackSaysWhoPutIt(t *testing.T) {
+	if got := dexNote(engine.WeaponCard{IntBy: "Balística"}); got != "Balística: Inteligência no lugar de Destreza" {
+		t.Errorf("a nota do ataque com a Balística diz %q", got)
+	}
+	if got := dexNote(engine.WeaponCard{IntBy: "Armeiro"}); got != "Armeiro: Inteligência no lugar de Força" {
+		t.Errorf("a nota do ataque com o Armeiro diz %q", got)
+	}
+}

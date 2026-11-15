@@ -74,7 +74,12 @@ type WeaponCard struct {
 	// diz que ela entrou também no DANO, o que só a Acuidade faz — e é o que
 	// deixa a conta da ficha rotular a parcela certa. Fora do fio de propósito:
 	// é explicação para a tela, e o fio já tem o número.
-	DexBy     string `json:"-"`
+	DexBy string `json:"-"`
+	// IntBy diz quem pôs a Inteligência no lugar do atributo do ATAQUE — o Armeiro (p68) ou a Balística
+	// (p69) —, e IntDamage que ela entrou também no dano (o Armeiro). Fora do fio, como o `DexBy`: só a
+	// ficha os lê, para escrever o atributo e o porquê.
+	IntBy     string `json:"-"`
+	IntDamage bool   `json:"-"`
 	DexDamage bool   `json:"-"`
 	// DamageType é o tipo do dano da ARMA — "corte", "perfuracao", "impacto" —,
 	// e ele vale para os dados dela e para os bônus numéricos que a acompanham
@@ -256,6 +261,7 @@ type cardBasis struct {
 	damageAll  TotalContribs
 	forTotal   int
 	dexTotal   int
+	intTotal   int
 	hasFinesse bool
 	load       LoadBreakdown
 }
@@ -267,6 +273,7 @@ func newCardBasis(ch Character, effects ItemEffects) cardBasis {
 		damageAll:  totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
 		forTotal:   effectiveAttribute(ch, "strength", effects),
 		dexTotal:   effectiveAttribute(ch, "dexterity", effects),
+		intTotal:   effectiveAttribute(ch, "intelligence", effects),
 		hasFinesse: parseChoiceSet(ch.ClassPowers).has["acuidade-com-arma"],
 		// A carta de arma resolve Luta/Pontaria, que a penalidade de armadura
 		// nunca alcança (p153) — a carga entra por completude, para esta chamada
@@ -343,6 +350,14 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		}
 		dexDamageUsed = dexDamage
 	}
+	attribute, intBy := b.intelligenceInstead(w, attribute, scopes)
+	intDamage := false
+	if intBy == armorerName && b.intTotal > strDamage {
+		strDamage, dexDamageUsed, intDamage = b.intTotal, false, true
+	}
+	if intBy != "" {
+		dexBy = ""
+	}
 	// weaponSkillState returns the stored Luta row (attribute strength); force
 	// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
 	state := weaponSkillState(ch, skill, attribute)
@@ -367,6 +382,8 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		DamageType:      w.Type,
 		StrDamage:       strDamage,
 		DexBy:           dexBy,
+		IntBy:           intBy,
+		IntDamage:       intDamage,
 		DexDamage:       dexDamageUsed,
 		DamageBonus:     strDamage + b.damageAll.Total + ownDamage.Total,
 		DamageAll:       b.damageAll,
@@ -378,26 +395,6 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		Announces:       announcesOfThisCard(b.effects.Announced, scopes),
 		CriticalBonus:   b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 	}
-}
-
-// Quem pôs a Destreza no ataque: a arma (`WeaponStats.Finesse`) ou o poder.
-const (
-	DexByWeapon  = "weapon"
-	DexByFinesse = "acuidade-com-arma"
-)
-
-// weaponDexUse mirrors weapon-cards.ts weaponDexUse: whether a wielded weapon may
-// use Destreza instead of Força on attack/damage (T20 p145). Only when DES beats
-// FOR (the rule is optional, so the sheet takes the better). Attack finesse = the
-// weapon's inherent flag (Adaga) OR the Acuidade power on a light-melee or ágil
-// weapon; damage finesse is Acuidade-only. Ranged never applies (ALE-31), and the
-// thrown weapon has its own branch in the card, because it already attacks with Destreza.
-func weaponDexUse(w *WeaponStats, hasFinesse bool, forTotal, dexTotal int) (attack, damage bool) {
-	if w.Purpose == "ranged" || dexTotal <= forTotal {
-		return false, false
-	}
-	finesse := hasFinesse && ((w.Hand == "light" && w.Purpose == "melee") || hasTrait(w.Traits, "agil"))
-	return w.Finesse || finesse, finesse
 }
 
 // DamageStepsOf soma os passos que estes modificadores dão À ARMA que os carrega.
