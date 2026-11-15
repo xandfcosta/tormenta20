@@ -384,7 +384,7 @@ var classPowersPart12 = []ClassPower{
 		ID: "class.ladino.mao-na-boca",
 		Modeled: []string{
 			"o +2 em testes de agarrar",
-			"o agarrar livre, declarado no golpe com o Ataque Furtivo ligado e aberto pelo ✓ do mestre",
+			"o agarrar livre, aberto pelo acerto de um golpe com o Ataque Furtivo ligado",
 		},
 		ClassName:   "Ladino",
 		Name:        "Mão na Boca",
@@ -396,7 +396,7 @@ var classPowersPart12 = []ClassPower{
 		},
 		Unmodeled:     "a criatura agarrada por ela não pode falar: é o mestre que aplica, como a condição",
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Luta"}},
-		FollowUp:      &ClassPowerFollowUp{Maneuver: "agarrar", NeedsFlag: "ataque-furtivo"},
+		FollowUp:      &ClassPowerFollowUp{Maneuver: "agarrar", On: "hit", NeedsFlag: "ataque-furtivo"},
 	},
 	{
 		ID:          "class.ladino.maos-rapidas",

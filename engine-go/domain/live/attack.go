@@ -101,11 +101,11 @@ type PendingAttack struct {
 	ExtraNeedsUnarmed bool `json:"extraNeedsUnarmed,omitempty"`
 	// ImpulsiveGuard é o Golpe Imprudente (p77): o ✓ do mestre deixa o –5 na Defesa até o próximo turno.
 	ImpulsiveGuard bool `json:"impulsiveGuard,omitempty"`
-	// FollowUp é a manobra em seguida que quem ataca DECLAROU neste gesto, antes de rolar (decisão do dono):
-	// o ✓ do mestre a abre na vez. FollowUpOf é a manobra em seguida que ESTE gesto é — livre, e pelo PM
-	// do poder.
-	FollowUp   *FollowUp `json:"followUp,omitempty"`
-	FollowUpOf *FollowUp `json:"followUpOf,omitempty"`
+	// FollowUps são as manobras em seguida que a decisão do mestre sobre ESTE gesto pode abrir, armadas quando
+	// ele foi rolado (`RulingOpens`). FollowUpOf é a manobra em seguida que este gesto É — livre, e pelo PM do
+	// poder.
+	FollowUps  []FollowUp `json:"followUps,omitempty"`
+	FollowUpOf *FollowUp  `json:"followUpOf,omitempty"`
 	// Paid é o que a proposta pagou ao nascer, e é o que o cancelamento do mestre
 	// devolve. Nulo na proposta de antes desta regra, que não pagou nada.
 	Paid *AttackPaid `json:"paid,omitempty"`

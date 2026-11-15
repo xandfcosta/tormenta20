@@ -373,16 +373,20 @@ func handDieLabel(group handGroup, n int) string {
 	return label
 }
 
-// writtenFollowUp é a manobra em seguida que o gesto DECLAROU, antes de rolar (ALE-651): o ✓ do mestre a abre.
-// "Declarou derrubar em seguida (Lutador de Chão, 1 PM)".
+// writtenFollowUp é o que a decisão do mestre sobre este gesto abre (ALE-659): a consequência da decisão que ele
+// vai tomar. "O Sucesso abre derrubar em seguida (Lutador de Chão, 1 PM)".
 func writtenFollowUp(pa live.PendingAttack) string {
-	declared := pa.FollowUp
-	if declared == nil {
-		return ""
+	lines := make([]string, 0, len(pa.FollowUps))
+	for _, armed := range pa.FollowUps {
+		decision := "O acerto"
+		if armed.On == live.RulingSuccess {
+			decision = "O Sucesso"
+		}
+		what := armed.Name
+		if armed.PM > 0 {
+			what += ", " + strconv.Itoa(armed.PM) + " PM"
+		}
+		lines = append(lines, decision+" abre "+armed.Maneuver+" em seguida ("+what+")")
 	}
-	what := declared.Name
-	if declared.PM > 0 {
-		what += ", " + strconv.Itoa(declared.PM) + " PM"
-	}
-	return "Declarou " + declared.Maneuver + " em seguida (" + what + ")"
+	return strings.Join(lines, "; ")
 }

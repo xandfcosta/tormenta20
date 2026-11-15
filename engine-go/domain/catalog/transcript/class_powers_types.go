@@ -26,11 +26,12 @@ type ClassPower struct {
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
 }
 
-// ClassPowerFollowUp é a manobra em seguida que o poder dá: a derrubada depois de agarrar (Lutador de Chão,
-// p77), o agarrar depois do golpe com o Ataque Furtivo ligado (Mão na Boca, p74).
+// ClassPowerFollowUp é a manobra em seguida que o poder dá: a derrubada depois do Sucesso no agarrar (Lutador de
+// Chão, p77), o agarrar depois do acerto com o Ataque Furtivo ligado (Mão na Boca, p74).
 type ClassPowerFollowUp struct {
 	Maneuver  string `json:"maneuver"`
 	After     string `json:"after,omitempty"`
+	On        string `json:"on"`
 	PM        int    `json:"pm,omitempty"`
 	NeedsFlag string `json:"needsFlag,omitempty"`
 }

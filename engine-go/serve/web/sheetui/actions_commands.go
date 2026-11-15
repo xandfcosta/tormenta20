@@ -30,10 +30,7 @@ func rollsAttackOnTheTarget(otherUse bool) func(Scene, *http.Request, sqlcgen.Ch
 		if err != nil {
 			return fmt.Errorf("a arma vem por índice no caminho, e veio %q", chi.URLParam(r, "arma"))
 		}
-		strike := ActionStrike{
-			Weapon: weapon, OtherUse: otherUse, Dose: chosenDose(sig, weapon), Boost: chosenBoost(sig, weapon),
-			DeclaresFollowUp: sig.FollowUp,
-		}
+		strike := ActionStrike{Weapon: weapon, OtherUse: otherUse, Dose: chosenDose(sig, weapon), Boost: chosenBoost(sig, weapon)}
 		return s.proposeOnTheTable(r, row, strike, sig)
 	}
 }
@@ -117,13 +114,13 @@ func aimsAtTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signal
 // o motor pede dela é só a conferência de que quem a faz não está de arco na
 // mão. Um seletor de arma por manobra seriam cinco escolhas por nada.
 func rollsManeuverOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
-	return s.proposeOnTheTable(r, row, ActionStrike{Maneuver: chi.URLParam(r, "manobra"), DeclaresFollowUp: sig.FollowUp}, sig)
+	return s.proposeOnTheTable(r, row, ActionStrike{Maneuver: chi.URLParam(r, "manobra")}, sig)
 }
 
-// rollsFollowUpOnTheTarget rola a manobra em seguida que o ✓ do mestre abriu — a derrubada do Lutador de Chão
-// (p77), o agarrar da Mão na Boca (p74). Ela é livre, e o PM dela sai junto da proposta.
+// rollsFollowUpOnTheTarget rola a manobra em seguida que a decisão do mestre abriu — a derrubada do Lutador de
+// Chão (p77), o agarrar da Mão na Boca (p74). Ela é livre, e o PM dela sai junto da proposta.
 func rollsFollowUpOnTheTarget(s Scene, r *http.Request, row sqlcgen.Character, sig Signals) error {
-	strike := ActionStrike{Maneuver: chi.URLParam(r, "manobra"), TakesFollowUp: chi.URLParam(r, "poder"), DeclaresFollowUp: sig.FollowUp}
+	strike := ActionStrike{Maneuver: chi.URLParam(r, "manobra"), TakesFollowUp: chi.URLParam(r, "poder")}
 	return s.proposeOnTheTable(r, row, strike, sig)
 }
 

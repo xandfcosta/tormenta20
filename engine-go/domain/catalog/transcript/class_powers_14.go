@@ -25,11 +25,8 @@ var classPowersPart14 = []ClassPower{
 		},
 	},
 	{
-		ID: "class.lutador.lutador-de-chao",
-		Modeled: []string{
-			"o +2 em agarrar e derrubar",
-			"a derrubada livre por 1 PM, declarada no agarrar e aberta pelo ✓ do mestre",
-		},
+		ID:          "class.lutador.lutador-de-chao",
+		Modeled:     []string{"o +2 em agarrar e derrubar", "a derrubada livre por 1 PM, aberta pelo Sucesso no agarrar"},
 		ClassName:   "Lutador",
 		Name:        "Lutador de Chão",
 		Description: "+2 em testes de ataque para agarrar e derrubar. Quando agarra criatura, gasta 1 PM para manobra derrubar como ação livre.",
@@ -39,7 +36,7 @@ var classPowersPart14 = []ClassPower{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "agarrar"}, Amount: 2, BonusType: "untyped"},
 			{Target: ModifierTarget{Kind: "maneuver", Name: "derrubar"}, Amount: 2, BonusType: "untyped"},
 		},
-		FollowUp: &ClassPowerFollowUp{Maneuver: "derrubar", After: "agarrar", PM: 1},
+		FollowUp: &ClassPowerFollowUp{Maneuver: "derrubar", After: "agarrar", On: "success", PM: 1},
 	},
 	{
 		ID:          "class.lutador.nome-na-arena",

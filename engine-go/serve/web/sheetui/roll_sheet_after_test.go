@@ -17,11 +17,6 @@ func TestTheSheetRollClearsTheBoostLikeTheRowRoll(t *testing.T) {
 	sheets := map[string]*rollSheet{
 		"Golpe Relâmpago": paidExtraRow(0, unarmed, lightning, offered, true).Sheet,
 	}
-	row := attackRow(0, unarmed, [][]attackBoost{offered})
-	declaresTheFollowUp(&row, 0, []engine.FollowUpManeuver{{
-		PowerID: "class.ladino.mao-na-boca", Name: "Mão na Boca", Maneuver: "agarrar", Ready: true,
-	}}, "")
-	sheets["Mão na Boca"] = row.Sheet
 
 	for name, sheet := range sheets {
 		if sheet == nil {

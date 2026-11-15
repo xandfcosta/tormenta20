@@ -72,8 +72,8 @@ type Scene struct {
 	// ExtraOpenedUnarmed diz que o golpe que abriu o extra foi desarmado: o Golpe Relâmpago só vem depois
 	// de um assim (p76).
 	ExtraOpenedUnarmed bool `json:"extraOpenedUnarmed,omitempty"`
-	// FollowUpOpen é a manobra em seguida que o ✓ do mestre abriu nesta vez, e nula quando não há: uma por
-	// gesto declarado, e ela sai quando é feita.
+	// FollowUpOpen é a manobra em seguida que a decisão do mestre abriu nesta vez, e nula quando não há: uma por
+	// gesto decidido, e ela sai quando é feita.
 	FollowUpOpen *OpenFollowUp `json:"followUpOpen,omitempty"`
 	// OncePerRoundUsed são os gastos de "uma vez por rodada" já feitos, um por `linha|gasto` — o 2 PM de
 	// um encanto (p335-336). A rodada é de QUEM gastou, de uma vez dele até a próxima: a entrada sai quando

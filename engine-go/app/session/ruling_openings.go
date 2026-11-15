@@ -22,7 +22,7 @@ import (
 //
 //   - o ataque extra (p25), o adicional do estilo (p125) e o ataque pago (ALE-651), que vêm de QUALQUER resposta
 //     a agredir — errar não desfaz o agredir;
-//   - a manobra em seguida declarada no gesto (`PendingAttack.FollowUp`).
+//   - a manobra em seguida armada no gesto (`PendingAttack.FollowUps`), quando a decisão é a que ela pede.
 func opensWhatTheRulingOpens(s *live.SessionRuntimeState, attack live.PendingAttack) {
 	if !paidInThisTurn(s, attack) {
 		return
@@ -35,8 +35,11 @@ func opensWhatTheRulingOpens(s *live.SessionRuntimeState, attack live.PendingAtt
 	if attack.TargetEntryID == "" {
 		return
 	}
-	if attack.FollowUp != nil {
-		s.Scene.FollowUpOpen = &live.OpenFollowUp{FollowUp: *attack.FollowUp, EntryID: attack.AttackerEntryID, TargetID: attack.TargetEntryID}
+	for _, armed := range attack.FollowUps {
+		if live.RulingOpens(attack.Ruling, armed.On) {
+			s.Scene.FollowUpOpen = &live.OpenFollowUp{FollowUp: armed, EntryID: attack.AttackerEntryID, TargetID: attack.TargetEntryID}
+			return
+		}
 	}
 }
 
