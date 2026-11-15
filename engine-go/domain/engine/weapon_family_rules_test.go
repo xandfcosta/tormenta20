@@ -115,6 +115,7 @@ func TestTheRaceWeaponsReachTheSpecificItemToo(t *testing.T) {
 	}{
 		{"sereia-tritao", "tridente", 0, 2},
 		{"sereia-tritao", "azagaia-dos-relampagos", 0, 2},
+		{"sereia-tritao", "lanca-montada", 0, 2},
 		{"sereia-tritao", "espada-longa", 0, 0},
 		{"anao", "machado-batalha", 2, 0},
 		{"anao", "martelo-guerra", 2, 0},
