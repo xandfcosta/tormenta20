@@ -102,8 +102,12 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 	if addsAttributeToDamage(card) {
 		// Com a Acuidade com Arma a parcela é a Destreza, e o rótulo a segue.
 		label := "FOR"
-		if card.DexDamage {
+		switch {
+		case card.DexDamage:
 			label = "DES"
+		case card.IntDamage:
+			// O Armeiro troca a Força pela Inteligência no dano (p68).
+			label = "INT"
 		}
 		damage = append(damage, breakdownRow{Label: label, Value: book.WithSign(card.StrDamage)})
 	}

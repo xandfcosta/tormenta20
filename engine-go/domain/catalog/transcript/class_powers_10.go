@@ -251,14 +251,17 @@ var classPowersPart10 = []ClassPower{
 		},
 	},
 	{
-		ID:             "class.inventor.armeiro",
-		Modeled:        []string{"a proficiência com armas marciais corpo a corpo"},
+		ID: "class.inventor.armeiro",
+		Modeled: []string{
+			"a proficiência com armas marciais corpo a corpo",
+			"a Inteligência no lugar da Força no ataque e no dano com a arma corpo a corpo empunhada, quando ela é maior",
+		},
 		ClassName:      "Inventor",
 		Name:           "Armeiro",
 		Description:    "Proficiência com armas marciais corpo a corpo. Quando empunha arma corpo a corpo, usa Inteligência em vez de Força nos ataques e rolagens de dano.",
 		BookPage:       68,
 		UID:            "pwr_5nxcqin5sx",
-		Unmodeled:      "Inteligência no lugar de Força no ataque e no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "flag", Name: "armeiro"}, Amount: 1, BonusType: "untyped"}},
 		ProficientWith: []ProficiencyReach{{Category: "armas-marciais", Purpose: "melee", Label: "as corpo a corpo"}},
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Luta"},
@@ -301,14 +304,20 @@ var classPowersPart10 = []ClassPower{
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.automato"}},
 	},
 	{
-		ID:          "class.inventor.balistica",
-		Modeled:     []string{"a proficiência com armas marciais de ataque à distância e com armas de fogo"},
+		ID: "class.inventor.balistica",
+		Modeled: []string{
+			"a proficiência com armas marciais de ataque à distância e com armas de fogo",
+			"a Inteligência no lugar da Destreza no ataque à distância com a arma empunhada, quando ela é maior",
+		},
 		ClassName:   "Inventor",
 		Name:        "Balística",
 		Description: "Proficiência com armas marciais de ataque à distância e armas de fogo. Quando usa arma de ataque à distância, soma Inteligência em vez de Destreza nos testes de ataque.",
 		BookPage:    69,
 		UID:         "pwr_zuskbji6cp",
-		Unmodeled:   "Inteligência no lugar de Destreza no ataque à distância: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "flag", Name: "balistica"}, Amount: 1, BonusType: "untyped"},
+		},
+		Unmodeled: "a Inteligência no lugar da Destreza no dano, com o Estilo de Disparo: o estilo soma a Destreza por escala, e trocá-la pede forma (ALE-655)",
 		ProficientWith: []ProficiencyReach{
 			{Category: "armas-marciais", Purpose: "ranged", Label: "as de ataque à distância"},
 			{Category: "armas-de-fogo"},
