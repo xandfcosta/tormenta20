@@ -1,0 +1,27 @@
+package table
+
+import "t20engine/serve/web/ui"
+
+// boardTargetHead é o cabeçalho do painel das ações no tabuleiro (ALE-660): contra quem, e a que distância. Um
+// bloco por peça que pode ser alvo, mostrado pelo `$turn_target`, porque quem escolhe o alvo é o navegador e a
+// distância é do servidor. O ✕ só fecha o painel: o alvo continua escolhido (decisão do dono).
+templ boardTargetHead(v BoardView) {
+	<div class="ds-board-target-head" data-show="$board_panel" style="display:none">
+		<div class="ds-board-target-who">
+			for _, p := range v.Tokens {
+				if p.PicksTarget {
+					<div data-show={ "$turn_target === '" + p.EntryID + "'" } style="display:none">
+						<div class="ds-row-meta">Contra</div>
+						<div class="ds-board-target-name">{ p.Label }</div>
+						if p.Reach != "" {
+							<div class="ds-row-meta">{ p.Reach }</div>
+						}
+					</div>
+				}
+			}
+		</div>
+		<button type="button" class="ds-button" data-variant="secondary" data-icon aria-label="Fechar o painel" title="Fechar o painel" data-on:click="$board_panel = false">
+			@ui.Icon("X", "ds-icon")
+		</button>
+	</div>
+}

@@ -50,20 +50,26 @@ func (r body) touches(other body) bool {
 
 // giveEveryTokenABody escreve o corpo de cada peça.
 //
-// O footprint zerado vira 1 aqui e em nenhum outro lugar: peça antiga gravada
-// sem o campo existe no banco, e deixar o zero passar faria o corpo dela ser
-// vazio — ela deixaria de ocupar quadrado nenhum e duas nasceriam em cima.
+// O footprint zerado vira 1 no `bodyOf` e em nenhum outro lugar: peça antiga
+// gravada sem o campo existe no banco, e deixar o zero passar faria o corpo dela
+// ser vazio.
 func giveEveryTokenABody(b *BoardState) ecs.System {
 	return func(w *ecs.World) {
 		ecs.Each(w, func(e ecs.Entity, at tokenAt) {
-			t := b.Tokens[at.Index]
-			side := t.Footprint
-			if side <= 0 {
-				side = 1
-			}
-			ecs.Set(w, e, body{X0: t.X, Y0: t.Y, X1: t.X + side - 1, Y1: t.Y + side - 1})
+			ecs.Set(w, e, bodyOf(b.Tokens[at.Index]))
 		})
 	}
+}
+
+// bodyOf é o espaço que a peça ocupa: o lado dela em quadrados a partir do canto. Uma peça sem lado ocupa um,
+// porque sem isso ela deixaria de ocupar quadrado nenhum e duas nasceriam em cima. As situações e a distância
+// entre duas peças (`ApartBetween`) leem o mesmo corpo.
+func bodyOf(t BoardToken) body {
+	side := t.Footprint
+	if side <= 0 {
+		side = 1
+	}
+	return body{X0: t.X, Y0: t.Y, X1: t.X + side - 1, Y1: t.Y + side - 1}
 }
 
 // bindEachTokenToItsQueueRow escreve o vínculo de quem tem um.

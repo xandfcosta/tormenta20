@@ -803,6 +803,16 @@ html {
     outline: 2px dashed var(--ds-map-danger);
     outline-offset: 2px;
   }
+  /* O ALVO DA VEZ que o jogador escolheu tocando na peça (ALE-660). A cor de AÇÃO
+   * e um traço cheio: o dourado é a vez, e o tracejado vermelho é o ataque já
+   * pendurado — três estados, três desenhos. Mora aqui pela razão da regra de
+   * cima: a camada decide antes da especificidade. */
+  .board-token.board-token-chosen {
+    outline: 3px solid color-mix(in oklch, var(--ds-action) 55%, white);
+    outline-offset: 2px;
+    box-shadow: 0 0 14px 3px color-mix(in oklch, var(--ds-action) 70%, transparent);
+    z-index: 2;
+  }
 
   /* O MENU DE CONTEXTO DA PEÇA (ALE-206).
    *

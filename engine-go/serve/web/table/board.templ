@@ -131,13 +131,19 @@ templ drawnRuler(v BoardView) {
 // A cor vem por variável de estilo e não por classe, e é o único jeito: o matiz
 // é um número calculado por nome, então não existe classe do Tailwind para ele —
 // seriam 360 classes que o scanner nunca veria.
+//
+// O JOGADOR toca na peça de outro para escolher o alvo da vez e abrir o painel das ações (`board_target.go`,
+// ALE-660).
 templ planToken(v BoardView, p boardToken) {
 	<button
 		type="button"
 		aria-label={ tokenName(p) }
 		title={ tokenName(p) }
 		style={ posicaoNoPlano(p.X, p.Y, p.Footprint) + fmt.Sprintf("--matiz:%d;", p.Hue) }
-		data-class={ tokenStyling(p.ID, dragsItself(v, p.ID)) }
+		data-class={ chosenTargetStyling(tokenStyling(p.ID, dragsItself(v, p.ID)), p) }
+		if p.PicksTarget {
+			data-on:click={ picksTheTarget(p) }
+		}
 		if dragsItself(v, p.ID) {
 			data-on:pointerdown={ takeToken(v, p.ID) }
 			data-on:pointermove__window={ followToken(v, p) }

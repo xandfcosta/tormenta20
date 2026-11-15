@@ -45,8 +45,9 @@ templ tempestadeTableScene(v View) {
 			<div class="ds-session-surface" data-show={ surface(superficieDaFicha) }>
 				@sheetui.SceneBody(*v.MySheet)
 			</div>
-			// AS AÇÕES: a barra de alvo fixa em cima e a lista rolando por baixo.
-			<div class="ds-session-surface" data-show={ surface(superficieDasAcoes) }>
+			// AS AÇÕES: a barra de alvo fixa em cima e a lista rolando por baixo. No tabuleiro, com o painel
+			// aberto, a mesma superfície vira o painel das ações contra o alvo (`board_target.go`).
+			<div class="ds-session-surface" data-show={ actionsSurfaceShows() } data-class={ actionsSurfaceMode() }>
 				@tempestadeTargetBar(v)
 				<div class="ds-session-scroll">
 					@sheetui.ActionsSurface(*v.MySheet)

@@ -88,7 +88,7 @@ templ tempestadeActionsBody(v View) {
 // gesto. A linha que o servidor recusa aparece apagada com o motivo, em vez de
 // sumir — "Fúria — falta PM" responde; a ausência manda procurar.
 templ actionRowDs(v View, group actionGroup, row actionRow) {
-	<div class="ds-row ds-turn-action" data-refused?={ !row.Can } data-boosted?={ len(row.Boosts) > 0 }>
+	<div class="ds-row ds-turn-action" data-refused?={ !row.Can } data-boosted?={ len(row.Boosts) > 0 } data-targets?={ rowPicksATarget(row) }>
 		<div class="min-w-0">
 			<div class="ds-row-title">
 				{ row.Name }
