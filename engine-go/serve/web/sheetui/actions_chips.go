@@ -134,7 +134,7 @@ func chipsOffered(powers powersPanel, situational []situationalRow) []actionChip
 	chips := []actionChip{}
 	for _, power := range powers.Actions {
 		if power.Stance != nil {
-			chips = append(chips, stanceChips(power)...)
+			chips = append(chips, stanceChips(power, func(id string) bool { return ownsPower(powers, id) })...)
 		}
 	}
 	for _, row := range situational {
@@ -167,7 +167,9 @@ func chipsOffered(powers powersPanel, situational []situationalRow) []actionChip
 // Sem degrau a escolher, segue de um toque — são as seis Posturas de Combate
 // (p54) e todo bárbaro abaixo do 6º. Perguntar ali seria um toque a mais numa
 // pergunta de uma resposta só.
-func stanceChips(power powerRow) []actionChip {
+//
+// O que o chip MOVE é pela posse (`owns`): a Inspiração só mexe no dano de quem tem a Inspiração Marcial (p45).
+func stanceChips(power powerRow, owns func(powerID string) bool) []actionChip {
 	stance := power.Stance
 	if stance.Active {
 		return []actionChip{{
@@ -177,7 +179,7 @@ func stanceChips(power powerRow) []actionChip {
 			// encerrar desfaz um PM que não volta, e quem decide precisa saber o
 			// que vai perder. Era preciso ir à aba Efeitos para descobrir.
 			Bonus:     bonusInEffect(stance),
-			Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
+			Moves:     numbersMovedBy(book.StanceTargets(stance.Flag, owns)),
 			GroupCost: stanceGroupCost(power),
 			Path:      "/efeitos/postura/" + stance.Flag,
 		}}
@@ -186,7 +188,7 @@ func stanceChips(power powerRow) []actionChip {
 		Label: power.Name,
 		Cost:  strconv.Itoa(stance.BasePm) + " PM",
 		Can:   power.Can, Why: power.Why,
-		Moves:     numbersMovedBy(book.StanceTargets(stance.Flag)),
+		Moves:     numbersMovedBy(book.StanceTargets(stance.Flag, owns)),
 		GroupCost: stanceGroupCost(power),
 		Before:    "$stance_degrees = 0; ", Path: "/poderes/postura/" + stance.Flag + "/entra",
 	}

@@ -31,12 +31,21 @@ var classPowersPart03 = []ClassPower{
 	},
 	{
 		ID:          "class.bardo.inspiracao-marcial",
+		Modeled:     []string{"o bônus da Inspiração também no dano, com o degrau pago"},
 		ClassName:   "Bardo",
 		Name:        "Inspiração Marcial",
 		Description: "Bônus da sua Inspiração também se aplica a rolagens de dano.",
 		BookPage:    45,
 		UID:         "pwr_qzwk3hf3p7",
-		Unmodeled:   "o bônus da Inspiração também no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "damage", Scope: "all"},
+				Amount:    1,
+				BonusType: "morale",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "inspiracao", Label: "Sob Inspiração"},
+			},
+		},
+		Unmodeled: "o bônus no dano dos ALIADOS: é a Inspiração deles, que a mesa aplica, como a das perícias",
 	},
 	{
 		ID:            "class.bardo.lendas-e-historias",
