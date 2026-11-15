@@ -272,6 +272,8 @@ var itemFlagLabel = map[string]string{
 	"magia-ilimitada":            "Magia Ilimitada",
 	"ambidestria":                "Ambidestria",
 	"tem-estilo-de-duas-armas":   "Estilo de Duas Armas",
+	// A da Escaramuça Superior (p51): ela é quem cala os bônus menores da Escaramuça.
+	"escaramuca-superior": "Escaramuça Superior",
 	// A que a Flauta Mística pede (p158): o bônus dela é de "um bardo".
 	"magias-de-bardo": "Conjura como bardo",
 	// As TRÊS do descanso da noite (p106, ALE-488), na voz do livro.

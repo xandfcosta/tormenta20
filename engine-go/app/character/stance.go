@@ -91,7 +91,7 @@ func (p Plays) EnterStance(
 		}); err != nil {
 			return fmt.Errorf("ligar a postura %q: %w", flag, err)
 		}
-		return writeStanceDegrees(ctx, q, row.ID, *spec, flag, steps)
+		return writeStanceDegrees(ctx, q, row.ID, *spec, flag, steps, func(id string) bool { return sheet.OwnsClassPower(dto, id) })
 	}); err != nil {
 		return err
 	}
@@ -123,9 +123,9 @@ func (p Plays) EnterStance(
 // precisar lembrar.
 func writeStanceDegrees(
 	ctx context.Context, q *sqlcgen.Queries, characterID int64,
-	spec book.Activation, flag string, steps int,
+	spec book.Activation, flag string, steps int, owns func(powerID string) bool,
 ) error {
-	mods := book.StanceDegreeModifiers(flag, steps)
+	mods := book.StanceDegreeModifiers(flag, steps, owns)
 	if len(mods) == 0 {
 		return nil
 	}

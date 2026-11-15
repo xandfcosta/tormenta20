@@ -10,7 +10,7 @@ import (
 // inteira dentro da sessão. Agora o chip guarda o caminho, e quem escreve o
 // endereço é o `sheetPost` da ficha.
 func TestAChipGestureCarriesTheMarkOfTheSheetItIsDrawnIn(t *testing.T) {
-	chip := stanceChips(powerRow{Name: "Fúria", Can: true, Stance: &stanceState{Flag: "furia", BasePm: 2}})[0]
+	chip := stanceChips(powerRow{Name: "Fúria", Can: true, Stance: &stanceState{Flag: "furia", BasePm: 2}}, func(string) bool { return true })[0]
 
 	embedded := chipCommand(View{ID: 7, ActiveTab: "expertises", Embedded: true}, chip)
 	for _, want := range []string{"/personagens/7/poderes/postura/furia/entra", "embutida=1"} {

@@ -194,13 +194,31 @@ func StanceScales(flag string) bool {
 	return spec != nil && spec.Scaling != nil && spec.Scaling.StepPm > 0
 }
 
-// StanceTargets são os alvos que a postura move — o que a tela precisa para
-// dizer QUAIS números um chip mexe, sem o resto do modificador.
-func StanceTargets(flag string) []engine.ModifierTarget {
-	base := StanceBase(flag)
+// StanceTargets são os alvos que a postura move NESTA ficha — o que a tela precisa para dizer QUAIS números um
+// chip mexe, sem o resto do modificador. Pela posse, como o degrau (`StanceDegreeModifiers`): a Inspiração só
+// mexe no dano de quem tem a Inspiração Marcial (p45).
+func StanceTargets(flag string, owns func(powerID string) bool) []engine.ModifierTarget {
+	base := stanceBaseOwned(flag, owns)
 	out := make([]engine.ModifierTarget, 0, len(base))
 	for _, m := range base {
 		out = append(out, m.Target)
+	}
+	return out
+}
+
+// stanceBaseOwned são os modificadores da postura dos poderes que a ficha TEM. O `StanceBase` lê o catálogo
+// inteiro, porque é dele que sai o NOME do bônus ("Fúria +3"); o que a ficha recebe é só o dos poderes dela.
+func stanceBaseOwned(flag string, owns func(powerID string) bool) []engine.Modifier {
+	out := []engine.Modifier{}
+	for _, p := range ClassPowersWithModifiers() {
+		if !owns(p.ID) {
+			continue
+		}
+		for _, m := range p.Modifiers {
+			if m.Condition != nil && m.Condition.C == "flagOn" && m.Condition.Flag == flag {
+				out = append(out, m)
+			}
+		}
 	}
 	return out
 }
@@ -225,12 +243,16 @@ func StanceTargets(flag string) []engine.ModifierTarget {
 // na postura e morre ao encerrá-la, então a EXISTÊNCIA da linha já é a condição.
 // Carregá-la de novo faria o mesmo bônus ser diferido e dobrado de volta pelo
 // mesmo interruptor, e a tela mostraria o degrau como uma segunda linha.
-func StanceDegreeModifiers(flag string, steps int) []engine.Modifier {
+//
+// PELA POSSE (`owns`), e é ela que faz o papel da condição que saiu: o degrau da
+// Inspiração vale no dano só de quem tem a Inspiração Marcial (p45), e sem a posse
+// ele chegaria ao dano de todo bardo.
+func StanceDegreeModifiers(flag string, steps int, owns func(powerID string) bool) []engine.Modifier {
 	if steps <= 0 {
 		return nil
 	}
 	out := []engine.Modifier{}
-	for _, m := range StanceBase(flag) {
+	for _, m := range stanceBaseOwned(flag, owns) {
 		m.Amount += steps
 		m.Condition = nil
 		out = append(out, m)
