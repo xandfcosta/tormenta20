@@ -61,6 +61,9 @@ type itemSheet struct {
 	Spell *improvementSpell
 	// Ability é a habilidade que a arma Harmonizada pede (p165), nil no item sem ela.
 	Ability *improvementAbility
+	// MadeByOwner é a marca "feita por mim" (p69): nil quando a folha não a oferece, e o estado dela quando
+	// oferece. Ver `madeByOwnerOnTheItemSheet`.
+	MadeByOwner *bool
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
@@ -143,6 +146,7 @@ func itemSheetsOf(
 		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil && entry.Spell.Chosen != "" {
 			chosenCutRow(entry.Overlays, entry.Spell.Improvement, "−1 PM no custo de "+book.SpellName(entry.Spell.Chosen))
 		}
+		entry.MadeByOwner = madeByOwnerOnTheItemSheet(dto, item)
 		if entry.Ability = abilityOnTheItemSheet(item); entry.Ability != nil && entry.Ability.ChosenName != "" {
 			chosenCutRow(entry.Overlays, entry.Ability.Improvement, "−1 PM no custo de "+entry.Ability.ChosenName+" com esta arma")
 		}

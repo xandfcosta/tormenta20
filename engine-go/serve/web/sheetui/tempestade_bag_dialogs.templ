@@ -88,6 +88,12 @@ templ itemSheetDs(v View, s itemSheet) {
 		if s.Ability != nil {
 			@itemAbilityField(v, s)
 		}
+		if s.MadeByOwner != nil {
+			<div class="ds-field">
+				@ds.Switch("Feita por mim", *s.MadeByOwner, templ.Attributes{"data-on:change": sheetPost(v, madeByOwnerPath(s))})
+				<p class="ds-help">O Ferreiro e o Cano Raiado valem na arma feita por você mesmo (p69).</p>
+			</div>
+		}
 		// O TEXTO NO `.ds-field`, como as linhas do livro logo acima: é ele que dá ao `.ds-help` o corpo pequeno e
 		// a tinta de ajuda. Solto, o texto saía no corpo do diálogo e gritava mais que o interruptor que explica. O
 		// interruptor fica FORA: um `label` filho do `.ds-field` vira rótulo de campo, e encolhia junto.

@@ -27,6 +27,14 @@ func (r *Ruleset) itemCard(ch Character, it CharacterItem, catalog *CatalogItem,
 		if catalog.Category == "weapon-firearm" {
 			scopes = append(scopes, FirearmScope)
 		}
+		if it.MadeByOwner {
+			switch use.Purpose {
+			case "melee":
+				scopes = append(scopes, MadeByOwnerMeleeScope)
+			case "ranged":
+				scopes = append(scopes, MadeByOwnerFiredScope)
+			}
+		}
 		if slot == LegSlot {
 			// A pata não é "uma arma em uma das mãos" (p128).
 			scopes = slices.DeleteFunc(scopes, func(scope string) bool { return scope == MeleeOneHandedScope })

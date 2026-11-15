@@ -117,7 +117,9 @@ type ItemDTO struct {
 	Choice string `json:"choice,omitempty"`
 	// ImprovementChoices é a escolha que a melhoria pede, por melhoria — ver `engine.CharacterItem`.
 	ImprovementChoices map[string]string `json:"improvementChoices,omitempty"`
-	Material           *string           `json:"material"`
+	// MadeByOwner é a marca "feita por mim" da folha do item — ver `engine.CharacterItem`.
+	MadeByOwner bool    `json:"madeByOwner,omitempty"`
+	Material    *string `json:"material"`
 	// Oversized é a marca de arma de categoria maior — ver `engine.CharacterItem`.
 	Oversized bool `json:"oversized,omitempty"`
 	// Doses são as da Injeção alquímica (p165) — ver `doses.go`.

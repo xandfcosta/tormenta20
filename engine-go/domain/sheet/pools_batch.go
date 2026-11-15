@@ -173,6 +173,14 @@ func partialSheetsForPools(
 	if err != nil {
 		return nil, fmt.Errorf("ler as escolhas das melhorias de %d fichas: %w", len(ids), err)
 	}
+	madeRows, err := q.ItemsMadeByOwnerOfCharacters(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("ler as marcas de feita por mim de %d fichas: %w", len(ids), err)
+	}
+	madeByOwner := map[int64]bool{}
+	for _, row := range madeRows {
+		madeByOwner[row.Itemid] = true
+	}
 	improvementChoices := overlayChoices{}
 	for _, row := range improvementRows {
 		improvementChoices.add(row.Itemid, row.Improvementid, sql.NullString{String: row.Choice, Valid: true})
@@ -184,8 +192,8 @@ func partialSheetsForPools(
 			Quantity: it.Quantity, Slots: it.Slots, Equipped: dbvalue.NullToPtr(it.Equipped),
 			Improvements: it.Improvements, Material: dbvalue.NullToPtr(it.Material),
 			Enchants: porItem[it.ID], EnchantChoices: choices[it.ID], Choice: choiceOf[it.ID],
-			ImprovementChoices: improvementChoices[it.ID],
-			Oversized:          slices.Contains(oversized, it.ID),
+			ImprovementChoices: improvementChoices[it.ID], MadeByOwner: madeByOwner[it.ID],
+			Oversized: slices.Contains(oversized, it.ID),
 		})
 		partials[it.Characterid] = dto
 	}

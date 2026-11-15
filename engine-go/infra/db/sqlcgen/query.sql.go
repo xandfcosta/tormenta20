@@ -2127,6 +2127,83 @@ func (q *Queries) ItemChoicesOfCharacters(ctx context.Context, ids []int64) ([]I
 	return items, nil
 }
 
+const itemsMadeByOwnerOfCharacter = `-- name: ItemsMadeByOwnerOfCharacter :many
+SELECT m.itemId
+FROM character_item_made_by_owner m
+JOIN character_items i ON i.id = m.itemId
+WHERE i.characterId = ?
+`
+
+// Os itens com a marca "feita por mim" (o Ferreiro e o Cano Raiado, p69), por ficha.
+func (q *Queries) ItemsMadeByOwnerOfCharacter(ctx context.Context, characterid int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, itemsMadeByOwnerOfCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var itemid int64
+		if err := rows.Scan(&itemid); err != nil {
+			return nil, err
+		}
+		items = append(items, itemid)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const itemsMadeByOwnerOfCharacters = `-- name: ItemsMadeByOwnerOfCharacters :many
+SELECT i.characterId, m.itemId
+FROM character_item_made_by_owner m
+JOIN character_items i ON i.id = m.itemId
+WHERE i.characterId IN (/*SLICE:ids*/?)
+`
+
+type ItemsMadeByOwnerOfCharactersRow struct {
+	Characterid int64 `json:"characterid"`
+	Itemid      int64 `json:"itemid"`
+}
+
+// O irmao em lote do `ItemsMadeByOwnerOfCharacter`, para o caminho que monta N fichas.
+func (q *Queries) ItemsMadeByOwnerOfCharacters(ctx context.Context, ids []int64) ([]ItemsMadeByOwnerOfCharactersRow, error) {
+	query := itemsMadeByOwnerOfCharacters
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ItemsMadeByOwnerOfCharactersRow{}
+	for rows.Next() {
+		var i ItemsMadeByOwnerOfCharactersRow
+		if err := rows.Scan(&i.Characterid, &i.Itemid); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listActiveEffectsByCharacter = `-- name: ListActiveEffectsByCharacter :many
 SELECT id, source, catalogId, scope, modifiers, createdAt
 FROM active_effects WHERE characterId = ? ORDER BY id ASC
@@ -4017,6 +4094,16 @@ func (q *Queries) LiveSessionsForUser(ctx context.Context, userid int64) ([]Live
 	return items, nil
 }
 
+const markItemMadeByOwner = `-- name: MarkItemMadeByOwner :exec
+INSERT INTO character_item_made_by_owner (itemId) VALUES (?)
+ON CONFLICT(itemId) DO NOTHING
+`
+
+func (q *Queries) MarkItemMadeByOwner(ctx context.Context, itemid int64) error {
+	_, err := q.db.ExecContext(ctx, markItemMadeByOwner, itemid)
+	return err
+}
+
 const markOversizedWeapon = `-- name: MarkOversizedWeapon :exec
 INSERT INTO character_oversized_weapons (itemId) VALUES (?)
 `
@@ -4809,6 +4896,15 @@ func (q *Queries) TransferCampaigns(ctx context.Context, arg TransferCampaignsPa
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const unmarkItemMadeByOwner = `-- name: UnmarkItemMadeByOwner :exec
+DELETE FROM character_item_made_by_owner WHERE itemId = ?
+`
+
+func (q *Queries) UnmarkItemMadeByOwner(ctx context.Context, itemid int64) error {
+	_, err := q.db.ExecContext(ctx, unmarkItemMadeByOwner, itemid)
+	return err
 }
 
 const unmarkOversizedWeapon = `-- name: UnmarkOversizedWeapon :execrows

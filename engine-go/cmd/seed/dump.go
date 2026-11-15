@@ -52,6 +52,8 @@ var dumpTables = []string{
 	"character_item_choices",
 	// Depois de `character_items`, pela mesma FK: a magia do Harmonizado (p165).
 	"character_item_improvement_choices",
+	// Depois de `character_items`, pela mesma FK: a marca "feita por mim" (p69).
+	"character_item_made_by_owner",
 	"character_oversized_weapons",
 	"character_item_doses",
 	"character_spells",

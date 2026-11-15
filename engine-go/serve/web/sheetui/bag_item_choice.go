@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -206,4 +207,50 @@ func choosesTheImprovementAbility(s Scene, r *http.Request, row sqlcgen.Characte
 		return err
 	}
 	return s.plays.ChooseImprovementAbility(r.Context(), item, chi.URLParam(r, "melhoria"), chi.URLParam(r, "habilidade"))
+}
+
+// A MARCA "FEITA POR MIM": o Ferreiro e o Cano Raiado valem na "arma feita por você mesmo" (p69), e o app não sabe
+// quem fabricou o item (decisão do dono: a marca é do jogador). Ela só aparece na arma de quem tem algo que a
+// lê — o motor diz, pelo escopo da marca —, porque para os outros seria um interruptor que não muda nada.
+
+// madeByOwnerOnTheItemSheet diz se a folha oferece a marca e se ela está ligada; nil quando não oferece.
+func madeByOwnerOnTheItemSheet(dto sheet.CharacterDTO, item sheet.ItemDTO) *bool {
+	if entry := catalogItem(item); entry == nil || entry.Weapon == nil || !readsTheMadeByOwnerMark(dto) {
+		return nil
+	}
+	made := item.MadeByOwner
+	return &made
+}
+
+// readsTheMadeByOwnerMark diz se algum efeito da ficha soma no escopo da marca.
+func readsTheMadeByOwnerMark(dto sheet.CharacterDTO) bool {
+	if dto.Ruleset == nil {
+		return false
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return false
+	}
+	effects := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
+	for _, target := range []engine.ModifierTarget{
+		{K: "damageStep", Scope: engine.MadeByOwnerMeleeScope},
+		{K: "critRange", Scope: engine.MadeByOwnerFiredScope},
+	} {
+		if engine.StatFor(effects, target).Total != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// madeByOwnerPath é o endereço que liga e desliga a marca.
+func madeByOwnerPath(s itemSheet) string { return "/itens/" + s.Command + "/feita-por-mim" }
+
+// togglesMadeByOwner liga ou desliga a marca do item.
+func togglesMadeByOwner(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	item, err := s.sheetItem(r, row.ID)
+	if err != nil {
+		return err
+	}
+	return s.plays.ToggleItemMadeByOwner(r.Context(), item)
 }
