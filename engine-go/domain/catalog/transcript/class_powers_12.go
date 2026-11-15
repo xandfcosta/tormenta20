@@ -189,7 +189,7 @@ var classPowersPart12 = []ClassPower{
 		GrantedAtLevel: 8,
 		BookPage:       74,
 		UID:            "pwr_grtr3iizm7",
-		Unmodeled:      "não pode ser flanqueado: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+		Unmodeled:      "não pode ser flanqueado: o flanqueio é o mestre quem diz — a mesa não o detecta, porque a peça no tabuleiro não sabe quem é aliado de quem",
 	},
 	{
 		ID:             "class.ladino.ataque-furtivo-5d6",
