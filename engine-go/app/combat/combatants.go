@@ -99,7 +99,8 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 			return ""
 		},
 		// O PERSONAGEM tem a raça e o tipo dela (o osteon é morto-vivo, ALE-650).
-		Nature: book.CharacterNature(primaryRace(dto)),
+		Nature:      book.CharacterNature(primaryRace(dto)),
+		DamageTaken: engine.DamageTakenFrom(efeitos),
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed.Attributes)
 		},

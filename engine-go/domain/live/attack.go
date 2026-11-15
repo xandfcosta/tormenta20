@@ -153,6 +153,9 @@ type PendingAttack struct {
 	CritExtraIgnoreChance int                 `json:"critExtraIgnoreChance,omitempty"`
 	Absorbed              int                 `json:"absorbed"`
 	Damage                int                 `json:"damage"`
+	// Taken é o que o CORPO do alvo mudou no dano antes da RD — os Ossos Frágeis, a imunidade da Fonte
+	// Elemental (ALE-650) —, uma linha por fonte, para a conta da mesa dizer de onde veio.
+	Taken []TakenRow `json:"taken,omitempty"`
 	// Maneuver é a conta da MANOBRA (p234), e ela é nula num golpe comum.
 	//
 	// Uma manobra É um ataque corpo a corpo — o livro abre a página dizendo isso
@@ -297,4 +300,10 @@ type ChosenKindRead struct {
 	Chosen     string `json:"chosen"`
 	TargetKind string `json:"targetKind,omitempty"`
 	TargetRace string `json:"targetRace,omitempty"`
+}
+
+// TakenRow é uma linha do que o corpo do alvo mudou no dano: "Ossos Frágeis" +1, "imune a fogo" −6.
+type TakenRow struct {
+	Label  string `json:"label"`
+	Amount int    `json:"amount"`
 }

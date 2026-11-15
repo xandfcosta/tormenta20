@@ -62,6 +62,7 @@ templ tempestadeBlast(v View) {
 				<span class="ds-strike-tally">{ v.Blast.Tally }</span>
 			</div>
 			<p class="ds-help">{ v.Blast.Save }</p>
+			@damageTakenBlock(v.Blast.Taken)
 		</section>
 	} else {
 		<section id="table-blast" hidden></section>

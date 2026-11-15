@@ -247,16 +247,21 @@ func maneuverConsequence(pa live.PendingAttack) []duelRow {
 	return []duelRow{{Label: "Consequência", Value: strings.Join(said, "; "), Text: true}}
 }
 
-// damageRows são as linhas de conta do dano rolado: o dano, a RD do alvo e o
-// final. Sem RD agindo, o dano É o final, e a linha não se repete.
+// damageRows são as linhas de conta do dano rolado: o dano, o que o corpo do
+// alvo mudou nele (ALE-650), a RD e o final. Sem nada agindo, o dano É o final,
+// e a linha não se repete.
 func damageRows(pa live.PendingAttack) []duelRow {
 	rows := []duelRow{{Label: "Dano", Sum: damageSum(pa), Value: strconv.Itoa(pa.RawDamage)}}
-	if pa.Absorbed == 0 {
+	for _, taken := range pa.Taken {
+		rows = append(rows, duelRow{Label: taken.Label, Value: signed(int64(taken.Amount))})
+	}
+	if pa.Absorbed != 0 {
+		rows = append(rows, duelRow{Label: "RD", Value: "−" + strconv.Itoa(pa.Absorbed)})
+	}
+	if pa.Absorbed == 0 && len(pa.Taken) == 0 {
 		return rows
 	}
-	return append(rows,
-		duelRow{Label: "RD", Value: "−" + strconv.Itoa(pa.Absorbed)},
-		duelRow{Label: "Dano final", Value: strconv.Itoa(pa.Damage), Final: true})
+	return append(rows, duelRow{Label: "Dano final", Value: strconv.Itoa(pa.Damage), Final: true})
 }
 
 // writtenDose é a frase da dose. O efeito fica fora do dano do golpe porque quem o

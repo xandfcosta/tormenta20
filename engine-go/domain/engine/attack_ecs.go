@@ -89,20 +89,6 @@ type diceRolled struct {
 	Total  int
 }
 
-// rawTally e absorbedTally são as duas últimas contas, e são duas porque são
-// dois sistemas: quem soma as parcelas não sabe de RD, e quem aplica a RD não
-// sabe de parcela.
-type rawTally struct {
-	Raw int
-	// ByType é o cru POR TIPO de dano, e ele existe para a RD contra um tipo
-	// (p229) saber o que alcança. A soma dele é o `Raw` — toda parcela tem tipo,
-	// nem que seja o da própria arma.
-	ByType map[string]int
-	// CriticalExtra é quanto do cru veio do crítico — ver `criticalExtra`.
-	CriticalExtra int
-}
-type absorbedTally struct{ Absorbed, Final int }
-
 // attackFault guarda o PRIMEIRO erro e cala os sistemas seguintes.
 //
 // Um `ecs.System` é `func(*World)` e não devolve erro — a alternativa seria
@@ -138,6 +124,7 @@ func damageSystems(
 		dropWhatIsNotCritical,
 		rollTheDice(rollDie),
 		sumTheParcels(card),
+		theTargetsBodyTakesIt(target),
 		absorbWithDamageReduction(target),
 	}
 }
@@ -331,80 +318,6 @@ func rollTheDice(rollDie func(faces int) (int, error)) ecs.System {
 	}
 }
 
-// sumTheParcels soma o que sobrou vivo.
-func sumTheParcels(card WeaponCard) ecs.System {
-	return func(w *ecs.World) {
-		raw := 0
-		byType := map[string]int{}
-		// O TIPO DA PARCELA é o dela quando ela traz um, e o da ARMA quando não:
-		// os dados da espada e o bônus de Força são o corte da espada. Sem este
-		// recuo, uma redução de corte não alcançaria o dano da arma de corte —
-		// que é o caso da Armadura Óssea do osteon (RD 5 a corte, frio e
-		// perfuração).
-		extra := 0
-		soma := func(e ecs.Entity, amount int) {
-			raw += amount
-			if _, inteira := ecs.Get[criticalExtra](w, e); inteira {
-				extra += amount
-			}
-			tipo := card.DamageType
-			if own, has := ecs.Get[damageTypeOf](w, e); has {
-				tipo = own.Name
-			}
-			if tipo != "" {
-				byType[tipo] += amount
-			}
-		}
-		ecs.Each(w, func(e ecs.Entity, rolled diceRolled) {
-			if dead(w, e) {
-				return
-			}
-			soma(e, rolled.Total)
-			// O EXCEDENTE da parcela que o crítico multiplicou: o que passa da
-			// contagem de antes é o que ele acrescentou.
-			if before, multiplicada := ecs.Get[criticalMultiplied](w, e); multiplicada {
-				for i := before.Base; i < len(rolled.Values); i++ {
-					extra += rolled.Values[i]
-				}
-			}
-		})
-		ecs.Each(w, func(e ecs.Entity, parcel damageFlat) {
-			if !dead(w, e) {
-				soma(e, parcel.Amount)
-			}
-		})
-		setResource(w, rawTally{Raw: raw, ByType: byType, CriticalExtra: extra})
-	}
-}
-
-// absorbWithDamageReduction aplica a RD do alvo, e são DUAS famílias.
-//
-//	"Se uma criatura com RD 5 sofre um ataque que causa 8 pontos de dano, perde
-//	 apenas 3 PV. A redução pode ser contra um ou mais tipos de dano
-//	 específicos. Assim, uma criatura com redução de fogo 10 ignora 10 pontos de
-//	 dano de fogo, mas sofre dano de outros tipos normalmente." (p229)
-//
-// A DO TIPO VEM PRIMEIRO, e a ordem é decisão desta casa — o livro não diz o
-// que fazer quando as duas alcançam o mesmo ataque. É a única ordem bem
-// definida: a geral come de um total, e depois dela ninguém sabe quanto do que
-// sobrou era fogo. Cada uma age UMA VEZ por ataque, que é como o livro conta
-// ("ignora 10 pontos de dano de fogo", não "de cada parcela").
-//
-// O PISO EM ZERO é decisão desta casa: o livro só dá o caso em que sobra dano, e
-// "ignora parte do dano que sofre" não descreve um ataque que devolve PV. Sem o
-// piso, uma RD alta viraria cura — e a cura tem regra própria, que não é esta.
-func absorbWithDamageReduction(target AttackTarget) ecs.System {
-	return func(w *ecs.World) {
-		tally := resourceOf[rawTally](w)
-		absorbed := 0
-		for tipo, rd := range target.DamageReductionByType {
-			absorbed += min(rd, tally.ByType[tipo])
-		}
-		absorbed += min(target.DamageReduction, tally.Raw-absorbed)
-		setResource(w, absorbedTally{Absorbed: absorbed, Final: tally.Raw - absorbed})
-	}
-}
-
 // outcomeFromWorld remonta a conta que a mesa lê.
 func outcomeFromWorld(w *ecs.World) AttackOutcome {
 	hit := resourceOf[hitVerdict](w)
@@ -416,6 +329,7 @@ func outcomeFromWorld(w *ecs.World) AttackOutcome {
 		Situations: labelsOfTheSituations(w),
 		Critical:   resourceOf[criticalVerdict](w).Critical,
 		RawDamage:  resourceOf[rawTally](w).Raw,
+		Taken:      resourceOf[bodyTally](w).Taken,
 
 		CriticalExtra: resourceOf[rawTally](w).CriticalExtra,
 		Absorbed:      resourceOf[absorbedTally](w).Absorbed,

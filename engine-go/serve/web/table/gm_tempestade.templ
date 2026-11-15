@@ -230,6 +230,7 @@ templ gmCombatantSheet(v View, row tableRow) {
 				Salvar
 			}
 		</div>
+		@damageTakenBlock(v.GM.DamageTaken[row.CharacterID])
 		<div class="ds-gm-pools">
 			@gmPoolEditor(v, row, "hp", "PV", "pv", row.PV)
 			@gmPoolEditor(v, row, "mp", "PM", "pm", row.PM)
@@ -397,6 +398,20 @@ templ gmConditionPicker(v View) {
 				@ds.Option(false, templ.Attributes{"title": c.Description, "data-attr:aria-pressed": onCondition(c.ID) + " ? 'true' : 'false'", "data-on:click": toggleConditionRow(v, c.ID)}) {
 					{ c.Name }
 				}
+			}
+		</div>
+	}
+}
+
+// damageTakenBlock é "como o dano o atinge" (ALE-650): o rótulo e as frases, na folha do combatente e na faixa
+// da bola de fogo — o mesmo bloco nos dois lugares, para o mestre ler a mesma coisa do mesmo jeito. Sem frase,
+// nada.
+templ damageTakenBlock(sentences []string) {
+	if len(sentences) > 0 {
+		<div class="ds-gm-conds">
+			<span class="ds-field-label">Como o dano o atinge</span>
+			for _, sentence := range sentences {
+				<span class="ds-row-meta">{ sentence }</span>
 			}
 		</div>
 	}

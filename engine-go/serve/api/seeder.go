@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"t20engine/app/accounts"
@@ -151,6 +152,17 @@ func (sd Seeder) ToggleItemMadeByOwner(ctx context.Context, itemID int64) error 
 // ToggleOversizedWeapon marca a arma de categoria maior, pela mesma regra da Mochila.
 func (sd Seeder) ToggleOversizedWeapon(ctx context.Context, itemID int64) error {
 	return sd.plays.ToggleOversizedWeapon(ctx, itemID)
+}
+
+// ChooseRaceVariants grava a variante das habilidades de raça — a origem elemental do golem (p27) —, pelo caso
+// de uso das escolhas da ficha.
+func (sd Seeder) ChooseRaceVariants(ctx context.Context, id int64, variants []string) error {
+	raw, err := json.Marshal(variants)
+	if err != nil {
+		return err
+	}
+	written := string(raw)
+	return sd.plays.SaveChoices(ctx, id, character.ChoiceWrite{RaceAbilityChoices: &written})
 }
 
 // ChooseItemGod grava o deus do símbolo sagrado, pelo caso de uso da Mochila.

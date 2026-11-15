@@ -240,7 +240,19 @@ var classPowersPart03 = []ClassPower{
 		GrantedAtLevel: 10,
 		BookPage:       48,
 		UID:            "pwr_56sczxtxkq",
-		Unmodeled:      "Reflexos que zera o dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "evasao-aprimorada"},
+				Amount:    1,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOff",
+					Flag:  "armadura-pesada",
+					Flags: []string{"imovel"},
+					Label: "sem armadura pesada e sem estar imóvel",
+				},
+			},
+		},
 	},
 	{
 		ID:             "class.bucaneiro.esquiva-sagaz-3",

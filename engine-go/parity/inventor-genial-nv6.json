@@ -348,6 +348,15 @@
           "amount": -1,
           "bonusType": "untyped",
           "note": "Kliren"
+        },
+        {
+          "target": {
+            "k": "damageTakenPerDie",
+            "damageType": "impacto"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "Ossos Frágeis"
         }
       ]
     }
@@ -387,6 +396,18 @@
             "bonusType": "untyped",
             "amount": -1,
             "note": "Kliren"
+          }
+        ]
+      },
+      "damageTakenPerDie:impacto": {
+        "total": 1,
+        "contributions": [
+          {
+            "sourceId": "kliren",
+            "source": "Raça: Kliren",
+            "bonusType": "untyped",
+            "amount": 1,
+            "note": "Ossos Frágeis"
           }
         ]
       }

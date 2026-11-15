@@ -570,6 +570,10 @@ func targetKey(t ModifierTarget) string {
 			return "damageReduction:" + t.DamageType
 		}
 		return "damageReduction"
+	case "damageTakenPerDie", "damageImmunity", "magicDamageHeals":
+		// O TIPO NA CHAVE, pela razão da redução logo acima: o +1 por dado de
+		// impacto do kliren não alcança o frio.
+		return t.K + ":" + t.DamageType
 	case "catalyst":
 		return "catalyst:" + t.School
 	case "inventorySlots":

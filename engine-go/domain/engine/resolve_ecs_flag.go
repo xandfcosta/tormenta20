@@ -23,13 +23,26 @@ type worldFlags struct {
 }
 
 // raiseFlags acende toda flag de termo que cumpre a própria condição.
+//
+// A FLAG QUE DEPENDE DE OUTRA FLAG ESPERA. A Evasão "não pode ser usada de armadura pesada ou na condição
+// imóvel" (p47): ela é uma flag com `flagOff`, e a condição só se decide depois de as outras flags estarem
+// acesas. Acesa aqui, ela ficava no conjunto mesmo depois de o `dropWhatTheFlagTurnsOff` calar o termo —
+// quem a acende é o `harvestFlags`, no fim, sobre o que sobreviveu às travas.
 func raiseFlags(w *ecs.World) {
 	flags := flagsOf(w)
 	ecs.Each(w, func(_ ecs.Entity, t Term) {
-		if t.Mod.Target.K == "flag" && conditionMet(t.Mod, t.Wear) {
+		if t.Mod.Target.K == "flag" && conditionMet(t.Mod, t.Wear) && !gatedByOtherFlags(t.Mod.Condition) {
 			raiseFlagWithSource(flags, t)
 		}
 	})
+}
+
+// gatedByOtherFlags diz se a condição pergunta por OUTRAS flags, e por isso só se decide depois delas.
+func gatedByOtherFlags(c *ModifierCondition) bool {
+	if c == nil {
+		return false
+	}
+	return c.C == "flagOff" || c.C == "flagRequired" || len(c.Requires) > 0 || len(c.Unless) > 0
 }
 
 // raiseFlagWithSource acende a bandeira do termo e guarda quem a acendeu, e a

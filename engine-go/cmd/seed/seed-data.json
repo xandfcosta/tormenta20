@@ -2147,6 +2147,42 @@
               { "catalogId": "adaga" }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "raceVariants": ["golem-fonte-fogo"],
+          "create": {
+            "name": "Golem Fornalha Nv10",
+            "races": ["golem"],
+            "classes": [{ "className": "Ladino", "level": 10 }],
+            "strength": 2,
+            "dexterity": 4,
+            "constitution": 3,
+            "intelligence": 1,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 6,
+            "items": [{ "catalogId": "adaga", "equipped": "wielded" }]
+          }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Trog Caverna Nv3",
+            "races": ["trog"],
+            "origin": "soldado",
+            "classes": [{ "className": "Guerreiro", "level": 3 }],
+            "strength": 4,
+            "dexterity": 1,
+            "constitution": 3,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [{ "catalogId": "clava", "equipped": "wielded" }]
+          }
         }
       ]
     },

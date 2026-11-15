@@ -59,6 +59,9 @@ type seedCharacter struct {
 	// MadeByOwner são os `catalogId` das armas marcadas "feita por mim" (o Ferreiro e o Cano Raiado, p69).
 	MadeByOwner []string      `json:"madeByOwner"`
 	Overlays    []seedOverlay `json:"overlays"`
+	// RaceVariants é a variante das habilidades de raça — a origem elemental do golem (p27) —, que a criação
+	// não leva.
+	RaceVariants []string `json:"raceVariants"`
 	// ItemGods é o deus de um símbolo sagrado do elenco (p157), pelo mesmo gesto da Mochila.
 	ItemGods []seedItemGod `json:"itemGods"`
 	// ImprovementSpells é a magia do Harmonizado de um esotérico do elenco (p165), depois dos `overlays`.
@@ -150,6 +153,8 @@ type casaDaSeed interface {
 	SaveItemOverlays(ctx context.Context, itemID int64, improvements []string, material string) error
 	// LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.
 	LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error
+	// ChooseRaceVariants grava a variante das habilidades de raça, pelo mesmo gesto das escolhas da ficha.
+	ChooseRaceVariants(ctx context.Context, id int64, variants []string) error
 	// ChooseItemGod grava o deus do símbolo sagrado, pelo mesmo gesto da Mochila.
 	ChooseItemGod(ctx context.Context, itemID int64, god string) error
 	// ChooseImprovementSpell grava a magia do Harmonizado, pelo mesmo gesto da Mochila.
@@ -297,6 +302,11 @@ func seedCharacterRow(ctx context.Context, square casaDaSeed, ownerID int64, ch 
 	id, err := square.CreateCharacter(ctx, ownerID, body)
 	if err != nil {
 		return err
+	}
+	if len(ch.RaceVariants) > 0 {
+		if err := square.ChooseRaceVariants(ctx, id, ch.RaceVariants); err != nil {
+			return fmt.Errorf("variantes de raça: %w", err)
+		}
 	}
 	for _, sp := range ch.Spells {
 		if err := square.LearnSpell(ctx, id, sp.ID, sp.Prepared); err != nil {

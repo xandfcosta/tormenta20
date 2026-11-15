@@ -170,7 +170,14 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Name:        "Ossos Frágeis",
 				Description: "Você sofre 1 ponto de dano adicional por dado de dano de impacto.",
 				UID:         "rac_bvxnjgjfnv",
-				Unmodeled:   "+1 de dano por dado de impacto sofrido: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "damageTakenPerDie", DamageType: "impacto"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "Ossos Frágeis",
+					},
+				},
 			},
 			{
 				ID:          "kliren-vanguardista",
@@ -297,12 +304,83 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Name:        "Fonte Elemental",
 				Description: "Você possui um espírito elemental preso em seu corpo. Imune ao tipo de dano associado; se sofreria dano mágico desse tipo, em vez disso cura PV em metade do dano. Escolha sua origem elemental:",
 				UID:         "rac_iuopumis6i",
-				Unmodeled:   "a imunidade ao tipo de dano escolhido, e a cura pelo dano mágico dele: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
 				Variants: []RaceAbilityVariant{
-					{ID: "golem-fonte-agua", Name: "Água (frio)", Description: "Imune a frio."},
-					{ID: "golem-fonte-ar", Name: "Ar (eletricidade)", Description: "Imune a eletricidade."},
-					{ID: "golem-fonte-fogo", Name: "Fogo (fogo)", Description: "Imune a fogo."},
-					{ID: "golem-fonte-terra", Name: "Terra (ácido)", Description: "Imune a ácido."},
+					{
+						ID:          "golem-fonte-agua",
+						Name:        "Água (frio)",
+						Description: "Imune a frio.",
+						Modifiers: []Modifier{
+							{
+								Target:    ModifierTarget{Kind: "damageImmunity", DamageType: "frio"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+							{
+								Target:    ModifierTarget{Kind: "magicDamageHeals", DamageType: "frio"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+						},
+					},
+					{
+						ID:          "golem-fonte-ar",
+						Name:        "Ar (eletricidade)",
+						Description: "Imune a eletricidade.",
+						Modifiers: []Modifier{
+							{
+								Target:    ModifierTarget{Kind: "damageImmunity", DamageType: "eletricidade"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+							{
+								Target:    ModifierTarget{Kind: "magicDamageHeals", DamageType: "eletricidade"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+						},
+					},
+					{
+						ID:          "golem-fonte-fogo",
+						Name:        "Fogo (fogo)",
+						Description: "Imune a fogo.",
+						Modifiers: []Modifier{
+							{
+								Target:    ModifierTarget{Kind: "damageImmunity", DamageType: "fogo"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+							{
+								Target:    ModifierTarget{Kind: "magicDamageHeals", DamageType: "fogo"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+						},
+					},
+					{
+						ID:          "golem-fonte-terra",
+						Name:        "Terra (ácido)",
+						Description: "Imune a ácido.",
+						Modifiers: []Modifier{
+							{
+								Target:    ModifierTarget{Kind: "damageImmunity", DamageType: "ácido"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+							{
+								Target:    ModifierTarget{Kind: "magicDamageHeals", DamageType: "ácido"},
+								Amount:    1,
+								BonusType: "untyped",
+								Note:      "Fonte Elemental",
+							},
+						},
+					},
 				},
 			},
 			{
@@ -365,7 +443,14 @@ var raceDefinitionsPart03 = []RaceDefinition{
 				Name:        "Sangue Frio",
 				Description: "Você sofre 1 ponto de dano adicional por dado de dano de frio.",
 				UID:         "rac_d7ur63vhtr",
-				Unmodeled:   "+1 de dano por dado de frio sofrido: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "damageTakenPerDie", DamageType: "frio"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "Sangue Frio",
+					},
+				},
 			},
 		},
 		UID: "rac_avgggbkcvx",

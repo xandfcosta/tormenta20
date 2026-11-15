@@ -64,6 +64,9 @@ type Combatant struct {
 	BoostAgainst func(engine.BoostChoice) string
 	// Nature é o que a mesa sabe do combatente como ALVO: o tipo de criatura e a raça.
 	Nature book.CreatureNature
+	// DamageTaken é o que o corpo do combatente faz com o dano que sofre (ALE-650). Vazio para quem não tem
+	// ficha: o bloco do mestre não escreve Ossos Frágeis.
+	DamageTaken engine.DamageTaken
 	// Stances são as posturas acesas agora, que a proposta guarda. Vazio para quem não
 	// tem ficha.
 	Stances []string
@@ -350,6 +353,8 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 			DamageReductionByType: setup.victim.DamageReductionByType,
 			CritExtraIgnoreChance: setup.victim.CritExtraIgnoreChance,
 			CritImmune:            setup.victim.CritImmune,
+			TakenPerDie:           setup.victim.DamageTaken.PerDie,
+			ImmuneTo:              setup.victim.DamageTaken.Immune,
 		}
 	}
 	setup.boost.against = chosenKindAgainst(striker, req, setup.victim.Nature)

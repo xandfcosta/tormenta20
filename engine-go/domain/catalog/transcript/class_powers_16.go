@@ -156,7 +156,7 @@ var classPowersPart16 = []ClassPower{
 				Condition: &ModifierCondition{Kind: "flagOn", Flag: "castidade", Label: "para perceber blefes"},
 			},
 		},
-		Unmodeled: "a imunidade a encantamento: é uma forma que o motor ainda não tem (ALE-650)",
+		Unmodeled: "a imunidade a encantamento: é o mestre quem a aplica — nenhum efeito chega à ficha dizendo de que escola de magia veio",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-compaixao",
@@ -291,7 +291,19 @@ var classPowersPart16 = []ClassPower{
 		Description: "Em teste de Reflexos que reduziria dano à metade, sucesso = 0 dano. Falha = dano normal. Exige liberdade de movimentos.",
 		BookPage:    47,
 		UID:         "pwr_enoa4lwutn",
-		Unmodeled:   "Reflexos que zera o dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "evasao"},
+				Amount:    1,
+				BonusType: "untyped",
+				Condition: &ModifierCondition{
+					Kind:  "flagOff",
+					Flag:  "armadura-pesada",
+					Flags: []string{"imovel"},
+					Label: "sem armadura pesada e sem estar imóvel",
+				},
+			},
+		},
 	},
 	{
 		ID:          "poder.autoridade-feudal",
