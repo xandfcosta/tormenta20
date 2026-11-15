@@ -33,6 +33,7 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 		Hit: out.Hit, Critical: out.Critical, CritRange: margin, CritMult: multiplier,
 		Melee: setup.weapon.IsMelee(), ByUserID: who.ID,
 		BoostPowerID: setup.boost.powerID, BoostPM: setup.boost.pm, BoostHitPoints: setup.boost.hitPoints, Charge: req.Charge,
+		BoostAddOn: req.Boost.AddOn, IgnoredReduction: setup.weapon.IgnoresDamageReduction,
 		BoostAgainst: setup.boost.against, FollowUps: setup.followUps,
 		WeaponID: setup.weapon.CatalogID, AttackerStances: setup.striker.Stances, TargetStances: setup.victim.Stances,
 	}

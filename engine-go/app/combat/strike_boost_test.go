@@ -260,3 +260,41 @@ func TestTheAnticreatureBoostCarriesWhatTheTableKnowsOfTheTarget(t *testing.T) {
 		t.Errorf("o gasto da Venenosa, que vale contra qualquer alvo, guardou %+v", got)
 	}
 }
+
+// O ACRÉSCIMO VIAJA ATÉ O DANO (ALE-652): o Romper Resistências vai junto do Ataque Especial na proposta, e a
+// RD que ele ignora atravessa o congelamento do golpe — o dano rola DEPOIS da palavra do mestre, a partir da
+// carta congelada, e não da ficha daquele momento. Uma carta que perdesse o campo no caminho devolveria a RD
+// inteira sem ninguém notar na proposta.
+func TestTheBreakResistancesCarriesTheIgnoredReductionToTheDamage(t *testing.T) {
+	breaking := func(choice engine.BoostChoice) ([]engine.WeaponCard, error) {
+		card := aLongsword()
+		card.BoostPM = 2
+		if choice.AddOn != "" {
+			card.BoostPM, card.IgnoresDamageReduction = 3, 10
+		}
+		return []engine.WeaponCard{card}, nil
+	}
+	table := aTable(t)
+	strike := NewStrike(sheetDouble{
+		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword()}, Boost: breaking, ManaAvailable: 5},
+		"ogro":  {EntryID: "ogro", Label: "Ogro", Defense: 10, DamageReduction: 12},
+	}, table, semTabuleiro{}, fixedDie(4))
+	d20 := 10
+	req := Request{
+		SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+		Boost: engine.BoostChoice{PowerID: "class.guerreiro.ataque-especial-4", AddOn: "class.guerreiro.romper-resistencias"},
+	}
+	out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", req)
+	if err != nil {
+		t.Fatalf("propor o Ataque Especial com o Romper Resistências: %v", err)
+	}
+	if out.BoostAddOn != "class.guerreiro.romper-resistencias" || out.BoostPM != 3 || out.IgnoredReduction != 10 {
+		t.Errorf("o provisório saiu com o acréscimo %q por %d PM ignorando %d de RD, want o Romper por 3 PM ignorando 10",
+			out.BoostAddOn, out.BoostPM, out.IgnoredReduction)
+	}
+	rolled := hitAndRoll(t, strike, req)
+	// 1d8 (4) + 3 = 7; a RD 12 ignorando 10 absorve 2.
+	if rolled.Absorbed != 2 || rolled.Damage != 5 {
+		t.Errorf("o dano absorveu %d e ficou %d, want 2 e 5 — a RD 12 ignorando 10", rolled.Absorbed, rolled.Damage)
+	}
+}

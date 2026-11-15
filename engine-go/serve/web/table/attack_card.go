@@ -270,10 +270,17 @@ func damageRows(pa live.PendingAttack) []duelRow {
 	for _, taken := range pa.Taken {
 		rows = append(rows, duelRow{Label: taken.Label, Value: signed(int64(taken.Amount))})
 	}
-	if pa.Absorbed != 0 {
-		rows = append(rows, duelRow{Label: "RD", Value: "−" + strconv.Itoa(pa.Absorbed)})
+	// A RD IGNORADA diz o porquê na própria linha: o mestre sabe a RD do alvo, e "−2" contra uma RD 12 pede
+	// explicação (o Punhos de Adamante, o Romper Resistências, ALE-652). Ela vai na coluna da conta, e não no
+	// rótulo, que é estreito e quebrava o número numa segunda linha.
+	if pa.Absorbed != 0 || pa.IgnoredReduction > 0 {
+		reduction := duelRow{Label: "RD", Value: "−" + strconv.Itoa(pa.Absorbed)}
+		if pa.IgnoredReduction > 0 {
+			reduction.Sum = "ignorando " + strconv.Itoa(pa.IgnoredReduction)
+		}
+		rows = append(rows, reduction)
 	}
-	if pa.Absorbed == 0 && len(pa.Taken) == 0 {
+	if pa.Absorbed == 0 && pa.IgnoredReduction == 0 && len(pa.Taken) == 0 {
 		return rows
 	}
 	return append(rows, duelRow{Label: "Dano final", Value: strconv.Itoa(pa.Damage), Final: true})

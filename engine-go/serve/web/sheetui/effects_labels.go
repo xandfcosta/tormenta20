@@ -137,8 +137,10 @@ func targetLabel(t engine.ModifierTarget) string {
 		"armorPenaltyExempt":    "Ignora a penalidade de armadura",
 		"nonLethalDamage":       "Dano não letal",
 		"ignoresSituation":      "Ignora no ataque",
-		"source":                "Multiplica o que a fonte dá",
-		"tempHp":                "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
+		// A palavra da casa para a RD é "redução de dano" (a aba Combate), e o verbo é o do livro (p66, p77).
+		"ignoresDamageReduction": "Ignora redução de dano",
+		"source":                 "Multiplica o que a fonte dá",
+		"tempHp":                 "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
 		// O DANO QUE O PERSONAGEM SOFRE (ALE-650), com o tipo no complemento.
 		"damageTakenPerDie": "Dano sofrido a mais por dado",
 		"damageImmunity":    "Imune a dano",

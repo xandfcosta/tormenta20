@@ -178,7 +178,7 @@ func tableSignalsExpr(revision string) string {
 		// declaração eles nascem texto vazio, e a leitura do `Signals` da ficha
 		// falha INTEIRA — o golpe chegava sem o `turn_target` (ALE-499). Quem
 		// cobra é o `TestEveryTypedSignalTheActionsSurfaceReadsIsDeclaredByTheTable`.
-		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: '', dose_weapon: -1, dose_choice: ''",
+		"stance_degrees: 0, boost_weapon: -1, boost_power: '', boost_steps: 0, boost_split: '', boost_addon: '', dose_weapon: -1, dose_choice: ''",
 		// O ATAQUE EM ABERTO, que a barra de alvo escreve como escreve a vez.
 		"attack_open: false",
 		"extra_open: false",

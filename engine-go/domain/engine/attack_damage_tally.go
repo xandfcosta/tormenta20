@@ -135,14 +135,15 @@ func theTargetsBodyTakesIt(target AttackTarget) ecs.System {
 // O PISO EM ZERO é decisão desta casa: o livro só dá o caso em que sobra dano, e
 // "ignora parte do dano que sofre" não descreve um ataque que devolve PV. Sem o
 // piso, uma RD alta viraria cura — e a cura tem regra própria, que não é esta.
-func absorbWithDamageReduction(target AttackTarget) ecs.System {
+func absorbWithDamageReduction(target AttackTarget, ignored int) ecs.System {
 	return func(w *ecs.World) {
 		tally := resourceOf[bodyTally](w)
+		general, byType := withoutIgnoredReduction(target, ignored)
 		absorbed := 0
-		for tipo, rd := range target.DamageReductionByType {
+		for tipo, rd := range byType {
 			absorbed += min(rd, tally.ByType[tipo])
 		}
-		absorbed += min(target.DamageReduction, tally.Raw-absorbed)
+		absorbed += min(general, tally.Raw-absorbed)
 		setResource(w, absorbedTally{Absorbed: absorbed, Final: tally.Raw - absorbed})
 	}
 }

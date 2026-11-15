@@ -30,6 +30,8 @@ const (
 	boostPowerSignal  = "boost_power"
 	boostStepsSignal  = "boost_steps"
 	boostSplitSignal  = "boost_split"
+	// boostAddOnSignal é o acréscimo pago escolhido junto do impulso (o Romper Resistências, p66), ou vazio.
+	boostAddOnSignal = "boost_addon"
 )
 
 // attackBoost é um impulso oferecido numa arma.
@@ -56,6 +58,12 @@ type attackBoost struct {
 	// OncePerRound diz que o gasto é "uma vez por rodada" (o do encanto, p335-336). Com a iniciativa
 	// correndo a proposta recusa o segundo; fora dela não há rodada para contar, e a etiqueta é quem avisa.
 	OncePerRound bool
+	// AddOns são os acréscimos pagos que a ficha tem para este impulso (o Romper Resistências no Ataque
+	// Especial, p66): um interruptor dentro do impulso escolhido, com o PM a mais.
+	AddOns []engine.BoostAddOnOffer
+	// AddOnPMs é o preço NESTA arma, por degrau, com cada acréscimo ligado — do motor, e não `PMs` mais o PM do
+	// acréscimo: a Harmonizada corta o custo inteiro com o piso de 1, e 1 + 1 − 1 é 1, não 2.
+	AddOnPMs map[string][]int
 	// Foresees é o que o golpe pago prevê no acerto, escrito: "no acerto: Envenenado (1d12 PV por rodada,
 	// por 3 rodadas)". Vazio no impulso que só soma número.
 	Foresees string
@@ -134,8 +142,10 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 		boost := attackBoost{
 			PowerID: offer.PowerID, Name: name, Split: offer.Split, Buys: offer.Buys,
 			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0, Foresees: foreseenWritten(offer.Foresees),
+			AddOns: offer.AddOns,
 		}
 		previews, prices := boostPreviewsOf(dto.Ruleset, ec, active, offer, cards)
+		addOnPrices := addOnPricesOf(dto.Ruleset, ec, active, offer, len(cards))
 		for i := range cards {
 			if offer.MeleeOnly && !cards[i].IsMelee() {
 				continue
@@ -144,7 +154,9 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 			if offer.ItemID != 0 && cards[i].ItemID != offer.ItemID {
 				continue
 			}
-			out[i] = append(out[i], pricedOn(boost, previews[i], prices[i], mana))
+			priced := pricedOn(boost, previews[i], prices[i], mana)
+			priced.AddOnPMs = addOnPrices[i]
+			out[i] = append(out[i], priced)
 		}
 	}
 	return out
@@ -163,6 +175,38 @@ func pricedOn(boost attackBoost, previews map[string]boostPreview, prices []int,
 		boost.MaxSteps--
 	}
 	return boost
+}
+
+// addOnPricesOf é, por arma, o preço de cada degrau com cada acréscimo da oferta ligado. O lado não muda o
+// preço, e por isso se pergunta por um só.
+func addOnPricesOf(world *engine.Ruleset, ec engine.Character, active map[string]bool, offer engine.BoostOffer, weapons int) []map[string][]int {
+	out := make([]map[string][]int, weapons)
+	if len(offer.AddOns) == 0 {
+		return out
+	}
+	side := ""
+	if offer.Split {
+		side = engine.BoostToAttack
+	}
+	for i := range out {
+		out[i] = map[string][]int{}
+	}
+	for _, addOn := range offer.AddOns {
+		for i := range out {
+			out[i][addOn.PowerID] = make([]int, offer.MaxSteps+1)
+		}
+		for steps := 0; steps <= offer.MaxSteps; steps++ {
+			cards, err := world.BoostedWeaponCards(ec, active,
+				engine.BoostChoice{PowerID: offer.PowerID, Steps: steps, Split: side, AddOn: addOn.PowerID})
+			if err != nil {
+				continue
+			}
+			for i := 0; i < weapons && i < len(cards); i++ {
+				out[i][addOn.PowerID][steps] = cards[i].BoostPM
+			}
+		}
+	}
+	return out
 }
 
 // boostPreviewsOf computa as cartas com o impulso para cada degrau e lado, e
@@ -242,10 +286,29 @@ func boostChosenExpr(weapon int, powerID string) string {
 // Ligar zera o degrau e põe o lado em "no ataque", que é o que o motor recusaria
 // vazio.
 func boostToggleCommand(weapon int, boost attackBoost) string {
-	return fmt.Sprintf("if (%s) { $%s = '' } else { $%s = %d; $%s = %q; $%s = 0; $%s = %q }",
+	return fmt.Sprintf("if (%s) { $%s = '' } else { $%s = %d; $%s = %q; $%s = 0; $%s = %q; $%s = '' }",
 		boostChosenExpr(weapon, boost.PowerID), boostPowerSignal,
 		boostWeaponSignal, weapon, boostPowerSignal, boost.PowerID,
-		boostStepsSignal, boostSplitSignal, splitDefault(boost))
+		boostStepsSignal, boostSplitSignal, splitDefault(boost), boostAddOnSignal)
+}
+
+// boostAddOnIsExpr diz se o acréscimo `id` está escolhido.
+func boostAddOnIsExpr(id string) string {
+	return fmt.Sprintf("$%s === %q", boostAddOnSignal, id)
+}
+
+// boostAddOnCommand liga o acréscimo, ou o desliga se já estava.
+func boostAddOnCommand(id string) string {
+	return fmt.Sprintf("$%s = (%s) ? '' : %q", boostAddOnSignal, boostAddOnIsExpr(id), id)
+}
+
+// addOnLabel é o rótulo do acréscimo: o que ele compra e o PM a mais — "ignora 10 de RD · +1 PM".
+func addOnLabel(addOn engine.BoostAddOnOffer) string {
+	price := "+" + strconv.Itoa(addOn.PM) + " PM"
+	if addOn.Buys == "" {
+		return price
+	}
+	return addOn.Buys + " · " + price
 }
 
 func splitDefault(boost attackBoost) string {
@@ -276,10 +339,16 @@ func boostStepLabelExpr(boost attackBoost) string {
 		boostAmountExpr(boost), boostAmountExpr(boost), boostPriceExpr(boost), suffix)
 }
 
-// boostPriceExpr é o PM do degrau escolhido, pela tabela de preços desta arma.
+// boostPriceExpr é o PM do degrau escolhido, pela tabela de preços desta arma — a do acréscimo escolhido, se
+// houver um ligado.
 func boostPriceExpr(boost attackBoost) string {
 	blob, _ := json.Marshal(boost.PMs)
-	return fmt.Sprintf("%s[$%s]", blob, boostStepsSignal)
+	table := string(blob)
+	for _, addOn := range boost.AddOns {
+		withAddOn, _ := json.Marshal(boost.AddOnPMs[addOn.PowerID])
+		table = fmt.Sprintf("(%s ? %s : %s)", boostAddOnIsExpr(addOn.PowerID), withAddOn, table)
+	}
+	return fmt.Sprintf("%s[$%s]", table, boostStepsSignal)
 }
 
 // boostAmountExpr escreve o que o degrau escolhido compra, pela tabela que o
@@ -357,5 +426,5 @@ func ariaBoolExpr(when string) string {
 // rollClearsTheBoost é o que o "Rolar" do ataque faz depois de mandar o golpe:
 // a escolha volta a "sem", e o próximo golpe paga de novo se quiser.
 func rollClearsTheBoost() string {
-	return "; $" + boostPowerSignal + " = ''"
+	return "; $" + boostPowerSignal + " = ''; $" + boostAddOnSignal + " = ''"
 }

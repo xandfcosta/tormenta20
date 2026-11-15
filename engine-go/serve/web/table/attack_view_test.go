@@ -411,3 +411,19 @@ func TestTheBoostOfAnEnchantIsWrittenWithItsName(t *testing.T) {
 		t.Errorf("o gasto da Tumular saiu escrito %q; quer o nome, o PM e o PV que ele tirou", written)
 	}
 }
+
+// A RD IGNORADA aparece na carta do mestre MESMO QUANDO NÃO COMEU NADA (ALE-652): ele sabe a RD do alvo, e um
+// golpe que passa inteiro por uma RD 5 pede o porquê na própria linha. O "ignorando 10" vai na coluna da conta,
+// e não no rótulo: no rótulo ele quebrava o "10" sozinho numa segunda linha, a 390px e no desktop.
+func TestTheGMCardSaysHowMuchReductionTheStrikeIgnored(t *testing.T) {
+	rows := damageRows(live.PendingAttack{Dice: []int{8}, Faces: 8, RawDamage: 11, Absorbed: 0, Damage: 11, IgnoredReduction: 10})
+	var reduction *duelRow
+	for i := range rows {
+		if rows[i].Label == "RD" {
+			reduction = &rows[i]
+		}
+	}
+	if reduction == nil || reduction.Sum != "ignorando 10" || reduction.Value != "−0" {
+		t.Errorf("as linhas do dano = %+v, want a linha RD com \"ignorando 10\" na conta e −0", rows)
+	}
+}

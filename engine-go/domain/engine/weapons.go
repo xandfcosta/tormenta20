@@ -105,6 +105,9 @@ type WeaponCard struct {
 	//   - o TIPO tem de sobreviver até a mesa, porque é ele que dá a
 	//     resistência a fogo onde agir.
 	ExtraDamage []ExtraDamage `json:"extraDamage,omitempty"`
+	// IgnoresDamageReduction é quanto da RD do alvo este golpe ignora: o desarmado do Punhos de Adamante (p77), o
+	// Ataque Especial com o Romper Resistências (p66). Ver `ignored_reduction.go`.
+	IgnoresDamageReduction int `json:"ignoresDamageReduction,omitempty"`
 	// CriticalBonus é o dano que só existe no acerto crítico — os "+10 pontos
 	// de dano" do encanto Dilacerante (p336). É bônus numérico, então não
 	// multiplica, e fora do crítico ele não existe.
@@ -319,28 +322,29 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		ShootsIntoMelee: b.effects.Flags["disparo-preciso"] || shootsIntoMeleeHere(b.effects, scopes),
 		// O PÃO E CIRCO: "pode escolher causar dano não letal sem sofrer a penalidade de –5" (p91). Só a arma
 		// letal: ficar letal com a não letal continua pagando a linha da Tabela 5-3.
-		SwitchesDamageFreely: b.effects.Flags["pao-e-circo"] && !nonLethal,
-		Attribute:            ex.Attribute,
-		Attack:               ex.Total + b.attackAll.Total + ownAttack.Total,
-		AttackOwn:            ownAttack,
-		Expertise:            ex,
-		AttackAll:            b.attackAll,
-		Damage:               damage,
-		DamageType:           w.Type,
-		StrDamage:            strDamage,
-		DexBy:                dexBy,
-		IntBy:                intBy,
-		IntDamage:            intDamage,
-		DexDamage:            dexDamageUsed,
-		DamageBonus:          strDamage + b.damageAll.Total + ownDamage.Total,
-		DamageAll:            b.damageAll,
-		DamageOwn:            ownDamage,
-		CritRange:            threatRangeOf(w.CritRange, b.effects, scopes),
-		CritMult:             critMult,
-		NonLethal:            nonLethal,
-		ExtraDamage:          diceOfThisCard(b.effects.ExtraDamage, scopes),
-		Announces:            announcesOfThisCard(b.effects.Announced, scopes),
-		CriticalBonus:        b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
+		SwitchesDamageFreely:   b.effects.Flags["pao-e-circo"] && !nonLethal,
+		Attribute:              ex.Attribute,
+		Attack:                 ex.Total + b.attackAll.Total + ownAttack.Total,
+		AttackOwn:              ownAttack,
+		Expertise:              ex,
+		AttackAll:              b.attackAll,
+		Damage:                 damage,
+		DamageType:             w.Type,
+		StrDamage:              strDamage,
+		DexBy:                  dexBy,
+		IntBy:                  intBy,
+		IntDamage:              intDamage,
+		DexDamage:              dexDamageUsed,
+		DamageBonus:            strDamage + b.damageAll.Total + ownDamage.Total,
+		DamageAll:              b.damageAll,
+		DamageOwn:              ownDamage,
+		CritRange:              threatRangeOf(w.CritRange, b.effects, scopes),
+		CritMult:               critMult,
+		NonLethal:              nonLethal,
+		ExtraDamage:            diceOfThisCard(b.effects.ExtraDamage, scopes),
+		Announces:              announcesOfThisCard(b.effects.Announced, scopes),
+		CriticalBonus:          b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
+		IgnoresDamageReduction: ignoredReductionOf(b.effects, scopes),
 	}
 }
 

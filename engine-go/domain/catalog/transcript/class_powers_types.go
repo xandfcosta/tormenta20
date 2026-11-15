@@ -22,6 +22,8 @@ type ClassPower struct {
 	Boost           *ClassPowerBoost   `json:"boost,omitempty"`
 	// ExtraStrike é o ataque pago que não gasta a vez — ver `engine.PaidExtraStrike`.
 	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
+	// BoostAddOn é o acréscimo pago num impulso de outro poder — ver `engine.ClassPowerBoostAddOn`.
+	BoostAddOn *ClassPowerBoostAddOn `json:"boostAddOn,omitempty"`
 	// FollowUp é a manobra livre depois de outro gesto declarado — ver `engine.FollowUpManeuver`.
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
 }
@@ -102,4 +104,12 @@ type ClassPowerBoost struct {
 	Modifiers []Modifier `json:"modifiers"`
 	MeleeOnly bool       `json:"meleeOnly,omitempty"`
 	Split     bool       `json:"split,omitempty"`
+}
+
+// ClassPowerBoostAddOn é o acréscimo pago num impulso de outro poder: o Romper Resistências põe +1 PM no Ataque
+// Especial para ignorar 10 de RD (p66).
+type ClassPowerBoostAddOn struct {
+	Boost     string     `json:"boost"`
+	PM        int        `json:"pm"`
+	Modifiers []Modifier `json:"modifiers"`
 }

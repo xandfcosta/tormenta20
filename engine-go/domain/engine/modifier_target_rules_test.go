@@ -43,6 +43,8 @@ var alvosQueOMotorAplica = map[string]string{
 	"damage":               "weapons.go e attack_ecs.go, no dano",
 	"critRange":            "weapons.go, na margem de ameaça (ALE-411)",
 	"nonLethalDamage":      "weapons.go, na carta, e attack_ecs.go na parcela (ALE-423)",
+	"ignoresDamageReduction": "weapons.go, na carta (`ignoredReductionOf`), e attack_damage_tally.go tirando do " +
+		"que a RD absorve (o Punhos de Adamante, o Romper Resistências, ALE-652)",
 	"ignoresSituation": "weapons.go, na carta, e special_situations_ecs.go tirando do ataque a linha " +
 		"da Tabela 5-3 que a arma não sofre (a Caçadora, p335)",
 	"critMult":          "weapons.go, no multiplicador (ALE-411)",

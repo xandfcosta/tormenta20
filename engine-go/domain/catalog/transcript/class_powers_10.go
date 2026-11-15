@@ -37,12 +37,23 @@ var classPowersPart10 = []ClassPower{
 	},
 	{
 		ID:          "class.guerreiro.romper-resistencias",
+		Modeled:     []string{"o acréscimo pago no Ataque Especial: +1 PM para ignorar 10 de RD"},
 		ClassName:   "Guerreiro",
 		Name:        "Romper Resistências",
 		Description: "Quando faz Ataque Especial, paga 1 PM adicional para ignorar 10 pontos de redução de dano.",
 		BookPage:    66,
 		UID:         "pwr_yq5zeb5dbo",
-		Unmodeled:   "ignorar 10 de RD no Ataque Especial por +1 PM: o impulso não tem acréscimo pago (ALE-652)",
+		BoostAddOn: &ClassPowerBoostAddOn{
+			Boost: "class.guerreiro.ataque-especial-4",
+			PM:    1,
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "ignoresDamageReduction", Scope: "all"},
+					Amount:    10,
+					BonusType: "untyped",
+				},
+			},
+		},
 	},
 	{
 		ID:          "class.guerreiro.solidez",

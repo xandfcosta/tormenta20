@@ -49,6 +49,17 @@ templ boostStripDs(row actionRow) {
 						}
 					</span>
 				}
+				for _, addOn := range boost.AddOns {
+					<button
+						type="button"
+						class="ds-option"
+						data-attr:aria-pressed={ ariaBoolExpr(boostAddOnIsExpr(addOn.PowerID)) }
+						data-on:click={ boostAddOnCommand(addOn.PowerID) }
+					>
+						{ addOn.Name }
+						<span class="ds-row-meta">{ addOnLabel(addOn) }</span>
+					</button>
+				}
 			</span>
 		}
 	</div>
