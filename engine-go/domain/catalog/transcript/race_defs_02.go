@@ -179,11 +179,12 @@ var raceDefinitionsPart02 = []RaceDefinition{
 			},
 			{
 				ID:          "silfide-espirito-da-natureza",
+				Modeled:     []string{"o tipo espírito na mesa: o alvo da Anticriatura e as imunidades do tipo (p228)"},
 				RaceID:      "silfide",
 				Name:        "Espírito da Natureza",
 				Description: "Você é uma criatura do tipo espírito, recebe visão na penumbra e pode falar com animais livremente.",
 				UID:         "rac_yspdaw2jpl",
-				Unmodeled:   "espírito: o tipo está no catálogo da raça, mas não chega ao alvo da mesa nem às imunidades do tipo (p228) (ALE-650); a visão na penumbra e a fala com animais são prosa",
+				Unmodeled:   "a visão na penumbra e a fala com animais são prosa",
 			},
 			{
 				ID:          "silfide-magia-das-fadas",

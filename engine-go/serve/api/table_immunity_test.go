@@ -136,3 +136,44 @@ func TestRemovingAConditionFromAnImmuneCreatureStillWorks(t *testing.T) {
 		t.Errorf("a linha do Zumbi ficou com %v depois de tirar a condição", se)
 	}
 }
+
+// umPersonagemNaFila põe a ficha na fila e devolve o id da linha.
+func umPersonagemNaFila(t *testing.T, f sceneFixture, characterID int64, rotulo string) string {
+	t.Helper()
+	_, err := f.s.sessions.AddInitiativeEntry(context.Background(), f.sessionID,
+		live.InitiativeEntry{Label: rotulo, Initiative: 12, Type: "character", CharacterID: &characterID})
+	if err != nil {
+		t.Fatalf("pôr %s na fila: %v", rotulo, err)
+	}
+	for _, linha := range stateOf(t, f.s.sessions, f.sessionID).Initiative {
+		if linha.Label == rotulo {
+			return linha.ID
+		}
+	}
+	t.Fatalf("%s não entrou na fila", rotulo)
+	return ""
+}
+
+// O PERSONAGEM DE RAÇA NÃO HUMANOIDE também é imune pelo TIPO (ALE-650): o osteon é morto-vivo (p29), e a p228
+// barra veneno a morto-vivo. A MENTE ele tem — é personagem —, então o medo entra.
+func TestTheOsteonCharacterRefusesPoisonByItsType(t *testing.T) {
+	f := newSceneFixture(t)
+	seedRaca(t, f.s, f.charID, "Osteon")
+	osteon := umPersonagemNaFila(t, f, f.charID, "Ossada")
+	if recusa := marcaCondicao(t, f, osteon, "envenenado"); !strings.Contains(recusa, "veneno") {
+		t.Errorf("envenenar o osteon jogador não foi recusado pelo tipo: %q", recusa)
+	}
+	// O CONTROLE: o osteon tem mente, e o medo entra nele.
+	if recusa := marcaCondicao(t, f, osteon, "apavorado"); recusa != "" {
+		t.Errorf("apavorar o osteon jogador foi recusado: %q — ele tem Inteligência", recusa)
+	}
+}
+
+func TestTheHumanCharacterTakesPoison(t *testing.T) {
+	f := newSceneFixture(t)
+	seedRaca(t, f.s, f.charID, "Humano")
+	human := umPersonagemNaFila(t, f, f.charID, "Gente")
+	if recusa := marcaCondicao(t, f, human, "envenenado"); recusa != "" {
+		t.Errorf("envenenar o humano jogador foi recusado: %q", recusa)
+	}
+}
