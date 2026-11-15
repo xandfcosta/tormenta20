@@ -206,6 +206,7 @@ var classPowersPart05 = []ClassPower{
 		Modeled: []string{
 			"o +2 na Defesa e em Reflexos e o +1d8 no dano, que o jogador liga",
 			"calada de armadura pesada",
+			"o dado à distância só em alcance curto, com o alvo medido pelo tabuleiro; sem tabuleiro, vale o interruptor",
 		},
 		ClassName:   "Caçador",
 		Name:        "Escaramuça",
@@ -236,7 +237,7 @@ var classPowersPart05 = []ClassPower{
 				},
 			},
 			{
-				Target:    ModifierTarget{Kind: "damage", Scope: "all"},
+				Target:    ModifierTarget{Kind: "damage", Scope: "all", Range: "curto"},
 				BonusType: "untyped",
 				Condition: &ModifierCondition{
 					Kind:   "flagOn",
@@ -247,7 +248,6 @@ var classPowersPart05 = []ClassPower{
 				Dice: "1d8",
 			},
 		},
-		Unmodeled:     "o dado de dano à distância só em alcance curto: o tabuleiro mede a distância, e a conferência é a próxima fatia (ALE-652)",
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "dexterity", Min: 2}},
 		MinLevel:      6,
 	},
@@ -285,7 +285,7 @@ var classPowersPart05 = []ClassPower{
 				},
 			},
 			{
-				Target:    ModifierTarget{Kind: "damage", Scope: "all"},
+				Target:    ModifierTarget{Kind: "damage", Scope: "all", Range: "curto"},
 				BonusType: "untyped",
 				Condition: &ModifierCondition{
 					Kind:   "flagOn",
@@ -297,7 +297,6 @@ var classPowersPart05 = []ClassPower{
 			},
 			{Target: ModifierTarget{Kind: "flag", Name: "escaramuca-superior"}, Amount: 1, BonusType: "untyped"},
 		},
-		Unmodeled:     "o dado de dano à distância só em alcance curto: o tabuleiro mede a distância, e a conferência é a próxima fatia (ALE-652)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.cacador.escaramuca"}},
 		MinLevel:      12,
 	},

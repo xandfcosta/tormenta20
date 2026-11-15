@@ -16,6 +16,10 @@ type ExtraDamage struct {
 	// Scope é a arma de que o dado é: o encanto Flamejante da espada não queima pela adaga. Vazio vale
 	// em toda carta. Fica fora do JSON porque a carta já sai filtrada (`diceOfThisCard`).
 	Scope string `json:"-"`
+	// Range é a faixa a que o dado se limita no ataque À DISTÂNCIA: "curto" é o +1d8 da Escaramuça, que vale
+	// "em alcance curto" (p51). Vazio vale a qualquer distância. Quem o tira do golpe é a linha
+	// `TargetBeyondShortRange`, quando o tabuleiro mede o alvo além de 9m.
+	Range string `json:"range,omitempty"`
 }
 
 // IsMelee diz se esta arma bate CORPO A CORPO.

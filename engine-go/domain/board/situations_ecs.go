@@ -131,7 +131,27 @@ func SituationsBetween(
 	if targetInMeleeCombat(w, b, attackerEntry, target) {
 		out = append(out, engine.TargetInMeleeCombat)
 	}
+	if beyondShortRange(b, attackerEntry, target) {
+		out = append(out, engine.TargetBeyondShortRange)
+	}
 	return out
+}
+
+// beyondShortRange diz que o alvo está além do alcance curto, 9m (p224), medido de corpo a corpo
+// (`ApartBetween`). É a distância e nada mais: o que ela tira do golpe é do motor.
+func beyondShortRange(b *BoardState, attackerEntry string, target AttackTargetOnTheBoard) bool {
+	var from, to *BoardToken
+	for i := range b.Tokens {
+		token := &b.Tokens[i]
+		if token.EntryID != nil && *token.EntryID == attackerEntry {
+			from = token
+		}
+		if (target.TokenID != "" && token.ID == target.TokenID) ||
+			(target.TokenID == "" && token.EntryID != nil && *token.EntryID == target.EntryID) {
+			to = token
+		}
+	}
+	return from != nil && to != nil && ApartBetween(*from, *to).Squares > engine.ShortRangeSquares
 }
 
 // targetInMeleeCombat diz se o alvo está "dentro do alcance natural de qualquer

@@ -24,6 +24,7 @@ type FrozenStrike struct {
 //
 //	frozen, err := engine.FreezeStrike(card, target, situations)
 func FreezeStrike(card WeaponCard, target AttackTarget, situations []SpecialSituation) (json.RawMessage, error) {
+	card = withoutDiceOutOfRange(card, situations)
 	frozen, err := json.Marshal(FrozenStrike{
 		Weapon: card, Target: target, Situations: situations, ShootsIntoMelee: card.ShootsIntoMelee,
 	})
@@ -41,4 +42,33 @@ func ThawStrike(raw json.RawMessage) (FrozenStrike, error) {
 	}
 	frozen.Weapon.ShootsIntoMelee = frozen.ShootsIntoMelee
 	return frozen, nil
+}
+
+// withoutDiceOutOfRange tira da carta o dado de alcance curto quando o golpe à distância vai além dele
+// (`TargetBeyondShortRange`). É no CONGELAR, e não num sistema do dano, porque o dano a rolar
+// (`DamageToRoll`) e o dano rolado leem a carta congelada: tirado aqui, nenhum dos dois o vê. A cópia da lista
+// não mexe na carta de origem.
+func withoutDiceOutOfRange(card WeaponCard, situations []SpecialSituation) WeaponCard {
+	if card.IsMelee() || !hasSituation(situations, TargetBeyondShortRange) || len(shortRangeDiceOf(card)) == 0 {
+		return card
+	}
+	kept := []ExtraDamage{}
+	for _, extra := range card.ExtraDamage {
+		if extra.Range != string(RangeShort) {
+			kept = append(kept, extra)
+		}
+	}
+	card.ExtraDamage = kept
+	return card
+}
+
+// shortRangeDiceOf são os dados da carta que só valem em alcance curto.
+func shortRangeDiceOf(card WeaponCard) []ExtraDamage {
+	out := []ExtraDamage{}
+	for _, extra := range card.ExtraDamage {
+		if extra.Range == string(RangeShort) {
+			out = append(out, extra)
+		}
+	}
+	return out
 }
