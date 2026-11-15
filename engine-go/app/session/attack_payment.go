@@ -77,7 +77,11 @@ func paysForTheProposal(ctx context.Context, u Unit, s *live.SessionRuntimeState
 	if err := takesTheEnchantBoostOfTheRound(s, *attack); err != nil {
 		return err
 	}
-	if attack.ExtraOf != "" {
+	if attack.FollowUpOf != nil {
+		if err := takesTheFollowUp(s, attack); err != nil {
+			return err
+		}
+	} else if attack.ExtraOf != "" {
 		if err := takesTheExtraStrike(s, attack); err != nil {
 			return err
 		}
@@ -296,6 +300,7 @@ func givesTheTurnBack(s *live.SessionRuntimeState, open live.PendingAttack) {
 			s.Scene.ExtraStrikesUsed = slices.Delete(s.Scene.ExtraStrikesUsed, at, at+1)
 		}
 	}
+	givesTheFollowUpBack(s, open)
 	paid := open.Paid
 	s.Scene.StandardLeft = s.Scene.StandardLeft || paid.Standard
 	s.Scene.MovementLeft = s.Scene.MovementLeft || paid.Movement

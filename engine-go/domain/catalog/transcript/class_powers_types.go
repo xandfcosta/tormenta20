@@ -22,6 +22,17 @@ type ClassPower struct {
 	Boost           *ClassPowerBoost   `json:"boost,omitempty"`
 	// ExtraStrike é o ataque pago que não gasta a vez — ver `engine.PaidExtraStrike`.
 	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
+	// FollowUp é a manobra livre depois de outro gesto declarado — ver `engine.FollowUpManeuver`.
+	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
+}
+
+// ClassPowerFollowUp é a manobra em seguida que o poder dá: a derrubada depois de agarrar (Lutador de Chão,
+// p77), o agarrar depois do golpe com o Ataque Furtivo ligado (Mão na Boca, p74).
+type ClassPowerFollowUp struct {
+	Maneuver  string `json:"maneuver"`
+	After     string `json:"after,omitempty"`
+	PM        int    `json:"pm,omitempty"`
+	NeedsFlag string `json:"needsFlag,omitempty"`
 }
 
 // ClassPowerExtraStrike é o ataque adicional que o poder vende ao agredir, por PM: o Ataque Extra (p66) com

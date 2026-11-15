@@ -40,12 +40,16 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 	pending := live.PendingAttack{
 		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: weapon.Name,
 		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, WeaponID: weapon.CatalogID,
-		AttackerStances: striker.Stances, TargetStances: victim.Stances, OpensExtra: true,
+		AttackerStances: striker.Stances, TargetStances: victim.Stances,
 		Maneuver: &live.ManeuverRoll{
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
 		},
+		// A MANOBRA EM SEGUIDA é livre, e não a ação agredir: ela não abre o extra nem o estilo.
+		BoostPM: setup.boost.pm, FollowUp: setup.followUp, FollowUpOf: setup.followUpOf, OpensExtra: setup.followUpOf == nil,
 	}
-	opensTheStyle(&pending, weapon)
+	if pending.OpensExtra {
+		opensTheStyle(&pending, weapon)
+	}
 	return pending, nil
 }

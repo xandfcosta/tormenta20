@@ -193,14 +193,16 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 	rows := make([]actionRow, 0, len(combat.Weapons)+2)
 	for i, weapon := range combat.Weapons {
 		if !strikesWithTheFullAction(weapon) {
-			rows = append(rows, attackRow(i, weapon, boosts))
+			row := attackRow(i, weapon, boosts)
+			declaresTheFollowUp(&row, 0, combat.FollowUps, "")
+			rows = append(rows, row)
 		}
 	}
 	// A MANOBRA SÓ EXISTE COM ARMA CORPO A CORPO NA MÃO: *"não é possível fazer
 	// manobras de combate com ataques à distância"* (p234). Oferecê-la ao
 	// arqueiro seria desenhar um gesto que a regra recusa.
 	if hasMeleeWeapon(combat.Weapons) {
-		rows = append(rows, actionRow{
+		row := actionRow{
 			Name: "Manobra",
 			// O DETALHE DEIXA DE LISTAR as cinco quando elas viram botão: a
 			// mesma lista escrita duas vezes na mesma linha é a segunda que
@@ -210,7 +212,11 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 			Can:    true,
 			Moves:  []string{"attack"},
 			Rolls:  maneuverRolls(),
-		})
+		}
+		for i, kind := range engine.ManeuversOfTheBook() {
+			declaresTheFollowUp(&row, i, combat.FollowUps, kind)
+		}
+		rows = append(rows, row)
 	}
 	// FINTAR é teste de Enganação contra os Reflexos do alvo (p234) — é a única
 	// ação padrão do livro que não sai de Luta nem de Pontaria.
@@ -222,6 +228,7 @@ func standardRows(combat panelCombat, melee int, computed engine.ComputedSheet, 
 		Moves:  []string{"expertise:Enganação"},
 		Rolls:  []actionRoll{expertiseRoll("Enganação")},
 	})
+	switchesTheFollowUpOff(rows, combat.FollowUps)
 	return rows
 }
 

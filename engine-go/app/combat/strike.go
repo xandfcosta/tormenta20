@@ -66,6 +66,8 @@ type Combatant struct {
 	Nature book.CreatureNature
 	// StrikesImpulsively diz que a ficha tem o Golpe Imprudente (p77). Falso para quem não tem ficha.
 	StrikesImpulsively bool
+	// FollowUps são as manobras em seguida que os poderes da ficha dão. Vazio para quem não tem ficha.
+	FollowUps []engine.FollowUpManeuver
 	// DamageTaken é o que o corpo do combatente faz com o dano que sofre (ALE-650). Vazio para quem não tem
 	// ficha: o bloco do mestre não escreve Ossos Frágeis.
 	DamageTaken engine.DamageTaken
@@ -183,6 +185,8 @@ type Request struct {
 	ExtraPower string
 	// Impulsive é o Golpe Imprudente ligado no Golpe Relâmpago (p77): um dado a mais, e a guarda aberta.
 	Impulsive bool
+	// FollowUp é a manobra em seguida: a declarada neste gesto, ou a que ele faz (`follow_up.go`).
+	FollowUp FollowUpAsk
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -237,7 +241,7 @@ func (s Strike) strikerFor(
 	// a mesa vê e que nunca poderia ter acontecido.
 	if attackerEntry.CharacterID != nil {
 		cost := engine.StrikeAction(req.Charge)
-		if req.ExtraStrike {
+		if req.ExtraStrike || req.FollowUp.Takes != "" {
 			cost = engine.ActionFree
 		}
 		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, cost); err != nil {
@@ -289,6 +293,8 @@ type strikeSetup struct {
 	target     engine.AttackTarget
 	targetID   string
 	situations []engine.SpecialSituation
+	// followUp é a manobra em seguida declarada neste gesto, e followUpOf a que ele faz.
+	followUp, followUpOf *live.FollowUp
 }
 
 // setUp confere quem ataca e o alvo, e monta a arma.
@@ -325,6 +331,9 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		return strikeSetup{}, err
 	}
 	setup := strikeSetup{attacker: attackerEntry, striker: striker, weapon: weapon, boost: boost}
+	if err := setup.settleFollowUp(req); err != nil {
+		return strikeSetup{}, err
+	}
 	if req.ExtraStrike {
 		state, err := s.tables.State(ctx, req.SessionID)
 		if err != nil {

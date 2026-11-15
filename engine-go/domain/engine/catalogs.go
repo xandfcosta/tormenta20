@@ -188,6 +188,9 @@ type ClassPower struct {
 	// ExtraStrike é o ataque pago que não gasta a vez (o Ataque Extra, o Golpe Relâmpago) — ver
 	// `PaidExtraStrike`.
 	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
+	// FollowUp é a manobra livre que o poder dá depois de outro gesto declarado (o Lutador de Chão, a Mão na
+	// Boca) — ver `FollowUpManeuver`.
+	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
 	// ProficientWith é a proficiência que o poder dá: a categoria inteira (o Pistoleiro, p48) ou parte dela
 	// (o Armeiro, "armas marciais corpo a corpo", p68). Ver `ProficiencyOf`.
 	ProficientWith []ProficiencyReach `json:"proficientWith,omitempty"`

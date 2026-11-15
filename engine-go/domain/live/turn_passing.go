@@ -78,20 +78,21 @@ func RewindTurn(st *SessionRuntimeState) {
 }
 
 // TurnLeftBehind é o que o "Próximo" guarda do turno que passou: o que sobrou de ação, o ataque a mais
-// aberto e a mira.
+// aberto, a manobra em seguida aberta e a mira.
 type TurnLeftBehind struct {
-	EntryID           string   `json:"entryId"`
-	StandardLeft      bool     `json:"standardLeft"`
-	MovementLeft      bool     `json:"movementLeft"`
-	ExtraMovementLeft bool     `json:"extraMovementLeft,omitempty"`
-	ExtraStrikeEntry  string   `json:"extraStrikeEntry,omitempty"`
-	ExtraStrikeBarred string   `json:"extraStrikeBarred,omitempty"`
-	ExtraStrikesUsed  []string `json:"extraStrikesUsed,omitempty"`
-	ExtraUnarmed      bool     `json:"extraUnarmed,omitempty"`
-	ExtraStyle        string   `json:"extraStyle,omitempty"`
-	ExtraStyleItem    int64    `json:"extraStyleItem,omitempty"`
-	AimedBy           string   `json:"aimedBy,omitempty"`
-	AimedAt           string   `json:"aimedAt,omitempty"`
+	EntryID           string        `json:"entryId"`
+	StandardLeft      bool          `json:"standardLeft"`
+	MovementLeft      bool          `json:"movementLeft"`
+	ExtraMovementLeft bool          `json:"extraMovementLeft,omitempty"`
+	ExtraStrikeEntry  string        `json:"extraStrikeEntry,omitempty"`
+	ExtraStrikeBarred string        `json:"extraStrikeBarred,omitempty"`
+	ExtraStrikesUsed  []string      `json:"extraStrikesUsed,omitempty"`
+	ExtraUnarmed      bool          `json:"extraUnarmed,omitempty"`
+	FollowUpOpen      *OpenFollowUp `json:"followUpOpen,omitempty"`
+	ExtraStyle        string        `json:"extraStyle,omitempty"`
+	ExtraStyleItem    int64         `json:"extraStyleItem,omitempty"`
+	AimedBy           string        `json:"aimedBy,omitempty"`
+	AimedAt           string        `json:"aimedAt,omitempty"`
 }
 
 // turnsKeptBehind é até onde o "voltar a vez" lembra. Ele é conserto de mesa, de uma ou duas vezes, e o
@@ -107,7 +108,7 @@ func leavesTheTurnBehind(st *SessionRuntimeState) {
 	st.Scene.TurnsBehind = append(st.Scene.TurnsBehind, TurnLeftBehind{
 		EntryID: st.Initiative[st.TurnIndex].ID, StandardLeft: s.StandardLeft, MovementLeft: s.MovementLeft,
 		ExtraMovementLeft: s.ExtraMovementLeft, ExtraStrikeEntry: s.ExtraStrikeEntry, ExtraStrikeBarred: s.ExtraStrikeBarred,
-		ExtraStrikesUsed: s.ExtraStrikesUsed, ExtraUnarmed: s.ExtraOpenedUnarmed, ExtraStyle: s.ExtraStyle, ExtraStyleItem: s.ExtraStyleItem,
+		ExtraStrikesUsed: s.ExtraStrikesUsed, ExtraUnarmed: s.ExtraOpenedUnarmed, FollowUpOpen: s.FollowUpOpen, ExtraStyle: s.ExtraStyle, ExtraStyleItem: s.ExtraStyleItem,
 		AimedBy: s.AimedBy, AimedAt: s.AimedAt,
 	})
 	if extra := len(s.TurnsBehind) - turnsKeptBehind; extra > 0 {
@@ -132,7 +133,7 @@ func takesTheTurnBack(st *SessionRuntimeState) {
 	s.TurnsBehind = slices.Clip(s.TurnsBehind[:last])
 	s.StandardLeft, s.MovementLeft, s.ExtraMovementLeft = turn.StandardLeft, turn.MovementLeft, turn.ExtraMovementLeft
 	s.ExtraStrikeEntry, s.ExtraStrikeBarred, s.ExtraStrikesUsed = turn.ExtraStrikeEntry, turn.ExtraStrikeBarred, turn.ExtraStrikesUsed
-	s.ExtraOpenedUnarmed = turn.ExtraUnarmed
+	s.ExtraOpenedUnarmed, s.FollowUpOpen = turn.ExtraUnarmed, turn.FollowUpOpen
 	s.ExtraStyle, s.ExtraStyleItem = turn.ExtraStyle, turn.ExtraStyleItem
 	s.AimedBy, s.AimedAt = turn.AimedBy, turn.AimedAt
 }

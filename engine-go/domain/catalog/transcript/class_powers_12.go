@@ -381,8 +381,11 @@ var classPowersPart12 = []ClassPower{
 		MinLevel:      13,
 	},
 	{
-		ID:          "class.ladino.mao-na-boca",
-		Modeled:     []string{"o +2 em testes de agarrar"},
+		ID: "class.ladino.mao-na-boca",
+		Modeled: []string{
+			"o +2 em testes de agarrar",
+			"o agarrar livre, declarado no golpe com o Ataque Furtivo ligado e aberto pelo ✓ do mestre",
+		},
 		ClassName:   "Ladino",
 		Name:        "Mão na Boca",
 		Description: "+2 em testes de agarrar. Quando acerta AF em criatura desprevenida, faz teste de agarrar como ação livre. Criatura agarrada não pode falar.",
@@ -391,8 +394,8 @@ var classPowersPart12 = []ClassPower{
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "maneuver", Name: "agarrar"}, Amount: 2, BonusType: "untyped"},
 		},
-		Unmodeled:     "o agarrar livre depois do ataque furtivo: é uma forma de ataque que o motor ainda não tem (ALE-651)",
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Luta"}},
+		FollowUp:      &ClassPowerFollowUp{Maneuver: "agarrar", NeedsFlag: "ataque-furtivo"},
 	},
 	{
 		ID:          "class.ladino.maos-rapidas",

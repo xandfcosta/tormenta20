@@ -47,6 +47,8 @@ type View struct {
 	ExtraStrikesUsed  string
 	// ExtraUnarmed diz que o golpe que abriu o extra foi desarmado: o Golpe Relâmpago espera por ele (p76).
 	ExtraUnarmed bool
+	// FollowUpOpen é o poder da manobra em seguida que o ✓ do mestre abriu para quem está na vez, ou vazio.
+	FollowUpOpen string
 	// ExtraStyle e ExtraStyleItem são o estilo aberto e a arma do golpe que o abriu (p125).
 	ExtraStyle     string
 	ExtraStyleItem int64
@@ -400,6 +402,7 @@ func tableViewOf(
 		ExtraStrikeOpen:   extraStrikeIsOpen(st),
 		ExtraStrikeBarred: extraStrikeBarred(st),
 		ExtraUnarmed:      extraStrikeIsOpen(st) && st.Scene.ExtraOpenedUnarmed,
+		FollowUpOpen:      followUpOpenOnTurn(st),
 		ExtraStyle:        extraStyle(st),
 		ExtraStyleItem:    extraStyleItem(st),
 		AimedAtLabel:      aimedAtLabel(st),
@@ -630,4 +633,16 @@ func upkeepOf(st *live.SessionRuntimeState) *live.TurnUpkeep {
 		return nil
 	}
 	return st.Scene.Upkeep
+}
+
+// followUpOpenOnTurn é o poder da manobra em seguida aberta, se ela é de quem está na vez: a vez que passa a
+// fecha (`live.RefreshTurn`), e voltar a vez pode mudar quem está nela sem renovar o turno.
+func followUpOpenOnTurn(st *live.SessionRuntimeState) string {
+	if st == nil || st.Scene == nil || st.Scene.FollowUpOpen == nil || st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
+		return ""
+	}
+	if open := st.Scene.FollowUpOpen; st.Initiative[st.TurnIndex].ID == open.EntryID {
+		return open.PowerID
+	}
+	return ""
 }

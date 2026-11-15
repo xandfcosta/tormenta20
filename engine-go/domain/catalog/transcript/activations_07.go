@@ -11,14 +11,6 @@ var activationsPart07 = []Activation{
 		Uses:   nil,
 	},
 	{
-		ID:     "class.lutador.lutador-de-chao",
-		Name:   "Lutador de Chão",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
-		Uses:   nil,
-	},
-	{
 		ID:     "class.lutador.nome-na-arena",
 		Name:   "Nome na Arena",
 		Kind:   "instant",

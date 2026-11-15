@@ -121,6 +121,13 @@ Relâmpago declaram o preço no verbete (`ClassPower.ExtraStrike`), a carta os l
 trava da mesa conta pela fonte, que é o poder. O Golpe Relâmpago só sai depois de agredir desarmado — a
 cena guarda isso em `ExtraOpenedUnarmed`, que o "voltar a vez" devolve junto do resto do extra.
 
+**A manobra em seguida é a irmã dele** (`follow_up_maneuver.go`, ALE-651): o Lutador de Chão e a Mão na
+Boca declaram no verbete (`ClassPower.FollowUp`) a manobra livre, o gesto que a abre e o interruptor que ele
+pede. O jogador a declara antes de rolar, e a proposta a leva (`PendingAttack.FollowUp`). O ✓ do mestre a
+abre na cena (`Scene.FollowUpOpen`, `opensTheFollowUp`), e a manobra que a faz sai sem gastar ação, contra o
+mesmo alvo, pelo PM do poder (`takesTheFollowUp`). O cancelamento a devolve aberta, e o "voltar a vez"
+também.
+
 **O ataque adicional dos estilos usa o mesmo caminho** (`offerStyleStrikes`, p125). Ele é uma
 **declaração**: o Usar do poder liga a flag dele (`book.DeclaredFlag`), o -2 vale nos dois ataques, e
 por isso o golpe só abre o segundo se já saiu com ela ligada. A flag se desliga sozinha quando a vez

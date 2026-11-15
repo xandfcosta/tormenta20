@@ -355,3 +355,17 @@ func handDieLabel(group handGroup, n int) string {
 	}
 	return label
 }
+
+// writtenFollowUp é a manobra em seguida que o gesto DECLAROU, antes de rolar (ALE-651): o ✓ do mestre a abre.
+// "Declarou derrubar em seguida (Lutador de Chão, 1 PM)".
+func writtenFollowUp(pa live.PendingAttack) string {
+	declared := pa.FollowUp
+	if declared == nil {
+		return ""
+	}
+	what := declared.Name
+	if declared.PM > 0 {
+		what += ", " + strconv.Itoa(declared.PM) + " PM"
+	}
+	return "Declarou " + declared.Maneuver + " em seguida (" + what + ")"
+}

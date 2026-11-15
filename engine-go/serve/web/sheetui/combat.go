@@ -41,6 +41,8 @@ type panelCombat struct {
 	// ele a tripla mágica é que é o assunto.
 	ShowWeapons bool
 	Weapons     []weaponTile
+	// FollowUps são as manobras em seguida que a ficha pode declarar (ALE-651), que as Ações oferecem.
+	FollowUps []engine.FollowUpManeuver
 	// MagicTiles é vazia para quem não conjura por CLASSE. Um poder que concede
 	// uma magia solta não abre este bloco.
 	MagicTiles []statTile
@@ -210,6 +212,7 @@ func panelForCombat(sheet engine.ComputedSheet, cards []engine.WeaponCard, caste
 		ShowWeapons: len(cards) > 0 || !caster,
 		Weapons:     weaponTiles(cards),
 		MagicTiles:  magicTiles(sheet, caster, mainTradition(dto)),
+		FollowUps:   followUpsOf(dto),
 	}
 }
 

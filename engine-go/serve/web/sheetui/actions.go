@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -177,7 +178,8 @@ func actionsPanelFrom(
 		engine.ActionStandard: append(standardRows(combat, melee, computed, boosts), blasts...),
 		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
-		engine.ActionFree:     append(extraStrikeRows(combat, boosts, ownsPower(powers, engine.ImpulsiveStrikePowerID)), shapeRows...),
+		engine.ActionFree: slices.Concat(extraStrikeRows(combat, boosts, ownsPower(powers, engine.ImpulsiveStrikePowerID)),
+			followUpRows(combat.FollowUps, melee), shapeRows),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {

@@ -24,6 +24,7 @@ var notAGesture = map[string]string{
 	// O PM do ataque pago sai com ele, na linha que a carta monta, como o da arma natural (ALE-651).
 	"class.guerreiro.ataque-extra":  "o ataque pago é a linha da carta",
 	"class.lutador.golpe-relampago": "o ataque pago é a linha da carta",
+	"class.lutador.lutador-de-chao": "a derrubada em seguida é a linha da manobra livre, aberta pelo agarrar declarado",
 	// o PM deles se paga no diálogo de conjurar, somado ao custo da magia (p131)
 	QuickenedSpellPower: "aprimoramento", AmplifiedSpellPower: "aprimoramento", DiscreetSpellPower: "aprimoramento",
 	// o TOTAL de PM

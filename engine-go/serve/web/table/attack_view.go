@@ -40,6 +40,8 @@ type attackProposal struct {
 	Against string
 	// Dose diz o que a Injeção alquímica libera neste golpe (p165).
 	Dose string
+	// FollowUp é a manobra em seguida que o gesto declarou, para o mestre ler o pedido inteiro (ALE-651).
+	FollowUp string
 	// Guard é a guarda que a investida abre em quem investiu (p235). Para o
 	// NPC, que não tem ficha onde a penalidade more, a frase é o que o mestre
 	// aplica.
@@ -90,6 +92,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Boost:    writtenBoost(*pa),
 		Against:  writtenChosenKind(*pa),
 		Dose:     writtenDose(*pa),
+		FollowUp: writtenFollowUp(*pa),
 		Guard:    writtenGuard(*pa, entryLabel(st, pa.AttackerEntryID)),
 		Mine:     pa.ByUserID == userID,
 		Rerolled: writtenRerolls(pa.Rerolls, pa.Roll),
@@ -348,6 +351,8 @@ func writtenBoost(pa live.PendingAttack) string {
 		parts = append(parts, "Ataque adicional")
 	} else if pa.ExtraOf != "" {
 		parts = append(parts, "Ataque extra")
+	} else if pa.FollowUpOf != nil {
+		parts = append(parts, "Em seguida ("+pa.FollowUpOf.Name+")")
 	}
 	if pa.BoostPowerID != "" {
 		name := pa.BoostPowerID
@@ -471,7 +476,7 @@ func attackIsOpen(a *attackProposal) bool { return a != nil && a.Stage != stageM
 // de hoje as escreve.
 func attackNotes(a *attackProposal) []string {
 	var notes []string
-	for _, line := range []string{a.Boost, a.Situations, a.Guard, a.Rerolled} {
+	for _, line := range []string{a.Boost, a.FollowUp, a.Situations, a.Guard, a.Rerolled} {
 		if line != "" {
 			notes = append(notes, line)
 		}

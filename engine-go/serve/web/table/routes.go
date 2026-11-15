@@ -187,6 +187,8 @@ func tableSignalsExpr(revision string) string {
 		// O GOLPE RELÂMPAGO espera o agredir desarmado (p76), e o Golpe Imprudente é o interruptor da folha
 		// dele (p77, ALE-651).
 		"extra_unarmed: false, impulsive_strike: false",
+		// A MANOBRA EM SEGUIDA: o interruptor que a declara, e o poder dela que o ✓ do mestre abriu (ALE-651).
+		"follow_up: false, follow_up_open: ''",
 		// E os gastos de PM do teste de perícia (ALE-489), pela mesma razão: o
 		// diálogo da perícia também é desenhado dentro da Mesa.
 		sheetui.ExpertiseSpendsDeclaration(),
