@@ -235,11 +235,11 @@ var raceDefinitionsPart03 = []RaceDefinition{
 			},
 			{
 				ID:          "hynne-sorte-salvadora",
+				Modeled:     []string{"o rolar de novo do teste de resistência por 1 PM, na faixa do teste"},
 				RaceID:      "hynne",
 				Name:        "Sorte Salvadora",
 				Description: "Quando faz um teste de resistência, você pode gastar 1 PM para rolar este teste novamente.",
 				UID:         "rac_fljkqob7lk",
-				Unmodeled:   "rolar de novo o teste de resistência por 1 PM: o rolar de novo do teste existe (o do Resoluto), e este ainda é só o gesto que cobra (ALE-652)",
 			},
 		},
 		UID: "rac_76vs5luayw",
