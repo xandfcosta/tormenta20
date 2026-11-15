@@ -42,6 +42,9 @@ func TestTappingAnotherTokenPicksTheTargetOfTheTurn(t *testing.T) {
 	if !strings.Contains(player, "$turn_target = '"+goblin+"'; $board_panel = true") {
 		t.Error("tocar na peça do Goblin não escolhe o alvo da vez nem abre o painel")
 	}
+	if !strings.Contains(player, "if ($tool === '') { $turn_target = '"+goblin+"'") {
+		t.Error("o toque na peça escolhe o alvo também com a Régua na mão, e quem mede não pediu o painel")
+	}
 	if strings.Contains(player, "$turn_target = '"+barbarian+"'") {
 		t.Error("a peça do próprio jogador virou alvo dele")
 	}

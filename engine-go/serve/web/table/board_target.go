@@ -77,15 +77,17 @@ func reachSentence(apart board.Apart) string {
 // `.ds-board-panel` no `ds.css`. Os dois andam juntos: com a folha maior que a conta, a peça sobe para baixo dela.
 const boardPanelSheetShare = 0.52
 
-// picksTheTarget é o toque na peça: escolhe o alvo da vez e abre o painel. No celular, onde o painel é uma folha
-// que sobe de baixo, ele traz a peça para a faixa ACIMA da folha, e só se ela ficaria coberta — o "rolar o mínimo"
-// do `viewportFollowsFocus`: o alvo tem de continuar à vista enquanto se escolhe o que fazer com ele.
+// picksTheTarget é o toque na peça: escolhe o alvo da vez e abre o painel — com o Mover na mão, que é o repouso
+// do tabuleiro (o `$tool` vazio). Com a Régua ou o Gabarito, a peça está por cima das camadas deles, e o toque de
+// quem mede não pode abrir um painel que ninguém pediu. No celular, onde o painel é uma folha que sobe de baixo,
+// ele traz a peça para a faixa ACIMA da folha, e só se ela ficaria coberta — o "rolar o mínimo" do
+// `viewportFollowsFocus`: o alvo tem de continuar à vista enquanto se escolhe o que fazer com ele.
 func picksTheTarget(p boardToken) string {
 	center := fmt.Sprintf("(%d + %d / 2) * $square", p.Y, max(p.Footprint, 1))
-	return fmt.Sprintf("$turn_target = '%s'; $board_panel = true; "+
+	return fmt.Sprintf("if ($tool === '') { $turn_target = '%s'; $board_panel = true; "+
 		"if (window.matchMedia('(max-width: 63.99rem)').matches) { "+
 		"const cena = document.getElementById(%q); const visivel = cena.clientHeight - window.innerHeight * %.2f; "+
-		"if (%s - $viewport_y > visivel - $square) { $viewport_y = %s - visivel / 2 } }",
+		"if (%s - $viewport_y > visivel - $square) { $viewport_y = %s - visivel / 2 } } }",
 		p.EntryID, sceneId, boardPanelSheetShare, center, center)
 }
 
