@@ -38,6 +38,9 @@ type forbidsTheAttack struct{}
 type shootingIntoMelee struct{}
 type meleeOnly struct{}
 
+// dropsShortRangeDice é o alvo além do alcance curto, que tira do golpe à distância o dado de alcance curto.
+type dropsShortRangeDice struct{}
+
 // situationLabel é a procedência que a mesa lê.
 type situationLabel struct{ Text string }
 
@@ -84,6 +87,9 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 			if rule.ShootingIntoMelee {
 				ecs.Set(w, e, shootingIntoMelee{})
 			}
+			if rule.DropsShortRangeDice {
+				ecs.Set(w, e, dropsShortRangeDice{})
+			}
 		}
 	}
 }
@@ -115,6 +121,11 @@ func dropWhatDoesNotReachThisWeapon(card WeaponCard) ecs.System {
 		})
 		if card.Skill != "Pontaria" || card.ShootsIntoMelee {
 			ecs.Each(w, func(e ecs.Entity, _ shootingIntoMelee) { w.Despawn(e) })
+		}
+		// A DISTÂNCIA só age no golpe à distância que leva dado de alcance curto: no corpo a corpo e no arco
+		// sem esse dado, ela não tirou nada, e a linha não se escreve.
+		if card.IsMelee() || len(shortRangeDiceOf(card)) == 0 {
+			ecs.Each(w, func(e ecs.Entity, _ dropsShortRangeDice) { w.Despawn(e) })
 		}
 		if card.Skill != "Pontaria" {
 			return

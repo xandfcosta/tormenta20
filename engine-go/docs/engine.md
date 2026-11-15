@@ -86,6 +86,12 @@ depois da resposta do mestre (`live.RefusesANewAttack`): o erro, o ✓ ou o canc
 jogador não retira a proposta, porque isso seria um d20 novo de graça. O "rolar de novo" pago
 (p226) é a única troca que ela aceita, e só o dado muda.
 
+**O congelar também tira o dado que o alcance não alcança.** Com o tabuleiro medindo o alvo além do
+alcance curto, 9m de corpo a corpo (`TargetBeyondShortRange`), o golpe à distância perde o dado que só
+vale em alcance curto (`ExtraDamage.Range`, o +1d8 da Escaramuça, p51): o dano a rolar e o rolado leem a
+carta congelada, e nenhum dos dois o vê. A conta diz "além do alcance curto", e só quando a linha tirou
+alguma coisa.
+
 **A proposta paga ao nascer** (decisão do dono, `session.Store.ProposeAttack`): a ação e o PM do
 impulso saem ali, na mesma transação, e o PV que o gasto da Tumular cobra também (rolado na
 proposta, `PendingAttack.BoostHitPoints`). Assim a postura que não couber é recusada na hora dela, e

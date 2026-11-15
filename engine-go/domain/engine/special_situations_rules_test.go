@@ -160,9 +160,14 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	bow.Skill = "Pontaria"
 	for _, situation := range SpecialSituationsOfTheBook() {
 		measuredWith := card
-		// A única que só vale para quem atira, pela mesma razão do flanqueio.
-		if situation == TargetInMeleeCombat {
+		// As que só valem para quem atira, pela mesma razão do flanqueio. A distância pede ainda o dado de
+		// alcance curto, que é o que ela tira: sem ele, a linha não age e se despacha.
+		switch situation {
+		case TargetInMeleeCombat:
 			measuredWith = bow
+		case TargetBeyondShortRange:
+			measuredWith = bow
+			measuredWith.ExtraDamage = []ExtraDamage{{Dice: "1d8", Range: string(RangeShort)}}
 		}
 		w := judgeWorld(measuredWith, AttackTarget{Defense: 15},
 			[]SpecialSituation{situation}, 10, fixedDice(t, 10, 4))
@@ -175,10 +180,10 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 		if SpecialSituationLabel(situation) == "" {
 			t.Errorf("%q entrou sem rótulo, e a mesa não tem como dizer de onde veio", situation)
 		}
-		// O MECANISMO: toda linha tem de carregar PELO MENOS UM dos quatro.
+		// O MECANISMO: toda linha tem de carregar PELO MENOS UM dos cinco.
 		// Zero é a entrada que alguém escreveu e nenhum sistema vai ler.
 		mecanismos := countOf[shiftsTheAttack](w) + countOf[shiftsTheDefense](w) +
-			countOf[missChance](w) + countOf[forbidsTheAttack](w)
+			countOf[missChance](w) + countOf[forbidsTheAttack](w) + countOf[dropsShortRangeDice](w)
 		if mecanismos == 0 {
 			t.Errorf("%q chegou ao mundo sem mecanismo nenhum: ela não desloca número, "+
 				"não dá chance de falha e não proíbe o ataque — é uma linha da tabela "+
@@ -205,18 +210,23 @@ func TestEverySpecialSituationReachesTheAttack(t *testing.T) {
 	// A INVESTIDA é a quarta parcela, e são duas linhas: a da p235 e a
 	// Imprudente da p42, que é a mesma investida com outro nome na mesa
 	// (ALE-499).
+	//
+	// A DISTÂNCIA é a sexta: o alvo além do alcance curto (p224), que o tabuleiro
+	// mede e que tira do golpe à distância o dado da Escaramuça (p51).
 	const linhasDaTabela53 = 7
 	const daProsaDaP239 = 1 // o objeto em movimento
 	const daProsaDaP236 = 1 // trocar o tipo de dano
 	const daInvestida = 2   // a investida (p235) e a Imprudente (p42)
 	const daProsaDaP233 = 1 // atirar em combate corpo a corpo
-	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236 + daInvestida + daProsaDaP233
+	const daProsaDaP51 = 1  // o alvo além do alcance curto (p224), que tira o dado da Escaramuça
+	esperadas := linhasDaTabela53 + daProsaDaP239 + daProsaDaP236 + daInvestida + daProsaDaP233 + daProsaDaP51
 	if medidos != esperadas {
 		t.Errorf("a varredura mediu %d situações, e o livro dá %d: %d linhas da Tabela 5-3 "+
-			"que não são condição, %d da prosa da p239, %d da prosa da p236, %d da investida e %d da prosa da p233.\n"+
-			"Linha nova entra no `specialSituationTable` E numa destas cinco parcelas: um "+
+			"que não são condição, %d da prosa da p239, %d da prosa da p236, %d da investida, %d da prosa da p233 "+
+			"e %d da prosa da p51.\n"+
+			"Linha nova entra no `specialSituationTable` E numa destas seis parcelas: um "+
 			"guarda que percorre o próprio mapa dá verde sobre a linha que ninguém escreveu",
-			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236, daInvestida, daProsaDaP233)
+			medidos, esperadas, linhasDaTabela53, daProsaDaP239, daProsaDaP236, daInvestida, daProsaDaP233, daProsaDaP51)
 	}
 }
 

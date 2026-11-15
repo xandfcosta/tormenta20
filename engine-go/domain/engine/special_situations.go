@@ -66,6 +66,10 @@ const (
 	// TargetInMeleeCombat é o alvo em combate corpo a corpo (p233). Como o objeto
 	// em movimento, é prosa e não linha da tabela, com o mesmo mecanismo dela.
 	TargetInMeleeCombat SpecialSituation = "target-in-melee-combat"
+	// TargetBeyondShortRange é o alvo além do alcance curto, 9m (p224), que o tabuleiro mede. Também é prosa e
+	// não linha da tabela: o mecanismo é tirar do golpe À DISTÂNCIA o dado que só vale em alcance curto — o +1d8
+	// da Escaramuça (p51) —, e a linha só aparece quando tirou algum (`dropWhatDoesNotReachThisWeapon`).
+	TargetBeyondShortRange SpecialSituation = "beyond-short-range"
 )
 
 // specialSituationTable é a Tabela 5-3 transcrita, e ela é a FONTE do guarda de
@@ -113,6 +117,8 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// "Quando faz um ataque à distância contra uma criatura em combate corpo a
 	// corpo, você sofre –5 no teste de ataque" (p233).
 	TargetInMeleeCombat: {Label: "alvo em combate corpo a corpo", Attack: -5, ShootingIntoMelee: true},
+	// "+1d8 nas rolagens de dano de ataques corpo a corpo e à distância em alcance curto" (Escaramuça, p51).
+	TargetBeyondShortRange: {Label: "além do alcance curto", DropsShortRangeDice: true},
 }
 
 // situationRule é uma linha da tabela. Zero em tudo que a linha não diz.
@@ -125,6 +131,8 @@ type situationRule struct {
 	MeleeOnly bool
 	// ShootingIntoMelee só vale para quem atira, e o Disparo Preciso a tira (p125).
 	ShootingIntoMelee bool
+	// DropsShortRangeDice tira do golpe à distância o dado que só vale em alcance curto (`ExtraDamage.Range`).
+	DropsShortRangeDice bool
 }
 
 // SpecialSituationsOfTheBook são as linhas transcritas, para quem precisa
