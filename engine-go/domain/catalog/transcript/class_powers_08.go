@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 8 de 14 de `ClassPowers` (class_powers.go).
+// Parte 8 de 16 de `ClassPowers` (class_powers.go).
 var classPowersPart08 = []ClassPower{
 	{
 		ID:          "class.druida.aspecto-do-inverno",

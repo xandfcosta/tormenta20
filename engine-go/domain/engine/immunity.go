@@ -85,3 +85,27 @@ func ImmuneToCondition(immunities, conditionTags []string) (string, bool) {
 	}
 	return "", false
 }
+
+// A CONDIÇÃO QUE UM PODER BARRA (ALE-650). A imunidade acima é do TIPO de efeito; esta é de UMA condição, e
+// vem de um poder da ficha: "Você nunca fica surpreendido" (Esquiva Sobrenatural, p42, e a do ladino, p74).
+//
+// O poder acende uma flag, e não um alvo próprio, porque a pergunta é de sim ou não e a flag já viaja com o
+// nome de quem a acendeu (`FlagSources`) — que é o que a recusa diz ao mestre.
+const NeverSurprisedFlag = "nunca-surpreendido"
+
+// conditionBarredByFlag é a condição que cada flag barra.
+var conditionBarredByFlag = map[string]string{
+	NeverSurprisedFlag: "surpreendido",
+}
+
+// ConditionBarredByAPower diz se os efeitos da ficha barram a condição, e o nome do poder que a barra.
+//
+//	engine.ConditionBarredByAPower(efeitos, "surpreendido") // → "Esquiva Sobrenatural", true
+func ConditionBarredByAPower(effects ItemEffects, condition string) (string, bool) {
+	for flag, barred := range conditionBarredByFlag {
+		if barred == condition && effects.Flags[flag] {
+			return effects.FlagSources[flag], true
+		}
+	}
+	return "", false
+}

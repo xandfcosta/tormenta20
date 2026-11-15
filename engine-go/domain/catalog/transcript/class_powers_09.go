@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 9 de 14 de `ClassPowers` (class_powers.go).
+// Parte 9 de 16 de `ClassPowers` (class_powers.go).
 var classPowersPart09 = []ClassPower{
 	{
 		ID:             "class.guerreiro.durao",

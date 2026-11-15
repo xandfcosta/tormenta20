@@ -1610,6 +1610,9 @@
         {
           "create": {
             "name": "Sentinela Élfica Nv8",
+            "classPowers": [
+              "class.guerreiro.solidez"
+            ],
             "races": [
               "elfo"
             ],

@@ -388,6 +388,10 @@ Mente Criminosa não são).
   (`TestNoAttributeSumTargetsAnAttribute`).
 - **O atributo negativo SUBTRAI** (decisão do dono): o livro não tem regra
   própria e usa o valor como é — "10 + sua Destreza" (p106).
+- **A Defesa do escudo mora na mesma passada**: `scale: {per: shieldDefense}`
+  vale o que o escudo EMPUNHADO pôs na Defesa — as parcelas que vêm do verbete
+  dele, com melhoria e encanto (a Solidez, p55 e p66). Sem escudo na mão ela
+  sai, em vez de virar "+0". Ela mira a resistência, que a Defesa não lê.
 - **A trava que nomeia duas coisas usa `flags`**: o `flagOff` cala se QUALQUER
   uma estiver posta ("de armadura pesada ou na condição imóvel", p47); o
   `flagRequired` pede todas. A condição Imóvel (e quem a contém) levanta a flag

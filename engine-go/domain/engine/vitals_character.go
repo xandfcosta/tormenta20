@@ -5,13 +5,13 @@ package engine
 // conditionals). The server-side vitals recompute (backend buildVitalContext +
 // vitals-sync) uses it to re-derive PV/PM máximos after a level/class change.
 func (r *Ruleset) VitalContextFor(ch Character) VitalContext {
-	// Sem as somas de atributo: elas não miram vital nenhum, e resolvê-las aqui
+	// Sem as somas da segunda passada: elas não miram vital nenhum, e resolvê-las aqui
 	// seria uma passada a mais para nada.
 	//
 	// Sem a FORMA SELVAGEM: ela é fonte da coleta e muda Força e Destreza, e o máximo de PV e PM é o do
 	// druida, que o animal não toca (p62).
 	ch.WildShape = nil
-	plain, _ := splitAttributeSums(r.ActiveItemsFor(ch))
+	plain, _ := splitSecondPassSums(r.ActiveItemsFor(ch))
 	effects := resolveInWorld(plain, nil)
 	attrTotals := map[string]int{}
 	for _, a := range AttributeKeys {

@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 6 de 14 de `ClassPowers` (class_powers.go).
+// Parte 6 de 16 de `ClassPowers` (class_powers.go).
 var classPowersPart06 = []ClassPower{
 	{
 		ID:          "class.cacador.ervas-curativas",
@@ -416,7 +416,14 @@ var classPowersPart06 = []ClassPower{
 		Description: "Se está usando escudo, soma bônus na Defesa concedido pelo escudo em testes de resistência.",
 		BookPage:    55,
 		UID:         "pwr_nliuayfffj",
-		Unmodeled:   "o bônus do escudo nos testes de resistência: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-650)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "resistance"},
+				Amount:    1,
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "shieldDefense"},
+			},
+		},
 	},
 	{
 		ID:            "class.cavaleiro.titulo",

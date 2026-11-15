@@ -139,11 +139,32 @@ func (st Scene) refuseIfTheCharacterIsImmune(c commandCtx, row sqlcgen.Character
 	if err != nil {
 		return fmt.Errorf("ler a raça da ficha %d: %w", row.ID, err)
 	}
-	if len(races) == 0 {
+	if len(races) > 0 {
+		mind := int(row.Intelligence)
+		refusal := immunityRefusal(row.Name, engine.ImmunitiesOfCreature(book.CharacterNature(races[0]).Kind, &mind), condition)
+		if refusal != nil {
+			return refusal
+		}
+	}
+	return st.refuseIfAPowerBarsIt(c, row, condition)
+}
+
+// refuseIfAPowerBarsIt é a recusa da condição que um poder da ficha barra — a Esquiva Sobrenatural e o
+// surpreendido (p42) —, pelos efeitos que a ficha tem agora.
+func (st Scene) refuseIfAPowerBarsIt(c commandCtx, row sqlcgen.Character, condition string) error {
+	dto, err := sheet.Load(c.R.Context(), st.deps.Queries(), st.deps.Catalogs(), row)
+	if err != nil {
+		return fmt.Errorf("montar a ficha %d: %w", row.ID, err)
+	}
+	ec, err := sheet.EngineCharacterFrom(dto)
+	if err != nil {
+		return err
+	}
+	power, barred := engine.ConditionBarredByAPower(dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)), condition)
+	if !barred {
 		return nil
 	}
-	mind := int(row.Intelligence)
-	return immunityRefusal(row.Name, engine.ImmunitiesOfCreature(book.CharacterNature(races[0]).Kind, &mind), condition)
+	return fmt.Errorf("%s não fica %s: tem %s", row.Name, strings.ToLower(book.ConditionName(condition)), power)
 }
 
 // immunityRefusal é a recusa da condição a quem é imune ao tipo de efeito dela, ou nil.

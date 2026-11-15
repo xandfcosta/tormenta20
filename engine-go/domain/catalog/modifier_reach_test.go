@@ -68,7 +68,7 @@ func everyModifier(t *testing.T) ([]modifierSlice, int) {
 	return all, total
 }
 
-// NENHUM `scale` FORA DOS TRÊS LEITORES, porque fora deles ele não é lido.
+// NENHUM `scale` FORA DOS LEITORES DELE, porque fora deles ele não é lido.
 func TestNoModifierScalesWhereNobodyReadsTheScale(t *testing.T) {
 	entries, measured := everyModifier(t)
 	for _, e := range entries {
@@ -81,13 +81,18 @@ func TestNoModifierScalesWhereNobodyReadsTheScale(t *testing.T) {
 			if per == "attribute" && k != "attribute" {
 				continue
 			}
+			// A DEFESA DO ESCUDO (a Solidez): a segunda passada do `EffectsOf` a lê, como a soma de
+			// atributo, e o vital não passa por ela.
+			if per == "shieldDefense" && !vitalTargets[k] {
+				continue
+			}
 			// O DADO QUE CRESCE com o nível na classe (`growDice`, ALE-486).
 			if e.resource == "class-powers" && m.Dice != "" && (per == "level" || per == "levelStep") {
 				continue
 			}
 			if !vitalTargets[k] {
-				t.Errorf("%s declara `scale` num alvo %q, e só os vitais, a soma de atributo e "+
-					"o dado de classe leem escala: o modificador vale o `amount` cru e o resto some em silêncio", e.ID, k)
+				t.Errorf("%s declara `scale` num alvo %q, e só os vitais, a soma de atributo, a "+
+					"Defesa do escudo e o dado de classe leem escala: o modificador vale o `amount` cru e o resto some em silêncio", e.ID, k)
 			}
 		}
 	}
