@@ -35,6 +35,7 @@ import (
 	"sort"
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog/transcript"
 )
 
@@ -51,7 +52,9 @@ var bucketOrder = []string{"inteiro", "em parte", "gesto", "só nota", "aponta"}
 
 // entry é o que o balde lê de um verbete, igual para os três perfis.
 type entry struct {
-	label, id     string
+	label, id string
+	// name é o nome do verbete, sem o dono: é por ele que a ativação se liga quando o id não casa.
+	name          string
 	hasModifiers  bool
 	modeled       bool
 	unmodeled     string
@@ -59,17 +62,11 @@ type entry struct {
 	variantEffect bool
 }
 
-var activations = func() map[string]transcript.Activation {
-	out := map[string]transcript.Activation{}
-	for _, a := range transcript.Activations {
-		out[a.ID] = a
-	}
-	return out
-}()
-
 // bucket é o balde do verbete e a falha de marcação ("" quando não há).
 func bucket(e entry) (string, string) {
-	activation, hasActivation := activations[e.id]
+	// PELO ID OU PELO NOME, com o `book.ActivationOf` que a ficha usa: o auditor mede o que o app liga.
+	activation := book.ActivationOf(e.id, e.name)
+	hasActivation := activation != nil
 	effect := e.hasModifiers || e.variantEffect || (hasActivation && activation.Grant != nil)
 	if (effect || e.modeled) && e.unmodeled != "" {
 		if !e.modeled {
@@ -102,7 +99,7 @@ func entries(profile string) []entry {
 				for _, v := range a.Variants {
 					variantEffect = variantEffect || len(v.Modifiers) > 0
 				}
-				out = append(out, entry{race.Name + ": " + a.Name, a.ID, len(a.Modifiers) > 0,
+				out = append(out, entry{race.Name + ": " + a.Name, a.ID, a.Name, len(a.Modifiers) > 0,
 					len(a.Modeled) > 0, a.Unmodeled, "", variantEffect})
 			}
 		}
@@ -115,13 +112,13 @@ func entries(profile string) []entry {
 			if name == "" {
 				name = p.ID
 			}
-			out = append(out, entry{class + ": " + name, p.ID, len(p.Modifiers) > 0,
+			out = append(out, entry{class + ": " + name, p.ID, p.Name, len(p.Modifiers) > 0,
 				len(p.Modeled) > 0, p.Unmodeled, p.PowerUID, false})
 		}
 	case "origem":
 		for _, o := range transcript.Origins {
 			u := o.UniquePower
-			out = append(out, entry{o.Name + ": " + u.Name, u.ID, len(u.Modifiers) > 0, false, u.Unmodeled, "", false})
+			out = append(out, entry{o.Name + ": " + u.Name, u.ID, u.Name, len(u.Modifiers) > 0, len(u.Modeled) > 0, u.Unmodeled, "", false})
 		}
 	}
 	return out
