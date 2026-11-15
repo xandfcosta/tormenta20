@@ -211,7 +211,7 @@ func TestTheWeaponLineWritesTheExtraDiceWithTheirType(t *testing.T) {
 // A ETIQUETA AO LADO DO NÚMERO diz o preço inteiro do gasto escolhido: a Tumular custa "2 PM e 1d8 PV"
 // (p336), e a etiqueta que dizia só "2 PM" escondia a metade que tira vida.
 func TestTheBoostCostTagSaysTheHitPointsToo(t *testing.T) {
-	expr := boostCostExpr(0, []attackBoost{{PowerID: "encanto:7:encanto-tumular", BasePM: 2, HitPointCost: "1d8"}})
+	expr := boostCostExpr(0, []attackBoost{{PowerID: "encanto:7:encanto-tumular", PMs: []int{2}, HitPointCost: "1d8"}})
 	if !strings.Contains(expr, "' e 1d8 PV'") {
 		t.Errorf("a etiqueta do gasto não diz o PV: %s", expr)
 	}
@@ -225,5 +225,18 @@ func TestTheWeaponLineAddsUpExtraDiceOfTheSameType(t *testing.T) {
 	}}
 	if got := damageLabel(card); got != "1d8+8 +2d8 de trevas +1d6 de fogo" {
 		t.Errorf("a linha da arma diz %q", got)
+	}
+}
+
+// O CORTE DA HARMONIZADA na aba Efeitos diz o nome da habilidade, seja um poder ou o encanto da arma (p165):
+// o id do catálogo cru seria a chave do motor na tela.
+func TestTheHarmonizedCutSaysTheAbilityName(t *testing.T) {
+	for id, want := range map[string]string{
+		"class.paladino.golpe-divino-1d8": "Custo em PM no golpe (Golpe Divino)",
+		"encanto-tumular":                 "Custo em PM no golpe (Tumular)",
+	} {
+		if got := targetLabel(engine.ModifierTarget{K: "boostCost", Name: id}); got != want {
+			t.Errorf("o corte de %s diz %q; want %q", id, got, want)
+		}
 	}
 }

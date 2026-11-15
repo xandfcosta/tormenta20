@@ -162,6 +162,8 @@ func (r *Ruleset) ownItemMods(it CharacterItem, catalog *CatalogItem, devotion s
 //     "dessa escola" sem escola não vale em nenhuma;
 //   - a magia do Harmonizado preenche o alvo (`FromChoice: spell`, p165), pela escolha da MELHORIA e não do
 //     item, e sem escolha ele sai como a escola;
+//   - a habilidade da arma Harmonizada preenche o alvo do mesmo jeito (`FromChoice: boost`, p165), com o id
+//     do poder que ela corta;
 //   - o deus do símbolo sagrado decide se o modificador vale (`FromChoice: god`): "o símbolo sagrado de um
 //     deus do qual é devoto" (p157). Ele vale quando o deus escolhido é o da ficha (`devotion`), e sai
 //     quando não há deus escolhido ou ele é outro.
@@ -182,6 +184,13 @@ func chosenByTheItem(mods []Modifier, choice, devotion string) []Modifier {
 			}
 			filled := m
 			filled.FromChoice, filled.Target.Spell = "", choice
+			out = append(out, filled)
+		case "boost":
+			if choice == "" {
+				continue
+			}
+			filled := m
+			filled.FromChoice, filled.Target.Name = "", choice
 			out = append(out, filled)
 		case "god":
 			if choice == "" || choice != devotion {

@@ -59,6 +59,8 @@ type itemSheet struct {
 	God *itemGod
 	// Spell é a magia que o Harmonizado pede (p165), nil no item sem ele.
 	Spell *improvementSpell
+	// Ability é a habilidade que a arma Harmonizada pede (p165), nil no item sem ela.
+	Ability *improvementAbility
 	// Weapon diz se a folha oferece a marca de arma de categoria maior, e Oversized
 	// se ela está ligada.
 	Weapon    bool
@@ -138,8 +140,11 @@ func itemSheetsOf(
 		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
 		entry.School = schoolOnTheItemSheet(item)
 		entry.God = godOnTheItemSheet(item, dto)
-		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil {
-			spellCutRow(entry.Overlays, entry.Spell.Improvement, entry.Spell.Chosen)
+		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil && entry.Spell.Chosen != "" {
+			chosenCutRow(entry.Overlays, entry.Spell.Improvement, "−1 PM no custo de "+book.SpellName(entry.Spell.Chosen))
+		}
+		if entry.Ability = abilityOnTheItemSheet(item); entry.Ability != nil && entry.Ability.ChosenName != "" {
+			chosenCutRow(entry.Overlays, entry.Ability.Improvement, "−1 PM no custo de "+entry.Ability.ChosenName+" com esta arma")
 		}
 		sheets = append(sheets, entry)
 	}

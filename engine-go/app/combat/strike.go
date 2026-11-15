@@ -55,7 +55,7 @@ type Combatant struct {
 	// Boost são as cartas com o impulso de PM pedido, e o PM que ele custa
 	// (`engine.BoostedWeaponCards`). Nulo para quem não tem ficha — o bloco de
 	// criatura não paga PM no golpe.
-	Boost func(engine.BoostChoice) ([]engine.WeaponCard, int, error)
+	Boost func(engine.BoostChoice) ([]engine.WeaponCard, error)
 	// BoostHitPointCost é o dado de PV que o gasto pedido também cobra (o 1d8 da Tumular), ou vazio. Nulo
 	// para quem não tem ficha.
 	BoostHitPointCost func(engine.BoostChoice) string

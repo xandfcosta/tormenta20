@@ -61,6 +61,8 @@ type seedCharacter struct {
 	ItemGods []seedItemGod `json:"itemGods"`
 	// ImprovementSpells é a magia do Harmonizado de um esotérico do elenco (p165), depois dos `overlays`.
 	ImprovementSpells []seedImprovementSpell `json:"improvementSpells"`
+	// ImprovementAbilities é a habilidade da arma Harmonizada do elenco (p165), depois dos `overlays`.
+	ImprovementAbilities []seedImprovementAbility `json:"improvementAbilities"`
 	// Doses são os itens carregados na Injeção alquímica, depois dos `overlays`.
 	Doses       []seedDose `json:"doses"`
 	Simple      bool       `json:"simple"`
@@ -89,6 +91,12 @@ type seedEnchant struct {
 type seedItemGod struct {
 	Item string `json:"item"`
 	God  string `json:"god"`
+}
+
+type seedImprovementAbility struct {
+	Item        string `json:"item"`
+	Improvement string `json:"improvement"`
+	Ability     string `json:"ability"`
 }
 
 type seedImprovementSpell struct {
@@ -142,6 +150,8 @@ type casaDaSeed interface {
 	ChooseItemGod(ctx context.Context, itemID int64, god string) error
 	// ChooseImprovementSpell grava a magia do Harmonizado, pelo mesmo gesto da Mochila.
 	ChooseImprovementSpell(ctx context.Context, itemID int64, improvement, spell string) error
+	// ChooseImprovementAbility grava a habilidade da arma Harmonizada, pelo mesmo gesto da Mochila.
+	ChooseImprovementAbility(ctx context.Context, itemID int64, improvement, ability string) error
 }
 
 // standardTrained são as perícias que todo personagem não-simples treina, para a
@@ -399,6 +409,16 @@ func enrichLiveState(ctx context.Context, square casaDaSeed, id int64, ch seedCh
 		}
 		if err := square.ChooseImprovementSpell(ctx, line, want.Improvement, want.Spell); err != nil {
 			return fmt.Errorf("dar a magia %q ao %q do personagem %d: %w", want.Spell, want.Item, id, err)
+		}
+	}
+	for _, want := range ch.ImprovementAbilities {
+		line := lineOfCatalogItem(sheet.Items, want.Item)
+		if line == 0 {
+			return fmt.Errorf("o personagem %d não tem o item %q para dar a habilidade %q: "+
+				"o `improvementAbilities` aponta para um `create.items[].catalogId` que não está lá", id, want.Item, want.Ability)
+		}
+		if err := square.ChooseImprovementAbility(ctx, line, want.Improvement, want.Ability); err != nil {
+			return fmt.Errorf("dar a habilidade %q ao %q do personagem %d: %w", want.Ability, want.Item, id, err)
 		}
 	}
 	for _, dose := range ch.Doses {

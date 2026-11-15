@@ -39,10 +39,11 @@ serializa para quem lê JSON (`transcript.ResourceJSON`).
   tabela de sorteio é de um verbete só, e "uma raça de humanoides" abriria um
   verbete por raça.
 - **A escolha que se TROCA mora no item, e não no verbete**: a escola do tomo
-  hermético (p160), o deus do símbolo sagrado (p157) e a magia do Harmonizado
-  (p165), que um ritual troca. O modificador a pede pelo `FromChoice`, e o
-  `AsksFor` diz à Mochila qual verbete pede o quê. A do Harmonizado é da
-  MELHORIA, gravada por item e por melhoria, porque o tomo harmonizado pede duas.
+  hermético (p160), o deus do símbolo sagrado (p157), a magia do Harmonizado
+  (p165), que um ritual troca, e a habilidade da arma Harmonizada (p165). O
+  modificador a pede pelo `FromChoice`, e o `AsksFor` diz à Mochila qual verbete
+  pede o quê. As das duas Harmonizadas são da MELHORIA, gravadas por item e por
+  melhoria, porque o tomo harmonizado pede duas.
 
 **O que a CAMPANHA acrescenta não mora no livro**, que é compilado, enquanto a
 mesa autora em tempo de execução: a `emenda de catálogo` vive em

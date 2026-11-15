@@ -71,6 +71,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"tempHp":         "sheet/temp_pools.go, na reserva que o dano gasta antes do PV",
 	"pmLimit":        "breakdowns_magic.go, no limite de PM por magia",
 	"pmCost":         "breakdowns_magic.go, no custo da magia",
+	"boostCost":      "attack_boost.go, no custo do impulso na carta da arma Harmonizada (p165)",
 	"spellDC":        "breakdowns_magic.go, na CD",
 	"inventorySlots": "breakdowns_magic.go, nos espaços da mochila",
 	"catalyst":       "bag_improvements.go, no catalisador",

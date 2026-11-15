@@ -1319,7 +1319,7 @@ INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (68, 14, 'cosmetico', 'Cosmético', 1, 0.5, NULL, '[]', NULL, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (69, 15, 'armadura-completa', 'Armadura completa', 1, 5, 'vested', '[]', NULL, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (70, 15, 'escudo-pesado', 'Escudo pesado', 1, 2, 'wielded', '[]', NULL, '2026-01-01T00:00:00.000Z');
-INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (71, 15, 'machado-batalha', 'Machado de batalha', 1, 1, 'wielded', '[]', NULL, '2026-01-01T00:00:00.000Z');
+INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (71, 15, 'machado-batalha', 'Machado de batalha', 1, 1, 'wielded', '["melhoria-certeira","melhoria-harmonizada-arma"]', NULL, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (72, 15, 'balsamo-restaurador', 'Bálsamo restaurador', 2, 0.5, NULL, '[]', NULL, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (73, 15, 'cosmetico', 'Cosmético', 2, 0.5, NULL, '[]', NULL, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_items ("id", "characterId", "catalogId", "name", "quantity", "slots", "equipped", "improvements", "material", "createdAt") VALUES (74, 16, 'machado-batalha', 'Machado de batalha', 1, 1, 'wielded', '[]', NULL, '2026-01-01T00:00:00.000Z');
@@ -1403,6 +1403,7 @@ INSERT INTO character_item_enchant_choices ("itemId", "enchantId", "choice") VAL
 INSERT INTO character_item_choices ("itemId", "choice") VALUES (6, 'lena');
 
 INSERT INTO character_item_improvement_choices ("itemId", "improvementId", "choice") VALUES (65, 'melhoria-harmonizado-esoterico', 'relampago');
+INSERT INTO character_item_improvement_choices ("itemId", "improvementId", "choice") VALUES (71, 'melhoria-harmonizada-arma', 'class.paladino.golpe-divino-1d8');
 
 INSERT INTO character_oversized_weapons ("itemId") VALUES (56);
 

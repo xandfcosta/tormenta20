@@ -13,13 +13,13 @@ import "testing"
 
 func boostedCard(t *testing.T, world *Ruleset, ch Character, weapon string, choice BoostChoice) (WeaponCard, int, error) {
 	t.Helper()
-	cards, cost, err := world.BoostedWeaponCards(ch, nil, choice)
+	cards, err := world.BoostedWeaponCards(ch, nil, choice)
 	if err != nil {
 		return WeaponCard{}, 0, err
 	}
 	for _, c := range cards {
 		if c.Name == weapon {
-			return c, cost, nil
+			return c, c.BoostPM, nil
 		}
 	}
 	t.Fatalf("nenhuma carta para %q", weapon)
@@ -54,11 +54,11 @@ func TestTheDivineStrikeAddsCharismaAndOneD8PerDegree(t *testing.T) {
 			cost, two.Attack-plain.Attack, two.ExtraDamage)
 	}
 
-	if _, _, err := world.BoostedWeaponCards(paladin, nil, BoostChoice{PowerID: "class.paladino.golpe-divino-1d8", Steps: 2}); err == nil {
+	if _, err := world.BoostedWeaponCards(paladin, nil, BoostChoice{PowerID: "class.paladino.golpe-divino-1d8", Steps: 2}); err == nil {
 		t.Errorf("2 degraus no 5º nível passaram — o teto é 1 até o 9º")
 	}
 	low := wielding(attributeSumHero("Paladino", 4, `[]`), "espada-longa")
-	if _, _, err := world.BoostedWeaponCards(low, nil, BoostChoice{PowerID: "class.paladino.golpe-divino-1d8", Steps: 1}); err == nil {
+	if _, err := world.BoostedWeaponCards(low, nil, BoostChoice{PowerID: "class.paladino.golpe-divino-1d8", Steps: 1}); err == nil {
 		t.Errorf("1 degrau no 4º nível passou — o primeiro é do 5º")
 	}
 	// "Quando faz um ataque CORPO A CORPO": o arco fica sem o golpe.
@@ -71,7 +71,7 @@ func TestTheDivineStrikeAddsCharismaAndOneD8PerDegree(t *testing.T) {
 	}
 	// Quem não é paladino não tem o poder.
 	fighter := wielding(attributeSumHero("Guerreiro", 5, `[]`), "espada-longa")
-	if _, _, err := world.BoostedWeaponCards(fighter, nil, BoostChoice{PowerID: "class.paladino.golpe-divino-1d8"}); err == nil {
+	if _, err := world.BoostedWeaponCards(fighter, nil, BoostChoice{PowerID: "class.paladino.golpe-divino-1d8"}); err == nil {
 		t.Errorf("um guerreiro usou o Golpe Divino")
 	}
 }
@@ -102,7 +102,7 @@ func TestTheSpecialAttackGoesToAttackDamageOrHalfEach(t *testing.T) {
 	if atk, dmg, _ := special(BoostSplitEvenly); atk != 10 || dmg != 10 {
 		t.Errorf("dividido: +%d/+%d, want +10/+10", atk, dmg)
 	}
-	if _, _, err := world.BoostedWeaponCards(fighter, nil,
+	if _, err := world.BoostedWeaponCards(fighter, nil,
 		BoostChoice{PowerID: "class.guerreiro.ataque-especial-4"}); err == nil {
 		t.Errorf("o Ataque Especial sem dizer onde vai o bônus passou")
 	}
@@ -116,7 +116,7 @@ func TestTheMeleeOnlyBoostIsRefusedByTheRangedUse(t *testing.T) {
 	cardsOf := func(weapon string) WeaponCard {
 		paladin := wielding(attributeSumHero("Paladino", 5, `[]`), weapon)
 		paladin.Charisma = 3
-		cards, _, err := world.BoostedWeaponCards(paladin, nil, strike)
+		cards, err := world.BoostedWeaponCards(paladin, nil, strike)
 		if err != nil {
 			t.Fatalf("o Golpe Divino foi recusado em %s: %v", weapon, err)
 		}

@@ -53,7 +53,7 @@ func TestAFrozenStrikeRollsLikeTheCard(t *testing.T) {
 // silêncio. A lista obriga a decidir.
 func TestEveryCardFieldOutOfTheWireIsDecided(t *testing.T) {
 	notInTheStrike := map[string]bool{
-		"CatalogID": true, "ItemID": true, "Doses": true, "OtherUse": true, "RefusesBoost": true,
+		"CatalogID": true, "ItemID": true, "Doses": true, "OtherUse": true, "RefusesBoost": true, "BoostPM": true,
 		"DexBy": true, "DexDamage": true, "Natural": true, "Style": true, "SwitchesDamageFreely": true, "Improvised": true,
 		"ShootsIntoMelee": true, // este o FreezeStrike leva à parte
 	}
