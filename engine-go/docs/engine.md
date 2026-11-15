@@ -395,7 +395,14 @@ Mente Criminosa não são).
 - **O dano por TIPO de arma** cai nos escopos `melee-light-or-agile` e `ranged`
   (arremesso e disparo, p142), lidos pela carta da arma junto do `DamageOwn`. O
   ATAQUE por escopo de arma (o `weapon:<id>` do Foco em Arma) é o `AttackOwn`,
-  que a decomposição da tela soma.
+  que a decomposição da tela soma. O ataque, o dano, o passo de dano e o
+  multiplicador somam por TODO escopo da carta: o da arma, o da arma BASE do item
+  específico (a Azagaia dos relâmpagos é uma azagaia, decisão do dono), o tipo
+  (`melee`, `thrown`, `fired`), as armas de fogo (`firearm`, pela categoria) e o
+  da Fúria (`rage`). A Fúria tem escopo PRÓPRIO porque é "corpo a corpo" (p40) e
+  a Fúria da Savana a leva ao arremesso (p42) sem levar junto todo bônus corpo a
+  corpo; o degrau pago e a Fúria Titânica, que copiam e dobram a Fúria, seguem o
+  escopo dela.
 - **O outro uso da arma mora dentro da carta dela** (`WeaponCard.OtherUse`,
   `otherUseOf`), e o índice da carta é o da mão: toda arma corpo a corpo se arremessa,
   com −5 se não tiver alcance (p143) nem o encanto Arremesso (p335, decisão do dono), e

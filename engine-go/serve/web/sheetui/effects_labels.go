@@ -257,6 +257,7 @@ var itemFlagLabel = map[string]string{
 	"saque-rapido":               "Saque Rápido",
 	"arremesso-potente":          "Arremesso Potente",
 	"disparo-preciso":            "Disparo Preciso",
+	"furia-da-savana":            "Fúria também no arremesso",
 	"magia-ilimitada":            "Magia Ilimitada",
 	"ambidestria":                "Ambidestria",
 	"tem-estilo-de-duas-armas":   "Estilo de Duas Armas",

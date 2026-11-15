@@ -43,14 +43,13 @@ func (r *Ruleset) unarmedCard(ch Character, b cardBasis) WeaponCard {
 	if brawl {
 		w.Damage = die
 	}
-	steps := StatFor(b.effects, ModifierTarget{K: "damageStep", Scope: UnarmedScope}).Total
 	nonLethal := !brawl && !b.effects.Flags["lethal-unarmed"]
 	// O desarmado é corpo a corpo (p143), mas não é "uma arma em uma das mãos": o Estilo de Uma Arma o
 	// exclui com todas as letras (p128).
 	scopes := append([]string{UnarmedScope}, slices.DeleteFunc(weaponKindScopes(w), func(scope string) bool {
 		return scope == MeleeOneHandedScope
 	})...)
-	card := b.card(ch, UnarmedName, w, scopes, steps, nonLethal)
+	card := b.card(ch, UnarmedName, w, scopes, 0, nonLethal)
 	card.SwitchesDamageFreely = parseChoiceSet(ch.ClassPowers).has["estilo-desarmado"]
 	return card
 }

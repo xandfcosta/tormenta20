@@ -26,6 +26,9 @@ import (
 // `cmd/audit/classes`, que exige o ALVO de cada modificador ser nomeado
 // no texto do livro.
 //
+// O escopo é o da Fúria (`RageScope`), e não o geral: o bônus é "corpo a corpo" (p40), e a carta corpo a corpo
+// é que o soma — quem prende isso é o `TestTheFuryIsMeleeAndTheSavannaFuryReachesThrowing`.
+//
 // # O controle está no mesmo caso
 //
 // Ele afirma que ataque e dano CONTINUAM subindo. Sem isso, apagar a Fúria
@@ -54,11 +57,11 @@ func TestFuryGivesAttackAndDamageAndNotResistances(t *testing.T) {
 	}
 
 	// O CONTROLE: a Fúria tem de estar fazendo alguma coisa.
-	if got := subiu(ModifierTarget{K: "attack", Scope: "all"}); got != 2 {
+	if got := subiu(ModifierTarget{K: "attack", Scope: RageScope}); got != 2 {
 		t.Fatalf("a Fúria subiu o ataque em %d e a p41 dá +2 de base — "+
 			"o caso abaixo estaria medindo uma Fúria que não entrou", got)
 	}
-	if got := subiu(ModifierTarget{K: "damage", Scope: "all"}); got != 2 {
+	if got := subiu(ModifierTarget{K: "damage", Scope: RageScope}); got != 2 {
 		t.Errorf("a Fúria subiu o dano em %d e a p41 dá o MESMO +2", got)
 	}
 

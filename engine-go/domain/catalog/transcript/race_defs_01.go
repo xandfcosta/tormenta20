@@ -103,12 +103,49 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				},
 			},
 			{
-				ID:          "anao-tradicao-de-heredrimm",
+				ID: "anao-tradicao-de-heredrimm",
+				Modeled: []string{
+					"o +2 no ataque com machados, martelos, marretas e picaretas, e os itens específicos feitos deles",
+				},
 				RaceID:      "anao",
 				Name:        "Tradição de Heredrimm",
 				Description: "Você é perito nas armas tradicionais anãs. Para você, todos os machados, martelos, marretas e picaretas são armas simples. Recebe +2 em ataques com essas armas.",
 				UID:         "rac_6yvby3oao3",
-				Unmodeled:   "machado, martelo, marreta e picareta como armas simples, com +2 no ataque: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
+				Unmodeled:   "essas armas como armas simples: a habilidade não concede proficiência (ALE-649)",
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "attack", Scope: "weapon:machadinha"},
+						Amount:    2,
+						BonusType: "untyped",
+					},
+					{
+						Target:    ModifierTarget{Kind: "attack", Scope: "weapon:machado-batalha"},
+						Amount:    2,
+						BonusType: "untyped",
+					},
+					{
+						Target:    ModifierTarget{Kind: "attack", Scope: "weapon:machado-guerra"},
+						Amount:    2,
+						BonusType: "untyped",
+					},
+					{
+						Target:    ModifierTarget{Kind: "attack", Scope: "weapon:machado-anao"},
+						Amount:    2,
+						BonusType: "untyped",
+					},
+					{
+						Target:    ModifierTarget{Kind: "attack", Scope: "weapon:machado-taurico"},
+						Amount:    2,
+						BonusType: "untyped",
+					},
+					{
+						Target:    ModifierTarget{Kind: "attack", Scope: "weapon:martelo-guerra"},
+						Amount:    2,
+						BonusType: "untyped",
+					},
+					{Target: ModifierTarget{Kind: "attack", Scope: "weapon:marreta"}, Amount: 2, BonusType: "untyped"},
+					{Target: ModifierTarget{Kind: "attack", Scope: "weapon:picareta"}, Amount: 2, BonusType: "untyped"},
+				},
 			},
 		},
 		UID: "rac_hg27fnvss3",

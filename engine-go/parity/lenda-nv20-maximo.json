@@ -469,6 +469,70 @@
           "scale": {
             "per": "level"
           }
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:machadinha"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:machado-batalha"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:machado-guerra"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:machado-anao"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:machado-taurico"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:martelo-guerra"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:marreta"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
+        },
+        {
+          "target": {
+            "k": "attack",
+            "scope": "weapon:picareta"
+          },
+          "amount": 2,
+          "bonusType": "untyped"
         }
       ]
     },
@@ -567,6 +631,94 @@
             "source": "Escudo pesado",
             "bonusType": "untyped",
             "amount": -2
+          }
+        ]
+      },
+      "attack:weapon:machadinha": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:machado-anao": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:machado-batalha": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:machado-guerra": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:machado-taurico": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:marreta": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:martelo-guerra": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
+          }
+        ]
+      },
+      "attack:weapon:picareta": {
+        "total": 2,
+        "contributions": [
+          {
+            "sourceId": "anao",
+            "source": "Raça: Anão",
+            "bonusType": "untyped",
+            "amount": 2
           }
         ]
       },
@@ -850,6 +1002,10 @@
       "contributions": []
     },
     "damageAll": {
+      "total": 0,
+      "contributions": []
+    },
+    "attackMelee": {
       "total": 0,
       "contributions": []
     },
@@ -1429,6 +1585,16 @@
         }
       ]
     },
+    "attackMelee": {
+      "total": 2,
+      "contributions": [
+        {
+          "source": "Duelo (cond.)",
+          "amount": 2,
+          "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+        }
+      ]
+    },
     "damageReduction": {
       "total": 0,
       "sources": []
@@ -1901,7 +2067,7 @@
       "name": "Machado de batalha",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 23,
+      "attack": 25,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
@@ -1923,6 +2089,15 @@
             "source": "Duelo (cond.)",
             "amount": 2,
             "note": "contra o alvo do Duelo — 2 PM, até o fim da cena"
+          }
+        ]
+      },
+      "attackOwn": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 2
           }
         ]
       },
@@ -2022,7 +2197,7 @@
       "name": "Machado de batalha",
       "skill": "Luta",
       "attribute": "strength",
-      "attack": 21,
+      "attack": 23,
       "expertise": {
         "name": "Luta",
         "attribute": "strength",
@@ -2040,6 +2215,15 @@
       "attackAll": {
         "total": 0,
         "contributions": []
+      },
+      "attackOwn": {
+        "total": 2,
+        "contributions": [
+          {
+            "source": "Raça: Anão",
+            "amount": 2
+          }
+        ]
       },
       "damage": "1d8",
       "damageType": "corte",

@@ -1,5 +1,7 @@
 package engine
 
+import "slices"
+
 // WeaponCard is one wielded-weapon formula card (combat-magic-stats.tsx
 // WeaponFormulaCards): attack = the weapon's attack perícia (Luta melee, Pontaria
 // thrown/fired) + global attack mods; damage adds Força for melee/thrown (not
@@ -149,7 +151,16 @@ const (
 	// ThrownScope e FiredScope: as duas metades de "à distância" (p142).
 	ThrownScope = "thrown"
 	FiredScope  = "fired"
+	// FirearmScope: as armas de fogo, pela categoria do item (o Pistoleiro, p48).
+	FirearmScope = "firearm"
+	// RageScope é o alcance da Fúria: "ataque e […] dano corpo a corpo" (p40), e o arremesso também com a Fúria
+	// da Savana (p42). É um escopo PRÓPRIO, e não o `melee`, porque a Savana estende a Fúria e não todo bônus
+	// corpo a corpo; e os degraus pagos e a Fúria Titânica, que copiam e multiplicam a Fúria, vão junto dela.
+	RageScope = "rage"
 )
+
+// savannaRageFlag é a bandeira da Fúria da Savana, que leva a Fúria ao arremesso (p42).
+const savannaRageFlag = "furia-da-savana"
 
 // OversizedWeaponScope é o escopo da arma de categoria maior, e é por ele que a
 // Empunhadura Poderosa diminui a penalidade para –2 (p125).
@@ -268,6 +279,14 @@ func newCardBasis(ch Character, effects ItemEffects) cardBasis {
 // catálogo, o tipo de arma, o desarmado) e os passos que já são dela.
 func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []string,
 	steps int, nonLethal bool) WeaponCard {
+	if slices.Contains(scopes, MeleeScope) || (slices.Contains(scopes, ThrownScope) && b.effects.Flags[savannaRageFlag]) {
+		scopes = append(slices.Clone(scopes), RageScope)
+	}
+	// O PASSO DE DANO DE CADA ESCOPO da carta, como o multiplicador logo abaixo: o da arma (`weapon:<id>`), o
+	// do desarmado, e o de uma família (o arremesso do Arremessador, p28).
+	for _, scope := range scopes {
+		steps += StatFor(b.effects, ModifierTarget{K: "damageStep", Scope: scope}).Total
+	}
 	parts := []TotalContribs{}
 	for _, scope := range scopes {
 		parts = append(parts, totalContribsFor(b.effects, ModifierTarget{K: "damage", Scope: scope}))

@@ -504,6 +504,10 @@
       "total": 0,
       "contributions": []
     },
+    "attackMelee": {
+      "total": 0,
+      "contributions": []
+    },
     "damageReduction": {
       "total": 0,
       "sources": []
@@ -1049,6 +1053,10 @@
       "contributions": []
     },
     "damageAll": {
+      "total": 0,
+      "contributions": []
+    },
+    "attackMelee": {
       "total": 0,
       "contributions": []
     },

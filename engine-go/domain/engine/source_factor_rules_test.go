@@ -20,7 +20,7 @@ func TestTheTitanicFuryDoublesTheFuryParcelAndNothingElse(t *testing.T) {
 	furiaLigada := map[string]bool{FlagGroupID("furia"): true}
 	ataqueDe := func(ch Character, ligados map[string]bool) int {
 		efeitos := resolveInWorld(world.ActiveItemsFor(ch), ligados)
-		return StatFor(efeitos, ModifierTarget{K: "attack", Scope: "all"}).Total
+		return StatFor(efeitos, ModifierTarget{K: "attack", Scope: RageScope}).Total
 	}
 	barbaro := func(level int) Character {
 		return Character{
@@ -47,7 +47,7 @@ func TestTheTitanicFuryDoublesTheFuryParcelAndNothingElse(t *testing.T) {
 	comDegrau := barbaro(20)
 	comDegrau.ActiveEffects = []ActiveEffectRow{{
 		CatalogID: "class.barbaro.furia", Scope: "scene",
-		Modifiers: `[{"target":{"k":"attack","scope":"all"},"amount":5,"bonusType":"morale"}]`,
+		Modifiers: `[{"target":{"k":"attack","scope":"rage"},"amount":5,"bonusType":"morale"}]`,
 	}}
 	if got := ataqueDe(comDegrau, furiaLigada); got != 10 {
 		t.Errorf("com 5 PM gastos o ataque ficou em +%d, e o exemplo da p42 dá +10", got)

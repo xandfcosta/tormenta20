@@ -127,11 +127,14 @@ var classPowersPart02 = []ClassPower{
 		ID:          "class.barbaro.critico-brutal",
 		ClassName:   "Bárbaro",
 		Name:        "Crítico Brutal",
-		Description: "Multiplicador de crítico com armas corpo-a-corpo aumenta em +1. Ex: x3 vira x4.",
+		Description: "Multiplicador de crítico com armas corpo a corpo e de arremesso aumenta em +1. Ex: x3 vira x4.",
 		BookPage:    41,
 		UID:         "pwr_k7lsvzqp2p",
-		Unmodeled:   "o multiplicador de crítico +1 em corpo a corpo: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-649)",
-		MinLevel:    6,
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "critMult", Scope: "melee"}, Amount: 1, BonusType: "untyped"},
+			{Target: ModifierTarget{Kind: "critMult", Scope: "thrown"}, Amount: 1, BonusType: "untyped"},
+		},
+		MinLevel: 6,
 	},
 	{
 		ID:            "class.barbaro.destruidor",
@@ -182,8 +185,10 @@ var classPowersPart02 = []ClassPower{
 		Description: "Deslocamento aumenta em +3m. Em fúria, bônus aplica também a armas de arremesso.",
 		BookPage:    42,
 		UID:         "pwr_mvlz73jbrw",
-		Modifiers:   []Modifier{{Target: ModifierTarget{Kind: "displacement"}, Amount: 3, BonusType: "untyped"}},
-		Unmodeled:   "o bônus da Fúria também em armas de arremesso: a Fúria soma em ataque e dano gerais, e não por arma (ALE-649)",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "displacement"}, Amount: 3, BonusType: "untyped"},
+			{Target: ModifierTarget{Kind: "flag", Name: "furia-da-savana"}, Amount: 1, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:          "class.barbaro.furia-raivosa",
