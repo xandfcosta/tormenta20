@@ -66,6 +66,8 @@ type Combatant struct {
 	Nature book.CreatureNature
 	// StrikesImpulsively diz que a ficha tem o Golpe Imprudente (p77). Falso para quem não tem ficha.
 	StrikesImpulsively bool
+	// FollowUps são as manobras em seguida que os poderes da ficha dão. Vazio para quem não tem ficha.
+	FollowUps []engine.FollowUpManeuver
 	// DamageTaken é o que o corpo do combatente faz com o dano que sofre (ALE-650). Vazio para quem não tem
 	// ficha: o bloco do mestre não escreve Ossos Frágeis.
 	DamageTaken engine.DamageTaken
@@ -183,6 +185,8 @@ type Request struct {
 	ExtraPower string
 	// Impulsive é o Golpe Imprudente ligado no Golpe Relâmpago (p77): um dado a mais, e a guarda aberta.
 	Impulsive bool
+	// FollowUp é a manobra em seguida: a declarada neste gesto, ou a que ele faz (`follow_up.go`).
+	FollowUp FollowUpAsk
 	// Charge é a investida que leva a este golpe (`ChargePlain`,
 	// `ChargeReckless`); vazio é golpe parado. Ver `charge.go`.
 	Charge string
@@ -237,7 +241,7 @@ func (s Strike) strikerFor(
 	// a mesa vê e que nunca poderia ter acontecido.
 	if attackerEntry.CharacterID != nil {
 		cost := engine.StrikeAction(req.Charge)
-		if req.ExtraStrike {
+		if req.ExtraStrike || req.FollowUp.Takes != "" {
 			cost = engine.ActionFree
 		}
 		if err := s.tables.CharacterActionFits(ctx, *attackerEntry.CharacterID, cost); err != nil {
@@ -289,6 +293,8 @@ type strikeSetup struct {
 	target     engine.AttackTarget
 	targetID   string
 	situations []engine.SpecialSituation
+	// followUp é a manobra em seguida declarada neste gesto, e followUpOf a que ele faz.
+	followUp, followUpOf *live.FollowUp
 }
 
 // setUp confere quem ataca e o alvo, e monta a arma.
@@ -325,6 +331,9 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		return strikeSetup{}, err
 	}
 	setup := strikeSetup{attacker: attackerEntry, striker: striker, weapon: weapon, boost: boost}
+	if err := setup.settleFollowUp(req); err != nil {
+		return strikeSetup{}, err
+	}
 	if req.ExtraStrike {
 		state, err := s.tables.State(ctx, req.SessionID)
 		if err != nil {
@@ -408,48 +417,6 @@ func (s Strike) roll(ctx context.Context, who app.Caller, role string, req Reque
 		return live.PendingAttack{}, err
 	}
 	return setup.proposalOf(who, req, out)
-}
-
-// rollManeuver resolve o teste OPOSTO da manobra e guarda o provisório.
-//
-// Ele divide com o golpe tudo que vem antes: a vez, a posse, a ação padrão e as
-// duas pontas da fila. O que muda é só a REGRA no meio — e é por isso que ele é
-// um ramo aqui, e não um caso de uso irmão que repetiria sete conferências.
-func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20 int) (live.PendingAttack, error) {
-	if req.TargetObject != nil {
-		return live.PendingAttack{}, fmt.Errorf("manobra é contra criatura, e não contra peça de cenário: %w", app.ErrRefused)
-	}
-	striker, victim, weapon := setup.striker, setup.victim, setup.weapon
-	// O LUTA DO DEFENSOR, e não a Defesa dele: "mesmo que ela esteja usando uma
-	// arma de ataque à distância, deve fazer o teste usando seu valor de Luta"
-	// (p234). Quem não tem arma empunhada não tem carta, e aí o Luta dele é
-	// zero — um NPC de bloco escrito à mão não traz perícia.
-	defesa := engine.ManeuverSide{Bonus: victim.Melee + victim.ManeuverDefense[req.Maneuver]}
-	ataque := engine.ManeuverSide{
-		Bonus:  weapon.Attack + striker.ManeuverOffense[req.Maneuver],
-		Ranged: !weapon.IsMelee(),
-	}
-
-	opposed, err := s.d20Of(req.OpposedD20)
-	if err != nil {
-		return live.PendingAttack{}, err
-	}
-	out := engine.ResolveManeuver(req.Maneuver, ataque, defesa, d20, opposed)
-	if out.Refused != "" {
-		return live.PendingAttack{}, fmt.Errorf("%s: %w", out.Refused, app.ErrRefused)
-	}
-
-	pending := live.PendingAttack{
-		AttackerEntryID: setup.attacker.ID, TargetEntryID: setup.targetID, Weapon: weapon.Name,
-		Roll: out.AttackerRoll, Total: out.AttackerTotal, ByUserID: who.ID, WeaponID: weapon.CatalogID,
-		AttackerStances: striker.Stances, TargetStances: victim.Stances, OpensExtra: true,
-		Maneuver: &live.ManeuverRoll{
-			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
-			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
-		},
-	}
-	opensTheStyle(&pending, weapon)
-	return pending, nil
 }
 
 // d20Of devolve a rolagem, do cliente ou do servidor.

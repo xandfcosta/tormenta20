@@ -53,6 +53,10 @@ templ gmAttack(v View) {
 				if v.Attack.Dose != "" {
 					<p class="ds-help">{ v.Attack.Dose }</p>
 				}
+				// A MANOBRA EM SEGUIDA DECLARADA fica à vista: o ✓ do mestre é que a abre.
+				if v.Attack.FollowUp != "" {
+					<p class="ds-help">{ v.Attack.FollowUp }</p>
+				}
 				if v.Attack.Stage == stageDamage {
 					<p class="ds-help">{ v.Attack.Attacker + " rola o dano: " }<b>{ v.Attack.ToRoll }</b></p>
 				}

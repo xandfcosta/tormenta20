@@ -104,6 +104,7 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 				return err
 			}
 			opensTheExtraStrike(s, settled)
+			opensTheFollowUp(s, settled)
 			live.ClearPendingAttack(s)
 			return nil
 		})

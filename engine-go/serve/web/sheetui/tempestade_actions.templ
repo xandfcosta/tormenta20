@@ -230,7 +230,7 @@ templ rollSheetDs(v View, group actionGroup, sheet rollSheet) {
 templ rollSheetFootBody(v View, group actionGroup, sheet rollSheet) {
 	@ds.Button(ds.ButtonPrimary, rollAttrs(v, group, sheet.Roll, templ.Attributes{
 		"aria-label": "Rolar " + sheet.Title, "commandfor": sheet.ID, "command": "close",
-		"data-on:click": rollCommand(v, sheet.Roll, ""),
+		"data-on:click": rollCommand(v, sheet.Roll, sheet.After),
 	})) {
 		Rolar
 	}

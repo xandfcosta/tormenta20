@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 
@@ -104,11 +105,13 @@ type actionRow struct {
 	Sheet *rollSheet
 }
 
-// rollSheet é a folha do Rolar: o título, a linha do que se rola, o interruptor e o gesto do pé.
+// rollSheet é a folha do Rolar: o título, a linha do que se rola, o interruptor e o gesto do pé. After é o que
+// o Rolar da folha roda depois de mandar o gesto, como o da linha (`rollAfter`).
 type rollSheet struct {
 	ID, Title, Detail string
 	Switch            rollSwitch
 	Roll              actionRoll
+	After             string
 }
 
 // rollSwitch é um interruptor da folha, preso a um sinal booleano.
@@ -175,7 +178,8 @@ func actionsPanelFrom(
 		engine.ActionStandard: append(standardRows(combat, melee, computed, boosts), blasts...),
 		engine.ActionMovement: movementRows(combat, computed, ownsPower(powers, engine.SharpAimPowerID)),
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
-		engine.ActionFree:     append(extraStrikeRows(combat, boosts, ownsPower(powers, engine.ImpulsiveStrikePowerID)), shapeRows...),
+		engine.ActionFree: slices.Concat(extraStrikeRows(combat, boosts, ownsPower(powers, engine.ImpulsiveStrikePowerID)),
+			followUpRows(combat.FollowUps, melee), shapeRows),
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {

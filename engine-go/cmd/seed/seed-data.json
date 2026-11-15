@@ -1880,7 +1880,8 @@
               "class.lutador.bracos-calejados",
               "class.lutador.sarado",
               "class.lutador.trincado",
-              "class.lutador.golpe-imprudente"
+              "class.lutador.golpe-imprudente",
+              "class.lutador.lutador-de-chao"
             ],
             "items": []
           }
@@ -1908,7 +1909,9 @@
             "size": "Pequeno",
             "displacement": 9,
             "raceAttributeChoices": {},
-            "classPowers": [],
+            "classPowers": [
+              "class.ladino.mao-na-boca"
+            ],
             "items": [
               {
                 "catalogId": "adaga",
