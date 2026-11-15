@@ -156,7 +156,7 @@ var classPowersPart16 = []ClassPower{
 				Condition: &ModifierCondition{Kind: "flagOn", Flag: "castidade", Label: "para perceber blefes"},
 			},
 		},
-		Unmodeled: "a imunidade a encantamento: é uma forma que o motor ainda não tem (ALE-650)",
+		Unmodeled: "a imunidade a encantamento: é o mestre quem a aplica — nenhum efeito chega à ficha dizendo de que escola de magia veio",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-compaixao",
