@@ -816,7 +816,8 @@
               "class.guerreiro.valentao",
               "ataque-poderoso",
               "combate-defensivo",
-              "estilo-de-duas-maos"
+              "estilo-de-duas-maos",
+              "class.guerreiro.romper-resistencias"
             ],
             "powerChoices": {
               "class.guerreiro.aumento-de-atributo": [
@@ -1883,7 +1884,8 @@
               "class.lutador.sarado",
               "class.lutador.trincado",
               "class.lutador.golpe-imprudente",
-              "class.lutador.lutador-de-chao"
+              "class.lutador.lutador-de-chao",
+              "class.lutador.punhos-de-adamante"
             ],
             "items": []
           }
