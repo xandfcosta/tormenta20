@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/serve/web/ds"
 )
@@ -173,10 +174,24 @@ func rulingSaid(pa live.PendingAttack) string {
 
 // verdictsOf são os três botões do mestre, com a sugestão do livro cheia.
 func verdictsOf(pa live.PendingAttack) []verdictButton {
+	if pa.Maneuver != nil {
+		return maneuverVerdicts(pa)
+	}
 	return []verdictButton{
 		{Label: "Errou", Path: "julgar/errou", Suggested: !pa.Hit},
 		{Label: "Acertou", Path: "julgar/acertou", Suggested: pa.Hit && !pa.Critical},
 		{Label: critLabel(pa), Path: "julgar/critico", Suggested: pa.Critical},
+	}
+}
+
+// maneuverVerdicts são as duas decisões da manobra (ALE-659): Sucesso ou Falha, com a que o embate sugere cheia
+// (p234). No empate nenhuma é sugerida: o livro pede outro teste, e o mestre cancela ou decide.
+func maneuverVerdicts(pa live.PendingAttack) []verdictButton {
+	m := *pa.Maneuver
+	read := engine.ReadManeuver(pa.Roll, pa.Total, m.OpposedRoll, m.Opposed)
+	return []verdictButton{
+		{Label: "Falha", Path: "julgar/falha", Suggested: read == engine.ManeuverFails},
+		{Label: "Sucesso", Path: "julgar/sucesso", Suggested: read == engine.ManeuverSucceeds},
 	}
 }
 
@@ -308,6 +323,8 @@ func gmAttackBadge(stage string) string {
 		return "Para julgar"
 	case stageDamage:
 		return "Esperando o dano"
+	case stageManeuver:
+		return "Para decidir"
 	}
 	return "Para confirmar"
 }

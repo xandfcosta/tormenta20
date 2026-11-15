@@ -270,11 +270,13 @@ type ManeuverRoll struct {
 	ConditionOnAWin string `json:"conditionOnAWin,omitempty"`
 }
 
-// As três decisões do mestre sobre um golpe.
+// As três decisões do mestre sobre um golpe, e as duas sobre uma manobra (ALE-659).
 const (
 	RulingMiss     = "miss"
 	RulingHit      = "hit"
 	RulingCritical = "critical"
+	RulingSuccess  = "success"
+	RulingFailure  = "failure"
 )
 
 // DamageToRoll é a fórmula do dano depois da decisão, na ordem em que os dados

@@ -10,9 +10,9 @@ import (
 
 // A MANOBRA EM SEGUIDA (ALE-651): o Lutador de Chão (p77) e a Mão na Boca (p74). O jogador DECLARA a ação
 // completa antes de rolar (decisão do dono): o interruptor vai no gesto que a abre, a carta a mostra ao
-// mestre, e o ✓ dele abre a manobra livre na mesma vez, contra o mesmo alvo. Sem a declaração, nada abre.
+// mestre, e a decisão dele abre a manobra livre na mesma vez, contra o mesmo alvo. Sem a declaração, nada abre.
 //
-// INTEGRAÇÃO porque o que quebra é a COMPOSIÇÃO: a declaração sai das Ações, o ✓ abre a vez, a trava da
+// INTEGRAÇÃO porque o que quebra é a COMPOSIÇÃO: a declaração sai das Ações, a decisão abre a vez, a trava da
 // mesa confere a abertura sem cobrar ação, e o PM sai da ficha.
 
 const (
@@ -33,8 +33,8 @@ func followsUp(t *testing.T, f sceneFixture, id int64, maneuver, power, target s
 	return rollsFromTheActions(t, f, id, "manobra/"+maneuver+"/em-seguida/"+power, target)
 }
 
-// O LUTADOR DE CHÃO: declarado no agarrar, o ✓ do mestre abre a derrubada livre por 1 PM, uma por agarrar.
-// Sem a declaração, o ✓ não abre nada.
+// O LUTADOR DE CHÃO: declarado no agarrar, o Sucesso abre a derrubada livre por 1 PM, uma por agarrar.
+// Sem a declaração, a decisão não abre nada.
 func TestTheGroundFighterTripsForOneManaAfterTheDeclaredGrapple(t *testing.T) {
 	f, id, goblin := barbarianOnTurn(t)
 	seedClasse(t, f.s, id, "Lutador", 1)
@@ -42,8 +42,8 @@ func TestTheGroundFighterTripsForOneManaAfterTheDeclaredGrapple(t *testing.T) {
 	if refusal := rollsFromTheActions(t, f, id, "manobra/agarrar", goblin); refusal != "" {
 		t.Fatalf("agarrar sem declarar foi recusado: %q", refusal)
 	}
-	if refusal := gmRefusal(t, f, "/ataque/confirmar"); refusal != "" {
-		t.Fatalf("o ✓ do agarrar foi recusado: %q", refusal)
+	if refusal := gmRefusal(t, f, "/ataque/julgar/sucesso"); refusal != "" {
+		t.Fatalf("o Sucesso do agarrar foi recusado: %q", refusal)
 	}
 	if refusal := followsUp(t, f, id, "derrubar", groundFighter, goblin); !strings.Contains(refusal, "declar") {
 		t.Errorf("a derrubada sem o agarrar declarado não foi recusada pela declaração: %q", refusal)
@@ -58,7 +58,7 @@ func TestTheGroundFighterTripsForOneManaAfterTheDeclaredGrapple(t *testing.T) {
 	if pa := pendingOf(t, g); pa == nil || pa.FollowUp == nil || pa.FollowUp.PowerID != groundFighter {
 		t.Fatalf("o agarrar não levou a declaração do Lutador de Chão ao mestre: %+v", pa)
 	}
-	// A CARTA DO MESTRE diz a declaração NA FACE, perto do ✓: é o que ele lê antes de responder, e não um detalhe.
+	// A CARTA DO MESTRE diz a declaração NA FACE, perto da decisão: é o que ele lê antes de responder, e não um detalhe.
 	page := html.UnescapeString(g.requests(t, g.gm, http.MethodGet, g.tableUrl(), "").Body.String())
 	face := page[strings.Index(page, `id="table-attack"`):]
 	face = face[:strings.Index(face, `id="gm-attack-details"`)]
@@ -66,15 +66,15 @@ func TestTheGroundFighterTripsForOneManaAfterTheDeclaredGrapple(t *testing.T) {
 		t.Error("a face da carta do agarrar não diz ao mestre que a derrubada em seguida foi declarada")
 	}
 	if refusal := followsUp(t, g, other, "derrubar", groundFighter, enemy); refusal == "" {
-		t.Error("a derrubada saiu antes do ✓ do mestre ao agarrar")
+		t.Error("a derrubada saiu antes da decisão do mestre sobre o agarrar")
 	}
-	if refusal := gmRefusal(t, g, "/ataque/confirmar"); refusal != "" {
-		t.Fatalf("o ✓ do agarrar declarado foi recusado: %q", refusal)
+	if refusal := gmRefusal(t, g, "/ataque/julgar/sucesso"); refusal != "" {
+		t.Fatalf("o Sucesso do agarrar declarado foi recusado: %q", refusal)
 	}
 
 	before := poolsOf(t, g.s, other).MpCurrent
 	if refusal := followsUp(t, g, other, "derrubar", groundFighter, enemy); refusal != "" {
-		t.Fatalf("a derrubada do Lutador de Chão depois do ✓ foi recusada: %q", refusal)
+		t.Fatalf("a derrubada do Lutador de Chão depois do Sucesso foi recusada: %q", refusal)
 	}
 	pa := pendingOf(t, g)
 	if pa == nil || pa.Maneuver == nil || pa.Maneuver.Kind != "derrubar" || pa.FollowUpOf == nil || pa.FollowUpOf.PowerID != groundFighter {
@@ -93,8 +93,8 @@ func TestTheGroundFighterTripsForOneManaAfterTheDeclaredGrapple(t *testing.T) {
 	if refusal := followsUp(t, g, other, "derrubar", groundFighter, enemy); refusal != "" {
 		t.Fatalf("a derrubada desfeita pelo ✕ não voltou a ficar aberta: %q", refusal)
 	}
-	if refusal := gmRefusal(t, g, "/ataque/confirmar"); refusal != "" {
-		t.Fatalf("o ✓ da derrubada foi recusado: %q", refusal)
+	if refusal := gmRefusal(t, g, "/ataque/julgar/sucesso"); refusal != "" {
+		t.Fatalf("o Sucesso da derrubada foi recusado: %q", refusal)
 	}
 	if refusal := followsUp(t, g, other, "derrubar", groundFighter, enemy); !strings.Contains(refusal, "declar") {
 		t.Errorf("a segunda derrubada do mesmo agarrar não foi recusada: %q", refusal)

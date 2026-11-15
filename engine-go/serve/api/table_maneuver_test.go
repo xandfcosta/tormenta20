@@ -10,7 +10,7 @@ import (
 //
 // Uma manobra É um ataque corpo a corpo (p234), e o gesto atravessa o mesmo
 // caminho: a vez, a posse conferida contra o banco, a ação padrão, e o mesmo
-// `PendingAttack` que o mestre confirma. O que muda é a REGRA no meio.
+// `PendingAttack` que o mestre decide. O que muda é a REGRA no meio.
 //
 // É INTEGRAÇÃO e não unitário de propósito: o que esta fatia acrescentou foi
 // COMPOSIÇÃO — uma rota, um ramo no caso de uso e um campo no fio —, e a
@@ -35,7 +35,7 @@ func TestTheManeuverRidesTheSamePendingAsTheStrike(t *testing.T) {
 		t.Errorf("a manobra do provisório é %q e o caminho pediu derrubar", pending.Maneuver.Kind)
 	}
 	// O DANO NÃO EXISTE numa manobra: ela é "um ataque corpo a corpo para fazer
-	// algo diferente de causar dano" (p234). Um dano aqui faria a confirmação
+	// algo diferente de causar dano" (p234). Um dano aqui faria a decisão
 	// tirar PV de quem só foi derrubado.
 	if pending.Damage != 0 || len(pending.Dice) != 0 {
 		t.Errorf("a manobra veio com %d de dano e %d dados, e a p234 diz que ela não "+
@@ -64,11 +64,11 @@ func TestTheManeuverRidesTheSamePendingAsTheStrike(t *testing.T) {
 	}
 
 	// E ELA GASTA A PADRÃO pelo mesmo verbo do golpe: manobra é ação de agredir.
-	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
-		t.Fatalf("confirmar a manobra deu %d", rec.Code)
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/sucesso", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o Sucesso da manobra deu %d", rec.Code)
 	}
 	if stateOf(t, f.s.sessions, f.sessionID).Scene.StandardLeft {
-		t.Error("a manobra confirmada não gastou a ação padrão")
+		t.Error("a manobra decidida não gastou a ação padrão")
 	}
 }
 
@@ -90,10 +90,10 @@ func TestAManeuverTheBookDoesNotHaveIsRefused(t *testing.T) {
 	}
 }
 
-// A MANOBRA CONFIRMADA **NÃO** APLICA A CONDIÇÃO — ela a ANUNCIA.
+// A MANOBRA COM SUCESSO **NÃO** APLICA A CONDIÇÃO — ela a ANUNCIA.
 //
 // Este caso nasceu afirmando o contrário: o motor decidia quem vencia o embate e
-// a confirmação punha "caído" no alvo sozinha. A regra que o derrubou está na
+// o ✓ punha "caído" no alvo sozinho. A regra que o derrubou está na
 // seção "O sistema INFORMA; o mestre DECIDE" do `CLAUDE.md` da raiz — e é por
 // isso que o caso ficou e teve o sinal invertido em vez de ser apagado: o que ele
 // protege agora é a AUSÊNCIA do automatismo, que é mais fácil de perder de vista
@@ -102,7 +102,7 @@ func TestAManeuverTheBookDoesNotHaveIsRefused(t *testing.T) {
 // O Goblin é um NPC do bestiário, e portanto a condição dele moraria na LINHA da
 // iniciativa — o caminho mais curto que o automatismo tinha. Se alguma coisa
 // voltar a aplicar sozinha, é aqui que aparece.
-func TestAConfirmedManeuverAnnouncesTheConditionAndLeavesItToTheGameMaster(t *testing.T) {
+func TestAManeuverRuledSuccessAnnouncesTheConditionAndLeavesItToTheGameMaster(t *testing.T) {
 	f, goblin := attackOnTurn(t)
 
 	// UM GIRO SÓ, e isto é a medida da mudança: o caso antigo rolava até QUARENTA
@@ -122,17 +122,17 @@ func TestAConfirmedManeuverAnnouncesTheConditionAndLeavesItToTheGameMaster(t *te
 			"poupar o mestre de ir ao livro", pending.Maneuver.ConditionOnAWin)
 	}
 	if temCondicao(t, f, goblin, "caido") {
-		t.Error("o alvo ficou caído com a manobra ainda por confirmar")
+		t.Error("o alvo ficou caído com a manobra ainda por decidir")
 	}
 
-	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
-		t.Fatalf("confirmar a manobra deu %d", rec.Code)
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/sucesso", ""); rec.Code != http.StatusOK {
+		t.Fatalf("o Sucesso da manobra deu %d", rec.Code)
 	}
-	// A CONFIRMAÇÃO GASTA A AÇÃO E REGISTRA A ROLAGEM, e para aí. Quem decide se
-	// o goblin caiu é quem está narrando — e ele tem o gesto de condição para
-	// dizê-lo, que é por onde isto passa a ser uma escolha e não um efeito.
+	// O SUCESSO ENCERRA A MANOBRA E ABRE O QUE DEPENDE DELA, e para aí. Quem
+	// deita o goblin é quem está narrando — e ele tem o gesto de condição para
+	// isso, que é por onde isto passa a ser uma escolha e não um efeito.
 	if caidas := condicoesDe(t, f, goblin); len(caidas) != 0 {
-		t.Errorf("a manobra confirmada aplicou %v sozinha: o desfecho do embate é do "+
+		t.Errorf("o Sucesso da manobra aplicou %v sozinho: a condição é do "+
 			"mestre, e a faixa só lhe diz o que o livro prevê", caidas)
 	}
 }
@@ -144,7 +144,7 @@ func TestAConfirmedManeuverAnnouncesTheConditionAndLeavesItToTheGameMaster(t *te
 // deitar o alvo de um desarmar.
 func TestTheManeuversTheBookGivesNoConditionAnnounceNone(t *testing.T) {
 	for _, manobra := range []string{"desarmar", "empurrar"} {
-		// UMA BANCADA POR MANOBRA: confirmar gasta a ação padrão do turno, e um
+		// UMA BANCADA POR MANOBRA: ela gasta a ação padrão do turno, e um
 		// segundo giro na mesma mesa mediria a recusa por falta de ação.
 		f, goblin := attackOnTurn(t)
 		rec := f.requests(t, f.player, http.MethodPost,
@@ -157,11 +157,11 @@ func TestTheManeuversTheBookGivesNoConditionAnnounceNone(t *testing.T) {
 			t.Errorf("o %s anuncia a condição %q, e a p234 lhe dá efeito de ITEM ou de "+
 				"MOVIMENTO", manobra, pending.Maneuver.ConditionOnAWin)
 		}
-		if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/confirmar", ""); rec.Code != http.StatusOK {
-			t.Fatalf("confirmar o %s deu %d", manobra, rec.Code)
+		if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/ataque/julgar/sucesso", ""); rec.Code != http.StatusOK {
+			t.Fatalf("o Sucesso do %s deu %d", manobra, rec.Code)
 		}
 		if len(condicoesDe(t, f, goblin)) != 0 {
-			t.Errorf("o %s confirmado deixou %v no alvo", manobra, condicoesDe(t, f, goblin))
+			t.Errorf("o Sucesso do %s deixou %v no alvo", manobra, condicoesDe(t, f, goblin))
 		}
 	}
 }

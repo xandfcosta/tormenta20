@@ -190,16 +190,6 @@ func timesIn(used []string, entry string) int {
 	return times
 }
 
-// opensTheExtraStrike é o que a resposta do mestre deixa: agredir abre o ataque extra das outras
-// armas naturais (p25), se a vez ainda é a do turno em que o golpe nasceu.
-func opensTheExtraStrike(s *live.SessionRuntimeState, attack live.PendingAttack) {
-	if attack.OpensExtra && paidInThisTurn(s, attack) {
-		s.Scene.ExtraStrikeEntry, s.Scene.ExtraStrikeBarred = attack.AttackerEntryID, attack.NaturalSource
-		s.Scene.ExtraOpenedUnarmed = attack.OpensUnarmed
-		s.Scene.ExtraStyle, s.Scene.ExtraStyleItem = attack.OpensStyle, attack.StyleItem
-	}
-}
-
 // paidInThisTurn diz se a proposta nasceu neste turno. Na vez de outra pessoa, ou na rodada
 // seguinte, a vez que volta já é outro turno.
 func paidInThisTurn(s *live.SessionRuntimeState, attack live.PendingAttack) bool {

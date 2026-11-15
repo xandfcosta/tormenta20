@@ -103,8 +103,7 @@ func (st *Store) CommitAttack(ctx context.Context, sessionID int64, who live.Att
 			if err != nil {
 				return err
 			}
-			opensTheExtraStrike(s, settled)
-			opensTheFollowUp(s, settled)
+			opensWhatTheRulingOpens(s, settled)
 			live.ClearPendingAttack(s)
 			return nil
 		})
@@ -129,7 +128,7 @@ func (st *Store) RuleAttack(
 			if err := live.RuleAttack(s, who, ruling, nil); err != nil {
 				return err
 			}
-			opensTheExtraStrike(s, *s.PendingAttack)
+			opensWhatTheRulingOpens(s, *s.PendingAttack)
 			return nil
 		})
 }
