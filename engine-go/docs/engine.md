@@ -402,6 +402,11 @@ Mente Criminosa não são).
   a Azagaia bate com −5 (p146). O pedido leva
   `OtherUse`, e a proposta o congela para a decisão e o dano. O impulso só corpo a
   corpo é recusado no uso à distância (`RefusesBoost`), para não cobrar PM em troca de nada.
+- **O preço do impulso é da CARTA** (`WeaponCard.BoostPM`): a arma Harmonizada tira 1 PM da
+  habilidade escolhida nela, só no golpe com ela (p165, `boostCost` com o poder no `Name`, preenchido
+  pelo `FromChoice: boost`). Os cortes não se acumulam e o custo não desce de 1 PM, como no da magia
+  (p226). A proposta cobra a carta do golpe, e a linha de ataque mostra o preço de cada degrau naquela
+  arma, porque o piso tira a conta da linha reta.
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
   moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é
   uma só para a mão inteira, e um bônus nela sobe a arma da outra mão. O dano, a

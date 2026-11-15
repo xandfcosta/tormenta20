@@ -72,6 +72,33 @@ func (p Plays) ChooseImprovementSpell(ctx context.Context, item sqlcgen.GetItemR
 	return nil
 }
 
+// ChooseImprovementAbility grava a habilidade que a arma Harmonizada corta: "Escolha uma habilidade ativada ao
+// se fazer um ataque […] e que custe pontos de mana" (p165). A lista é a do livro, e não só o que a ficha tem,
+// pela mesma razão da magia do Harmonizado: o livro não prende a escolha ao que o portador sabe.
+//
+//	plays.ChooseImprovementAbility(ctx, item, "melhoria-harmonizada-arma", "class.paladino.golpe-divino-1d8")
+func (p Plays) ChooseImprovementAbility(ctx context.Context, item sqlcgen.GetItemRow, improvement, power string) error {
+	entry := book.ItemByID(improvement)
+	if entry == nil || !entry.AsksFor("boost") {
+		return fmt.Errorf("%q não pede habilidade; quem pede é a Harmonizada (p165)", improvement)
+	}
+	if !slices.Contains(sheet.UnmarshalStrings(item.Improvements), improvement) {
+		return fmt.Errorf("%s não tem a melhoria %s; aplique-a pelas Melhorias antes de escolher a habilidade",
+			item.Name, entry.Name)
+	}
+	if found, ok := book.ClassPowers()[power]; !ok || found.Boost == nil {
+		return fmt.Errorf("%q não é uma habilidade que se paga no ataque; esperava o id de uma delas, como %q",
+			power, "class.paladino.golpe-divino-1d8")
+	}
+	err := p.queries.SetImprovementChoice(ctx, sqlcgen.SetImprovementChoiceParams{
+		Itemid: item.ID, Improvementid: improvement, Choice: power,
+	})
+	if err != nil {
+		return fmt.Errorf("gravar a habilidade da melhoria %s do item %d: %w", improvement, item.ID, err)
+	}
+	return nil
+}
+
 // itemEntryOf é o verbete do livro de um item da mochila, ou nil no item próprio.
 func itemEntryOf(item sqlcgen.GetItemRow) *book.Item {
 	if !item.Catalogid.Valid {

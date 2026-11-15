@@ -510,6 +510,9 @@ func targetKey(t ModifierTarget) string {
 		// A Fúria Titânica (p42) dobra "o bônus da Fúria", que vive em dois
 		// alvos (ataque e dano) e em duas parcelas (a base e o degrau pago).
 		return "source:" + t.Name
+	case "boostCost":
+		// O PODER no nome: o corte da Harmonizada é de uma habilidade só (p165).
+		return "boostCost:" + t.Name
 	case "critRange", "critMult":
 		// O escopo entra na chave só quando existe: a margem do Golpe Cruel é
 		// do desarmado (`critRange:unarmed`, p77), e a global continua sendo a

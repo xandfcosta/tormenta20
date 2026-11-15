@@ -46,15 +46,11 @@ func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, er
 		if striker.Boost == nil {
 			return engine.WeaponCard{}, boost, fmt.Errorf("%s não paga PM no golpe: %w", striker.Label, app.ErrRefused)
 		}
-		boosted, pm, err := striker.Boost(req.Boost)
+		boosted, err := striker.Boost(req.Boost)
 		if err != nil {
 			return engine.WeaponCard{}, boost, fmt.Errorf("%w: %w", err, app.ErrRefused)
 		}
-		if pm > striker.ManaAvailable {
-			return engine.WeaponCard{}, boost, fmt.Errorf(
-				"o impulso custa %d PM e %s tem %d: %w", pm, striker.Label, striker.ManaAvailable, app.ErrRefused)
-		}
-		cards, boost = boosted, paidBoost{powerID: req.Boost.PowerID, pm: pm}
+		cards, boost = boosted, paidBoost{powerID: req.Boost.PowerID}
 	}
 	if req.Weapon < 0 || req.Weapon >= len(cards) {
 		return engine.WeaponCard{}, boost, fmt.Errorf(
@@ -83,6 +79,13 @@ func weaponFor(striker Combatant, req Request) (engine.WeaponCard, paidBoost, er
 	if card.RefusesBoost {
 		return engine.WeaponCard{}, boost, fmt.Errorf(
 			"%s não recebe este impulso, que só vale corpo a corpo: %w", card.Name, app.ErrRefused)
+	}
+	// O PREÇO É O DA CARTA, e por isso se confere depois de escolhê-la: a arma Harmonizada corta o custo do
+	// poder dela (p165), e a outra mão paga o preço cheio.
+	boost.pm = card.BoostPM
+	if boost.pm > striker.ManaAvailable {
+		return engine.WeaponCard{}, boost, fmt.Errorf(
+			"o impulso custa %d PM com %s e %s tem %d: %w", boost.pm, card.Name, striker.Label, striker.ManaAvailable, app.ErrRefused)
 	}
 	return card, boost, nil
 }

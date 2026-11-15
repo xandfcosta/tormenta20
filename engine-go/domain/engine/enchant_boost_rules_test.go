@@ -46,11 +46,11 @@ func TestTheEnchantOffersTwoPMOnlyOnItsWeapon(t *testing.T) {
 		t.Errorf("a oferta da Tumular é %+v; quer o nome do encanto, 2 PM, sem degraus, e o item 7", offer)
 	}
 	// A ADAGA não tem o encanto: o gasto não vale nela.
-	cards, cost, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: offer.PowerID})
+	cards, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: offer.PowerID})
 	if err != nil {
 		t.Fatalf("gastar os 2 PM da Tumular: %v", err)
 	}
-	if cost != 2 {
+	if cost := cards[0].BoostPM; cost != 2 {
 		t.Errorf("o gasto custa %d PM, e o livro diz 2", cost)
 	}
 	plain := world.ComputeWeaponCards(ch, nil)
@@ -79,7 +79,7 @@ func TestTheTomblikeEnchantRaisesItsDieToTwoD8(t *testing.T) {
 		return n
 	}
 	plain := world.ComputeWeaponCards(ch, nil)[0]
-	cards, _, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: EnchantBoostID(7, "encanto-tumular")})
+	cards, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: EnchantBoostID(7, "encanto-tumular")})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestTheEnchantAnnouncesWhatTheBookForeseesOnlyWhenPaid(t *testing.T) {
 			if foresees(world.ComputeWeaponCards(ch, nil)[0]) {
 				t.Error("a carta sem o gasto já anuncia o efeito dele")
 			}
-			cards, _, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: EnchantBoostID(7, c.enchant)})
+			cards, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: EnchantBoostID(7, c.enchant)})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -151,7 +151,7 @@ func TestTheAnticreatureEnchantBuysFourD8AgainstTheChosenKind(t *testing.T) {
 		return out
 	}
 	plain := world.ComputeWeaponCards(ch, nil)
-	cards, _, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: offer.PowerID})
+	cards, err := world.BoostedWeaponCards(ch, nil, BoostChoice{PowerID: offer.PowerID})
 	if err != nil {
 		t.Fatalf("gastar os 2 PM da Anticriatura: %v", err)
 	}

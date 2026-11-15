@@ -54,6 +54,9 @@ type WeaponCard struct {
 	// RefusesBoost diz que o impulso pedido não vale neste uso: o Golpe Divino e a
 	// arma à distância. Não vai para o fio, porque só o pedido de atacar o lê.
 	RefusesBoost bool `json:"-"`
+	// BoostPM é o PM que o impulso pedido custa NESTA arma: o mesmo em toda carta, salvo a arma Harmonizada
+	// para aquele poder, que o corta (p165). Zero na carta sem impulso. Fora do fio, como o `RefusesBoost`.
+	BoostPM int `json:"-"`
 	// ShootsIntoMelee é o Disparo Preciso (p125): atira em combate corpo a corpo
 	// sem a penalidade. Não vai para o fio, porque só o ataque o lê.
 	ShootsIntoMelee bool               `json:"-"`

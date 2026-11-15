@@ -106,6 +106,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/itens/{item}/escola/{escola}", s.sheetCommand(choosesTheItemSchool))
 	r.Post("/personagens/{id}/itens/{item}/deus/{deus}", s.sheetCommand(choosesTheItemGod))
 	r.Post("/personagens/{id}/itens/{item}/melhorias/{melhoria}/magia/{magia}", s.sheetCommand(choosesTheImprovementSpell))
+	r.Post("/personagens/{id}/itens/{item}/melhorias/{melhoria}/habilidade/{habilidade}", s.sheetCommand(choosesTheImprovementAbility))
 	// OS PODERES.
 	r.Post("/personagens/{id}/poderes/usa/{poder}", s.sheetCommand(usePower))
 	r.Post("/personagens/{id}/poderes/postura/{flag}/entra", s.sheetCommand(enterStance))

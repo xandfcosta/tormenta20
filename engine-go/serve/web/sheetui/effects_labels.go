@@ -119,7 +119,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"resistance": "Resistências",
 		"critRange":  "Margem de ameaça",
 		"critMult":   "Multiplicador crítico", "pmLimit": "Limite de PM por magia",
-		"pmCost": "Custo em PM", "catalyst": "Catalisador", "spellDC": "CD de magias",
+		"pmCost": "Custo em PM", "boostCost": "Custo em PM no golpe", "catalyst": "Catalisador", "spellDC": "CD de magias",
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
 		"armorPenalty": "Penalidade de armadura",
 		"damageStep":   "Passo de dano",
@@ -192,18 +192,19 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.K == "attribute" && t.Name != "" {
 		return book.AttributeLabel(t.Name)
 	}
-	// OS OUTROS TRÊS CAMPOS `name` QUE NÃO SÃO TEXTO DE TELA, e cada um tem o
+	// OS OUTROS CAMPOS `name` QUE NÃO SÃO TEXTO DE TELA, e cada um tem o
 	// seu tradutor: o atributo que a Defesa pode usar no lugar da Destreza
-	// (p69, p79), a condição que o encanto reserva (p335-336) e a FONTE cujo
-	// fator o poder dobra. Devolvidos crus, os três põem `intelligence`,
-	// `sangrando` e `class.barbaro.furia` na ficha de alguém.
+	// (p69, p79), a condição que o encanto reserva (p335-336), a FONTE cujo
+	// fator o poder dobra e o poder cujo custo a arma Harmonizada corta (p165).
+	// Devolvidos crus, eles põem `intelligence`, `sangrando` e
+	// `class.barbaro.furia` na ficha de alguém.
 	if t.K == "defenseAttribute" && t.Name != "" {
 		return book.AttributeLabel(t.Name)
 	}
 	if t.K == "announcedCondition" && t.Name != "" {
 		return book.ConditionName(t.Name)
 	}
-	if t.K == "source" && t.Name != "" {
+	if (t.K == "source" || t.K == "boostCost") && t.Name != "" {
 		return effectDisplayName(t.Name)
 	}
 	// A LINHA DA TABELA 5-3 que a Caçadora anula (p335): o id é do motor, e a mesa lê "cobertura leve".

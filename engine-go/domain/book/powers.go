@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"slices"
 	"sort"
+	"strings"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -49,6 +50,9 @@ type ClassPower struct {
 	// MinLevel é o "Nº nível de <classe>" do pré-requisito: o nível DA CLASSE a partir do qual o
 	// poder pode ser escolhido (o Mestre em Escola pede o 8º de arcanista, p38).
 	MinLevel int `json:"minLevel"`
+	// Boost é o que o poder vende no golpe, por PM (o Golpe Divino, p82): nil no poder que não se paga no
+	// ataque. A ficha lê só se ele existe — é a lista que a arma Harmonizada oferece (p165).
+	Boost *engine.ClassPowerBoost `json:"boost"`
 }
 
 // PowerPrerequisite é um pré-requisito. `IDs` é "um destes" (o `ID` é um só).
@@ -321,6 +325,21 @@ func Origins() map[string]Origin {
 func ClassPowers() map[string]ClassPower {
 	PowerCatalogs()
 	return poderesDeClassePorID
+}
+
+// PaidOnAttackPowers são os poderes de classe que se pagam no golpe, pelo nome: as habilidades "ativadas ao se
+// fazer um ataque […] e que custem pontos de mana" que a arma Harmonizada pode escolher (p165).
+//
+//	book.PaidOnAttackPowers() // [Ataque Especial (Guerreiro), Golpe Divino (Paladino)]
+func PaidOnAttackPowers() []ClassPower {
+	out := []ClassPower{}
+	for _, power := range ClassPowers() {
+		if power.Boost != nil {
+			out = append(out, power)
+		}
+	}
+	slices.SortFunc(out, func(a, b ClassPower) int { return strings.Compare(a.Name, b.Name) })
+	return out
 }
 
 func GeneralPowers() map[string]GeneralPower {

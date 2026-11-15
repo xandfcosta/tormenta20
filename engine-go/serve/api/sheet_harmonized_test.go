@@ -31,11 +31,17 @@ func harmonizedSpellPath(item int64, spell string) string {
 
 func storedImprovementChoice(t *testing.T, f sceneFixture, item int64) string {
 	t.Helper()
+	return storedChoiceOf(t, f, item, harmonizedImprovement)
+}
+
+// storedChoiceOf é a escolha gravada da melhoria `improvement` no item, vazia sem escolha.
+func storedChoiceOf(t *testing.T, f sceneFixture, item int64, improvement string) string {
+	t.Helper()
 	var choice sql.NullString
 	if err := f.s.db.QueryRowContext(context.Background(),
 		"SELECT choice FROM character_item_improvement_choices WHERE itemId = ? AND improvementId = ?",
-		item, harmonizedImprovement).Scan(&choice); err != nil && err != sql.ErrNoRows {
-		t.Fatalf("ler a escolha da melhoria do item %d: %v", item, err)
+		item, improvement).Scan(&choice); err != nil && err != sql.ErrNoRows {
+		t.Fatalf("ler a escolha da melhoria %s do item %d: %v", improvement, item, err)
 	}
 	return choice.String
 }

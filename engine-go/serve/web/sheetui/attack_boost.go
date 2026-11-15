@@ -42,9 +42,10 @@ type attackBoost struct {
 	// MaxSteps é o teto do nível JÁ cortado pelo PM: o "+" não oferece o degrau
 	// que a ficha não paga.
 	MaxSteps int
-	BasePM   int
-	StepPM   int
-	Split    bool
+	// PMs é o preço NESTA arma por degraus a mais, do motor: a arma Harmonizada corta o do poder dela, e o
+	// piso de 1 PM tira a conta da linha reta (p165, p226).
+	PMs   []int
+	Split bool
 	// Buys é o rótulo de cada contagem de degraus ("+2d8"), do motor.
 	Buys []string
 	// Previews são os números da linha com o impulso, pela chave
@@ -83,7 +84,7 @@ func foreseenWritten(foresees []engine.AnnouncedCondition) string {
 
 // Price é o que o gasto custa, para a etiqueta da tira: "2 PM", ou "2 PM e 1d8 PV" na Tumular.
 func (b attackBoost) Price() string {
-	price := strconv.Itoa(b.BasePM) + " PM"
+	price := strconv.Itoa(b.PMs[0]) + " PM"
 	if b.HitPointCost != "" {
 		price += " e " + b.HitPointCost + " PV"
 	}
@@ -131,18 +132,10 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 			name += " contra " + book.ChosenKindName(offer.Against)
 		}
 		boost := attackBoost{
-			PowerID: offer.PowerID, Name: name, BasePM: offer.BasePM, StepPM: offer.StepPM,
-			Split: offer.Split, Buys: offer.Buys, Can: offer.BasePM <= mana, Previews: map[string]boostPreview{},
+			PowerID: offer.PowerID, Name: name, Split: offer.Split, Buys: offer.Buys,
 			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0, Foresees: foreseenWritten(offer.Foresees),
 		}
-		if !boost.Can {
-			boost.Why = fmt.Sprintf("falta PM: %s pede %d", offer.Name, offer.BasePM)
-		}
-		boost.MaxSteps = offer.MaxSteps
-		for boost.MaxSteps > 0 && offer.BasePM+boost.MaxSteps*offer.StepPM > mana {
-			boost.MaxSteps--
-		}
-		previews := boostPreviewsOf(dto.Ruleset, ec, active, offer, boost.MaxSteps, cards)
+		previews, prices := boostPreviewsOf(dto.Ruleset, ec, active, offer, cards)
 		for i := range cards {
 			if offer.MeleeOnly && !cards[i].IsMelee() {
 				continue
@@ -151,23 +144,39 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 			if offer.ItemID != 0 && cards[i].ItemID != offer.ItemID {
 				continue
 			}
-			weaponBoost := boost
-			weaponBoost.Previews = previews[i]
-			out[i] = append(out[i], weaponBoost)
+			out[i] = append(out[i], pricedOn(boost, previews[i], prices[i], mana))
 		}
 	}
 	return out
 }
 
+// pricedOn é o impulso na linha de UMA arma, com o preço dela: o que a ficha não paga fica recusado, e o teto
+// de degraus desce até o que ela paga.
+func pricedOn(boost attackBoost, previews map[string]boostPreview, prices []int, mana int) attackBoost {
+	boost.Previews, boost.PMs = previews, prices
+	boost.Can = prices[0] <= mana
+	if !boost.Can {
+		boost.Why = fmt.Sprintf("falta PM: %s pede %d", boost.Name, prices[0])
+	}
+	boost.MaxSteps = len(prices) - 1
+	for boost.MaxSteps > 0 && prices[boost.MaxSteps] > mana {
+		boost.MaxSteps--
+	}
+	return boost
+}
+
 // boostPreviewsOf computa as cartas com o impulso para cada degrau e lado, e
-// devolve, por arma, a prévia de cada combinação.
+// devolve, por arma, a prévia de cada combinação e o preço de cada degrau.
 func boostPreviewsOf(
 	world *engine.Ruleset, ec engine.Character, active map[string]bool,
-	offer engine.BoostOffer, maxSteps int, plain []engine.WeaponCard,
-) []map[string]boostPreview {
+	offer engine.BoostOffer, plain []engine.WeaponCard,
+) ([]map[string]boostPreview, [][]int) {
+	maxSteps := offer.MaxSteps
 	out := make([]map[string]boostPreview, len(plain))
+	prices := make([][]int, len(plain))
 	for i := range out {
 		out[i] = map[string]boostPreview{}
+		prices[i] = make([]int, maxSteps+1)
 	}
 	sides := []string{""}
 	if offer.Split {
@@ -178,7 +187,7 @@ func boostPreviewsOf(
 	}
 	for steps := 0; steps <= maxSteps; steps++ {
 		for _, side := range sides {
-			cards, _, err := world.BoostedWeaponCards(ec, active,
+			cards, err := world.BoostedWeaponCards(ec, active,
 				engine.BoostChoice{PowerID: offer.PowerID, Steps: steps, Split: side})
 			if err != nil {
 				continue
@@ -193,10 +202,11 @@ func boostPreviewsOf(
 					Detail:   boostedWeaponDetail(cards[i]),
 					OtherUse: otherUseLabel(cards[i].OtherUse),
 				}
+				prices[i][steps] = cards[i].BoostPM
 			}
 		}
 	}
-	return out
+	return out, prices
 }
 
 // otherUseVerb é o nome do gesto. Ele sai da perícia, porque o único outro uso em
@@ -262,8 +272,14 @@ func boostStepLabelExpr(boost attackBoost) string {
 	if boost.OncePerRound {
 		suffix += " · uma vez por rodada"
 	}
-	return fmt.Sprintf("((%s) ? %s + ' · ' : '') + (%d + %d * $%s) + ' PM%s'",
-		boostAmountExpr(boost), boostAmountExpr(boost), boost.BasePM, boost.StepPM, boostStepsSignal, suffix)
+	return fmt.Sprintf("((%s) ? %s + ' · ' : '') + %s + ' PM%s'",
+		boostAmountExpr(boost), boostAmountExpr(boost), boostPriceExpr(boost), suffix)
+}
+
+// boostPriceExpr é o PM do degrau escolhido, pela tabela de preços desta arma.
+func boostPriceExpr(boost attackBoost) string {
+	blob, _ := json.Marshal(boost.PMs)
+	return fmt.Sprintf("%s[$%s]", blob, boostStepsSignal)
 }
 
 // boostAmountExpr escreve o que o degrau escolhido compra, pela tabela que o
@@ -307,8 +323,7 @@ func boostOnExpr(weapon int) string {
 func boostCostExpr(weapon int, boosts []attackBoost) string {
 	parts := []string{}
 	for _, boost := range boosts {
-		parts = append(parts, fmt.Sprintf("(%s ? %d + %d * $%s : 0)",
-			boostChosenExpr(weapon, boost.PowerID), boost.BasePM, boost.StepPM, boostStepsSignal))
+		parts = append(parts, fmt.Sprintf("(%s ? %s : 0)", boostChosenExpr(weapon, boost.PowerID), boostPriceExpr(boost)))
 	}
 	suffix := []string{}
 	for _, boost := range boosts {

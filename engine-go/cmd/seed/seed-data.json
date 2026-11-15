@@ -980,6 +980,15 @@
         },
         {
           "hpFraction": 0.6,
+          "overlays": [
+            {
+              "item": "machado-batalha",
+              "improvements": ["melhoria-certeira", "melhoria-harmonizada-arma"]
+            }
+          ],
+          "improvementAbilities": [
+            { "item": "machado-batalha", "improvement": "melhoria-harmonizada-arma", "ability": "class.paladino.golpe-divino-1d8" }
+          ],
           "create": {
             "name": "Paladino Sagrado Nv10",
             "godPowers": ["Dom da Verdade"],

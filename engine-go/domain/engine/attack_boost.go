@@ -67,31 +67,36 @@ type BoostChoice struct {
 	Split   string
 }
 
-// BoostedWeaponCards são as cartas de arma com o impulso pedido, e o PM que ele
-// custa. O pedido que o livro não permite volta como erro que diz o porquê.
+// BoostedWeaponCards são as cartas de arma com o impulso pedido, cada uma com o PM que ele custa NELA
+// (`BoostPM`): o mesmo em toda arma, salvo a Harmonizada, que o corta (p165). O pedido que o livro não
+// permite volta como erro que diz o porquê.
 //
-//	cards, pm, err := world.BoostedWeaponCards(ch, nil,
+//	cards, err := world.BoostedWeaponCards(ch, nil,
 //		BoostChoice{PowerID: "class.paladino.golpe-divino-1d8", Steps: 1})
-func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string]bool, choice BoostChoice) ([]WeaponCard, int, error) {
+func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string]bool, choice BoostChoice) ([]WeaponCard, error) {
 	plain := r.ComputeWeaponCards(ch, activeConditionals)
 	if choice.PowerID == "" {
-		return plain, 0, nil
+		return plain, nil
 	}
 	if _, _, isEnchant := enchantBoostOf(choice.PowerID); isEnchant {
-		return r.enchantBoostedCards(ch, activeConditionals, choice.PowerID)
+		cards, pm, err := r.enchantBoostedCards(ch, activeConditionals, choice.PowerID)
+		for i := range cards {
+			pricedAt(&cards[i], pm)
+		}
+		return cards, err
 	}
 	power, classLevel := r.ownedBoostPower(ch, choice.PowerID)
 	if power == nil {
-		return nil, 0, fmt.Errorf("o personagem não tem um poder que se paga no ataque com o id %q", choice.PowerID)
+		return nil, fmt.Errorf("o personagem não tem um poder que se paga no ataque com o id %q", choice.PowerID)
 	}
 	boost := power.Boost
 	maxSteps := StepsAt(boost.Degrees.FirstStepLevel, boost.Degrees.StepEveryLevels, classLevel)
 	if choice.Steps < 0 || choice.Steps > maxSteps {
-		return nil, 0, fmt.Errorf("%s: %d degraus a mais pedidos, e o %dº nível de %s abre %d",
+		return nil, fmt.Errorf("%s: %d degraus a mais pedidos, e o %dº nível de %s abre %d",
 			power.Name, choice.Steps, classLevel, power.ClassName, maxSteps)
 	}
 	if boost.Split && choice.Split != BoostToAttack && choice.Split != BoostToDamage && choice.Split != BoostSplitEvenly {
-		return nil, 0, fmt.Errorf("%s: diga para onde vai o bônus (%q, %q ou %q), e veio %q",
+		return nil, fmt.Errorf("%s: diga para onde vai o bônus (%q, %q ou %q), e veio %q",
 			power.Name, BoostToAttack, BoostToDamage, BoostSplitEvenly, choice.Split)
 	}
 	mods := boostModifiers(boost, 1+choice.Steps, choice.Split, classLevel)
@@ -104,7 +109,47 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 			}
 		}
 	}
-	return boosted, boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM, nil
+	pm := boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM
+	for i := range boosted {
+		pricedAt(&boosted[i], r.boostCostWith(ch, boosted[i].ItemID, power.ID, pm))
+	}
+	return boosted, nil
+}
+
+// pricedAt escreve o custo do impulso na carta e no outro uso dela: a azagaia arremessada paga o mesmo que a
+// azagaia que bate.
+func pricedAt(card *WeaponCard, pm int) {
+	card.BoostPM = pm
+	if card.OtherUse != nil {
+		card.OtherUse.BoostPM = pm
+	}
+}
+
+// boostCostWith é o custo do impulso `powerID` pago com a arma `itemID`: o `pm` de toda arma, menos o corte
+// que ela leva para aquele poder (a Harmonizada, p165).
+//
+// Os cortes NÃO SE ACUMULAM e o custo não desce de 1 PM — a regra do custo da magia (p226), que o livro dá
+// para o custo de qualquer habilidade. Vale o maior corte, e não a soma, porque duas fontes de "–1 PM" na
+// mesma habilidade são o caso que a p226 nomeia.
+func (r *Ruleset) boostCostWith(ch Character, itemID int64, powerID string, pm int) int {
+	if itemID == 0 {
+		return pm
+	}
+	cut := 0
+	for _, it := range ch.Items {
+		if it.ID != itemID || it.CatalogID == nil {
+			continue
+		}
+		for _, m := range r.ownItemMods(it, r.getCatalogItem(*it.CatalogID), devotionOf(ch)) {
+			if m.Target.K == "boostCost" && m.Target.Name == powerID {
+				cut = min(cut, m.Amount)
+			}
+		}
+	}
+	if cut == 0 {
+		return pm
+	}
+	return max(1, pm+cut)
 }
 
 // BoostOffer é um impulso que a ficha pode pagar num golpe, com o teto de

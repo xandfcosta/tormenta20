@@ -122,15 +122,16 @@ func spellOnTheItemSheet(item sheet.ItemDTO, query string) *improvementSpell {
 	return out
 }
 
-// spellCutRow troca, na linha da melhoria aplicada, o "custo da magia escolhida" pelo nome dela.
-func spellCutRow(rows []overlayRow, improvement string, chosen string) {
+// chosenCutRow troca, na linha da melhoria aplicada, o "custo da magia escolhida" (ou da habilidade) pelo
+// `effect` que diz o nome dela.
+func chosenCutRow(rows []overlayRow, improvement string, effect string) {
 	entry := book.ItemByID(improvement)
-	if entry == nil || chosen == "" {
+	if entry == nil {
 		return
 	}
 	for i := range rows {
 		if rows[i].Name == entry.Name {
-			rows[i].Effect = "−1 PM no custo de " + book.SpellName(chosen)
+			rows[i].Effect = effect
 		}
 	}
 }
@@ -147,4 +148,48 @@ func choosesTheImprovementSpell(s Scene, r *http.Request, row sqlcgen.Character,
 		return err
 	}
 	return s.plays.ChooseImprovementSpell(r.Context(), item, chi.URLParam(r, "melhoria"), chi.URLParam(r, "magia"))
+}
+
+// A HABILIDADE QUE A ARMA HARMONIZADA PEDE: "escolha uma habilidade ativada ao se fazer um ataque […] e que
+// custe pontos de mana" (p165). São poucas no livro, e a folha as mostra todas, sem busca; como a magia do
+// Harmonizado, a lista é o livro e não o que a ficha tem.
+
+// improvementAbility é a escolha na folha: a melhoria que pede, a habilidade escolhida e as do livro.
+type improvementAbility struct {
+	Improvement        string
+	Chosen, ChosenName string
+	Options            []book.ClassPower
+}
+
+// abilityOnTheItemSheet é a escolha da melhoria aplicada que pede habilidade, ou nil.
+func abilityOnTheItemSheet(item sheet.ItemDTO) *improvementAbility {
+	applied := savedImprovements(item.Improvements)
+	at := slices.IndexFunc(applied, func(id string) bool {
+		entry := book.ItemByID(id)
+		return entry != nil && entry.AsksFor("boost")
+	})
+	if at < 0 {
+		return nil
+	}
+	out := &improvementAbility{
+		Improvement: applied[at], Chosen: item.ImprovementChoices[applied[at]], Options: book.PaidOnAttackPowers(),
+	}
+	if power, ok := book.ClassPowers()[out.Chosen]; ok {
+		out.ChosenName = power.Name
+	}
+	return out
+}
+
+// improvementAbilityPath é o endereço que escolhe `power` para a melhoria da folha.
+func improvementAbilityPath(s itemSheet, power string) string {
+	return "/itens/" + s.Command + "/melhorias/" + s.Ability.Improvement + "/habilidade/" + power
+}
+
+// choosesTheImprovementAbility grava a habilidade da melhoria.
+func choosesTheImprovementAbility(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	item, err := s.sheetItem(r, row.ID)
+	if err != nil {
+		return err
+	}
+	return s.plays.ChooseImprovementAbility(r.Context(), item, chi.URLParam(r, "melhoria"), chi.URLParam(r, "habilidade"))
 }

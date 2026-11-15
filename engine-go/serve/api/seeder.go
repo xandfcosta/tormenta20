@@ -162,6 +162,15 @@ func (sd Seeder) ChooseImprovementSpell(ctx context.Context, itemID int64, impro
 	return sd.plays.ChooseImprovementSpell(ctx, item, improvement, spell)
 }
 
+// ChooseImprovementAbility grava a habilidade que a arma Harmonizada corta (p165), pelo caso de uso da Mochila.
+func (sd Seeder) ChooseImprovementAbility(ctx context.Context, itemID int64, improvement, ability string) error {
+	item, err := sd.queries.GetItem(ctx, itemID)
+	if err != nil {
+		return fmt.Errorf("ler o item %d: %w", itemID, err)
+	}
+	return sd.plays.ChooseImprovementAbility(ctx, item, improvement, ability)
+}
+
 // LoadDose carrega a Injeção alquímica, pelo mesmo gesto da Mochila.
 func (sd Seeder) LoadDose(ctx context.Context, characterID, doseItemID, weaponItemID int64) error {
 	return sd.plays.LoadDose(ctx, characterID, doseItemID, weaponItemID)

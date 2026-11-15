@@ -19,10 +19,48 @@ import (
 // `session.Store.ProposeAttack` cobra, e o PM que a ficha não tem recusa a proposta.
 
 // boostedSword devolve a espada com +3 no ataque por 2 PM, para qualquer pedido.
-func boostedSword(choice engine.BoostChoice) ([]engine.WeaponCard, int, error) {
+func boostedSword(choice engine.BoostChoice) ([]engine.WeaponCard, error) {
 	card := aLongsword()
 	card.Attack += 3
-	return []engine.WeaponCard{card}, 2, nil
+	card.BoostPM = 2
+	return []engine.WeaponCard{card}, nil
+}
+
+// O PREÇO QUE SE COBRA É O DA CARTA DO GOLPE: a arma Harmonizada corta o custo do poder dela (p165), e a
+// outra mão paga o cheio. Quem calcula o corte é o motor; aqui se prende que a proposta cobra a carta
+// escolhida, e não o preço de toda arma.
+func TestTheBoostChargesThePriceOfTheChosenWeapon(t *testing.T) {
+	harmonizedAndPlain := func(engine.BoostChoice) ([]engine.WeaponCard, error) {
+		harmonized, plain := aLongsword(), aLongsword()
+		harmonized.BoostPM, plain.BoostPM = 1, 2
+		return []engine.WeaponCard{harmonized, plain}, nil
+	}
+	for _, c := range []struct {
+		weapon int
+		wantPM int
+		refuse bool
+	}{{0, 1, false}, {1, 0, true}} {
+		table := aTable(t)
+		strike := NewStrike(sheetDouble{
+			"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{aLongsword(), aLongsword()},
+				Boost: harmonizedAndPlain, ManaAvailable: 1},
+			"ogro": {EntryID: "ogro", Label: "Ogro", Defense: 10},
+		}, table, semTabuleiro{}, fixedDie(4))
+		d20 := 10
+		out, err := strike.Propose(context.Background(), app.Caller{ID: 7}, "player", Request{
+			SessionID: 1, AttackerEntryID: "heroi", TargetEntryID: "ogro", D20: &d20, OwnsAttacker: true,
+			Weapon: c.weapon, Boost: engine.BoostChoice{PowerID: "class.paladino.golpe-divino-1d8"},
+		})
+		if c.refuse {
+			if !errors.Is(err, app.ErrRefused) || !strings.Contains(err.Error(), "2 PM") {
+				t.Errorf("a arma %d custa 2 PM e a ficha tem 1: err = %v, want a recusa com o preço dela", c.weapon, err)
+			}
+			continue
+		}
+		if err != nil || out.BoostPM != c.wantPM {
+			t.Errorf("a arma %d: o provisório cobrou %d PM (err %v), want %d — o preço da carta", c.weapon, out.BoostPM, err, c.wantPM)
+		}
+	}
 }
 
 func TestTheBoostedCardRollsAndTheProvisionalCarriesTheCost(t *testing.T) {
@@ -120,8 +158,8 @@ func TestAnEnchantBoostIsRefusedOnAnotherWeapon(t *testing.T) {
 	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{sword, dagger},
-			Boost: func(engine.BoostChoice) ([]engine.WeaponCard, int, error) {
-				return []engine.WeaponCard{sword, dagger}, 2, nil
+			Boost: func(engine.BoostChoice) ([]engine.WeaponCard, error) {
+				return []engine.WeaponCard{sword, dagger}, nil
 			}, ManaAvailable: 5},
 		"ogro": {EntryID: "ogro", Label: "Ogro", Defense: 10},
 	}, table, semTabuleiro{}, fixedDie(4))
@@ -189,8 +227,8 @@ func TestTheAnticreatureBoostCarriesWhatTheTableKnowsOfTheTarget(t *testing.T) {
 	table := aTable(t)
 	strike := NewStrike(sheetDouble{
 		"heroi": {EntryID: "heroi", Label: "Arwen", Weapons: []engine.WeaponCard{sword},
-			Boost: func(engine.BoostChoice) ([]engine.WeaponCard, int, error) {
-				return []engine.WeaponCard{sword}, 2, nil
+			Boost: func(engine.BoostChoice) ([]engine.WeaponCard, error) {
+				return []engine.WeaponCard{sword}, nil
 			},
 			BoostAgainst: func(choice engine.BoostChoice) string {
 				if choice == anticreature {
