@@ -323,7 +323,6 @@ var classPowersPart13 = []ClassPower{
 		Description: "Quando inimigo erra ataque corpo-a-corpo, recebe 2 PM temp (cumulativos). Máx = nível por cena. Desaparecem fim cena.",
 		BookPage:    76,
 		UID:         "pwr_pj36cpvnsh",
-		Unmodeled:   "2 PM temporários quando o inimigo erra um ataque corpo a corpo: gatilho na decisão do mestre sobre o ataque do outro (ALE-653)",
 		MinLevel:    8,
 	},
 	{

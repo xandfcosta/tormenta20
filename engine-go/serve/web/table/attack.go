@@ -302,12 +302,14 @@ func (st Scene) bumpsTheAttacker(
 	return err
 }
 
-// bumpsTheTarget sobe o que quem APANHA ganha — hoje, o Foco de Batalha do
-// cavaleiro: *"sempre que um inimigo atacá-lo, você recebe 1 PM temporário"*
-// (p54).
+// bumpsTheTarget sobe o que quem APANHA ganha: o Foco de Batalha do cavaleiro,
+// *"sempre que um inimigo atacá-lo, você recebe 1 PM temporário"* (p54), e a
+// Confiança dos Ringues do lutador, quando o inimigo *"erra um ataque corpo a
+// corpo contra você"* (p76).
 //
-// SEM EXIGIR ACERTO, e isso é o livro e não folga: a frase é "atacá-lo", não
-// "acertá-lo". O cavaleiro ganha o ponto pelo golpe que erra também.
+// O FOCO NÃO EXIGE ACERTO, e isso é o livro e não folga: a frase é "atacá-lo", não
+// "acertá-lo". O cavaleiro ganha o ponto pelo golpe que erra também. O erro da
+// Confiança é o "errou" do MESTRE, e a manobra não o tem: ela é Sucesso ou Falha.
 //
 // E SEM PERGUNTAR SE É INIMIGO, porque o app não modela amizade: quem está na
 // fila é um combatente, e quem decide se aquilo foi um ataque de inimigo é o
@@ -319,7 +321,11 @@ func (st Scene) bumpsTheTarget(
 	if target == nil || target.CharacterID == nil {
 		return nil
 	}
-	err := st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, pendente.TargetStances, "attacked")
+	triggers := []string{"attacked"}
+	if pendente.Ruling == live.RulingMiss && pendente.Melee {
+		triggers = append(triggers, "meleeMissed")
+	}
+	err := st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, pendente.TargetStances, triggers...)
 	st.deps.CharacterChanged(*target.CharacterID)
 	return err
 }

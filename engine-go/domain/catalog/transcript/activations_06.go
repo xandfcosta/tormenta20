@@ -360,10 +360,16 @@ var activationsPart06 = []Activation{
 	{
 		ID:     "class.lutador.confianca-dos-ringues",
 		Name:   "Confiança dos Ringues",
-		Kind:   "passive",
+		Kind:   "triggered-passive",
 		Action: "passivo",
 		PMCost: PMCost{Fixed: 0},
-		Uses:   ptr("cena"),
+		Uses:   nil,
+		Cumulative: &CumulativeGrant{
+			On:      "meleeMissed",
+			Amount:  2,
+			CapPer:  "level",
+			Targets: []ModifierTarget{{Kind: "tempMp"}},
+		},
 	},
 	{
 		ID:     "class.lutador.convencido",

@@ -275,6 +275,9 @@ var cumulativeTriggers = map[string]bool{
 	// "sempre que um inimigo atacá-lo" (p54) — e o livro NÃO pede acerto: o
 	// cavaleiro ganha o ponto pelo golpe que erra também.
 	"attacked": true,
+	// "quando um inimigo erra um ataque corpo a corpo contra você" (p76): é do lado de
+	// quem APANHA, e quem diz que errou é o mestre.
+	"meleeMissed": true,
 }
 
 // CumulativeTriggerIsKnown diz se o motor sabe disparar este gatilho.
