@@ -61,8 +61,10 @@ func TestTheItemSheetShowsTheDamageInTheHandBelowTheBook(t *testing.T) {
 	seedPowerChoices(t, f.s, f.charID, `["class.inventor.armeiro","class.inventor.ferreiro"]`, `{}`)
 
 	before := itemSheetSearching(t, f, sword, "")
-	if !strings.Contains(before, "dano 1d8 · crítico") {
-		t.Fatalf("a referência do livro sumiu da folha da espada:\n%s", before)
+	// O CRÍTICO se escreve como no Combate: com as duas linhas uma embaixo da outra, um
+	// "19/×2" no livro e um "19-20/x2" na mão pareciam dois críticos diferentes.
+	if !strings.Contains(before, "dano 1d8 · crítico 19-20/x2") {
+		t.Fatalf("a referência do livro sumiu da folha da espada, ou escreve o crítico de outro jeito:\n%s", before)
 	}
 	if !strings.Contains(before, "na sua mão: 1d8") {
 		t.Errorf("a folha da espada empunhada não diz o dano na mão:\n%s", before)

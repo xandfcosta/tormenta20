@@ -27,8 +27,7 @@ func thatSaysBook(catalog book.Item) *bookInfo {
 		Page:     catalog.BookPage,
 	}
 	if weapon := catalog.Weapon; weapon != nil {
-		info.Rows = append(info.Rows, "dano "+weapon.Damage+" · crítico "+
-			strconv.Itoa(weapon.CritRange)+"/×"+strconv.Itoa(weapon.CritMult))
+		info.Rows = append(info.Rows, "dano "+weapon.Damage+" · crítico "+critWritten(weapon.CritRange, weapon.CritMult))
 		if weapon.Type != "" {
 			info.Rows = append(info.Rows, "tipo "+damageWrittenKind(weapon.Type))
 		}

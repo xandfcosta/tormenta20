@@ -55,11 +55,17 @@ func damageLabel(card engine.WeaponCard) string {
 	return label
 }
 
-// critLabel é "19-20/x3". Margem 20 se escreve sozinha, e não como "20-20".
+// critLabel é o crítico da carta: "19-20/x3".
 func critLabel(card engine.WeaponCard) string {
-	margin := "20"
-	if card.CritRange < 20 {
-		margin = strconv.Itoa(card.CritRange) + "-20"
+	return critWritten(card.CritRange, card.CritMult)
+}
+
+// critWritten é a escrita do crítico em toda a ficha, a carta e a referência do livro:
+// "19-20/x3". Margem 20 se escreve sozinha, e não como "20-20".
+func critWritten(margin, multiplier int) string {
+	from := "20"
+	if margin < 20 {
+		from = strconv.Itoa(margin) + "-20"
 	}
-	return margin + "/x" + strconv.Itoa(card.CritMult)
+	return from + "/x" + strconv.Itoa(multiplier)
 }
