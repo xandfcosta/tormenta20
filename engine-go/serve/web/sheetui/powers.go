@@ -81,9 +81,11 @@ type powerRow struct {
 	Degrees  *useDegrees
 	InEffect string
 	Command  string
-	// ItemNotes são os avisos dos itens empunhados que mudam este poder sem mudar número: "alcance dobrado
-	// (Tambor das Profundezas)". Ver `book.ActivationHeld`.
-	ItemNotes []string
+	// Notes são os avisos do que muda este poder sem mudar número, com o nome de quem muda: o item empunhado
+	// ("alcance dobrado (Tambor das Profundezas)", `book.ActivationHeld`), o acréscimo que a ficha tem ("alcance
+	// curto e 2d6+1 PV por PM (Virtude Paladinesca: Compaixão)", `book.ActivationRidden`) e a arma que a
+	// declaração pede (`declarationWarning`).
+	Notes []string
 	// Declares é a flag que usar este poder liga, quando ele é uma declaração (o Estilo de Duas Armas), e
 	// Declared diz se ela está em curso. Ver `powers_declarations.go`.
 	Declares string
@@ -158,7 +160,10 @@ func powerRowFor(
 	// O PODER COMO ELE FICA NA MÃO DE QUEM O USA: o item empunhado muda a ação (o Alaúde Élfico) ou deixa um
 	// aviso na linha (o Tambor das Profundezas), p158.
 	held, notes := book.ActivationHeld(*spec, dto.WieldedCatalogIDs())
-	spec, row.ItemNotes = &held, notes
+	// E COMO OS ACRÉSCIMOS QUE A FICHA TEM O DEIXAM: a Compaixão troca o que o degrau da Cura pelas Mãos compra
+	// e avisa o alcance curto (p83).
+	ridden, riderNotes := book.ActivationRidden(held, character.RidersOf(dto, held))
+	spec, row.Notes = &ridden, append(notes, riderNotes...)
 	row.ID, row.Command = spec.ID, spec.ID
 	row.Kind, row.Glyph = spec.Kind, activationGlyph(spec.Kind)
 	// O NOME DA AÇÃO é o da ATIVAÇÃO, e não o da linha do catálogo.

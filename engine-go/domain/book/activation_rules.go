@@ -218,6 +218,33 @@ func GrantModifiersWithRiders(spec Activation, steps int, riders []Activation, d
 	return out
 }
 
+// ActivationRidden é o gesto como os acréscimos da ficha o deixam no que NÃO é número: o que cada degrau
+// compra, e os avisos da linha dele, com o nome de quem avisa. É o par do `ActivationHeld`, que faz o mesmo
+// pelos itens empunhados — o alcance não é número que o motor guarde, e mora no texto.
+//
+//	cura, avisos := book.ActivationRidden(cura, []Activation{compaixao})
+//	cura.Scaling.StepLabel // "+2d6+1 PV curados"
+//	avisos                 // ["alcance curto e 2d6+1 PV por PM (Virtude Paladinesca: Compaixão)"]
+func ActivationRidden(spec Activation, riders []Activation) (Activation, []string) {
+	notes := []string{}
+	for _, r := range riders {
+		if r.Rider == nil || r.Rider.On != spec.ID {
+			continue
+		}
+		// O degrau é COPIADO antes de trocar o rótulo: o `Scaling` é ponteiro para o registro que toda ficha
+		// lê, e escrever nele daria a Compaixão a todo paladino da casa.
+		if r.Rider.StepLabel != "" && spec.Scaling != nil {
+			scale := *spec.Scaling
+			scale.StepLabel = r.Rider.StepLabel
+			spec.Scaling = &scale
+		}
+		if r.Rider.Note != "" {
+			notes = append(notes, r.Rider.Note+" ("+r.Name+")")
+		}
+	}
+	return spec, notes
+}
+
 // RidersDouble diz se algum dos acréscimos dobra a concessão (o Inimigo).
 func RidersDouble(spec Activation, riders []Activation) bool {
 	for _, r := range riders {

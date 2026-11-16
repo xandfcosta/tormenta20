@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -15,10 +16,14 @@ import (
 // O GESTO QUE MEXE EM NÚMERO DE QUEM O USA aplica o número: o PM comprou o efeito, e a conta é do app (o que
 // o efeito faz nos OUTROS fica com o mestre).
 
-// paladinWithCharisma é um paladino de `level` com Carisma 3, com o PM cheio e na mesa.
+// paladinWithCharisma é um paladino de `level` com Carisma 3, com o PM cheio e na mesa — a ÚNICA ficha do
+// jogador, para a mesa abrir na dela.
 func paladinWithCharisma(t *testing.T, level int64) (sceneFixture, int64) {
 	t.Helper()
-	f := newSceneFixture(t)
+	s := newTestServer(t)
+	f := sceneFixture{s: s, gm: seedUser(t, s, "mestre@t.com"), player: seedUser(t, s, "jogador@t.com")}
+	f.campaignID = seedCampaign(t, s, f.gm)
+	f.sessionID = seedSession(t, s, f.campaignID)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.player, Name: "Devota", Origin: "batedor", Level: level,
 		Strength: 3, Dexterity: 1, Constitution: 2, Intelligence: 0, Wisdom: 1, Charisma: 3,
@@ -35,6 +40,7 @@ func paladinWithCharisma(t *testing.T, level int64) (sceneFixture, int64) {
 		return pools, nil
 	})
 	seedMember(t, f.s, f.campaignID, id)
+	f.charID = id
 	return f, id
 }
 
@@ -85,5 +91,47 @@ func TestTheSharpWordsStepSaysItsDice(t *testing.T) {
 	}
 	if !strings.Contains(spec.Scaling.StepLabel, "+2d6") {
 		t.Errorf("o degrau da Palavras Afiadas diz %q; want o dado que ele compra, +2d6", spec.Scaling.StepLabel)
+	}
+}
+
+// A COMPAIXÃO MUDA O QUE A CURA PELAS MÃOS DIZ: "você pode usar Cura pelas Mãos em alcance curto e, para cada PM
+// que gastar, cura 2d6+1 (em vez de 1d8+1)" (p83). O app não rola a cura (decisão do dono): o que muda é o texto
+// do gesto — o aviso do alcance e do dado na linha da Cura, e o que cada degrau compra no diálogo de usar.
+//
+// Pela LINHA da Cura, como o aviso do Tambor das Profundezas, e não pela página: a folha da própria Compaixão
+// repete "2d6+1" no verbete, e a página inteira o conteria com ou sem a mudança.
+func TestCompassionTakesTheHealingByHandsToShortRangeWithTwoD6PerPM(t *testing.T) {
+	const warning = "alcance curto e 2d6+1 PV por PM (Virtude Paladinesca: Compaixão)"
+	for _, c := range []struct {
+		name, powers string
+		compassion   bool
+	}{
+		{"com a Compaixão", `["class.paladino.virtude-paladinesca-compaixao"]`, true},
+		{"sem a Compaixão", `[]`, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			f, id := paladinWithCharisma(t, 6)
+			seedPowerChoices(t, f.s, id, c.powers, "{}")
+			f.actionSceneWithTheGoblinFirst(t, "Devota", id, 2)
+			for where, screen := range map[string]string{
+				"na aba Poderes": sheetTab(t, f, id, "abilities"), "nas Ações da mesa": acoesDaMesa(t, f),
+			} {
+				line := regexp.MustCompile(`<div class="ds-row-title">\s*Cura pelas Mãos\s*</div>\s*(?:<div class="ds-row-meta">([^<]*)<)?|` +
+					`<span class="ds-row-title">Cura pelas Mãos</span> <span class="ds-row-meta">([^<]*)<`).FindStringSubmatch(screen)
+				if line == nil {
+					t.Fatalf("não há linha da Cura pelas Mãos %s", where)
+				}
+				if says := line[1] + line[2]; strings.Contains(says, warning) != c.compassion {
+					t.Errorf("%s, a linha da Cura diz %q; o aviso da Compaixão tinha de estar lá: %v", where, says, c.compassion)
+				}
+			}
+			step := "Cada +1 PM compra +1d8+1 PV curados."
+			if c.compassion {
+				step = "Cada +1 PM compra +2d6+1 PV curados."
+			}
+			if screen := sheetTab(t, f, id, "abilities"); !strings.Contains(screen, step) {
+				t.Errorf("o diálogo de usar a Cura não diz %q", step)
+			}
+		})
 	}
 }

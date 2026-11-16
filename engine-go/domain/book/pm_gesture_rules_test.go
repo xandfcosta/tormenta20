@@ -53,8 +53,8 @@ var notAGesture = map[string]string{
 	// PERDER PM por violar o código
 	"class.cavaleiro.codigo-de-honra": "perde PM", "class.paladino.codigo-do-heroi": "perde PM",
 	// muda OUTRA habilidade, sem gasto próprio
-	"class.barbaro.furia-titanica": "muda a Fúria", "class.paladino.virtude-paladinesca-compaixao": "muda a Cura pelas Mãos",
-	"class.inventor.obra-prima": "não gasta PM",
+	"class.barbaro.furia-titanica": "muda a Fúria",
+	"class.inventor.obra-prima":    "não gasta PM",
 	// já COBERTO por outro mecanismo
 	"class.cavaleiro.baluarte": "situacional com degraus", "class.cavaleiro.duelo": "situacional",
 	"class.guerreiro.ataque-especial-4": "impulso no ataque", "class.paladino.golpe-divino-1d8": "impulso no ataque",

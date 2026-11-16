@@ -40,11 +40,16 @@ var activationsPart08 = []Activation{
 	{
 		ID:       "class.paladino.virtude-compaixao",
 		Name:     "Virtude Paladinesca: Compaixão",
-		Kind:     "passive",
+		Kind:     "rider",
 		Action:   "passivo",
 		PMCost:   PMCost{Fixed: 0},
 		Uses:     nil,
 		BookPage: 83,
+		Rider: &ActivationRider{
+			On:        "class.paladino.cura-pelas-maos-1d8-1-pv",
+			StepLabel: "+2d6+1 PV curados",
+			Note:      "alcance curto e 2d6+1 PV por PM",
+		},
 	},
 	{
 		ID:       "class.paladino.virtude-humildade",
