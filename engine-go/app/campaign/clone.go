@@ -50,16 +50,32 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		return 0, err
 	}
 
-	// AS TABELAS FILHAS, uma por `INSERT…SELECT` sob o id novo. Dano, efeitos e condições NÃO
-	// vêm: o que se gastou no rascunho fica nele, e a cópia nasce inteira (ALE-564). As que têm
-	// carimbo próprio — itens, magias — levam um `now` fresco: a cópia
-	// nasce agora, e herdar o carimbo do molde faria a mesa dizer que o item
-	// entrou na mochila antes de o herói existir nela.
-	steps := []struct {
-		what string
-		sql  string
-		args []any
-	}{
+	for _, step := range cloneSteps(destID, sourceID, now) {
+		if _, err := tx.ExecContext(ctx, step.sql, step.args...); err != nil {
+			return 0, fmt.Errorf("clonar %s do molde %d: %w", step.what, sourceID, err)
+		}
+	}
+
+	return destID, nil
+}
+
+// cloneStep é um `INSERT…SELECT` de uma tabela filha, sob o id novo.
+type cloneStep struct {
+	what string
+	sql  string
+	args []any
+}
+
+// cloneSteps são as tabelas filhas que a cópia leva, uma por `INSERT…SELECT` sob o id
+// novo. O `TestEveryCharacterTableIsClonedOrSaysWhyNot` as confere contra o schema: uma
+// tabela nova que pende da ficha ou do item tem de entrar aqui, ou dizer lá por que não —
+// e é lá que mora por que o estado de jogo (dano, efeitos, posturas) não vem.
+//
+// As que têm carimbo próprio — itens, magias — levam um `now` fresco: a cópia nasce
+// agora, e herdar o carimbo do molde faria a mesa dizer que o item entrou na mochila
+// antes de o herói existir nela.
+func cloneSteps(destID, sourceID int64, now string) []cloneStep {
+	return []cloneStep{
 		{"races", `INSERT INTO character_races (characterId, race)
 			SELECT ?, race FROM character_races WHERE characterId = ?`, []any{destID, sourceID}},
 		{"expertises", `INSERT INTO character_expertises (characterId, name, attribute, trained, custom)
@@ -99,11 +115,4 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 			SELECT ?, level, kind, ref, pick, estimated FROM character_level_choices WHERE characterId = ? ORDER BY id`,
 			[]any{destID, sourceID}},
 	}
-	for _, step := range steps {
-		if _, err := tx.ExecContext(ctx, step.sql, step.args...); err != nil {
-			return 0, fmt.Errorf("clonar %s do molde %d: %w", step.what, sourceID, err)
-		}
-	}
-
-	return destID, nil
 }

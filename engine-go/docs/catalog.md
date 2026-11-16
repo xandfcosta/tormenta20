@@ -139,7 +139,9 @@ servidor; o filtro da tela é só conveniência.
 
 A ficha sem `campaignId` é o **rascunho**, e ele aceita os mesmos gestos da cópia da campanha. O que
 muda é a entrada: a cópia nasce inteira, porque dano, efeitos e condições não atravessam o
-`cloneCharacterTx`.
+`cloneCharacterTx`. Tabela nova que pende da ficha ou do item entra no `cloneSteps` ou diz, no
+`notCloned`, por que a cópia nasce sem ela: o `TestEveryCharacterTableIsClonedOrSaysWhyNot` reprova a que não
+fizer nenhum dos dois.
 
 ### A validação de ESCOLHA é do servidor, e é estrita
 
