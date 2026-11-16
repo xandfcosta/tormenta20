@@ -118,6 +118,12 @@ type ActivationRider struct {
 	// Doubles dobra o efeito inteiro quando quem usa diz que vale — o Inimigo,
 	// contra a presa do tipo escolhido.
 	Doubles bool `json:"doubles,omitempty"`
+	// StepLabel troca o que cada degrau do gesto compra, e Note é o aviso que
+	// ele deixa na linha do gesto: o que muda e não é número que o motor guarde
+	// — a Compaixão leva a Cura pelas Mãos ao alcance curto e ao 2d6+1 (p83).
+	// Ver `ActivationRidden`.
+	StepLabel string `json:"stepLabel,omitempty"`
+	Note      string `json:"note,omitempty"`
 }
 
 // ActivationScale é a postura que sobe de degrau com o nível.

@@ -44,7 +44,7 @@ func powerMeta(row powerRow) string {
 	case row.Limit != "":
 		parts = append(parts, row.Limit)
 	}
-	parts = append(parts, row.ItemNotes...)
+	parts = append(parts, row.Notes...)
 	return strings.Join(parts, " · ")
 }
 

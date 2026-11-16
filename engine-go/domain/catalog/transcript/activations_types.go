@@ -25,6 +25,8 @@ type ActivationRider struct {
 	Modifiers []Modifier `json:"modifiers,omitempty"`
 	PerStep   int        `json:"perStep,omitempty"`
 	Doubles   bool       `json:"doubles,omitempty"`
+	StepLabel string     `json:"stepLabel,omitempty"`
+	Note      string     `json:"note,omitempty"`
 }
 
 type SkillSpend struct {

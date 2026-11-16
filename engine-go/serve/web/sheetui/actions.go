@@ -263,15 +263,20 @@ func rowFromPower(power powerRow) actionRow {
 	// luta seria o atrito que esta superfície existe para tirar.
 	if power.Declares != "" {
 		row.Live = power.Declared
-		row.Detail = strings.Join(power.ItemNotes, " · ")
+		row.Detail = strings.Join(power.Notes, " · ")
 		row.Rolls = []actionRoll{{Label: "Usar", Path: "/poderes/usa/" + power.Command, Before: useResets}}
 		return row
 	}
 	// O INSTANTÂNEO QUE VENDE DEGRAU ganha o gesto aqui (a Marca da Presa,
 	// p50, ALE-487), e com o que está dando quando em curso. Os outros
 	// instantâneos continuam sem botão nesta superfície — usar é da aba Poderes.
+	//
+	// Fora de curso, o detalhe é o AVISO do que muda o gesto — o alcance curto
+	// da Cura pelas Mãos com a Compaixão (p83): é aqui que se usa, e o aviso só
+	// na aba Poderes chegaria depois do PM gasto.
 	if power.Degrees != nil {
 		row.Live = power.InEffect != ""
+		row.Detail = strings.Join(power.Notes, " · ")
 		if row.Live {
 			row.Detail = power.InEffect + " em curso"
 		}

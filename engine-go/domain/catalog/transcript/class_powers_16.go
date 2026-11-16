@@ -159,13 +159,15 @@ var classPowersPart16 = []ClassPower{
 		Unmodeled: "a imunidade a encantamento: é o mestre quem a aplica — nenhum efeito chega à ficha dizendo de que escola de magia veio",
 	},
 	{
-		ID:          "class.paladino.virtude-paladinesca-compaixao",
+		ID: "class.paladino.virtude-paladinesca-compaixao",
+		Modeled: []string{
+			"o aviso do alcance curto e do 2d6+1 por PM na linha da Cura pelas Mãos, e o degrau que compra +2d6+1",
+		},
 		ClassName:   "Paladino",
 		Name:        "Virtude Paladinesca: Compaixão",
 		Description: "Pode usar Cura pelas Mãos em alcance curto. Para cada PM gasto, cura 2d6+1 (em vez de 1d8+1).",
 		BookPage:    83,
 		UID:         "pwr_3veknkiyye",
-		Unmodeled:   "a Cura pelas Mãos em alcance curto e 2d6+1 por PM: o gesto da Cura ainda diz 1d8+1 (ALE-652)",
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-humildade",

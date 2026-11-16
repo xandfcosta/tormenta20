@@ -27,7 +27,7 @@ func declarationOf(row *powerRow, dto sheet.CharacterDTO, flag string) bool {
 	row.Declares = flag
 	row.Declared = slices.Contains(dto.Conditionals, engine.FlagGroupID(flag))
 	if warning := declarationWarning(flag, dto); warning != "" {
-		row.ItemNotes = append(row.ItemNotes, warning)
+		row.Notes = append(row.Notes, warning)
 	}
 	return true
 }
