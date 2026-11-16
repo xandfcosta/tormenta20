@@ -1,18 +1,22 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 	"strings"
 	"testing"
+
+	"t20engine/domain/board"
 )
 
 // O QUE O MESTRE ESCONDE NÃO VAZA POR UMA TELA IRMÃ.
 //
 // A regra é a da fila (`live.RedactForPlayers`): o PV de personagem nasce à vista, todo PM
 // nasce escondido, e o mestre muda isso linha a linha. O cartão Grupo da tela do jogador
-// montava o mesmo dado por OUTRO caminho, que não passava pela regra: na mesma tela, a
-// fila dizia "PM ocultos pelo mestre" e o Grupo, logo abaixo, "PM 12/20".
+// e a lente do mestre montavam o mesmo dado por OUTRO caminho, que não passava pela
+// regra: na mesma tela, a fila dizia "PM ocultos pelo mestre" e o Grupo, logo abaixo,
+// "PM 12/20".
 
 var poolNumber = regexp.MustCompile(`P[VM] \d+/\d+`)
 
@@ -102,4 +106,24 @@ func TestTheGroupCardHidesWhatTheQueueHides(t *testing.T) {
 			t.Error("o Grupo do mestre ganhou o olho riscado, que nesta página cobre o −")
 		}
 	})
+}
+
+// A LENTE mostra ao mestre a mesa como ela é, e isso inclui a barra de PV das peças: o
+// Ogro da bancada tem o PV escondido, e a Tela da mesa já o desenha sem barra.
+func TestTheLensHidesTheBarOfAHiddenHitPointPool(t *testing.T) {
+	f := newSceneFixture(t)
+	f.seedOpenBoard(t, "crypt")
+	f.scene(t)
+	ogre := entryLabeled(t, stateOf(t, f.s.sessions, f.sessionID), "Ogro cansado")
+	if _, err := f.s.tableHost().Boards().AddToken(context.Background(), f.sessionID, defaultTab,
+		board.BoardToken{Label: "Ogro cansado", X: 2, Y: 2, EntryID: &ogre}); err != nil {
+		t.Fatalf("pôr a peça do Ogro: %v", err)
+	}
+	// O CONTROLE: sem a lente, o mestre vê a barra do Ogro.
+	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, "board-vitals-full") {
+		t.Fatal("a peça do Ogro não tem barra na tela do mestre — o caso mediria o vazio")
+	}
+	if withLens := onLens(t, f); strings.Contains(withLens, "board-vitals-full") {
+		t.Error("com a lente, a peça do Ogro mostra a barra de PV que a mesa não vê")
+	}
 }

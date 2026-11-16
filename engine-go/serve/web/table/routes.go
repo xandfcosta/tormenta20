@@ -393,11 +393,15 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// pode: ele confere a emboscada sem parar de montá-la.
 	hidden := 0
 	inLens := role == "gm" && s.lenses.On(sessionID, userID)
+	health := saudeDaFila(st)
 	if inLens {
 		scene, hidden = seesTableHowScene(scene)
+		// A SAÚDE também é a da mesa: a peça cujo PV o mestre escondeu sai sem barra, como
+		// na Tela da mesa. Redigir só o tabuleiro deixava a barra na lente.
+		health = saudeDaFila(live.StateForRole("player", fresh))
 	}
 	view.Board = boardViewOf(
-		scene, st, saudeDaFila(st), turnCombatant(st), viewer, mine, campaignID, sessionID,
+		scene, st, health, turnCombatant(st), viewer, mine, campaignID, sessionID,
 	)
 	view.Board.Lens = inLens
 	view.Board.HiddenTokens = hidden
