@@ -5968,6 +5968,12 @@
     font-size: var(--ds-t-xs);
     font-weight: 400;
   }
+  /* A reserva na cor de ação, como o "+N" da fileira do mestre (`.ds-gm-temp`). */
+  .ds-vital-value > .ds-vital-temp {
+    margin-left: 0.25rem;
+    color: var(--ds-action);
+    font-weight: 600;
+  }
   .ds-bar[data-thin] {
     height: 0.25rem;
   }

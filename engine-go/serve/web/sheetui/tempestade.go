@@ -273,6 +273,21 @@ func meterOf(label string, vital sheetVital, kind ds.MeterKind) ds.Meter {
 	return meter
 }
 
+// stripVitalName é o nome do botão do vital na faixa. Ele SUBSTITUI o texto do botão
+// para quem ouve a tela, e por isso carrega tudo o que o texto mostra — a palavra de
+// quem caiu e a reserva —, na ordem da frase da fileira da mesa (`barLabel`):
+// "PV −1/63, morrendo, mais 30 temporários, ajustar".
+func stripVitalName(label string, vital sheetVital) string {
+	name := label + " " + vital.Fraction
+	if vital.Down != "" {
+		name += ", " + vital.Down
+	}
+	if vital.Temp != "" {
+		name += ", mais " + strings.TrimPrefix(vital.Temp, "+") + " temporários"
+	}
+	return name + ", ajustar"
+}
+
 // vitalTone é o degrau da escada da barra da faixa: o do PV, e nenhum no PM.
 func vitalTone(kind ds.MeterKind, vital sheetVital) string {
 	if kind != ds.MeterPV {
