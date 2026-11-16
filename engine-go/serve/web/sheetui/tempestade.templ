@@ -249,7 +249,7 @@ templ vitalStrip(v View) {
 templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKind) {
 	<div class="ds-vital">
 		@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/-1")})
-		<button type="button" class="ds-vital-open" commandfor={ "vital-" + which } command="show-modal" aria-label={ label + " " + vital.Fraction + ", ajustar" }>
+		<button type="button" class="ds-vital-open" commandfor={ "vital-" + which } command="show-modal" aria-label={ stripVitalName(label, vital) }>
 			<span class="ds-vital-line">
 				// A PALAVRA DE QUEM CAIU vai ao lado do nome do pool, na linha de
 				// cima: embaixo do número ela cobria a barra a 390px.
@@ -259,7 +259,14 @@ templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKin
 						<span class="ds-down">{ vital.Down }</span>
 					}
 				</span>
-				<span class="ds-vital-value">{ ui.Quantity(int(vital.Current)) }<small>{ "/" + strconv.FormatInt(vital.Max, 10) }</small></span>
+				// A RESERVA vai na linha do número, e não na do nome: lá, ao lado da
+				// palavra de quem caiu, ela quebrava a linha e o selo pisava no número.
+				<span class="ds-vital-value">
+					{ ui.Quantity(int(vital.Current)) }<small>{ "/" + strconv.FormatInt(vital.Max, 10) }</small>
+					if vital.Temp != "" {
+						<small class="ds-vital-temp">{ vital.Temp }</small>
+					}
+				</span>
 			</span>
 			<span class="ds-bar" data-thin aria-hidden="true">
 				<span

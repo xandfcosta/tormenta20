@@ -281,8 +281,8 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 		t.Errorf("o medidor do PV não diz QUANTO é a reserva:\n%s", meter)
 	}
 	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
-	// somando.
-	if !strings.Contains(screen, `aria-label="PV `+fraction+`, ajustar"`) {
+	// somando. (O resto do nome, que diz a reserva, é do caso da faixa abaixo.)
+	if !strings.Contains(screen, `aria-label="PV `+fraction+` `) {
 		t.Errorf("a fração do PV saiu de %q — a reserva virou somando em vez de parcela", fraction)
 	}
 }
@@ -304,4 +304,54 @@ func railMeter(t *testing.T, screen, label string) string {
 	}
 	meter, _, _ := strings.Cut(screen[start:], "</div>")
 	return meter
+}
+
+// A FAIXA DO CELULAR TAMBÉM MOSTRA A RESERVA. A coluna da ficha diz "+30 temp." desde
+// que a reserva existe, mas a 390px a coluna não está na tela: o que fica à vista é a
+// faixa de baixo, e ela dizia 137/137 com 30 de colchão. Quem quisesse saber tinha de
+// abrir o diálogo.
+//
+// O CONTROLE vem primeiro, pela razão do caso acima: sem poça, a faixa não tem a marca.
+func TestTheMobileStripShowsTheTemporaryReserve(t *testing.T) {
+	f, id := barbaro(t, 5)
+
+	if pv := stripVitalOf(t, powerScreen(t, f, id), "PV"); strings.Contains(pv, "ds-vital-temp") {
+		t.Fatalf("a faixa SEM poça já mostra a reserva — o caso mediria o repouso:\n%s", pv)
+	}
+	fraction := pvFraction(t, f, id)
+
+	if rec := effect(t, f, id, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
+		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
+	}
+
+	pv := stripVitalOf(t, powerScreen(t, f, id), "PV")
+	// O número é do LIVRO: o Campo de Força dá 30 PV temporários de cena.
+	if !strings.Contains(pv, `<small class="ds-vital-temp">+30</small>`) {
+		t.Errorf("a faixa do PV não diz QUANTO é a reserva:\n%s", pv)
+	}
+	// O botão tem nome próprio, e ele é o que o leitor de tela lê no lugar do texto: a
+	// reserva tem de estar nele também, sem mexer na fração.
+	if !strings.Contains(pv, `aria-label="PV `+fraction+` e 30 temporários, ajustar"`) {
+		t.Errorf("o nome do botão do PV não diz a reserva, ou a fração saiu de %q:\n%s", fraction, pv)
+	}
+}
+
+// stripVitalOf recorta da faixa do celular a metade de um vital, do −1 ao +1.
+func stripVitalOf(t *testing.T, screen, label string) string {
+	t.Helper()
+	// A ÂNCORA É A FAIXA, e não o rótulo do −1: a coluna da ficha tem botões com o
+	// mesmo nome, e vem antes no documento.
+	_, strip, ok := strings.Cut(screen, `<div class="ds-vitals">`)
+	if !ok {
+		t.Fatal("a ficha não desenhou a faixa do celular: o caso mediria o vazio")
+	}
+	start := strings.Index(strip, `aria-label="Menos 1 `+label+`"`)
+	if start < 0 {
+		t.Fatalf("a faixa não tem a metade do %s", label)
+	}
+	half, _, ok := strings.Cut(strip[start:], `aria-label="Mais 1 `+label+`"`)
+	if !ok {
+		t.Fatalf("a metade do %s na faixa não fecha no +1", label)
+	}
+	return half
 }

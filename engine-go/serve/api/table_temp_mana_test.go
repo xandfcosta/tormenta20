@@ -38,7 +38,10 @@ import (
 // do rótulo do botão de Inspiração — um número que não se mexe. Dois casos
 // reprovaram dizendo que o motor não funcionava, e o motor estava certo: a
 // sonda é que lia outro número.
-var manaBadge = regexp.MustCompile(`aria-label="PM (\d+)/(\d+), ajustar"`)
+//
+// Com reserva, o nome diz também os temporários ("PM 24/24 e 2 temporários,
+// ajustar"), e a sonda lê só a fração: a reserva quem lê é o `manaReserve`.
+var manaBadge = regexp.MustCompile(`aria-label="PM (\d+)/(\d+)(?: e \d+ temporários)?, ajustar"`)
 
 // manaReserve acha a parcela à parte, que o medidor de PM da coluna escreve
 // logo depois da fração.
