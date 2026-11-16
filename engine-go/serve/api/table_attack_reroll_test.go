@@ -178,3 +178,18 @@ func TestNimbsLuckMakesTheAttackANaturalTwenty(t *testing.T) {
 		t.Error("a faixa não diz que o 11 conta como 20 natural")
 	}
 }
+
+// O NÚMERO DE UM TESTE NÃO VIRA O DADO DO GOLPE. O "Eu rolei" é do teste de perícia rolado
+// na mesa, e o ataque não tem esse campo: o d20 do golpe e o de novo são do servidor. O
+// sinal fica na página depois que o campo some, e um 20 digitado num teste valia como o
+// d20 do Sortudo no golpe seguinte.
+func TestTheAttackRerollIgnoresTheSkillTestsHandDie(t *testing.T) {
+	f, goblin := attackOnTurn(t)
+	withPowers(t, f, `["sortudo"]`, "{}")
+	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
+	f.s.fixedD20 = 7
+	f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/ataque/rolar-de-novo/sortudo", `{"reroll_d20":20}`)
+	if got := stateOf(t, f.s.sessions, f.sessionID).PendingAttack; got == nil || got.Roll != 7 {
+		t.Errorf("o Sortudo rolou %+v, e o dado do servidor deu 7: o número que sobrou do teste virou o d20 do golpe", got)
+	}
+}

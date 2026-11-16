@@ -77,3 +77,23 @@ func TestNimbsLuckMakesElevenOrMoreANaturalTwenty(t *testing.T) {
 		t.Error("a faixa não diz que o 13 conta como 20 natural")
 	}
 }
+
+// O "EU ROLEI" SÓ EXISTE NO TESTE ROLADO NA MESA. No teste que o app rolou, a faixa não
+// tem o campo, e um número que sobrou no sinal de um teste anterior valia como o segundo
+// dado em vez de o servidor rolar.
+func TestTheRerollOfATestTheAppRolledIgnoresALeftoverHandDie(t *testing.T) {
+	f, id := spenderAtTheTable(t, "Cavaleiro", 5, 0)
+	choiceCom(t, f, id, `["class.cavaleiro.etiqueta"]`, "[]")
+	f.s.fixedD20 = 4
+	if refusal := rollsWith(t, f, id, "Diplomacia", `{}`); refusal != "" {
+		t.Fatalf("rolar Diplomacia: %q", refusal)
+	}
+	if first := stateOf(t, f.s.sessions, f.sessionID).LastSkillTest; first.ByHand || first.Roll != 4 {
+		t.Fatalf("o primeiro teste devia ser do app, com o 4 cravado: na mão %v, d20 %d", first.ByHand, first.Roll)
+	}
+	f.s.fixedD20 = 7
+	rerollsOnTheTable(t, f, f.player, "etiqueta", `{"reroll_d20":15}`)
+	if got := stateOf(t, f.s.sessions, f.sessionID).LastSkillTest; got.Roll != 7 || got.ByHand {
+		t.Errorf("o segundo dado foi %d (na mão %v), e o servidor rolou 7: o número que sobrou no sinal valeu", got.Roll, got.ByHand)
+	}
+}
