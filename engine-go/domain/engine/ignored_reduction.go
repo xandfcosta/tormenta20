@@ -85,14 +85,10 @@ func (r *Ruleset) ownedBoostAddOn(ch Character, id, boost string) *ClassPower {
 
 // ownedBoostAddOns são os acréscimos que a ficha tem para o impulso `boost`, na ordem das classes.
 func (r *Ruleset) ownedBoostAddOns(ch Character, boost string) []*ClassPower {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
 	var out []*ClassPower
-	for _, entry := range ch.Classes {
-		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
-			if power.BoostAddOn != nil && power.BoostAddOn.Boost == boost {
-				out = append(out, power)
-			}
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		if power.BoostAddOn != nil && power.BoostAddOn.Boost == boost {
+			out = append(out, power)
 		}
 	}
 	return out

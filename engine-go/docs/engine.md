@@ -475,6 +475,13 @@ Mente Criminosa não são).
   que entra, o PM a mais e os modificadores que liga. O pedido leva `BoostChoice.AddOn`, o motor soma os
   modificadores à carta como mais um item e o PM ao `BoostPM`, e recusa o acréscimo de um poder que a ficha
   não tem. A oferta do impulso o lista (`BoostOffer.AddOns`), e só é oferecido a quem o tem.
+- **O dado do impulso muda de fora dele** (`boost_changes.go`). A Arma Sagrada (p82) é do poder
+  (`FavoredWeaponDie`): o Golpe Divino rola d12 só na carta da arma preferida da divindade, e o motor monta o
+  pedido duas vezes e fica com a carta da preferida do segundo. O que o degrau compra também é da carta
+  (`BoostBuys`), porque o "+1d8" da oferta mentiria na arma preferida.
+- **A arma preferida da divindade vem do catálogo pelo NOME** (`catalog.favoredWeapons`): o verbete do deus a
+  escreve como o livro, e o item é achado pelo nome. Um nome que não acha uma arma só reprova a montagem do
+  catálogo, com o deus e o nome. O "todas" de Nimb (p102) fica fora: é o mestre quem diz.
 - **O que é da ARMA fica nas cartas dela**: a melhoria e a falta de proficiência
   moram em `attack:weapon:<id>`, e não na perícia (`mirrorWeaponAttackMods`). Luta é
   uma só para a mão inteira, e um bônus nela sobe a arma da outra mão. O dano, a

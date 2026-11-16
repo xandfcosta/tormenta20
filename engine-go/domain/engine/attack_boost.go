@@ -101,8 +101,11 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 		return nil, fmt.Errorf("%s: diga para onde vai o bônus (%q, %q ou %q), e veio %q",
 			power.Name, BoostToAttack, BoostToDamage, BoostSplitEvenly, choice.Split)
 	}
-	mods := boostModifiers(boost, 1+choice.Steps, choice.Split, classLevel)
-	item := ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods}
+	changes := r.boostChangesOf(ch, activeConditionals, power.ID)
+	modsWith := func(split string, faces int) []Modifier {
+		return changes.onDice(boostModifiers(boost, 1+choice.Steps, split, classLevel), faces)
+	}
+	item := ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: modsWith(choice.Split, 0)}
 	items := []ActiveItem{item}
 	addOnPM := 0
 	if choice.AddOn != "" {
@@ -114,6 +117,24 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 		addOnPM = addOn.BoostAddOn.PM
 	}
 	boosted := r.weaponCardsWith(ch, activeConditionals, items)
+	// O que a tira escreve é o bônus inteiro, antes de escolher o lado, como na oferta (`boostBuys`).
+	buys := buysWritten(modsWith(BoostToAttack, 0))
+	for i := range boosted {
+		boosted[i].BoostBuys = buys
+	}
+	if changes.favoredFaces > 0 && changes.favoredWeapon != "" {
+		// A ARMA PREFERIDA rola o outro dado, e as outras armas continuam com o do impulso: o mesmo pedido,
+		// com o dado trocado, e só a carta da preferida sai dele.
+		favoredItems := append([]ActiveItem{}, items...)
+		favoredItems[0].Modifiers = modsWith(choice.Split, changes.favoredFaces)
+		onFavored := r.weaponCardsWith(ch, activeConditionals, favoredItems)
+		for i := range boosted {
+			if i < len(onFavored) && r.isTheFavoredWeapon(boosted[i], changes.favoredWeapon) {
+				boosted[i] = onFavored[i]
+				boosted[i].BoostBuys = buysWritten(modsWith(BoostToAttack, changes.favoredFaces))
+			}
+		}
+	}
 	if boost.MeleeOnly {
 		for i := range boosted {
 			if i < len(plain) {
@@ -281,16 +302,7 @@ func boostModifiers(boost *ClassPowerBoost, degrees int, split string, classLeve
 // número do primeiro modificador que cresce com o degrau. No impulso que se
 // divide, é o bônus inteiro, antes de escolher o lado.
 func boostBuys(boost *ClassPowerBoost, degrees int) string {
-	for _, m := range boostModifiers(boost, degrees, BoostToAttack, 0) {
-		if m.Scale != nil {
-			continue
-		}
-		if m.Dice != "" {
-			return "+" + m.Dice
-		}
-		return "+" + strconv.Itoa(m.Amount)
-	}
-	return ""
+	return buysWritten(boostModifiers(boost, degrees, BoostToAttack, 0))
 }
 
 // MultiplyDice escreve "NdF" com N vezes `by` — 1d8 com 3 degraus é 3d8.
