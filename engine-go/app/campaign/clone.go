@@ -77,6 +77,17 @@ FROM characters WHERE id = ?`, sourceID, campaignID, now, now, sourceID)
 		{"oversized weapons", `INSERT INTO character_oversized_weapons (itemId)
 			SELECT pair.copiedId FROM ` + copiedItemPairs + ` pair
 			JOIN character_oversized_weapons mark ON mark.itemId = pair.originalId`, []any{destID, sourceID}},
+		// AS DECISÕES DO JOGADOR SOBRE O ITEM: a escola do tomo hermético, a magia do
+		// Harmonizado e a marca de feita por mim, que o Ferreiro e o Cano Raiado leem (p69).
+		{"item choices", `INSERT INTO character_item_choices (itemId, choice)
+			SELECT pair.copiedId, chosen.choice FROM ` + copiedItemPairs + ` pair
+			JOIN character_item_choices chosen ON chosen.itemId = pair.originalId`, []any{destID, sourceID}},
+		{"item improvement choices", `INSERT INTO character_item_improvement_choices (itemId, improvementId, choice)
+			SELECT pair.copiedId, chosen.improvementId, chosen.choice FROM ` + copiedItemPairs + ` pair
+			JOIN character_item_improvement_choices chosen ON chosen.itemId = pair.originalId`, []any{destID, sourceID}},
+		{"items made by owner", `INSERT INTO character_item_made_by_owner (itemId)
+			SELECT pair.copiedId FROM ` + copiedItemPairs + ` pair
+			JOIN character_item_made_by_owner mark ON mark.itemId = pair.originalId`, []any{destID, sourceID}},
 		{"weapon doses", `INSERT INTO character_item_doses (itemId, catalogId)
 			SELECT pair.copiedId, dose.catalogId FROM ` + copiedItemPairs + ` pair
 			JOIN character_item_doses dose ON dose.itemId = pair.originalId ORDER BY dose.id`, []any{destID, sourceID}},
