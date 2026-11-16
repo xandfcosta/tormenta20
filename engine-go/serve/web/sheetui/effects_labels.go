@@ -139,8 +139,10 @@ func targetLabel(t engine.ModifierTarget) string {
 		"ignoresSituation":      "Ignora no ataque",
 		// A palavra da casa para a RD é "redução de dano" (a aba Combate), e o verbo é o do livro (p66, p77).
 		"ignoresDamageReduction": "Ignora redução de dano",
-		"source":                 "Multiplica o que a fonte dá",
-		"tempHp":                 "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
+		// O Vingador Sagrado no Golpe Divino (p84): o complemento é o nome do poder.
+		"boostCostHalved": "Custo em PM no golpe", "boostExtraDice": "Dados a mais no golpe",
+		"source": "Multiplica o que a fonte dá",
+		"tempHp": "PV temporários", "tempMp": "PM temporários", "maneuver": "Manobra",
 		// O DANO QUE O PERSONAGEM SOFRE (ALE-650), com o tipo no complemento.
 		"damageTakenPerDie": "Dano sofrido a mais por dado",
 		"damageImmunity":    "Imune a dano",
@@ -211,7 +213,7 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.K == "announcedCondition" && t.Name != "" {
 		return book.ConditionName(t.Name)
 	}
-	if (t.K == "source" || t.K == "boostCost") && t.Name != "" {
+	if (t.K == "source" || t.K == "boostCost" || t.K == "boostCostHalved" || t.K == "boostExtraDice") && t.Name != "" {
 		// O corte da Harmonizada pode ser do gasto de um ENCANTO da arma, e o encanto é item do catálogo.
 		if enchant := book.ItemByID(t.Name); t.K == "boostCost" && enchant != nil {
 			return enchant.Name

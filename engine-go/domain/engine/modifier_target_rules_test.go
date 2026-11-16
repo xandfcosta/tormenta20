@@ -77,6 +77,8 @@ var alvosQueOMotorAplica = map[string]string{
 	"pmLimit":         "breakdowns_magic.go, no limite de PM por magia",
 	"pmCost":          "breakdowns_magic.go, no custo da magia",
 	"boostCost":       "attack_boost.go, no custo do impulso na carta da arma Harmonizada (p165)",
+	"boostCostHalved": "boost_changes.go, no custo do impulso pela metade na forma do Vingador Sagrado (p84)",
+	"boostExtraDice":  "boost_changes.go, nos dados a mais do impulso na forma do Vingador Sagrado (p84)",
 	"shootsIntoMelee": "weapons.go, tirando da carta o –5 de atirar em corpo a corpo (o Grudar o Cano, p48)",
 	"spellDC":         "breakdowns_magic.go, na CD",
 	"inventorySlots":  "breakdowns_magic.go, nos espaços da mochila",

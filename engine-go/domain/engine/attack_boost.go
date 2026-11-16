@@ -144,7 +144,7 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	}
 	pm := boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM + addOnPM
 	for i := range boosted {
-		pricedAt(&boosted[i], r.boostCostWith(ch, boosted[i].ItemID, power.ID, pm))
+		pricedAt(&boosted[i], changes.priced(pm, r.boostCostWith(ch, boosted[i].ItemID, power.ID, pm)))
 	}
 	return boosted, nil
 }

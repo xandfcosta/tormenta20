@@ -40,6 +40,18 @@ var activationsPart12 = []Activation{
 					BonusType: "untyped",
 					Note:      "Vingador Sagrado",
 				},
+				{
+					Target:    ModifierTarget{Kind: "boostCostHalved", Name: "class.paladino.golpe-divino-1d8"},
+					Amount:    1,
+					BonusType: "untyped",
+					Note:      "Vingador Sagrado",
+				},
+				{
+					Target:    ModifierTarget{Kind: "boostExtraDice", Name: "class.paladino.golpe-divino-1d8"},
+					Amount:    2,
+					BonusType: "untyped",
+					Note:      "Vingador Sagrado",
+				},
 			},
 		},
 	},
