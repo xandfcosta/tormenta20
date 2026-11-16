@@ -141,7 +141,12 @@ primeiro e se era para saltar, o que ficou apertado, o que ficou solto, o que
 desalinha. Nenhum limiar responde a essas quatro, e é por isso que este passo é
 humano — não porque a suíte seja fraca.
 
-- **Quais cenas:** as que a mudança TOCA, e os endereços delas estão em
+- **Quais cenas:** as que DESENHAM o dado que a mudança cria ou muda — e não
+  só as que o diff toca. Uma fatia de regra muda um DADO, e o dado aparece em
+  superfícies que ela não editou: a coluna e a faixa do celular, a carta do
+  mestre e o recorte do jogador, a linha compacta e a folha. Ache o campo do
+  modelo de tela que carrega o dado e todo `.templ` que o lê; cada um entra,
+  nas duas larguras e nos dois papéis. Os endereços estão em
   `engine-go/serve/web/appearance_scenes.json` — o registro que o
   `TestEveryPageSceneIsMeasuredForAppearance` mantém completo. Não escreva uma
   segunda lista aqui: ela envelheceria sozinha.
@@ -189,6 +194,9 @@ e o que vale delas aqui é isto:
   DEVE-CORRIGIR, DETALHE ou OBSERVAÇÃO. Candidata de arquitetura vem numerada,
   sem interface proposta, com a pergunta "qual destas explorar?". Nada é editado
   sem o dono pedir.
+- **Candidata que volta não é pergunta de novo.** A mesma candidata em duas
+  revisões quer dizer que cada fatia está pagando por ela: ela sai do fim do PR
+  e vai ao dono como decisão, antes da próxima fatia — fazer agora, ou recusar.
 - **Candidata recusada por um motivo que vale guardar** vai para o
   [APRENDIZADOS.md](APRENDIZADOS.md), para a próxima revisão não sugeri-la de
   novo.
