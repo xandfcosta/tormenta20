@@ -2255,6 +2255,27 @@
               { "catalogId": "armadura-couro", "equipped": "vested" }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Paladino Compassivo Nv6",
+            "races": ["humano"],
+            "origin": "acolito",
+            "classes": [{ "className": "Paladino", "level": 6 }],
+            "strength": 3,
+            "dexterity": 0,
+            "constitution": 2,
+            "intelligence": 0,
+            "wisdom": 2,
+            "charisma": 4,
+            "size": "Médio",
+            "displacement": 9,
+            "classPowers": ["class.paladino.virtude-paladinesca-compaixao"],
+            "items": [
+              { "catalogId": "espada-longa", "equipped": "wielded" }
+            ]
+          }
         }
       ]
     },
