@@ -36,9 +36,13 @@ func pendingWithANaturalOne(t *testing.T, f sceneFixture, path string) live.Pend
 	return seeded
 }
 
-func rerollsTheAttack(t *testing.T, f sceneFixture, who int64, key, body string) live.PendingAttack {
+// rerollsTheAttack rola de novo o golpe com o d20 CRAVADO no dado do servidor: o
+// ataque não tem "Eu rolei", e o segundo dado é sempre do servidor.
+func rerollsTheAttack(t *testing.T, f sceneFixture, who int64, key string, d20 int) live.PendingAttack {
 	t.Helper()
-	f.requests(t, who, http.MethodPost, f.tableUrl()+"/ataque/rolar-de-novo/"+key, body)
+	f.s.fixedD20 = d20
+	defer func() { f.s.fixedD20 = 0 }()
+	f.requests(t, who, http.MethodPost, f.tableUrl()+"/ataque/rolar-de-novo/"+key, "")
 	state := stateOf(t, f.s.sessions, f.sessionID)
 	if state.PendingAttack == nil {
 		t.Fatal("o provisório sumiu depois de rolar de novo")
@@ -70,7 +74,7 @@ func TestLuckyRerollsTheAttackAndTheSecondDieStands(t *testing.T) {
 	}
 
 	before := mpOf(t, f.s, f.charID)
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":20}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 20)
 	if got.Roll != 20 || !got.Hit || !got.Critical {
 		t.Errorf("depois de rolar de novo com 20: d20 %d, acertou %v, crítico %v; o 20 natural acerta e critica (p221, p231)",
 			got.Roll, got.Hit, got.Critical)
@@ -94,7 +98,7 @@ func TestOnlyWhoRolledRerollsTheAttack(t *testing.T) {
 	f, goblin := attackOnTurn(t)
 	withPowers(t, f, `["sortudo"]`, "{}")
 	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
-	if got := rerollsTheAttack(t, f, f.gm, "sortudo", `{"reroll_d20":20}`); got.Roll != 1 {
+	if got := rerollsTheAttack(t, f, f.gm, "sortudo", 20); got.Roll != 1 {
 		t.Errorf("o mestre rolou de novo o ataque do jogador: d20 %d", got.Roll)
 	}
 }
@@ -110,7 +114,7 @@ func TestNoRerollAfterTheGMRules(t *testing.T) {
 		t.Fatalf("o mestre dizer errou deu %d", rec.Code)
 	}
 	before := mpOf(t, f.s, f.charID)
-	if got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":20}`); got.Roll != 1 || len(got.Rerolls) != 0 {
+	if got := rerollsTheAttack(t, f, f.player, "sortudo", 20); got.Roll != 1 || len(got.Rerolls) != 0 {
 		t.Errorf("o jogador rolou de novo depois de o mestre decidir: d20 %d, %+v", got.Roll, got.Rerolls)
 	}
 	if spent := before - mpOf(t, f.s, f.charID); spent != 0 {
@@ -135,7 +139,7 @@ func TestWeaponMasteryRerollsOnlyWithTheChosenWeapon(t *testing.T) {
 	if !strings.Contains(page, "Rolar de novo · Mestre em Arma · 2 PM") {
 		t.Fatal("o Mestre em Arma da espada longa não oferece rolar de novo o golpe dela")
 	}
-	if got := rerollsTheAttack(t, f, f.player, "mestre_em_arma", `{"reroll_d20":20}`); got.Roll != 20 {
+	if got := rerollsTheAttack(t, f, f.player, "mestre_em_arma", 20); got.Roll != 20 {
 		t.Errorf("o Mestre em Arma não rolou de novo: d20 %d", got.Roll)
 	}
 }
@@ -149,7 +153,7 @@ func TestTheManeuverRerollKeepsTheDefendersDie(t *testing.T) {
 	if seeded.Maneuver == nil {
 		t.Fatal("a manobra não veio no provisório")
 	}
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":15}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 15)
 	if got.Maneuver == nil || got.Maneuver.OpposedRoll != seeded.Maneuver.OpposedRoll {
 		t.Fatalf("o d20 do defensor mudou: %+v, antes %+v", got.Maneuver, seeded.Maneuver)
 	}
@@ -165,7 +169,7 @@ func TestNimbsLuckMakesTheAttackANaturalTwenty(t *testing.T) {
 	f, goblin := attackOnTurn(t)
 	seedClasse(t, f.s, f.charID, "Bucaneiro", 20)
 	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
-	got := rerollsTheAttack(t, f, f.player, "sorte_de_nimb", `{"reroll_d20":11}`)
+	got := rerollsTheAttack(t, f, f.player, "sorte_de_nimb", 11)
 	if got.Roll != 11 || !got.Hit || !got.Critical || len(got.Rerolls) != 1 || !got.Rerolls[0].Natural {
 		t.Errorf("Sorte de Nimb com 11: d20 %d, acertou %v, crítico %v, %+v; esperava o 11 valendo 20 natural",
 			got.Roll, got.Hit, got.Critical, got.Rerolls)
