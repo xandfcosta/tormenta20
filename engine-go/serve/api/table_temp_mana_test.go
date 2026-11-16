@@ -39,9 +39,9 @@ import (
 // reprovaram dizendo que o motor não funcionava, e o motor estava certo: a
 // sonda é que lia outro número.
 //
-// Com reserva, o nome diz também os temporários ("PM 24/24 e 2 temporários,
+// Com reserva, o nome diz também os temporários ("PM 24/24, mais 2 temporários,
 // ajustar"), e a sonda lê só a fração: a reserva quem lê é o `manaReserve`.
-var manaBadge = regexp.MustCompile(`aria-label="PM (\d+)/(\d+)(?: e \d+ temporários)?, ajustar"`)
+var manaBadge = regexp.MustCompile(`aria-label="PM (\d+)/(\d+)(?:, mais \d+ temporários)?, ajustar"`)
 
 // manaReserve acha a parcela à parte, que o medidor de PM da coluna escreve
 // logo depois da fração.

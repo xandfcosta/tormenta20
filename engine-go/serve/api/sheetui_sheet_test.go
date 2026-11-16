@@ -282,7 +282,7 @@ func TestTheBadgeShowsTheTemporaryHpAsItsOwnParcel(t *testing.T) {
 	}
 	// E o PV de verdade não se mexeu: a reserva é parcela à parte, não um
 	// somando. (O resto do nome, que diz a reserva, é do caso da faixa abaixo.)
-	if !strings.Contains(screen, `aria-label="PV `+fraction+` `) {
+	if !strings.Contains(screen, `aria-label="PV `+fraction+`,`) {
 		t.Errorf("a fração do PV saiu de %q — a reserva virou somando em vez de parcela", fraction)
 	}
 }
@@ -331,8 +331,27 @@ func TestTheMobileStripShowsTheTemporaryReserve(t *testing.T) {
 	}
 	// O botão tem nome próprio, e ele é o que o leitor de tela lê no lugar do texto: a
 	// reserva tem de estar nele também, sem mexer na fração.
-	if !strings.Contains(pv, `aria-label="PV `+fraction+` e 30 temporários, ajustar"`) {
+	// A frase é a da fileira da mesa (`barLabel`), para quem ouve as duas telas.
+	if !strings.Contains(pv, `aria-label="PV `+fraction+`, mais 30 temporários, ajustar"`) {
 		t.Errorf("o nome do botão do PV não diz a reserva, ou a fração saiu de %q:\n%s", fraction, pv)
+	}
+}
+
+// O NOME DO BOTÃO DIZ QUEM CAIU. O texto do botão mostra "morrendo" ao lado do PV, e o
+// nome, que o substitui para o leitor de tela, dizia só a fração.
+func TestTheMobileStripNamesTheDownedWord(t *testing.T) {
+	f, id := barbaro(t, 5)
+	pool := poolsOf(t, f.s, id)
+	if rec := f.requests(t, f.player, http.MethodPost,
+		fmt.Sprintf("/personagens/%d/vitais/pv/gasto/%d", id, pool.HpMax+1), ""); rec.Code != http.StatusOK {
+		t.Fatalf("derrubar o bárbaro devolveu %d", rec.Code)
+	}
+	pv := stripVitalOf(t, powerScreen(t, f, id), "PV")
+	if !strings.Contains(pv, `<span class="ds-down">morrendo</span>`) {
+		t.Fatalf("o bárbaro a −1 não está morrendo na faixa — o caso mediria outra coisa:\n%s", pv)
+	}
+	if !strings.Contains(pv, fmt.Sprintf(`aria-label="PV −1/%d, morrendo, ajustar"`, pool.HpMax)) {
+		t.Errorf("o nome do botão do PV não diz que ele está morrendo:\n%s", pv)
 	}
 }
 

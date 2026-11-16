@@ -274,12 +274,16 @@ func meterOf(label string, vital sheetVital, kind ds.MeterKind) ds.Meter {
 }
 
 // stripVitalName é o nome do botão do vital na faixa. Ele SUBSTITUI o texto do botão
-// para quem ouve a tela, e por isso carrega a reserva que o texto mostra:
-// "PV 63/63 e 30 temporários, ajustar".
+// para quem ouve a tela, e por isso carrega tudo o que o texto mostra — a palavra de
+// quem caiu e a reserva —, na ordem da frase da fileira da mesa (`barLabel`):
+// "PV −1/63, morrendo, mais 30 temporários, ajustar".
 func stripVitalName(label string, vital sheetVital) string {
 	name := label + " " + vital.Fraction
+	if vital.Down != "" {
+		name += ", " + vital.Down
+	}
 	if vital.Temp != "" {
-		name += " e " + strings.TrimPrefix(vital.Temp, "+") + " temporários"
+		name += ", mais " + strings.TrimPrefix(vital.Temp, "+") + " temporários"
 	}
 	return name + ", ajustar"
 }
