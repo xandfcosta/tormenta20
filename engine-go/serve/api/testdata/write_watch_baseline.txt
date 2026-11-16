@@ -5,8 +5,11 @@ POST /admin/usuarios/{id}/apagar grava em campaigns
 POST /admin/usuarios/{id}/apagar grava em character_level_choices
 POST /admin/usuarios/{id}/apagar grava em characters
 POST /campanhas/entrar grava em character_expertises
+POST /campanhas/entrar grava em character_item_choices
 POST /campanhas/entrar grava em character_item_enchant_choices
 POST /campanhas/entrar grava em character_item_enchants
+POST /campanhas/entrar grava em character_item_improvement_choices
+POST /campanhas/entrar grava em character_item_made_by_owner
 POST /campanhas/entrar grava em character_items
 POST /campanhas/entrar grava em character_level_choices
 POST /campanhas/entrar grava em character_oversized_weapons

@@ -55,6 +55,9 @@ templ itemSheetDs(v View, s itemSheet) {
 				for _, row := range s.Book.Rows {
 					<p class="ds-help">{ row }</p>
 				}
+				if s.InHand != "" {
+					<p class="ds-help">{ "na sua mão: " + s.InHand }</p>
+				}
 			</div>
 		}
 		if s.School != nil {

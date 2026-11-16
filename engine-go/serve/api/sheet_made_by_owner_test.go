@@ -46,3 +46,47 @@ func TestTheSmithMarksTheWeaponAsHisOwn(t *testing.T) {
 		t.Errorf("tocar de novo não tirou a marca (recusa %q)", refusal)
 	}
 }
+
+// A FOLHA DO ITEM DIZ O QUE A MARCA MUDOU. A linha de referência é o que o LIVRO diz da
+// arma, e fica; abaixo dela, a da arma NA MÃO desta ficha, com a mesma conta da carta do
+// Combate. Sem ela, quem liga "Feita por mim" via o dano do livro logo acima do
+// interruptor e não via, ali, o passo que o Ferreiro deu — só na aba Combate.
+//
+// Os DADOS são o que se prende, e não o total: o +N é da Força do Inventor, e a conta
+// dela é de outro caso.
+func TestTheItemSheetShowsTheDamageInTheHandBelowTheBook(t *testing.T) {
+	f := newSceneFixture(t)
+	sword := itemSemeia(t, f, f.charID, "espada-longa", "Espada longa", "wielded")
+	seedClasse(t, f.s, f.charID, "Inventor", 5)
+	seedPowerChoices(t, f.s, f.charID, `["class.inventor.armeiro","class.inventor.ferreiro"]`, `{}`)
+
+	before := itemSheetSearching(t, f, sword, "")
+	// O CRÍTICO se escreve como no Combate: com as duas linhas uma embaixo da outra, um
+	// "19/×2" no livro e um "19-20/x2" na mão pareciam dois críticos diferentes.
+	if !strings.Contains(before, "dano 1d8 · crítico 19-20/x2") {
+		t.Fatalf("a referência do livro sumiu da folha da espada, ou escreve o crítico de outro jeito:\n%s", before)
+	}
+	if !strings.Contains(before, "na sua mão: 1d8") {
+		t.Errorf("a folha da espada empunhada não diz o dano na mão:\n%s", before)
+	}
+
+	if refusal := bagCommand(t, f, f.charID, fmt.Sprintf("itens/%d/feita-por-mim", sword)); refusal != "" {
+		t.Fatalf("marcar a espada foi recusado: %q", refusal)
+	}
+	after := itemSheetSearching(t, f, sword, "")
+	if !strings.Contains(after, "na sua mão: 1d10") {
+		t.Errorf("com a marca, o Ferreiro dá um passo, e a linha da mão não o diz:\n%s", after)
+	}
+	if !strings.Contains(after, "dano 1d8 · crítico") {
+		t.Errorf("a marca mexeu na referência do livro, que é do catálogo:\n%s", after)
+	}
+}
+
+// A arma GUARDADA não está na mão de ninguém, e não ganha a linha.
+func TestAStowedWeaponHasNoDamageInTheHand(t *testing.T) {
+	f := newSceneFixture(t)
+	sword := itemSemeia(t, f, f.charID, "espada-longa", "Espada longa", "")
+	if screen := itemSheetSearching(t, f, sword, ""); strings.Contains(screen, "na sua mão") {
+		t.Errorf("a espada guardada diz um dano na mão:\n%s", screen)
+	}
+}
