@@ -343,6 +343,12 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	for i := range group {
 		withTempPool(&group[i].PV, pools.Hp[group[i].CharacterID])
 		withTempPool(&group[i].PM, pools.Mp[group[i].CharacterID])
+		// O GRUPO DO JOGADOR SEGUE A REGRA DA FILA, e a ficha de quem olha é dele. O mestre
+		// vê tudo, e a página Grupo dele não desenha o olho riscado: lá ele cobriria o −.
+		if role != "gm" && !mine[group[i].CharacterID] {
+			hp, mp := live.TableSeesMemberPools(fresh, group[i].CharacterID)
+			group[i].PV.Hidden, group[i].PM.Hidden = !hp, !mp
+		}
 		markDowned(&group[i].PV, conditions[group[i].CharacterID])
 	}
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)
@@ -387,11 +393,15 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// pode: ele confere a emboscada sem parar de montá-la.
 	hidden := 0
 	inLens := role == "gm" && s.lenses.On(sessionID, userID)
+	health := saudeDaFila(st)
 	if inLens {
 		scene, hidden = seesTableHowScene(scene)
+		// A SAÚDE também é a da mesa: a peça cujo PV o mestre escondeu sai sem barra, como
+		// na Tela da mesa. Redigir só o tabuleiro deixava a barra na lente.
+		health = saudeDaFila(live.StateForRole("player", fresh))
 	}
 	view.Board = boardViewOf(
-		scene, st, saudeDaFila(st), turnCombatant(st), viewer, mine, campaignID, sessionID,
+		scene, st, health, turnCombatant(st), viewer, mine, campaignID, sessionID,
 	)
 	view.Board.Lens = inLens
 	view.Board.HiddenTokens = hidden
