@@ -45,6 +45,8 @@ var alvosQueOMotorAplica = map[string]string{
 	"nonLethalDamage":      "weapons.go, na carta, e attack_ecs.go na parcela (ALE-423)",
 	"ignoresDamageReduction": "weapons.go, na carta (`ignoredReductionOf`), e attack_damage_tally.go tirando do " +
 		"que a RD absorve (o Punhos de Adamante, o Romper Resistências, ALE-652)",
+	"rerollsLowWeaponDice": "weapons.go, na carta (`rerollsLowDiceOf`), que o app/combat confere no golpe congelado antes " +
+		"de rolar de novo os 1 e 2 do dano (o Destruidor, p41, p65)",
 	"ignoresSituation": "weapons.go, na carta, e special_situations_ecs.go tirando do ataque a linha " +
 		"da Tabela 5-3 que a arma não sofre (a Caçadora, p335)",
 	"critMult":          "weapons.go, no multiplicador (ALE-411)",

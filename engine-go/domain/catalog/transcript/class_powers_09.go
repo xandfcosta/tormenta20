@@ -148,13 +148,20 @@ var classPowersPart09 = []ClassPower{
 		Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 	},
 	{
-		ID:            "class.guerreiro.destruidor",
-		ClassName:     "Guerreiro",
-		Name:          "Destruidor",
-		Description:   "Quando causa dano corpo-a-corpo com arma de duas mãos, pode rolar novamente qualquer 1 ou 2 da rolagem de dano.",
-		BookPage:      65,
-		UID:           "pwr_6pmfc5jyqn",
-		Unmodeled:     "rolar de novo 1 e 2 no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
+		ID:          "class.guerreiro.destruidor",
+		Modeled:     []string{"rolar de novo os 1 e 2 dos dados da arma corpo a corpo de duas mãos, depois do dano"},
+		ClassName:   "Guerreiro",
+		Name:        "Destruidor",
+		Description: "Quando causa dano corpo-a-corpo com arma de duas mãos, pode rolar novamente qualquer 1 ou 2 da rolagem de dano.",
+		BookPage:    65,
+		UID:         "pwr_6pmfc5jyqn",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "rerollsLowWeaponDice", Scope: "melee-two-handed"},
+				Amount:    1,
+				BonusType: "untyped",
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}},
 	},
 	{

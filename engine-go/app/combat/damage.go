@@ -86,6 +86,15 @@ func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, ses
 		return live.PendingAttack{}, fmt.Errorf("foram digitados %d dados a mais do que o dano pede: %w",
 			byHand.Unused(), app.ErrRefused)
 	}
+	pending = withRolledDamage(pending, out)
+	if _, err := s.tables.RecordAttackDamage(ctx, sessionID, attacker, pending); err != nil {
+		return live.PendingAttack{}, err
+	}
+	return pending, nil
+}
+
+// withRolledDamage é o provisório com o dano que o motor rolou: os dados, a conta e o que o livro prevê.
+func withRolledDamage(pending live.PendingAttack, out engine.AttackOutcome) live.PendingAttack {
 	pending.Dice, pending.Faces, pending.ExtraDice = out.Dice, out.Faces, extraDiceOf(out)
 	pending.RawDamage, pending.Absorbed, pending.Damage, pending.NonLethal = out.RawDamage, out.Absorbed, out.Damage, out.NonLethal
 	pending.CriticalExtra, pending.CritExtraIgnoreChance = out.CriticalExtra, out.CritExtraIgnoreChance
@@ -94,10 +103,7 @@ func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, ses
 	for _, row := range out.Taken {
 		pending.Taken = append(pending.Taken, live.TakenRow{Label: row.Label, Amount: row.Amount})
 	}
-	if _, err := s.tables.RecordAttackDamage(ctx, sessionID, attacker, pending); err != nil {
-		return live.PendingAttack{}, err
-	}
-	return pending, nil
+	return pending
 }
 
 // damageToRollOf copia a fórmula do motor para a forma que o regime entende.

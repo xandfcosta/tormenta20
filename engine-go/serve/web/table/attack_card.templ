@@ -193,14 +193,24 @@ templ playerAttackBody(v View) {
 			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "dano")}) {
 				{ "Rolar " + v.Attack.ToRoll }
 			}
-			@handDamageEntry(v)
+			@handDiceEntry(v, v.Attack.Hand, v.Attack.HandBonus, "dano/na-mao")
 		case stageConfirm:
 			// `aria-live` na conta: quem ouve precisa do resultado, e não dos botões.
 			<div class="ds-strike-roll" aria-live="polite">
 				<b class="ds-strike-verdict">{ strconv.Itoa(v.Attack.DamageTotal) }</b>
 				<span class="ds-strike-tally">{ v.Attack.DamageLine }</span>
 			</div>
+			if v.Attack.DamageRerolled != "" {
+				<p class="ds-help">{ "Destruidor: " + v.Attack.DamageRerolled + "." }</p>
+			}
 			<p class="ds-help">{ "O mestre aplica em " + v.Attack.Target + "." }</p>
+			// O DESTRUIDOR (p41, p65): os 1 e 2 da arma, de uma vez, no app ou na mão (decisões do dono).
+			if v.Attack.Destroyer != nil {
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "dano/destruidor")}) {
+					Rolar de novo os 1 e 2 · Destruidor
+				}
+				@handDiceEntry(v, v.Attack.Destroyer, "", "dano/destruidor/na-mao")
+			}
 		case stageMiss:
 			<div class="ds-strike-roll">
 				<span class="ds-strike-tally">{ v.Attack.Tally }</span>
@@ -231,14 +241,15 @@ templ playerAttackBody(v View) {
 	}
 }
 
-// handDamageEntry é o "rolei na mão" escrito NA NOTAÇÃO: cada grupo é
+// handDiceEntry é o "rolei na mão" escrito NA NOTAÇÃO: cada grupo é
 // `NdF ( _ _ )`, um campo por dado, e o bônus no fim. Os sinais nascem vazios a
-// cada cartão, para o dado de um ataque não vazar para o seguinte.
-templ handDamageEntry(v View) {
-	<div class="ds-hand-damage" data-signals={ handSignalsDeclaration(v.Attack.Hand) }>
+// cada cartão, para o dado de um ataque não vazar para o seguinte. Serve ao dano
+// (`dano/na-mao`) e ao Destruidor, que só pede os dados que rola de novo.
+templ handDiceEntry(v View, groups []handGroup, bonus string, verb string) {
+	<div class="ds-hand-damage" data-signals={ handSignalsDeclaration(groups) }>
 		<span class="ds-row-meta">ou rolei na mão</span>
 		<div class="ds-hand-formula">
-			for i, group := range v.Attack.Hand {
+			for i, group := range groups {
 				if i > 0 {
 					<span class="ds-hand-op">+</span>
 				}
@@ -263,11 +274,11 @@ templ handDamageEntry(v View) {
 					{ ")" }
 				</span>
 			}
-			if v.Attack.HandBonus != "" {
-				<span class="ds-hand-op">{ v.Attack.HandBonus }</span>
+			if bonus != "" {
+				<span class="ds-hand-op">{ bonus }</span>
 			}
 		</div>
-		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "dano/na-mao")}) {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, verb)}) {
 			Usar
 		}
 	</div>

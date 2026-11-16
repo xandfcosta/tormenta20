@@ -682,6 +682,21 @@
       ]
     },
     {
+      "sourceId": "class.barbaro.destruidor",
+      "source": "Destruidor",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "rerollsLowWeaponDice",
+            "scope": "melee-two-handed"
+          },
+          "amount": 1,
+          "bonusType": "untyped"
+        }
+      ]
+    },
+    {
       "sourceId": "class.barbaro.pele-de-ferro",
       "source": "Pele de Ferro",
       "equipped": "vested",
@@ -959,6 +974,17 @@
           {
             "sourceId": "class.barbaro.totem-espiritual",
             "source": "Totem Espiritual",
+            "bonusType": "untyped",
+            "amount": 1
+          }
+        ]
+      },
+      "rerollsLowWeaponDice:melee-two-handed": {
+        "total": 1,
+        "contributions": [
+          {
+            "sourceId": "class.barbaro.destruidor",
+            "source": "Destruidor",
             "bonusType": "untyped",
             "amount": 1
           }
@@ -2268,6 +2294,7 @@
       },
       "damage": "2d8",
       "damageType": "corte",
+      "rerollsLowDice": true,
       "strDamage": 5,
       "damageBonus": 8,
       "damageAll": {
@@ -2458,6 +2485,7 @@
       },
       "damage": "2d8",
       "damageType": "corte",
+      "rerollsLowDice": true,
       "strDamage": 5,
       "damageBonus": 6,
       "damageAll": {

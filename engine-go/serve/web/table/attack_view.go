@@ -72,6 +72,10 @@ type attackProposal struct {
 	// vê a RD do alvo.
 	DamageLine  string
 	DamageTotal int
+	// Destroyer são os campos da mão do Destruidor (p41, p65), um por dado da arma que saiu 1 ou 2, para quem
+	// rolou; nil quando ele não se oferece. DamageRerolled é o que ele mudou, escrito: "1 → 5, 2 → 1".
+	Destroyer      []handGroup
+	DamageRerolled string
 }
 
 // attackProposalOf traduz o provisório do regime no cartão do MESTRE, ou nil
@@ -97,6 +101,9 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		Mine:     pa.ByUserID == userID,
 		Rerolled: writtenRerolls(pa.Rerolls, pa.Roll),
 		Said:     rulingSaid(*pa),
+
+		Destroyer:      destroyerFields(*pa, pa.ByUserID == userID),
+		DamageRerolled: rerolledWritten(pa.DamageRerolledFrom, pa.Dice),
 	}
 	if pa.DamageToRoll != nil {
 		out.ToRoll, out.Hand = toRollLine(*pa.DamageToRoll), handGroupsOf(*pa.DamageToRoll)

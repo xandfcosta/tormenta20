@@ -83,8 +83,11 @@ que impede a dose devolvida de encontrar a arma cheia.
 alvo e a Tabela 5-3 do instante do d20, e a decisão, o dano e o rolar de novo leem dali, e não
 da ficha: ligar uma postura depois de propor não muda o golpe. O próximo ataque só existe
 depois da resposta do mestre (`live.RefusesANewAttack`): o erro, o ✓ ou o cancelamento dele. O
-jogador não retira a proposta, porque isso seria um d20 novo de graça. O "rolar de novo" pago
-(p226) é a única troca que ela aceita, e só o dado muda.
+jogador não retira a proposta, porque isso seria um d20 novo de graça. Ela aceita duas trocas, e
+nas duas só o dado muda: o "rolar de novo" pago do d20 (p226), antes da decisão, e o Destruidor
+(p41, p65), depois do dano rolado e antes do ✓ — os 1 e 2 dos dados DA ARMA de uma vez, uma vez
+só (`LowWeaponDice`, `RerollLowWeaponDice`). O dano é refeito inteiro a partir do golpe congelado,
+com os dados novos da arma e os extras como saíram (`combat.Strike.RerollLowDamage`).
 
 **O congelar também tira o dado que o alcance não alcança.** Com o tabuleiro medindo o alvo além do
 alcance curto, 9m de corpo a corpo (`TargetBeyondShortRange`), o golpe à distância perde o dado que só
