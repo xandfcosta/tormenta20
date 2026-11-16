@@ -143,16 +143,23 @@ templ tempestadeTracker(v View) {
 // escondeu em vez de deixar o lugar vazio. A linha sem o pool não desenha nada
 // dele, porque "não rastreia" e "escondido" são coisas diferentes.
 templ queueVital(row tableRow) {
-	if row.PV == nil || row.PV.Hidden {
+	@poolsTheTableSees(row.PV, row.PM, "ds-queue-vital")
+}
+
+// poolsTheTableSees é o PV e o PM que a mesa vê, com a frase no lugar do que o mestre
+// esconde. A fila e o cartão Grupo desenham por aqui, cada um na grade dele (`class`):
+// eram dois desenhos, e só o da fila sabia esconder.
+templ poolsTheTableSees(pv, pm *tableBar, class string) {
+	if pv == nil || pv.Hidden {
 		<div class="ds-row-meta">PV ocultos pelo mestre</div>
 	}
-	if (row.PV != nil && !row.PV.Hidden) || (row.PM != nil && !row.PM.Hidden) {
-		<div class="ds-queue-vital">
-			@poolLine("PV", "pv", row.PV)
-			@poolLine("PM", "pm", row.PM)
+	if (pv != nil && !pv.Hidden) || (pm != nil && !pm.Hidden) {
+		<div class={ class }>
+			@poolLine("PV", "pv", pv)
+			@poolLine("PM", "pm", pm)
 		</div>
 	}
-	if row.PM != nil && row.PM.Hidden {
+	if pm != nil && pm.Hidden {
 		<div class="ds-row-meta">PM ocultos pelo mestre</div>
 	}
 }
@@ -214,10 +221,7 @@ templ tempestadeParty(v View) {
 								{ m.Name }
 							</div>
 							<div class="ds-row-meta">{ m.Classes }</div>
-							<div class="ds-party-vitals">
-								@poolLine("PV", "pv", &m.PV)
-								@poolLine("PM", "pm", &m.PM)
-							</div>
+							@poolsTheTableSees(&m.PV, poolOrNothing(m.PM), "ds-party-vitals")
 						</div>
 					</div>
 				}

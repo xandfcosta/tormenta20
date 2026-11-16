@@ -223,11 +223,7 @@ func toggleEye(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	} else if pool != "mp" {
 		return nil, fmt.Errorf("pool %q não existe; a fila esconde 'hp' e 'mp'", pool)
 	}
-	visible := visibleByDefault
-	if choice != nil {
-		visible = !*choice
-	}
-	hidden := visible
+	hidden := live.TableSeesPool(choice, visibleByDefault)
 	patch := live.EntryPatch{MpHidden: &hidden}
 	if pool == "hp" {
 		patch = live.EntryPatch{HpHidden: &hidden}

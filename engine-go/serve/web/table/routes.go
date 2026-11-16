@@ -343,6 +343,12 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	for i := range group {
 		withTempPool(&group[i].PV, pools.Hp[group[i].CharacterID])
 		withTempPool(&group[i].PM, pools.Mp[group[i].CharacterID])
+		// O GRUPO DO JOGADOR SEGUE A REGRA DA FILA, e a ficha de quem olha é dele. O mestre
+		// vê tudo, e a página Grupo dele não desenha o olho riscado: lá ele cobriria o −.
+		if role != "gm" && !mine[group[i].CharacterID] {
+			hp, mp := live.TableSeesMemberPools(fresh, group[i].CharacterID)
+			group[i].PV.Hidden, group[i].PM.Hidden = !hp, !mp
+		}
 		markDowned(&group[i].PV, conditions[group[i].CharacterID])
 	}
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)

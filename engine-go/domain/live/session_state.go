@@ -387,16 +387,39 @@ func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 // só marcamos o pool que EXISTE — senão a mesa leria "PV ocultos pelo mestre" de
 // um combatente que nunca teve PV.
 func hideIfSecret(choice *bool, visibleByDefault bool, current, max **int64, mark **bool) {
-	visible := visibleByDefault
-	if choice != nil {
-		visible = !*choice
-	}
-	if visible || *max == nil {
+	if TableSeesPool(choice, visibleByDefault) || *max == nil {
 		return
 	}
 	*current, *max = nil, nil
 	hidden := true
 	*mark = &hidden
+}
+
+// TableSeesPool é A regra de quem vê um pool: a escolha do mestre, quando ele decidiu, e o
+// padrão do pool quando não — o PV de personagem nasce à vista, o PV de NPC e todo PM
+// nascem escondidos. A fila, o olho do mestre e o cartão Grupo perguntam aqui, e não
+// cada um à sua maneira.
+func TableSeesPool(choice *bool, visibleByDefault bool) bool {
+	if choice != nil {
+		return !*choice
+	}
+	return visibleByDefault
+}
+
+// TableSeesMemberPools diz se a mesa vê o PV e o PM de um personagem do GRUPO, pela
+// regra da fila: em cena, a escolha do mestre na linha dele; fora de cena, ou sem linha,
+// o padrão de cada pool. É o que o cartão Grupo da tela do jogador segue (decisão do
+// dono): sem isto, a fila dizia "PM ocultos pelo mestre" e o Grupo, logo abaixo, o número.
+func TableSeesMemberPools(st *SessionRuntimeState, characterID int64) (hp, mp bool) {
+	if st != nil && st.InScene() {
+		for i := range st.Initiative {
+			e := &st.Initiative[i]
+			if e.CharacterID != nil && *e.CharacterID == characterID {
+				return TableSeesPool(e.HpHidden, e.Type == "character"), TableSeesPool(e.MpHidden, false)
+			}
+		}
+	}
+	return TableSeesPool(nil, true), TableSeesPool(nil, false)
 }
 
 // StateForRole é o que UM socket pode ver. Existe porque o broadcast não é o
