@@ -2276,6 +2276,24 @@
               { "catalogId": "espada-longa", "equipped": "wielded" }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Lutador Confiante Nv8",
+            "races": ["humano"],
+            "origin": "guarda",
+            "classes": [{ "className": "Lutador", "level": 8 }],
+            "strength": 4,
+            "dexterity": 2,
+            "constitution": 3,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "classPowers": ["class.lutador.confianca-dos-ringues"]
+          }
         }
       ]
     },

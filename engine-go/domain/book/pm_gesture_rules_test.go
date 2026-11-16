@@ -45,8 +45,8 @@ var notAGesture = map[string]string{
 	// RECUPERAR ou ganhar PM
 	"class.bucaneiro.panache": "recupera PM", "class.cacador.mestre-cacador": "recupera PM",
 	"class.guerreiro.campeao": "recupera PM", "class.ladino.roubo-de-mana": "PM temporário",
-	"class.lutador.confianca-dos-ringues": "PM temporário", "class.nobre.general": "PM temporário",
-	"fome-de-mana": "PM temporário",
+	"class.nobre.general": "PM temporário",
+	"fome-de-mana":        "PM temporário",
 	// o DESCANSO
 	"origin-selvagem-unique": "descanso", "goblin-rato-das-ruas": "descanso",
 	"osteon-preco-da-nao-vida": "descanso", "sereia-transformacao-anfibia": "descanso",
