@@ -137,13 +137,20 @@ var classPowersPart02 = []ClassPower{
 		MinLevel: 6,
 	},
 	{
-		ID:            "class.barbaro.destruidor",
-		ClassName:     "Bárbaro",
-		Name:          "Destruidor",
-		Description:   "Em dano corpo-a-corpo com arma de duas mãos, pode rolar novamente resultados 1 ou 2 da rolagem de dano.",
-		BookPage:      41,
-		UID:           "pwr_iba73nb2qc",
-		Unmodeled:     "rolar de novo 1 e 2 no dano: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-652)",
+		ID:          "class.barbaro.destruidor",
+		Modeled:     []string{"rolar de novo os 1 e 2 dos dados da arma corpo a corpo de duas mãos, depois do dano"},
+		ClassName:   "Bárbaro",
+		Name:        "Destruidor",
+		Description: "Em dano corpo-a-corpo com arma de duas mãos, pode rolar novamente resultados 1 ou 2 da rolagem de dano.",
+		BookPage:    41,
+		UID:         "pwr_iba73nb2qc",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "rerollsLowWeaponDice", Scope: "melee-two-handed"},
+				Amount:    1,
+				BonusType: "untyped",
+			},
+		},
 		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "strength", Min: 1}},
 	},
 	{

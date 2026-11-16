@@ -139,6 +139,8 @@ func targetLabel(t engine.ModifierTarget) string {
 		"ignoresSituation":      "Ignora no ataque",
 		// A palavra da casa para a RD é "redução de dano" (a aba Combate), e o verbo é o do livro (p66, p77).
 		"ignoresDamageReduction": "Ignora redução de dano",
+		// O Destruidor (p41, p65): o complemento é o escopo, "de duas mãos".
+		"rerollsLowWeaponDice": "Rola de novo os 1 e 2 do dano",
 		// O Vingador Sagrado no Golpe Divino (p84): o complemento é o nome do poder.
 		"boostCostHalved": "Custo em PM no golpe", "boostExtraDice": "Dados a mais no golpe",
 		"source": "Multiplica o que a fonte dá",

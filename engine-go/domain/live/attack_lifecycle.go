@@ -248,3 +248,23 @@ func RecordAttackDamage(st *SessionRuntimeState, who Attacker, rolled PendingAtt
 	st.PendingAttack = &rolled
 	return nil
 }
+
+// RerollAttackDamage troca o dano rolado pelo rolado de novo — o Destruidor (p41, p65) —, conferindo que o dano
+// já foi rolado, que ainda não foi rolado de novo (vale o segundo resultado, p226), e que quem pede é quem
+// atacou ou o mestre, como no rolar o dano.
+func RerollAttackDamage(st *SessionRuntimeState, who Attacker, rerolled PendingAttack) error {
+	attack := st.PendingAttack
+	switch {
+	case attack == nil:
+		return fmt.Errorf("não há ataque na mesa para rolar o dano de novo")
+	case !attack.DamageRolled:
+		return fmt.Errorf("o dano deste ataque ainda não foi rolado")
+	case attack.DamageRerolledFrom != nil:
+		return fmt.Errorf("o dano deste ataque já foi rolado de novo, e vale o segundo resultado")
+	case who.Role != "gm" && attack.ByUserID != who.UserID:
+		return fmt.Errorf("quem rola o dano de novo é quem atacou")
+	}
+	rerolled.DamageRolled = true
+	st.PendingAttack = &rerolled
+	return nil
+}

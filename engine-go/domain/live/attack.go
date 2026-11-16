@@ -145,6 +145,11 @@ type PendingAttack struct {
 	DamageToRoll *DamageToRoll `json:"damageToRoll,omitempty"`
 	// DamageRolled diz que o dano foi rolado: só então o ✓ do mestre pousa.
 	DamageRolled bool `json:"damageRolled,omitempty"`
+	// RerollsLowDice diz que a arma do golpe rola de novo os 1 e 2 do dano (o Destruidor, p41, p65), para a
+	// faixa de quem atacou oferecer o botão; quem confere é a carta congelada. DamageRerolledFrom são os dados
+	// da arma ANTES de rolar de novo: a carta do mestre diz o que mudou, e o segundo pedido é recusado.
+	RerollsLowDice     bool  `json:"rerollsLowDice,omitempty"`
+	DamageRerolledFrom []int `json:"damageRerolledFrom,omitempty"`
 	// ExtraDice são as parcelas de dado de outro tipo — o 1d6 de fogo do
 	// encanto —, discriminadas para a mesa ler a notação inteira.
 	ExtraDice []RolledGroup `json:"extraDice,omitempty"`

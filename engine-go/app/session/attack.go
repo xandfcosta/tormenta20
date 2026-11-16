@@ -141,3 +141,11 @@ func (st *Store) RecordAttackDamage(
 	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { return live.RecordAttackDamage(s, who, rolled) })
 }
+
+// RerollAttackDamage troca o dano rolado pelo rolado de novo (o Destruidor, p41, p65). Também não tira PV.
+func (st *Store) RerollAttackDamage(
+	ctx context.Context, sessionID int64, who live.Attacker, rerolled live.PendingAttack,
+) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { return live.RerollAttackDamage(s, who, rerolled) })
+}

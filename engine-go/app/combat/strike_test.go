@@ -54,6 +54,16 @@ func (f *queueDouble) RecordAttackDamage(
 	return f.state, nil
 }
 
+func (f *queueDouble) RerollAttackDamage(
+	_ context.Context, _ int64, who live.Attacker, rerolled live.PendingAttack,
+) (*live.SessionRuntimeState, error) {
+	if err := live.RerollAttackDamage(f.state, who, rerolled); err != nil {
+		return f.state, err
+	}
+	f.stored = f.state.PendingAttack
+	return f.state, nil
+}
+
 func (f *queueDouble) CharacterActionFits(context.Context, int64, engine.ActionCost) error {
 	return nil
 }

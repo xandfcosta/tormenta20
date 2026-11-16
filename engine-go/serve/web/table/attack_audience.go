@@ -34,6 +34,7 @@ func (a attackProposal) forPlayer(pa live.PendingAttack) *attackProposal {
 	out.Dose = a.Dose
 	out.Said, out.ToRoll, out.Hand, out.HandBonus = a.Said, a.ToRoll, a.Hand, a.HandBonus
 	out.DamageLine, out.DamageTotal = a.DamageLine, a.DamageTotal
+	out.Destroyer, out.DamageRerolled = a.Destroyer, a.DamageRerolled
 	return &out
 }
 

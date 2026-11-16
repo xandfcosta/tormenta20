@@ -267,6 +267,10 @@ func maneuverConsequence(pa live.PendingAttack) []duelRow {
 // e a linha não se repete.
 func damageRows(pa live.PendingAttack) []duelRow {
 	rows := []duelRow{{Label: "Dano", Sum: damageSum(pa), Value: strconv.Itoa(pa.RawDamage)}}
+	// O QUE O DESTRUIDOR MUDOU fica na carta do mestre (p41, p65): o dano é outro, e ele precisa saber por quê.
+	if changed := rerolledWritten(pa.DamageRerolledFrom, pa.Dice); changed != "" {
+		rows = append(rows, duelRow{Label: "Destruidor", Sum: "rolou de novo " + changed})
+	}
 	for _, taken := range pa.Taken {
 		rows = append(rows, duelRow{Label: taken.Label, Value: signed(int64(taken.Amount))})
 	}

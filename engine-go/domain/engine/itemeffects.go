@@ -548,6 +548,9 @@ func targetKey(t ModifierTarget) string {
 	case "ignoresDamageReduction":
 		// O ESCOPO NA CHAVE, como no dano: o Punhos de Adamante ignora RD só no desarmado (p77).
 		return "ignoresDamageReduction:" + t.Scope
+	case "rerollsLowWeaponDice":
+		// O ESCOPO NA CHAVE: o Destruidor vale só na arma corpo a corpo de duas mãos (p41, p65).
+		return "rerollsLowWeaponDice:" + t.Scope
 	case "ignoresSituation":
 		// A LINHA DA TABELA 5-3 E A ARMA NA CHAVE: a Caçadora anula três linhas (p335), e só na arma dela.
 		return "ignoresSituation:" + t.Name + ":" + t.Scope

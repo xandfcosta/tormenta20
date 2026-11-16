@@ -111,6 +111,9 @@ type WeaponCard struct {
 	// IgnoresDamageReduction é quanto da RD do alvo este golpe ignora: o desarmado do Punhos de Adamante (p77), o
 	// Ataque Especial com o Romper Resistências (p66). Ver `ignored_reduction.go`.
 	IgnoresDamageReduction int `json:"ignoresDamageReduction,omitempty"`
+	// RerollsLowDice é o Destruidor (p41, p65): quem ataca pode rolar de novo os 1 e 2 dos dados DESTA arma.
+	// Vai no JSON porque quem confere é o dano rolado depois, a partir da carta congelada. Ver `destroyer.go`.
+	RerollsLowDice bool `json:"rerollsLowDice,omitempty"`
 	// CriticalBonus é o dano que só existe no acerto crítico — os "+10 pontos
 	// de dano" do encanto Dilacerante (p336). É bônus numérico, então não
 	// multiplica, e fora do crítico ele não existe.
@@ -348,6 +351,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		Announces:              announcesOfThisCard(b.effects.Announced, scopes),
 		CriticalBonus:          b.effects.CriticalBonus[targetKey(ModifierTarget{K: "damage"})],
 		IgnoresDamageReduction: ignoredReductionOf(b.effects, scopes),
+		RerollsLowDice:         rerollsLowDiceOf(b.effects, scopes),
 	}
 }
 

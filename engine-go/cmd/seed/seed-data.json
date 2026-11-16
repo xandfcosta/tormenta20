@@ -2233,6 +2233,28 @@
               { "catalogId": "espada-curta", "equipped": "wielded" }
             ]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Bárbaro Destruidor Nv6",
+            "races": ["humano"],
+            "origin": "soldado",
+            "classes": [{ "className": "Bárbaro", "level": 6 }],
+            "strength": 4,
+            "dexterity": 2,
+            "constitution": 3,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "classPowers": ["class.barbaro.destruidor"],
+            "items": [
+              { "catalogId": "montante", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
         }
       ]
     },

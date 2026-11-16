@@ -39,6 +39,8 @@ func (s Scene) AttackRoutes(r chi.Router) {
 	r.Post(sessionPattern+"/ataque/julgar/{decisao}", s.gmCommand(rulesAttack))
 	r.Post(sessionPattern+"/ataque/dano", s.tableStateCommand(rollsAttackDamage))
 	r.Post(sessionPattern+"/ataque/dano/na-mao", s.tableStateCommand(rollsAttackDamageByHand))
+	r.Post(sessionPattern+"/ataque/dano/destruidor", s.tableStateCommand(rerollsLowDamage))
+	r.Post(sessionPattern+"/ataque/dano/destruidor/na-mao", s.tableStateCommand(rerollsLowDamageByHand))
 	r.Post(sessionPattern+"/ataque/confirmar", s.gmCommand(confirmsAttack))
 	r.Post(sessionPattern+"/ataque/cancelar", s.tableStateCommand(cancelsAttack))
 	// O ROLAR DE NOVO mora nas faixas do teste e do ataque (ALE-507, ALE-508).
