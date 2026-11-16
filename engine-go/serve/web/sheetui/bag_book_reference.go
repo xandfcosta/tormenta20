@@ -8,7 +8,8 @@ import (
 
 // O QUE O LIVRO DIZ DO ITEM, na folha dele: a categoria, o preço, a página e os
 // números do catálogo — o dano e o crítico da arma, a proteção, a magia do frasco.
-// É REFERÊNCIA, e não a conta da ficha.
+// É REFERÊNCIA, e não a conta da ficha: o dano desta ficha com a arma na mão é o
+// `InHand` da folha, que vem da carta do Combate.
 
 // bookInfo é o que o livro diz do item.
 type bookInfo struct {

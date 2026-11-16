@@ -35,6 +35,9 @@ type itemSheet struct {
 	// Doses é o que o diálogo diz da Injeção alquímica, nulo no item que não a toca.
 	Doses *itemSheetDoses
 	Book  *bookInfo
+	// InHand é o dano da arma NA MÃO desta ficha, com a conta da carta do Combate ("1d8+7 ·
+	// 20/x2"), logo abaixo do que o livro diz. Vazio na arma guardada, que não tem carta.
+	InHand string
 	// Overlays são as melhorias e o material JÁ aplicados, com o que fazem.
 	Overlays []overlayRow
 	// Enchants são os encantos que o item CARREGA, para ler. Quem encanta é o
@@ -122,7 +125,7 @@ type catalogItemRow struct {
 
 func itemSheetsOf(
 	dto sheet.CharacterDTO, proficiencies engine.Proficiency, attributes map[string]engine.AttributeBreakdown, armable bool,
-	spellSearch string,
+	spellSearch string, cards []engine.WeaponCard,
 ) []itemSheet {
 	sheets := make([]itemSheet, 0, len(dto.Items))
 	// Sem a resposta, a folha só deixa de oferecer o Vestir da regra; o gesto, este sim, recusa com o erro.
@@ -139,6 +142,7 @@ func itemSheetsOf(
 			chosenCutRow(entry.Overlays, entry.Spell.Improvement, "−1 PM no custo de "+book.SpellName(entry.Spell.Chosen))
 		}
 		entry.MadeByOwner = madeByOwnerOnTheItemSheet(dto, item)
+		entry.InHand = inHandOf(cards, item.ID)
 		if entry.Ability = abilityOnTheItemSheet(item); entry.Ability != nil && entry.Ability.ChosenName != "" {
 			chosenCutRow(entry.Overlays, entry.Ability.Improvement, "−1 PM no custo de "+entry.Ability.ChosenName+" com esta arma")
 		}
@@ -254,6 +258,16 @@ func contemTraco(traits []string, target string) bool {
 		}
 	}
 	return false
+}
+
+// inHandOf é o dano da carta da arma `itemID`, escrito como o Combate o escreve.
+func inHandOf(cards []engine.WeaponCard, itemID int64) string {
+	for _, card := range cards {
+		if card.ItemID == itemID {
+			return damageLabel(card) + " · " + critLabel(card)
+		}
+	}
+	return ""
 }
 
 // appliedImprovements são as sobreposições em vigor, com o que elas fazem.
