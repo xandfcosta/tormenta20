@@ -513,9 +513,10 @@ func targetKey(t ModifierTarget) string {
 	case "shootsIntoMelee":
 		// O ESCOPO no nome: o Grudar o Cano vale só com a arma de fogo (p48).
 		return "shootsIntoMelee:" + t.Scope
-	case "boostCost":
-		// O PODER no nome: o corte da Harmonizada é de uma habilidade só (p165).
-		return "boostCost:" + t.Name
+	case "boostCost", "boostCostHalved", "boostExtraDice":
+		// O PODER no nome: o corte da Harmonizada é de uma habilidade só (p165), e o Vingador Sagrado mexe só no
+		// Golpe Divino (p84).
+		return t.K + ":" + t.Name
 	case "critRange", "critMult":
 		// O escopo entra na chave só quando existe: a margem do Golpe Cruel é
 		// do desarmado (`critRange:unarmed`, p77), e a global continua sendo a

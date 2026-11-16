@@ -280,9 +280,12 @@ func modifierRowsOf(raw string) []breakdownRow {
 	}
 	rows := make([]breakdownRow, 0, len(mods))
 	for _, m := range mods {
-		rows = append(rows, breakdownRow{
-			Label: targetLabel(m.Target), Value: book.WithSign(m.Amount), Note: m.Note,
-		})
+		value := book.WithSign(m.Amount)
+		// O CUSTO PELA METADE é um estado, e o `Amount` só diz que ele está ligado (o Vingador Sagrado, p84).
+		if m.Target.K == "boostCostHalved" {
+			value = "metade"
+		}
+		rows = append(rows, breakdownRow{Label: targetLabel(m.Target), Value: value, Note: m.Note})
 	}
 	return rows
 }

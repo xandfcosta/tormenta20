@@ -68,6 +68,9 @@ type WeaponCard struct {
 	// BoostPM é o PM que o impulso pedido custa NESTA arma: o mesmo em toda carta, salvo a arma Harmonizada
 	// para aquele poder, que o corta (p165). Zero na carta sem impulso. Fora do fio, como o `RefusesBoost`.
 	BoostPM int `json:"-"`
+	// BoostBuys é o que o impulso pedido compra NESTA arma, escrito ("+2d12"): a Arma Sagrada troca o dado do
+	// Golpe Divino só na arma preferida da divindade (p82), e a tira de cada linha tem de dizer o dela.
+	BoostBuys string `json:"-"`
 	// ShootsIntoMelee é o Disparo Preciso (p125): atira em combate corpo a corpo
 	// sem a penalidade. Não vai para o fio, porque só o ataque o lê.
 	ShootsIntoMelee bool               `json:"-"`

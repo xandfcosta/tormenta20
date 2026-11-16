@@ -191,6 +191,8 @@ type ClassPower struct {
 	// BoostAddOn é o acréscimo pago que este poder põe num impulso de outro (o Romper Resistências no Ataque
 	// Especial) — ver `ClassPowerBoostAddOn`.
 	BoostAddOn *ClassPowerBoostAddOn `json:"boostAddOn,omitempty"`
+	// FavoredWeaponDie é o dado que o poder põe num impulso com a arma preferida (a Arma Sagrada, p82).
+	FavoredWeaponDie *ClassPowerFavoredWeaponDie `json:"favoredWeaponDie,omitempty"`
 	// FollowUp é a manobra livre que o poder dá depois de outro gesto declarado (o Lutador de Chão, a Mão na
 	// Boca) — ver `FollowUpManeuver`.
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
@@ -336,6 +338,8 @@ type Catalogs struct {
 	tormentaIDs   map[string]bool
 	// tormentaNaturalWeapons são as armas naturais dos poderes da Tormenta, por id.
 	tormentaNaturalWeapons map[string]NaturalWeapon
+	// favoredWeapons é a arma preferida de cada divindade, pelo id do item (`catalog.favoredWeapons`).
+	favoredWeapons map[string]string
 }
 
 // enginePayload é a forma JSON que o `catalog.EnginePayload` monta a partir dos
@@ -355,6 +359,7 @@ type enginePayload struct {
 	// a tabela de atributo POR RAÇA, que o dump guarda sob `racas`.
 	RaceAttributes map[string]RaceAttributeEntry `json:"racas"`
 	TormentaIDs    []string                      `json:"tormentaPowerIds"`
+	FavoredWeapons map[string]string             `json:"favoredWeapons"`
 }
 
 // PrimeEngineCatalogs ingere o JSON dos catálogos num `Catalogs` indexado.
@@ -375,6 +380,7 @@ func PrimeEngineCatalogs(raw []byte) (*Catalogs, error) {
 		tormentaIDs:   make(map[string]bool, len(p.TormentaIDs)),
 
 		tormentaNaturalWeapons: p.TormentaNaturalWeapons,
+		favoredWeapons:         p.FavoredWeapons,
 	}
 	for i := range p.Items {
 		c.itemsByID[p.Items[i].ID] = &p.Items[i]

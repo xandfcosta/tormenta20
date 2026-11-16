@@ -96,5 +96,27 @@ func assembleEnginePayload() ([]byte, error) {
 		return nil, err
 	}
 	out["tormentaNaturalWeapons"] = naturalJSON
+	favored, err := favoredWeaponsPayload()
+	if err != nil {
+		return nil, fmt.Errorf("catalog.EnginePayload: %w", err)
+	}
+	out["favoredWeapons"] = favored
 	return json.Marshal(out)
+}
+
+// favoredWeaponsPayload é a arma preferida de cada divindade, pelo id do item (`favoredWeapons`).
+func favoredWeaponsPayload() (json.RawMessage, error) {
+	gods, err := resourceJSON("gods")
+	if err != nil {
+		return nil, fmt.Errorf("recurso \"gods\": %w", err)
+	}
+	items, err := resourceJSON("items")
+	if err != nil {
+		return nil, fmt.Errorf("recurso \"items\": %w", err)
+	}
+	byGod, err := favoredWeapons(gods, items)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(byGod)
 }

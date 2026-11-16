@@ -225,3 +225,19 @@ func TestEveryDurationAnEffectCanCarryIsNamedOnTheSheet(t *testing.T) {
 	}
 	t.Logf("%d durações de efeito conferidas contra o rótulo da aba", measured)
 }
+
+// O CUSTO PELA METADE é um estado e não um número (o Vingador Sagrado, p84): a linha do efeito diz "metade", e
+// não o "+1" que o modificador carrega por dentro para dizer que está ligado.
+func TestTheHalvedCostRowSaysHalfAndNotItsAmount(t *testing.T) {
+	rows := modifierRowsOf(`[{"target":{"k":"boostCostHalved","name":"class.paladino.golpe-divino-1d8"},"amount":1,"bonusType":"untyped"},` +
+		`{"target":{"k":"boostExtraDice","name":"class.paladino.golpe-divino-1d8"},"amount":2,"bonusType":"untyped"}]`)
+	if len(rows) != 2 {
+		t.Fatalf("as linhas do efeito = %+v, want duas", rows)
+	}
+	if rows[0].Label != "Custo em PM no golpe (Golpe Divino)" || rows[0].Value != "metade" {
+		t.Errorf("a linha do custo = %q %q, want \"Custo em PM no golpe (Golpe Divino)\" e \"metade\"", rows[0].Label, rows[0].Value)
+	}
+	if rows[1].Label != "Dados a mais no golpe (Golpe Divino)" || rows[1].Value != "+2" {
+		t.Errorf("a linha dos dados = %q %q, want \"Dados a mais no golpe (Golpe Divino)\" e \"+2\"", rows[1].Label, rows[1].Value)
+	}
+}

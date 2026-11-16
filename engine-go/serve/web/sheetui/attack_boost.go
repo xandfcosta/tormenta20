@@ -3,6 +3,7 @@ package sheetui
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -48,7 +49,8 @@ type attackBoost struct {
 	// piso de 1 PM tira a conta da linha reta (p165, p226).
 	PMs   []int
 	Split bool
-	// Buys é o rótulo de cada contagem de degraus ("+2d8"), do motor.
+	// Buys é o rótulo de cada contagem de degraus ("+2d8"), do motor e DESTA arma: a Arma Sagrada rola d12 só
+	// na arma preferida (p82).
 	Buys []string
 	// Previews são os números da linha com o impulso, pela chave
 	// `degraus|lado` ("1|" no que não divide, "2|half" no que divide).
@@ -144,7 +146,7 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 			HitPointCost: offer.HitPointCost, OncePerRound: offer.ItemID != 0, Foresees: foreseenWritten(offer.Foresees),
 			AddOns: offer.AddOns,
 		}
-		previews, prices := boostPreviewsOf(dto.Ruleset, ec, active, offer, cards)
+		previews, prices, buys := boostPreviewsOf(dto.Ruleset, ec, active, offer, cards)
 		addOnPrices := addOnPricesOf(dto.Ruleset, ec, active, offer, len(cards))
 		for i := range cards {
 			if offer.MeleeOnly && !cards[i].IsMelee() {
@@ -155,6 +157,8 @@ func attackBoostsFor(dto sheet.CharacterDTO, cards []engine.WeaponCard) [][]atta
 				continue
 			}
 			priced := pricedOn(boost, previews[i], prices[i], mana)
+			// O QUE O DEGRAU COMPRA é desta arma: a Arma Sagrada rola d12 só na arma preferida (p82).
+			priced.Buys = buys[i]
 			priced.AddOnPMs = addOnPrices[i]
 			out[i] = append(out[i], priced)
 		}
@@ -210,17 +214,19 @@ func addOnPricesOf(world *engine.Ruleset, ec engine.Character, active map[string
 }
 
 // boostPreviewsOf computa as cartas com o impulso para cada degrau e lado, e
-// devolve, por arma, a prévia de cada combinação e o preço de cada degrau.
+// devolve, por arma, a prévia de cada combinação, o preço de cada degrau e o que ele compra.
 func boostPreviewsOf(
 	world *engine.Ruleset, ec engine.Character, active map[string]bool,
 	offer engine.BoostOffer, plain []engine.WeaponCard,
-) ([]map[string]boostPreview, [][]int) {
+) ([]map[string]boostPreview, [][]int, [][]string) {
 	maxSteps := offer.MaxSteps
 	out := make([]map[string]boostPreview, len(plain))
 	prices := make([][]int, len(plain))
+	buys := make([][]string, len(plain))
 	for i := range out {
 		out[i] = map[string]boostPreview{}
 		prices[i] = make([]int, maxSteps+1)
+		buys[i] = slices.Clone(offer.Buys)
 	}
 	sides := []string{""}
 	if offer.Split {
@@ -247,10 +253,13 @@ func boostPreviewsOf(
 					OtherUse: otherUseLabel(cards[i].OtherUse),
 				}
 				prices[i][steps] = cards[i].BoostPM
+				if steps < len(buys[i]) && cards[i].BoostBuys != "" {
+					buys[i][steps] = cards[i].BoostBuys
+				}
 			}
 		}
 	}
-	return out, prices
+	return out, prices, buys
 }
 
 // otherUseVerb é o nome do gesto. Ele sai da perícia, porque o único outro uso em

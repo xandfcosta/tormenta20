@@ -24,6 +24,8 @@ type ClassPower struct {
 	ExtraStrike *ClassPowerExtraStrike `json:"extraStrike,omitempty"`
 	// BoostAddOn é o acréscimo pago num impulso de outro poder — ver `engine.ClassPowerBoostAddOn`.
 	BoostAddOn *ClassPowerBoostAddOn `json:"boostAddOn,omitempty"`
+	// FavoredWeaponDie é o dado do impulso com a arma preferida — ver `engine.ClassPowerFavoredWeaponDie`.
+	FavoredWeaponDie *ClassPowerFavoredWeaponDie `json:"favoredWeaponDie,omitempty"`
 	// FollowUp é a manobra livre depois de outro gesto declarado — ver `engine.FollowUpManeuver`.
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
 }
@@ -112,4 +114,11 @@ type ClassPowerBoostAddOn struct {
 	Boost     string     `json:"boost"`
 	PM        int        `json:"pm"`
 	Modifiers []Modifier `json:"modifiers"`
+}
+
+// ClassPowerFavoredWeaponDie é o dado que um poder põe no impulso de outro quando o golpe é com a arma preferida
+// da divindade: a Arma Sagrada leva o Golpe Divino a d12 (p82).
+type ClassPowerFavoredWeaponDie struct {
+	Boost string `json:"boost"`
+	Faces int    `json:"faces"`
 }

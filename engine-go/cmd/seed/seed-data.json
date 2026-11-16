@@ -2209,6 +2209,30 @@
             "displacement": 6,
             "items": [{ "catalogId": "adaga", "equipped": "wielded" }]
           }
+        },
+        {
+          "sceneEffect": false,
+          "create": {
+            "name": "Paladino Vingador Nv20",
+            "races": ["humano"],
+            "origin": "soldado",
+            "classes": [{ "className": "Paladino", "level": 20 }],
+            "god": "khalmyr",
+            "godPowers": ["Coragem Total", "Dom da Verdade"],
+            "strength": 4,
+            "dexterity": 1,
+            "constitution": 3,
+            "intelligence": 0,
+            "wisdom": 2,
+            "charisma": 5,
+            "size": "Médio",
+            "displacement": 9,
+            "classPowers": ["class.paladino.arma-sagrada"],
+            "items": [
+              { "catalogId": "espada-longa", "equipped": "wielded" },
+              { "catalogId": "espada-curta", "equipped": "wielded" }
+            ]
+          }
         }
       ]
     },
