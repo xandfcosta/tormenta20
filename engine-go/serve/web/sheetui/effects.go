@@ -45,9 +45,6 @@ type effectsPanel struct {
 	// "Fadiga ao dormir" da armadura pesada. Elas aparecem em modo de leitura
 	// para o bloco não contradizer o aviso que a mesma flag produz no cabeçalho.
 	AlwaysOn []alwaysOnRow
-	// Count é o que o crachá da aba mostra, e ele conta COISAS e não modificadores
-	// do motor: a Fúria entra como oito modificadores e é UMA coisa na mesa.
-	Count int
 }
 
 type conditionRow struct {
@@ -183,21 +180,7 @@ func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect,
 	}
 	panel.Situational, _ = situationalRowsOf(offered, active, dto)
 	panel.AlwaysOn = alwaysOnRowsOf(flags)
-	panel.Count = len(panel.Conditions) + len(panel.Applied) + len(panel.Stances) + len(panel.Declared) + activeCountOf(panel.Situational)
-	if wildShapeInPlay(dto) != nil {
-		panel.Count++
-	}
 	return panel
-}
-
-func activeCountOf(rows []situationalRow) int {
-	n := 0
-	for _, l := range rows {
-		if l.Active {
-			n++
-		}
-	}
-	return n
 }
 
 // conditionRowsOf são as condições do livro que estão ligadas.
