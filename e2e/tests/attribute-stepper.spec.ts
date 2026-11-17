@@ -33,6 +33,10 @@ async function strengthField(page: Page, id: string) {
 const strengthPost = (r: { url(): string; request(): { method(): string } }) =>
   r.url().includes('/atributos/strength/') && r.request().method() === 'POST'
 
+/** A resposta do POST que grava a Força em `value`, e não qualquer uma. */
+const strengthPostOf = (value: number) => (r: { url(): string; request(): { method(): string } }) =>
+  strengthPost(r) && r.url().includes(`/atributos/strength/${value}?`)
+
 test('escrever 5 e tocar + grava 6, e não o valor antigo mais um', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const id = await tanqueId(page)
@@ -44,7 +48,14 @@ test('escrever 5 e tocar + grava 6, e não o valor antigo mais um', async ({ pag
   // aí que os dois pedidos saem — o do campo e o do botão.
   try {
     await field.fill(String(written))
-    const both = Promise.all([page.waitForResponse(strengthPost), page.waitForResponse(strengthPost)])
+    // AS DUAS RESPOSTAS, cada uma pelo valor que grava. Com duas esperas pelo mesmo
+    // predicado, as duas se resolviam na PRIMEIRA resposta (a do campo), e a recarga
+    // logo abaixo abortava o pedido do `+` no meio: sob a suíte cheia, a Força ficava
+    // no valor escrito, e o caso culpava o app por uma corrida que ele não tem.
+    const both = Promise.all([
+      page.waitForResponse(strengthPostOf(written)),
+      page.waitForResponse(strengthPostOf(written + 1)),
+    ])
     await page.getByRole('button', { name: 'Aumentar Força' }).click()
     await both
 
