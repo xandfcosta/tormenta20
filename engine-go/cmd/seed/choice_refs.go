@@ -18,6 +18,19 @@ func choiceRefs(create map[string]json.RawMessage, where string, expertises []st
 	// Especialização em Arma (ALE-491). Opção errada nasce como um +2 que não
 	// cai em arma nenhuma, com a ficha abrindo normal.
 	for _, powerID := range asChavesDe(create, "powerChoices") {
+		// O PODER QUE A ORIGEM DEIXA ESCOLHER mora sob o id do BENEFÍCIO ("um poder de
+		// combate a sua escolha", p91), e aponta para um poder geral do tipo dele.
+		if benefit, isPick := originPickBenefit(powerID); isPick {
+			for _, pick := range escolhasDe(create, powerID) {
+				if power, found := book.GeneralPowers()[pick]; !found || power.Kind != benefit.PowerPick {
+					broken = append(broken, referenciaQuebrada{
+						where: where + ", create.powerChoices." + powerID, value: pick,
+						catalog: "poderes de " + benefit.PowerPick, neighbor: oVizinho(pick, generalPowerIDs()),
+					})
+				}
+			}
+			continue
+		}
 		power, known := book.PowerWithChoice(powerID)
 		if !known {
 			broken = append(broken, referenciaQuebrada{
@@ -75,6 +88,18 @@ func choiceRefs(create map[string]json.RawMessage, where string, expertises []st
 		}
 	}
 	return broken
+}
+
+// originPickBenefit acha o benefício de origem que deixa escolher um poder, pelo id.
+func originPickBenefit(id string) (book.OriginBenefit, bool) {
+	for _, origin := range book.Origins() {
+		for _, b := range origin.Benefits {
+			if b.ID == id && b.PowerPick != "" {
+				return b, true
+			}
+		}
+	}
+	return book.OriginBenefit{}, false
 }
 
 // escolhasDe são as escolhas gravadas para um poder no `powerChoices`.

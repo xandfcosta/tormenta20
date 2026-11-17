@@ -2294,6 +2294,35 @@
             "displacement": 9,
             "classPowers": ["class.lutador.confianca-dos-ringues"]
           }
+        },
+        {
+          "create": {
+            "name": "Capanga Bloqueador Nv5",
+            "races": ["humano"],
+            "origin": "capanga",
+            "originChoices": [
+              "origin-capanga-pericia-luta",
+              "origin-capanga-poder-poder-de-combate-escolha"
+            ],
+            "powerChoices": {
+              "origin-capanga-poder-poder-de-combate-escolha": ["bloqueio-com-escudo"]
+            },
+            "classes": [{ "className": "Guerreiro", "level": 5 }],
+            "strength": 4,
+            "dexterity": 1,
+            "constitution": 3,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "escudo-leve",
+                "equipped": "wielded"
+              }
+            ]
+          }
         }
       ]
     },
