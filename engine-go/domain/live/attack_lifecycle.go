@@ -45,7 +45,17 @@ func RefusesANewAttack(st *SessionRuntimeState) error {
 }
 
 func attackIsOpen(st *SessionRuntimeState) bool {
-	return st != nil && st.PendingAttack != nil && st.PendingAttack.Ruling != RulingMiss
+	return st != nil && st.PendingAttack != nil && !st.PendingAttack.Settled()
+}
+
+// Settled diz que o ataque ACABOU e só fica na mesa para quem atacou ler a decisão: o
+// golpe que o mestre disse que errou, ou a manobra que ele já decidiu (Sucesso ou Falha).
+// O acerto do golpe não acabou: ele ainda espera o dano e o ✓.
+func (pa PendingAttack) Settled() bool {
+	if pa.Maneuver != nil {
+		return pa.Ruling != ""
+	}
+	return pa.Ruling == RulingMiss
 }
 
 // ReplaceAttackRoll troca o dado da proposta pelo do "rolar de novo" (p226), que é pago
@@ -132,10 +142,9 @@ func AttackToCommit(st *SessionRuntimeState, who Attacker) (PendingAttack, error
 	return *attack, nil
 }
 
-// ClearPendingAttack tira o provisório da mesa depois do ✓. O ataque que o
-// mestre disse ERRADO não passa por aqui: ele fica com a decisão para o jogador
-// ler (`RuleAttack`), e sai quando a vez muda, quando o próximo ataque o
-// substitui ou quando quem atacou o fecha.
+// ClearPendingAttack tira o provisório da mesa depois do ✓. O ataque ENCERRADO (`Settled`)
+// não passa por aqui: ele fica com a decisão para o jogador ler, e sai quando a vez muda,
+// quando o próximo ataque o substitui ou quando quem atacou o fecha.
 func ClearPendingAttack(st *SessionRuntimeState) { st.PendingAttack = nil }
 
 // CancelAttack descarta o provisório. O cancelamento do mestre é uma resposta: ele
@@ -151,7 +160,7 @@ func CancelAttack(st *SessionRuntimeState, who Attacker) error {
 	if who.Role != "gm" && attack.ByUserID != who.UserID {
 		return fmt.Errorf("o ataque proposto não é seu")
 	}
-	if who.Role != "gm" && attack.Ruling != RulingMiss {
+	if who.Role != "gm" && !attack.Settled() {
 		return fmt.Errorf("a proposta de ataque só sai da mesa com a resposta do mestre")
 	}
 	st.PendingAttack = nil
@@ -195,7 +204,7 @@ func RuleAttack(st *SessionRuntimeState, who Attacker, ruling string, toRoll *Da
 
 // RuleManeuver guarda a decisão do mestre sobre a manobra: Sucesso ou Falha (ALE-659). É ela que diz se o que
 // depende da manobra abre — a derrubada do Lutador de Chão vem do agarrar que venceu. A manobra não rola dano, e
-// quem a encerra logo depois é o `session.Store.RuleManeuver`.
+// a decisão a ENCERRA (`Settled`): ela fica na mesa só para quem a propôs ler, como o erro do golpe.
 //
 // O ✓ que vinha antes dizia só "aceito", na vitória e na falha, e deixava o que depende dela sem saber se abria.
 func RuleManeuver(st *SessionRuntimeState, who Attacker, ruling string) error {

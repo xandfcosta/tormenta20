@@ -23,8 +23,8 @@ import (
 // conteúdo não ser desenhado duas vezes.
 
 // gmAttack é o cartão do MESTRE: o duelo, e o que cada tempo pede dele —
-// decidir, esperar o dano, confirmar. O erro decidido não tem mais nada a
-// pedir, e o cartão sai.
+// decidir, esperar o dano, confirmar. O ataque encerrado (o erro, a manobra
+// decidida) não tem mais nada a pedir, e o cartão sai.
 func gmAttack(v View) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -46,7 +46,7 @@ func gmAttack(v View) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		if v.Attack != nil && v.Attack.Stage != stageMiss {
+		if v.Attack != nil && v.Attack.Stage != stageSettled {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"table-attack\" class=\"ds-strike\" data-attack data-float data-preserve-attr=\"style\" aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1204,7 +1204,7 @@ func playerAttackBody(v View) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-		case stageMiss:
+		case stageSettled:
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<div class=\"ds-strike-roll\"><span class=\"ds-strike-tally\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

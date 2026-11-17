@@ -15,10 +15,10 @@ import (
 // conteúdo não ser desenhado duas vezes.
 
 // gmAttack é o cartão do MESTRE: o duelo, e o que cada tempo pede dele —
-// decidir, esperar o dano, confirmar. O erro decidido não tem mais nada a
-// pedir, e o cartão sai.
+// decidir, esperar o dano, confirmar. O ataque encerrado (o erro, a manobra
+// decidida) não tem mais nada a pedir, e o cartão sai.
 templ gmAttack(v View) {
-	if v.Attack != nil && v.Attack.Stage != stageMiss {
+	if v.Attack != nil && v.Attack.Stage != stageSettled {
 		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ gmAttackBadge(v.Attack.Stage) }>
 			<div class="ds-strike-head" data-float-handle>
 				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
@@ -211,7 +211,7 @@ templ playerAttackBody(v View) {
 				}
 				@handDiceEntry(v, v.Attack.Destroyer, "", "dano/destruidor/na-mao")
 			}
-		case stageMiss:
+		case stageSettled:
 			<div class="ds-strike-roll">
 				<span class="ds-strike-tally">{ v.Attack.Tally }</span>
 			</div>

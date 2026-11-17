@@ -19,22 +19,24 @@ import (
 // Os tempos do cartão. O golpe passa por julgar → esperar o dano → confirmar,
 // ou acaba no erro; a manobra tem um tempo só, porque não rola dano.
 const (
-	stageJudge    = "judge"
-	stageDamage   = "damage"
-	stageConfirm  = "confirm"
-	stageMiss     = "miss"
+	stageJudge   = "judge"
+	stageDamage  = "damage"
+	stageConfirm = "confirm"
+	// stageSettled é o ataque ENCERRADO (`Settled`): o erro do golpe ou a manobra decidida,
+	// que só fica na mesa para quem atacou ler a decisão.
+	stageSettled  = "settled"
 	stageManeuver = "maneuver"
 )
 
 // stageOf diz em que tempo o provisório está.
 func stageOf(pa live.PendingAttack) string {
 	switch {
+	case pa.Settled():
+		return stageSettled
 	case pa.Maneuver != nil:
 		return stageManeuver
 	case pa.Ruling == "":
 		return stageJudge
-	case pa.Ruling == live.RulingMiss:
-		return stageMiss
 	case !pa.DamageRolled:
 		return stageDamage
 	}
@@ -168,6 +170,10 @@ func rulingSaid(pa live.PendingAttack) string {
 		return "acertou"
 	case live.RulingCritical:
 		return strings.ToLower(critLabel(pa))
+	case live.RulingSuccess:
+		return "Sucesso"
+	case live.RulingFailure:
+		return "Falha"
 	}
 	return ""
 }
@@ -350,7 +356,10 @@ func playerAttackBadge(a *attackProposal) string {
 		return "Role o dano"
 	case stageConfirm:
 		return "Dano rolado"
-	case stageMiss:
+	case stageSettled:
+		if a.Maneuver {
+			return a.Said
+		}
 		return "Errou"
 	}
 	return "Rascunho"

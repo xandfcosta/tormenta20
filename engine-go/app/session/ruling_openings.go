@@ -44,7 +44,9 @@ func opensWhatTheRulingOpens(s *live.SessionRuntimeState, attack live.PendingAtt
 }
 
 // RuleManeuver guarda o Sucesso ou a Falha da manobra e a encerra: ela não rola dano, e a decisão é o fim dela.
-// A Falha mantém a ação gasta, como o erro do golpe; o ✕ do mestre continua sendo o cancelamento que devolve.
+// A Falha mantém a ação gasta, como o erro do golpe. A manobra decidida FICA na mesa para quem a propôs ler a
+// decisão (decisão do dono), como o erro do golpe: ela está encerrada (`Settled`), não trava o próximo ataque, e
+// sai quando a vez muda ou quando quem a propôs a fecha. O ✕ do mestre é o cancelamento ANTES da decisão.
 func (st *Store) RuleManeuver(ctx context.Context, sessionID int64, who live.Attacker, ruling string) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.AttackSettled{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error {
@@ -52,7 +54,6 @@ func (st *Store) RuleManeuver(ctx context.Context, sessionID int64, who live.Att
 				return err
 			}
 			opensWhatTheRulingOpens(s, *s.PendingAttack)
-			live.ClearPendingAttack(s)
 			return nil
 		})
 }

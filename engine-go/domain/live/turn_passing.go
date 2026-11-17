@@ -23,7 +23,7 @@ func AdvanceTurn(st *SessionRuntimeState) {
 	if !st.CountsRounds() || len(st.Initiative) == 0 {
 		return
 	}
-	dropTheSettledMiss(st)
+	dropTheSettledAttack(st)
 	if st.TurnIndex < 0 {
 		st.TurnIndex = 0
 		if st.Round < 1 {
@@ -42,11 +42,11 @@ func AdvanceTurn(st *SessionRuntimeState) {
 	RefreshTurn(st)
 }
 
-// dropTheSettledMiss tira da mesa o ataque que o mestre já disse que ERROU. Ele
-// fica para o jogador ler a decisão, e a vez mudando é o fim dessa leitura. O
-// ataque ainda sem decisão fica: o mestre não falou, e mudar a vez não é falar.
-func dropTheSettledMiss(st *SessionRuntimeState) {
-	if st.PendingAttack != nil && st.PendingAttack.Ruling == RulingMiss {
+// dropTheSettledAttack tira da mesa o ataque ENCERRADO (`Settled`): o erro do golpe e a
+// manobra decidida. Ele fica para o jogador ler a decisão, e a vez mudando é o fim dessa
+// leitura. O ataque ainda sem decisão fica: o mestre não falou, e mudar a vez não é falar.
+func dropTheSettledAttack(st *SessionRuntimeState) {
+	if st.PendingAttack != nil && st.PendingAttack.Settled() {
 		st.PendingAttack = nil
 	}
 }
@@ -59,7 +59,7 @@ func RewindTurn(st *SessionRuntimeState) {
 	if len(st.Initiative) == 0 || st.TurnIndex < 0 {
 		return
 	}
-	dropTheSettledMiss(st)
+	dropTheSettledAttack(st)
 	// Desfazer um turno desconta um turno: o contador é o que JÁ aconteceu, e
 	// voltar diz que não aconteceu.
 	if st.TurnsTaken > 0 {
