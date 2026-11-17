@@ -217,7 +217,8 @@ func (r *Ruleset) characterFitsRule(ch Character, rule TableRule) bool {
 
 // OwnsPower diz se a ficha tem o poder: de classe (pelo nível na classe), geral, o que a
 // origem deixou escolher, ou o da devoção. É a pergunta das regras da mesa ("tem o poder
-// X"), e a ficha responde a mesma coisa pelo `sheet.OwnsPower`.
+// X"), e a ficha responde a mesma coisa pelo `sheet.OwnsPower` — o
+// `TestTheEngineAndTheSheetAgreeOnEveryProvenanceOfAPower` confere as duas.
 //
 //	ruleset.OwnsPower(ch, "bloqueio-com-escudo")
 func (r *Ruleset) OwnsPower(ch Character, id string) bool {
