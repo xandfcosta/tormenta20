@@ -26,6 +26,8 @@ import (
 
 // choicesPanel é o diálogo inteiro.
 type choicesPanel struct {
+	// Search é o termo da busca do Escolher, que o campo de busca da classe mostra.
+	Search  string
 	Pending []pendencia
 	Races   []raceChoiceCard
 	Origin  *originChoiceCard
@@ -190,7 +192,7 @@ type pickerChoice struct {
 
 // choicesPanelOf monta o diálogo.
 func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPanel {
-	panel := choicesPanel{Pending: s.sheetPendings(dto)}
+	panel := choicesPanel{Search: search, Pending: s.sheetPendings(dto)}
 	panel.Races = s.raceChoices(dto, search)
 	panel.Origin = originChoice(dto)
 	panel.Classes = classChoiceCards(dto, search)
