@@ -1,7 +1,6 @@
 package table
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -42,20 +41,11 @@ func damageTakenSentences(taken engine.DamageTaken) []string {
 //
 // Melhor esforço, como a Defesa do Grupo: uma ficha que não monta fica sem as frases, e a mesa continua de pé —
 // a iniciativa é o assunto da tela.
-func (s Scene) damageTakenOf(ctx context.Context, ids []int64) map[int64][]string {
+func damageTakenOf(sheets *tableSheets, ids []int64) map[int64][]string {
 	out := map[int64][]string{}
-	if s.deps.Catalogs() == nil {
-		return out
-	}
 	for _, id := range ids {
-		row, err := s.deps.Queries().GetCharacter(ctx, id)
-		if err != nil {
-			log.Printf("mesa: ler a ficha %d para o dano sofrido falhou (%v)", id, err)
-			continue
-		}
-		dto, err := sheet.Load(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
-		if err != nil {
-			log.Printf("mesa: montar a ficha %d para o dano sofrido falhou (%v)", id, err)
+		dto, ok := sheets.of(id)
+		if !ok {
 			continue
 		}
 		ec, err := sheet.EngineCharacterFrom(dto)

@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"t20engine/domain/board"
-	"t20engine/domain/book"
 	"t20engine/domain/live"
 
 	"github.com/a-h/templ"
@@ -330,7 +329,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if err != nil {
 		return View{}, http.StatusInternalServerError, err
 	}
-	group, mine, eu := s.tableRoster(ctx, userID, campaignID)
+	sheets := s.sheetsOfThisDrawing(ctx)
+	group, mine, eu := s.tableRoster(ctx, userID, campaignID, sheets)
 	st := live.StateForViewer(role, fresh, mine)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
 	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de
@@ -446,7 +446,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	marcaAPresenca(view.Group, connected)
 	if role == "gm" {
 		r := ofViewGm(st, members, present, true)
-		r.DamageTaken = s.damageTakenOf(ctx, onTable)
+		r.DamageTaken = damageTakenOf(sheets, onTable)
 		if view.Blast != nil {
 			view.Blast.Taken = r.DamageTaken[view.Blast.TargetCharacterID]
 		}
@@ -469,7 +469,9 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 // A ponte até "quem está olhando" é o `ownerId` do roster, e não o id do
 // personagem: a ficha de um membro é o SNAPSHOT da campanha, então o dono
 // registrado é o único fio de volta até a pessoa.
-func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) ([]Member, map[int64]bool, *tableMe) {
+func (s Scene) tableRoster(
+	ctx context.Context, userID, campaignID int64, sheets *tableSheets,
+) ([]Member, map[int64]bool, *tableMe) {
 	rows, err := s.deps.Queries().ListMembers(ctx, campaignID)
 	if err != nil {
 		// Roster indisponível não derruba a fila: a iniciativa é o assunto da
@@ -504,7 +506,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 			CharacterID: m.Characterid,
 			Name:        m.Charname,
 			Initials:    ui.Monogram(m.Charname),
-			Defense:     s.memberDefense(ctx, m.Characterid),
+			Defense:     sheets.memberDefense(m.Characterid),
 			Level:       m.Charlevel,
 			Classes:     s.tableClasses(ctx, m.Characterid),
 			PV:          tableBarOf(pools[m.Characterid].HpCurrent, pools[m.Characterid].HpMax, false),
@@ -604,27 +606,4 @@ func (s Scene) membrosEPresenca(ctx context.Context, campaignID, sessionID int64
 		present = append(present, u.UserID)
 	}
 	return members, present
-}
-
-// memberDefense pergunta ao MOTOR, que é a mesma `ComputeSheet` da ficha.
-//
-// Travessão quando o motor não está de pé: a cena inteira não pode cair por
-// causa de um número, e um zero seria pior — Defesa 0 é um valor plausível, e o
-// mestre agiria sobre ele. É a mesma escolha que o cartão de personagem faz.
-func (s Scene) memberDefense(ctx context.Context, characterID int64) string {
-	if s.deps.Catalogs() == nil {
-		return "—"
-	}
-	row, err := s.deps.Queries().GetCharacter(ctx, characterID)
-	if err != nil {
-		return "—"
-	}
-	character, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
-	if err != nil {
-		return "—"
-	}
-	// A MESMA frase da ficha, e da mesma função: o mestre confere aqui a Defesa
-	// de um jogador para decidir se o ataque acerta, e com o alvo caído o total
-	// é o único número que não responde essa pergunta.
-	return book.DefenseLabel(character.Defense)
 }
