@@ -31,6 +31,7 @@
 #   decisao — a DECISÃO do mestre sobre o golpe (errou, acertou, critico): três
 #             botões de um gesto só, e um corpo JSON pediria uma ilha de JS onde
 #             há um `@post`, pelo motivo da `manobra`
+aliado
 arma
 ascendencia
 atributo
@@ -38,6 +39,7 @@ beneficio
 campaignId
 catalogo
 categoria
+cavaleiro
 characterId
 classe
 cond

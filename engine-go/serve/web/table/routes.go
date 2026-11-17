@@ -45,6 +45,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Get(sessionPattern+"/fluxo", s.handleTableStream)
 	r.Post(sessionPattern+"/iniciativa", s.handleTableInitiative)
 	r.Post(sessionPattern+"/sangramento/{die}", s.handleBleedingRoll)
+	r.Post(sessionPattern+"/estandarte/{cavaleiro}/{aliado}", s.gmCommand(givesBanner))
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.SidePageRoutes(r)
@@ -448,6 +449,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	}
 	if role == "gm" {
 		view.NPCs = s.CampaignCast(ctx, campaignID)
+		view.Banners = bannerBandsOf(st, group, sheets, campaignID, sessionID)
 	}
 	// A PRESENÇA É DOS DOIS PAPÉIS, e não só do mestre (decisão do dono): saber
 	// quem caiu é o que faz a mesa ESPERAR em vez de continuar sem alguém. Por
