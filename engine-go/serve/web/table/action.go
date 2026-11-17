@@ -65,7 +65,7 @@ func (s Scene) registerInitiativeTable(r *http.Request, campaignID, sessionID, d
 	if _, _, err := s.access.Session(r.Context(), app.Caller{ID: userID}, campaignID, sessionID); err != nil {
 		return err
 	}
-	_, _, eu := s.tableRoster(r.Context(), userID, campaignID)
+	_, eu := s.ownedOnTable(r.Context(), userID, campaignID)
 	if eu == nil {
 		return fmt.Errorf("você não tem personagem nesta mesa")
 	}

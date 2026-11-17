@@ -477,7 +477,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		return nil, map[int64]bool{}, nil
 	}
 	group := make([]Member, 0, len(rows))
-	mine := make(map[int64]bool, len(rows))
+	mine, eu := s.ownedOnTable(ctx, userID, campaignID)
 	// OS POÇOS DO GRUPO NUMA VEZ SÓ. O `ListMembers` trazia os quatro vitais por
 	// JOIN — e eles não existem mais —, e este cartão foi o último leitor das
 	// colunas a sair (ALE-355). Falha
@@ -492,14 +492,7 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 		log.Printf("mesa: derivar os poços do grupo falhou (%v)", err)
 		pools = map[int64]sheet.Pools{}
 	}
-	var eu *tableMe
 	for _, m := range rows {
-		if owner, err := s.deps.Queries().GetCharacterOwner(ctx, m.Characterid); err == nil && owner == userID {
-			mine[m.Characterid] = true
-			if eu == nil {
-				eu = &tableMe{CharacterID: m.Characterid, Name: m.Charname}
-			}
-		}
 		// NÃO entra filtro de PAPEL aqui, e a razão é do dono da mesa: o mestre
 		// NÃO tem personagem próprio. O que ele tem é um elenco de NPCs que
 		// entram na história ou não — decisão por CENA, tomada na hora de pôr a

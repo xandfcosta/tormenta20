@@ -94,7 +94,7 @@ func (s Scene) whoDragsInPreview(r *http.Request, role string, token *board.Boar
 	if err != nil {
 		return who
 	}
-	_, mine, _ := s.tableRoster(r.Context(), userID, int64(campaignID))
+	mine, _ := s.ownedOnTable(r.Context(), userID, int64(campaignID))
 	who.OwnsCharacter = mine[*token.CharacterID]
 	return who
 }

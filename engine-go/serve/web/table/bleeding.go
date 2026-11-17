@@ -95,7 +95,7 @@ func (s Scene) answerBleeding(r *http.Request, campaignID, sessionID int64, die 
 		return errors.New("a vez não está esperando este dado")
 	}
 	if role != app.RoleGM {
-		_, mine, _ := s.tableRoster(r.Context(), userID, campaignID)
+		mine, _ := s.ownedOnTable(r.Context(), userID, campaignID)
 		if !mine[check.CharacterID] {
 			return fmt.Errorf("o teste é de %s, e só o dono da ficha ou o mestre rolam por ele", check.Label)
 		}
