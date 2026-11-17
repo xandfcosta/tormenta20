@@ -172,7 +172,7 @@ templ poolLine(label, kind string, b *tableBar) {
 			{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }
 			// A RESERVA, como na fileira do mestre: o dano a come primeiro (p106).
 			if b.Temp > 0 {
-				<span class="ds-gm-temp" title={ label + " temporários" }>{ fmt.Sprintf("+%d", b.Temp) }</span>
+				<span class="ds-temp" title={ label + " temporários" }>{ fmt.Sprintf("+%d", b.Temp) }</span>
 			}
 			if b.Down != "" {
 				<span class="ds-down">{ b.Down }</span>

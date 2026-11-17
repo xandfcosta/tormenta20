@@ -3467,7 +3467,7 @@
     border-top: 1px solid var(--ds-line);
     background: var(--ds-surface);
   }
-  .ds-gm-temp {
+  .ds-temp {
     margin-left: 0.25rem;
     color: var(--ds-action);
     font-weight: 600;
@@ -5982,7 +5982,7 @@
     font-size: var(--ds-t-xs);
     font-weight: 400;
   }
-  /* A reserva na cor de ação, como o "+N" da fileira do mestre (`.ds-gm-temp`). */
+  /* A reserva na cor de ação, como o "+N" da fileira do mestre (`.ds-temp`). */
   .ds-vital-value > .ds-vital-temp {
     margin-left: 0.25rem;
     color: var(--ds-action);
