@@ -1182,15 +1182,6 @@
       "total": 0,
       "contributions": []
     },
-    "tempHpFuria": {
-      "total": 12,
-      "sources": [
-        {
-          "source": "Alma de Bronze (Fúria, p41)",
-          "amount": 12
-        }
-      ]
-    },
     "expertises": [
       {
         "name": "Acrobacia",
@@ -1787,15 +1778,6 @@
     "critExtraIgnoreChance": {
       "total": 0,
       "contributions": []
-    },
-    "tempHpFuria": {
-      "total": 12,
-      "sources": [
-        {
-          "source": "Alma de Bronze (Fúria, p41)",
-          "amount": 12
-        }
-      ]
     },
     "expertises": [
       {

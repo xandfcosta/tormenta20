@@ -122,11 +122,8 @@ type ComputedSheet struct {
 	// rola é a mesa, e por isso o resultado do ataque traz o extra separado,
 	// para o mestre ter o que tirar. Um fator que cortasse o dano "em média"
 	// daria um número que nenhuma mesa rola.
-	CritExtraIgnoreChance TotalContribs `json:"critExtraIgnoreChance"`
-	// TempHpFury is tempHpFromPowers with furia active — the interesting branch
-	// (Alma de Bronze). The base sheet (furia off) is always {0, []}.
-	TempHpFury TempHpBreakdown      `json:"tempHpFuria"`
-	Expertises []ExpertiseBreakdown `json:"expertises"`
+	CritExtraIgnoreChance TotalContribs        `json:"critExtraIgnoreChance"`
+	Expertises            []ExpertiseBreakdown `json:"expertises"`
 	// Perícias em que o personagem FALHA AUTOMATICAMENTE — hoje só Reflexos, do
 	// Indefeso (p394). É o motor quem responde isso, e não a UI reinterpretando
 	// uma flag: a regra de quais condições implicam indefeso mora aqui.

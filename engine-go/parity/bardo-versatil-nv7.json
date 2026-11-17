@@ -671,10 +671,6 @@
       "total": 0,
       "contributions": []
     },
-    "tempHpFuria": {
-      "total": 0,
-      "sources": []
-    },
     "expertises": [
       {
         "name": "Acrobacia",
@@ -1219,10 +1215,6 @@
     "critExtraIgnoreChance": {
       "total": 0,
       "contributions": []
-    },
-    "tempHpFuria": {
-      "total": 0,
-      "sources": []
     },
     "expertises": [
       {

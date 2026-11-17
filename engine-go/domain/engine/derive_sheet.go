@@ -45,7 +45,6 @@ func deriveSheet(ch Character, effects ItemEffects, raceSquares int) ComputedShe
 		DamageAll:             totalContribsFor(effects, ModifierTarget{K: "damage", Scope: "all"}),
 		DamageReduction:       characterDamageReduction(effects),
 		CritExtraIgnoreChance: totalContribsFor(effects, ModifierTarget{K: "critExtraIgnoreChance"}),
-		TempHpFury:            tempHpFromPowers(ch, effects, true),
 		Expertises:            expertises,
 		AutoFailExpertises:    autoFailExpertises(effects),
 		char:                  ch,
