@@ -2,7 +2,6 @@ package convention
 
 import (
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -205,37 +204,14 @@ func TestNoCitationNamesAMissingTest(t *testing.T) {
 
 func arquivosParaCitacao(t *testing.T) []string {
 	t.Helper()
-	var findings []string
 	// O `e2e/` entra porque cada spec de Playwright se JUSTIFICA citando o teste
 	// de Go que já cobre a parte barata — é a regra "e2e é o menor conjunto
 	// possível" escrita caso a caso. Uma citação podre ali faz o próximo autor
-	// procurar uma garantia que não existe e escrever um e2e a mais.
-	for _, root := range []string{"..", "../..", "../../e2e"} {
-		err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if entry.IsDir() {
-				if entry.Name() == "node_modules" || entry.Name() == ".git" {
-					return filepath.SkipDir
-				}
-				// A raiz do repositório entra só pelos `.md` dela: o `engine-go`
-				// já foi varrido inteiro pela primeira raiz.
-				if root == "../.." && path != root {
-					return filepath.SkipDir
-				}
-				return nil
-			}
-			name := entry.Name()
-			if strings.HasSuffix(name, ".go") || strings.HasSuffix(name, ".md") ||
-				strings.HasSuffix(name, ".ts") {
-				findings = append(findings, path)
-			}
-			return nil
-		})
-		if err != nil {
-			t.Fatalf("varrer %s: %v", root, err)
-		}
-	}
-	return findings
+	// procurar uma garantia que não existe e escrever um e2e a mais. A raiz do
+	// repositório entra só pelos `.md` dela.
+	return trackedFiles(t,
+		":(glob)engine-go/**/*.go", ":(glob)engine-go/**/*.md", ":(glob)engine-go/**/*.ts",
+		":(glob)*.md",
+		":(glob)e2e/**/*.go", ":(glob)e2e/**/*.md", ":(glob)e2e/**/*.ts",
+	)
 }
