@@ -353,6 +353,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	}
 	view := tableViewOf(st, campaignID, sessionID, sess.Sessionnumber, group, mine, eu, pools)
 	withSheetState(&view, st, conditions)
+	view.sheets = sheets
 	view.Bleeding = bleedingPromptOf(st, role, mine)
 	// O CICLO da sessão chega à tela porque, sem ele, os verbos teriam de ser
 	// oferecidos todos — e "encerrar" numa sessão que nunca começou é o gesto
@@ -514,9 +515,7 @@ func (s Scene) tableRoster(
 		})
 	}
 	if eu != nil {
-		// O bônus é do MOTOR, nunca do template: é a mesma `ComputeSheet` que
-		// a ficha inteira usa.
-		if bonus, err := s.queue.Roster().Bonus(ctx, eu.CharacterID); err == nil {
+		if bonus, ok := sheets.initiativeBonus(eu.CharacterID); ok {
 			eu.Bonus = bonus
 		}
 	}

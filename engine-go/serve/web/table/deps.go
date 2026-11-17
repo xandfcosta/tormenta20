@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"t20engine/app/boards"
+	"t20engine/domain/sheet"
 
 	"github.com/a-h/templ"
 
@@ -77,8 +78,9 @@ type Deps interface {
 
 	// PlayerSheet é a ficha EMBUTIDA, pedida PRONTA: montá-la aqui obrigaria a
 	// Mesa a cumprir a `sheetui.Deps` inteira para desenhar um painel. Nulo é
-	// caminho normal — mestre não tem ficha na mesa.
-	PlayerSheet(r *http.Request, characterID int64) *sheetui.View
+	// caminho normal — mestre não tem ficha na mesa. `loaded` é a ficha que o
+	// desenho da mesa já carregou, ou nil; a posse continua conferida lá.
+	PlayerSheet(r *http.Request, characterID int64, loaded *sheet.CharacterDTO) *sheetui.View
 	// BookAddress é o endereço do livro, ou o zero quando não há `LIVRO_PDF`.
 	// A cena não pergunta "há livro?": o valor já responde, como o leitor.
 	BookAddress() bookui.BookAddress

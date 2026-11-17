@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 )
 
@@ -68,6 +69,21 @@ func (t *tableSheets) memberDefense(characterID int64) string {
 	// de um jogador para decidir se o ataque acerta, e com o alvo caído o total
 	// é o único número que não responde essa pergunta.
 	return book.DefenseLabel(character.Defense)
+}
+
+// initiativeBonus é o bônus de iniciativa do personagem, pela regra do MOTOR
+// (`engine.InitiativeTotal`) sobre a ficha deste desenho: o `initiative.Roster`
+// carregaria a mesma ficha outra vez para fazer a mesma conta.
+func (t *tableSheets) initiativeBonus(characterID int64) (int64, bool) {
+	dto, ok := t.of(characterID)
+	if !ok {
+		return 0, false
+	}
+	character, err := sheet.Compute(dto)
+	if err != nil {
+		return 0, false
+	}
+	return int64(engine.InitiativeTotal(character)), true
 }
 
 // ownedOnTable são os personagens da mesa que são do usuário, e o primeiro deles.
