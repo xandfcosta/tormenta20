@@ -2,7 +2,6 @@ package convention
 
 import (
 	"encoding/json"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -401,20 +400,13 @@ func oQueORepositorioDeclara(t *testing.T) (map[string]bool, map[string]bool) {
 	literalField := regexp.MustCompile(`(?m)^\s*(\w+):\s`)
 
 	visited := 0
-	err := filepath.WalkDir("../..", func(path string, entry fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if entry.IsDir() {
-			if entry.Name() == "node_modules" || entry.Name() == ".git" {
-				return filepath.SkipDir
-			}
-			return nil
-		}
+	// O ÍNDICE do git, e não o disco, pela razão do `trackedFiles`: um símbolo que só
+	// existe num arquivo fora do git não existe na CI.
+	for _, path := range trackedFiles(t, "*.go", "*.templ", "*.sql", "*.ts", "*.tsx", "*.js", "*.json") {
 		ext := filepath.Ext(path)
 		raw, readErr := os.ReadFile(path)
 		if readErr != nil {
-			return nil
+			continue
 		}
 		s := string(raw)
 		switch ext {
@@ -464,10 +456,6 @@ func oQueORepositorioDeclara(t *testing.T) (map[string]bool, map[string]bool) {
 				colheChaves(anything, exists)
 			}
 		}
-		return nil
-	})
-	if err != nil {
-		t.Fatalf("caminhar a árvore: %v", err)
 	}
 
 	// O SEGUNDO DENOMINADOR: um conjunto vazio faria TODA citação reprovar, e um
