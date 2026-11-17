@@ -16,6 +16,8 @@ import (
 // PERMITIDOS: o verbete novo que fale em PM sem gesto reprova com o nome dele,
 // e o permitido que ganhou gesto também.
 var notAGesture = map[string]string{
+	// O PM dele é CONCEDIDO, e não gasto: sai no início da cena, e o dos aliados pela faixa do mestre.
+	"class.cavaleiro.estandarte": "PM temporários no início da cena, sem gesto",
 	// O PM delas sai no ataque extra, que é uma linha da aba Ações montada pela carta da arma.
 	"minotauro-chifres": "o ataque extra é a linha da arma natural",
 	"trog-mordida":      "o ataque extra é a linha da arma natural",

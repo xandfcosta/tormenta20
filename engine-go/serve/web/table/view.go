@@ -99,7 +99,9 @@ type View struct {
 	SkillTest *skillTestBand
 	// Blast é o ÚLTIMO disparo de encanto em vez do golpe (a bola de fogo da Flamejante), nil quando não há.
 	Blast *blastBand
-	GM    *viewGm
+	// Banners são as faixas do Estandarte (p54), só do MESTRE e só com a cena aberta.
+	Banners []bannerBand
+	GM      *viewGm
 	// Notes é o caderno da noite, e ele é DO MESTRE. Vazio para quem não é
 	// mestre, pela mesma trava do resto — a view não tem o que desenhar, em vez
 	// de a tela esconder.

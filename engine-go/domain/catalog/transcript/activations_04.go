@@ -9,6 +9,7 @@ var activationsPart04 = []Activation{
 		Action: "passivo",
 		PMCost: PMCost{Fixed: 0},
 		Uses:   ptr("cena"),
+		Grant:  &ActivationGrant{Kind: "temp-mp", Scope: "scene", Attribute: "charisma", AttributeOnly: true},
 	},
 	{
 		ID:         "class.cavaleiro.etiqueta",

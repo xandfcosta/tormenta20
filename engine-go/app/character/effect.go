@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"t20engine/domain/book"
 
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
@@ -75,6 +76,47 @@ func (p Plays) ApplyTempHpPool(
 		return sheet.EffectDTO{}, fmt.Errorf("gravar a poça de %d PV temporários de %q: %w", howMuch, catalogID, err)
 	}
 	return effectFrom(eff), nil
+}
+
+// ApplyTempPool liga a reserva que a concessão dá — de PV ou de PM, pelo `Kind` dela —
+// pela mesma gravação da `ApplyTempHpPool`: fonte repetida reescreve, fontes diferentes somam.
+//
+//	p.ApplyTempPool(ctx, characterID, "power", "class.cavaleiro.estandarte", *spec.Grant, 3)
+func (p Plays) ApplyTempPool(
+	ctx context.Context, characterID int64, source, catalogID string, grant book.PowerGrant, howMuch int,
+) (sheet.EffectDTO, error) {
+	if grant.Kind != "temp-mp" {
+		return p.ApplyTempHpPool(ctx, characterID, source, catalogID, grant.Scope, howMuch, "PV temporários")
+	}
+	mods := []map[string]any{
+		{"target": map[string]any{"k": "tempMp"}, "amount": howMuch, "bonusType": "untyped", "note": "PM temporários"},
+	}
+	modJSON, _ := json.Marshal(mods)
+	eff, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: characterID, Source: source, Catalogid: catalogID, Scope: grant.Scope,
+		Modifiers: string(modJSON), Createdat: dbvalue.NowISO(),
+	})
+	if err != nil {
+		return sheet.EffectDTO{}, fmt.Errorf("gravar a poça de %d PM temporários de %q: %w", howMuch, catalogID, err)
+	}
+	return effectFrom(eff), nil
+}
+
+// GrantAmount é quanto a concessão dá a esta ficha, pela conta do verbete
+// (`PowerGrant.AmountFor`) com o atributo computado.
+func (p Plays) GrantAmount(ctx context.Context, row sqlcgen.Character, grant book.PowerGrant) (int, bool) {
+	if p.catalogs == nil {
+		return 0, false
+	}
+	computed, err := sheet.LoadAndCompute(ctx, p.queries, p.catalogs, row)
+	if err != nil {
+		return 0, false
+	}
+	attr, found := computed.Attributes[grant.Attribute]
+	if !found {
+		return 0, false
+	}
+	return grant.AmountFor(int(row.Level), attr.Total), true
 }
 
 // TempHpAmount é quanto de PV temporário um poder concede: o NÍVEL do

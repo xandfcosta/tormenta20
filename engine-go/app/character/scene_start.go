@@ -34,12 +34,11 @@ func (p Plays) GrantSceneStartPools(ctx context.Context, row sqlcgen.Character) 
 		if !sheet.OwnsActivation(dto, spec) {
 			continue
 		}
-		howMuch, ok := p.TempHpAmount(ctx, row, spec.Grant.Attribute)
+		howMuch, ok := p.GrantAmount(ctx, row, *spec.Grant)
 		if !ok {
 			continue
 		}
-		if _, err := p.ApplyTempHpPool(
-			ctx, row.ID, "power", spec.ID, spec.Grant.Scope, howMuch, "PV temporários"); err != nil {
+		if _, err := p.ApplyTempPool(ctx, row.ID, "power", spec.ID, *spec.Grant, howMuch); err != nil {
 			return given, err
 		}
 		given++
