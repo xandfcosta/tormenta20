@@ -9,16 +9,15 @@ var Classes = []Class{
 		Proficiencies: []string{},
 		Spellcasting: &Spellcasting{
 			List:                "arcana",
-			Attribute:           "intelligence",
 			SchoolRestriction:   nil,
 			UnlockLevel:         OrderedMap[*int]{{"1", ptr(1)}, {"2", ptr(5)}, {"3", ptr(9)}, {"4", ptr(13)}, {"5", ptr(17)}},
 			MaxCircle:           5,
 			StartingSpellsKnown: 3,
 			LearnCadence:        "every-level",
 			Paths: OrderedMap[SpellcastingPath]{
-				{"bruxo", SpellcastingPath{Attribute: "intelligence", LearnCadence: "every-level"}},
-				{"feiticeiro", SpellcastingPath{Attribute: "charisma", LearnCadence: "every-odd-level"}},
-				{"mago", SpellcastingPath{Attribute: "intelligence", LearnCadence: "every-level", StartingSpellsKnown: 4}},
+				{"bruxo", SpellcastingPath{LearnCadence: "every-level"}},
+				{"feiticeiro", SpellcastingPath{LearnCadence: "every-odd-level"}},
+				{"mago", SpellcastingPath{LearnCadence: "every-level", StartingSpellsKnown: 4}},
 			},
 		},
 		UID: "cls_uov4q5z5jl",
@@ -37,7 +36,6 @@ var Classes = []Class{
 		Proficiencies: []string{"armas-marciais"},
 		Spellcasting: &Spellcasting{
 			List:                "arcana",
-			Attribute:           "charisma",
 			SchoolRestriction:   ptr(3),
 			UnlockLevel:         OrderedMap[*int]{{"1", ptr(1)}, {"2", ptr(6)}, {"3", ptr(10)}, {"4", ptr(14)}, {"5", nil}},
 			MaxCircle:           4,
@@ -74,7 +72,6 @@ var Classes = []Class{
 		Proficiencies: []string{"armaduras-pesadas", "escudos"},
 		Spellcasting: &Spellcasting{
 			List:                "divina",
-			Attribute:           "wisdom",
 			SchoolRestriction:   nil,
 			UnlockLevel:         OrderedMap[*int]{{"1", ptr(1)}, {"2", ptr(5)}, {"3", ptr(9)}, {"4", ptr(13)}, {"5", ptr(17)}},
 			MaxCircle:           5,
@@ -90,7 +87,6 @@ var Classes = []Class{
 		Proficiencies: []string{"escudos"},
 		Spellcasting: &Spellcasting{
 			List:                "divina",
-			Attribute:           "wisdom",
 			SchoolRestriction:   ptr(3),
 			UnlockLevel:         OrderedMap[*int]{{"1", ptr(1)}, {"2", ptr(6)}, {"3", ptr(10)}, {"4", ptr(14)}, {"5", nil}},
 			MaxCircle:           4,
@@ -123,7 +119,6 @@ var Classes = []Class{
 		Proficiencies: []string{"armas-marciais", "armaduras-pesadas", "escudos"},
 		Spellcasting: &Spellcasting{
 			List:                "divina",
-			Attribute:           "wisdom",
 			SchoolRestriction:   nil,
 			UnlockLevel:         OrderedMap[*int]{{"1", ptr(2)}, {"2", nil}, {"3", nil}, {"4", nil}, {"5", nil}},
 			MaxCircle:           1,

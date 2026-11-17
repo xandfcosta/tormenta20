@@ -200,7 +200,9 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow 
 // com os bônus de CD de item e de poder (a Flauta Mística, p158).
 //
 // Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
-// usa: uma segunda conta aqui daria dois números para a mesma pergunta. O bônus
+// usa: uma segunda conta aqui daria dois números para a mesma pergunta. O
+// atributo de cada classe também é dele (`SpellAttributeByClass`), porque o do
+// Arcanista sai do caminho (p37), e a feiticeira lia a CD de Inteligência. O bônus
 // é o que alcança a magia (`ForSpell`), com a tradição da classe que lança: a varinha arcana
 // sobe a CD das arcanas e não a das divinas (p160), e o tomo hermético só a da escola dele.
 func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, spell catalog.Spell, at engine.SpellAt) string {
@@ -215,7 +217,8 @@ func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, s
 		}
 		byThisClass := at
 		byThisClass.Tradition = prog.List
-		if cd := computed.SpellCdByAttribute[prog.Attribute] + computed.ForSpell("spellDC", byThisClass).Total; cd > best {
+		attribute := computed.SpellAttributeByClass[class.ClassName]
+		if cd := computed.SpellCdByAttribute[attribute] + computed.ForSpell("spellDC", byThisClass).Total; cd > best {
 			best = cd
 		}
 	}

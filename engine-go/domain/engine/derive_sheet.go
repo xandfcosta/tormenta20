@@ -36,6 +36,7 @@ func deriveSheet(ch Character, effects ItemEffects, raceSquares int) ComputedShe
 		PmLimit:                 pmLimitBreakdown(ch, effects, SpellAt{}),
 		BestBaseSpellCd:         bestBaseCd,
 		BestSpellAttribute:      bestAttr,
+		SpellAttributeByClass:   spellAttributeByClass(ch),
 		SpellCdByAttribute:      spellCdByAttribute(ch, effects),
 		SpellDCBonus:            spellDCBonus(effects),
 		PmCostMod:               pmCostMod(effects),

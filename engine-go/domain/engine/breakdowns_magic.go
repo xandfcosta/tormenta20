@@ -124,6 +124,18 @@ func bestSpellcasting(ch Character, e ItemEffects) (string, *int) {
 	return attribute, best
 }
 
+// spellAttributeByClass é o atributo-chave de cada classe da ficha que conjura,
+// pelo caminho no Arcanista. Classe que não conjura não entra.
+func spellAttributeByClass(ch Character) map[string]string {
+	out := map[string]string{}
+	for _, entry := range ch.Classes {
+		if attr := spellcastingAttributeFor(ch, entry.ClassName); attr != "" {
+			out[entry.ClassName] = attr
+		}
+	}
+	return out
+}
+
 // spellCdByAttribute is the per-class CD: the spell
 // save CD keyed by casting attribute (10 + ½ nível + FINAL attr mod), so a spell
 // row can pick the CD for any of its applicable classes without re-deriving.

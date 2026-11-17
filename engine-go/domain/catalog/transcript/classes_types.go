@@ -11,7 +11,6 @@ type Class struct {
 
 type Spellcasting struct {
 	List                string                       `json:"list"`
-	Attribute           string                       `json:"attribute"`
 	SchoolRestriction   *int                         `json:"schoolRestriction"`
 	UnlockLevel         OrderedMap[*int]             `json:"unlockLevel"`
 	MaxCircle           int                          `json:"maxCircle"`
@@ -21,7 +20,6 @@ type Spellcasting struct {
 }
 
 type SpellcastingPath struct {
-	Attribute           string `json:"attribute"`
 	LearnCadence        string `json:"learnCadence"`
 	StartingSpellsKnown int    `json:"startingSpellsKnown,omitempty"`
 }

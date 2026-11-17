@@ -23,6 +23,10 @@ func trainingBonusForLevel(level int) int {
 	return 2
 }
 
+// O ATRIBUTO DE CONJURAÇÃO MORA SÓ AQUI. O catálogo de classes também o
+// transcrevia, e a linha de magia da ficha lia de lá a do Arcanista sem o
+// caminho; o dado saiu do catálogo, e a ficha lê `SpellAttributeByClass`.
+//
 // classSpellcastingAttribute is the key attribute FIXED by the class entry
 // ("" for non-casters): Bardo p44, Clérigo p57, Druida p61, and the Paladino's
 // Orar power p83 ("Seu atributo-chave para esta magia é Sabedoria").
