@@ -111,3 +111,32 @@ func TestOnlyTheGameMasterGivesTheBanner(t *testing.T) {
 		t.Errorf("o jogador deu o Estandarte pelo endereço, e a Arcanista ganhou %d PM temporários", got)
 	}
 }
+
+// O "PRONTO" RECOLHE A FAIXA ATÉ A PRÓXIMA CENA (decisão do dono). O mestre diz quem vê o
+// estandarte e fecha: sem ele, a faixa ficava até o fim da cena enquanto houvesse aliado
+// sem a reserva, e no celular empurrava a fila para baixo.
+func TestTheDoneButtonPutsTheBannerAwayUntilTheNextScene(t *testing.T) {
+	f, knight := knightWithTheBanner(t, 3)
+	startsTheScene(t, f)
+	done := fmt.Sprintf("%s/estandarte/%d/pronto", f.tableUrl(), knight)
+	give := fmt.Sprintf("%s/estandarte/%d/%d", f.tableUrl(), knight, f.charID)
+
+	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, done) {
+		t.Fatalf("a faixa do Estandarte não oferece o Pronto (%s)", done)
+	}
+	if refusal := tableRefusal(t, f.requests(t, f.gm, http.MethodPost, done, "").Body.String()); refusal != "" {
+		t.Fatalf("o Pronto foi recusado: %q", refusal)
+	}
+	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(page, give) {
+		t.Error("o mestre tocou em Pronto e a faixa ainda oferece o Estandarte")
+	}
+
+	// A PRÓXIMA CENA traz a faixa de volta: o Estandarte vale "no início de cada cena" (p54).
+	if rec := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/cena/encerrar", ""); rec.Code != http.StatusOK {
+		t.Fatalf("encerrar a cena deu %d", rec.Code)
+	}
+	startsTheScene(t, f)
+	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, give) {
+		t.Error("a cena nova não trouxe de volta a faixa do Estandarte")
+	}
+}

@@ -1,6 +1,7 @@
 package live
 
 import (
+	"errors"
 	"slices"
 	"strings"
 )
@@ -83,6 +84,10 @@ type Scene struct {
 	// feito: as Duas Armas pedem a outra, e o Disparo Rápido, a mesma.
 	ExtraStyle     string `json:"extraStyle,omitempty"`
 	ExtraStyleItem int64  `json:"extraStyleItem,omitempty"`
+	// BannersDone são os cavaleiros cuja faixa do Estandarte (p54) o mestre recolheu com o
+	// "Pronto": ela volta na próxima cena, porque o poder vale "no início de cada cena", e
+	// por isso mora na cena e some com ela.
+	BannersDone []int64 `json:"bannersDone,omitempty"`
 	// AimedBy e AimedAt são quem mirou nesta vez e em quem: anula o -5 de atirar em quem está em
 	// combate corpo a corpo, "neste turno" e "contra aquele alvo" (p234).
 	AimedBy string `json:"aimedBy,omitempty"`
@@ -253,4 +258,16 @@ func GivesOncePerRoundBack(st *SessionRuntimeState, entryID, key string) {
 	if at := slices.Index(st.Scene.OncePerRoundUsed, used); at >= 0 {
 		st.Scene.OncePerRoundUsed = slices.Delete(slices.Clone(st.Scene.OncePerRoundUsed), at, at+1)
 	}
+}
+
+// DismissBanner recolhe a faixa do Estandarte do cavaleiro até o fim da cena. Fora de
+// cena não há faixa, e recolher o que não existe é recusa.
+func DismissBanner(s *SessionRuntimeState, knightID int64) error {
+	if !s.InScene() {
+		return errors.New("não há cena aberta, e a faixa do Estandarte só existe nela")
+	}
+	if !slices.Contains(s.Scene.BannersDone, knightID) {
+		s.Scene.BannersDone = append(s.Scene.BannersDone, knightID)
+	}
+	return nil
 }

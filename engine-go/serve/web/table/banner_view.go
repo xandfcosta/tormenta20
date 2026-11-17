@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -23,6 +24,8 @@ type bannerBand struct {
 	// Head é "Estandarte de Sir Aldo · 3 PM temporários a quem vê o estandarte".
 	Head   string
 	Offers []bannerOffer
+	// Done é o endereço do "Pronto", que recolhe a faixa até a próxima cena.
+	Done string
 }
 
 // bannerOffer é o toque que entrega o Estandarte a um aliado.
@@ -40,6 +43,9 @@ func bannerBandsOf(st *live.SessionRuntimeState, group []Member, sheets *tableSh
 	}
 	var bands []bannerBand
 	for _, knight := range group {
+		if slices.Contains(st.Scene.BannersDone, knight.CharacterID) {
+			continue
+		}
 		dto, ok := sheets.of(knight.CharacterID)
 		if !ok || !sheet.OwnsActivation(dto, *spec) {
 			continue
@@ -49,7 +55,11 @@ func bannerBandsOf(st *live.SessionRuntimeState, group []Member, sheets *tableSh
 			continue
 		}
 		amount := spec.Grant.AmountFor(int(dto.Level), computed.Attributes[spec.Grant.Attribute].Total)
-		band := bannerBand{Head: fmt.Sprintf("Estandarte de %s · %d PM temporários a quem vê o estandarte", knight.Name, amount)}
+		base := fmt.Sprintf("%s/estandarte/%d", routes.Session(campaignID, sessionID), knight.CharacterID)
+		band := bannerBand{
+			Head: fmt.Sprintf("Estandarte de %s · %d PM temporários a quem vê o estandarte", knight.Name, amount),
+			Done: base + "/pronto",
+		}
 		for _, ally := range group {
 			if ally.CharacterID == knight.CharacterID {
 				continue
@@ -59,7 +69,7 @@ func bannerBandsOf(st *live.SessionRuntimeState, group []Member, sheets *tableSh
 			}
 			band.Offers = append(band.Offers, bannerOffer{
 				Name: ally.Name,
-				Path: fmt.Sprintf("%s/estandarte/%d/%d", routes.Session(campaignID, sessionID), knight.CharacterID, ally.CharacterID),
+				Path: fmt.Sprintf("%s/%d", base, ally.CharacterID),
 			})
 		}
 		if len(band.Offers) > 0 {
@@ -80,4 +90,13 @@ func givesBanner(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 		return nil, fmt.Errorf("o aliado %q não é um id: %w", chi.URLParam(c.R, "aliado"), app.ErrRefused)
 	}
 	return st.party.GiveBanner(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID, knight, ally)
+}
+
+// dismissesBanner é o "Pronto" da faixa de um cavaleiro.
+func dismissesBanner(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	knight, err := strconv.ParseInt(chi.URLParam(c.R, "cavaleiro"), 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("o cavaleiro %q não é um id: %w", chi.URLParam(c.R, "cavaleiro"), app.ErrRefused)
+	}
+	return st.party.DismissBanner(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID, knight)
 }

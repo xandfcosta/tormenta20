@@ -336,6 +336,12 @@ func (st *Store) StartScene(ctx context.Context, sessionID int64, kind live.Scen
 		func(s *live.SessionRuntimeState) error { live.StartScene(s, kind); return nil })
 }
 
+// DismissBanner recolhe a faixa do Estandarte do cavaleiro até o fim da cena.
+func (st *Store) DismissBanner(ctx context.Context, sessionID, knightID int64) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.BannerDismissed{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { return live.DismissBanner(s, knightID) })
+}
+
 func (st *Store) EndScene(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.SceneEnded{SessionID: sessionID},
 		func(s *live.SessionRuntimeState) error { live.EndScene(s); return nil })

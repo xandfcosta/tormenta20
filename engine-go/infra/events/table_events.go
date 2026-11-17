@@ -102,6 +102,13 @@ type SceneEnded struct {
 
 func (e SceneEnded) Target() Target { return Target{SessionID: e.SessionID} }
 
+// BannerDismissed — o mestre recolheu a faixa do Estandarte até o fim da cena.
+type BannerDismissed struct {
+	SessionID int64
+}
+
+func (e BannerDismissed) Target() Target { return Target{SessionID: e.SessionID} }
+
 // BoardOpened — o mestre abriu um tabuleiro. Nascer e sumir são as mudanças mais
 // visíveis do mapa, e é por isso que elas têm evento próprio em vez de caírem no
 // `BoardChanged`.

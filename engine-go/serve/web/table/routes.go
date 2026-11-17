@@ -45,6 +45,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Get(sessionPattern+"/fluxo", s.handleTableStream)
 	r.Post(sessionPattern+"/iniciativa", s.handleTableInitiative)
 	r.Post(sessionPattern+"/sangramento/{die}", s.handleBleedingRoll)
+	r.Post(sessionPattern+"/estandarte/{cavaleiro}/pronto", s.gmCommand(dismissesBanner))
 	r.Post(sessionPattern+"/estandarte/{cavaleiro}/{aliado}", s.gmCommand(givesBanner))
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
