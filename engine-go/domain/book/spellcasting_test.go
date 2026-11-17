@@ -36,41 +36,38 @@ func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
 	const unreachable = "nunca"
 
 	book := []struct {
-		class     string
-		page      int
-		list      string
-		attribute string
-		max       int
-		opens     map[int]*int
+		class string
+		page  int
+		list  string
+		max   int
+		opens map[int]*int
 	}{
 		// Tabela 1-5 e "Magias", p37: "Você pode lançar magias arcanas de 1º
 		// círculo. A cada quatro níveis, pode lançar magias de um círculo maior
 		// (2º círculo no 5º nível, 3º círculo no 9º nível e assim por diante)".
 		//
-		// Inteligência é o que o catálogo guarda, mas o livro diz que o
-		// atributo-chave do arcanista é definido pelo CAMINHO: é o de dois dos
-		// três (bruxo e mago), e o feiticeiro lança com Carisma. Quem resolve o
-		// caminho é o `spellcastingAttributeFor`, no `engine`.
-		{"Arcanista", 37, "arcana", "intelligence", 5, map[int]*int{
+		// O atributo-chave não é conferido aqui: ele mora só no motor, que o
+		// resolve pelo caminho no Arcanista (`TestEveryCasterCastsWithTheBooksAttribute`).
+		{"Arcanista", 37, "arcana", 5, map[int]*int{
 			1: level(1), 2: level(5), 3: level(9), 4: level(13), 5: level(17),
 		}},
 		// Tabela 1-7 e "Magias", p44: "2º círculo no 6º nível, 3º círculo no 10º
 		// nível e 4º círculo no 14º nível". A tabela para no 4º.
-		{"Bardo", 44, "arcana", "charisma", 4, map[int]*int{
+		{"Bardo", 44, "arcana", 4, map[int]*int{
 			1: level(1), 2: level(6), 3: level(10), 4: level(14), 5: nil,
 		}},
 		// Tabela 1-11 e "Magias", p57: mesma cadência do arcanista, lista divina.
-		{"Clérigo", 57, "divina", "wisdom", 5, map[int]*int{
+		{"Clérigo", 57, "divina", 5, map[int]*int{
 			1: level(1), 2: level(5), 3: level(9), 4: level(13), 5: level(17),
 		}},
 		// Tabela 1-12 e "Magias", p61: mesma cadência do bardo, lista divina.
-		{"Druida", 61, "divina", "wisdom", 4, map[int]*int{
+		{"Druida", 61, "divina", 4, map[int]*int{
 			1: level(1), 2: level(6), 3: level(10), 4: level(14), 5: nil,
 		}},
 		// O poder Orar, p83: "Você aprende e pode lançar uma magia divina de 1º
 		// círculo a sua escolha. Seu atributo-chave para esta magia é Sabedoria".
 		// Poder de paladino começa no 2º nível (Tabela 1-18, p82).
-		{"Paladino", 83, "divina", "wisdom", 1, map[int]*int{
+		{"Paladino", 83, "divina", 1, map[int]*int{
 			1: level(2), 2: nil, 3: nil, 4: nil, 5: nil,
 		}},
 	}
@@ -89,9 +86,6 @@ func TestTheCircleProgressionMatchesTheBook(t *testing.T) {
 		}
 		if found.List != want.list {
 			t.Errorf("%s lança da lista %q, quer %q (p%d)", want.class, found.List, want.list, want.page)
-		}
-		if found.Attribute != want.attribute {
-			t.Errorf("%s lança com %q, quer %q (p%d)", want.class, found.Attribute, want.attribute, want.page)
 		}
 		if found.MaxCircle != want.max {
 			t.Errorf("%s vai até o %dº círculo, quer o %dº (p%d)", want.class, found.MaxCircle, want.max, want.page)
