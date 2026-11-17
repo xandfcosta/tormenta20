@@ -87,6 +87,8 @@ func TestTheParallelActionsOfferTheAttackBoost(t *testing.T) {
 // são coisas diferentes, como na fila de hoje.
 func TestTheParallelQueueSaysWhenTheManaIsHidden(t *testing.T) {
 	f := newSceneFixture(t)
+	// O PM ESCONDIDO é o da colega: o do próprio jogador ele vê (a ficha é dele).
+	withAColleague(t, f)
 	f.tracker(t)
 	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)

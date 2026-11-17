@@ -183,10 +183,10 @@ templ gmPoolLine(label, kind string, b *tableBar) {
 		<span class="ds-gm-vital">
 			<span class="ds-row-meta">
 				{ fmt.Sprintf("%s %d/%d", label, b.Current, b.Max) }
-				// A RESERVA de PV temporário vai escrita: é o que o dano come antes
-				// do PV (p106), e o mestre calcula o golpe contra ela.
+				// A RESERVA vai escrita: é o que o dano come antes do PV (p106), e o
+				// mestre calcula o golpe contra ela. A dica diz o pool da linha.
 				if b.Temp > 0 {
-					<span class="ds-gm-temp" title="PV temporários">{ fmt.Sprintf("+%d", b.Temp) }</span>
+					<span class="ds-temp" title={ label + " temporários" }>{ fmt.Sprintf("+%d", b.Temp) }</span>
 				}
 				if b.Down != "" {
 					<span class="ds-down">{ b.Down }</span>
@@ -266,6 +266,10 @@ templ gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) 
 		<div class="ds-gm-pool">
 			<div class="ds-gm-pool-head">
 				<span class="ds-row-title">{ label } <b>{ ui.Quantity(int(b.Current)) }</b>{ fmt.Sprintf("/%d", b.Max) }</span>
+				// A RESERVA, aqui onde o mestre aplica o dano que a come primeiro (p106).
+				if b.Temp > 0 {
+					<span class="ds-temp" title={ label + " temporários" }>{ fmt.Sprintf("+%d", b.Temp) }</span>
+				}
 				if b.Down != "" {
 					<span class="ds-down">{ b.Down }</span>
 				}

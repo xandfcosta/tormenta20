@@ -330,8 +330,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if err != nil {
 		return View{}, http.StatusInternalServerError, err
 	}
-	st := live.StateForRole(role, fresh)
 	group, mine, eu := s.tableRoster(ctx, userID, campaignID)
+	st := live.StateForViewer(role, fresh, mine)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
 	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de
 	// escrita — entrar na fila, resincronizar máximos, aplicar dano —, e um
@@ -535,8 +535,8 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 // UMA consulta e não uma por combatente: a fila redesenha a cada tique do
 // stream, e N+1 por quadro é o custo que a `sqlc.slice` existe para não pagar.
 //
-// Falha não derruba a tela: sem o mapa as barras saem sem filete, que é o que
-// elas eram antes desta fatia. Mesma escolha do roster logo acima — a
+// Falha não derruba a tela: sem o mapa as barras saem sem o "+N" da reserva, que
+// é o que elas eram antes dela. Mesma escolha do roster logo acima — a
 // iniciativa é o assunto da tela, a reserva é um detalhe dela.
 func (s Scene) tempPoolsOf(ctx context.Context, ids []int64) tempReserves {
 	empty := tempReserves{Hp: map[int64]int64{}, Mp: map[int64]int64{}}

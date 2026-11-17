@@ -146,9 +146,6 @@ type tableBar struct {
 	//
 	// ZERO quer dizer "não há reserva", e aí a barra fica igual à de sempre.
 	Temp int64
-	// TempPct é a largura do filete da reserva, presa em 0..100 — o trilho da
-	// fila não tem número para mostrar, só espaço para uma linha.
-	TempPct int
 	// Tom é a CLASSE do preenchimento — a cor diz "quão mal", não só a largura.
 	//
 	// Classe e não `var(--token)` inline por duas razões que se somam: o
@@ -235,9 +232,8 @@ type tableRow struct {
 // barLabel é o nome ACESSÍVEL de uma barra: "PV 22 de 40", mais a reserva
 // quando ela existe.
 //
-// O filete da reserva é COR e largura, e nenhuma das duas existe para quem usa
-// leitor de tela: sem esta frase, a reserva não existiria para quem não vê a
-// tela.
+// A barra é COR e largura, e o "+N" da reserva fica fora dela: a frase leva os dois
+// para quem usa leitor de tela, numa leitura só.
 func barLabel(label string, b tableBar) string {
 	sentence := fmt.Sprintf("%s %d de %d", label, b.Current, b.Max)
 	if b.Down != "" {
@@ -350,14 +346,13 @@ func poolBar(current, max *int64, hidden *bool, arcane bool) *tableBar {
 
 // withTempPool põe a reserva numa barra, e a devolve.
 //
-// A reserva SÓ CABE onde há máximo: uma linha sem PV rastreado não ganha filete
-// nem número, porque não há de que o filete ser uma fração.
+// A reserva SÓ CABE onde há máximo: uma linha sem o pool rastreado não ganha o "+N",
+// porque não há pool para a reserva acompanhar.
 func withTempPool(b *tableBar, temp int64) {
 	if b == nil || temp <= 0 || b.Max <= 0 {
 		return
 	}
 	b.Temp = temp
-	b.TempPct = ui.VitalPercent(temp, b.Max)
 }
 
 // tableViewOf monta a tela a partir das partes já buscadas. Tudo o que decide
