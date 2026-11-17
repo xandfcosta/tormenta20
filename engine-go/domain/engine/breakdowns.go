@@ -99,6 +99,10 @@ type ComputedSheet struct {
 	// BestSpellAttribute é o atributo-chave da classe que dá a BestBaseSpellCd
 	// ("charisma" para o Arcanista feiticeiro, p37). Fora do fio: só a tela o lê.
 	BestSpellAttribute string `json:"-"`
+	// SpellAttributeByClass é o atributo-chave de CADA classe que conjura, pelo nome
+	// dela: a linha de uma magia escolhe a CD pela classe que a lança, e o Arcanista
+	// lança pelo caminho (p37). Fora do fio, como o de cima.
+	SpellAttributeByClass map[string]string `json:"-"`
 	// SpellCdByAttribute is the spell save CD keyed by casting attribute (p173),
 	// so a spell row can pick the CD for any of its applicable classes without
 	// re-deriving.
