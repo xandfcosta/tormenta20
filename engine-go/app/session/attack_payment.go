@@ -256,10 +256,10 @@ func (st *Store) CancelAttack(ctx context.Context, sessionID int64, who live.Att
 }
 
 // givesTheProposalBack desfaz o que a proposta pagou, e devolve a ficha que mudou. O golpe
-// que sai da mesa sem resposta não aconteceu: a ação, o PM e a dose voltam. O erro já
+// que sai da mesa sem resposta não aconteceu: a ação, o PM e a dose voltam. O ataque encerrado (o erro, a manobra decidida) já
 // aconteceu, e fechar a leitura dele não devolve nada.
 func givesTheProposalBack(ctx context.Context, u Unit, s *live.SessionRuntimeState, open *live.PendingAttack) (*int64, error) {
-	if open == nil || open.Ruling == live.RulingMiss {
+	if open == nil || open.Settled() {
 		return nil, nil
 	}
 	givesTheTurnBack(s, *open)

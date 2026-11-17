@@ -52,9 +52,12 @@ mão não saberia quantos dados pegar.
   mantém a ação gasta, como o erro.
 - **O erro ENCERRA o golpe**: a ação e o PM pagos na proposta ficam pagos, e ele
   deixa o que o ✓ deixaria — guarda da investida, gatilhos cumulativos
-  (`afterTheStrike`). O provisório fica com a decisão, para o
-  jogador ler "o mestre disse: errou", até a vez mudar (`dropTheSettledMiss`)
-  ou o próximo ataque o substituir.
+  (`afterTheStrike`).
+- **O ataque encerrado fica para ser lido** (`PendingAttack.Settled`): o erro do
+  golpe e a manobra decidida continuam na carta de quem atacou, com "o mestre
+  disse: errou" (ou Sucesso, ou Falha) e um Fechar, até a vez mudar
+  (`dropTheSettledAttack`), o próximo ataque o substituir ou quem atacou o fechar.
+  Encerrado, ele não trava o próximo ataque, e a carta do mestre sai.
 - **Rolar de novo vale antes da decisão** (p226): o `Reroll` recusa depois dela.
 - **Os campos da mão são sinais NUMERADOS** (`damage_die_1`…), montados em Go
   (`handDamageSignal`) e declarados vazios a cada cartão

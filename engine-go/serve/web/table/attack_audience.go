@@ -32,8 +32,14 @@ func (a attackProposal) forPlayer(pa live.PendingAttack) *attackProposal {
 	out.Tally = rollNotation(pa.Roll, pa.Total) + " = " + strconv.Itoa(pa.Total)
 	out.Boost, out.Guard, out.Rerolled = a.Boost, a.Guard, a.Rerolled
 	out.Dose = a.Dose
+	// O QUE É DELE e explica a conta dele: a manobra que ele mesmo declarou, e as situações
+	// da Tabela 5-3 do lado de quem ataca. As do alvo ficam com o mestre, como a Defesa
+	// (decisão do dono).
+	out.FollowUp = a.FollowUp
+	out.Situations = strings.Join(pa.AttackerSituations, ", ")
 	out.Said, out.ToRoll, out.Hand, out.HandBonus = a.Said, a.ToRoll, a.Hand, a.HandBonus
-	out.DamageLine, out.DamageTotal = a.DamageLine, a.DamageTotal
+	// O "não letal" qualifica o dano da arma DELE (p236): a linha do mestre já o diz.
+	out.DamageLine, out.DamageTotal = a.DamageLine+writtenNonLethal(pa), a.DamageTotal
 	out.Destroyer, out.DamageRerolled = a.Destroyer, a.DamageRerolled
 	return &out
 }

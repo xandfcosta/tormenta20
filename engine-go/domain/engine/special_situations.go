@@ -88,9 +88,9 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// no ALVO — foi por isso que ela não cabia na tabela de condições.
 	AttackerInvisible: {Label: "atacante invisível", Defense: -5},
 	// "Sob cobertura leve: +5" na Defesa.
-	TargetUnderLightCover: {Label: "cobertura leve", Defense: 5},
+	TargetUnderLightCover: {Label: "cobertura leve", Defense: 5, TargetSide: true},
 	// "Sob cobertura total: o alvo não pode ser atacado".
-	TargetUnderTotalCover: {Label: "cobertura total", Forbids: true},
+	TargetUnderTotalCover: {Label: "cobertura total", Forbids: true, TargetSide: true},
 	// A CAMUFLAGEM ROLA 1d10, e não um percentual: "ao fazer um ataque, o
 	// atacante rola 1d10 junto com o d20 do teste de ataque; se o resultado
 	// desse d10 for 1 ou 2, o ataque erra, independentemente do resultado do
@@ -99,12 +99,12 @@ var specialSituationTable = map[SpecialSituation]situationRule{
 	// A Tabela 5-3 escreve "20%" e "50%", e é a PROSA que diz o dado. Escrever
 	// o percentual e rolar d100 dá a mesma estatística e o dado errado na mesa
 	// — e a mesa rola o dado de verdade.
-	TargetUnderLightConcealment: {Label: "camuflagem leve", MissUpTo: 2},
-	TargetUnderTotalConcealment: {Label: "camuflagem total", MissUpTo: 5},
+	TargetUnderLightConcealment: {Label: "camuflagem leve", MissUpTo: 2, TargetSide: true},
+	TargetUnderTotalConcealment: {Label: "camuflagem total", MissUpTo: 5, TargetSide: true},
 	// "Se o objeto estiver em movimento, recebe +5 na Defesa" (p239). Só
 	// objeto: criatura em movimento não ganha nada do livro — quem corre
 	// gasta ação, e é isso que a p238 cobra dela.
-	TargetObjectInMotion: {Label: "objeto em movimento", Defense: 5},
+	TargetObjectInMotion: {Label: "objeto em movimento", Defense: 5, TargetSide: true},
 	// "Você pode usar uma arma para causar dano não letal [...], mas sofre uma
 	// penalidade de –5 no teste de ataque. [...] Você pode usar esses ataques e
 	// armas para causar dano letal, mas sofre a mesma penalidade" (p236).
@@ -133,6 +133,10 @@ type situationRule struct {
 	ShootingIntoMelee bool
 	// DropsShortRangeDice tira do golpe à distância o dado que só vale em alcance curto (`ExtraDamage.Range`).
 	DropsShortRangeDice bool
+	// TargetSide é a linha que muda o ALVO — a Defesa dele ou a chance de errar contra ele —, e
+	// não a conta de quem ataca. A carta do jogador não a mostra, como não mostra a Defesa
+	// (decisão do dono): no papel do personagem, ele não conhece a ficha de outra entidade.
+	TargetSide bool
 }
 
 // SpecialSituationsOfTheBook são as linhas transcritas, para quem precisa

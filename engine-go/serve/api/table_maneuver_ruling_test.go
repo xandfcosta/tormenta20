@@ -8,7 +8,7 @@ import (
 )
 
 // A MANOBRA TEM A DECISÃO DO MESTRE (ALE-659): Sucesso ou Falha, no lugar do ✓ que só dizia "aceito". Os dois
-// encerram a manobra num toque — ela não rola dano —, e a Falha mantém a ação gasta, como o erro do golpe. É a
+// encerram a manobra num toque (ela fica na carta só para o jogador ler) — ela não rola dano —, e a Falha mantém a ação gasta, como o erro do golpe. É a
 // decisão que diz se o que depende da manobra abre: a derrubada do Lutador de Chão só vem do agarrar que venceu.
 func TestTheGameMasterRulesTheManeuverSuccessOrFailure(t *testing.T) {
 	f, goblin := attackOnTurn(t)
@@ -41,7 +41,8 @@ func TestTheGameMasterRulesTheManeuverSuccessOrFailure(t *testing.T) {
 	if refusal := gmRefusal(t, f, "/ataque/julgar/falha"); refusal != "" {
 		t.Fatalf("a Falha da manobra foi recusada: %q", refusal)
 	}
-	if pa := pendingOf(t, f); pa != nil {
+	// ENCERRADA, e na mesa para o jogador ler (ver `table_maneuver_ruling_read_test.go`).
+	if pa := pendingOf(t, f); pa == nil || !pa.Settled() {
 		t.Errorf("a Falha não encerrou a manobra: %+v", pa)
 	}
 	if sceneOf(t, f).StandardLeft {
@@ -55,7 +56,7 @@ func TestTheGameMasterRulesTheManeuverSuccessOrFailure(t *testing.T) {
 	if refusal := gmRefusal(t, g, "/ataque/julgar/sucesso"); refusal != "" {
 		t.Fatalf("o Sucesso da manobra foi recusado: %q", refusal)
 	}
-	if pa := pendingOf(t, g); pa != nil {
+	if pa := pendingOf(t, g); pa == nil || !pa.Settled() {
 		t.Errorf("o Sucesso não encerrou a manobra: %+v", pa)
 	}
 }

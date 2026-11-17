@@ -86,6 +86,9 @@ type AttackOutcome struct {
 	// arma anula também vem, dita assim ("cobertura leve anulada pela Caçadora",
 	// p335): o mestre a pintou no tabuleiro e precisa ler por que ela não agiu.
 	Situations []string `json:"situations,omitempty"`
+	// AttackerSituations são as do `Situations` do lado de quem ataca: as que a carta do
+	// jogador mostra (ver `situationRule.TargetSide`).
+	AttackerSituations []string `json:"attackerSituations,omitempty"`
 	// Defense é a Defesa que ESTE ataque enfrentou, depois da Tabela 5-3 — ela
 	// não é a da ficha quando o alvo está sob cobertura (p239). Viaja porque
 	// "errei por 1" e "errei por 1 porque ele está atrás da carroça" são

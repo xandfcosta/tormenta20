@@ -256,7 +256,7 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, health map[s
 	// a faixa não podem discordar sobre de quem se fala. O erro decidido não
 	// acende ninguém: o ataque acabou, e o provisório só fica para o jogador ler.
 	targeted := ""
-	if st != nil && st.PendingAttack != nil && st.PendingAttack.Ruling != live.RulingMiss {
+	if st != nil && st.PendingAttack != nil && !st.PendingAttack.Settled() {
 		targeted = st.PendingAttack.TargetEntryID
 	}
 	// A cena VAZIA ainda precisa saber quem olha e onde ela está: é dela que sai

@@ -480,7 +480,7 @@ const nonLethalWords = "não letal"
 
 // attackIsOpen diz se o ataque na mesa ainda não acabou. O erro já encerrou o
 // golpe, e o cartão dele só fica para o jogador ler a decisão.
-func attackIsOpen(a *attackProposal) bool { return a != nil && a.Stage != stageMiss }
+func attackIsOpen(a *attackProposal) bool { return a != nil && a.Stage != stageSettled }
 
 // attackNotes são as linhas do cartão do ataque além da conta: o impulso, as
 // situações, a guarda aberta e o que já foi rolado de novo — na ordem em que o
