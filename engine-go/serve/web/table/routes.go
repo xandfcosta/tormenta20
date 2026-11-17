@@ -535,8 +535,8 @@ func (s Scene) tableRoster(ctx context.Context, userID int64, campaignID int64) 
 // UMA consulta e não uma por combatente: a fila redesenha a cada tique do
 // stream, e N+1 por quadro é o custo que a `sqlc.slice` existe para não pagar.
 //
-// Falha não derruba a tela: sem o mapa as barras saem sem filete, que é o que
-// elas eram antes desta fatia. Mesma escolha do roster logo acima — a
+// Falha não derruba a tela: sem o mapa as barras saem sem o "+N" da reserva, que
+// é o que elas eram antes dela. Mesma escolha do roster logo acima — a
 // iniciativa é o assunto da tela, a reserva é um detalhe dela.
 func (s Scene) tempPoolsOf(ctx context.Context, ids []int64) tempReserves {
 	empty := tempReserves{Hp: map[int64]int64{}, Mp: map[int64]int64{}}
