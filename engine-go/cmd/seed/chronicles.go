@@ -82,6 +82,9 @@ var demoCampaigns = []demoCampaign{
 			{"jogador@t20.local", "Arcanista Erudito Nv9"},
 			{"jogador@t20.local", "Paladino Sagrado Nv10"},
 			{"jogador@t20.local", "Recruta Nv1 Simples"},
+			// O ESTANDARTE (p54): no início da cena, a mesa do mestre oferece os PM
+			// temporários aos aliados que veem o estandarte (ALE-653).
+			{"jogador@t20.local", "Porta-Estandarte Nv14"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
