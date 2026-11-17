@@ -26,6 +26,9 @@ type OriginBenefit struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	// PowerPick é o TIPO de poder geral que o benefício deixa escolher ("um poder de
+	// combate a sua escolha", p91): `combate` ou `tormenta`. Vazio no benefício fixo.
+	PowerPick string `json:"powerPick,omitempty"`
 }
 
 type ClassPower struct {

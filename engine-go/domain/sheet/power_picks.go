@@ -132,6 +132,10 @@ func powerPicksFit(dto CharacterDTO) error {
 		owned[p.ID], owned["name:"+p.Name] = true, true
 	}
 	for id, picks := range PowerPicks(dto.PowerChoices) {
+		// A escolha do poder da ORIGEM é outra conta (`originPicksFit`).
+		if isOriginPickKey(id) {
+			continue
+		}
 		power, chooses := book.PowerWithChoice(id)
 		if !chooses {
 			return fmt.Errorf("o poder %q não pede escolha", id)

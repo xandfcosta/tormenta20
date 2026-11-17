@@ -92,6 +92,8 @@ templ choiceStepSection(v View, step choiceStep) {
 							@powerPickRow(v, power, true)
 						}
 					}
+				case "originPick":
+					@originPickDs(v, step.OriginPick)
 				case "path":
 					@classPickerDs(v, step.Class.ClassName, "caminho", "Caminho", *step.Class.Path)
 				case "devotion":

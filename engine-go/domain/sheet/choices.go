@@ -130,6 +130,9 @@ func WithChoicesValid(dto CharacterDTO) error {
 	if err := originFitBenefits(dto); err != nil {
 		return err
 	}
+	if err := originPicksFit(dto); err != nil {
+		return err
+	}
 	if err := devotionIsValid(dto); err != nil {
 		return err
 	}

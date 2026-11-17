@@ -160,6 +160,12 @@ caminhos e deuses por classe se conferem na gravação, não só no diálogo.
 - **Poder GERAL com escolha** (Foco em Perícia, Foco em Arma) passa por
   `book.PowerWithChoice`; a escolha vinda da origem é grátis
   (`sheet.FreePicks`).
+- **O poder que a ORIGEM deixa escolher** ("um poder de combate a sua escolha",
+  p91) mora no `powerChoices` sob o id do benefício, e quem o confere é o
+  `originPicksFit`, e não o `powerPicksFit`: o benefício marcado na origem da
+  ficha, um poder só, poder geral do tipo do benefício (`OriginBenefit.PowerPick`).
+  O pré-requisito do poder fica escrito na tela e não barra, como no passo dos
+  poderes da classe. Desmarcar o benefício leva a escolha junto.
 - **Contada por ATRIBUTO** (`countAttribute`, Especialista, p73): sem vaga,
   perícia treinada, até o atributo sem temporários
   (`Ruleset.PermanentAttribute`), mínimo 1. Gesto que mexe no N ou no treino

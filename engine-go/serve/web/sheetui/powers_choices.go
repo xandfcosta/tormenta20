@@ -31,7 +31,9 @@ type choicesPanel struct {
 	Pending []pendencia
 	Races   []raceChoiceCard
 	Origin  *originChoiceCard
-	Classes []classChoiceCard
+	// OriginPicks são os benefícios marcados que deixam escolher um poder.
+	OriginPicks []originPickChoice
+	Classes     []classChoiceCard
 	// Devotion é o passo da devoção, que toda ficha tem.
 	Devotion devotionChoice
 	// Training é o passo das perícias da primeira classe, ou nil sem classe.
@@ -185,6 +187,7 @@ func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPane
 	panel := choicesPanel{Search: search, Pending: s.sheetPendings(dto)}
 	panel.Races = s.raceChoices(dto, search)
 	panel.Origin = originChoice(dto)
+	panel.OriginPicks = originPicksOf(dto)
 	panel.Classes = classChoiceCards(dto, search)
 	panel.Devotion = devotionChoiceOf(dto)
 	return panel
