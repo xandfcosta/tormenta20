@@ -144,7 +144,7 @@ func (s Scene) moveWho(c commandCtx) board.Mover {
 	if role == "gm" {
 		return who
 	}
-	_, mine, _ := s.tableRoster(c.R.Context(), c.User, c.CampaignID)
+	mine, _ := s.ownedOnTable(c.R.Context(), c.User, c.CampaignID)
 	// A LEITURA QUE FALHA DEIXA A POSSE EM FALSO, e este é o lado seguro: sem
 	// saber de quem é a peça, a resposta é "não é sua", e o `assertMovable` do
 	// tabuleiro recusa com a frase dele. O erro não some da mesa — o gesto que
