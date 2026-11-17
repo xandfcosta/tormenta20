@@ -206,7 +206,7 @@ func (r *Ruleset) characterFitsRule(ch Character, rule TableRule) bool {
 		case RuleOnDevotion:
 			fits = ch.God != nil && *ch.God == condition.Value
 		case RuleOnPower:
-			fits = r.ownsPower(ch, condition.Value)
+			fits = r.OwnsPower(ch, condition.Value)
 		}
 		if !fits {
 			return false
@@ -215,8 +215,12 @@ func (r *Ruleset) characterFitsRule(ch Character, rule TableRule) bool {
 	return true
 }
 
-// ownsPower diz se a ficha tem o poder, de classe, geral, da raça, da origem ou da devoção.
-func (r *Ruleset) ownsPower(ch Character, id string) bool {
+// OwnsPower diz se a ficha tem o poder: de classe, geral, o que a origem deixou escolher, ou o
+// da devoção. É a pergunta das regras da mesa ("tem o poder X"), e a ficha responde a mesma
+// coisa pelo `sheet.OwnsPower`.
+//
+//	ruleset.OwnsPower(ch, "bloqueio-com-escudo")
+func (r *Ruleset) OwnsPower(ch Character, id string) bool {
 	if r.chosenGeneralPowers(ch).has[id] || slices.Contains(r.OriginPickedPowerIDs(ch), id) {
 		return true
 	}

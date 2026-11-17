@@ -46,7 +46,7 @@ func (p Plays) EnterStance(
 	// na Inspiração do bardo (p44) com `steps: 0`: 2 PM cobrados, linha gravada,
 	// e a aba Efeitos oferecendo encerrar. A tela nunca ofereceu o gesto — e é
 	// por isso que a recusa mora aqui, porque travar na UI é UX (ALE-423).
-	if !sheet.OwnsClassPower(dto, spec.ID) {
+	if !sheet.OwnsActivation(dto, *spec) {
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
 	cost, err := scaledPrice(dto, *spec, steps)
@@ -91,7 +91,7 @@ func (p Plays) EnterStance(
 		}); err != nil {
 			return fmt.Errorf("ligar a postura %q: %w", flag, err)
 		}
-		return writeStanceDegrees(ctx, q, row.ID, *spec, flag, steps, func(id string) bool { return sheet.OwnsClassPower(dto, id) })
+		return writeStanceDegrees(ctx, q, row.ID, *spec, flag, steps, func(id string) bool { return sheet.OwnsPower(dto, id) })
 	}); err != nil {
 		return err
 	}
@@ -406,7 +406,7 @@ func (p Plays) applyStanceGrants(
 		if spec.Grant.Kind != "temp-hp" {
 			continue
 		}
-		if !sheet.OwnsClassPower(dto, spec.ID) {
+		if !sheet.OwnsActivation(dto, spec) {
 			continue
 		}
 		howMuch, ok := p.TempHpAmount(ctx, row, spec.Grant.Attribute)

@@ -357,6 +357,15 @@ func chosenPowersOf(dto CharacterDTO) []OwnedPower {
 	return outside
 }
 
+// OwnsPower diz se a ficha tem o poder de id dado, de QUALQUER procedência: é a mesma
+// lista que a aba Poderes mostra e que o Usar consulta (`OwnsActivation`). Quem pergunta
+// "eu tenho este poder?" fora da tela pergunta aqui, e não a uma resposta por procedência.
+//
+//	sheet.OwnsPower(dto, engine.WildTierPowerID(engine.WildTierNormal))
+func OwnsPower(dto CharacterDTO, id string) bool {
+	return OwnedIndexOf(dto).ids[id]
+}
+
 // godPowerOf são os poderes que a devoção concede, guardados pelo NOME.
 //
 // Eles não apareciam no acervo da tela, e a falta ficava calada: o Dom da Verdade
