@@ -45,7 +45,7 @@ func (r *Ruleset) CanArmTheLegs(ch Character) bool {
 // os verbetes de classe escrevem. Quem já tem as fontes ou os efeitos não as coleta de novo.
 func (r *Ruleset) canArmTheLegs(ch Character, ambidextrous bool) bool {
 	powers := r.chosenGeneralPowers(ch)
-	hasLimbs := powers.has[ExtraLimbsPowerID] || slices.Contains(r.originPickedPowerIds(ch), ExtraLimbsPowerID)
+	hasLimbs := powers.has[ExtraLimbsPowerID] || slices.Contains(r.OriginPickedPowerIDs(ch), ExtraLimbsPowerID)
 	return hasLimbs && (powers.has[TwoWeaponStylePowerID] || ambidextrous)
 }
 

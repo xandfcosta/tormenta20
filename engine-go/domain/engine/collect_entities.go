@@ -107,7 +107,7 @@ func (r *Ruleset) originActiveItem(ch Character) *ActiveItem {
 	choices := parseChoiceSet(ch.OriginChoices)
 	mods := originModifiers(origin, choices.has, r.generalPowerByUid)
 	picks := parsePowerChoices(ch.PowerChoices)
-	for _, id := range r.originPickedPowerIds(ch) {
+	for _, id := range r.OriginPickedPowerIDs(ch) {
 		if p := r.getGeneralPower(id); p != nil {
 			mods = append(mods, expandChoiceModifiers(p.Modifiers, picks[p.ID], nil)...)
 		}
@@ -118,10 +118,14 @@ func (r *Ruleset) originActiveItem(ch Character) *ActiveItem {
 	return &ActiveItem{SourceID: origin.ID, Source: "Origem: " + origin.Name, Equipped: &vestedWear, Modifiers: mods}
 }
 
-// originPickedPowerIds: for each CHOSEN free-pick origin
-// benefit, the power ids named in powerChoices. Iterates originChoices in its
-// stored order so the resulting modifier order is stable.
-func (r *Ruleset) originPickedPowerIds(ch Character) []string {
+// OriginPickedPowerIDs são os poderes que a ORIGEM deixou escolher ("um poder de
+// combate a sua escolha", p91): para cada benefício de escolha livre marcado, os ids
+// gravados no `powerChoices`, na ordem do `originChoices` para a ordem dos
+// modificadores ser estável. É a resposta única: a derivação, as armas naturais, as
+// regras da mesa e a lista de poderes da ficha perguntam aqui.
+//
+//	ids := ruleset.OriginPickedPowerIDs(ch) // ["bloqueio-com-escudo"]
+func (r *Ruleset) OriginPickedPowerIDs(ch Character) []string {
 	chosen := parseChoiceSet(ch.OriginChoices)
 	if len(chosen.list) == 0 {
 		return []string{}
@@ -316,7 +320,7 @@ func (r *Ruleset) tormentaCarismaItem(ch Character) *ActiveItem {
 	for _, id := range parseChoiceSet(ch.ClassPowers).list {
 		uniq.add(id)
 	}
-	for _, id := range r.originPickedPowerIds(ch) {
+	for _, id := range r.OriginPickedPowerIDs(ch) {
 		uniq.add(id)
 	}
 	// O poder que uma habilidade de raça deu conta como os outros — menos a

@@ -54,6 +54,7 @@ func OwnedPowers(dto CharacterDTO) []OwnedPower {
 	outside = append(outside, raceHeldPowersOf(dto)...)
 	outside = append(outside, borrowedAbilitiesOf(dto)...)
 	outside = append(outside, chosenOriginBenefitsOf(dto)...)
+	outside = append(outside, originPickedPowersOf(dto)...)
 	outside = append(outside, automaticClassPowersOf(dto)...)
 	outside = append(outside, chosenPowersOf(dto)...)
 	outside = append(outside, godPowerOf(dto)...)
@@ -261,6 +262,41 @@ func chosenOriginBenefitsOf(dto CharacterDTO) []OwnedPower {
 		outside = append(outside, OwnedPower{
 			ID: b.ID, Name: b.Name, Detail: b.Description,
 			Source: PowerFromOrigin, Owner: origin.Name, Page: origin.BookPage,
+		})
+	}
+	return outside
+}
+
+// originPickedPowersOf são os poderes escolhidos DENTRO de um benefício de origem ("um
+// poder de combate a sua escolha", p91). O benefício já sai no `chosenOriginBenefitsOf`,
+// mas o poder escolhido nele é outro poder, com o gesto dele: sem esta lista, o motor
+// somava os modificadores do Bloqueio com Escudo e o Usar recusava dizendo que a ficha
+// não o tinha. Quem diz quais são é o motor (`OriginPickedPowerIDs`), a mesma resposta
+// que a derivação usa.
+func originPickedPowersOf(dto CharacterDTO) []OwnedPower {
+	if dto.Ruleset == nil {
+		return nil
+	}
+	ch, err := EngineCharacterFrom(dto)
+	if err != nil {
+		return nil
+	}
+	owner := ""
+	if origin, found := book.Origins()[dto.Origin]; found {
+		owner = origin.Name
+	}
+	outside := []OwnedPower{}
+	for _, id := range dto.Ruleset.OriginPickedPowerIDs(ch) {
+		power, found := book.GeneralPowers()[id]
+		if !found {
+			continue
+		}
+		// A PROCEDÊNCIA É A ORIGEM, e não "poder geral": é ela que o dá, e ele não
+		// ocupa vaga — o `FreePicks` conta como grátis o que não vem da classe nem
+		// das vagas de poder geral.
+		outside = append(outside, OwnedPower{
+			ID: power.ID, Name: power.Name, Detail: power.Description,
+			Source: PowerFromOrigin, Owner: owner, Page: power.BookPage,
 		})
 	}
 	return outside
