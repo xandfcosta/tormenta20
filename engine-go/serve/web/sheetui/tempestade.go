@@ -51,8 +51,11 @@ func bottomNavPlaces(v View) []bottomNavPlace {
 	for _, value := range order {
 		tab := tabByValue(v, value)
 		place := bottomNavPlace{Tab: tab, Href: sheetRoute(v.ID, value), Current: tab.Active}
+		// O NÚMERO É O TAMANHO DA LISTA QUE A COLUNA DESENHA, e conta COISAS e não
+		// modificadores do motor: a Fúria entra como oito modificadores e é UM crachá.
+		// Contado à parte, ele somava a situação ligada que a coluna não mostrava.
 		if value == "conditionals" {
-			place.Count = v.Effects.Count
+			place.Count = len(activeEffects(v))
 		}
 		places = append(places, place)
 	}
@@ -142,6 +145,17 @@ func activeEffects(v View) []activeEffect {
 		out = append(out, activeEffect{
 			Kind: "declared", Name: d.Name, Remove: sheetPost(v, "/efeitos/declaracao/"+d.Flag),
 			Dialog: "effect-declared-" + d.Flag, Meta: declaredMeta(d), Text: declaredText(v, d.Flag),
+		})
+	}
+	// A SITUAÇÃO LIGADA está em vigor como as outras (decisão do dono): o X do crachá
+	// desliga o mesmo interruptor da aba Efeitos.
+	for _, row := range v.Effects.Situational {
+		if !row.Active {
+			continue
+		}
+		out = append(out, activeEffect{
+			Kind: "situational", Name: row.Label, Remove: situationalToggles(v, row),
+			Dialog: "effect-" + situationalSheetID(row), Meta: "Situação · " + situationalMeta(row),
 		})
 	}
 	// A FORMA SELVAGEM em vigor: o "Voltar ao normal" da aba Efeitos é o X do crachá.
