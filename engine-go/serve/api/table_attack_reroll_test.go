@@ -123,10 +123,12 @@ func TestNoRerollAfterTheGMRules(t *testing.T) {
 }
 
 // p66 Mestre em Arma: "Escolha uma arma. Com esta arma, […] quando faz um
-// teste de ataque você pode gastar 2 PM para rolá-lo novamente."
+// teste de ataque você pode gastar 2 PM para rolá-lo novamente." O poder pede
+// guerreiro 12, e a bancada é arcanista: sem os níveis de guerreiro, a ficha não o tem.
 func TestWeaponMasteryRerollsOnlyWithTheChosenWeapon(t *testing.T) {
 	const poder = `["class.guerreiro.mestre-em-arma"]`
 	f, goblin := attackOnTurn(t)
+	seedClasse(t, f.s, f.charID, "Guerreiro", 12)
 	withPowers(t, f, poder, `{"class.guerreiro.mestre-em-arma":["adaga"]}`)
 	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
 	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()

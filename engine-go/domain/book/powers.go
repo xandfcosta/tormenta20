@@ -224,6 +224,9 @@ type GrantByChoice struct {
 func (p ClassPower) ForEngine() *engine.ClassPower {
 	out := &engine.ClassPower{
 		ID: p.ID, ClassName: p.ClassName, Name: p.Name, GrantedAtLevel: p.GrantedAtLevel,
+		// O MÍNIMO viaja porque é ele que corta o poder ESCOLHIDO abaixo do nível na
+		// classe; sem ele, a ficha dava o poder que o motor não somava.
+		MinLevel: p.MinLevel,
 	}
 	if p.GrantedByChoice != nil {
 		out.GrantedByChoice = &engine.GrantedByChoice{

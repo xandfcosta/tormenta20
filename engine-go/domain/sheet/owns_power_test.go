@@ -30,6 +30,9 @@ func TestAChosenClassPowerAboveTheClassLevelIsNotOwned(t *testing.T) {
 	}
 	for _, c := range cases {
 		dto := CharacterDTO{Classes: c.classes, ClassPowers: `["` + totem + `"]`}
+		if got := OwnsPower(dto, totem); got != c.owns {
+			t.Errorf("%s com o Totem Espiritual escolhido: a ficha diz %v, e o livro diz %v", c.name, got, c.owns)
+		}
 		ec, err := EngineCharacterFrom(dto)
 		if err != nil {
 			t.Fatalf("%s: converter a ficha: %v", c.name, err)
