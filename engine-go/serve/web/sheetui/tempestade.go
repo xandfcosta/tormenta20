@@ -288,6 +288,10 @@ func stripVitalName(label string, vital sheetVital) string {
 	return name + ", ajustar"
 }
 
+// sheetMenuLabel é o nome do ⋯ da ficha, nos três lugares que o abrem: o cabeçalho
+// da ficha solta, e a fileira de seções e as abas da ficha dentro da sessão.
+const sheetMenuLabel = "Quem é, nível e aparência"
+
 // vitalTone é o degrau da escada da barra da faixa: o do PV, e nenhum no PM.
 func vitalTone(kind ds.MeterKind, vital sheetVital) string {
 	if kind != ds.MeterPV {

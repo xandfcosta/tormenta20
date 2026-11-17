@@ -31,13 +31,22 @@ templ tempestadeSheet(v View) {
 				@activeEffectDialog(v, e)
 			}
 			<div class="ds-sheet-main">
-				<div class="ds-sheet-tabs">
+				<div
+					class="ds-sheet-tabs"
+					if v.Embedded {
+						data-with-menu
+					}
+				>
 					@ds.Tabs("Seções da ficha") {
 						for _, tab := range v.Tabs {
 							@ds.Tab(templ.SafeURL(sheetRoute(v.ID, tab.Value)), tab.Active, tabGesture(v, tab.Value)) {
 								{ tab.Label }
 							}
 						}
+					}
+					// DENTRO DA SESSÃO o cabeçalho da ficha não existe, e o ⋯ dele mora aqui.
+					if v.Embedded {
+						@ds.IconButton(ds.ButtonGhost, "Ellipsis", sheetMenuLabel, templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
 					}
 				</div>
 				if v.Refusal != "" {
@@ -54,6 +63,12 @@ templ tempestadeSheet(v View) {
 						{ tab.Label }
 					}
 				}
+				// O ⋯ do cabeçalho, que dentro da sessão não existe: sem ele, o degrau de
+				// nível, quem é o herói e o modo de cor não abriam no celular.
+				<button type="button" commandfor="sheet-menu" command="show-modal" aria-label={ sheetMenuLabel }>
+					@ui.Icon("Ellipsis", "ds-icon")
+					Mais
+				</button>
 			}
 		} else {
 			@sheetBottomNav(v)
@@ -92,7 +107,7 @@ templ sheetHeader(v View) {
 			<b>{ v.Defense }</b>
 			<span>DEF</span>
 		</div>
-		@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Quem é, nível e aparência", templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
+		@ds.IconButton(ds.ButtonGhost, "Ellipsis", sheetMenuLabel, templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
 	</header>
 }
 
