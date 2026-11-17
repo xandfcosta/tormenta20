@@ -33,6 +33,12 @@ type Server struct {
 	// checkout. Ver `buildRevision`.
 	revision string
 
+	// fixedD20 é o d20 que a BANCADA crava, e zero em produção, onde o dado é o
+	// `engine.RollDie`. Ele é lido na hora de rolar, e não na de montar, porque a cena da
+	// Mesa é montada uma vez só no construtor. Só o d20: os outros dados continuam
+	// rolando, para um caso que crava o ataque não cravar também o dano.
+	fixedD20 int
+
 	// log recebe o que um handler não pode responder ao cliente: a causa de um
 	// 500. É campo, e não o `slog` global, para o teste ler o que foi registrado.
 	log      *slog.Logger
@@ -245,12 +251,17 @@ func (s *Server) boardGestures() boards.Gestures {
 func (s *Server) combatStrike() combat.Strike {
 	return combat.NewStrike(
 		combat.NewRoster(s.queries, s.catalogs), s.sessions,
-		combat.NewBoardSituations(s.boards),
-		func(faces int) (int, error) {
-			roll, err := engine.RollDie(faces)
-			return roll.Value, err
-		},
+		combat.NewBoardSituations(s.boards), s.rollDie,
 	)
+}
+
+// rollDie é o dado do servidor: o `engine.RollDie`, ou o d20 que a bancada cravou.
+func (s *Server) rollDie(faces int) (int, error) {
+	if faces == 20 && s.fixedD20 > 0 {
+		return s.fixedD20, nil
+	}
+	roll, err := engine.RollDie(faces)
+	return roll.Value, err
 }
 
 // sessionLifecycle é o caso de uso do ciclo, montado com o que o servidor tem.
@@ -270,10 +281,7 @@ func (s *Server) characterBirths() character.Births {
 
 // characterPlays são os gestos da ficha em jogo, montados com o mesmo trio.
 func (s *Server) characterPlays() character.Plays {
-	return character.NewPlays(s.db, s.queries, s.catalogs, func(faces int) (int, error) {
-		roll, err := engine.RollDie(faces)
-		return roll.Value, err
-	})
+	return character.NewPlays(s.db, s.queries, s.catalogs, s.rollDie)
 }
 
 // sessionAccess é a TRAVA de quem alcança campanha e sessão, montada com o que

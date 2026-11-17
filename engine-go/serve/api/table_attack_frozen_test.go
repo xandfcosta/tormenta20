@@ -230,7 +230,7 @@ func TestTheRerollChangesOnlyTheDie(t *testing.T) {
 	seeded := pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
 	setStrength(t, f, 15)
 
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":9}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 9)
 	if got.Roll != 9 {
 		t.Fatalf("o d20 novo devia ser 9, e veio %d", got.Roll)
 	}
@@ -247,7 +247,7 @@ func TestTheManeuverRerollChangesOnlyTheDie(t *testing.T) {
 	seeded := pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/manobra/derrubar")
 	setStrength(t, f, 15)
 
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":9}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 9)
 	if got.Roll != 9 {
 		t.Fatalf("o d20 novo devia ser 9, e veio %d", got.Roll)
 	}
@@ -268,7 +268,7 @@ func TestTheRerollKeepsTheDose(t *testing.T) {
 	loaded(t, f, weapon, "acido", "Ácido")
 	pendingWithANaturalOne(t, f, "/iniciativa/"+goblin+"/atacar")
 
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":9}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 9)
 	if got.Dose == nil || got.Dose.CatalogID != "acido" || len(got.Frozen) == 0 {
 		t.Errorf("rolar de novo perdeu parte da proposta: dose %+v", got.Dose)
 	}

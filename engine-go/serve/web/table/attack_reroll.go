@@ -16,7 +16,9 @@ import (
 
 // O ROLAR DE NOVO NA FAIXA DO ATAQUE (p226, ALE-508): só quem rolou, enquanto
 // o provisório espera o mestre, e vale o segundo dado. O d20 do golpe é rolado
-// no servidor, e o de novo também — a faixa não tem o campo "Eu rolei".
+// no servidor, e o de novo também — a faixa não tem o campo "Eu rolei", e por
+// isso este gesto não lê o `reroll_d20`: o sinal é do teste de perícia, e fica na
+// página depois que o campo dele some.
 
 // rerollsAttack rola de novo o ataque provisório com o gasto do caminho.
 func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
@@ -37,17 +39,13 @@ func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("a ficha de %s não existe mais", attacker.Label)
 	}
-	d20, err := rerollDie(c)
-	if err != nil {
-		return nil, err
-	}
 	offer, err := st.plays.AttackRerollOffer(ctx, row, meleeAttack(pa), pa.WeaponID, chi.URLParam(c.R, "gasto"))
 	// O GASTO grava na ficha (a sorte, o PM), e a ficha aberta só se redesenha no evento.
 	st.deps.CharacterChanged(row.ID)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := st.strike.Reroll(ctx, app.Caller{ID: c.User}, c.SessionID, d20,
+	if _, err := st.strike.Reroll(ctx, app.Caller{ID: c.User}, c.SessionID, nil,
 		live.DieReroll{Name: offer.Name, PM: offer.PM}, offer.NaturalFrom); err != nil {
 		return nil, err
 	}

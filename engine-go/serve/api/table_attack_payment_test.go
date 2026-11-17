@@ -302,7 +302,7 @@ func TestTheMissKeepsTheBoostPaid(t *testing.T) {
 func TestTheBoostAndTheRerollCannotShareTheMana(t *testing.T) {
 	f, barbaro, goblin := boostingBarbarian(t, 3)
 	proposesWithTheBoost(t, f, barbaro, goblin)
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":10}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 10)
 	if len(got.Rerolls) != 0 {
 		t.Errorf("o Sortudo passou sem PM para ele: %+v", got.Rerolls)
 	}
@@ -314,7 +314,7 @@ func TestTheBoostAndTheRerollCannotShareTheMana(t *testing.T) {
 func TestTheGMCancellingGivesTheRerollBack(t *testing.T) {
 	f, barbaro, goblin := boostingBarbarian(t, 6)
 	proposesWithTheBoost(t, f, barbaro, goblin)
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":10}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 10)
 	if len(got.Rerolls) != 1 {
 		t.Fatalf("o Sortudo não rolou de novo: %+v", got.Rerolls)
 	}
@@ -582,7 +582,7 @@ func TestTheRerollAlsoGivesThePoolBack(t *testing.T) {
 	f, barbaro, goblin := boostingBarbarian(t, 5)
 	seedTempMana(t, f, barbaro, 4)
 	proposesWithTheBoost(t, f, barbaro, goblin)
-	got := rerollsTheAttack(t, f, f.player, "sortudo", `{"reroll_d20":10}`)
+	got := rerollsTheAttack(t, f, f.player, "sortudo", 10)
 	if len(got.Rerolls) != 1 {
 		t.Fatalf("o Sortudo não rolou de novo: %+v", got.Rerolls)
 	}

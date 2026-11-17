@@ -77,3 +77,47 @@ func TestNimbsLuckMakesElevenOrMoreANaturalTwenty(t *testing.T) {
 		t.Error("a faixa não diz que o 13 conta como 20 natural")
 	}
 }
+
+// O "EU ROLEI" SÓ EXISTE NO TESTE ROLADO NA MESA. No teste que o app rolou, a faixa não
+// tem o campo, e um número que sobrou no sinal de um teste anterior valia como o segundo
+// dado em vez de o servidor rolar.
+func TestTheRerollOfATestTheAppRolledIgnoresALeftoverHandDie(t *testing.T) {
+	f, id := spenderAtTheTable(t, "Cavaleiro", 5, 0)
+	choiceCom(t, f, id, `["class.cavaleiro.etiqueta"]`, "[]")
+	f.s.fixedD20 = 4
+	if refusal := rollsWith(t, f, id, "Diplomacia", `{}`); refusal != "" {
+		t.Fatalf("rolar Diplomacia: %q", refusal)
+	}
+	if first := stateOf(t, f.s.sessions, f.sessionID).LastSkillTest; first.ByHand || first.Roll != 4 {
+		t.Fatalf("o primeiro teste devia ser do app, com o 4 cravado: na mão %v, d20 %d", first.ByHand, first.Roll)
+	}
+	f.s.fixedD20 = 7
+	rerollsOnTheTable(t, f, f.player, "etiqueta", `{"reroll_d20":15}`)
+	if got := stateOf(t, f.s.sessions, f.sessionID).LastSkillTest; got.Roll != 7 || got.ByHand {
+		t.Errorf("o segundo dado foi %d (na mão %v), e o servidor rolou 7: o número que sobrou no sinal valeu", got.Roll, got.ByHand)
+	}
+}
+
+// O CAMPO ZERA DEPOIS DE VALER. O "Eu rolei" guarda o número no sinal, e o próximo teste
+// rolado na mão abria com o número do anterior já escrito. A resposta do gesto que deu
+// certo manda o sinal vazio; a recusa não, para quem digitou não perder o número.
+func TestTheHandDieFieldEmptiesAfterTheReroll(t *testing.T) {
+	f, id := spenderAtTheTable(t, "Cavaleiro", 5, 0)
+	choiceCom(t, f, id, `["class.cavaleiro.etiqueta"]`, "[]")
+	if refusal := rollsWith(t, f, id, "Diplomacia", `{"expertise_d20":4}`); refusal != "" {
+		t.Fatalf("rolar Diplomacia: %q", refusal)
+	}
+	body := f.requests(t, f.player, http.MethodPost, f.tableUrl()+"/teste/rolar-de-novo/etiqueta", `{"reroll_d20":15}`).Body.String()
+	if got := stateOf(t, f.s.sessions, f.sessionID).LastSkillTest; got.Roll != 15 {
+		t.Fatalf("o rolar de novo não valeu o 15 — o caso mediria outra coisa: d20 %d", got.Roll)
+	}
+	if !strings.Contains(body, `"reroll_d20":""`) {
+		t.Errorf("a resposta do rolar de novo não zera o \"Eu rolei\":\n%s", body)
+	}
+
+	// A RECUSA guarda o número: o mestre não rola o teste do jogador.
+	refused := f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/teste/rolar-de-novo/etiqueta", `{"reroll_d20":9}`).Body.String()
+	if strings.Contains(refused, `"reroll_d20"`) {
+		t.Errorf("a recusa mexeu no \"Eu rolei\" de quem digitou:\n%s", refused)
+	}
+}

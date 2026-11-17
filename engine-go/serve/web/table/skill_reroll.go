@@ -51,9 +51,13 @@ func rerollsSkillTest(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, fmt.Errorf("a ficha de %s não existe mais", test.Who)
 	}
-	d20, err := rerollDie(c)
-	if err != nil {
-		return nil, err
+	// O "Eu rolei" só existe na faixa do teste rolado na mesa: no que o app rolou, o
+	// número no sinal é sobra de outro teste, e o servidor rola.
+	var d20 *int
+	if test.ByHand {
+		if d20, err = rerollDie(c); err != nil {
+			return nil, err
+		}
 	}
 	rolled, err := st.plays.RerollSkillTest(ctx, row, *test, chi.URLParam(c.R, "gasto"), d20)
 	// O GASTO grava na ficha (a sorte, o PM), e a ficha aberta só se redesenha no evento.
@@ -61,11 +65,17 @@ func rerollsSkillTest(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Sessions().RecordSkillTest(ctx, c.SessionID, rolled)
+	recorded, err := st.deps.Sessions().RecordSkillTest(ctx, c.SessionID, rolled)
+	if err == nil {
+		// O "Eu rolei" ZERA depois de valer: o próximo teste rolado na mão abria com
+		// este número já escrito. Na recusa ele fica, para quem digitou não o perder.
+		c.Signals["reroll_d20"] = ""
+	}
+	return recorded, err
 }
 
-// rerollDie lê o d20 da mesa, quando o primeiro dado veio de lá. Vazio é o
-// servidor rolar.
+// rerollDie lê o d20 que a mesa digitou no "Eu rolei" do teste. Vazio é o servidor
+// rolar.
 func rerollDie(c commandCtx) (*int, error) {
 	var signals struct {
 		D20 json.RawMessage `json:"reroll_d20"`
