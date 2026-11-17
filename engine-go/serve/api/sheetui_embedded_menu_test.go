@@ -35,6 +35,11 @@ func TestTheEmbeddedSheetCanOpenItsMenu(t *testing.T) {
 	if !strings.Contains(nav, opens) {
 		t.Error("a fileira de seções da ficha embutida não abre o ⋯: no celular, nada o abre")
 	}
+	// O RÓTULO diz o que abre, e não colide com o "Mais" da ficha solta, que abre as
+	// seções que não cabem na barra (decisão do dono).
+	if _, item, _ := strings.Cut(nav, opens); !strings.Contains(item, "Herói") {
+		t.Error("o ⋯ da fileira não se chama \"Herói\"")
+	}
 	_, tabs, _ := strings.Cut(embedded, `class="ds-sheet-tabs"`)
 	tabs, _, _ = strings.Cut(tabs, "</div>")
 	if !strings.Contains(tabs, opens) {
