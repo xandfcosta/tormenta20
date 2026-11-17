@@ -179,7 +179,9 @@ vê", no [CLAUDE.md da raiz](../../CLAUDE.md)). O `engine.ReadManeuver` aplica o
 desempate da p234 — maior total; no empate, maior bônus; bônus iguais, outro
 teste —, e a faixa do mestre diz sucesso, falha ou empate, e o efeito extra da
 margem de 5. A faixa do jogador passa pelo `forPlayer`, que tira o veredito, a
-Defesa e o lado de quem resiste.
+Defesa e o lado de quem resiste. Ele parte do cartão INTEIRO e apaga o que é só
+do mestre, e o `TestEveryAttackCardFieldSaysWhoSeesIt` exige que todo campo do
+cartão diga quem o vê: campo novo reprova até alguém decidir.
 
 - O `TestTheManeuverNeverDeclaresAWinner` varre os campos do `ManeuverOutcome`
   por reflexão: o vencedor não é guardado nem aplicado.
