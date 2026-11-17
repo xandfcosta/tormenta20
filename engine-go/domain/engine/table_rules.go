@@ -206,7 +206,7 @@ func (r *Ruleset) characterFitsRule(ch Character, rule TableRule) bool {
 		case RuleOnDevotion:
 			fits = ch.God != nil && *ch.God == condition.Value
 		case RuleOnPower:
-			fits = r.ownsPower(ch, condition.Value)
+			fits = r.OwnsPower(ch, condition.Value)
 		}
 		if !fits {
 			return false
@@ -215,9 +215,21 @@ func (r *Ruleset) characterFitsRule(ch Character, rule TableRule) bool {
 	return true
 }
 
-// ownsPower diz se a ficha tem o poder, de classe, geral, da raça, da origem ou da devoção.
-func (r *Ruleset) ownsPower(ch Character, id string) bool {
-	if r.chosenGeneralPowers(ch).has[id] || slices.Contains(r.OriginPickedPowerIDs(ch), id) {
+// OwnsPower diz se a ficha tem o poder: de classe (pelo nível na classe), geral, o que a
+// origem deixou escolher, ou o da devoção. É a pergunta das regras da mesa ("tem o poder
+// X"), e a ficha responde a mesma coisa pelo `sheet.OwnsPower` — o
+// `TestTheEngineAndTheSheetAgreeOnEveryProvenanceOfAPower` confere as duas.
+//
+//	ruleset.OwnsPower(ch, "bloqueio-com-escudo")
+func (r *Ruleset) OwnsPower(ch Character, id string) bool {
+	// A coluna dos escolhidos guarda poder de classe, geral e da Tormenta juntos, e o de CLASSE não
+	// vale por estar nela: ele passa pelo nível na classe, logo abaixo, senão o bárbaro 3 que
+	// escolheu o Totem Espiritual (4º nível, p42) já casava a regra da mesa.
+	isClassPower := slices.ContainsFunc(r.book.classPowers, func(p *ClassPower) bool { return p.ID == id })
+	if !isClassPower && r.chosenGeneralPowers(ch).has[id] {
+		return true
+	}
+	if slices.Contains(r.OriginPickedPowerIDs(ch), id) {
 		return true
 	}
 	chosen, choices := parseChoiceSet(ch.ClassPowers), parseClassChoices(ch.ClassChoices)

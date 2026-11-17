@@ -335,8 +335,18 @@ func automaticClassPowersOf(dto CharacterDTO) []OwnedPower {
 // do banco está errada.
 func chosenPowersOf(dto CharacterDTO) []OwnedPower {
 	outside := []OwnedPower{}
+	chosen := map[string]bool{}
+	for _, id := range UnmarshalStrings(dto.ClassPowers) {
+		chosen[id] = true
+	}
+	choices := ClassChoiceSelections(dto)
 	for _, id := range UnmarshalStrings(dto.ClassPowers) {
 		if power, found := book.ClassPowers()[id]; found {
+			// A REGRA DE POSSE é do motor, classe por classe: o poder é de UMA, e o nível
+			// que o concede é o NAQUELA classe (um bárbaro 3/ladino 2 tem as vagas das duas).
+			if !ownsChosenClassPower(dto, power, chosen, choices) {
+				continue
+			}
 			outside = append(outside, OwnedPower{
 				ID: power.ID, Name: power.Name, Detail: power.Description,
 				Source: PowerFromClass, Owner: power.ClassName, Page: power.BookPage,
@@ -355,6 +365,31 @@ func chosenPowersOf(dto CharacterDTO) []OwnedPower {
 		}
 	}
 	return outside
+}
+
+// ownsChosenClassPower diz se a ficha tem o poder de classe escolhido, pela regra do
+// motor (`engine.OwnsClassPower`) com o nível na classe dele.
+func ownsChosenClassPower(
+	dto CharacterDTO, power book.ClassPower, chosen map[string]bool, choices map[string]engine.ClassChoiceSelections,
+) bool {
+	for _, class := range dto.Classes {
+		if class.ClassName != power.ClassName {
+			continue
+		}
+		if engine.OwnsClassPower(power.ForEngine(), int(class.Level), chosen, choices[class.ClassName]) {
+			return true
+		}
+	}
+	return false
+}
+
+// OwnsPower diz se a ficha tem o poder de id dado, de QUALQUER procedência: é a mesma
+// lista que a aba Poderes mostra e que o Usar consulta (`OwnsActivation`). Quem pergunta
+// "eu tenho este poder?" fora da tela pergunta aqui, e não a uma resposta por procedência.
+//
+//	sheet.OwnsPower(dto, engine.WildTierPowerID(engine.WildTierNormal))
+func OwnsPower(dto CharacterDTO, id string) bool {
+	return OwnedIndexOf(dto).ids[id]
 }
 
 // godPowerOf são os poderes que a devoção concede, guardados pelo NOME.

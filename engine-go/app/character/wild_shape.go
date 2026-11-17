@@ -22,7 +22,7 @@ func (p Plays) TakeWildShape(ctx context.Context, row sqlcgen.Character, dto she
 	if !found {
 		return fmt.Errorf("a forma %q no nível %q não está no quadro da p63", shape.Form, shape.Tier)
 	}
-	if powerID := engine.WildTierPowerID(shape.Tier); !sheet.OwnsClassPower(dto, powerID) {
+	if powerID := engine.WildTierPowerID(shape.Tier); !sheet.OwnsPower(dto, powerID) {
 		return fmt.Errorf("a forma %s pede o poder %s, e o personagem não o tem (p62)", shape.Tier, powerName(powerID))
 	}
 	if !slices.Contains(engine.WildShapeDamageTypes, shape.DamageType) {

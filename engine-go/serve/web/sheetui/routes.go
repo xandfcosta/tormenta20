@@ -303,7 +303,7 @@ func patchActionsAlong(r *http.Request, sse *datastar.ServerSentEventGenerator, 
 // não toca na poça temporária: quem paga com ela é o `spendsVital`.
 //
 // O TETO é o máximo do personagem: curar além do máximo não é PV temporário, que
-// é outra regra e tem dono no motor (`TempHpFuria`).
+// é outra regra e tem dono na postura que o concede (`applyStanceGrants`).
 func touchesVital(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
 	step, err := uRLStep(r)
 	if err != nil {

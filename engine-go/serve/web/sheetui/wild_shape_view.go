@@ -76,7 +76,7 @@ const wildShapeOpens = "$wild_form = 'agil'; $wild_tier = 'normal'; $wild_damage
 func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 	view := wildShapeView{Summaries: map[string]string{}, Moves: map[engine.WildTier][]wildMoveOption{}}
 	for _, tier := range engine.WildTiers {
-		if !sheet.OwnsClassPower(dto, engine.WildTierPowerID(tier)) {
+		if !sheet.OwnsPower(dto, engine.WildTierPowerID(tier)) {
 			continue
 		}
 		view.Offered = true

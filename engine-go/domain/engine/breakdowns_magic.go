@@ -28,11 +28,6 @@ type RdByType struct {
 	Sources []SourceAmount `json:"sources"`
 }
 
-type TempHpBreakdown struct {
-	Total   int            `json:"total"`
-	Sources []SourceAmount `json:"sources"`
-}
-
 // flySpeedTotal: fly speed from effects (0 = can't fly).
 func flySpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "flySpeed"}).Total)
@@ -213,28 +208,6 @@ func typedDamageReduction(e ItemEffects) []RdByType {
 	}
 	sort.Slice(out, func(a, b int) bool { return out[a].Type < out[b].Type })
 	return out
-}
-
-// tempHpFromPowers: Alma de Bronze (Bárbaro p41) grants
-// nível + Força temp PV while furia is active.
-func tempHpFromPowers(ch Character, e ItemEffects, furyActive bool) TempHpBreakdown {
-	empty := TempHpBreakdown{Total: 0, Sources: []SourceAmount{}}
-	if !furyActive {
-		return empty
-	}
-	chosen := parseChoiceSet(ch.ClassPowers)
-	owns := false
-	for _, id := range chosen.list {
-		if id == "alma-de-bronze" || strings.HasSuffix(id, ".alma-de-bronze") {
-			owns = true
-			break
-		}
-	}
-	if !owns {
-		return empty
-	}
-	amount := ch.Level + effectiveAttribute(ch, "strength", e)
-	return TempHpBreakdown{Total: amount, Sources: []SourceAmount{{"Alma de Bronze (Fúria, p41)", amount}}}
 }
 
 // SpellPmLimit is the p224 ceiling for ONE spell: the character's level in the

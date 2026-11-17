@@ -96,7 +96,7 @@ func cumulativesInTheAir(dto sheet.CharacterDTO, atProposal, triggers []string) 
 		if stance != "" && !slices.Contains(atProposal, stance) {
 			continue
 		}
-		if !sheet.OwnsClassPower(dto, spec.ID) {
+		if !sheet.OwnsActivation(dto, spec) {
 			continue
 		}
 		outside = append(outside, spec)
