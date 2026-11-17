@@ -1,19 +1,18 @@
 package table
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
+	"t20engine/domain/book"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
 	"t20engine/app/character"
 	"t20engine/domain/live"
-	"t20engine/domain/sheet"
 	"t20engine/serve/web/routes"
 )
 
@@ -97,33 +96,36 @@ func rerollDie(c commandCtx) (*int, error) {
 // skillTestBandFor é a faixa do teste com os botões de rolar de novo de QUEM
 // OLHA, quando é ele quem rolou.
 func (s Scene) skillTestBandFor(
-	ctx context.Context, st *live.SessionRuntimeState, userID, campaignID, sessionID int64,
+	st *live.SessionRuntimeState, userID, campaignID, sessionID int64, sheets *tableSheets,
 ) *skillTestBand {
 	band := skillTestBandOf(st)
 	if band == nil || st.LastSkillTest.ByUserID != userID || st.LastSkillTest.CharacterID == 0 {
 		return band
 	}
 	test := st.LastSkillTest
-	row, err := s.deps.Queries().GetCharacter(ctx, test.CharacterID)
-	if err != nil {
-		return band
-	}
-	dto, err := sheet.Load(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
-	if err != nil {
+	dto, ok := sheets.of(test.CharacterID)
+	if !ok {
 		return band
 	}
 	skill := test.Skill
 	if test.UsedSkill != "" {
 		skill = test.UsedSkill
 	}
-	for _, offer := range character.RerollOffersFor(dto, skill) {
-		label := fmt.Sprintf("Rolar de novo · %s · %d PM", offer.Name, offer.PM)
-		band.Offers = append(band.Offers, rerollOffer{
-			Label: label,
-			Path:  fmt.Sprintf("%s/teste/rolar-de-novo/%s", routes.Session(campaignID, sessionID), offer.Key),
+	band.Offers = rerollOffersAt(character.RerollOffersFor(dto, skill), routes.Session(campaignID, sessionID)+"/teste/rolar-de-novo/")
+	return band
+}
+
+// rerollOffersAt são os botões de rolar de novo de UM gesto, o ataque ou o teste:
+// o rótulo é o mesmo nos dois, e o endereço muda só no prefixo de quem rola.
+func rerollOffersAt(offers []book.SkillSpendOffer, prefix string) []rerollOffer {
+	out := make([]rerollOffer, 0, len(offers))
+	for _, offer := range offers {
+		out = append(out, rerollOffer{
+			Label: fmt.Sprintf("Rolar de novo · %s · %d PM", offer.Name, offer.PM),
+			Path:  prefix + offer.Key,
 		})
 	}
-	return band
+	return out
 }
 
 // writtenRerolls diz os "rolar de novo" pagos: "rolou de novo (Etiqueta · 1

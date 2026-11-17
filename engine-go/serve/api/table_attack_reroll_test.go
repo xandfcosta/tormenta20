@@ -141,6 +141,10 @@ func TestWeaponMasteryRerollsOnlyWithTheChosenWeapon(t *testing.T) {
 	if !strings.Contains(page, "Rolar de novo · Mestre em Arma · 2 PM") {
 		t.Fatal("o Mestre em Arma da espada longa não oferece rolar de novo o golpe dela")
 	}
+	// O BOTÃO LEVA À ROTA QUE ROLA, que o `rerollsTheAttack` abaixo usa direto.
+	if route := f.tableUrl() + "/ataque/rolar-de-novo/mestre_em_arma"; !strings.Contains(page, route) {
+		t.Errorf("o botão do Mestre em Arma não leva a %s", route)
+	}
 	if got := rerollsTheAttack(t, f, f.player, "mestre_em_arma", 20); got.Roll != 20 {
 		t.Errorf("o Mestre em Arma não rolou de novo: d20 %d", got.Roll)
 	}

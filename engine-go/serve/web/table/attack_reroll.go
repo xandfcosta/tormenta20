@@ -1,7 +1,6 @@
 package table
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
@@ -10,7 +9,6 @@ import (
 	"t20engine/app"
 	"t20engine/app/character"
 	"t20engine/domain/live"
-	"t20engine/domain/sheet"
 	"t20engine/serve/web/routes"
 )
 
@@ -62,7 +60,7 @@ func meleeAttack(pa live.PendingAttack) bool {
 // recortada para o jogador (ver `forPlayer`), com os botões de rolar de novo
 // quando é ele quem rolou.
 func (s Scene) attackProposalFor(
-	ctx context.Context, st *live.SessionRuntimeState, userID int64, role string, campaignID, sessionID int64,
+	st *live.SessionRuntimeState, userID int64, role string, campaignID, sessionID int64, sheets *tableSheets,
 ) *attackProposal {
 	band := attackProposalOf(st, userID)
 	if band != nil && role != "gm" {
@@ -75,20 +73,12 @@ func (s Scene) attackProposalFor(
 	if attacker == nil || attacker.CharacterID == nil {
 		return band
 	}
-	row, err := s.deps.Queries().GetCharacter(ctx, *attacker.CharacterID)
-	if err != nil {
-		return band
-	}
-	dto, err := sheet.Load(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
-	if err != nil {
+	dto, ok := sheets.of(*attacker.CharacterID)
+	if !ok {
 		return band
 	}
 	pa := st.PendingAttack
-	for _, offer := range character.AttackRerollOffersFor(dto, meleeAttack(*pa), pa.WeaponID) {
-		band.Offers = append(band.Offers, rerollOffer{
-			Label: fmt.Sprintf("Rolar de novo · %s · %d PM", offer.Name, offer.PM),
-			Path:  fmt.Sprintf("%s/ataque/rolar-de-novo/%s", routes.Session(campaignID, sessionID), offer.Key),
-		})
-	}
+	band.Offers = rerollOffersAt(character.AttackRerollOffersFor(dto, meleeAttack(*pa), pa.WeaponID),
+		routes.Session(campaignID, sessionID)+"/ataque/rolar-de-novo/")
 	return band
 }

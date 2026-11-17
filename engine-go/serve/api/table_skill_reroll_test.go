@@ -26,6 +26,11 @@ func TestTheEtiquetteRerollsTheDiplomacyTestAndTheSecondDieStands(t *testing.T) 
 	if !strings.Contains(page, "Rolar de novo · Etiqueta · 1 PM") {
 		t.Fatal("a faixa de quem rolou não oferece a Etiqueta")
 	}
+	// O BOTÃO LEVA À ROTA QUE ROLA: os casos abaixo postam no endereço direto, e sem
+	// esta linha um botão apontando para outro lugar passaria com a suíte verde.
+	if route := f.tableUrl() + "/teste/rolar-de-novo/etiqueta"; !strings.Contains(page, route) {
+		t.Errorf("o botão da Etiqueta não leva a %s", route)
+	}
 	if gm := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(gm, "Rolar de novo · Etiqueta") {
 		t.Error("o mestre, que não rolou, vê o botão de rolar de novo")
 	}
