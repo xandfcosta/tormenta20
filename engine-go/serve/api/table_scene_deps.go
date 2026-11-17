@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"t20engine/app/boards"
 	"t20engine/app/session"
+	"t20engine/domain/sheet"
 
 	"t20engine/domain/board"
 	"t20engine/domain/live"
@@ -105,12 +106,12 @@ func (h tableHost) PublishWhatIsLeft(ctx context.Context, sessionID int64) {
 // família que muda envelhece sozinho.) Nulo é caminho normal, e a falha é
 // silenciosa de propósito: estar numa mesa é mais importante que ver a própria
 // ficha dentro dela.
-func (h tableHost) PlayerSheet(r *http.Request, characterID int64) *sheetui.View {
-	sheet, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays, h.rules.sheetLog).Load(
-		r.Context(), currentUser(r).ID, characterID, sheetui.AskedTab(""), "", sheetui.Signals{})
+func (h tableHost) PlayerSheet(r *http.Request, characterID int64, loaded *sheet.CharacterDTO) *sheetui.View {
+	embedded, _, err := sheetui.New(h.rules.sheetScene, h.rules.sheetPlays, h.rules.sheetLog).LoadFrom(
+		r.Context(), currentUser(r).ID, characterID, loaded, sheetui.AskedTab(""), "", sheetui.Signals{})
 	if err != nil {
 		return nil
 	}
-	sheet.Embedded = true
-	return &sheet
+	embedded.Embedded = true
+	return &embedded
 }

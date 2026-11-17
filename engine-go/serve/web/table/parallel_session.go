@@ -2,6 +2,7 @@ package table
 
 import (
 	"net/http"
+	"t20engine/domain/sheet"
 
 	"t20engine/serve/web/sheetui"
 )
@@ -23,7 +24,13 @@ func (s Scene) tablePlayerSheet(r *http.Request, view View) *sheetui.View {
 	if view.GM != nil || view.Eu == nil {
 		return nil
 	}
-	return s.deps.PlayerSheet(r, view.Eu.CharacterID)
+	var loaded *sheet.CharacterDTO
+	if view.sheets != nil {
+		if dto, ok := view.sheets.of(view.Eu.CharacterID); ok {
+			loaded = &dto
+		}
+	}
+	return s.deps.PlayerSheet(r, view.Eu.CharacterID, loaded)
 }
 
 // streamOfPage é o fluxo que a página abre, com a marca da página à parte: o

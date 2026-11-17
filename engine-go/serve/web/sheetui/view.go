@@ -203,12 +203,26 @@ func AskedTab(raw string) string {
 func (s Scene) Load(
 	ctx context.Context, userID int64, id int64, aba, search string, signals Signals,
 ) (View, int, error) {
+	return s.LoadFrom(ctx, userID, id, nil, aba, search, signals)
+}
+
+// LoadFrom é o `Load` com a ficha que quem chama já carregou, ou nil para carregá-la
+// aqui. A mesa a usa: o desenho dela já carregou a ficha do jogador para a Defesa e
+// o bônus de iniciativa. A POSSE é conferida do mesmo jeito, com a ficha carregada
+// ou sem ela, e uma ficha de OUTRO personagem é ignorada.
+//
+//	scene.LoadFrom(ctx, userID, characterID, &dto, AskedTab(""), "", Signals{})
+func (s Scene) LoadFrom(
+	ctx context.Context, userID int64, id int64, loaded *sheet.CharacterDTO, aba, search string, signals Signals,
+) (View, int, error) {
 	row, status, err := s.reachableCharacter(ctx, id, userID)
 	if err != nil {
 		return View{}, status, err
 	}
-	dto, err := s.deps.LoadCharacter(ctx, row)
-	if err != nil {
+	var dto sheet.CharacterDTO
+	if loaded != nil && loaded.ID == id {
+		dto = *loaded
+	} else if dto, err = s.deps.LoadCharacter(ctx, row); err != nil {
 		return View{}, 500, err
 	}
 	table, err := s.tableOf(ctx, row)

@@ -18,6 +18,9 @@ import (
 // View é uma tela inteira da Mesa. Campos exportados porque `html/template`
 // não enxerga os minúsculos — a única razão, e ela é do pacote de template.
 type View struct {
+	// sheets são as fichas que este desenho carregou: a folha embutida do jogador
+	// lê a dele daqui, em vez de carregá-la de novo. Fora do template.
+	sheets *tableSheets
 	// Bleeding é o teste de quem sangra, pendente na vez (p236) — nil fora dele.
 	Bleeding *bleedingView
 	// Status é o ciclo da sessão — `planned`, `active` ou `ended`. Ele decide
