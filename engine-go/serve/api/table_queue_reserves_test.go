@@ -98,6 +98,10 @@ func TestTheReserveShowsOnTheQueueAndOnTheCombatantSheet(t *testing.T) {
 	if !strings.Contains(gmRow, `title="PV temporários">+30<`) {
 		t.Fatalf("a fileira do mestre não diz o +30 do PV — o caso mediria outra coisa:\n%s", gmRow)
 	}
+	// A DICA diz o pool certo na linha do PM.
+	if !strings.Contains(gmRow, `title="PM temporários">+5<`) {
+		t.Errorf("o +5 da linha do PM do mestre não diz que são PM temporários:\n%s", gmRow)
+	}
 	// A FOLHA DO COMBATENTE, onde o mestre aplica o dano, diz a reserva.
 	sheet := regexp.MustCompile(`(?s)<dialog[^>]*id="combatant-` + entry + `".*?</dialog>`).FindString(gm)
 	if sheet == "" {
