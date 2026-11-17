@@ -93,13 +93,7 @@ func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 			}
 		}
 	}
-	if dto.WildShape != nil {
-		if stats, found := engine.WildShapeStatsOf(dto.WildShape.Form, dto.WildShape.Tier); found {
-			parts := wildShapeParts(stats, dto.WildShape.DamageType, dto.WildShape.Movement)
-			parts = append(parts, strconv.FormatInt(dto.WildShapePaid, 10)+" PM pagos")
-			view.Active = &wildShapeLine{Name: wildShapeName(*dto.WildShape), Meta: strings.Join(parts, " · ")}
-		}
-	}
+	view.Active = wildShapeInPlay(dto)
 	if character.OffersTheDeclaration(dto, engine.WildAgileBothFlag) {
 		view.AgileBoth = &agileBothState{Declared: slices.Contains(dto.Conditionals, engine.FlagGroupID(engine.WildAgileBothFlag))}
 	}
@@ -223,4 +217,19 @@ func (w wildShapeView) wildCostExpr() string {
 		return "'Transformar'"
 	}
 	return "'Transformar · ' + (" + string(table) + ")[$wild_tier] + ' PM'"
+}
+
+// wildShapeInPlay é a forma em vigor, ou nil. A aba Efeitos, a coluna da ficha e o número do
+// ícone de Efeitos perguntam aqui: eram duas respostas, e só a aba Efeitos via a forma.
+func wildShapeInPlay(dto sheet.CharacterDTO) *wildShapeLine {
+	if dto.WildShape == nil {
+		return nil
+	}
+	stats, found := engine.WildShapeStatsOf(dto.WildShape.Form, dto.WildShape.Tier)
+	if !found {
+		return nil
+	}
+	parts := wildShapeParts(stats, dto.WildShape.DamageType, dto.WildShape.Movement)
+	parts = append(parts, strconv.FormatInt(dto.WildShapePaid, 10)+" PM pagos")
+	return &wildShapeLine{Name: wildShapeName(*dto.WildShape), Meta: strings.Join(parts, " · ")}
 }

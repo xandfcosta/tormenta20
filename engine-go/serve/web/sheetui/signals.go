@@ -147,6 +147,9 @@ type Signals struct {
 	// ImpulsiveStrike é o Golpe Imprudente ligado na folha do Golpe Relâmpago (p77, ALE-651).
 	ImpulsiveStrike bool   `json:"impulsive_strike"`
 	PowerSearch     string `json:"power_search"`
+	// ChoiceSearch é a busca do Escolher, e não a da aba Poderes: com um sinal só,
+	// digitar no Escolher deixava a aba de trás filtrada.
+	ChoiceSearch string `json:"choice_search"`
 	// Os atributos que a raça distribui, escolhidos no diálogo.
 	RaceAttributes []string `json:"race_attributes"`
 	// TurnTarget é o ALVO DA VEZ, e ele é o único sinal desta cena DECLARADO

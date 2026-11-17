@@ -372,7 +372,7 @@ func raceAbilityDs(v View, block raceAbilityBlock) templ.Component {
 				}
 				ctx = templ.InitializeContext(ctx)
 				templ_7745c5c3_Err = ds.SearchField("race-power-search-"+block.ID, "Buscar poder geral de "+block.Name, templ.Attributes{
-					"value": block.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+					"value": block.Search, "data-bind:choice_search": true, "data-on:input__debounce.250ms": sheetGet(v),
 				}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -615,7 +615,7 @@ func powersStepFilters(v View, card classChoiceCard) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			templ_7745c5c3_Err = ds.SearchField("class-power-search-"+card.ClassName, "Buscar poder de "+card.ClassName, templ.Attributes{
-				"value": v.Powers.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+				"value": v.Choices.Search, "data-bind:choice_search": true, "data-on:input__debounce.250ms": sheetGet(v),
 			}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

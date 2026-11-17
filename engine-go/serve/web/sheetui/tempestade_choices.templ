@@ -87,7 +87,7 @@ templ raceAbilityDs(v View, block raceAbilityBlock) {
 			<span class="ds-help">{ block.PowerLabel() }</span>
 			@ds.FilterBar() {
 				@ds.SearchField("race-power-search-"+block.ID, "Buscar poder geral de "+block.Name, templ.Attributes{
-					"value": block.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+					"value": block.Search, "data-bind:choice_search": true, "data-on:input__debounce.250ms": sheetGet(v),
 				})
 			}
 			for _, group := range block.PowerGroups {
@@ -134,7 +134,7 @@ templ originStepBody(v View, origin originChoiceCard) {
 templ powersStepFilters(v View, card classChoiceCard) {
 	@ds.FilterBar() {
 		@ds.SearchField("class-power-search-"+card.ClassName, "Buscar poder de "+card.ClassName, templ.Attributes{
-			"value": v.Powers.Search, "data-bind:power_search": true, "data-on:input__debounce.250ms": sheetGet(v),
+			"value": v.Choices.Search, "data-bind:choice_search": true, "data-on:input__debounce.250ms": sheetGet(v),
 		})
 		<div class="ds-options ds-options-line" data-scrolls-x role="group" aria-label="Quais poderes">
 			@pickFilterOption("", "Todos")

@@ -253,7 +253,7 @@ func (s Scene) Load(
 	v.OpenDialog = signals.SheetDialog
 	v.EffectPicks = effectPickFilters{ConditionSearch: signals.ConditionSearch, BuffSearch: signals.BuffSearch, BuffCircle: signals.BuffCircle}
 	v.Powers = s.powersPanelOf(dto, signals.PowerSearch)
-	v.Choices = s.choicesPanelOf(dto, signals.PowerSearch)
+	v.Choices = s.choicesPanelOf(dto, signals.ChoiceSearch)
 	v.Bag = s.bagPanelOf(dto, bagFilters{
 		Search: signals.ItemSearch, Category: signals.ItemCategory,
 		CatalogSearch: signals.CatalogSearch, CatalogCategory: signals.CatalogCategory,

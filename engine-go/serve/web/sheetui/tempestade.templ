@@ -31,13 +31,22 @@ templ tempestadeSheet(v View) {
 				@activeEffectDialog(v, e)
 			}
 			<div class="ds-sheet-main">
-				<div class="ds-sheet-tabs">
+				<div
+					class="ds-sheet-tabs"
+					if v.Embedded {
+						data-with-menu
+					}
+				>
 					@ds.Tabs("Seções da ficha") {
 						for _, tab := range v.Tabs {
 							@ds.Tab(templ.SafeURL(sheetRoute(v.ID, tab.Value)), tab.Active, tabGesture(v, tab.Value)) {
 								{ tab.Label }
 							}
 						}
+					}
+					// DENTRO DA SESSÃO o cabeçalho da ficha não existe, e o ⋯ dele mora aqui.
+					if v.Embedded {
+						@ds.IconButton(ds.ButtonGhost, "Ellipsis", sheetMenuLabel, templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
 					}
 				</div>
 				if v.Refusal != "" {
@@ -54,6 +63,12 @@ templ tempestadeSheet(v View) {
 						{ tab.Label }
 					}
 				}
+				// O ⋯ do cabeçalho, que dentro da sessão não existe: sem ele, o degrau de
+				// nível, quem é o herói e o modo de cor não abriam no celular.
+				<button type="button" commandfor="sheet-menu" command="show-modal" aria-label={ sheetMenuLabel }>
+					@ui.Icon("Ellipsis", "ds-icon")
+					Herói
+				</button>
 			}
 		} else {
 			@sheetBottomNav(v)
@@ -92,7 +107,7 @@ templ sheetHeader(v View) {
 			<b>{ v.Defense }</b>
 			<span>DEF</span>
 		</div>
-		@ds.IconButton(ds.ButtonGhost, "Ellipsis", "Quem é, nível e aparência", templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
+		@ds.IconButton(ds.ButtonGhost, "Ellipsis", sheetMenuLabel, templ.Attributes{"commandfor": "sheet-menu", "command": "show-modal"})
 	</header>
 }
 
@@ -235,53 +250,6 @@ templ tempestadePanel(v View) {
 	}
 }
 
-// vitalStrip é a faixa dos vitais, no celular: −1 e +1 à mão, e o número abre
-// o diálogo de dano ou cura.
-templ vitalStrip(v View) {
-	<div class="ds-vitals">
-		@stripVital(v, "pv", "PV", v.PV, ds.MeterPV)
-		if !v.NoMana {
-			@stripVital(v, "pm", "PM", v.PM, ds.MeterPM)
-		}
-	</div>
-}
-
-templ stripVital(v View, which, label string, vital sheetVital, kind ds.MeterKind) {
-	<div class="ds-vital">
-		@ds.IconButton(ds.ButtonSecondary, "Minus", "Menos 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/-1")})
-		<button type="button" class="ds-vital-open" commandfor={ "vital-" + which } command="show-modal" aria-label={ stripVitalName(label, vital) }>
-			<span class="ds-vital-line">
-				// A PALAVRA DE QUEM CAIU vai ao lado do nome do pool, na linha de
-				// cima: embaixo do número ela cobria a barra a 390px.
-				<span class="ds-vital-key">
-					{ label }
-					if vital.Down != "" {
-						<span class="ds-down">{ vital.Down }</span>
-					}
-				</span>
-				// A RESERVA vai na linha do número, e não na do nome: lá, ao lado da
-				// palavra de quem caiu, ela quebrava a linha e o selo pisava no número.
-				<span class="ds-vital-value">
-					{ ui.Quantity(int(vital.Current)) }<small>{ "/" + strconv.FormatInt(vital.Max, 10) }</small>
-					if vital.Temp != "" {
-						<small class="ds-vital-temp">{ vital.Temp }</small>
-					}
-				</span>
-			</span>
-			<span class="ds-bar" data-thin aria-hidden="true">
-				<span
-					data-kind={ string(kind) }
-					if tone := vitalTone(kind, vital); tone != "" {
-						data-tone={ tone }
-					}
-					style={ "width:" + strconv.Itoa(vital.Percent) + "%" }
-				></span>
-			</span>
-		</button>
-		@ds.IconButton(ds.ButtonSecondary, "Plus", "Mais 1 "+label, templ.Attributes{"type": "button", "data-on:click": sheetPost(v, "/vitais/"+which+"/1")})
-	</div>
-}
-
 // sheetDialog é o diálogo da ficha com a recusa dentro: um modal deixa a página atrás dele, e
 // a recusa desenhada só lá parece um gesto que não fez nada. Fechado, ele não mostra nada, e
 // a da página é a que se lê.
@@ -295,72 +263,6 @@ templ sheetDialog(v View, id, title string, foot templ.Component) {
 templ refusalInDialog(v View) {
 	if v.Refusal != "" {
 		<p role="alert" class="ds-alert">{ v.Refusal }</p>
-	}
-}
-
-// vitalDialog é o dano ou a cura de qualquer valor, e os temporários, que são outra conta:
-// eles não têm teto e pagam primeiro (p106).
-templ vitalDialog(v View, which, title string, vital sheetVital, kind ds.MeterKind, levels []vitalLevelRow) {
-	@sheetDialog(v, "vital-"+which, title, nil) {
-		@ds.MeterView(meterOf(map[string]string{"pv": "PV", "pm": "PM"}[which], vital, kind))
-		<div class="ds-field">
-			<label for={ "vital-" + which + "-amount" }>Valor</label>
-			<div class="ds-vital-amount">
-				<input id={ "vital-" + which + "-amount" } class="ds-input" type="number" inputmode="numeric" min="1" data-bind:vital_amount/>
-				if which == "pv" {
-					@vitalAmountButton(v, which, -1, "Dano")
-					@vitalAmountButton(v, which, +1, "Cura")
-				} else {
-					@vitalAmountButton(v, which, -1, "Gastar")
-					@vitalAmountButton(v, which, +1, "Recuperar")
-				}
-			</div>
-		</div>
-		<div class="ds-field">
-			<label for={ "vital-" + which + "-temp" }>
-				Temporários
-				if vital.Temp != "" {
-					{ " " + vital.Temp }
-				}
-			</label>
-			<div class="ds-vital-amount">
-				<input id={ "vital-" + which + "-temp" } class="ds-input" type="number" inputmode="numeric" min="1" data-bind:vital_temp_amount/>
-				@vitalTempButton(v, which, +1, "Somar")
-				if vital.Temp != "" {
-					@vitalTempButton(v, which, -1, "Tirar")
-				}
-			</div>
-		</div>
-		// A CONTA ABRE EM OUTRO DIÁLOGO (decisão do dono): aberta aqui, ela afastaria o
-		// campo do número que ele muda.
-		if len(levels) > 0 {
-			@ds.BareList("", "") {
-				@ds.ActionRow(vitalLevelsTitle(vital), "", vitalLevelsID(which)) {
-					@ui.Icon("ChevronRight", "ds-icon")
-				}
-			}
-		}
-	}
-	if len(levels) > 0 {
-		@sheetDialog(v, vitalLevelsID(which), vitalLevelsTitle(vital), nil) {
-			@ds.BareList("", "") {
-				for _, level := range levels {
-					@ds.Row(level.Title, level.Account, level.Total, "")
-				}
-			}
-		}
-	}
-}
-
-templ vitalAmountButton(v View, which string, sign int, label string) {
-	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": vitalAmountPost(v, which, sign) + "; document.getElementById('vital-" + which + "').close(); $vital_amount = ''"}) {
-		{ label }
-	}
-}
-
-templ vitalTempButton(v View, which string, sign int, label string) {
-	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": vitalTempPost(v, which, sign) + "; document.getElementById('vital-" + which + "').close(); $vital_temp_amount = ''"}) {
-		{ label }
 	}
 }
 

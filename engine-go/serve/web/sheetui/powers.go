@@ -65,6 +65,9 @@ type powerRow struct {
 	// ela paga, e ler isso do `Cost` já escrito seria um analisador de texto de
 	// tela — o rótulo muda, o grupo muda junto, e em silêncio.
 	Action string
+	// SortPM é o custo para ORDENAR as Ações, lido do verbete pela mesma razão do
+	// `Action`: desmontar o `Cost` lia o "2+" da Fúria como zero.
+	SortPM int
 	// Limit é o crachá do limite: "1/cena", "3/dia". Cobrado só nos dois
 	// primeiros; ver `book.ChargedScope`.
 	Limit string
@@ -123,12 +126,14 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
 	panel := powersPanel{Search: query, IsCaster: len(casterClassesOf(dto)) > 0}
 	rows := s.powerRowsOf(dto)
 	panel.Total = len(rows)
-	if term := search.Fold(strings.TrimSpace(query)); term != "" {
-		panel.Results = filtradasPorNome(rows, term)
-		return panel
-	}
+	// AS LISTAS SÃO SEMPRE AS INTEIRAS, com ou sem busca: a postura e a declaração em
+	// vigor tiram delas o texto do poder, e as Ações as leem. A busca só ACRESCENTA o
+	// resultado, que a aba Poderes desenha no lugar das listas.
 	panel.Actions, panel.Passives = separadasPorUso(rows)
 	panel.LiveTriggers = airTriggers(panel.Passives)
+	if term := search.Fold(strings.TrimSpace(query)); term != "" {
+		panel.Results = filtradasPorNome(rows, term)
+	}
 	return panel
 }
 
@@ -191,6 +196,7 @@ func powerRowFor(
 	row.Degrees = useDegreesFor(dto, *spec)
 	row.InEffect = grantInEffect(dto, spec.ID)
 	row.Cost, row.Action = writtenCost(*spec, row.Stance), spec.Action
+	row.SortPM = sortCost(*spec)
 	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
 	if scope := book.ChargedScope(*spec); scope != "" {
 		row.Spent = writtenSpent(scope, uses[spec.ID])
@@ -341,7 +347,7 @@ func separadasPorUso(rows []powerRow) (actions, passives []powerRow) {
 		if activeOne(actions[a]) != activeOne(actions[b]) {
 			return activeOne(actions[a])
 		}
-		return rowPm(actions[a]) < rowPm(actions[b])
+		return actions[a].SortPM < actions[b].SortPM
 	})
 	return actions, passives
 }
@@ -350,18 +356,18 @@ func activeOne(row powerRow) bool {
 	return row.Stance != nil && row.Stance.Active
 }
 
-// rowPm é o custo para ordenar. O custo variável vai para o FIM, e é por
-// isso que ele vira um número grande em vez de ganhar um caso próprio.
-func rowPm(row powerRow) int {
-	if strings.Contains(row.Cost, "variável") {
+// sortCost é o custo do verbete para ordenar: a postura pelo preço de entrada, o resto
+// pelo PM da ativação. O custo variável vai para o FIM, e é por isso que ele vira um
+// número grande em vez de ganhar um caso próprio.
+func sortCost(spec book.Activation) int {
+	switch {
+	case spec.Kind == "stance":
+		return book.ScaledCost(spec, 0)
+	case book.CostIsVariable(spec):
 		return 999
+	default:
+		return book.ActivationPm(spec)
 	}
-	for _, chunk := range strings.Fields(row.Cost) {
-		if n, err := strconv.Atoi(chunk); err == nil {
-			return n
-		}
-	}
-	return 0
 }
 
 // airTriggers são as passivas de gatilho que estão fazendo efeito agora.

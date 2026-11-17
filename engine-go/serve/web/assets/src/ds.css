@@ -5717,7 +5717,8 @@
     background: var(--ds-surface);
     scrollbar-width: none;
   }
-  .ds-section-nav > a {
+  .ds-section-nav > a,
+  .ds-section-nav > button {
     display: grid;
     flex: none;
     justify-items: center;
@@ -5728,6 +5729,19 @@
     font-size: var(--ds-t-xs);
     text-decoration: none;
     white-space: nowrap;
+  }
+  /* O ⋯ é botão, e não link: tira a moldura de botão e herda a letra da fileira. E
+   * fica PRESO à direita: a fileira rola para o lado a 390px, e no fim dela ele ficava
+   * fora da tela. */
+  .ds-section-nav > button {
+    position: sticky;
+    right: 0;
+    margin-left: auto;
+    border: 0;
+    border-left: 1px solid var(--ds-line);
+    background: var(--ds-surface);
+    font-family: inherit;
+    cursor: pointer;
   }
   .ds-section-nav > a[aria-current='page'] {
     color: var(--ds-action);
@@ -6036,6 +6050,16 @@
       top: 0;
       z-index: 1;
       background: var(--ds-bg);
+    }
+    /* Dentro da sessão, o ⋯ da ficha fica no fim das abas. */
+    .ds-sheet-tabs[data-with-menu] {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .ds-sheet-tabs[data-with-menu] > .ds-tabs {
+      flex: 1;
+      min-width: 0;
     }
     .ds-sheet-who {
       display: block;
