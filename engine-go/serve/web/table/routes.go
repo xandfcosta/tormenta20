@@ -345,9 +345,20 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 		withTempPool(&group[i].PM, pools.Mp[group[i].CharacterID])
 		// O GRUPO DO JOGADOR SEGUE A REGRA DA FILA, e a ficha de quem olha é dele. O mestre
 		// vê tudo, e a página Grupo dele não desenha o olho riscado: lá ele cobriria o −.
+		//
+		// ESCONDIDO NASCE SEM NÚMERO, como na fila, onde o estado do jogador já chega
+		// redigido. Marcar a barra e deixar os números nela era esconder no template, e o
+		// próximo template que lesse `Current` sem olhar a marca mostraria o que o mestre
+		// escondeu.
 		if role != "gm" && !mine[group[i].CharacterID] {
 			hp, mp := live.TableSeesMemberPools(fresh, group[i].CharacterID)
-			group[i].PV.Hidden, group[i].PM.Hidden = !hp, !mp
+			// Só o pool que EXISTE se esconde: o guerreiro sem PM não ganha "PM ocultos".
+			if !hp && group[i].PV.Max > 0 {
+				group[i].PV = tableBar{Hidden: true}
+			}
+			if !mp && group[i].PM.Max > 0 {
+				group[i].PM = tableBar{Hidden: true}
+			}
 		}
 		markDowned(&group[i].PV, conditions[group[i].CharacterID])
 	}

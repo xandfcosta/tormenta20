@@ -193,9 +193,10 @@ func memberMeta(m Member) string {
 }
 
 // poolOrNothing não desenha o pool que o personagem não tem: um "PM 0/0" de
-// quem não usa mana é uma barra vazia que parece um herói esgotado.
+// quem não usa mana é uma barra vazia que parece um herói esgotado. A barra
+// ESCONDIDA também não tem número, e passa: ela é a frase "ocultos pelo mestre".
 func poolOrNothing(b tableBar) *tableBar {
-	if b.Max == 0 {
+	if b.Max == 0 && !b.Hidden {
 		return nil
 	}
 	return &b

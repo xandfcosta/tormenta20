@@ -127,3 +127,34 @@ func TestTheLensHidesTheBarOfAHiddenHitPointPool(t *testing.T) {
 		t.Error("com a lente, a peça do Ogro mostra a barra de PV que a mesa não vê")
 	}
 }
+
+// O POOL ESCONDIDO NÃO CHEGA AO DESENHO DO GRUPO, como não chega ao da fila. A fila
+// esconde na FONTE — o estado do jogador já vem sem os números —, e o Grupo escondia
+// no TEMPLATE: a barra carregava o PV e o PM verdadeiros com a marca `Hidden`, e o
+// próximo template que lesse `PM.Current` sem olhar a marca mostraria ao jogador o que
+// o mestre escondeu. A barra escondida agora nasce sem número, como a da fila.
+func TestTheHiddenPoolReachesTheGroupWithoutItsNumbers(t *testing.T) {
+	f := newSceneFixture(t)
+	withAColleague(t, f)
+	view, _, err := f.s.tableScene.LoadView(t.Context(), f.player, f.campaignID, f.sessionID)
+	if err != nil {
+		t.Fatalf("montar a mesa do jogador: %v", err)
+	}
+	found := false
+	for _, m := range view.Group {
+		if m.Name != "Guerreira" {
+			continue
+		}
+		found = true
+		if !m.PM.Hidden {
+			t.Fatal("o PM da colega não está escondido fora de cena — o caso não mede o que diz")
+		}
+		if m.PM.Current != 0 || m.PM.Max != 0 || m.PM.Temp != 0 || m.PM.Pct != 0 {
+			t.Errorf("o PM escondido da colega chegou ao Grupo com os números: %d/%d, +%d, %d%%",
+				m.PM.Current, m.PM.Max, m.PM.Temp, m.PM.Pct)
+		}
+	}
+	if !found {
+		t.Fatal("a Guerreira não está no Grupo do jogador")
+	}
+}
