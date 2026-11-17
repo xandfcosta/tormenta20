@@ -327,9 +327,11 @@ func outcomeFromWorld(w *ecs.World) AttackOutcome {
 		Hit:        hit.Hit,
 		Defense:    resourceOf[effectiveDefense](w).Value,
 		Situations: labelsOfTheSituations(w),
-		Critical:   resourceOf[criticalVerdict](w).Critical,
-		RawDamage:  resourceOf[rawTally](w).Raw,
-		Taken:      resourceOf[bodyTally](w).Taken,
+
+		AttackerSituations: attackerLabelsOfTheSituations(w),
+		Critical:           resourceOf[criticalVerdict](w).Critical,
+		RawDamage:          resourceOf[rawTally](w).Raw,
+		Taken:              resourceOf[bodyTally](w).Taken,
 
 		CriticalExtra: resourceOf[rawTally](w).CriticalExtra,
 		Absorbed:      resourceOf[absorbedTally](w).Absorbed,

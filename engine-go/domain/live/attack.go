@@ -126,6 +126,9 @@ type PendingAttack struct {
 	// faixa os escreve. Sem eles a mesa lê uma Defesa que a ficha não tem, ou
 	// um ataque que bateu a Defesa e errou (p238), e vai procurar o defeito.
 	Situations []string `json:"situations,omitempty"`
+	// AttackerSituations são as do lado de quem ataca, e é delas que a carta do jogador
+	// explica a conta; as do alvo ficam com o mestre, como a Defesa (decisão do dono).
+	AttackerSituations []string `json:"attackerSituations,omitempty"`
 	// Hit e Critical são a SUGESTÃO do livro enquanto o mestre não decide, e a
 	// decisão dele depois (`Ruling`): é a mesma pergunta — "acertou? critou?" —
 	// em dois momentos, e quem lê depois da decisão lê a palavra do mestre.

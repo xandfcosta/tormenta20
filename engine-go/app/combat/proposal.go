@@ -30,7 +30,8 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 		// 5-3 — não a da ficha. "Errei por 1" e "errei por 1 porque ele está
 		// atrás da carroça" são leituras diferentes do mesmo número.
 		Roll: out.Roll, Total: out.Total, Defense: out.Defense, Situations: out.Situations,
-		Hit: out.Hit, Critical: out.Critical, CritRange: margin, CritMult: multiplier,
+		AttackerSituations: out.AttackerSituations,
+		Hit:                out.Hit, Critical: out.Critical, CritRange: margin, CritMult: multiplier,
 		Melee: setup.weapon.IsMelee(), ByUserID: who.ID,
 		BoostPowerID: setup.boost.powerID, BoostPM: setup.boost.pm, BoostHitPoints: setup.boost.hitPoints, Charge: req.Charge,
 		BoostAddOn: req.Boost.AddOn, IgnoredReduction: setup.weapon.IgnoresDamageReduction, RerollsLowDice: setup.weapon.RerollsLowDice,

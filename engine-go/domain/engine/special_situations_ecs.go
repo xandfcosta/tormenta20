@@ -42,7 +42,11 @@ type meleeOnly struct{}
 type dropsShortRangeDice struct{}
 
 // situationLabel é a procedência que a mesa lê.
-type situationLabel struct{ Text string }
+// AttackerSees diz que a linha é do lado de quem ataca (ver `situationRule.TargetSide`).
+type situationLabel struct {
+	Text         string
+	AttackerSees bool
+}
 
 // situationRow é a linha da tabela de que a entidade nasceu, para a arma que a ignora a achar.
 type situationRow struct{ Row SpecialSituation }
@@ -67,7 +71,7 @@ func spawnTheSituations(situations []SpecialSituation) ecs.System {
 				continue
 			}
 			e := w.Spawn()
-			ecs.Set(w, e, situationLabel{Text: rule.Label})
+			ecs.Set(w, e, situationLabel{Text: rule.Label, AttackerSees: !rule.TargetSide})
 			ecs.Set(w, e, situationRow{Row: s})
 			if rule.Attack != 0 {
 				ecs.Set(w, e, shiftsTheAttack{Amount: rule.Attack})
@@ -116,7 +120,8 @@ func dropWhatDoesNotReachThisWeapon(card WeaponCard) ecs.System {
 			w.Despawn(e)
 			annulled := w.Spawn()
 			ecs.Set(w, annulled, situationLabel{
-				Text: SpecialSituationLabel(row.Row) + " anulada pela " + card.IgnoresSituations[at].By,
+				Text:         SpecialSituationLabel(row.Row) + " anulada pela " + card.IgnoresSituations[at].By,
+				AttackerSees: !specialSituationTable[row.Row].TargetSide,
 			})
 		})
 		if card.Skill != "Pontaria" || card.ShootsIntoMelee {
@@ -212,9 +217,18 @@ func undoTheHitOnConcealment(rollDie func(faces int) (int, error)) ecs.System {
 // porque ela não agiu — escrever "flanqueando" numa linha de ataque à distância
 // diria que o +2 entrou.
 func labelsOfTheSituations(w *ecs.World) []string {
+	return situationLabelsWhere(w, func(situationLabel) bool { return true })
+}
+
+// attackerLabelsOfTheSituations são as linhas que a carta de quem ataca mostra: as do lado dele.
+func attackerLabelsOfTheSituations(w *ecs.World) []string {
+	return situationLabelsWhere(w, func(l situationLabel) bool { return l.AttackerSees })
+}
+
+func situationLabelsWhere(w *ecs.World, keep func(situationLabel) bool) []string {
 	out := []string{}
 	ecs.Each(w, func(e ecs.Entity, label situationLabel) {
-		if w.Alive(e) {
+		if w.Alive(e) && keep(label) {
 			out = append(out, label.Text)
 		}
 	})

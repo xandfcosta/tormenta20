@@ -93,6 +93,7 @@ func (s Strike) withAnotherDie(first live.PendingAttack, d20 int, natural bool) 
 		return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
 	}
 	second.Roll, second.Total, second.Defense, second.Situations = out.Roll, out.Total, out.Defense, out.Situations
+	second.AttackerSituations = out.AttackerSituations
 	second.Hit, second.Critical = out.Hit, out.Critical
 	return second, nil
 }
