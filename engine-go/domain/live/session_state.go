@@ -350,6 +350,13 @@ func CloneState(s *SessionRuntimeState) *SessionRuntimeState {
 // gargalo pelo qual os DOIS caminhos do estado passam — o broadcast por sala de
 // papel e o ack do `get-session-state`.
 func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
+	return redactForViewer(st, nil)
+}
+
+// redactForViewer é a redação da mesa para quem olha, que vê os pools dos PRÓPRIOS
+// personagens (`own`): a ficha é dele, e a linha dele dizia "PM ocultos pelo mestre"
+// com o Grupo, logo abaixo, mostrando o mesmo PM (decisão do dono).
+func redactForViewer(st *SessionRuntimeState, own map[int64]bool) *SessionRuntimeState {
 	if !st.InScene() {
 		// Rastreador limpo e não `CloneState` com a lista zerada: a rodada e o
 		// contador de turnos também são da cena, e "rodada 7, ninguém na fila"
@@ -367,6 +374,9 @@ func RedactForPlayers(st *SessionRuntimeState) *SessionRuntimeState {
 	out := CloneState(st)
 	for i := range out.Initiative {
 		e := &out.Initiative[i]
+		if e.CharacterID != nil && own[*e.CharacterID] {
+			continue
+		}
 		// O PV do GRUPO é o único pool que a mesa vê sem o mestre mandar.
 		hideIfSecret(e.HpHidden, e.Type == "character", &e.HpCurrent, &e.HpMax, &e.HpHidden)
 		hideIfSecret(e.MpHidden, false, &e.MpCurrent, &e.MpMax, &e.MpHidden)
@@ -427,10 +437,17 @@ func TableSeesMemberPools(st *SessionRuntimeState, characterID int64) (hp, mp bo
 // responde a quem pediu. Papel desconhecido cai em jogador — errar para o lado
 // que mostra seria vazar por omissão.
 func StateForRole(role string, st *SessionRuntimeState) *SessionRuntimeState {
+	return StateForViewer(role, st, nil)
+}
+
+// StateForViewer é o `StateForRole` de quem olha e tem personagens na mesa (`own`): o
+// jogador vê os pools dos dele. Continua sendo um portão só — o mestre vê tudo, e papel
+// desconhecido cai em jogador.
+func StateForViewer(role string, st *SessionRuntimeState, own map[int64]bool) *SessionRuntimeState {
 	if role == "gm" {
 		return st
 	}
-	return RedactForPlayers(st)
+	return redactForViewer(st, own)
 }
 
 // ResetInitiative esvazia a fila e desliga a CENA junto: reiniciar é voltar ao

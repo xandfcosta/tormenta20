@@ -896,6 +896,8 @@ func TestTheTrackerBadgeSaysSheetAndNeverPc(t *testing.T) {
 // fila que não desenha nada.
 func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	f := newSceneFixture(t)
+	// O PM ESCONDIDO que o jogador lê é o da colega: o do próprio personagem ele vê.
+	withAColleague(t, f)
 	f.tracker(t)
 	if rec := f.requests(t, f.gm, "POST", f.tableUrl()+"/cena/iniciar/acao", ""); rec.Code != http.StatusOK {
 		t.Fatalf("iniciar cena deu %d", rec.Code)
@@ -914,8 +916,7 @@ func TestTheTrackerRowDrawsAPoolPerBarAndEachRoleReadsItsOwn(t *testing.T) {
 	}
 
 	forPlayer := f.requests(t, f.player, "GET", f.tableUrl(), "").Body.String()
-	// O PV do GRUPO é o que a mesa vê por padrão, e o personagem desta bancada é
-	// justamente do jogador que está pedindo.
+	// O PV do GRUPO é o que a mesa vê por padrão.
 	if !strings.Contains(forPlayer, "PV ") {
 		t.Error("a mesa perdeu o PV do próprio grupo")
 	}

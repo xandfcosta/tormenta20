@@ -51,12 +51,15 @@ func TestTheTableShowsTheTemporaryHpOfWhoIsInTheQueue(t *testing.T) {
 //
 // A asserção é sobre a VIEW e não sobre o HTML, e isso é medida e não preguiça:
 // a frase "mais 30 temporários" sai em DUAS superfícies da mesma página — a
-// linha da fila e o cartão do Grupo —, e o cartão do Grupo mostra o PV de todo
-// membro independentemente do olho da fila, que é comportamento anterior a esta
-// fatia. Procurá-la no corpo inteiro responderia sobre a página, e a pergunta é
-// sobre a LINHA.
+// linha da fila e o cartão do Grupo. Procurá-la no corpo inteiro responderia
+// sobre a página, e a pergunta é sobre a LINHA.
+//
+// QUEM OLHA é OUTRA jogadora: o dono do Arcanista vê os pools dele mesmo com o
+// olho fechado, porque a ficha é dele (decisão do dono).
 func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 	f := newSceneFixture(t)
+	colleague := seedUser(t, f.s, "colega@t.com")
+	seedMember(t, f.s, f.campaignID, seedCharacterAtLevel(t, f.s, colleague, "Guerreira", "Guerreiro", 3, 0, 0))
 	f.scene(t)
 	if rec := effect(t, f, f.charID, "aplica/campo-de-forca"); rec.Code != http.StatusOK {
 		t.Fatalf("aplicar o Campo de Força devolveu %d", rec.Code)
@@ -81,9 +84,9 @@ func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 		return 0
 	}
 
-	// CONTROLE: com o PV à vista, a linha do JOGADOR carrega a reserva. Sem esta
-	// metade, o caso abaixo ficaria verde sobre uma fila que nunca a carrega.
-	if open := queuedReserve(f.player); open != 30 {
+	// CONTROLE: com o PV à vista, a linha que a colega vê carrega a reserva. Sem
+	// esta metade, o caso abaixo ficaria verde sobre uma fila que nunca a carrega.
+	if open := queuedReserve(colleague); open != 30 {
 		t.Fatalf("com o PV à vista a linha diz %d de reserva, e o Campo de Força dá 30", open)
 	}
 
@@ -92,7 +95,7 @@ func TestAHiddenPoolHidesItsTemporaryHpToo(t *testing.T) {
 		t.Fatalf("esconder o PV devolveu %d", rec.Code)
 	}
 
-	if hidden := queuedReserve(f.player); hidden != 0 {
+	if hidden := queuedReserve(colleague); hidden != 0 {
 		t.Errorf("o PV oculto vazou %d de reserva para a mesa", hidden)
 	}
 	// E O MESTRE continua vendo: esconder é decisão sobre o que a MESA vê, e

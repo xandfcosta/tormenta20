@@ -330,8 +330,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if err != nil {
 		return View{}, http.StatusInternalServerError, err
 	}
-	st := live.StateForRole(role, fresh)
 	group, mine, eu := s.tableRoster(ctx, userID, campaignID)
+	st := live.StateForViewer(role, fresh, mine)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
 	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de
 	// escrita — entrar na fila, resincronizar máximos, aplicar dano —, e um
