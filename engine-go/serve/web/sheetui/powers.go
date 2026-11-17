@@ -123,12 +123,14 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
 	panel := powersPanel{Search: query, IsCaster: len(casterClassesOf(dto)) > 0}
 	rows := s.powerRowsOf(dto)
 	panel.Total = len(rows)
-	if term := search.Fold(strings.TrimSpace(query)); term != "" {
-		panel.Results = filtradasPorNome(rows, term)
-		return panel
-	}
+	// AS LISTAS SÃO SEMPRE AS INTEIRAS, com ou sem busca: a postura e a declaração em
+	// vigor tiram delas o texto do poder, e as Ações as leem. A busca só ACRESCENTA o
+	// resultado, que a aba Poderes desenha no lugar das listas.
 	panel.Actions, panel.Passives = separadasPorUso(rows)
 	panel.LiveTriggers = airTriggers(panel.Passives)
+	if term := search.Fold(strings.TrimSpace(query)); term != "" {
+		panel.Results = filtradasPorNome(rows, term)
+	}
 	return panel
 }
 
