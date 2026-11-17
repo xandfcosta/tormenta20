@@ -285,16 +285,27 @@ test('entrar na vez pulsa a linha do combatente que entrou', async ({ page }) =>
 test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
   const { apagar: erase } = await aTrackerWithTwo(page)
   try {
+    // A JANELA COMEÇA NO CRACHÁ, e não no relógio. Ela começava antes dos três
+    // cliques e durava 900 ms: sob a suíte cheia, o crachá montava depois de ela
+    // fechar, e o caso contava zero animações sem a animação ter faltado. Agora
+    // conta 300 ms a partir do quadro em que o crachá NOVO aparece, e só desiste
+    // se ele não aparecer em 5 s.
     await page.evaluate(() => {
       const w = window as unknown as { __c: number; __cDone?: boolean }
       w.__c = 0
       const t0 = performance.now()
+      const before = document.querySelectorAll('[data-condicao]').length
+      let seenAt = 0
       const step = () => {
-        for (const c of document.querySelectorAll('[data-condicao]')) {
+        const now = performance.now()
+        const tiles = document.querySelectorAll('[data-condicao]')
+        if (!seenAt && tiles.length > before) seenAt = now
+        for (const c of tiles) {
           if (c.getAnimations().length > 0) w.__c++
         }
-        if (performance.now() - t0 < 900) requestAnimationFrame(step)
-        else w.__cDone = true
+        const done = seenAt ? now - seenAt >= 300 : now - t0 >= 5000
+        if (done) w.__cDone = true
+        else requestAnimationFrame(step)
       }
       requestAnimationFrame(step)
     })
@@ -302,7 +313,7 @@ test('aplicar uma condição faz o crachá dela surgir', async ({ page }) => {
     await page.getByRole('button', { name: 'Abrir Ogro do E2E' }).click()
     await page.locator('dialog[open]').getByRole('button', { name: '+ Aplicar condição' }).click()
     await page.locator('#gm-conditions').getByRole('button', { name: 'Abalado', exact: true }).click()
-    await page.waitForFunction(() => (window as unknown as { __cDone?: boolean }).__cDone, null, { timeout: 5000 })
+    await page.waitForFunction(() => (window as unknown as { __cDone?: boolean }).__cDone, null, { timeout: 8000 })
 
     const tiles = await page.evaluate(() => (window as unknown as { __c: number }).__c)
     expect(

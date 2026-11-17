@@ -19,11 +19,14 @@ import (
 // O fluxo da Mesa só redesenha no evento (CQRS puro): o que muda sem gravar —
 // quem está com a Mesa aberta, a tela da mesa, o Grupo que cresce com a Mesa
 // aberta — precisa publicar o seu, senão a tela dos outros fica parada sem erro.
-// Cada caso abre o fluxo por HTTP de verdade e exige o quadro em 400ms: menos da
-// metade do tique de 1s que existia, então um verde aqui nunca foi o relógio.
+// Cada caso abre o fluxo por HTTP de verdade e exige o quadro em 800ms: abaixo do
+// tique de 1s que existia, então um verde aqui nunca foi o relógio.
 
-// eventReach é o prazo de cada caso: folgado para um round-trip local.
-const eventReach = 400 * time.Millisecond
+// eventReach é o prazo de cada caso. Era 400ms, e a suíte cheia — os pacotes em
+// paralelo disputando a CPU — passava dele de vez em quando: o caso reprovava sem o
+// evento ter faltado, e passava dez vezes em dez sozinho. O que o prazo protege é
+// ficar ABAIXO do tique de 1s; a metade dele era folga que a máquina não tinha.
+const eventReach = 800 * time.Millisecond
 
 // liveStream é um fluxo aberto por HTTP, lido em quadros.
 type liveStream struct {
