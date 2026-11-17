@@ -47,10 +47,13 @@ type SkillSpend struct {
 }
 
 type ActivationGrant struct {
-	Kind      string     `json:"kind"`
-	Scope     string     `json:"scope"`
-	Attribute string     `json:"attribute,omitempty"`
-	Modifiers []Modifier `json:"modifiers,omitempty"`
+	Kind      string `json:"kind"`
+	Scope     string `json:"scope"`
+	Attribute string `json:"attribute,omitempty"`
+	// AttributeOnly é a reserva que é SÓ o atributo, mínimo 1 (o Estandarte, p54);
+	// sem ele, a reserva é nível + atributo (a Armadura da Honra, p53).
+	AttributeOnly bool       `json:"attributeOnly,omitempty"`
+	Modifiers     []Modifier `json:"modifiers,omitempty"`
 }
 
 type CumulativeGrant struct {

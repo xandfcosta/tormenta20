@@ -330,7 +330,24 @@ func writtenDegrees(howMany int) string {
 	return strconv.Itoa(howMany) + " degraus"
 }
 
-// SceneStartGrants são as ativações que concedem uma reserva NO INÍCIO DA CENA.
+// AmountFor é quanto a reserva dá a uma ficha de `level` com o atributo da concessão em
+// `attribute`: nível + atributo (a Armadura da Honra, p53), ou só o atributo, mínimo 1,
+// quando o verbete diz (o Estandarte, p54).
+//
+//	grant.AmountFor(14, 3) // 3 no Estandarte, 17 na Armadura da Honra
+func (g PowerGrant) AmountFor(level, attribute int) int {
+	if g.AttributeOnly {
+		return max(1, attribute)
+	}
+	return level + attribute
+}
+
+// BannerPowerID é o Estandarte (p54): o cavaleiro recebe no início da cena, e os aliados
+// que veem o estandarte recebem pelo mestre, na faixa da mesa.
+const BannerPowerID = "class.cavaleiro.estandarte"
+
+// SceneStartGrants são as ativações que concedem uma reserva NO INÍCIO DA CENA: de PV
+// (a Armadura da Honra, p53) ou de PM (o Estandarte, p54).
 //
 // Elas são PASSIVAS com concessão: não há gesto que as dispare, e o que as
 // separa das outras concessões é justamente isso — a da postura espera a flag
@@ -338,7 +355,7 @@ func writtenDegrees(howMany int) string {
 func SceneStartGrants() []Activation {
 	outside := []Activation{}
 	for _, spec := range Activations() {
-		if spec.Kind != "passive" || spec.Grant == nil || spec.Grant.Kind != "temp-hp" {
+		if spec.Kind != "passive" || spec.Grant == nil || (spec.Grant.Kind != "temp-hp" && spec.Grant.Kind != "temp-mp") {
 			continue
 		}
 		outside = append(outside, spec)

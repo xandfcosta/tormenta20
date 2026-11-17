@@ -158,6 +158,7 @@ func TestEveryGrantHasSomeoneToApplyIt(t *testing.T) {
 		"instant+active-effect": "writeGrantedEffect, ao usar o poder",
 		"instant+switch":        "UsePower, que liga o interruptor da declaração",
 		"passive+temp-hp":       "Party.StartScene, na varredura do início da cena",
+		"passive+temp-mp":       "Party.StartScene, na varredura do início da cena; o dos aliados, pela faixa do mestre",
 	}
 	measured := 0
 	for _, spec := range Activations() {

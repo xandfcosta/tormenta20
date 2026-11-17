@@ -157,6 +157,9 @@ type PowerGrant struct {
 	Kind      string `json:"kind"`
 	Scope     string `json:"scope"`
 	Attribute string `json:"attribute"`
+	// AttributeOnly é a reserva que é SÓ o atributo, mínimo 1 (o Estandarte, p54);
+	// sem ele, a reserva é nível + atributo (a Armadura da Honra, p53).
+	AttributeOnly bool `json:"attributeOnly"`
 	// Modifiers é o que o efeito ativo liga. Vazio na reserva de PV, que se
 	// dimensiona pelo `Attribute` e não por lista.
 	Modifiers []engine.Modifier `json:"modifiers"`
