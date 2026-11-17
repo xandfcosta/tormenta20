@@ -123,16 +123,6 @@ type variantChoice struct {
 	Chosen    string
 }
 
-// originChoiceCard são os benefícios da origem, com o teto de dois.
-type originChoiceCard struct {
-	Name    string
-	Options []filterOption
-	Chosen  []string
-	// Ceiling é quantos benefícios a origem cobra (`originBenefitCeiling`).
-	Ceiling int
-	Left    int
-}
-
 // classChoiceCard é o que uma classe pede: as vagas de poder, o caminho e o
 // devoto.
 type classChoiceCard struct {
@@ -278,26 +268,6 @@ func raceVariants(dto sheet.CharacterDTO, name string) []variantChoice {
 		outside = append(outside, choice)
 	}
 	return outside
-}
-
-// originChoice monta o cartão da origem.
-func originChoice(dto sheet.CharacterDTO) *originChoiceCard {
-	origin, found := book.Origins()[dto.Origin]
-	if !found {
-		return nil
-	}
-	chosen := sheet.UnmarshalStrings(dto.OriginChoices)
-	ceiling := originBenefitCeiling(origin)
-	card := &originChoiceCard{
-		Name: origin.Name, Chosen: chosen,
-		Ceiling: ceiling, Left: ceiling - len(chosen),
-	}
-	for _, b := range sheet.OriginBenefitsOf(origin) {
-		card.Options = append(card.Options, filterOption{
-			Value: b.ID, Label: b.Name, Active: contemTraco(chosen, b.ID),
-		})
-	}
-	return card
 }
 
 // classChoiceCards monta um cartão por classe da ficha.
