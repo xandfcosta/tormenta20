@@ -266,6 +266,10 @@ templ gmPoolEditor(v View, row tableRow, pool, label, kind string, b *tableBar) 
 		<div class="ds-gm-pool">
 			<div class="ds-gm-pool-head">
 				<span class="ds-row-title">{ label } <b>{ ui.Quantity(int(b.Current)) }</b>{ fmt.Sprintf("/%d", b.Max) }</span>
+				// A RESERVA, aqui onde o mestre aplica o dano que a come primeiro (p106).
+				if b.Temp > 0 {
+					<span class="ds-gm-temp" title={ label + " temporários" }>{ fmt.Sprintf("+%d", b.Temp) }</span>
+				}
 				if b.Down != "" {
 					<span class="ds-down">{ b.Down }</span>
 				}
