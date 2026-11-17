@@ -65,7 +65,13 @@ func rerollsSkillTest(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, err
 	}
-	return st.deps.Sessions().RecordSkillTest(ctx, c.SessionID, rolled)
+	recorded, err := st.deps.Sessions().RecordSkillTest(ctx, c.SessionID, rolled)
+	if err == nil {
+		// O "Eu rolei" ZERA depois de valer: o próximo teste rolado na mão abria com
+		// este número já escrito. Na recusa ele fica, para quem digitou não o perder.
+		c.Signals["reroll_d20"] = ""
+	}
+	return recorded, err
 }
 
 // rerollDie lê o d20 que a mesa digitou no "Eu rolei" do teste. Vazio é o servidor
