@@ -17,30 +17,34 @@ import (
 // não vê esse julgamento, nem a Defesa do alvo, nem a rolagem do outro lado:
 // no papel do personagem, ele não conhece a ficha de outra entidade.
 
-// forPlayer recorta a faixa para quem não é o mestre. Quem rolou fica com a
-// própria rolagem, a decisão do mestre e o dano que ela pede; os outros
-// jogadores, só com quem ataca quem.
+// forPlayer recorta a faixa para quem não é o mestre. Os OUTROS jogadores ficam só com a
+// cabeça: quem ataca quem.
+//
+// QUEM ROLOU parte do cartão INTEIRO, e o recorte APAGA o que é só do mestre — a sugestão do
+// livro, a Defesa, a RD, o tipo da criatura (p230) — e reescreve o que ele lê de outro
+// jeito. O caminho não tomado é o de antes: montar o cartão dele do zero, copiando campo a
+// campo, fazia cada campo novo do mestre ser esquecido no do jogador até alguém notar (o
+// botão do Destruidor, a manobra declarada, as situações do lado dele, o "não letal").
+// Quem diz o que é de quem é o `attackCardAudience`, no teste ao lado, e ele reprova o
+// campo que ninguém classificou.
 func (a attackProposal) forPlayer(pa live.PendingAttack) *attackProposal {
-	out := attackProposal{
-		Stage:    a.Stage,
-		Attacker: a.Attacker, Target: a.Target, TargetEntryID: a.TargetEntryID,
-		Weapon: a.Weapon, Mine: a.Mine, Maneuver: a.Maneuver, Action: a.Action,
-	}
 	if !a.Mine {
-		return &out
+		return &attackProposal{
+			Stage:    a.Stage,
+			Attacker: a.Attacker, Target: a.Target, TargetEntryID: a.TargetEntryID,
+			Weapon: a.Weapon, Mine: a.Mine, Maneuver: a.Maneuver, Action: a.Action,
+		}
 	}
+	out := a
+	// SÓ O MESTRE.
+	out.Against = ""
+	out.Duel, out.Verdicts, out.Hint = duelView{}, nil, ""
+	out.Rows, out.Notes = nil, nil
+	// REESCRITOS para quem rolou: a conta sem a Defesa, as situações do lado dele (as do
+	// alvo ficam com o mestre, como a Defesa) e o "não letal" do dano da arma dele (p236).
 	out.Tally = rollNotation(pa.Roll, pa.Total) + " = " + strconv.Itoa(pa.Total)
-	out.Boost, out.Guard, out.Rerolled = a.Boost, a.Guard, a.Rerolled
-	out.Dose = a.Dose
-	// O QUE É DELE e explica a conta dele: a manobra que ele mesmo declarou, e as situações
-	// da Tabela 5-3 do lado de quem ataca. As do alvo ficam com o mestre, como a Defesa
-	// (decisão do dono).
-	out.FollowUp = a.FollowUp
 	out.Situations = strings.Join(pa.AttackerSituations, ", ")
-	out.Said, out.ToRoll, out.Hand, out.HandBonus = a.Said, a.ToRoll, a.Hand, a.HandBonus
-	// O "não letal" qualifica o dano da arma DELE (p236): a linha do mestre já o diz.
-	out.DamageLine, out.DamageTotal = a.DamageLine+writtenNonLethal(pa), a.DamageTotal
-	out.Destroyer, out.DamageRerolled = a.Destroyer, a.DamageRerolled
+	out.DamageLine = a.DamageLine + writtenNonLethal(pa)
 	return &out
 }
 

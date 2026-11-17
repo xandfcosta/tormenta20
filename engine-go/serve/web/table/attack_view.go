@@ -36,7 +36,7 @@ type attackProposal struct {
 	// "Golpe Divino · 3 PM" (ALE-487).
 	Boost string
 	// Against é o que a mesa sabe do alvo contra o tipo escolhido no gasto (a Anticriatura), só para o
-	// mestre: o `forPlayer` não o copia.
+	// mestre: o `forPlayer` o apaga.
 	Against string
 	// Dose diz o que a Injeção alquímica libera neste golpe (p165).
 	Dose string
