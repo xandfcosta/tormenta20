@@ -31,7 +31,9 @@ type choicesPanel struct {
 	Pending []pendencia
 	Races   []raceChoiceCard
 	Origin  *originChoiceCard
-	Classes []classChoiceCard
+	// OriginPicks são os benefícios marcados que deixam escolher um poder.
+	OriginPicks []originPickChoice
+	Classes     []classChoiceCard
 	// Devotion é o passo da devoção, que toda ficha tem.
 	Devotion devotionChoice
 	// Training é o passo das perícias da primeira classe, ou nil sem classe.
@@ -123,16 +125,6 @@ type variantChoice struct {
 	Chosen    string
 }
 
-// originChoiceCard são os benefícios da origem, com o teto de dois.
-type originChoiceCard struct {
-	Name    string
-	Options []filterOption
-	Chosen  []string
-	// Ceiling é quantos benefícios a origem cobra (`originBenefitCeiling`).
-	Ceiling int
-	Left    int
-}
-
 // classChoiceCard é o que uma classe pede: as vagas de poder, o caminho e o
 // devoto.
 type classChoiceCard struct {
@@ -195,6 +187,7 @@ func (s Scene) choicesPanelOf(dto sheet.CharacterDTO, search string) choicesPane
 	panel := choicesPanel{Search: search, Pending: s.sheetPendings(dto)}
 	panel.Races = s.raceChoices(dto, search)
 	panel.Origin = originChoice(dto)
+	panel.OriginPicks = originPicksOf(dto)
 	panel.Classes = classChoiceCards(dto, search)
 	panel.Devotion = devotionChoiceOf(dto)
 	return panel
@@ -278,26 +271,6 @@ func raceVariants(dto sheet.CharacterDTO, name string) []variantChoice {
 		outside = append(outside, choice)
 	}
 	return outside
-}
-
-// originChoice monta o cartão da origem.
-func originChoice(dto sheet.CharacterDTO) *originChoiceCard {
-	origin, found := book.Origins()[dto.Origin]
-	if !found {
-		return nil
-	}
-	chosen := sheet.UnmarshalStrings(dto.OriginChoices)
-	ceiling := originBenefitCeiling(origin)
-	card := &originChoiceCard{
-		Name: origin.Name, Chosen: chosen,
-		Ceiling: ceiling, Left: ceiling - len(chosen),
-	}
-	for _, b := range sheet.OriginBenefitsOf(origin) {
-		card.Options = append(card.Options, filterOption{
-			Value: b.ID, Label: b.Name, Active: contemTraco(chosen, b.ID),
-		})
-	}
-	return card
 }
 
 // classChoiceCards monta um cartão por classe da ficha.

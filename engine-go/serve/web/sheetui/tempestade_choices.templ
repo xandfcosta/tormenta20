@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"t20engine/domain/book"
 	"t20engine/serve/web/ds"
 )
 
@@ -126,6 +127,26 @@ templ originStepBody(v View, origin originChoiceCard) {
 			</div>
 		}
 	}
+}
+
+// originPickDs é o poder que um benefício da origem deixa escolher: um entre os poderes
+// gerais do tipo dele, como o caminho da classe. O pré-requisito vai no `title`, e não
+// barra: quem decide se ele vale é o mestre, como no passo dos poderes da classe.
+templ originPickDs(v View, pick originPickChoice) {
+	<div class="ds-field">
+		// O RÓTULO diz o que a lista é: o nome do benefício já está no título do passo.
+		<span class="ds-field-label">{ "Poderes de " + pick.Kind }</span>
+		<div class="ds-options">
+			for _, o := range pick.Picker.Options {
+				@ds.Option(o.Active, templ.Attributes{
+					"title":         book.PowerRequirements(o.Value),
+					"data-on:click": sheetPost(v, "/poderes/origem/"+pick.BenefitID+"/poder/"+o.Value),
+				}) {
+					{ o.Label }
+				}
+			}
+		</div>
+	</div>
 }
 
 // powersStepFilters são a busca e o filtro "Todos · Da classe · Gerais ·

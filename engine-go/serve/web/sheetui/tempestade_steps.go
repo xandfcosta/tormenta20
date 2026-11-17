@@ -24,14 +24,16 @@ type choiceStep struct {
 	// de um valor só.
 	Count string
 	Done  bool
-	// Kind diz o que o passo desenha: `race`, `origin`, `powers`, `path`,
-	// `devotion`, `counted`, `general` ou `training`.
+	// Kind diz o que o passo desenha: `race`, `origin`, `originPick`, `powers`,
+	// `path`, `devotion`, `counted`, `general` ou `training`.
 	Kind    string
 	Race    raceChoiceCard
 	Class   classChoiceCard
 	Counted countedChoice
 	// Power é o poder geral do passo `general`.
 	Power powerChoice
+	// OriginPick é o poder que um benefício da origem deixa escolher, no passo `originPick`.
+	OriginPick originPickChoice
 }
 
 // Tag é o que a lista mostra na ponta do passo: quanto falta, ou "feito".
@@ -82,6 +84,20 @@ func choiceStepsOf(v View) []choiceStep {
 	}
 	if o := v.Choices.Origin; o != nil {
 		all = append(all, choiceStep{ID: "origin", Title: "Origem · " + o.Name, Meta: "benefícios", Count: originWritten(*o), Done: o.Left <= 0, Kind: "origin"})
+		// O PODER QUE O BENEFÍCIO DEIXA ESCOLHER é um passo à parte: ligar o benefício
+		// não dizia qual poder, e sem passo ninguém o escolhia.
+		for _, pick := range v.Choices.OriginPicks {
+			step := choiceStep{
+				ID: "origin-pick-" + pick.BenefitID, Title: o.Name + " · " + pick.Name,
+				Meta: "escolha um", Kind: "originPick", OriginPick: pick, Done: pick.Picker.Chosen != "",
+			}
+			for _, option := range pick.Picker.Options {
+				if option.Active {
+					step.Meta = option.Label
+				}
+			}
+			all = append(all, step)
+		}
 	}
 	if t := v.Choices.Training; t != nil && t.Limit() > 0 {
 		all = append(all, choiceStep{

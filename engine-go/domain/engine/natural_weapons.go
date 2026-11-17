@@ -96,7 +96,7 @@ func (r *Ruleset) raceWeaponsOf(ch Character) []ownedNaturalWeapon {
 // tormentaWeaponsOf são as armas naturais dos poderes da Tormenta, inclusive o tomado pela origem.
 func (r *Ruleset) tormentaWeaponsOf(ch Character) []ownedNaturalWeapon {
 	out := []ownedNaturalWeapon{}
-	for _, id := range append(r.chosenGeneralPowers(ch).list, r.originPickedPowerIds(ch)...) {
+	for _, id := range append(r.chosenGeneralPowers(ch).list, r.OriginPickedPowerIDs(ch)...) {
 		if weapon, found := r.book.tormentaNaturalWeapons[id]; found {
 			out = append(out, ownedNaturalWeapon{sourceID: id, weapon: weapon})
 		}

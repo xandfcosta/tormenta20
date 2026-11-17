@@ -238,6 +238,20 @@ func pickOriginBenefit(s Scene, r *http.Request, row sqlcgen.Character, _ Signal
 	id := chi.URLParam(r, "beneficio")
 	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
 		dto.OriginChoices = idToggledCom(dto.OriginChoices, id)
+		// DESMARCADO, o benefício leva a escolha de poder dele junto: órfã, ela seria recusada.
+		if !slices.Contains(sheet.UnmarshalStrings(dto.OriginChoices), id) {
+			dto.PowerChoices = sheet.WithoutOriginPowerPick(dto.PowerChoices, id)
+		}
+	})
+}
+
+// pickOriginPower grava o poder que um benefício marcado da origem deixa escolher ("um poder
+// de combate a sua escolha", p91). Quem confere o tipo e o benefício é o `WithChoicesValid`,
+// dentro do `saveTheChoices`.
+func pickOriginPower(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	benefit, power := chi.URLParam(r, "beneficio"), chi.URLParam(r, "poder")
+	return s.saveTheChoices(r, row, func(dto *sheet.CharacterDTO) {
+		dto.PowerChoices = sheet.WithOriginPowerPick(dto.PowerChoices, benefit, power)
 	})
 }
 

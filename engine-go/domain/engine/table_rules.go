@@ -217,7 +217,7 @@ func (r *Ruleset) characterFitsRule(ch Character, rule TableRule) bool {
 
 // ownsPower diz se a ficha tem o poder, de classe, geral, da raça, da origem ou da devoção.
 func (r *Ruleset) ownsPower(ch Character, id string) bool {
-	if r.chosenGeneralPowers(ch).has[id] || slices.Contains(r.originPickedPowerIds(ch), id) {
+	if r.chosenGeneralPowers(ch).has[id] || slices.Contains(r.OriginPickedPowerIDs(ch), id) {
 		return true
 	}
 	chosen, choices := parseChoiceSet(ch.ClassPowers), parseClassChoices(ch.ClassChoices)

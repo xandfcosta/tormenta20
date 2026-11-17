@@ -8,7 +8,7 @@ import "encoding/json"
 
 // orderedSet is a string set that also preserves first-seen order — the Go stand
 // -in for a JS `Set` built from a JSON array, whose insertion order some callers
-// iterate (generalPowerActiveItem, originPickedPowerIds). Go maps randomize, so
+// iterate (generalPowerActiveItem, OriginPickedPowerIDs). Go maps randomize, so
 // membership (has) and iteration (list) are kept separate.
 type orderedSet struct {
 	list []string
