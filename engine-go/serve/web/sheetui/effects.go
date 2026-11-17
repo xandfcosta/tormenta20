@@ -184,6 +184,9 @@ func effectsPanelFor(dto sheet.CharacterDTO, offered []engine.ConditionalEffect,
 	panel.Situational, _ = situationalRowsOf(offered, active, dto)
 	panel.AlwaysOn = alwaysOnRowsOf(flags)
 	panel.Count = len(panel.Conditions) + len(panel.Applied) + len(panel.Stances) + len(panel.Declared) + activeCountOf(panel.Situational)
+	if wildShapeInPlay(dto) != nil {
+		panel.Count++
+	}
 	return panel
 }
 

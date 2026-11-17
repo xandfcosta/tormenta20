@@ -144,6 +144,13 @@ func activeEffects(v View) []activeEffect {
 			Dialog: "effect-declared-" + d.Flag, Meta: declaredMeta(d), Text: declaredText(v, d.Flag),
 		})
 	}
+	// A FORMA SELVAGEM em vigor: o "Voltar ao normal" da aba Efeitos é o X do crachá.
+	if shape := v.WildShape.Active; shape != nil {
+		out = append(out, activeEffect{
+			Kind: "wild-shape", Name: shape.Name, Remove: sheetPost(v, "/efeitos/forma-selvagem"),
+			Dialog: "effect-wild-shape", Meta: "Forma Selvagem · " + shape.Meta,
+		})
+	}
 	for _, a := range v.Effects.Applied {
 		out = append(out, activeEffect{
 			Kind: "applied", Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command),
@@ -273,6 +280,10 @@ func meterOf(label string, vital sheetVital, kind ds.MeterKind) ds.Meter {
 	return meter
 }
 
+// sheetMenuLabel é o nome do ⋯ da ficha, nos três lugares que o abrem: o cabeçalho
+// da ficha solta, e a fileira de seções e as abas da ficha dentro da sessão.
+const sheetMenuLabel = "Quem é, nível e aparência"
+
 // stripVitalName é o nome do botão do vital na faixa. Ele SUBSTITUI o texto do botão
 // para quem ouve a tela, e por isso carrega tudo o que o texto mostra — a palavra de
 // quem caiu e a reserva —, na ordem da frase da fileira da mesa (`barLabel`):
@@ -287,10 +298,6 @@ func stripVitalName(label string, vital sheetVital) string {
 	}
 	return name + ", ajustar"
 }
-
-// sheetMenuLabel é o nome do ⋯ da ficha, nos três lugares que o abrem: o cabeçalho
-// da ficha solta, e a fileira de seções e as abas da ficha dentro da sessão.
-const sheetMenuLabel = "Quem é, nível e aparência"
 
 // vitalTone é o degrau da escada da barra da faixa: o do PV, e nenhum no PM.
 func vitalTone(kind ds.MeterKind, vital sheetVital) string {
