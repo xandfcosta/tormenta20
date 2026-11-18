@@ -85,7 +85,7 @@ func (st Scene) proposeStrike(
 	}
 	onTurn := state.Initiative[state.TurnIndex]
 	// A POSSE é resolvida CONTRA O BANCO e nunca contra o cliente — é o mesmo
-	// caminho que o `Mover.OwnsCharacter` do tabuleiro usa.
+	// caminho que o `Mover.OwnedCharacters` do tabuleiro usa.
 	mine, _ := st.ownedOnTable(c.R.Context(), c.User, c.CampaignID)
 	if _, err := st.strike.Propose(c.R.Context(), app.Caller{ID: c.User}, c.Role, combat.Request{
 		CampaignID:         c.CampaignID,

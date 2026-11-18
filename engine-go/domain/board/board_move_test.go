@@ -67,7 +67,7 @@ func caminho(squares ...[2]int) []engine.Square {
 }
 
 var (
-	jogadorDono = Mover{UserID: 42, Role: "player", OwnsCharacter: true}
+	jogadorDono = Mover{UserID: 42, Role: "player", OwnedCharacters: map[int64]bool{7: true}}
 	mestre      = Mover{UserID: 1, Role: "gm"}
 )
 
@@ -200,10 +200,21 @@ func TestAPlayerDoesNotMoveOutsideTheirOwnTurn(t *testing.T) {
 // A peça do vizinho não é da pessoa, mesmo estando na vez dela.
 func TestAPlayerDoesNotMoveSomeoneElsesToken(t *testing.T) {
 	b, st := mesaEmCombate(t)
-	notOwner := Mover{UserID: 42, Role: "player", OwnsCharacter: false}
+	notOwner := Mover{UserID: 42, Role: "player", OwnedCharacters: map[int64]bool{8: true}}
 
 	if err := ProposeMove(b, st, "t2", caminho([2]int{9, 9}, [2]int{8, 9}), notOwner); err == nil {
 		t.Fatal("o jogador moveu a peça do Ogro")
+	}
+}
+
+// A POSSE é da PEÇA que o tabuleiro leu: ser dono de um personagem da mesa não dá
+// a peça de outro, nem na vez dela. É o predicado que decide quem anda.
+func TestOwningAnotherCharacterDoesNotMoveThisToken(t *testing.T) {
+	b, st := mesaEmCombate(t)
+	ownsAnother := Mover{UserID: 42, Role: "player", OwnedCharacters: map[int64]bool{8: true}}
+
+	if err := ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), ownsAnother); err == nil {
+		t.Fatal("o dono do personagem 8 moveu a peça do personagem 7 na vez dela")
 	}
 }
 
@@ -276,7 +287,7 @@ func TestTheGmConfirmsForThePlayerAndNotTheOtherWayAround(t *testing.T) {
 	b, st := mesaEmCombate(t)
 	_ = ProposeMove(b, st, "t1", caminho([2]int{0, 0}, [2]int{1, 0}), jogadorDono)
 
-	otherPlayer := Mover{UserID: 99, Role: "player", OwnsCharacter: true}
+	otherPlayer := Mover{UserID: 99, Role: "player", OwnedCharacters: map[int64]bool{7: true}}
 	if err := CommitMove(b, st, b.Version, otherPlayer); err == nil {
 		t.Fatal("um jogador confirmou o movimento proposto por outro")
 	}

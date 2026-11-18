@@ -81,7 +81,7 @@ func (s Scene) handlePreviewMove(w http.ResponseWriter, r *http.Request) {
 // prévia mentindo o deslocamento de uma peça que não é dele.
 //
 // A POSSE é resolvida contra o BANCO (o `mine` do roster), como no `moveWho`, e
-// nunca assumida: um `OwnsCharacter: true` escrito direto daria a qualquer
+// nunca assumida: uma posse escrita direto daria a qualquer
 // jogador o deslocamento da peça de qualquer outro — não pela tela, que só
 // oferece o arrasto da peça dele, mas pela ROTA, que é onde a fronteira mora.
 func (s Scene) whoDragsInPreview(r *http.Request, role string, token *board.BoardToken) board.Mover {
@@ -94,8 +94,9 @@ func (s Scene) whoDragsInPreview(r *http.Request, role string, token *board.Boar
 	if err != nil {
 		return who
 	}
-	mine, _ := s.ownedOnTable(r.Context(), userID, int64(campaignID))
-	who.OwnsCharacter = mine[*token.CharacterID]
+	// A PEÇA SEM PERSONAGEM não é de jogador nenhum, e pular a consulta das fichas
+	// para ela é o `return` acima; para as outras, quem decide é o `CanMoveWith`.
+	who.OwnedCharacters, _ = s.ownedOnTable(r.Context(), userID, int64(campaignID))
 	return who
 }
 

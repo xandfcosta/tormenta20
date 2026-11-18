@@ -85,10 +85,11 @@ func cancelMove(st Scene, c commandCtx) (*board.BoardState, error) {
 
 // moveWho resolve a POSSE contra o banco, e nunca contra o cliente.
 //
-// O `Mover.OwnsCharacter` é o que separa "a peça é sua" de "você disse que é": a
-// peça aponta para um personagem, e quem responde de quem ele é são as fichas da
-// campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os
-// MEUS.
+// O `Mover.OwnedCharacters` é o que separa "a peça é sua" de "você disse que é":
+// a peça aponta para um personagem, e quem responde de quem ele é são as fichas
+// da campanha — o mesmo caminho que o `tableRoster` usa para saber quais são os
+// MEUS. QUAL peça é a do gesto quem acha é o tabuleiro, dentro da mutação: aqui
+// não se lê o tabuleiro.
 func (s Scene) moveWho(c commandCtx) board.Mover {
 	_, role, err := s.access.Session(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID)
 	if err != nil {
@@ -98,19 +99,10 @@ func (s Scene) moveWho(c commandCtx) board.Mover {
 	if role == "gm" {
 		return who
 	}
-	mine, _ := s.ownedOnTable(c.R.Context(), c.User, c.CampaignID)
-	// A LEITURA QUE FALHA DEIXA A POSSE EM FALSO, e este é o lado seguro: sem
-	// saber de quem é a peça, a resposta é "não é sua", e o `assertMovable` do
-	// tabuleiro recusa com a frase dele. O erro não some da mesa — o gesto que
-	// vem a seguir lê o mesmo tabuleiro pela porta que DEVOLVE erro, e é ele
-	// quem conta o que houve.
-	b, err := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
-	if err != nil {
-		return who
-	}
-	if token := board.FindToken(b, chi.URLParam(c.R, "tokenId")); token != nil && token.CharacterID != nil {
-		who.OwnsCharacter = mine[*token.CharacterID]
-	}
+	// A LEITURA QUE FALHA DEIXA A POSSE VAZIA, e este é o lado seguro: sem saber
+	// de quem são as fichas, a resposta é "não é sua", e o `assertMovable` do
+	// tabuleiro recusa com a frase dele.
+	who.OwnedCharacters, _ = s.ownedOnTable(c.R.Context(), c.User, c.CampaignID)
 	return who
 }
 
