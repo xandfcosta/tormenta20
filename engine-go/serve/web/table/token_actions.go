@@ -45,42 +45,16 @@ func (s Scene) TokenActionRoutes(r chi.Router) {
 	r.Post(base+"/remover", s.gmBoardCommand(removesToken))
 }
 
-// toggleVisibility é o gesto da EMBOSCADA.
-//
-// ALTERNA e não recebe o estado desejado, ao contrário do pincel de terreno:
-// mandar o valor da tela faria dois cliques rápidos com a resposta atrasada
-// apagarem um ao outro — e o resultado desse empate é a emboscada aparecendo
-// para a mesa.
+// toggleVisibility é o gesto da EMBOSCADA. Ele ALTERNA sobre o tabuleiro que a mutação leu, e por quê
+// está no `board.ToggleTokenHidden`.
 func toggleVisibility(st Scene, c commandCtx) (*board.BoardState, error) {
-	token, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
-	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
-		board.ParseTokenPatch(map[string]any{"hidden": !token.Hidden}))
+	return st.deps.Boards().ToggleTokenHidden(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "tokenId"))
 }
 
-// toggleMoving liga e desliga o "em movimento" de uma peça de cenário (p239).
-//
-// O ESTADO VEM DO SERVIDOR e não da tela, pela mesma razão do `toggleVisibility`
-// logo acima: dois cliques rápidos com a resposta atrasada se apagariam, e o
-// resultado do empate seria uma Defesa +5 que ninguém pediu.
-//
-// SÓ PEÇA COM ESTATÍSTICAS: "em movimento" é uma linha da Tabela 5-3 sobre a
-// Defesa de um OBJETO, e marcá-la num ogro não muda nada — um botão que não faz
-// nada é pior que um botão que não existe.
+// toggleMoving liga e desliga o "em movimento" de uma peça de cenário (p239), sobre o tabuleiro que a
+// mutação leu — a regra e a recusa estão no `board.ToggleTokenMoving`.
 func toggleMoving(st Scene, c commandCtx) (*board.BoardState, error) {
-	token, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
-	if !token.HasObjectStats() {
-		return nil, fmt.Errorf(
-			"%s não tem estatísticas de objeto: o +5 por estar em movimento é da "+
-				"Defesa de um objeto (p239)", token.Label)
-	}
-	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
-		board.ParseTokenPatch(map[string]any{"moving": !token.Moving}))
+	return st.deps.Boards().ToggleTokenMoving(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "tokenId"))
 }
 
 // OS DUPLICARES, e a diferença entre eles é o que a cópia faz com a LINHA DA
@@ -343,14 +317,9 @@ func (s Scene) addsACopyOfTheLine(ctx context.Context, sessionID int64, template
 // usado. Um "voltar" que continuasse disponível andaria para trás na cena sem
 // dizer até onde vai.
 func wasWhereForTokenBack(st Scene, c commandCtx) (*board.BoardState, error) {
-	token, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
-	if token.CameFrom == nil {
-		return nil, fmt.Errorf("%s não foi movida nesta cena: não há para onde voltar", token.Label)
-	}
-	return st.deps.Boards().ReturnToken(c.R.Context(), c.SessionID, c.BoardID, token.ID)
+	// QUEM RECUSA é o `board.ReturnToken`, sobre o tabuleiro que a mutação leu: a peça que sumiu e a
+	// que não foi movida nesta cena voltam com a frase dele.
+	return st.deps.Boards().ReturnToken(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "tokenId"))
 }
 
 // tokenSignals é o que o diálogo de editar manda.
@@ -366,10 +335,6 @@ type tokenSignals struct {
 // peça Grande desenhada em 1×1 mente sobre quem o gabarito pega e sobre onde cabe
 // passar.
 func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
-	token, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
 	var signals tokenSignals
 	if err := datastar.ReadSignals(c.R, &signals); err != nil {
 		return nil, fmt.Errorf("não entendi o formulário da peça: %v", err)
@@ -384,7 +349,7 @@ func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
 	}
 	// `size` e não `footprint`: o lado é derivado, e mandá-lo aqui seria um
 	// patch que o invariante desfaz.
-	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, token.ID,
+	return st.deps.Boards().UpdateToken(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "tokenId"),
 		board.ParseTokenPatch(map[string]any{"label": name, "size": signals.Size}))
 }
 
@@ -394,11 +359,7 @@ func editsToken(st Scene, c commandCtx) (*board.BoardState, error) {
 // — "ele saiu do mapa" e "ele saiu do combate" —, e juntá-los faria o mestre
 // perder o combatente ao arrumar a cena.
 func removesToken(st Scene, c commandCtx) (*board.BoardState, error) {
-	token, err := st.tokenOfCommand(c)
-	if err != nil {
-		return nil, err
-	}
-	return st.deps.Boards().RemoveToken(c.R.Context(), c.SessionID, c.BoardID, token.ID)
+	return st.deps.Boards().TakeTokenOff(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "tokenId"))
 }
 
 // tokenOfCommand lê a peça pelo id do CAMINHO, e recusa a que não existe.

@@ -8,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/board"
-	"t20engine/domain/engine"
 )
 
 // O MOVIMENTO da peça na Mesa.
@@ -54,50 +53,16 @@ func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
 		state, chi.URLParam(c.R, "tokenId"), destination, st.moveWho(c))
 }
 
-// undoLastStop corrige a última perna sem jogar a rota inteira fora.
-//
-// É a ordem do arrependimento: primeiro se tira a perna errada, e só depois se
-// cancela tudo. Sobrando só a origem, desfazer VIRA cancelar — uma proposta sem
-// perna nenhuma não é proposta, e deixar um provisório de custo zero na mesa
-// seria pedir um "Confirmar" que não move ninguém.
-//
-// Reconstrói pelas paradas que sobraram em vez de cortar o fim do caminho: o
-// número de quadrados de um trecho não se deduz das paradas sem redesenhá-lo, e
-// redesenhar é o que o `PathThroughStops` faz de graça.
+// undoLastStop corrige a última perna sem jogar a rota inteira fora — a ordem do arrependimento, e
+// quando desfazer vira cancelar, estão no `board.UndoLastStop`. As paradas saem do tabuleiro que a
+// mutação leu: lidas à parte, dois desfazer juntos tiravam a mesma perna.
 func undoLastStop(st Scene, c commandCtx) (*board.BoardState, error) {
-	tokenID := chi.URLParam(c.R, "tokenId")
-	stops, err := st.paradasDaProposta(c, tokenID)
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 	if err != nil {
 		return nil, err
 	}
-	if len(stops) < 2 {
-		return nil, fmt.Errorf("não há parada a desfazer em %q", tokenID)
-	}
-	if stops = stops[:len(stops)-1]; len(stops) < 2 {
-		return cancelMove(st, c)
-	}
-	return st.propoePorParadas(c, tokenID, stops)
-}
-
-// paradasDaProposta devolve as paradas já acumuladas, ou só o lugar da peça (`board.StopsSoFar`).
-func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square, error) {
-	b, err := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
-	if err != nil {
-		return nil, err
-	}
-	if b == nil {
-		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
-	}
-	return board.StopsSoFar(b, tokenID, c.User)
-}
-
-func (s Scene) propoePorParadas(c commandCtx, tokenID string, stops []engine.Square) (*board.BoardState, error) {
-	state, err := s.deps.Sessions().State(c.R.Context(), c.SessionID)
-	if err != nil {
-		return nil, err
-	}
-	return s.deps.Boards().ProposeMoveWithStops(c.R.Context(), c.SessionID, c.BoardID,
-		state, tokenID, stops, s.moveWho(c))
+	return st.deps.Boards().UndoLastStop(c.R.Context(), c.SessionID, c.BoardID,
+		state, chi.URLParam(c.R, "tokenId"), st.moveWho(c))
 }
 
 // confirmMove entrega o gesto ao caso de uso, que abre a transação.

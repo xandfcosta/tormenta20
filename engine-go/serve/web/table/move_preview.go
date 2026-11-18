@@ -103,9 +103,8 @@ func (s Scene) whoDragsInPreview(r *http.Request, role string, token *board.Boar
 //
 // A lista de paradas sai do provisório quando ele existe — é o que faz a perna
 // viva ESTENDER o caminho em vez de recomeçá-lo — e da posição da peça quando
-// não. É a mesma leitura do `paradasDaProposta`, e ela é refeita aqui em vez de
-// reusada porque aquela vive num `commandCtx` (o caminho da MUTAÇÃO) e esta não
-// pode ter direito de escrita nenhum.
+// não. É parecida com o `board.StopsSoFar` que a mutação usa, mas esta não
+// confere QUEM propôs o movimento.
 func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID string, destination engine.Square, who board.Mover) (map[string]any, error) {
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
