@@ -381,14 +381,18 @@ func TestASwitchedOnConditionalCompetesInTheStacking(t *testing.T) {
 	}
 }
 
-// A FLAG SOB CONDIÇÃO não acende pelo interruptor: quem a acende é a condição cumprida.
-func TestASwitchedOnFlagTargetDoesNotRaiseTheFlag(t *testing.T) {
+// A FLAG SOB CONDIÇÃO ACENDE PELO INTERRUPTOR LIGADO, e não vira parcela: o terreno difícil
+// "em terreno natural" do Caminho dos Ermos é uma flag que a mesa liga (ALE-654).
+func TestASwitchedOnFlagTargetRaisesTheFlag(t *testing.T) {
 	items := []ActiveItem{
 		vested("weird", Modifier{Target: ModifierTarget{K: "flag", Name: "fatigue-on-sleep"}, Amount: 1, BonusType: "untyped", Condition: &ModifierCondition{C: "context", Note: "durante a noite"}}),
 	}
 	on := resolveInWorld(items, map[string]bool{resolveInWorld(items, nil).Conditional[0].Term: true})
-	if on.Flags["fatigue-on-sleep"] {
-		t.Error("a flag sob condição acendeu pelo interruptor")
+	if !on.Flags["fatigue-on-sleep"] {
+		t.Error("o interruptor ligado não acendeu a flag que ele carrega")
+	}
+	if off := resolveInWorld(items, nil); off.Flags["fatigue-on-sleep"] {
+		t.Error("a flag sob condição acendeu com o interruptor desligado")
 	}
 	if _, ok := on.ByTarget["flag:fatigue-on-sleep"]; ok {
 		t.Error("a flag sob condição virou parcela na pilha")

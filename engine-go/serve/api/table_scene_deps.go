@@ -53,8 +53,8 @@ func (h tableHost) SSE() *live.SSEHub                { return h.rules.sse }
 
 // CharacterChanged avisa que uma ficha da mesa mexeu. A regra é da FICHA e a
 // Mesa a pede emprestada, que é o que o campo `sheet` do `tableRules` diz.
-func (h tableHost) CharacterChanged(characterID int64) {
-	h.rules.sheet.characterChanged(characterID)
+func (h tableHost) CharacterChanged(ctx context.Context, characterID int64) {
+	h.rules.sheet.characterChanged(ctx, characterID)
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 

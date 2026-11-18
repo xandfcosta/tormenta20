@@ -238,7 +238,7 @@ func (st Scene) opensTheGuard(c commandCtx, state *live.SessionRuntimeState, pen
 	if attacker == nil || attacker.CharacterID == nil {
 		return nil
 	}
-	defer st.deps.CharacterChanged(*attacker.CharacterID)
+	defer st.deps.CharacterChanged(c.R.Context(), *attacker.CharacterID)
 	if pendente.Charge != "" {
 		if err := st.plays.OpenTheGuard(c.R.Context(), *attacker.CharacterID, pendente.Charge); err != nil {
 			return err
@@ -308,7 +308,7 @@ func (st Scene) bumpsTheAttacker(
 	if err == nil {
 		err = st.plays.RecoverOnTriggers(c.R.Context(), *attacker.CharacterID, triggers...)
 	}
-	st.deps.CharacterChanged(*attacker.CharacterID)
+	st.deps.CharacterChanged(c.R.Context(), *attacker.CharacterID)
 	return err
 }
 
@@ -336,7 +336,7 @@ func (st Scene) bumpsTheTarget(
 		triggers = append(triggers, "meleeMissed")
 	}
 	err := st.plays.BumpCumulativeBonus(c.R.Context(), *target.CharacterID, pendente.TargetStances, triggers...)
-	st.deps.CharacterChanged(*target.CharacterID)
+	st.deps.CharacterChanged(c.R.Context(), *target.CharacterID)
 	return err
 }
 

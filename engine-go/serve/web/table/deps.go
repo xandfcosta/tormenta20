@@ -74,7 +74,7 @@ type Deps interface {
 	// dispara — mexer nos vitais de uma linha — ainda é uma chamada de STORE, e
 	// um caso de uso que só notificasse não seria um caso de uso. Ela vai junto
 	// com o store da fila.
-	CharacterChanged(characterID int64)
+	CharacterChanged(ctx context.Context, characterID int64)
 
 	// PlayerSheet é a ficha EMBUTIDA, pedida PRONTA: montá-la aqui obrigaria a
 	// Mesa a cumprir a `sheetui.Deps` inteira para desenhar um painel. Nulo é

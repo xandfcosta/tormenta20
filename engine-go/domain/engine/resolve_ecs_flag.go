@@ -174,17 +174,16 @@ func dropWhatTheFlagRequires(w *ecs.World) {
 }
 
 // harvestFlags tira as flags da pilha: elas são interruptor, não número.
+//
+// A FLAG LIGADA PELO INTERRUPTOR ACENDE. Ela não acendia — "quem a acende é a condição cumprida",
+// regra que só preservava a passada antiga —, e o terreno difícil do Caminho dos Ermos, do Caminho
+// do Explorador e do À Prova de Tudo (p51, p63, p88) é justamente uma flag sob a condição que a mesa
+// liga: "em terreno natural" (decisão do dono, ALE-654). Ligada, ela acende como a incondicional, e
+// continua fora da pilha.
 func harvestFlags(w *ecs.World) {
 	flags := flagsOf(w)
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if dead(w, e) || deferred(w, e) || t.Mod.Target.K != "flag" {
-			return
-		}
-		if switched(w, e) {
-			// A FLAG SOB CONDIÇÃO NÃO ACENDE pelo interruptor: quem a acende é a condição cumprida
-			// (`raiseFlags`), e a segunda passada de antes a descartava do mesmo jeito. O interruptor
-			// que liga um grupo de flag é o `FlagGroupID`, e ele liga os termos que LEEM a flag.
-			suppress(w, e, "flag sob condição não acende pelo interruptor")
 			return
 		}
 		raiseFlagWithSource(flags, t)

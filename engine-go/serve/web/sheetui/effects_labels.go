@@ -278,6 +278,8 @@ var itemFlagLabel = map[string]string{
 	"magia-ilimitada":            "Magia Ilimitada",
 	"ambidestria":                "Ambidestria",
 	"tem-estilo-de-duas-armas":   "Estilo de Duas Armas",
+	// A do Caminho do Explorador (p51): o terreno difícil sem redução, no interruptor de terreno do Explorador, a pede.
+	"caminho-do-explorador": "Caminho do Explorador",
 	// A da Escaramuça Superior (p51): ela é quem cala os bônus menores da Escaramuça.
 	"escaramuca-superior": "Escaramuça Superior",
 	// A que a Flauta Mística pede (p158): o bônus dela é de "um bardo".

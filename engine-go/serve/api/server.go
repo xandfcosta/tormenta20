@@ -15,8 +15,10 @@ import (
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
+	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
+	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
@@ -120,14 +122,39 @@ func (s *Server) CloseLiveStreams() {
 // middleware e o id vêm logo abaixo e são do `Server`. Partir por RECEPTOR
 // partiria em dois arquivos que ninguém lê junto o mecanismo, que é a coisa com
 // uma razão para mudar.
-func (sr sheetRules) characterChanged(characterID int64) {
+func (sr sheetRules) characterChanged(ctx context.Context, characterID int64) {
 	// O AVISO PARA AS CENAS DO SERVIDOR é por PERSONAGEM e não por sessão: quem
 	// escuta é o stream da Mesa de quem tem essa ficha aberta, e a busca por
 	// sessão viva abaixo responde outra pergunta — a do hub SSE, que fala com a
 	// sala inteira.
 	sr.bus.Publish(events.CharacterChanged{CharacterID: characterID})
-	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(characterID) {
+	liveSessions := sr.sessions.LiveSessionsWithCharacter(characterID)
+	for _, sessionID := range liveSessions {
 		sr.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
+	}
+	sr.remeasurePieces(ctx, characterID, liveSessions)
+}
+
+// remeasurePieces mede a ficha de novo para as peças dela nos tabuleiros das sessões vivas: o
+// interruptor ligado e a condição posta mudam o deslocamento e a isenção de terreno difícil no
+// meio da cena (ALE-654). A ficha só é computada quando há sessão viva com o personagem.
+//
+// Falha em LOG, e não no gesto: a ficha já foi gravada, e recusar o interruptor porque o mapa não
+// acompanhou desfaria uma coisa certa por causa de outra.
+func (sr sheetRules) remeasurePieces(ctx context.Context, characterID int64, sessions []int64) {
+	if len(sessions) == 0 || sr.boards == nil {
+		return
+	}
+	squares, ignores, err := sheet.MovementOf(ctx, sr.queries, sr.catalogs, characterID)
+	if err != nil {
+		slog.Warn("tabuleiro: ficha não medida para as peças", "character_id", characterID, "err", err)
+		return
+	}
+	movement := board.TokenMovement{Squares: squares, IgnoresDifficult: ignores}
+	for _, sessionID := range sessions {
+		if err := sr.boards.RemeasureCharacter(ctx, sessionID, characterID, movement); err != nil {
+			slog.Warn("tabuleiro: peças não medidas de novo", "character_id", characterID, "session_id", sessionID, "err", err)
+		}
 	}
 }
 

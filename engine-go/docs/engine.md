@@ -622,7 +622,10 @@ caiu entre os dois sem ninguém o ler.
 > de carga sem tocar em fator (a magia de lentidão vale para o anão). **São duas
 > flags porque o livro as vende separadas** (o Fanático, p128, compra só a da
 > armadura). Isenção de terreno difícil (Acrobático, p129) é do `PathCost` do
-> tabuleiro. **Confira na PÁGINA, e não na descrição do catálogo, antes de
+> tabuleiro, e ela pode vir sob o interruptor que a mesa liga ("em terreno
+> natural" do Caminho dos Ermos, p63): **a flag ligada pelo interruptor acende
+> como a incondicional**. A peça mede a ficha ao entrar no mapa, e o aviso de
+> que a ficha mudou a mede de novo (`RemeasureCharacter`). **Confira na PÁGINA, e não na descrição do catálogo, antes de
 > concluir que um poder pede isenção nova**: o corte pode ser da CIRCUNSTÂNCIA,
 > que o app não modela.
 

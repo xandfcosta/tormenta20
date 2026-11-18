@@ -356,13 +356,22 @@ var classPowersPart07 = []ClassPower{
 	},
 	{
 		ID:             "class.druida.caminho-dos-ermos",
+		Modeled:        []string{"o terreno difícil sem redução, no interruptor de terreno natural"},
 		ClassName:      "Druida",
 		Name:           "Caminho dos Ermos",
 		Description:    "Pode atravessar terrenos difíceis sem redução em seu deslocamento. CD para rastreá-lo aumenta em +10. Só em terrenos naturais.",
 		GrantedAtLevel: 2,
 		BookPage:       63,
 		UID:            "pwr_6uiwktxrwi",
-		Unmodeled:      "terreno difícil natural sem redução: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
+				Amount:    1,
+				BonusType: "untyped",
+				Note:      "terreno difícil não reduz o deslocamento; a CD para rastreá-lo sobe +10",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "terreno-natural", Label: "em terreno natural"},
+			},
+		},
 	},
 	{
 		ID:             "class.druida.magias-2-circulo",

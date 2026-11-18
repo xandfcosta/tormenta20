@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"strings"
 	"t20engine/app/session"
 	"t20engine/domain/live"
@@ -34,7 +35,7 @@ func TestTheSheetThatChangedReachesTheTable(t *testing.T) {
 	}
 	conn := s.sse.Add(7, "c1", "player")
 
-	s.sheetRules().characterChanged(14)
+	s.sheetRules().characterChanged(context.Background(), 14)
 
 	select {
 	case frame := <-conn.Frames:
@@ -60,7 +61,7 @@ func TestATableWithoutTheCharacterDoesNotReceiveIt(t *testing.T) {
 	}
 	conn := s.sse.Add(7, "c1", "player")
 
-	s.sheetRules().characterChanged(14)
+	s.sheetRules().characterChanged(context.Background(), 14)
 
 	select {
 	case frame := <-conn.Frames:
