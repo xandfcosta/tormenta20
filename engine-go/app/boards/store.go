@@ -80,31 +80,6 @@ func (bs *Store) snapshotsFor(ctx context.Context) BoardSnapshots {
 	return bs.snapshots
 }
 
-// cloneBoard copia o tabuleiro para o broadcast. As peças são valores; a cópia
-// da fatia é o que impede uma mensagem concorrente de mexer no que já está
-// sendo serializado.
-func cloneBoard(b *board.BoardState) *board.BoardState {
-	if b == nil {
-		return nil
-	}
-	out := *b
-	out.Tokens = make([]board.BoardToken, len(b.Tokens))
-	copy(out.Tokens, b.Tokens)
-	// Os marcadores são valores, mas a FATIA é compartilhada: sem a cópia, uma
-	// mensagem concorrente mexeria no que já está sendo serializado.
-	out.Markers = make([]board.BoardMarker, len(b.Markers))
-	copy(out.Markers, b.Markers)
-	// O provisório é PONTEIRO, e uma cópia rasa deixaria o instantâneo do
-	// broadcast apontando para o mesmo movimento que a mensagem seguinte
-	// substitui. O que sai no fio tem de ser cópia de verdade.
-	if b.Pending != nil {
-		pending := *b.Pending
-		pending.Path = append([]engine.Square(nil), b.Pending.Path...)
-		out.Pending = &pending
-	}
-	return &out
-}
-
 // Get devolve UM tabuleiro da sessão (nil quando não há), lido do banco.
 //
 // `boardID` vazio significa "a aba padrão", e não "erro": quem entra na
@@ -248,24 +223,31 @@ func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain
 // o que proteger do cancelamento: o gesto cancelado não fecha a aba, o banco
 // não muda, e a mesa continua íntegra.
 func (bs *Store) Close(ctx context.Context, sessionID int64, boardID string) error {
+	closed, err := bs.closeLocked(ctx, sessionID, boardID)
+	if err != nil || !closed {
+		return err
+	}
+	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
+	return nil
+}
+
+// closeLocked apaga a linha do tabuleiro sob a trava, e diz se havia o que fechar. O aviso sai DEPOIS,
+// fora da trava, como no `apply`.
+func (bs *Store) closeLocked(ctx context.Context, sessionID int64, boardID string) (bool, error) {
 	bs.Mu.Lock()
+	defer bs.Mu.Unlock()
 	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
 	if err != nil {
-		bs.Mu.Unlock()
-		return err
+		return false, err
 	}
 	target := FindBoard(open, boardID)
 	if target == nil {
-		bs.Mu.Unlock()
-		return nil
+		return false, nil
 	}
 	if err := bs.snapshotsFor(ctx).Delete(ctx, sessionID, target.ID); err != nil {
-		bs.Mu.Unlock()
-		return err
+		return false, err
 	}
-	bs.Mu.Unlock()
-	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
-	return nil
+	return true, nil
 }
 
 // apply roda uma mutação pura sobre UM tabuleiro, sob a trava, e devolve o

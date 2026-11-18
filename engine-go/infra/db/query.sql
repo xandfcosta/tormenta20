@@ -505,7 +505,7 @@ WHERE s.campaignId = ?;
 -- name: ListLiveOpenBoards :many
 -- Os tabuleiros abertos das sessoes NAO ENCERRADAS, para achar onde uma ficha tem peca: o tabuleiro se
 -- le do banco, e nao de uma copia em memoria (decisao do dono).
-SELECT b.sessionId, b.state
+SELECT b.sessionId, b.boardId, b.state
 FROM open_boards b
 JOIN sessions s ON s.id = b.sessionId
 WHERE s.status != 'ended';

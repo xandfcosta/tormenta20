@@ -3,6 +3,7 @@ package boards
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 
 	"t20engine/domain/board"
@@ -67,6 +68,10 @@ func (bs *Store) SessionsWithPieceOf(ctx context.Context, characterID int64) ([]
 		}
 		parsed, err := parseBoardBlob(row.State)
 		if err != nil {
+			// SEGUE para as outras sessões, mas com rastro: um tabuleiro ilegível não pode impedir a
+			// remedida das mesas sãs, e calado ele deixaria a peça com o número velho sem ninguém saber.
+			slog.Warn("tabuleiro ilegível na busca de peças para remedir",
+				"session_id", row.Sessionid, "board_id", row.Boardid, "character_id", characterID, "err", err)
 			continue
 		}
 		if hasPieceOf(parsed, characterID) {

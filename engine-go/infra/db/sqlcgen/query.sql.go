@@ -3615,7 +3615,7 @@ func (q *Queries) ListLevelChoicesByCharacters(ctx context.Context, ids []int64)
 }
 
 const listLiveOpenBoards = `-- name: ListLiveOpenBoards :many
-SELECT b.sessionId, b.state
+SELECT b.sessionId, b.boardId, b.state
 FROM open_boards b
 JOIN sessions s ON s.id = b.sessionId
 WHERE s.status != 'ended'
@@ -3623,6 +3623,7 @@ WHERE s.status != 'ended'
 
 type ListLiveOpenBoardsRow struct {
 	Sessionid int64  `json:"sessionid"`
+	Boardid   string `json:"boardid"`
 	State     string `json:"state"`
 }
 
@@ -3637,7 +3638,7 @@ func (q *Queries) ListLiveOpenBoards(ctx context.Context) ([]ListLiveOpenBoardsR
 	items := []ListLiveOpenBoardsRow{}
 	for rows.Next() {
 		var i ListLiveOpenBoardsRow
-		if err := rows.Scan(&i.Sessionid, &i.State); err != nil {
+		if err := rows.Scan(&i.Sessionid, &i.Boardid, &i.State); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
