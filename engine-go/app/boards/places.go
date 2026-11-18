@@ -108,31 +108,25 @@ func (bs *Store) openPlaceLocked(ctx context.Context, campaignID, sessionID, pla
 	}
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	// A HIDRATAÇÃO QUE FALHA RECUSA (ALE-375): sem saber quais abas já estão
-	// abertas, abrir mais uma passa por cima do teto e pode duplicar a cena que
-	// já estava na mesa.
-	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
+	// A LEITURA QUE FALHA RECUSA (ALE-375): sem saber quais abas já estão abertas, abrir mais uma
+	// passa por cima do teto e pode duplicar a cena que já estava na mesa.
+	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
+	if err != nil {
 		return nil, err
 	}
-	return bs.inNewTabLocked(sessionID, scene)
-}
-
-// inNewTabLocked acrescenta a cena como mais uma aba, com a trava na mão.
-//
-// UM lugar só cunha id e sequência, e é por isso que ele existe: uma segunda
-// cópia disso é como uma delas esquece o TETO de abas — a diferença entre uma
-// sessão com oito cenas e uma que cresce sem limite carregando tudo em toda
-// hidratação.
-func (bs *Store) inNewTabLocked(sessionID int64, scene *board.BoardState) (*board.BoardState, error) {
-	if len(bs.boards[sessionID]) >= openBoardsCeiling {
+	if len(open) >= openBoardsCeiling {
 		return nil, fmt.Errorf(
 			"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de abrir outro lugar",
-			len(bs.boards[sessionID]), openBoardsCeiling)
+			len(open), openBoardsCeiling)
 	}
 	scene.ID = bs.newID()
-	scene.Seq = bs.nextSeqLocked(sessionID)
-	bs.boards[sessionID] = append(bs.boards[sessionID], scene)
-	return cloneBoard(scene), nil
+	scene.Seq = nextSeq(open)
+	// GRAVADA AO ABRIR: a cena reaberta morava só na memória até o primeiro gesto gravá-la, e um
+	// reinício no meio a perdia. Sem cópia em memória, abrir é gravar.
+	if err := bs.snapshotsFor(ctx).Save(ctx, sessionID, scene); err != nil {
+		return nil, err
+	}
+	return scene, nil
 }
 
 // storedScene desempacota o que o acervo guardou, pronto para entrar na mesa.

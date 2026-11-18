@@ -146,7 +146,11 @@ func (sr sheetRules) remeasurePieces(ctx context.Context, characterID int64) {
 	if sr.boards == nil {
 		return
 	}
-	sessions := sr.boards.SessionsWithPieceOf(characterID)
+	sessions, err := sr.boards.SessionsWithPieceOf(ctx, characterID)
+	if err != nil {
+		slog.Warn("tabuleiro: sessões com peça da ficha não lidas", "character_id", characterID, "err", err)
+		return
+	}
 	if len(sessions) == 0 {
 		return
 	}
@@ -365,7 +369,7 @@ func (s *Server) restParty() rest.Party {
 // (que ele já tem), os tabuleiros, e a memória efêmera da Mesa. Um mapa que fique
 // fora desta lista sobrevive à sessão que o continha (ALE-377).
 func (s *Server) sessionLifecycle() session.Lifecycle {
-	return session.NewLifecycle(s.db, s.queries, s.sessions, s.bus, s.boards, s.tableMemory)
+	return session.NewLifecycle(s.db, s.queries, s.sessions, s.bus, s.tableMemory)
 }
 
 // sceneCore é montado por chamada e não guardado num campo: são três ponteiros

@@ -473,6 +473,11 @@ WHERE id = sqlc.arg('id');
 -- name: ListOpenBoards :many
 SELECT boardId, state, openSeq FROM open_boards WHERE sessionId = ? ORDER BY openSeq;
 
+-- name: ListOpenBoardIDs :many
+-- So os ids, na ordem das abas: escolher a aba e saber qual e a padrao nao precisa ler e desempacotar
+-- cada tabuleiro inteiro, e o tabuleiro se le do banco a cada pergunta.
+SELECT boardId FROM open_boards WHERE sessionId = ? ORDER BY openSeq;
+
 -- O upsert NAO toca `openSeq`: gravar o tabuleiro e dizer que ele mudou, nunca
 -- que ele nasceu de novo. Sem o `excluded` de fora, a ordem das abas mudaria a
 -- cada peca que anda.
@@ -496,6 +501,14 @@ SELECT b.sessionId, b.boardId, b.state
 FROM open_boards b
 JOIN sessions s ON s.id = b.sessionId
 WHERE s.campaignId = ?;
+
+-- name: ListLiveOpenBoards :many
+-- Os tabuleiros abertos das sessoes NAO ENCERRADAS, para achar onde uma ficha tem peca: o tabuleiro se
+-- le do banco, e nao de uma copia em memoria (decisao do dono).
+SELECT b.sessionId, b.boardId, b.state
+FROM open_boards b
+JOIN sessions s ON s.id = b.sessionId
+WHERE s.status != 'ended';
 
 -- name: ListCampaignsForCharacter :many
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,

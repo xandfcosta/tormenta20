@@ -147,9 +147,8 @@ type BoardState struct {
 	// ao mesmo tempo.
 	//
 	// Cunhado pelo servidor no `Open`, com o mesmo `newID` das peças, e não pelo
-	// banco: o tabuleiro nasce em MEMÓRIA e a gravação vem depois, então um id
-	// vindo do disco obrigaria a cena a esperar o disco para saber quem ela é.
-	// Na hidratação ele vem da COLUNA e não deste campo — ver `hydrateLocked`.
+	// banco: a cena sabe quem ela é antes de ser gravada. Na leitura ele vem da
+	// COLUNA e não deste campo — ver o `Read` do retrato (`app/boards`).
 	ID string `json:"id"`
 	// Seq é a ORDEM DE ABERTURA dentro da sessão, e ela é a ordem das abas na
 	// tela. Mora numa COLUNA e não no JSON — `json:"-"` — porque é propriedade

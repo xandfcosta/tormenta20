@@ -3614,6 +3614,44 @@ func (q *Queries) ListLevelChoicesByCharacters(ctx context.Context, ids []int64)
 	return items, nil
 }
 
+const listLiveOpenBoards = `-- name: ListLiveOpenBoards :many
+SELECT b.sessionId, b.boardId, b.state
+FROM open_boards b
+JOIN sessions s ON s.id = b.sessionId
+WHERE s.status != 'ended'
+`
+
+type ListLiveOpenBoardsRow struct {
+	Sessionid int64  `json:"sessionid"`
+	Boardid   string `json:"boardid"`
+	State     string `json:"state"`
+}
+
+// Os tabuleiros abertos das sessoes NAO ENCERRADAS, para achar onde uma ficha tem peca: o tabuleiro se
+// le do banco, e nao de uma copia em memoria (decisao do dono).
+func (q *Queries) ListLiveOpenBoards(ctx context.Context) ([]ListLiveOpenBoardsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listLiveOpenBoards)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListLiveOpenBoardsRow{}
+	for rows.Next() {
+		var i ListLiveOpenBoardsRow
+		if err := rows.Scan(&i.Sessionid, &i.Boardid, &i.State); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listLiveSessionStates = `-- name: ListLiveSessionStates :many
 SELECT id, runtimeState FROM sessions WHERE status != 'ended'
 `
@@ -3778,6 +3816,35 @@ func (q *Queries) ListOpenAccountInvites(ctx context.Context, now string) ([]Lis
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOpenBoardIDs = `-- name: ListOpenBoardIDs :many
+SELECT boardId FROM open_boards WHERE sessionId = ? ORDER BY openSeq
+`
+
+// So os ids, na ordem das abas: escolher a aba e saber qual e a padrao nao precisa ler e desempacotar
+// cada tabuleiro inteiro, e o tabuleiro se le do banco a cada pergunta.
+func (q *Queries) ListOpenBoardIDs(ctx context.Context, sessionid int64) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listOpenBoardIDs, sessionid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var boardid string
+		if err := rows.Scan(&boardid); err != nil {
+			return nil, err
+		}
+		items = append(items, boardid)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

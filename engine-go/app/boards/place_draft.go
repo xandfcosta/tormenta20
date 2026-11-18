@@ -91,19 +91,10 @@ func (bs *Store) NewID() string { return bs.newID() }
 // campanha — é assim que o `Archive` decide se sobrescreve, e é a mesma conta
 // que o acervo já faz para escrever "nesta mesa agora".
 //
-// DAS DUAS FONTES, e nenhuma delas basta sozinha — foi medido nas duas direções:
-//
-//   - só a MEMÓRIA não vê o tabuleiro aberto ontem, numa sessão que este
-//     processo nunca hidratou. Depois de reiniciar o servidor o mapa está
-//     vazio e a trava passaria a deixar tudo montar.
-//   - só o BANCO nunca deixou de ver o tabuleiro recém-aberto, e desde a
-//     ALE-375 isso é garantido em vez de provável: a gravação acontece DENTRO
-//     do `Open`, então um tabuleiro que existe na memória existe na tabela. A
-//     razão de olhar os dois é a de cima, que continua de pé.
+// SÓ O BANCO, que é onde o tabuleiro mora: toda abertura grava dentro do gesto — o `Open` desde a
+// ALE-375, a cena reaberta do acervo desde que a cópia em memória saiu. Havia uma segunda fonte, a
+// memória deste processo, e ela não via o tabuleiro aberto antes de um reinício.
 func (bs *Store) refusesIfOnATable(ctx context.Context, campaignID int64, name string) error {
-	if session := bs.sessionShowingLocked(name); session != 0 {
-		return placeOnATable(name)
-	}
 	open, err := bs.q.ListOpenBoardsOfCampaign(ctx, campaignID)
 	if err != nil {
 		// RECUSA em vez de deixar passar: o que está em jogo é o trabalho do
@@ -158,17 +149,6 @@ func (bs *Store) PlacesOnATable(ctx context.Context, campaignID int64) map[strin
 			onTable[scene.Place] = isOpen.Sessionid
 		}
 	}
-	// A MEMÓRIA por cima do disco, e não o contrário: o tabuleiro aberto agora
-	// ainda não foi gravado, e é justamente o que a pessoa acabou de fazer.
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	for sessionID, alive := range bs.boards {
-		for _, b := range alive {
-			if b.Place != "" {
-				onTable[b.Place] = sessionID
-			}
-		}
-	}
 	return onTable
 }
 
@@ -181,25 +161,6 @@ func placeOnATable(name string) error {
 	return fmt.Errorf(
 		"%q está aberto numa mesa agora: encerre a aba antes de montar o rascunho, senão o que você montar aqui some quando ela for encerrada",
 		name)
-}
-
-// sessionShowingLocked procura o lugar entre os tabuleiros VIVOS deste processo,
-// e devolve a sessão que o mostra (zero quando nenhuma).
-//
-// Varre todas as sessões em memória e não uma: o rascunho não sabe em qual mesa
-// o lugar poderia estar, e é justamente essa a pergunta. O custo é um laço sobre
-// as sessões hidratadas, sem I/O nenhum, debaixo da trava que já protege o mapa.
-func (bs *Store) sessionShowingLocked(name string) int64 {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	for sessionID, open := range bs.boards {
-		for _, b := range open {
-			if b.Place == name {
-				return sessionID
-			}
-		}
-	}
-	return 0
 }
 
 // NewPlace devolve o lugar em que o mestre vai montar a cena, criando-o vazio

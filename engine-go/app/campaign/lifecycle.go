@@ -230,8 +230,8 @@ func nullOrText(text string) any {
 //
 // Apagar a campanha leva as sessões por CASCATA, e depois disso não há mais como
 // perguntar quais eram. Invertida, a lista volta vazia, ninguém é esquecido, e o
-// tabuleiro de cada sessão fica no mapa em memória batendo numa chave
-// estrangeira que não existe: a mesa se declara suja para sempre.
+// que cada sessão deixou em memória (a numeração dos quadros, a lente, a aba
+// escolhida) fica pendurado numa sessão que não existe.
 //
 // Ela morava num handler, entre dois comentários que a explicavam — e uma
 // invariante de sequência que depende de quem chama lembrar dela é uma

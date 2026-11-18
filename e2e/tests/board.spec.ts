@@ -556,6 +556,13 @@ test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ 
 
     const command = (path: string) =>
       page.request.post(mesa + path, { headers: { 'datastar-request': 'true' }, data: {} })
+    // O DESLIZE da peça que andou (`slideTheToken`) atravessa as casas do caminho POR CIMA das
+    // outras: um arrasto que começa durante ele pega a peça que está passando, e não a que está
+    // parada embaixo. Foi o que a CI pegou — o Elfo cruzando o Anão da vez.
+    const slidesEnded = () =>
+      page
+        .locator('.board-token')
+        .evaluateAll((tokens) => Promise.all(tokens.flatMap((t) => t.getAnimations().map((a) => a.finished))))
     expect((await command('/cena/iniciar/acao')).ok()).toBeTruthy()
     expect((await command('/iniciativa/proxima-vez')).ok()).toBeTruthy()
     await page.goto(mesa, { waitUntil: 'domcontentloaded' })
@@ -572,6 +579,7 @@ test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ 
     await expect(page.locator('.board-token-ghost'), 'a peça fora da vez abriu proposta').toHaveCount(0)
 
     // A DA VEZ: propõe a parada, e o movimento só existe depois de confirmar.
+    await slidesEnded()
     const firstTurn = await onTurn.getAttribute('aria-label')
     expect(await dragBy(onTurn, 120), 'a peça da vez não propôs parada').toContain('/parada')
     await page.getByRole('button', { name: /cancelar/i }).first().click()
@@ -594,6 +602,7 @@ test('o mestre arrasta qualquer peça, e só a da vez propõe parada', async ({ 
     // PASSAR A VEZ SEM RECARREGAR: quem propõe agora é a peça nova.
     expect((await command('/iniciativa/proxima-vez')).ok()).toBeTruthy()
     await expect(onTurn, 'a vez não passou no remendo').not.toHaveAttribute('aria-label', firstTurn ?? '')
+    await slidesEnded()
     const posts = await dragBy(onTurn, 120)
     expect(posts, 'o arrasto continuou preso à peça antiga').toContain('/parada')
     await expect(page.locator('.board-token-ghost')).toHaveCount(1)

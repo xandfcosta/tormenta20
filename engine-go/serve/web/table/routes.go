@@ -3,6 +3,7 @@ package table
 import (
 	"context"
 	"t20engine/app"
+	"t20engine/app/boards"
 	"t20engine/domain/markdown"
 	"t20engine/domain/sheet"
 	"t20engine/serve/web/sheetui"
@@ -329,7 +330,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	group, mine, eu := s.tableRoster(ctx, userID, campaignID, sheets)
 	st := live.StateForViewer(role, fresh, mine)
 	// A RESERVA de PV temporário é DERIVADA a cada desenho, e nunca espelhada na
-	// linha da fila. O estado ao vivo mora em memória e tem vários sítios de
+	// linha da fila. O estado ao vivo tem vários sítios de
 	// escrita — entrar na fila, resincronizar máximos, aplicar dano —, e um
 	// terceiro número espelhado ali envelheceria no primeiro que esquecesse de
 	// atualizá-lo, em silêncio. Aqui não há o que esquecer: o stream redesenha
@@ -386,14 +387,19 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// A ABA que ESTA pessoa está olhando, e não "o tabuleiro da sessão": não há
 	// tabuleiro único. Ela é resolvida contra os abertos, então a aba que o
 	// mestre fechou não deixa ninguém numa tela morta.
-	aba, pulled, pulledFrom, err := s.pullTab(ctx, sessionID, userID)
+	//
+	// UMA LEITURA dos abertos para o desenho inteiro: a aba, o tabuleiro dela e a barra de abas saem
+	// da mesma lista. O tabuleiro se lê do banco, e eram três idas por desenho.
+	open, err := s.deps.Boards().OpenBoards(ctx, sessionID)
 	if err != nil {
 		return View{}, http.StatusInternalServerError, err
 	}
-	onBoard, err := s.deps.Boards().Get(ctx, sessionID, aba)
-	if err != nil {
-		return View{}, http.StatusInternalServerError, err
+	ids := make([]string, len(open))
+	for i, b := range open {
+		ids[i] = b.ID
 	}
+	aba, pulled, pulledFrom := s.pullTabFrom(ids, sessionID, userID)
+	onBoard := boards.FindBoard(open, aba)
 	scene := board.BoardForRole(role, onBoard)
 	// A LENTE DO MESTRE: com ela ligada, o que se desenha é a cena
 	// REDIGIDA — a mesma que a mesa recebe. Só a CENA muda; o `viewer` continua
@@ -417,10 +423,6 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// quem olha — e ela vem depois da lente de propósito: a lente é sobre a CENA
 	// que o mestre está vendo, não sobre quais cenas existem. Um mestre na lente
 	// que perdesse as abas não teria como sair da que está olhando.
-	open, err := s.deps.Boards().OpenBoards(ctx, sessionID)
-	if err != nil {
-		return View{}, http.StatusInternalServerError, err
-	}
 	view.Board.Tabs = tableTabs(open, role, aba, campaignID, sessionID)
 	// A TIRA DO PUXÃO vem depois da barra porque ela é feita DELA: os nomes já
 	// passaram pelo papel de quem olha, e ler o estado cru aqui contaria o nome

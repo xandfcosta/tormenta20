@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -261,9 +262,7 @@ func TestABoardWriteRefusedLeavesTheMapUntouched(t *testing.T) {
 	}
 	before := boardRead(s.boards.Get(ctx, sid, defaultTab))
 
-	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
-		t.Fatalf("derrubar a tabela: %v", err)
-	}
+	refusesBoardWrites(t, s.db)
 
 	_, err := s.boards.AddToken(ctx, sid, defaultTab, board.BoardToken{Label: "Goblin", X: 9, Y: 9})
 
@@ -331,26 +330,6 @@ func TestATransientReadFailureIsRetried(t *testing.T) {
 	}
 }
 
-// "Sessão sem tabuleiro" é resposta DEFINITIVA e continua sendo cacheada: sem
-// isso, toda mensagem de uma sessão sem tabuleiro iria ao disco.
-func TestNoBoardIsStillCached(t *testing.T) {
-	s := newTestServer(t)
-	ctx := context.Background()
-	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
-
-	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b != nil {
-		t.Fatalf("sessão nova veio com tabuleiro: %+v", b)
-	}
-	// Com a tabela fora do ar, uma segunda leitura só pode responder se estiver
-	// respondendo de memória.
-	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
-		t.Fatalf("derrubar a tabela: %v", err)
-	}
-	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b != nil {
-		t.Errorf("a segunda leitura foi ao disco em vez de lembrar: %+v", b)
-	}
-}
-
 // ENCERRAR QUE NÃO PODE APAGAR NÃO ENCERRA.
 //
 // Aqui o `Close` AVISAVA — a memória dizia "fechado", o banco mantinha a linha,
@@ -363,18 +342,16 @@ func TestClosingABoardTheDiskRefusesKeepsItOpen(t *testing.T) {
 	sid := seedSession(t, s, seedCampaign(t, s, seedUser(t, s, "gm@t.com")))
 	opensBoard(t, s, sid, "Cripta", "stone")
 
-	if _, err := s.db.Exec("DROP TABLE open_boards"); err != nil {
-		t.Fatalf("derrubar a tabela: %v", err)
-	}
+	refusesBoardWrites(t, s.db)
 	err := s.boards.Close(ctx, sid, defaultTab)
 
 	if err == nil {
 		t.Fatal("o encerramento passou sobre um DELETE que não podia acontecer")
 	}
-	// E A ABA CONTINUA NA MEMÓRIA: um "fechado" que o banco não aceitou é
+	// E A ABA CONTINUA ABERTA: um "fechado" que o banco não aceitou é
 	// exatamente o tabuleiro fantasma que este caso existe para impedir.
 	if b := boardRead(s.boards.Get(ctx, sid, defaultTab)); b == nil {
-		t.Error("a aba sumiu da memória sobre um encerramento recusado")
+		t.Error("a aba sumiu sobre um encerramento recusado")
 	}
 }
 
@@ -602,5 +579,18 @@ func TestAPartyRestWithAStaleMirrorDoesNotCount(t *testing.T) {
 	if done != 0 {
 		t.Errorf("contou %d de %d como descansados com o espelho parado — o mestre lê "+
 			"que a mesa está em dia e escolhe alvo pelo PV de antes", done, total)
+	}
+}
+
+// refusesBoardWrites faz a gravação de tabuleiro FALHAR com a leitura de pé: um gatilho que recusa o
+// INSERT e o UPDATE em `open_boards`. Derrubar a tabela matava a leitura junto, e o tabuleiro se lê
+// sempre do banco — a sabotagem tem de ser a escrita, que é como o defeito fica invisível.
+func refusesBoardWrites(t *testing.T, db *sql.DB) {
+	t.Helper()
+	for _, verb := range []string{"INSERT", "UPDATE", "DELETE"} {
+		if _, err := db.Exec("CREATE TRIGGER refuse_open_boards_" + strings.ToLower(verb) + " BEFORE " + verb +
+			" ON open_boards BEGIN SELECT RAISE(ABORT, 'open_boards recusou a gravação'); END"); err != nil {
+			t.Fatalf("armar a recusa da gravação: %v", err)
+		}
 	}
 }

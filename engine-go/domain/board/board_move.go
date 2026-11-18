@@ -231,7 +231,7 @@ func ProposeMoveWithStops(b *BoardState, st *live.SessionRuntimeState, tokenID s
 // desde a proposta, o commit é RECUSADO em vez de aplicado sobre outra cena.
 // Isso mata os três casos que o last-write-wins quebra — dois clientes na mesma
 // peça, o mestre arrastando enquanto o jogador confirma, e o broadcast atrasado
-// que chega depois da re-hidratação. Versão 0 = "não sei em que versão eu
+// que chega depois de outra mutação. Versão 0 = "não sei em que versão eu
 // estava", aceita, porque recusar um cliente honesto e desatualizado seria
 // pior que aplicar o que ele acabou de ver na tela.
 func CommitMove(b *BoardState, st *live.SessionRuntimeState, version int64, by Mover) error {
