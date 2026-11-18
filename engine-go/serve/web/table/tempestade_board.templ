@@ -212,6 +212,20 @@ templ tempestadeMove(v BoardView) {
 				<span class="ds-row-meta">o mestre confirma</span>
 			}
 		</div>
+		// O "ANDA POR" só para quem decide sobre o movimento, só na peça que tem outro deslocamento, e só
+		// com orçamento: fora de combate não há teto, e trocar o modo não mudaria número nenhum.
+		if v.Movement.Mine && len(v.Movement.Modes) > 0 && v.Movement.Budget >= 0 {
+			<div class="ds-field">
+				<span class="ds-field-label">Anda por</span>
+				<div class="ds-options" role="group" aria-label="Anda por">
+					for _, mode := range v.Movement.Modes {
+						@ds.Option(mode.Active, templ.Attributes{"type": "button", "data-on:click": moveCommand(v, "modo/"+mode.Slug)}) {
+							{ mode.Label }
+						}
+					}
+				</div>
+			</div>
+		}
 		<p class="ds-row-title" aria-live="polite">
 			{ v.Movement.Label } ·
 			if v.Movement.Budget < 0 {

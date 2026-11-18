@@ -33,6 +33,7 @@ func (s Scene) MoveRoutes(r chi.Router) {
 	base := sessionPattern + "/tabuleiro/{tokenId}"
 	r.Post(base+"/parada", s.tableCommand(paraNoQuadrado))
 	r.Post(base+"/desfazer-parada", s.tableCommand(undoLastStop))
+	r.Post(base+"/modo/{modo}", s.tableCommand(changesMoveMode))
 	r.Post(base+"/confirmar", s.tableCommand(confirmMove))
 	r.Post(base+"/cancelar", s.tableCommand(cancelMove))
 }
@@ -254,4 +255,19 @@ func intDoCaminho(raw string) (int, error) {
 	var n int
 	_, err := fmt.Sscanf(raw, "%d", &n)
 	return n, err
+}
+
+// changesMoveMode é o "Anda por" do cartão do movimento: o modo vem no caminho, e "terrestre" é a
+// pé — o modo vazio do domínio não cabe numa rota.
+func changesMoveMode(st Scene, c commandCtx) (*board.BoardState, error) {
+	mode := board.MoveModeKind(chi.URLParam(c.R, "modo"))
+	if mode == moveModeLandSlug {
+		mode = board.MoveModeLand
+	}
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
+	if err != nil {
+		return nil, err
+	}
+	return st.deps.Boards().ChangeMoveMode(c.R.Context(), c.SessionID, c.BoardID, state,
+		chi.URLParam(c.R, "tokenId"), mode, st.moveWho(c))
 }

@@ -176,12 +176,17 @@ func ClearSquare(b *BoardState, square engine.Square) bool {
 	return cleared
 }
 
-// moveTerrainFor traduz a lista esparsa para o que o motor cobra, DO PONTO DE
+// MoveTerrainFor traduz a lista esparsa para o que o motor cobra, DO PONTO DE
 // VISTA de quem anda.
 //
 // A conversão mora aqui e não no motor porque o motor não conhece tabuleiro:
 // ele responde sobre um caminho e um chão, e quem tem chão é o estado.
-func moveTerrainFor(b *BoardState, mover *BoardToken) engine.MoveTerrain {
+func MoveTerrainFor(b *BoardState, mover *BoardToken, mode MoveModeKind) engine.MoveTerrain {
+	// QUEM VOA passa por cima: o terreno difícil é "onde é difícil andar" (p238), e é do chão
+	// (decisão do dono). Escalando ou nadando, a superfície cobra (p228).
+	if mode == MoveModeFly {
+		return engine.MoveTerrain{}
+	}
 	// QUEM IGNORA O TERRENO DIFÍCIL ANDA NUM MAPA SEM ELE, e é assim que a
 	// p129 entra sem o cálculo do caminho saber de personagem: "terreno difícil
 	// não reduz seu deslocamento" é, para o `PathCost`, um terreno sem casa

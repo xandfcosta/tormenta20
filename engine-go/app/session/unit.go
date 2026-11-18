@@ -161,3 +161,12 @@ func (u storedUnits) Do(ctx context.Context, work func(Unit) error) error {
 func WithUnit(ctx context.Context, unit Unit) context.Context {
 	return context.WithValue(ctx, unitKey{}, unit)
 }
+
+// AfterTheUnit devolve um contexto que não carrega mais unidade nenhuma: o de quem roda DEPOIS do
+// commit e grava por conta própria. Com a unidade ainda no contexto, quem instala só "depois do
+// commit" (o tabuleiro) registraria a troca numa unidade que já fechou, e ela nunca aconteceria.
+//
+// Uso: no aviso de depois do commit, `session.AfterTheUnit(ctx)` antes de gravar o tabuleiro.
+func AfterTheUnit(ctx context.Context) context.Context {
+	return context.WithValue(ctx, unitKey{}, nil)
+}

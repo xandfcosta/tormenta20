@@ -129,7 +129,7 @@ func TestOnlyDifficultTerrainCountsForMovement(t *testing.T) {
 			PaintTerrain(b, square, brush.ID, true)
 		}
 	}
-	noHard := moveTerrainFor(b, nil)
+	noHard := MoveTerrainFor(b, nil, MoveModeLand)
 	if len(noHard.Difficult) != 0 {
 		t.Errorf("cobertura, camuflagem ou elevado entraram na conta do movimento: %v", noHard.Difficult)
 	}
@@ -138,7 +138,7 @@ func TestOnlyDifficultTerrainCountsForMovement(t *testing.T) {
 	// conta" seria verdade também sobre uma tradução quebrada que nunca devolve
 	// casa nenhuma.
 	PaintTerrain(b, square, TerrenoDificil, true)
-	if withHard := moveTerrainFor(b, nil); !withHard.Difficult[square] {
+	if withHard := MoveTerrainFor(b, nil, MoveModeLand); !withHard.Difficult[square] {
 		t.Error("o terreno difícil não chegou ao motor — o guarda acima mediria um cano entupido")
 	}
 }

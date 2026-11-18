@@ -26,13 +26,13 @@ func TestWhoIgnoresDifficultTerrainWalksOnAMapWithoutIt(t *testing.T) {
 	// O CONTROLE: o mapa TEM terreno difícil, e quem não é isento o paga. Sem
 	// ele, um tabuleiro que perdesse a pintura passaria verde no caso de baixo.
 	comum := &BoardToken{ID: "comum"}
-	if terrain := moveTerrainFor(b, comum); !terrain.Difficult[hard] {
+	if terrain := MoveTerrainFor(b, comum, MoveModeLand); !terrain.Difficult[hard] {
 		t.Fatalf("o controle já estava errado: a casa (1,0) está pintada e o terreno "+
 			"de quem anda não a cobra — %+v", terrain)
 	}
 
 	acrobatico := &BoardToken{ID: "acrobatico", IgnoresDifficult: true}
-	if terrain := moveTerrainFor(b, acrobatico); len(terrain.Difficult) != 0 {
+	if terrain := MoveTerrainFor(b, acrobatico, MoveModeLand); len(terrain.Difficult) != 0 {
 		t.Errorf("quem ignora terreno difícil recebeu %d casas difíceis, e a p129 diz "+
 			"que ele não paga nenhuma", len(terrain.Difficult))
 	}
@@ -40,8 +40,8 @@ func TestWhoIgnoresDifficultTerrainWalksOnAMapWithoutIt(t *testing.T) {
 	// E O CUSTO É O QUE MUDA, que é a razão de tudo isto existir: um passo em
 	// casa difícil custa DOIS quadrados (p238) e para ele custa um.
 	path := []engine.Square{{X: 0, Y: 0}, hard}
-	pago := engine.PathCost(path, moveTerrainFor(b, comum), -1)
-	isento := engine.PathCost(path, moveTerrainFor(b, acrobatico), -1)
+	pago := engine.PathCost(path, MoveTerrainFor(b, comum, MoveModeLand), -1)
+	isento := engine.PathCost(path, MoveTerrainFor(b, acrobatico, MoveModeLand), -1)
 	if pago.Squares != 2 {
 		t.Errorf("o passo em terreno difícil custou %d quadrados a quem o paga, e a "+
 			"p238 cobra 2", pago.Squares)
@@ -65,7 +65,7 @@ func TestWhoIgnoresDifficultTerrainWalksOnAMapWithoutIt(t *testing.T) {
 func TestAnUnknownMoverPaysTheDifficultTerrain(t *testing.T) {
 	hard := engine.Square{X: 2, Y: 2}
 	b := &BoardState{Difficult: []engine.Square{hard}}
-	if terrain := moveTerrainFor(b, nil); !terrain.Difficult[hard] {
+	if terrain := MoveTerrainFor(b, nil, MoveModeLand); !terrain.Difficult[hard] {
 		t.Error("sem movedor conhecido o terreno saiu limpo: o recuo tem de ser o " +
 			"mapa, e não a isenção")
 	}
