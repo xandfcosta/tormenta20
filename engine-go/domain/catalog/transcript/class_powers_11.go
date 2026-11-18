@@ -21,13 +21,24 @@ var classPowersPart11 = []ClassPower{
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.balistica"}},
 	},
 	{
-		ID:            "class.inventor.alquimista-de-batalha",
-		ClassName:     "Inventor",
-		Name:          "Alquimista de Batalha",
-		Description:   "Quando usa preparado alquímico ou poção que cause dano, soma Inteligência na rolagem de dano.",
-		BookPage:      68,
-		UID:           "pwr_z3r3obbqtu",
-		Unmodeled:     "a Inteligência no dano do preparado alquímico e da poção: o dano do item não soma atributo (ALE-655)",
+		ID: "class.inventor.alquimista-de-batalha",
+		Modeled: []string{
+			"a Inteligência no dano do preparado alquímico, inclusive na dose da Injeção alquímica",
+		},
+		ClassName:   "Inventor",
+		Name:        "Alquimista de Batalha",
+		Description: "Quando usa preparado alquímico ou poção que cause dano, soma Inteligência na rolagem de dano.",
+		BookPage:    68,
+		UID:         "pwr_z3r3obbqtu",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "alchemicalDamage"},
+				Amount:    1,
+				BonusType: "untyped",
+				Scale:     &ModifierScale{Per: "attribute", Attribute: "intelligence"},
+			},
+		},
+		Unmodeled:     "a Inteligência no dano da POÇÃO: a ficha ainda não desenha o dano da granada",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.alquimista-iniciado"}},
 	},
 	{

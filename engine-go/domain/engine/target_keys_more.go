@@ -10,6 +10,10 @@ func moreTargetKeys(t ModifierTarget) string {
 		// ela AUTORIZA aquele atributo a entrar no lugar do da perícia — "pode usar Destreza em
 		// vez de Força em Atletismo" (p28, p129).
 		return "expertiseAttribute:" + t.Name + ":" + t.Attribute
+	case "alchemicalDamage":
+		// O DANO DO PREPARADO ALQUÍMICO (p160), e não o de toda dose: a água benta fere e é
+		// equipamento de aventura (p155), fora do que o Alquimista de Batalha soma (p68).
+		return "alchemicalDamage"
 	}
 	return ""
 }

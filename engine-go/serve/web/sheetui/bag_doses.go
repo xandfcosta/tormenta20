@@ -39,12 +39,12 @@ type doseTarget struct {
 }
 
 func dosesOnTheItemSheet(
-	dto sheet.CharacterDTO, item sheet.ItemDTO, attributes map[string]engine.AttributeBreakdown,
+	dto sheet.CharacterDTO, item sheet.ItemDTO, computed engine.ComputedSheet,
 ) *itemSheetDoses {
 	if sheet.HoldsDoses(item.Improvements) {
 		doses := &itemSheetDoses{Count: fmt.Sprintf("%d de %d", len(item.Doses), sheet.MaxDoses)}
 		for _, id := range item.Doses {
-			name, effect := sheet.WrittenDose(id, dto.Level, attributes)
+			name, effect := sheet.WrittenDose(id, dto.Level, computed)
 			doses.Held = append(doses.Held, overlayRow{Name: name, Effect: effect})
 		}
 		return doses

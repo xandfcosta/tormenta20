@@ -88,6 +88,8 @@ type ComputedSheet struct {
 	// campo novo em toda ficha mudaria todo oráculo de paridade sem mudar regra nenhuma.
 	ClimbSpeed int `json:"climbSpeed,omitempty"`
 	SwimSpeed  int `json:"swimSpeed,omitempty"`
+	// AlchemicalDamage é o que se soma ao dano do preparado alquímico (o Alquimista de Batalha, p68).
+	AlchemicalDamage int `json:"alchemicalDamage,omitempty"`
 	// ClimbsAsItWalks é o Espelunqueiro (p23): a escalada É o deslocamento terrestre, depois das
 	// contas dele. Booleano e não número em `ClimbSpeed` porque o terrestre pode ser 4,5m (o goblin
 	// Lento), e o metro inteiro o arredondaria para 4.

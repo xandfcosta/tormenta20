@@ -102,7 +102,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		Nature:      book.CharacterNature(primaryRace(dto)),
 		DamageTaken: engine.DamageTakenFrom(efeitos),
 		WrittenDose: func(catalogID string) (string, string) {
-			return sheet.WrittenDose(catalogID, dto.Level, computed.Attributes)
+			return sheet.WrittenDose(catalogID, dto.Level, computed)
 		},
 		ManaAvailable:      int(dto.ManaAvailable()),
 		ChargesRecklessly:  sheet.OwnsPower(dto, engine.RecklessChargePowerID),

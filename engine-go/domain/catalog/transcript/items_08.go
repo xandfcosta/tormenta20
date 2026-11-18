@@ -100,7 +100,9 @@ var itemsPart08 = []Item{
 		Consumable: &Consumable{
 			Scope: "instant",
 			Dose: &DoseEffect{
-				Effect:        "2d4 de ácido",
+				Damage:        &DoseDamage{Dice: "2d4", Type: "ácido"},
+				Alchemical:    true,
+				Effect:        "",
 				Save:          "Reflexos",
 				SaveAttribute: "dexterity",
 				OnSave:        "reduz à metade",
@@ -120,7 +122,9 @@ var itemsPart08 = []Item{
 		Consumable: &Consumable{
 			Scope: "instant",
 			Dose: &DoseEffect{
-				Effect:        "6d6 de impacto em toda criatura a até 3m do alvo",
+				Damage:        &DoseDamage{Dice: "6d6", Type: "impacto"},
+				Alchemical:    true,
+				Effect:        "em toda criatura a até 3m do alvo",
 				Save:          "Reflexos",
 				SaveAttribute: "dexterity",
 				OnSave:        "reduz à metade",
@@ -152,7 +156,9 @@ var itemsPart08 = []Item{
 		Consumable: &Consumable{
 			Scope: "instant",
 			Dose: &DoseEffect{
-				Effect:        "1d6 de fogo e fica em chamas",
+				Damage:        &DoseDamage{Dice: "1d6", Type: "fogo"},
+				Alchemical:    true,
+				Effect:        "e fica em chamas",
 				Save:          "Reflexos",
 				SaveAttribute: "dexterity",
 				OnSave:        "reduz à metade e evita as chamas",

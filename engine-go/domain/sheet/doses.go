@@ -41,21 +41,40 @@ func HoldsDoses(improvements string) bool {
 }
 
 // WrittenDose é o nome do item e o efeito dele como a mesa lê, com a CD de quem atacou
-// (p227): 10 + metade do nível + o atributo.
+// (p227): 10 + metade do nível + o atributo. O dano do PREPARADO alquímico soma o que a ficha dá a
+// ele (o Alquimista de Batalha soma a Inteligência, p68).
 //
-//	WrittenDose("acido", 8, computed.Attributes) // "Ácido", "2d4 de ácido (Reflexos CD 17 reduz à metade)"
-func WrittenDose(catalogID string, level int64, attributes map[string]engine.AttributeBreakdown) (name, effect string) {
+//	WrittenDose("acido", 8, computed) // "Ácido", "2d4 de ácido (Reflexos CD 17 reduz à metade)"
+func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (name, effect string) {
 	dose := DoseEffectOf(catalogID)
 	if dose == nil {
 		return catalogID, ""
 	}
 	name = book.ItemByID(catalogID).Name
+	effect = doseEffectPhrase(dose, computed.AlchemicalDamage)
 	// Sem a ficha computada não há CD a dizer, e um número feito com atributo zero
 	// pareceria certo.
-	attribute, known := attributes[dose.SaveAttribute]
+	attribute, known := computed.Attributes[dose.SaveAttribute]
 	if !known {
-		return name, dose.Effect + " (" + dose.Save + " " + dose.OnSave + ")"
+		return name, effect + " (" + dose.Save + " " + dose.OnSave + ")"
 	}
 	save := engine.EffectSaveDc(int(level), attribute.Total)
-	return name, dose.Effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
+	return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
+}
+
+// doseEffectPhrase monta o dano e o resto do efeito: "2d4+4 de ácido", "6d6 de impacto em toda
+// criatura a até 3m do alvo". A soma só vale para o preparado, e só quando há o que somar.
+func doseEffectPhrase(dose *book.DoseEffect, alchemicalBonus int) string {
+	if dose.Damage == nil {
+		return dose.Effect
+	}
+	dice := dose.Damage.Dice
+	if dose.Alchemical && alchemicalBonus > 0 {
+		dice += "+" + strconv.Itoa(alchemicalBonus)
+	}
+	phrase := dice + " de " + dose.Damage.Type
+	if dose.Effect != "" {
+		phrase += " " + dose.Effect
+	}
+	return phrase
 }
