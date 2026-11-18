@@ -170,12 +170,22 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				ID: "silfide-asas-de-borboleta",
 				Modeled: []string{
 					"o tamanho Minúsculo soma em Furtividade, manobras e no passo da arma reduzida pela Tab. 1-21 (`raceSizeItem`)",
+					"o pairar ignora terreno difícil SEMPRE, por ser o modo natural dela; quem a quer andando no chão diz em voz (decisão do dono)",
+					"o voo de 12m é o gesto Voar, SUSTENTADO: o sustentado é o \"1 PM por rodada\", e o voo cai quando ninguém paga",
 				},
 				RaceID:      "silfide",
 				Name:        "Asas de Borboleta",
 				Description: "Seu tamanho é Minúsculo. Pode pairar a 1,5m do chão com deslocamento 9m, ignorando terreno difícil e imune a dano por queda. Gastando 1 PM por rodada, voa com deslocamento 12m.",
 				UID:         "rac_ljzrjw3hlq",
-				Unmodeled:   "o pairar e o voo de 12m: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
+				Unmodeled:   "a imunidade a dano por queda: o app não rola queda, é a mesa que aplica",
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "pairando a 1,5m do chão, terreno difícil não reduz o deslocamento",
+					},
+				},
 			},
 			{
 				ID:          "silfide-espirito-da-natureza",
@@ -247,7 +257,15 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				Name:        "Transformação Anfíbia",
 				Description: "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
 				UID:         "rac_axjfztusy3",
-				Unmodeled:   "natação de 12m: é uma forma de movimento que o motor ainda não tem (ALE-654); e o PM sem água é do mestre, que sabe se houve água (decisão do dono)",
+				Unmodeled:   "o PM sem água é do mestre, que sabe se houve água (decisão do dono)",
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "swimSpeed"},
+						Amount:    12,
+						BonusType: "untyped",
+						Note:      "a cauda, debaixo d’água",
+					},
+				},
 			},
 		},
 		UID: "rac_kcyddre5st",

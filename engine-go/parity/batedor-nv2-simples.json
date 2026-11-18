@@ -321,6 +321,15 @@
           "amount": -2,
           "bonusType": "untyped",
           "note": "Sílfide"
+        },
+        {
+          "target": {
+            "k": "flag",
+            "name": "movement-ignores-difficult"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "note": "pairando a 1,5m do chão, terreno difícil não reduz o deslocamento"
         }
       ]
     },
@@ -674,7 +683,8 @@
     },
     "flags": [
       "armadura-leve",
-      "evasao"
+      "evasao",
+      "movement-ignores-difficult"
     ],
     "conditional": [
       {
@@ -718,7 +728,7 @@
       "contributions": []
     },
     "flySpeed": 0,
-    "ignoresDifficultTerrain": false,
+    "ignoresDifficultTerrain": true,
     "carga": {
       "items": 3,
       "coins": 0,
@@ -1258,7 +1268,7 @@
       "contributions": []
     },
     "flySpeed": 0,
-    "ignoresDifficultTerrain": false,
+    "ignoresDifficultTerrain": true,
     "carga": {
       "items": 3,
       "coins": 0,

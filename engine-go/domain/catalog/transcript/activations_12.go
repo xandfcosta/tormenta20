@@ -3,6 +3,26 @@ package transcript
 // Parte 12 de 12 de `Activations` (activations.go).
 var activationsPart12 = []Activation{
 	{
+		ID:     "class.paladino.aura-sagrada",
+		Name:   "Aura Sagrada",
+		Kind:   "instant",
+		Action: "livre",
+		PMCost: PMCost{Fixed: 1},
+		Uses:   nil,
+		Grant: &ActivationGrant{
+			Kind:  "active-effect",
+			Scope: "sustained",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "resistance"},
+					BonusType: "untyped",
+					Note:      "Aura Sagrada",
+					Scale:     &ModifierScale{Per: "attribute", Attribute: "charisma"},
+				},
+			},
+		},
+	},
+	{
 		ID:     "class.paladino.cura-pelas-maos-1d8-1-pv",
 		Name:   "Cura pelas Mãos",
 		Kind:   "instant",

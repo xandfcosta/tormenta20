@@ -270,16 +270,26 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				},
 			},
 			{
-				ID:          "goblin-espelunqueiro",
-				Modeled:     []string{"a visão no escuro e a escalada aparecem como fato"},
+				ID: "goblin-espelunqueiro",
+				Modeled: []string{
+					"a visão no escuro aparece como fato",
+					"a escalada igual ao deslocamento terrestre, depois das contas dele",
+				},
 				RaceID:      "goblin",
 				Name:        "Espelunqueiro",
 				Description: "Você recebe visão no escuro e deslocamento de escalada igual ao seu deslocamento terrestre.",
 				UID:         "rac_ijbtrkclx6",
-				Unmodeled:   "o deslocamento de escalada: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
 					{Category: "movement", Text: "Escalada = deslocamento terrestre"},
+				},
+				Modifiers: []Modifier{
+					{
+						Target:    ModifierTarget{Kind: "flag", Name: "climb-equals-land"},
+						Amount:    1,
+						BonusType: "untyped",
+						Note:      "escalada igual ao deslocamento terrestre",
+					},
 				},
 			},
 			{

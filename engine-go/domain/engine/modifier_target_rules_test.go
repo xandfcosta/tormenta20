@@ -73,6 +73,8 @@ var alvosQueOMotorAplica = map[string]string{
 		"NO LUGAR da Destreza (p69, p79, ALE-443)",
 	"displacement":    "breakdowns.go, no deslocamento",
 	"flySpeed":        "breakdowns.go, no voo",
+	"climbSpeed":      "breakdowns_magic.go, na escalada",
+	"swimSpeed":       "breakdowns_magic.go, na natação",
 	"maxPv":           "vitals_catalog.go",
 	"maxPm":           "vitals_catalog.go",
 	"tempHp":          "sheet/temp_pools.go, na reserva que o dano gasta antes do PV",

@@ -2374,6 +2374,49 @@
               }
             ]
           }
+        },
+        {
+          "simple": true,
+          "create": {
+            "name": "Tritão Nadador Nv3",
+            "races": ["sereia-tritao"],
+            "origin": "marujo",
+            "classes": [{ "className": "Bucaneiro", "level": 3 }],
+            "strength": 2,
+            "dexterity": 3,
+            "constitution": 2,
+            "intelligence": 1,
+            "wisdom": 1,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["strength", "dexterity", "constitution"] },
+            "items": [
+              { "catalogId": "tridente", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
+        },
+        {
+          "simple": true,
+          "create": {
+            "name": "Sílfide Voadora Nv3",
+            "races": ["silfide"],
+            "origin": "batedor",
+            "classes": [{ "className": "Ladino", "level": 3 }],
+            "strength": 1,
+            "dexterity": 4,
+            "constitution": 2,
+            "intelligence": 2,
+            "wisdom": 2,
+            "charisma": 1,
+            "size": "Minúsculo",
+            "displacement": 9,
+            "items": [
+              { "catalogId": "espada-curta", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
         }
       ]
     },

@@ -121,7 +121,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"critMult":   "Multiplicador crítico", "pmLimit": "Limite de PM por magia",
 		"shootsIntoMelee": "Atira em corpo a corpo sem o –5",
 		"pmCost":          "Custo em PM", "boostCost": "Custo em PM no golpe", "catalyst": "Catalisador", "spellDC": "CD de magias",
-		"inventorySlots": "Espaços de carga", "flySpeed": "Voo",
+		"inventorySlots": "Espaços de carga", "flySpeed": "Voo", "climbSpeed": "Escalada", "swimSpeed": "Natação",
 		"armorPenalty": "Penalidade de armadura",
 		"damageStep":   "Passo de dano",
 		// O DADO da Briga não soma em nada: ele É o dado do ataque desarmado.
@@ -280,6 +280,8 @@ var itemFlagLabel = map[string]string{
 	"tem-estilo-de-duas-armas":   "Estilo de Duas Armas",
 	// A do Caminho do Explorador (p51): o terreno difícil sem redução, no interruptor de terreno do Explorador, a pede.
 	"caminho-do-explorador": "Caminho do Explorador",
+	// A do Espelunqueiro (p23): a escalada sai do deslocamento terrestre, depois das contas dele.
+	"climb-equals-land": "Escalada igual ao deslocamento",
 	// A da Escaramuça Superior (p51): ela é quem cala os bônus menores da Escaramuça.
 	"escaramuca-superior": "Escaramuça Superior",
 	// A que a Flauta Mística pede (p158): o bônus dela é de "um bardo".

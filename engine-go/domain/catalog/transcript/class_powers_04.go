@@ -166,7 +166,10 @@ var classPowersPart04 = []ClassPower{
 		},
 	},
 	{
-		ID:             "class.cacador.explorador",
+		ID: "class.cacador.explorador",
+		Modeled: []string{
+			"o terreno difícil sem redução do Caminho do Explorador (p51) mora AQUI, por terreno escolhido, e pede com `Requires` a flag que o Caminho acende: no verbete do Caminho, que não tem escolhas, ele sairia num interruptor \"no terreno:\" sem terreno",
+		},
 		ClassName:      "Caçador",
 		Name:           "Explorador",
 		Description:    "Escolha um tipo de terreno (aquático, ártico, colina, deserto, floresta, montanha, pântano, planície, subterrâneo, urbano). Quando nele, soma Sabedoria (mín +1) na Defesa e em testes de Acrobacia, Atletismo, Furtividade, Percepção e Sobrevivência. L11 inclui Tormenta. A cada 4 níveis (L7/11/15/19), escolhe outro terreno ou aumenta bônus em terreno já escolhido em +2.",

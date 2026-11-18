@@ -256,15 +256,38 @@ func aimDetail(sharpAim bool) string {
 // O motor o guarda em QUADRADOS de 1,5m porque é assim que o tabuleiro conta, e
 // a tela diz metros porque é assim que a mesa fala — a conversão mora aqui, de um
 // lado só.
+//
+// Os OUTROS deslocamentos (escalada, natação, voo) vão no detalhe, na ordem do livro, e só os que
+// a ficha tem: eles já chegam em metros do motor. O voo era calculado e nenhuma tela o mostrava.
 func movementRow(computed engine.ComputedSheet) actionRow {
-	meters := float64(computed.Displacement.Total) * 1.5
-	written := strconv.FormatFloat(meters, 'f', -1, 64)
+	land := computed.Displacement.Total * 3 // em meios metros, para o 4,5m não virar 4
+	climb := computed.ClimbSpeed * 2
+	if computed.ClimbsAsItWalks {
+		climb = max(climb, land)
+	}
+	detail := "percorrer o seu deslocamento · p233"
+	for _, other := range []struct {
+		name       string
+		halfMetres int
+	}{{"escalada", climb}, {"natação", computed.SwimSpeed * 2}, {"voo", computed.FlySpeed * 2}} {
+		if other.halfMetres > 0 {
+			// O espaço INSEPARÁVEL segura "escalada 9m" numa linha só: na coluna estreita do
+			// celular, o nome ficava no fim de uma linha e o número no começo da outra.
+			detail += " · " + other.name + "\u00a0" + writtenMetres(other.halfMetres)
+		}
+	}
 	return actionRow{
 		Name:   "Mover",
-		Detail: "percorrer o seu deslocamento · p233",
-		Value:  strings.Replace(written, ".", ",", 1) + "m",
+		Detail: detail,
+		Value:  writtenMetres(land),
 		Can:    true,
 	}
+}
+
+// writtenMetres escreve meios metros como a mesa fala: 9 vira "4,5m", e 18 vira "9m".
+func writtenMetres(halfMetres int) string {
+	written := strconv.FormatFloat(float64(halfMetres)/2, 'f', -1, 64)
+	return strings.Replace(written, ".", ",", 1) + "m"
 }
 
 // fullRows são as duas completas que saem de número que a ficha já tem.

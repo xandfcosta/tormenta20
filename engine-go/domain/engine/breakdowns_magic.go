@@ -33,6 +33,17 @@ func flySpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "flySpeed"}).Total)
 }
 
+// climbSpeedTotal é a escalada em metros que um efeito dá. Quem escala tão rápido quanto anda
+// (`ClimbEqualsLand`) não passa por aqui: ver `ClimbsAsItWalks`.
+func climbSpeedTotal(e ItemEffects) int {
+	return max(0, StatFor(e, ModifierTarget{K: "climbSpeed"}).Total)
+}
+
+// swimSpeedTotal é a natação em metros (0 = não nada além do teste de Atletismo).
+func swimSpeedTotal(e ItemEffects) int {
+	return max(0, StatFor(e, ModifierTarget{K: "swimSpeed"}).Total)
+}
+
 // inventorySlotsTotal (p141): 10 +2/Força (or −1/Força negativa)
 // + item slot mods.
 func inventorySlotsTotal(ch Character, e ItemEffects) int {
