@@ -87,6 +87,9 @@ var demoCampaigns = []demoCampaign{
 			{"jogador@t20.local", "Porta-Estandarte Nv14"},
 			// O PANACHE (p48): o crítico ou a queda que o mestre confirma devolve 1 PM (ALE-653).
 			{"jogador@t20.local", "Bucaneira Insolente Nv5"},
+			// O ROUBO DE MANA (p74): o golpe furtivo que o mestre confirma dá PM temporários
+			// à ladra e tira PM da criatura (ALE-653).
+			{"jogador@t20.local", "Ladra de Mana Nv7"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
