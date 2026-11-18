@@ -44,12 +44,14 @@ func paraNoQuadrado(st Scene, c commandCtx) (*board.BoardState, error) {
 	if err != nil {
 		return nil, err
 	}
-	tokenID := chi.URLParam(c.R, "tokenId")
-	stops, err := st.paradasDaProposta(c, tokenID)
+	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 	if err != nil {
 		return nil, err
 	}
-	return st.propoePorParadas(c, tokenID, append(stops, destination))
+	// UMA LEITURA DO TABULEIRO: as paradas que já existem saem do que a mutação leu, e não de uma
+	// leitura à parte antes dela (`ProposeNextStop`).
+	return st.deps.Boards().ProposeNextStop(c.R.Context(), c.SessionID, c.BoardID,
+		state, chi.URLParam(c.R, "tokenId"), destination, st.moveWho(c))
 }
 
 // undoLastStop corrige a última perna sem jogar a rota inteira fora.
@@ -77,11 +79,7 @@ func undoLastStop(st Scene, c commandCtx) (*board.BoardState, error) {
 	return st.propoePorParadas(c, tokenID, stops)
 }
 
-// paradasDaProposta devolve as paradas já acumuladas, ou só o lugar da peça.
-//
-// A proposta de OUTRA pessoa não conta: duas mãos empilhando pernas no mesmo
-// movimento é o estado que o `ByUserID` existe para evitar, e sem esta conferência
-// um segundo jogador estenderia o caminho que o primeiro está montando.
+// paradasDaProposta devolve as paradas já acumuladas, ou só o lugar da peça (`board.StopsSoFar`).
 func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square, error) {
 	b, err := s.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
 	if err != nil {
@@ -90,17 +88,7 @@ func (s Scene) paradasDaProposta(c commandCtx, tokenID string) ([]engine.Square,
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
 	}
-	token := board.FindToken(b, tokenID)
-	if token == nil {
-		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
-	}
-	if p := b.Pending; p != nil && p.TokenID == tokenID && p.ByUserID == c.User && len(p.Stops) > 0 {
-		// Cópia, e não a fatia do estado: o `append` do chamador escreveria na
-		// memória do tabuleiro vivo antes de a proposta ser validada — e uma
-		// proposta RECUSADA teria deixado a parada lá.
-		return append([]engine.Square(nil), p.Stops...), nil
-	}
-	return []engine.Square{{X: token.X, Y: token.Y}}, nil
+	return board.StopsSoFar(b, tokenID, c.User)
 }
 
 func (s Scene) propoePorParadas(c commandCtx, tokenID string, stops []engine.Square) (*board.BoardState, error) {

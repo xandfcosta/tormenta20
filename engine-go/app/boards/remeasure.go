@@ -2,9 +2,9 @@ package boards
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
-	"t20engine/app/session"
 	"t20engine/domain/board"
 )
 
@@ -23,10 +23,10 @@ func (bs *Store) RemeasureCharacter(ctx context.Context, sessionID, characterID 
 		return nil
 	}
 	// A GRAVAÇÃO É DO STORE, e nunca da unidade que o contexto carrega: quem chama é o aviso de que
-	// a ficha mudou, que pode sair DEPOIS do commit de uma unidade cujo contexto ainda a leva. Com
-	// ela ali, o escritor seria o da transação fechada e a troca na memória ficaria para um "depois
-	// do commit" que já passou — a peça não mudava, e o teste do voo que cai o mediu.
-	ctx = context.WithValue(session.AfterTheUnit(ctx), snapshotsKey{}, BoardSnapshots(nil))
+	// a ficha mudou, que pode sair DEPOIS do commit de uma unidade cujo contexto ainda leva o
+	// escritor dela — e gravar por uma transação fechada falha. Zerar a chave devolve o
+	// `snapshotsFor` ao escritor do store.
+	ctx = context.WithValue(ctx, snapshotsKey{}, BoardSnapshots(nil))
 	open, err := bs.OpenBoards(ctx, sessionID)
 	if err != nil {
 		return err
@@ -52,26 +52,34 @@ func (bs *Store) RemeasureCharacter(ctx context.Context, sessionID, characterID 
 	return nil
 }
 
-// SessionsWithPieceOf devolve as sessões com tabuleiro aberto em memória que têm peça deste
-// personagem. Só a trava dos tabuleiros: quem pergunta pode estar dentro da trava da sessão.
-func (bs *Store) SessionsWithPieceOf(characterID int64) []int64 {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
+// SessionsWithPieceOf devolve as sessões não encerradas com tabuleiro aberto que tem peça deste
+// personagem, lidas do banco numa consulta. Não pede trava nenhuma: quem pergunta pode estar dentro
+// da trava da sessão (o aviso de depois do commit).
+func (bs *Store) SessionsWithPieceOf(ctx context.Context, characterID int64) ([]int64, error) {
+	rows, err := bs.q.ListLiveOpenBoards(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ler os tabuleiros abertos: %w", err)
+	}
 	var found []int64
-	for sessionID, open := range bs.boards {
-		if hasPieceOf(open, characterID) {
-			found = append(found, sessionID)
+	for _, row := range rows {
+		if slices.Contains(found, row.Sessionid) {
+			continue
+		}
+		parsed, err := parseBoardBlob(row.State)
+		if err != nil {
+			continue
+		}
+		if hasPieceOf(parsed, characterID) {
+			found = append(found, row.Sessionid)
 		}
 	}
-	return found
+	return found, nil
 }
 
-func hasPieceOf(open []*board.BoardState, characterID int64) bool {
-	for _, b := range open {
-		for _, token := range b.Tokens {
-			if token.CharacterID != nil && *token.CharacterID == characterID {
-				return true
-			}
+func hasPieceOf(b *board.BoardState, characterID int64) bool {
+	for _, token := range b.Tokens {
+		if token.CharacterID != nil && *token.CharacterID == characterID {
+			return true
 		}
 	}
 	return false

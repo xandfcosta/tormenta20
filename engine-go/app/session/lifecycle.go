@@ -26,9 +26,9 @@ import (
 // a PERGUNTA em vez do objeto desfez o impedimento sem custar nada: era uma
 // chamada só.
 //
-// Uma LISTA e não um campo por dono, porque eles não são dois: a fila, os
-// tabuleiros e a memória efêmera da Mesa são três mapas chaveados por sessão, e
-// um quarto é uma linha de fiação (ALE-377).
+// Uma LISTA e não um campo por dono: a numeração dos quadros da fila e a memória efêmera da Mesa
+// são mapas chaveados por sessão, e mais um é uma linha de fiação (ALE-377). A fila e os
+// tabuleiros saíram dela quando passaram a se ler sempre do banco.
 type MemoryOfASession interface {
 	SessionDeleted(sessionID int64)
 }

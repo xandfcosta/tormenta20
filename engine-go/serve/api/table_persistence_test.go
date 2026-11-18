@@ -75,13 +75,11 @@ func TestACommandTheDiskRefusesComesBackRefused(t *testing.T) {
 		t.Fatal("o controle falhou: a peça não entrou com o disco saudável")
 	}
 
-	// A SABOTAGEM é derrubar a TABELA, e as duas óbvias não servem: sem
-	// tabuleiro aberto não há o que gravar, e fechar o `*sql.DB` mata a LEITURA
-	// junto — a página nem renderiza. O defeito de verdade é escrita falhando
-	// com leitura funcionando, que é como ele fica invisível.
-	if _, err := f.s.db.ExecContext(ctx, "DROP TABLE open_boards"); err != nil {
-		t.Fatalf("derrubar a tabela: %v", err)
-	}
+	// A SABOTAGEM é a GRAVAÇÃO falhar com a leitura de pé (`refusesBoardWrites`), e as óbvias não
+	// servem: sem tabuleiro aberto não há o que gravar, e fechar o `*sql.DB` ou derrubar a tabela mata a
+	// LEITURA junto — a página nem renderiza. O defeito de verdade é escrita falhando com leitura
+	// funcionando, que é como ele fica invisível.
+	refusesBoardWrites(t, f.s.db)
 
 	body := f.posts(t, f.gm, f.tableUrl()+"/tabuleiro/pecas", `{"map_selection":"`+sheet+`"}`)
 

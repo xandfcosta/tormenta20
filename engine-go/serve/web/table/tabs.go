@@ -3,11 +3,11 @@ package table
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
+	"t20engine/domain/board"
 
 	"github.com/go-chi/chi/v5"
-
-	"t20engine/domain/board"
 )
 
 // AS ABAS DE TABULEIRO: o mestre abre a cripta sem guardar a taverna, e cada
@@ -211,20 +211,19 @@ func (s Scene) chosenTabOf(ctx context.Context, sessionID, userID int64) (string
 // tela morta: o mestre mostra a cripta, encerra a cripta, e quem foi trazido
 // volta para onde estava em vez de ficar olhando um tabuleiro que não existe.
 func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string, pulled bool, pulledFrom string, err error) {
-	open, err := s.deps.Boards().OpenBoards(ctx, sessionID)
+	ids, err := s.deps.Boards().OpenBoardIDs(ctx, sessionID)
 	if err != nil {
 		return "", false, "", err
 	}
+	aba, pulled, pulledFrom = s.pullTabFrom(ids, sessionID, userID)
+	return aba, pulled, pulledFrom, nil
+}
+
+// pullTabFrom é o `pullTab` sobre os ids dos abertos que quem chama já tem: o desenho da mesa lê a
+// lista UMA vez e escolhe nela a aba, o tabuleiro e a barra de abas.
+func (s Scene) pullTabFrom(ids []string, sessionID, userID int64) (aba string, pulled bool, pulledFrom string) {
 	isOpen := func(id string) bool {
-		if id == "" {
-			return false
-		}
-		for _, b := range open {
-			if b.ID == id {
-				return true
-			}
-		}
-		return false
+		return id != "" && slices.Contains(ids, id)
 	}
 	target, pulled, pulledFrom := s.chosenTabs.Resolve(sessionID, userID)
 	if pulled && !isOpen(target) {
@@ -238,7 +237,7 @@ func (s Scene) pullTab(ctx context.Context, sessionID, userID int64) (aba string
 		// coisa à outra.
 		target = ""
 	}
-	return target, pulled, pulledFrom, nil
+	return target, pulled, pulledFrom
 }
 
 func (s Scene) TabRoutes(r chi.Router) {

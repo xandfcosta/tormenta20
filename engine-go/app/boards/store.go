@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 
-	"t20engine/app/session"
 	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -23,12 +22,14 @@ var errNoBoard = errors.New("esta sessão não tem tabuleiro aberto")
 // tempo.
 //
 // Existe pelo mesmo motivo do `MaxTokens`: sem teto o estado cresce sem
-// limite e TODA hidratação e TODA gravação o carregam. Oito frentes é uma cena
+// limite e TODA leitura e TODA gravação o carregam. Oito frentes é uma cena
 // que nenhuma mesa joga.
 const openBoardsCeiling = 8
 
-// Store guarda os tabuleiros vivos de cada sessão em memória, com lastro na
-// tabela open_boards.
+// Store é o tabuleiro vivo de cada sessão: ele mora na tabela open_boards, e se lê e se grava SEMPRE
+// no banco (decisão do dono). Aqui morava uma cópia em memória, um mapa por sessão, e ela saiu pela
+// razão da cópia da mesa: o gancho de depois do commit a escrevia FORA da trava quando um gesto abria
+// a unidade direto, e a cena reaberta do acervo vivia só nela até o primeiro gesto gravá-la.
 //
 // Mutex PRÓPRIO, separado do `session.Store`: lá o mutex é global a todas as
 // sessões, e um tabuleiro movimentado numa mesa serializaria a edição de PV de
@@ -36,14 +37,6 @@ const openBoardsCeiling = 8
 // aparecer, ela vira uma por sessão sem mudar quem chama.
 type Store struct {
 	Mu sync.Mutex
-	// boards é uma LISTA por sessão, e a ordem dela é a de abertura: ela é a
-	// ordem das abas na tela, e a primeira é a aba PADRÃO de quem ainda não
-	// escolheu. Um mapa por id perderia a ordem e faria a barra de abas mudar de
-	// forma a cada carga.
-	boards map[int64][]*board.BoardState
-	// loaded marca a sessão já consultada no banco, para "sem tabuleiro" não
-	// virar uma ida ao disco por mensagem.
-	loaded map[int64]bool
 	// bus é por onde as mudanças deste tabuleiro viram notícia.
 	//
 	// Barramento e não um registro de ouvintes por store: dois stores com travas
@@ -69,29 +62,10 @@ type Store struct {
 func NewStore(snapshots BoardSnapshots, q *sqlcgen.Queries, newID func() string, bus *events.Bus) *Store {
 	return &Store{
 		bus:       bus,
-		boards:    map[int64][]*board.BoardState{},
-		loaded:    map[int64]bool{},
 		newID:     newID,
 		snapshots: snapshots,
 		q:         q,
 	}
-}
-
-// installWhenItCounts põe o tabuleiro mudado na memória — AGORA, ou depois do
-// commit quando há transação aberta.
-//
-// Dentro de uma unidade, gravar não é o fim: a transação ainda pode ser
-// desfeita por um passo seguinte, e a memória não participa disso. Instalando
-// na hora, o `rollback` desfaz o disco e deixa o mapa que a mesa VÊ adiantado —
-// medido na ALE-376, a peça ficava na casa nova depois de o gesto inteiro ser
-// recusado.
-func (bs *Store) installWhenItCounts(ctx context.Context, alvo, draft *board.BoardState) {
-	if open, ok := session.UnitFrom(ctx); ok && open.AfterCommit != nil {
-		pronto := *draft
-		open.AfterCommit(func() { *alvo = pronto })
-		return
-	}
-	*alvo = *draft
 }
 
 // snapshotsFor devolve o retrato que ESTE gesto tem de usar: o da transação
@@ -131,8 +105,7 @@ func cloneBoard(b *board.BoardState) *board.BoardState {
 	return &out
 }
 
-// Get devolve UM tabuleiro da sessão (nil quando não há), hidratando do banco na
-// primeira leitura.
+// Get devolve UM tabuleiro da sessão (nil quando não há), lido do banco.
 //
 // `boardID` vazio significa "a aba padrão", e não "erro": quem entra na
 // sessão pela primeira vez ainda não escolheu aba nenhuma, e o que ele vê é o
@@ -146,12 +119,11 @@ func cloneBoard(b *board.BoardState) *board.BoardState {
 // até a ALE-373. O nil que sobra quer dizer uma coisa só: não há aquele
 // tabuleiro.
 func (bs *Store) Get(ctx context.Context, sessionID int64, boardID string) (*board.BoardState, error) {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
+	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
+	if err != nil {
 		return nil, err
 	}
-	return cloneBoard(bs.findLocked(sessionID, boardID)), nil
+	return FindBoard(open, boardID), nil
 }
 
 // OpenBoards devolve os tabuleiros da sessão na ordem de abertura — é o que a
@@ -161,16 +133,7 @@ func (bs *Store) Get(ctx context.Context, sessionID int64, boardID string) (*boa
 // e devolver os ponteiros vivos deixaria o `board.BoardForRole` do chamador
 // escrevendo no estado da mesa.
 func (bs *Store) OpenBoards(ctx context.Context, sessionID int64) ([]*board.BoardState, error) {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
-		return nil, err
-	}
-	open := make([]*board.BoardState, 0, len(bs.boards[sessionID]))
-	for _, b := range bs.boards[sessionID] {
-		open = append(open, cloneBoard(b))
-	}
-	return open, nil
+	return bs.snapshotsFor(ctx).Read(ctx, sessionID)
 }
 
 // DefaultBoardID é o id da aba de quem ainda não escolheu: a mais antiga.
@@ -180,15 +143,21 @@ func (bs *Store) OpenBoards(ctx context.Context, sessionID int64) ([]*board.Boar
 // para uma cortina sem ninguém pedir. Quem move a mesa de propósito é o FORÇAR,
 // que é gesto.
 func (bs *Store) DefaultBoardID(ctx context.Context, sessionID int64) (string, error) {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
+	ids, err := bs.OpenBoardIDs(ctx, sessionID)
+	if err != nil || len(ids) == 0 {
 		return "", err
 	}
-	if open := bs.boards[sessionID]; len(open) > 0 {
-		return open[0].ID, nil
+	return ids[0], nil
+}
+
+// OpenBoardIDs são os ids dos tabuleiros abertos, na ordem das abas, sem ler os tabuleiros: é o que a
+// escolha da aba e a aba padrão perguntam, e a pergunta vem a cada gesto e a cada desenho.
+func (bs *Store) OpenBoardIDs(ctx context.Context, sessionID int64) ([]string, error) {
+	ids, err := bs.q.ListOpenBoardIDs(ctx, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("ler as abas da sessão %d: %w", sessionID, err)
 	}
-	return "", nil
+	return ids, nil
 }
 
 // nextSeqLocked é o número da PRÓXIMA aba desta sessão.
@@ -196,9 +165,9 @@ func (bs *Store) DefaultBoardID(ctx context.Context, sessionID int64) (string, e
 // `max + 1` e não `len + 1`: fechar a aba do meio deixaria dois tabuleiros com
 // o mesmo número, e dois números iguais é o empate que esta coluna existe para
 // não ter. Buraco na sequência não custa nada — ela só serve para ordenar.
-func (bs *Store) nextSeqLocked(sessionID int64) int64 {
+func nextSeq(open []*board.BoardState) int64 {
 	var max int64
-	for _, b := range bs.boards[sessionID] {
+	for _, b := range open {
 		if b.Seq > max {
 			max = b.Seq
 		}
@@ -206,9 +175,9 @@ func (bs *Store) nextSeqLocked(sessionID int64) int64 {
 	return max + 1
 }
 
-// findLocked resolve o id na lista da sessão, com a trava já na mão.
-func (bs *Store) findLocked(sessionID int64, boardID string) *board.BoardState {
-	open := bs.boards[sessionID]
+// FindBoard acha o tabuleiro na lista dos abertos: o do id, ou a aba PADRÃO (a primeira) quando o id
+// vem vazio; nil quando não há. Quem já leu a lista escolhe nela, sem ler o banco de novo.
+func FindBoard(open []*board.BoardState, boardID string) *board.BoardState {
 	if len(open) == 0 {
 		return nil
 	}
@@ -219,32 +188,6 @@ func (bs *Store) findLocked(sessionID int64, boardID string) *board.BoardState {
 		if b.ID == boardID {
 			return b
 		}
-	}
-	return nil
-}
-
-// hydrateLocked traz os tabuleiros do banco na primeira leitura da sessão.
-//
-// O `loaded` só é marcado no SUCESSO, e agora isso é consequência e não
-// cuidado: o erro SOBE, então não há caminho em que a sessão seja marcada sobre
-// uma leitura que falhou. Marcando antes da query, um erro transiente ficaria
-// cacheado como "esta sessão não tem tabuleiro" até o processo reiniciar.
-//
-// A lista VAZIA marca: "sessão sem tabuleiro" é resposta legítima e definitiva,
-// e ela evita uma ida ao disco por mensagem.
-func (bs *Store) hydrateLocked(ctx context.Context, sessionID int64) error {
-	if bs.loaded[sessionID] {
-		return nil
-	}
-	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
-	if err != nil {
-		// Sem marcar: a próxima mensagem tenta de novo em vez de servir um
-		// "sem tabuleiro" que só existe porque o banco piscou.
-		return err
-	}
-	bs.loaded[sessionID] = true
-	if len(open) > 0 {
-		bs.boards[sessionID] = open
 	}
 	return nil
 }
@@ -270,24 +213,21 @@ func (bs *Store) Open(ctx context.Context, sessionID int64, place, terrain strin
 func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain string) (*board.BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
+	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
+	if err != nil {
 		return nil, err
 	}
-	if len(bs.boards[sessionID]) >= openBoardsCeiling {
+	if len(open) >= openBoardsCeiling {
 		return nil, fmt.Errorf(
 			"esta sessão já tem %d tabuleiros abertos (teto %d): feche um antes de abrir outro",
-			len(bs.boards[sessionID]), openBoardsCeiling)
+			len(open), openBoardsCeiling)
 	}
 	b := board.NewBoard(bs.newID(), place, terrain)
-	b.Seq = bs.nextSeqLocked(sessionID)
-	// A GRAVAÇÃO VEM ANTES DE A ABA EXISTIR PARA ALGUÉM. Invertida, o mestre vê
-	// a aba nova na barra, monta a cena nela, e no próximo boot ela não está lá
-	// — porque o INSERT que nunca aconteceu era o que a fazia existir.
+	b.Seq = nextSeq(open)
 	if err := bs.snapshotsFor(ctx).Save(ctx, sessionID, b); err != nil {
 		return nil, err
 	}
-	bs.boards[sessionID] = append(bs.boards[sessionID], b)
-	return cloneBoard(b), nil
+	return b, nil
 }
 
 // Close encerra UM tabuleiro: some da memória e do banco. As posições não são
@@ -309,54 +249,23 @@ func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain
 // não muda, e a mesa continua íntegra.
 func (bs *Store) Close(ctx context.Context, sessionID int64, boardID string) error {
 	bs.Mu.Lock()
-	target := bs.findLocked(sessionID, boardID)
+	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
+	if err != nil {
+		bs.Mu.Unlock()
+		return err
+	}
+	target := FindBoard(open, boardID)
 	if target == nil {
 		bs.Mu.Unlock()
 		return nil
 	}
-	closed := target.ID
-	if err := bs.snapshotsFor(ctx).Delete(ctx, sessionID, closed); err != nil {
+	if err := bs.snapshotsFor(ctx).Delete(ctx, sessionID, target.ID); err != nil {
 		bs.Mu.Unlock()
 		return err
 	}
-	remaining := make([]*board.BoardState, 0, len(bs.boards[sessionID]))
-	for _, b := range bs.boards[sessionID] {
-		if b.ID != closed {
-			remaining = append(remaining, b)
-		}
-	}
-	if len(remaining) == 0 {
-		delete(bs.boards, sessionID)
-	} else {
-		bs.boards[sessionID] = remaining
-	}
-	bs.loaded[sessionID] = true
 	bs.Mu.Unlock()
 	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
 	return nil
-}
-
-// SessionDeleted é o FIM DA VIDA dos tabuleiros de uma sessão: sem esta porta,
-// o mapa em memória sobreviveria à sessão que o continha.
-//
-// Ela não é o `Close`, e a diferença encolheu com a ALE-375 sem sumir. O
-// `Close` é o mestre ENCERRANDO uma cena, e ele GRAVA — o DELETE mora dentro do
-// gesto, e a falha dele recusa. Aqui a sessão deixou de existir, e com ela
-// qualquer motivo para tocar no disco.
-//
-// Não toca no BANCO: a linha de `open_boards` some por CASCATA quando a sessão
-// é apagada (migração 00010). Apagá-la aqui seria a segunda verdade sobre quem
-// limpa, e a que roda depois falharia por não achar nada.
-//
-// > Aqui morava metade de um argumento sobre o `Dirty`, que explicava por que a
-// > marca de sujeira saía junto: ela acenderia para sempre quando o `Persist`
-// > seguinte batesse na chave estrangeira de uma sessão apagada. A marca não
-// > existe mais, e nem o `Persist` — a razão inteira saiu com eles.
-func (bs *Store) SessionDeleted(sessionID int64) {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	delete(bs.boards, sessionID)
-	delete(bs.loaded, sessionID)
 }
 
 // apply roda uma mutação pura sobre UM tabuleiro, sob a trava, e devolve o
@@ -373,34 +282,22 @@ func (bs *Store) apply(
 	return b, nil
 }
 
-// A MUDANÇA RODA SOBRE UMA CÓPIA, e é isso que faz a gravação recusada não
-// deixar rastro: o tabuleiro vivo só é substituído DEPOIS de o disco aceitar.
-// Mutando o vivo direto, uma gravação que falhasse deixaria a mesa vendo uma
-// peça que o banco não tem — que é exatamente o estado que o `Dirty` existia
-// para avisar, e que esta fatia apaga em vez de avisar.
-//
-// # Por que aqui NÃO se relê do banco, e na fila sim
-//
-// O `Mutate` da fila lê o retrato antes de mudá-lo, e o comentário dele diz por
-// quê: a função de mudança dela ESCREVE NA FICHA por outras portas, então
-// partir do gravado é o que garante que ela parta do mundo real. Aqui a mutação
-// é PURA — `domain/board` recebe estado e devolve estado, sem tocar em nada —,
-// e a memória é escrita através a cada gesto: ela não tem como divergir do
-// disco, porque nenhuma mutação sobrevive a uma gravação recusada. Reler seria
-// uma ida ao disco por peça que anda, comprando uma garantia que já existe.
+// applyLocked lê o tabuleiro do banco, deixa a mutação pura mudar a cópia lida e grava: o que o disco
+// recusa não chega a existir para ninguém (ALE-375). A trava guarda a ORDEM entre dois gestos no
+// mesmo tabuleiro — sem ela, os dois liam a mesma versão e o segundo apagava o primeiro.
 func (bs *Store) applyLocked(
 	ctx context.Context, sessionID int64, boardID string, fn func(*board.BoardState) error,
 ) (*board.BoardState, error) {
 	bs.Mu.Lock()
 	defer bs.Mu.Unlock()
-	if err := bs.hydrateLocked(ctx, sessionID); err != nil {
+	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
+	if err != nil {
 		return nil, err
 	}
-	live := bs.findLocked(sessionID, boardID)
-	if live == nil {
+	draft := FindBoard(open, boardID)
+	if draft == nil {
 		return nil, errNoBoard
 	}
-	draft := cloneBoard(live)
 	if err := fn(draft); err != nil {
 		return nil, err
 	}
@@ -409,8 +306,7 @@ func (bs *Store) applyLocked(
 	if err := bs.snapshotsFor(ctx).Save(ctx, sessionID, draft); err != nil {
 		return nil, err
 	}
-	bs.installWhenItCounts(ctx, live, draft)
-	return cloneBoard(draft), nil
+	return draft, nil
 }
 
 // board.AddToken põe a peça no tabuleiro, NA CASA que ela traz. A posição é sempre
