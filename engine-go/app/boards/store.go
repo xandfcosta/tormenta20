@@ -205,51 +205,6 @@ func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain
 	return b, nil
 }
 
-// Close encerra UM tabuleiro: some da memória e do banco. As posições não são
-// arquivadas AQUI — quem arquiva é o gateway, antes de chamar.
-//
-// Devolve as transições de saúde como o `Persist`: se o DELETE falha, a memória
-// diz "fechado" e o banco mantém a linha — no próximo boot o tabuleiro FANTASMA
-// volta, com as peças de uma cena que a mesa já encerrou.
-// O APAGAR VEM ANTES DE A ABA SUMIR DA MEMÓRIA (ALE-375), e a ordem inverteu.
-// Ela saía da memória primeiro e o DELETE ia depois, num caminho que podia
-// falhar: a aba sumia da tela, a linha ficava no banco, e no boot seguinte o
-// tabuleiro FANTASMA voltava com as peças de uma cena que a mesa já encerrou.
-// Agora o DELETE que falha RECUSA o gesto, e a aba continua onde estava.
-//
-// E COM ISSO O `WithoutCancel` SAIU. Ele existia porque a limpeza acontecia
-// depois da resposta, e um cliente que fosse embora a levaria junto — "limpeza
-// que depende de o cliente esperar não é limpeza". Dentro do gesto não há mais
-// o que proteger do cancelamento: o gesto cancelado não fecha a aba, o banco
-// não muda, e a mesa continua íntegra.
-func (bs *Store) Close(ctx context.Context, sessionID int64, boardID string) error {
-	closed, err := bs.closeLocked(ctx, sessionID, boardID)
-	if err != nil || !closed {
-		return err
-	}
-	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
-	return nil
-}
-
-// closeLocked apaga a linha do tabuleiro sob a trava, e diz se havia o que fechar. O aviso sai DEPOIS,
-// fora da trava, como no `apply`.
-func (bs *Store) closeLocked(ctx context.Context, sessionID int64, boardID string) (bool, error) {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
-	if err != nil {
-		return false, err
-	}
-	target := FindBoard(open, boardID)
-	if target == nil {
-		return false, nil
-	}
-	if err := bs.snapshotsFor(ctx).Delete(ctx, sessionID, target.ID); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
 // apply roda uma mutação pura sobre UM tabuleiro, sob a trava, e devolve o
 // instantâneo para o broadcast. Recusa quando aquele tabuleiro não existe: mexer
 // no que não existe é erro de quem chamou, não um tabuleiro criado por acidente.

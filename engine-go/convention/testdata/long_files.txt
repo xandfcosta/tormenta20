@@ -1,4 +1,3 @@
-app/boards/store.go
 domain/book/catalogs.go
 domain/engine/itemeffects.go
 serve/web/campaigns/routes.go
