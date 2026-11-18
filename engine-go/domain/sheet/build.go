@@ -337,6 +337,17 @@ func LoadPlayState(ctx context.Context, q *sqlcgen.Queries, id int64, dto *Chara
 		}
 		dto.WildShapePaid = shape.Pmpaid
 	}
+	if dto.WildShape == nil {
+		return nil
+	}
+	primal, err := q.GetCharacterWildShapePrimal(ctx, id)
+	if err != nil {
+		return err
+	}
+	for _, row := range primal {
+		dto.WildShape.Second = engine.WildForm(row.Secondform)
+		dto.WildShape.WeaponFrom, dto.WildShape.SizeFrom = engine.WildForm(row.Weaponfrom), engine.WildForm(row.Sizefrom)
+	}
 	return nil
 }
 

@@ -188,7 +188,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +
 			" catalog_search: '', catalog_category: '', improvement_spell_search: '', item_qty: 1, item_name: '', item_slots: 1," +
 			" item_roll_hp: 0, item_roll_mp: 0, item_improvements: [], item_material: '', item_enchants: [], item_enchant_against: ''," +
-			" power_search: '', choice_search: '', stance_degrees: 0, power: '', show_passives: false, wild_form: '', wild_tier: '', wild_damage: '', wild_move: ''," +
+			" power_search: '', choice_search: '', stance_degrees: 0, power: '', show_passives: false, wild_form: '', wild_tier: '', wild_damage: '', wild_move: '', wild_second: '', wild_weapon_from: '', wild_size_from: ''," +
 			" power_source: 'raca', choice_step: '', power_pick_filter: '', race_attributes: [], expertise_d20: 0, expertise_trained_only: false, vital_amount: '', vital_temp_amount: '', " + ExpertiseSpendsDeclaration() + "}",
 	}, SceneBody(view))
 }

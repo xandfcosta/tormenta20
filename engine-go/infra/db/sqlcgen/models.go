@@ -269,6 +269,13 @@ type CharacterWildShape struct {
 	Pmpaid      int64  `json:"pmpaid"`
 }
 
+type CharacterWildShapePrimal struct {
+	Characterid int64  `json:"characterid"`
+	Secondform  string `json:"secondform"`
+	Weaponfrom  string `json:"weaponfrom"`
+	Sizefrom    string `json:"sizefrom"`
+}
+
 type OpenBoard struct {
 	Sessionid int64  `json:"sessionid"`
 	Boardid   string `json:"boardid"`

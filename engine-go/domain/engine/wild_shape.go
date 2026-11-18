@@ -53,6 +53,11 @@ type WildShape struct {
 	DamageType string `json:"damageType"`
 	// Movement é a escolha da Forma Veloz, vazia nas outras.
 	Movement WildMovement `json:"movement,omitempty"`
+	// Second é a segunda forma da Forma Primal (p62), vazia sem ela; WeaponFrom e SizeFrom dizem de
+	// qual das duas vêm a arma natural e o tamanho, vazios para a primeira.
+	Second     WildForm `json:"second,omitempty"`
+	WeaponFrom WildForm `json:"weaponFrom,omitempty"`
+	SizeFrom   WildForm `json:"sizeFrom,omitempty"`
 }
 
 // WildShapeDamageTypes são os três tipos que a arma da forma pode ter.
@@ -149,7 +154,7 @@ func activeWildShape(ch Character) (WildShapeStats, bool) {
 	if ch.WildShape == nil {
 		return WildShapeStats{}, false
 	}
-	return WildShapeStatsOf(ch.WildShape.Form, ch.WildShape.Tier)
+	return WildShapeStatsOfShape(*ch.WildShape)
 }
 
 // wildShapeAsAnItem é a forma como fonte da ficha. O tamanho dela entra aqui, sem o passo de dano da
@@ -199,7 +204,7 @@ func wildShapeWeapon(ch Character) (ownedNaturalWeapon, bool) {
 	}
 	return ownedNaturalWeapon{
 		sourceID: WildTierPowerID(ch.WildShape.Tier), ofTheShape: true, critRange: stats.CritRange,
-		weapon: NaturalWeapon{Name: WildFormName(ch.WildShape.Form), Damage: stats.Damage, CritMult: 2, DamageType: ch.WildShape.DamageType},
+		weapon: NaturalWeapon{Name: WildFormName(ch.WildShape.WeaponForm()), Damage: stats.Damage, CritMult: 2, DamageType: ch.WildShape.DamageType},
 	}, true
 }
 

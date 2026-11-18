@@ -225,6 +225,15 @@ func (q *Queries) ClearCharacterWildShape(ctx context.Context, characterid int64
 	return err
 }
 
+const clearCharacterWildShapePrimal = `-- name: ClearCharacterWildShapePrimal :exec
+DELETE FROM character_wild_shape_primal WHERE characterId = ?
+`
+
+func (q *Queries) ClearCharacterWildShapePrimal(ctx context.Context, characterid int64) error {
+	_, err := q.db.ExecContext(ctx, clearCharacterWildShapePrimal, characterid)
+	return err
+}
+
 const clearIgnoredRulesForCampaign = `-- name: ClearIgnoredRulesForCampaign :exec
 DELETE FROM campaign_ignored_rules WHERE campaignId = ?
 `
@@ -1549,6 +1558,40 @@ func (q *Queries) GetCharacterWildShape(ctx context.Context, characterid int64) 
 			&i.Movement,
 			&i.Pmpaid,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCharacterWildShapePrimal = `-- name: GetCharacterWildShapePrimal :many
+SELECT secondForm, weaponFrom, sizeFrom FROM character_wild_shape_primal WHERE characterId = ?
+`
+
+type GetCharacterWildShapePrimalRow struct {
+	Secondform string `json:"secondform"`
+	Weaponfrom string `json:"weaponfrom"`
+	Sizefrom   string `json:"sizefrom"`
+}
+
+// :many pela razao da forma: sem Forma Primal nao ha linha, e isso e o caso comum.
+func (q *Queries) GetCharacterWildShapePrimal(ctx context.Context, characterid int64) ([]GetCharacterWildShapePrimalRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCharacterWildShapePrimal, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCharacterWildShapePrimalRow{}
+	for rows.Next() {
+		var i GetCharacterWildShapePrimalRow
+		if err := rows.Scan(&i.Secondform, &i.Weaponfrom, &i.Sizefrom); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -4494,6 +4537,30 @@ func (q *Queries) SaveCharacterWildShape(ctx context.Context, arg SaveCharacterW
 		arg.Damagetype,
 		arg.Movement,
 		arg.Pmpaid,
+	)
+	return err
+}
+
+const saveCharacterWildShapePrimal = `-- name: SaveCharacterWildShapePrimal :exec
+INSERT INTO character_wild_shape_primal (characterId, secondForm, weaponFrom, sizeFrom)
+VALUES (?, ?, ?, ?)
+ON CONFLICT (characterId)
+DO UPDATE SET secondForm = excluded.secondForm, weaponFrom = excluded.weaponFrom, sizeFrom = excluded.sizeFrom
+`
+
+type SaveCharacterWildShapePrimalParams struct {
+	Characterid int64  `json:"characterid"`
+	Secondform  string `json:"secondform"`
+	Weaponfrom  string `json:"weaponfrom"`
+	Sizefrom    string `json:"sizefrom"`
+}
+
+func (q *Queries) SaveCharacterWildShapePrimal(ctx context.Context, arg SaveCharacterWildShapePrimalParams) error {
+	_, err := q.db.ExecContext(ctx, saveCharacterWildShapePrimal,
+		arg.Characterid,
+		arg.Secondform,
+		arg.Weaponfrom,
+		arg.Sizefrom,
 	)
 	return err
 }
