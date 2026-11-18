@@ -85,6 +85,8 @@ var demoCampaigns = []demoCampaign{
 			// O ESTANDARTE (p54): no início da cena, a mesa do mestre oferece os PM
 			// temporários aos aliados que veem o estandarte (ALE-653).
 			{"jogador@t20.local", "Porta-Estandarte Nv14"},
+			// O PANACHE (p48): o crítico ou a queda que o mestre confirma devolve 1 PM (ALE-653).
+			{"jogador@t20.local", "Bucaneira Insolente Nv5"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
