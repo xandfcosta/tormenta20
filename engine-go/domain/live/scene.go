@@ -88,6 +88,9 @@ type Scene struct {
 	// "Pronto": ela volta na próxima cena, porque o poder vale "no início de cada cena", e
 	// por isso mora na cena e some com ela.
 	BannersDone []int64 `json:"bannersDone,omitempty"`
+	// UntilHit são os erros desarmados de cada lutador contra cada oponente, do Até Acertar (p76):
+	// "+2 cumulativo [...] contra o mesmo oponente", até ele acertar um ataque ou a cena acabar.
+	UntilHit []UntilHitMark `json:"untilHit,omitempty"`
 	// ManaStolen são os pares "ladino|alvo" (linhas da fila) que já usaram o Roubo de Mana nesta
 	// cena: "uma vez por cena contra uma mesma criatura" (p74).
 	ManaStolen []string `json:"manaStolen,omitempty"`
@@ -288,4 +291,49 @@ func MarkManaStolen(s *SessionRuntimeState, thief, target string) bool {
 	}
 	s.Scene.ManaStolen = append(s.Scene.ManaStolen, key)
 	return true
+}
+
+// UntilHitMark são os erros desarmados de um lutador (`Attacker`, linha da fila) contra um
+// oponente (`Target`).
+type UntilHitMark struct {
+	Attacker string `json:"attacker"`
+	Target   string `json:"target"`
+	Misses   int    `json:"misses"`
+}
+
+// MarkUnarmedMiss soma um erro desarmado do lutador contra o oponente. Fora de cena não marca: o
+// bônus termina no fim da cena (p76).
+func MarkUnarmedMiss(s *SessionRuntimeState, attacker, target string) {
+	if !s.InScene() {
+		return
+	}
+	for i := range s.Scene.UntilHit {
+		if m := &s.Scene.UntilHit[i]; m.Attacker == attacker && m.Target == target {
+			m.Misses++
+			return
+		}
+	}
+	s.Scene.UntilHit = append(s.Scene.UntilHit, UntilHitMark{Attacker: attacker, Target: target, Misses: 1})
+}
+
+// ClearUntilHit apaga os erros do lutador contra todo oponente: o bônus termina quando ele
+// "acertar um ataque" (p76), qualquer um.
+func ClearUntilHit(s *SessionRuntimeState, attacker string) {
+	if !s.InScene() {
+		return
+	}
+	s.Scene.UntilHit = slices.DeleteFunc(s.Scene.UntilHit, func(m UntilHitMark) bool { return m.Attacker == attacker })
+}
+
+// UntilHitMisses são os erros desarmados do lutador contra o oponente nesta cena.
+func UntilHitMisses(s *SessionRuntimeState, attacker, target string) int {
+	if s == nil || !s.InScene() {
+		return 0
+	}
+	for _, m := range s.Scene.UntilHit {
+		if m.Attacker == attacker && m.Target == target {
+			return m.Misses
+		}
+	}
+	return 0
 }

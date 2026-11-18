@@ -107,6 +107,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		ManaAvailable:      int(dto.ManaAvailable()),
 		ChargesRecklessly:  sheet.OwnsPower(dto, engine.RecklessChargePowerID),
 		StrikesImpulsively: sheet.OwnsPower(dto, engine.ImpulsiveStrikePowerID),
+		UntilHit:           sheet.OwnsPower(dto, engine.UntilHitPowerID),
 		FollowUps:          dto.Ruleset.FollowUpManeuvers(ec, sheet.ToStringSet(dto.Conditionals)),
 		Stances:            stanceFlagsOf(dto),
 	}, nil

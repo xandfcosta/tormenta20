@@ -102,6 +102,13 @@ type SceneEnded struct {
 
 func (e SceneEnded) Target() Target { return Target{SessionID: e.SessionID} }
 
+// UntilHitChanged — os erros desarmados do Até Acertar mudaram na cena.
+type UntilHitChanged struct {
+	SessionID int64
+}
+
+func (e UntilHitChanged) Target() Target { return Target{SessionID: e.SessionID} }
+
 // ManaStolen — o Roubo de Mana de um ladino contra uma criatura ficou marcado na cena.
 type ManaStolen struct {
 	SessionID int64

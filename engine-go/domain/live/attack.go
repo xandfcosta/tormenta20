@@ -161,6 +161,8 @@ type PendingAttack struct {
 	// *"ao acertar um ataque corpo a corpo"* (p45). A arma não vem junto no
 	// provisório — só o nome dela —, e um nome não responde a pergunta.
 	Melee bool `json:"melee,omitempty"`
+	// Unarmed diz que o golpe foi desarmado: o erro dele soma no Até Acertar (p76).
+	Unarmed bool `json:"unarmed,omitempty"`
 	// SneakDice são os d6 do Ataque Furtivo que entraram neste golpe, com o interruptor ligado na
 	// proposta. O Roubo de Mana dá 1 PM temporário por dado (p74), e a confirmação os lê daqui.
 	SneakDice int   `json:"sneakDice,omitempty"`
