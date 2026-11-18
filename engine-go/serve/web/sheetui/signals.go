@@ -131,6 +131,10 @@ type Signals struct {
 	WildTier   string `json:"wild_tier"`
 	WildDamage string `json:"wild_damage"`
 	WildMove   string `json:"wild_move"`
+	// A Forma Primal (p62): a segunda forma, e de qual das duas vêm a arma natural e o tamanho.
+	WildSecond     string `json:"wild_second"`
+	WildWeaponFrom string `json:"wild_weapon_from"`
+	WildSizeFrom   string `json:"wild_size_from"`
 	// O impulso de PM escolhido na linha de ataque — ver `attack_boost.go`. A
 	// arma vem junto porque a escolha é DAQUELA linha: o impulso ligado na
 	// espada não viaja no golpe do arco.

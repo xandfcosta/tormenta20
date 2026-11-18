@@ -132,13 +132,15 @@ var classPowersPart08 = []ClassPower{
 		MinLevel:    4,
 	},
 	{
-		ID:            "class.druida.forma-primal",
+		ID: "class.druida.forma-primal",
+		Modeled: []string{
+			"a segunda forma no diálogo da Forma Selvagem: cada número usa o maior das duas, e a arma natural e o tamanho são escolha do jogador (decisão do dono)",
+		},
 		ClassName:     "Druida",
 		Name:          "Forma Primal",
 		Description:   "Em Forma Selvagem, transforma-se em fera primal: recebe benefícios de DOIS tipos de animais (bônus iguais não acumulam).",
 		BookPage:      62,
 		UID:           "pwr_rkhek5tdnr",
-		Unmodeled:     "os benefícios de DOIS animais na Forma Selvagem: a forma escolhe um animal só (ALE-655)",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.druida.forma-selvagem"}},
 		MinLevel:      18,
 	},

@@ -10,19 +10,25 @@ import (
 templ wildShapeDialog(v View) {
 	@sheetDialog(v, wildShapeDialogID, "Forma Selvagem", wildShapeConfirm(v)) {
 		<div class="ds-field">
-			<span class="ds-field-label">Forma</span>
-			<div class="ds-options" role="group" aria-label="Forma">
+			<span class="ds-field-label">{ wildFirstFormLabel(v.WildShape) }</span>
+			<div class="ds-options" role="group" aria-label={ wildFirstFormLabel(v.WildShape) }>
 				for _, form := range engine.WildForms {
 					@ds.Option(false, templ.Attributes{
-						"data-on:click":          "$wild_form = '" + string(form) + "'; $wild_move = ''",
+						// A PRIMEIRA NÃO PODE SER A SEGUNDA: são dois tipos de animais (p62).
+						"data-on:click":          "$wild_form = '" + string(form) + "'; $wild_move = ''; $wild_second = $wild_second === '" + string(form) + "' ? '' : $wild_second",
 						"data-attr:aria-pressed": "String($wild_form === '" + string(form) + "')",
 					}) {
 						{ wildFormShortName(form) }
 					}
 				}
 			</div>
-			<p class="ds-help" data-text={ v.WildShape.wildSummaryExpr() }></p>
+			if v.WildShape.Primal == nil {
+				<p class="ds-help" data-text={ v.WildShape.wildSummaryExpr() }></p>
+			}
 		</div>
+		if p := v.WildShape.Primal; p != nil {
+			@wildPrimalSecond(v.WildShape, p)
+		}
 		<div class="ds-field">
 			<span class="ds-field-label">Nível</span>
 			<div class="ds-options" role="group" aria-label="Nível">
@@ -63,6 +69,9 @@ templ wildShapeDialog(v View) {
 					}
 				</div>
 			</div>
+		}
+		if p := v.WildShape.Primal; p != nil {
+			@wildPrimalChoices(p)
 		}
 		<div class="ds-field">
 			<p class="ds-help">Na forma você não fala, não empunha itens nem lança magias. O equipamento some, mas os itens vestidos continuam valendo (p63).</p>
@@ -109,4 +118,60 @@ templ agileBothButton(v View, state agileBothState) {
 			As duas
 		}
 	}
+}
+
+// wildPrimalSecond é a segunda forma da Forma Primal (p62), com o resumo da fera primal debaixo dela.
+templ wildPrimalSecond(w wildShapeView, p *wildPrimalView) {
+	<div class="ds-field">
+		<span class="ds-field-label">Segunda forma · Forma Primal</span>
+		<div class="ds-options" role="group" aria-label="Segunda forma · Forma Primal">
+			@ds.Option(false, templ.Attributes{
+				"data-on:click":          "$wild_second = ''; $wild_weapon_from = ''; $wild_size_from = ''",
+				"data-attr:aria-pressed": "String($wild_second === '')",
+			}) {
+				Nenhuma
+			}
+			for _, form := range engine.WildForms {
+				@ds.Option(false, templ.Attributes{
+					"data-on:click":          "$wild_second = '" + string(form) + "'; $wild_weapon_from = ''; $wild_size_from = ''",
+					"data-attr:aria-pressed": "String($wild_second === '" + string(form) + "')",
+					"data-attr:disabled":     "$wild_form === '" + string(form) + "'",
+				}) {
+					{ wildFormShortName(form) }
+				}
+			}
+		</div>
+		<p class="ds-help" data-text={ p.summaryExpr(w.wildSummaryExpr()) }></p>
+	</div>
+}
+
+// wildPrimalChoices são a arma natural e o tamanho da fera primal: de qual das duas formas, com o
+// padrão na primeira (decisão do dono). Só com a segunda forma escolhida.
+templ wildPrimalChoices(p *wildPrimalView) {
+	<div class="ds-field" data-show="$wild_second !== ''">
+		<span class="ds-field-label">Arma natural de</span>
+		<div class="ds-options" role="group" aria-label="Arma natural de">
+			@ds.Option(false, templ.Attributes{
+				"data-on:click": "$wild_weapon_from = $wild_form", "data-text": labelExpr(p.Weapons, "wild_form"),
+				"data-attr:aria-pressed": "String($wild_weapon_from === '' || $wild_weapon_from === $wild_form)",
+			})
+			@ds.Option(false, templ.Attributes{
+				"data-on:click": "$wild_weapon_from = $wild_second", "data-text": labelExpr(p.Weapons, "wild_second"),
+				"data-attr:aria-pressed": "String($wild_weapon_from !== '' && $wild_weapon_from === $wild_second)",
+			})
+		</div>
+	</div>
+	<div class="ds-field" data-show="$wild_second !== ''">
+		<span class="ds-field-label">Tamanho de</span>
+		<div class="ds-options" role="group" aria-label="Tamanho de">
+			@ds.Option(false, templ.Attributes{
+				"data-on:click": "$wild_size_from = $wild_form", "data-text": labelExpr(p.Sizes, "wild_form"),
+				"data-attr:aria-pressed": "String($wild_size_from === '' || $wild_size_from === $wild_form)",
+			})
+			@ds.Option(false, templ.Attributes{
+				"data-on:click": "$wild_size_from = $wild_second", "data-text": labelExpr(p.Sizes, "wild_second"),
+				"data-attr:aria-pressed": "String($wild_size_from !== '' && $wild_size_from === $wild_second)",
+			})
+		</div>
+	</div>
 }

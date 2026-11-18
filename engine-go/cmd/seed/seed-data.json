@@ -2417,6 +2417,30 @@
               { "catalogId": "armadura-couro", "equipped": "vested" }
             ]
           }
+        },
+        {
+          "simple": true,
+          "create": {
+            "name": "Druida Primal Nv18",
+            "races": ["humano"],
+            "origin": "eremita",
+            "classes": [{ "className": "Druida", "level": 18 }],
+            "god": "allihanna",
+            "classPowers": [
+              "class.druida.forma-selvagem",
+              "class.druida.forma-selvagem-aprimorada",
+              "class.druida.forma-selvagem-superior",
+              "class.druida.forma-primal"
+            ],
+            "strength": 2,
+            "dexterity": 2,
+            "constitution": 3,
+            "intelligence": 1,
+            "wisdom": 5,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9
+          }
         }
       ]
     },
