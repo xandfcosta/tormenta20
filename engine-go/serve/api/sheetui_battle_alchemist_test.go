@@ -18,9 +18,9 @@ func TestTheBattleAlchemistAddsIntelligenceToThePreparationDose(t *testing.T) {
 		catalog, name string
 		want, refuse  string
 	}{
-		{"acido", "Ácido", "2d4+4 de ácido", "2d4 de ácido"},
-		{"bomba", "Bomba", "6d6+4 de impacto", "6d6 de impacto"},
-		{"fogo-alquimico", "Fogo alquímico", "1d6+4 de fogo", "1d6 de fogo"},
+		{"acido", "Ácido", "2d4+4 de ácido (+4 Alquimista de Batalha)", "2d4 de ácido"},
+		{"bomba", "Bomba", "6d6+4 de impacto em toda criatura a até 3m do alvo (+4 Alquimista de Batalha)", "6d6 de impacto"},
+		{"fogo-alquimico", "Fogo alquímico", "1d6+4 de fogo e fica em chamas (+4 Alquimista de Batalha)", "1d6 de fogo"},
 		{"agua-benta", "Água benta", "2d10 de luz", "2d10+4"},
 	}
 	for _, c := range cases {
@@ -52,7 +52,13 @@ func battleAlchemist(t *testing.T, f sceneFixture) {
 		t.Fatalf("fazer da ficha um inventor: %v", err)
 	}
 	withPowers(t, f, `["class.inventor.alquimista-iniciado","class.inventor.alquimista-de-batalha"]`, "{}")
-	if _, err := f.s.db.ExecContext(ctx, "UPDATE characters SET intelligence = 4 WHERE id = ?", f.charID); err != nil {
+	withIntelligence(t, f, 4)
+}
+
+func withIntelligence(t *testing.T, f sceneFixture, value int) {
+	t.Helper()
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE characters SET intelligence = ? WHERE id = ?", value, f.charID); err != nil {
 		t.Fatalf("pôr a Inteligência: %v", err)
 	}
 }
@@ -60,10 +66,7 @@ func battleAlchemist(t *testing.T, f sceneFixture) {
 // Sem o poder, o dano do preparado não soma atributo nenhum: é o controle do caso acima.
 func TestWithoutTheBattleAlchemistThePreparationDoseKeepsItsDice(t *testing.T) {
 	f, goblin := doseAttackOnTurn(t)
-	if _, err := f.s.db.ExecContext(context.Background(),
-		"UPDATE characters SET intelligence = 4 WHERE id = ?", f.charID); err != nil {
-		t.Fatalf("pôr a Inteligência: %v", err)
-	}
+	withIntelligence(t, f, 4)
 	weapon := weaponWithInjection(t, f)
 	loaded(t, f, weapon, "acido", "Ácido")
 	attacks(t, f, goblin, "")

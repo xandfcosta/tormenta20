@@ -2758,15 +2758,18 @@ INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref"
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (844, 52, 5, 'class', 'Inventor', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (845, 52, 2, 'power', 'class.inventor.alquimista-iniciado', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (846, 52, 3, 'power', 'class.inventor.alquimista-de-batalha', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (847, 52, 3, 'automatic', 'class.inventor.comerciante', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (848, 52, 1, 'automatic', 'class.inventor.engenhosidade', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (849, 52, 2, 'automatic', 'class.inventor.fabricar-item-superior-1-melhoria', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (850, 52, 5, 'automatic', 'class.inventor.fabricar-item-superior-2-melhorias', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (851, 52, 1, 'automatic', 'class.inventor.prototipo', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (852, 53, 1, 'class', 'Arcanista', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (853, 53, 1, 'automatic', 'class.arcanista.caminho-do-arcanista', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (854, 53, 1, 'automatic', 'class.arcanista.caminho-mago', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (855, 53, 1, 'automatic', 'class.arcanista.magias-1-circulo', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (847, 52, 4, 'power', 'class.inventor.invencao-potente', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (848, 52, 5, 'power', 'class.inventor.catalisador-instavel', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (849, 52, 5, 'power', 'class.inventor.farmaceutico', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (850, 52, 3, 'automatic', 'class.inventor.comerciante', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (851, 52, 1, 'automatic', 'class.inventor.engenhosidade', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (852, 52, 2, 'automatic', 'class.inventor.fabricar-item-superior-1-melhoria', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (853, 52, 5, 'automatic', 'class.inventor.fabricar-item-superior-2-melhorias', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (854, 52, 1, 'automatic', 'class.inventor.prototipo', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (855, 53, 1, 'class', 'Arcanista', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (856, 53, 1, 'automatic', 'class.arcanista.caminho-do-arcanista', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (857, 53, 1, 'automatic', 'class.arcanista.caminho-mago', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (858, 53, 1, 'automatic', 'class.arcanista.magias-1-circulo', '', 0);
 
 INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (1, 1, 1, '2026-07-01T12:00:00.000Z');
 INSERT INTO campaign_members ("id", "campaignId", "characterId", "addedAt") VALUES (2, 1, 13, '2026-07-01T12:00:00.000Z');

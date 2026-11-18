@@ -2460,7 +2460,10 @@
             "classes": [{ "className": "Inventor", "level": 5 }],
             "classPowers": [
               "class.inventor.alquimista-iniciado",
-              "class.inventor.alquimista-de-batalha"
+              "class.inventor.alquimista-de-batalha",
+              "class.inventor.invencao-potente",
+              "class.inventor.catalisador-instavel",
+              "class.inventor.farmaceutico"
             ],
             "strength": 1,
             "dexterity": 3,

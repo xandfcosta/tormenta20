@@ -2,6 +2,7 @@ package sheet
 
 import (
 	"strconv"
+	"strings"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -62,19 +63,27 @@ func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (
 	return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
 }
 
-// doseEffectPhrase monta o dano e o resto do efeito: "2d4+4 de ácido", "6d6 de impacto em toda
-// criatura a até 3m do alvo". A soma só vale para o preparado, e só quando há o que somar.
-func doseEffectPhrase(dose *book.DoseEffect, alchemicalBonus int) string {
+// doseEffectPhrase monta o dano e o resto do efeito: "2d4+4 de ácido (+4 Alquimista de Batalha)",
+// "6d6 de impacto em toda criatura a até 3m do alvo". A soma só vale para o PREPARADO, e diz de onde
+// vem: a conta pronta e decomposta.
+func doseEffectPhrase(dose *book.DoseEffect, alchemical *engine.TotalContribs) string {
 	if dose.Damage == nil {
 		return dose.Effect
 	}
-	dice := dose.Damage.Dice
-	if dose.Alchemical && alchemicalBonus > 0 {
-		dice += "+" + strconv.Itoa(alchemicalBonus)
+	dice, sources := dose.Damage.Dice, ""
+	if dose.Alchemical && alchemical != nil {
+		dice += "+" + strconv.Itoa(alchemical.Total)
+		parts := make([]string, 0, len(alchemical.Contributions))
+		for _, c := range alchemical.Contributions {
+			if !c.Dropped {
+				parts = append(parts, book.WithSign(c.Amount)+" "+c.Source)
+			}
+		}
+		sources = " (" + strings.Join(parts, ", ") + ")"
 	}
 	phrase := dice + " de " + dose.Damage.Type
 	if dose.Effect != "" {
 		phrase += " " + dose.Effect
 	}
-	return phrase
+	return phrase + sources
 }
