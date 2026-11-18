@@ -196,8 +196,9 @@ func SpecialSituationLabel(s SpecialSituation) string {
 var errTotalCover = fmt.Errorf("o alvo está sob cobertura total e não pode ser atacado (p239)")
 
 // shootsIntoMeleeHere diz se um alvo `shootsIntoMelee` alcança esta carta: o Grudar o Cano, com a arma de fogo
-// contra o oponente adjacente (p48). Alvo, e não bandeira, porque ele vem de um interruptor, e a bandeira sob
-// condição não acende pelo interruptor (`TestASwitchedOnFlagTargetDoesNotRaiseTheFlag`).
+// contra o oponente adjacente (p48). Alvo, e não bandeira, porque ele vale para UMA arma — o alvo tem escopo, e a
+// bandeira não. Ele nasceu alvo também porque a bandeira sob condição não acendia pelo interruptor; hoje acende
+// (`TestASwitchedOnFlagTargetRaisesTheFlag`), e o escopo é o que segura a escolha.
 func shootsIntoMeleeHere(effects ItemEffects, scopes []string) bool {
 	for _, scope := range scopes {
 		if StatFor(effects, ModifierTarget{K: "shootsIntoMelee", Scope: scope}).Total > 0 {
