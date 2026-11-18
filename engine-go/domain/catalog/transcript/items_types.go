@@ -112,12 +112,23 @@ type Consumable struct {
 // presença dele é o que diz que o item carrega. O preparado que não fere (o bálsamo,
 // o cosmético) não tem: decisão do dono.
 type DoseEffect struct {
-	Effect string `json:"effect"`
+	// Damage é o dano da dose, à parte do resto da frase (Effect), para o motor somar nele sem ler
+	// texto; Alchemical diz que o item é um PREPARADO alquímico (p160), cujo dano recebe o Alquimista
+	// de Batalha (p68).
+	Damage     *DoseDamage `json:"damage,omitempty"`
+	Alchemical bool        `json:"alchemical,omitempty"`
+	Effect     string      `json:"effect"`
 	// Save é o teste que o item pede, SaveAttribute o atributo da CD (p227) e OnSave o
 	// que passar nele faz.
 	Save          string `json:"save"`
 	SaveAttribute string `json:"saveAttribute"`
 	OnSave        string `json:"onSave"`
+}
+
+// DoseDamage é o dado e o tipo do dano de uma dose: "2d4" de "ácido".
+type DoseDamage struct {
+	Dice string `json:"dice"`
+	Type string `json:"type"`
 }
 
 type InstantRecovery struct {

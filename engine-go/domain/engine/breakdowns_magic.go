@@ -39,6 +39,16 @@ func climbSpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "climbSpeed"}).Total)
 }
 
+// alchemicalDamageTotal é o que se soma ao dano do preparado alquímico (p68), com as parcelas; nil
+// quando não há soma positiva.
+func alchemicalDamageTotal(e ItemEffects) *TotalContribs {
+	sum := totalContribsFor(e, ModifierTarget{K: "alchemicalDamage"})
+	if sum.Total <= 0 {
+		return nil
+	}
+	return &sum
+}
+
 // swimSpeedTotal é a natação em metros (0 = não nada além do teste de Atletismo).
 func swimSpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "swimSpeed"}).Total)

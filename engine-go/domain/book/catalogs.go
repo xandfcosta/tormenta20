@@ -177,14 +177,6 @@ type Consumable struct {
 	Dose *DoseEffect `json:"dose"`
 }
 
-// DoseEffect é o efeito de uma dose; a CD quem escreve é a `sheet.WrittenDose`.
-type DoseEffect struct {
-	Effect        string `json:"effect"`
-	Save          string `json:"save"`
-	SaveAttribute string `json:"saveAttribute"`
-	OnSave        string `json:"onSave"`
-}
-
 // ImmediateGain é o PV/PM que um consumível devolve na hora. O `Dice` é a
 // rolagem que a MESA faz — a ficha não rola por ninguém.
 type ImmediateGain struct {

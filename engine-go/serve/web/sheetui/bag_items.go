@@ -124,7 +124,7 @@ type catalogItemRow struct {
 }
 
 func itemSheetsOf(
-	dto sheet.CharacterDTO, proficiencies engine.Proficiency, attributes map[string]engine.AttributeBreakdown, armable bool,
+	dto sheet.CharacterDTO, proficiencies engine.Proficiency, computed engine.ComputedSheet, armable bool,
 	spellSearch string, cards []engine.WeaponCard,
 ) []itemSheet {
 	sheets := make([]itemSheet, 0, len(dto.Items))
@@ -135,7 +135,7 @@ func itemSheetsOf(
 		entry.Equip = append(entry.Equip, legChoice(armable, item)...)
 		offerTableImprovements(&entry, dto, item)
 		offerVesting(&entry, worn, item)
-		entry.Doses = dosesOnTheItemSheet(dto, item, attributes)
+		entry.Doses = dosesOnTheItemSheet(dto, item, computed)
 		entry.School = schoolOnTheItemSheet(item)
 		entry.God = godOnTheItemSheet(item, dto)
 		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil && entry.Spell.Chosen != "" {

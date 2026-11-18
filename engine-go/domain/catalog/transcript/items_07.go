@@ -219,7 +219,8 @@ var itemsPart07 = []Item{
 		Consumable: &Consumable{
 			Scope: "instant",
 			Dose: &DoseEffect{
-				Effect:        "2d10 de luz em morto-vivo ou abissal, e é inofensiva contra outras criaturas",
+				Damage:        &DoseDamage{Dice: "2d10", Type: "luz"},
+				Effect:        "em morto-vivo ou abissal, e é inofensiva contra outras criaturas",
 				Save:          "Reflexos",
 				SaveAttribute: "wisdom",
 				OnSave:        "reduz à metade",

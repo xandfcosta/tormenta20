@@ -168,7 +168,7 @@ func (s Scene) bagPanelOf(dto sheet.CharacterDTO, filters bagFilters) bagPanel {
 	panel.StowedTotal = len(saved)
 	panel.Stowed = stowedTilesOf(dto.Ruleset, bagFiltered(saved, search, category))
 	sheet, cards, ok := s.sheetForPanels(dto)
-	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet.Attributes, armable, filters.ImprovementSpellSearch, cards)
+	panel.Sheets = itemSheetsOf(dto, proficiencies, sheet, armable, filters.ImprovementSpellSearch, cards)
 	if ok {
 		panel.Load = loadMeterOf(sheet)
 		panel.Load.DisplacementExemptBy = exempt[engine.DisplacementIgnoresLoad]

@@ -122,8 +122,9 @@ func targetLabel(t engine.ModifierTarget) string {
 		"shootsIntoMelee": "Atira em corpo a corpo sem o –5",
 		"pmCost":          "Custo em PM", "boostCost": "Custo em PM no golpe", "catalyst": "Catalisador", "spellDC": "CD de magias",
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo", "climbSpeed": "Escalada", "swimSpeed": "Natação",
-		"armorPenalty": "Penalidade de armadura",
-		"damageStep":   "Passo de dano",
+		"alchemicalDamage": "Dano de preparado alquímico",
+		"armorPenalty":     "Penalidade de armadura",
+		"damageStep":       "Passo de dano",
 		// O DADO da Briga não soma em nada: ele É o dado do ataque desarmado.
 		"unarmedDamage": "Dado do ataque desarmado",
 		// OS SETE QUE FALTAVAM (ALE-453). Cada um reusa a palavra que a casa já
