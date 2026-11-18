@@ -106,6 +106,9 @@ var demoCampaigns = []demoCampaign{
 			{"jogador@t20.local", "Hynne Sortudo Nv3"},
 			// A FORMA PRIMAL (p62): a Forma Selvagem com dois animais (ALE-655).
 			{"jogador@t20.local", "Druida Primal Nv18"},
+			// O ALQUIMISTA DE BATALHA (p68): a Inteligência no dano do preparado, na dose da Injeção
+			// alquímica que a espada curta guarda (ALE-655).
+			{"jogador@t20.local", "Inventor Alquimista Nv5"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
