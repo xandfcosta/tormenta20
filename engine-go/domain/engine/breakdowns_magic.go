@@ -33,14 +33,10 @@ func flySpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "flySpeed"}).Total)
 }
 
-// climbSpeedTotal é a escalada em metros: a que um efeito dá, ou o deslocamento terrestre de quem
-// escala tão rápido quanto anda (`ClimbEqualsLand`), o maior dos dois.
-func climbSpeedTotal(e ItemEffects, landSquares int) int {
-	climb := max(0, StatFor(e, ModifierTarget{K: "climbSpeed"}).Total)
-	if e.Flags[ClimbEqualsLand] {
-		climb = max(climb, landSquares*3/2)
-	}
-	return climb
+// climbSpeedTotal é a escalada em metros que um efeito dá. Quem escala tão rápido quanto anda
+// (`ClimbEqualsLand`) não passa por aqui: ver `ClimbsAsItWalks`.
+func climbSpeedTotal(e ItemEffects) int {
+	return max(0, StatFor(e, ModifierTarget{K: "climbSpeed"}).Total)
 }
 
 // swimSpeedTotal é a natação em metros (0 = não nada além do teste de Atletismo).

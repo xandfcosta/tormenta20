@@ -23,3 +23,13 @@ func TestTheMoveRowNamesEveryOtherDisplacement(t *testing.T) {
 		t.Errorf("sem outro deslocamento, a linha ganhou %q", plain.Detail)
 	}
 }
+
+// O GOBLIN LENTO anda 4,5m e escala 4,5m: a escalada É o terrestre (p23), com o meio metro.
+func TestTheSlowGoblinClimbsFourAndAHalfMetres(t *testing.T) {
+	computed := engine.ComputedSheet{ClimbsAsItWalks: true}
+	computed.Displacement.Total = 3
+	row := movementRow(computed)
+	if row.Value != "4,5m" || row.Detail != "percorrer o seu deslocamento · p233 · escalada\u00a04,5m" {
+		t.Errorf("o goblin lento anda %q e a linha diz %q; a escalada devia ser 4,5m", row.Value, row.Detail)
+	}
+}

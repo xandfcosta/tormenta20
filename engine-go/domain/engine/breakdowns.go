@@ -86,6 +86,10 @@ type ComputedSheet struct {
 	// campo novo em toda ficha mudaria todo oráculo de paridade sem mudar regra nenhuma.
 	ClimbSpeed int `json:"climbSpeed,omitempty"`
 	SwimSpeed  int `json:"swimSpeed,omitempty"`
+	// ClimbsAsItWalks é o Espelunqueiro (p23): a escalada É o deslocamento terrestre, depois das
+	// contas dele. Booleano e não número em `ClimbSpeed` porque o terrestre pode ser 4,5m (o goblin
+	// Lento), e o metro inteiro o arredondaria para 4.
+	ClimbsAsItWalks bool `json:"climbsAsItWalks,omitempty"`
 	// IgnoresDifficultTerrain é a p129 vista pelo TABULEIRO: "terreno difícil
 	// não reduz seu deslocamento" (Acrobático). Ela sai na ficha, e não numa
 	// consulta à parte, porque é quem desenha o movimento que precisa dela —

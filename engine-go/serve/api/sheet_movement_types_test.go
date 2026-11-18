@@ -40,9 +40,8 @@ func computedOf(t *testing.T, f sceneFixture, id int64) engine.ComputedSheet {
 
 func TestTheGoblinClimbsAsFastAsHeWalks(t *testing.T) {
 	_, goblin := raceSheet(t, newSceneFixture(t), "goblin")
-	walks := goblin.Displacement.Total * 3 / 2
-	if walks == 0 || goblin.ClimbSpeed != walks {
-		t.Errorf("o goblin anda %dm e escala %dm; o Espelunqueiro (p23) os iguala", walks, goblin.ClimbSpeed)
+	if !goblin.ClimbsAsItWalks {
+		t.Error("o goblin não escala como anda; o Espelunqueiro (p23) iguala a escalada ao deslocamento terrestre")
 	}
 }
 
