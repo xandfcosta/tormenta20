@@ -37,6 +37,7 @@ func (setup strikeSetup) pendingOf(who app.Caller, req Request, out engine.Attac
 		BoostAddOn: req.Boost.AddOn, IgnoredReduction: setup.weapon.IgnoresDamageReduction, RerollsLowDice: setup.weapon.RerollsLowDice,
 		BoostAgainst: setup.boost.against, FollowUps: setup.followUps,
 		WeaponID: setup.weapon.CatalogID, AttackerStances: setup.striker.Stances, TargetStances: setup.victim.Stances,
+		SneakDice: setup.weapon.SneakDice(),
 	}
 	if natural := setup.weapon.Natural; natural != nil {
 		pending.NaturalSource = natural.SourceID
