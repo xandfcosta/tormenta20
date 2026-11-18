@@ -29,7 +29,7 @@ func toggleBookCondition(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	// O AVISO sai DEPOIS da escrita, nunca antes: avisar sobre algo que ainda
 	// pode falhar faria a mesa buscar o estado velho e acreditar nele. Ele fica
 	// na cena porque depende do barramento do PROCESSO, que é do hospedeiro.
-	s.deps.CharacterChanged(row.ID)
+	s.deps.CharacterChanged(r.Context(), row.ID)
 	return nil
 }
 

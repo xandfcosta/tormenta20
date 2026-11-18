@@ -60,7 +60,7 @@ func (s Scene) wakeTableSheets(ctx context.Context, campaignID int64) {
 		return
 	}
 	for _, characterID := range stamped {
-		s.deps.CharacterChanged(characterID)
+		s.deps.CharacterChanged(ctx, characterID)
 	}
 }
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 )
 
@@ -33,4 +34,6 @@ func (s *Server) campaignsHost() campaignsHost {
 func (h campaignsHost) RequesterIsAdmin(r *http.Request) bool { return currentUser(r).IsAdmin }
 
 // CharacterChanged avisa que uma ficha mudou. A regra é da FICHA, e a campanha a pede emprestada.
-func (h campaignsHost) CharacterChanged(characterID int64) { h.sheet.characterChanged(characterID) }
+func (h campaignsHost) CharacterChanged(ctx context.Context, characterID int64) {
+	h.sheet.characterChanged(ctx, characterID)
+}

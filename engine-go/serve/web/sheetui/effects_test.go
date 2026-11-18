@@ -42,7 +42,7 @@ func TestAConditionAnnouncesItselfToTheLiveTable(t *testing.T) {
 	if save < 0 {
 		t.Fatal("o recorte não pegou o corpo de `toggleBookCondition` — o guarda mediria o vazio")
 	}
-	notice := strings.Index(body, "s.deps.CharacterChanged(row.ID)")
+	notice := strings.Index(body, "s.deps.CharacterChanged(r.Context(), row.ID)")
 	if notice < 0 {
 		t.Fatal("o comando de condição não chama `CharacterChanged`: o mestre aplica " +
 			"Caído e a tela do jogador segue com a Defesa velha, sem nada acusar")

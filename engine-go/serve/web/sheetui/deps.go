@@ -46,7 +46,7 @@ type Deps interface {
 	// CharacterChanged avisa a MESA que esta ficha mexeu, e é chamada num lugar
 	// só — o funil dos comandos. Passam trinta mutações por ali, e a linha
 	// esquecida numa delas seria uma ficha que não atualiza só naquele gesto.
-	CharacterChanged(characterID int64)
+	CharacterChanged(ctx context.Context, characterID int64)
 	// Bus e LiveStreamsClosing são do fluxo ao vivo da ficha solta (`sheetLive`): o aviso de que a ficha
 	// mudou, e a deixa de que o processo vai encerrar.
 	Bus() *events.Bus

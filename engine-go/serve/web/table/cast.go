@@ -100,7 +100,7 @@ func moveCastVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeSta
 		// aqui sempre há personagem atrás do gesto, ao contrário da fila,
 		// onde o capanga anônimo não tem quem avisar.
 		if err == nil {
-			st.deps.CharacterChanged(chosen.CharacterID)
+			st.deps.CharacterChanged(c.R.Context(), chosen.CharacterID)
 		}
 		return state, err
 	}

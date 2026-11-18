@@ -257,7 +257,7 @@ func (s Scene) sheetCommand(
 			// Só no caminho SEM recusa: uma regra que barrou o gesto não mudou
 			// nada, e avisar ali faria toda tela que escuta refazer a ficha por
 			// causa de um clique que não aconteceu.
-			s.deps.CharacterChanged(row.ID)
+			s.deps.CharacterChanged(r.Context(), row.ID)
 		}
 		view, status, err := s.Load(
 			r.Context(), s.deps.CurrentUserID(r), id, AskedTab(r.URL.Query().Get("tab")), signals.term(), signals)

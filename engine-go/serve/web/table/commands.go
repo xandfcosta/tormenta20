@@ -160,7 +160,7 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 		// `CharacterIDOf` devolve nulo e não há quem avisar.
 		if err == nil {
 			if charID := st.deps.Sessions().CharacterIDOf(c.SessionID, entryID); charID != nil {
-				st.deps.CharacterChanged(*charID)
+				st.deps.CharacterChanged(c.R.Context(), *charID)
 			}
 		}
 		return state, err

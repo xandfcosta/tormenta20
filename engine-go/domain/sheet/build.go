@@ -255,6 +255,23 @@ func LoadAndCompute(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalog
 	return Compute(dto)
 }
 
+// MovementOf lê da ficha computada as DUAS coisas que o tabuleiro pede de uma peça: o deslocamento em
+// QUADRADOS (o motor já conta assim) e se o terreno difícil cobra dela (p129). Juntas porque saem da
+// MESMA ficha, e computá-la duas vezes para ler dois campos seria pagar o caro por nada.
+//
+// Uso: `sheet.MovementOf(ctx, q, cat, 7)` devolve o orçamento e a isenção do personagem 7.
+func MovementOf(ctx context.Context, q *sqlcgen.Queries, cat *engine.Catalogs, characterID int64) (int, bool, error) {
+	row, err := q.GetCharacter(ctx, characterID)
+	if err != nil {
+		return 0, false, err
+	}
+	character, err := LoadAndCompute(ctx, q, cat, row)
+	if err != nil {
+		return 0, false, err
+	}
+	return character.Displacement.Total, character.IgnoresDifficultTerrain, nil
+}
+
 // engineCharacterFrom leva o agregado até o `engine.Character` por JSON: os dois
 // têm a mesma forma, então a ida e volta não perde nada.
 func EngineCharacterFrom(dto CharacterDTO) (engine.Character, error) {

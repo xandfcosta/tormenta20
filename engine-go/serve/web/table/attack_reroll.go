@@ -39,7 +39,7 @@ func rerollsAttack(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	}
 	offer, err := st.plays.AttackRerollOffer(ctx, row, meleeAttack(pa), pa.WeaponID, chi.URLParam(c.R, "gasto"))
 	// O GASTO grava na ficha (a sorte, o PM), e a ficha aberta só se redesenha no evento.
-	st.deps.CharacterChanged(row.ID)
+	st.deps.CharacterChanged(c.R.Context(), row.ID)
 	if err != nil {
 		return nil, err
 	}

@@ -37,9 +37,9 @@ func (st Scene) stealsMana(c commandCtx, state *live.SessionRuntimeState, penden
 	if err := st.plays.StealMana(c.R.Context(), *attacker.CharacterID, victim, pendente.SneakDice); err != nil {
 		return err
 	}
-	st.deps.CharacterChanged(*attacker.CharacterID)
+	st.deps.CharacterChanged(c.R.Context(), *attacker.CharacterID)
 	if victim != 0 {
-		st.deps.CharacterChanged(victim)
+		st.deps.CharacterChanged(c.R.Context(), victim)
 	}
 	return nil
 }

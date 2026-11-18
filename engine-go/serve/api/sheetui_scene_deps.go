@@ -44,7 +44,9 @@ func (h sheetHost) LoadCharacter(ctx context.Context, c sqlcgen.Character) (shee
 }
 
 // CharacterChanged avisa a mesa e a ficha solta aberta que esta ficha mexeu.
-func (h sheetHost) CharacterChanged(characterID int64) { h.rules.characterChanged(characterID) }
+func (h sheetHost) CharacterChanged(ctx context.Context, characterID int64) {
+	h.rules.characterChanged(ctx, characterID)
+}
 
 // Bus e LiveStreamsClosing alimentam o fluxo ao vivo da ficha solta.
 func (h sheetHost) Bus() *events.Bus                    { return h.rules.bus }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"t20engine/app/boards"
 	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -29,11 +30,14 @@ type sheetRules struct {
 	bus      *events.Bus
 	sessions *session.Store
 	sse      *live.SSEHub
+	// boards é quem guarda as peças, que medem a ficha ao entrar no mapa e são medidas de novo a
+	// cada aviso (ver `characterChanged`).
+	boards *boards.Store
 }
 
 func (s *Server) sheetRules() sheetRules {
 	return sheetRules{
 		queries: s.queries, catalogs: s.catalogs,
-		bus: s.bus, sessions: s.sessions, sse: s.sse,
+		bus: s.bus, sessions: s.sessions, sse: s.sse, boards: s.boards,
 	}
 }

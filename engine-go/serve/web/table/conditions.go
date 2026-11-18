@@ -235,7 +235,7 @@ func toggleSheetCondition(st Scene, c commandCtx, characterID int64, id string) 
 	if err := st.plays.ToggleBookCondition(c.R.Context(), row, id); err != nil {
 		return nil, err
 	}
-	st.deps.CharacterChanged(characterID)
+	st.deps.CharacterChanged(c.R.Context(), characterID)
 	after, err := st.deps.Queries().GetCharacter(c.R.Context(), characterID)
 	if err != nil {
 		return nil, fmt.Errorf("reler a ficha %d: %w", characterID, err)

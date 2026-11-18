@@ -329,7 +329,9 @@ var aparenciasDaPeca = map[string]bool{"object": true, "npc": true}
 
 // speedsForBoard mede o deslocamento das peças de personagem que ainda não têm
 // um. SÓ AS QUE FALTAM: recomputar a ficha de todo mundo a cada "trazer o grupo"
-// seria pagar caro por um número que não muda sozinho.
+// seria pagar caro por um número que já está certo — quando a ficha muda no meio
+// da cena (o interruptor, a condição), quem mede a peça de novo é o aviso de que
+// ela mudou (`RemeasureCharacter`).
 //
 // Ela é da CENA e não de um caso de uso (ALE-344): não autoriza nada, não grava
 // nada e não decide nada — é a conta que o desenho da prévia de movimento pede,
@@ -362,15 +364,10 @@ func (s Scene) speedsForBoard(ctx context.Context, boardState *board.BoardState)
 // prévia, e derrubar o gesto inteiro por causa de um número deixaria o mestre
 // sem as peças que já nasceram.
 func (s Scene) movementOf(ctx context.Context, characterID int64) (int, bool) {
-	row, err := s.deps.Queries().GetCharacter(ctx, characterID)
-	if err != nil {
-		return 0, false
-	}
-	character, err := sheet.LoadAndCompute(ctx, s.deps.Queries(), s.deps.Catalogs(), row)
+	squares, ignores, err := sheet.MovementOf(ctx, s.deps.Queries(), s.deps.Catalogs(), characterID)
 	if err != nil {
 		log.Printf("tabuleiro: ficha do personagem %d não computada (%v)", characterID, err)
 		return 0, false
 	}
-	// Já vem em QUADRADOS do motor (ALE-390); não há o que converter.
-	return character.Displacement.Total, character.IgnoresDifficultTerrain
+	return squares, ignores
 }
