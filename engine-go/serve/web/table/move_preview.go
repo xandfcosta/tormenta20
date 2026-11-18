@@ -102,10 +102,11 @@ func (s Scene) whoDragsInPreview(r *http.Request, role string, token *board.Boar
 
 // dragPreview mede o caminho ATUAL mais a casa sob o dedo.
 //
-// A lista de paradas sai do provisório quando ele existe — é o que faz a perna
-// viva ESTENDER o caminho em vez de recomeçá-lo — e da posição da peça quando
-// não. É parecida com o `board.StopsSoFar` que a mutação usa, mas esta não
-// confere QUEM propôs o movimento.
+// A lista de paradas é a MESMA do gesto (`board.StopsSoFar`): o provisório de
+// quem arrasta, que faz a perna viva ESTENDER o caminho em vez de recomeçá-lo, e
+// a posição da peça quando não há — inclusive quando o provisório é de OUTRA
+// pessoa. Uma lista só para as duas é o que impede a seta de mostrar um caminho
+// e o soltar fazer outro.
 func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID string, destination engine.Square, who board.Mover) (map[string]any, error) {
 	if b == nil {
 		return nil, fmt.Errorf("não há tabuleiro aberto nesta mesa")
@@ -114,7 +115,11 @@ func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID stri
 	if token == nil {
 		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
-	folds := append(progressStops(b, tokenID, token), destination)
+	stops, err := board.StopsSoFar(b, tokenID, who.UserID)
+	if err != nil {
+		return nil, err
+	}
+	folds := append(stops, destination)
 	_, budget := board.CanMoveWith(b, st, tokenID, who)
 	// O MODO DA PROPOSTA vale para a perna viva: arrastar a peça que voa mede contra o voo.
 	mode := board.PendingMode(b, tokenID)
@@ -130,14 +135,6 @@ func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID stri
 		"preview_labels":       previewLabels(folds, costs),
 		"preview_text":         previewPhrase(costs, budget),
 	}, nil
-}
-
-// progressStops são as dobras do caminho já desenhado, ou a casa da peça.
-func progressStops(b *board.BoardState, tokenID string, token *board.BoardToken) []engine.Square {
-	if p := b.Pending; p != nil && p.TokenID == tokenID && len(p.Stops) > 0 {
-		return append([]engine.Square(nil), p.Stops...)
-	}
-	return []engine.Square{{X: token.X, Y: token.Y}}
 }
 
 // previewLabels empacota cada perna num trio de números que a tela desenha:
