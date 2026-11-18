@@ -216,6 +216,19 @@ var classPowersPart04 = []ClassPower{
 				Scale:      &ModifierScale{Per: "attribute", Attribute: "wisdom", Min: 1, RepeatBonus: 2},
 				FromChoice: "flag",
 			},
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
+				Amount:    1,
+				BonusType: "untyped",
+				Note:      "Caminho do Explorador: terreno difícil não reduz o deslocamento; a CD para rastreá-lo sobe +10",
+				Condition: &ModifierCondition{
+					Kind:     "flagOn",
+					Flag:     "explorador",
+					Label:    "no terreno: ",
+					Requires: []string{"caminho-do-explorador"},
+				},
+				FromChoice: "flag",
+			},
 		},
 		Choice: &PowerChoice{
 			Kind:  "terrain",
@@ -249,8 +262,10 @@ var classPowersPart04 = []ClassPower{
 		UID:            "pwr_qbylwbqhow",
 	},
 	{
-		ID:             "class.cacador.caminho-do-explorador",
-		Modeled:        []string{"o terreno difícil sem redução, no interruptor de terreno do Explorador"},
+		ID: "class.cacador.caminho-do-explorador",
+		Modeled: []string{
+			"o terreno difícil sem redução, no interruptor de cada terreno do Explorador, onde o termo mora",
+		},
 		ClassName:      "Caçador",
 		Name:           "Caminho do Explorador",
 		Description:    "Pode atravessar terrenos difíceis sem redução em seu deslocamento e CD para rastreá-lo aumenta em +10. Só funciona em terrenos com Explorador.",
@@ -259,11 +274,10 @@ var classPowersPart04 = []ClassPower{
 		UID:            "pwr_roegwmfedx",
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
+				Target:    ModifierTarget{Kind: "flag", Name: "caminho-do-explorador"},
 				Amount:    1,
 				BonusType: "untyped",
-				Note:      "terreno difícil não reduz o deslocamento; a CD para rastreá-lo sobe +10",
-				Condition: &ModifierCondition{Kind: "flagOn", Flag: "explorador", Label: "no terreno: "},
+				Note:      "o terreno difícil sem redução entra no interruptor de cada terreno do Explorador",
 			},
 		},
 	},
