@@ -76,6 +76,8 @@ type Combatant struct {
 	Stances []string
 	// ChargesRecklessly diz que a ficha tem a Investida Imprudente (p42).
 	ChargesRecklessly bool
+	// UntilHit diz que a ficha tem o Até Acertar (p76).
+	UntilHit bool
 	// WrittenDose é o nome e o efeito de uma dose, com a CD desta ficha (p227).
 	// Nulo para quem não tem ficha, que não carrega dose.
 	WrittenDose func(catalogID string) (name, effect string)
@@ -332,6 +334,14 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 	}
 	if weapon, err = impulsiveWeapon(striker, req, weapon); err != nil {
 		return strikeSetup{}, err
+	}
+	// O ATÉ ACERTAR (p76) soma os erros desarmados contra ESTE oponente, que a cena guarda.
+	if req.Maneuver == "" && weapon.Unarmed && striker.UntilHit {
+		state, err := s.tables.State(ctx, req.SessionID)
+		if err != nil {
+			return strikeSetup{}, err
+		}
+		weapon = engine.UntilHitCard(weapon, live.UntilHitMisses(state, attackerEntry.ID, req.TargetEntryID))
 	}
 	setup := strikeSetup{attacker: attackerEntry, striker: striker, weapon: weapon, boost: boost}
 	if err := setup.settleFollowUp(req); err != nil {

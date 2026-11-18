@@ -336,6 +336,18 @@ func (st *Store) StartScene(ctx context.Context, sessionID int64, kind live.Scen
 		func(s *live.SessionRuntimeState) error { live.StartScene(s, kind); return nil })
 }
 
+// MarkUnarmedMiss soma um erro desarmado do Até Acertar (p76) contra o oponente.
+func (st *Store) MarkUnarmedMiss(ctx context.Context, sessionID int64, attacker, target string) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.UntilHitChanged{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { live.MarkUnarmedMiss(s, attacker, target); return nil })
+}
+
+// ClearUntilHit apaga os erros do lutador: ele acertou um ataque (p76).
+func (st *Store) ClearUntilHit(ctx context.Context, sessionID int64, attacker string) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.UntilHitChanged{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { live.ClearUntilHit(s, attacker); return nil })
+}
+
 // MarkManaStolen marca o Roubo de Mana de `thief` contra `target` na cena, e diz se ele era
 // novo: a segunda vez contra a mesma criatura não rouba nada (p74).
 func (st *Store) MarkManaStolen(ctx context.Context, sessionID int64, thief, target string) (bool, error) {

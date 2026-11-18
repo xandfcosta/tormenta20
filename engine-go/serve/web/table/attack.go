@@ -218,40 +218,10 @@ func (st Scene) afterTheStrike(
 	if err := st.raisesTheCumulativeBonus(c, state, pendente, antes); err != nil {
 		return err
 	}
+	if err := st.countsTheUnarmedMiss(c, state, pendente); err != nil {
+		return err
+	}
 	return st.stealsMana(c, state, pendente)
-}
-
-// stealsMana é o Roubo de Mana (p74): o golpe confirmado que CAUSOU dano com o furtivo ligado dá
-// ao ladino 1 PM temporário por dado, e tira 1 PM por dado da ficha atrás do alvo. Uma vez por
-// cena contra a mesma criatura — a marca é da cena, e só se marca quem tem o poder.
-func (st Scene) stealsMana(c commandCtx, state *live.SessionRuntimeState, pendente *live.PendingAttack) error {
-	if pendente == nil || !pendente.Hit || pendente.SneakDice <= 0 || pendente.Damage <= 0 {
-		return nil
-	}
-	attacker := entryByID(state, pendente.AttackerEntryID)
-	if attacker == nil || attacker.CharacterID == nil {
-		return nil
-	}
-	has, err := st.plays.HasManaTheft(c.R.Context(), *attacker.CharacterID)
-	if err != nil || !has {
-		return err
-	}
-	fresh, err := st.deps.Sessions().MarkManaStolen(c.R.Context(), c.SessionID, pendente.AttackerEntryID, pendente.TargetEntryID)
-	if err != nil || !fresh {
-		return err
-	}
-	var victim int64
-	if target := entryByID(state, pendente.TargetEntryID); target != nil && target.CharacterID != nil {
-		victim = *target.CharacterID
-	}
-	if err := st.plays.StealMana(c.R.Context(), *attacker.CharacterID, victim, pendente.SneakDice); err != nil {
-		return err
-	}
-	st.deps.CharacterChanged(*attacker.CharacterID)
-	if victim != 0 {
-		st.deps.CharacterChanged(victim)
-	}
-	return nil
 }
 
 // opensTheGuard deixa em quem INVESTIU a penalidade na Defesa até a vez dele

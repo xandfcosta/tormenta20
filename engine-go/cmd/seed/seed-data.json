@@ -2292,7 +2292,7 @@
             "charisma": 0,
             "size": "Médio",
             "displacement": 9,
-            "classPowers": ["class.lutador.confianca-dos-ringues"]
+            "classPowers": ["class.lutador.confianca-dos-ringues", "class.lutador.ate-acertar"]
           }
         },
         {

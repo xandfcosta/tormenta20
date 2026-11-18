@@ -12,8 +12,11 @@ import (
 // ManaTheftPowerID é o Roubo de Mana do ladino (p74).
 const ManaTheftPowerID = "class.ladino.roubo-de-mana"
 
-// HasManaTheft diz se a ficha tem o Roubo de Mana, pela lista de poderes dela.
-func (p Plays) HasManaTheft(ctx context.Context, characterID int64) (bool, error) {
+// HasPower diz se a ficha tem o poder, pela lista de poderes dela (`sheet.OwnsPower`): o Roubo de
+// Mana e o Até Acertar perguntam aqui na confirmação do mestre.
+//
+//	p.HasPower(ctx, characterID, ManaTheftPowerID)
+func (p Plays) HasPower(ctx context.Context, characterID int64, powerID string) (bool, error) {
 	row, err := p.queries.GetCharacter(ctx, characterID)
 	if err != nil {
 		return false, fmt.Errorf("ler o personagem %d: %w", characterID, err)
@@ -22,7 +25,7 @@ func (p Plays) HasManaTheft(ctx context.Context, characterID int64) (bool, error
 	if err != nil {
 		return false, fmt.Errorf("montar a ficha de %s: %w", row.Name, err)
 	}
-	return sheet.OwnsPower(dto, ManaTheftPowerID), nil
+	return sheet.OwnsPower(dto, powerID), nil
 }
 
 // StealMana é o Roubo de Mana (p74): o ladino recebe 1 PM temporário por dado do furtivo, e a

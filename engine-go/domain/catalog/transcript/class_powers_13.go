@@ -257,13 +257,16 @@ var classPowersPart13 = []ClassPower{
 		Unmodeled:   "um passo de dano com arma improvisada: o app não tem arma improvisada (ALE-655)",
 	},
 	{
-		ID:          "class.lutador.ate-acertar",
+		ID: "class.lutador.ate-acertar",
+		Modeled: []string{
+			"o +2 cumulativo no ataque e no dano desarmado a cada erro desarmado contra o mesmo oponente, que o mestre diz",
+			"o fim do bônus no acerto de qualquer ataque e no fim da cena",
+		},
 		ClassName:   "Lutador",
 		Name:        "Até Acertar",
 		Description: "Quando erra ataque desarmado, recebe +2 cumulativo em ataque e dano desarmado contra mesmo oponente até acertar ou fim cena.",
 		BookPage:    76,
 		UID:         "pwr_xemedow23h",
-		Unmodeled:   "o +2 cumulativo a cada erro contra o mesmo oponente: é contagem de rodadas (ALE-653)",
 	},
 	{
 		ID:        "class.lutador.aumento-de-atributo",

@@ -90,6 +90,9 @@ var demoCampaigns = []demoCampaign{
 			// O ROUBO DE MANA (p74): o golpe furtivo que o mestre confirma dá PM temporários
 			// à ladra e tira PM da criatura (ALE-653).
 			{"jogador@t20.local", "Ladra de Mana Nv7"},
+			// A CONFIANÇA DOS RINGUES e o ATÉ ACERTAR (p76): o erro que o mestre diz rende ao
+			// lutador, contra o oponente e contra quem o atacou (ALE-653).
+			{"jogador@t20.local", "Lutador Confiante Nv8"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
