@@ -126,21 +126,28 @@ func (sr sheetRules) characterChanged(ctx context.Context, characterID int64) {
 	// sessão viva abaixo responde outra pergunta — a do hub SSE, que fala com a
 	// sala inteira.
 	sr.bus.Publish(events.CharacterChanged{CharacterID: characterID})
-	liveSessions := sr.sessions.LiveSessionsWithCharacter(characterID)
-	for _, sessionID := range liveSessions {
+	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(characterID) {
 		sr.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
-	sr.remeasurePieces(ctx, characterID, liveSessions)
+	sr.remeasurePieces(ctx, characterID)
 }
 
-// remeasurePieces mede a ficha de novo para as peças dela nos tabuleiros das sessões vivas: o
-// interruptor ligado e a condição posta mudam o deslocamento e a isenção de terreno difícil no
-// meio da cena (ALE-654). A ficha só é computada quando há sessão viva com o personagem.
+// remeasurePieces mede a ficha de novo para as peças dela nos tabuleiros abertos: o interruptor
+// ligado, a condição posta e o voo sustentado que cai na virada da vez mudam o deslocamento no
+// meio da cena (ALE-654). A ficha só é computada quando há peça dela em algum tabuleiro.
+//
+// QUEM RESPONDE ONDE HÁ PEÇA É O STORE DOS TABULEIROS, e não o da sessão: o aviso da unidade de
+// trabalho sai depois do commit mas DENTRO da trava da sessão, e perguntar a ela ali era pedir a
+// mesma trava duas vezes — o impasse que a primeira versão teve.
 //
 // Falha em LOG, e não no gesto: a ficha já foi gravada, e recusar o interruptor porque o mapa não
 // acompanhou desfaria uma coisa certa por causa de outra.
-func (sr sheetRules) remeasurePieces(ctx context.Context, characterID int64, sessions []int64) {
-	if len(sessions) == 0 || sr.boards == nil {
+func (sr sheetRules) remeasurePieces(ctx context.Context, characterID int64) {
+	if sr.boards == nil {
+		return
+	}
+	sessions := sr.boards.SessionsWithPieceOf(characterID)
+	if len(sessions) == 0 {
 		return
 	}
 	movement, err := boards.MovementOf(ctx, sr.queries, sr.catalogs, characterID)
@@ -210,15 +217,28 @@ func NewServer(cfg config.Config, database *sql.DB, catalogs *engine.Catalogs) *
 	// structs.
 	engineOfNow := func() *engine.Catalogs { return srv.catalogs }
 	// A FICHA GRAVADA AVISA: fora da transação, na hora; dentro dela, depois do commit (`touched`).
-	fromSheet := sheetVitals{q: q, catalogs: engineOfNow, touched: func(characterID int64) {
+	fromSheet := sheetVitals{q: q, catalogs: engineOfNow, touched: func(_ context.Context, characterID int64) {
 		bus.Publish(events.CharacterChanged{CharacterID: characterID})
 	}}
+	// E A UNIDADE MEDE AS PEÇAS de novo, depois do commit: a vez que passa derruba o voo sustentado que
+	// ninguém pagou (ALE-654), e essa gravação não passa pelo funil da cena (`characterChanged`).
+	//
+	// SÓ A UNIDADE, e não o `fromSheet`: ele roda dentro do fluxo do store da sessão, e medir ali
+	// grava o tabuleiro por OUTRA conexão enquanto a da sessão pode segurar a trava do escritor do
+	// SQLite — o aviso do jogador atrasou até o `busy_timeout` e o `TestTheOptionalRuleReachesTheOpenSheet`
+	// mediu. Os gestos da cena já passam pelo funil; a queda do sustentado sai pela unidade.
+	piecesOf := func(ctx context.Context, characterID int64) {
+		srv.sheetRules().remeasurePieces(ctx, characterID)
+	}
 	// A UNIDADE DE TRABALHO de um gesto da mesa (ALE-373). O contorno dela é do
 	// caso de uso; daqui vai só o que o hospedeiro sabe: como montar as portas
 	// da ficha a partir de um caderno de consultas.
 	units := session.NewUnits(database, q, func(inTx *sqlcgen.Queries, afterCommit func(func())) (live.SheetVitals, live.SheetTurnEffects) {
-		ports := sheetVitals{q: inTx, catalogs: engineOfNow, touched: func(characterID int64) {
-			afterCommit(func() { bus.Publish(events.CharacterChanged{CharacterID: characterID}) })
+		ports := sheetVitals{q: inTx, catalogs: engineOfNow, touched: func(ctx context.Context, characterID int64) {
+			afterCommit(func() {
+				bus.Publish(events.CharacterChanged{CharacterID: characterID})
+				piecesOf(ctx, characterID)
+			})
 		}}
 		return ports, ports
 	})
