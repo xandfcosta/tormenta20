@@ -565,33 +565,20 @@ func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, boardID string,
 // (ALE-375). A tarja "a mesa não está sendo salva" saiu junto: um aviso que só
 // podia aparecer depois do estrago é pior que uma recusa na hora.
 
-// board.ProposeMove, board.CommitMove e board.CancelMove são as três portas do movimento.
-// A posse e o orçamento chegam RESOLVIDOS do gateway: quem consulta o banco é
-// ele, e a trava daqui não pode esperar por I/O.
-
-func (bs *Store) ProposeMove(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, path []engine.Square, by board.Mover, speedSquares int) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
-		// O orçamento fresco do motor entra na peça ANTES da medição: sem isso,
-		// a armadura vestida no meio da sessão só valeria no movimento seguinte.
-		if token := board.FindToken(b, tokenID); token != nil && speedSquares > 0 {
-			token.SpeedSquares = speedSquares
-		}
-		return board.ProposeMove(b, st, tokenID, path, by)
-	})
-}
-
-// board.ProposeMoveWithStops é a porta de quem monta o movimento CLICANDO, e ela
-// existe para a lista de paradas ser guardada junto.
+// board.ProposeMoveWithStops, board.CommitMove e board.CancelMove são as três portas do movimento.
+// A posse chega RESOLVIDA do gateway: quem consulta o banco é ele, e a trava daqui não pode esperar
+// por I/O.
 //
-// Mesma trava, mesmo orçamento fresco, mesma medição: o que muda é a memória de
-// ONDE a pessoa parou, que o caminho sozinho não deixa reconstruir. Sem ela,
-// "desfazer a última perna" seria um palpite sobre o movimento que a mesa está
-// vendo.
-func (bs *Store) ProposeMoveWithStops(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, stops []engine.Square, by board.Mover, speedSquares int) (*board.BoardState, error) {
+// O ORÇAMENTO JÁ ESTÁ NA PEÇA: ela mede a ficha ao entrar no mapa, e o aviso de que a ficha mudou a
+// mede de novo (`RemeasureCharacter`). Houve aqui um parâmetro de "orçamento fresco" que regravava a
+// peça antes de medir, e o único chamador passava zero — um segundo lugar escrevendo a mesma cópia,
+// morto, e com um comentário dizendo que a armadura vestida valia por ele.
+
+// ProposeMoveWithStops é a porta de quem monta o movimento CLICANDO, e ela existe para a lista de
+// paradas ser guardada junto: sem a memória de ONDE a pessoa parou, que o caminho sozinho não deixa
+// reconstruir, "desfazer a última perna" seria um palpite sobre o movimento que a mesa está vendo.
+func (bs *Store) ProposeMoveWithStops(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, stops []engine.Square, by board.Mover) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
-		if token := board.FindToken(b, tokenID); token != nil && speedSquares > 0 {
-			token.SpeedSquares = speedSquares
-		}
 		return board.ProposeMoveWithStops(b, st, tokenID, stops, by)
 	})
 }
