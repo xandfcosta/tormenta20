@@ -1,7 +1,6 @@
 package table
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/go-chi/chi/v5"
@@ -21,35 +20,23 @@ func (s Scene) MarkerRoutes(r chi.Router) {
 	// O `novo` estático antes das coordenadas separa a criação dos gestos sobre
 	// um marcador que já existe — sem ele, `{x}` e `{id}` disputariam a mesma
 	// posição do caminho.
-	r.Post(base+"/novo", s.gmBoardCommand(marcaOLugar))
+	r.Post(base+"/novo", s.gmBoardCommand(marksTheSquare))
 	r.Post(base+"/{id}/revelar", s.gmBoardCommand(revealMarker))
 	r.Post(base+"/{id}/cor/{cor}", s.gmBoardCommand(paintMarker))
 	r.Post(base+"/{id}/remover", s.gmBoardCommand(eraseMarker))
 }
 
-// marcaOLugar põe um marcador novo na casa clicada.
+// marksTheSquare põe um marcador novo na casa clicada.
 //
-// A LETRA vem do motor (`NextMarkerLetter`) e não da tela: duas telas
-// escolhendo letra por conta própria é como nasce o segundo "C" no mesmo mapa.
-func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
+// A LETRA vem do motor e não da tela, e é decidida DENTRO da mutação (`board.AddNextMarker`): duas
+// telas escolhendo letra por conta própria, ou dois cliques decidindo sobre a mesma leitura, é como
+// nasce o segundo "C" no mesmo mapa.
+func marksTheSquare(st Scene, c commandCtx) (*board.BoardState, error) {
 	square, err := squareOnly(c.R)
 	if err != nil {
 		return nil, err
 	}
-	b, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
-	if err != nil {
-		return nil, err
-	}
-	if b == nil {
-		return nil, errors.New("não há tabuleiro aberto para marcar")
-	}
-	return st.deps.Boards().AddMarker(c.R.Context(), c.SessionID, c.BoardID, board.BoardMarker{
-		X: square.X, Y: square.Y,
-		Text:  board.NextMarkerLetter(b.Markers),
-		Color: board.DefaultMarkerColor(),
-		// ESCONDIDO ao nascer, e é a razão de o marcador existir.
-		Hidden: true,
-	})
+	return st.deps.Boards().AddNextMarker(c.R.Context(), c.SessionID, c.BoardID, square)
 }
 
 // revealMarker alterna entre mostrar e esconder.
@@ -58,20 +45,11 @@ func marcaOLugar(st Scene, c commandCtx) (*board.BoardState, error) {
 // demais precisa poder esconder de volta, e um segundo botão para desfazer o
 // primeiro seria a mesma decisão em dois lugares.
 func revealMarker(st Scene, c commandCtx) (*board.BoardState, error) {
-	marker, err := urlMarker(st, c)
-	if err != nil {
-		return nil, err
-	}
-	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.BoardID, marker.ID,
-		board.MarkerReveal(!marker.Hidden))
+	return st.deps.Boards().ToggleMarkerHidden(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "id"))
 }
 
 // paintMarker troca a cor.
 func paintMarker(st Scene, c commandCtx) (*board.BoardState, error) {
-	marker, err := urlMarker(st, c)
-	if err != nil {
-		return nil, err
-	}
 	color := chi.URLParam(c.R, "cor")
 	// A RECUSA é aqui e explícita, apesar de o `UpdateMarker` ignorar cor
 	// desconhecida: ignorar em silêncio é um clique que não faz nada e não diz
@@ -79,40 +57,13 @@ func paintMarker(st Scene, c commandCtx) (*board.BoardState, error) {
 	if !board.KnownMarkerColor(color) {
 		return nil, fmt.Errorf("a cor %q não existe; as do mapa são %s", color, coresEmPortugues())
 	}
-	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.BoardID, marker.ID,
+	return st.deps.Boards().UpdateMarker(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "id"),
 		board.NewMarkerColor(color))
 }
 
 // eraseMarker tira o ponto do mapa.
 func eraseMarker(st Scene, c commandCtx) (*board.BoardState, error) {
-	marker, err := urlMarker(st, c)
-	if err != nil {
-		return nil, err
-	}
-	return st.deps.Boards().RemoveMarker(c.R.Context(), c.SessionID, c.BoardID, marker.ID)
-}
-
-// urlMarker acha o marcador que o gesto aponta.
-//
-// Ele DEVOLVE O MARCADOR e não só o id porque os três gestos precisam do estado
-// atual — revelar alterna, e alternar sem ler é escrever `true` por cima de
-// `true`. E achar aqui é o que faz um id inventado virar recusa com frase em vez
-// de mutação silenciosa que não acha ninguém.
-func urlMarker(st Scene, c commandCtx) (board.BoardMarker, error) {
-	id := chi.URLParam(c.R, "id")
-	b, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
-	if err != nil {
-		return board.BoardMarker{}, err
-	}
-	if b == nil {
-		return board.BoardMarker{}, errors.New("não há tabuleiro aberto")
-	}
-	for _, m := range b.Markers {
-		if m.ID == id {
-			return m, nil
-		}
-	}
-	return board.BoardMarker{}, fmt.Errorf("o marcador %q não está neste mapa", id)
+	return st.deps.Boards().EraseMarker(c.R.Context(), c.SessionID, c.BoardID, chi.URLParam(c.R, "id"))
 }
 
 // coresEmPortugues lista as cores para a frase da recusa — a mensagem tem de

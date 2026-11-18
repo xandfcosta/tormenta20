@@ -205,51 +205,6 @@ func (bs *Store) openLocked(ctx context.Context, sessionID int64, place, terrain
 	return b, nil
 }
 
-// Close encerra UM tabuleiro: some da memória e do banco. As posições não são
-// arquivadas AQUI — quem arquiva é o gateway, antes de chamar.
-//
-// Devolve as transições de saúde como o `Persist`: se o DELETE falha, a memória
-// diz "fechado" e o banco mantém a linha — no próximo boot o tabuleiro FANTASMA
-// volta, com as peças de uma cena que a mesa já encerrou.
-// O APAGAR VEM ANTES DE A ABA SUMIR DA MEMÓRIA (ALE-375), e a ordem inverteu.
-// Ela saía da memória primeiro e o DELETE ia depois, num caminho que podia
-// falhar: a aba sumia da tela, a linha ficava no banco, e no boot seguinte o
-// tabuleiro FANTASMA voltava com as peças de uma cena que a mesa já encerrou.
-// Agora o DELETE que falha RECUSA o gesto, e a aba continua onde estava.
-//
-// E COM ISSO O `WithoutCancel` SAIU. Ele existia porque a limpeza acontecia
-// depois da resposta, e um cliente que fosse embora a levaria junto — "limpeza
-// que depende de o cliente esperar não é limpeza". Dentro do gesto não há mais
-// o que proteger do cancelamento: o gesto cancelado não fecha a aba, o banco
-// não muda, e a mesa continua íntegra.
-func (bs *Store) Close(ctx context.Context, sessionID int64, boardID string) error {
-	closed, err := bs.closeLocked(ctx, sessionID, boardID)
-	if err != nil || !closed {
-		return err
-	}
-	bs.bus.Publish(events.BoardClosed{SessionID: sessionID})
-	return nil
-}
-
-// closeLocked apaga a linha do tabuleiro sob a trava, e diz se havia o que fechar. O aviso sai DEPOIS,
-// fora da trava, como no `apply`.
-func (bs *Store) closeLocked(ctx context.Context, sessionID int64, boardID string) (bool, error) {
-	bs.Mu.Lock()
-	defer bs.Mu.Unlock()
-	open, err := bs.snapshotsFor(ctx).Read(ctx, sessionID)
-	if err != nil {
-		return false, err
-	}
-	target := FindBoard(open, boardID)
-	if target == nil {
-		return false, nil
-	}
-	if err := bs.snapshotsFor(ctx).Delete(ctx, sessionID, target.ID); err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
 // apply roda uma mutação pura sobre UM tabuleiro, sob a trava, e devolve o
 // instantâneo para o broadcast. Recusa quando aquele tabuleiro não existe: mexer
 // no que não existe é erro de quem chamou, não um tabuleiro criado por acidente.
@@ -326,10 +281,6 @@ func (bs *Store) UnbindTokens(
 	})
 }
 
-func (bs *Store) RemoveToken(ctx context.Context, sessionID int64, boardID, tokenID string) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { board.RemoveToken(b, tokenID); return nil })
-}
-
 // board.DuplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
 // duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3".
 //
@@ -378,17 +329,8 @@ func (bs *Store) ReturnToken(ctx context.Context, sessionID int64, boardID, toke
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.ReturnToken(b, tokenID) })
 }
 
-// Marcadores: o lugar apontado no mapa que não é peça.
-func (bs *Store) AddMarker(ctx context.Context, sessionID int64, boardID string, m board.BoardMarker) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.AddMarker(b, m, bs.newID) })
-}
-
 func (bs *Store) UpdateMarker(ctx context.Context, sessionID int64, boardID, markerID string, patch board.MarkerPatch) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.UpdateMarker(b, markerID, patch) })
-}
-
-func (bs *Store) RemoveMarker(ctx context.Context, sessionID int64, boardID, markerID string) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { board.RemoveMarker(b, markerID); return nil })
 }
 
 func (bs *Store) PaintTerrain(
@@ -451,15 +393,6 @@ func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, boardID string,
 // mede de novo (`RemeasureCharacter`). Houve aqui um parâmetro de "orçamento fresco" que regravava a
 // peça antes de medir, e o único chamador passava zero — um segundo lugar escrevendo a mesma cópia,
 // morto, e com um comentário dizendo que a armadura vestida valia por ele.
-
-// ProposeMoveWithStops é a porta de quem monta o movimento CLICANDO, e ela existe para a lista de
-// paradas ser guardada junto: sem a memória de ONDE a pessoa parou, que o caminho sozinho não deixa
-// reconstruir, "desfazer a última perna" seria um palpite sobre o movimento que a mesa está vendo.
-func (bs *Store) ProposeMoveWithStops(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, stops []engine.Square, by board.Mover) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
-		return board.ProposeMoveWithStops(b, st, tokenID, stops, by)
-	})
-}
 
 func (bs *Store) CommitMove(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, version int64, by board.Mover) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.CommitMove(b, st, version, by) })

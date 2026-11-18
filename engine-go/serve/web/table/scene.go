@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -328,24 +327,14 @@ func openBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	return b, nil
 }
 
-// endBoard arquiva e tira a cena da mesa.
+// endBoard arquiva e tira a cena da mesa, numa leitura do tabuleiro só (`EndScene`). A falha ao
+// arquivar não impede o encerrar, e o porquê está lá.
 //
-// A falha ao ARQUIVAR não impede o encerrar: o mestre mandou tirar a cena da
-// mesa, e recusar isso porque o acervo falhou deixaria a mesa presa numa cena
-// que já acabou.
+// O FECHAR QUE FALHA RECUSA (ALE-375): o DELETE mora dentro do gesto, e uma aba que sumisse da tela
+// com a linha viva no banco voltaria no próximo boot.
 func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
-	current, err := st.deps.Boards().Get(c.R.Context(), c.SessionID, c.BoardID)
+	left, err := st.deps.Boards().EndScene(c.R.Context(), c.CampaignID, c.SessionID, c.BoardID)
 	if err != nil {
-		return nil, err
-	}
-	if current != nil {
-		if err := st.deps.Boards().Archive(c.R.Context(), c.CampaignID, current); err != nil {
-			log.Printf("session %d: falha ao arquivar o lugar (%v)", c.SessionID, err)
-		}
-	}
-	// O FECHAR QUE FALHA RECUSA (ALE-375): o DELETE mora dentro do gesto, e uma
-	// aba que sumisse da tela com a linha viva no banco voltaria no próximo boot.
-	if err := st.deps.Boards().Close(c.R.Context(), c.SessionID, c.BoardID); err != nil {
 		return nil, err
 	}
 	// AS ESCOLHAS DE ABA morrem com a ÚLTIMA cena, e não com esta.
@@ -354,11 +343,7 @@ func endBoard(st Scene, c commandCtx) (*board.BoardState, error) {
 	// olhando a que morreu cai na padrão sozinho, porque o `chosenTabOf` confere a
 	// escolha contra o que existe. Apagar tudo aqui arrastaria de volta para a
 	// padrão gente que estava numa aba que continua aberta.
-	left, err := st.deps.Boards().OpenBoards(c.R.Context(), c.SessionID)
-	if err != nil {
-		return nil, err
-	}
-	if len(left) == 0 {
+	if left == 0 {
 		// A LENTE morre com a cena: "você está vendo como a mesa" sobre uma tela
 		// sem tabuleiro faria o mestre concluir que o mapa sumiu PARA OS
 		// JOGADORES — a resposta errada exatamente à pergunta que a lente existe

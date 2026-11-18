@@ -113,3 +113,25 @@ func TestOutOfCombatThePreviewMeasuresWithoutBands(t *testing.T) {
 		t.Errorf("a prévia não mediu fora de combate; sinais = %s", signals)
 	}
 }
+
+// A PRÉVIA DESENHA O QUE O GESTO VAI FAZER, e o gesto de quem não propôs começa da peça.
+//
+// O mestre que arrasta a peça com o movimento que o JOGADOR montou não estende o caminho dele: a
+// parada do mestre sai do lugar da peça (`board.StopsSoFar`). Uma prévia que estendesse o caminho do
+// jogador mostraria uma seta, e o soltar faria outra.
+func TestThePreviewOfSomeoneWhoDidNotProposeStartsFromTheToken(t *testing.T) {
+	f := newSceneFixture(t)
+	tokenID := f.onBoardAt(t, 0, 0)
+	f.turnPlayer(t)
+	base := f.tableUrl() + "/tabuleiro/" + tokenID
+	if rec := f.requests(t, f.player, http.MethodPost, base+"/parada", `{"from":{"X":3,"Y":0}}`); rec.Code != http.StatusOK {
+		t.Fatalf("a parada do jogador deu %d", rec.Code)
+	}
+
+	signals := signalsLine(f.requests(t, f.gm, http.MethodPost, base+"/previa", `{"from":{"X":6,"Y":0}}`).Body.String())
+
+	// UMA perna de seis casas, e não as duas de três do caminho do jogador.
+	if strings.Count(signals, `"t":"4,5m"`) != 0 || !strings.Contains(signals, `"t":"9,0m"`) {
+		t.Errorf("a prévia do mestre estendeu o caminho do jogador; sinais = %s", signals)
+	}
+}

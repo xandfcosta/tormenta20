@@ -321,7 +321,7 @@ func boardViewOf(b *board.BoardState, st *live.SessionRuntimeState, health map[s
 		v.Candidates = MapCandidates(b, st)
 	}
 	v.Movement = moveBoard(b, st, who)
-	reach := reachAndTarget(b, st, who, mine)
+	reach := reachAndTarget(b, st, who)
 	v.MoveTarget, v.TargetLabel = reach.Target, reach.Label
 	v.Range, v.SecondReach = reach.Inside, reach.Segundo
 	if v.Movement != nil && v.Movement.Mine {

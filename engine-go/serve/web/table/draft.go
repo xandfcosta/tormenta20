@@ -300,12 +300,7 @@ func draftDuplicatesToken(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftRemovesToken(st Scene, c draftCtx, b *board.BoardState) error {
-	id := chi.URLParam(c.R, "id")
-	if board.FindToken(b, id) == nil {
-		return fmt.Errorf("peça %q não está no rascunho", id)
-	}
-	board.RemoveToken(b, id)
-	return nil
+	return board.TakeTokenOff(b, chi.URLParam(c.R, "id"))
 }
 
 // draftTogglesVisibility esconde a peça que a mesa NÃO deve ver quando a cena
@@ -314,13 +309,7 @@ func draftRemovesToken(st Scene, c draftCtx, b *board.BoardState) error {
 // ALTERNA lendo o estado atual, como na mesa: escrever o valor desejado faria a
 // tela ser a fonte da verdade de um estado que é do servidor.
 func draftTogglesVisibility(st Scene, c draftCtx, b *board.BoardState) error {
-	id := chi.URLParam(c.R, "id")
-	token := board.FindToken(b, id)
-	if token == nil {
-		return fmt.Errorf("peça %q não está no rascunho", id)
-	}
-	hidden := !token.Hidden
-	return board.UpdateToken(b, id, board.ParseTokenPatch(map[string]any{"hidden": hidden}))
+	return board.ToggleTokenHidden(b, chi.URLParam(c.R, "id"))
 }
 
 // ── os MARCADORES ────────────────────────────────────────────────────────────
@@ -330,55 +319,21 @@ func draftMarksTheSpot(st Scene, c draftCtx, b *board.BoardState) error {
 	if err != nil {
 		return err
 	}
-	return board.AddMarker(b, board.BoardMarker{
-		X: square.X, Y: square.Y,
-		Text:  board.NextMarkerLetter(b.Markers),
-		Color: board.DefaultMarkerColor(),
-		// ESCONDIDO ao nascer, e é a razão de o marcador existir: marcar a
-		// armadilha na frente da mesa entrega a armadilha.
-		Hidden: true,
-	}, st.deps.Boards().NewID)
+	return board.AddNextMarker(b, square, st.deps.Boards().NewID)
 }
 
 func draftRevealsMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	marker, err := draftMarker(c, b)
-	if err != nil {
-		return err
-	}
-	return board.UpdateMarker(b, marker.ID, board.MarkerReveal(!marker.Hidden))
+	return board.ToggleMarkerHidden(b, chi.URLParam(c.R, "id"))
 }
 
 func draftPaintsMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	marker, err := draftMarker(c, b)
-	if err != nil {
-		return err
-	}
 	color := chi.URLParam(c.R, "cor")
 	if !board.KnownMarkerColor(color) {
 		return fmt.Errorf("a cor %q não existe; as do mapa são %s", color, coresEmPortugues())
 	}
-	return board.UpdateMarker(b, marker.ID, board.NewMarkerColor(color))
+	return board.UpdateMarker(b, chi.URLParam(c.R, "id"), board.NewMarkerColor(color))
 }
 
 func draftErasesMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	marker, err := draftMarker(c, b)
-	if err != nil {
-		return err
-	}
-	board.RemoveMarker(b, marker.ID)
-	return nil
-}
-
-// draftMarker acha o marcador que o gesto aponta, na cena já lida.
-//
-// Devolve o MARCADOR e não o id pela mesma razão do `urlMarker` da mesa: revelar
-// ALTERNA, e alternar sem ler é escrever `true` por cima de `true`.
-func draftMarker(c draftCtx, b *board.BoardState) (board.BoardMarker, error) {
-	id := chi.URLParam(c.R, "id")
-	for _, m := range b.Markers {
-		if m.ID == id {
-			return m, nil
-		}
-	}
-	return board.BoardMarker{}, fmt.Errorf("marcador %q não está no rascunho", id)
+	return board.EraseMarker(b, chi.URLParam(c.R, "id"))
 }

@@ -94,9 +94,18 @@ func speedOf(t BoardToken) int {
 type Mover struct {
 	UserID int64
 	Role   string
-	// OwnsCharacter: a peça é de um personagem DESTE usuário. Resolvido no
-	// gateway, contra o banco — o cliente não é fonte de posse.
-	OwnsCharacter bool
+	// OwnedCharacters são os personagens DESTE usuário na campanha, resolvidos
+	// contra o banco — o cliente não é fonte de posse. É o CONJUNTO, e não um
+	// "esta peça é minha" já respondido: quem decide de quem é a peça é o
+	// tabuleiro que a mutação leu, e uma resposta trazida de uma leitura à parte
+	// seria uma ida a mais ao banco por gesto.
+	OwnedCharacters map[int64]bool
+}
+
+// owns diz se a peça é de um personagem desta pessoa. Peça sem personagem (o NPC,
+// o cenário) não é de jogador nenhum.
+func (by Mover) owns(token *BoardToken) bool {
+	return token.CharacterID != nil && by.OwnedCharacters[*token.CharacterID]
 }
 
 // assertMovable responde "esta pessoa pode Mover esta peça agora?" e, quando
@@ -116,7 +125,7 @@ func assertMovable(b *BoardState, st *live.SessionRuntimeState, tokenID string, 
 	if by.Role == "gm" {
 		return token, drawingBudget(*token, st), nil
 	}
-	if !by.OwnsCharacter {
+	if !by.owns(token) {
 		return nil, 0, fmt.Errorf("a peça %q não é sua", token.Label)
 	}
 	if st == nil || st.TurnIndex < 0 {

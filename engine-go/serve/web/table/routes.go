@@ -383,7 +383,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// peça dele sai sem barra — a redação alcança o mapa sem uma segunda decisão.
 	// O `Mover` diz de quem é a vez e de quem é a peça, e a POSSE é resolvida
 	// contra o banco (o `mine` do roster) e nunca contra o cliente.
-	viewer := board.Mover{UserID: userID, Role: role}
+	viewer := board.Mover{UserID: userID, Role: role, OwnedCharacters: mine}
 	// A ABA que ESTA pessoa está olhando, e não "o tabuleiro da sessão": não há
 	// tabuleiro único. Ela é resolvida contra os abertos, então a aba que o
 	// mestre fechou não deixa ninguém numa tela morta.

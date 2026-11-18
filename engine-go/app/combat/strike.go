@@ -161,8 +161,8 @@ type Request struct {
 	// azagaia (`engine.WeaponCard.OtherUse`).
 	OtherUse bool
 	// OwnsAttacker: quem pede é dono do personagem que ataca. Resolvido no
-	// gateway, CONTRA O BANCO — o cliente não é fonte de posse. É o mesmo campo
-	// e a mesma razão do `board.Mover.OwnsCharacter`.
+	// gateway, CONTRA O BANCO — o cliente não é fonte de posse. É a mesma razão
+	// do `board.Mover.OwnedCharacters`.
 	OwnsAttacker bool
 	// Maneuver é a manobra do livro quando o gesto é uma MANOBRA e não um golpe
 	// (p234): agarrar, derrubar, desarmar, empurrar ou quebrar. Vazio é golpe.

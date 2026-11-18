@@ -35,14 +35,14 @@ func TestTheGMTargetFollowsTheTurn(t *testing.T) {
 		{"a vez é de quem não tem peça: nenhuma paga custo", 2, ""},
 	}
 	for _, c := range cases {
-		if got := reachAndTarget(tokens, combat(c.turn), gm, nil).Target; got != c.want {
+		if got := reachAndTarget(tokens, combat(c.turn), gm).Target; got != c.want {
 			t.Errorf("%s: o alvo do mestre é %q, esperava %q", c.name, got, c.want)
 		}
 	}
 
 	// Fora da iniciativa não há vez para seguir: nenhuma peça propõe, e todas pousam direto.
 	outside := &live.SessionRuntimeState{TurnIndex: -1}
-	if got := reachAndTarget(tokens, outside, gm, nil).Target; got != "" {
+	if got := reachAndTarget(tokens, outside, gm).Target; got != "" {
 		t.Errorf("fora da iniciativa o alvo é %q, esperava nenhum", got)
 	}
 }

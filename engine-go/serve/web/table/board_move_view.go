@@ -155,7 +155,7 @@ func moveTerrain(b *board.BoardState, mover *board.BoardToken, mode board.MoveMo
 // O `Restante` sai daqui junto com as casas porque é a MESMA conta. Duas
 // chamadas com os mesmos argumentos, cada uma jogando fora metade, é como este
 // repositório já mostrou dois números diferentes para o mesmo combatente.
-func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board.Mover, mine map[int64]bool) boardReach {
+func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board.Mover) boardReach {
 	if b == nil {
 		return boardReach{}
 	}
@@ -185,17 +185,9 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board
 			if who.Role == "gm" && (st == nil || !board.IsTokenOnTurn(&b.Tokens[i], st)) {
 				continue
 			}
-			// A POSSE é por PEÇA e não por pessoa: o `Mover` carrega um booleano
-			// só, e deixá-lo em falso aqui tira o alcance do jogador NA VEZ dele
-			// — a tela diria que ele não pode mover a própria peça.
-			//
-			// Quem responde é o `mine`, montado contra o banco pelo `tableRoster`:
-			// a ponte até a pessoa é o DONO do personagem.
-			hers := who
-			if id := b.Tokens[i].CharacterID; id != nil {
-				hers.OwnsCharacter = mine[*id]
-			}
-			canMove, herBudget := board.CanMoveWith(b, st, b.Tokens[i].ID, hers)
+			// A POSSE é por PEÇA, e quem a decide é o tabuleiro: o `Mover` leva os
+			// personagens de quem olha (o `mine` do `tableRoster`, contra o banco).
+			canMove, herBudget := board.CanMoveWith(b, st, b.Tokens[i].ID, who)
 			if !canMove {
 				continue
 			}

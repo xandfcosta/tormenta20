@@ -1038,3 +1038,13 @@ aberto, GC nem pool, e sim o governador `powersave` da máquina (que é a da
 produção) — 21 ms com pedidos colados, até 65 ms depois de a CPU parar um
 instante.
 
+
+### A trava por sessão no store dos tabuleiros foi recusada (2026-11)
+
+Duas revisões seguidas (#637 e a ALE-664) sugeriram trocar a trava única do
+`boards.Store`, que serve os tabuleiros de TODAS as sessões, por uma trava por
+sessão, porque desde que o tabuleiro se lê sempre do banco a leitura e a
+gravação acontecem debaixo dela. O dono recusou: o SQLite já tem UM escritor só
+para o banco inteiro, então uma trava por sessão só deixaria as LEITURAS de duas
+mesas andarem juntas, e o servidor atende uma mesa por vez. Não se reabre sem
+uma medida de duas mesas esperando uma pela outra.
