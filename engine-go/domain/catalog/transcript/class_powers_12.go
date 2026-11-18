@@ -451,13 +451,17 @@ var classPowersPart12 = []ClassPower{
 		Prerequisites: []Prerequisite{{Kind: "trained", Expertise: "Reflexos"}},
 	},
 	{
-		ID:            "class.ladino.roubo-de-mana",
+		ID: "class.ladino.roubo-de-mana",
+		Modeled: []string{
+			"o PM temporário por dado do Ataque Furtivo e a perda de PM da ficha atingida, na confirmação do mestre",
+			"uma vez por cena contra a mesma criatura",
+		},
 		ClassName:     "Ladino",
 		Name:          "Roubo de Mana",
 		Description:   "Quando causa dano com AF, para cada 1d6 de dano do AF, recebe 1 PM temp e criatura perde 1 PM (se tiver). Uma vez por cena contra uma mesma criatura.",
 		BookPage:      74,
 		UID:           "pwr_nokkrlzsmp",
-		Unmodeled:     "PM temporários por dado do Ataque Furtivo que acertou, e a perda de PM do alvo: gatilho no dano do ataque (ALE-653)",
-		Prerequisites: []Prerequisite{{Kind: "attribute", Attr: "intelligence", Min: 1}},
+		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.ladino.truque-magico"}},
+		MinLevel:      7,
 	},
 }

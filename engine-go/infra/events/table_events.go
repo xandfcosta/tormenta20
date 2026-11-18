@@ -102,6 +102,13 @@ type SceneEnded struct {
 
 func (e SceneEnded) Target() Target { return Target{SessionID: e.SessionID} }
 
+// ManaStolen — o Roubo de Mana de um ladino contra uma criatura ficou marcado na cena.
+type ManaStolen struct {
+	SessionID int64
+}
+
+func (e ManaStolen) Target() Target { return Target{SessionID: e.SessionID} }
+
 // BannerDismissed — o mestre recolheu a faixa do Estandarte até o fim da cena.
 type BannerDismissed struct {
 	SessionID int64

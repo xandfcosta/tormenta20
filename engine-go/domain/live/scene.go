@@ -88,6 +88,9 @@ type Scene struct {
 	// "Pronto": ela volta na próxima cena, porque o poder vale "no início de cada cena", e
 	// por isso mora na cena e some com ela.
 	BannersDone []int64 `json:"bannersDone,omitempty"`
+	// ManaStolen são os pares "ladino|alvo" (linhas da fila) que já usaram o Roubo de Mana nesta
+	// cena: "uma vez por cena contra uma mesma criatura" (p74).
+	ManaStolen []string `json:"manaStolen,omitempty"`
 	// AimedBy e AimedAt são quem mirou nesta vez e em quem: anula o -5 de atirar em quem está em
 	// combate corpo a corpo, "neste turno" e "contra aquele alvo" (p234).
 	AimedBy string `json:"aimedBy,omitempty"`
@@ -270,4 +273,19 @@ func DismissBanner(s *SessionRuntimeState, knightID int64) error {
 		s.Scene.BannersDone = append(s.Scene.BannersDone, knightID)
 	}
 	return nil
+}
+
+// MarkManaStolen marca o Roubo de Mana do ladino `thief` contra o alvo `target` nesta cena, e
+// diz se ele ainda não tinha sido usado — o livro o limita a uma vez por cena contra a mesma
+// criatura (p74). Fora de cena não há marca, e o roubo também não vale.
+func MarkManaStolen(s *SessionRuntimeState, thief, target string) bool {
+	if !s.InScene() {
+		return false
+	}
+	key := thief + "|" + target
+	if slices.Contains(s.Scene.ManaStolen, key) {
+		return false
+	}
+	s.Scene.ManaStolen = append(s.Scene.ManaStolen, key)
+	return true
 }
