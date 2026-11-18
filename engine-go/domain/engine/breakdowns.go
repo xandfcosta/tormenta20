@@ -81,6 +81,11 @@ type ComputedSheet struct {
 	// leitor antigo ler 6 onde lia 9, sem erro em lugar nenhum.
 	Displacement ValueBreakdown `json:"displacementSquares"`
 	FlySpeed     int            `json:"flySpeed"`
+	// ClimbSpeed e SwimSpeed são os outros deslocamentos por tipo, em METROS como o voo — a
+	// escalada do goblin (p23), a natação da sereia (p30). Zero é "não tem", e o fio os omite: um
+	// campo novo em toda ficha mudaria todo oráculo de paridade sem mudar regra nenhuma.
+	ClimbSpeed int `json:"climbSpeed,omitempty"`
+	SwimSpeed  int `json:"swimSpeed,omitempty"`
 	// IgnoresDifficultTerrain é a p129 vista pelo TABULEIRO: "terreno difícil
 	// não reduz seu deslocamento" (Acrobático). Ela sai na ficha, e não numa
 	// consulta à parte, porque é quem desenha o movimento que precisa dela —
@@ -177,6 +182,11 @@ const (
 	// diferente delas no destino: aquelas isentam o deslocamento de uma
 	// REDUÇÃO, e esta isenta o CAMINHO de um custo.
 	MovementIgnoresDifficult = "movement-ignores-difficult"
+
+	// ClimbEqualsLand: "deslocamento de escalada igual ao seu deslocamento terrestre"
+	// (Espelunqueiro, p23). Flag e não número, porque o número é o terrestre DEPOIS das contas
+	// — a armadura, a carga e o Lento reduzem os dois juntos.
+	ClimbEqualsLand = "climb-equals-land"
 
 	DisplacementIgnoresArmor = "displacement-ignores-armor"
 	DisplacementIgnoresLoad  = "displacement-ignores-load"

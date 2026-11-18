@@ -595,8 +595,8 @@ func targetKey(t ModifierTarget) string {
 			return "displacement:" + t.Scope
 		}
 		return "displacement"
-	case "flySpeed":
-		return "flySpeed"
+	case "flySpeed", "climbSpeed", "swimSpeed":
+		return t.K
 	case "armorPenalty":
 		return "armorPenalty"
 	case "armorPenaltyExempt":

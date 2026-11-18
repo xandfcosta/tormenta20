@@ -25,11 +25,14 @@ func deriveSheet(ch Character, effects ItemEffects, raceSquares int) ComputedShe
 		expertises = append(expertises, expertiseBreakdown(ch, ex, effects, load))
 	}
 	bestAttr, bestBaseCd := bestSpellcasting(ch, effects)
+	displacement := displacementBreakdown(raceSquares, effects, load)
 
 	return ComputedSheet{
 		Defense:                 defenseBreakdown(ch, effects),
-		Displacement:            displacementBreakdown(raceSquares, effects, load),
+		Displacement:            displacement,
 		FlySpeed:                flySpeedTotal(effects),
+		ClimbSpeed:              climbSpeedTotal(effects, displacement.Total),
+		SwimSpeed:               swimSpeedTotal(effects),
 		IgnoresDifficultTerrain: effects.Flags[MovementIgnoresDifficult],
 		Load:                    load,
 		Attributes:              attributes,
