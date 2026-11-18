@@ -108,7 +108,7 @@ func (s Scene) propoePorParadas(c commandCtx, tokenID string, stops []engine.Squ
 		return nil, err
 	}
 	return s.deps.Boards().ProposeMoveWithStops(c.R.Context(), c.SessionID, c.BoardID,
-		state, tokenID, stops, s.moveWho(c), 0)
+		state, tokenID, stops, s.moveWho(c))
 }
 
 // confirmMove entrega o gesto ao caso de uso, que abre a transação.
