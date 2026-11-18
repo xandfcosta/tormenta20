@@ -90,7 +90,7 @@ func (r *Ruleset) isDoubleWeapon(card WeaponCard) bool {
 // naturais dela são iguais, então elas são UMA carta, e o adicional sai dela de novo, como a outra
 // ponta da arma dupla.
 func agileShapeStrike(ch Character, active map[string]bool) *StyleStrike {
-	if ch.WildShape == nil || ch.WildShape.Form != WildAgile || !active[FlagGroupID(WildAgileBothFlag)] {
+	if ch.WildShape == nil || ch.WildShape.WeaponForm() != WildAgile || !active[FlagGroupID(WildAgileBothFlag)] {
 		return nil
 	}
 	return &StyleStrike{SourceID: WildAgileBothFlag, Name: "Forma Ágil", NaturalPair: true}

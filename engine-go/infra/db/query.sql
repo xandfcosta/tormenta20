@@ -724,6 +724,19 @@ DO UPDATE SET form = excluded.form, tier = excluded.tier, damageType = excluded.
 -- name: ClearCharacterWildShape :exec
 DELETE FROM character_wild_shape WHERE characterId = ?;
 
+-- name: GetCharacterWildShapePrimal :many
+-- :many pela razao da forma: sem Forma Primal nao ha linha, e isso e o caso comum.
+SELECT secondForm, weaponFrom, sizeFrom FROM character_wild_shape_primal WHERE characterId = ?;
+
+-- name: SaveCharacterWildShapePrimal :exec
+INSERT INTO character_wild_shape_primal (characterId, secondForm, weaponFrom, sizeFrom)
+VALUES (?, ?, ?, ?)
+ON CONFLICT (characterId)
+DO UPDATE SET secondForm = excluded.secondForm, weaponFrom = excluded.weaponFrom, sizeFrom = excluded.sizeFrom;
+
+-- name: ClearCharacterWildShapePrimal :exec
+DELETE FROM character_wild_shape_primal WHERE characterId = ?;
+
 -- name: ListCampaignItemPatches :many
 -- A emenda de catalogo de UMA campanha: o mundo dela.
 --

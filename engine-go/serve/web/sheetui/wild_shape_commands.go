@@ -21,6 +21,8 @@ func takeWildShape(s Scene, r *http.Request, row sqlcgen.Character, signals Sign
 	shape := engine.WildShape{
 		Form: engine.WildForm(signals.WildForm), Tier: engine.WildTier(signals.WildTier),
 		DamageType: signals.WildDamage, Movement: engine.WildMovement(signals.WildMove),
+		Second: engine.WildForm(signals.WildSecond), WeaponFrom: engine.WildForm(signals.WildWeaponFrom),
+		SizeFrom: engine.WildForm(signals.WildSizeFrom),
 	}
 	if err := s.plays.TakeWildShape(r.Context(), row, dto, shape); err != nil {
 		return err

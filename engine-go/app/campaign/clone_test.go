@@ -22,13 +22,14 @@ import (
 var notCloned = map[string]string{
 	// O ESTADO DE JOGO fica no rascunho: a cópia nasce inteira (ALE-564), e o rascunho
 	// não tem estado de jogo nenhum desde a migração 23.
-	"character_damage":           "estado de jogo: a cópia nasce com o PV e o PM cheios",
-	"character_nonlethal_damage": "estado de jogo: a cópia nasce sem dano não letal",
-	"active_effects":             "estado de jogo: a cópia nasce sem efeito ativo",
-	"character_conditionals":     "estado de jogo: as situações ligadas são da cena",
-	"character_power_uses":       "estado de jogo: a cópia nasce com os usos inteiros",
-	"character_stances":          "estado de jogo: a cópia nasce sem postura",
-	"character_wild_shape":       "estado de jogo: a cópia nasce na forma dela",
+	"character_damage":            "estado de jogo: a cópia nasce com o PV e o PM cheios",
+	"character_nonlethal_damage":  "estado de jogo: a cópia nasce sem dano não letal",
+	"active_effects":              "estado de jogo: a cópia nasce sem efeito ativo",
+	"character_conditionals":      "estado de jogo: as situações ligadas são da cena",
+	"character_power_uses":        "estado de jogo: a cópia nasce com os usos inteiros",
+	"character_stances":           "estado de jogo: a cópia nasce sem postura",
+	"character_wild_shape":        "estado de jogo: a cópia nasce na forma dela",
+	"character_wild_shape_primal": "estado de jogo: a segunda forma da Forma Primal sai com a forma",
 	// A CAMPANHA aponta para a ficha da mesa, e não o contrário: são da campanha, e o
 	// rascunho não tem campanha.
 	"campaign_members":      "da campanha: quem cria o membro é a entrada na mesa",

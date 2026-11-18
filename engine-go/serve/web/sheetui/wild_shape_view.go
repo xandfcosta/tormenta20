@@ -30,6 +30,9 @@ type wildShapeView struct {
 	// AgileBoth é o "atacar com ambas" da Forma Ágil (p63), quando o druida está nela; Declared diz que
 	// ele já declarou.
 	AgileBoth *agileBothState
+	// Primal diz que a ficha tem a Forma Primal (p62): o diálogo oferece a segunda forma, e ele traz o
+	// resumo e as escolhas de arma e tamanho dela.
+	Primal *wildPrimalView
 }
 
 type agileBothState struct {
@@ -71,7 +74,16 @@ const wildShapeDialogID = "wild-shape"
 
 // wildShapeOpens são os sinais que abrir o diálogo zera: a primeira forma e o nível normal, que todo
 // druida com a Forma Selvagem tem.
-const wildShapeOpens = "$wild_form = 'agil'; $wild_tier = 'normal'; $wild_damage = 'corte'; $wild_move = ''"
+const wildShapeOpens = "$wild_form = 'agil'; $wild_tier = 'normal'; $wild_damage = 'corte'; $wild_move = ''; " +
+	"$wild_second = ''; $wild_weapon_from = ''; $wild_size_from = ''"
+
+// wildFirstFormLabel é "Forma", ou "Primeira forma" para quem tem a Forma Primal e escolhe duas.
+func wildFirstFormLabel(w wildShapeView) string {
+	if w.Primal != nil {
+		return "Primeira forma"
+	}
+	return "Forma"
+}
 
 func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 	view := wildShapeView{Summaries: map[string]string{}, Moves: map[engine.WildTier][]wildMoveOption{}}
@@ -92,6 +104,9 @@ func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 				view.Moves[tier] = append(view.Moves[tier], wildMoveOption{Move: move, Label: wildMoveLabel(move, metres)})
 			}
 		}
+	}
+	if sheet.OwnsPower(dto, engine.PrimalFormPowerID) {
+		view.Primal = wildPrimalViewOf(view.Tiers)
 	}
 	view.Active = wildShapeInPlay(dto)
 	if character.OffersTheDeclaration(dto, engine.WildAgileBothFlag) {
@@ -119,6 +134,9 @@ func agileBothRows(w wildShapeView) []actionRow {
 // wildShapeName é "Forma Feroz", ou "Forma Feroz aprimorada".
 func wildShapeName(shape engine.WildShape) string {
 	name := engine.WildFormName(shape.Form)
+	if shape.Second != "" {
+		name = "Forma Primal (" + wildFormShortName(shape.Form) + " e " + wildFormShortName(shape.Second) + ")"
+	}
 	if shape.Tier != engine.WildTierNormal {
 		name += " " + string(shape.Tier)
 	}
@@ -225,7 +243,7 @@ func wildShapeInPlay(dto sheet.CharacterDTO) *wildShapeLine {
 	if dto.WildShape == nil {
 		return nil
 	}
-	stats, found := engine.WildShapeStatsOf(dto.WildShape.Form, dto.WildShape.Tier)
+	stats, found := engine.WildShapeStatsOfShape(*dto.WildShape)
 	if !found {
 		return nil
 	}

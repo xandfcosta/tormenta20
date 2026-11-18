@@ -32,7 +32,7 @@ func OffersTheDeclaration(dto sheet.CharacterDTO, flag string) bool {
 	// A FORMA ÁGIL é a única que tem as duas armas naturais (p63). O -2 dela mora no poder da Forma
 	// Selvagem, que todo druida com a forma tem, e por isso o condicional é oferecido em qualquer forma:
 	// quem diz se há o que declarar é a forma em que ele está.
-	if flag == engine.WildAgileBothFlag && (ec.WildShape == nil || ec.WildShape.Form != engine.WildAgile) {
+	if flag == engine.WildAgileBothFlag && (ec.WildShape == nil || ec.WildShape.WeaponForm() != engine.WildAgile) {
 		return false
 	}
 	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
