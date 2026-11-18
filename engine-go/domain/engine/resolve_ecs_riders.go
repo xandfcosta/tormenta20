@@ -51,6 +51,7 @@ func harvestWeaponRiders(w *ecs.World) {
 			}
 			riders.extra = append(riders.extra, ExtraDamage{
 				Dice: t.Mod.Dice, Type: t.Mod.Target.DamageType, Scope: t.Mod.Target.Scope, Range: t.Mod.Target.Range,
+				SourceID: t.SourceID,
 			})
 			suppress(w, e, "é dado extra, e dado não soma na pilha")
 			return

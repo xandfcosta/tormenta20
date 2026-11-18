@@ -1,6 +1,10 @@
 package engine
 
-import "slices"
+import (
+	"slices"
+	"strconv"
+	"strings"
+)
 
 // WeaponCard is one wielded-weapon formula card (combat-magic-stats.tsx
 // WeaponFormulaCards): attack = the weapon's attack perícia (Luta melee, Pontaria
@@ -20,6 +24,31 @@ type ExtraDamage struct {
 	// "em alcance curto" (p51). Vazio vale a qualquer distância. Quem o tira do golpe é a linha
 	// `TargetBeyondShortRange`, quando o tabuleiro mede o alvo além de 9m.
 	Range string `json:"range,omitempty"`
+	// SourceID é o poder ou item de onde o dado veio: o Roubo de Mana conta os dados do Ataque
+	// Furtivo (p74), e o "+4d6" sozinho não diz de quem é. Fora do fio, como o `Scope`: quem o lê
+	// é a proposta, na carta viva.
+	SourceID string `json:"-"`
+}
+
+// SneakAttackPowerID é o Ataque Furtivo do ladino (p73), cujo dado cresce +1d6 a cada dois níveis.
+const SneakAttackPowerID = "class.ladino.ataque-furtivo-1d6"
+
+// SneakDice são os d6 do Ataque Furtivo que esta carta rola, com o interruptor ligado: zero
+// quando ele está desligado ou a ficha não o tem.
+//
+//	card.SneakDice() // 4, no ladino 7 com o furtivo ligado
+func (card WeaponCard) SneakDice() int {
+	total := 0
+	for _, die := range card.ExtraDamage {
+		if die.SourceID != SneakAttackPowerID {
+			continue
+		}
+		count, _, _ := strings.Cut(die.Dice, "d")
+		if n, err := strconv.Atoi(count); err == nil {
+			total += n
+		}
+	}
+	return total
 }
 
 // IsMelee diz se esta arma bate CORPO A CORPO.

@@ -160,7 +160,10 @@ type PendingAttack struct {
 	// depende disso DEPOIS da confirmação: o Golpe Mágico do bardo só acumula
 	// *"ao acertar um ataque corpo a corpo"* (p45). A arma não vem junto no
 	// provisório — só o nome dela —, e um nome não responde a pergunta.
-	Melee     bool  `json:"melee,omitempty"`
+	Melee bool `json:"melee,omitempty"`
+	// SneakDice são os d6 do Ataque Furtivo que entraram neste golpe, com o interruptor ligado na
+	// proposta. O Roubo de Mana dá 1 PM temporário por dado (p74), e a confirmação os lê daqui.
+	SneakDice int   `json:"sneakDice,omitempty"`
 	Dice      []int `json:"dice,omitempty"`
 	Faces     int   `json:"faces,omitempty"`
 	RawDamage int   `json:"rawDamage"`

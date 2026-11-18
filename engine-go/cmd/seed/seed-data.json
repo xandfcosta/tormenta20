@@ -2344,6 +2344,32 @@
             "size": "Médio",
             "displacement": 9
           }
+        },
+        {
+          "create": {
+            "name": "Ladra de Mana Nv7",
+            "races": ["humano"],
+            "origin": "soldado",
+            "classes": [{ "className": "Ladino", "level": 7 }],
+            "classPowers": [
+              "class.ladino.truque-magico",
+              "class.ladino.roubo-de-mana"
+            ],
+            "strength": 0,
+            "dexterity": 4,
+            "constitution": 1,
+            "intelligence": 2,
+            "wisdom": 1,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9,
+            "items": [
+              {
+                "catalogId": "adaga",
+                "equipped": "wielded"
+              }
+            ]
+          }
         }
       ]
     },

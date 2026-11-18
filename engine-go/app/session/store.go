@@ -336,6 +336,17 @@ func (st *Store) StartScene(ctx context.Context, sessionID int64, kind live.Scen
 		func(s *live.SessionRuntimeState) error { live.StartScene(s, kind); return nil })
 }
 
+// MarkManaStolen marca o Roubo de Mana de `thief` contra `target` na cena, e diz se ele era
+// novo: a segunda vez contra a mesma criatura não rouba nada (p74).
+func (st *Store) MarkManaStolen(ctx context.Context, sessionID int64, thief, target string) (bool, error) {
+	fresh := false
+	_, err := st.apply(ctx, sessionID, events.ManaStolen{SessionID: sessionID}, func(s *live.SessionRuntimeState) error {
+		fresh = live.MarkManaStolen(s, thief, target)
+		return nil
+	})
+	return fresh, err
+}
+
 // DismissBanner recolhe a faixa do Estandarte do cavaleiro até o fim da cena.
 func (st *Store) DismissBanner(ctx context.Context, sessionID, knightID int64) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.BannerDismissed{SessionID: sessionID},
