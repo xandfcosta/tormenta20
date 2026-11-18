@@ -104,6 +104,8 @@ var demoCampaigns = []demoCampaign{
 			{"jogador@t20.local", "Sílfide Voadora Nv3"},
 			// O PEQUENO E RECHONCHUDO (p28): a Destreza no Atletismo quando ela é maior (ALE-655).
 			{"jogador@t20.local", "Hynne Sortudo Nv3"},
+			// A FORMA PRIMAL (p62): a Forma Selvagem com dois animais (ALE-655).
+			{"jogador@t20.local", "Druida Primal Nv18"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
