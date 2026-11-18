@@ -45,8 +45,8 @@ type Unit struct {
 	InTx *sqlcgen.Queries
 	// AfterCommit guarda o que só vale DEPOIS de o disco aceitar.
 	//
-	// Os dois stores mantêm uma cópia em MEMÓRIA do que gravaram, e ela não
-	// participa da transação: o `rollback` desfaz o disco e deixa a memória
+	// O store dos tabuleiros mantém uma cópia em MEMÓRIA do que gravou, e ela
+	// não participa da transação (a da mesa saiu: ela se lê do banco): o `rollback` desfaz o disco e deixa a memória
 	// adiantada. Medido na ALE-376 — com a gravação da fila recusada por um
 	// gatilho, a transação desfez tudo no banco e a peça continuou na casa nova
 	// no mapa que a mesa vê. **Um gesto que desfaz metade é o que a unidade

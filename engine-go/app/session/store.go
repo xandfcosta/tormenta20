@@ -2,17 +2,16 @@ package session
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 
 	"t20engine/domain/live"
 	"t20engine/infra/events"
 )
 
-// Store guarda o estado vivo de cada sessão em memória: protege as
-// mutações puras (session_state.go) com um mutex e grava em
-// `Session.runtimeState`. Reiniciar o servidor zera os rastreadores até o
-// primeiro `Load()` reidratar do banco, e cada mutação devolve um instantâneo
-// para quem chama serializar e transmitir fora da trava.
+// Store é a mesa viva de cada sessão: ela mora em `Session.runtimeState`, e se lê e se grava SEMPRE
+// no banco (ver `cache.go`). O mutex guarda a ORDEM das mutações e a `seq` que as numera, e cada
+// mutação devolve a mesa gravada para quem chama serializar e transmitir fora da trava.
 type Store struct {
 	Mu sync.Mutex
 	// sheet é a PORTA para o contexto da ficha: o regime escreve PV e PM de
@@ -23,8 +22,6 @@ type Store struct {
 	// (p227). Separada da `sheet` porque muda por outra razão; o mesmo
 	// adaptador cumpre as duas.
 	turnEffects live.SheetTurnEffects
-	// States é o CACHE da mesa (ver `cache.go`): quem manda é o retrato gravado.
-	States map[int64]*live.SessionRuntimeState
 	// seqs numera as mutações de cada sessão, para o hub reconhecer quadro
 	// atrasado. Mora aqui e não no estado: hidratar do banco troca o estado, e um
 	// contador que vivesse nele voltaria a zero.
@@ -59,7 +56,6 @@ func NewStore(
 	sheet live.SheetVitals, turnEffects live.SheetTurnEffects, bus *events.Bus,
 ) *Store {
 	return &Store{
-		States:      map[int64]*live.SessionRuntimeState{},
 		seqs:        map[int64]uint64{},
 		newID:       newID,
 		sheet:       sheet,
@@ -68,17 +64,6 @@ func NewStore(
 		units:       units,
 		bus:         bus,
 	}
-}
-
-// installWhenItCounts põe a mesa mudada no cache — AGORA, ou depois do commit
-// quando há transação aberta. Ver o irmão em `boards.Store`, e a razão é a
-// mesma: a memória não participa do `rollback` (ALE-376).
-func (st *Store) installWhenItCounts(ctx context.Context, sessionID int64, saved *live.SessionRuntimeState) {
-	if open, ok := UnitFrom(ctx); ok && open.AfterCommit != nil {
-		open.AfterCommit(func() { st.States[sessionID] = saved })
-		return
-	}
-	st.States[sessionID] = saved
 }
 
 // snapshotsFor devolve o retrato que ESTE gesto tem de usar: o da unidade
@@ -111,25 +96,21 @@ func (st *Store) nextSeqLocked(sessionID int64) uint64 {
 	return st.seqs[sessionID]
 }
 
-// LiveSessionsWithCharacter devolve as sessões EM MEMÓRIA que têm este
-// personagem na fila.
+// LiveSessionsWithCharacter devolve as sessões NÃO ENCERRADAS que têm este personagem na fila.
 //
-// Só as vivas, e isso é o ponto: o aviso serve para atualizar tela aberta. Mesa
-// que ninguém está olhando não precisa ser avisada — quem entrar depois busca o
-// estado do zero.
-func (st *Store) LiveSessionsWithCharacter(characterID int64) []int64 {
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	var out []int64
-	for sessionID, state := range st.States {
-		for _, entry := range state.Initiative {
-			if entry.CharacterID != nil && *entry.CharacterID == characterID {
-				out = append(out, sessionID)
-				break
-			}
-		}
+// Só as vivas, e isso é o ponto: o aviso serve para atualizar tela aberta. Antes "viva" queria dizer
+// "carregada em memória desde que o servidor subiu", o que incluía a planejada em que o mestre já
+// montou a fila; lida do banco, ela é a que não foi encerrada — a mesma conta, sem depender de quem
+// abriu a mesa primeiro.
+// A falha de leitura não derruba o gesto que avisa: a ficha já foi gravada, e a tela se corrige no
+// próximo desenho.
+func (st *Store) LiveSessionsWithCharacter(ctx context.Context, characterID int64) []int64 {
+	sessions, err := st.snapshots.LiveWithCharacter(ctx, characterID)
+	if err != nil {
+		slog.Warn("sessões vivas do personagem não lidas", "character_id", characterID, "err", err)
+		return nil
 	}
-	return out
+	return sessions
 }
 
 // apply roda uma mutação pura sob a trava, publica o evento e devolve o
@@ -171,10 +152,8 @@ func (st *Store) applyLocked(ctx context.Context, sessionID int64, fn func(*live
 	if err != nil {
 		return nil, err
 	}
-	st.installWhenItCounts(ctx, sessionID, saved)
-	clone := live.CloneState(saved)
-	clone.Seq = st.nextSeqLocked(sessionID)
-	return clone, nil
+	saved.Seq = st.nextSeqLocked(sessionID)
+	return saved, nil
 }
 
 func (st *Store) AddInitiativeEntry(ctx context.Context, sessionID int64, e live.InitiativeEntry) (*live.SessionRuntimeState, error) {
@@ -272,8 +251,7 @@ func (st *Store) unitGesture(
 		if err != nil {
 			return err
 		}
-		st.installWhenItCounts(inUnit, sessionID, saved)
-		clone = live.CloneState(saved)
+		clone = saved
 		clone.Seq = st.nextSeqLocked(sessionID)
 		return nil
 	})

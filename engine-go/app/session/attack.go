@@ -42,7 +42,7 @@ func (st *Store) RecordSkillTest(
 func (st *Store) PublishCharacterSkillTest(
 	ctx context.Context, characterID int64, roll live.SkillTestRoll,
 ) error {
-	for _, sessionID := range st.LiveSessionsWithCharacter(characterID) {
+	for _, sessionID := range st.LiveSessionsWithCharacter(ctx, characterID) {
 		if _, err := st.RecordSkillTest(ctx, sessionID, roll); err != nil {
 			return err
 		}

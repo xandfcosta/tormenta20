@@ -455,6 +455,12 @@ WHERE s.status = 'active'
        ))
 GROUP BY s.campaignId;
 
+-- name: ListLiveSessionStates :many
+-- A fila de cada sessao NAO ENCERRADA, para achar onde uma ficha esta jogando: a mesa se le do banco, e
+-- nao de uma copia em memoria (decisao do dono). A planejada entra: o mestre monta a fila e roda a cena
+-- nela antes de "comecar", e a copia em memoria que esta consulta substitui a contava.
+SELECT id, runtimeState FROM sessions WHERE status != 'ended';
+
 -- name: ResetSessionTracker :exec
 UPDATE sessions SET runtimeState = sqlc.arg('runtimeState'), updatedAt = sqlc.arg('updatedAt')
 WHERE id = sqlc.arg('id');

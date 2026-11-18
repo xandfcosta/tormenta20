@@ -130,7 +130,7 @@ func (st *Store) SpendCharacterAction(ctx context.Context, characterID int64, co
 // dele. O terceiro valor diz se há cena — sem ela os outros dois não querem
 // dizer nada.
 func (st *Store) momentOf(ctx context.Context, characterID int64) (int64, engine.ActionMoment, bool, error) {
-	for _, sessionID := range st.LiveSessionsWithCharacter(characterID) {
+	for _, sessionID := range st.LiveSessionsWithCharacter(ctx, characterID) {
 		s, err := st.State(ctx, sessionID)
 		if err != nil {
 			return 0, engine.ActionMoment{}, false, err

@@ -26,7 +26,7 @@ import (
 // fonte; valor absoluto NÃO drena pool temporário, porque é uma afirmação sobre
 // o total e não uma pancada.
 func (st *Store) PatchVitals(ctx context.Context, sessionID int64, entryID string, hpCurrent, mpCurrent *int64) (*live.SessionRuntimeState, error) {
-	charID := st.CharacterIDOf(sessionID, entryID)
+	charID := st.CharacterIDOf(ctx, sessionID, entryID)
 	if charID == nil {
 		return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, nil),
 			patchEntryVitals(entryID, hpCurrent, mpCurrent))
@@ -92,7 +92,7 @@ func (st *Store) entryIDForCharacter(ctx context.Context, sessionID, characterID
 // temporários, como o endpoint de dano) e a entrada espelha o resultado. NPC não
 // tem ficha — ali o rastreador é o registro.
 func (st *Store) DeltaVitals(ctx context.Context, sessionID int64, entryID string, hpDelta, mpDelta *int64, nonLethal int64) (*live.SessionRuntimeState, error) {
-	charID := st.CharacterIDOf(sessionID, entryID)
+	charID := st.CharacterIDOf(ctx, sessionID, entryID)
 	if charID == nil {
 		return st.apply(ctx, sessionID, vitalsEvent(sessionID, entryID, nil),
 			deltaEntryVitals(entryID, hpDelta, mpDelta))
@@ -138,34 +138,24 @@ func (st *Store) DeltaVitals(ctx context.Context, sessionID int64, entryID strin
 // acima dele. Ele deixou de ter caso: o atual vem do poço derivado, que é
 // `máximo − dano` e já nasce na faixa (ALE-355).
 func (st *Store) RefreshCharacterVitals(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
-	st.Mu.Lock()
-	s, err := st.cachedLocked(ctx, sessionID)
-	var ids []int64
-	if err == nil {
-		ids = uniqueCharacterIDs(s)
-	}
-	st.Mu.Unlock()
+	// UMA LEITURA DA MESA: ela vem do banco, e a cópia é desta pergunta — não há o que reler depois de
+	// buscar os poços, nem trava a segurar entre as duas buscas.
+	fresh, err := st.State(ctx, sessionID)
 	if err != nil {
 		return nil, err
 	}
+	ids := uniqueCharacterIDs(fresh)
 	if len(ids) == 0 {
-		return st.State(ctx, sessionID)
+		return fresh, nil
 	}
 	pools, err := st.sheet.PoolsOf(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("reler os poços da sessão %d: %w", sessionID, err)
 	}
-	st.Mu.Lock()
-	defer st.Mu.Unlock()
-	cached, err := st.cachedLocked(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
 	// O ESPELHO É REFEITO NA CÓPIA, e não gravado: a leitura não escreve (o CQRS da Mesa, ALE-639). Quem
 	// muda o poço de uma ficha escreve NA FICHA e espelha no próprio gesto (`DeltaVitals`, `PatchVitals`);
 	// a Mesa que desenha só precisa do espelho de agora, e o retrato guardado não depende dele — gravá-lo a
 	// cada leitura era uma escrita sem evento num `GET`.
-	fresh := live.CloneState(cached)
 	for i := range fresh.Initiative {
 		e := &fresh.Initiative[i]
 		if e.CharacterID == nil {

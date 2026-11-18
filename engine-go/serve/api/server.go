@@ -126,7 +126,7 @@ func (sr sheetRules) characterChanged(ctx context.Context, characterID int64) {
 	// sessão viva abaixo responde outra pergunta — a do hub SSE, que fala com a
 	// sala inteira.
 	sr.bus.Publish(events.CharacterChanged{CharacterID: characterID})
-	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(characterID) {
+	for _, sessionID := range sr.sessions.LiveSessionsWithCharacter(ctx, characterID) {
 		sr.sse.Emit(sessionID, "", "character-changed", map[string]any{"characterId": characterID})
 	}
 	sr.remeasurePieces(ctx, characterID)

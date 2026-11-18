@@ -159,7 +159,7 @@ func moveVitals(sign int64) func(Scene, commandCtx) (*live.SessionRuntimeState, 
 		// mesa mudou, e a tela dele precisa saber. NPC não tem ficha: ali o
 		// `CharacterIDOf` devolve nulo e não há quem avisar.
 		if err == nil {
-			if charID := st.deps.Sessions().CharacterIDOf(c.SessionID, entryID); charID != nil {
+			if charID := st.deps.Sessions().CharacterIDOf(c.R.Context(), c.SessionID, entryID); charID != nil {
 				st.deps.CharacterChanged(c.R.Context(), *charID)
 			}
 		}

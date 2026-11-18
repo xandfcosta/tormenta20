@@ -318,12 +318,6 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if err != nil {
 		return View{}, status, err
 	}
-	// HIDRATA do banco antes de desenhar, e o erro SOBE: sem isto um servidor
-	// recém-subido serviria fila vazia para um combate em andamento, e uma
-	// leitura que falha viraria "não há ninguém na mesa" (ALE-369, ALE-373).
-	if _, err := s.deps.Sessions().State(ctx, sessionID); err != nil {
-		return View{}, http.StatusInternalServerError, err
-	}
 	// `stateForRole` e não `redactForPlayers` direto: é o mesmo gargalo que o
 	// socket usa, e papel desconhecido cai em jogador. Esta cena não ganha uma
 	// segunda decisão sobre quem vê o quê.
