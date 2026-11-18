@@ -2,6 +2,7 @@ package boards
 
 import (
 	"context"
+	"slices"
 
 	"t20engine/domain/board"
 )
@@ -30,7 +31,8 @@ func (bs *Store) RemeasureCharacter(ctx context.Context, sessionID, characterID 
 			if token.CharacterID == nil || *token.CharacterID != characterID {
 				continue
 			}
-			if token.SpeedSquares != movement.Squares || token.IgnoresDifficult != movement.IgnoresDifficult {
+			if token.SpeedSquares != movement.Squares || token.IgnoresDifficult != movement.IgnoresDifficult ||
+				!slices.Equal(token.OtherModes, movement.Modes) {
 				stale[token.ID] = movement
 			}
 		}

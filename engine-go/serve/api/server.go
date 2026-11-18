@@ -15,10 +15,8 @@ import (
 	"t20engine/app/initiative"
 	"t20engine/app/rest"
 	"t20engine/app/session"
-	"t20engine/domain/board"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
-	"t20engine/domain/sheet"
 	"t20engine/infra/config"
 	"t20engine/infra/db/sqlcgen"
 	"t20engine/infra/events"
@@ -145,12 +143,11 @@ func (sr sheetRules) remeasurePieces(ctx context.Context, characterID int64, ses
 	if len(sessions) == 0 || sr.boards == nil {
 		return
 	}
-	squares, ignores, err := sheet.MovementOf(ctx, sr.queries, sr.catalogs, characterID)
+	movement, err := boards.MovementOf(ctx, sr.queries, sr.catalogs, characterID)
 	if err != nil {
 		slog.Warn("tabuleiro: ficha não medida para as peças", "character_id", characterID, "err", err)
 		return
 	}
-	movement := board.TokenMovement{Squares: squares, IgnoresDifficult: ignores}
 	for _, sessionID := range sessions {
 		if err := sr.boards.RemeasureCharacter(ctx, sessionID, characterID, movement); err != nil {
 			slog.Warn("tabuleiro: peças não medidas de novo", "character_id", characterID, "session_id", sessionID, "err", err)

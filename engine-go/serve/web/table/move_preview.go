@@ -116,7 +116,12 @@ func dragPreview(b *board.BoardState, st *live.SessionRuntimeState, tokenID stri
 	}
 	folds := append(progressStops(b, tokenID, token), destination)
 	_, budget := board.CanMoveWith(b, st, tokenID, who)
-	costs := legsCosts(folds, moveTerrain(b, token))
+	// O MODO DA PROPOSTA vale para a perna viva: arrastar a peça que voa mede contra o voo.
+	mode := board.PendingMode(b, tokenID)
+	if budget >= 0 {
+		budget = board.ModeBudget(*token, mode)
+	}
+	costs := legsCosts(folds, moveTerrain(b, token, mode))
 	fits, segundo, beyond := moveWires(folds, costs, budget)
 	return map[string]any{
 		"preview_arrow_fits":   fits,

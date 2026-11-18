@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"t20engine/app/boards"
 	"t20engine/domain/engine"
-	"t20engine/domain/sheet"
 
 	"github.com/starfederation/datastar-go/datastar"
 
@@ -347,27 +347,23 @@ func (s Scene) speedsForBoard(ctx context.Context, boardState *board.BoardState)
 		if token.CharacterID == nil || token.SpeedSquares > 0 {
 			continue
 		}
-		if n, ignores := s.movementOf(ctx, *token.CharacterID); n > 0 {
-			moves[token.ID] = board.TokenMovement{Squares: n, IgnoresDifficult: ignores}
+		if movement := s.movementOf(ctx, *token.CharacterID); movement.Squares > 0 {
+			moves[token.ID] = movement
 		}
 	}
 	return moves
 }
 
-// movementOf lê da ficha computada as DUAS coisas que o desenho do movimento
-// pede: o orçamento em quadrados e se o terreno difícil cobra desta criatura.
-//
-// As duas juntas porque saem da MESMA ficha, e computá-la duas vezes para ler
-// dois campos seria pagar o caro por nada.
+// movementOf lê da ficha o movimento da peça (`boards.MovementOf`).
 //
 // Falha em silêncio de propósito: a peça sem deslocamento medido desenha sem a
 // prévia, e derrubar o gesto inteiro por causa de um número deixaria o mestre
 // sem as peças que já nasceram.
-func (s Scene) movementOf(ctx context.Context, characterID int64) (int, bool) {
-	squares, ignores, err := sheet.MovementOf(ctx, s.deps.Queries(), s.deps.Catalogs(), characterID)
+func (s Scene) movementOf(ctx context.Context, characterID int64) board.TokenMovement {
+	movement, err := boards.MovementOf(ctx, s.deps.Queries(), s.deps.Catalogs(), characterID)
 	if err != nil {
 		log.Printf("tabuleiro: ficha do personagem %d não computada (%v)", characterID, err)
-		return 0, false
+		return board.TokenMovement{}
 	}
-	return squares, ignores
+	return movement
 }

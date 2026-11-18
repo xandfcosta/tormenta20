@@ -42,6 +42,8 @@ type PendingMove struct {
 	// duas). Por isso ele é o deslocamento da PEÇA e não a permissão de quem
 	// arrasta — ver `boardDefaultSpeedSquares`.
 	Budget int `json:"budget"`
+	// Mode é o deslocamento com que a peça anda neste caminho (p228-229); vazio é a pé.
+	Mode MoveModeKind `json:"mode,omitempty"`
 	// ByUserID é quem propôs. O mestre confirma por qualquer um; o jogador só
 	// confirma o que ele mesmo propôs.
 	ByUserID int64 `json:"byUserId"`
@@ -69,6 +71,7 @@ type PendingMove struct {
 type TokenMovement struct {
 	Squares          int
 	IgnoresDifficult bool
+	Modes            []MoveMode
 }
 
 // boardDefaultSpeedSquares é o orçamento de quem não declarou deslocamento: 9m,
@@ -168,7 +171,15 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 	if path[0].X != token.X || path[0].Y != token.Y {
 		return fmt.Errorf("o caminho começa em (%d,%d) e a peça está em (%d,%d)", path[0].X, path[0].Y, token.X, token.Y)
 	}
-	cost := engine.PathCost(path, moveTerrainFor(b, token), budget)
+	// O MODO DA PROPOSTA ANTERIOR fica: estender o caminho voando não devolve a peça ao chão.
+	mode := MoveModeLand
+	if b.Pending != nil && b.Pending.TokenID == tokenID {
+		mode = b.Pending.Mode
+	}
+	if budget >= 0 {
+		budget = ModeBudget(*token, mode)
+	}
+	cost := engine.PathCost(path, MoveTerrainFor(b, token, mode), budget)
 	// O DESLOCAMENTO não recusa nada, nem aqui nem no `CommitMove`.
 	//
 	// Propor é DESENHAR, e o desenho é o produto: o do jogador é sempre visual —
@@ -187,7 +198,7 @@ func ProposeMove(b *BoardState, st *live.SessionRuntimeState, tokenID string, pa
 		return err
 	}
 	b.Pending = &PendingMove{
-		TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget,
+		TokenID: tokenID, Path: path, Cost: cost.Squares, Budget: budget, Mode: mode,
 		Diagonals: cost.Diagonals, Difficult: cost.Difficult, ByUserID: by.UserID,
 	}
 	b.Version++

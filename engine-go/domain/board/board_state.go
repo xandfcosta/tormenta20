@@ -45,9 +45,12 @@ type BoardToken struct {
 	// SpeedSquares é o orçamento de movimento da peça em QUADRADOS (T20 p106:
 	// 9m = 6 quadrados). Mora na peça porque a tela precisa dele ANTES de
 	// propor — para contar o gasto e acender o que dá para alcançar —, e é
-	// re-sincronizado do motor a cada proposta, como o `RefreshCharacterVitals`
-	// faz com o `hpMax`. Zero = nunca medido; vale o padrão do livro.
+	// medido ao entrar no mapa e de novo quando a ficha muda
+	// (`RemeasureCharacter`). Zero = nunca medido; vale o padrão do livro.
 	SpeedSquares int `json:"speedSquares,omitempty"`
+	// OtherModes são a escalada, a natação e o voo, em quadrados, medidos junto
+	// do `SpeedSquares`; o movimento proposto escolhe um (`ChangeMoveMode`).
+	OtherModes []MoveMode `json:"otherModes,omitempty"`
 	// IgnoresDifficult: o terreno difícil não cobra nada desta peça (p129).
 	//
 	// Mora na PEÇA pela mesma razão que o `SpeedSquares`: a tela precisa dela
@@ -297,7 +300,7 @@ func DuplicateToken(b *BoardState, tokenID string, loop *live.InitiativeEntry, n
 		dup.EntryID = strPtr(loop.ID)
 		dup.CharacterID = loop.CharacterID
 	}
-	dup.SpeedSquares = original.SpeedSquares
+	dup.SpeedSquares, dup.OtherModes = original.SpeedSquares, original.OtherModes
 	dup.Label = nextInstanceLabel(b, original.Label)
 	spot := freeSpotNear(occupancyWorldOf(b), boardSpot{x: original.X, y: original.Y})
 	dup.X, dup.Y = spot.x, spot.y

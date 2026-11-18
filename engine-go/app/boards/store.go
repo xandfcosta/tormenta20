@@ -548,7 +548,7 @@ func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, boardID string,
 		for i := range b.Tokens {
 			if movement, ok := speeds[b.Tokens[i].ID]; ok && movement.Squares > 0 {
 				b.Tokens[i].SpeedSquares = movement.Squares
-				b.Tokens[i].IgnoresDifficult = movement.IgnoresDifficult
+				b.Tokens[i].IgnoresDifficult, b.Tokens[i].OtherModes = movement.IgnoresDifficult, movement.Modes
 			}
 		}
 		b.Version++

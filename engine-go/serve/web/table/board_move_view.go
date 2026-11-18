@@ -68,6 +68,8 @@ type moveView struct {
 	// não há ação padrão para trocar, e desenhar as faixas inventaria um teto.
 	SecondWire string
 	BeyondWire string
+	// Modes é o "Anda por": a pé e cada deslocamento que a peça tem, vazio para quem só anda.
+	Modes []moveModeChoice
 	// Legs são os rótulos em metros, um por trecho entre duas paradas. Eles
 	// contam o CUSTO da perna e não a distância geométrica dela, para que o metro
 	// do rótulo seja o mesmo metro que decide onde o `BeyondWire` começa.
@@ -95,6 +97,7 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 		// passo de 1,5m cabe em qualquer orçamento e não acontece se a padrão e
 		// a de movimento já foram (p233).
 		NoActionLeft: turnCannotPay(b, st, p.Cost, p.Budget),
+		Modes:        moveModeChoices(*token, p.Mode),
 	}
 	for _, q := range p.Path {
 		v.Trail = append(v.Trail, boardSquare{X: q.X, Y: q.Y})
@@ -110,7 +113,7 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 	// dobras e do MESMO terreno: é o que faz o número escrito sobre a linha
 	// explicar a cor dela em vez de contradizê-la.
 	folds := moveFolds(p)
-	costs := legsCosts(folds, moveTerrain(b, token))
+	costs := legsCosts(folds, moveTerrain(b, token, p.Mode))
 	v.Wire, v.SecondWire, v.BeyondWire = moveWires(folds, costs, p.Budget)
 	v.Legs = moveLegs(folds, costs)
 	// As paradas INTERMEDIÁRIAS: a última é onde a peça pousou e a primeira é de
@@ -130,26 +133,12 @@ func moveBoard(b *board.BoardState, st *live.SessionRuntimeState, m board.Mover)
 // moveTerrain traduz o terreno difícil do tabuleiro para o motor, DO PONTO DE
 // VISTA de quem anda.
 //
-// Existe porque o `moveTerrainFor` do pacote `board` é privado, e duplicar a
-// TRADUÇÃO é barato — duplicar a REGRA não seria. Se um dia ela virar três
-// linhas, ela sobe para lá.
-//
-// QUEM IGNORA O TERRENO DIFÍCIL ANDA NUM MAPA SEM ELE (p129): é a mesma linha
-// que o `moveTerrainFor` tem, e ela está nas duas porque a PRÉVIA e a MEDIÇÃO
-// têm de concordar — uma seta dourada sobre um caminho que o servidor cobra em
-// vermelho é pior que não desenhar seta nenhuma.
-func moveTerrain(b *board.BoardState, mover *board.BoardToken) engine.MoveTerrain {
-	if mover != nil && mover.IgnoresDifficult {
-		return engine.MoveTerrain{}
-	}
-	if len(b.Difficult) == 0 {
-		return engine.MoveTerrain{}
-	}
-	hard := make(map[engine.Square]bool, len(b.Difficult))
-	for _, q := range b.Difficult {
-		hard[q] = true
-	}
-	return engine.MoveTerrain{Difficult: hard}
+// É o `board.MoveTerrainFor` e mais nada: a PRÉVIA e a MEDIÇÃO têm de concordar —
+// uma seta dourada sobre um caminho que o servidor cobra em vermelho é pior que não
+// desenhar seta nenhuma. Ela morou aqui duplicada enquanto era três linhas; o modo
+// de deslocamento (o voo passa por cima do terreno difícil) a fez subir.
+func moveTerrain(b *board.BoardState, mover *board.BoardToken, mode board.MoveModeKind) engine.MoveTerrain {
+	return board.MoveTerrainFor(b, mover, mode)
 }
 
 // reachAndTarget é a peça que quem olha pode COMEÇAR a mover agora, ou "".
@@ -180,10 +169,11 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board
 	// difícil (p129) tem um alcance maior, e desenhá-lo com o mapa de todo
 	// mundo pintaria dourado onde ele anda de graça — ou o contrário.
 	var mover *board.BoardToken
+	mode := board.MoveModeLand
 	if p := b.Pending; p != nil && (who.Role == "gm" || p.ByUserID == who.UserID) {
 		if token := board.FindToken(b, p.TokenID); token != nil {
 			target, label, de, budget = p.TokenID, token.Label, p.Path, p.Budget
-			mover = token
+			mover, mode = token, p.Mode
 		}
 	}
 	if target == "" && b.Pending == nil {
@@ -218,7 +208,7 @@ func reachAndTarget(b *board.BoardState, st *live.SessionRuntimeState, who board
 	if target == "" {
 		return boardReach{}
 	}
-	inside, segundo, remaining := engine.ReachFromStops(de, budget, moveTerrain(b, mover))
+	inside, segundo, remaining := engine.ReachFromStops(de, budget, moveTerrain(b, mover, mode))
 	return boardReach{
 		Target: target, Label: label, Remaining: remaining,
 		Inside: screenSquares(inside), Segundo: screenSquares(segundo),
