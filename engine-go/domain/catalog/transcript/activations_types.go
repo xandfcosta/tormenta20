@@ -13,11 +13,19 @@ type Activation struct {
 	BookPage    int              `json:"bookPage,omitempty"`
 	Grant       *ActivationGrant `json:"grant,omitempty"`
 	Cumulative  *CumulativeGrant `json:"cumulative,omitempty"`
+	Recovers    *Recovery        `json:"recovers,omitempty"`
 	Flag        string           `json:"flag,omitempty"`
 	StanceGroup string           `json:"stanceGroup,omitempty"`
 	Scaling     *PMScaling       `json:"scaling,omitempty"`
 	SkillSpend  *SkillSpend      `json:"skillSpend,omitempty"`
 	Rider       *ActivationRider `json:"rider,omitempty"`
+}
+
+// Recovery é o PM que um evento da mesa DEVOLVE ao pool, até o máximo: o Panache (p48)
+// recupera 1 PM no acerto crítico ou ao derrubar um inimigo.
+type Recovery struct {
+	On     string `json:"on"`
+	Amount int    `json:"amount"`
 }
 
 type ActivationRider struct {

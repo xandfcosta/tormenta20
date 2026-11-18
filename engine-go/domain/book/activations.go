@@ -74,6 +74,9 @@ type Activation struct {
 	Grant      *PowerGrant `json:"grant"`
 	// Cumulative é o bônus que SOBE A CADA GATILHO — ver `CumulativeBonus`.
 	Cumulative *CumulativeBonus `json:"cumulative"`
+	// Recovers é o PM que um evento da mesa devolve ao pool, até o máximo (o Panache,
+	// p48). O gatilho é o mesmo do bônus cumulativo (`CumulativeTriggerIsKnown`).
+	Recovers *Recovery `json:"recovers"`
 	// Rider é o que este poder ACRESCENTA ao uso de outro — ver
 	// `ActivationRider`.
 	Rider    *ActivationRider `json:"rider,omitempty"`
@@ -91,6 +94,12 @@ type Activation struct {
 //
 // Por isso ele também é irmão do `Grant` e não um campo dele: o `Grant` é
 // aplicado UMA vez, ao entrar na postura, e este é reaplicado a cada gatilho.
+// Recovery é o PM que volta ao pool quando o gatilho `On` acontece.
+type Recovery struct {
+	On     string `json:"on"`
+	Amount int    `json:"amount"`
+}
+
 type CumulativeBonus struct {
 	// On é o gatilho, e o vocabulário é FECHADO: um valor que o motor não
 	// conhece não acumula nada, e o `CumulativeTriggerIsKnown` é quem recusa.

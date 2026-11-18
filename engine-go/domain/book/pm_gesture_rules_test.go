@@ -45,8 +45,8 @@ var notAGesture = map[string]string{
 	"foco-em-magia": "custo", "magia-ilimitada": "custo", "qareen-desejos": "custo",
 	"celebrar-ritual": "custo", "class.arcanista.escriba-arcano": "custo em dinheiro por PM",
 	// RECUPERAR ou ganhar PM
-	"class.bucaneiro.panache": "recupera PM", "class.cacador.mestre-cacador": "recupera PM",
-	"class.guerreiro.campeao": "recupera PM", "class.ladino.roubo-de-mana": "PM temporário",
+	"class.cacador.mestre-cacador": "recupera PM",
+	"class.guerreiro.campeao":      "recupera PM", "class.ladino.roubo-de-mana": "PM temporário",
 	"class.nobre.general": "PM temporário",
 	"fome-de-mana":        "PM temporário",
 	// o DESCANSO

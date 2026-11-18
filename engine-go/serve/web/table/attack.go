@@ -298,6 +298,10 @@ func (st Scene) bumpsTheAttacker(
 		triggers = append(triggers, "meleeHit")
 	}
 	err := st.plays.BumpCumulativeBonus(c.R.Context(), *attacker.CharacterID, pendente.AttackerStances, triggers...)
+	// O PANACHE (p48) volta pelo mesmo gatilho, e devolve PM em vez de acumular bônus.
+	if err == nil {
+		err = st.plays.RecoverOnTriggers(c.R.Context(), *attacker.CharacterID, triggers...)
+	}
 	st.deps.CharacterChanged(*attacker.CharacterID)
 	return err
 }
