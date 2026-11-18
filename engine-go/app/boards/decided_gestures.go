@@ -29,7 +29,7 @@ func (bs *Store) ToggleMarkerHidden(ctx context.Context, sessionID int64, boardI
 // EraseMarker tira o marcador, e recusa o que não existe.
 func (bs *Store) EraseMarker(ctx context.Context, sessionID int64, boardID, markerID string) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
-		return board.RemoveMarkerOrRefuse(b, markerID)
+		return board.EraseMarker(b, markerID)
 	})
 }
 
@@ -50,7 +50,7 @@ func (bs *Store) ToggleTokenMoving(ctx context.Context, sessionID int64, boardID
 // TakeTokenOff tira a peça do tabuleiro, e recusa a que não existe.
 func (bs *Store) TakeTokenOff(ctx context.Context, sessionID int64, boardID, tokenID string) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
-		return board.RemoveTokenOrRefuse(b, tokenID)
+		return board.TakeTokenOff(b, tokenID)
 	})
 }
 
@@ -59,5 +59,18 @@ func (bs *Store) TakeTokenOff(ctx context.Context, sessionID int64, boardID, tok
 func (bs *Store) UndoLastStop(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, by board.Mover) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
 		return board.UndoLastStop(b, st, tokenID, by)
+	})
+}
+
+// ProposeNextStop acrescenta uma parada ao movimento que esta pessoa monta com a peça, numa leitura
+// só: as paradas que já existem saem do tabuleiro que a mutação acabou de ler, e não de uma leitura
+// antes dela.
+func (bs *Store) ProposeNextStop(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, destination engine.Square, by board.Mover) (*board.BoardState, error) {
+	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
+		stops, err := board.StopsSoFar(b, tokenID, by.UserID)
+		if err != nil {
+			return err
+		}
+		return board.ProposeMoveWithStops(b, st, tokenID, append(stops, destination), by)
 	})
 }

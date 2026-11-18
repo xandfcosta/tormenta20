@@ -300,7 +300,7 @@ func draftDuplicatesToken(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftRemovesToken(st Scene, c draftCtx, b *board.BoardState) error {
-	return board.RemoveTokenOrRefuse(b, chi.URLParam(c.R, "id"))
+	return board.TakeTokenOff(b, chi.URLParam(c.R, "id"))
 }
 
 // draftTogglesVisibility esconde a peça que a mesa NÃO deve ver quando a cena
@@ -335,5 +335,5 @@ func draftPaintsMarker(st Scene, c draftCtx, b *board.BoardState) error {
 }
 
 func draftErasesMarker(st Scene, c draftCtx, b *board.BoardState) error {
-	return board.RemoveMarkerOrRefuse(b, chi.URLParam(c.R, "id"))
+	return board.EraseMarker(b, chi.URLParam(c.R, "id"))
 }

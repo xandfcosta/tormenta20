@@ -281,10 +281,6 @@ func (bs *Store) UnbindTokens(
 	})
 }
 
-func (bs *Store) RemoveToken(ctx context.Context, sessionID int64, boardID, tokenID string) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { board.RemoveToken(b, tokenID); return nil })
-}
-
 // board.DuplicateToken põe outra igual ao lado, numerada pelo SERVIDOR: dois clientes
 // duplicando ao mesmo tempo não podem inventar o mesmo "Zumbi 3".
 //
@@ -333,17 +329,8 @@ func (bs *Store) ReturnToken(ctx context.Context, sessionID int64, boardID, toke
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.ReturnToken(b, tokenID) })
 }
 
-// Marcadores: o lugar apontado no mapa que não é peça.
-func (bs *Store) AddMarker(ctx context.Context, sessionID int64, boardID string, m board.BoardMarker) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.AddMarker(b, m, bs.newID) })
-}
-
 func (bs *Store) UpdateMarker(ctx context.Context, sessionID int64, boardID, markerID string, patch board.MarkerPatch) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.UpdateMarker(b, markerID, patch) })
-}
-
-func (bs *Store) RemoveMarker(ctx context.Context, sessionID int64, boardID, markerID string) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { board.RemoveMarker(b, markerID); return nil })
 }
 
 func (bs *Store) PaintTerrain(
@@ -406,15 +393,6 @@ func (bs *Store) SetSpeeds(ctx context.Context, sessionID int64, boardID string,
 // mede de novo (`RemeasureCharacter`). Houve aqui um parâmetro de "orçamento fresco" que regravava a
 // peça antes de medir, e o único chamador passava zero — um segundo lugar escrevendo a mesma cópia,
 // morto, e com um comentário dizendo que a armadura vestida valia por ele.
-
-// ProposeMoveWithStops é a porta de quem monta o movimento CLICANDO, e ela existe para a lista de
-// paradas ser guardada junto: sem a memória de ONDE a pessoa parou, que o caminho sozinho não deixa
-// reconstruir, "desfazer a última perna" seria um palpite sobre o movimento que a mesa está vendo.
-func (bs *Store) ProposeMoveWithStops(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, tokenID string, stops []engine.Square, by board.Mover) (*board.BoardState, error) {
-	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error {
-		return board.ProposeMoveWithStops(b, st, tokenID, stops, by)
-	})
-}
 
 func (bs *Store) CommitMove(ctx context.Context, sessionID int64, boardID string, st *live.SessionRuntimeState, version int64, by board.Mover) (*board.BoardState, error) {
 	return bs.apply(ctx, sessionID, boardID, func(b *board.BoardState) error { return board.CommitMove(b, st, version, by) })

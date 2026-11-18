@@ -6,7 +6,7 @@ import (
 
 	"t20engine/app"
 	"t20engine/app/boards"
-	"t20engine/domain/board"
+	"t20engine/domain/engine"
 )
 
 /*
@@ -163,14 +163,14 @@ func TestTheForeignKeyStillBitesWhenTheBoardOutlivesTheSession(t *testing.T) {
 		t.Fatalf("apagar a sessão: %v", err)
 	}
 
-	_, err := s.boards.AddMarker(ctx, session, defaultTab, board.BoardMarker{X: 2, Y: 3})
+	_, err := s.boards.AddNextMarker(ctx, session, defaultTab, engine.Square{X: 2, Y: 3})
 
 	if err == nil {
 		t.Fatal("gravar num tabuleiro órfão passou — o canal não existe, e os outros casos não provam nada")
 	}
 	// E NÃO SAI SOZINHO: a sessão não volta a existir, então todo gesto seguinte
 	// bate na mesma chave. É o que torna o mapa órfão um estrago e não um susto.
-	if _, again := s.boards.AddMarker(ctx, session, defaultTab, board.BoardMarker{X: 4, Y: 5}); again == nil {
+	if _, again := s.boards.AddNextMarker(ctx, session, defaultTab, engine.Square{X: 4, Y: 5}); again == nil {
 		t.Error("o segundo gesto passou: o defeito não é o que a issue descreve")
 	}
 }

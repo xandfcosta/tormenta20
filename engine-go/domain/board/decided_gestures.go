@@ -40,9 +40,9 @@ func ToggleMarkerHidden(b *BoardState, markerID string) error {
 	return fmt.Errorf("o marcador %q não está neste mapa", markerID)
 }
 
-// RemoveMarkerOrRefuse tira o marcador, e RECUSA o que não existe: o `RemoveMarker` some em silêncio,
+// EraseMarker tira o marcador, e RECUSA o que não existe: o `RemoveMarker` some em silêncio,
 // e para o botão de apagar um id que não acha nada é recusa com frase, e não clique mudo.
-func RemoveMarkerOrRefuse(b *BoardState, markerID string) error {
+func EraseMarker(b *BoardState, markerID string) error {
 	for _, m := range b.Markers {
 		if m.ID == markerID {
 			RemoveMarker(b, markerID)
@@ -81,9 +81,9 @@ func ToggleTokenMoving(b *BoardState, tokenID string) error {
 	return UpdateToken(b, tokenID, ParseTokenPatch(map[string]any{"moving": !token.Moving}))
 }
 
-// RemoveTokenOrRefuse tira a peça, e RECUSA a que não existe, pela mesma razão do
-// `RemoveMarkerOrRefuse`: a frase diz o id porque é ele que o botão carregava.
-func RemoveTokenOrRefuse(b *BoardState, tokenID string) error {
+// TakeTokenOff tira a peça, e RECUSA a que não existe, pela mesma razão do
+// `EraseMarker`: a frase diz o id porque é ele que o botão carregava.
+func TakeTokenOff(b *BoardState, tokenID string) error {
 	if FindToken(b, tokenID) == nil {
 		return fmt.Errorf("peça %q não está no tabuleiro", tokenID)
 	}
@@ -111,4 +111,21 @@ func UndoLastStop(b *BoardState, st *live.SessionRuntimeState, tokenID string, b
 		return CancelMove(b, by)
 	}
 	return ProposeMoveWithStops(b, st, tokenID, stops, by)
+}
+
+// StopsSoFar são as paradas do movimento que esta pessoa já está montando com a peça, ou só o lugar
+// da peça quando não há. Cópia, e não a fatia do estado: o `append` de quem chama escreveria no
+// tabuleiro antes de a proposta ser validada.
+//
+// A proposta de OUTRA pessoa não conta: duas mãos empilhando pernas no mesmo movimento é o estado que
+// o `ByUserID` existe para evitar.
+func StopsSoFar(b *BoardState, tokenID string, userID int64) ([]engine.Square, error) {
+	token := FindToken(b, tokenID)
+	if token == nil {
+		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
+	}
+	if p := b.Pending; p != nil && p.TokenID == tokenID && p.ByUserID == userID && len(p.Stops) > 0 {
+		return append([]engine.Square(nil), p.Stops...), nil
+	}
+	return []engine.Square{{X: token.X, Y: token.Y}}, nil
 }

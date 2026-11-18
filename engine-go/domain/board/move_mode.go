@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"t20engine/domain/engine"
 	"t20engine/domain/live"
 )
 
@@ -87,21 +86,4 @@ func modeNames(token BoardToken) string {
 		names = append(names, string(other.Kind))
 	}
 	return strings.Join(names, ", ")
-}
-
-// StopsSoFar são as paradas do movimento que esta pessoa já está montando com a peça, ou só o lugar
-// da peça quando não há. Cópia, e não a fatia do estado: o `append` de quem chama escreveria no
-// tabuleiro antes de a proposta ser validada.
-//
-// A proposta de OUTRA pessoa não conta: duas mãos empilhando pernas no mesmo movimento é o estado que
-// o `ByUserID` existe para evitar.
-func StopsSoFar(b *BoardState, tokenID string, userID int64) ([]engine.Square, error) {
-	token := FindToken(b, tokenID)
-	if token == nil {
-		return nil, fmt.Errorf("peça %q não está no tabuleiro", tokenID)
-	}
-	if p := b.Pending; p != nil && p.TokenID == tokenID && p.ByUserID == userID && len(p.Stops) > 0 {
-		return append([]engine.Square(nil), p.Stops...), nil
-	}
-	return []engine.Square{{X: token.X, Y: token.Y}}, nil
 }
