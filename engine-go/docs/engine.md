@@ -637,6 +637,7 @@ caiu entre os dois sem ninguém o ler.
 | `Modifier.Amount` em memória | quadrados |
 | `Modifier` no fio (JSON) | metros |
 | `ComputedSheet.Displacement` (`json:"displacementSquares"`) | quadrados — e o nome do campo diz |
+| `ComputedSheet.FlySpeed`, `ClimbSpeed`, `SwimSpeed` (voo, escalada, natação) | metros |
 | `ItemEffects.ByTarget["displacement"]` | quadrados, e o nome do alvo é a única pista |
 | a tela (crachá da mochila, régua da Mesa) | metros |
 
