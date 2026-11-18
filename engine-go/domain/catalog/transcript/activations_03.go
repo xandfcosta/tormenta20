@@ -187,6 +187,15 @@ var activationsPart03 = []Activation{
 		Uses:   nil,
 	},
 	{
+		ID:       "class.bucaneiro.panache",
+		Name:     "Panache",
+		Kind:     "triggered-passive",
+		Action:   "passivo",
+		PMCost:   PMCost{Fixed: 0},
+		Uses:     nil,
+		Recovers: &Recovery{On: "criticalOrDrop", Amount: 1},
+	},
+	{
 		ID:     "class.cavaleiro.armadura-da-honra",
 		Name:   "Armadura da Honra",
 		Kind:   "passive",

@@ -209,14 +209,16 @@ var classPowersPart03 = []ClassPower{
 		},
 	},
 	{
-		ID:             "class.bucaneiro.panache",
+		ID: "class.bucaneiro.panache",
+		Modeled: []string{
+			"o 1 PM que volta no acerto crítico ou ao reduzir um inimigo a 0 PV, na confirmação do mestre",
+		},
 		ClassName:      "Bucaneiro",
 		Name:           "Panache",
 		Description:    "Quando faz crítico em combate ou reduz inimigo a 0 PV, recupera 1 PM.",
 		GrantedAtLevel: 5,
 		BookPage:       48,
 		UID:            "pwr_pgqhjqd6nr",
-		Unmodeled:      "recuperar 1 PM no crítico ou ao derrubar um inimigo: gatilho na decisão do mestre sobre o ataque (ALE-653)",
 	},
 	{
 		ID:             "class.bucaneiro.esquiva-sagaz-2",
