@@ -97,10 +97,11 @@ var demoCampaigns = []demoCampaign{
 			// "no terreno" e o À Prova de Tudo no "em terreno natural" (ALE-654).
 			{"jogador@t20.local", "Caçadora da Marca Nv9"},
 			// OS DESLOCAMENTOS POR TIPO (p23, p30): a escalada do goblin, a natação do tritão, e a
-			// sílfide que paira sobre o terreno difícil e voa por 1 PM a rodada (ALE-654).
+			// sílfide que paira sobre o terreno difícil e voa por 1 PM a rodada (ALE-654). A sílfide é
+			// própria: o Batedor Nv2 Simples é o rascunho fora de mesa que o e2e senta numa mesa.
 			{"jogador@t20.local", "Goblin Rato das Ruas Nv4"},
 			{"jogador@t20.local", "Tritão Nadador Nv3"},
-			{"jogador@t20.local", "Batedor Nv2 Simples"},
+			{"jogador@t20.local", "Sílfide Voadora Nv3"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
