@@ -689,6 +689,28 @@
         {
           "simple": true,
           "create": {
+            "name": "Tritão Nadador Nv3",
+            "races": ["sereia-tritao"],
+            "origin": "marujo",
+            "classes": [{ "className": "Bucaneiro", "level": 3 }],
+            "strength": 2,
+            "dexterity": 3,
+            "constitution": 2,
+            "intelligence": 1,
+            "wisdom": 1,
+            "charisma": 1,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": { "floatingPicks": ["strength", "dexterity", "constitution"] },
+            "items": [
+              { "catalogId": "tridente", "equipped": "wielded" },
+              { "catalogId": "armadura-couro", "equipped": "vested" }
+            ]
+          }
+        },
+        {
+          "simple": true,
+          "create": {
             "name": "Batedor Nv2 Simples",
             "races": [
               "silfide"
