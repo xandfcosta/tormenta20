@@ -57,7 +57,9 @@ type expertiseRow struct {
 	// do jogador. É a mesma decisão do `stepCommand` com o nome da classe.
 	Command   string
 	Attribute string
-	Total     string
+	// UsedAttribute é o atributo com que a conta rolou, que um verbete pode trocar (p28, p129).
+	UsedAttribute string
+	Total         string
 	// Trained é o VEREDITO do motor, e não a coluna da ficha: a perícia que a
 	// origem treina (p85) chega treinada sem a coluna marcada (ALE-490).
 	Trained bool
@@ -182,19 +184,23 @@ func expertiseRowFor(index int, entry sheet.ExpertiseDTO, sheet engine.ComputedS
 	breaks := expertiseOrZero(sheet, entry.Name, entry.Attribute)
 	trainedOnly := trainedOnlyByBook(entry.Name)
 	row := expertiseRow{
-		Key:         "exp-" + strconv.Itoa(index),
-		Name:        entry.Name,
-		Command:     url.PathEscape(entry.Name),
-		Attribute:   entry.Attribute,
-		Total:       book.WithSign(breaks.Total),
-		TotalValue:  breaks.Total,
-		Trained:     breaks.Trained,
-		TrainedBy:   trainedByText(breaks.TrainedBy),
-		TrainedOnly: trainedOnly,
-		Locked:      trainedOnly && !breaks.Trained,
-		AutoFail:    autoFails(sheet, entry.Name),
-		Custom:      entry.Custom,
-		Sum:         expertiseSumTerms(breaks),
+		Key:       "exp-" + strconv.Itoa(index),
+		Name:      entry.Name,
+		Command:   url.PathEscape(entry.Name),
+		Attribute: entry.Attribute,
+		// O ATRIBUTO QUE A CONTA USOU, ao lado do gravado: o Pequeno e Rechonchudo põe a Destreza no
+		// Atletismo (p28), e a nota dizendo FOR ao lado de um número da Destreza mentiria. O seletor
+		// continua no gravado: marcar ali o usado gravaria a troca no primeiro salvar.
+		UsedAttribute: breaks.Attribute,
+		Total:         book.WithSign(breaks.Total),
+		TotalValue:    breaks.Total,
+		Trained:       breaks.Trained,
+		TrainedBy:     trainedByText(breaks.TrainedBy),
+		TrainedOnly:   trainedOnly,
+		Locked:        trainedOnly && !breaks.Trained,
+		AutoFail:      autoFails(sheet, entry.Name),
+		Custom:        entry.Custom,
+		Sum:           expertiseSumTerms(breaks),
 	}
 	return row
 }

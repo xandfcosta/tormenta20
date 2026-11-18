@@ -71,8 +71,10 @@ var alvosQueOMotorAplica = map[string]string{
 		"2-1 — quem não sabe usar (p152, ALE-444)",
 	"defenseAttribute": "breakdowns.go, autorizando um atributo a entrar na Defesa " +
 		"NO LUGAR da Destreza (p69, p79, ALE-443)",
-	"displacement":    "breakdowns.go, no deslocamento",
-	"flySpeed":        "breakdowns.go, no voo",
+	"displacement": "breakdowns.go, no deslocamento",
+	"flySpeed":     "breakdowns.go, no voo",
+	"expertiseAttribute": "expertise_attribute.go, AUTORIZANDO um atributo a entrar no lugar " +
+		"do da perícia (p28, p129)",
 	"climbSpeed":      "breakdowns_magic.go, na escalada",
 	"swimSpeed":       "breakdowns_magic.go, na natação",
 	"maxPv":           "vitals_catalog.go",
@@ -109,7 +111,7 @@ var alvosDeclaradosInertes = map[string]string{
 }
 
 func TestTheCatalogOnlyUsesTargetsTheEngineApplies(t *testing.T) {
-	doSwitch := alvosQueOTargetKeyNomeia(t)
+	doSwitch := targetsTheTargetKeyNames(t)
 	declarados := map[string]bool{}
 	for k := range alvosQueOMotorAplica {
 		declarados[k] = true
@@ -158,49 +160,54 @@ func TestTheCatalogOnlyUsesTargetsTheEngineApplies(t *testing.T) {
 		len(doSwitch), len(alvosQueOMotorAplica), len(alvosDeclaradosInertes))
 }
 
-// alvosQueOTargetKeyNomeia lê os `case` do `switch` do `targetKey`.
+// targetsTheTargetKeyNames lê os `case` do `switch` do `targetKey` e do `moreTargetKeys`, a
+// continuação dele em outro arquivo (o do `targetKey` está na linha de base do teto de linhas).
 //
 // Pela ÁRVORE e não por regex: o `targetKey` tem `case` com dois valores na
 // mesma linha e `case` dentro de `if` aninhado, e um regex que erre um deles
 // deixa o alvo fora do denominador — que é a forma de este guarda mentir.
-func alvosQueOTargetKeyNomeia(t *testing.T) []string {
+func targetsTheTargetKeyNames(t *testing.T) []string {
 	t.Helper()
-	arquivo, err := parser.ParseFile(token.NewFileSet(), "itemeffects.go", nil, 0)
-	if err != nil {
-		t.Fatalf("ler o itemeffects.go: %v", err)
-	}
-	achados := map[string]bool{}
-	for _, decl := range arquivo.Decls {
-		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || fn.Name.Name != "targetKey" {
-			continue
+	found := map[string]bool{}
+	for file, function := range map[string]string{"itemeffects.go": "targetKey", "target_keys_more.go": "moreTargetKeys"} {
+		parsed, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+		if err != nil {
+			t.Fatalf("ler o %s: %v", file, err)
 		}
-		ast.Inspect(fn, func(n ast.Node) bool {
-			clause, ok := n.(*ast.CaseClause)
-			if !ok {
+		seen := 0
+		for _, decl := range parsed.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Name.Name != function {
+				continue
+			}
+			ast.Inspect(fn, func(n ast.Node) bool {
+				clause, ok := n.(*ast.CaseClause)
+				if !ok {
+					return true
+				}
+				for _, expr := range clause.List {
+					lit, ok := expr.(*ast.BasicLit)
+					if !ok || lit.Kind != token.STRING {
+						continue
+					}
+					if value, err := strconv.Unquote(lit.Value); err == nil {
+						found[value] = true
+						seen++
+					}
+				}
 				return true
-			}
-			for _, expr := range clause.List {
-				lit, ok := expr.(*ast.BasicLit)
-				if !ok || lit.Kind != token.STRING {
-					continue
-				}
-				if valor, err := strconv.Unquote(lit.Value); err == nil {
-					achados[valor] = true
-				}
-			}
-			return true
-		})
+			})
+		}
+		if seen == 0 {
+			t.Fatalf("nenhum `case` lido do `%s` em %s — o guarda ficou cego", function, file)
+		}
 	}
-	if len(achados) == 0 {
-		t.Fatal("nenhum `case` lido do `targetKey` — o guarda ficou cego")
+	names := make([]string, 0, len(found))
+	for name := range found {
+		names = append(names, name)
 	}
-	fora := make([]string, 0, len(achados))
-	for k := range achados {
-		fora = append(fora, k)
-	}
-	sort.Strings(fora)
-	return fora
+	sort.Strings(names)
+	return names
 }
 
 // alvosQueOCatalogoUsa conta os `target.k` que o catálogo escreve.
