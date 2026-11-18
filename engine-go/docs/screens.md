@@ -18,6 +18,10 @@
   `templ generate`.
 - **`@componente()` tem de COMEÇAR a linha**; no meio de texto, a tela mostra
   `@tecla("⏎")`.
+- **O ESPAÇO do começo do texto de um elemento some na geração**:
+  `<span> proposto</span>` sai `>proposto<` no `_templ.go`, e duas partes
+  coladas viram "MOVIMENTOPROPOSTO". O espaço que separa vai como expressão,
+  `{ " proposto" }`, que o templ não apara.
 - **Atributo CONSTANTE sai literal; só o DINÂMICO é escapado** (`'` vira
   `&#39;`) — importa ao afirmar HTML em teste.
 - **NUNCA passe formatador em arquivo GERADO.** O `goimports -w` reordena os

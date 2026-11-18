@@ -210,7 +210,9 @@ templ tempestadeMove(v BoardView) {
 	<div class="ds-board-card" data-move-card>
 		<div class="ds-board-line">
 			if v.GM {
-				<span class="ds-board-seal">Movimento<span class="ds-seal-tail"> proposto</span></span>
+				// O ESPAÇO do rabo vai como expressão: texto de elemento que começa com espaço perde o espaço
+				// na geração do templ (ver `docs/screens.md`).
+				<span class="ds-board-seal">Movimento<span class="ds-seal-tail">{ " proposto" }</span></span>
 			} else {
 				<span class="ds-board-seal">Rascunho</span>
 				<span class="ds-row-meta">o mestre confirma</span>
