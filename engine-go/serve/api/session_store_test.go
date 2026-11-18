@@ -45,7 +45,6 @@ func TestStorePersistLoadRoundTrip(t *testing.T) {
 		t.Fatalf("NextTurn: %v", err)
 	}
 	// Nenhuma gravação é pedida: a mutação já gravou (ALE-371).
-	store.Forget(sid) // joga o cache fora → o próximo Load relê o banco
 	loaded, err := store.State(ctx, sid)
 	if err != nil {
 		t.Fatalf("reload: %v", err)
@@ -236,14 +235,10 @@ func TestAMutationThatCannotBeWrittenIsRefusedAndLeavesNoTrace(t *testing.T) {
 	if _, err := store.AddInitiativeEntry(context.Background(), sid, npc("Goblin", 12)); err == nil {
 		t.Error("a gravação falhou e o comando passou: a mesa veria uma linha que o banco não tem")
 	}
-	queue := stateOf(t, store, sid).Initiative
-	for _, e := range queue {
-		if e.Label == "Goblin" {
-			t.Errorf("o goblin ficou na fila que a mesa lê, com %d linhas", len(queue))
-		}
-	}
-	if len(queue) != 1 {
-		t.Errorf("a fila tinha de ficar com o ogro e mais nada, e tem %d linhas", len(queue))
+	// SEM BANCO, A MESA NÃO SE LÊ: ela vem sempre do retrato gravado, e a cópia em memória que serviria a
+	// fila velha saiu (decisão do dono). Recusar é melhor que inventar uma fila que ninguém confirma.
+	if _, err := store.State(context.Background(), sid); err == nil {
+		t.Error("o banco sumiu e a mesa ainda se leu: ela veio de uma cópia que não é o retrato gravado")
 	}
 }
 

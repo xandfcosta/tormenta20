@@ -24,6 +24,8 @@ type SessionSnapshots interface {
 	// Read devolve a mesa gravada. Sessão que não existe é erro — inventar uma
 	// vazia foi o defeito da ALE-369.
 	Read(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error)
+	// LiveWithCharacter devolve as sessões não encerradas com este personagem na fila.
+	LiveWithCharacter(ctx context.Context, characterID int64) ([]int64, error)
 	// Mutate lê o retrato, deixa `change` mudar e GRAVA antes de devolver.
 	//
 	// OS TRÊS PASSOS NÃO MORAM NUMA TRANSAÇÃO SÓ, que é o desenho óbvio contra
@@ -68,6 +70,25 @@ func (sn storedSnapshots) Read(ctx context.Context, sessionID int64) (*live.Sess
 		return nil, fmt.Errorf("ler do banco a mesa da sessão %d: %w", sessionID, err)
 	}
 	return parseRuntimeBlob(row.Runtimestate), nil
+}
+
+// LiveWithCharacter lê a fila de cada sessão NÃO ENCERRADA e devolve as que têm o personagem. Uma vez
+// só por sessão, mesmo com ele duas vezes na fila (o mestre pôs a ficha e o jogador entrou sozinho).
+func (sn storedSnapshots) LiveWithCharacter(ctx context.Context, characterID int64) ([]int64, error) {
+	rows, err := sn.q.ListLiveSessionStates(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("ler as sessões em andamento: %w", err)
+	}
+	var found []int64
+	for _, row := range rows {
+		for _, entry := range parseRuntimeBlob(row.Runtimestate).Initiative {
+			if entry.CharacterID != nil && *entry.CharacterID == characterID {
+				found = append(found, row.ID)
+				break
+			}
+		}
+	}
+	return found, nil
 }
 
 func (sn storedSnapshots) Mutate(ctx context.Context, sessionID int64,

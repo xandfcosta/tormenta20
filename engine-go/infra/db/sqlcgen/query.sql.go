@@ -3614,6 +3614,41 @@ func (q *Queries) ListLevelChoicesByCharacters(ctx context.Context, ids []int64)
 	return items, nil
 }
 
+const listLiveSessionStates = `-- name: ListLiveSessionStates :many
+SELECT id, runtimeState FROM sessions WHERE status != 'ended'
+`
+
+type ListLiveSessionStatesRow struct {
+	ID           int64  `json:"id"`
+	Runtimestate string `json:"runtimestate"`
+}
+
+// A fila de cada sessao NAO ENCERRADA, para achar onde uma ficha esta jogando: a mesa se le do banco, e
+// nao de uma copia em memoria (decisao do dono). A planejada entra: o mestre monta a fila e roda a cena
+// nela antes de "comecar", e a copia em memoria que esta consulta substitui a contava.
+func (q *Queries) ListLiveSessionStates(ctx context.Context) ([]ListLiveSessionStatesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listLiveSessionStates)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListLiveSessionStatesRow{}
+	for rows.Next() {
+		var i ListLiveSessionStatesRow
+		if err := rows.Scan(&i.ID, &i.Runtimestate); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMembers = `-- name: ListMembers :many
 
 SELECT m.id, m.campaignId, m.characterId, m.addedAt,

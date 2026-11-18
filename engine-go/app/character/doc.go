@@ -34,8 +34,8 @@
 // Nascer é uma escrita só em cinco tabelas; beber uma dose é a linha do efeito,
 // a baixa do item e os poços juntos. Metade gravada é uma ficha que abre
 // quebrada, e o dono da transação é quem sabe onde o gesto começa e acaba. É o
-// que a Mesa não pôde provar: lá o estado vive em memória e a gravação é
-// assíncrona.
+// que a Mesa não pôde provar enquanto o estado dela vivia em memória e a
+// gravação era assíncrona.
 //
 // # A POSSE não é conferida aqui, e isso é decisão
 //

@@ -15,7 +15,7 @@ import (
 // Lifecycle é o CICLO DE VIDA de uma sessão, do pedido à gravação.
 //
 // Cada método dele faz a mesma sequência, e é ela que define a camada: AUTORIZA,
-// pergunta a DECISÃO à regra pura, GRAVA, e acerta o estado em memória. A cena
+// pergunta a DECISÃO à regra pura, e GRAVA. A cena
 // recebe o resultado e desenha; ela não sabe em que ordem nada disso acontece.
 // MemoryOfASession é um mapa por sessão que tem de esvaziar quando a sessão
 // deixa de existir, e é UM método.
@@ -159,17 +159,8 @@ func (l Lifecycle) SaveNotes(
 	return nil
 }
 
-// RestartCombat esvazia a fila e os turnos SEM tirar a partida do ar.
-//
-// ESQUECER O CACHE é metade do gesto, e a metade que não aparece: a fila mora em
-// MEMÓRIA e o banco só é lido na primeira carga, então escrever a linha limpa
-// sem derrubar o cache deixa a sessão servindo a fila velha — o reinício
-// "funciona" e nada muda na tela. Um guarda que medisse o BANCO não pega isto:
-// ele já está vazio antes do reinício, porque a fila nunca chegou lá.
-//
-// E a releitura depois do `Forget` também é obrigatória: sem ela o `State`
-// devolve a cópia em memória sem passar pelo banco, e a próxima carga fria
-// discordaria desta.
+// RestartCombat esvazia a fila e os turnos SEM tirar a partida do ar: grava a linha limpa e devolve a
+// mesa relida dela. A mesa se lê sempre do banco, então não há cópia em memória a derrubar.
 func (l Lifecycle) RestartCombat(
 	ctx context.Context, who app.Caller, campaignID, sessionID int64,
 ) (*live.SessionRuntimeState, error) {
@@ -181,7 +172,6 @@ func (l Lifecycle) RestartCombat(
 	}); err != nil {
 		return nil, fmt.Errorf("limpar a fila da sessão %d: %w", sessionID, err)
 	}
-	l.sessions.Forget(sessionID)
 	state, err := l.sessions.State(ctx, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("reler a fila da sessão %d: %w", sessionID, err)

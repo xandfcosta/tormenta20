@@ -23,6 +23,10 @@ func (d *snapshotsDouble) Read(context.Context, int64) (*live.SessionRuntimeStat
 	return live.CloneState(d.stored), nil
 }
 
+func (d *snapshotsDouble) LiveWithCharacter(context.Context, int64) ([]int64, error) {
+	return nil, nil
+}
+
 func (d *snapshotsDouble) Mutate(_ context.Context, _ int64,
 	change func(*live.SessionRuntimeState) error) (*live.SessionRuntimeState, error) {
 	d.mutations++
