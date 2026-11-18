@@ -1804,6 +1804,10 @@
               "humano"
             ],
             "origin": "batedor",
+            "originChoices": [
+              "origin-batedor-pericia-sobrevivencia",
+              "origin-batedor-unique"
+            ],
             "classes": [
               {
                 "className": "Caçador",

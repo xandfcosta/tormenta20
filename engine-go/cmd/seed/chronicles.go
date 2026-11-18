@@ -93,6 +93,9 @@ var demoCampaigns = []demoCampaign{
 			// A CONFIANÇA DOS RINGUES e o ATÉ ACERTAR (p76): o erro que o mestre diz rende ao
 			// lutador, contra o oponente e contra quem o atacou (ALE-653).
 			{"jogador@t20.local", "Lutador Confiante Nv8"},
+			// O TERRENO DIFÍCIL SEM REDUÇÃO (p51, p88): o Caminho do Explorador no interruptor
+			// "no terreno" e o À Prova de Tudo no "em terreno natural" (ALE-654).
+			{"jogador@t20.local", "Caçadora da Marca Nv9"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},
