@@ -2971,8 +2971,35 @@
    * que ela abre: o botão cobre o cartão inteiro. No desktop o mesmo diálogo é
    * desenhado DENTRO do cartão (`display: contents`), sem a cabeça dele — um
    * nó só para as duas larguras, e o conteúdo não se desenha duas vezes. */
-  .ds-strike[data-attack] {
+  .ds-strike[data-attack],
+  .ds-strike[data-banner],
+  .ds-board-card[data-move-card] {
     position: relative;
+  }
+  /* A CABEÇA DO MOVIMENTO no celular: o resumo encolhe antes do Confirmar, e o
+   * Confirmar fica ACIMA do botão que abre o diálogo, que cobre o cartão inteiro. */
+  .ds-move-summary {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+  }
+  /* NO CELULAR O SELO É CURTO, "Movimento": a cabeça é uma linha, e o título do
+   * diálogo diz o resto. */
+  @media (max-width: 63.99rem) {
+    .ds-seal-tail {
+      display: none;
+    }
+  }
+  /* O NOME encolhe, e a conta fica: "4 de 6" é o que a cabeça existe para dizer. */
+  .ds-move-who {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ds-move-quick {
+    position: relative;
+    z-index: 1;
   }
   .ds-strike-open {
     position: absolute;
@@ -2990,17 +3017,40 @@
     .ds-strike-open {
       display: none;
     }
-    .ds-strike[data-attack] > #attack-sheet {
+    .ds-strike[data-attack] > #attack-sheet,
+    .ds-strike[data-banner] > #banner-sheet,
+    .ds-board-card[data-move-card] > #move-sheet {
       display: contents;
     }
-    .ds-strike[data-attack] > #attack-sheet > .ds-dialog-head {
+    .ds-strike[data-attack] > #attack-sheet > .ds-dialog-head,
+    .ds-strike[data-banner] > #banner-sheet > .ds-dialog-head,
+    .ds-board-card[data-move-card] > #move-sheet > .ds-dialog-head {
       display: none;
     }
-    .ds-strike[data-attack] > #attack-sheet > .ds-dialog-body {
+    .ds-strike[data-attack] > #attack-sheet > .ds-dialog-body,
+    .ds-strike[data-banner] > #banner-sheet > .ds-dialog-body,
+    .ds-board-card[data-move-card] > #move-sheet > .ds-dialog-body {
       display: grid;
       gap: 0.375rem;
       padding: 0;
       overflow: visible;
+    }
+    /* No desktop o corpo já diz a conta e traz o Confirmar: a cabeça do movimento
+     * volta a ser só o selo. */
+    .ds-move-summary,
+    .ds-move-quick {
+      display: none;
+    }
+    /* O ESTANDARTE FLUTUA no canto de cima, à direita, e não no meio, onde nasce o
+     * ataque: os dois podem estar no ar juntos. Os aliados vão em duas colunas. */
+    .ds-strike[data-banner][data-float] {
+      top: var(--float-y, 11.5rem);
+      left: var(--float-x, calc(100% - 31rem));
+      width: min(30rem, 100vw - 2rem);
+    }
+    .ds-strike[data-banner] .ds-strike-foot {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
     }
   }
   /* NO DESKTOP O CARTÃO FLUTUA sobre a mesa, e não empurra as superfícies para

@@ -50,9 +50,18 @@ function place(card: HTMLElement, spot: Spot): void {
 }
 
 /** Põe na posição guardada o cartão que acabou de aparecer sem uma. */
+/**
+ * A CHAVE É POR CARTÃO: o ataque e o Estandarte flutuam ao mesmo tempo, e uma chave só os poria no
+ * mesmo lugar, um em cima do outro. O ataque fica com a chave de antes, para quem já o arrastou não o
+ * ver voltar ao meio.
+ */
+function keyOf(card: HTMLElement): string {
+  return card.id === 'table-attack' || !card.id ? STORAGE_KEY : `${STORAGE_KEY}:${card.id}`
+}
+
 function restore(card: HTMLElement, storage: Storage): void {
   if (card.style.getPropertyValue('--float-x') || !floats(card)) return
-  const spot = readSpot(storage.getItem(STORAGE_KEY))
+  const spot = readSpot(storage.getItem(keyOf(card)))
   if (spot) place(card, spot)
 }
 
@@ -84,7 +93,7 @@ export function attachFloatCard(storage: Storage = window.localStorage): void {
   const drop = (event: PointerEvent) => {
     if (!drag || event.pointerId !== drag.pointer) return
     const box = drag.card.getBoundingClientRect()
-    storage.setItem(STORAGE_KEY, JSON.stringify({ x: Math.round(box.left), y: Math.round(box.top) }))
+    storage.setItem(keyOf(drag.card), JSON.stringify({ x: Math.round(box.left), y: Math.round(box.top) }))
     delete drag.card.dataset.dragging
     drag = null
   }
@@ -99,7 +108,7 @@ export function attachFloatCard(storage: Storage = window.localStorage): void {
   new MutationObserver(restoreAll).observe(document.body, { subtree: true, childList: true })
   window.addEventListener('resize', () => {
     for (const card of document.querySelectorAll<HTMLElement>('[data-float]')) {
-      const spot = readSpot(storage.getItem(STORAGE_KEY))
+      const spot = readSpot(storage.getItem(keyOf(card)))
       if (spot && floats(card)) place(card, spot)
     }
   })
