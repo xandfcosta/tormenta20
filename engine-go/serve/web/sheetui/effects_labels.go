@@ -134,6 +134,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"announcedCondition":    "O livro prevê",
 		"announcedEffect":       "O livro prevê",
 		"defenseAttribute":      "Atributo da Defesa",
+		"expertiseAttribute":    "Atributo da perícia",
 		"armorPenaltyExempt":    "Ignora a penalidade de armadura",
 		"nonLethalDamage":       "Dano não letal",
 		"ignoresSituation":      "Ignora no ataque",

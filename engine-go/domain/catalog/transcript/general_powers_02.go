@@ -340,6 +340,11 @@ var generalPowersPart02 = []GeneralPower{
 				BonusType: "untyped",
 				Note:      "terreno difícil não reduz o deslocamento",
 			},
+			{
+				Target:    ModifierTarget{Kind: "expertiseAttribute", Name: "Atletismo", Attribute: "dexterity"},
+				BonusType: "untyped",
+				Note:      "Destreza no lugar da Força em Atletismo",
+			},
 		},
 	},
 	{

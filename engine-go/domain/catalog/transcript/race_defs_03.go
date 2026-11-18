@@ -223,14 +223,19 @@ var raceDefinitionsPart03 = []RaceDefinition{
 					"o +2 em Enganação",
 					"os 6m saem do `deslocamento` do races.json",
 					"o tamanho Pequeno soma em Furtividade, manobras pela Tab. 1-21 (`raceSizeItem`)",
+					"a Destreza no Atletismo, quando ela é maior que a Força (decisão do dono)",
 				},
 				RaceID:      "hynne",
 				Name:        "Pequeno e Rechonchudo",
 				Description: "Seu tamanho é Pequeno e seu deslocamento é 6m. Recebe +2 em Enganação e pode usar Destreza como atributo-chave de Atletismo (em vez de Força).",
 				UID:         "rac_eief7ymkwz",
-				Unmodeled:   "Destreza como atributo de Atletismo: é uma forma que o motor ainda não tem (ALE-655)",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "expertise", Name: "Enganação"}, Amount: 2, BonusType: "untyped"},
+					{
+						Target:    ModifierTarget{Kind: "expertiseAttribute", Name: "Atletismo", Attribute: "dexterity"},
+						BonusType: "untyped",
+						Note:      "Destreza no lugar da Força em Atletismo",
+					},
 				},
 			},
 			{

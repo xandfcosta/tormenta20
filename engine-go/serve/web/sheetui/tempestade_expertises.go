@@ -24,8 +24,12 @@ import (
 //
 //	expertiseSumTerms(ex) // [{Destreza +3} {Metade do nível +2} {Treinada +4} …]
 func expertiseSumTerms(ex engine.ExpertiseBreakdown) []ds.SumTerm {
+	attribute := ds.SumTerm{Label: book.AttributeLabel(ex.Attribute), Value: book.WithSign(ex.AttrValue)}
+	if ex.AttributeSource != "" {
+		attribute.Note = ex.AttributeSource + ", no lugar do atributo da perícia"
+	}
 	terms := []ds.SumTerm{
-		{Label: book.AttributeLabel(ex.Attribute), Value: book.WithSign(ex.AttrValue)},
+		attribute,
 		{Label: "Metade do nível", Value: book.WithSign(ex.HalfLevel)},
 	}
 	shown := ex.AttrValue + ex.HalfLevel
@@ -43,7 +47,7 @@ func expertiseSumTerms(ex engine.ExpertiseBreakdown) []ds.SumTerm {
 //
 //	expertiseHint(row) // "FOR · treinada"
 func expertiseHint(row expertiseRow) string {
-	parts := []string{attributeAbbr[row.Attribute]}
+	parts := []string{attributeAbbr[row.UsedAttribute]}
 	switch {
 	case row.AutoFail:
 		parts = append(parts, "falha automática")

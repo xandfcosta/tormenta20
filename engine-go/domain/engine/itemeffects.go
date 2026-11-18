@@ -653,7 +653,7 @@ func targetKey(t ModifierTarget) string {
 	case "unarmedDamage":
 		return "unarmedDamage"
 	}
-	return ""
+	return moreTargetKeys(t)
 }
 
 // ─── condition helpers ────────────────────────────────────────────────

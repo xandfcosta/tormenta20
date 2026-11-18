@@ -58,8 +58,10 @@ type AttributeBreakdown struct {
 }
 
 type ExpertiseBreakdown struct {
-	Name                string                  `json:"name"`
-	Attribute           string                  `json:"attribute"`
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	// AttributeSource é quem pôs outro atributo no lugar do da perícia, vazio no caso comum.
+	AttributeSource     string                  `json:"attributeSource,omitempty"`
 	Base                int                     `json:"base"`
 	ItemBonus           int                     `json:"itemBonus"`
 	Total               int                     `json:"total"`
@@ -312,6 +314,8 @@ var savingThrowExpertises = map[string]bool{"Fortitude": true, "Reflexos": true,
 // (expertise/expertiseAll/expertiseByAttribute) + penalidade de armadura, que
 // tem duas fontes: a armadura vestida e a sobrecarga.
 func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, load LoadBreakdown) ExpertiseBreakdown {
+	var attributeSource string
+	state.Attribute, attributeSource = expertiseAttributeFor(ch, state, e)
 	halfLevel := ch.Level / 2
 	attrValue := effectiveAttribute(ch, state.Attribute, e)
 	// O treino tem DUAS fontes: a coluna da ficha (as perícias da classe e as
@@ -357,6 +361,7 @@ func expertiseBreakdown(ch Character, state CharacterExpertise, e ItemEffects, l
 
 	itemBonus := merged.Total
 	return ExpertiseBreakdown{
+		AttributeSource:     attributeSource,
 		Name:                state.Name,
 		Attribute:           state.Attribute,
 		Base:                base,
