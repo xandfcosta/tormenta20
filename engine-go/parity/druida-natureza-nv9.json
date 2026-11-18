@@ -382,6 +382,27 @@
           }
         }
       ]
+    },
+    {
+      "sourceId": "class.druida.caminho-dos-ermos",
+      "source": "Caminho dos Ermos",
+      "equipped": "vested",
+      "modifiers": [
+        {
+          "target": {
+            "k": "flag",
+            "name": "movement-ignores-difficult"
+          },
+          "amount": 1,
+          "bonusType": "untyped",
+          "condition": {
+            "c": "flagOn",
+            "flag": "terreno-natural",
+            "label": "em terreno natural"
+          },
+          "note": "terreno difícil não reduz o deslocamento; a CD para rastreá-lo sobe +10"
+        }
+      ]
     }
   ],
   "itemEffects": {
@@ -457,7 +478,21 @@
       }
     },
     "flags": [],
-    "conditional": []
+    "conditional": [
+      {
+        "term": "class.druida.caminho-dos-ermos::flag:movement-ignores-difficult::::flagOn///terreno-natural",
+        "sourceId": "class.druida.caminho-dos-ermos",
+        "source": "Caminho dos Ermos",
+        "bonusType": "untyped",
+        "amount": 1,
+        "note": "em terreno natural",
+        "target": {
+          "k": "flag",
+          "name": "movement-ignores-difficult"
+        },
+        "flag": "terreno-natural"
+      }
+    ]
   },
   "sheet": {
     "defense": {
@@ -996,7 +1031,9 @@
     ],
     "autoFailExpertises": []
   },
-  "activeConditionals": [],
+  "activeConditionals": [
+    "class.druida.caminho-dos-ermos::flag:movement-ignores-difficult::::flagOn///terreno-natural"
+  ],
   "sheetWithConditionals": {
     "defense": {
       "base": 14,
@@ -1017,7 +1054,7 @@
       "contributions": []
     },
     "flySpeed": 0,
-    "ignoresDifficultTerrain": false,
+    "ignoresDifficultTerrain": true,
     "carga": {
       "items": 3.5,
       "coins": 0,

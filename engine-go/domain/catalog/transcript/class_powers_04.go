@@ -250,13 +250,22 @@ var classPowersPart04 = []ClassPower{
 	},
 	{
 		ID:             "class.cacador.caminho-do-explorador",
+		Modeled:        []string{"o terreno difícil sem redução, no interruptor de terreno do Explorador"},
 		ClassName:      "Caçador",
 		Name:           "Caminho do Explorador",
 		Description:    "Pode atravessar terrenos difíceis sem redução em seu deslocamento e CD para rastreá-lo aumenta em +10. Só funciona em terrenos com Explorador.",
 		GrantedAtLevel: 5,
 		BookPage:       51,
 		UID:            "pwr_roegwmfedx",
-		Unmodeled:      "terreno difícil sem redução no terreno de Explorador: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
+				Amount:    1,
+				BonusType: "untyped",
+				Note:      "terreno difícil não reduz o deslocamento; a CD para rastreá-lo sobe +10",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "explorador", Label: "no terreno: "},
+			},
+		},
 	},
 	{
 		ID: "class.cacador.marca-da-presa-1d12",

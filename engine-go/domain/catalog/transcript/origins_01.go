@@ -331,10 +331,19 @@ var originsPart01 = []Origin{
 		},
 		UniquePower: OriginUniquePower{
 			ID:          "origin-batedor-unique",
-			Unmodeled:   "clima ruim e terreno difícil natural não penalizam deslocamento nem Sobrevivência: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-654)",
+			Unmodeled:   "o clima ruim, que o app não modela, e a Sobrevivência em terreno difícil natural: é a mesa que aplica",
 			Name:        "À Prova de Tudo",
 			Kind:        "poder",
 			Description: "Você não sofre penalidade em deslocamento e Sobrevivência por clima ruim e por terreno difícil natural.",
+			Modifiers: []Modifier{
+				{
+					Target:    ModifierTarget{Kind: "flag", Name: "movement-ignores-difficult"},
+					Amount:    1,
+					BonusType: "untyped",
+					Note:      "terreno difícil natural não reduz o deslocamento",
+					Condition: &ModifierCondition{Kind: "flagOn", Flag: "terreno-natural", Label: "em terreno natural"},
+				},
+			},
 		},
 		UID: "org_lzjmjzh7f6",
 	},
