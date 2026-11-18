@@ -18,6 +18,9 @@ templ gmBanner(v View) {
 							{ offer.Name }
 						}
 					}
+					@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "aria-label": "Pronto: recolher o Estandarte até a próxima cena", "data-on:click": "@post('" + band.Done + "')"}) {
+						Pronto
+					}
 				</div>
 			}
 		</section>

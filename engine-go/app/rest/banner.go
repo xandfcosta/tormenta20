@@ -78,3 +78,14 @@ func (p Party) GiveBanner(
 	p.sheetTouched(allyID)
 	return state, nil
 }
+
+// DismissBanner é o "Pronto" da faixa: o mestre disse quem vê o estandarte, e a faixa do
+// cavaleiro some até a próxima cena (decisão do dono).
+func (p Party) DismissBanner(
+	ctx context.Context, who app.Caller, campaignID, sessionID, knightID int64,
+) (*live.SessionRuntimeState, error) {
+	if _, err := p.access.GM(ctx, who, campaignID, sessionID); err != nil {
+		return nil, err
+	}
+	return p.sessions.DismissBanner(ctx, sessionID, knightID)
+}
