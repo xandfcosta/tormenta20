@@ -74,6 +74,14 @@ mão não saberia quantos dados pegar.
   remendo do servidor o devolve ao lugar padrão no primeiro toque do mestre. O
   `attack-card-float.spec.ts` prova com um remendo que muda o PRÓPRIO cartão —
   passar a vez não o remenda, e "ficou no lugar" mediria o nada.
+- **O mesmo padrão vale para o que fica sobre o tabuleiro** (mockup aprovado,
+  ALE-653), para o mapa ser o foco no celular: a faixa do Estandarte
+  (`banner-sheet`) flutua no canto de cima, e a posição dela tem chave própria
+  no `float-card.ts`, para não pousar sobre o ataque; o cartão do movimento
+  (`move-sheet`) mostra no celular a cabeça com o Confirmar à mão, e no desktop
+  fica no pé do mapa, sem flutuar. A faixa continua região à parte, FORA do
+  mapa: dentro dele, cada aliado tocado remendaria o mapa debaixo do dedo de
+  quem arrasta. O `board-cards-mobile.spec.ts` mede as duas cabeças.
 
 **A dose da Injeção alquímica sai na decisão** (p165): o provisório leva a dose desde o
 d20, e o `session.Store.RuleAttack` a tira da arma no acerto e no crítico, na mesma

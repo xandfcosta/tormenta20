@@ -2,27 +2,40 @@ package table
 
 import "t20engine/serve/web/ds"
 
+// bannerSheet é o diálogo do corpo da faixa no celular, e o corpo dela no desktop.
+const bannerSheet = "banner-sheet"
+
 // gmBanner é a faixa do Estandarte (p54) na mesa do mestre: um toque por aliado que vê o
 // estandarte. O nó vazio fica pela razão do disparo: o fluxo remenda por id.
+//
+// NO PADRÃO DO CARTÃO DO ATAQUE (mockup aprovado, ALE-653): no celular só a cabeça fica à vista, e
+// os aliados e o Pronto abrem num diálogo — com um botão por aliado, a faixa cobria a tela inteira
+// numa mesa grande. No desktop ela flutua sobre a mesa e se arrasta pela cabeça, com o corpo à vista.
+// Ela continua REGIÃO À PARTE, fora do mapa: dentro dele, cada aliado tocado remendaria o mapa e
+// trocaria a peça debaixo do dedo de quem arrasta.
 templ gmBanner(v View) {
 	if len(v.Banners) > 0 {
-		<section id="table-banner" class="ds-strike" role="status" aria-label="Estandarte">
-			for _, band := range v.Banners {
-				<div class="ds-strike-head">
-					@ds.Badge("Estandarte · p54", true)
-					<span class="ds-row-meta"><b>{ band.Head }</b></span>
-				</div>
-				<div class="ds-strike-foot">
-					for _, offer := range band.Offers {
-						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Dar o Estandarte a " + offer.Name, "data-on:click": "@post('" + offer.Path + "')"}) {
-							{ offer.Name }
+		<section id="table-banner" class="ds-strike" data-banner data-float data-preserve-attr="style" aria-label="Estandarte">
+			<div class="ds-strike-head" data-float-handle>
+				@ds.Badge("Estandarte · p54", true)
+				<span class="ds-row-meta">{ bannerSummary(v.Banners) }</span>
+			</div>
+			@ds.Dialog(bannerSheet, "Estandarte", nil) {
+				for _, band := range v.Banners {
+					<p class="ds-row-meta"><b>{ band.Head }</b></p>
+					<div class="ds-strike-foot">
+						for _, offer := range band.Offers {
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Dar o Estandarte a " + offer.Name, "data-on:click": "@post('" + offer.Path + "')"}) {
+								{ offer.Name }
+							}
 						}
-					}
-					@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "aria-label": "Pronto: recolher o Estandarte até a próxima cena", "data-on:click": "@post('" + band.Done + "')"}) {
-						Pronto
-					}
-				</div>
+						@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "aria-label": "Pronto: recolher o Estandarte até a próxima cena", "data-on:click": "@post('" + band.Done + "')"}) {
+							Pronto
+						}
+					</div>
+				}
 			}
+			<button type="button" class="ds-strike-open" commandfor={ bannerSheet } command="show-modal" aria-label="Abrir o Estandarte"></button>
 		</section>
 	} else {
 		<section id="table-banner" hidden></section>
