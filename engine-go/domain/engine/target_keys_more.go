@@ -10,6 +10,9 @@ func moreTargetKeys(t ModifierTarget) string {
 		// ela AUTORIZA aquele atributo a entrar no lugar do da perícia — "pode usar Destreza em
 		// vez de Força em Atletismo" (p28, p129).
 		return "expertiseAttribute:" + t.Name + ":" + t.Attribute
+	case "mundaneHealing":
+		// A CURA MUNDANA (o bálsamo, p160), e não toda cura: a mágica é a da Cura Gentil (p133).
+		return "mundaneHealing"
 	case "poisonDc":
 		// A CD DO VENENO que o personagem aplica (o Veneno Potente, p74), e não a CD das magias nem a
 		// das habilidades: são pilhas diferentes no livro.

@@ -3,16 +3,20 @@ package transcript
 // Parte 8 de 21 de `Items` (items.go).
 var itemsPart08 = []Item{
 	{
-		ID:         "balsamo-restaurador",
-		Name:       "Bálsamo restaurador",
-		Category:   "consumable",
-		Price:      10,
-		Slots:      0.5,
-		Equip:      "either",
-		Modifiers:  []Modifier{},
-		BookPage:   160,
-		UID:        "itm_oaresd2eo4",
-		Consumable: &Consumable{Scope: "instant", Instant: &InstantRecovery{HP: &RecoveryDice{Dice: "2d4"}}},
+		ID:        "balsamo-restaurador",
+		Name:      "Bálsamo restaurador",
+		Category:  "consumable",
+		Price:     10,
+		Slots:     0.5,
+		Equip:     "either",
+		Modifiers: []Modifier{},
+		BookPage:  160,
+		UID:       "itm_oaresd2eo4",
+		Consumable: &Consumable{
+			Scope:       "instant",
+			Instant:     &InstantRecovery{HP: &RecoveryDice{Dice: "2d4"}},
+			MundaneCure: true,
+		},
 	},
 	{
 		ID:         "essencia-de-mana",

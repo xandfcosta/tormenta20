@@ -109,6 +109,9 @@ type Consumable struct {
 	// Poison é o veneno (p161-162): a inoculação, o efeito, o que passar no teste faz, e o que o
 	// próprio veneno soma à CD de quem aplica (a Beladona e o Pó de lich, +5).
 	Poison *PoisonEffect `json:"poison,omitempty"`
+	// MundaneCure é a cura MUNDANA (o bálsamo, p160): a que o Médico de Campo soma (p89). Marca
+	// explícita, e não "cura sem magia": o Macarrão de Yuvalin dá PV temporários (p162), não cura.
+	MundaneCure bool `json:"mundaneCure,omitempty"`
 }
 
 type PoisonEffect struct {

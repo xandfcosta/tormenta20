@@ -97,6 +97,8 @@ type consumeChoice struct {
 	// ninguém: o dado é da pessoa, e o servidor aceita o número que ela mandar.
 	HpDice string
 	MpDice string
+	// HpBonus é o que a ficha soma à cura, dito junto do dado: " · +3 Origem: Curandeiro".
+	HpBonus string
 }
 
 type overlayRow struct {
@@ -139,6 +141,7 @@ func itemSheetsOf(
 		offerVesting(&entry, worn, item)
 		entry.Doses = dosesOnTheItemSheet(dto, item, computed)
 		entry.Poison = poisonOnTheItemSheet(dto, item, computed)
+		offerCureBonus(&entry, item, computed)
 		entry.School = schoolOnTheItemSheet(item)
 		entry.God = godOnTheItemSheet(item, dto)
 		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil && entry.Spell.Chosen != "" {

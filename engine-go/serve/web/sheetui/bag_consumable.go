@@ -1,6 +1,10 @@
 package sheetui
 
-import "t20engine/domain/book"
+import (
+	"t20engine/domain/book"
+	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
+)
 
 // consumableUse descreve o consumo, ou nil quando o item não se usa.
 func consumableUse(catalog book.Item) *consumeChoice {
@@ -36,4 +40,15 @@ func rollThatAsksANumber(gain *book.GainRoll) string {
 		return ""
 	}
 	return gain.Dice
+}
+
+// offerCureBonus diz, no campo que pergunta o dado da cura, o que a ficha soma a ela (o Médico de
+// Campo, p89): quem rola sabe o número que vai curar antes de confirmar.
+func offerCureBonus(entry *itemSheet, item sheet.ItemDTO, computed engine.ComputedSheet) {
+	if entry.Consumable == nil || entry.Consumable.HpDice == "" || item.CatalogID == nil {
+		return
+	}
+	if _, written := sheet.MundaneCureBonus(*item.CatalogID, computed); written != "" {
+		entry.Consumable.HpBonus = " · " + written
+	}
 }
