@@ -53,13 +53,10 @@ func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (
 	}
 	name = book.ItemByID(catalogID).Name
 	effect = doseEffectPhrase(dose, computed.AlchemicalDamage)
-	// Sem a ficha computada não há CD a dizer, e um número feito com atributo zero
-	// pareceria certo.
-	attribute, known := computed.Attributes[dose.SaveAttribute]
+	save, known := itemSaveDc(level, computed, dose.SaveAttribute)
 	if !known {
 		return name, effect + " (" + dose.Save + " " + dose.OnSave + ")"
 	}
-	save := engine.EffectSaveDc(int(level), attribute.Total)
 	return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
 }
 

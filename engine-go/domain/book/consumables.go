@@ -14,6 +14,8 @@ type Consumable struct {
 	Dose *DoseEffect `json:"dose"`
 	// Poison é o veneno (p161-162): a inoculação, o efeito e a CD; nulo no que não é veneno.
 	Poison *PoisonEffect `json:"poison"`
+	// MundaneCure é a cura MUNDANA (o bálsamo, p160), a que o Médico de Campo soma (p89).
+	MundaneCure bool `json:"mundaneCure"`
 }
 
 // ImmediateGain é o PV/PM que um consumível devolve na hora. O `Dice` é a

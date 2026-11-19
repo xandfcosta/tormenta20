@@ -78,6 +78,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"climbSpeed":       "breakdowns_magic.go, na escalada",
 	"alchemicalDamage": "breakdowns_magic.go, no dano do preparado alquímico que a `sheet.WrittenDose` escreve",
 	"poisonDc":         "breakdowns_magic.go, na CD do veneno que a `sheet.WrittenPoison` escreve",
+	"mundaneHealing":   "breakdowns_magic.go, na cura do bálsamo que o `Consume` aplica",
 	"swimSpeed":        "breakdowns_magic.go, na natação",
 	"maxPv":            "vitals_catalog.go",
 	"maxPm":            "vitals_catalog.go",

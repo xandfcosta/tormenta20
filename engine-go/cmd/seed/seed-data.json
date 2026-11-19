@@ -2512,6 +2512,33 @@
               { "catalogId": "beladona" }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Curandeira de Campo Nv1",
+            "races": ["humano"],
+            "origin": "curandeiro",
+            "originChoices": [
+              "origin-curandeiro-pericia-cura",
+              "origin-curandeiro-unique"
+            ],
+            "classes": [{ "className": "Guerreiro", "level": 1 }],
+            "strength": 2,
+            "dexterity": 1,
+            "constitution": 2,
+            "intelligence": 0,
+            "wisdom": 3,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": ["wisdom", "strength", "constitution"]
+            },
+            "items": [
+              { "catalogId": "espada-longa", "equipped": "wielded" },
+              { "catalogId": "balsamo-restaurador", "quantity": 3 }
+            ]
+          }
         }
       ]
     },

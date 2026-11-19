@@ -54,6 +54,11 @@ func positiveTotal(e ItemEffects, target ModifierTarget) *TotalContribs {
 	return &sum
 }
 
+// mundaneHealingTotal é o que se soma aos PV da cura mundana (p89), com as parcelas.
+func mundaneHealingTotal(e ItemEffects) *TotalContribs {
+	return positiveTotal(e, ModifierTarget{K: "mundaneHealing"})
+}
+
 // poisonDcTotal é o que se soma à CD do veneno que o personagem aplica (p74), com as parcelas.
 func poisonDcTotal(e ItemEffects) *TotalContribs {
 	return positiveTotal(e, ModifierTarget{K: "poisonDc"})

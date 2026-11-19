@@ -142,7 +142,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if s.Consumable.HpDice != "" {
-					templ_7745c5c3_Err = ds.TextField(ds.Field{ID: "roll-hp-" + s.Command, Label: "PV rolados (" + s.Consumable.HpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_hp": true}).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = ds.TextField(ds.Field{ID: "roll-hp-" + s.Command, Label: "PV rolados (" + s.Consumable.HpDice + ")" + s.Consumable.HpBonus, Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_hp": true}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

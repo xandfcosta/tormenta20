@@ -124,6 +124,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo", "climbSpeed": "Escalada", "swimSpeed": "Natação",
 		"alchemicalDamage": "Dano de preparado alquímico",
 		"poisonDc":         "CD de venenos",
+		"mundaneHealing":   "Cura mundana",
 		"armorPenalty":     "Penalidade de armadura",
 		"damageStep":       "Passo de dano",
 		// O DADO da Briga não soma em nada: ele É o dado do ataque desarmado.

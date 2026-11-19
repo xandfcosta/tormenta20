@@ -93,6 +93,8 @@ type ComputedSheet struct {
 	AlchemicalDamage *TotalContribs `json:"alchemicalDamage,omitempty"`
 	// PoisonDc é o que se soma à CD do veneno que o personagem aplica (o Veneno Potente, p74).
 	PoisonDc *TotalContribs `json:"poisonDc,omitempty"`
+	// MundaneHealing é o que se soma aos PV da cura mundana (o Médico de Campo, p89).
+	MundaneHealing *TotalContribs `json:"mundaneHealing,omitempty"`
 	// ClimbsAsItWalks é o Espelunqueiro (p23): a escalada É o deslocamento terrestre, depois das
 	// contas dele. Booleano e não número em `ClimbSpeed` porque o terrestre pode ser 4,5m (o goblin
 	// Lento), e o metro inteiro o arredondaria para 4.

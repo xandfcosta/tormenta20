@@ -36,7 +36,7 @@ templ itemSheetDs(v View, s itemSheet) {
 			<div class="ds-field">
 				<span class="ds-field-label">{ "Usar · " + s.Consumable.Scope }</span>
 				if s.Consumable.HpDice != "" {
-					@ds.TextField(ds.Field{ID: "roll-hp-" + s.Command, Label: "PV rolados (" + s.Consumable.HpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_hp": true})
+					@ds.TextField(ds.Field{ID: "roll-hp-" + s.Command, Label: "PV rolados (" + s.Consumable.HpDice + ")" + s.Consumable.HpBonus, Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_hp": true})
 				}
 				if s.Consumable.MpDice != "" {
 					@ds.TextField(ds.Field{ID: "roll-mp-" + s.Command, Label: "PM rolados (" + s.Consumable.MpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_mp": true})

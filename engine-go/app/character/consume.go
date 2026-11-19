@@ -80,6 +80,17 @@ func (p Plays) Consume(
 
 	hpGain, hasHp := rollGain(hpRolled, spec.Instant, true)
 	mpGain, hasMp := rollGain(mpRolled, spec.Instant, false)
+	if hasHp && sheet.IsMundaneCure(cat.ID) {
+		// A CURA MUNDANA soma o que a ficha dá a ela (o Médico de Campo, p89). Sem a ficha calculada
+		// a cura sairia sem a soma, e calada: recusa em vez de curar menos. Só ela calcula a ficha: a
+		// poção cura como sempre curou, sem recusa nova.
+		computed, err := sheet.Compute(dto)
+		if err != nil {
+			return ConsumedItem{}, fmt.Errorf("calcular a ficha para a cura de %q: %w", cat.Name, err)
+		}
+		bonus, _ := sheet.MundaneCureBonus(cat.ID, computed)
+		hpGain += bonus
+	}
 
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
