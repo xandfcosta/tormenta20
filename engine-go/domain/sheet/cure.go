@@ -14,9 +14,15 @@ import (
 //
 //	MundaneCureBonus("balsamo-restaurador", computed) // 3, "+3 Origem: Curandeiro"
 func MundaneCureBonus(catalogID string, computed engine.ComputedSheet) (bonus int, written string) {
-	item := book.ItemByID(catalogID)
-	if item == nil || item.Consumable == nil || !item.Consumable.MundaneCure || computed.MundaneHealing == nil {
+	if !IsMundaneCure(catalogID) || computed.MundaneHealing == nil {
 		return 0, ""
 	}
 	return computed.MundaneHealing.Total, strings.Join(namedParts(computed.MundaneHealing), ", ")
+}
+
+// IsMundaneCure diz se o item é cura MUNDANA (o bálsamo, p160), a única que a ficha soma por cima.
+// Quem só precisa saber disso não calcula a ficha: a poção cura sem ela.
+func IsMundaneCure(catalogID string) bool {
+	item := book.ItemByID(catalogID)
+	return item != nil && item.Consumable != nil && item.Consumable.MundaneCure
 }
