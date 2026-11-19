@@ -54,6 +54,23 @@ func positiveTotal(e ItemEffects, target ModifierTarget) *TotalContribs {
 	return &sum
 }
 
+// alchemicalSaveLicenses são os atributos que algum verbete autoriza na CD do item alquímico, com a
+// fonte da primeira licença de cada um; nil quando nenhum autoriza.
+func alchemicalSaveLicenses(e ItemEffects) map[string]string {
+	var licenses map[string]string
+	for _, key := range AttributeKeys {
+		allowed := StatFor(e, ModifierTarget{K: "alchemicalSaveAttribute", Attribute: key})
+		if len(allowed.Contributions) == 0 {
+			continue
+		}
+		if licenses == nil {
+			licenses = map[string]string{}
+		}
+		licenses[key] = allowed.Contributions[0].Source
+	}
+	return licenses
+}
+
 // mundaneHealingTotal é o que se soma aos PV da cura mundana (p89), com as parcelas.
 func mundaneHealingTotal(e ItemEffects) *TotalContribs {
 	return positiveTotal(e, ModifierTarget{K: "mundaneHealing"})

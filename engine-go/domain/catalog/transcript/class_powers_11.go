@@ -271,13 +271,23 @@ var classPowersPart11 = []ClassPower{
 		MinLevel:      5,
 	},
 	{
-		ID:            "class.inventor.granadeiro",
-		ClassName:     "Inventor",
-		Name:          "Granadeiro",
-		Description:   "Pode arremessar itens alquímicos e poções em alcance médio. Soma Int para calcular CD desses itens.",
-		BookPage:      69,
-		UID:           "pwr_oga2a252ko",
-		Unmodeled:     "é uma forma de ataque ou movimento que o motor ainda não tem (ALE-655)",
+		ID: "class.inventor.granadeiro",
+		Modeled: []string{
+			"a Inteligência no lugar da Destreza na CD do item alquímico, quando é maior, inclusive na dose da Injeção alquímica",
+		},
+		ClassName:   "Inventor",
+		Name:        "Granadeiro",
+		Description: "Pode arremessar itens alquímicos e poções em alcance médio. Soma Int para calcular CD desses itens.",
+		BookPage:    69,
+		UID:         "pwr_oga2a252ko",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "alchemicalSaveAttribute", Attribute: "intelligence"},
+				BonusType: "untyped",
+				Note:      "Inteligência no lugar da Destreza na CD do item alquímico",
+			},
+		},
+		Unmodeled:     "o alcance médio do arremesso: o app não tem arremesso de item alquímico",
 		Prerequisites: []Prerequisite{{Kind: "power", ID: "class.inventor.alquimista-de-batalha"}},
 	},
 }

@@ -95,6 +95,9 @@ type ComputedSheet struct {
 	PoisonDc *TotalContribs `json:"poisonDc,omitempty"`
 	// MundaneHealing é o que se soma aos PV da cura mundana (o Médico de Campo, p89).
 	MundaneHealing *TotalContribs `json:"mundaneHealing,omitempty"`
+	// AlchemicalSaveAttributes são os atributos que podem entrar na CD do item alquímico, cada um com
+	// quem o autoriza (o Granadeiro, p69); nil quando nada autoriza.
+	AlchemicalSaveAttributes map[string]string `json:"alchemicalSaveAttributes,omitempty"`
 	// ClimbsAsItWalks é o Espelunqueiro (p23): a escalada É o deslocamento terrestre, depois das
 	// contas dele. Booleano e não número em `ClimbSpeed` porque o terrestre pode ser 4,5m (o goblin
 	// Lento), e o metro inteiro o arredondaria para 4.
