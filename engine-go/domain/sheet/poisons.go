@@ -24,12 +24,11 @@ func WrittenPoison(catalogID string, level int64, computed engine.ComputedSheet)
 	if poison.OnSave != "" {
 		effect += "; se passar, " + poison.OnSave
 	}
-	// Sem a ficha computada não há CD a dizer, e um número feito com atributo zero pareceria certo.
-	intelligence, known := computed.Attributes["intelligence"]
+	dc, known := itemSaveDc(level, computed, "intelligence")
 	if !known {
 		return poison.Inoculation + " · Fortitude", effect, true
 	}
-	dc := engine.EffectSaveDc(int(level), intelligence.Total) + poison.DcBonus
+	dc += poison.DcBonus
 	parts := []string{}
 	if poison.DcBonus != 0 {
 		parts = append(parts, book.WithSign(poison.DcBonus)+" "+item.Name)
