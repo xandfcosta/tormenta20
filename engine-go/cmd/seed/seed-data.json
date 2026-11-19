@@ -2483,6 +2483,35 @@
               { "catalogId": "fogo-alquimico" }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Ladina Envenenadora Nv3",
+            "races": ["humano"],
+            "origin": "soldado",
+            "classes": [{ "className": "Ladino", "level": 3 }],
+            "classPowers": [
+              "class.ladino.veneno-potente",
+              "class.ladino.gatuno",
+              "class.ladino.escapista"
+            ],
+            "strength": 1,
+            "dexterity": 3,
+            "constitution": 1,
+            "intelligence": 3,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": ["dexterity", "intelligence", "constitution"]
+            },
+            "items": [
+              { "catalogId": "adaga", "equipped": "wielded" },
+              { "catalogId": "peconha-comum", "quantity": 2 },
+              { "catalogId": "beladona" }
+            ]
+          }
         }
       ]
     },

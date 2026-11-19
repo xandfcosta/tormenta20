@@ -34,7 +34,9 @@ type itemSheet struct {
 	Consumable *consumeChoice
 	// Doses é o que o diálogo diz da Injeção alquímica, nulo no item que não a toca.
 	Doses *itemSheetDoses
-	Book  *bookInfo
+	// Poison é o que o diálogo diz do veneno (p161-162), nulo no item que não é veneno.
+	Poison *itemSheetPoison
+	Book   *bookInfo
 	// InHand é o dano da arma NA MÃO desta ficha, com a conta da carta do Combate ("1d8+7 ·
 	// 20/x2"), logo abaixo do que o livro diz. Vazio na arma guardada, que não tem carta.
 	InHand string
@@ -136,6 +138,7 @@ func itemSheetsOf(
 		offerTableImprovements(&entry, dto, item)
 		offerVesting(&entry, worn, item)
 		entry.Doses = dosesOnTheItemSheet(dto, item, computed)
+		entry.Poison = poisonOnTheItemSheet(dto, item, computed)
 		entry.School = schoolOnTheItemSheet(item)
 		entry.God = godOnTheItemSheet(item, dto)
 		if entry.Spell = spellOnTheItemSheet(item, spellSearch); entry.Spell != nil && entry.Spell.Chosen != "" {

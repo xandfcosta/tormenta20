@@ -106,6 +106,16 @@ type Consumable struct {
 	Kind       string           `json:"kind,omitempty"`
 	Augment    string           `json:"augment,omitempty"`
 	Dose       *DoseEffect      `json:"dose,omitempty"`
+	// Poison é o veneno (p161-162): a inoculação, o efeito, o que passar no teste faz, e o que o
+	// próprio veneno soma à CD de quem aplica (a Beladona e o Pó de lich, +5).
+	Poison *PoisonEffect `json:"poison,omitempty"`
+}
+
+type PoisonEffect struct {
+	Inoculation string `json:"inoculation"`
+	Effect      string `json:"effect"`
+	OnSave      string `json:"onSave,omitempty"`
+	DcBonus     int    `json:"dcBonus,omitempty"`
 }
 
 // DoseEffect é o que o item faz quando a Injeção alquímica o libera (p165), e a

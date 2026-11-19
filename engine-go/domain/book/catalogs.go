@@ -164,31 +164,6 @@ type Armor struct {
 	Heavy   bool `json:"heavy"`
 }
 
-type Consumable struct {
-	Scope   string         `json:"scope"`
-	Instant *ImmediateGain `json:"instant"`
-	// Spell, Kind e Augment são a poção (p341) — a magia que o frasco contém,
-	// como ela se ativa, e o aprimoramento que aquela linha da tabela compra.
-	// A regra mora no `domain/catalog`, que é quem o motor lê.
-	Spell   string `json:"spell"`
-	Kind    string `json:"kind"`
-	Augment string `json:"augment"`
-	// Dose é o que o item faz na Injeção alquímica (p165), nula se ele não carrega.
-	Dose *DoseEffect `json:"dose"`
-}
-
-// ImmediateGain é o PV/PM que um consumível devolve na hora. O `Dice` é a
-// rolagem que a MESA faz — a ficha não rola por ninguém.
-type ImmediateGain struct {
-	HP *GainRoll `json:"hp"`
-	MP *GainRoll `json:"mp"`
-}
-
-type GainRoll struct {
-	Dice  string `json:"dice"`
-	Bonus int    `json:"bonus"`
-}
-
 // ── a leitura, uma vez só ────────────────────────────────────────────────────
 
 // Catalogs lê os quatro catálogos e os ORDENA uma vez.

@@ -109,6 +109,8 @@ var demoCampaigns = []demoCampaign{
 			// O ALQUIMISTA DE BATALHA (p68): a Inteligência no dano do preparado, na dose da Injeção
 			// alquímica que a espada curta guarda (ALE-655).
 			{"jogador@t20.local", "Inventor Alquimista Nv5"},
+			// O VENENO POTENTE (p74): a CD +5 que o diálogo do veneno na mochila diz (ALE-655).
+			{"jogador@t20.local", "Ladina Envenenadora Nv3"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},

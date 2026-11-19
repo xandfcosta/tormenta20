@@ -63,6 +63,18 @@ func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (
 	return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
 }
 
+// namedParts são as parcelas que ENTRARAM num total, como a frase as diz: "+5 Veneno Potente". As
+// descartadas não somaram, e dizê-las mentiria a conta.
+func namedParts(sum *engine.TotalContribs) []string {
+	parts := make([]string, 0, len(sum.Contributions))
+	for _, c := range sum.Contributions {
+		if !c.Dropped {
+			parts = append(parts, book.WithSign(c.Amount)+" "+c.Source)
+		}
+	}
+	return parts
+}
+
 // doseEffectPhrase monta o dano e o resto do efeito: "2d4+4 de ácido (+4 Alquimista de Batalha)",
 // "6d6 de impacto em toda criatura a até 3m do alvo". A soma só vale para o PREPARADO, e diz de onde
 // vem: a conta pronta e decomposta.
@@ -73,13 +85,7 @@ func doseEffectPhrase(dose *book.DoseEffect, alchemical *engine.TotalContribs) s
 	dice, sources := dose.Damage.Dice, ""
 	if dose.Alchemical && alchemical != nil {
 		dice += "+" + strconv.Itoa(alchemical.Total)
-		parts := make([]string, 0, len(alchemical.Contributions))
-		for _, c := range alchemical.Contributions {
-			if !c.Dropped {
-				parts = append(parts, book.WithSign(c.Amount)+" "+c.Source)
-			}
-		}
-		sources = " (" + strings.Join(parts, ", ") + ")"
+		sources = " (" + strings.Join(namedParts(alchemical), ", ") + ")"
 	}
 	phrase := dice + " de " + dose.Damage.Type
 	if dose.Effect != "" {

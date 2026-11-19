@@ -1,0 +1,10 @@
+package sheetui
+
+import "t20engine/serve/web/ds"
+
+// itemSheetPoisonDs é o veneno no diálogo do item: a CD que o mestre pede, e o que acontece.
+templ itemSheetPoisonDs(p *itemSheetPoison) {
+	@ds.BareList("Veneno", "") {
+		@ds.Row(p.Headline, p.Effect, "", "")
+	}
+}
