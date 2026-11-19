@@ -148,7 +148,7 @@ func itemSheetDs(v View, s itemSheet) templ.Component {
 					}
 				}
 				if s.Consumable.MpDice != "" {
-					templ_7745c5c3_Err = ds.TextField(ds.Field{ID: "roll-mp-" + s.Command, Label: "PM rolados (" + s.Consumable.MpDice + ")" + s.Consumable.MpBonus, Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_mp": true}).Render(ctx, templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = ds.TextField(ds.Field{ID: "roll-mp-" + s.Command, Label: "PM rolados (" + s.Consumable.MpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_mp": true}).Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

@@ -17,7 +17,6 @@ func consumableUse(catalog book.Item) *consumeChoice {
 		use.HpDice = rollThatAsksANumber(immediate.HP)
 		use.MpDice = rollThatAsksANumber(immediate.MP)
 		use.HpBonus = fixedBonusBeside(use.HpDice, immediate.HP)
-		use.MpBonus = fixedBonusBeside(use.MpDice, immediate.MP)
 	}
 	return use
 }

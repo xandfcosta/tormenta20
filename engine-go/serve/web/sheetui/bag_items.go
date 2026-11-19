@@ -97,10 +97,9 @@ type consumeChoice struct {
 	// ninguém: o dado é da pessoa, e o servidor aceita o número que ela mandar.
 	HpDice string
 	MpDice string
-	// HpBonus e MpBonus são o que se soma ao dado, dito junto dele: o bônus fixo do item e o que a
-	// ficha dá à cura (" · +2 do item, +3 Origem: Curandeiro").
+	// HpBonus é o que se soma ao dado, dito junto dele: o bônus fixo do item e o que a ficha dá à
+	// cura (" · +2 do item, +3 Origem: Curandeiro").
 	HpBonus string
-	MpBonus string
 }
 
 type overlayRow struct {
