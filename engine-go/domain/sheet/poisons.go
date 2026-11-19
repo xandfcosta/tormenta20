@@ -36,11 +36,7 @@ func WrittenPoison(catalogID string, level int64, computed engine.ComputedSheet)
 	}
 	if computed.PoisonDc != nil {
 		dc += computed.PoisonDc.Total
-		for _, c := range computed.PoisonDc.Contributions {
-			if !c.Dropped {
-				parts = append(parts, book.WithSign(c.Amount)+" "+c.Source)
-			}
-		}
+		parts = append(parts, namedParts(computed.PoisonDc)...)
 	}
 	save := "Fortitude CD " + strconv.Itoa(dc)
 	if len(parts) > 0 {

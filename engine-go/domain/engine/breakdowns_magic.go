@@ -39,24 +39,24 @@ func climbSpeedTotal(e ItemEffects) int {
 	return max(0, StatFor(e, ModifierTarget{K: "climbSpeed"}).Total)
 }
 
-// alchemicalDamageTotal é o que se soma ao dano do preparado alquímico (p68), com as parcelas; nil
-// quando não há soma positiva.
+// alchemicalDamageTotal é o que se soma ao dano do preparado alquímico (p68), com as parcelas.
 func alchemicalDamageTotal(e ItemEffects) *TotalContribs {
-	sum := totalContribsFor(e, ModifierTarget{K: "alchemicalDamage"})
+	return positiveTotal(e, ModifierTarget{K: "alchemicalDamage"})
+}
+
+// positiveTotal é o total de um alvo com as parcelas, ou nil quando ele não soma nada positivo: o
+// fio omite o nulo, e um campo novo em toda ficha mudaria os oráculos de paridade sem mudar regra.
+func positiveTotal(e ItemEffects, target ModifierTarget) *TotalContribs {
+	sum := totalContribsFor(e, target)
 	if sum.Total <= 0 {
 		return nil
 	}
 	return &sum
 }
 
-// poisonDcTotal é o que se soma à CD do veneno que o personagem aplica (p74), com as parcelas; nil
-// quando não há soma positiva.
+// poisonDcTotal é o que se soma à CD do veneno que o personagem aplica (p74), com as parcelas.
 func poisonDcTotal(e ItemEffects) *TotalContribs {
-	sum := totalContribsFor(e, ModifierTarget{K: "poisonDc"})
-	if sum.Total <= 0 {
-		return nil
-	}
-	return &sum
+	return positiveTotal(e, ModifierTarget{K: "poisonDc"})
 }
 
 // swimSpeedTotal é a natação em metros (0 = não nada além do teste de Atletismo).

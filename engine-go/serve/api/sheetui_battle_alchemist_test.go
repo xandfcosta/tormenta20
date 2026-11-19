@@ -46,13 +46,19 @@ func TestTheBattleAlchemistAddsIntelligenceToThePreparationDose(t *testing.T) {
 // dele, e Inteligência 4: o poder de classe só vale para quem tem a classe.
 func battleAlchemist(t *testing.T, f sceneFixture) {
 	t.Helper()
-	ctx := context.Background()
-	if _, err := f.s.db.ExecContext(ctx,
-		"UPDATE character_level_choices SET ref = 'Inventor' WHERE characterId = ? AND kind = 'class'", f.charID); err != nil {
-		t.Fatalf("fazer da ficha um inventor: %v", err)
-	}
+	asClass(t, f, "Inventor")
 	withPowers(t, f, `["class.inventor.alquimista-iniciado","class.inventor.alquimista-de-batalha"]`, "{}")
 	withIntelligence(t, f, 4)
+}
+
+// asClass troca a classe de todos os níveis da ficha da bancada: o poder de classe só vale para quem
+// tem a classe.
+func asClass(t *testing.T, f sceneFixture, class string) {
+	t.Helper()
+	if _, err := f.s.db.ExecContext(context.Background(),
+		"UPDATE character_level_choices SET ref = ? WHERE characterId = ? AND kind = 'class'", class, f.charID); err != nil {
+		t.Fatalf("fazer da ficha %s: %v", class, err)
+	}
 }
 
 func withIntelligence(t *testing.T, f sceneFixture, value int) {

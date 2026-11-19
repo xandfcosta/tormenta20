@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -51,17 +50,11 @@ func TestThePoisonDialogSaysTheDCAndPotentPoisonAddsFive(t *testing.T) {
 // classe só vale para quem tem a classe.
 func rogue(t *testing.T, f sceneFixture, potent bool) {
 	t.Helper()
-	ctx := context.Background()
-	if _, err := f.s.db.ExecContext(ctx,
-		"UPDATE character_level_choices SET ref = 'Ladino' WHERE characterId = ? AND kind = 'class'", f.charID); err != nil {
-		t.Fatalf("fazer da ficha um ladino: %v", err)
-	}
+	asClass(t, f, "Ladino")
 	if potent {
 		withPowers(t, f, `["class.ladino.veneno-potente"]`, "{}")
 	}
-	if _, err := f.s.db.ExecContext(ctx, "UPDATE characters SET intelligence = 3 WHERE id = ?", f.charID); err != nil {
-		t.Fatalf("pôr a Inteligência: %v", err)
-	}
+	withIntelligence(t, f, 3)
 }
 
 // itemDialogText é o texto do diálogo daquele item na mochila, como o navegador o concatena.
