@@ -34,6 +34,7 @@ func deriveSheet(ch Character, effects ItemEffects, raceSquares int) ComputedShe
 		ClimbsAsItWalks:         effects.Flags[ClimbEqualsLand],
 		SwimSpeed:               swimSpeedTotal(effects),
 		AlchemicalDamage:        alchemicalDamageTotal(effects),
+		PoisonDc:                poisonDcTotal(effects),
 		IgnoresDifficultTerrain: effects.Flags[MovementIgnoresDifficult],
 		Load:                    load,
 		Attributes:              attributes,

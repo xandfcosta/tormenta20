@@ -76,12 +76,13 @@ var classPowersPart13 = []ClassPower{
 	},
 	{
 		ID:            "class.ladino.veneno-potente",
+		Modeled:       []string{"a CD +5 do veneno, no diálogo do veneno na mochila; quem aplica o veneno é o mestre"},
 		ClassName:     "Ladino",
 		Name:          "Veneno Potente",
 		Description:   "CD para resistir aos venenos que você usa aumenta em +5.",
 		BookPage:      74,
 		UID:           "pwr_a4i5boqbyd",
-		Unmodeled:     "a CD +5 do veneno que você usa: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-655)",
+		Modifiers:     []Modifier{{Target: ModifierTarget{Kind: "poisonDc"}, Amount: 5, BonusType: "untyped"}},
 		Prerequisites: []Prerequisite{{Kind: "note", Description: "Treinado em Ofício (alquimista)"}},
 	},
 	{

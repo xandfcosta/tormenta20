@@ -91,6 +91,8 @@ type ComputedSheet struct {
 	// AlchemicalDamage é o que se soma ao dano do preparado alquímico (o Alquimista de Batalha, p68),
 	// com as parcelas para a frase dizer de onde vem; nil quando nada soma, e o fio o omite.
 	AlchemicalDamage *TotalContribs `json:"alchemicalDamage,omitempty"`
+	// PoisonDc é o que se soma à CD do veneno que o personagem aplica (o Veneno Potente, p74).
+	PoisonDc *TotalContribs `json:"poisonDc,omitempty"`
 	// ClimbsAsItWalks é o Espelunqueiro (p23): a escalada É o deslocamento terrestre, depois das
 	// contas dele. Booleano e não número em `ClimbSpeed` porque o terrestre pode ser 4,5m (o goblin
 	// Lento), e o metro inteiro o arredondaria para 4.
