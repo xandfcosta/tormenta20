@@ -61,7 +61,7 @@ func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (
 	}
 	if source != "" {
 		return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + ", pela " +
-			book.AttributeLabel(attribute) + " do " + source + ", " + dose.OnSave + ")"
+			book.AttributeLabel(attribute) + " (" + source + "), " + dose.OnSave + ")"
 	}
 	return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
 }

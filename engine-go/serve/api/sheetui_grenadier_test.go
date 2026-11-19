@@ -20,7 +20,7 @@ func TestTheGrenadierUsesIntelligenceForTheAlchemicalDC(t *testing.T) {
 		want, refuse  string
 	}{
 		{"com o poder e a Inteligência maior", true, 5, 3, "acido", "Ácido",
-			"Reflexos CD 19, pela Inteligência do Granadeiro, reduz à metade", "CD 17"},
+			"Reflexos CD 19, pela Inteligência (Granadeiro), reduz à metade", "CD 17"},
 		{"sem o poder vale a Destreza", false, 5, 3, "acido", "Ácido",
 			"Reflexos CD 17 reduz à metade", "Granadeiro"},
 		{"com o poder e a Destreza maior", true, 2, 3, "acido", "Ácido",

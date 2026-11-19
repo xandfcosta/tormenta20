@@ -36,7 +36,7 @@ func deriveSheet(ch Character, effects ItemEffects, raceSquares int) ComputedShe
 		AlchemicalDamage:         alchemicalDamageTotal(effects),
 		PoisonDc:                 poisonDcTotal(effects),
 		MundaneHealing:           mundaneHealingTotal(effects),
-		AlchemicalSaveAttributes: alchemicalSaveLicenses(effects),
+		AlchemicalSaveAttributes: alchemicalSaveAttributes(ch, effects),
 		IgnoresDifficultTerrain:  effects.Flags[MovementIgnoresDifficult],
 		Load:                     load,
 		Attributes:               attributes,
