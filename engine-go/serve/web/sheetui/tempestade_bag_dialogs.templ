@@ -39,7 +39,7 @@ templ itemSheetDs(v View, s itemSheet) {
 					@ds.TextField(ds.Field{ID: "roll-hp-" + s.Command, Label: "PV rolados (" + s.Consumable.HpDice + ")" + s.Consumable.HpBonus, Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_hp": true})
 				}
 				if s.Consumable.MpDice != "" {
-					@ds.TextField(ds.Field{ID: "roll-mp-" + s.Command, Label: "PM rolados (" + s.Consumable.MpDice + ")", Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_mp": true})
+					@ds.TextField(ds.Field{ID: "roll-mp-" + s.Command, Label: "PM rolados (" + s.Consumable.MpDice + ")" + s.Consumable.MpBonus, Type: "number"}, templ.Attributes{"min": "0", "data-bind:item_roll_mp": true})
 				}
 				@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Usar " + s.Name, "commandfor": itemSheetID(s.Command), "command": "close", "data-on:click": sheetPost(v, "/itens/"+s.Command+"/usa")}) {
 					Usar

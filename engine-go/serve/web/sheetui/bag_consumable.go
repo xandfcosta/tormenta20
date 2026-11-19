@@ -16,6 +16,8 @@ func consumableUse(catalog book.Item) *consumeChoice {
 	if immediate := catalog.Consumable.Instant; immediate != nil && catalog.Consumable.Scope == "instant" {
 		use.HpDice = rollThatAsksANumber(immediate.HP)
 		use.MpDice = rollThatAsksANumber(immediate.MP)
+		use.HpBonus = fixedBonusBeside(use.HpDice, immediate.HP)
+		use.MpBonus = fixedBonusBeside(use.MpDice, immediate.MP)
 	}
 	return use
 }
@@ -49,6 +51,24 @@ func offerCureBonus(entry *itemSheet, item sheet.ItemDTO, computed engine.Comput
 		return
 	}
 	if _, written := sheet.MundaneCureBonus(*item.CatalogID, computed); written != "" {
-		entry.Consumable.HpBonus = " · " + written
+		entry.Consumable.HpBonus = besideTheDice(entry.Consumable.HpBonus, written)
 	}
+}
+
+// fixedBonusBeside é o bônus fixo do item dito ao lado do dado (" · +2 do item"), e nada quando não há
+// dado a perguntar ou bônus a somar.
+func fixedBonusBeside(dice string, gain *book.GainRoll) string {
+	if dice == "" || gain == nil || gain.Bonus <= 0 {
+		return ""
+	}
+	return besideTheDice("", book.WithSign(gain.Bonus)+" do item")
+}
+
+// besideTheDice acrescenta uma parcela ao que já vai ao lado do dado: a primeira abre com " · ", as
+// seguintes entram com vírgula.
+func besideTheDice(written, part string) string {
+	if written == "" {
+		return " · " + part
+	}
+	return written + ", " + part
 }

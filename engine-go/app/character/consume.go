@@ -165,6 +165,9 @@ func findItemDTO(items []sheet.ItemDTO, itemID int64) *sheet.ItemDTO {
 	return nil
 }
 
+// rollGain é o que o item devolve: o dado que a mesa rolou MAIS o bônus fixo do item (a Poção de
+// Curar Ferimentos cura 2d8+2, p341). O campo pergunta só o dado e diz o bônus à parte: somado só na
+// média, o +2 sumia sempre que alguém digitava a rolagem.
 func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 	if instant == nil {
 		return 0, false
@@ -177,7 +180,7 @@ func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 		return 0, false
 	}
 	if rolled != nil {
-		return int(*rolled), true
+		return int(*rolled) + g.Bonus, true
 	}
 	return rollAverage(g.Dice, g.Bonus), true
 }
@@ -187,10 +190,10 @@ func rollGain(rolled *int64, instant *catalog.Instant, isHp bool) (int, bool) {
 // a porção do dia já foi consumida — é ela que o `OncePerDay` lá em cima
 // procura, e é ela que o UNIQUE (characterId, catalogId, scope) protege.
 //
-// Exigir modificadores para criá-la mata a regra da porção diária inteira: os
-// cinco pratos que o catálogo marca como `oncePerDay` só curam e nenhum tem
-// modificador, então não haveria marcador para achar e a mesa comeria o mesmo
-// prato a manhã inteira.
+// Exigir modificadores para criá-la mata a regra da porção diária inteira: há
+// prato de `oncePerDay` sem modificador nenhum (a batata valkariana, o prato do
+// aventureiro), e sem a linha não haveria marcador para achar — a mesa comeria o
+// mesmo prato a manhã inteira.
 func wantsEffectRow(spec *catalog.Consumable) bool {
 	return spec.Scope != "instant" && (spec.OncePerDay || hasModifiers(spec.Modifiers))
 }

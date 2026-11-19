@@ -59,7 +59,7 @@ var itemsPart08 = []Item{
 		UID:       "itm_cox244vxb4",
 		Consumable: &Consumable{
 			Scope:      "day",
-			Instant:    &InstantRecovery{MP: &RecoveryDice{Dice: "0", Bonus: 2}},
+			Modifiers:  []Modifier{{Target: ModifierTarget{Kind: "tempMp"}, Amount: 2, BonusType: "untyped"}},
 			OncePerDay: true,
 		},
 	},
@@ -75,7 +75,7 @@ var itemsPart08 = []Item{
 		UID:       "itm_z2bworid3u",
 		Consumable: &Consumable{
 			Scope:      "day",
-			Instant:    &InstantRecovery{HP: &RecoveryDice{Dice: "0", Bonus: 5}},
+			Modifiers:  []Modifier{{Target: ModifierTarget{Kind: "tempHp"}, Amount: 5, BonusType: "untyped"}},
 			OncePerDay: true,
 		},
 	},
