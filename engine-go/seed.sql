@@ -2827,7 +2827,7 @@ INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref"
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (846, 52, 3, 'power', 'class.inventor.alquimista-de-batalha', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (847, 52, 4, 'power', 'class.inventor.invencao-potente', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (848, 52, 5, 'power', 'class.inventor.catalisador-instavel', '', 0);
-INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (849, 52, 5, 'power', 'class.inventor.farmaceutico', '', 0);
+INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (849, 52, 5, 'power', 'class.inventor.granadeiro', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (850, 52, 3, 'automatic', 'class.inventor.comerciante', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (851, 52, 1, 'automatic', 'class.inventor.engenhosidade', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (852, 52, 2, 'automatic', 'class.inventor.fabricar-item-superior-1-melhoria', '', 0);
