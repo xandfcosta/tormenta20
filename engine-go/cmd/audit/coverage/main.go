@@ -61,10 +61,10 @@ type entry struct {
 	unmodeled     string
 	powerUID      string
 	variantEffect bool
-	// fieldEffect é o efeito que o verbete de classe dá por um CAMPO que o motor lê, sem modificador — quais
-	// campos, quem diz é o `transcript.ClassPower.HasEngineEffect`, ao lado do tipo. Sem ele, só a nota `modeled`
+	// classEffect é o efeito do poder de classe segundo o `transcript.ClassPower.HasEngineEffect`, ao lado do
+	// tipo: o modificador ou um CAMPO que o motor lê sem modificador. Sem o campo, só a nota `modeled`
 	// sustentaria o "inteiro", e um campo que saísse deixaria a nota afirmando um efeito que não existe mais.
-	fieldEffect bool
+	classEffect bool
 }
 
 // bucket é o balde do verbete e a falha de marcação ("" quando não há).
@@ -72,7 +72,7 @@ func bucket(e entry) (string, string) {
 	// PELO ID OU PELO NOME, com o `book.ActivationOf` que a ficha usa: o auditor mede o que o app liga.
 	activation := book.ActivationOf(e.id, e.name)
 	hasActivation := activation != nil
-	effect := e.hasModifiers || e.variantEffect || e.fieldEffect || (hasActivation && activation.Grant != nil)
+	effect := e.hasModifiers || e.variantEffect || e.classEffect || (hasActivation && activation.Grant != nil)
 	if (effect || e.modeled) && e.unmodeled != "" {
 		if !e.modeled {
 			return "em parte", "aplica alguma coisa e não diz O QUÊ (`modeled`)"
@@ -121,7 +121,7 @@ func entries(profile string) []entry {
 			}
 			out = append(out, entry{
 				label: class + ": " + name, id: p.ID, name: p.Name, hasModifiers: len(p.Modifiers) > 0,
-				modeled: len(p.Modeled) > 0, unmodeled: p.Unmodeled, powerUID: p.PowerUID, fieldEffect: p.HasEngineEffect(),
+				modeled: len(p.Modeled) > 0, unmodeled: p.Unmodeled, powerUID: p.PowerUID, classEffect: p.HasEngineEffect(),
 			})
 		}
 	case "origem":
