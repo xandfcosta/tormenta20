@@ -18,7 +18,8 @@ serializa para quem lê JSON (`transcript.ResourceJSON`).
   ./cmd/transcriptfmt`. É o que deixa `cmd/mintuids`, `cmd/bookpages` e
   `cmd/audit/bestiary --aplicar` reescreverem o arquivo sem cirurgia de AST.
 - **Comentário dentro de literal não sobrevive à reescrita**: o porquê do
-  verbete mora no `modeled`/`unmodeled`, que a ficha lê.
+  verbete mora no `modeled`/`unmodeled`, que o `cmd/audit/coverage` e os testes
+  do catálogo leem — nenhuma tela os mostra.
 - **Tipos (`*_types.go`) e registro (`layout.go`) se escrevem à mão**; recurso
   novo é uma linha no `layout.go`.
 - **`Modifier.Amount`, `Item.Price` e `Item.Slots` não distinguem ausente de
