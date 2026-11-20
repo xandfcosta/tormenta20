@@ -10,6 +10,10 @@ func moreTargetKeys(t ModifierTarget) string {
 		// ela AUTORIZA aquele atributo a entrar no lugar do da perícia — "pode usar Destreza em
 		// vez de Força em Atletismo" (p28, p129).
 		return "expertiseAttribute:" + t.Name + ":" + t.Attribute
+	case "scaleAttribute":
+		// O VERBETE E O ATRIBUTO NA CHAVE, e a licença não soma nada: ela autoriza a escala daquele
+		// verbete — o "soma a Destreza" do Estilo de Disparo — a usar outro atributo (a Balística, p69).
+		return "scaleAttribute:" + t.Name + ":" + t.Attribute
 	case "alchemicalSaveAttribute":
 		// O ATRIBUTO NA CHAVE, e a licença não soma nada: como o `expertiseAttribute`, ela AUTORIZA
 		// aquele atributo a entrar no lugar do que o item pede na CD — "pode usar sua Inteligência em
