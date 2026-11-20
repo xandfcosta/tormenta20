@@ -122,3 +122,14 @@ type ClassPowerFavoredWeaponDie struct {
 	Boost string `json:"boost"`
 	Faces int    `json:"faces"`
 }
+
+// HasEngineEffect diz se o motor aplica alguma coisa deste poder: um modificador, ou um campo que o motor lê sem
+// modificador — o ataque pago, o aprimoramento, o que se soma a ele, o dado da arma favorita, a escala de PM, a
+// proficiência e a manobra em seguida. É o que o auditor de cobertura conta como efeito, e um campo novo do tipo
+// tem de decidir de que lado fica (`TestEveryClassPowerFieldSaysWhetherItIsAnEngineEffect`).
+//
+//	if power.HasEngineEffect() { … }
+func (p ClassPower) HasEngineEffect() bool {
+	return len(p.Modifiers) > 0 || len(p.ProficientWith) > 0 || p.Degrees != nil || p.Boost != nil ||
+		p.ExtraStrike != nil || p.BoostAddOn != nil || p.FavoredWeaponDie != nil || p.FollowUp != nil
+}

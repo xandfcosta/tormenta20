@@ -228,7 +228,11 @@ rode o auditor dele.** É um por seção do sumário, e o que os distingue é a
 contra o MOTOR — quanto vira número, gesto ou nota do mestre. O balde é
 DECLARADO (`modeled`/`unmodeled`), a nota cita a issue da fatia que a resolve,
 `--destino` agrupa por ela, e verbete sem efeito nem `unmodeled` reprova (sem
-guarda em Go, por decisão do dono). O gesto se liga ao verbete como a ficha o
+guarda em Go, por decisão do dono). No poder de classe, o que conta como efeito é
+o `ClassPower.HasEngineEffect`, ao lado do tipo: o modificador e os campos que o
+motor lê sem modificador. Essa lista TEM guarda — o
+`TestEveryClassPowerFieldSaysWhetherItIsAnEngineEffect` obriga campo novo do tipo
+a dizer de que lado fica. O gesto se liga ao verbete como a ficha o
 liga (`book.ActivationOf`: pelo id, pelo nome ou pelo nome sem o degrau), porque
 cada catálogo grafa o id do seu jeito; juntar só pelo id contava o gesto de raça
 como só nota. O `cmd/audit/pointers` lista arquivos
