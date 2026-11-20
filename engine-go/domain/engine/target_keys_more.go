@@ -10,6 +10,11 @@ func moreTargetKeys(t ModifierTarget) string {
 		// ela AUTORIZA aquele atributo a entrar no lugar do da perícia — "pode usar Destreza em
 		// vez de Força em Atletismo" (p28, p129).
 		return "expertiseAttribute:" + t.Name + ":" + t.Attribute
+	case "alchemicalSaveAttribute":
+		// O ATRIBUTO NA CHAVE, e a licença não soma nada: como o `expertiseAttribute`, ela AUTORIZA
+		// aquele atributo a entrar no lugar do que o item pede na CD — "pode usar sua Inteligência em
+		// vez de Destreza" (o Granadeiro, p69).
+		return "alchemicalSaveAttribute:" + t.Attribute
 	case "mundaneHealing":
 		// A CURA MUNDANA (o bálsamo, p160), e não toda cura: a mágica é a da Cura Gentil (p133).
 		return "mundaneHealing"

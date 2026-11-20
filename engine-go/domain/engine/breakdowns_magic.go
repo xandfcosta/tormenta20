@@ -54,6 +54,25 @@ func positiveTotal(e ItemEffects, target ModifierTarget) *TotalContribs {
 	return &sum
 }
 
+// alchemicalSaveAttributes é, para cada atributo que um item alquímico pode pedir na CD, o que vale
+// no lugar dele pela licença (o Granadeiro, p69); só os que mudam, e nil quando nenhum muda.
+func alchemicalSaveAttributes(ch Character, e ItemEffects) map[string]LicensedAttribute {
+	var chosen map[string]LicensedAttribute
+	for _, base := range AttributeKeys {
+		attribute, source := licensedAttribute(ch, base, e, func(attribute string) ModifierTarget {
+			return ModifierTarget{K: "alchemicalSaveAttribute", Attribute: attribute}
+		})
+		if source == "" {
+			continue
+		}
+		if chosen == nil {
+			chosen = map[string]LicensedAttribute{}
+		}
+		chosen[base] = LicensedAttribute{Attribute: attribute, Source: source}
+	}
+	return chosen
+}
+
 // mundaneHealingTotal é o que se soma aos PV da cura mundana (p89), com as parcelas.
 func mundaneHealingTotal(e ItemEffects) *TotalContribs {
 	return positiveTotal(e, ModifierTarget{K: "mundaneHealing"})

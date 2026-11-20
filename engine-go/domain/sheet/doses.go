@@ -43,7 +43,8 @@ func HoldsDoses(improvements string) bool {
 
 // WrittenDose é o nome do item e o efeito dele como a mesa lê, com a CD de quem atacou
 // (p227): 10 + metade do nível + o atributo. O dano do PREPARADO alquímico soma o que a ficha dá a
-// ele (o Alquimista de Batalha soma a Inteligência, p68).
+// ele (o Alquimista de Batalha soma a Inteligência, p68), e a CD dele pode vir de outro atributo,
+// quando é maior (o Granadeiro, p69) — e aí a frase diz qual e por quê.
 //
 //	WrittenDose("acido", 8, computed) // "Ácido", "2d4 de ácido (Reflexos CD 17 reduz à metade)"
 func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (name, effect string) {
@@ -53,9 +54,14 @@ func WrittenDose(catalogID string, level int64, computed engine.ComputedSheet) (
 	}
 	name = book.ItemByID(catalogID).Name
 	effect = doseEffectPhrase(dose, computed.AlchemicalDamage)
-	save, known := itemSaveDc(level, computed, dose.SaveAttribute)
+	attribute, source := doseSaveAttribute(dose, computed)
+	save, known := itemSaveDc(level, computed, attribute)
 	if !known {
 		return name, effect + " (" + dose.Save + " " + dose.OnSave + ")"
+	}
+	if source != "" {
+		return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + ", pela " +
+			book.AttributeLabel(attribute) + " (" + source + "), " + dose.OnSave + ")"
 	}
 	return name, effect + " (" + dose.Save + " CD " + strconv.Itoa(save) + " " + dose.OnSave + ")"
 }

@@ -133,14 +133,15 @@ func targetLabel(t engine.ModifierTarget) string {
 		// escolheu para o conceito, e não uma segunda: "ignora o extra de
 		// crítico" é a do `critExtraRows`, e "o livro prevê" é a da faixa de
 		// ataque da mesa, escolhida de propósito por INFORMAR em vez de decidir.
-		"critExtraIgnoreChance": "Ignora o extra de crítico",
-		"announcedCondition":    "O livro prevê",
-		"announcedEffect":       "O livro prevê",
-		"defenseAttribute":      "Atributo da Defesa",
-		"expertiseAttribute":    "Atributo da perícia",
-		"armorPenaltyExempt":    "Ignora a penalidade de armadura",
-		"nonLethalDamage":       "Dano não letal",
-		"ignoresSituation":      "Ignora no ataque",
+		"critExtraIgnoreChance":   "Ignora o extra de crítico",
+		"announcedCondition":      "O livro prevê",
+		"announcedEffect":         "O livro prevê",
+		"defenseAttribute":        "Atributo da Defesa",
+		"expertiseAttribute":      "Atributo da perícia",
+		"alchemicalSaveAttribute": "Atributo da CD de item alquímico",
+		"armorPenaltyExempt":      "Ignora a penalidade de armadura",
+		"nonLethalDamage":         "Dano não letal",
+		"ignoresSituation":        "Ignora no ataque",
 		// A palavra da casa para a RD é "redução de dano" (a aba Combate), e o verbo é o do livro (p66, p77).
 		"ignoresDamageReduction": "Ignora redução de dano",
 		// O Destruidor (p41, p65): o complemento é o escopo, "de duas mãos".
