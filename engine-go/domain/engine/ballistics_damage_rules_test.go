@@ -41,7 +41,7 @@ func TestTheBallisticsPutsIntelligenceInTheFiredStyleDamage(t *testing.T) {
 			// A PARCELA DIZ POR QUE o número não é o da Destreza, só quando a troca acontece.
 			swapped := false
 			for _, part := range append(lit.DamageAll.Contributions, lit.DamageOwn.Contributions...) {
-				if strings.Contains(part.Note, "Inteligência no lugar da Destreza (Balística)") {
+				if strings.Contains(part.Note, "Balística: Inteligência no lugar de Destreza") {
 					swapped = true
 				}
 			}

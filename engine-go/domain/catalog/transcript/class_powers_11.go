@@ -125,7 +125,7 @@ var classPowersPart11 = []ClassPower{
 			{
 				Target:    ModifierTarget{Kind: "scaleAttribute", Name: "estilo-de-disparo", Attribute: "intelligence"},
 				BonusType: "untyped",
-				Note:      "Inteligência no lugar da Destreza (Balística)",
+				Note:      "Balística: Inteligência no lugar de Destreza",
 			},
 		},
 		ProficientWith: []ProficiencyReach{

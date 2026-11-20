@@ -124,13 +124,10 @@ func (r *Ruleset) resolveSecondPassSums(ch Character, sums []ActiveItem, effects
 			// A ESCALA PODE TROCAR DE ATRIBUTO por licença, quando o outro é maior: o "soma a Destreza" do
 			// Estilo de Disparo vira a Inteligência com a Balística (p69). A nota da licença vai junto, para a
 			// parcela dizer por que o número não é o da Destreza (`Modifier.scaledBy`).
-			attribute, by := licensedAttribute(ch, m.Scale.Attribute, effects, func(attribute string) ModifierTarget {
+			attribute, license := licensedAttribute(ch, m.Scale.Attribute, effects, func(attribute string) ModifierTarget {
 				return ModifierTarget{K: "scaleAttribute", Name: it.SourceID, Attribute: attribute}
 			})
-			if by != "" {
-				license := StatFor(effects, ModifierTarget{K: "scaleAttribute", Name: it.SourceID, Attribute: attribute})
-				m.scaledBy = license.Contributions[0].Note
-			}
+			m.scaledBy = license.Note
 			amount := effectiveAttribute(ch, attribute, effects)
 			if m.Scale.Cap == "classLevel" {
 				amount = min(amount, m.classLevel)

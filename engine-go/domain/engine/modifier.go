@@ -31,8 +31,8 @@ type Modifier struct {
 	Condition  *ModifierCondition `json:"condition,omitempty"`
 	Note       string             `json:"note,omitempty"`
 	Scale      *VitalScale        `json:"scale,omitempty"`
-	// scaledBy é a nota de quem TROCOU o atributo da escala — "Inteligência no lugar da Destreza
-	// (Balística)" —, posta pela segunda passada (`resolveSecondPassSums`). Fica à parte da `Note`
+	// scaledBy é a nota de quem TROCOU o atributo da escala — "Balística: Inteligência no lugar de
+	// Destreza" —, posta pela segunda passada (`resolveSecondPassSums`). Fica à parte da `Note`
 	// porque a parcela ligada por interruptor troca a nota do modificador pela do interruptor, e a
 	// troca de atributo tem de aparecer mesmo assim. Nunca vem do catálogo.
 	scaledBy string

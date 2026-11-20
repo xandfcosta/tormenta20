@@ -59,16 +59,16 @@ func positiveTotal(e ItemEffects, target ModifierTarget) *TotalContribs {
 func alchemicalSaveAttributes(ch Character, e ItemEffects) map[string]LicensedAttribute {
 	var chosen map[string]LicensedAttribute
 	for _, base := range AttributeKeys {
-		attribute, source := licensedAttribute(ch, base, e, func(attribute string) ModifierTarget {
+		attribute, license := licensedAttribute(ch, base, e, func(attribute string) ModifierTarget {
 			return ModifierTarget{K: "alchemicalSaveAttribute", Attribute: attribute}
 		})
-		if source == "" {
+		if license.Source == "" {
 			continue
 		}
 		if chosen == nil {
 			chosen = map[string]LicensedAttribute{}
 		}
-		chosen[base] = LicensedAttribute{Attribute: attribute, Source: source}
+		chosen[base] = LicensedAttribute{Attribute: attribute, Source: license.Source}
 	}
 	return chosen
 }
