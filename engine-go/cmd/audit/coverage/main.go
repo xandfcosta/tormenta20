@@ -12,8 +12,9 @@
 // por um instrumento que inferia o balde de fora; hoje o balde é DECLARADO no
 // verbete, nos termos dos encantos (ALE-459):
 //
-//   - efeito no motor (`modifiers`, variante com `modifiers`, ou ativação com
-//     `grant`) ou `modeled` → INTEIRO;
+//   - efeito no motor (`modifiers`, variante com `modifiers`, ativação com
+//     `grant`, ou um campo do poder de classe que o motor lê: `extraStrike`,
+//     `boost`, `boostAddOn`, `favoredWeaponDie`) ou `modeled` → INTEIRO;
 //   - só `powerUid` → APONTA: o balde é do verbete apontado. Contar o ponteiro
 //     como efeito deu "inteiro" a 31 entradas cujo alvo não aplicava nada
 //     (ALE-491);
@@ -60,6 +61,10 @@ type entry struct {
 	unmodeled     string
 	powerUID      string
 	variantEffect bool
+	// fieldEffect é o efeito que o verbete de classe dá por um CAMPO que o motor lê, sem modificador: o ataque
+	// pago, o aprimoramento, o que se soma a ele e o dado da arma favorita. Sem ele, só a nota `modeled`
+	// sustentaria o "inteiro", e um campo que saísse deixaria a nota afirmando um efeito que não existe mais.
+	fieldEffect bool
 }
 
 // bucket é o balde do verbete e a falha de marcação ("" quando não há).
@@ -67,7 +72,7 @@ func bucket(e entry) (string, string) {
 	// PELO ID OU PELO NOME, com o `book.ActivationOf` que a ficha usa: o auditor mede o que o app liga.
 	activation := book.ActivationOf(e.id, e.name)
 	hasActivation := activation != nil
-	effect := e.hasModifiers || e.variantEffect || (hasActivation && activation.Grant != nil)
+	effect := e.hasModifiers || e.variantEffect || e.fieldEffect || (hasActivation && activation.Grant != nil)
 	if (effect || e.modeled) && e.unmodeled != "" {
 		if !e.modeled {
 			return "em parte", "aplica alguma coisa e não diz O QUÊ (`modeled`)"
@@ -99,8 +104,10 @@ func entries(profile string) []entry {
 				for _, v := range a.Variants {
 					variantEffect = variantEffect || len(v.Modifiers) > 0
 				}
-				out = append(out, entry{race.Name + ": " + a.Name, a.ID, a.Name, len(a.Modifiers) > 0,
-					len(a.Modeled) > 0, a.Unmodeled, "", variantEffect})
+				out = append(out, entry{
+					label: race.Name + ": " + a.Name, id: a.ID, name: a.Name, hasModifiers: len(a.Modifiers) > 0,
+					modeled: len(a.Modeled) > 0, unmodeled: a.Unmodeled, variantEffect: variantEffect,
+				})
 			}
 		}
 	case "classe":
@@ -112,13 +119,19 @@ func entries(profile string) []entry {
 			if name == "" {
 				name = p.ID
 			}
-			out = append(out, entry{class + ": " + name, p.ID, p.Name, len(p.Modifiers) > 0,
-				len(p.Modeled) > 0, p.Unmodeled, p.PowerUID, false})
+			fieldEffect := p.ExtraStrike != nil || p.Boost != nil || p.BoostAddOn != nil || p.FavoredWeaponDie != nil
+			out = append(out, entry{
+				label: class + ": " + name, id: p.ID, name: p.Name, hasModifiers: len(p.Modifiers) > 0,
+				modeled: len(p.Modeled) > 0, unmodeled: p.Unmodeled, powerUID: p.PowerUID, fieldEffect: fieldEffect,
+			})
 		}
 	case "origem":
 		for _, o := range transcript.Origins {
 			u := o.UniquePower
-			out = append(out, entry{o.Name + ": " + u.Name, u.ID, u.Name, len(u.Modifiers) > 0, len(u.Modeled) > 0, u.Unmodeled, "", false})
+			out = append(out, entry{
+				label: o.Name + ": " + u.Name, id: u.ID, name: u.Name, hasModifiers: len(u.Modifiers) > 0,
+				modeled: len(u.Modeled) > 0, unmodeled: u.Unmodeled,
+			})
 		}
 	}
 	return out
