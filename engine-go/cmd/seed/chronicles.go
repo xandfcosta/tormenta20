@@ -113,6 +113,8 @@ var demoCampaigns = []demoCampaign{
 			{"jogador@t20.local", "Ladina Envenenadora Nv3"},
 			// O MÉDICO DE CAMPO (p89): a Sabedoria somada à cura do bálsamo (ALE-655).
 			{"jogador@t20.local", "Curandeira de Campo Nv1"},
+			// A BALÍSTICA (p69): a Inteligência no ataque e, com o Estilo de Disparo, no dano do arco (ALE-655).
+			{"jogador@t20.local", "Inventor Atirador Nv5"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},

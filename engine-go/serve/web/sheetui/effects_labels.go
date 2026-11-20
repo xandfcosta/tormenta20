@@ -60,6 +60,11 @@ func effectDisplayName(catalogID string) string {
 	if power, known := book.ClassPowers()[catalogID]; known {
 		return power.Name
 	}
+	// E O PODER GERAL, cujo verbete a licença de atributo nomeia: a Balística troca o atributo da soma do
+	// Estilo de Disparo (p69), e o rótulo do alvo saía com `estilo-de-disparo` cru.
+	if power, known := book.GeneralPowers()[catalogID]; known {
+		return power.Name
+	}
 	// O recuo para o ID é silencioso por construção — ele devolve algo que
 	// parece um nome para quem lê o código, e não para quem lê a tela. Ele fica
 	// porque a alternativa é a linha sem texto nenhum, mas toda procedência
@@ -139,6 +144,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"defenseAttribute":        "Atributo da Defesa",
 		"expertiseAttribute":      "Atributo da perícia",
 		"alchemicalSaveAttribute": "Atributo da CD de item alquímico",
+		"scaleAttribute":          "Atributo da soma",
 		"armorPenaltyExempt":      "Ignora a penalidade de armadura",
 		"nonLethalDamage":         "Dano não letal",
 		"ignoresSituation":        "Ignora no ataque",
@@ -220,7 +226,7 @@ func targetComplement(t engine.ModifierTarget) string {
 	if t.K == "announcedCondition" && t.Name != "" {
 		return book.ConditionName(t.Name)
 	}
-	if (t.K == "source" || t.K == "boostCost" || t.K == "boostCostHalved" || t.K == "boostExtraDice") && t.Name != "" {
+	if (t.K == "source" || t.K == "boostCost" || t.K == "boostCostHalved" || t.K == "boostExtraDice" || t.K == "scaleAttribute") && t.Name != "" {
 		// O corte da Harmonizada pode ser do gasto de um ENCANTO da arma, e o encanto é item do catálogo.
 		if enchant := book.ItemByID(t.Name); t.K == "boostCost" && enchant != nil {
 			return enchant.Name

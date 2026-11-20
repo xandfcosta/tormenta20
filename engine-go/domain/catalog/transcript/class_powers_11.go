@@ -113,6 +113,7 @@ var classPowersPart11 = []ClassPower{
 		Modeled: []string{
 			"a proficiência com armas marciais de ataque à distância ou com armas de fogo, a escolhida",
 			"a Inteligência no lugar da Destreza no ataque à distância com a arma empunhada, quando ela é maior",
+			"a Inteligência no lugar da Destreza no dano do Estilo de Disparo, quando ela é maior",
 		},
 		ClassName:   "Inventor",
 		Name:        "Balística",
@@ -121,8 +122,12 @@ var classPowersPart11 = []ClassPower{
 		UID:         "pwr_zuskbji6cp",
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "flag", Name: "balistica"}, Amount: 1, BonusType: "untyped"},
+			{
+				Target:    ModifierTarget{Kind: "scaleAttribute", Name: "estilo-de-disparo", Attribute: "intelligence"},
+				BonusType: "untyped",
+				Note:      "Balística: Inteligência no lugar de Destreza",
+			},
 		},
-		Unmodeled: "a Inteligência no lugar da Destreza no dano, com o Estilo de Disparo: o estilo soma a Destreza por escala, e trocá-la pede forma (ALE-655)",
 		ProficientWith: []ProficiencyReach{
 			{
 				Category: "armas-marciais",

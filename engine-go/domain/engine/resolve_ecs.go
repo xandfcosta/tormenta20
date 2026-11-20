@@ -372,6 +372,14 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 		} else if note != "" {
 			c.Note = note
 		}
+		// A TROCA DE ATRIBUTO se diz junto, ligada ou não: sem ela, a parcela mostra um número que não é o
+		// do atributo que o verbete escreve.
+		if t.Mod.scaledBy != "" {
+			if c.Note != "" {
+				c.Note += "; "
+			}
+			c.Note += t.Mod.scaledBy
+		}
 		buckets[key] = append(buckets[key], c)
 	})
 
