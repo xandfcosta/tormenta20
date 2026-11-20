@@ -2539,6 +2539,33 @@
               { "catalogId": "balsamo-restaurador", "quantity": 3 }
             ]
           }
+        },
+        {
+          "create": {
+            "name": "Inventor Atirador Nv5",
+            "races": ["humano"],
+            "origin": "soldado",
+            "classes": [{ "className": "Inventor", "level": 5 }],
+            "classPowers": [
+              "class.inventor.balistica",
+              "estilo-de-disparo",
+              "class.inventor.ajuste-de-mira",
+              "class.inventor.cano-raiado",
+              "class.inventor.invencao-potente"
+            ],
+            "strength": 1,
+            "dexterity": 3,
+            "constitution": 2,
+            "intelligence": 4,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": ["intelligence", "dexterity", "constitution"]
+            },
+            "items": [{ "catalogId": "arco-curto", "equipped": "wielded" }]
+          }
         }
       ]
     },
