@@ -253,11 +253,12 @@ var raceDefinitionsPart02 = []RaceDefinition{
 			},
 			{
 				ID:          "sereia-transformacao-anfibia",
+				Modeled:     []string{"o deslocamento de natação de 12m da cauda"},
 				RaceID:      "sereia-tritao",
 				Name:        "Transformação Anfíbia",
 				Description: "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
 				UID:         "rac_axjfztusy3",
-				Unmodeled:   "o PM sem água é do mestre, que sabe se houve água (decisão do dono)",
+				Unmodeled:   "respirar debaixo d’água e o PM sem água são do mestre, que sabe se houve água (decisão do dono)",
 				Modifiers: []Modifier{
 					{
 						Target:    ModifierTarget{Kind: "swimSpeed"},

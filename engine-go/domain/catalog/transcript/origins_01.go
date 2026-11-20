@@ -330,7 +330,10 @@ var originsPart01 = []Origin{
 			},
 		},
 		UniquePower: OriginUniquePower{
-			ID:          "origin-batedor-unique",
+			ID: "origin-batedor-unique",
+			Modeled: []string{
+				"o terreno difícil natural não reduz o deslocamento, no interruptor \"em terreno natural\"",
+			},
 			Unmodeled:   "o clima ruim, que o app não modela, e a Sobrevivência em terreno difícil natural: é a mesa que aplica",
 			Name:        "À Prova de Tudo",
 			Kind:        "poder",
