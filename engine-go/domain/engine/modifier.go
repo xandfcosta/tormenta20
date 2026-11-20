@@ -34,7 +34,8 @@ type Modifier struct {
 	// scaledBy é a nota de quem TROCOU o atributo da escala — "Balística: Inteligência no lugar de
 	// Destreza" —, posta pela segunda passada (`resolveSecondPassSums`). Fica à parte da `Note`
 	// porque a parcela ligada por interruptor troca a nota do modificador pela do interruptor, e a
-	// troca de atributo tem de aparecer mesmo assim. Nunca vem do catálogo.
+	// troca de atributo tem de aparecer mesmo assim. O TEXTO é a nota da licença, escrita no catálogo;
+	// o campo em si não viaja no JSON, e por isso não é exportado.
 	scaledBy string
 	// Factor MULTIPLICA o total do alvo, depois da soma — ver `factor.go`. Um
 	// modificador com fator ignora o `Amount`: ele não é parcela da pilha.
