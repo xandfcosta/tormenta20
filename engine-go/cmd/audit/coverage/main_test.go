@@ -34,3 +34,35 @@ func TestAnOriginPowerSaysWhatItApplies(t *testing.T) {
 	}
 	t.Fatal("o perfil de origem não tem a Vida Rústica")
 }
+
+// O CAMPO QUE O MOTOR LÊ É EFEITO, mesmo sem modificador. O ataque pago (`ExtraStrike`), o aprimoramento
+// (`Boost`), o que se soma a ele (`BoostAddOn`) e o dado da arma favorita (`FavoredWeaponDie`) mudam a ficha e a
+// mesa por um campo do verbete. Sem contá-los, só a nota `modeled` escrita à mão sustenta o "inteiro" — e um
+// campo que saísse deixaria a nota dizendo um efeito que não existe mais, sem nada reprovar. Por isso o caso
+// tira a nota: o balde tem de vir do CAMPO.
+func TestAClassPowerFieldTheEngineReadsCountsAsEffect(t *testing.T) {
+	byField := map[string]string{
+		"ExtraStrike":      "Lutador: Golpe Relâmpago",
+		"Boost":            "Guerreiro: Ataque Especial",
+		"BoostAddOn":       "Guerreiro: Romper Resistências",
+		"FavoredWeaponDie": "Paladino: Arma Sagrada",
+	}
+	found := map[string]bool{}
+	for _, e := range entries("classe") {
+		for field, label := range byField {
+			if e.label != label || found[field] {
+				continue
+			}
+			found[field] = true
+			e.modeled = false
+			if got, failure := bucket(e); got != "inteiro" || failure != "" {
+				t.Errorf("%s (pelo %s), sem a nota, caiu em %q com a falha %q; want inteiro, sem falha", label, field, got, failure)
+			}
+		}
+	}
+	for field, label := range byField {
+		if !found[field] {
+			t.Errorf("o perfil de classe não tem %s, o caso do %s", label, field)
+		}
+	}
+}
