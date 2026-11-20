@@ -104,8 +104,10 @@ func entries(profile string) []entry {
 				for _, v := range a.Variants {
 					variantEffect = variantEffect || len(v.Modifiers) > 0
 				}
-				out = append(out, entry{race.Name + ": " + a.Name, a.ID, a.Name, len(a.Modifiers) > 0,
-					len(a.Modeled) > 0, a.Unmodeled, "", variantEffect, false})
+				out = append(out, entry{
+					label: race.Name + ": " + a.Name, id: a.ID, name: a.Name, hasModifiers: len(a.Modifiers) > 0,
+					modeled: len(a.Modeled) > 0, unmodeled: a.Unmodeled, variantEffect: variantEffect,
+				})
 			}
 		}
 	case "classe":
@@ -118,13 +120,18 @@ func entries(profile string) []entry {
 				name = p.ID
 			}
 			fieldEffect := p.ExtraStrike != nil || p.Boost != nil || p.BoostAddOn != nil || p.FavoredWeaponDie != nil
-			out = append(out, entry{class + ": " + name, p.ID, p.Name, len(p.Modifiers) > 0,
-				len(p.Modeled) > 0, p.Unmodeled, p.PowerUID, false, fieldEffect})
+			out = append(out, entry{
+				label: class + ": " + name, id: p.ID, name: p.Name, hasModifiers: len(p.Modifiers) > 0,
+				modeled: len(p.Modeled) > 0, unmodeled: p.Unmodeled, powerUID: p.PowerUID, fieldEffect: fieldEffect,
+			})
 		}
 	case "origem":
 		for _, o := range transcript.Origins {
 			u := o.UniquePower
-			out = append(out, entry{o.Name + ": " + u.Name, u.ID, u.Name, len(u.Modifiers) > 0, len(u.Modeled) > 0, u.Unmodeled, "", false, false})
+			out = append(out, entry{
+				label: o.Name + ": " + u.Name, id: u.ID, name: u.Name, hasModifiers: len(u.Modifiers) > 0,
+				modeled: len(u.Modeled) > 0, unmodeled: u.Unmodeled,
+			})
 		}
 	}
 	return out
