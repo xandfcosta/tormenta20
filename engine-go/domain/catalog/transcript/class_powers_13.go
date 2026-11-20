@@ -97,7 +97,10 @@ var classPowersPart13 = []ClassPower{
 		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "unarmedDamage"}, BonusType: "training", Dice: "1d6"}},
 	},
 	{
-		ID:             "class.lutador.golpe-relampago",
+		ID: "class.lutador.golpe-relampago",
+		Modeled: []string{
+			"o ataque desarmado adicional pago com 1 PM depois de agredir desarmado, que a mesa abre quando o mestre responde ao golpe",
+		},
 		ClassName:      "Lutador",
 		Name:           "Golpe Relâmpago",
 		Description:    "Quando usa ação agredir para fazer ataque desarmado, gasta 1 PM para fazer ataque desarmado adicional.",
@@ -361,7 +364,10 @@ var classPowersPart13 = []ClassPower{
 		UID:         "pwr_6dm5eqldzf",
 	},
 	{
-		ID:          "class.lutador.golpe-imprudente",
+		ID: "class.lutador.golpe-imprudente",
+		Modeled: []string{
+			"o dado de dano extra no golpe do Golpe Relâmpago e o –5 na Defesa até o próximo turno, escolhidos ao pagar o golpe",
+		},
 		ClassName:   "Lutador",
 		Name:        "Golpe Imprudente",
 		Description: "Quando usa Golpe Relâmpago, ataca de forma impulsiva. Ataques desarmados recebem dado de dano extra do mesmo tipo, mas sofre -5 Defesa.",

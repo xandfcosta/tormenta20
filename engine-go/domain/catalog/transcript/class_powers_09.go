@@ -22,7 +22,10 @@ var classPowersPart09 = []ClassPower{
 		UID:            "pwr_rm5jyfm3iz",
 	},
 	{
-		ID:             "class.guerreiro.ataque-extra",
+		ID: "class.guerreiro.ataque-extra",
+		Modeled: []string{
+			"o ataque adicional pago com 2 PM depois de agredir, que a mesa abre quando o mestre responde ao golpe",
+		},
 		ClassName:      "Guerreiro",
 		Name:           "Ataque Extra",
 		Description:    "Quando usa ação agredir, gasta 2 PM para realizar ataque adicional uma vez por rodada.",
