@@ -342,8 +342,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 	// testes de ataque e rolagens de dano" (p68), e cada conta fica com o maior que lhe é permitido. A adaga ataca
 	// pela Destreza por regra da arma e ainda soma a Força no dano — que a Inteligência pode substituir. A arma de
 	// disparo não soma atributo no dano (p142), e não há o que trocar.
-	damageSwap := Contribution{}
-	damageSwapAttribute := ""
+	damageSwapAttribute, damageSwapNote := "", ""
 	if w.Purpose != "ranged" {
 		damageBase := "strength"
 		if dexDamageUsed {
@@ -351,7 +350,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		}
 		if damageAttribute, damageLicense := b.licensedWeaponAttribute(ch, w, "damage", damageBase, scopes); damageLicense.Source != "" {
 			strDamage, dexDamageUsed = effectiveAttribute(ch, damageAttribute, b.effects), false
-			damageSwap, damageSwapAttribute = damageLicense, damageAttribute
+			damageSwapAttribute, damageSwapNote = damageAttribute, damageLicense.Note
 		}
 	}
 	// weaponSkillState returns the stored Luta row (attribute strength); force
@@ -384,7 +383,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		DexBy:                  dexBy,
 		AttributeSwapNote:      attackLicense.Note,
 		DamageSwapAttribute:    damageSwapAttribute,
-		DamageSwapNote:         damageSwap.Note,
+		DamageSwapNote:         damageSwapNote,
 		DexDamage:              dexDamageUsed,
 		DamageBonus:            strDamage + b.damageAll.Total + ownDamage.Total,
 		DamageAll:              b.damageAll,
