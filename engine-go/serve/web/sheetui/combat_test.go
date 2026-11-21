@@ -244,11 +244,11 @@ func TestTheHarmonizedCutSaysTheAbilityName(t *testing.T) {
 // COM O ARMEIRO, A PARCELA DO DANO É A INTELIGÊNCIA (p68), e o rótulo a segue, como o da Acuidade.
 func TestTheArmorerDamageRowSaysIntelligence(t *testing.T) {
 	const armorer = "Armeiro: Inteligência no lugar de Força"
-	_, damage := weaponRows(engine.WeaponCard{Skill: "Luta", StrDamage: 4, IntNote: armorer, IntDamageNote: armorer})
+	_, damage := weaponRows(engine.WeaponCard{Skill: "Luta", StrDamage: 4, AttributeSwapNote: armorer, DamageSwapAttribute: "intelligence", DamageSwapNote: armorer})
 	if len(damage) == 0 || damage[0].Label != "INT" || damage[0].Value != "+4" {
 		t.Errorf("a primeira parcela do dano com o Armeiro não é INT +4: %+v", damage)
 	}
-	_, terms := weaponSumTerms(engine.WeaponCard{Skill: "Luta", StrDamage: 4, IntNote: armorer, IntDamageNote: armorer, DamageBonus: 4})
+	_, terms := weaponSumTerms(engine.WeaponCard{Skill: "Luta", StrDamage: 4, AttributeSwapNote: armorer, DamageSwapAttribute: "intelligence", DamageSwapNote: armorer, DamageBonus: 4})
 	if len(terms) == 0 || terms[0].Label != "Inteligência" || terms[0].Note != armorer {
 		t.Errorf("a conta do dano com o Armeiro não diz Inteligência pelo Armeiro: %+v", terms)
 	}

@@ -477,7 +477,8 @@ Mente Criminosa não são).
   distância, no ataque (p69). O motor não conhece nenhum dos dois pelo nome. A carta fica com o maior, pelo
   `licensedAttribute`, só na arma empunhada, e cada conta decide sozinha (decisão do dono): a adaga ataca
   pela Destreza e ainda pode somar a Inteligência do Armeiro no dano, no lugar da Força. Ela diz quem trocou
-  (`DexBy`, e a frase da licença em `IntNote` e `IntDamageNote`) para a ficha escrever o porquê.
+  (`DexBy`; a frase da licença em `AttributeSwapNote`, e o atributo e a frase do dano em
+  `DamageSwapAttribute` e `DamageSwapNote`) para a ficha escrever o atributo e o porquê, sem supor qual.
 - **O outro uso da arma mora dentro da carta dela** (`WeaponCard.OtherUse`,
   `otherUseOf`), e o índice da carta é o da mão: toda arma corpo a corpo se arremessa,
   com −5 se não tiver alcance (p143) nem o encanto Arremesso (p335, decisão do dono), e

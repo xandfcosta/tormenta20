@@ -53,7 +53,7 @@ func TestAFrozenStrikeRollsLikeTheCard(t *testing.T) {
 // silêncio. A lista obriga a decidir.
 func TestEveryCardFieldOutOfTheWireIsDecided(t *testing.T) {
 	notInTheStrike := map[string]bool{
-		"CatalogID": true, "ItemID": true, "Doses": true, "OtherUse": true, "RefusesBoost": true, "BoostPM": true, "BoostBuys": true, "IntNote": true, "IntDamageNote": true,
+		"CatalogID": true, "ItemID": true, "Doses": true, "OtherUse": true, "RefusesBoost": true, "BoostPM": true, "BoostBuys": true, "AttributeSwapNote": true, "DamageSwapAttribute": true, "DamageSwapNote": true,
 		"DexBy": true, "DexDamage": true, "Natural": true, "Style": true, "SwitchesDamageFreely": true, "Improvised": true,
 		"ShootsIntoMelee": true, // este o FreezeStrike leva à parte
 		// O ataque pago e a marca do desarmado são da PROPOSTA (o PM, a abertura), e não da conta do dano.

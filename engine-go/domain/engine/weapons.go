@@ -116,13 +116,15 @@ type WeaponCard struct {
 	// deixa a conta da ficha rotular a parcela certa. Fora do fio de propósito:
 	// é explicação para a tela, e o fio já tem o número.
 	DexBy string `json:"-"`
-	// IntNote é a frase da licença que pôs a Inteligência no lugar do atributo do ATAQUE — "Armeiro: Inteligência
-	// no lugar de Força" (p68), "Balística: Inteligência no lugar de Destreza" (p69) —, e IntDamageNote a da que
-	// a pôs no DANO (o Armeiro). Vazias quando nada trocou. Fora do fio, como o `DexBy`: só a ficha as lê, para
-	// escrever o atributo e o porquê.
-	IntNote       string `json:"-"`
-	IntDamageNote string `json:"-"`
-	DexDamage     bool   `json:"-"`
+	// AttributeSwapNote é a frase da licença que trocou o atributo do ATAQUE — "Armeiro: Inteligência no lugar
+	// de Força" (p68), "Balística: Inteligência no lugar de Destreza" (p69) —; o atributo trocado é o próprio
+	// `Attribute`. DamageSwapAttribute e DamageSwapNote são o atributo e a frase da que trocou o do DANO (o
+	// Armeiro): a licença aceita qualquer atributo, e a tela escreve o que a carta trouxe. Vazios quando nada
+	// trocou. Fora do fio, como o `DexBy`: só a ficha os lê, para escrever o atributo e o porquê.
+	AttributeSwapNote   string `json:"-"`
+	DamageSwapAttribute string `json:"-"`
+	DamageSwapNote      string `json:"-"`
+	DexDamage           bool   `json:"-"`
 	// DamageType é o tipo do dano da ARMA — "corte", "perfuracao", "impacto" —,
 	// e ele vale para os dados dela e para os bônus numéricos que a acompanham
 	// (a Força, o dano do encanto sem tipo próprio). As parcelas de OUTRO tipo
@@ -340,14 +342,15 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 	// testes de ataque e rolagens de dano" (p68), e cada conta fica com o maior que lhe é permitido. A adaga ataca
 	// pela Destreza por regra da arma e ainda soma a Força no dano — que a Inteligência pode substituir. A arma de
 	// disparo não soma atributo no dano (p142), e não há o que trocar.
-	intDamageNote := ""
+	damageSwapAttribute, damageSwapNote := "", ""
 	if w.Purpose != "ranged" {
 		damageBase := "strength"
 		if dexDamageUsed {
 			damageBase = "dexterity"
 		}
 		if damageAttribute, damageLicense := b.licensedWeaponAttribute(ch, w, "damage", damageBase, scopes); damageLicense.Source != "" {
-			strDamage, dexDamageUsed, intDamageNote = effectiveAttribute(ch, damageAttribute, b.effects), false, damageLicense.Note
+			strDamage, dexDamageUsed = effectiveAttribute(ch, damageAttribute, b.effects), false
+			damageSwapAttribute, damageSwapNote = damageAttribute, damageLicense.Note
 		}
 	}
 	// weaponSkillState returns the stored Luta row (attribute strength); force
@@ -378,8 +381,9 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		DamageType:             w.Type,
 		StrDamage:              strDamage,
 		DexBy:                  dexBy,
-		IntNote:                attackLicense.Note,
-		IntDamageNote:          intDamageNote,
+		AttributeSwapNote:      attackLicense.Note,
+		DamageSwapAttribute:    damageSwapAttribute,
+		DamageSwapNote:         damageSwapNote,
 		DexDamage:              dexDamageUsed,
 		DamageBonus:            strDamage + b.damageAll.Total + ownDamage.Total,
 		DamageAll:              b.damageAll,
