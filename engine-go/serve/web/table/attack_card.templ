@@ -289,12 +289,15 @@ templ handDiceEntry(v View, groups []handGroup, bonus string, verb string) {
 // "Rolar" e o "rolei na mão" logo abaixo seguem a escolhida. Some quando a carta não tem situação.
 templ damageLineChoice(v View) {
 	if len(v.Attack.DamageLines) > 1 {
-		@ds.Segmented("Linha do dano") {
-			for _, line := range v.Attack.DamageLines {
-				@ds.SegmentedOption(line.Chosen, templ.Attributes{"data-on:click": attackCommand(v, "dano/linha/"+line.Slug), "title": line.Source}) {
-					{ line.Label + " · " + line.ToRoll }
+		<div class="ds-strike-lines">
+			@ds.Segmented("Linha do dano") {
+				for _, line := range v.Attack.DamageLines {
+					@ds.SegmentedOption(line.Chosen, templ.Attributes{"data-on:click": attackCommand(v, "dano/linha/"+line.Slug), "title": line.Source}) {
+						<span>{ line.Label }</span>
+						<b>{ line.ToRoll }</b>
+					}
 				}
 			}
-		}
+		</div>
 	}
 }
