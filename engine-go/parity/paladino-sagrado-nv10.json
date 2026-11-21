@@ -1746,7 +1746,7 @@
       },
       "damage": "1d8",
       "damageType": "corte",
-      "strDamage": 3,
+      "attributeDamage": 3,
       "damageBonus": 3,
       "damageAll": {
         "total": 0,
@@ -1784,7 +1784,7 @@
       },
       "damage": "1d3",
       "damageType": "impacto",
-      "strDamage": 3,
+      "attributeDamage": 3,
       "damageBonus": 3,
       "damageAll": {
         "total": 0,
@@ -1843,7 +1843,7 @@
       },
       "damage": "1d8",
       "damageType": "corte",
-      "strDamage": 3,
+      "attributeDamage": 3,
       "damageBonus": 3,
       "damageAll": {
         "total": 0,
@@ -1881,7 +1881,7 @@
       },
       "damage": "1d3",
       "damageType": "impacto",
-      "strDamage": 3,
+      "attributeDamage": 3,
       "damageBonus": 3,
       "damageAll": {
         "total": 0,

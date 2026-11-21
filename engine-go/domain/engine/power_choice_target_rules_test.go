@@ -109,7 +109,7 @@ func TestWeaponSpecializationAddsDamageOnlyToTheChosenWeapon(t *testing.T) {
 		t.Errorf("a adaga, que não foi escolhida, somou %d no dano; só a Força 3 vale", got)
 	}
 
-	soma := bonus["Espada longa"].StrDamage
+	soma := bonus["Espada longa"].AttributeDamage
 	for _, c := range append(bonus["Espada longa"].DamageAll.Contributions,
 		bonus["Espada longa"].DamageOwn.Contributions...) {
 		soma += c.Amount

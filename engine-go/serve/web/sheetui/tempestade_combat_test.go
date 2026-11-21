@@ -13,7 +13,7 @@ import (
 func TestTheWeaponSumSaysWhyDexterityAndCountsDamageApart(t *testing.T) {
 	dagger := engine.WeaponCard{
 		Name: "Adaga", CatalogID: "adaga", Skill: "Luta", Attack: 11, Damage: "1d4",
-		DexBy: engine.DexByWeapon, StrDamage: 0,
+		DexBy: engine.DexByWeapon, AttributeDamage: 0,
 		Expertise: engine.ExpertiseBreakdown{Attribute: "dexterity", AttrValue: 3, HalfLevel: 4, Training: 4, Trained: true, Total: 11},
 	}
 	attack, damage := weaponSumTerms(dagger)
@@ -26,7 +26,7 @@ func TestTheWeaponSumSaysWhyDexterityAndCountsDamageApart(t *testing.T) {
 	sameTerms(t, "dano da adaga", damage, []ds.SumTerm{{Label: "Força", Value: "+0"}})
 
 	finesse := dagger
-	finesse.Name, finesse.CatalogID, finesse.DexBy, finesse.DexDamage, finesse.StrDamage, finesse.DamageBonus = "Espada curta", "espada-curta", engine.DexByFinesse, true, 3, 3
+	finesse.Name, finesse.CatalogID, finesse.DexBy, finesse.DexDamage, finesse.AttributeDamage, finesse.DamageBonus = "Espada curta", "espada-curta", engine.DexByFinesse, true, 3, 3
 	attack, damage = weaponSumTerms(finesse)
 	if attack[0].Note != "Acuidade com Arma: Destreza no lugar de Força" {
 		t.Errorf("a espada curta com Acuidade não diz por que usa a Destreza: %+v", attack[0])
@@ -37,7 +37,7 @@ func TestTheWeaponSumSaysWhyDexterityAndCountsDamageApart(t *testing.T) {
 // A ARMA DE ARREMESSO ataca com Pontaria e soma a Força no dano (p142): a conta dá nome
 // a ela, e a arma de disparo não tem atributo nenhum para mostrar.
 func TestTheThrownWeaponSumNamesTheStrengthInTheDamage(t *testing.T) {
-	spear := engine.WeaponCard{Name: "Lança (arremesso)", Skill: "Pontaria", Damage: "1d6", StrDamage: 4, DamageBonus: 4}
+	spear := engine.WeaponCard{Name: "Lança (arremesso)", Skill: "Pontaria", Damage: "1d6", AttributeDamage: 4, DamageBonus: 4}
 	_, damage := weaponSumTerms(spear)
 	sameTerms(t, "dano da lança arremessada", damage, []ds.SumTerm{{Label: "Força", Value: "+4"}})
 	_, rows := weaponRows(spear)

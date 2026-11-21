@@ -64,15 +64,15 @@ func weaponSumTerms(card engine.WeaponCard) (attack, damage []ds.SumTerm) {
 
 	bonus := card.DamageBonus
 	if addsAttributeToDamage(card) {
-		strength := ds.SumTerm{Label: "Força", Value: book.WithSign(card.StrDamage)}
+		strength := ds.SumTerm{Label: "Força", Value: book.WithSign(card.AttributeDamage)}
 		switch {
 		case card.DexDamage:
-			strength = ds.SumTerm{Label: "Destreza", Note: "Acuidade com Arma", Value: book.WithSign(card.StrDamage)}
+			strength = ds.SumTerm{Label: "Destreza", Note: "Acuidade com Arma", Value: book.WithSign(card.AttributeDamage)}
 		case card.DamageSwapAttribute != "":
-			strength = ds.SumTerm{Label: book.AttributeLabel(card.DamageSwapAttribute), Note: card.DamageSwapNote, Value: book.WithSign(card.StrDamage)}
+			strength = ds.SumTerm{Label: book.AttributeLabel(card.DamageSwapAttribute), Note: card.DamageSwapNote, Value: book.WithSign(card.AttributeDamage)}
 		}
 		damage = append(damage, strength)
-		bonus -= card.StrDamage
+		bonus -= card.AttributeDamage
 	}
 	damage = withContributions(damage, bonus, card.DamageAll.Contributions, card.DamageOwn.Contributions)
 	return attack, damage

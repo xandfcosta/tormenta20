@@ -1536,7 +1536,7 @@
       },
       "damage": "1d6",
       "damageType": "impacto",
-      "strDamage": -1,
+      "attributeDamage": -1,
       "damageBonus": -1,
       "damageAll": {
         "total": 0,
@@ -1574,7 +1574,7 @@
       },
       "damage": "1d3",
       "damageType": "impacto",
-      "strDamage": -1,
+      "attributeDamage": -1,
       "damageBonus": -1,
       "damageAll": {
         "total": 0,
@@ -1620,7 +1620,7 @@
       },
       "damage": "1d6",
       "damageType": "impacto",
-      "strDamage": -1,
+      "attributeDamage": -1,
       "damageBonus": -1,
       "damageAll": {
         "total": 0,
@@ -1658,7 +1658,7 @@
       },
       "damage": "1d3",
       "damageType": "impacto",
-      "strDamage": -1,
+      "attributeDamage": -1,
       "damageBonus": -1,
       "damageAll": {
         "total": 0,
