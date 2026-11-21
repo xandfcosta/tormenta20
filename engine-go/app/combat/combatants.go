@@ -69,11 +69,10 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, fmt.Errorf("computar a ficha de %s: %w", e.Label, err)
 	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	efeitos, ec, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return Combatant{}, err
 	}
-	efeitos := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
 	return Combatant{
 		EntryID: e.ID, Label: e.Label,
 		Weapons:               dto.Ruleset.ComputeWeaponCards(ec, sheet.ToStringSet(dto.Conditionals)),

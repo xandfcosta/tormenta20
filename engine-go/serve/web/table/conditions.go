@@ -156,11 +156,11 @@ func (st Scene) refuseIfAPowerBarsIt(c commandCtx, row sqlcgen.Character, condit
 	if err != nil {
 		return fmt.Errorf("montar a ficha %d: %w", row.ID, err)
 	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	effects, _, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return err
 	}
-	power, barred := engine.ConditionBarredByAPower(dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)), condition)
+	power, barred := engine.ConditionBarredByAPower(effects, condition)
 	if !barred {
 		return nil
 	}

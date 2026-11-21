@@ -22,10 +22,7 @@ import (
 //
 //	character.OffersTheDeclaration(dto, "ataque-ambidestro") // false com o estilo na ficha
 func OffersTheDeclaration(dto sheet.CharacterDTO, flag string) bool {
-	if dto.Ruleset == nil {
-		return false
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	effects, ec, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return false
 	}
@@ -35,8 +32,7 @@ func OffersTheDeclaration(dto sheet.CharacterDTO, flag string) bool {
 	if flag == engine.WildAgileBothFlag && (ec.WildShape == nil || ec.WildShape.WeaponForm() != engine.WildAgile) {
 		return false
 	}
-	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
-	return slices.ContainsFunc(offered, func(c engine.ConditionalEffect) bool { return c.Flag == flag })
+	return slices.ContainsFunc(effects.Conditional, func(c engine.ConditionalEffect) bool { return c.Flag == flag })
 }
 
 // Declare liga a declaração pela flag dela — o gesto da Forma Ágil, que não tem poder próprio para ter
