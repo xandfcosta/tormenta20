@@ -82,6 +82,9 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 	if CostIsVariable(spec) {
 		return false, "custo variável"
 	}
+	if context.OnAlly && !spec.AllyTarget {
+		return false, "não tem um aliado como alvo"
+	}
 	if spec.RequiresFlag != "" && !context.Flags[spec.RequiresFlag] {
 		return false, "requer " + spec.RequiresFlag
 	}
@@ -95,7 +98,7 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if context.Cost.Price(ActivationPm(spec), ActivationClass(spec), context.Cut) > context.CurrentPM {
+	if UsePrice(spec, context.Cost, Use{OnAlly: context.OnAlly}) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -107,8 +110,9 @@ type UseContext struct {
 	// Cost são as regras do custo de habilidade da ficha (o Alquebrado, p394; a metade do Artista Completo, p45):
 	// a decisão confere o PM contra o preço que se cobra, e não contra o do catálogo.
 	Cost engine.AbilityCostRules
-	// Cut é o corte deste uso, ≤ 0: o da Caridade quando o alvo é um aliado (p83). Zero no uso comum.
-	Cut           int
+	// OnAlly diz que o alvo deste uso é um aliado: o preço leva o corte da Caridade (p83), e a habilidade que não
+	// pode ter um aliado como alvo recusa.
+	OnAlly        bool
 	UsedThisScene int
 	UsedToday     int
 	Flags         map[string]bool
@@ -160,14 +164,12 @@ func ScaledCost(spec Activation, steps int) int {
 }
 
 // ScaledDecision responde se dá para pagar esses degraus: dentro do teto do
-// nível, e com PM para o total.
-// O PM se confere contra o preço que se cobra: o custo dos degraus pelas regras de custo da ficha (o Alquebrado,
-// p394; o Artista Completo, p45), pela conta única.
-func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules, cut int) (bool, string) {
-	if steps < 0 || steps > max {
+// nível, e com PM para o PREÇO DO USO (ver `UsePrice`).
+func ScaledDecision(spec Activation, use Use, max, currentPM int, rules engine.AbilityCostRules) (bool, string) {
+	if use.Steps < 0 || use.Steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec), cut); cost > currentPM {
+	if UsePrice(spec, rules, use) > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -371,12 +373,12 @@ func SceneStartGrants() []Activation {
 	return outside
 }
 
-// ActivationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
+// activationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
 // fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45).
 //
 // Pelo id do poder ou, quando o id da ativação é outro, pelo NOME — a ligação que a ficha faz entre a ativação e
 // o dono. Quinze ativações de classe só se ligam pelo nome (a Coragem, a Libertação…).
-func ActivationClass(spec Activation) string {
+func activationClass(spec Activation) string {
 	if class := ClassOfPower(spec.ID); class != "" {
 		return class
 	}
@@ -399,15 +401,6 @@ var classByPowerName = sync.OnceValue(func() map[string]string {
 	}
 	return byName
 })
-
-// AllyTargetCut é o corte da ficha no uso de `spec` com um aliado como alvo (a Caridade, p83), ≤ 0; zero na
-// habilidade que não pode ter um aliado como alvo. Quem diz se o alvo do uso É um aliado é o gesto.
-func AllyTargetCut(spec Activation, rules engine.AbilityCostRules) int {
-	if !spec.AllyTarget {
-		return 0
-	}
-	return rules.AllyCut(ActivationClass(spec))
-}
 
 // ClassOfPower é a classe do poder de classe com esse id, e vazia quando não é um.
 //

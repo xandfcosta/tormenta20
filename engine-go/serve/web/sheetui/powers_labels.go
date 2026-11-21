@@ -34,9 +34,8 @@ var writtenActions = map[string]string{
 // importa menos que o fato de ser postura (ela DURA), e o "+" avisa que o preço
 // sobe com os degraus antes de a pessoa abrir o contador.
 func writtenCost(spec book.Activation, stance *stanceState, cost engine.AbilityCostRules) string {
-	class := book.ActivationClass(spec)
 	if spec.Kind == "stance" {
-		return "POSTURA · " + strconv.Itoa(cost.Price(book.ScaledCost(spec, 0), class)) + stepsMore(stance) + " PM"
+		return "POSTURA · " + strconv.Itoa(book.UsePrice(spec, cost, book.Use{})) + stepsMore(stance) + " PM"
 	}
 	action, found := writtenActions[spec.Action]
 	if !found {
@@ -45,7 +44,7 @@ func writtenCost(spec book.Activation, stance *stanceState, cost engine.AbilityC
 	if book.CostIsVariable(spec) {
 		return action + " · PM variável"
 	}
-	return action + " · " + strconv.Itoa(cost.Price(book.ActivationPm(spec), class)) + " PM"
+	return action + " · " + strconv.Itoa(book.UsePrice(spec, cost, book.Use{})) + " PM"
 }
 
 // stepsMore é o "+" do preço, e ele pergunta ao PERSONAGEM e não ao catálogo.

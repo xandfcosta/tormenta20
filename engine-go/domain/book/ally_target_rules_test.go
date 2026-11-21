@@ -27,15 +27,16 @@ func TestTheAllyTargetedPaladinAbilitiesAreMarked(t *testing.T) {
 	}
 }
 
-// A DECISÃO de pagar os degraus confere o PM contra o preço com o corte: a Coragem de 2 PM com 1 PM sobrando sai
-// num aliado (2 – 1) e não no próprio paladino.
+// A DECISÃO de pagar os degraus confere o PM contra o preço do uso: a Coragem de 2 PM com 1 PM sobrando sai num
+// aliado com a Caridade (2 – 1) e não no próprio paladino.
 func TestTheScaledDecisionWeighsTheAllyCut(t *testing.T) {
 	courage := ActivationOf("class.paladino.julgamento-coragem", "")
-	if can, _ := ScaledDecision(*courage, 0, 0, 1, engine.AbilityCostRules{}, 0); can {
+	charity := engine.AbilityCostRules{AllyCuts: map[string]int{"Paladino": -1}}
+	if can, _ := ScaledDecision(*courage, Use{}, 0, 1, charity); can {
 		t.Error("com 1 PM a Coragem de 2 PM saiu no próprio paladino")
 	}
-	if can, why := ScaledDecision(*courage, 0, 0, 1, engine.AbilityCostRules{}, -1); !can {
-		t.Errorf("com 1 PM a Coragem num aliado (–1) foi recusada: %s", why)
+	if can, why := ScaledDecision(*courage, Use{OnAlly: true}, 0, 1, charity); !can {
+		t.Errorf("com 1 PM a Coragem num aliado foi recusada: %s", why)
 	}
 }
 
@@ -44,7 +45,7 @@ func TestTheScaledDecisionWeighsTheAllyCut(t *testing.T) {
 // `class.paladino.julgamento-divino-coragem` no poder; sem o nome, o corte da classe nunca a alcançaria.
 func TestTheActivationClassFallsBackToTheName(t *testing.T) {
 	courage := ActivationOf("class.paladino.julgamento-coragem", "")
-	if got := ActivationClass(*courage); got != "Paladino" {
+	if got := activationClass(*courage); got != "Paladino" {
 		t.Errorf("a Coragem é da classe %q; want Paladino", got)
 	}
 }

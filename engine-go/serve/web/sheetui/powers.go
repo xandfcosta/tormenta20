@@ -224,18 +224,15 @@ func stanceStateFor(
 	steps, active := stances[flag]
 	state := &stanceState{
 		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
-		BasePm: context.Cost.Price(book.ActivationPm(spec), book.ActivationClass(spec)), BaseBonus: book.StanceBaseBonus(flag),
+		BasePm: book.UsePrice(spec, context.Cost, book.Use{}), BaseBonus: book.StanceBaseBonus(flag),
 		BonusNote: stanceBonusNote(dto, spec.ID),
 	}
 	if spec.Scaling != nil {
-		state.BasePm = context.Cost.Price(spec.Scaling.BasePm, book.ActivationClass(spec))
 		state.StepPm = spec.Scaling.StepPm
 		state.StepLabel = spec.Scaling.StepLabel
 		state.MaxSteps = character.PowerMaxSteps(dto, spec)
 	}
-	for steps := 0; steps <= state.MaxSteps; steps++ {
-		state.Prices = append(state.Prices, context.Cost.Price(book.ScaledCost(spec, steps), book.ActivationClass(spec)))
-	}
+	state.Prices = book.UsePrices(spec, context.Cost, state.MaxSteps, false)
 	return state
 }
 

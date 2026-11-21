@@ -280,7 +280,7 @@ type SkillSpendChoice struct {
 // spendPrice é o custo do gasto pelas regras de custo da ficha (o Alquebrado, p394; o Artista Completo, p45). O
 // corte de quem recebe a habilidade duas vezes (p28) vem depois, na oferta.
 func spendPrice(a Activation, target SkillSpendTarget) int {
-	return target.Cost.Price(ActivationPm(a), ActivationClass(a))
+	return UsePrice(a, target.Cost, Use{})
 }
 
 // SpendKey é o nome do gasto no sinal da tela: o fim do id, em `snake_case`

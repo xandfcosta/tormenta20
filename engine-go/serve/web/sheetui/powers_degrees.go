@@ -61,13 +61,9 @@ func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.Abi
 		StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
 		MaxSteps: character.PowerMaxSteps(dto, spec),
 	}
-	class := book.ActivationClass(spec)
-	cut := book.AllyTargetCut(spec, cost)
-	for steps := 0; steps <= d.MaxSteps; steps++ {
-		d.Prices = append(d.Prices, cost.Price(book.ScaledCost(spec, steps), class))
-		if cut < 0 {
-			d.AllyPrices = append(d.AllyPrices, cost.Price(book.ScaledCost(spec, steps), class, cut))
-		}
+	d.Prices = book.UsePrices(spec, cost, d.MaxSteps, false)
+	if book.OffersAllyCut(spec, cost) {
+		d.AllyPrices = book.UsePrices(spec, cost, d.MaxSteps, true)
 	}
 	riders := character.RidersOf(dto, spec)
 	d.CanDouble = book.RidersDouble(spec, riders)
@@ -198,17 +194,14 @@ type allyUse struct {
 
 // allyUseFor é o uso com aliado como alvo, quando a habilidade o tem e a ficha corta nele; nulo no resto.
 func allyUseFor(spec book.Activation, context book.UseContext) *allyUse {
-	if book.CostIsVariable(spec) {
-		return nil
-	}
-	class := book.ActivationClass(spec)
-	cut := book.AllyTargetCut(spec, context.Cost)
-	if cut >= 0 {
+	if book.CostIsVariable(spec) || !book.OffersAllyCut(spec, context.Cost) {
 		return nil
 	}
 	onAlly := context
-	onAlly.Cut = cut
+	onAlly.OnAlly = true
 	can, _ := book.UseDecision(spec, onAlly)
-	base := book.ActivationPm(spec)
-	return &allyUse{SelfPM: context.Cost.Price(base, class), AllyPM: context.Cost.Price(base, class, cut), AllyCan: can}
+	return &allyUse{
+		SelfPM: book.UsePrice(spec, context.Cost, book.Use{}), AllyPM: book.UsePrice(spec, context.Cost, book.Use{OnAlly: true}),
+		AllyCan: can,
+	}
 }
