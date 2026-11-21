@@ -106,6 +106,9 @@ type stanceState struct {
 	MaxSteps int
 	BasePm   int
 	StepPm   int
+	// Prices é o custo de entrar com cada contagem de degraus, de zero ao teto, pelas regras de custo da ficha: a
+	// prévia do diálogo lê daqui, e não refaz a conta no navegador.
+	Prices []int
 	// StepLabel é o que cada degrau compra ("+1 no bônus de Fúria").
 	StepLabel string
 	// BaseBonus é o bônus do degrau ZERO — o +2 da Fúria, o +1 da Inspiração —,
@@ -195,7 +198,7 @@ func powerRowFor(
 	if spec.Kind == "stance" {
 		row.Stance = stanceStateFor(dto, *spec, stances, context)
 	}
-	row.Degrees = useDegreesFor(dto, *spec)
+	row.Degrees = useDegreesFor(dto, *spec, context.Cost)
 	row.InEffect = grantInEffect(dto, spec.ID)
 	row.Cost, row.Action = writtenCost(*spec, row.Stance, context.Cost), spec.Action
 	row.SortPM = sortCost(*spec)
@@ -226,6 +229,9 @@ func stanceStateFor(
 		state.StepPm = spec.Scaling.StepPm
 		state.StepLabel = spec.Scaling.StepLabel
 		state.MaxSteps = character.PowerMaxSteps(dto, spec)
+	}
+	for steps := 0; steps <= state.MaxSteps; steps++ {
+		state.Prices = append(state.Prices, context.Cost.Price(book.ScaledCost(spec, steps), book.ActivationClass(spec)))
 	}
 	return state
 }

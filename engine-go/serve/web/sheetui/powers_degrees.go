@@ -21,8 +21,10 @@ import (
 // useDegrees é o que a tela precisa para oferecer os degraus de um uso.
 type useDegrees struct {
 	MaxSteps int
-	BasePm   int
 	StepPm   int
+	// Prices é o custo de cada contagem de degraus, de zero ao teto, pelas regras de custo da ficha. A prévia lê
+	// daqui, e não refaz a conta no navegador.
+	Prices []int
 	// Buys é o que cada contagem de degraus compra, escrito ("+1d8"), de zero
 	// ao teto — do mesmo `ScaledGrantModifiers` que o gesto grava.
 	Buys []string
@@ -49,13 +51,17 @@ type riderPart struct {
 func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble }
 
 // useDegreesFor resolve os degraus de um instantâneo com escala, ou nil.
-func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation) *useDegrees {
+func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.AbilityCostRules) *useDegrees {
 	if spec.Kind != "instant" || spec.Scaling == nil {
 		return nil
 	}
 	d := &useDegrees{
-		BasePm: spec.Scaling.BasePm, StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
+		StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
 		MaxSteps: character.PowerMaxSteps(dto, spec),
+	}
+	class := book.ActivationClass(spec)
+	for steps := 0; steps <= d.MaxSteps; steps++ {
+		d.Prices = append(d.Prices, cost.Price(book.ScaledCost(spec, steps), class))
 	}
 	riders := character.RidersOf(dto, spec)
 	d.CanDouble = book.RidersDouble(spec, riders)
@@ -160,8 +166,9 @@ func useCounterExpr(d useDegrees) string {
 		doubled, _ := json.Marshal(d.DoubledBuys)
 		buys = []byte(fmt.Sprintf("($prey_favored ? %s : %s)", doubled, buys))
 	}
-	return fmt.Sprintf("(%s[$stance_degrees] ? %s[$stance_degrees] + ' · ' : '') + (%d + %d * $stance_degrees) + ' PM'",
-		buys, buys, d.BasePm, d.StepPm)
+	prices, _ := json.Marshal(d.Prices)
+	return fmt.Sprintf("(%s[$stance_degrees] ? %s[$stance_degrees] + ' · ' : '') + %s[$stance_degrees] + ' PM'",
+		buys, buys, prices)
 }
 
 // riderShows é quando a linha dos acréscimos de `steps` degraus aparece.
