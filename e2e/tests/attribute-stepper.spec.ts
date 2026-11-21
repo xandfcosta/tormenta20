@@ -7,7 +7,7 @@ import { tidyUp } from './support/tidy'
  * `+` gravava o antigo mais um, e o 5 escrito se perdia.
  *
  * Só um navegador mede isto: o campo escrito sem sair dele, o toque no botão
- * que tira o foco, e os dois pedidos que saem em sequência.
+ * que NÃO tira o foco do campo, e o pedido único que sai dele.
  */
 const TANQUE = 'Tanque Placas Nv10'
 
