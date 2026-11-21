@@ -88,6 +88,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"tempHp":                  "sheet/temp_pools.go, na reserva que o dano gasta antes do PV",
 	"pmLimit":                 "breakdowns_magic.go, no limite de PM por magia",
 	"pmCost":                  "breakdowns_magic.go, no custo da magia",
+	"abilityPmCost":           "ability_pm_cost.go, no custo de toda habilidade, e a magia o lê pelo ForSpell",
 	"boostCost":               "attack_boost.go, no custo do impulso na carta da arma Harmonizada (p165)",
 	"boostCostHalved":         "boost_changes.go, no custo do impulso pela metade na forma do Vingador Sagrado (p84)",
 	"boostExtraDice":          "boost_changes.go, nos dados a mais do impulso na forma do Vingador Sagrado (p84)",

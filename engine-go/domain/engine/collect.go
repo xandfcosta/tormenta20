@@ -134,8 +134,8 @@ func condDamageReduction(n int) Modifier {
 
 // condPmCost é o único modificador de condição que NÃO é penalidade em teste: o
 // Alquebrado encarece as habilidades do personagem.
-func condPmCost(n int) Modifier {
-	return Modifier{Target: ModifierTarget{K: "pmCost"}, Amount: n, BonusType: "condition"}
+func condAbilityPmCost(n int) Modifier {
+	return Modifier{Target: ModifierTarget{K: abilityPmCostTarget}, Amount: n, BonusType: "condition"}
 }
 
 func condIntSabCar(n int) []Modifier {
@@ -221,7 +221,8 @@ var conditionModifierTable = map[string][]Modifier{
 
 	// "ALQUEBRADO. O custo em pontos de mana das habilidades do personagem
 	// aumenta em +1." Aumento, não redução — soma normalmente (p226).
-	"alquebrado": {condPmCost(1)},
+	// O alvo é o de TODA habilidade, que a magia também lê (`ForSpell`): "das habilidades", e não "das magias".
+	"alquebrado": {condAbilityPmCost(1)},
 
 	"ofuscado":  {condAttack(-2), condSkill("Percepção", -2)},
 	"fascinado": {condSkill("Percepção", -5)},

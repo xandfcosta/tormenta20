@@ -51,7 +51,9 @@ type SpellReach struct {
 func (e ItemEffects) ForSpell(kind string, at SpellAt) SpellReach {
 	reached := []keyedTarget{}
 	for _, kt := range e.targets {
-		if kt.target.K == kind && at.reachedBy(kt.target) {
+		// O CUSTO DA MAGIA lê também o de TODA habilidade (o Alquebrado, p394): magia é habilidade.
+		matches := kt.target.K == kind || (kind == "pmCost" && kt.target.K == abilityPmCostTarget)
+		if matches && at.reachedBy(kt.target) {
 			reached = append(reached, kt)
 		}
 	}

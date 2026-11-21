@@ -5,6 +5,9 @@ package engine
 // conhece continua sendo "", que não alcança pilha nenhuma.
 func moreTargetKeys(t ModifierTarget) string {
 	switch t.K {
+	case "abilityPmCost":
+		// O CUSTO DE TODA HABILIDADE não tem recorte: o Alquebrado vale para qualquer uma (p394).
+		return abilityPmCostTarget
 	case "expertiseAttribute":
 		// A PERÍCIA E O ATRIBUTO NO NOME, e a licença não soma nada: como o `defenseAttribute`,
 		// ela AUTORIZA aquele atributo a entrar no lugar do da perícia — "pode usar Destreza em

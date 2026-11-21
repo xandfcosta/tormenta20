@@ -68,13 +68,14 @@ func (c boostChanges) onDice(mods []Modifier, faces int) []Modifier {
 	return out
 }
 
-// priced é o custo do impulso com a forma do Vingador: a metade do `pm` cheio, para baixo e nunca abaixo de
-// 1 PM, contra o `cut` que a arma já deu (a Harmonizada). As reduções não se acumulam, e vale a maior (p226).
-func (c boostChanges) priced(pm, cut int) int {
+// halvedCut é o corte da forma do Vingador no impulso de `pm`: o que falta para a metade, para baixo e nunca
+// abaixo de 1 PM. Ele COMPETE com o corte da arma (a Harmonizada), e vale o maior (p226) — o verbete não diz
+// "após aplicar", como a Alta Arcana diz (p39), e por isso não é fator.
+func (c boostChanges) halvedCut(pm int) int {
 	if !c.halved {
-		return cut
+		return 0
 	}
-	return min(cut, max(1, pm/2))
+	return max(1, pm/2) - pm
 }
 
 // isTheFavoredWeapon diz se a carta é a arma preferida: pelo item, ou pela arma base do item específico, que é

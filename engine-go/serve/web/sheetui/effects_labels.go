@@ -125,7 +125,7 @@ func targetLabel(t engine.ModifierTarget) string {
 		"critRange":  "Margem de ameaça",
 		"critMult":   "Multiplicador crítico", "pmLimit": "Limite de PM por magia",
 		"shootsIntoMelee": "Atira em corpo a corpo sem o –5",
-		"pmCost":          "Custo em PM", "boostCost": "Custo em PM no golpe", "catalyst": "Catalisador", "spellDC": "CD de magias",
+		"pmCost":          "Custo em PM", "abilityPmCost": "Custo em PM das habilidades", "boostCost": "Custo em PM no golpe", "catalyst": "Catalisador", "spellDC": "CD de magias",
 		"inventorySlots": "Espaços de carga", "flySpeed": "Voo", "climbSpeed": "Escalada", "swimSpeed": "Natação",
 		"alchemicalDamage": "Dano de preparado alquímico",
 		"poisonDc":         "CD de venenos",

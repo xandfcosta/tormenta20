@@ -94,7 +94,7 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if ActivationPm(spec) > context.CurrentPM {
+	if engine.AbilityPmCost(ActivationPm(spec), context.CostIncrease) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -102,7 +102,10 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 
 // UseContext é o que a decisão precisa saber da ficha AGORA.
 type UseContext struct {
-	CurrentPM     int
+	CurrentPM int
+	// CostIncrease é o que sobe o custo de toda habilidade da ficha (o Alquebrado, p394): a decisão confere o PM
+	// contra o preço que se cobra, e não contra o do catálogo.
+	CostIncrease  int
 	UsedThisScene int
 	UsedToday     int
 	Flags         map[string]bool
@@ -155,11 +158,13 @@ func ScaledCost(spec Activation, steps int) int {
 
 // ScaledDecision responde se dá para pagar esses degraus: dentro do teto do
 // nível, e com PM para o total.
-func ScaledDecision(spec Activation, steps, max, currentPM int) (bool, string) {
+// O PM se confere contra o preço que se cobra: o custo dos degraus com o `increase` de toda habilidade (o
+// Alquebrado, p394), pela conta única.
+func ScaledDecision(spec Activation, steps, max, currentPM, increase int) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := ScaledCost(spec, steps); cost > currentPM {
+	if cost := engine.AbilityPmCost(ScaledCost(spec, steps), increase); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""

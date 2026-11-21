@@ -87,12 +87,13 @@ func wildFirstFormLabel(w wildShapeView) string {
 
 func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 	view := wildShapeView{Summaries: map[string]string{}, Moves: map[engine.WildTier][]wildMoveOption{}}
+	increase := sheet.AbilityCostIncrease(dto)
 	for _, tier := range engine.WildTiers {
 		if !sheet.OwnsPower(dto, engine.WildTierPowerID(tier)) {
 			continue
 		}
 		view.Offered = true
-		pm := engine.WildTierPM(tier)
+		pm := engine.AbilityPmCost(engine.WildTierPM(tier), increase)
 		view.Tiers = append(view.Tiers, wildTierOption{Tier: tier, Label: wildTierLabel(tier) + " · " + strconv.Itoa(pm) + " PM", PM: pm})
 		for _, form := range engine.WildForms {
 			stats, _ := engine.WildShapeStatsOf(form, tier)

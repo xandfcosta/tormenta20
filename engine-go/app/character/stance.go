@@ -181,10 +181,12 @@ func (p Plays) EndStance(
 // Poder que não vende degrau tem teto zero.
 func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int) (int, error) {
 	max := PowerMaxSteps(dto, spec)
-	if can, reason := book.ScaledDecision(spec, steps, max, int(dto.ManaAvailable())); !can {
+	// O ALQUEBRADO (p394) sobe o custo pela conta única, e a falta de PM se confere contra o preço que se cobra.
+	increase := sheet.AbilityCostIncrease(dto)
+	if can, reason := book.ScaledDecision(spec, steps, max, int(dto.ManaAvailable()), increase); !can {
 		return 0, fmt.Errorf("%s: %s", spec.Name, reason)
 	}
-	return book.ScaledCost(spec, steps), nil
+	return engine.AbilityPmCost(book.ScaledCost(spec, steps), increase), nil
 }
 
 // UsePower gasta um uso de um poder instantâneo: cobra o PM e soma o contador.
