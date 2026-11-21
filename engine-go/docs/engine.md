@@ -472,9 +472,11 @@ Mente Criminosa não são).
   corpo; o degrau pago e a Fúria Titânica, que copiam e dobram a Fúria, seguem o
   escopo dela.
 - **O atributo da carta se troca por quem "pode"** (`weapon_attribute.go`): a Destreza pela arma ou pela
-  Acuidade (p145), a Inteligência pelo Armeiro, corpo a corpo, no ataque e no dano (p68), e pela Balística, à
-  distância, no ataque (p69). A carta fica com o maior, só na arma empunhada, e diz quem trocou (`DexBy`,
-  `IntBy`) para a ficha escrever o porquê.
+  Acuidade (p145), e a Inteligência pela licença `weaponAttribute` que o catálogo declara — o alcance, a conta
+  (ataque ou dano) e a frase —: o Armeiro, corpo a corpo, no ataque e no dano (p68), e a Balística, à
+  distância, no ataque (p69). O motor não conhece nenhum dos dois pelo nome. A carta fica com o maior, pelo
+  `licensedAttribute`, só na arma empunhada, e o dano só troca se o ataque trocou. Ela diz quem trocou
+  (`DexBy`, e a frase da licença em `IntNote` e `IntDamageNote`) para a ficha escrever o porquê.
 - **O outro uso da arma mora dentro da carta dela** (`WeaponCard.OtherUse`,
   `otherUseOf`), e o índice da carta é o da mão: toda arma corpo a corpo se arremessa,
   com −5 se não tiver alcance (p143) nem o encanto Arremesso (p335, decisão do dono), e

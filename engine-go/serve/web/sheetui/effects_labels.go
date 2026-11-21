@@ -169,6 +169,11 @@ func targetLabel(t engine.ModifierTarget) string {
 		}
 		return t.Name
 	}
+	// A LICENÇA DO ATRIBUTO DA ARMA também é uma frase inteira: "Inteligência no dano corpo a corpo" diz o
+	// atributo, a conta e o alcance (o Armeiro, p68; a Balística, p69).
+	if t.K == "weaponAttribute" {
+		return weaponAttributeLabel(t)
+	}
 	// A ISENÇÃO DE BANDEIRA também é uma frase inteira, e ela é AFIRMATIVA:
 	// "Isento de: Não soma Destreza na Defesa" é uma negação dupla que o
 	// jogador tem de desfazer de cabeça, e o verbete não fala assim.
@@ -283,8 +288,6 @@ var itemFlagLabel = map[string]string{
 	"evasao":                     "Reflexos que zera o dano à metade",
 	"evasao-aprimorada":          "Reflexos que zera o dano à metade, e a falha só sofre metade",
 	"pao-e-circo":                "Não letal sem a penalidade",
-	"armeiro":                    "Inteligência no ataque corpo a corpo",
-	"balistica":                  "Inteligência no ataque à distância",
 	"furia-da-savana":            "Fúria também no arremesso",
 	"magia-ilimitada":            "Magia Ilimitada",
 	"ambidestria":                "Ambidestria",
@@ -328,4 +331,20 @@ func conditionalLabel(c engine.ConditionalEffect) string {
 		return note
 	}
 	return targetLabel(c.Target)
+}
+
+// weaponAttributeLabel é a frase da licença do atributo da arma: o atributo, a conta e o alcance.
+//
+//	weaponAttributeLabel(engine.ModifierTarget{K: "weaponAttribute", Name: "melee", Scope: "damage", Attribute: "intelligence"})
+//	// "Inteligência no dano corpo a corpo"
+func weaponAttributeLabel(t engine.ModifierTarget) string {
+	account := "no ataque"
+	if t.Scope == "damage" {
+		account = "no dano"
+	}
+	reach := "à distância"
+	if t.Name == "melee" {
+		reach = "corpo a corpo"
+	}
+	return book.AttributeLabel(t.Attribute) + " " + account + " " + reach
 }

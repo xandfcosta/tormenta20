@@ -3,8 +3,8 @@ package engine
 import "slices"
 
 // O ATRIBUTO DA ARMA: a Força corpo a corpo e a Destreza à distância (p142), e quem pode trocá-los — a arma e a
-// Acuidade com Arma, pela Destreza (p145); o Armeiro e a Balística, pela Inteligência (p68, p69). Todos dizem
-// "pode", e a carta fica com o maior.
+// Acuidade com Arma, pela Destreza (p145); a licença `weaponAttribute` do catálogo, pela Inteligência (o Armeiro e
+// a Balística, p68, p69). Todos dizem "pode", e a carta fica com o maior.
 
 // Quem pôs a Destreza no ataque: a arma (`WeaponStats.Finesse`) ou o poder.
 const (
@@ -26,35 +26,22 @@ func weaponDexUse(w *WeaponStats, hasFinesse bool, forTotal, dexTotal int) (atta
 	return w.Finesse || finesse, finesse
 }
 
-// Quem põe a Inteligência no lugar do atributo da arma, pelo nome que a ficha escreve.
-const (
-	armorerName    = "Armeiro"
-	ballisticsName = "Balística"
-	armorerFlag    = "armeiro"
-	ballisticsFlag = "balistica"
-)
-
-// intelligenceInstead é o atributo do ataque depois do Armeiro, corpo a corpo, e da Balística, à distância:
-// os dois "podem usar a Inteligência", e a carta fica com ela quando ela é maior que o atributo em uso
-// (p68, p69). Só na arma EMPUNHADA ("quando empunha uma arma"): o desarmado e a arma natural ficam com o
-// atributo deles. Devolve também quem a pôs, vazio quando ninguém pôs.
-func (b cardBasis) intelligenceInstead(w *WeaponStats, attribute string, scopes []string) (string, string) {
+// licensedWeaponAttribute é o atributo de uma conta da arma — o ataque ou o dano (`account`) — depois das
+// licenças `weaponAttribute` do catálogo: o Armeiro põe a Inteligência no ataque e no dano corpo a corpo, a
+// Balística no ataque à distância (p68, p69). Os dois "podem", e a carta fica com o maior, pelo mesmo
+// `licensedAttribute` das outras licenças. Só na arma EMPUNHADA ("quando empunha uma arma"): o desarmado e a arma
+// natural ficam com o atributo deles. Devolve também a parcela da licença que trocou, vazia quando nada trocou —
+// é a frase dela que a carta mostra.
+func (b cardBasis) licensedWeaponAttribute(ch Character, w *WeaponStats, account, attribute string, scopes []string) (string, Contribution) {
 	if !slices.Contains(scopes, WieldedScope) {
-		return attribute, ""
+		return attribute, Contribution{}
 	}
-	current := b.forTotal
-	if attribute == "dexterity" {
-		current = b.dexTotal
+	// O arremesso é ataque À DISTÂNCIA (p142): a Balística o alcança.
+	reach := "ranged"
+	if w.Purpose == "melee" {
+		reach = "melee"
 	}
-	by := ""
-	switch {
-	case w.Purpose == "melee" && b.effects.Flags[armorerFlag]:
-		by = armorerName
-	case (w.Purpose == "ranged" || w.Purpose == "thrown") && b.effects.Flags[ballisticsFlag]:
-		by = ballisticsName
-	}
-	if by == "" || b.intTotal <= current {
-		return attribute, ""
-	}
-	return "intelligence", by
+	return licensedAttribute(ch, attribute, b.effects, func(attribute string) ModifierTarget {
+		return ModifierTarget{K: "weaponAttribute", Name: reach, Scope: account, Attribute: attribute}
+	})
 }

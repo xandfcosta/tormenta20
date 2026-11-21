@@ -23,8 +23,8 @@ func TestTheArmorerAttacksAndHitsWithIntelligence(t *testing.T) {
 	if armorer.Attribute != "intelligence" || armorer.Attack-plain.Attack != 3 {
 		t.Errorf("o Armeiro com Int 4 e For 1 ataca com %s, %d acima; want intelligence, +3", armorer.Attribute, armorer.Attack-plain.Attack)
 	}
-	if armorer.StrDamage != 4 || !armorer.IntDamage {
-		t.Errorf("o Armeiro soma %d no dano (Inteligência: %v); want a Inteligência, 4", armorer.StrDamage, armorer.IntDamage)
+	if armorer.StrDamage != 4 || armorer.IntDamageNote == "" {
+		t.Errorf("o Armeiro soma %d no dano (Inteligência: %q); want a Inteligência, 4", armorer.StrDamage, armorer.IntDamageNote)
 	}
 	// "PODE": com a Força maior, fica a Força.
 	if strong := sword(`["class.inventor.armeiro"]`, 5); strong.Attribute != "strength" || strong.StrDamage != 5 {
@@ -58,5 +58,25 @@ func TestTheBallisticsAimsWithIntelligence(t *testing.T) {
 		if card.StrDamage != c.dmg {
 			t.Errorf("a Balística com %s soma %d no dano; want %d", c.weapon, card.StrDamage, c.dmg)
 		}
+	}
+}
+
+// A TROCA É UMA LICENÇA DO CATÁLOGO (ALE-670). O Armeiro e a Balística declaram a troca do atributo da arma — o
+// alcance, a conta e a frase —, e a carta leva a frase da licença: o motor não conhece nenhum dos dois pelo nome,
+// e a tela não deduz de qual atributo saiu a Inteligência pelo nome do poder.
+func TestTheWeaponAttributeSwapCarriesTheLicensePhrase(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	sword := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 1, 0, 4, "espada-longa"), nil), "espada-longa")
+	if sword.IntNote != "Armeiro: Inteligência no lugar de Força" || sword.IntDamageNote != sword.IntNote {
+		t.Errorf("o Armeiro diz %q no ataque e %q no dano; want a frase da licença nos dois", sword.IntNote, sword.IntDamageNote)
+	}
+	bow := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.balistica"]`, 1, 0, 4, "arco-longo"), nil), "arco-longo")
+	if bow.IntNote != "Balística: Inteligência no lugar de Destreza" || bow.IntDamageNote != "" {
+		t.Errorf("a Balística diz %q no ataque e %q no dano; want a frase da licença só no ataque", bow.IntNote, bow.IntDamageNote)
+	}
+	// Sem troca, sem frase: a Força maior fica.
+	strong := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 5, 0, 4, "espada-longa"), nil), "espada-longa")
+	if strong.IntNote != "" || strong.IntDamageNote != "" {
+		t.Errorf("o Armeiro com a Força maior ainda diz %q e %q", strong.IntNote, strong.IntDamageNote)
 	}
 }

@@ -61,12 +61,23 @@ var classPowersPart11 = []ClassPower{
 			"a proficiência com armas marciais corpo a corpo",
 			"a Inteligência no lugar da Força no ataque e no dano com a arma corpo a corpo empunhada, quando ela é maior",
 		},
-		ClassName:      "Inventor",
-		Name:           "Armeiro",
-		Description:    "Proficiência com armas marciais corpo a corpo. Quando empunha arma corpo a corpo, usa Inteligência em vez de Força nos ataques e rolagens de dano.",
-		BookPage:       68,
-		UID:            "pwr_5nxcqin5sx",
-		Modifiers:      []Modifier{{Target: ModifierTarget{Kind: "flag", Name: "armeiro"}, Amount: 1, BonusType: "untyped"}},
+		ClassName:   "Inventor",
+		Name:        "Armeiro",
+		Description: "Proficiência com armas marciais corpo a corpo. Quando empunha arma corpo a corpo, usa Inteligência em vez de Força nos ataques e rolagens de dano.",
+		BookPage:    68,
+		UID:         "pwr_5nxcqin5sx",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "weaponAttribute", Scope: "attack", Name: "melee", Attribute: "intelligence"},
+				BonusType: "untyped",
+				Note:      "Armeiro: Inteligência no lugar de Força",
+			},
+			{
+				Target:    ModifierTarget{Kind: "weaponAttribute", Scope: "damage", Name: "melee", Attribute: "intelligence"},
+				BonusType: "untyped",
+				Note:      "Armeiro: Inteligência no lugar de Força",
+			},
+		},
 		ProficientWith: []ProficiencyReach{{Category: "armas-marciais", Purpose: "melee", Label: "as corpo a corpo"}},
 		Prerequisites: []Prerequisite{
 			{Kind: "trained", Expertise: "Luta"},
@@ -121,7 +132,11 @@ var classPowersPart11 = []ClassPower{
 		BookPage:    69,
 		UID:         "pwr_zuskbji6cp",
 		Modifiers: []Modifier{
-			{Target: ModifierTarget{Kind: "flag", Name: "balistica"}, Amount: 1, BonusType: "untyped"},
+			{
+				Target:    ModifierTarget{Kind: "weaponAttribute", Scope: "attack", Name: "ranged", Attribute: "intelligence"},
+				BonusType: "untyped",
+				Note:      "Balística: Inteligência no lugar de Destreza",
+			},
 			{
 				Target:    ModifierTarget{Kind: "scaleAttribute", Name: "estilo-de-disparo", Attribute: "intelligence"},
 				BonusType: "untyped",

@@ -116,12 +116,13 @@ type WeaponCard struct {
 	// deixa a conta da ficha rotular a parcela certa. Fora do fio de propósito:
 	// é explicação para a tela, e o fio já tem o número.
 	DexBy string `json:"-"`
-	// IntBy diz quem pôs a Inteligência no lugar do atributo do ATAQUE — o Armeiro (p68) ou a Balística
-	// (p69) —, e IntDamage que ela entrou também no dano (o Armeiro). Fora do fio, como o `DexBy`: só a
-	// ficha os lê, para escrever o atributo e o porquê.
-	IntBy     string `json:"-"`
-	IntDamage bool   `json:"-"`
-	DexDamage bool   `json:"-"`
+	// IntNote é a frase da licença que pôs a Inteligência no lugar do atributo do ATAQUE — "Armeiro: Inteligência
+	// no lugar de Força" (p68), "Balística: Inteligência no lugar de Destreza" (p69) —, e IntDamageNote a da que
+	// a pôs no DANO (o Armeiro). Vazias quando nada trocou. Fora do fio, como o `DexBy`: só a ficha as lê, para
+	// escrever o atributo e o porquê.
+	IntNote       string `json:"-"`
+	IntDamageNote string `json:"-"`
+	DexDamage     bool   `json:"-"`
 	// DamageType é o tipo do dano da ARMA — "corte", "perfuracao", "impacto" —,
 	// e ele vale para os dados dela e para os bônus numéricos que a acompanham
 	// (a Força, o dano do encanto sem tipo próprio). As parcelas de OUTRO tipo
@@ -331,13 +332,18 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		}
 		dexDamageUsed = dexDamage
 	}
-	attribute, intBy := b.intelligenceInstead(w, attribute, scopes)
-	intDamage := false
-	if intBy == armorerName && b.intTotal > strDamage {
-		strDamage, dexDamageUsed, intDamage = b.intTotal, false, true
-	}
-	if intBy != "" {
+	attribute, attackLicense := b.licensedWeaponAttribute(ch, w, "attack", attribute, scopes)
+	// O DANO SÓ TROCA SE O ATAQUE TROCOU: é como a carta sempre leu o Armeiro, que diz os dois juntos (p68).
+	intDamageNote := ""
+	if attackLicense.Source != "" {
 		dexBy = ""
+		damageBase := "strength"
+		if dexDamageUsed {
+			damageBase = "dexterity"
+		}
+		if damageAttribute, damageLicense := b.licensedWeaponAttribute(ch, w, "damage", damageBase, scopes); damageAttribute == "intelligence" {
+			strDamage, dexDamageUsed, intDamageNote = b.intTotal, false, damageLicense.Note
+		}
 	}
 	// weaponSkillState returns the stored Luta row (attribute strength); force
 	// the resolved attribute so a finessed melee attack sums Destreza (ALE-31).
@@ -367,8 +373,8 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		DamageType:             w.Type,
 		StrDamage:              strDamage,
 		DexBy:                  dexBy,
-		IntBy:                  intBy,
-		IntDamage:              intDamage,
+		IntNote:                attackLicense.Note,
+		IntDamageNote:          intDamageNote,
 		DexDamage:              dexDamageUsed,
 		DamageBonus:            strDamage + b.damageAll.Total + ownDamage.Total,
 		DamageAll:              b.damageAll,

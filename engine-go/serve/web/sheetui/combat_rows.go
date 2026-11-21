@@ -105,7 +105,7 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 		switch {
 		case card.DexDamage:
 			label = "DES"
-		case card.IntDamage:
+		case card.IntDamageNote != "":
 			// O Armeiro troca a Força pela Inteligência no dano (p68).
 			label = "INT"
 		}
