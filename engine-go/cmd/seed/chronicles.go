@@ -118,6 +118,8 @@ var demoCampaigns = []demoCampaign{
 			// A ARMA IMPROVISADA e a CHAVE (p76): as linhas do dano desarmado um passo acima, que se escolhem no
 			// passo do dano da mesa (ALE-655).
 			{"jogador@t20.local", "Lutador Agarrador Nv5"},
+			// O ARTISTA COMPLETO (p45): sob a Inspiração, as habilidades de bardo custam a metade (ALE-647).
+			{"jogador@t20.local", "Bardo Artista Nv20"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},

@@ -1,6 +1,10 @@
 package book
 
-import "testing"
+import (
+	"testing"
+
+	"t20engine/domain/engine"
+)
 
 // A DECISÃO DE USAR confere o PM contra o preço que se cobra, e o Alquebrado sobe esse preço (p394, ALE-647): com
 // 2 PM sobrando, a Cabeçada de 2 PM sai, e Alquebrado (3 PM) não.
@@ -12,7 +16,7 @@ func TestTheUseDecisionWeighsTheBrokenIncrease(t *testing.T) {
 	if can, why := UseDecision(*headbutt, UseContext{CurrentPM: 2}); !can {
 		t.Fatalf("com 2 PM a Cabeçada foi recusada: %s", why)
 	}
-	if can, why := UseDecision(*headbutt, UseContext{CurrentPM: 2, CostIncrease: 1}); can || why != "PM insuficiente" {
+	if can, why := UseDecision(*headbutt, UseContext{CurrentPM: 2, Cost: engine.AbilityCostRules{Increase: 1}}); can || why != "PM insuficiente" {
 		t.Errorf("Alquebrado com 2 PM a Cabeçada saiu (%v, %q); want recusada por PM insuficiente", can, why)
 	}
 }

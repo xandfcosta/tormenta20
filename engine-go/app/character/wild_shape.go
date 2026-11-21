@@ -37,7 +37,8 @@ func (p Plays) TakeWildShape(ctx context.Context, row sqlcgen.Character, dto she
 	if stats.Moves == nil {
 		shape.Movement = ""
 	}
-	cost := engine.AbilityPmCost(engine.WildTierPM(shape.Tier), sheet.AbilityCostIncrease(dto))
+	// O custo da forma passa pelas regras de custo da ficha, com a classe do poder dela.
+	cost := sheet.AbilityCostRules(dto).Price(engine.WildTierPM(shape.Tier), book.ClassOfPower(engine.WildTierPowerID(shape.Tier)))
 	return p.inTx(ctx, "assumir a forma selvagem", func(q *sqlcgen.Queries) error {
 		if err := chargeMp(ctx, q, p.catalogs, row, cost); err != nil {
 			return err

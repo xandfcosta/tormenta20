@@ -6,7 +6,11 @@ package engine
 func moreTargetKeys(t ModifierTarget) string {
 	switch t.K {
 	case "abilityPmCost":
-		// O CUSTO DE TODA HABILIDADE não tem recorte: o Alquebrado vale para qualquer uma (p394).
+		// O CUSTO DE TODA HABILIDADE, ou só o das de uma CLASSE (`Name`): o Alquebrado vale para qualquer uma
+		// (p394), e a metade do Artista Completo, para as de bardo (p45).
+		if t.Name != "" {
+			return abilityPmCostTarget + ":" + t.Name
+		}
 		return abilityPmCostTarget
 	case "expertiseAttribute":
 		// A PERÍCIA E O ATRIBUTO NO NOME, e a licença não soma nada: como o `defenseAttribute`,

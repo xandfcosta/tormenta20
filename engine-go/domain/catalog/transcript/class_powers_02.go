@@ -404,14 +404,25 @@ var classPowersPart02 = []ClassPower{
 		PowerUID:       "pwr_cq2yqbaoiy",
 	},
 	{
-		ID:             "class.bardo.artista-completo",
+		ID: "class.bardo.artista-completo",
+		Modeled: []string{
+			"a metade do custo em PM das habilidades de bardo, magias incluídas, sob a Inspiração, depois dos aumentos e dos cortes",
+		},
 		ClassName:      "Bardo",
 		Name:           "Artista Completo",
 		Description:    "Capstone: pode usar Inspiração como ação livre. Sob Inspiração, custo em PM de habilidades de bardo (incluindo magias) reduzido à metade.",
 		GrantedAtLevel: 20,
 		BookPage:       45,
 		UID:            "pwr_xvc2mvxdj2",
-		Unmodeled:      "a metade do custo das habilidades de bardo sob a Inspiração é custo de habilidade (ALE-647); a Inspiração como ação livre é do mestre",
+		Modifiers: []Modifier{
+			{
+				Target:    ModifierTarget{Kind: "abilityPmCost", Name: "Bardo"},
+				BonusType: "untyped",
+				Condition: &ModifierCondition{Kind: "flagOn", Flag: "inspiracao", Label: "Sob Inspiração"},
+				Factor:    &ModifierFactor{Num: 1, Den: 2},
+			},
+		},
+		Unmodeled: "a Inspiração como ação livre é do mestre",
 	},
 	{
 		ID:          "class.bardo.arte-magica",

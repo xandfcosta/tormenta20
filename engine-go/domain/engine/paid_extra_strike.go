@@ -31,12 +31,12 @@ type PaidExtraStrike struct {
 }
 
 // paidExtraStrikes são os ataques pagos que os poderes da ficha dão, na ordem das classes.
-// O preço já leva o `increase` de toda habilidade (o Alquebrado, p394).
-func (r *Ruleset) paidExtraStrikes(ch Character, increase int) []PaidExtraStrike {
+// O preço passa pelas regras de custo da ficha (o Alquebrado, p394; o fator da classe do poder).
+func (r *Ruleset) paidExtraStrikes(ch Character, rules AbilityCostRules) []PaidExtraStrike {
 	var out []PaidExtraStrike
 	for _, power := range r.ownedPowersOfEveryClass(ch) {
 		if grant := power.ExtraStrike; grant != nil {
-			out = append(out, PaidExtraStrike{PowerID: power.ID, Name: power.Name, PM: AbilityPmCost(grant.PM, increase), Unarmed: grant.Unarmed})
+			out = append(out, PaidExtraStrike{PowerID: power.ID, Name: power.Name, PM: rules.Price(grant.PM, power.ClassName), Unarmed: grant.Unarmed})
 		}
 	}
 	return out

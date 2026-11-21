@@ -82,11 +82,11 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	}
 	// O ALQUEBRADO (p394) sobe o custo de toda habilidade, e o gasto do encanto também é uma: a p224 conta os
 	// itens entre as fontes de habilidade.
-	increase := r.EffectsOf(ch, activeConditionals).AbilityCostIncrease()
+	rules := r.EffectsOf(ch, activeConditionals).AbilityCostRules()
 	if _, enchant, isEnchant := enchantBoostOf(choice.PowerID); isEnchant {
 		cards, pm, err := r.enchantBoostedCards(ch, activeConditionals, choice.PowerID)
 		for i := range cards {
-			pricedAt(&cards[i], AbilityPmCost(pm, increase, r.boostCutWith(ch, cards[i].ItemID, enchant)))
+			pricedAt(&cards[i], rules.Price(pm, "", r.boostCutWith(ch, cards[i].ItemID, enchant)))
 		}
 		return cards, err
 	}
@@ -150,7 +150,7 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	pm := boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM + addOnPM
 	for i := range boosted {
 		cut := r.boostCutWith(ch, boosted[i].ItemID, power.ID)
-		pricedAt(&boosted[i], AbilityPmCost(pm, increase*abilities, cut, changes.halvedCut(pm)))
+		pricedAt(&boosted[i], AbilityPmCostWith(pm, rules.Increase*abilities, rules.Factor(power.ClassName), cut, changes.halvedCut(pm)))
 	}
 	return boosted, nil
 }
@@ -221,7 +221,7 @@ type BoostOffer struct {
 //	world.BoostOffers(paladin) // [{PowerID: "class.paladino.golpe-divino-1d8", BasePM: 2, …}]
 func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 	// O PREÇO QUE A OFERTA DIZ já leva o Alquebrado (p394), que mora na ficha e não num interruptor.
-	increase := r.EffectsOf(ch, nil).AbilityCostIncrease()
+	rules := r.EffectsOf(ch, nil).AbilityCostRules()
 	out := []BoostOffer{}
 	for _, power := range r.ownedPowersOfEveryClass(ch) {
 		if power.Boost == nil {
@@ -229,7 +229,7 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 		}
 		d := power.Boost.Degrees
 		offer := BoostOffer{
-			PowerID: power.ID, Name: power.Name, BasePM: AbilityPmCost(d.BasePM, increase), StepPM: d.StepPM,
+			PowerID: power.ID, Name: power.Name, BasePM: rules.Price(d.BasePM, power.ClassName), StepPM: d.StepPM,
 			MaxSteps:  StepsAt(d.FirstStepLevel, d.StepEveryLevels, power.ClassLevel),
 			Split:     power.Boost.Split,
 			MeleeOnly: power.Boost.MeleeOnly,
@@ -239,12 +239,12 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 		}
 		for _, addOn := range r.ownedBoostAddOns(ch, power.ID) {
 			offer.AddOns = append(offer.AddOns, BoostAddOnOffer{
-				PowerID: addOn.ID, Name: addOn.Name, PM: AbilityPmCost(addOn.BoostAddOn.PM, increase), Buys: addOnBuys(addOn.BoostAddOn),
+				PowerID: addOn.ID, Name: addOn.Name, PM: rules.Price(addOn.BoostAddOn.PM, addOn.ClassName), Buys: addOnBuys(addOn.BoostAddOn),
 			})
 		}
 		out = append(out, offer)
 	}
-	return append(out, r.enchantBoostOffers(ch, increase)...)
+	return append(out, r.enchantBoostOffers(ch, rules)...)
 }
 
 // ownedBoostPower é o poder de impulso que a ficha tem com esse id, com o nível na

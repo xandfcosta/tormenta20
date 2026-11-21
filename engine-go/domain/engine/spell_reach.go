@@ -1,6 +1,9 @@
 package engine
 
-import "sort"
+import (
+	"slices"
+	"sort"
+)
 
 // O QUE VALE PARA UMA MAGIA, numa pergunta só.
 //
@@ -17,6 +20,9 @@ import "sort"
 //	SpellAt{Tradition: "arcana", School: "evocacao", Range: "medio", Spell: "bola-de-fogo"}
 type SpellAt struct {
 	Tradition, School, Range, Spell string
+	// Classes são as classes que lançam a magia (`sheet.CastingClasses`): o que vale para as habilidades de uma
+	// classe só alcança a magia que ela lança.
+	Classes []string
 }
 
 // reachedBy diz se o modificador com este alvo alcança a magia: cada campo que ele pede, a magia tem.
@@ -52,7 +58,9 @@ func (e ItemEffects) ForSpell(kind string, at SpellAt) SpellReach {
 	reached := []keyedTarget{}
 	for _, kt := range e.targets {
 		// O CUSTO DA MAGIA lê também o de TODA habilidade (o Alquebrado, p394): magia é habilidade.
-		matches := kt.target.K == kind || (kind == "pmCost" && kt.target.K == abilityPmCostTarget)
+		// A de uma CLASSE só alcança a magia que essa classe lança (as de bardo do Artista Completo, p45).
+		matches := kt.target.K == kind || (kind == "pmCost" && kt.target.K == abilityPmCostTarget &&
+			(kt.target.Name == "" || slices.Contains(at.Classes, kt.target.Name)))
 		if matches && at.reachedBy(kt.target) {
 			reached = append(reached, kt)
 		}

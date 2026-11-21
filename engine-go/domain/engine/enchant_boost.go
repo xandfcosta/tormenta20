@@ -72,7 +72,7 @@ func enchantBoostOf(id string) (int64, string, bool) {
 }
 
 // enchantBoostOffers são os gastos que as armas EMPUNHADAS oferecem, um por encanto com gasto.
-func (r *Ruleset) enchantBoostOffers(ch Character, increase int) []BoostOffer {
+func (r *Ruleset) enchantBoostOffers(ch Character, rules AbilityCostRules) []BoostOffer {
 	out := []BoostOffer{}
 	wields := r.wieldedBy(ch)
 	for _, it := range ch.Items {
@@ -85,7 +85,7 @@ func (r *Ruleset) enchantBoostOffers(ch Character, increase int) []BoostOffer {
 				continue
 			}
 			out = append(out, BoostOffer{
-				PowerID: EnchantBoostID(it.ID, enchant), Name: catalog.Name, BasePM: AbilityPmCost(catalog.Boost.PM, increase),
+				PowerID: EnchantBoostID(it.ID, enchant), Name: catalog.Name, BasePM: rules.Price(catalog.Boost.PM, ""),
 				ItemID: it.ID, HitPointCost: catalog.Boost.HitPointCost, Against: it.EnchantChoices[enchant],
 				Buys: []string{enchantBoostBuys(catalog.Boost)}, Foresees: enchantBoostForesees(catalog.Boost),
 			})
