@@ -48,17 +48,6 @@ func (r *Ruleset) boostChangesOf(ch Character, activeConditionals map[string]boo
 	return changes
 }
 
-// ownedPowersOfEveryClass são os poderes de classe que a ficha tem, na ordem das classes.
-func (r *Ruleset) ownedPowersOfEveryClass(ch Character) []*ClassPower {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
-	var out []*ClassPower
-	for _, entry := range ch.Classes {
-		out = append(out, r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName])...)
-	}
-	return out
-}
-
 // onDice devolve os modificadores do impulso com os dados mudados: os dados a mais somam na contagem ("mais
 // dois dados de dano", e não dois por degrau), e `faces`, quando não é zero, troca o dado.
 func (c boostChanges) onDice(mods []Modifier, faces int) []Modifier {

@@ -232,12 +232,9 @@ func (r *Ruleset) OwnsPower(ch Character, id string) bool {
 	if slices.Contains(r.OriginPickedPowerIDs(ch), id) {
 		return true
 	}
-	chosen, choices := parseChoiceSet(ch.ClassPowers), parseClassChoices(ch.ClassChoices)
-	for _, entry := range ch.Classes {
-		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
-			if power.ID == id {
-				return true
-			}
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		if power.ID == id {
+			return true
 		}
 	}
 	for _, name := range parseChoiceSet(ch.GodPowers).list {

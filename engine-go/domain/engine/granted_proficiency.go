@@ -65,17 +65,13 @@ func (g ProficiencyReach) reaches(item *CatalogItem, required string) bool {
 //	world.ProficiencyOf(armeiro).Holds(espadaLonga, &wielded) // true
 func (r *Ruleset) ProficiencyOf(ch Character) Proficiency {
 	out := Proficiency{Saved: parseProficiencySet(ch.Proficiencies)}
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
 	picks := parsePowerChoices(ch.PowerChoices)
-	for _, entry := range ch.Classes {
-		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
-			for _, reach := range power.ProficientWith {
-				if reach.Option != "" && !slices.Contains(picks[power.ID], reach.Option) {
-					continue
-				}
-				out.Granted = append(out.Granted, GrantedProficiency{Source: power.Name, ProficiencyReach: reach})
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		for _, reach := range power.ProficientWith {
+			if reach.Option != "" && !slices.Contains(picks[power.ID], reach.Option) {
+				continue
 			}
+			out.Granted = append(out.Granted, GrantedProficiency{Source: power.Name, ProficiencyReach: reach})
 		}
 	}
 	for _, applied := range r.appliedRaces(ch) {

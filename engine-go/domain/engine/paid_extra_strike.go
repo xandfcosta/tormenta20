@@ -32,14 +32,10 @@ type PaidExtraStrike struct {
 
 // paidExtraStrikes são os ataques pagos que os poderes da ficha dão, na ordem das classes.
 func (r *Ruleset) paidExtraStrikes(ch Character) []PaidExtraStrike {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
 	var out []PaidExtraStrike
-	for _, entry := range ch.Classes {
-		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
-			if grant := power.ExtraStrike; grant != nil {
-				out = append(out, PaidExtraStrike{PowerID: power.ID, Name: power.Name, PM: grant.PM, Unarmed: grant.Unarmed})
-			}
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		if grant := power.ExtraStrike; grant != nil {
+			out = append(out, PaidExtraStrike{PowerID: power.ID, Name: power.Name, PM: grant.PM, Unarmed: grant.Unarmed})
 		}
 	}
 	return out

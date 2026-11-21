@@ -28,20 +28,16 @@ type DamageVariant struct {
 
 // unarmedDamageVariants são as linhas que os poderes da ficha dão, na ordem das classes, já com o dado da carta.
 func (r *Ruleset) unarmedDamageVariants(ch Character, damage string) []DamageVariant {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
 	var out []DamageVariant
-	for _, entry := range ch.Classes {
-		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
-			grant := power.UnarmedDamageVariant
-			if grant == nil {
-				continue
-			}
-			out = append(out, DamageVariant{
-				ID: power.ID, Label: grant.Label, Source: power.Name, BookPage: power.BookPage,
-				Damage: DamageStep(damage, grant.Steps),
-			})
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		grant := power.UnarmedDamageVariant
+		if grant == nil {
+			continue
 		}
+		out = append(out, DamageVariant{
+			ID: power.ID, Label: grant.Label, Source: power.Name, BookPage: power.BookPage,
+			Damage: DamageStep(damage, grant.Steps),
+		})
 	}
 	return out
 }
