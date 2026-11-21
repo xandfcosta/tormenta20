@@ -94,7 +94,7 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if engine.AbilityPmCost(ActivationPm(spec), context.CostIncrease) > context.CurrentPM {
+	if context.Cost.Price(ActivationPm(spec), ActivationClass(spec)) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -103,9 +103,9 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 // UseContext é o que a decisão precisa saber da ficha AGORA.
 type UseContext struct {
 	CurrentPM int
-	// CostIncrease é o que sobe o custo de toda habilidade da ficha (o Alquebrado, p394): a decisão confere o PM
-	// contra o preço que se cobra, e não contra o do catálogo.
-	CostIncrease  int
+	// Cost são as regras do custo de habilidade da ficha (o Alquebrado, p394; a metade do Artista Completo, p45):
+	// a decisão confere o PM contra o preço que se cobra, e não contra o do catálogo.
+	Cost          engine.AbilityCostRules
 	UsedThisScene int
 	UsedToday     int
 	Flags         map[string]bool
@@ -158,13 +158,13 @@ func ScaledCost(spec Activation, steps int) int {
 
 // ScaledDecision responde se dá para pagar esses degraus: dentro do teto do
 // nível, e com PM para o total.
-// O PM se confere contra o preço que se cobra: o custo dos degraus com o `increase` de toda habilidade (o
-// Alquebrado, p394), pela conta única.
-func ScaledDecision(spec Activation, steps, max, currentPM, increase int) (bool, string) {
+// O PM se confere contra o preço que se cobra: o custo dos degraus pelas regras de custo da ficha (o Alquebrado,
+// p394; o Artista Completo, p45), pela conta única.
+func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := engine.AbilityPmCost(ScaledCost(spec, steps), increase); cost > currentPM {
+	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec)); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -366,4 +366,13 @@ func SceneStartGrants() []Activation {
 		outside = append(outside, spec)
 	}
 	return outside
+}
+
+// ActivationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
+// fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45).
+func ActivationClass(spec Activation) string {
+	if power, found := ClassPowers()[spec.ID]; found {
+		return power.ClassName
+	}
+	return ""
 }

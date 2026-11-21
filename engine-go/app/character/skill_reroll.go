@@ -38,7 +38,7 @@ func rerollOffersOf(dto sheet.CharacterDTO, target book.SkillSpendTarget) []book
 	if len(owned) == 0 {
 		return nil
 	}
-	target.CostIncrease = sheet.AbilityCostIncrease(dto)
+	target.Cost = sheet.AbilityCostRules(dto)
 	return book.RerollOffers(owned, target)
 }
 

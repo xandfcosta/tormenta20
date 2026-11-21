@@ -56,7 +56,7 @@ func PrepareSkillSpends(dto sheet.CharacterDTO, computed engine.ComputedSheet) S
 		TrainingBonus: engine.TrainingBonusForLevel(int(dto.Level)), Attributes: attributes,
 		Totals: totals, TrainedIn: trainedIn,
 		Flags: sheetFlags(dto), PowerPicks: sheet.PowerPicks(dto.PowerChoices),
-		CostIncrease: sheet.AbilityCostIncrease(dto),
+		Cost: sheet.AbilityCostRules(dto),
 	}
 	return prepared
 }

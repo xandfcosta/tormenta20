@@ -103,9 +103,9 @@ type SkillSpendTarget struct {
 	// WeaponID é a arma do catálogo quando o teste é de ATAQUE, e vazio num
 	// teste de perícia (ALE-508).
 	WeaponID string
-	// CostIncrease é o que sobe o custo de toda habilidade da ficha (o Alquebrado, p394), e entra no preço de cada
-	// oferta pela conta única (`engine.AbilityPmCost`).
-	CostIncrease int
+	// Cost são as regras do custo de habilidade da ficha (o Alquebrado, p394; o Artista Completo, p45), e entram
+	// no preço de cada oferta pela conta única.
+	Cost engine.AbilityCostRules
 }
 
 // SkillSpendOffer é um gasto que a ficha pode fazer NESTE teste.
@@ -277,10 +277,10 @@ type SkillSpendChoice struct {
 	PM  int
 }
 
-// spendPrice é o custo do gasto com o aumento de toda habilidade da ficha (o Alquebrado, p394). O corte de quem
-// recebe a habilidade duas vezes (p28) vem depois, na oferta.
+// spendPrice é o custo do gasto pelas regras de custo da ficha (o Alquebrado, p394; o Artista Completo, p45). O
+// corte de quem recebe a habilidade duas vezes (p28) vem depois, na oferta.
 func spendPrice(a Activation, target SkillSpendTarget) int {
-	return engine.AbilityPmCost(ActivationPm(a), target.CostIncrease)
+	return target.Cost.Price(ActivationPm(a), ActivationClass(a))
 }
 
 // SpendKey é o nome do gasto no sinal da tela: o fim do id, em `snake_case`

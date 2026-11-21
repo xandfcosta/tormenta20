@@ -124,6 +124,11 @@ func StanceBase(flag string) []engine.Modifier {
 	out := []engine.Modifier{}
 	for _, p := range ClassPowersWithModifiers() {
 		for _, m := range p.Modifiers {
+			// O FATOR NÃO É BÔNUS da postura: ele multiplica, e o degrau não o sobrescreve. A metade do Artista
+			// Completo liga com a mesma flag da Inspiração (p45), e entrava aqui como um "+0" da postura.
+			if m.Factor != nil {
+				continue
+			}
 			if m.Condition != nil && m.Condition.C == "flagOn" && m.Condition.Flag == flag {
 				out = append(out, m)
 			}
