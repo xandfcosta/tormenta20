@@ -36,6 +36,7 @@ var activationsPart12 = []Activation{
 			FirstStepLevel:  6,
 			StepEveryLevels: 4,
 		},
+		AllyTarget: true,
 	},
 	{
 		ID:     "class.paladino.vingador-sagrado",

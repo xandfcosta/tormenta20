@@ -89,6 +89,7 @@ var alvosQueOMotorAplica = map[string]string{
 	"pmLimit":                 "breakdowns_magic.go, no limite de PM por magia",
 	"pmCost":                  "breakdowns_magic.go, no custo da magia",
 	"abilityPmCost":           "ability_pm_cost.go, no custo de toda habilidade, e a magia o lê pelo ForSpell",
+	"allyTargetCost":          "ability_pm_cost.go, o corte no uso com aliado como alvo (a Caridade)",
 	"boostCost":               "attack_boost.go, no custo do impulso na carta da arma Harmonizada (p165)",
 	"boostCostHalved":         "boost_changes.go, no custo do impulso pela metade na forma do Vingador Sagrado (p84)",
 	"boostExtraDice":          "boost_changes.go, nos dados a mais do impulso na forma do Vingador Sagrado (p84)",

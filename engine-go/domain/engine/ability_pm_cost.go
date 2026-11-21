@@ -46,11 +46,18 @@ func (e ItemEffects) AbilityCostIncrease() int {
 type AbilityCostRules struct {
 	Increase int
 	Factors  map[string]Ratio
+	// AllyCuts são os cortes por classe no uso com um aliado como alvo (a Caridade, nas de paladino, p83).
+	AllyCuts map[string]int
 }
 
 // AbilityCostRules lê as regras de custo dos efeitos da ficha.
 func (e ItemEffects) AbilityCostRules() AbilityCostRules {
-	out := AbilityCostRules{Increase: e.AbilityCostIncrease(), Factors: map[string]Ratio{}}
+	out := AbilityCostRules{Increase: e.AbilityCostIncrease(), Factors: map[string]Ratio{}, AllyCuts: map[string]int{}}
+	for key, stat := range e.ByTarget {
+		if class, scoped := strings.CutPrefix(key, allyTargetCostTarget+":"); scoped {
+			out.AllyCuts[class] = stat.Total
+		}
+	}
 	for key, factor := range e.Factors {
 		if key == abilityPmCostTarget {
 			out.Factors[""] = factor
@@ -73,6 +80,15 @@ func (c AbilityCostRules) Price(base int, class string, cuts ...int) int {
 func (c AbilityCostRules) Factor(class string) Ratio {
 	return severest(c.Factors[""], c.Factors[class])
 }
+
+// AllyCut é o corte no custo de uma habilidade da classe `class` quando o alvo do uso é um aliado (a Caridade, nas
+// de paladino, p83), ≤ 0. Quem diz se o alvo é um aliado é o gesto de usar.
+func (c AbilityCostRules) AllyCut(class string) int {
+	return c.AllyCuts[class]
+}
+
+// allyTargetCostTarget é o alvo do corte no uso com aliado como alvo.
+const allyTargetCostTarget = "allyTargetCost"
 
 // abilityPmCostTarget é o alvo do que mexe no custo de toda habilidade, e não só no das magias (`pmCost`).
 const abilityPmCostTarget = "abilityPmCost"

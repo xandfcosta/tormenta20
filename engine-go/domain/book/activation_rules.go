@@ -3,6 +3,7 @@ package book
 import (
 	"encoding/json"
 	"strconv"
+	"sync"
 
 	"t20engine/domain/engine"
 )
@@ -94,7 +95,7 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if context.Cost.Price(ActivationPm(spec), ActivationClass(spec)) > context.CurrentPM {
+	if context.Cost.Price(ActivationPm(spec), ActivationClass(spec), context.Cut) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -105,7 +106,9 @@ type UseContext struct {
 	CurrentPM int
 	// Cost são as regras do custo de habilidade da ficha (o Alquebrado, p394; a metade do Artista Completo, p45):
 	// a decisão confere o PM contra o preço que se cobra, e não contra o do catálogo.
-	Cost          engine.AbilityCostRules
+	Cost engine.AbilityCostRules
+	// Cut é o corte deste uso, ≤ 0: o da Caridade quando o alvo é um aliado (p83). Zero no uso comum.
+	Cut           int
 	UsedThisScene int
 	UsedToday     int
 	Flags         map[string]bool
@@ -160,11 +163,11 @@ func ScaledCost(spec Activation, steps int) int {
 // nível, e com PM para o total.
 // O PM se confere contra o preço que se cobra: o custo dos degraus pelas regras de custo da ficha (o Alquebrado,
 // p394; o Artista Completo, p45), pela conta única.
-func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules) (bool, string) {
+func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules, cut int) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec)); cost > currentPM {
+	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec), cut); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -370,8 +373,40 @@ func SceneStartGrants() []Activation {
 
 // ActivationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
 // fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45).
+//
+// Pelo id do poder ou, quando o id da ativação é outro, pelo NOME — a ligação que a ficha faz entre a ativação e
+// o dono. Quinze ativações de classe só se ligam pelo nome (a Coragem, a Libertação…).
 func ActivationClass(spec Activation) string {
-	return ClassOfPower(spec.ID)
+	if class := ClassOfPower(spec.ID); class != "" {
+		return class
+	}
+	return classByPowerName()[spec.Name]
+}
+
+// classByPowerName é a classe de cada nome de poder de classe. Um nome que duas classes usam fica VAZIO: escolher
+// uma delas dependeria da ordem do mapa, e a resposta mudaria de uma execução para a outra.
+var classByPowerName = sync.OnceValue(func() map[string]string {
+	byName := map[string]string{}
+	ambiguous := map[string]bool{}
+	for _, power := range ClassPowers() {
+		if class, seen := byName[power.Name]; seen && class != power.ClassName {
+			ambiguous[power.Name] = true
+		}
+		byName[power.Name] = power.ClassName
+	}
+	for name := range ambiguous {
+		byName[name] = ""
+	}
+	return byName
+})
+
+// AllyTargetCut é o corte da ficha no uso de `spec` com um aliado como alvo (a Caridade, p83), ≤ 0; zero na
+// habilidade que não pode ter um aliado como alvo. Quem diz se o alvo do uso É um aliado é o gesto.
+func AllyTargetCut(spec Activation, rules engine.AbilityCostRules) int {
+	if !spec.AllyTarget {
+		return 0
+	}
+	return rules.AllyCut(ActivationClass(spec))
 }
 
 // ClassOfPower é a classe do poder de classe com esse id, e vazia quando não é um.

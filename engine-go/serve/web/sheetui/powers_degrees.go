@@ -21,8 +21,12 @@ import (
 // useDegrees é o que a tela precisa para oferecer os degraus de um uso.
 type useDegrees struct {
 	MaxSteps int
-	BasePm   int
 	StepPm   int
+	// Prices é o custo de cada contagem de degraus, de zero ao teto, pelas regras de custo da ficha; AllyPrices, o
+	// mesmo com um aliado como alvo (a Caridade, p83), nulo quando a habilidade não tem o desconto. A prévia lê
+	// daqui, e não refaz a conta no navegador.
+	Prices     []int
+	AllyPrices []int
 	// Buys é o que cada contagem de degraus compra, escrito ("+1d8"), de zero
 	// ao teto — do mesmo `ScaledGrantModifiers` que o gesto grava.
 	Buys []string
@@ -44,18 +48,26 @@ type riderPart struct {
 	What, Value, Source string
 }
 
-// opensDialog diz se o "Usar" abre o diálogo: há degrau a escolher, ou a
-// caixa do Inimigo a marcar.
-func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble }
+// opensDialog diz se o "Usar" abre o diálogo: há degrau a escolher, a caixa do Inimigo a marcar, ou o alvo a
+// escolher — a Cura pelas Mãos com a Caridade antes do primeiro degrau, no nível 2 e 3 (p82-83).
+func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble || d.AllyPrices != nil }
 
 // useDegreesFor resolve os degraus de um instantâneo com escala, ou nil.
-func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation) *useDegrees {
+func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.AbilityCostRules) *useDegrees {
 	if spec.Kind != "instant" || spec.Scaling == nil {
 		return nil
 	}
 	d := &useDegrees{
-		BasePm: spec.Scaling.BasePm, StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
+		StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
 		MaxSteps: character.PowerMaxSteps(dto, spec),
+	}
+	class := book.ActivationClass(spec)
+	cut := book.AllyTargetCut(spec, cost)
+	for steps := 0; steps <= d.MaxSteps; steps++ {
+		d.Prices = append(d.Prices, cost.Price(book.ScaledCost(spec, steps), class))
+		if cut < 0 {
+			d.AllyPrices = append(d.AllyPrices, cost.Price(book.ScaledCost(spec, steps), class, cut))
+		}
 	}
 	riders := character.RidersOf(dto, spec)
 	d.CanDouble = book.RidersDouble(spec, riders)
@@ -144,7 +156,7 @@ func useDialogID(powerID string) string {
 
 // useResets zera o que o diálogo de usar escolhe: um degrau ou uma caixa que
 // sobrou de outro diálogo viraria pedido aqui.
-const useResets = "$stance_degrees = 0; $prey_favored = false; "
+const useResets = "$stance_degrees = 0; $prey_favored = false; $power_on_ally = false; "
 
 // useOpensCommand abre o contador zerado.
 func useOpensCommand(powerID string) string {
@@ -160,8 +172,13 @@ func useCounterExpr(d useDegrees) string {
 		doubled, _ := json.Marshal(d.DoubledBuys)
 		buys = []byte(fmt.Sprintf("($prey_favored ? %s : %s)", doubled, buys))
 	}
-	return fmt.Sprintf("(%s[$stance_degrees] ? %s[$stance_degrees] + ' · ' : '') + (%d + %d * $stance_degrees) + ' PM'",
-		buys, buys, d.BasePm, d.StepPm)
+	prices, _ := json.Marshal(d.Prices)
+	if d.AllyPrices != nil {
+		ally, _ := json.Marshal(d.AllyPrices)
+		prices = []byte(fmt.Sprintf("($power_on_ally ? %s : %s)", ally, prices))
+	}
+	return fmt.Sprintf("(%s[$stance_degrees] ? %s[$stance_degrees] + ' · ' : '') + %s[$stance_degrees] + ' PM'",
+		buys, buys, prices)
 }
 
 // riderShows é quando a linha dos acréscimos de `steps` degraus aparece.
@@ -170,4 +187,28 @@ func riderShows(steps int, doubled bool) string {
 		return fmt.Sprintf("$stance_degrees == %d && $prey_favored", steps)
 	}
 	return fmt.Sprintf("$stance_degrees == %d && !$prey_favored", steps)
+}
+
+// allyUse é o uso com o aliado como alvo que a linha oferece ao lado do comum (a Caridade, p83): o preço de cada
+// um e se o PM dá para o do aliado.
+type allyUse struct {
+	SelfPM, AllyPM int
+	AllyCan        bool
+}
+
+// allyUseFor é o uso com aliado como alvo, quando a habilidade o tem e a ficha corta nele; nulo no resto.
+func allyUseFor(spec book.Activation, context book.UseContext) *allyUse {
+	if book.CostIsVariable(spec) {
+		return nil
+	}
+	class := book.ActivationClass(spec)
+	cut := book.AllyTargetCut(spec, context.Cost)
+	if cut >= 0 {
+		return nil
+	}
+	onAlly := context
+	onAlly.Cut = cut
+	can, _ := book.UseDecision(spec, onAlly)
+	base := book.ActivationPm(spec)
+	return &allyUse{SelfPM: context.Cost.Price(base, class), AllyPM: context.Cost.Price(base, class, cut), AllyCan: can}
 }

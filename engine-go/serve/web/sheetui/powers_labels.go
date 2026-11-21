@@ -1,6 +1,7 @@
 package sheetui
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -128,10 +129,13 @@ func noActionsPhrase(casts bool) string {
 // PRÉVIA e não decisão: quem cobra é o servidor, com o teto de degraus do nível
 // e o PM disponível. Escrever a regra aqui daria uma segunda conta do mesmo
 // número.
+//
+// A prévia LÊ o preço de cada contagem de degraus, que o servidor calculou pelas regras de custo da ficha: refazer
+// a conta no navegador deixava de fora o Alquebrado e a metade do Artista Completo, e a prévia dizia um preço e o
+// gesto cobrava outro.
 func costStancePreview(row powerRow) string {
-	base := strconv.Itoa(row.Stance.BasePm)
-	step := strconv.Itoa(row.Stance.StepPm)
-	return "(" + base + " + " + step + " * $stance_degrees) + ' PM'"
+	prices, _ := json.Marshal(row.Stance.Prices)
+	return string(prices) + "[$stance_degrees] + ' PM'"
 }
 
 // degreeCounterShows é o que o contador escreve enquanto alguém escolhe: o

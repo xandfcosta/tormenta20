@@ -5,6 +5,10 @@ package engine
 // conhece continua sendo "", que não alcança pilha nenhuma.
 func moreTargetKeys(t ModifierTarget) string {
 	switch t.K {
+	case "allyTargetCost":
+		// O CORTE NO USO COM ALIADO COMO ALVO, da CLASSE (`Name`): a Caridade, nas de paladino (p83). Ele só vale
+		// no uso que o gesto diz ter um aliado como alvo, e por isso não entra no custo sozinho.
+		return "allyTargetCost:" + t.Name
 	case "abilityPmCost":
 		// O CUSTO DE TODA HABILIDADE, ou só o das de uma CLASSE (`Name`): o Alquebrado vale para qualquer uma
 		// (p394), e a metade do Artista Completo, para as de bardo (p45).

@@ -10,6 +10,9 @@ import (
 type UseChoice struct {
 	Steps   int
 	Doubled bool
+	// OnAlly diz que o alvo do uso é um aliado (a Caridade corta 1 PM nas habilidades de paladino que podem tê-lo,
+	// p83). Só a habilidade marcada com aliado como alvo o aceita.
+	OnAlly bool
 }
 
 // RidersOf são os acréscimos que a ficha TEM para o uso de `spec` — o

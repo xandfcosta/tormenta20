@@ -2617,6 +2617,31 @@
             },
             "items": []
           }
+        },
+        {
+          "create": {
+            "name": "Paladina Caridosa Nv6",
+            "races": ["humano"],
+            "origin": "acolito",
+            "classes": [{ "className": "Paladino", "level": 6 }],
+            "classPowers": [
+              "class.paladino.julgamento-divino-coragem",
+              "class.paladino.julgamento-divino-libertacao",
+              "class.paladino.virtude-paladinesca-caridade"
+            ],
+            "strength": 3,
+            "dexterity": 0,
+            "constitution": 2,
+            "intelligence": 0,
+            "wisdom": 1,
+            "charisma": 3,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": ["strength", "charisma", "constitution"]
+            },
+            "items": []
+          }
         }
       ]
     },
