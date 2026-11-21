@@ -19,7 +19,7 @@ import (
 func aHold() engine.WeaponCard {
 	return engine.WeaponCard{Name: "Ataque desarmado", Skill: "Luta", Damage: "1d8", DamageBonus: 3, Attack: 5,
 		CritRange: 20, CritMult: 2, DamageVariants: []engine.DamageVariant{{
-			ID: "class.lutador.chave", Label: "esmagando quem agarra", Source: "Chave", BookPage: 76, Damage: "1d10", Steps: 1,
+			ID: "class.lutador.chave", Label: "esmagando quem agarra", Source: "Chave", BookPage: 76, Damage: "1d10",
 		}}}
 }
 

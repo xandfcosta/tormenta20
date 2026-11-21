@@ -14,8 +14,8 @@ func TestTheUnarmedCardOffersADamageLinePerSituation(t *testing.T) {
 		t.Fatalf("o desarmado do lutador de 5º nível é %s; want 1d8 (p75)", card.Damage)
 	}
 	want := []DamageVariant{
-		{ID: "class.lutador.arma-improvisada", Label: "com arma improvisada", Source: "Arma Improvisada", BookPage: 76, Damage: "1d10", Steps: 1},
-		{ID: "class.lutador.chave", Label: "esmagando quem agarra", Source: "Chave", BookPage: 76, Damage: "1d10", Steps: 1},
+		{ID: "class.lutador.arma-improvisada", Label: "com arma improvisada", Source: "Arma Improvisada", BookPage: 76, Damage: "1d10"},
+		{ID: "class.lutador.chave", Label: "esmagando quem agarra", Source: "Chave", BookPage: 76, Damage: "1d10"},
 	}
 	if len(card.DamageVariants) != len(want) {
 		t.Fatalf("a carta desarmada tem as linhas %+v; want %+v", card.DamageVariants, want)

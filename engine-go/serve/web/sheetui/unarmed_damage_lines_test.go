@@ -12,8 +12,8 @@ import (
 func TestTheUnarmedCardReadsOneDamageLinePerSituation(t *testing.T) {
 	card := engine.WeaponCard{Name: "Ataque desarmado", Skill: "Luta", Damage: "1d6", DamageBonus: 4, CritRange: 20, CritMult: 2,
 		DamageVariants: []engine.DamageVariant{
-			{ID: "class.lutador.arma-improvisada", Label: "com arma improvisada", Source: "Arma Improvisada", BookPage: 76, Damage: "1d8", Steps: 1},
-			{ID: "class.lutador.chave", Label: "esmagando quem agarra", Source: "Chave", BookPage: 76, Damage: "1d8", Steps: 1},
+			{ID: "class.lutador.arma-improvisada", Label: "com arma improvisada", Source: "Arma Improvisada", BookPage: 76, Damage: "1d8"},
+			{ID: "class.lutador.chave", Label: "esmagando quem agarra", Source: "Chave", BookPage: 76, Damage: "1d8"},
 		}}
 	tile := weaponTiles([]engine.WeaponCard{card})[0]
 	if len(tile.DamageLines) != 2 {

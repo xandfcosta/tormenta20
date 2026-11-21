@@ -77,10 +77,8 @@ func critWritten(margin, multiplier int) string {
 func damageLinesOf(card engine.WeaponCard) []ds.SumTerm {
 	var lines []ds.SumTerm
 	for _, variant := range card.DamageVariants {
-		varied, err := engine.WithDamageVariant(card, variant.ID)
-		if err != nil {
-			continue
-		}
+		varied := card
+		varied.Damage = variant.Damage
 		note := variant.Source
 		if variant.BookPage != 0 {
 			note += " (p" + strconv.Itoa(variant.BookPage) + ")"

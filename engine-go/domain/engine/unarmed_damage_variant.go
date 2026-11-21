@@ -17,14 +17,13 @@ type ClassPowerUnarmedDamageVariant struct {
 }
 
 // DamageVariant é uma linha do dano desarmado: o poder que a dá (`ID`, `Source`, `BookPage`), a situação
-// (`Label`) e o dado já com o passo (`Damage`).
+// (`Label`) e o dado já com o passo (`Damage`), que é a fonte única do dado da linha.
 type DamageVariant struct {
 	ID       string `json:"id"`
 	Label    string `json:"label"`
 	Source   string `json:"source"`
 	BookPage int    `json:"bookPage,omitempty"`
 	Damage   string `json:"damage"`
-	Steps    int    `json:"steps"`
 }
 
 // unarmedDamageVariants são as linhas que os poderes da ficha dão, na ordem das classes, já com o dado da carta.
@@ -40,7 +39,7 @@ func (r *Ruleset) unarmedDamageVariants(ch Character, damage string) []DamageVar
 			}
 			out = append(out, DamageVariant{
 				ID: power.ID, Label: grant.Label, Source: power.Name, BookPage: power.BookPage,
-				Damage: DamageStep(damage, grant.Steps), Steps: grant.Steps,
+				Damage: DamageStep(damage, grant.Steps),
 			})
 		}
 	}
@@ -57,7 +56,7 @@ func WithDamageVariant(card WeaponCard, id string) (WeaponCard, error) {
 	}
 	for _, variant := range card.DamageVariants {
 		if variant.ID == id {
-			card.Damage = DamageStep(card.Damage, variant.Steps)
+			card.Damage = variant.Damage
 			return card, nil
 		}
 	}
