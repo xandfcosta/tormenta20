@@ -88,7 +88,7 @@ func (r *Ruleset) ownedBoostAddOns(ch Character, boost string) []*ClassPower {
 	var out []*ClassPower
 	for _, power := range r.ownedPowersOfEveryClass(ch) {
 		if power.BoostAddOn != nil && power.BoostAddOn.Boost == boost {
-			out = append(out, power)
+			out = append(out, power.ClassPower)
 		}
 	}
 	return out

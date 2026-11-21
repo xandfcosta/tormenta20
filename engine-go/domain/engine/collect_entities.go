@@ -152,23 +152,18 @@ func (r *Ruleset) OriginPickedPowerIDs(ch Character) []string {
 // classActiveItems: one ActiveItem per owned class power that
 // carries modifiers, named by the poder (not an opaque class bundle).
 func (r *Ruleset) classActiveItems(ch Character) []ActiveItem {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
 	picks := parsePowerChoices(ch.PowerChoices)
 	out := []ActiveItem{}
-	for _, entry := range ch.Classes {
-		owned := r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName])
-		for _, power := range owned {
-			mods := expandChoiceModifiers(power.Modifiers, picks[power.ID], power.choiceNames())
-			if len(mods) == 0 {
-				continue
-			}
-			for i := range mods {
-				mods[i].classLevel = entry.Level
-				mods[i] = growDice(mods[i])
-			}
-			out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		mods := expandChoiceModifiers(power.Modifiers, picks[power.ID], power.choiceNames())
+		if len(mods) == 0 {
+			continue
 		}
+		for i := range mods {
+			mods[i].classLevel = power.ClassLevel
+			mods[i] = growDice(mods[i])
+		}
+		out = append(out, ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: mods})
 	}
 	return out
 }

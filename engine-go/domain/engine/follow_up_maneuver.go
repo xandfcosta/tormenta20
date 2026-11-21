@@ -51,20 +51,16 @@ type FollowUpManeuver struct {
 //
 //	world.FollowUpManeuvers(lutador, active) // [{Lutador de Chão: derrubar depois do Sucesso no agarrar, 1 PM}]
 func (r *Ruleset) FollowUpManeuvers(ch Character, active map[string]bool) []FollowUpManeuver {
-	chosen := parseChoiceSet(ch.ClassPowers)
-	choices := parseClassChoices(ch.ClassChoices)
 	var out []FollowUpManeuver
-	for _, entry := range ch.Classes {
-		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
-			grant := power.FollowUp
-			if grant == nil {
-				continue
-			}
-			out = append(out, FollowUpManeuver{
-				PowerID: power.ID, Name: power.Name, Maneuver: grant.Maneuver, After: grant.After, On: grant.On, PM: grant.PM,
-				NeedsFlag: grant.NeedsFlag, Ready: grant.NeedsFlag == "" || active[FlagGroupID(grant.NeedsFlag)],
-			})
+	for _, power := range r.ownedPowersOfEveryClass(ch) {
+		grant := power.FollowUp
+		if grant == nil {
+			continue
 		}
+		out = append(out, FollowUpManeuver{
+			PowerID: power.ID, Name: power.Name, Maneuver: grant.Maneuver, After: grant.After, On: grant.On, PM: grant.PM,
+			NeedsFlag: grant.NeedsFlag, Ready: grant.NeedsFlag == "" || active[FlagGroupID(grant.NeedsFlag)],
+		})
 	}
 	return out
 }

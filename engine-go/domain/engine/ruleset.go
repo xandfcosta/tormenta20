@@ -226,6 +226,30 @@ func (r *Ruleset) raceEntryByID(id string) *RaceAttributeEntry {
 
 func (r *Ruleset) isTormentaPower(id string) bool { return r.book.isTormentaPower(id) }
 
+// classPowerAtLevel é um poder de classe que a ficha tem, com o nível dela NA CLASSE do poder: é dele que
+// sai o teto de degraus do impulso e o escalonamento por nível de classe dos modificadores.
+type classPowerAtLevel struct {
+	*ClassPower
+	ClassLevel int
+}
+
+// ownedPowersOfEveryClass são os poderes de classe que a ficha tem, na ordem das classes e, dentro de cada uma,
+// na do `ownedClassPowers`. É o laço que todo leitor de poder de classe fazia à mão — ler as escolhas, percorrer
+// as classes, pegar os poderes de cada uma — escrito uma vez.
+//
+//	for _, power := range r.ownedPowersOfEveryClass(ch) { … power.Boost … power.ClassLevel … }
+func (r *Ruleset) ownedPowersOfEveryClass(ch Character) []classPowerAtLevel {
+	chosen := parseChoiceSet(ch.ClassPowers)
+	choices := parseClassChoices(ch.ClassChoices)
+	var out []classPowerAtLevel
+	for _, entry := range ch.Classes {
+		for _, power := range r.ownedClassPowers(entry.ClassName, entry.Level, chosen.has, choices[entry.ClassName]) {
+			out = append(out, classPowerAtLevel{ClassPower: power, ClassLevel: entry.Level})
+		}
+	}
+	return out
+}
+
 func (r *Ruleset) ownedClassPowers(
 	className string, classLevel int, chosen map[string]bool, choice ClassChoiceSelections,
 ) []*ClassPower {
