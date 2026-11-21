@@ -76,6 +76,8 @@ type WeaponCard struct {
 	PaidExtras []PaidExtraStrike `json:"-"`
 	// Unarmed marca a carta do ataque desarmado, que é a única que o Golpe Relâmpago alcança (p76).
 	Unarmed bool `json:"-"`
+	// DamageVariants são as linhas do dano desarmado, no fio para o golpe congelado — ver `DamageVariant`.
+	DamageVariants []DamageVariant `json:"damageVariants,omitempty"`
 	// SwitchesDamageFreely é o ataque desarmado do Estilo Desarmado: letal ou não letal, "sem
 	// penalidades" (p128). Fora do fio, porque só o pedido de atacar o lê.
 	SwitchesDamageFreely bool `json:"-"`
@@ -399,34 +401,6 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		IgnoresDamageReduction: ignoredReductionOf(b.effects, scopes),
 		RerollsLowDice:         rerollsLowDiceOf(b.effects, scopes),
 	}
-}
-
-// DamageStepsOf soma os passos que estes modificadores dão À ARMA que os carrega.
-//
-// Do item, e não do acumulado — que é o contrário do `damage:this` logo acima,
-// e de propósito. Aquele soma um BÔNUS, e a imprecisão custa um ponto na carta
-// da arma vizinha; um passo troca o DADO, e um machado comum anunciando 1d12
-// porque a espada da outra mão é de adamante seria a carta mentindo sobre a
-// arma que a pessoa está olhando.
-//
-// A condição é avaliada com o `conditionMet` de sempre: o `wielded` do material
-// vale porque esta arma está na mão, e um passo preso a flag ou a circunstância
-// fica de fora até alguém escrever como ele liga.
-//
-// Exportada porque a MOCHILA pergunta o mesmo: o crachá do cartão diz o dado da
-// arma com as sobreposições DELA, e a conta tem de ser a mesma da carta de
-// combate — duas somas de passo seriam duas respostas para o mesmo dado.
-//
-// @example DamageStepsOf(adamante.Modifiers, &empunhada) // 1
-func DamageStepsOf(own []Modifier, equipped *string) int {
-	steps := 0
-	for _, m := range own {
-		if targetKey(m.Target) != "damageStep:this" || !conditionMet(m, equipped) {
-			continue
-		}
-		steps += m.Amount
-	}
-	return steps
 }
 
 func hasTrait(traits []string, t string) bool {

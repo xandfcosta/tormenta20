@@ -7,6 +7,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/serve/web/ds"
 )
 
 // A CARTA DA ARMA ESCRITA: o dano e o crítico como a mesa os lê ("1d8+8 +1d8 de trevas · 19-20/x2"). Três
@@ -68,4 +69,23 @@ func critWritten(margin, multiplier int) string {
 		from = strconv.Itoa(margin) + "-20"
 	}
 	return from + "/x" + strconv.Itoa(multiplier)
+}
+
+// damageLinesOf são as linhas do dano da carta numa situação que só a mesa conhece — a Arma Improvisada e a Chave
+// (p76) —, cada uma com o dano inteiro já um passo acima e o poder que a dá. São leitura: a linha que vale se
+// escolhe no passo do dano da mesa (ALE-655).
+func damageLinesOf(card engine.WeaponCard) []ds.SumTerm {
+	var lines []ds.SumTerm
+	for _, variant := range card.DamageVariants {
+		varied, err := engine.WithDamageVariant(card, variant.ID)
+		if err != nil {
+			continue
+		}
+		note := variant.Source
+		if variant.BookPage != 0 {
+			note += " (p" + strconv.Itoa(variant.BookPage) + ")"
+		}
+		lines = append(lines, ds.SumTerm{Label: variant.Label, Note: note, Value: damageLabel(varied)})
+	}
+	return lines
 }
