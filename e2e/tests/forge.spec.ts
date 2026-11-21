@@ -154,6 +154,25 @@ test('os atributos escritos em sequência sobrevivem ao redesenho', async ({ pag
   await expectDsFloors(page, 'na explicação dos atributos')
 })
 
+// O TOQUE NO `+` É O ÚNICO PEDIDO, como na ficha (`attribute-stepper.spec.ts`): o campo redesenha a folha ao
+// perder o foco, e o toque que o tirasse mandaria o redesenho junto do passo — e a resposta que chegasse por
+// último ficava na tela.
+test('escrever um atributo e tocar + soma um ao escrito, num pedido só', async ({ page }) => {
+  await page.goto('/personagens/nova')
+  const posted: string[] = []
+  page.on('request', (r) => {
+    if (r.method() === 'POST' && r.url().includes('/personagens/nova/esboco')) posted.push(new URL(r.url()).pathname)
+  })
+  await page.locator('#forge-attr-strength').fill('4')
+  const answered = page.waitForResponse((r) => r.url().includes('/esboco/atributo/strength/1'))
+  await page.getByRole('button', { name: 'Aumentar Força' }).click()
+  await answered
+  await expect(page.locator('#forge-attr-strength')).toHaveValue('5')
+  expect(posted, `escrito 4 e tocado o +, saíram os pedidos ${posted.join(', ')}; want só o do passo`).toEqual([
+    '/personagens/nova/esboco/atributo/strength/1',
+  ])
+})
+
 // O diálogo mora na camada de cima: o remendo tem de deixá-lo aberto, e a recusa tem de sair dentro dele.
 test('o diálogo do atributo grava e continua aberto', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
