@@ -156,15 +156,11 @@ type alwaysOnRow struct {
 // primado a aba mostra o que não depende do motor (condições, posturas e
 // efeitos aplicados) e perde a Situação, que é derivada.
 func (s Scene) effectsPanelOf(dto sheet.CharacterDTO) effectsPanel {
-	if dto.Ruleset == nil {
-		return effectsPanelFor(dto, nil, nil)
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	effects, ec, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return effectsPanelFor(dto, nil, nil)
 	}
-	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
-	return effectsPanelFor(dto, offered, dto.Ruleset.ComputeEquippedFlags(ec.Items))
+	return effectsPanelFor(dto, effects.Conditional, dto.Ruleset.ComputeEquippedFlags(ec.Items))
 }
 
 // effectsPanelFor monta a aba inteira.

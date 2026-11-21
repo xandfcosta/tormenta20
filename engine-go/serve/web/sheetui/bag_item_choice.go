@@ -224,14 +224,10 @@ func madeByOwnerOnTheItemSheet(dto sheet.CharacterDTO, item sheet.ItemDTO) *bool
 
 // readsTheMadeByOwnerMark diz se algum efeito da ficha soma no escopo da marca.
 func readsTheMadeByOwnerMark(dto sheet.CharacterDTO) bool {
-	if dto.Ruleset == nil {
-		return false
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	effects, _, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return false
 	}
-	effects := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
 	for _, target := range []engine.ModifierTarget{
 		{K: "damageStep", Scope: engine.MadeByOwnerMeleeScope},
 		{K: "critRange", Scope: engine.MadeByOwnerFiredScope},

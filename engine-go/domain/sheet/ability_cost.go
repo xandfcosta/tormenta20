@@ -8,12 +8,9 @@ import "t20engine/domain/engine"
 //
 //	cost := sheet.AbilityCostRules(dto).Price(book.ScaledCost(spec, steps), book.ActivationClass(spec))
 func AbilityCostRules(dto CharacterDTO) engine.AbilityCostRules {
-	if dto.Ruleset == nil {
-		return engine.AbilityCostRules{}
-	}
-	ec, err := EngineCharacterFrom(dto)
+	effects, _, err := CharacterEffects(dto)
 	if err != nil {
 		return engine.AbilityCostRules{}
 	}
-	return dto.Ruleset.EffectsOf(ec, ToStringSet(dto.Conditionals)).AbilityCostRules()
+	return effects.AbilityCostRules()
 }

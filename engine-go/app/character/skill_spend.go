@@ -91,14 +91,11 @@ func bookAttributeOf(computed engine.ComputedSheet, skill string) string {
 
 // sheetFlags são as flags acesas na ficha — a cena paga do Detetive (p91).
 func sheetFlags(dto sheet.CharacterDTO) map[string]bool {
-	if dto.Ruleset == nil {
-		return nil
-	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	effects, _, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return nil
 	}
-	return dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Flags
+	return effects.Flags
 }
 
 // trainedOnly diz se o livro só deixa rolar a perícia com treino (p115). O

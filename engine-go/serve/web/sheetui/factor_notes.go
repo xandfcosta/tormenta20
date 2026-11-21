@@ -75,14 +75,13 @@ func onlyHereCutNote(computed engine.ComputedSheet, ok bool, at engine.SpellAt) 
 // sai com +10 na ficha; sem a frase, a diferença seria um número aparecendo do
 // nada na aba Combate.
 func stanceBonusNote(dto sheet.CharacterDTO, stancePowerID string) string {
-	if stancePowerID == "" || dto.Ruleset == nil {
+	if stancePowerID == "" {
 		return ""
 	}
-	ec, err := sheet.EngineCharacterFrom(dto)
+	effects, _, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return ""
 	}
-	effects := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals))
 	factor, source, set := effects.FactorOn(engine.ModifierTarget{K: "source", Name: stancePowerID})
 	power, known := book.ClassPowers()[source]
 	if !set || !known {

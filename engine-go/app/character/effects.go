@@ -3,6 +3,7 @@ package character
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"t20engine/domain/book"
@@ -360,14 +361,14 @@ func refuseDegreesAboveTheCeiling(dto sheet.CharacterDTO, offer book.DegreeOffer
 
 // refuseUnofferedSituational recusa a chave que a ficha não oferece.
 func (p Plays) refuseUnofferedSituational(dto sheet.CharacterDTO, key string) error {
-	if dto.Ruleset == nil {
+	effects, _, err := sheet.CharacterEffects(dto)
+	if errors.Is(err, sheet.ErrSheetWithoutRules) {
 		return fmt.Errorf("a ficha %d chegou sem o mundo dela; não dá para dizer o que ela oferece", dto.ID)
 	}
-	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return fmt.Errorf("montar o personagem do motor (%d): %w", dto.ID, err)
 	}
-	offered := dto.Ruleset.EffectsOf(ec, sheet.ToStringSet(dto.Conditionals)).Conditional
+	offered := effects.Conditional
 	for _, g := range SituationalGroupsOf(offered) {
 		if g.Key == key {
 			return nil
