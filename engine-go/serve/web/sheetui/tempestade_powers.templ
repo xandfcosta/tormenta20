@@ -136,6 +136,17 @@ templ powerGesture(v View, row powerRow) {
 			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Usar "+row.Name, templ.Attributes{"commandfor": useStepsDialogID(row), "command": "show-modal", "aria-haspopup": "dialog", "data-on:click": useResets})) {
 				Usar
 			}
+		} else if row.Ally != nil {
+			// A CARIDADE (p83): o alvo é dito no gesto, e cada botão diz o preço que cobra — um interruptor na
+			// ficha ficaria ligado depois do uso.
+			<div class="ds-row-gesture-pair">
+				@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Usar "+row.Name+" em você", templ.Attributes{"data-on:click": useResets + sheetPost(v, "/poderes/usa/"+row.Command)})) {
+					{ "Em você · " + strconv.Itoa(row.Ally.SelfPM) + " PM" }
+				}
+				@ds.Button(ds.ButtonSecondary, allyGestureAttrs(row, templ.Attributes{"data-on:click": useResets + "$power_on_ally = true; " + sheetPost(v, "/poderes/usa/"+row.Command)})) {
+					{ "Num aliado · " + strconv.Itoa(row.Ally.AllyPM) + " PM" }
+				}
+			</div>
 		} else {
 			@ds.Button(ds.ButtonSecondary, powerGestureAttrs(row, "Usar "+row.Name, templ.Attributes{"data-on:click": useResets + sheetPost(v, "/poderes/usa/"+row.Command)})) {
 				Usar
@@ -171,6 +182,17 @@ templ powerSheetFootBody(v View, row powerRow) {
 templ useStepsDialog(v View, row powerRow, id string) {
 	@sheetDialog(v, id, row.Name, stepsConfirm(id, "Usar", "Confirmar "+row.Name, sheetPost(v, "/poderes/usa/"+row.Command))) {
 		<p class="ds-help">{ "Cada +" + strconv.Itoa(row.Degrees.StepPm) + " PM compra " + row.Degrees.StepLabel + "." }</p>
+		if row.Degrees.AllyPrices != nil {
+			// O ALVO, porque a Caridade corta 1 PM quando é um aliado (p83).
+			@ds.Segmented("Alvo") {
+				@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "String(!$power_on_ally)", "data-on:click": "$power_on_ally = false"}) {
+					Você
+				}
+				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "String($power_on_ally)", "data-on:click": "$power_on_ally = true"}) {
+					Um aliado
+				}
+			}
+		}
 		@stepsCounter(row.Degrees.MaxSteps, useCounterExpr(*row.Degrees))
 		for steps, parts := range row.Degrees.Riders {
 			@stepRiderLine(parts, riderShows(steps, false))

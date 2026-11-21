@@ -132,13 +132,18 @@ var classPowersPart16 = []ClassPower{
 		UID:         "pwr_hohhagcqwp",
 	},
 	{
-		ID:          "class.paladino.virtude-paladinesca-caridade",
+		ID: "class.paladino.virtude-paladinesca-caridade",
+		Modeled: []string{
+			"–1 PM nas habilidades de paladino que podem ter um aliado como alvo, no uso em que o alvo é um aliado",
+		},
 		ClassName:   "Paladino",
 		Name:        "Virtude Paladinesca: Caridade",
 		Description: "Custo de habilidades de paladino que tenham aliado como alvo é reduzido em -1 PM.",
 		BookPage:    83,
 		UID:         "pwr_5clwvtahye",
-		Unmodeled:   "–1 PM nas habilidades de paladino com aliado como alvo: é uma forma de ataque ou movimento que o motor ainda não tem (ALE-647)",
+		Modifiers: []Modifier{
+			{Target: ModifierTarget{Kind: "allyTargetCost", Name: "Paladino"}, Amount: -1, BonusType: "untyped"},
+		},
 	},
 	{
 		ID:          "class.paladino.virtude-paladinesca-castidade",

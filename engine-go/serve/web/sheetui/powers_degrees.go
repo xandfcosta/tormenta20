@@ -22,9 +22,11 @@ import (
 type useDegrees struct {
 	MaxSteps int
 	StepPm   int
-	// Prices é o custo de cada contagem de degraus, de zero ao teto, pelas regras de custo da ficha. A prévia lê
+	// Prices é o custo de cada contagem de degraus, de zero ao teto, pelas regras de custo da ficha; AllyPrices, o
+	// mesmo com um aliado como alvo (a Caridade, p83), nulo quando a habilidade não tem o desconto. A prévia lê
 	// daqui, e não refaz a conta no navegador.
-	Prices []int
+	Prices     []int
+	AllyPrices []int
 	// Buys é o que cada contagem de degraus compra, escrito ("+1d8"), de zero
 	// ao teto — do mesmo `ScaledGrantModifiers` que o gesto grava.
 	Buys []string
@@ -60,8 +62,15 @@ func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.Abi
 		MaxSteps: character.PowerMaxSteps(dto, spec),
 	}
 	class := book.ActivationClass(spec)
+	cut := 0
+	if spec.AllyTarget {
+		cut = cost.AllyCut(class)
+	}
 	for steps := 0; steps <= d.MaxSteps; steps++ {
 		d.Prices = append(d.Prices, cost.Price(book.ScaledCost(spec, steps), class))
+		if cut < 0 {
+			d.AllyPrices = append(d.AllyPrices, cost.Price(book.ScaledCost(spec, steps), class, cut))
+		}
 	}
 	riders := character.RidersOf(dto, spec)
 	d.CanDouble = book.RidersDouble(spec, riders)
@@ -150,7 +159,7 @@ func useDialogID(powerID string) string {
 
 // useResets zera o que o diálogo de usar escolhe: um degrau ou uma caixa que
 // sobrou de outro diálogo viraria pedido aqui.
-const useResets = "$stance_degrees = 0; $prey_favored = false; "
+const useResets = "$stance_degrees = 0; $prey_favored = false; $power_on_ally = false; "
 
 // useOpensCommand abre o contador zerado.
 func useOpensCommand(powerID string) string {
@@ -167,6 +176,10 @@ func useCounterExpr(d useDegrees) string {
 		buys = []byte(fmt.Sprintf("($prey_favored ? %s : %s)", doubled, buys))
 	}
 	prices, _ := json.Marshal(d.Prices)
+	if d.AllyPrices != nil {
+		ally, _ := json.Marshal(d.AllyPrices)
+		prices = []byte(fmt.Sprintf("($power_on_ally ? %s : %s)", ally, prices))
+	}
 	return fmt.Sprintf("(%s[$stance_degrees] ? %s[$stance_degrees] + ' · ' : '') + %s[$stance_degrees] + ' PM'",
 		buys, buys, prices)
 }
@@ -177,4 +190,28 @@ func riderShows(steps int, doubled bool) string {
 		return fmt.Sprintf("$stance_degrees == %d && $prey_favored", steps)
 	}
 	return fmt.Sprintf("$stance_degrees == %d && !$prey_favored", steps)
+}
+
+// allyUse é o uso com o aliado como alvo que a linha oferece ao lado do comum (a Caridade, p83): o preço de cada
+// um e se o PM dá para o do aliado.
+type allyUse struct {
+	SelfPM, AllyPM int
+	AllyCan        bool
+}
+
+// allyUseFor é o uso com aliado como alvo, quando a habilidade o tem e a ficha corta nele; nulo no resto.
+func allyUseFor(spec book.Activation, context book.UseContext) *allyUse {
+	if !spec.AllyTarget || book.CostIsVariable(spec) {
+		return nil
+	}
+	class := book.ActivationClass(spec)
+	cut := context.Cost.AllyCut(class)
+	if cut >= 0 {
+		return nil
+	}
+	onAlly := context
+	onAlly.Cut = cut
+	can, _ := book.UseDecision(spec, onAlly)
+	base := book.ActivationPm(spec)
+	return &allyUse{SelfPM: context.Cost.Price(base, class), AllyPM: context.Cost.Price(base, class, cut), AllyCan: can}
 }

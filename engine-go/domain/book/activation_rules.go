@@ -94,7 +94,7 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if context.Cost.Price(ActivationPm(spec), ActivationClass(spec)) > context.CurrentPM {
+	if context.Cost.Price(ActivationPm(spec), ActivationClass(spec), context.Cut) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -105,7 +105,9 @@ type UseContext struct {
 	CurrentPM int
 	// Cost são as regras do custo de habilidade da ficha (o Alquebrado, p394; a metade do Artista Completo, p45):
 	// a decisão confere o PM contra o preço que se cobra, e não contra o do catálogo.
-	Cost          engine.AbilityCostRules
+	Cost engine.AbilityCostRules
+	// Cut é o corte deste uso, ≤ 0: o da Caridade quando o alvo é um aliado (p83). Zero no uso comum.
+	Cut           int
 	UsedThisScene int
 	UsedToday     int
 	Flags         map[string]bool
@@ -160,11 +162,11 @@ func ScaledCost(spec Activation, steps int) int {
 // nível, e com PM para o total.
 // O PM se confere contra o preço que se cobra: o custo dos degraus pelas regras de custo da ficha (o Alquebrado,
 // p394; o Artista Completo, p45), pela conta única.
-func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules) (bool, string) {
+func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules, cuts ...int) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec)); cost > currentPM {
+	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec), cuts...); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -370,8 +372,19 @@ func SceneStartGrants() []Activation {
 
 // ActivationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
 // fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45).
+//
+// Pelo id do poder ou, quando o id da ativação é outro, pelo NOME — a ligação que a ficha faz entre a ativação e
+// o dono. Quinze ativações de classe só se ligam pelo nome (a Coragem, a Libertação…).
 func ActivationClass(spec Activation) string {
-	return ClassOfPower(spec.ID)
+	if class := ClassOfPower(spec.ID); class != "" {
+		return class
+	}
+	for _, power := range ClassPowers() {
+		if power.Name == spec.Name {
+			return power.ClassName
+		}
+	}
+	return ""
 }
 
 // ClassOfPower é a classe do poder de classe com esse id, e vazia quando não é um.

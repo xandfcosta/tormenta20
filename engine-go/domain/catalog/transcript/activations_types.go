@@ -19,6 +19,9 @@ type Activation struct {
 	Scaling     *PMScaling       `json:"scaling,omitempty"`
 	SkillSpend  *SkillSpend      `json:"skillSpend,omitempty"`
 	Rider       *ActivationRider `json:"rider,omitempty"`
+	// AllyTarget diz que a habilidade pode ter um aliado como alvo (a Cura pelas Mãos, a Coragem e a Libertação,
+	// p82-83): é nela que a Caridade corta 1 PM quando o alvo do uso é um aliado (p83).
+	AllyTarget bool `json:"allyTarget,omitempty"`
 }
 
 // Recovery é o PM que um evento da mesa DEVOLVE ao pool, até o máximo: o Panache (p48)

@@ -671,6 +671,24 @@
     text-align: left;
     cursor: pointer;
   }
+  /* O PAR DE GESTOS na ponta da linha ("Em você · 2 PM", "Num aliado · 1 PM"). Na coluna `auto` ele
+   * reivindica a largura dos dois botões, e a 390px esmagava o nome em três linhas cortadas: no celular ele
+   * desce para uma linha própria, embaixo do nome, com as duas metades iguais. */
+  .ds-row-gesture-pair {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  @media (max-width: 40rem) {
+    .ds-action-row > .ds-row-gesture-pair {
+      grid-column: 1 / -1;
+      padding: 0 0 0.5rem 1rem;
+    }
+    .ds-action-row > .ds-row-gesture-pair > * {
+      flex: 1;
+    }
+  }
   /* O HOVER É DA LINHA INTEIRA, com o gesto da ponta junto: só no botão do
    * nome ele pintava uma faixa que parava antes do botão. */
   .ds-action-row:has(> .ds-action-row-open:hover) {

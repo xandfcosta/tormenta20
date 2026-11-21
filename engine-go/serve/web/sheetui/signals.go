@@ -125,6 +125,8 @@ type Signals struct {
 	// A caixa do Inimigo de (Criatura) no diálogo da Marca da Presa: a presa
 	// é do tipo escolhido, e o uso dobra (p51, ALE-509).
 	PreyFavored *bool `json:"prey_favored"`
+	// O alvo do uso é um aliado: a Caridade corta 1 PM nas habilidades de paladino que podem tê-lo (p83, ALE-647).
+	PowerOnAlly *bool `json:"power_on_ally"`
 	// A escolha do diálogo da Forma Selvagem: a forma, o nível, o dano da arma natural e, na Veloz, o
 	// deslocamento (p63).
 	WildForm   string `json:"wild_form"`

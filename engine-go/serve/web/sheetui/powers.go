@@ -47,6 +47,8 @@ type powersPanel struct {
 
 // powerRow é um poder na tela.
 type powerRow struct {
+	// Ally é o uso com um aliado como alvo, ao lado do comum (a Caridade, p83); nulo quando não há.
+	Ally   *allyUse
 	ID     string
 	Name   string
 	Source string
@@ -199,6 +201,7 @@ func powerRowFor(
 		row.Stance = stanceStateFor(dto, *spec, stances, context)
 	}
 	row.Degrees = useDegreesFor(dto, *spec, context.Cost)
+	row.Ally = allyUseFor(*spec, context)
 	row.InEffect = grantInEffect(dto, spec.ID)
 	row.Cost, row.Action = writtenCost(*spec, row.Stance, context.Cost), spec.Action
 	row.SortPM = sortCost(*spec)

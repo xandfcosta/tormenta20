@@ -83,6 +83,17 @@ func powerGestureAttrs(row powerRow, aria string, attrs templ.Attributes) templ.
 	return attrs
 }
 
+// allyGestureAttrs são os do botão "Num aliado": ele se apaga pela decisão do uso com o corte, que pode
+// deixar passar o que o uso comum recusa por falta de PM.
+func allyGestureAttrs(row powerRow, attrs templ.Attributes) templ.Attributes {
+	ally := row
+	ally.Can = row.Ally.AllyCan
+	if ally.Can {
+		ally.Why = ""
+	}
+	return powerGestureAttrs(ally, "Usar "+row.Name+" num aliado", attrs)
+}
+
 // powerSheetFoot é o pé da folha: o mesmo gesto da linha, quando há um.
 func powerSheetFoot(v View, row powerRow) templ.Component {
 	if row.Stance == nil && row.Kind != "instant" {

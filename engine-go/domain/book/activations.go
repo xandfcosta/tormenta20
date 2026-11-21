@@ -79,8 +79,9 @@ type Activation struct {
 	Recovers *Recovery `json:"recovers"`
 	// Rider é o que este poder ACRESCENTA ao uso de outro — ver
 	// `ActivationRider`.
-	Rider    *ActivationRider `json:"rider,omitempty"`
-	BookPage int              `json:"bookPage"`
+	Rider      *ActivationRider `json:"rider,omitempty"`
+	AllyTarget bool             `json:"allyTarget,omitempty"`
+	BookPage   int              `json:"bookPage"`
 }
 
 // CumulativeBonus é o bônus que sobe a cada gatilho enquanto a postura dura —

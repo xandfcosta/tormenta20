@@ -49,7 +49,7 @@ func (p Plays) EnterStance(
 	if !sheet.OwnsActivation(dto, *spec) {
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
-	cost, err := scaledPrice(dto, *spec, steps)
+	cost, err := scaledPrice(dto, *spec, steps, false)
 	if err != nil {
 		return err
 	}
@@ -176,20 +176,6 @@ func (p Plays) EndStance(
 	})
 }
 
-// scaledPrice é o PM de pagar os degraus pedidos, ou a recusa que diz por que
-// não dá: acima do teto que o nível NA CLASSE abre (p40), ou sem PM para o total.
-// Poder que não vende degrau tem teto zero.
-func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int) (int, error) {
-	max := PowerMaxSteps(dto, spec)
-	// O CUSTO PELA CONTA ÚNICA (o Alquebrado, p394; o Artista Completo, p45), e a falta de PM se confere contra o
-	// preço que se cobra.
-	rules := sheet.AbilityCostRules(dto)
-	if can, reason := book.ScaledDecision(spec, steps, max, int(dto.ManaAvailable()), rules); !can {
-		return 0, fmt.Errorf("%s: %s", spec.Name, reason)
-	}
-	return rules.Price(book.ScaledCost(spec, steps), book.ActivationClass(spec)), nil
-}
-
 // UsePower gasta um uso de um poder instantâneo: cobra o PM e soma o contador.
 //
 // Os `steps` são os degraus A MAIS que o jogador pagou, no poder que os vende —
@@ -222,14 +208,18 @@ func (p Plays) UsePower(
 		return p.declare(ctx, dto, spec.Name, flag)
 	}
 	uses := PowerUses(dto)[spec.ID]
+	// A DECISÃO confere o PM contra o preço deste uso: as regras de custo da ficha e, com um aliado como alvo, o
+	// corte da Caridade (p83).
+	rules := sheet.AbilityCostRules(dto)
+	cut := allyCutOf(rules, *spec, choice.OnAlly)
 	can, reason := book.UseDecision(*spec, book.UseContext{
 		CurrentPM: int(dto.ManaAvailable()), UsedThisScene: uses.Scene, UsedToday: uses.Day,
-		Flags: p.activeFlags(dto),
+		Flags: p.activeFlags(dto), Cost: rules, Cut: cut,
 	})
 	if !can {
 		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
-	cost, err := scaledPrice(dto, *spec, steps)
+	cost, err := scaledPrice(dto, *spec, steps, choice.OnAlly)
 	if err != nil {
 		return err
 	}
