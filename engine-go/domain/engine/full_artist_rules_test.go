@@ -34,13 +34,13 @@ func fullArtist() Character {
 func TestTheFullArtistHalvesTheBardAbilitiesUnderInspiration(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	inspired := map[string]bool{FlagGroupID("inspiracao"): true}
-	if got := world.EffectsOf(fullArtist(), inspired).AbilityCostFactor("Bardo"); got != (Ratio{Num: 1, Den: 2}) {
+	if got := world.EffectsOf(fullArtist(), inspired).AbilityCostRules().Factor("Bardo"); got != (Ratio{Num: 1, Den: 2}) {
 		t.Errorf("o bardo 20 sob a Inspiração corta as habilidades de bardo por %+v; want a metade", got)
 	}
-	if got := world.EffectsOf(fullArtist(), nil).AbilityCostFactor("Bardo"); got != (Ratio{}) {
+	if got := world.EffectsOf(fullArtist(), nil).AbilityCostRules().Factor("Bardo"); got != (Ratio{}) {
 		t.Errorf("sem a Inspiração, o fator é %+v; want nenhum", got)
 	}
-	if got := world.EffectsOf(fullArtist(), inspired).AbilityCostFactor("Guerreiro"); got != (Ratio{}) {
+	if got := world.EffectsOf(fullArtist(), inspired).AbilityCostRules().Factor("Guerreiro"); got != (Ratio{}) {
 		t.Errorf("a habilidade de outra classe pegou o fator %+v; want nenhum", got)
 	}
 }

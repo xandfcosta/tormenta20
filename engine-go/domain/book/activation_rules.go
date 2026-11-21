@@ -371,7 +371,14 @@ func SceneStartGrants() []Activation {
 // ActivationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
 // fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45).
 func ActivationClass(spec Activation) string {
-	if power, found := ClassPowers()[spec.ID]; found {
+	return ClassOfPower(spec.ID)
+}
+
+// ClassOfPower é a classe do poder de classe com esse id, e vazia quando não é um.
+//
+//	book.ClassOfPower(engine.WildTierPowerID(engine.WildTierNormal)) // "Druida"
+func ClassOfPower(id string) string {
+	if power, found := ClassPowers()[id]; found {
 		return power.ClassName
 	}
 	return ""

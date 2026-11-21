@@ -40,12 +40,6 @@ func (e ItemEffects) AbilityCostIncrease() int {
 	return StatFor(e, ModifierTarget{K: abilityPmCostTarget}).Total
 }
 
-// AbilityCostFactor é o fator no custo das habilidades da classe `class` (a metade do Artista Completo nas de
-// bardo, sob a Inspiração, p45): o de toda habilidade e o da classe, e vale o que corta mais.
-func (e ItemEffects) AbilityCostFactor(class string) Ratio {
-	return severest(e.Factors[abilityPmCostTarget], e.Factors[abilityPmCostTarget+":"+class])
-}
-
 // AbilityCostRules são as regras do custo de habilidade de uma ficha: o aumento de toda habilidade (o
 // Alquebrado, p394) e os fatores por classe (a metade do Artista Completo nas de bardo, p45; a chave vazia vale
 // para toda habilidade). É o que a ficha leva para cada lugar que cobra ou mostra um custo.
@@ -71,7 +65,13 @@ func (e ItemEffects) AbilityCostRules() AbilityCostRules {
 //
 //	rules.Price(2, "Bardo") // 1 sob a Inspiração do Artista Completo
 func (c AbilityCostRules) Price(base int, class string, cuts ...int) int {
-	return AbilityPmCostWith(base, c.Increase, severest(c.Factors[""], c.Factors[class]), cuts...)
+	return AbilityPmCostWith(base, c.Increase, c.Factor(class), cuts...)
+}
+
+// Factor é o fator no custo das habilidades da classe `class` (a metade do Artista Completo nas de bardo, sob a
+// Inspiração, p45): o de toda habilidade e o da classe, e vale o que corta mais.
+func (c AbilityCostRules) Factor(class string) Ratio {
+	return severest(c.Factors[""], c.Factors[class])
 }
 
 // abilityPmCostTarget é o alvo do que mexe no custo de toda habilidade, e não só no das magias (`pmCost`).

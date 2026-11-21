@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"t20engine/app/character"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 )
@@ -93,7 +94,7 @@ func wildShapeViewOf(dto sheet.CharacterDTO) wildShapeView {
 			continue
 		}
 		view.Offered = true
-		pm := cost.Price(engine.WildTierPM(tier), "Druida")
+		pm := cost.Price(engine.WildTierPM(tier), book.ClassOfPower(engine.WildTierPowerID(tier)))
 		view.Tiers = append(view.Tiers, wildTierOption{Tier: tier, Label: wildTierLabel(tier) + " · " + strconv.Itoa(pm) + " PM", PM: pm})
 		for _, form := range engine.WildForms {
 			stats, _ := engine.WildShapeStatsOf(form, tier)
