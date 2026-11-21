@@ -3,6 +3,7 @@ package book
 import (
 	"encoding/json"
 	"strconv"
+	"sync"
 
 	"t20engine/domain/engine"
 )
@@ -162,11 +163,11 @@ func ScaledCost(spec Activation, steps int) int {
 // nível, e com PM para o total.
 // O PM se confere contra o preço que se cobra: o custo dos degraus pelas regras de custo da ficha (o Alquebrado,
 // p394; o Artista Completo, p45), pela conta única.
-func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules, cuts ...int) (bool, string) {
+func ScaledDecision(spec Activation, steps, max, currentPM int, rules engine.AbilityCostRules, cut int) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec), cuts...); cost > currentPM {
+	if cost := rules.Price(ScaledCost(spec, steps), ActivationClass(spec), cut); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -379,12 +380,33 @@ func ActivationClass(spec Activation) string {
 	if class := ClassOfPower(spec.ID); class != "" {
 		return class
 	}
+	return classByPowerName()[spec.Name]
+}
+
+// classByPowerName é a classe de cada nome de poder de classe. Um nome que duas classes usam fica VAZIO: escolher
+// uma delas dependeria da ordem do mapa, e a resposta mudaria de uma execução para a outra.
+var classByPowerName = sync.OnceValue(func() map[string]string {
+	byName := map[string]string{}
+	ambiguous := map[string]bool{}
 	for _, power := range ClassPowers() {
-		if power.Name == spec.Name {
-			return power.ClassName
+		if class, seen := byName[power.Name]; seen && class != power.ClassName {
+			ambiguous[power.Name] = true
 		}
+		byName[power.Name] = power.ClassName
 	}
-	return ""
+	for name := range ambiguous {
+		byName[name] = ""
+	}
+	return byName
+})
+
+// AllyTargetCut é o corte da ficha no uso de `spec` com um aliado como alvo (a Caridade, p83), ≤ 0; zero na
+// habilidade que não pode ter um aliado como alvo. Quem diz se o alvo do uso É um aliado é o gesto.
+func AllyTargetCut(spec Activation, rules engine.AbilityCostRules) int {
+	if !spec.AllyTarget {
+		return 0
+	}
+	return rules.AllyCut(ActivationClass(spec))
 }
 
 // ClassOfPower é a classe do poder de classe com esse id, e vazia quando não é um.

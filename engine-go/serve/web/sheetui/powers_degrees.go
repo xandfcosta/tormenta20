@@ -62,10 +62,7 @@ func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.Abi
 		MaxSteps: character.PowerMaxSteps(dto, spec),
 	}
 	class := book.ActivationClass(spec)
-	cut := 0
-	if spec.AllyTarget {
-		cut = cost.AllyCut(class)
-	}
+	cut := book.AllyTargetCut(spec, cost)
 	for steps := 0; steps <= d.MaxSteps; steps++ {
 		d.Prices = append(d.Prices, cost.Price(book.ScaledCost(spec, steps), class))
 		if cut < 0 {
@@ -201,11 +198,11 @@ type allyUse struct {
 
 // allyUseFor é o uso com aliado como alvo, quando a habilidade o tem e a ficha corta nele; nulo no resto.
 func allyUseFor(spec book.Activation, context book.UseContext) *allyUse {
-	if !spec.AllyTarget || book.CostIsVariable(spec) {
+	if book.CostIsVariable(spec) {
 		return nil
 	}
 	class := book.ActivationClass(spec)
-	cut := context.Cost.AllyCut(class)
+	cut := book.AllyTargetCut(spec, context.Cost)
 	if cut >= 0 {
 		return nil
 	}

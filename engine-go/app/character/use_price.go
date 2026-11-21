@@ -27,11 +27,11 @@ func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int, onAlly
 	return rules.Price(book.ScaledCost(spec, steps), class, cut), nil
 }
 
-// allyCutOf é o corte deste uso quando o alvo é um aliado (a Caridade, p83), ≤ 0; zero no uso comum e na
-// habilidade que não pode ter um aliado como alvo.
+// allyCutOf é o corte deste uso quando o gesto diz que o alvo é um aliado (a Caridade, p83), ≤ 0; zero no uso
+// comum.
 func allyCutOf(rules engine.AbilityCostRules, spec book.Activation, onAlly bool) int {
-	if !onAlly || !spec.AllyTarget {
+	if !onAlly {
 		return 0
 	}
-	return rules.AllyCut(book.ActivationClass(spec))
+	return book.AllyTargetCut(spec, rules)
 }
