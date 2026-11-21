@@ -300,9 +300,24 @@ const (
 // DamageToRoll é a fórmula do dano depois da decisão, na ordem em que os dados
 // se leem: a arma primeiro, os extras depois. Repete o `engine.DamageFormula`
 // pela razão do `ForeseenCondition`: o regime não conhece o motor.
+//
+// AS LINHAS (ALE-655): quando a carta tem situações que mudam o dado — a Arma Improvisada e a Chave sobem o
+// desarmado um passo (p76) —, `Lines` são as fórmulas de cada uma, o normal primeiro, e `Line` a escolhida.
+// Escolher troca `Dice` e `Bonus` pelos da linha, e é contra eles que o "rolei na mão" se confere.
 type DamageToRoll struct {
-	Dice  []DiceGroup `json:"dice"`
-	Bonus int         `json:"bonus"`
+	Dice  []DiceGroup  `json:"dice"`
+	Bonus int          `json:"bonus"`
+	Lines []DamageLine `json:"lines,omitempty"`
+	Line  string       `json:"line,omitempty"`
+}
+
+// DamageLine é uma linha do passo do dano: o poder que a dá (`ID` vazio é o normal), a situação e a fórmula.
+type DamageLine struct {
+	ID     string      `json:"id"`
+	Label  string      `json:"label"`
+	Source string      `json:"source,omitempty"`
+	Dice   []DiceGroup `json:"dice"`
+	Bonus  int         `json:"bonus"`
 }
 
 // DiceGroup são os dados de uma parcela: os 3d8 do machado, o 1d6 de fogo.

@@ -66,6 +66,9 @@ type attackProposal struct {
 	ToRoll    string
 	Hand      []handGroup
 	HandBonus string
+	// DamageLines são as linhas do passo do dano (a Arma Improvisada, a Chave, p76), a escolhida marcada;
+	// vazias quando a carta não tem situação.
+	DamageLines []damageLineView
 	// Said é a decisão do mestre como o jogador a lê ("crítico ×2").
 	Said string
 	// DamageLine é o dano rolado na notação, e DamageTotal o cru: o jogador não
@@ -108,6 +111,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	if pa.DamageToRoll != nil {
 		out.ToRoll, out.Hand = toRollLine(*pa.DamageToRoll), handGroupsOf(*pa.DamageToRoll)
 		out.HandBonus = strings.TrimSpace(signedTerm(pa.DamageToRoll.Bonus))
+		out.DamageLines = damageLinesView(*pa.DamageToRoll)
 	}
 	if pa.Maneuver != nil {
 		var note string

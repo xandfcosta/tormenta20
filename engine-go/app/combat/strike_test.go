@@ -54,6 +54,12 @@ func (f *queueDouble) RecordAttackDamage(
 	return f.state, nil
 }
 
+func (f *queueDouble) ChooseDamageLine(
+	_ context.Context, _ int64, who live.Attacker, line string,
+) (*live.SessionRuntimeState, error) {
+	return f.state, live.ChooseDamageLine(f.state, who, line)
+}
+
 func (f *queueDouble) RerollAttackDamage(
 	_ context.Context, _ int64, who live.Attacker, rerolled live.PendingAttack,
 ) (*live.SessionRuntimeState, error) {

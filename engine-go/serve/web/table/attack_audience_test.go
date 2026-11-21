@@ -22,7 +22,7 @@ var attackCardAudience = map[string]string{
 	"Weapon": everyone, "Action": everyone, "Maneuver": everyone, "Mine": everyone,
 	// O que é de quem rolou, e só dele.
 	"Boost": roller, "Dose": roller, "FollowUp": roller, "Guard": roller, "Rerolled": roller,
-	"Offers": roller, "ToRoll": roller, "Hand": roller, "HandBonus": roller, "Said": roller,
+	"Offers": roller, "ToRoll": roller, "DamageLines": roller, "Hand": roller, "HandBonus": roller, "Said": roller,
 	"DamageTotal": roller, "Destroyer": roller, "DamageRerolled": roller,
 	// O que quem rolou vê ESCRITO DE OUTRO JEITO: a conta sem a Defesa, as situações do lado
 	// dele, o dano com o "não letal" da arma dele.

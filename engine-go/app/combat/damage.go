@@ -30,11 +30,10 @@ func (s Strike) Rule(ctx context.Context, who app.Caller, role string, sessionID
 			if err != nil {
 				return nil, err
 			}
-			formula, err := engine.DamageToRoll(frozen.Weapon, engine.Ruling(ruling))
+			toRoll, err = damageLinesOf(frozen.Weapon, engine.Ruling(ruling))
 			if err != nil {
 				return nil, err
 			}
-			toRoll = damageToRollOf(formula)
 		}
 	}
 	return s.tables.RuleAttack(ctx, sessionID, live.Attacker{UserID: who.ID, Role: role}, ruling, toRoll)
@@ -71,6 +70,12 @@ func (s Strike) RollDamage(ctx context.Context, who app.Caller, role string, ses
 	if err != nil {
 		return live.PendingAttack{}, err
 	}
+	// A LINHA ESCOLHIDA é a carta que se rola: o dado um passo acima, e o resto igual (ALE-655).
+	if pending.DamageToRoll != nil {
+		if frozen.Weapon, err = engine.WithDamageVariant(frozen.Weapon, pending.DamageToRoll.Line); err != nil {
+			return live.PendingAttack{}, fmt.Errorf("%w: %w", err, app.ErrRefused)
+		}
+	}
 	rollDie := s.rollDie
 	var byHand *engine.HandDice
 	if hand != nil {
@@ -106,6 +111,35 @@ func withRolledDamage(pending live.PendingAttack, out engine.AttackOutcome) live
 	return pending
 }
 
+// damageLinesOf é o dano a rolar com as linhas da carta: o normal marcado, e uma fórmula por situação (ALE-655).
+// Sem situação na carta, só o normal, e sem a lista.
+func damageLinesOf(card engine.WeaponCard, ruling engine.Ruling) (*live.DamageToRoll, error) {
+	formula, err := engine.DamageToRoll(card, ruling)
+	if err != nil {
+		return nil, err
+	}
+	toRoll := damageToRollOf(formula)
+	if len(card.DamageVariants) == 0 {
+		return toRoll, nil
+	}
+	toRoll.Lines = []live.DamageLine{{Label: "normal", Dice: toRoll.Dice, Bonus: toRoll.Bonus}}
+	for _, variant := range card.DamageVariants {
+		varied, err := engine.WithDamageVariant(card, variant.ID)
+		if err != nil {
+			return nil, err
+		}
+		formula, err := engine.DamageToRoll(varied, ruling)
+		if err != nil {
+			return nil, err
+		}
+		line := damageToRollOf(formula)
+		toRoll.Lines = append(toRoll.Lines, live.DamageLine{
+			ID: variant.ID, Label: variant.Label, Source: variant.Source, Dice: line.Dice, Bonus: line.Bonus,
+		})
+	}
+	return toRoll, nil
+}
+
 // damageToRollOf copia a fórmula do motor para a forma que o regime entende.
 func damageToRollOf(formula engine.DamageFormula) *live.DamageToRoll {
 	toRoll := &live.DamageToRoll{Bonus: formula.Bonus}
@@ -121,4 +155,16 @@ func extraDiceOf(out engine.AttackOutcome) []live.RolledGroup {
 		extra = append(extra, live.RolledGroup{Dice: roll.Dice, Faces: roll.Faces, Type: roll.Type})
 	}
 	return extra
+}
+
+// ChooseDamageLine marca a linha do dano que quem atacou vai rolar: o normal, ou uma situação da carta (a Arma
+// Improvisada, a Chave, p76). O "Rolar" e o "rolei na mão" seguem a linha marcada.
+//
+//	state, err := strike.ChooseDamageLine(ctx, player, "player", sessionID, "class.lutador.chave")
+func (s Strike) ChooseDamageLine(ctx context.Context, who app.Caller, role string, sessionID int64, line string) (*live.SessionRuntimeState, error) {
+	state, err := s.tables.ChooseDamageLine(ctx, sessionID, live.Attacker{UserID: who.ID, Role: role}, line)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", err, app.ErrRefused)
+	}
+	return state, nil
 }
