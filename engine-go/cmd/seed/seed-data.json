@@ -2566,6 +2566,31 @@
             },
             "items": [{ "catalogId": "arco-curto", "equipped": "wielded" }]
           }
+        },
+        {
+          "create": {
+            "name": "Lutador Agarrador Nv5",
+            "races": ["humano"],
+            "origin": "gladiador",
+            "classes": [{ "className": "Lutador", "level": 5 }],
+            "classPowers": [
+              "class.lutador.arma-improvisada",
+              "class.lutador.lutador-de-chao",
+              "class.lutador.chave"
+            ],
+            "strength": 3,
+            "dexterity": 2,
+            "constitution": 2,
+            "intelligence": 1,
+            "wisdom": 1,
+            "charisma": 0,
+            "size": "Médio",
+            "displacement": 9,
+            "raceAttributeChoices": {
+              "floatingPicks": ["strength", "dexterity", "constitution"]
+            },
+            "items": []
+          }
         }
       ]
     },
