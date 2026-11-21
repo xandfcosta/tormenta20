@@ -83,3 +83,17 @@ func TestTheCharityOffersTheAllyTargetWithItsPrice(t *testing.T) {
 		})
 	}
 }
+
+// A CURA SEM DEGRAU (paladino de nível 2 e 3, antes do primeiro "a cada 4 níveis", p82) também escolhe o alvo:
+// sem a escolha, as Ações da mesa a usavam direto no próprio paladino, e sob o Alquebrado o aliado pagava 1 PM a
+// mais do que o livro cobra.
+func TestTheHealingWithoutStepsStillAsksTheTarget(t *testing.T) {
+	f, id := paladinWithCharisma(t, 3)
+	seedPowerChoices(t, f.s, id, `["class.paladino.virtude-paladinesca-caridade"]`, "{}")
+	f.actionSceneWithTheGoblinFirst(t, "Devota", id, 2)
+	for where, screen := range map[string]string{"na aba Poderes": sheetTab(t, f, id, "abilities"), "nas Ações da mesa": acoesDaMesa(t, f)} {
+		if !strings.Contains(screen, `aria-label="Alvo"`) {
+			t.Errorf("%s, a Cura pelas Mãos de nível 3 não escolhe o alvo", where)
+		}
+	}
+}

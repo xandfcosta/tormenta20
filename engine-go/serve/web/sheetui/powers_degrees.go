@@ -48,9 +48,9 @@ type riderPart struct {
 	What, Value, Source string
 }
 
-// opensDialog diz se o "Usar" abre o diálogo: há degrau a escolher, ou a
-// caixa do Inimigo a marcar.
-func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble }
+// opensDialog diz se o "Usar" abre o diálogo: há degrau a escolher, a caixa do Inimigo a marcar, ou o alvo a
+// escolher — a Cura pelas Mãos com a Caridade antes do primeiro degrau, no nível 2 e 3 (p82-83).
+func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble || d.AllyPrices != nil }
 
 // useDegreesFor resolve os degraus de um instantâneo com escala, ou nil.
 func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.AbilityCostRules) *useDegrees {
