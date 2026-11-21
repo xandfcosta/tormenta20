@@ -10,6 +10,10 @@ func moreTargetKeys(t ModifierTarget) string {
 		// ela AUTORIZA aquele atributo a entrar no lugar do da perícia — "pode usar Destreza em
 		// vez de Força em Atletismo" (p28, p129).
 		return "expertiseAttribute:" + t.Name + ":" + t.Attribute
+	case "weaponAttribute":
+		// A LICENÇA DO ATRIBUTO DA ARMA: o alcance (`Name`, corpo a corpo ou à distância), a conta (`Scope`, ataque
+		// ou dano) e o atributo que pode entrar no lugar (o Armeiro e a Balística, p68-69).
+		return "weaponAttribute:" + t.Name + ":" + t.Scope + ":" + t.Attribute
 	case "scaleAttribute":
 		// O VERBETE E O ATRIBUTO NA CHAVE, e a licença não soma nada: ela autoriza a escala daquele
 		// verbete — o "soma a Destreza" do Estilo de Disparo — a usar outro atributo (a Balística, p69).
