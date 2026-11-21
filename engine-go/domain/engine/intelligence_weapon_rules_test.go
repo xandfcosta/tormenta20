@@ -23,8 +23,8 @@ func TestTheArmorerAttacksAndHitsWithIntelligence(t *testing.T) {
 	if armorer.Attribute != "intelligence" || armorer.Attack-plain.Attack != 3 {
 		t.Errorf("o Armeiro com Int 4 e For 1 ataca com %s, %d acima; want intelligence, +3", armorer.Attribute, armorer.Attack-plain.Attack)
 	}
-	if armorer.StrDamage != 4 || armorer.IntDamageNote == "" {
-		t.Errorf("o Armeiro soma %d no dano (Inteligência: %q); want a Inteligência, 4", armorer.StrDamage, armorer.IntDamageNote)
+	if armorer.StrDamage != 4 || armorer.DamageSwapNote == "" {
+		t.Errorf("o Armeiro soma %d no dano (Inteligência: %q); want a Inteligência, 4", armorer.StrDamage, armorer.DamageSwapNote)
 	}
 	// "PODE": com a Força maior, fica a Força.
 	if strong := sword(`["class.inventor.armeiro"]`, 5); strong.Attribute != "strength" || strong.StrDamage != 5 {
@@ -67,17 +67,21 @@ func TestTheBallisticsAimsWithIntelligence(t *testing.T) {
 func TestTheWeaponAttributeSwapCarriesTheLicensePhrase(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	sword := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 1, 0, 4, "espada-longa"), nil), "espada-longa")
-	if sword.IntNote != "Armeiro: Inteligência no lugar de Força" || sword.IntDamageNote != sword.IntNote {
-		t.Errorf("o Armeiro diz %q no ataque e %q no dano; want a frase da licença nos dois", sword.IntNote, sword.IntDamageNote)
+	if sword.AttributeSwapNote != "Armeiro: Inteligência no lugar de Força" || sword.DamageSwapNote != sword.AttributeSwapNote {
+		t.Errorf("o Armeiro diz %q no ataque e %q no dano; want a frase da licença nos dois", sword.AttributeSwapNote, sword.DamageSwapNote)
+	}
+	// O ATRIBUTO DO DANO viaja na carta: a tela não supõe a Inteligência (ALE-672).
+	if sword.DamageSwapAttribute != "intelligence" {
+		t.Errorf("o dano do Armeiro diz que trocou para %q; want intelligence", sword.DamageSwapAttribute)
 	}
 	bow := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.balistica"]`, 1, 0, 4, "arco-longo"), nil), "arco-longo")
-	if bow.IntNote != "Balística: Inteligência no lugar de Destreza" || bow.IntDamageNote != "" {
-		t.Errorf("a Balística diz %q no ataque e %q no dano; want a frase da licença só no ataque", bow.IntNote, bow.IntDamageNote)
+	if bow.AttributeSwapNote != "Balística: Inteligência no lugar de Destreza" || bow.DamageSwapNote != "" {
+		t.Errorf("a Balística diz %q no ataque e %q no dano; want a frase da licença só no ataque", bow.AttributeSwapNote, bow.DamageSwapNote)
 	}
 	// Sem troca, sem frase: a Força maior fica.
 	strong := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 5, 0, 4, "espada-longa"), nil), "espada-longa")
-	if strong.IntNote != "" || strong.IntDamageNote != "" {
-		t.Errorf("o Armeiro com a Força maior ainda diz %q e %q", strong.IntNote, strong.IntDamageNote)
+	if strong.AttributeSwapNote != "" || strong.DamageSwapNote != "" {
+		t.Errorf("o Armeiro com a Força maior ainda diz %q e %q", strong.AttributeSwapNote, strong.DamageSwapNote)
 	}
 }
 
@@ -88,10 +92,10 @@ func TestTheWeaponAttributeSwapCarriesTheLicensePhrase(t *testing.T) {
 func TestTheArmorerDamageSwapsEvenWhenTheAttackKeepsDexterity(t *testing.T) {
 	world := BookRuleset(primeBook(t))
 	dagger := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 0, 4, 3, "adaga"), nil), "adaga")
-	if dagger.Attribute != "dexterity" || dagger.IntNote != "" {
-		t.Errorf("a adaga do Armeiro ataca com %s (troca: %q); want a Destreza, sem troca", dagger.Attribute, dagger.IntNote)
+	if dagger.Attribute != "dexterity" || dagger.AttributeSwapNote != "" {
+		t.Errorf("a adaga do Armeiro ataca com %s (troca: %q); want a Destreza, sem troca", dagger.Attribute, dagger.AttributeSwapNote)
 	}
-	if dagger.StrDamage != 3 || dagger.IntDamageNote != "Armeiro: Inteligência no lugar de Força" {
-		t.Errorf("a adaga do Armeiro soma %d no dano (troca: %q); want a Inteligência, 3, com a frase da licença", dagger.StrDamage, dagger.IntDamageNote)
+	if dagger.StrDamage != 3 || dagger.DamageSwapNote != "Armeiro: Inteligência no lugar de Força" {
+		t.Errorf("a adaga do Armeiro soma %d no dano (troca: %q); want a Inteligência, 3, com a frase da licença", dagger.StrDamage, dagger.DamageSwapNote)
 	}
 }

@@ -105,9 +105,9 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 		switch {
 		case card.DexDamage:
 			label = "DES"
-		case card.IntDamageNote != "":
-			// O Armeiro troca a Força pela Inteligência no dano (p68).
-			label = "INT"
+		case card.DamageSwapAttribute != "":
+			// A licença do catálogo trocou o atributo do dano (o Armeiro, p68), e a sigla é a do que ela escolheu.
+			label = attributeAbbr[card.DamageSwapAttribute]
 		}
 		damage = append(damage, breakdownRow{Label: label, Value: book.WithSign(card.StrDamage)})
 	}

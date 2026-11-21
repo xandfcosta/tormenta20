@@ -68,8 +68,8 @@ func weaponSumTerms(card engine.WeaponCard) (attack, damage []ds.SumTerm) {
 		switch {
 		case card.DexDamage:
 			strength = ds.SumTerm{Label: "Destreza", Note: "Acuidade com Arma", Value: book.WithSign(card.StrDamage)}
-		case card.IntDamageNote != "":
-			strength = ds.SumTerm{Label: "Inteligência", Note: card.IntDamageNote, Value: book.WithSign(card.StrDamage)}
+		case card.DamageSwapAttribute != "":
+			strength = ds.SumTerm{Label: book.AttributeLabel(card.DamageSwapAttribute), Note: card.DamageSwapNote, Value: book.WithSign(card.StrDamage)}
 		}
 		damage = append(damage, strength)
 		bonus -= card.StrDamage
@@ -100,10 +100,10 @@ func withContributions(terms []ds.SumTerm, total int, groups ...[]engine.Breakdo
 // dexNote diz por que a Destreza entrou no ataque: a arma que o livro deixa
 // usar assim (a adaga, com a página dela) ou a Acuidade com Arma.
 func dexNote(card engine.WeaponCard) string {
-	// A INTELIGÊNCIA no lugar do atributo do ataque: a frase é a da licença do catálogo, que diz quem a pôs e no
-	// lugar de quê (o Armeiro, p68; a Balística, p69).
-	if card.IntNote != "" {
-		return card.IntNote
+	// A TROCA DO ATRIBUTO DO ATAQUE pela licença do catálogo: a frase é a dela, que diz quem trocou e por quê (o
+	// Armeiro, p68; a Balística, p69).
+	if card.AttributeSwapNote != "" {
+		return card.AttributeSwapNote
 	}
 	switch card.DexBy {
 	case engine.DexByWeapon:
