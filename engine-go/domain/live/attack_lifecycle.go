@@ -246,6 +246,27 @@ func AttackAwaitingDamage(st *SessionRuntimeState, who Attacker) (PendingAttack,
 	return *attack, nil
 }
 
+// ChooseDamageLine marca a linha do dano que quem atacou vai rolar, e põe a fórmula dela no passo do dano.
+// Vale enquanto o dano espera, para quem pode rolá-lo.
+func ChooseDamageLine(st *SessionRuntimeState, who Attacker, line string) error {
+	if _, err := AttackAwaitingDamage(st, who); err != nil {
+		return err
+	}
+	toRoll := st.PendingAttack.DamageToRoll
+	if toRoll == nil {
+		return fmt.Errorf("o ataque não tem dano a rolar")
+	}
+	offered := make([]string, 0, len(toRoll.Lines))
+	for _, option := range toRoll.Lines {
+		if option.ID == line {
+			toRoll.Dice, toRoll.Bonus, toRoll.Line = option.Dice, option.Bonus, option.ID
+			return nil
+		}
+		offered = append(offered, option.Label)
+	}
+	return fmt.Errorf("o dano deste ataque não tem a linha %q; as que ele tem: %v", line, offered)
+}
+
 // RecordAttackDamage põe o dano rolado no provisório, conferindo DE NOVO que
 // ele ainda espera o dano: entre a leitura e a gravação, o mesmo dano pode ter
 // sido rolado por outra aba.

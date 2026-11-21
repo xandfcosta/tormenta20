@@ -1690,6 +1690,23 @@
   .ds-hub-menu-row[data-danger] > .ds-icon {
     color: var(--ds-danger);
   }
+  /* AS LINHAS DO DANO (a Arma Improvisada, a Chave): uma opção por linha, a situação à esquerda e o dado à
+     direita. Lado a lado, três rótulos longos quebravam em três linhas cada no celular. */
+  .ds-strike-lines .ds-segmented {
+    display: grid;
+    width: 100%;
+  }
+  .ds-strike-lines .ds-segmented > button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    height: auto;
+    min-height: var(--ds-h-control);
+    padding: 0.5rem 0.75rem;
+    line-height: 1.25;
+    text-align: left;
+  }
   .ds-hub-menu .ds-segmented {
     display: grid;
     width: 100%;

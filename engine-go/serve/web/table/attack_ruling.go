@@ -82,6 +82,19 @@ func rollsAttackDamageByHand(st Scene, c commandCtx) (*live.SessionRuntimeState,
 	return st.rollDamage(c, hand)
 }
 
+// choosesDamageLine marca a linha do dano que quem atacou vai rolar. A do golpe comum chega como `normal`,
+// porque a linha dela não tem id e um pedaço vazio não cabe no caminho.
+func choosesDamageLine(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
+	line := chi.URLParam(c.R, "linha")
+	if line == normalDamageLine {
+		line = ""
+	}
+	return st.strike.ChooseDamageLine(c.R.Context(), app.Caller{ID: c.User}, c.Role, c.SessionID, line)
+}
+
+// normalDamageLine é o pedaço do caminho que escolhe a linha do golpe comum.
+const normalDamageLine = "normal"
+
 func (st Scene) rollDamage(c commandCtx, hand []int) (*live.SessionRuntimeState, error) {
 	if _, err := st.strike.RollDamage(c.R.Context(), app.Caller{ID: c.User}, c.Role, c.SessionID, hand); err != nil {
 		return nil, err

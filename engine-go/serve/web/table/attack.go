@@ -39,6 +39,8 @@ func (s Scene) AttackRoutes(r chi.Router) {
 	r.Post(sessionPattern+"/ataque/julgar/{decisao}", s.gmCommand(rulesAttack))
 	r.Post(sessionPattern+"/ataque/dano", s.tableStateCommand(rollsAttackDamage))
 	r.Post(sessionPattern+"/ataque/dano/na-mao", s.tableStateCommand(rollsAttackDamageByHand))
+	// A LINHA DO DANO (a Arma Improvisada, a Chave, p76) se escolhe antes de rolar; `normal` é a do golpe comum.
+	r.Post(sessionPattern+"/ataque/dano/linha/{linha}", s.tableStateCommand(choosesDamageLine))
 	r.Post(sessionPattern+"/ataque/dano/destruidor", s.tableStateCommand(rerollsLowDamage))
 	r.Post(sessionPattern+"/ataque/dano/destruidor/na-mao", s.tableStateCommand(rerollsLowDamageByHand))
 	r.Post(sessionPattern+"/ataque/confirmar", s.gmCommand(confirmsAttack))

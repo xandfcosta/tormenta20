@@ -142,6 +142,14 @@ func (st *Store) RecordAttackDamage(
 		func(s *live.SessionRuntimeState) error { return live.RecordAttackDamage(s, who, rolled) })
 }
 
+// ChooseDamageLine marca a linha do dano que quem atacou vai rolar (a Arma Improvisada, a Chave, p76).
+func (st *Store) ChooseDamageLine(
+	ctx context.Context, sessionID int64, who live.Attacker, line string,
+) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { return live.ChooseDamageLine(s, who, line) })
+}
+
 // RerollAttackDamage troca o dano rolado pelo rolado de novo (o Destruidor, p41, p65). Também não tira PV.
 func (st *Store) RerollAttackDamage(
 	ctx context.Context, sessionID int64, who live.Attacker, rerolled live.PendingAttack,

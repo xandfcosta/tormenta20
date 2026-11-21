@@ -190,6 +190,7 @@ templ playerAttackBody(v View) {
 	switch v.Attack.Stage {
 		case stageDamage:
 			<p class="ds-help">O mestre disse: <b>{ v.Attack.Said }</b></p>
+			@damageLineChoice(v)
 			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-on:click": attackCommand(v, "dano")}) {
 				{ "Rolar " + v.Attack.ToRoll }
 			}
@@ -282,4 +283,21 @@ templ handDiceEntry(v View, groups []handGroup, bonus string, verb string) {
 			Usar
 		}
 	</div>
+}
+
+// damageLineChoice é a escolha da linha do dano (a Arma Improvisada, a Chave, p76): o normal vem marcado, e o
+// "Rolar" e o "rolei na mão" logo abaixo seguem a escolhida. Some quando a carta não tem situação.
+templ damageLineChoice(v View) {
+	if len(v.Attack.DamageLines) > 1 {
+		<div class="ds-strike-lines">
+			@ds.Segmented("Linha do dano") {
+				for _, line := range v.Attack.DamageLines {
+					@ds.SegmentedOption(line.Chosen, templ.Attributes{"data-on:click": attackCommand(v, "dano/linha/"+line.Slug), "title": line.Source}) {
+						<span>{ line.Label }</span>
+						<b>{ line.ToRoll }</b>
+					}
+				}
+			}
+		</div>
+	}
 }

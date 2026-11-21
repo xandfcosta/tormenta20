@@ -41,7 +41,11 @@ mão não saberia quantos dados pegar.
 - **A decisão** (`Ruling`: `miss`, `hit`, `critical`) é do mestre, UMA vez
   (`live.RuleAttack`). No acerto e no crítico ela já guarda o que rolar
   (`DamageToRoll`, do `engine.DamageToRoll`), na ordem em que os dados se leem:
-  a arma primeiro, os extras depois.
+  a arma primeiro, os extras depois. Quando a carta tem **linhas do dano**
+  (`WeaponCard.DamageVariants`: a Arma Improvisada e a Chave, p76), ela guarda uma
+  fórmula por linha, o normal marcado; quem atacou escolhe a linha
+  (`live.ChooseDamageLine`) antes de rolar, e o "Rolar" e o "rolei na mão" seguem
+  a escolhida — é assim que o sistema sabe a situação, sem interruptor.
 - **O dano** é de quem atacou, ou do mestre por ele (`live.AttackAwaitingDamage`):
   o `RollAttackDamage` troca a sugestão pela decisão (`applyTheRuling`) e rola.
   Na mão, o `DiceRolledByHand` entrega os dados na mesma ordem, confere cada um

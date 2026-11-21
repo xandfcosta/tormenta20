@@ -99,6 +99,7 @@ type Tables interface {
 	ProposeAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 	RuleAttack(ctx context.Context, sessionID int64, who live.Attacker, ruling string, toRoll *live.DamageToRoll) (*live.SessionRuntimeState, error)
 	RecordAttackDamage(ctx context.Context, sessionID int64, who live.Attacker, rolled live.PendingAttack) (*live.SessionRuntimeState, error)
+	ChooseDamageLine(ctx context.Context, sessionID int64, who live.Attacker, line string) (*live.SessionRuntimeState, error)
 	RerollAttackDamage(ctx context.Context, sessionID int64, who live.Attacker, rerolled live.PendingAttack) (*live.SessionRuntimeState, error)
 	RerollAttack(ctx context.Context, sessionID int64, attack live.PendingAttack) (*live.SessionRuntimeState, error)
 	// CharacterActionFits diz se este personagem pode gastar o custo AGORA: se

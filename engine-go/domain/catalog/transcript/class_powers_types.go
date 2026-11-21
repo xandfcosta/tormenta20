@@ -28,6 +28,15 @@ type ClassPower struct {
 	FavoredWeaponDie *ClassPowerFavoredWeaponDie `json:"favoredWeaponDie,omitempty"`
 	// FollowUp é a manobra livre depois de outro gesto declarado — ver `engine.FollowUpManeuver`.
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
+	// UnarmedDamageVariant é a linha do dano desarmado numa situação — ver `engine.DamageVariant`.
+	UnarmedDamageVariant *ClassPowerUnarmedDamageVariant `json:"unarmedDamageVariant,omitempty"`
+}
+
+// ClassPowerUnarmedDamageVariant é a linha que o poder dá à carta desarmada: a situação e quantos passos o dado
+// sobe nela (a Arma Improvisada e a Chave, p76).
+type ClassPowerUnarmedDamageVariant struct {
+	Label string `json:"label"`
+	Steps int    `json:"steps"`
 }
 
 // ClassPowerFollowUp é a manobra em seguida que o poder dá: a derrubada depois do Sucesso no agarrar (Lutador de
@@ -125,11 +134,12 @@ type ClassPowerFavoredWeaponDie struct {
 
 // HasEngineEffect diz se o motor aplica alguma coisa deste poder: um modificador, ou um campo que o motor lê sem
 // modificador — o ataque pago, o aprimoramento, o que se soma a ele, o dado da arma favorita, a escala de PM, a
-// proficiência e a manobra em seguida. É o que o auditor de cobertura conta como efeito, e um campo novo do tipo
+// proficiência, a manobra em seguida e a linha do dano desarmado. É o que o auditor de cobertura conta como efeito, e um campo novo do tipo
 // tem de decidir de que lado fica (`TestEveryClassPowerFieldSaysWhetherItIsAnEngineEffect`).
 //
 //	if power.HasEngineEffect() { … }
 func (p ClassPower) HasEngineEffect() bool {
 	return len(p.Modifiers) > 0 || len(p.ProficientWith) > 0 || p.Degrees != nil || p.Boost != nil ||
-		p.ExtraStrike != nil || p.BoostAddOn != nil || p.FavoredWeaponDie != nil || p.FollowUp != nil
+		p.ExtraStrike != nil || p.BoostAddOn != nil || p.FavoredWeaponDie != nil || p.FollowUp != nil ||
+		p.UnarmedDamageVariant != nil
 }

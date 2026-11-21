@@ -135,6 +135,8 @@ type weaponTile struct {
 	// (`weaponSumTerms`).
 	AttackSum []ds.SumTerm
 	DamageSum []ds.SumTerm
+	// DamageLines são as linhas do dano numa situação (a Arma Improvisada, a Chave) — `damageLinesOf`.
+	DamageLines []ds.SumTerm
 }
 
 // attributeAbbr são as abreviações que a mesa fala, na ordem do livro.
@@ -464,6 +466,7 @@ func weaponTiles(cards []engine.WeaponCard) []weaponTile {
 			DamageRows:  damageRows,
 			AttackSum:   attackSum,
 			DamageSum:   damageSum,
+			DamageLines: damageLinesOf(card),
 		})
 	}
 	return tiles

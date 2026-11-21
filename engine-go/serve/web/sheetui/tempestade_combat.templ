@@ -71,6 +71,10 @@ templ weaponSum(w weaponTile) {
 		<p class="ds-sum-section">{ "Dano · crítico " + w.Crit }</p>
 		@ds.SumTerms(w.DamageSum)
 		@ds.SumTotal(w.Damage, nil)
+		if len(w.DamageLines) > 0 {
+			<p class="ds-sum-section">Dano em outra situação</p>
+			@ds.SumTerms(w.DamageLines)
+		}
 		if len(w.Doses) > 0 {
 			<p class="ds-help">{ writtenDoses(w.Doses) }</p>
 		}
