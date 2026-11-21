@@ -237,7 +237,7 @@ func (r *Ruleset) weaponCardsWith(ch Character, activeConditionals map[string]bo
 	}
 	r.offerStyleStrikes(ch, activeConditionals, effects, cards)
 	cards = append(append(cards, r.unarmedCard(ch, shared)), r.naturalCards(ch, shared, activeConditionals)...)
-	offerPaidExtraStrikes(cards, r.paidExtraStrikes(ch))
+	offerPaidExtraStrikes(cards, r.paidExtraStrikes(ch, effects.AbilityCostIncrease()))
 	return cards
 }
 

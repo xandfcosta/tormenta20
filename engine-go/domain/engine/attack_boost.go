@@ -80,10 +80,13 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	if choice.PowerID == "" {
 		return plain, nil
 	}
+	// O ALQUEBRADO (p394) sobe o custo de toda habilidade, e o gasto do encanto também é uma: a p224 conta os
+	// itens entre as fontes de habilidade.
+	increase := r.EffectsOf(ch, activeConditionals).AbilityCostIncrease()
 	if _, enchant, isEnchant := enchantBoostOf(choice.PowerID); isEnchant {
 		cards, pm, err := r.enchantBoostedCards(ch, activeConditionals, choice.PowerID)
 		for i := range cards {
-			pricedAt(&cards[i], r.boostCostWith(ch, cards[i].ItemID, enchant, pm))
+			pricedAt(&cards[i], AbilityPmCost(pm, increase, r.boostCutWith(ch, cards[i].ItemID, enchant)))
 		}
 		return cards, err
 	}
@@ -107,14 +110,14 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	}
 	item := ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: modsWith(choice.Split, 0)}
 	items := []ActiveItem{item}
-	addOnPM := 0
+	addOnPM, abilities := 0, 1
 	if choice.AddOn != "" {
 		addOn := r.ownedBoostAddOn(ch, choice.AddOn, power.ID)
 		if addOn == nil {
 			return nil, fmt.Errorf("%s: o acréscimo %q não é de um poder que a ficha tenha para este impulso", power.Name, choice.AddOn)
 		}
 		items = append(items, ActiveItem{SourceID: addOn.ID, Source: addOn.Name, Equipped: &vestedWear, Modifiers: addOn.BoostAddOn.Modifiers})
-		addOnPM = addOn.BoostAddOn.PM
+		addOnPM, abilities = addOn.BoostAddOn.PM, 2
 	}
 	boosted := r.weaponCardsWith(ch, activeConditionals, items)
 	// O que a tira escreve é o bônus inteiro, antes de escolher o lado, como na oferta (`boostBuys`).
@@ -142,9 +145,12 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 			}
 		}
 	}
+	// UM AUMENTO POR HABILIDADE: o acréscimo engatilhado no impulso (o Romper Resistências, p66) é habilidade
+	// própria (p224), com o +1 dele (decisão do dono). Os cortes valem sobre o total, e o maior vence (p226).
 	pm := boost.Degrees.BasePM + choice.Steps*boost.Degrees.StepPM + addOnPM
 	for i := range boosted {
-		pricedAt(&boosted[i], changes.priced(pm, r.boostCostWith(ch, boosted[i].ItemID, power.ID, pm)))
+		cut := r.boostCutWith(ch, boosted[i].ItemID, power.ID)
+		pricedAt(&boosted[i], AbilityPmCost(pm, increase*abilities, cut, changes.halvedCut(pm)))
 	}
 	return boosted, nil
 }
@@ -158,16 +164,14 @@ func pricedAt(card *WeaponCard, pm int) {
 	}
 }
 
-// boostCostWith é o custo do impulso `powerID` pago com a arma `itemID`: o `pm` de toda arma, menos o corte
-// que ela leva para aquele poder (a Harmonizada, p165). No gasto de um encanto, `powerID` é o id do encanto,
-// que é o que a Harmonizada guarda: a arma já é a dela.
+// boostCutWith é o corte que a arma `itemID` dá no custo do impulso `powerID` (a Harmonizada, p165), ≤ 0. No
+// gasto de um encanto, `powerID` é o id do encanto, que é o que a Harmonizada guarda: a arma já é a dela.
 //
-// Os cortes NÃO SE ACUMULAM e o custo não desce de 1 PM — a regra do custo da magia (p226), que o livro dá
-// para o custo de qualquer habilidade. Vale o maior corte, e não a soma, porque duas fontes de "–1 PM" na
-// mesma habilidade são o caso que a p226 nomeia.
-func (r *Ruleset) boostCostWith(ch Character, itemID int64, powerID string, pm int) int {
+// Os cortes NÃO SE ACUMULAM — vale o maior, e não a soma, porque duas fontes de "–1 PM" na mesma habilidade
+// são o caso que a p226 nomeia —, e o piso de 1 PM é da conta única (`AbilityPmCost`).
+func (r *Ruleset) boostCutWith(ch Character, itemID int64, powerID string) int {
 	if itemID == 0 {
-		return pm
+		return 0
 	}
 	cut := 0
 	for _, it := range ch.Items {
@@ -180,10 +184,7 @@ func (r *Ruleset) boostCostWith(ch Character, itemID int64, powerID string, pm i
 			}
 		}
 	}
-	if cut == 0 {
-		return pm
-	}
-	return max(1, pm+cut)
+	return cut
 }
 
 // BoostOffer é um impulso que a ficha pode pagar num golpe, com o teto de
@@ -219,6 +220,8 @@ type BoostOffer struct {
 //
 //	world.BoostOffers(paladin) // [{PowerID: "class.paladino.golpe-divino-1d8", BasePM: 2, …}]
 func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
+	// O PREÇO QUE A OFERTA DIZ já leva o Alquebrado (p394), que mora na ficha e não num interruptor.
+	increase := r.EffectsOf(ch, nil).AbilityCostIncrease()
 	out := []BoostOffer{}
 	for _, power := range r.ownedPowersOfEveryClass(ch) {
 		if power.Boost == nil {
@@ -226,7 +229,7 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 		}
 		d := power.Boost.Degrees
 		offer := BoostOffer{
-			PowerID: power.ID, Name: power.Name, BasePM: d.BasePM, StepPM: d.StepPM,
+			PowerID: power.ID, Name: power.Name, BasePM: AbilityPmCost(d.BasePM, increase), StepPM: d.StepPM,
 			MaxSteps:  StepsAt(d.FirstStepLevel, d.StepEveryLevels, power.ClassLevel),
 			Split:     power.Boost.Split,
 			MeleeOnly: power.Boost.MeleeOnly,
@@ -236,12 +239,12 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 		}
 		for _, addOn := range r.ownedBoostAddOns(ch, power.ID) {
 			offer.AddOns = append(offer.AddOns, BoostAddOnOffer{
-				PowerID: addOn.ID, Name: addOn.Name, PM: addOn.BoostAddOn.PM, Buys: addOnBuys(addOn.BoostAddOn),
+				PowerID: addOn.ID, Name: addOn.Name, PM: AbilityPmCost(addOn.BoostAddOn.PM, increase), Buys: addOnBuys(addOn.BoostAddOn),
 			})
 		}
 		out = append(out, offer)
 	}
-	return append(out, r.enchantBoostOffers(ch)...)
+	return append(out, r.enchantBoostOffers(ch, increase)...)
 }
 
 // ownedBoostPower é o poder de impulso que a ficha tem com esse id, com o nível na
