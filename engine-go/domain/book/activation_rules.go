@@ -158,11 +158,13 @@ func ScaledCost(spec Activation, steps int) int {
 
 // ScaledDecision responde se dá para pagar esses degraus: dentro do teto do
 // nível, e com PM para o total.
-func ScaledDecision(spec Activation, steps, max, currentPM int) (bool, string) {
+// O PM se confere contra o preço que se cobra: o custo dos degraus com o `increase` de toda habilidade (o
+// Alquebrado, p394), pela conta única.
+func ScaledDecision(spec Activation, steps, max, currentPM, increase int) (bool, string) {
 	if steps < 0 || steps > max {
 		return false, "o teto permite até " + writtenDegrees(max)
 	}
-	if cost := ScaledCost(spec, steps); cost > currentPM {
+	if cost := engine.AbilityPmCost(ScaledCost(spec, steps), increase); cost > currentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
