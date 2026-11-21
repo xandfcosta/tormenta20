@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 )
 
 // O PM QUE SE PAGA NUM TESTE DE PERÍCIA (ALE-489).
@@ -102,6 +103,9 @@ type SkillSpendTarget struct {
 	// WeaponID é a arma do catálogo quando o teste é de ATAQUE, e vazio num
 	// teste de perícia (ALE-508).
 	WeaponID string
+	// CostIncrease é o que sobe o custo de toda habilidade da ficha (o Alquebrado, p394), e entra no preço de cada
+	// oferta pela conta única (`engine.AbilityPmCost`).
+	CostIncrease int
 }
 
 // SkillSpendOffer é um gasto que a ficha pode fazer NESTE teste.
@@ -148,7 +152,7 @@ func SkillSpendOffers(owned []Activation, target SkillSpendTarget) []SkillSpendO
 				continue
 			}
 		}
-		offer := SkillSpendOffer{ID: a.ID, Key: SpendKey(a.ID), Name: a.Name, Kind: spend.Kind, PM: ActivationPm(a)}
+		offer := SkillSpendOffer{ID: a.ID, Key: SpendKey(a.ID), Name: a.Name, Kind: spend.Kind, PM: spendPrice(a, target)}
 		switch spend.Kind {
 		case SpendAddAttribute:
 			offer.Bonus = target.Attributes[spend.Attribute]
@@ -227,7 +231,7 @@ func RerollOffers(owned []Activation, target SkillSpendTarget) []SkillSpendOffer
 			continue
 		}
 		out = append(out, SkillSpendOffer{
-			ID: a.ID, Key: SpendKey(a.ID), Name: a.Name, Kind: spend.Kind, PM: ActivationPm(a),
+			ID: a.ID, Key: SpendKey(a.ID), Name: a.Name, Kind: spend.Kind, PM: spendPrice(a, target),
 			Bonus: spend.Amount, Context: spend.Context, NaturalFrom: spend.NaturalFrom,
 		})
 	}
@@ -271,6 +275,12 @@ func PaysTraining(kind string) bool {
 type SkillSpendChoice struct {
 	Key string
 	PM  int
+}
+
+// spendPrice é o custo do gasto com o aumento de toda habilidade da ficha (o Alquebrado, p394). O corte de quem
+// recebe a habilidade duas vezes (p28) vem depois, na oferta.
+func spendPrice(a Activation, target SkillSpendTarget) int {
+	return engine.AbilityPmCost(ActivationPm(a), target.CostIncrease)
 }
 
 // SpendKey é o nome do gasto no sinal da tela: o fim do id, em `snake_case`

@@ -6,6 +6,7 @@ import (
 
 	"t20engine/app/character"
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 )
 
 // O QUE A ABA PODERES ESCREVE.
@@ -31,9 +32,9 @@ var writtenActions = map[string]string{
 // A POSTURA escreve outra coisa: "POSTURA · 2+ PM". A economia de ação dela
 // importa menos que o fato de ser postura (ela DURA), e o "+" avisa que o preço
 // sobe com os degraus antes de a pessoa abrir o contador.
-func writtenCost(spec book.Activation, stance *stanceState) string {
+func writtenCost(spec book.Activation, stance *stanceState, increase int) string {
 	if spec.Kind == "stance" {
-		return "POSTURA · " + strconv.Itoa(book.ScaledCost(spec, 0)) + stepsMore(stance) + " PM"
+		return "POSTURA · " + strconv.Itoa(engine.AbilityPmCost(book.ScaledCost(spec, 0), increase)) + stepsMore(stance) + " PM"
 	}
 	action, found := writtenActions[spec.Action]
 	if !found {
@@ -42,7 +43,7 @@ func writtenCost(spec book.Activation, stance *stanceState) string {
 	if book.CostIsVariable(spec) {
 		return action + " · PM variável"
 	}
-	return action + " · " + strconv.Itoa(book.ActivationPm(spec)) + " PM"
+	return action + " · " + strconv.Itoa(engine.AbilityPmCost(book.ActivationPm(spec), increase)) + " PM"
 }
 
 // stepsMore é o "+" do preço, e ele pergunta ao PERSONAGEM e não ao catálogo.

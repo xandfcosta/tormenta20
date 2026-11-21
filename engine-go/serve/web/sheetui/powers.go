@@ -140,7 +140,9 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
-	context := book.UseContext{CurrentPM: int(dto.ManaAvailable()), Flags: s.activeFlags(dto)}
+	context := book.UseContext{
+		CurrentPM: int(dto.ManaAvailable()), Flags: s.activeFlags(dto), CostIncrease: sheet.AbilityCostIncrease(dto),
+	}
 	uses := character.PowerUses(dto)
 	stances := paidStances(dto)
 	rows := []powerRow{}
@@ -195,7 +197,7 @@ func powerRowFor(
 	}
 	row.Degrees = useDegreesFor(dto, *spec)
 	row.InEffect = grantInEffect(dto, spec.ID)
-	row.Cost, row.Action = writtenCost(*spec, row.Stance), spec.Action
+	row.Cost, row.Action = writtenCost(*spec, row.Stance, context.CostIncrease), spec.Action
 	row.SortPM = sortCost(*spec)
 	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
 	if scope := book.ChargedScope(*spec); scope != "" {
@@ -216,11 +218,11 @@ func stanceStateFor(
 	steps, active := stances[flag]
 	state := &stanceState{
 		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
-		BasePm: book.ActivationPm(spec), BaseBonus: book.StanceBaseBonus(flag),
+		BasePm: engine.AbilityPmCost(book.ActivationPm(spec), context.CostIncrease), BaseBonus: book.StanceBaseBonus(flag),
 		BonusNote: stanceBonusNote(dto, spec.ID),
 	}
 	if spec.Scaling != nil {
-		state.BasePm = spec.Scaling.BasePm
+		state.BasePm = engine.AbilityPmCost(spec.Scaling.BasePm, context.CostIncrease)
 		state.StepPm = spec.Scaling.StepPm
 		state.StepLabel = spec.Scaling.StepLabel
 		state.MaxSteps = character.PowerMaxSteps(dto, spec)

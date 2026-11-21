@@ -184,7 +184,12 @@ func scaledPrice(dto sheet.CharacterDTO, spec book.Activation, steps int) (int, 
 	if can, reason := book.ScaledDecision(spec, steps, max, int(dto.ManaAvailable())); !can {
 		return 0, fmt.Errorf("%s: %s", spec.Name, reason)
 	}
-	return book.ScaledCost(spec, steps), nil
+	// O ALQUEBRADO (p394) sobe o custo pela conta única, e a falta de PM se confere contra o preço que se cobra.
+	cost := engine.AbilityPmCost(book.ScaledCost(spec, steps), sheet.AbilityCostIncrease(dto))
+	if available := int(dto.ManaAvailable()); cost > available {
+		return 0, fmt.Errorf("%s: custa %d PM, e sobram %d", spec.Name, cost, available)
+	}
+	return cost, nil
 }
 
 // UsePower gasta um uso de um poder instantâneo: cobra o PM e soma o contador.

@@ -94,7 +94,7 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 			return false, "limite por dia atingido"
 		}
 	}
-	if ActivationPm(spec) > context.CurrentPM {
+	if engine.AbilityPmCost(ActivationPm(spec), context.CostIncrease) > context.CurrentPM {
 		return false, "PM insuficiente"
 	}
 	return true, ""
@@ -102,7 +102,10 @@ func UseDecision(spec Activation, context UseContext) (bool, string) {
 
 // UseContext é o que a decisão precisa saber da ficha AGORA.
 type UseContext struct {
-	CurrentPM     int
+	CurrentPM int
+	// CostIncrease é o que sobe o custo de toda habilidade da ficha (o Alquebrado, p394): a decisão confere o PM
+	// contra o preço que se cobra, e não contra o do catálogo.
+	CostIncrease  int
 	UsedThisScene int
 	UsedToday     int
 	Flags         map[string]bool

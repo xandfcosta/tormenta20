@@ -37,7 +37,7 @@ func (p Plays) TakeWildShape(ctx context.Context, row sqlcgen.Character, dto she
 	if stats.Moves == nil {
 		shape.Movement = ""
 	}
-	cost := engine.WildTierPM(shape.Tier)
+	cost := engine.AbilityPmCost(engine.WildTierPM(shape.Tier), sheet.AbilityCostIncrease(dto))
 	return p.inTx(ctx, "assumir a forma selvagem", func(q *sqlcgen.Queries) error {
 		if err := chargeMp(ctx, q, p.catalogs, row, cost); err != nil {
 			return err
