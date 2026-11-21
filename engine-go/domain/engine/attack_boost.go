@@ -87,15 +87,15 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 		}
 		return cards, err
 	}
-	power, classLevel := r.ownedBoostPower(ch, choice.PowerID)
-	if power == nil {
+	power, owned := r.ownedBoostPower(ch, choice.PowerID)
+	if !owned {
 		return nil, fmt.Errorf("o personagem não tem um poder que se paga no ataque com o id %q", choice.PowerID)
 	}
 	boost := power.Boost
-	maxSteps := StepsAt(boost.Degrees.FirstStepLevel, boost.Degrees.StepEveryLevels, classLevel)
+	maxSteps := StepsAt(boost.Degrees.FirstStepLevel, boost.Degrees.StepEveryLevels, power.ClassLevel)
 	if choice.Steps < 0 || choice.Steps > maxSteps {
 		return nil, fmt.Errorf("%s: %d degraus a mais pedidos, e o %dº nível de %s abre %d",
-			power.Name, choice.Steps, classLevel, power.ClassName, maxSteps)
+			power.Name, choice.Steps, power.ClassLevel, power.ClassName, maxSteps)
 	}
 	if boost.Split && choice.Split != BoostToAttack && choice.Split != BoostToDamage && choice.Split != BoostSplitEvenly {
 		return nil, fmt.Errorf("%s: diga para onde vai o bônus (%q, %q ou %q), e veio %q",
@@ -103,7 +103,7 @@ func (r *Ruleset) BoostedWeaponCards(ch Character, activeConditionals map[string
 	}
 	changes := r.boostChangesOf(ch, activeConditionals, power.ID)
 	modsWith := func(split string, faces int) []Modifier {
-		return changes.onDice(boostModifiers(boost, 1+choice.Steps, split, classLevel), faces)
+		return changes.onDice(boostModifiers(boost, 1+choice.Steps, split, power.ClassLevel), faces)
 	}
 	item := ActiveItem{SourceID: power.ID, Source: power.Name, Equipped: &vestedWear, Modifiers: modsWith(choice.Split, 0)}
 	items := []ActiveItem{item}
@@ -244,15 +244,15 @@ func (r *Ruleset) BoostOffers(ch Character) []BoostOffer {
 	return append(out, r.enchantBoostOffers(ch)...)
 }
 
-// ownedBoostPower é o poder de impulso que a ficha tem com esse id, e o nível na
-// classe dele.
-func (r *Ruleset) ownedBoostPower(ch Character, id string) (*ClassPower, int) {
+// ownedBoostPower é o poder de impulso que a ficha tem com esse id, com o nível na
+// classe dele; `false` quando a ficha não o tem.
+func (r *Ruleset) ownedBoostPower(ch Character, id string) (classPowerAtLevel, bool) {
 	for _, power := range r.ownedPowersOfEveryClass(ch) {
 		if power.ID == id && power.Boost != nil {
-			return power.ClassPower, power.ClassLevel
+			return power, true
 		}
 	}
-	return nil, 0
+	return classPowerAtLevel{}, false
 }
 
 // boostModifiers são os modificadores do impulso com `degrees` degraus PAGOS
