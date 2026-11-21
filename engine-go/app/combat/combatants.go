@@ -69,7 +69,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 	if err != nil {
 		return Combatant{}, fmt.Errorf("computar a ficha de %s: %w", e.Label, err)
 	}
-	efeitos, ec, err := sheet.CharacterEffects(dto)
+	effects, ec, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return Combatant{}, err
 	}
@@ -81,8 +81,8 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		DamageReductionByType: reducaoPorTipo(computed.DamageReduction),
 		CritExtraIgnoreChance: computed.CritExtraIgnoreChance.Total,
 		Melee:                 meleeOf(computed),
-		ManeuverOffense:       maneuverBonuses(efeitos, engine.ManeuverOffense),
-		ManeuverDefense:       maneuverBonuses(efeitos, engine.ManeuverDefense),
+		ManeuverOffense:       maneuverBonuses(effects, engine.ManeuverOffense),
+		ManeuverDefense:       maneuverBonuses(effects, engine.ManeuverDefense),
 		Boost: func(choice engine.BoostChoice) ([]engine.WeaponCard, error) {
 			return dto.Ruleset.BoostedWeaponCards(ec, sheet.ToStringSet(dto.Conditionals), choice)
 		},
@@ -99,7 +99,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 		},
 		// O PERSONAGEM tem a raça e o tipo dela (o osteon é morto-vivo, ALE-650).
 		Nature:      book.CharacterNature(primaryRace(dto)),
-		DamageTaken: engine.DamageTakenFrom(efeitos),
+		DamageTaken: engine.DamageTakenFrom(effects),
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed)
 		},
@@ -178,10 +178,10 @@ func meleeOf(computed engine.ComputedSheet) int {
 // As cinco por nome, e não "as que têm modificador": um mapa montado a partir
 // do que EXISTE devolveria zero para a manobra sem bônus e para a manobra
 // escrita errada do mesmo jeito, e as duas coisas são diferentes.
-func maneuverBonuses(efeitos engine.ItemEffects, lado engine.ManeuverRole) map[string]int {
+func maneuverBonuses(effects engine.ItemEffects, lado engine.ManeuverRole) map[string]int {
 	fora := map[string]int{}
 	for _, manobra := range engine.ManeuversOfTheBook() {
-		fora[manobra] = engine.ManeuverBonus(efeitos, manobra, lado)
+		fora[manobra] = engine.ManeuverBonus(effects, manobra, lado)
 	}
 	return fora
 }
