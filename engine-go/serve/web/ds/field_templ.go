@@ -552,6 +552,11 @@ const EnterLeavesTheField = "if (evt.key === 'Enter') { evt.preventDefault(); el
 
 // ValueStepper é um valor que se escreve direto, com o `−` e o `+` ao lado. Os botões ficam porque o teclado
 // numérico do celular pode não ter o sinal de menos. O campo é texto: quem recusa é o servidor.
+//
+// O `−` E O `+` NÃO TIRAM O FOCO DO CAMPO (`keepsTheFieldFocused`). O campo grava quando perde o foco, e o botão
+// parte do que está escrito: se o toque tirasse o foco, saíam dois pedidos juntos — o do campo e o do botão —, e
+// o servidor ficava com o que terminasse por último. Com o foco no campo, o toque é o único pedido. O custo
+// escolhido pelo dono: no celular, o teclado numérico continua aberto depois do toque, se estava aberto.
 func ValueStepper(label, written string, down, field, up templ.Attributes) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -577,7 +582,7 @@ func ValueStepper(label, written string, down, field, up templ.Attributes) templ
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconButton(ButtonSecondary, "Minus", "Diminuir "+label, down).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = IconButton(ButtonSecondary, "Minus", "Diminuir "+label, keepsTheFieldFocused(down)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -588,7 +593,7 @@ func ValueStepper(label, written string, down, field, up templ.Attributes) templ
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("Valor de " + label)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ds/field.templ`, Line: 111, Col: 124}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ds/field.templ`, Line: 116, Col: 124}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 		if templ_7745c5c3_Err != nil {
@@ -601,7 +606,7 @@ func ValueStepper(label, written string, down, field, up templ.Attributes) templ
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(written)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ds/field.templ`, Line: 111, Col: 142}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/ds/field.templ`, Line: 116, Col: 142}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -619,7 +624,7 @@ func ValueStepper(label, written string, down, field, up templ.Attributes) templ
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = IconButton(ButtonSecondary, "Plus", "Aumentar "+label, up).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = IconButton(ButtonSecondary, "Plus", "Aumentar "+label, keepsTheFieldFocused(up)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -629,6 +634,16 @@ func ValueStepper(label, written string, down, field, up templ.Attributes) templ
 		}
 		return nil
 	})
+}
+
+// keepsTheFieldFocused acrescenta ao botão o `mousedown` que não troca o foco: é o `mousedown` que o move, com o
+// mouse e com o toque (o navegador o dispara por compatibilidade antes do clique), e o clique continua valendo.
+func keepsTheFieldFocused(attrs templ.Attributes) templ.Attributes {
+	out := templ.Attributes{"data-on:mousedown": "evt.preventDefault()"}
+	for name, value := range attrs {
+		out[name] = value
+	}
+	return out
 }
 
 var _ = templruntime.GeneratedTemplate

@@ -7,10 +7,8 @@ import { tidyUp } from './support/tidy'
  * `+` gravava o antigo mais um, e o 5 escrito se perdia.
  *
  * Só um navegador mede isto: o campo escrito sem sair dele, o toque no botão
- * que tira o foco, e os dois pedidos que saem em sequência.
+ * que NÃO tira o foco do campo, e o pedido único que sai dele.
  */
-test.use({ storageState: '.auth/user.json' })
-
 const TANQUE = 'Tanque Placas Nv10'
 
 async function tanqueId(page: Page): Promise<string> {
@@ -37,40 +35,60 @@ const strengthPost = (r: { url(): string; request(): { method(): string } }) =>
 const strengthPostOf = (value: number) => (r: { url(): string; request(): { method(): string } }) =>
   strengthPost(r) && r.url().includes(`/atributos/strength/${value}?`)
 
-test('escrever 5 e tocar + grava 6, e não o valor antigo mais um', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
-  const id = await tanqueId(page)
-  let field = await strengthField(page, id)
-  const before = await field.inputValue()
-  const written = Number(before) + 3
-
-  // O CAMPO É ESCRITO SEM SAIR DELE: o toque no `+` é o que tira o foco, e é
-  // aí que os dois pedidos saem — o do campo e o do botão.
-  try {
-    await field.fill(String(written))
-    // AS DUAS RESPOSTAS, cada uma pelo valor que grava. Com duas esperas pelo mesmo
-    // predicado, as duas se resolviam na PRIMEIRA resposta (a do campo), e a recarga
-    // logo abaixo abortava o pedido do `+` no meio: sob a suíte cheia, a Força ficava
-    // no valor escrito, e o caso culpava o app por uma corrida que ele não tem.
-    const both = Promise.all([
-      page.waitForResponse(strengthPostOf(written)),
-      page.waitForResponse(strengthPostOf(written + 1)),
-    ])
-    await page.getByRole('button', { name: 'Aumentar Força' }).click()
-    await both
-
-    field = await strengthField(page, id)
-    await expect(field, `escrito ${written} e tocado o +, a Força livre devia ser ${written + 1}`).toHaveValue(
-      String(written + 1),
-    )
-  } finally {
-    await tidyUp(`a Força do ${TANQUE} fora do valor da semente`, async () => {
-      field = await strengthField(page, id)
-      if ((await field.inputValue()) === before) return
-      const restored = page.waitForResponse(strengthPost)
-      await field.fill(before)
-      await field.press('Enter')
-      await restored
+/**
+ * O TOQUE NO `+` É O ÚNICO PEDIDO. O campo grava quando perde o foco, e o `+` partia do que estava escrito: se o
+ * toque tirasse o foco, saíam dois pedidos juntos — o do campo (7) e o do botão (8) —, e o servidor gravava os dois
+ * na ordem em que terminassem. O rastro da CI pegou o 8 terminando antes do 7, e a Força ficando em 7. Por isso o
+ * caso CONTA os pedidos, e não só o valor final: dois pedidos é o defeito, mesmo quando a sorte acerta a ordem.
+ *
+ * Com o mouse e com o toque, porque o caminho do foco é outro em cada um.
+ */
+for (const pointer of ['mouse', 'touch'] as const) {
+  test(`escrever um valor e tocar + grava o valor mais um, num pedido só (${pointer})`, async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: '.auth/user.json',
+      viewport: { width: 390, height: 844 },
+      hasTouch: pointer === 'touch',
     })
-  }
-})
+    const page = await context.newPage()
+    const id = await tanqueId(page)
+    let field = await strengthField(page, id)
+    const before = await field.inputValue()
+    const written = Number(before) + 3
+    const posted: string[] = []
+    page.on('request', (r) => {
+      if (r.method() === 'POST' && r.url().includes('/atributos/strength/')) posted.push(r.url().match(/\/atributos\/strength\/(-?\d+)/)?.[1] ?? '?')
+    })
+
+    try {
+      await field.fill(String(written))
+      const plus = page.getByRole('button', { name: 'Aumentar Força' })
+      const answered = page.waitForResponse(strengthPostOf(written + 1))
+      if (pointer === 'touch') await plus.tap()
+      else await plus.click()
+      await answered
+      expect(posted, `escrito ${written} e tocado o +, saíram os pedidos ${posted.join(', ')}; want só o ${written + 1}`).toEqual([
+        String(written + 1),
+      ])
+
+      // O CAMPO, AINDA FOCADO, MOSTRA O VALOR NOVO: é o que ele grava quando o foco sair dele. Se o redesenho
+      // poupasse o campo focado, a saída gravaria o valor escrito por cima do que o `+` gravou.
+      await expect(field, 'o campo focado ainda mostra o valor escrito depois do +').toHaveValue(String(written + 1))
+
+      field = await strengthField(page, id)
+      await expect(field, `escrito ${written} e tocado o +, a Força livre devia ser ${written + 1}`).toHaveValue(
+        String(written + 1),
+      )
+    } finally {
+      await tidyUp(`a Força do ${TANQUE} fora do valor da semente`, async () => {
+        field = await strengthField(page, id)
+        if ((await field.inputValue()) === before) return
+        const restored = page.waitForResponse(strengthPost)
+        await field.fill(before)
+        await field.press('Enter')
+        await restored
+      })
+      await context.close()
+    }
+  })
+}
