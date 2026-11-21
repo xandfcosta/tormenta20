@@ -140,6 +140,7 @@ func (p Plays) Cast(
 	casting := sheet.CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
 	at := engine.SpellAt{
 		Tradition: sheet.SpellTradition(dto.Classes, casting), School: spell.School, Range: spell.Range, Spell: catalogSpellID,
+		Classes: casting,
 	}
 	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, at)
 	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, at)
