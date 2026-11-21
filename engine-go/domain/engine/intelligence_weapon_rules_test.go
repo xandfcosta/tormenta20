@@ -23,12 +23,12 @@ func TestTheArmorerAttacksAndHitsWithIntelligence(t *testing.T) {
 	if armorer.Attribute != "intelligence" || armorer.Attack-plain.Attack != 3 {
 		t.Errorf("o Armeiro com Int 4 e For 1 ataca com %s, %d acima; want intelligence, +3", armorer.Attribute, armorer.Attack-plain.Attack)
 	}
-	if armorer.StrDamage != 4 || armorer.DamageSwapNote == "" {
-		t.Errorf("o Armeiro soma %d no dano (Inteligência: %q); want a Inteligência, 4", armorer.StrDamage, armorer.DamageSwapNote)
+	if armorer.AttributeDamage != 4 || armorer.DamageSwapNote == "" {
+		t.Errorf("o Armeiro soma %d no dano (Inteligência: %q); want a Inteligência, 4", armorer.AttributeDamage, armorer.DamageSwapNote)
 	}
 	// "PODE": com a Força maior, fica a Força.
-	if strong := sword(`["class.inventor.armeiro"]`, 5); strong.Attribute != "strength" || strong.StrDamage != 5 {
-		t.Errorf("o Armeiro com For 5 e Int 4 ataca com %s e soma %d no dano; want a Força, 5", strong.Attribute, strong.StrDamage)
+	if strong := sword(`["class.inventor.armeiro"]`, 5); strong.Attribute != "strength" || strong.AttributeDamage != 5 {
+		t.Errorf("o Armeiro com For 5 e Int 4 ataca com %s e soma %d no dano; want a Força, 5", strong.Attribute, strong.AttributeDamage)
 	}
 	// Só corpo a corpo: o arco segue com a Destreza.
 	bow := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 1, 0, 4, "arco-longo"), nil), "arco-longo")
@@ -55,8 +55,8 @@ func TestTheBallisticsAimsWithIntelligence(t *testing.T) {
 			t.Errorf("a Balística com %s ataca com %s; want %s", c.weapon, card.Attribute, c.want)
 		}
 		// O dano não muda: a Balística troca a Destreza no TESTE, e o arremesso soma a Força no dano (p142).
-		if card.StrDamage != c.dmg {
-			t.Errorf("a Balística com %s soma %d no dano; want %d", c.weapon, card.StrDamage, c.dmg)
+		if card.AttributeDamage != c.dmg {
+			t.Errorf("a Balística com %s soma %d no dano; want %d", c.weapon, card.AttributeDamage, c.dmg)
 		}
 	}
 }
@@ -95,7 +95,7 @@ func TestTheArmorerDamageSwapsEvenWhenTheAttackKeepsDexterity(t *testing.T) {
 	if dagger.Attribute != "dexterity" || dagger.AttributeSwapNote != "" {
 		t.Errorf("a adaga do Armeiro ataca com %s (troca: %q); want a Destreza, sem troca", dagger.Attribute, dagger.AttributeSwapNote)
 	}
-	if dagger.StrDamage != 3 || dagger.DamageSwapNote != "Armeiro: Inteligência no lugar de Força" {
-		t.Errorf("a adaga do Armeiro soma %d no dano (troca: %q); want a Inteligência, 3, com a frase da licença", dagger.StrDamage, dagger.DamageSwapNote)
+	if dagger.AttributeDamage != 3 || dagger.DamageSwapNote != "Armeiro: Inteligência no lugar de Força" {
+		t.Errorf("a adaga do Armeiro soma %d no dano (troca: %q); want a Inteligência, 3, com a frase da licença", dagger.AttributeDamage, dagger.DamageSwapNote)
 	}
 }

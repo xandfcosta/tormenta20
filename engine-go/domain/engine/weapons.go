@@ -149,10 +149,12 @@ type WeaponCard struct {
 	// CriticalBonus é o dano que só existe no acerto crítico — os "+10 pontos
 	// de dano" do encanto Dilacerante (p336). É bônus numérico, então não
 	// multiplica, e fora do crítico ele não existe.
-	CriticalBonus int           `json:"criticalBonus,omitempty"`
-	StrDamage     int           `json:"strDamage"`   // Força folded into melee/thrown damage (0 ranged)
-	DamageBonus   int           `json:"damageBonus"` // strDamage + damageAll.total
-	DamageAll     TotalContribs `json:"damageAll"`
+	CriticalBonus int `json:"criticalBonus,omitempty"`
+	// AttributeDamage é o atributo somado no dano: a Força corpo a corpo e no arremesso, a Destreza pela Acuidade
+	// com Arma, ou o que a licença `weaponAttribute` trocou (o Armeiro, p68). Zero na arma de disparo (p142).
+	AttributeDamage int           `json:"attributeDamage"`
+	DamageBonus     int           `json:"damageBonus"` // attributeDamage + damageAll.total
+	DamageAll       TotalContribs `json:"damageAll"`
 	// DamageOwn são as parcelas que valem só para ESTA arma: o `this` da
 	// sobreposição (a melhoria Cruel) e o `weapon:<id>` da arma escolhida num
 	// poder (a Especialização em Arma, p65). Elas entravam no `DamageBonus` sem
@@ -303,11 +305,11 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		ownAttack = TotalContribs{}
 	}
 	skill, attribute := "Luta", "strength"
-	strDamage := b.forTotal
+	attributeDamage := b.forTotal
 	dexBy, dexDamageUsed := "", false
 	if w.Purpose == "ranged" {
 		skill, attribute = "Pontaria", "dexterity"
-		strDamage = 0
+		attributeDamage = 0
 	} else if w.Purpose == "thrown" {
 		// A arma de arremesso é de ataque à distância: Pontaria no teste e Força no dano (p142). O Arremesso
 		// Potente troca a Destreza pela Força no teste, e a Acuidade a Força pela Destreza no dano (p124).
@@ -317,7 +319,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 			attribute = "strength"
 		}
 		if b.hasFinesse && b.dexTotal > b.forTotal {
-			strDamage, dexDamageUsed = b.dexTotal, true
+			attributeDamage, dexDamageUsed = b.dexTotal, true
 		}
 	} else {
 		// Finesse (Adaga / Acuidade com Arma): use Destreza when it beats Força.
@@ -330,7 +332,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 			}
 		}
 		if dexDamage {
-			strDamage = b.dexTotal
+			attributeDamage = b.dexTotal
 		}
 		dexDamageUsed = dexDamage
 	}
@@ -349,7 +351,7 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 			damageBase = "dexterity"
 		}
 		if damageAttribute, damageLicense := b.licensedWeaponAttribute(ch, w, "damage", damageBase, scopes); damageLicense.Source != "" {
-			strDamage, dexDamageUsed = effectiveAttribute(ch, damageAttribute, b.effects), false
+			attributeDamage, dexDamageUsed = effectiveAttribute(ch, damageAttribute, b.effects), false
 			damageSwapAttribute, damageSwapNote = damageAttribute, damageLicense.Note
 		}
 	}
@@ -379,13 +381,13 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		AttackAll:              b.attackAll,
 		Damage:                 damage,
 		DamageType:             w.Type,
-		StrDamage:              strDamage,
+		AttributeDamage:        attributeDamage,
 		DexBy:                  dexBy,
 		AttributeSwapNote:      attackLicense.Note,
 		DamageSwapAttribute:    damageSwapAttribute,
 		DamageSwapNote:         damageSwapNote,
 		DexDamage:              dexDamageUsed,
-		DamageBonus:            strDamage + b.damageAll.Total + ownDamage.Total,
+		DamageBonus:            attributeDamage + b.damageAll.Total + ownDamage.Total,
 		DamageAll:              b.damageAll,
 		DamageOwn:              ownDamage,
 		CritRange:              threatRangeOf(w.CritRange, b.effects, scopes),

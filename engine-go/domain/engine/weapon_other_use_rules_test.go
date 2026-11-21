@@ -46,8 +46,8 @@ func TestAWeaponKeepsItsOtherUseInsideItsOwnCard(t *testing.T) {
 				t.Errorf("o outro uso aponta para %q", other.CatalogID)
 			}
 			// "Quando você ataca com uma arma de arremesso, soma sua Força às rolagens de dano" (p142).
-			if main.StrDamage != 4 || other.StrDamage != 4 {
-				t.Errorf("a Força soma %+d e %+d, e a ficha tem 4", main.StrDamage, other.StrDamage)
+			if main.AttributeDamage != 4 || other.AttributeDamage != 4 {
+				t.Errorf("a Força soma %+d e %+d, e a ficha tem 4", main.AttributeDamage, other.AttributeDamage)
 			}
 			// A penalidade tem nome na conta, para quem abre saber de onde veio.
 			if c.penalty != 0 && (other.AttackOwn.Total != c.penalty || len(other.AttackOwn.Contributions) != 1) {
@@ -174,11 +174,11 @@ func TestTheThrowFollowsThePowersOfTheThrow(t *testing.T) {
 	finesse := otherUseHero(`["acuidade-com-arma"]`, "lanca")
 	finesse.Strength, finesse.Dexterity = 1, 5
 	melee, thrown := usesOf(finesse)
-	if melee.Attribute != "strength" || melee.StrDamage != 1 {
-		t.Errorf("Acuidade na lança corpo a corpo: %s e %+d no dano, want Força e +1", melee.Attribute, melee.StrDamage)
+	if melee.Attribute != "strength" || melee.AttributeDamage != 1 {
+		t.Errorf("Acuidade na lança corpo a corpo: %s e %+d no dano, want Força e +1", melee.Attribute, melee.AttributeDamage)
 	}
-	if thrown.Attribute != "dexterity" || thrown.StrDamage != 5 || !thrown.DexDamage {
-		t.Errorf("Acuidade na lança arremessada: %s e %+d no dano, want Destreza e +5", thrown.Attribute, thrown.StrDamage)
+	if thrown.Attribute != "dexterity" || thrown.AttributeDamage != 5 || !thrown.DexDamage {
+		t.Errorf("Acuidade na lança arremessada: %s e %+d no dano, want Destreza e +5", thrown.Attribute, thrown.AttributeDamage)
 	}
 
 	// Arremesso Potente: a Força no teste de ataque, só no arremesso.

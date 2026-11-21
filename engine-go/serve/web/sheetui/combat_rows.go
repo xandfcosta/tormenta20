@@ -109,7 +109,7 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 			// A licença do catálogo trocou o atributo do dano (o Armeiro, p68), e a sigla é a do que ela escolheu.
 			label = attributeAbbr[card.DamageSwapAttribute]
 		}
-		damage = append(damage, breakdownRow{Label: label, Value: book.WithSign(card.StrDamage)})
+		damage = append(damage, breakdownRow{Label: label, Value: book.WithSign(card.AttributeDamage)})
 	}
 	damage = append(damage, rowsFromContributions(card.DamageAll.Contributions)...)
 	return attack, append(damage, rowsFromContributions(card.DamageOwn.Contributions)...)
@@ -118,10 +118,10 @@ func weaponRows(card engine.WeaponCard) (attack, damage []breakdownRow) {
 // addsAttributeToDamage diz se o dano desta carta soma um atributo.
 //
 // Pelo número e não pela perícia: a arma de arremesso ataca com Pontaria e soma a
-// Força (p142), e só a de disparo chega aqui com `StrDamage` zero. A exceção do
+// Força (p142), e só a de disparo chega aqui com `AttributeDamage` zero. A exceção do
 // corpo a corpo é a Força 0, que a conta mostra como +0.
 func addsAttributeToDamage(card engine.WeaponCard) bool {
-	return card.IsMelee() || card.StrDamage != 0
+	return card.IsMelee() || card.AttributeDamage != 0
 }
 
 // pmLimitRows é o teto de PM por magia.

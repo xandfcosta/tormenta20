@@ -1851,7 +1851,7 @@
       },
       "damage": "1d4",
       "damageType": "perfuracao",
-      "strDamage": 2,
+      "attributeDamage": 2,
       "damageBonus": 2,
       "damageAll": {
         "total": 0,
@@ -1895,7 +1895,7 @@
       },
       "damage": "1d3",
       "damageType": "impacto",
-      "strDamage": 2,
+      "attributeDamage": 2,
       "damageBonus": 2,
       "damageAll": {
         "total": 0,
@@ -1941,7 +1941,7 @@
       },
       "damage": "1d4",
       "damageType": "perfuracao",
-      "strDamage": 2,
+      "attributeDamage": 2,
       "damageBonus": 2,
       "damageAll": {
         "total": 0,
@@ -1979,7 +1979,7 @@
       },
       "damage": "1d3",
       "damageType": "impacto",
-      "strDamage": 2,
+      "attributeDamage": 2,
       "damageBonus": 2,
       "damageAll": {
         "total": 0,
