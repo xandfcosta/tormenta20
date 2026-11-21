@@ -333,16 +333,21 @@ func (b cardBasis) card(ch Character, name string, w *WeaponStats, scopes []stri
 		dexDamageUsed = dexDamage
 	}
 	attribute, attackLicense := b.licensedWeaponAttribute(ch, w, "attack", attribute, scopes)
-	// O DANO SÓ TROCA SE O ATAQUE TROCOU: é como a carta sempre leu o Armeiro, que diz os dois juntos (p68).
-	intDamageNote := ""
 	if attackLicense.Source != "" {
 		dexBy = ""
+	}
+	// AS DUAS CONTAS SÃO INDEPENDENTES (decisão do dono): o Armeiro oferece a Inteligência "em vez de Força nos
+	// testes de ataque e rolagens de dano" (p68), e cada conta fica com o maior que lhe é permitido. A adaga ataca
+	// pela Destreza por regra da arma e ainda soma a Força no dano — que a Inteligência pode substituir. A arma de
+	// disparo não soma atributo no dano (p142), e não há o que trocar.
+	intDamageNote := ""
+	if w.Purpose != "ranged" {
 		damageBase := "strength"
 		if dexDamageUsed {
 			damageBase = "dexterity"
 		}
-		if damageAttribute, damageLicense := b.licensedWeaponAttribute(ch, w, "damage", damageBase, scopes); damageAttribute == "intelligence" {
-			strDamage, dexDamageUsed, intDamageNote = b.intTotal, false, damageLicense.Note
+		if damageAttribute, damageLicense := b.licensedWeaponAttribute(ch, w, "damage", damageBase, scopes); damageLicense.Source != "" {
+			strDamage, dexDamageUsed, intDamageNote = effectiveAttribute(ch, damageAttribute, b.effects), false, damageLicense.Note
 		}
 	}
 	// weaponSkillState returns the stored Luta row (attribute strength); force

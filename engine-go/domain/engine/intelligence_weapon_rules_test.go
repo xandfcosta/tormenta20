@@ -80,3 +80,18 @@ func TestTheWeaponAttributeSwapCarriesTheLicensePhrase(t *testing.T) {
 		t.Errorf("o Armeiro com a Força maior ainda diz %q e %q", strong.IntNote, strong.IntDamageNote)
 	}
 }
+
+// AS DUAS CONTAS DO ARMEIRO SÃO INDEPENDENTES (ALE-671, decisão do dono). O livro oferece a Inteligência "em vez
+// de Força nos testes de ataque e rolagens de dano" (p68): cada conta parte da Força e fica com o maior que lhe é
+// permitido. A adaga ataca pela Destreza por regra da arma (p146) e soma a Força no dano; com Destreza 4,
+// Inteligência 3 e Força 0, o ataque fica na Destreza e o dano vai para a Inteligência.
+func TestTheArmorerDamageSwapsEvenWhenTheAttackKeepsDexterity(t *testing.T) {
+	world := BookRuleset(primeBook(t))
+	dagger := cardOf(t, world.ComputeWeaponCards(inventor(`["class.inventor.armeiro"]`, 0, 4, 3, "adaga"), nil), "adaga")
+	if dagger.Attribute != "dexterity" || dagger.IntNote != "" {
+		t.Errorf("a adaga do Armeiro ataca com %s (troca: %q); want a Destreza, sem troca", dagger.Attribute, dagger.IntNote)
+	}
+	if dagger.StrDamage != 3 || dagger.IntDamageNote != "Armeiro: Inteligência no lugar de Força" {
+		t.Errorf("a adaga do Armeiro soma %d no dano (troca: %q); want a Inteligência, 3, com a frase da licença", dagger.StrDamage, dagger.IntDamageNote)
+	}
+}
