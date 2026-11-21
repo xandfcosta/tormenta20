@@ -6,7 +6,7 @@ import "t20engine/domain/engine"
 // nas condições, e a metade do Artista Completo (p45), que liga com a Inspiração. Lidas do mesmo jeito que as
 // flags da ficha: sem regras ou sem personagem montável, não há o que ler, e o custo é o do catálogo.
 //
-//	cost := sheet.AbilityCostRules(dto).Price(book.ScaledCost(spec, steps), book.ActivationClass(spec))
+//	price := book.UsePrice(spec, sheet.AbilityCostRules(dto), book.Use{Steps: steps})
 func AbilityCostRules(dto CharacterDTO) engine.AbilityCostRules {
 	effects, _, err := CharacterEffects(dto)
 	if err != nil {

@@ -49,7 +49,7 @@ func (p Plays) EnterStance(
 	if !sheet.OwnsActivation(dto, *spec) {
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
-	cost, err := scaledPrice(dto, *spec, steps, false)
+	cost, err := scaledPrice(dto, *spec, book.Use{Steps: steps})
 	if err != nil {
 		return err
 	}
@@ -208,18 +208,15 @@ func (p Plays) UsePower(
 		return p.declare(ctx, dto, spec.Name, flag)
 	}
 	uses := PowerUses(dto)[spec.ID]
-	// A DECISÃO confere o PM contra o preço deste uso: as regras de custo da ficha e, com um aliado como alvo, o
-	// corte da Caridade (p83).
-	rules := sheet.AbilityCostRules(dto)
-	cut := allyCutOf(rules, *spec, choice.OnAlly)
+	// A DECISÃO confere o PM contra o preço deste uso, com o alvo que o gesto diz (a Caridade, p83).
 	can, reason := book.UseDecision(*spec, book.UseContext{
 		CurrentPM: int(dto.ManaAvailable()), UsedThisScene: uses.Scene, UsedToday: uses.Day,
-		Flags: p.activeFlags(dto), Cost: rules, Cut: cut,
+		Flags: p.activeFlags(dto), Cost: sheet.AbilityCostRules(dto), OnAlly: choice.OnAlly,
 	})
 	if !can {
 		return fmt.Errorf("%s: %s", spec.Name, reason)
 	}
-	cost, err := scaledPrice(dto, *spec, steps, choice.OnAlly)
+	cost, err := scaledPrice(dto, *spec, book.Use{Steps: steps, OnAlly: choice.OnAlly})
 	if err != nil {
 		return err
 	}
