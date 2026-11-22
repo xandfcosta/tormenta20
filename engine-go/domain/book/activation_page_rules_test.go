@@ -2,10 +2,10 @@ package book
 
 import "testing"
 
-// A PÁGINA DA ATIVAÇÃO TEM UM LUGAR SÓ: a do dono — o poder de classe, o geral, o item, o poder do deus —, achado
-// pela mesma regra que diz qual poder é dono da ativação (`activation_owner.go`). Repetida no registro, ela divergiu
-// em 166 de 481 entradas, e a aba Poderes mostrava a do registro. A ativação escreve página só quando nenhum dono
-// tem: a habilidade de raça, o benefício de origem.
+// A PÁGINA DA ATIVAÇÃO TEM UM LUGAR SÓ: a do dono — o poder de classe, o geral, o item, o poder do deus, a
+// habilidade de raça —, achado pela mesma regra que diz qual poder é dono da ativação (`activation_owner.go`).
+// Repetida no registro, ela divergiu em 166 de 481 entradas, e a aba Poderes mostrava a do registro. A ativação
+// escreve página só quando nenhum dono tem: o benefício de origem.
 func TestNoActivationRepeatsItsOwnersPage(t *testing.T) {
 	measured := 0
 	for _, a := range transcribedActivations() {
