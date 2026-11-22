@@ -114,9 +114,9 @@ func ownerPage(spec Activation) int {
 	across := 0
 	for _, owner := range owners.byName[withoutStepSuffix(spec.Name)] {
 		switch {
-		case sameScope(spec.ID, owner.ID):
+		case sameScope(spec.ID, owner.id):
 			return owner.page
-		case across == 0 && nameLinks(spec, owner.ID):
+		case across == 0 && nameLinks(spec, owner.id):
 			across = owner.page
 		}
 	}
@@ -125,8 +125,8 @@ func ownerPage(spec Activation) int {
 
 // pagedOwner é um poder que tem página no livro.
 type pagedOwner struct {
-	ID   string
-	page int
+	id, name string
+	page     int
 }
 
 // pagedOwnerIndex são os poderes com página: por id, e por nome sem o sufixo de degrau, em ordem de id para a
@@ -138,31 +138,28 @@ type pagedOwnerIndex struct {
 
 // pagedOwners junta os catálogos que dão página a um poder. O id do item leva o `item.` do registro de ativações.
 var pagedOwners = sync.OnceValue(func() pagedOwnerIndex {
-	var refs []PowerRef
-	pages := map[string]int{}
-	add := func(id, name string, page int) {
-		if page > 0 {
-			refs = append(refs, PowerRef{ID: id, Name: name})
-			pages[id] = page
-		}
-	}
+	var owners []pagedOwner
 	for _, power := range ClassPowers() {
-		add(power.ID, power.Name, power.BookPage)
+		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
 	}
 	for _, power := range GeneralPowers() {
-		add(power.ID, power.Name, power.BookPage)
+		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
 	}
 	for _, power := range DivinePowers() {
-		add(power.ID, power.Name, power.BookPage)
+		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
 	}
 	for _, item := range Catalogs().Items {
-		add("item."+item.ID, item.Name, item.BookPage)
+		owners = append(owners, pagedOwner{"item." + item.ID, item.Name, item.BookPage})
 	}
-	slices.SortFunc(refs, func(a, b PowerRef) int { return strings.Compare(a.ID, b.ID) })
-	index := pagedOwnerIndex{byID: pages, byName: map[string][]pagedOwner{}}
-	for _, ref := range refs {
-		key := withoutStepSuffix(ref.Name)
-		index.byName[key] = append(index.byName[key], pagedOwner{ID: ref.ID, page: pages[ref.ID]})
+	slices.SortFunc(owners, func(a, b pagedOwner) int { return strings.Compare(a.id, b.id) })
+	index := pagedOwnerIndex{byID: map[string]int{}, byName: map[string][]pagedOwner{}}
+	for _, owner := range owners {
+		if owner.page == 0 {
+			continue
+		}
+		index.byID[owner.id] = owner.page
+		key := withoutStepSuffix(owner.name)
+		index.byName[key] = append(index.byName[key], owner)
 	}
 	return index
 })
