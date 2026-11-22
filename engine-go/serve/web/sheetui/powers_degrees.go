@@ -193,15 +193,11 @@ type allyUse struct {
 }
 
 // allyUseFor é o uso com aliado como alvo, quando a habilidade o tem e a ficha corta nele; nulo no resto.
-func allyUseFor(spec book.Activation, context book.UseContext) *allyUse {
-	if book.CostIsVariable(spec) || !book.OffersAllyCut(spec, context.Cost) {
+func allyUseFor(spec book.Activation, gate character.UseGate) *allyUse {
+	if book.CostIsVariable(spec) || !book.OffersAllyCut(spec, gate.CostRules()) {
 		return nil
 	}
-	onAlly := context
-	onAlly.OnAlly = true
-	can, _ := book.UseDecision(spec, onAlly)
-	return &allyUse{
-		SelfPM: book.UsePrice(spec, context.Cost, book.Use{}), AllyPM: book.UsePrice(spec, context.Cost, book.Use{OnAlly: true}),
-		AllyCan: can,
-	}
+	selfPM, _ := gate.Decide(spec, book.Use{})
+	allyPM, refusal := gate.Decide(spec, book.Use{OnAlly: true})
+	return &allyUse{SelfPM: selfPM, AllyPM: allyPM, AllyCan: refusal == ""}
 }

@@ -145,20 +145,18 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
 // powerRowsOf traduz o acervo em linhas de tela, resolvendo a ativação de cada
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
-	context := book.UseContext{
-		CurrentPM: int(dto.ManaAvailable()), Flags: s.activeFlags(dto), Cost: sheet.AbilityCostRules(dto),
-	}
+	gate := character.UseGateOf(dto)
 	uses := character.PowerUses(dto)
 	stances := paidStances(dto)
 	rows := []powerRow{}
 	for _, power := range ownedPowersOf(dto) {
-		rows = append(rows, powerRowFor(dto, power, context, uses, stances))
+		rows = append(rows, powerRowFor(dto, power, gate, uses, stances))
 	}
 	return stanceRepeatedSem(rows)
 }
 
 func powerRowFor(
-	dto sheet.CharacterDTO, power ownedPower, context book.UseContext,
+	dto sheet.CharacterDTO, power ownedPower, gate character.UseGate,
 	uses map[string]character.PowerUse, stances map[string]int,
 ) powerRow {
 	row := powerRow{
@@ -198,24 +196,24 @@ func powerRowFor(
 	// "2+ PM" é sobre ESTE personagem, e quem sabe se ele tem degrau a comprar é
 	// o estado da postura.
 	if spec.Kind == "stance" {
-		row.Stance = stanceStateFor(dto, *spec, stances, context)
+		row.Stance = stanceStateFor(dto, *spec, stances, gate.CostRules())
 	}
-	row.Degrees = useDegreesFor(dto, *spec, context.Cost)
-	row.Ally = allyUseFor(*spec, context)
+	row.Degrees = useDegreesFor(dto, *spec, gate.CostRules())
+	row.Ally = allyUseFor(*spec, gate)
 	row.InEffect = grantInEffect(dto, spec.ID)
-	row.Cost, row.Action = writtenCost(*spec, row.Stance, context.Cost), spec.Action
+	row.Cost, row.Action = writtenCost(*spec, row.Stance, gate.CostRules()), spec.Action
 	row.SortPM = sortCost(*spec)
-	context.UsedThisScene, context.UsedToday = uses[spec.ID].Scene, uses[spec.ID].Day
 	if scope := book.ChargedScope(*spec); scope != "" {
 		row.Spent = writtenSpent(scope, uses[spec.ID])
 	}
-	row.Can, row.Why = book.UseDecision(*spec, context)
+	_, row.Why = gate.Decide(*spec, book.Use{})
+	row.Can = row.Why == ""
 	return row
 }
 
 // stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
-	dto sheet.CharacterDTO, spec book.Activation, stances map[string]int, context book.UseContext,
+	dto sheet.CharacterDTO, spec book.Activation, stances map[string]int, cost engine.AbilityCostRules,
 ) *stanceState {
 	flag := stanceFlag(spec)
 	if flag == "" {
@@ -224,7 +222,7 @@ func stanceStateFor(
 	steps, active := stances[flag]
 	state := &stanceState{
 		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
-		BasePm: book.UsePrice(spec, context.Cost, book.Use{}), BaseBonus: book.StanceBaseBonus(flag),
+		BasePm: book.UsePrice(spec, cost, book.Use{}), BaseBonus: book.StanceBaseBonus(flag),
 		BonusNote: stanceBonusNote(dto, spec.ID),
 	}
 	if spec.Scaling != nil {
@@ -232,7 +230,7 @@ func stanceStateFor(
 		state.StepLabel = spec.Scaling.StepLabel
 		state.MaxSteps = character.PowerMaxSteps(dto, spec)
 	}
-	state.Prices = book.UsePrices(spec, context.Cost, state.MaxSteps, false)
+	state.Prices = book.UsePrices(spec, cost, state.MaxSteps, false)
 	return state
 }
 
@@ -272,32 +270,6 @@ func limitBadge(spec book.Activation) string {
 		return strconv.Itoa(number) + "/dia"
 	}
 	return ""
-}
-
-// activeFlags são as FLAGS levantadas agora, e elas não estão no banco.
-//
-// O que o banco guarda é a lista de condicionais LIGADOS, e o id de um
-// condicional é um encadeado que o motor monta (`engine.TermID`). A flag
-// mora do outro lado: é o motor quem diz, para cada condicional oferecido, qual
-// flag ele acende. Então a pergunta "a Fúria está em pé?" é uma junção entre o
-// que o jogador ligou e o que o motor oferece — e é por isso que ela não é uma
-// consulta.
-//
-// Sem catálogo primado não há condicional oferecido, e o mapa sai vazio: a
-// consequência é a tela não OFERECER o poder de gatilho, que é o lado seguro.
-func (s Scene) activeFlags(dto sheet.CharacterDTO) map[string]bool {
-	outside := map[string]bool{}
-	effects, _, err := sheet.CharacterEffects(dto)
-	if err != nil {
-		return outside
-	}
-	on := sheet.ToStringSet(dto.Conditionals)
-	for _, c := range effects.Conditional {
-		if c.Flag != "" && on[engine.FlagGroupID(c.Flag)] {
-			outside[c.Flag] = true
-		}
-	}
-	return outside
 }
 
 // paidStances são as posturas com pagamento registrado, e com QUANTOS DEGRAUS

@@ -48,14 +48,40 @@ func TestTheUsePriceFollowsTheSheetRules(t *testing.T) {
 func TestTheUseDecisionTakesTheTarget(t *testing.T) {
 	charity := engine.AbilityCostRules{AllyCuts: map[string]int{"Paladino": -1}}
 	courage := *ActivationOf("class.paladino.julgamento-coragem", "")
-	if can, _ := UseDecision(courage, UseContext{CurrentPM: 1, Cost: charity}); can {
+	if _, why := UseDecision(courage, UseContext{CurrentPM: 1, Cost: charity}, Use{}); why == "" {
 		t.Error("com 1 PM, a Coragem de 2 PM saiu no próprio paladino")
 	}
-	if can, why := UseDecision(courage, UseContext{CurrentPM: 1, Cost: charity, OnAlly: true}); !can {
+	if _, why := UseDecision(courage, UseContext{CurrentPM: 1, Cost: charity}, Use{OnAlly: true}); why != "" {
 		t.Errorf("com 1 PM, a Coragem num aliado foi recusada: %s", why)
 	}
 	zeal := *ActivationOf("class.paladino.julgamento-zelo", "")
-	if can, why := UseDecision(zeal, UseContext{CurrentPM: 10, Cost: charity, OnAlly: true}); can || why != "não tem um aliado como alvo" {
-		t.Errorf("o Zelo pedido num aliado: pode %v, motivo %q; want recusado por não ter um aliado como alvo", can, why)
+	if _, why := UseDecision(zeal, UseContext{CurrentPM: 10, Cost: charity}, Use{OnAlly: true}); why != "não tem um aliado como alvo" {
+		t.Errorf("o Zelo pedido num aliado: motivo %q; want recusado por não ter um aliado como alvo", why)
+	}
+}
+
+// A DECISÃO É INTEIRA (ALE-679): o teto de degraus mora nela, ao lado das recusas de flag e de limite, e ela
+// devolve o preço que o gesto cobra — antes eram duas decisões, e a entrada na postura só passava pela segunda.
+func TestTheUseDecisionAnswersTheWholeUse(t *testing.T) {
+	healing := *ActivationOf("class.paladino.cura-pelas-maos-1d8-1-pv", "")
+	frenzy := *ActivationOf("class.barbaro.frenesi", "")
+	for _, c := range []struct {
+		name    string
+		spec    Activation
+		context UseContext
+		use     Use
+		price   int
+		refusal string
+	}{
+		{"a Cura com 1 degrau dentro do teto", healing, UseContext{CurrentPM: 5, MaxSteps: 1}, Use{Steps: 1}, 2, ""},
+		{"a Cura com 2 degraus acima do teto de 1", healing, UseContext{CurrentPM: 5, MaxSteps: 1}, Use{Steps: 2}, 3, "o teto permite até 1 degrau"},
+		{"a Cura com 1 degrau e 1 PM", healing, UseContext{CurrentPM: 1, MaxSteps: 1}, Use{Steps: 1}, 2, "PM insuficiente"},
+		{"o Frenesi fora da Fúria", frenzy, UseContext{CurrentPM: 5}, Use{}, 2, "requer furia"},
+		{"o Frenesi na Fúria", frenzy, UseContext{CurrentPM: 5, Flags: map[string]bool{"furia": true}}, Use{}, 2, ""},
+	} {
+		price, refusal := UseDecision(c.spec, c.context, c.use)
+		if price != c.price || refusal != c.refusal {
+			t.Errorf("%s: %d PM, recusa %q; want %d PM, recusa %q", c.name, price, refusal, c.price, c.refusal)
+		}
 	}
 }
