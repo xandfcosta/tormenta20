@@ -21,7 +21,7 @@ func UsePrice(spec Activation, rules engine.AbilityCostRules, use Use) int {
 	if use.OnAlly {
 		cut = allyTargetCut(spec, rules)
 	}
-	return rules.Price(ScaledCost(spec, use.Steps), activationClass(spec), cut)
+	return rules.Price(ScaledCost(spec, use.Steps), entryOf(spec).class, cut)
 }
 
 // UsePrices é o preço do uso de zero a `maxSteps` degraus, na ordem: a prévia do diálogo lê o da contagem
@@ -48,5 +48,5 @@ func allyTargetCut(spec Activation, rules engine.AbilityCostRules) int {
 	if !spec.AllyTarget {
 		return 0
 	}
-	return rules.AllyCut(activationClass(spec))
+	return rules.AllyCut(entryOf(spec).class)
 }

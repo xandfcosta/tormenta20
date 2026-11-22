@@ -10,7 +10,10 @@ import (
 // custa 1, e o bardo com 1 PM o usa. A metade é da CLASSE: a mesma regra não alcança uma habilidade de outra.
 func TestTheUseDecisionHalvesTheBardAbilityUnderInspiration(t *testing.T) {
 	mass := ActivationOf("class.bardo.fascinar-em-massa", "")
-	if mass == nil || ActivationPm(*mass) != 2 || activationClass(*mass) != "Bardo" {
+	if mass == nil || ActivationPm(*mass) != 2 {
+		t.Fatalf("o Fascinar em Massa do catálogo não é uma habilidade de 2 PM: %+v", mass)
+	}
+	if entryOf(*mass).class != "Bardo" {
 		t.Fatalf("o Fascinar em Massa do catálogo não é uma habilidade de bardo de 2 PM: %+v", mass)
 	}
 	halved := engine.AbilityCostRules{Factors: map[string]engine.Ratio{"Bardo": {Num: 1, Den: 2}}}

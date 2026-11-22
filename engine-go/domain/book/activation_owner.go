@@ -7,8 +7,8 @@ import (
 )
 
 // O DONO DE UMA ATIVAÇÃO — qual poder a concede — se diz AQUI, e só aqui: a ida (`ActivationOf`), a volta da ficha
-// (`OwnerIndex`), a classe que o preço do uso lê (`activationClass`) e a página que a ativação herda (`ownerPage`)
-// perguntam a mesma coisa, e respostas escritas à mão para cada uma já discordaram.
+// (`OwnerIndex`) e a volta da ativação para o verbete dela no catálogo (`entryOf`), de onde o preço do uso lê a
+// classe e o registro herda a página. Respostas escritas à mão para cada uma já discordaram.
 //
 // PELO ID, ou PELO NOME. O nome é a ponte entre catálogos que grafam o mesmo poder de jeitos diferentes: a
 // Armadura de Allihanna é `dahllan-armadura-de-allihanna` no de raças e `race.dahllan.armadura-de-allihanna` no
@@ -80,76 +80,61 @@ func (o OwnerIndex) Owns(spec Activation) bool {
 	return false
 }
 
-// activationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
-// fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45). A ativação de fora das classes
-// não tem classe, ainda que divida o nome com uma — a Engenhosidade do kliren não é a do inventor.
-func activationClass(spec Activation) string {
-	if class := ClassOfPower(spec.ID); class != "" {
-		return class
-	}
-	if scopeOf(spec.ID) == "" {
-		return ""
-	}
-	for _, power := range classPowersByName()[withoutStepSuffix(spec.Name)] {
-		if sameScope(spec.ID, power.ID) {
-			return power.ClassName
-		}
-	}
-	return ""
-}
-
-// ownerPage é a página do verbete do DONO da ativação — o poder de classe, o geral, o do deus, o item, a habilidade
-// de raça —, achado pela regra deste arquivo: pelo id, ou pelo nome preferindo a mesma procedência. Zero quando
-// nenhum dono tem página (o benefício de origem): só aí a ativação escreve a sua.
-//
-// Quando a ativação serve a dois donos (a Esquiva Sobrenatural do bárbaro, p42, e a do ladino, p74), a página dela
-// é a do dono da mesma procedência; a ficha mostra a do poder que a pessoa tem.
-//
-//	ownerPage(*ActivationOf("class.paladino.julgamento-coragem", "")) // 83: a Coragem do paladino, ligada pelo nome
-func ownerPage(spec Activation) int {
-	owners := pagedOwners()
-	if page := owners.byID[spec.ID]; page > 0 {
-		return page
-	}
-	across := 0
-	for _, owner := range owners.byName[withoutStepSuffix(spec.Name)] {
-		switch {
-		case sameScope(spec.ID, owner.id):
-			return owner.page
-		case across == 0 && nameLinks(spec, owner.id):
-			across = owner.page
-		}
-	}
-	return across
-}
-
-// pagedOwner é um poder que tem página no livro.
-type pagedOwner struct {
+// catalogEntry é o VERBETE de um poder no catálogo — o poder de classe, o geral, o do deus, o item, a habilidade de
+// raça —, com o que a ativação lê dele: a classe e a página.
+type catalogEntry struct {
 	id, name string
-	page     int
+	// class é a classe do poder de classe, e vazia em todos os outros: é por ela que o fator de uma classe alcança a
+	// habilidade (a metade do Artista Completo nas de bardo, p45).
+	class string
+	page  int
 }
 
-// pagedOwnerIndex são os poderes com página: por id, e por nome sem o sufixo de degrau, em ordem de id para a
-// escolha não depender da ordem de um `map`.
-type pagedOwnerIndex struct {
-	byID   map[string]int
-	byName map[string][]pagedOwner
+// entryOf é o verbete dono da ativação: pelo id; senão pelo nome sem o sufixo de degrau, na MESMA procedência.
+//
+// Ele NÃO atravessa a procedência, ao contrário do `ActivationOf`. A ida da ficha para a ativação atravessa porque o
+// druida não tem ativação própria de Empatia Selvagem e usa a do caçador; a volta da ativação para o verbete não,
+// porque a ativação do caçador não é o verbete do druida. Pela mesma razão a Engenhosidade do kliren não tem a
+// classe do inventor.
+//
+// Sem verbete, ele devolve o verbete vazio: classe vazia e página zero, que é o que o preço e a herança leem.
+//
+//	entryOf(*ActivationOf("class.paladino.julgamento-coragem", "")) // Paladino, p83, ligada pelo nome
+func entryOf(spec Activation) catalogEntry {
+	entries := catalogEntries()
+	if entry, found := entries.byID[spec.ID]; found {
+		return entry
+	}
+	for _, entry := range entries.byName[withoutStepSuffix(spec.Name)] {
+		if sameScope(spec.ID, entry.id) {
+			return entry
+		}
+	}
+	return catalogEntry{}
 }
 
-// pagedOwners junta os catálogos que dão página a um poder. O id do item leva o `item.` do registro de ativações.
-var pagedOwners = sync.OnceValue(func() pagedOwnerIndex {
-	var owners []pagedOwner
+// catalogEntryIndex são os verbetes por id, e por nome sem o sufixo de degrau em ordem de id, para a escolha não
+// depender da ordem de um `map`.
+type catalogEntryIndex struct {
+	byID   map[string]catalogEntry
+	byName map[string][]catalogEntry
+}
+
+// catalogEntries junta os cinco catálogos que têm verbete de poder. O id do item leva o `item.` do registro de
+// ativações.
+var catalogEntries = sync.OnceValue(func() catalogEntryIndex {
+	var entries []catalogEntry
 	for _, power := range ClassPowers() {
-		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
+		entries = append(entries, catalogEntry{power.ID, power.Name, power.ClassName, power.BookPage})
 	}
 	for _, power := range GeneralPowers() {
-		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
+		entries = append(entries, catalogEntry{power.ID, power.Name, "", power.BookPage})
 	}
 	for _, power := range DivinePowers() {
-		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
+		entries = append(entries, catalogEntry{power.ID, power.Name, "", power.BookPage})
 	}
 	for _, item := range Catalogs().Items {
-		owners = append(owners, pagedOwner{"item." + item.ID, item.Name, item.BookPage})
+		entries = append(entries, catalogEntry{"item." + item.ID, item.Name, "", item.BookPage})
 	}
 	for key, race := range RaceTraitsByKey() {
 		// O índice das raças tem cada uma duas vezes, pelo id e pelo nome.
@@ -157,30 +142,17 @@ var pagedOwners = sync.OnceValue(func() pagedOwnerIndex {
 			continue
 		}
 		for _, ability := range race.Abilities {
-			owners = append(owners, pagedOwner{ability.ID, ability.Name, ability.BookPage})
+			entries = append(entries, catalogEntry{ability.ID, ability.Name, "", ability.BookPage})
 		}
 	}
-	slices.SortFunc(owners, func(a, b pagedOwner) int { return strings.Compare(a.id, b.id) })
-	index := pagedOwnerIndex{byID: map[string]int{}, byName: map[string][]pagedOwner{}}
-	for _, owner := range owners {
-		if owner.page == 0 {
-			continue
-		}
-		index.byID[owner.id] = owner.page
-		key := withoutStepSuffix(owner.name)
-		index.byName[key] = append(index.byName[key], owner)
+	slices.SortFunc(entries, func(a, b catalogEntry) int { return strings.Compare(a.id, b.id) })
+	index := catalogEntryIndex{byID: map[string]catalogEntry{}, byName: map[string][]catalogEntry{}}
+	for _, entry := range entries {
+		index.byID[entry.id] = entry
+		key := withoutStepSuffix(entry.name)
+		index.byName[key] = append(index.byName[key], entry)
 	}
 	return index
-})
-
-// classPowersByName são os poderes de classe por nome sem o sufixo de degrau.
-var classPowersByName = sync.OnceValue(func() map[string][]ClassPower {
-	byName := map[string][]ClassPower{}
-	for _, power := range ClassPowers() {
-		key := withoutStepSuffix(power.Name)
-		byName[key] = append(byName[key], power)
-	}
-	return byName
 })
 
 // registryIndexes são os índices do registro de ativações, montados uma vez.
