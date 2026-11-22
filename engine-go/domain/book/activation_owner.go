@@ -39,12 +39,9 @@ func ActivationOf(id, name string) *Activation {
 	// DE TRÁS PARA A FRENTE: com dois candidatos válidos (a Coragem Total de cada deus), o último do registro é o
 	// que o índice por nome devolvia, e trocar a escolha trocaria o endereço do gesto na tela.
 	for i := len(candidates) - 1; i >= 0; i-- {
-		if sameScope(candidates[i].ID, id) {
+		if registry.nameLinks(candidates[i], id) {
 			return &candidates[i]
 		}
-	}
-	if len(candidates) > 0 && !registry.scopeHasName(scopeOf(id), candidates[0].Name) {
-		return &candidates[len(candidates)-1]
 	}
 	return nil
 }
@@ -76,7 +73,7 @@ func (o OwnerIndex) Owns(spec Activation) bool {
 	}
 	registry := activationRegistry()
 	for _, power := range o.byName[withoutStepSuffix(spec.Name)] {
-		if sameScope(spec.ID, power.ID) || !registry.scopeHasName(scopeOf(power.ID), spec.Name) {
+		if registry.nameLinks(spec, power.ID) {
 			return true
 		}
 	}
@@ -119,8 +116,10 @@ type registryIndexes struct {
 	scopeNames map[string]bool
 }
 
-func (r registryIndexes) scopeHasName(scope, name string) bool {
-	return r.scopeNames[scope+"|"+name]
+// nameLinks diz se o NOME liga a ativação ao poder de id `powerID`: na mesma procedência, ou fora dela quando a
+// procedência do poder não tem ativação nenhuma com aquele nome — ver o cabeçalho deste arquivo.
+func (r registryIndexes) nameLinks(spec Activation, powerID string) bool {
+	return sameScope(spec.ID, powerID) || !r.scopeNames[scopeOf(powerID)+"|"+spec.Name]
 }
 
 var activationRegistry = sync.OnceValue(func() registryIndexes {
