@@ -3,7 +3,6 @@ package book
 import (
 	"encoding/json"
 	"slices"
-	"strings"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -176,8 +175,8 @@ type PowerGrant struct {
 }
 
 // Activations é o registro, com a página HERDADA do dono: o poder de classe,
-// o geral, o item, o poder do deus. A ativação escreve página só quando o dono
-// não tem (ALE-495).
+// o geral, o item, o poder do deus, achado pela regra única do dono (ver
+// `ownerPage`). A ativação escreve página só quando nenhum dono tem.
 //
 // Ele é montado UMA vez: o registro é embutido e não muda, e decodificá-lo a
 // cada pergunta custava a maior parte de cada página da ficha. Quem chama
@@ -189,7 +188,7 @@ func Activations() []Activation {
 var activationsOnce = sync.OnceValue(func() []Activation {
 	list := transcribedActivations()
 	for i, a := range list {
-		if page, owned := ownerPageOf(a); owned {
+		if page := ownerPage(a); page > 0 {
 			list[i].BookPage = page
 		}
 	}
@@ -205,42 +204,4 @@ func transcribedActivations() []Activation {
 	var list []Activation
 	_ = json.Unmarshal(raw, &list)
 	return list
-}
-
-// ownerPageOf é a página do DONO da ativação, achado pelo id: `class.*` no
-// poder de classe, `item.*` no item, `deus.<deus>.*` no poder que aquele deus
-// concede (pelo nome), e o id sem prefixo no poder geral. Raça e origem não
-// têm página por habilidade, e a variante sem verbete (`class.paladino.
-// julgamento-zelo`) não acha dono — as duas escrevem a sua.
-func ownerPageOf(a Activation) (int, bool) {
-	page := 0
-	switch prefix, rest, _ := strings.Cut(a.ID, "."); {
-	case prefix == "class":
-		page = ClassPowers()[a.ID].BookPage
-	case prefix == "item":
-		if item := ItemByID(rest); item != nil {
-			page = item.BookPage
-		}
-	case prefix == "deus":
-		god, _, _ := strings.Cut(rest, ".")
-		page = divinePowerPage(god, a.Name)
-	case !strings.Contains(a.ID, "."):
-		page = GeneralPowers()[a.ID].BookPage
-	}
-	return page, page > 0
-}
-
-// divinePowerPage é a página do poder que o deus concede, pelo nome.
-func divinePowerPage(god, name string) int {
-	type granted struct {
-		DeusID   string `json:"deusId"`
-		Name     string `json:"name"`
-		BookPage int    `json:"bookPage"`
-	}
-	for _, row := range ListOf[granted]("divine-powers") {
-		if row.DeusID == god && row.Name == name {
-			return row.BookPage
-		}
-	}
-	return 0
 }
