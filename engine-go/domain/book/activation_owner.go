@@ -97,18 +97,20 @@ type catalogEntry struct {
 // porque a ativação do caçador não é o verbete do druida. Pela mesma razão a Engenhosidade do kliren não tem a
 // classe do inventor.
 //
-//	entry, _ := entryOf(*ActivationOf("class.paladino.julgamento-coragem", "")) // Paladino, p83, ligada pelo nome
-func entryOf(spec Activation) (catalogEntry, bool) {
+// Sem verbete, ele devolve o verbete vazio: classe vazia e página zero, que é o que o preço e a herança leem.
+//
+//	entryOf(*ActivationOf("class.paladino.julgamento-coragem", "")) // Paladino, p83, ligada pelo nome
+func entryOf(spec Activation) catalogEntry {
 	entries := catalogEntries()
 	if entry, found := entries.byID[spec.ID]; found {
-		return entry, true
+		return entry
 	}
 	for _, entry := range entries.byName[withoutStepSuffix(spec.Name)] {
 		if sameScope(spec.ID, entry.id) {
-			return entry, true
+			return entry
 		}
 	}
-	return catalogEntry{}, false
+	return catalogEntry{}
 }
 
 // catalogEntryIndex são os verbetes por id, e por nome sem o sufixo de degrau em ordem de id, para a escolha não

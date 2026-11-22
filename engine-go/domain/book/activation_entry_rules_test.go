@@ -19,9 +19,9 @@ func TestTheActivationEntryStaysInTheActivationsOwnScope(t *testing.T) {
 			if spec == nil {
 				t.Fatalf("a ativação %s não está no registro", c.activation)
 			}
-			entry, found := entryOf(*spec)
-			if !found || entry.class != c.class || entry.page != c.page {
-				t.Errorf("o verbete de %s é %+v (achado: %v); want classe %q e p%d", c.activation, entry, found, c.class, c.page)
+			entry := entryOf(*spec)
+			if entry.class != c.class || entry.page != c.page {
+				t.Errorf("o verbete de %s é %+v; want classe %q e p%d", c.activation, entry, c.class, c.page)
 			}
 		})
 	}

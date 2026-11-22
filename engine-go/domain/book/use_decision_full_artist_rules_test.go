@@ -13,7 +13,7 @@ func TestTheUseDecisionHalvesTheBardAbilityUnderInspiration(t *testing.T) {
 	if mass == nil || ActivationPm(*mass) != 2 {
 		t.Fatalf("o Fascinar em Massa do catálogo não é uma habilidade de 2 PM: %+v", mass)
 	}
-	if entry, _ := entryOf(*mass); entry.class != "Bardo" {
+	if entryOf(*mass).class != "Bardo" {
 		t.Fatalf("o Fascinar em Massa do catálogo não é uma habilidade de bardo de 2 PM: %+v", mass)
 	}
 	halved := engine.AbilityCostRules{Factors: map[string]engine.Ratio{"Bardo": {Num: 1, Den: 2}}}

@@ -188,8 +188,8 @@ func Activations() []Activation {
 var activationsOnce = sync.OnceValue(func() []Activation {
 	list := transcribedActivations()
 	for i, a := range list {
-		if entry, _ := entryOf(a); entry.page > 0 {
-			list[i].BookPage = entry.page
+		if page := entryOf(a).page; page > 0 {
+			list[i].BookPage = page
 		}
 	}
 	return list
