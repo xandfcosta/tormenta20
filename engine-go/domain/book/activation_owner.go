@@ -98,9 +98,9 @@ func activationClass(spec Activation) string {
 	return ""
 }
 
-// ownerPage é a página do verbete do DONO da ativação — o poder de classe, o geral, o do deus, o item —, achado
-// pela regra deste arquivo: pelo id, ou pelo nome preferindo a mesma procedência. Zero quando nenhum dono tem
-// página (a raça, a origem): só aí a ativação escreve a sua.
+// ownerPage é a página do verbete do DONO da ativação — o poder de classe, o geral, o do deus, o item, a habilidade
+// de raça —, achado pela regra deste arquivo: pelo id, ou pelo nome preferindo a mesma procedência. Zero quando
+// nenhum dono tem página (o benefício de origem): só aí a ativação escreve a sua.
 //
 // Quando a ativação serve a dois donos (a Esquiva Sobrenatural do bárbaro, p42, e a do ladino, p74), a página dela
 // é a do dono da mesma procedência; a ficha mostra a do poder que a pessoa tem.
@@ -150,6 +150,15 @@ var pagedOwners = sync.OnceValue(func() pagedOwnerIndex {
 	}
 	for _, item := range Catalogs().Items {
 		owners = append(owners, pagedOwner{"item." + item.ID, item.Name, item.BookPage})
+	}
+	for key, race := range RaceTraitsByKey() {
+		// O índice das raças tem cada uma duas vezes, pelo id e pelo nome.
+		if key != race.ID {
+			continue
+		}
+		for _, ability := range race.Abilities {
+			owners = append(owners, pagedOwner{ability.ID, ability.Name, ability.BookPage})
+		}
 	}
 	slices.SortFunc(owners, func(a, b pagedOwner) int { return strings.Compare(a.id, b.id) })
 	index := pagedOwnerIndex{byID: map[string]int{}, byName: map[string][]pagedOwner{}}

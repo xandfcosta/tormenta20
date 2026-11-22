@@ -1,29 +1,40 @@
 package api
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
 
 // A PÁGINA NA FOLHA DO PODER é a do poder que a ficha tem. Uma ativação serve a mais de uma classe quando o livro
 // dá a mesma habilidade às duas — a Esquiva Sobrenatural do bárbaro (p42) e a do ladino (p74) —, e a folha do
-// ladino mostrava a página da ativação, que é a do bárbaro.
+// ladino mostrava a página da ativação, que é a do bárbaro. A habilidade de RAÇA tem a página onde o livro a
+// imprime, que nem sempre é a que abre a raça: a medusa começa na p28 e as habilidades dela estão na p29.
 func TestThePowerSheetShowsThePageOfThePowerTheSheetHas(t *testing.T) {
 	for _, c := range []struct {
-		name, class string
-		level       int64
-		chosen      string
-		activation  string
-		want        string
+		name, class, race string
+		level             int64
+		chosen            string
+		activation        string
+		want              string
 	}{
 		// O ladino a ganha no 4º nível; o bárbaro a escolhe como poder.
-		{"o ladino", "Ladino", 4, "", "class.barbaro.esquiva-sobrenatural", "p74"},
-		{"o bárbaro, dono da ativação", "Bárbaro", 2, "class.barbaro.esquiva-sobrenatural", "class.barbaro.esquiva-sobrenatural", "p42"},
+		{"o ladino", "Ladino", "", 4, "", "class.barbaro.esquiva-sobrenatural", "p74"},
+		{"o bárbaro, dono da ativação", "Bárbaro", "", 2, "class.barbaro.esquiva-sobrenatural", "class.barbaro.esquiva-sobrenatural", "p42"},
 		// A do druida é a p61; o catálogo dava a p21, que é a Empatia Selvagem do dahllan.
-		{"o druida", "Druida", 1, "", "class.cacador.empatia-selvagem", "p61"},
+		{"o druida", "Druida", "", 1, "", "class.cacador.empatia-selvagem", "p61"},
+		// O dahllan usa a ativação do caçador, que não é da raça e diz p51.
+		{"o dahllan", "Guerreiro", "dahllan", 1, "", "class.cacador.empatia-selvagem", "p21"},
+		{"a medusa", "Guerreiro", "medusa", 1, "", "race.medusa.natureza-venenosa", "p29"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f, id := classCharacterWithMpSpent(t, c.class, c.level, 0)
+			if c.race != "" {
+				if _, err := f.s.db.ExecContext(context.Background(),
+					"INSERT INTO character_races (characterId, race) VALUES (?, ?)", id, c.race); err != nil {
+					t.Fatalf("fazer da ficha %s: %v", c.race, err)
+				}
+			}
 			if c.chosen != "" {
 				seedPowerChoices(t, f.s, id, `["`+c.chosen+`"]`, "{}")
 			}

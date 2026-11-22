@@ -164,7 +164,7 @@ func borrowedAbilitiesOf(dto CharacterDTO) []OwnedPower {
 	for _, b := range borrowedAbilities(dto) {
 		outside = append(outside, OwnedPower{
 			ID: b.ability.ID, Name: b.ability.Name, Detail: b.ability.Description,
-			Source: PowerFromRace, Owner: b.from.Name + " (Memória Póstuma)",
+			Source: PowerFromRace, Owner: b.from.Name + " (Memória Póstuma)", Page: b.ability.BookPage,
 		})
 	}
 	book.SortByName(outside, func(p OwnedPower) string { return p.Name })
@@ -219,7 +219,7 @@ func raceAbilitiesOf(dto CharacterDTO) []OwnedPower {
 			}
 			outside = append(outside, OwnedPower{
 				ID: ability.ID, Name: ability.Name, Detail: ability.Description,
-				Source: PowerFromRace, Owner: race.Name,
+				Source: PowerFromRace, Owner: race.Name, Page: ability.BookPage,
 			})
 		}
 	}

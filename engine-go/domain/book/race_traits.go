@@ -29,10 +29,13 @@ import (
 
 // RaceAbility é uma habilidade da raça como a tela a lê: nome e uma linha.
 type RaceAbility struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Variants    []AbilityVariant `json:"variants"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// BookPage é a página onde o livro imprime a habilidade: a da medusa abre na p28, e as habilidades estão na
+	// p29.
+	BookPage int              `json:"bookPage"`
+	Variants []AbilityVariant `json:"variants"`
 	// Modifiers é o que a habilidade CONCEDE, e ele entrou para a tela poder
 	// NOMEAR a habilidade responsável por uma isenção (ALE-384). O motor resolve
 	// os modificadores num conjunto de flags e perde a procedência no caminho —

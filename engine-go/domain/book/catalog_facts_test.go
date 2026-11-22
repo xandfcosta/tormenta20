@@ -22,6 +22,19 @@ func TestEveryCatalogEntryHasABookPage(t *testing.T) {
 			t.Errorf("o item %s não tem página", i.ID)
 		}
 	}
+	// A habilidade de raça sem página cairia na da ativação que ela usa, que pode ser de uma classe (a Empatia
+	// Selvagem do dahllan mostrava a p51, do caçador). O índice tem cada raça duas vezes, pelo id e pelo nome.
+	for key, race := range RaceTraitsByKey() {
+		if key != race.ID {
+			continue
+		}
+		for _, ability := range race.Abilities {
+			measured++
+			if ability.BookPage == 0 {
+				t.Errorf("a habilidade de raça %s não tem página: confira no livro onde ela está impressa", ability.ID)
+			}
+		}
+	}
 	if measured < 500 {
 		t.Fatalf("só %d verbetes medidos: o catálogo não carregou", measured)
 	}

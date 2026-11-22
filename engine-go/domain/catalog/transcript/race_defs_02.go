@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 2 de 3 de `RaceDefinitions` (race_defs.go).
+// Parte 2 de 4 de `RaceDefinitions` (race_defs.go).
 var raceDefinitionsPart02 = []RaceDefinition{
 	{
 		ID:               "qareen",
@@ -13,6 +13,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "qareen",
 				Name:        "Desejos",
 				Description: "Se lançar uma magia que alguém tenha pedido desde seu último turno, o custo da magia diminui em –1 PM. Fazer um desejo ao qareen é uma ação livre.",
+				BookPage:    26,
 				UID:         "rac_5tafsebqv6",
 				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
@@ -21,6 +22,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "qareen",
 				Name:        "Resistência Elemental",
 				Description: "Conforme sua ascendência, recebe redução 10 a um tipo de dano. Escolha uma das variantes abaixo.",
+				BookPage:    26,
 				UID:         "rac_fgbigor4yt",
 				Variants: []RaceAbilityVariant{
 					{
@@ -108,6 +110,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "qareen",
 				Name:        "Tatuagem Mística",
 				Description: "Você pode lançar uma magia de 1º círculo a sua escolha (atributo-chave Carisma). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+				BookPage:    26,
 				UID:         "rac_gonx6fnbue",
 				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
@@ -126,6 +129,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "suraggel",
 				Name:        "Herança Divina",
 				Description: "Você é uma criatura do tipo espírito e recebe visão no escuro.",
+				BookPage:    31,
 				UID:         "rac_w6lwa7527h",
 				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 			},
@@ -135,6 +139,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "suraggel",
 				Name:        "Luz Sagrada",
 				Description: "Aggelus. Você recebe +2 em Diplomacia e Intuição. Além disso, pode lançar Luz (como uma magia divina; atributo-chave Carisma). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+				BookPage:    31,
 				UID:         "rac_6kb2436pvi",
 				Unmodeled:   "lançar Luz como magia divina: o motor de magia (ALE-465)",
 				Modifiers: []Modifier{
@@ -149,6 +154,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "suraggel",
 				Name:        "Sombras Profanas",
 				Description: "Sulfure. Você recebe +2 em Enganação e Furtividade. Além disso, pode lançar Escuridão (como uma magia divina; atributo-chave Inteligência). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+				BookPage:    31,
 				UID:         "rac_mdpv3zhlwj",
 				Unmodeled:   "lançar Escuridão como magia divina: o motor de magia (ALE-465)",
 				Modifiers: []Modifier{
@@ -176,6 +182,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "silfide",
 				Name:        "Asas de Borboleta",
 				Description: "Seu tamanho é Minúsculo. Pode pairar a 1,5m do chão com deslocamento 9m, ignorando terreno difícil e imune a dano por queda. Gastando 1 PM por rodada, voa com deslocamento 12m.",
+				BookPage:    30,
 				UID:         "rac_ljzrjw3hlq",
 				Unmodeled:   "a imunidade a dano por queda: o app não rola queda, é a mesa que aplica",
 				Modifiers: []Modifier{
@@ -193,6 +200,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "silfide",
 				Name:        "Espírito da Natureza",
 				Description: "Você é uma criatura do tipo espírito, recebe visão na penumbra e pode falar com animais livremente.",
+				BookPage:    30,
 				UID:         "rac_yspdaw2jpl",
 				Unmodeled:   "a visão na penumbra e a fala com animais são prosa",
 			},
@@ -201,6 +209,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "silfide",
 				Name:        "Magia das Fadas",
 				Description: "Pode lançar duas das magias a seguir (atributo-chave Carisma): Criar Ilusão, Enfeitiçar, Luz (como magia arcana) e Sono. Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
+				BookPage:    30,
 				UID:         "rac_gihxnrd5o7",
 				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
@@ -219,6 +228,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "sereia-tritao",
 				Name:        "+1 em Três Atributos Diferentes",
 				Description: "Distribua +1 em três atributos diferentes (já aplicado na ficha).",
+				BookPage:    30,
 				UID:         "rac_dg7bnsv4h7",
 			},
 			{
@@ -226,6 +236,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "sereia-tritao",
 				Name:        "Canção dos Mares",
 				Description: "Pode lançar duas das magias a seguir: Amedrontar, Comando, Despedaçar, Enfeitiçar, Hipnotismo ou Sono (atributo-chave Carisma). Caso aprenda novamente uma dessas magias, seu custo diminui em –1 PM.",
+				BookPage:    30,
 				UID:         "rac_cvz63biaim",
 				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
@@ -238,6 +249,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "sereia-tritao",
 				Name:        "Mestre do Tridente",
 				Description: "Para você, o tridente é uma arma simples. Você recebe +2 em rolagens de dano com azagaias, lanças e tridentes.",
+				BookPage:    30,
 				UID:         "rac_rojbbpkrph",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "damage", Scope: "weapon:azagaia"}, Amount: 2, BonusType: "untyped"},
@@ -257,6 +269,7 @@ var raceDefinitionsPart02 = []RaceDefinition{
 				RaceID:      "sereia-tritao",
 				Name:        "Transformação Anfíbia",
 				Description: "Pode respirar debaixo d’água e possui cauda com deslocamento de natação 12m. Fora d’água, a cauda dá lugar a pernas (deslocamento 9m). Mais de um dia sem contato com água impede recuperação de PM por descanso.",
+				BookPage:    30,
 				UID:         "rac_axjfztusy3",
 				Unmodeled:   "respirar debaixo d’água e o PM sem água são do mestre, que sabe se houve água (decisão do dono)",
 				Modifiers: []Modifier{
