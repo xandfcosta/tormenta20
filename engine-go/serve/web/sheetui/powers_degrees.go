@@ -53,13 +53,14 @@ type riderPart struct {
 func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble || d.AllyPrices != nil }
 
 // useDegreesFor resolve os degraus de um instantâneo com escala, ou nil.
-func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.AbilityCostRules) *useDegrees {
+func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, gate character.UseGate) *useDegrees {
+	cost := gate.CostRules()
 	if spec.Kind != "instant" || spec.Scaling == nil {
 		return nil
 	}
 	d := &useDegrees{
 		StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
-		MaxSteps: character.PowerMaxSteps(dto, spec),
+		MaxSteps: gate.MaxSteps(spec),
 	}
 	d.Prices = book.UsePrices(spec, cost, d.MaxSteps, false)
 	if book.OffersAllyCut(spec, cost) {

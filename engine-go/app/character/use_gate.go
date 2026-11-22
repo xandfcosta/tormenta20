@@ -20,11 +20,14 @@ type UseGate struct {
 	rules engine.AbilityCostRules
 	flags map[string]bool
 	uses  map[string]PowerUse
+	// maxSteps guarda o teto de cada habilidade já perguntada: ele pode pedir a ficha computada (o teto pelo
+	// atributo), e a tela e a decisão o leem na mesma linha.
+	maxSteps map[string]int
 }
 
 // UseGateOf monta o portão de uma ficha.
 func UseGateOf(dto sheet.CharacterDTO) UseGate {
-	gate := UseGate{dto: dto, flags: map[string]bool{}, uses: PowerUses(dto)}
+	gate := UseGate{dto: dto, flags: map[string]bool{}, uses: PowerUses(dto), maxSteps: map[string]int{}}
 	effects, _, err := sheet.CharacterEffects(dto)
 	if err != nil {
 		return gate
@@ -48,11 +51,27 @@ func UseGateOf(dto sheet.CharacterDTO) UseGate {
 
 // Decide é o preço do uso e a recusa, vazia quando pode (ver `book.UseDecision`).
 func (g UseGate) Decide(spec book.Activation, use book.Use) (int, string) {
-	used := g.uses[spec.ID]
+	used := g.Used(spec)
 	return book.UseDecision(spec, book.UseContext{
-		CurrentPM: int(g.dto.ManaAvailable()), Cost: g.rules, MaxSteps: PowerMaxSteps(g.dto, spec),
+		CurrentPM: int(g.dto.ManaAvailable()), Cost: g.rules, MaxSteps: g.MaxSteps(spec),
 		UsedThisScene: used.Scene, UsedToday: used.Day, Flags: g.flags,
 	}, use)
+}
+
+// MaxSteps é o teto de degraus da habilidade (ver `PowerMaxSteps`): o MESMO que a decisão confere, para a tela
+// não oferecer um contador que o gesto recusa.
+func (g UseGate) MaxSteps(spec book.Activation) int {
+	if max, known := g.maxSteps[spec.ID]; known {
+		return max
+	}
+	max := PowerMaxSteps(g.dto, spec)
+	g.maxSteps[spec.ID] = max
+	return max
+}
+
+// Used são os usos já gastos da habilidade, os que a decisão confere contra o limite.
+func (g UseGate) Used(spec book.Activation) PowerUse {
+	return g.uses[spec.ID]
 }
 
 // CostRules são as regras de custo da ficha, para quem escreve o preço sem decidir (o rótulo, a prévia).

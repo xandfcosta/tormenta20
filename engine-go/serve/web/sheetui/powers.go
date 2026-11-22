@@ -146,18 +146,16 @@ func (s Scene) powersPanelOf(dto sheet.CharacterDTO, query string) powersPanel {
 // poder e o estado de jogo dele.
 func (s Scene) powerRowsOf(dto sheet.CharacterDTO) []powerRow {
 	gate := character.UseGateOf(dto)
-	uses := character.PowerUses(dto)
 	stances := paidStances(dto)
 	rows := []powerRow{}
 	for _, power := range ownedPowersOf(dto) {
-		rows = append(rows, powerRowFor(dto, power, gate, uses, stances))
+		rows = append(rows, powerRowFor(dto, power, gate, stances))
 	}
 	return stanceRepeatedSem(rows)
 }
 
 func powerRowFor(
-	dto sheet.CharacterDTO, power ownedPower, gate character.UseGate,
-	uses map[string]character.PowerUse, stances map[string]int,
+	dto sheet.CharacterDTO, power ownedPower, gate character.UseGate, stances map[string]int,
 ) powerRow {
 	row := powerRow{
 		ID: power.ID, Name: power.Name, Source: shortSource(power.Source),
@@ -196,15 +194,15 @@ func powerRowFor(
 	// "2+ PM" é sobre ESTE personagem, e quem sabe se ele tem degrau a comprar é
 	// o estado da postura.
 	if spec.Kind == "stance" {
-		row.Stance = stanceStateFor(dto, *spec, stances, gate.CostRules())
+		row.Stance = stanceStateFor(dto, *spec, stances, gate)
 	}
-	row.Degrees = useDegreesFor(dto, *spec, gate.CostRules())
+	row.Degrees = useDegreesFor(dto, *spec, gate)
 	row.Ally = allyUseFor(*spec, gate)
 	row.InEffect = grantInEffect(dto, spec.ID)
 	row.Cost, row.Action = writtenCost(*spec, row.Stance, gate.CostRules()), spec.Action
 	row.SortPM = sortCost(*spec)
 	if scope := book.ChargedScope(*spec); scope != "" {
-		row.Spent = writtenSpent(scope, uses[spec.ID])
+		row.Spent = writtenSpent(scope, gate.Used(*spec))
 	}
 	_, row.Why = gate.Decide(*spec, book.Use{})
 	row.Can = row.Why == ""
@@ -213,7 +211,7 @@ func powerRowFor(
 
 // stanceStateFor resolve a flag, os degraus do nível e se ela está em curso.
 func stanceStateFor(
-	dto sheet.CharacterDTO, spec book.Activation, stances map[string]int, cost engine.AbilityCostRules,
+	dto sheet.CharacterDTO, spec book.Activation, stances map[string]int, gate character.UseGate,
 ) *stanceState {
 	flag := stanceFlag(spec)
 	if flag == "" {
@@ -222,15 +220,15 @@ func stanceStateFor(
 	steps, active := stances[flag]
 	state := &stanceState{
 		Flag: flag, Active: active, Bonus: book.StanceBonusInEffect(flag, steps),
-		BasePm: book.UsePrice(spec, cost, book.Use{}), BaseBonus: book.StanceBaseBonus(flag),
+		BasePm: book.UsePrice(spec, gate.CostRules(), book.Use{}), BaseBonus: book.StanceBaseBonus(flag),
 		BonusNote: stanceBonusNote(dto, spec.ID),
 	}
 	if spec.Scaling != nil {
 		state.StepPm = spec.Scaling.StepPm
 		state.StepLabel = spec.Scaling.StepLabel
-		state.MaxSteps = character.PowerMaxSteps(dto, spec)
+		state.MaxSteps = gate.MaxSteps(spec)
 	}
-	state.Prices = book.UsePrices(spec, cost, state.MaxSteps, false)
+	state.Prices = book.UsePrices(spec, gate.CostRules(), state.MaxSteps, false)
 	return state
 }
 
