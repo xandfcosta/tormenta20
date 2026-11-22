@@ -19,6 +19,8 @@ func TestThePowerSheetShowsThePageOfThePowerTheSheetHas(t *testing.T) {
 		// O ladino a ganha no 4º nível; o bárbaro a escolhe como poder.
 		{"o ladino", "Ladino", 4, "", "class.barbaro.esquiva-sobrenatural", "p74"},
 		{"o bárbaro, dono da ativação", "Bárbaro", 2, "class.barbaro.esquiva-sobrenatural", "class.barbaro.esquiva-sobrenatural", "p42"},
+		// A do druida é a p61; o catálogo dava a p21, que é a Empatia Selvagem do dahllan.
+		{"o druida", "Druida", 1, "", "class.cacador.empatia-selvagem", "p61"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			f, id := classCharacterWithMpSpent(t, c.class, c.level, 0)

@@ -141,6 +141,7 @@ var classPowersPart14 = []ClassPower{
 	{
 		ID:        "class.lutador.valentao",
 		ClassName: "Lutador",
+		BookPage:  77,
 		UID:       "pwr_3ikfe5s4ug",
 		PowerUID:  "pwr_hpf2masdfi",
 	},

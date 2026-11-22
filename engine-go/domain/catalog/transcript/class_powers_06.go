@@ -193,6 +193,7 @@ var classPowersPart06 = []ClassPower{
 	{
 		ID:        "class.cavaleiro.aumento-de-atributo",
 		ClassName: "Cavaleiro",
+		BookPage:  54,
 		UID:       "pwr_jqgtevs5dw",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},

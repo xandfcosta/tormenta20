@@ -97,6 +97,7 @@ var classPowersPart11 = []ClassPower{
 	{
 		ID:        "class.inventor.aumento-de-atributo",
 		ClassName: "Inventor",
+		BookPage:  68,
 		UID:       "pwr_brrumuthnq",
 		PowerUID:  "pwr_qbiyubn2cs",
 	},
