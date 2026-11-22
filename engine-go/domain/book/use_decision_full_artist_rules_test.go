@@ -14,14 +14,14 @@ func TestTheUseDecisionHalvesTheBardAbilityUnderInspiration(t *testing.T) {
 		t.Fatalf("o Fascinar em Massa do catálogo não é uma habilidade de bardo de 2 PM: %+v", mass)
 	}
 	halved := engine.AbilityCostRules{Factors: map[string]engine.Ratio{"Bardo": {Num: 1, Den: 2}}}
-	if can, why := UseDecision(*mass, UseContext{CurrentPM: 1, Cost: halved}); !can {
+	if _, why := UseDecision(*mass, UseContext{CurrentPM: 1, Cost: halved}, Use{}); why != "" {
 		t.Errorf("sob a Inspiração, com 1 PM o Fascinar em Massa foi recusado: %s", why)
 	}
-	if can, _ := UseDecision(*mass, UseContext{CurrentPM: 1}); can {
+	if _, why := UseDecision(*mass, UseContext{CurrentPM: 1}, Use{}); why == "" {
 		t.Error("sem a metade, com 1 PM o Fascinar em Massa de 2 PM saiu")
 	}
 	headbutt := ActivationOf("class.lutador.cabecada", "")
-	if can, _ := UseDecision(*headbutt, UseContext{CurrentPM: 1, Cost: halved}); can {
+	if _, why := UseDecision(*headbutt, UseContext{CurrentPM: 1, Cost: halved}, Use{}); why == "" {
 		t.Error("a metade do bardo alcançou a Cabeçada do lutador")
 	}
 }

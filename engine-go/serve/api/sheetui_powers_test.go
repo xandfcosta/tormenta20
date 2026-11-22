@@ -471,8 +471,8 @@ func TestNobodyUsesAPowerThatIsNotTheirs(t *testing.T) {
 // batido — e o `chargeMp` tem PISO EM ZERO, então o sintoma não seria um erro:
 // seria o jogador usando o que não pode pagar e o PM indo a zero calado.
 //
-// As duas metades do mesmo buraco estão aqui, porque são dois caminhos
-// diferentes até a mesma comparação: o `UseDecision` e o `ScaledDecision`.
+// As duas metades do mesmo buraco estão aqui, porque são dois gestos — usar o
+// poder e entrar na postura — que passam pelo mesmo portão (`UseGate`).
 func TestWithoutMpNeitherThePowerNorTheStanceGoesThrough(t *testing.T) {
 	f, id := barbarianWithMpSpent(t, 5, 15)
 	choiceCom(t, f, id, `["class.barbaro.brado-assustador"]`, `[]`)

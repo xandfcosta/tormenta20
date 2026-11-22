@@ -53,13 +53,14 @@ type riderPart struct {
 func (d useDegrees) opensDialog() bool { return d.MaxSteps > 0 || d.CanDouble || d.AllyPrices != nil }
 
 // useDegreesFor resolve os degraus de um instantâneo com escala, ou nil.
-func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, cost engine.AbilityCostRules) *useDegrees {
+func useDegreesFor(dto sheet.CharacterDTO, spec book.Activation, gate character.UseGate) *useDegrees {
+	cost := gate.CostRules()
 	if spec.Kind != "instant" || spec.Scaling == nil {
 		return nil
 	}
 	d := &useDegrees{
 		StepPm: spec.Scaling.StepPm, StepLabel: spec.Scaling.StepLabel,
-		MaxSteps: character.PowerMaxSteps(dto, spec),
+		MaxSteps: gate.MaxSteps(spec),
 	}
 	d.Prices = book.UsePrices(spec, cost, d.MaxSteps, false)
 	if book.OffersAllyCut(spec, cost) {
@@ -193,15 +194,11 @@ type allyUse struct {
 }
 
 // allyUseFor é o uso com aliado como alvo, quando a habilidade o tem e a ficha corta nele; nulo no resto.
-func allyUseFor(spec book.Activation, context book.UseContext) *allyUse {
-	if book.CostIsVariable(spec) || !book.OffersAllyCut(spec, context.Cost) {
+func allyUseFor(spec book.Activation, gate character.UseGate) *allyUse {
+	if book.CostIsVariable(spec) || !book.OffersAllyCut(spec, gate.CostRules()) {
 		return nil
 	}
-	onAlly := context
-	onAlly.OnAlly = true
-	can, _ := book.UseDecision(spec, onAlly)
-	return &allyUse{
-		SelfPM: book.UsePrice(spec, context.Cost, book.Use{}), AllyPM: book.UsePrice(spec, context.Cost, book.Use{OnAlly: true}),
-		AllyCan: can,
-	}
+	selfPM, _ := gate.Decide(spec, book.Use{})
+	allyPM, refusal := gate.Decide(spec, book.Use{OnAlly: true})
+	return &allyUse{SelfPM: selfPM, AllyPM: allyPM, AllyCan: refusal == ""}
 }

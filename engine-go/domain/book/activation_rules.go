@@ -72,35 +72,43 @@ func ActivationPm(spec Activation) int {
 
 // ── a DECISÃO de usar ────────────────────────────────────────────────────────
 
-// UseDecision responde se o poder pode ser usado AGORA, e por que não.
+// UseDecision é a DECISÃO DE USAR: se `spec` pode ser usado AGORA desta forma (os degraus e o alvo do gesto), por
+// que não, e o PREÇO DO USO (ver `UsePrice`). A recusa vazia quer dizer que pode. É a decisão inteira — o
+// instantâneo, o degrau e a entrada na postura passam por ela, e a tela pergunta a mesma coisa que o gesto.
 //
 // A ORDEM das recusas importa: a razão mostrada é a PRIMEIRA que barra, então
 // "requer Fúria" aparece antes de "PM insuficiente" num poder que precisa das
 // duas coisas — e é a que a pessoa pode resolver primeiro.
-func UseDecision(spec Activation, context UseContext) (bool, string) {
+//
+//	price, refusal := book.UseDecision(frenesi, contexto, book.Use{}) // 2, "requer furia" fora da Fúria
+func UseDecision(spec Activation, context UseContext, use Use) (int, string) {
+	price := UsePrice(spec, context.Cost, use)
 	if CostIsVariable(spec) {
-		return false, "custo variável"
+		return price, "custo variável"
 	}
-	if context.OnAlly && !spec.AllyTarget {
-		return false, "não tem um aliado como alvo"
+	if use.OnAlly && !spec.AllyTarget {
+		return price, "não tem um aliado como alvo"
 	}
 	if spec.RequiresFlag != "" && !context.Flags[spec.RequiresFlag] {
-		return false, "requer " + spec.RequiresFlag
+		return price, "requer " + spec.RequiresFlag
 	}
 	switch ChargedScope(spec) {
 	case "scene":
 		if context.UsedThisScene >= 1 {
-			return false, "limite por cena atingido"
+			return price, "limite por cena atingido"
 		}
 	case "day":
 		if context.UsedToday >= 1 {
-			return false, "limite por dia atingido"
+			return price, "limite por dia atingido"
 		}
 	}
-	if UsePrice(spec, context.Cost, Use{OnAlly: context.OnAlly}) > context.CurrentPM {
-		return false, "PM insuficiente"
+	if use.Steps < 0 || use.Steps > context.MaxSteps {
+		return price, "o teto permite até " + writtenDegrees(context.MaxSteps)
 	}
-	return true, ""
+	if price > context.CurrentPM {
+		return price, "PM insuficiente"
+	}
+	return price, ""
 }
 
 // UseContext é o que a decisão precisa saber da ficha AGORA.
@@ -109,12 +117,13 @@ type UseContext struct {
 	// Cost são as regras do custo de habilidade da ficha (o Alquebrado, p394; a metade do Artista Completo, p45):
 	// a decisão confere o PM contra o preço que se cobra, e não contra o do catálogo.
 	Cost engine.AbilityCostRules
-	// OnAlly diz que o alvo deste uso é um aliado: o preço leva o corte da Caridade (p83), e a habilidade que não
-	// pode ter um aliado como alvo recusa.
-	OnAlly        bool
+	// MaxSteps, UsedThisScene e UsedToday são DESTA habilidade: o teto de degraus que o nível na classe abre
+	// (p40) e os usos já gastos.
+	MaxSteps      int
 	UsedThisScene int
 	UsedToday     int
-	Flags         map[string]bool
+	// Flags são as acesas na ficha — os condicionais ligados, as mesmas que o motor aplica nos números.
+	Flags map[string]bool
 }
 
 // ── a POSTURA de degraus ─────────────────────────────────────────────────────
@@ -160,18 +169,6 @@ func ScaledCost(spec Activation, steps int) int {
 		return ActivationPm(spec)
 	}
 	return spec.Scaling.BasePm + steps*spec.Scaling.StepPm
-}
-
-// ScaledDecision responde se dá para pagar esses degraus: dentro do teto do
-// nível, e com PM para o PREÇO DO USO (ver `UsePrice`).
-func ScaledDecision(spec Activation, use Use, max, currentPM int, rules engine.AbilityCostRules) (bool, string) {
-	if use.Steps < 0 || use.Steps > max {
-		return false, "o teto permite até " + writtenDegrees(max)
-	}
-	if UsePrice(spec, rules, use) > currentPM {
-		return false, "PM insuficiente"
-	}
-	return true, ""
 }
 
 // ScaledGrantModifiers são os modificadores que a concessão grava com os

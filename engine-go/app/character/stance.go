@@ -49,7 +49,7 @@ func (p Plays) EnterStance(
 	if !sheet.OwnsActivation(dto, *spec) {
 		return fmt.Errorf("%s: o personagem não tem este poder", spec.Name)
 	}
-	cost, err := scaledPrice(dto, *spec, book.Use{Steps: steps})
+	cost, err := decidedPrice(dto, *spec, book.Use{Steps: steps})
 	if err != nil {
 		return err
 	}
@@ -207,16 +207,9 @@ func (p Plays) UsePower(
 	if flag := book.DeclaredFlag(*spec); flag != "" {
 		return p.declare(ctx, dto, spec.Name, flag)
 	}
-	uses := PowerUses(dto)[spec.ID]
-	// A DECISÃO confere o PM contra o preço deste uso, com o alvo que o gesto diz (a Caridade, p83).
-	can, reason := book.UseDecision(*spec, book.UseContext{
-		CurrentPM: int(dto.ManaAvailable()), UsedThisScene: uses.Scene, UsedToday: uses.Day,
-		Flags: p.activeFlags(dto), Cost: sheet.AbilityCostRules(dto), OnAlly: choice.OnAlly,
-	})
-	if !can {
-		return fmt.Errorf("%s: %s", spec.Name, reason)
-	}
-	cost, err := scaledPrice(dto, *spec, book.Use{Steps: steps, OnAlly: choice.OnAlly})
+	// A DECISÃO INTEIRA, pelo mesmo portão da tela: flag, limite, teto de degraus e o PM para o preço deste uso,
+	// com o alvo que o gesto diz (a Caridade, p83).
+	cost, err := decidedPrice(dto, *spec, book.Use{Steps: steps, OnAlly: choice.OnAlly})
 	if err != nil {
 		return err
 	}
@@ -321,16 +314,6 @@ func stanceOfFlag(flag string) *book.Activation {
 		return nil
 	}
 	return book.ActivationOf("", stance.Name)
-}
-
-// activeFlags são as flags acesas agora, para a decisão de usar um poder que
-// depende de postura.
-func (p Plays) activeFlags(dto sheet.CharacterDTO) map[string]bool {
-	outside := map[string]bool{}
-	for _, s := range dto.Stances {
-		outside[s.Flag] = true
-	}
-	return outside
 }
 
 // grantedEffectIDs são os efeitos em curso que vieram das concessões da flag.

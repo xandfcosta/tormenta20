@@ -32,10 +32,10 @@ func TestTheAllyTargetedPaladinAbilitiesAreMarked(t *testing.T) {
 func TestTheScaledDecisionWeighsTheAllyCut(t *testing.T) {
 	courage := ActivationOf("class.paladino.julgamento-coragem", "")
 	charity := engine.AbilityCostRules{AllyCuts: map[string]int{"Paladino": -1}}
-	if can, _ := ScaledDecision(*courage, Use{}, 0, 1, charity); can {
+	if _, why := UseDecision(*courage, UseContext{CurrentPM: 1, Cost: charity}, Use{}); why == "" {
 		t.Error("com 1 PM a Coragem de 2 PM saiu no próprio paladino")
 	}
-	if can, why := ScaledDecision(*courage, Use{OnAlly: true}, 0, 1, charity); !can {
+	if _, why := UseDecision(*courage, UseContext{CurrentPM: 1, Cost: charity}, Use{OnAlly: true}); why != "" {
 		t.Errorf("com 1 PM a Coragem num aliado foi recusada: %s", why)
 	}
 }

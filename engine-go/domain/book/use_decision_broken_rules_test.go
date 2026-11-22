@@ -13,10 +13,10 @@ func TestTheUseDecisionWeighsTheBrokenIncrease(t *testing.T) {
 	if headbutt == nil || ActivationPm(*headbutt) != 2 {
 		t.Fatalf("a Cabeçada do catálogo não custa 2 PM: %+v", headbutt)
 	}
-	if can, why := UseDecision(*headbutt, UseContext{CurrentPM: 2}); !can {
+	if _, why := UseDecision(*headbutt, UseContext{CurrentPM: 2}, Use{}); why != "" {
 		t.Fatalf("com 2 PM a Cabeçada foi recusada: %s", why)
 	}
-	if can, why := UseDecision(*headbutt, UseContext{CurrentPM: 2, Cost: engine.AbilityCostRules{Increase: 1}}); can || why != "PM insuficiente" {
-		t.Errorf("Alquebrado com 2 PM a Cabeçada saiu (%v, %q); want recusada por PM insuficiente", can, why)
+	if _, why := UseDecision(*headbutt, UseContext{CurrentPM: 2, Cost: engine.AbilityCostRules{Increase: 1}}, Use{}); why != "PM insuficiente" {
+		t.Errorf("Alquebrado com 2 PM a Cabeçada saiu (recusa %q); want recusada por PM insuficiente", why)
 	}
 }
