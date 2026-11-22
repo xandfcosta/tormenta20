@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 1 de 3 de `RaceDefinitions` (race_defs.go).
+// Parte 1 de 4 de `RaceDefinitions` (race_defs.go).
 var raceDefinitionsPart01 = []RaceDefinition{
 	{
 		ID:               "humano",
@@ -14,6 +14,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "humano",
 				Name:        "+1 em Três Atributos Diferentes",
 				Description: "Filhos de Valkaria, humanos podem se destacar em qualquer caminho. Distribua +1 em três atributos diferentes (já aplicado na ficha).",
+				BookPage:    19,
 				UID:         "rac_xvpdlnv5av",
 			},
 			{
@@ -25,6 +26,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "humano",
 				Name:        "Versátil",
 				Description: "Você se torna treinado em duas perícias a sua escolha (não precisam ser da sua classe). Pode trocar uma dessas perícias por um poder geral a sua escolha.",
+				BookPage:    19,
 				UID:         "rac_r4izqcoo75",
 				Choice: &PowerChoice{
 					Kind:  "trained-or-one-power",
@@ -50,6 +52,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "anao",
 				Name:        "Conhecimento das Rochas",
 				Description: "Recebe visão no escuro e +2 em testes de Percepção e Sobrevivência realizados no subterrâneo.",
+				BookPage:    20,
 				UID:         "rac_b6rsjnvbzc",
 				Facts:       []Fact{{Category: "sense", Text: "Visão no escuro"}},
 				Modifiers: []Modifier{
@@ -72,6 +75,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "anao",
 				Name:        "Devagar e Sempre",
 				Description: "Seu deslocamento é 6m (em vez de 9m). Porém, seu deslocamento não é reduzido por uso de armadura ou excesso de carga.",
+				BookPage:    20,
 				UID:         "rac_rfij7r42uu",
 				Modifiers: []Modifier{
 					{
@@ -91,6 +95,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "anao",
 				Name:        "Duro como Pedra",
 				Description: "Você recebe +3 pontos de vida no 1º nível e +1 por nível seguinte.",
+				BookPage:    20,
 				UID:         "rac_trflpocluh",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "maxPv"}, Amount: 2, BonusType: "untyped"},
@@ -111,6 +116,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "anao",
 				Name:        "Tradição de Heredrimm",
 				Description: "Você é perito nas armas tradicionais anãs. Para você, todos os machados, martelos, marretas e picaretas são armas simples. Recebe +2 em ataques com essas armas.",
+				BookPage:    20,
 				UID:         "rac_6yvby3oao3",
 				Modifiers: []Modifier{
 					{
@@ -176,6 +182,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "dahllan",
 				Name:        "Amiga das Plantas",
 				Description: "Você pode lançar a magia Controlar Plantas (atributo-chave Sabedoria). Caso aprenda novamente essa magia, seu custo diminui em –1 PM.",
+				BookPage:    21,
 				UID:         "rac_zdkffv2kws",
 				Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 			},
@@ -185,6 +192,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "dahllan",
 				Name:        "Armadura de Allihanna",
 				Description: "Você pode gastar uma ação de movimento e 1 PM para transformar sua pele em casca de árvore, recebendo +2 na Defesa até o fim da cena.",
+				BookPage:    21,
 				UID:         "rac_z62ya34txk",
 			},
 			{
@@ -192,6 +200,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "dahllan",
 				Name:        "Empatia Selvagem",
 				Description: "Você pode se comunicar com animais por meio de linguagem corporal e vocalizações. Pode usar Adestramento para mudar atitude e persuasão com animais. Caso receba esta habilidade novamente, recebe +2 em Adestramento.",
+				BookPage:    21,
 				UID:         "rac_lzc3gcrbqm",
 				Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 			},
@@ -210,6 +219,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "elfo",
 				Name:        "Graça de Glórienn",
 				Description: "Seu deslocamento é 12m (em vez de 9m).",
+				BookPage:    22,
 				UID:         "rac_t5jpldgezj",
 			},
 			{
@@ -217,6 +227,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "elfo",
 				Name:        "Sangue Mágico",
 				Description: "Você recebe +1 ponto de mana por nível.",
+				BookPage:    22,
 				UID:         "rac_ci2yeskjol",
 				Modifiers: []Modifier{
 					{
@@ -232,6 +243,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "elfo",
 				Name:        "Sentidos Élficos",
 				Description: "Você recebe visão na penumbra e +2 em Misticismo e Percepção.",
+				BookPage:    22,
 				UID:         "rac_thyp2fbhlb",
 				Facts:       []Fact{{Category: "sense", Text: "Visão na penumbra"}},
 				Modifiers: []Modifier{
@@ -254,6 +266,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "goblin",
 				Name:        "Engenhoso",
 				Description: "Você não sofre penalidades em testes de perícia por não usar ferramentas. Se usar a ferramenta necessária, recebe +2 no teste de perícia.",
+				BookPage:    23,
 				UID:         "rac_mdfpptz3vo",
 				Unmodeled:   "não sofrer penalidade por não ter ferramenta: é prosa do mestre",
 				Modifiers: []Modifier{
@@ -278,6 +291,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "goblin",
 				Name:        "Espelunqueiro",
 				Description: "Você recebe visão no escuro e deslocamento de escalada igual ao seu deslocamento terrestre.",
+				BookPage:    23,
 				UID:         "rac_ijbtrkclx6",
 				Facts: []Fact{
 					{Category: "sense", Text: "Visão no escuro"},
@@ -301,6 +315,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "goblin",
 				Name:        "Peste Esguia",
 				Description: "Seu tamanho é Pequeno, mas seu deslocamento se mantém 9m.",
+				BookPage:    23,
 				UID:         "rac_vwvkbcnw3t",
 			},
 			{
@@ -309,6 +324,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "goblin",
 				Name:        "Rato das Ruas",
 				Description: "Você recebe +2 em Fortitude e sua recuperação de PV e PM nunca é inferior ao seu nível.",
+				BookPage:    23,
 				UID:         "rac_vonfvat6ok",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "expertise", Name: "Fortitude"}, Amount: 2, BonusType: "untyped"},
@@ -335,6 +351,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "lefou",
 				Name:        "+1 em Três Atributos Diferentes (exceto Carisma)",
 				Description: "Distribua +1 em três atributos diferentes, exceto Carisma (já aplicado na ficha).",
+				BookPage:    24,
 				UID:         "rac_oet5hty4e2",
 			},
 			{
@@ -346,6 +363,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "lefou",
 				Name:        "Cria da Tormenta",
 				Description: "Você é uma criatura do tipo monstro e recebe +5 em testes de resistência contra efeitos causados por lefeu e pela Tormenta.",
+				BookPage:    24,
 				UID:         "rac_jqrbr6pho5",
 				Modifiers: []Modifier{
 					{
@@ -361,6 +379,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "lefou",
 				Name:        "Deformidade",
 				Description: "Recebe +2 em duas perícias a sua escolha (contam como poder da Tormenta, exceto para perda de Carisma). Pode trocar um desses bônus por um poder da Tormenta a sua escolha.",
+				BookPage:    24,
 				UID:         "rac_fkjq7hg3b5",
 				Modifiers: []Modifier{
 					{
@@ -389,6 +408,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:        "minotauro",
 				Name:          "Chifres",
 				Description:   "Arma natural de chifres (dano 1d6, crítico x2, perfuração). Uma vez por rodada, ao usar agredir com outra arma, pode gastar 1 PM para fazer um ataque corpo a corpo extra com os chifres.",
+				BookPage:      25,
 				UID:           "rac_ufu4k272et",
 				NaturalWeapon: &NaturalWeapon{Name: "Chifres", Damage: "1d6", CritMult: 2, DamageType: "perfuracao", ExtraPM: 1},
 			},
@@ -397,6 +417,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "minotauro",
 				Name:        "Couro Rígido",
 				Description: "Sua pele é dura como a de um touro. Você recebe +1 na Defesa.",
+				BookPage:    25,
 				UID:         "rac_mbrhxx3gi4",
 				Modifiers: []Modifier{
 					{Target: ModifierTarget{Kind: "defense"}, Amount: 1, BonusType: "untyped", Note: "Couro Rígido"},
@@ -407,6 +428,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "minotauro",
 				Name:        "Faro",
 				Description: "Você tem olfato apurado. Contra inimigos em alcance curto que não possa perceber, não fica desprevenido e camuflagem total lhe causa apenas 20% de chance de falha.",
+				BookPage:    25,
 				UID:         "rac_zffbu4bjdi",
 				Unmodeled:   "é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 			},
@@ -415,6 +437,7 @@ var raceDefinitionsPart01 = []RaceDefinition{
 				RaceID:      "minotauro",
 				Name:        "Medo de Altura",
 				Description: "Se estiver adjacente a uma queda de 3m ou mais de altura (como um buraco ou penhasco), você fica abalado.",
+				BookPage:    25,
 				UID:         "rac_gwa5247uhv",
 				Unmodeled:   "fica abalado perto de queda de 3m, e quem liga a condição é o mestre: é prosa do mestre: o livro descreve o que acontece na mesa, e não um número",
 			},

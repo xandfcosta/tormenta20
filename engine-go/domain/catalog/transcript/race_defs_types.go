@@ -11,17 +11,19 @@ type RaceDefinition struct {
 }
 
 type RaceAbility struct {
-	ID          string               `json:"id"`
-	Modeled     []string             `json:"modeled,omitempty"`
-	RaceID      string               `json:"raceId"`
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	UID         string               `json:"uid"`
-	Unmodeled   string               `json:"unmodeled,omitempty"`
-	Facts       []Fact               `json:"facts,omitempty"`
-	Modifiers   []Modifier           `json:"modifiers,omitempty"`
-	Variants    []RaceAbilityVariant `json:"variants,omitempty"`
-	Choice      *PowerChoice         `json:"choice,omitempty"`
+	ID          string   `json:"id"`
+	Modeled     []string `json:"modeled,omitempty"`
+	RaceID      string   `json:"raceId"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	// BookPage é a página onde o livro imprime a habilidade, que nem sempre é a que abre a raça.
+	BookPage  int                  `json:"bookPage"`
+	UID       string               `json:"uid"`
+	Unmodeled string               `json:"unmodeled,omitempty"`
+	Facts     []Fact               `json:"facts,omitempty"`
+	Modifiers []Modifier           `json:"modifiers,omitempty"`
+	Variants  []RaceAbilityVariant `json:"variants,omitempty"`
+	Choice    *PowerChoice         `json:"choice,omitempty"`
 	// Ancestry diz que a habilidade é de UMA ascendência — a Luz Sagrada do
 	// aggelus, as Sombras Profanas do sulfure (p31, ALE-505).
 	Ancestry      string         `json:"ancestry,omitempty"`

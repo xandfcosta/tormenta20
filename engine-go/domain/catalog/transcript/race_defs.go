@@ -6,4 +6,5 @@ var RaceDefinitions = concat(
 	raceDefinitionsPart01,
 	raceDefinitionsPart02,
 	raceDefinitionsPart03,
+	raceDefinitionsPart04,
 )
