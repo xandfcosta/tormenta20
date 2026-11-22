@@ -233,9 +233,10 @@ o `ClassPower.HasEngineEffect`, ao lado do tipo: o modificador e os campos que o
 motor lê sem modificador. Essa lista TEM guarda — o
 `TestEveryClassPowerFieldSaysWhetherItIsAnEngineEffect` obriga campo novo do tipo
 a dizer de que lado fica. O gesto se liga ao verbete como a ficha o
-liga (`book.ActivationOf`: pelo id, pelo nome ou pelo nome sem o degrau), porque
-cada catálogo grafa o id do seu jeito; juntar só pelo id contava o gesto de raça
-como só nota. O `cmd/audit/pointers` lista arquivos
+liga (`book.ActivationOf`: pelo id, ou pelo nome sem o degrau, preferindo a
+ativação da mesma classe — a regra única do dono mora em
+`domain/book/activation_owner.go`), porque cada catálogo grafa o id do seu jeito;
+juntar só pelo id contava o gesto de raça como só nota. O `cmd/audit/pointers` lista arquivos
 citados em comentário de teste que sumiram — candidatos, não veredito.
 
 ### O que vale para todo auditor

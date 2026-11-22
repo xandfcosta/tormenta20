@@ -31,7 +31,7 @@ func RerollOffersFor(dto sheet.CharacterDTO, skill string) []book.SkillSpendOffe
 func rerollOffersOf(dto sheet.CharacterDTO, target book.SkillSpendTarget) []book.SkillSpendOffer {
 	owned, index := []book.Activation{}, sheet.OwnedIndexOf(dto)
 	for _, a := range book.Activations() {
-		if a.SkillSpend != nil && a.SkillSpend.Kind == book.SpendReroll && index.Has(a) {
+		if a.SkillSpend != nil && a.SkillSpend.Kind == book.SpendReroll && index.Owns(a) {
 			owned = append(owned, a)
 		}
 	}

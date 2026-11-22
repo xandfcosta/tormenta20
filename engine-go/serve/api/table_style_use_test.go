@@ -129,3 +129,14 @@ func TestAmbidextrousInTwoClassesIsOneUse(t *testing.T) {
 		t.Errorf("as Ações têm %d Usar de Ambidestria, e o gesto é um", got)
 	}
 }
+
+// O NOME NÃO ATRAVESSA CLASSES (ALE-678): o guerreiro com o Ambidestria dele não é dono do Ambidestria do caçador,
+// e a rota recusa o gesto — o nome igual ligava os dois.
+func TestTheWarriorDoesNotOwnTheHuntersAmbidexterity(t *testing.T) {
+	f, id, _ := styleOnTurn(t, "ataque-poderoso", false, "espada-longa", "adaga")
+	seedClasse(t, f.s, id, "Guerreiro", 1)
+	seedPowerChoices(t, f.s, id, `["class.guerreiro.ambidestria"]`, "{}")
+	if refusal := usesTheStyle(t, f, id, "class.cacador.ambidestria"); !strings.Contains(refusal, "não tem este poder") {
+		t.Errorf("o guerreiro usou o Ambidestria do caçador (recusa %q); want recusado por não ter o poder", refusal)
+	}
+}

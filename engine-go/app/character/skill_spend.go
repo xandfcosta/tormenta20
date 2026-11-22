@@ -37,7 +37,7 @@ func PrepareSkillSpends(dto sheet.CharacterDTO, computed engine.ComputedSheet) S
 	prepared := SkillSpends{computed: computed}
 	index := sheet.OwnedIndexOf(dto)
 	for _, a := range book.Activations() {
-		if a.SkillSpend != nil && index.Has(a) {
+		if a.SkillSpend != nil && index.Owns(a) {
 			prepared.owned = append(prepared.owned, a)
 		}
 	}
