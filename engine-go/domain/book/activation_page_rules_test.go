@@ -10,7 +10,8 @@ func TestNoActivationRepeatsItsOwnersPage(t *testing.T) {
 	measured := 0
 	for _, a := range transcribedActivations() {
 		measured++
-		page := ownerPage(a)
+		entry, _ := entryOf(a)
+		page := entry.page
 		switch {
 		case page > 0 && a.BookPage != 0:
 			t.Errorf("a ativação %s escreve p%d, e o dono dela já diz p%d: apague a página da ativação", a.ID, a.BookPage, page)

@@ -45,7 +45,7 @@ func TestTheScaledDecisionWeighsTheAllyCut(t *testing.T) {
 // `class.paladino.julgamento-divino-coragem` no poder; sem o nome, o corte da classe nunca a alcançaria.
 func TestTheActivationClassFallsBackToTheName(t *testing.T) {
 	courage := ActivationOf("class.paladino.julgamento-coragem", "")
-	if got := activationClass(*courage); got != "Paladino" {
-		t.Errorf("a Coragem é da classe %q; want Paladino", got)
+	if entry, _ := entryOf(*courage); entry.class != "Paladino" {
+		t.Errorf("a Coragem é da classe %q; want Paladino", entry.class)
 	}
 }

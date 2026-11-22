@@ -175,8 +175,8 @@ type PowerGrant struct {
 }
 
 // Activations é o registro, com a página HERDADA do dono: o poder de classe,
-// o geral, o item, o poder do deus, achado pela regra única do dono (ver
-// `ownerPage`). A ativação escreve página só quando nenhum dono tem.
+// o geral, o item, o poder do deus, a habilidade de raça — o verbete que o
+// `entryOf` acha. A ativação escreve página só quando nenhum verbete tem.
 //
 // Ele é montado UMA vez: o registro é embutido e não muda, e decodificá-lo a
 // cada pergunta custava a maior parte de cada página da ficha. Quem chama
@@ -188,8 +188,8 @@ func Activations() []Activation {
 var activationsOnce = sync.OnceValue(func() []Activation {
 	list := transcribedActivations()
 	for i, a := range list {
-		if page := ownerPage(a); page > 0 {
-			list[i].BookPage = page
+		if entry, _ := entryOf(a); entry.page > 0 {
+			list[i].BookPage = entry.page
 		}
 	}
 	return list
