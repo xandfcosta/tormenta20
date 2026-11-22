@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"slices"
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 )
@@ -135,43 +136,25 @@ func activationsOfItem(item ItemDTO, entry book.Item) []OwnedPower {
 	}}
 }
 
-// OwnsActivation diz se a ficha tem o poder daquela ativação.
-//
-// PELO ID OU PELO NOME, e o nome não é folga: cada catálogo escreve o mesmo
-// poder com uma grafia — a Armadura de Allihanna é `dahllan-armadura-de-
-// allihanna` no de raças e `race.dahllan.armadura-de-allihanna` no de
-// ativações, e o Dom da Verdade é `divino.dom-da-verdade` contra
-// `deus.khalmyr.dom-da-verdade`. É o mesmo elo que o `book.ActivationOf` usa na
-// ida, e o que o guarda do poder único de origem já prende.
+// OwnsActivation diz se a ficha tem o poder daquela ativação — pelo id ou pelo nome, pela regra única do
+// `book` (ver `book.OwnerIndex`).
 func OwnsActivation(dto CharacterDTO, spec book.Activation) bool {
-	return OwnedIndexOf(dto).Has(spec)
+	return OwnedIndexOf(dto).Owns(spec)
 }
 
-// OwnedIndex são os poderes da ficha montados UMA vez, para perguntar várias
-// ativações em seguida. Remontar o `OwnedPowers` a cada pergunta, num laço
-// sobre o registro de ativações e outro sobre as perícias, custava ~46% da
+// OwnedIndexOf são os poderes da ficha montados UMA vez, para perguntar várias ativações em seguida. Remontar o
+// `OwnedPowers` a cada pergunta, num laço sobre o registro de ativações e outro sobre as perícias, custava ~46% da
 // página de Perícias (ALE-520).
 //
 //	owned := sheet.OwnedIndexOf(dto)
-//	for _, a := range book.Activations() { if owned.Has(a) { … } }
-type OwnedIndex struct {
-	ids, names map[string]bool
-}
-
-func OwnedIndexOf(dto CharacterDTO) OwnedIndex {
+//	for _, a := range book.Activations() { if owned.Owns(a) { … } }
+func OwnedIndexOf(dto CharacterDTO) book.OwnerIndex {
 	powers := OwnedPowers(dto)
-	index := OwnedIndex{ids: make(map[string]bool, len(powers)), names: make(map[string]bool, len(powers))}
+	refs := make([]book.PowerRef, 0, len(powers))
 	for _, owned := range powers {
-		index.ids[owned.ID] = true
-		index.names[owned.Name] = true
+		refs = append(refs, book.PowerRef{ID: owned.ID, Name: owned.Name})
 	}
-	return index
-}
-
-// Has diz se a ficha tem o poder da ativação — pelo id ou pelo nome, como o
-// `OwnsActivation` explica.
-func (o OwnedIndex) Has(spec book.Activation) bool {
-	return o.ids[spec.ID] || o.names[spec.Name]
+	return book.OwnerIndexOf(refs)
 }
 
 // borrowedAbilitiesOf são as habilidades que a Memória Póstuma tomou de outra
@@ -389,7 +372,7 @@ func ownsChosenClassPower(
 //
 //	sheet.OwnsPower(dto, engine.WildTierPowerID(engine.WildTierNormal))
 func OwnsPower(dto CharacterDTO, id string) bool {
-	return OwnedIndexOf(dto).ids[id]
+	return slices.ContainsFunc(OwnedPowers(dto), func(owned OwnedPower) bool { return owned.ID == id })
 }
 
 // godPowerOf são os poderes que a devoção concede, guardados pelo NOME.

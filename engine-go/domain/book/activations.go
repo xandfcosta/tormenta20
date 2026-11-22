@@ -175,23 +175,6 @@ type PowerGrant struct {
 	Modifiers []engine.Modifier `json:"modifiers"`
 }
 
-var (
-	ativacoesUmaVez  sync.Once
-	ativacoesPorID   map[string]Activation
-	ativacoesPorNome map[string]Activation
-)
-
-func loadTheActivations() {
-	ativacoesUmaVez.Do(func() {
-		ativacoesPorID = map[string]Activation{}
-		ativacoesPorNome = map[string]Activation{}
-		for _, a := range Activations() {
-			ativacoesPorID[a.ID] = a
-			ativacoesPorNome[a.Name] = a
-		}
-	})
-}
-
 // Activations é o registro, com a página HERDADA do dono: o poder de classe,
 // o geral, o item, o poder do deus. A ativação escreve página só quando o dono
 // não tem (ALE-495).
@@ -260,45 +243,4 @@ func divinePowerPage(god, name string) int {
 		}
 	}
 	return 0
-}
-
-// ActivationOf acha a ativação de um poder pelo ID e, se falhar, pelo NOME.
-//
-// A queda para o nome não é preguiça: os poderes de classe seguem a convenção
-// `class.<classe>.<slug>` e casam por id, mas as habilidades de raça e os
-// benefícios de origem têm ids próprios (`humano-versatil`,
-// `origin-acolito-...`) que o registro de ativações não usa.
-//
-// E há o caso dos DEGRAUS: "Inspiração +1" e "Fúria +3" são linhas de mesma
-// postura, e o nome delas traz o sufixo do degrau. Sem tirar o sufixo, cada
-// degrau cairia como passiva silenciosa em vez de resolver para a postura.
-func ActivationOf(id, name string) *Activation {
-	loadTheActivations()
-	if spec, found := ativacoesPorID[id]; found && id != "" {
-		return &spec
-	}
-	if spec, found := ativacoesPorNome[name]; found {
-		return &spec
-	}
-	if noStep := suffixStepSem(name); noStep != name {
-		if spec, found := ativacoesPorNome[noStep]; found {
-			return &spec
-		}
-	}
-	return nil
-}
-
-// suffixStepSem tira o " +N" do fim de "Inspiração +2".
-func suffixStepSem(name string) string {
-	if len(name) < 4 {
-		return name
-	}
-	end := len(name)
-	for end > 0 && name[end-1] >= '0' && name[end-1] <= '9' {
-		end--
-	}
-	if end == len(name) || end < 2 || name[end-1] != '+' || name[end-2] != ' ' {
-		return name
-	}
-	return name[:end-2]
 }

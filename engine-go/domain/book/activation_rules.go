@@ -3,7 +3,6 @@ package book
 import (
 	"encoding/json"
 	"strconv"
-	"sync"
 
 	"t20engine/domain/engine"
 )
@@ -372,35 +371,6 @@ func SceneStartGrants() []Activation {
 	}
 	return outside
 }
-
-// activationClass é a classe da habilidade, quando ela é poder de classe, e vazia quando não é: é por ela que o
-// fator de uma classe a alcança (a metade do Artista Completo nas de bardo, p45).
-//
-// Pelo id do poder ou, quando o id da ativação é outro, pelo NOME — a ligação que a ficha faz entre a ativação e
-// o dono. Quinze ativações de classe só se ligam pelo nome (a Coragem, a Libertação…).
-func activationClass(spec Activation) string {
-	if class := ClassOfPower(spec.ID); class != "" {
-		return class
-	}
-	return classByPowerName()[spec.Name]
-}
-
-// classByPowerName é a classe de cada nome de poder de classe. Um nome que duas classes usam fica VAZIO: escolher
-// uma delas dependeria da ordem do mapa, e a resposta mudaria de uma execução para a outra.
-var classByPowerName = sync.OnceValue(func() map[string]string {
-	byName := map[string]string{}
-	ambiguous := map[string]bool{}
-	for _, power := range ClassPowers() {
-		if class, seen := byName[power.Name]; seen && class != power.ClassName {
-			ambiguous[power.Name] = true
-		}
-		byName[power.Name] = power.ClassName
-	}
-	for name := range ambiguous {
-		byName[name] = ""
-	}
-	return byName
-})
 
 // ClassOfPower é a classe do poder de classe com esse id, e vazia quando não é um.
 //

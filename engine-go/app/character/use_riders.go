@@ -20,7 +20,7 @@ type UseChoice struct {
 func RidersOf(dto sheet.CharacterDTO, spec book.Activation) []book.Activation {
 	out, owned := []book.Activation{}, sheet.OwnedIndexOf(dto)
 	for _, a := range book.Activations() {
-		if a.Rider != nil && a.Rider.On == spec.ID && owned.Has(a) {
+		if a.Rider != nil && a.Rider.On == spec.ID && owned.Owns(a) {
 			out = append(out, a)
 		}
 	}
