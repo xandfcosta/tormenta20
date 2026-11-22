@@ -183,7 +183,9 @@ func powerRowFor(
 	if spec.Kind == "stance" || spec.Kind == "instant" {
 		row.Name = spec.Name
 	}
-	if spec.BookPage > 0 {
+	// A PÁGINA É A DO PODER DA FICHA, e a da ativação só a substitui quando ele não tem (a raça, a origem): uma
+	// ativação serve a mais de um poder — a Esquiva Sobrenatural do bárbaro, p42, e a do ladino, p74.
+	if row.Page == 0 {
 		row.Page = spec.BookPage
 	}
 	if flag := book.DeclaredFlag(*spec); flag != "" && !declarationOf(&row, dto, flag) {

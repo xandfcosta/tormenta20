@@ -143,7 +143,7 @@ var classPowersPart05 = []ClassPower{
 		ClassName:   "Caçador",
 		Name:        "Companheiro Animal",
 		Description: "Recebe animal companheiro inicial. Evolui para veterano L7 e mestre L15. Tipos: ajudante, assassino, atirador, combatente, fortão, guardião, perseguidor ou montaria.",
-		BookPage:    61,
+		BookPage:    51,
 		UID:         "pwr_yro6zihoil",
 		Unmodeled:   "é parceiro, e a regra de parceiros é da p260 (ALE-425)",
 		Prerequisites: []Prerequisite{

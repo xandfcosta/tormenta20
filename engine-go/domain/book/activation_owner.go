@@ -1,13 +1,14 @@
 package book
 
 import (
+	"slices"
 	"strings"
 	"sync"
 )
 
 // O DONO DE UMA ATIVAÇÃO — qual poder a concede — se diz AQUI, e só aqui: a ida (`ActivationOf`), a volta da ficha
-// (`OwnerIndex`) e a classe que o preço do uso lê (`activationClass`) perguntam a mesma coisa, e três respostas
-// escritas à mão já discordaram (ALE-678).
+// (`OwnerIndex`), a classe que o preço do uso lê (`activationClass`) e a página que a ativação herda (`ownerPage`)
+// perguntam a mesma coisa, e respostas escritas à mão para cada uma já discordaram.
 //
 // PELO ID, ou PELO NOME. O nome é a ponte entre catálogos que grafam o mesmo poder de jeitos diferentes: a
 // Armadura de Allihanna é `dahllan-armadura-de-allihanna` no de raças e `race.dahllan.armadura-de-allihanna` no
@@ -39,7 +40,7 @@ func ActivationOf(id, name string) *Activation {
 	// DE TRÁS PARA A FRENTE: com dois candidatos válidos (a Coragem Total de cada deus), o último do registro é o
 	// que o índice por nome devolvia, e trocar a escolha trocaria o endereço do gesto na tela.
 	for i := len(candidates) - 1; i >= 0; i-- {
-		if registry.nameLinks(candidates[i], id) {
+		if nameLinks(candidates[i], id) {
 			return &candidates[i]
 		}
 	}
@@ -71,9 +72,8 @@ func (o OwnerIndex) Owns(spec Activation) bool {
 	if o.ids[spec.ID] {
 		return true
 	}
-	registry := activationRegistry()
 	for _, power := range o.byName[withoutStepSuffix(spec.Name)] {
-		if registry.nameLinks(spec, power.ID) {
+		if nameLinks(spec, power.ID) {
 			return true
 		}
 	}
@@ -98,6 +98,72 @@ func activationClass(spec Activation) string {
 	return ""
 }
 
+// ownerPage é a página do verbete do DONO da ativação — o poder de classe, o geral, o do deus, o item —, achado
+// pela regra deste arquivo: pelo id, ou pelo nome preferindo a mesma procedência. Zero quando nenhum dono tem
+// página (a raça, a origem): só aí a ativação escreve a sua.
+//
+// Quando a ativação serve a dois donos (a Esquiva Sobrenatural do bárbaro, p42, e a do ladino, p74), a página dela
+// é a do dono da mesma procedência; a ficha mostra a do poder que a pessoa tem.
+//
+//	ownerPage(*ActivationOf("class.paladino.julgamento-coragem", "")) // 83: a Coragem do paladino, ligada pelo nome
+func ownerPage(spec Activation) int {
+	owners := pagedOwners()
+	if page := owners.byID[spec.ID]; page > 0 {
+		return page
+	}
+	across := 0
+	for _, owner := range owners.byName[withoutStepSuffix(spec.Name)] {
+		switch {
+		case sameScope(spec.ID, owner.id):
+			return owner.page
+		case across == 0 && nameLinks(spec, owner.id):
+			across = owner.page
+		}
+	}
+	return across
+}
+
+// pagedOwner é um poder que tem página no livro.
+type pagedOwner struct {
+	id, name string
+	page     int
+}
+
+// pagedOwnerIndex são os poderes com página: por id, e por nome sem o sufixo de degrau, em ordem de id para a
+// escolha não depender da ordem de um `map`.
+type pagedOwnerIndex struct {
+	byID   map[string]int
+	byName map[string][]pagedOwner
+}
+
+// pagedOwners junta os catálogos que dão página a um poder. O id do item leva o `item.` do registro de ativações.
+var pagedOwners = sync.OnceValue(func() pagedOwnerIndex {
+	var owners []pagedOwner
+	for _, power := range ClassPowers() {
+		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
+	}
+	for _, power := range GeneralPowers() {
+		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
+	}
+	for _, power := range DivinePowers() {
+		owners = append(owners, pagedOwner{power.ID, power.Name, power.BookPage})
+	}
+	for _, item := range Catalogs().Items {
+		owners = append(owners, pagedOwner{"item." + item.ID, item.Name, item.BookPage})
+	}
+	slices.SortFunc(owners, func(a, b pagedOwner) int { return strings.Compare(a.id, b.id) })
+	index := pagedOwnerIndex{byID: map[string]int{}, byName: map[string][]pagedOwner{}}
+	for _, owner := range owners {
+		if owner.page == 0 {
+			continue
+		}
+		index.byID[owner.id] = owner.page
+		key := withoutStepSuffix(owner.name)
+		index.byName[key] = append(index.byName[key], owner)
+	}
+	return index
+})
+
 // classPowersByName são os poderes de classe por nome sem o sufixo de degrau.
 var classPowersByName = sync.OnceValue(func() map[string][]ClassPower {
 	byName := map[string][]ClassPower{}
@@ -112,24 +178,32 @@ var classPowersByName = sync.OnceValue(func() map[string][]ClassPower {
 type registryIndexes struct {
 	byID   map[string]Activation
 	byName map[string][]Activation
-	// scopeNames diz que a procedência tem uma ativação com o nome: "paladino|Julgamento Divino: Coragem".
-	scopeNames map[string]bool
-}
-
-// nameLinks diz se o NOME liga a ativação ao poder de id `powerID`: na mesma procedência, ou fora dela quando a
-// procedência do poder não tem ativação nenhuma com aquele nome — ver o cabeçalho deste arquivo.
-func (r registryIndexes) nameLinks(spec Activation, powerID string) bool {
-	return sameScope(spec.ID, powerID) || !r.scopeNames[scopeOf(powerID)+"|"+spec.Name]
 }
 
 var activationRegistry = sync.OnceValue(func() registryIndexes {
-	registry := registryIndexes{byID: map[string]Activation{}, byName: map[string][]Activation{}, scopeNames: map[string]bool{}}
+	registry := registryIndexes{byID: map[string]Activation{}, byName: map[string][]Activation{}}
 	for _, a := range Activations() {
 		registry.byID[a.ID] = a
 		registry.byName[a.Name] = append(registry.byName[a.Name], a)
-		registry.scopeNames[scopeOf(a.ID)+"|"+a.Name] = true
 	}
 	return registry
+})
+
+// nameLinks diz se o NOME liga a ativação ao poder de id `powerID`: na mesma procedência, ou fora dela quando a
+// procedência do poder não tem ativação nenhuma com aquele nome — ver o cabeçalho deste arquivo.
+func nameLinks(spec Activation, powerID string) bool {
+	return sameScope(spec.ID, powerID) || !activationScopeNames()[scopeOf(powerID)+"|"+spec.Name]
+}
+
+// activationScopeNames diz que a procedência tem uma ativação com o nome: "paladino|Julgamento Divino: Coragem".
+// Ele lê o registro TRANSCRITO, e não o `Activations`: a página herdada do dono pergunta pela regra do nome, e o
+// registro com a página herdada ainda não existe nessa hora.
+var activationScopeNames = sync.OnceValue(func() map[string]bool {
+	names := map[string]bool{}
+	for _, a := range transcribedActivations() {
+		names[scopeOf(a.ID)+"|"+a.Name] = true
+	}
+	return names
 })
 
 // scopeOf é a procedência de um id: a classe de `class.<classe>.<slug>`, ou vazia para tudo o que é de fora das

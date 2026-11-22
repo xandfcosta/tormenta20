@@ -34,6 +34,12 @@ func barbaro(t *testing.T, level int64) (sceneFixture, int64) {
 // escolhesse estaria medindo um personagem que não pode existir (ALE-355).
 func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int64) {
 	t.Helper()
+	return classCharacterWithMpSpent(t, "Bárbaro", level, pmSpent)
+}
+
+// classCharacterWithMpSpent é a mesma ficha do `barbarianWithMpSpent`, com todos os níveis na classe dada.
+func classCharacterWithMpSpent(t *testing.T, class string, level, pmSpent int64) (sceneFixture, int64) {
+	t.Helper()
 	f := newSceneFixture(t)
 	id, err := f.s.sceneCore().Queries().CreateCharacter(context.Background(), sqlcgen.CreateCharacterParams{
 		OwnerId: f.player, Name: "Furioso", Origin: "batedor", Level: level,
@@ -45,7 +51,7 @@ func barbarianWithMpSpent(t *testing.T, level, pmSpent int64) (sceneFixture, int
 	if err != nil {
 		t.Fatalf("semear o bárbaro: %v", err)
 	}
-	seedClasse(t, f.s, id, "Bárbaro", level)
+	seedClasse(t, f.s, id, class, level)
 	arrangePools(t, f.s, id, func(pools sheet.Pools) (sheet.Pools, error) {
 		pools.HpCurrent, pools.MpCurrent = pools.HpMax, pools.MpMax-pmSpent
 		return pools, nil
