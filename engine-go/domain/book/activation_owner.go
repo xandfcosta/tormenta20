@@ -7,8 +7,8 @@ import (
 )
 
 // O DONO DE UMA ATIVAÇÃO — qual poder a concede — se diz AQUI, e só aqui: a ida (`ActivationOf`), a volta da ficha
-// (`OwnerIndex`) e a classe que o preço do uso lê (`activationClass`) perguntam a mesma coisa, e três respostas
-// escritas à mão já discordaram (ALE-678).
+// (`OwnerIndex`), a classe que o preço do uso lê (`activationClass`) e a página que a ativação herda (`ownerPage`)
+// perguntam a mesma coisa, e respostas escritas à mão para cada uma já discordaram.
 //
 // PELO ID, ou PELO NOME. O nome é a ponte entre catálogos que grafam o mesmo poder de jeitos diferentes: a
 // Armadura de Allihanna é `dahllan-armadura-de-allihanna` no de raças e `race.dahllan.armadura-de-allihanna` no
