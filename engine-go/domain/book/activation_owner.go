@@ -105,7 +105,7 @@ func activationClass(spec Activation) string {
 // Quando a ativação serve a dois donos (a Esquiva Sobrenatural do bárbaro, p42, e a do ladino, p74), a página dela
 // é a do dono da mesma procedência; a ficha mostra a do poder que a pessoa tem.
 //
-//	ownerPage(julgamentoCoragem) // 83, da Coragem do paladino, ligada pelo nome
+//	ownerPage(*ActivationOf("class.paladino.julgamento-coragem", "")) // 83: a Coragem do paladino, ligada pelo nome
 func ownerPage(spec Activation) int {
 	owners := pagedOwners()
 	if page := owners.byID[spec.ID]; page > 0 {
