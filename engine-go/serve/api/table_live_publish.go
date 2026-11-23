@@ -98,10 +98,9 @@ func (tr tableRules) publishWhatIsLeft(ctx context.Context, sessionID int64) {
 // liveCtx é quem pediu, em que mesa, com que papel. Resolvido uma vez por
 // requisição.
 type liveCtx struct {
-	UserID     int64
-	campaignID int64
-	sessionID  int64
-	Role       string
+	UserID    int64
+	sessionID int64
+	Role      string
 }
 
 // publishSessionState transmite o estado às duas salas por papel. Ela não grava

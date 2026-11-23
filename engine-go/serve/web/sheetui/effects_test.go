@@ -16,11 +16,6 @@ import (
 // O que eles prendem é o que separa este painel de uma lista bonita: a condição
 // MOVE os números, a mesa é avisada, e a fronteira de cada gesto é do servidor.
 
-type responseRecorderLike struct {
-	Code int
-	Body string
-}
-
 // A CONDIÇÃO AVISA A MESA AO VIVO.
 //
 // O motor deriva Defesa e perícias da condição, então uma aplicada sem aviso faz

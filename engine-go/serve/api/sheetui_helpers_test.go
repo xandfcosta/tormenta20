@@ -35,16 +35,6 @@ func improvementScreenDialog(screen, name string) string {
 	return screen[start : start+end]
 }
 
-var panelTitle = map[string]string{
-	"proficiencies": "Proficiências",
-	"combat":        "Combate",
-	"expertises":    "Perícias",
-	"conditionals":  "Efeitos",
-	"spells":        "Grimório",
-	"bag":           "Mochila",
-	"abilities":     "Poderes",
-}
-
 // powerPanel corta a LISTA, deixando de fora os diálogos que vêm depois
 // dela — o de escolher poderes mostra o catálogo inteiro de opções.
 func powerPanel(screen string) string {

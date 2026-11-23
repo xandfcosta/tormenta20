@@ -125,6 +125,10 @@ jobs:
       - name: Dead code
         run: ./engine-go/scripts/deadcode.sh
 
+      # Tipo, variável, constante e campo que nada usa. O portão local roda o mesmo script.
+      - name: Unused
+        run: ./engine-go/scripts/unused.sh
+
       - name: Build
         run: pnpm build
 

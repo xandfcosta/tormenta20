@@ -89,6 +89,7 @@ else
 fi
 run_step "go vet" bash -c 'cd engine-go && go vet ./...'
 run_step "deadcode" ./engine-go/scripts/deadcode.sh
+run_step "sem uso" ./engine-go/scripts/unused.sh
 run_step "go test" bash -c 'cd engine-go && go test -count=1 ./...'
 run_step "build" bash -c "cd engine-go && go build -o '$LOGS/t20-api' ./cmd/api"
 run_step "typecheck" bash -c 'cd engine-go && ./node_modules/.bin/tsc --noEmit -p tsconfig.json'
