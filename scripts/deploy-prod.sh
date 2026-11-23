@@ -211,8 +211,12 @@ HAD_PREVIOUS=""
 [ -f "$BINARY" ] && HAD_PREVIOUS="yes"
 
 if ! DB_BACKUP="$(take_backup)"; then
-  # Sem backup a troca não acontece. A versão que estava no ar volta.
-  [ -n "$HAD_PREVIOUS" ] && [ -n "$RUNNING_PID" ] && start_and_wait || true
+  # Sem backup a troca não acontece, e a versão que estava no ar tenta voltar. A frase diz o que de fato
+  # aconteceu: um `|| true` aqui fazia o deploy dizer "a versão anterior voltou" com a mesa fora do ar.
+  if [ -z "$HAD_PREVIOUS" ] || [ -z "$RUNNING_PID" ]; then
+    die "o backup falhou, e nada foi trocado. A mesa não estava no ar antes do deploy"
+  fi
+  start_and_wait || die "o backup falhou, e a versão anterior NÃO voltou: a mesa está FORA DO AR. Veja $LOG_FILE"
   die "o backup falhou, e a versão anterior voltou"
 fi
 say "$DB_BACKUP"
