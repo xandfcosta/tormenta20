@@ -150,22 +150,6 @@ func TestTheGodPowerIsInTheCollection(t *testing.T) {
 	}
 }
 
-// powerRowOf é a linha daquele poder na lista — o `ds-action-row` que tem o
-// nome. Afirmar sobre a tela inteira casaria o crachá de um poder com o nome
-// de outro.
-func powerRowOf(screen, name string) string {
-	at := strings.Index(screen, ">"+name+"</span>")
-	if at < 0 {
-		return ""
-	}
-	start := strings.LastIndex(screen[:at], `<div class="ds-row ds-action-row"`)
-	end := strings.Index(screen[at:], "</div>")
-	if start < 0 || end < 0 {
-		return ""
-	}
-	return screen[start : at+end]
-}
-
 // actionListOnScreen é uma lista de uma aba da ficha — "Ações", "Passivas ·
 // 7", "Em vigor" — com as linhas como a pessoa as lê.
 type actionListOnScreen struct {

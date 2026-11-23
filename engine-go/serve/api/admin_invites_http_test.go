@@ -199,11 +199,6 @@ func countUsers(t *testing.T, s *Server) int {
 	return countRows(t, s, "SELECT COUNT(*) FROM users")
 }
 
-func countOpenInvites(t *testing.T, s *Server) int {
-	t.Helper()
-	return countRows(t, s, "SELECT COUNT(*) FROM account_invite_links WHERE revokedAt IS NULL")
-}
-
 func countRows(t *testing.T, s *Server, query string) int {
 	t.Helper()
 	var count int

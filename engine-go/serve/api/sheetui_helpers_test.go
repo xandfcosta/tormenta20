@@ -18,17 +18,6 @@ import (
 // do Datastar que diz por que a recusa é CONTEÚDO e não status.
 var sceneAlert = regexp.MustCompile(`role="alert"[^>]*>([^<]*)</p>`)
 
-func actionsSlice(screen string) string {
-	start := strings.Index(screen, ">Ações</h3>")
-	if start < 0 {
-		return ""
-	}
-	end := strings.Index(screen[start:], "Passivas ·")
-	if end < 0 {
-		return screen[start:]
-	}
-	return screen[start : start+end]
-}
 func hasKey(m map[string]bool, key string) bool {
 	_, found := m[key]
 	return found
@@ -44,29 +33,6 @@ func improvementScreenDialog(screen, name string) string {
 		return screen[start:]
 	}
 	return screen[start : start+end]
-}
-
-// itemScreenSheet recorta o diálogo de UM item pelo rótulo dele.
-//
-// O CORTE É NO DIÁLOGO SEGUINTE, e não num `</div></div>`. A mochila desenha um
-// `role="dialog"` por item, então o vizinho é a fronteira confiável; o par de
-// fechamentos casava com o PRIMEIRO bloco interno — o de equipar — e devolvia a
-// cabeça do diálogo com cara de diálogo inteiro.
-//
-// Isso fazia toda asserção de AUSÊNCIA passar de graça: o que estivesse depois
-// do bloco de equipar não estava no recorte, então "não contém" era verdade por
-// truncagem. Medido ao acrescentar o bloco de encantos, que nasce no fim
-// (ALE-416).
-func itemScreenSheet(screen, name string) string {
-	start := strings.Index(screen, `aria-label="`+name+`"`)
-	if start < 0 {
-		return ""
-	}
-	rest := screen[start:]
-	if next := strings.Index(rest[1:], `role="dialog"`); next >= 0 {
-		return rest[:next+1]
-	}
-	return rest
 }
 
 var panelTitle = map[string]string{
@@ -104,26 +70,6 @@ func sceneRefusal(body string) string {
 		return ""
 	}
 	return html.UnescapeString(found[1])
-}
-
-// screenSaved recorta só a GRADE, e o recorte não é preciosismo: o nome de
-// um item aparece também nos crachás da tira e em CADA diálogo de ficha de
-// item, que são desenhados logo depois do painel. Procurar na tela inteira
-// acharia justamente o que o filtro escondeu, e o teste passaria dizendo o
-// contrário do que mede.
-//
-// O corte vai da grade até o fim da SEÇÃO, que é onde o painel acaba e os
-// diálogos começam.
-func screenSaved(screen string) string {
-	start := strings.Index(screen, "grid-cols-3")
-	if start < 0 {
-		return ""
-	}
-	end := strings.Index(screen[start:], "</section>")
-	if end < 0 {
-		return screen[start:]
-	}
-	return screen[start : start+end]
 }
 
 // hpTintOf devolve o degrau da escada com que a barra de PV foi pintada na
