@@ -235,12 +235,6 @@ func TestTheWieldedWeaponIsTheFirstStandardAction(t *testing.T) {
 	}
 }
 
-// passivaDoBarbaro é uma passiva que o bárbaro de nível 6 TEM — as dele são a
-// Redução de Dano e o Instinto Selvagem. Escrita aqui e não no corpo do caso
-// porque ela é o que o controle e a asserção comparam, e duas grafias fariam o
-// controle provar a existência de uma coisa e a asserção procurar outra.
-const passivaDoBarbaro = "Redução de Dano"
-
 // recorte encurta um pedaço de HTML para caber numa mensagem de falha sem
 // despejar a cena inteira no terminal.
 func recorte(s string) string {
