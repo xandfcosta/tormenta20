@@ -792,43 +792,6 @@ func resolveStack(contribs []Contribution) AggregatedStat {
 	return AggregatedStat{Total: total, Contributions: kept, Dropped: dropped}
 }
 
-// ConditionalDisplayInput é uma linha de efeito condicional entregue ao
-// `ResolveConditionalDisplay` (as linhas de uma postura ativa).
-type ConditionalDisplayInput struct {
-	Target    ModifierTarget `json:"target"`
-	BonusType string         `json:"bonusType"`
-	Amount    int            `json:"amount"`
-}
-
-type ConditionalDisplayRow struct {
-	Target ModifierTarget `json:"target"`
-	Amount int            `json:"amount"`
-}
-
-// ResolveConditionalDisplay resolve as linhas de uma postura ativa para exibir:
-// agrupa por identidade de alvo, roda a mesma resolução por `bonusType`, e
-// devolve só as linhas {alvo, valor} que sobreviveram.
-func ResolveConditionalDisplay(effects []ConditionalDisplayInput) []ConditionalDisplayRow {
-	order := []string{}
-	targets := map[string]ModifierTarget{}
-	byKey := map[string][]Contribution{}
-	for _, e := range effects {
-		key := targetKey(e.Target)
-		if _, ok := byKey[key]; !ok {
-			order = append(order, key)
-			targets[key] = e.Target
-		}
-		byKey[key] = append(byKey[key], Contribution{BonusType: e.BonusType, Amount: e.Amount})
-	}
-	kept := []ConditionalDisplayRow{}
-	for _, key := range order {
-		for _, c := range resolveStack(byKey[key]).Contributions {
-			kept = append(kept, ConditionalDisplayRow{Target: targets[key], Amount: c.Amount})
-		}
-	}
-	return kept
-}
-
 // firstNonEmpty devolve a primeira não vazia.
 func firstNonEmpty(a, b string) string {
 	if a != "" {

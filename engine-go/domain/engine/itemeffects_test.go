@@ -399,48 +399,6 @@ func TestASwitchedOnFlagTargetRaisesTheFlag(t *testing.T) {
 	}
 }
 
-// ─── resolveConditionalDisplay ────────────────────────────────────────
-
-func TestResolveConditionalDisplayTierDedupe(t *testing.T) {
-	furyTargets := []ModifierTarget{
-		{K: "attack", Scope: "all"},
-		{K: "damage", Scope: "all"},
-		{K: "expertise", Name: "Fortitude"},
-		{K: "expertise", Name: "Vontade"},
-	}
-	tier := func(amount int) []ConditionalDisplayInput {
-		out := []ConditionalDisplayInput{}
-		for _, tg := range furyTargets {
-			out = append(out, ConditionalDisplayInput{Target: tg, BonusType: "morale", Amount: amount})
-		}
-		return out
-	}
-	kept := ResolveConditionalDisplay(append(tier(2), tier(3)...))
-	if len(kept) != 4 {
-		t.Fatalf("kept = %d, want 4", len(kept))
-	}
-	for _, row := range kept {
-		if row.Amount != 3 {
-			t.Errorf("row amount = %d, want 3 (only +3 tier survives)", row.Amount)
-		}
-	}
-}
-
-func TestResolveConditionalDisplayUntypedStacks(t *testing.T) {
-	kept := ResolveConditionalDisplay([]ConditionalDisplayInput{
-		{Target: defenseTarget, BonusType: "morale", Amount: 2},
-		{Target: defenseTarget, BonusType: "untyped", Amount: 1},
-		{Target: defenseTarget, BonusType: "untyped", Amount: 1},
-	})
-	sum := 0
-	for _, r := range kept {
-		sum += r.Amount
-	}
-	if len(kept) != 3 || sum != 4 {
-		t.Errorf("kept=%d sum=%d, want 3 rows summing 4", len(kept), sum)
-	}
-}
-
 // ─── statFor ──────────────────────────────────────────────────────────
 
 // Não há caso próprio para "lista vazia produz lista vazia" nem para "alvo
