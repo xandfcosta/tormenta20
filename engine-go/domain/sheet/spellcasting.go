@@ -48,14 +48,10 @@ func RequiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
 	return choices["Arcanista"].Path == "mago"
 }
 
-// HighestCastableCircle é o maior círculo que o personagem alcança.
-//
-// O piso é o círculo da PRÓPRIA magia, e essa é a regra que não se adivinha: uma
-// magia concedida por poder (Totem Espiritual, p42) é conjurável por quem não
-// tem classe nenhuma de conjurador — no círculo dela, e só nele. Sem o piso, um
-// bárbaro com Totem não conseguiria conjurar a magia que o poder lhe deu.
-func HighestCastableCircle(classes []ClassDTO, spellCircle int) int {
-	best := spellCircle
+// HighestCastableCircle é o maior círculo que estas classes alcançam, 0 sem classe que conjure. O
+// círculo de uma magia é do `SpellCircleReach`, que escolhe as classes e põe o piso.
+func HighestCastableCircle(classes []ClassDTO) int {
+	best := 0
 	progressions := book.SpellProgressions()
 	for _, entry := range classes {
 		prog, casts := progressions[entry.ClassName]
@@ -82,8 +78,9 @@ func HighestCastableCircle(classes []ClassDTO, spellCircle int) int {
 //     círculo nas arcanas e o 1º nas divinas;
 //   - sem nenhuma delas, o das classes que conjuram: um poder ensinou a magia de fora da lista (o Aspecto da
 //     Primavera do druida, p61, aprende encantamento "arcana ou divina");
-//   - sem classe que conjure, o da própria magia, que veio de fora das classes — o mesmo piso do
-//     `HighestCastableCircle`.
+//   - sem classe que conjure, o da própria magia, que veio de fora das classes: a magia concedida por
+//     poder (Totem Espiritual, p42) se conjura no círculo dela, e sem esse piso o bárbaro com Totem não
+//     conjuraria a magia que o poder lhe deu.
 //
 // Magia desconhecida alcança o círculo 0.
 //
@@ -94,25 +91,14 @@ func SpellCircleReach(dto CharacterDTO, spellID string) int {
 		return 0
 	}
 	casting := CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
-	classes := classesNamed(dto.Classes, casting)
+	classes := slices.DeleteFunc(slices.Clone(dto.Classes), func(c ClassDTO) bool { return !slices.Contains(casting, c.ClassName) })
 	if len(classes) == 0 {
 		classes = slices.DeleteFunc(slices.Clone(dto.Classes), func(c ClassDTO) bool { return !IsCasterClass(c.ClassName) })
 	}
 	if len(classes) == 0 {
 		return spell.Circle
 	}
-	return HighestCastableCircle(classes, 0)
-}
-
-// classesNamed são as entradas de `classes` cujo nome está em `names`.
-func classesNamed(classes []ClassDTO, names []string) []ClassDTO {
-	out := []ClassDTO{}
-	for _, c := range classes {
-		if slices.Contains(names, c.ClassName) {
-			out = append(out, c)
-		}
-	}
-	return out
+	return HighestCastableCircle(classes)
 }
 
 // CanCastCircleOf diz se a ficha alcança o círculo da magia — "uma magia que

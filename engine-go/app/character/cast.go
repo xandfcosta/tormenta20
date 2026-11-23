@@ -2,6 +2,7 @@ package character
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -31,7 +32,7 @@ func (p Plays) LearnSpell(ctx context.Context, dto sheet.CharacterDTO, catalogSp
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
 	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
-		return fmt.Errorf("%s", refusal)
+		return errors.New(refusal)
 	}
 	if _, err := p.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
 		Characterid: dto.ID, Catalogspellid: catalogSpellID,
@@ -107,7 +108,7 @@ func (p Plays) Cast(
 	// A MAGIA GRAVADA ANTES DA REGRA fica no grimório, e conjurar recusa: o grimório
 	// não perde nada sozinho, e quem joga a esquece e aprende outra.
 	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
-		return fmt.Errorf("%s", refusal)
+		return errors.New(refusal)
 	}
 	if sheet.RequiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
 		return fmt.Errorf("prepare a magia antes de conjurá-la")

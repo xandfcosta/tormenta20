@@ -21,26 +21,26 @@ func TestSpellBasePmCostTable(t *testing.T) {
 	}
 }
 
-func TestTheReachableCircleRisesWithTheLevelAndHasAFloorInTheSpellItself(t *testing.T) {
+func TestTheReachableCircleRisesWithTheLevel(t *testing.T) {
 	cases := []struct {
 		name    string
 		classes []ClassDTO
-		spell   int
 		want    int
 	}{
-		{"arcanista de 1º alcança o 1º", []ClassDTO{{ClassName: "Arcanista", Level: 1}}, 1, 1},
-		{"arcanista de 4º ainda está no 1º", []ClassDTO{{ClassName: "Arcanista", Level: 4}}, 1, 1},
-		{"arcanista de 5º abre o 2º", []ClassDTO{{ClassName: "Arcanista", Level: 5}}, 1, 2},
-		{"arcanista de 17º chega ao 5º", []ClassDTO{{ClassName: "Arcanista", Level: 17}}, 1, 5},
-		{"bardo de 20º para no 4º", []ClassDTO{{ClassName: "Bardo", Level: 20}}, 1, 4},
-		{"guerreiro não conjura, e o piso é a magia", []ClassDTO{{ClassName: "Guerreiro", Level: 20}}, 2, 2},
+		{"arcanista de 1º alcança o 1º", []ClassDTO{{ClassName: "Arcanista", Level: 1}}, 1},
+		{"arcanista de 4º ainda está no 1º", []ClassDTO{{ClassName: "Arcanista", Level: 4}}, 1},
+		{"arcanista de 5º abre o 2º", []ClassDTO{{ClassName: "Arcanista", Level: 5}}, 2},
+		{"arcanista de 17º chega ao 5º", []ClassDTO{{ClassName: "Arcanista", Level: 17}}, 5},
+		{"bardo de 20º para no 4º", []ClassDTO{{ClassName: "Bardo", Level: 20}}, 4},
+		// O piso da magia de quem não conjura é do `SpellCircleReach` (ver o teste dele).
+		{"guerreiro não conjura", []ClassDTO{{ClassName: "Guerreiro", Level: 20}}, 0},
 		{"multiclasse fica com o MAIOR", []ClassDTO{
 			{ClassName: "Guerreiro", Level: 10}, {ClassName: "Arcanista", Level: 9},
-		}, 1, 3},
+		}, 3},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := HighestCastableCircle(tc.classes, tc.spell); got != tc.want {
+			if got := HighestCastableCircle(tc.classes); got != tc.want {
 				t.Errorf("alcançou o %dº, quer o %dº", got, tc.want)
 			}
 		})
