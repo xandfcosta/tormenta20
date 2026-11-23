@@ -128,13 +128,6 @@ func brushActsOnSquare(v BoardView) string {
 	)
 }
 
-// takesEraser é o traço da BORRACHA: os dois botões apagam.
-//
-// Ela usa a rota sem espécie (`terreno/limpar`), então o `$tool` não entra na
-// conta: pela rota com espécie, a borracha apagaria só o terreno da ferramenta
-// escolhida e pareceria não funcionar.
-func takesEraser(v BoardView) string { return takesBrush(v, pincelApaga) }
-
 // prendeOMenuDoNavegador é o `contextmenu` das camadas que usam o botão direito.
 //
 // Sem ele o menu do navegador abre no primeiro quadrado e o traço morre ali —

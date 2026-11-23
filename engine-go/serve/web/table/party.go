@@ -125,23 +125,3 @@ const markedTokensSignal = "marked_tokens"
 // markedMax é o teto do grupo, e ele é o teto da MESA: 50 combatentes
 // (`live`). Uma lista maior que isso não saiu de um laço sobre este tabuleiro.
 const markedMax = 50
-
-// markedTokens lê os ids do sinal.
-func markedTokens(r *http.Request) ([]string, error) {
-	var signals struct {
-		Marked string `json:"marked_tokens"`
-	}
-	if err := datastar.ReadSignals(r, &signals); err != nil {
-		return nil, fmt.Errorf("as peças marcadas não vieram: %w", err)
-	}
-	var ids []string
-	for _, id := range strings.Split(signals.Marked, ",") {
-		if id != "" {
-			ids = append(ids, id)
-		}
-	}
-	if len(ids) > markedMax {
-		return nil, fmt.Errorf("o grupo tem %d peças e a mesa cabe %d", len(ids), markedMax)
-	}
-	return ids, nil
-}

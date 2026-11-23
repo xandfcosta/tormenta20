@@ -11,7 +11,6 @@ import (
 
 	"t20engine/app"
 	"t20engine/domain/live"
-	"t20engine/infra/db/sqlcgen"
 	"t20engine/serve/web/routes"
 )
 
@@ -39,11 +38,6 @@ func (s Scene) RoutesSession(r chi.Router) {
 	r.Patch(sessionPattern, s.patchesTheSession)
 	r.Delete(sessionPattern, s.deletesTheSession)
 	r.Post(sessionPattern+"/combate/reiniciar", s.restartsTheCombat)
-}
-
-// commandSession relê a linha, que é onde o ciclo mora.
-func commandSession(st Scene, c commandCtx) (sqlcgen.Session, error) {
-	return st.deps.Queries().GetSession(c.R.Context(), c.SessionID)
 }
 
 // statusPatch é o corpo do `PATCH`, e os campos são PONTEIRO de propósito: só o
