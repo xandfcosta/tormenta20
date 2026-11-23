@@ -4,7 +4,10 @@
 #
 #   pnpm ci:local              # tudo, com o e2e
 #   pnpm ci:local --sem-e2e    # para iterar
-#   bash scripts/ci-local.sh   # em worktree: o pnpm recusa o `node_modules` em symlink
+#   bash scripts/ci-local.sh   # o mesmo, sem passar pelo `pnpm` para chamar o script
+#
+# Em worktree, o `node_modules` tem de ser de verdade (`pnpm install --frozen-lockfile`), e não um link para o do
+# checkout principal: o passo do lockfile roda o `pnpm`, e ele recusa `node_modules` em symlink.
 #
 # Cada passo dá o próprio veredito, e um que falha não impede os outros: uma cadeia com `&&` para no
 # primeiro e deixa o resto parecendo aprovado. Por isso também os binários são chamados direto, como nos
