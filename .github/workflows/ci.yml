@@ -121,6 +121,10 @@ jobs:
         run: go test ./...
         working-directory: engine-go
 
+      # Função que nada alcança, nem o app nem os testes. O portão local roda o mesmo script.
+      - name: Dead code
+        run: ./engine-go/scripts/deadcode.sh
+
       - name: Build
         run: pnpm build
 
