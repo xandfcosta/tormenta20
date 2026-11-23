@@ -48,6 +48,7 @@ func TestEveryModifierFieldSurvivesTheCatalogJSON(t *testing.T) {
 		From:              "melhoria-reforcada",
 		StacksWith:        []string{"class.arcanista.mestre-em-escola"},
 		StacksWithAll:     true,
+		RaisesItem:        true,
 	}
 	// O CONTROLE: o caso preenche TODOS os campos. Sem ele, um campo novo
 	// nasceria zerado dos dois lados e o round-trip passaria sobre o nada.

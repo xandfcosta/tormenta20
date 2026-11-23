@@ -111,11 +111,12 @@ var itemsPart10 = []Item{
 		Equip:    "either",
 		Modifiers: []Modifier{
 			{
-				Target:    ModifierTarget{Kind: "defense"},
-				Amount:    1,
-				BonusType: "enhancement",
-				Note:      "+1 Defesa",
-				Condition: &ModifierCondition{Kind: "vested"},
+				Target:     ModifierTarget{Kind: "defense"},
+				Amount:     1,
+				BonusType:  "enhancement",
+				Note:       "+1 Defesa",
+				Condition:  &ModifierCondition{Kind: "vested"},
+				RaisesItem: true,
 			},
 			{
 				Target:    ModifierTarget{Kind: "armorPenalty"},
