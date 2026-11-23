@@ -278,7 +278,8 @@ func (s Scene) LoadFrom(
 	if s.mastersTheCharacter(ctx, row, userID) {
 		offerEnchants(v.Bag.Sheets, dto)
 	}
-	// UMA conta do motor para os DOIS painéis que a leem.
+	// UMA conta do motor para os DOIS painéis que a leem. Sem catálogo primado não há conta, e os painéis ficam
+	// vazios em vez de mostrar zeros: um zero é um valor plausível, e o jogador agiria sobre ele.
 	if sheet, cards, ok := s.sheetForPanels(dto); ok {
 		v.Combat = panelForCombat(sheet, cards, isCaster(sheet), dto)
 		v.SpellCasting = spellCastingOf(sheet, mainTradition(dto))

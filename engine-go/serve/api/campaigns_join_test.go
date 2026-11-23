@@ -198,15 +198,6 @@ func TestADeadInviteBecomesASentenceAndNotABrokenPage(t *testing.T) {
 	}
 }
 
-func (s *Server) authUserPorID(t *testing.T, id int64) AuthUser {
-	t.Helper()
-	u, err := s.queries.GetUserByID(context.Background(), id)
-	if err != nil {
-		t.Fatalf("usuário: %v", err)
-	}
-	return s.accountRules().authUser(u)
-}
-
 // ehAdmin responde a pergunta que a cena faz por parâmetro, para a bancada não
 // ter de montar um `AuthUser` só para ler um booleano.
 //

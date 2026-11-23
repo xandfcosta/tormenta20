@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -57,15 +56,6 @@ func sendRaw(t *testing.T, s *Server, method, path, body, authorization string) 
 	rec := httptest.NewRecorder()
 	s.Router().ServeHTTP(rec, req)
 	return rec
-}
-
-func jsonField(t *testing.T, rec *httptest.ResponseRecorder, field string) any {
-	t.Helper()
-	var payload map[string]any
-	if err := json.Unmarshal(rec.Body.Bytes(), &payload); err != nil {
-		t.Fatalf("resposta não é JSON (%s): %v", rec.Body.String(), err)
-	}
-	return payload[field]
 }
 
 func TestRequireAuthRejectsMissingAndBrokenCredentials(t *testing.T) {

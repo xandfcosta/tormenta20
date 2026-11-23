@@ -34,35 +34,9 @@ func WriteJSON(w http.ResponseWriter, status int, body any) {
 }
 
 // WriteError emite o envelope mínimo: `{"statusCode","message"}`. Quando a falha
-// também tem detalhe por campo, quem responde é o `WriteFieldError`.
+// também tem detalhe por campo, quem responde é o `WriteValidationError`.
 func WriteError(w http.ResponseWriter, status int, message string) {
 	WriteJSON(w, status, map[string]any{"statusCode": status, "message": message})
-}
-
-// WriteFieldError emite o envelope de validação inteiro, para o handler que já
-// tem a mensagem e o detalhe na mão e não tem erro de domínio para embrulhar.
-//
-// Sem ele a forma rica só seria alcançável por um `*wire.FieldError`, incômodo
-// de montar na linha — e aí o handler escreve o mapa à mão e o envelope diverge.
-func WriteFieldError(w http.ResponseWriter, status int, message string, fields wire.FieldErrorMap) {
-	WriteJSON(w, status, map[string]any{
-		"statusCode":  status,
-		"error":       http.StatusText(status),
-		"message":     message,
-		"fieldErrors": fields,
-	})
-}
-
-// WriteDomainError é a ÚNICA costura por onde um handler traduz o par
-// `(status, erro)` de uma regra: um `*wire.FieldError` vira o envelope de
-// validação com a mensagem dele; qualquer outro vira `{message}` no status dado.
-func WriteDomainError(w http.ResponseWriter, status int, err error) {
-	var fe *wire.FieldError
-	if errors.As(err, &fe) {
-		WriteFieldError(w, fe.Status(), fe.Message(), fe.Fields())
-		return
-	}
-	WriteError(w, status, err.Error())
 }
 
 // maxBodyBytes é o teto de um corpo de requisição. Um megabyte é folgado para
@@ -90,7 +64,7 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, dst any) bool {
 	return true
 }
 
-// WriteValidationError emite o envelope de validação para o caso simples.
+// WriteValidationError emite o envelope de validação, com as recusas por campo.
 func WriteValidationError(w http.ResponseWriter, fields wire.FieldErrorMap) {
 	WriteJSON(w, http.StatusBadRequest, map[string]any{
 		"statusCode":  http.StatusBadRequest,

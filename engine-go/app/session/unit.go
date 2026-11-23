@@ -58,15 +58,6 @@ type Unit struct {
 	AfterCommit func(install func())
 }
 
-// UnitFrom devolve a unidade que o contexto carrega, se houver.
-//
-// Ela existe para o store do TABULEIRO, que mora noutro pacote e precisa saber
-// duas coisas da unidade aberta: por onde gravar e quando instalar na memória.
-func UnitFrom(ctx context.Context) (Unit, bool) {
-	open, ok := ctx.Value(unitKey{}).(Unit)
-	return open, ok
-}
-
 // Units abre a unidade de trabalho. Quem implementa é o hospedeiro, que é quem
 // sabe montar os adaptadores ligados a uma transação.
 //

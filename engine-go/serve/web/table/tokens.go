@@ -146,9 +146,6 @@ func escolhidosDosSinais(r *http.Request) (board.EntrySelection, error) {
 // As expressões que o navegador roda. Elas moram aqui e não no `.templ` para o
 // desenho ficar legível — é a mesma divisão do `takesBrush`.
 
-// listaDeIDs escreve os ids do jeito que o sinal os guarda.
-func listaDeIDs(ids []string) string { return strings.Join(ids, ",") }
-
 // dialogSheets lê no DOM os ids das fichas que ainda não têm peça.
 //
 // LER O DIÁLOGO em vez de escrever os ids no botão não é preferência de estilo:

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"t20engine/domain/engine"
 	"testing"
 
 	"golang.org/x/net/html"
@@ -159,13 +158,6 @@ func shortTag(tag string) string {
 		return tag[:160] + "…"
 	}
 	return tag
-}
-func squaresAt(pairs ...[2]int) []engine.Square {
-	qs := make([]engine.Square, len(pairs))
-	for i, p := range pairs {
-		qs[i] = engine.Square{X: p[0], Y: p[1]}
-	}
-	return qs
 }
 
 // responseDraft extrai o rascunho do quadro de sinais do SSE.

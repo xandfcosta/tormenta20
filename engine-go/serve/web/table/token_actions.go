@@ -266,48 +266,6 @@ func (s Scene) nextNameForTheLine(ctx context.Context, sessionID int64, label st
 	return live.NextInstanceLabelAmong(used, label), nil
 }
 
-// addsACopyOfTheLine põe na fila outra linha igual à dada, e devolve a que
-// nasceu.
-//
-// O PV ATUAL vira o MÁXIMO da nova, e não o máximo da original: o segundo zumbi
-// chega inteiro, não com os 12 de 130 que o primeiro levou de porrada. Quem
-// quisesse o contrário estaria pedindo "sangra junto", que é o outro verbo.
-//
-// As CONDIÇÕES ficam para trás pela mesma razão: caído e sangrando são estado de
-// combate do primeiro, e o que entra agora entra de pé.
-//
-// A linha nova é achada por DIFERENÇA e nunca pelo último da lista: o `AddEntry`
-// ORDENA a fila por iniciativa depois de inserir, então a recém-chegada pode
-// pousar em qualquer posição. Pegar `Initiative[len-1]` daria a de menor
-// iniciativa da mesa, e daria certo por acaso sempre que o zumbi fosse lento.
-func (s Scene) addsACopyOfTheLine(ctx context.Context, sessionID int64, template live.InitiativeEntry) (*live.InitiativeEntry, error) {
-	before := map[string]bool{}
-	state, err := s.deps.Sessions().State(ctx, sessionID)
-	if err != nil {
-		return nil, err
-	}
-	for i := range state.Initiative {
-		before[state.Initiative[i].ID] = true
-	}
-	nova := template
-	nova.ID = ""
-	nova.Conditions = nil
-	if template.HpMax != nil {
-		full := live.DerefOr(template.HpMax, 0)
-		nova.HpCurrent, nova.HpMax = &full, &full
-	}
-	after, err := s.deps.Sessions().AddInitiativeEntry(ctx, sessionID, nova)
-	if err != nil {
-		return nil, err
-	}
-	for i := range after.Initiative {
-		if !before[after.Initiative[i].ID] {
-			return &after.Initiative[i], nil
-		}
-	}
-	return nil, fmt.Errorf("a linha de %s não entrou na fila", template.Label)
-}
-
 // wasWhereForTokenBack desfaz o último pouso.
 //
 // A memória mora na PEÇA e não na tela: quem precisa desfazer pode ter

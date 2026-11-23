@@ -8,14 +8,6 @@ package board
 
 import "t20engine/domain/live"
 
-func labels(st *live.SessionRuntimeState) []string {
-	out := make([]string, len(st.Initiative))
-	for i, e := range st.Initiative {
-		out[i] = e.Label
-	}
-	return out
-}
-
 func npc(label string, init int) live.InitiativeEntry {
 	return live.InitiativeEntry{Label: label, Initiative: init, Type: "npc"}
 }
