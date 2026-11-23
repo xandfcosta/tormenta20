@@ -73,8 +73,8 @@ func validateCatalogRefs(sf seedFile) error {
 }
 
 // catalogoDaSeed são as listas de nomes contra as quais o seed é conferido.
-// Magia e item não entram aqui: eles são procurados por id, e o `catalog` já
-// tem o `LookupSpell` e o `LookupItem`.
+// Magia e item não entram aqui: eles são procurados por id, no `book.SpellByID`
+// e no `catalog.LookupItem`.
 type catalogoDaSeed struct {
 	lists map[string][]string
 }
@@ -110,13 +110,22 @@ func carregaOCatalogo() (catalogoDaSeed, error) {
 	return catalogoDaSeed{lists: lists}, nil
 }
 
+// spellIDsOfTheBook são os ids das magias do livro, para a sugestão de vizinho.
+func spellIDsOfTheBook() []string {
+	ids := []string{}
+	for _, spell := range book.Catalogs().Spells {
+		ids = append(ids, spell.ID)
+	}
+	return ids
+}
+
 func (c catalogoDaSeed) confereUmPersonagem(where string, ch seedCharacter) []referenciaQuebrada {
 	var broken []referenciaQuebrada
 	for _, spell := range ch.Spells {
-		if _, ok := catalog.LookupSpell(spell.ID); !ok {
+		if _, ok := book.SpellByID(spell.ID); !ok {
 			broken = append(broken, referenciaQuebrada{
 				where: where + ", spells[].id", value: spell.ID, catalog: "magias",
-				neighbor: oVizinho(spell.ID, catalog.SpellIDs()),
+				neighbor: oVizinho(spell.ID, spellIDsOfTheBook()),
 			})
 		}
 	}

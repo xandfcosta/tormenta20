@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
@@ -398,7 +399,7 @@ func (v sheetVitals) StabilizeBleeding(ctx context.Context, charID int64) error 
 // do nome até hoje. Consertar aquilo é mexer no que o motor carrega, e é outra
 // fatia.
 func spellLabel(catalogID string) string {
-	if spell, known := catalog.LookupSpell(catalogID); known && spell.Name != "" {
+	if spell, known := book.SpellByID(catalogID); known && spell.Name != "" {
 		return spell.Name
 	}
 	return catalogID

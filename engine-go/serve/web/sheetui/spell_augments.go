@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
 )
 
@@ -44,13 +43,12 @@ type augmentRow struct {
 // augmentRowsOf traduz os aprimoramentos da magia e os poderes da ficha que são
 // aprimoramento (p131), trancando os fora de alcance e montando os gestos que se
 // apagam entre si.
-func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell catalog.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow {
-	fromBook := spellOfBook(spellID)
+func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow {
 	rows := make([]augmentRow, 0, len(spell.Augments))
 	for i, a := range spell.Augments {
 		row := augmentRow{
 			Signal: augmentSignal(i), PM: a.PmCost, Stacks: a.Kind != "muda",
-			Description: augmentDescription(spellID, i),
+			Description: a.Description,
 			Exclusive:   a.Exclusive, Cantrip: a.Cantrip,
 		}
 		// A MARCA DE TRADIÇÃO vem antes do círculo: o círculo promete que o aprimoramento chega num nível, e o
@@ -69,7 +67,7 @@ func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell catalog.Spell, 
 		if !slices.ContainsFunc(owned, func(p sheet.OwnedPower) bool { return p.ID == power.PowerID }) {
 			continue
 		}
-		bar := book.PowerAugmentBar(power.PowerID, fromBook)
+		bar := book.PowerAugmentBar(power.PowerID, spell)
 		rows = append(rows, augmentRow{
 			Signal: powerAugmentSignals[power.PowerID], PM: power.Augment.PmCost, Stacks: power.Augment.Kind != "muda",
 			Description: power.Name + ": " + power.Augment.Description,
@@ -124,19 +122,6 @@ func clearSignals(signals []string, own string) string {
 		}
 	}
 	return expr
-}
-
-// augmentDescription lê o texto do aprimoramento do catálogo cru.
-//
-// O `catalog.Augment` do Go é um subconjunto deliberado e não carrega a
-// descrição — mas a tela precisa dela, senão o jogador escolhe entre "1 PM" e
-// "1 PM" sem saber o que cada um faz.
-func augmentDescription(spellID string, index int) string {
-	fromBook := spellOfBook(spellID)
-	if index < len(fromBook.Augments) {
-		return fromBook.Augments[index].Description
-	}
-	return ""
 }
 
 // augmentSignal é o sinal que guarda a pilha de um aprimoramento.

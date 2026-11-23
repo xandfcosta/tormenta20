@@ -221,7 +221,7 @@ var classOnlyCasts = map[string]func(SpellOnTheSheet) bool{
 }
 
 // CastsAs diz se a ficha lança a magia como a marca "Apenas Arcanos / Divinos / Druidas" de um aprimoramento
-// pede (`catalog.Augment.ClassOnly`, p187 e p197). Sem marca, sim; com uma marca que o mapa não conhece, não —
+// pede (`book.SpellAugment.ClassOnly`, p187 e p197). Sem marca, sim; com uma marca que o mapa não conhece, não —
 // e o `TestEveryClassOnlyMarkIsUnderstood` reprova a marca nova antes de ela chegar aqui.
 //
 //	sheet.CasterOf(clerigo).Spell("luz").CastsAs("arcanos") // false: a Luz do clérigo é divina

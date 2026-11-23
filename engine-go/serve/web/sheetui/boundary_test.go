@@ -33,7 +33,7 @@ var permitidos = map[string]bool{
 	// direção continua legal: quem importa é quem desenha depois.
 	"t20engine/app/character":    true,
 	"t20engine/domain/book":      true, // o catálogo TIPADO: poder, origem, deus, condição, ativação
-	"t20engine/domain/catalog":   true, // ver a nota abaixo — é o LookupSpell, não o Resource
+	"t20engine/domain/catalog":   true, // ver a nota abaixo — só o teste dos rótulos
 	"t20engine/infra/db/sqlcgen": true, // as linhas do banco, pelo `Queries` da porta
 	"t20engine/domain/engine":    true, // os tipos computados que os painéis desenham
 	"t20engine/infra/db/dbvalue": true,
@@ -58,11 +58,10 @@ var permitidos = map[string]bool{
 // leituras que existiam aqui viraram `book.ClassPowerFlags`,
 // `book.PowersThatTeachSpells` e `book.Activations`.
 //
-// O que fica são `catalog.LookupSpell`, `catalog.IsCondition` e os tipos
-// `catalog.Spell` e `catalog.Augment` em três assinaturas — o mesmo acessor que
-// o CASO DE USO usa (o `validateAugments` recebe um `catalog.Spell`, e é por
-// isso que ele não desce para o `domain/sheet`). Unificá-lo com o `book.Spell`
-// é trabalho próprio, que mexe nos dois lados.
+// A produção desta cena não o importa mais: a magia é o `book.Spell`. Quem fica
+// é o `target_label_rules_test.go`, que varre o catálogo CRU de propósito — ele
+// confere que todo alvo de modificador do livro tem rótulo, e o livro tipado
+// não lista os alvos.
 func TestTheSheetSceneDoesNotImportItsHost(t *testing.T) {
 	files, err := os.ReadDir(".")
 	if err != nil {

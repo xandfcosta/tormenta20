@@ -8,7 +8,6 @@ import (
 
 	"t20engine/app/character"
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
@@ -196,7 +195,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	caster := sheet.CasterOf(dto)
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
-		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
+		spell, known := book.SpellByID(learned.CatalogSpellID)
 		if !known {
 			continue
 		}

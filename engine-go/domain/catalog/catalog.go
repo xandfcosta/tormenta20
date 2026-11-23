@@ -26,104 +26,6 @@ func resourceJSON(name string) ([]byte, error) {
 	return raw, nil
 }
 
-// Spell is the subset of a SPELL_CATALOG entry the API's cast/apply paths read.
-type Spell struct {
-	// Name é o nome do livro, e ele é TEXTO DE TELA: o extrato da manutenção
-	// diz qual sustentada caiu, e "velocidade" não é o que a mesa chama de
-	// Velocidade.
-	Name   string `json:"name"`
-	Circle int    `json:"circle"`
-	School string `json:"school"`
-	// Class lists the spell appears on — the per-spell PM limit is the level in
-	// the class that PROVIDES the ability (p224), so the gate needs to know.
-	Classes  []string  `json:"classes"`
-	Augments []Augment `json:"augments"`
-	Buff     *Buff     `json:"buff"`
-	// Duration é a duração do livro, uma das seis da p227. Ela estava
-	// transcrita nas 198 magias e NENHUM código a lia — o efeito aplicado
-	// seguia um segundo campo, escrito à mão e em inglês, que divergia em oito
-	// (ALE-365). Quem a traduz em duração de efeito é o `engine.EffectScope`.
-	Duration string `json:"duration"`
-	// Range é o alcance do livro (p172): o medalhão de prata corta o custo das de alcance "pessoal" (p160).
-	Range string `json:"range"`
-	// DurationNote é a MEDIDA da definida, que o livro imprime em prosa no
-	// verbete: "Definida. A duração pode ser medida em rodadas, horas, dias ou
-	// outra unidade de tempo" (p227) nomeia a espécie e deixa o número para a
-	// magia. São 26 definidas e dezesseis notas diferentes, quase todas
-	// condicionais; quem separa medida de prosa é o `engine.SpellDuration`.
-	DurationNote string `json:"durationNote"`
-	// Execution é o TIPO DE AÇÃO que conjurar custa, uma das cinco da p233:
-	// `padrao` 160, `completa` 31, `reacao` 3, `livre` 2, `movimento` 2. A
-	// palavra é a do catálogo e a mesma do `engine.ActionCost` — traduzi-la na
-	// leitura daria duas grafias para um conceito.
-	Execution string `json:"execution"`
-}
-
-type Augment struct {
-	PmCost int    `json:"pmCost"`
-	Kind   string `json:"kind"`
-	// RequiresCircle é o círculo MÍNIMO que o personagem precisa alcançar para
-	// escolher este aprimoramento. Cento e vinte e seis dos 486 aprimoramentos o
-	// têm, e um `validateAugments` que não o leia aceita qualquer um.
-	//
-	// Ponteiro e não zero: círculo 0 é o TRUQUE, um valor legítimo, e um `int`
-	// zerado não distinguiria "exige truque" de "não exige nada".
-	RequiresCircle *int `json:"requiresCircle"`
-	// Exclusive é o aprimoramento que não aceita companhia na mesma conjuração.
-	//
-	// A marca é do APRIMORAMENTO e não do truque porque o livro diz a mesma frase
-	// em três lugares: como regra geral dos truques (p171) e à mão em dois
-	// aprimoramentos comuns — a esfera da Invisibilidade (p195) e a Luz
-	// permanente de pó de rubi (p197). Um ramo que perguntasse "é truque?"
-	// deixaria os outros dois de fora. Ver GLOSSARY, **aprimoramento exclusivo**.
-	Exclusive bool `json:"exclusive"`
-	// Cantrip zera o custo da magia INTEIRA, e não só o do aprimoramento: "reduz
-	// seu custo em PM para zero" (p171).
-	//
-	// São dois campos e não um porque são duas perguntas: `Exclusive` responde se
-	// ele aceita companhia (os catorze truques e mais dois), `Truque` responde
-	// quanto a conjuração custa (só os catorze). Quem impede os dois de divergirem
-	// é o `TestEveryTruqueIsFreeAndAlone`.
-	//
-	// O nome fica em português pela regra do glossário: é termo do livro sem
-	// tradução assentada, como `tormenta` — e os valores deste catálogo já são
-	// assim (`kind: "muda"`, `classOnly: "arcanos"`).
-	Cantrip bool `json:"truque"`
-	// ClassOnly é o aprimoramento que o livro marca "Apenas Arcanos", "Apenas Divinos" ou "Apenas Druidas"
-	// (a Luz, p197; o Controlar o Clima, p187): ele só existe para quem lança a magia por aquela tradição ou
-	// classe, e quem responde por onde a ficha lança é o conjurador (`SpellOnTheSheet.CastsAs`). Vazio é
-	// "todos".
-	ClassOnly string `json:"classOnly"`
-}
-
-// Buff carries the modifiers an applied spell effect stores (raw JSON so it
-// re-serializes byte-identical to the catalog).
-type Buff struct {
-	// DefaultScope só existe onde a magia NÃO PODE dizer quanto o efeito dura:
-	// a instantânea, cuja consequência não é a magia, e a definida sem quantia.
-	// Nos outros 29 casos ele era uma cópia da duração e foi apagado — quem
-	// recusa o retorno dele é o `TestEveryBuffLastsAsLongAsItsSpell`.
-	DefaultScope string          `json:"defaultScope"`
-	Modifiers    json.RawMessage `json:"modifiers"`
-}
-
-var (
-	spellsOnce sync.Once
-	spellsByID map[string]Spell
-)
-
-// LookupSpell returns the parsed spell entry, or (zero, false) if unknown.
-func LookupSpell(id string) (Spell, bool) {
-	spellsOnce.Do(func() {
-		spellsByID = map[string]Spell{}
-		if b, err := resourceJSON("spells"); err == nil {
-			_ = json.Unmarshal(b, &spellsByID)
-		}
-	})
-	sp, ok := spellsByID[id]
-	return sp, ok
-}
-
 // Item is the subset of a CATALOG_ITEMS entry the consume + seed paths read.
 type Item struct {
 	ID         string      `json:"id"`
@@ -292,18 +194,8 @@ func Options() ([]byte, error) {
 	return resourceJSON("options")
 }
 
-// SpellIDs e ItemIDs existem para a SUGESTÃO de vizinho: recusar um id
-// desconhecido sem dizer qual é o parecido deixa quem leu a mensagem procurando
-// na mão, e errar id é erro de digitação — digitação erra por pouco.
-func SpellIDs() []string {
-	LookupSpell("") // força o `sync.Once`, senão isto responde antes da carga
-	ids := make([]string, 0, len(spellsByID))
-	for id := range spellsByID {
-		ids = append(ids, id)
-	}
-	return ids
-}
-
+// ItemIDs existe para a SUGESTÃO de vizinho: recusar um id desconhecido sem dizer qual é o parecido deixa
+// quem leu a mensagem procurando na mão, e errar id é erro de digitação — digitação erra por pouco.
 func ItemIDs() []string {
 	LookupItem("") // idem
 	ids := make([]string, 0, len(itemsByID))

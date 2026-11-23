@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
@@ -28,7 +27,7 @@ import (
 // aquela classe" (p170), e a acima dele não se aprende (o conjurador, `sheet.CasterOf`). A magia de fora da
 // lista das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
 func (p Plays) LearnSpell(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
-	if _, known := catalog.LookupSpell(catalogSpellID); !known {
+	if _, known := book.SpellByID(catalogSpellID); !known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
 	if refusal := sheet.CasterOf(dto).Spell(catalogSpellID).AboveTheCircle; refusal != "" {
@@ -102,7 +101,7 @@ func (p Plays) Cast(
 	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string,
 	augments []sheet.AugmentPick, powerAugments []sheet.PowerAugmentPick,
 ) error {
-	spell, known := catalog.LookupSpell(catalogSpellID)
+	spell, known := book.SpellByID(catalogSpellID)
 	if !known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
@@ -198,7 +197,7 @@ func (p Plays) Cast(
 // Índice fora de faixa é ignorado de propósito: quem recusa o pedido malformado é
 // o `validateAugments`, que roda antes, e repetir a checagem aqui daria duas
 // respostas para a mesma pergunta.
-func truqueEscolhido(spell catalog.Spell, picks []sheet.AugmentPick) bool {
+func truqueEscolhido(spell book.Spell, picks []sheet.AugmentPick) bool {
 	for _, p := range picks {
 		if p.AugmentIndex >= 0 && p.AugmentIndex < len(spell.Augments) &&
 			spell.Augments[p.AugmentIndex].Cantrip {
@@ -220,18 +219,12 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 // validateAugments confere os aprimoramentos escolhidos e devolve o PM deles,
 // ou a frase da recusa.
 //
-// É regra PURA do livro e mesmo assim não desce para o `domain/sheet`: ela
-// recebe um `catalog.Spell`, e o guarda daquele pacote recusa o `catalog` por
-// escrito — *"catalog (que é o arquivo cru)"*. O caminho para descer é unificar
-// `catalog.Spell` com o `book.Spell` tipado, que é trabalho próprio e mexe nos
-// dois lados. Até lá ela fica com o único chamador que tem.
-//
 // O círculo do aprimoramento fechou uma FRONTEIRA que estava aberta (ALE-272, fatia 6):
 // 126 dos 486 aprimoramentos do catálogo exigem um círculo mínimo, e até aqui
 // esse limite existia só na tela. A tabela que o decide vivia só no TypeScript,
 // então o servidor nem tinha como perguntar — e um pedido montado à mão
 // conjurava o que a regra não permite. Travar na UI é UX; a fronteira é aqui.
-func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, onSheet sheet.SpellOnTheSheet) (int, string) {
+func validateAugments(spell book.Spell, picks []sheet.AugmentPick, onSheet sheet.SpellOnTheSheet) (int, string) {
 	if len(picks) == 0 {
 		return 0, ""
 	}
@@ -292,7 +285,7 @@ func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, onSheet sh
 // e a fronteira é o servidor: um pedido montado à mão pagaria o aprimoramento de
 // um poder que o personagem não tem.
 func validatePowerAugments(
-	dto sheet.CharacterDTO, spell catalog.Spell, spellID string,
+	dto sheet.CharacterDTO, spell book.Spell, spellID string,
 	spellPicks []sheet.AugmentPick, picks []sheet.PowerAugmentPick,
 ) (int, string) {
 	if len(picks) == 0 {

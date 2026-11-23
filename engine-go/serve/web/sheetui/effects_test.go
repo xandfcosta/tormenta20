@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 )
@@ -197,7 +196,7 @@ func TestAGrantedEffectShowsThePowerNameInsteadOfTheCatalogId(t *testing.T) {
 func TestEveryDurationAnEffectCanCarryIsNamedOnTheSheet(t *testing.T) {
 	measured := 0
 	for _, m := range book.Catalogs().Spells {
-		spell, known := catalog.LookupSpell(m.ID)
+		spell, known := book.SpellByID(m.ID)
 		if !known || spell.Buff == nil {
 			continue
 		}

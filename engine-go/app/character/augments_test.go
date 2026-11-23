@@ -3,7 +3,7 @@ package character
 import (
 	"testing"
 
-	"t20engine/domain/catalog"
+	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 )
 
@@ -16,7 +16,7 @@ import (
 // TypeScript, então o `validateAugments` nem tinha como perguntar. Um pedido
 // montado à mão conjurava o que a regra não permite, e nada acusava.
 func TestAnAugmentAboveTheCircleIsRefusedByTheServer(t *testing.T) {
-	spell, known := catalog.LookupSpell("invisibilidade")
+	spell, known := book.SpellByID("invisibilidade")
 	if !known {
 		t.Fatal("a magia `invisibilidade` sumiu do catálogo — o caso mediria o vazio")
 	}
