@@ -13,18 +13,6 @@ import (
 // non-equipment ActiveItem (race/origin/class/effect). Read-only.
 var vestedWear = "vested"
 
-const deformidadeExpertiseBonus = 2 // deformidade.ts DEFORMIDADE_PERICIA_BONUS
-
-// expertiseNamesSet mirrors expertises.ts EXPERTISE_NAMES — the valid perícia
-// names Deformidade may target.
-var expertiseNamesSet = toSet([]string{
-	"Acrobacia", "Adestramento", "Atletismo", "Atuação", "Cavalgar", "Conhecimento",
-	"Cura", "Diplomacia", "Enganação", "Fortitude", "Furtividade", "Guerra",
-	"Iniciativa", "Intimidação", "Intuição", "Investigação", "Jogatina", "Ladinagem",
-	"Luta", "Misticismo", "Nobreza", "Ofício", "Percepção", "Pilotagem", "Pontaria",
-	"Reflexos", "Religião", "Sobrevivência", "Vontade",
-})
-
 // AQUI MORAVA A SEGUNDA IMPLEMENTAÇÃO DA COLETA (ALE-378).
 //
 // Ela montava a lista de fontes com `append`, na mesma ordem que os sistemas do
