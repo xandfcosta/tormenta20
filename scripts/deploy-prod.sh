@@ -20,6 +20,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENGINE_DIR="$ROOT_DIR/engine-go"
+# shellcheck source=backup-exit-codes.sh
+source "$ROOT_DIR/scripts/backup-exit-codes.sh"
 ENV_FILE="$ENGINE_DIR/.env.production"
 BINARY="$ENGINE_DIR/bin/t20-api"
 LOG_FILE="$ENGINE_DIR/data/prod.log"
@@ -126,14 +128,13 @@ release_answers() {
 }
 
 # take_backup faz o backup e devolve a mensagem dele. Banco que ainda não existe não é erro, e ele se reconhece
-# pelo CÓDIGO de saída do `backup-db.sh` (3, o `NO_DATABASE`), e não pelo texto: o `.env` ausente também diz
-# "não existe", e lido pelo texto ele fazia o deploy seguir sem backup.
+# pelo CÓDIGO de saída do `backup-db.sh` (`BACKUP_NO_DATABASE`), e não pelo texto — ver o `backup-exit-codes.sh`.
 take_backup() {
   local output status=0
   output="$(bash "$ROOT_DIR/scripts/backup-db.sh" production 2>&1)" || status=$?
   case "$status" in
     0) echo "$output" ;;
-    3) echo "sem backup: o banco ainda não existia" ;;
+    "$BACKUP_NO_DATABASE") echo "sem backup: o banco ainda não existia" ;;
     *)
       echo "$output" >&2
       return 1

@@ -22,10 +22,8 @@ die() {
   exit 1
 }
 
-# NO_DATABASE é a saída de quando o banco ainda não existe — o primeiro deploy, antes de o servidor subir uma vez.
-# Ela tem código PRÓPRIO porque é o único "não existe" que o deploy aceita como "sem backup": o `.env` ausente
-# também diz "não existe", e lido pelo texto ele fazia o deploy seguir sem backup nenhum.
-readonly NO_DATABASE=3
+# shellcheck source=backup-exit-codes.sh
+source "$REPO_ROOT/scripts/backup-exit-codes.sh"
 
 # resolve_env normaliza o apelido do ambiente para o sufixo do arquivo `.env`.
 resolve_env() {
@@ -56,7 +54,7 @@ ENV_FILE="$ENGINE_DIR/.env.$APP_ENV"
 DB_PATH="$(database_path "$ENV_FILE")"
 if [ ! -f "$DB_PATH" ]; then
   echo "backup: banco $DB_PATH não existe (o servidor de $APP_ENV já subiu alguma vez?)" >&2
-  exit "$NO_DATABASE"
+  exit "$BACKUP_NO_DATABASE"
 fi
 
 mkdir -p "$BACKUP_DIR"
