@@ -11,8 +11,6 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-const defaultRuntimeState = `{"initiative":[],"round":0,"turnIndex":-1}`
-
 type SessionDTO struct {
 	ID            int64   `json:"id"`
 	CampaignID    int64   `json:"campaignId"`

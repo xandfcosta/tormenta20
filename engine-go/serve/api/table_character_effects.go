@@ -99,19 +99,3 @@ func (s *Server) handleEndScene(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleEndDay(w http.ResponseWriter, r *http.Request) {
 	s.clearEffectScopes(w, r, s.tableRules().endDay, []string{"scene", "day"})
 }
-
-type characterCampaignDTO struct {
-	ID          int64              `json:"id"`
-	CampaignID  int64              `json:"campaignId"`
-	CharacterID int64              `json:"characterId"`
-	Role        string             `json:"role"`
-	AddedAt     string             `json:"addedAt"`
-	Campaign    campaignSummaryDTO `json:"campaign"`
-}
-
-type campaignSummaryDTO struct {
-	ID          int64   `json:"id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description"`
-	UpdatedAt   string  `json:"updatedAt"`
-}

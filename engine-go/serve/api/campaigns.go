@@ -49,18 +49,6 @@ type campaignListDTO struct {
 	OwnerName *string `json:"ownerName,omitempty"`
 }
 
-type campaignDetailDTO struct {
-	CampaignDTO
-	Role string `json:"role"`
-	// IgnoredRules acompanha o detalhe porque é nele que a campanha se configura
-	// — pedir uma segunda rota para desenhar os interruptores faria a tela piscar
-	// entre "tudo ligado" e o estado real.
-	IgnoredRules []string `json:"ignoredRules"`
-	// Mesma regra da lista: só numa mesa que o chamador não possui. Aqui ele
-	// importa MAIS — esta é a tela onde se renomeia e se apaga.
-	OwnerName *string `json:"ownerName,omitempty"`
-}
-
 func campaignScalars(c sqlcgen.Campaign) CampaignDTO {
 	return CampaignDTO{
 		ID: c.ID, OwnerID: c.Ownerid, Name: c.Name, Description: dbvalue.NullToPtr(c.Description),
