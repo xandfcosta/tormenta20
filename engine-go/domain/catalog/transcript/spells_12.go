@@ -265,6 +265,7 @@ var spellsPart12 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda duração para permanente + adiciona Fortitude parcial. Sucesso = sofre por 1 rodada.",
 				RequiresCircle: 4,
+				Sustains:       ptr(false),
 			},
 		},
 		BookPage: 204,

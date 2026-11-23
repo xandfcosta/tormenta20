@@ -36,6 +36,7 @@ type SpellAugment struct {
 	RequiresCircle int    `json:"requiresCircle,omitempty"`
 	ClassOnly      string `json:"classOnly,omitempty"`
 	Cantrip        bool   `json:"truque,omitempty"`
+	Sustains       *bool  `json:"sustains,omitempty"`
 }
 
 type SpellBuff struct {

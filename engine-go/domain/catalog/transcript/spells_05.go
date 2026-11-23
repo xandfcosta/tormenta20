@@ -239,6 +239,7 @@ var spellsPart05 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda alcance para curto, alvo para criatura/objeto sólido Enorme ou menor, duração para sustentada. Esfera imóvel e tremeluzente: nada passa (dano, criaturas, objetos); respiração normal. Criaturas na área: Reflexos para evitar aprisionamento (e sempre que o conjurador se concentrar).",
 				RequiresCircle: 4,
+				Sustains:       ptr(true),
 			},
 			{
 				PMCost:         9,
@@ -274,6 +275,7 @@ var spellsPart05 = []Spell{
 				PMCost:      3,
 				Kind:        "muda",
 				Description: "Muda a duração para sustentada. Imagem mais distorcida: chance de falha da camuflagem leve sobe para 50%.",
+				Sustains:    ptr(true),
 			},
 			{
 				PMCost:         7,

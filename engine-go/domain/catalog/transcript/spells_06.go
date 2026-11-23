@@ -304,6 +304,7 @@ var spellsPart06 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda duração para sustentada, resistência para Reflexos metade. Labaredas: ação de movimento projeta labareda em alvo curto = 4d6 fogo (Reflexos metade).",
+				Sustains:    ptr(true),
 			},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d6 (exceto do efeito chamejar)."},
 			{

@@ -60,6 +60,12 @@ type SpellAugment struct {
 	// aprimoramento só existe para quem lança a magia por aquela tradição ou classe, e quem responde por onde
 	// a ficha lança é o conjurador (`SpellOnTheSheet.CastsAs`).
 	ClassOnly string `json:"classOnly"`
+	// Sustains diz se o aprimoramento PÕE a magia na duração sustentada ("Muda a duração para sustentada") ou a
+	// TIRA dela (o "Muda a duração para cena" da Oração), e é nulo no que não mexe nisso: é o que decide se a
+	// conjuração abre a manutenção (p227; ver GLOSSARY, **magia sustentada**). As outras mudanças de duração
+	// não têm marca, porque nenhuma conta as lê. Quem prende a marca ao texto é o
+	// `TestEveryAugmentThatChangesWhetherTheSpellIsSustainedSaysSo`.
+	Sustains *bool `json:"sustains"`
 }
 
 // SpellBuff é o efeito em curso que a magia aplica: os modificadores, crus, para gravarem byte a byte como o
