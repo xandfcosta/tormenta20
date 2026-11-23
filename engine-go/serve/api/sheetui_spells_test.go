@@ -73,9 +73,9 @@ func spellbook(t *testing.T, f sceneFixture, id int64) map[string]bool {
 	return outside
 }
 
-// APRENDER, PREPARAR E ESQUECER, nessa ordem.
-func TestASpellEntersTheSpellbookIsPreparedAndLeaves(t *testing.T) {
-	f, id := arcanista(t)
+// APRENDER, MEMORIZAR E ESQUECER, nessa ordem. O mago com a Luz no grimório memoriza uma de duas (p37).
+func TestASpellEntersTheSpellbookIsMemorizedAndLeaves(t *testing.T) {
+	f, id := mago(t, "luz")
 
 	if got := spell(t, f, id, "aprende/bola-de-fogo"); got != http.StatusOK {
 		t.Fatalf("aprender respondeu %d", got)
@@ -84,13 +84,13 @@ func TestASpellEntersTheSpellbookIsPreparedAndLeaves(t *testing.T) {
 		t.Fatal("a magia não entrou no grimório")
 	}
 
-	spell(t, f, id, "prepara/bola-de-fogo")
+	spell(t, f, id, "memoriza/bola-de-fogo")
 	if grimoire := spellbook(t, f, id); !grimoire["bola-de-fogo"] {
-		t.Error("o toque não preparou a magia")
+		t.Error("o toque não memorizou a magia")
 	}
-	spell(t, f, id, "prepara/bola-de-fogo")
+	spell(t, f, id, "memoriza/bola-de-fogo")
 	if grimoire := spellbook(t, f, id); grimoire["bola-de-fogo"] {
-		t.Error("o segundo toque não despreparou: o comando manda o ESTADO em vez da magia")
+		t.Error("o segundo toque não desmemorizou: o comando manda o ESTADO em vez da magia")
 	}
 
 	spell(t, f, id, "esquece/bola-de-fogo")

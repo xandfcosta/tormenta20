@@ -152,3 +152,38 @@ func TestEveryClassOnlyMarkIsUnderstood(t *testing.T) {
 		t.Error("nenhum aprimoramento com marca: o catálogo perdeu o campo, e o guarda não mede nada")
 	}
 }
+
+// SÓ O MAGO MEMORIZA (p37), e memoriza metade do que conhece, arredondando para baixo — "se conhece 7
+// magias, escolhe 3". No multiclasse, só a magia que a ficha lança apenas pelo mago conta e se memoriza.
+func TestOnlyTheMagoMemorizesHalfOfHisSpells(t *testing.T) {
+	path := func(p string) string { return `{"Arcanista":{"caminho":"` + p + `"}}` }
+	for _, c := range []struct {
+		why     string
+		dto     CharacterDTO
+		spell   string
+		needs   bool
+		mageAll bool
+	}{
+		{"o mago", CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 9}}, ClassChoices: path("mago")}, "bola-de-fogo", true, true},
+		{"o bruxo", CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 9}}, ClassChoices: path("bruxo")}, "bola-de-fogo", false, false},
+		{"o clérigo", CharacterDTO{Classes: []ClassDTO{{ClassName: "Clérigo", Level: 9}}}, "curar-ferimentos", false, false},
+		{"a Luz do mago que também é clérigo", CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 5}, {ClassName: "Clérigo", Level: 3}}, ClassChoices: path("mago")}, "luz", false, true},
+	} {
+		caster := CasterOf(c.dto)
+		if got := caster.Spell(c.spell).NeedsMemorizing; got != c.needs {
+			t.Errorf("%s: %s precisa memorizar = %v; want %v", c.why, c.spell, got, c.needs)
+		}
+		if got := caster.Memorizes(); got != c.mageAll {
+			t.Errorf("%s: tem quem memorize = %v; want %v", c.why, got, c.mageAll)
+		}
+	}
+
+	seven := []SpellDTO{}
+	for i, id := range []string{"armadura-arcana", "explosao-de-chamas", "luz", "seta-infalivel-de-talude", "bola-de-fogo", "relampago", "teia"} {
+		seven = append(seven, SpellDTO{CatalogSpellID: id, Prepared: i < 2})
+	}
+	mage := CasterOf(CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 9}}, ClassChoices: path("mago"), Spells: seven})
+	if memorized, limit := mage.Memorization(); memorized != 2 || limit != 3 {
+		t.Errorf("o mago com 7 magias e 2 memorizadas contou %d de %d; want 2 de 3", memorized, limit)
+	}
+}

@@ -43,6 +43,9 @@ templ tempestadeSpells(v View) {
 		if v.Spells.ShapeSilence != "" {
 			<p class="ds-help">{ v.Spells.ShapeSilence }</p>
 		}
+		if v.Spells.Memorization != "" {
+			<p class="ds-help">{ v.Spells.Memorization }</p>
+		}
 		if len(v.Spells.Learned) == 0 && len(v.Spells.Granted) == 0 {
 			if v.Spells.IsCaster {
 				@ds.Empty("Nenhuma magia aprendida", "Use Aprender para escolher no livro.")
@@ -55,7 +58,7 @@ templ tempestadeSpells(v View) {
 				for _, group := range groups {
 					@ds.ListHead(group.Title, strconv.Itoa(len(group.Spells)))
 					for _, spell := range group.Spells {
-						@ds.ActionRow(spell.Name, spellLineMeta(spell, v.Spells.RequiresPrep), spellSheetID(spell)) {
+						@ds.ActionRow(spell.Name, spellLineMeta(spell), spellSheetID(spell)) {
 							@castGesture(v, spell)
 						}
 					}
@@ -111,7 +114,7 @@ templ castGesture(v View, spell learnedSpellRow) {
 	}
 }
 
-// spellSheet é a folha da magia: a regra, o Preparada de quem prepara, os
+// spellSheet é a folha da magia: a regra, o Memorizada do mago, os
 // aprimoramentos com o custo somado, e no pé o Esquecer longe do Conjurar. A
 // soma é PRÉVIA (`costPreview`): quem cobra e recusa é o servidor.
 templ spellSheet(v View, spell learnedSpellRow) {
@@ -125,8 +128,11 @@ templ spellSheet(v View, spell learnedSpellRow) {
 		if spell.OffTheList != "" {
 			<p class="ds-help">{ spell.OffTheList }</p>
 		}
-		if v.Spells.RequiresPrep {
-			@ds.Switch("Preparada", spell.Prepared, templ.Attributes{"data-on:change": sheetPost(v, "/magias/prepara/"+spell.Command)})
+		if spell.MemorizeLock != "" {
+			@ds.Switch("Memorizada", false, templ.Attributes{"disabled": true, "title": spell.MemorizeLock})
+			<p class="ds-help">{ spell.MemorizeLock }</p>
+		} else if spell.NeedsMemorizing {
+			@ds.Switch("Memorizada", spell.Memorized, templ.Attributes{"data-on:change": sheetPost(v, "/magias/memoriza/"+spell.Command)})
 		}
 		if len(spell.Augments) > 0 {
 			@ds.List("Aprimoramentos", "") {

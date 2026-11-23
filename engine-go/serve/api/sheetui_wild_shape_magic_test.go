@@ -10,7 +10,7 @@ import (
 // "Na forma selvagem você não pode falar, empunhar itens ou lançar magias" (p62), e a Magia Natural (p62):
 // "em forma selvagem, você pode lançar magias e empunhar catalisadores e esotéricos".
 
-// shapedCaster é o druida com uma magia preparada, já na Forma Feroz, com os poderes pedidos.
+// shapedCaster é o druida com uma magia no grimório, já na Forma Feroz, com os poderes pedidos.
 func shapedCaster(t *testing.T, powers string, items ...string) (sceneFixture, int64) {
 	t.Helper()
 	f := newSceneFixture(t)
@@ -19,11 +19,9 @@ func shapedCaster(t *testing.T, powers string, items ...string) (sceneFixture, i
 	for _, item := range items {
 		itemSemeia(t, f, id, item, item, "wielded")
 	}
-	for _, step := range []string{"aprende", "prepara"} {
-		target := fmt.Sprintf("/personagens/%d/magias/%s/curar-ferimentos?tab=spells", id, step)
-		if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String()); refusal != "" {
-			t.Fatalf("%s Curar Ferimentos: %q", step, refusal)
-		}
+	target := fmt.Sprintf("/personagens/%d/magias/aprende/curar-ferimentos?tab=spells", id)
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, "").Body.String()); refusal != "" {
+		t.Fatalf("aprender Curar Ferimentos: %q", refusal)
 	}
 	if _, err := f.s.db.ExecContext(t.Context(),
 		"INSERT INTO character_wild_shape (characterId, form, tier, damageType, movement, pmPaid) VALUES (?, 'feroz', 'normal', 'corte', '', 3)", id); err != nil {

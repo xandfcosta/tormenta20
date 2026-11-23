@@ -14,10 +14,10 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// AS TRÊS ESCRITAS DO GRIMÓRIO — aprender, esquecer e alternar o preparo.
+// AS TRÊS ESCRITAS DO GRIMÓRIO — aprender, esquecer e alternar a memorização.
 //
 // Elas desceram da cena na ALE-350, e a do meio é a que explica por quê: o
-// `TogglePrepared` LÊ o grimório, DECIDE o estado novo e grava. As três coisas
+// `ToggleMemorized` LÊ o grimório, DECIDE o estado novo e grava. As três coisas
 // que o guia usa para reconhecer um caso de uso, num gesto de um clique.
 
 // LearnSpell põe uma magia do catálogo no grimório.
@@ -53,15 +53,17 @@ func (p Plays) ForgetSpell(ctx context.Context, characterID int64, catalogSpellI
 	return nil
 }
 
-// TogglePrepared prepara ou desprepara uma magia.
+// ToggleMemorized memoriza ou desmemoriza uma magia do mago (p37).
 //
-// Ela recebe a MAGIA e não o estado desejado: mandar "preparada" perde para o
+// Ela recebe a MAGIA e não o estado desejado: mandar "memorizada" perde para o
 // clique repetido e para a segunda aba aberta no mesmo personagem — quem sabe o
-// que está lá é o servidor, e é ele que inverte.
-func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpellID string) error {
-	all, err := p.queries.ListSpellsByCharacter(ctx, characterID)
+// que está lá é o servidor, e é ele que inverte. Memorizar pergunta ao conjurador
+// (`MemorizeRefusal`): só o mago memoriza, e até metade do que conhece.
+// Desmemorizar sempre se pode.
+func (p Plays) ToggleMemorized(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
+	all, err := p.queries.ListSpellsByCharacter(ctx, dto.ID)
 	if err != nil {
-		return fmt.Errorf("ler o grimório da ficha %d: %w", characterID, err)
+		return fmt.Errorf("ler o grimório da ficha %d: %w", dto.ID, err)
 	}
 	for _, m := range all {
 		if m.Catalogspellid != catalogSpellID {
@@ -69,12 +71,15 @@ func (p Plays) TogglePrepared(ctx context.Context, characterID int64, catalogSpe
 		}
 		after := int64(0)
 		if m.Prepared == 0 {
+			if refusal := sheet.CasterOf(dto).MemorizeRefusal(catalogSpellID); refusal != "" {
+				return errors.New(refusal)
+			}
 			after = 1
 		}
 		if _, err := p.queries.SetSpellPreparedByCatalog(ctx, sqlcgen.SetSpellPreparedByCatalogParams{
-			Prepared: after, CharacterId: characterID, CatalogSpellId: catalogSpellID,
+			Prepared: after, CharacterId: dto.ID, CatalogSpellId: catalogSpellID,
 		}); err != nil {
-			return fmt.Errorf("gravar o preparo de %q: %w", catalogSpellID, err)
+			return fmt.Errorf("gravar a memorização de %q: %w", catalogSpellID, err)
 		}
 		return nil
 	}
@@ -111,8 +116,8 @@ func (p Plays) Cast(
 	if refusal := onSheet.AboveTheCircle; refusal != "" {
 		return errors.New(refusal)
 	}
-	if sheet.RequiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
-		return fmt.Errorf("prepare a magia antes de conjurá-la")
+	if onSheet.NeedsMemorizing && !learned.Prepared {
+		return fmt.Errorf("memorize a magia antes de conjurá-la: o mago só lança magias memorizadas (p37)")
 	}
 	// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171),
 	// e não pela maior entre todas.

@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -31,6 +32,8 @@ type Caster struct {
 	// classes são as classes da ficha que conjuram, na ordem da ficha: o empate da tradição resolve pela
 	// primeira.
 	classes []casterClass
+	// spells é o grimório, que a conta da memorização lê.
+	spells []SpellDTO
 }
 
 type casterClass struct {
@@ -44,6 +47,8 @@ type casterClass struct {
 	// classe segue a lista do verbete.
 	schools      []string
 	picksSchools bool
+	// memorizes é o arcanista do caminho mago, o único que memoriza (p37).
+	memorizes bool
 }
 
 // CasterOf monta o conjurador da ficha. A saída de uma classe pergunta ao conjurador das classes que SOBRAM,
@@ -53,7 +58,11 @@ type casterClass struct {
 func CasterOf(dto CharacterDTO) Caster {
 	progressions := book.SpellProgressions()
 	picks := PowerPicks(dto.PowerChoices)
-	caster := Caster{}
+	var paths map[string]struct {
+		Path string `json:"caminho"`
+	}
+	_ = json.Unmarshal([]byte(dto.ClassChoices), &paths)
+	caster := Caster{spells: dto.Spells}
 	for _, entry := range dto.Classes {
 		prog, casts := progressions[entry.ClassName]
 		if !casts {
@@ -61,7 +70,8 @@ func CasterOf(dto CharacterDTO) Caster {
 		}
 		class := casterClass{
 			name: entry.ClassName, level: entry.Level, list: prog.List,
-			reach: HighestCastableCircle([]ClassDTO{entry}),
+			reach:     HighestCastableCircle([]ClassDTO{entry}),
+			memorizes: entry.ClassName == "Arcanista" && paths["Arcanista"].Path == "mago",
 		}
 		if power := schoolChoicePower(entry.ClassName); power != "" {
 			class.picksSchools, class.schools = true, picks[power]
@@ -104,6 +114,9 @@ type SpellOnTheSheet struct {
 	// OffTheList é o aviso da magia que nenhuma classe da ficha lança pela lista (p170), ou vazio. Não recusa
 	// nada: um poder pode ensiná-la, e quem confere de onde ela veio é o mestre.
 	OffTheList string
+	// NeedsMemorizing diz que a ficha só lança a magia memorizada: todas as classes que a lançam são o mago
+	// (p37). No multiclasse, a Luz que o clérigo também lança se conjura sem memorizar.
+	NeedsMemorizing bool
 }
 
 // Spell é o que a magia `spellID` é para esta ficha.
@@ -123,6 +136,7 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 		}
 	}
 	out.Class, out.Tradition = castingClassOf(casting)
+	out.NeedsMemorizing = len(casting) > 0 && !slices.ContainsFunc(casting, func(class casterClass) bool { return !class.memorizes })
 	if len(casting) == 0 {
 		out.OffTheList = "fora da lista das suas classes: só vale se um poder a ensinou"
 	}
@@ -139,6 +153,43 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 			spell.Name, spell.Circle, out.CircleReach)
 	}
 	return out
+}
+
+// Memorizes diz se a ficha tem o mago, o único que memoriza (p37).
+func (c Caster) Memorizes() bool {
+	return slices.ContainsFunc(c.classes, func(class casterClass) bool { return class.memorizes })
+}
+
+// Memorization é quantas magias o mago memorizou e quantas ele pode: metade das que conhece, arredondando
+// para baixo — "se conhece 7 magias, escolhe 3" (p37). Contam só as magias que a ficha lança apenas pelo mago
+// (`NeedsMemorizing`).
+//
+//	memorized, limit := sheet.CasterOf(dto).Memorization() // 2, 3 no mago com 7 magias e 2 memorizadas
+func (c Caster) Memorization() (memorized, limit int) {
+	known := 0
+	for _, learned := range c.spells {
+		if !c.Spell(learned.CatalogSpellID).NeedsMemorizing {
+			continue
+		}
+		known++
+		if learned.Prepared {
+			memorized++
+		}
+	}
+	return memorized, known / 2
+}
+
+// MemorizeRefusal é a frase que recusa memorizar mais esta magia, ou vazia. Desmemorizar não passa por aqui:
+// sempre se pode. A memorizada acima do limite, gravada antes, fica, e só a próxima é recusada.
+func (c Caster) MemorizeRefusal(spellID string) string {
+	spell := c.Spell(spellID)
+	if !spell.NeedsMemorizing {
+		return fmt.Sprintf("só o mago memoriza magia (p37), e esta ficha conjura %s sem memorizar", spell.Spell.Name)
+	}
+	if memorized, limit := c.Memorization(); memorized >= limit {
+		return fmt.Sprintf("o mago memoriza até metade das magias que conhece: já são %d de %d (p37)", memorized, limit)
+	}
+	return ""
 }
 
 // ReachesTheCircle diz se a ficha alcança o círculo da magia — "uma magia que possa lançar" (Foco em Magia,

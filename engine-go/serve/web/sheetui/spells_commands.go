@@ -30,8 +30,12 @@ func forgetSpell(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) err
 	return s.plays.ForgetSpell(r.Context(), row.ID, chi.URLParam(r, "magia"))
 }
 
-func togglePrepared(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	return s.plays.TogglePrepared(r.Context(), row.ID, chi.URLParam(r, "magia"))
+func toggleMemorized(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.ToggleMemorized(r.Context(), dto, chi.URLParam(r, "magia"))
 }
 
 // castSpellFromSheet conjura, cobrando o PM.
@@ -48,7 +52,7 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	}
 	// A HORA É PERGUNTADA ANTES e a ação é cobrada DEPOIS. A execução da magia
 	// diz o que ela custa do turno (p233), e a conjuração ainda pode ser
-	// recusada pelo grimório, pela preparação ou pelo PM — cobrar antes tiraria
+	// recusada pelo grimório, pela memorização ou pelo PM — cobrar antes tiraria
 	// a padrão de alguém por uma magia que nunca saiu.
 	powerAugments := signals.powerAugments()
 	dto, err := s.deps.LoadCharacter(r.Context(), row)

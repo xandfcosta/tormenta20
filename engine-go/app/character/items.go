@@ -258,7 +258,7 @@ func (p Plays) EnchantItem(ctx context.Context, itemID int64, enchants []string,
 // ToggleOversizedWeapon marca ou desmarca a arma como feita para uma categoria de
 // tamanho maior, e ajusta o espaço a mais que ela ocupa (p106, "mínimo meio espaço").
 //
-// Ela recebe o ITEM e não o estado desejado, como o `TogglePrepared`: quem sabe o que
+// Ela recebe o ITEM e não o estado desejado, como o `ToggleMemorized`: quem sabe o que
 // está lá é o servidor, e é ele que inverte.
 func (p Plays) ToggleOversizedWeapon(ctx context.Context, itemID int64) error {
 	return p.inTx(ctx, fmt.Sprintf("marcar a arma %d", itemID), func(q *sqlcgen.Queries) error {

@@ -112,19 +112,29 @@ func grantedSheetID(index int) string {
 	return "granted-spell-" + strconv.Itoa(index)
 }
 
-// spellLineMeta é a nota da linha: a execução e o alcance, como a mesa fala, e
-// o aviso de quem prepara.
+// spellLineMeta é a nota da linha do grimório: a execução e o alcance, como a mesa fala, e as marcas da magia do
+// mago que não está memorizada e da que passa do círculo.
 //
-//	spellLineMeta(row, false) // "Padrão · médio", na Bola de Fogo
-func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
+//	spellLineMeta(row) // "Padrão · médio · não memorizada", na Bola de Fogo do mago
+func spellLineMeta(spell learnedSpellRow) string {
 	meta := spell.ExecutionWritten + " · " + strings.ToLower(spell.RangeWritten)
-	if requiresPrep && !spell.Prepared {
-		meta += " · não preparada"
+	if spell.NeedsMemorizing && !spell.Memorized {
+		meta += " · não memorizada"
 	}
-	if spell.AboveTheCircle != "" {
-		meta += " · acima do seu círculo"
+	return meta + aboveTheCircleMark(spell)
+}
+
+// spellSheetExecution é a execução e o alcance na linha de cima da folha: sem a marca de memorizar, porque a folha
+// tem o interruptor.
+func spellSheetExecution(spell learnedSpellRow) string {
+	return spell.ExecutionWritten + " · " + strings.ToLower(spell.RangeWritten) + aboveTheCircleMark(spell)
+}
+
+func aboveTheCircleMark(spell learnedSpellRow) string {
+	if spell.AboveTheCircle == "" {
+		return ""
 	}
-	return meta
+	return " · acima do seu círculo"
 }
 
 // catalogSpellMeta é a linha de meta da magia no Aprender. A marca de círculo e de lista mora AQUI, curta, e
@@ -148,7 +158,7 @@ func catalogSpellMeta(spell catalogSpellRow) string {
 //
 //	spellSheetMeta(row) // "2º círculo · Padrão · médio · instantânea · p180", na Bola de Fogo
 func spellSheetMeta(spell learnedSpellRow) string {
-	parts := []string{spell.Circle + " círculo", spellLineMeta(spell, false)}
+	parts := []string{spell.Circle + " círculo", spellSheetExecution(spell)}
 	parts = append(parts, spell.DurationWritten)
 	if spell.Page > 0 {
 		parts = append(parts, "p"+strconv.Itoa(spell.Page))

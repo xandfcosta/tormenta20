@@ -34,8 +34,8 @@ const THE_SCREENS: Screen[] = [
     },
   },
   { nome: 'o acervo de condições', rota: '/mestre/condicoes' },
-  // O NECROMANTE tem oito magias no grimório, e o "preparada" de cada uma é um
-  // switch. Uma ficha SEM magia desenharia zero controles, e o caso passaria
+  // O NECROMANTE é mago e tem oito magias no grimório, e o "memorizada" de cada
+  // uma é um switch. Uma ficha SEM magia desenharia zero controles, e o caso passaria
   // sobre o vazio — é a razão de o personagem estar no endereço.
   { nome: 'as magias da ficha', rota: '/personagens/3?tab=spells' },
   // A LENDA DE NÍVEL 20 tem DEZOITO situacionais; a maioria das fichas não tem
