@@ -136,3 +136,16 @@ func TestTheSpellSheetLocksTheAugmentOfTheOtherTradition(t *testing.T) {
 		t.Error("a folha da Luz do arcanista tranca um aprimoramento apenas arcano")
 	}
 }
+
+// A MARCA DE TRADIÇÃO VEM ANTES DO CÍRCULO: no Arcanista 4, que ainda não alcança o 2º círculo, os dois
+// aprimoramentos "Apenas Divinos" da Luz dizem "apenas divinos", e não "exige o 2º círculo" — o círculo
+// prometeria que eles chegam no 5º nível, e na mão de um arcanista eles não chegam nunca.
+func TestTheTraditionLockComesBeforeTheCircleLock(t *testing.T) {
+	f := newSceneFixture(t)
+	apprentice := seedCharacterAtLevel(t, f.s, f.player, "Aprendiz", "Arcanista", 4, 10, 5)
+	learn(t, f, apprentice, "luz")
+	light := spellSheetOf(t, spellScreen(t, f, apprentice), "spell-luz")
+	if got := strings.Count(light, "apenas divinos"); got != 2 {
+		t.Errorf("a folha da Luz do Arcanista 4 diz \"apenas divinos\" %d vezes; want 2", got)
+	}
+}

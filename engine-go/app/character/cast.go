@@ -264,15 +264,16 @@ func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, onSheet sh
 				"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele",
 				p.AugmentIndex)
 		}
+		// O "APENAS ARCANOS / DIVINOS / DRUIDAS" (p187, p197) pergunta por onde a ficha lança a magia, e vem
+		// antes do círculo pela mesma razão do cadeado da folha: é o motivo que não passa com o nível.
+		if !onSheet.CastsAs(a.ClassOnly) {
+			return 0, fmt.Sprintf("o aprimoramento %d é \"apenas %s\", e esta ficha não lança %s assim",
+				p.AugmentIndex, a.ClassOnly, onSheet.Spell.Name)
+		}
 		if a.RequiresCircle != nil && *a.RequiresCircle > onSheet.CircleReach {
 			return 0, fmt.Sprintf(
 				"aprimoramento %d exige o %dº círculo e este personagem alcança o %dº",
 				p.AugmentIndex, *a.RequiresCircle, onSheet.CircleReach)
-		}
-		// O "APENAS ARCANOS / DIVINOS / DRUIDAS" (p187, p197) pergunta por onde a ficha lança a magia.
-		if !onSheet.CastsAs(a.ClassOnly) {
-			return 0, fmt.Sprintf("o aprimoramento %d é \"apenas %s\", e esta ficha não lança %s assim",
-				p.AugmentIndex, a.ClassOnly, onSheet.Spell.Name)
 		}
 		total += a.PmCost * p.Stacks
 	}

@@ -53,12 +53,14 @@ func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell catalog.Spell, 
 			Description: augmentDescription(spellID, i),
 			Exclusive:   a.Exclusive, Cantrip: a.Cantrip,
 		}
-		if a.RequiresCircle != nil && *a.RequiresCircle > onSheet.CircleReach {
-			row.Locked = true
-			row.LockNote = "exige o " + strconv.Itoa(*a.RequiresCircle) + "º círculo"
-		} else if !onSheet.CastsAs(a.ClassOnly) {
+		// A MARCA DE TRADIÇÃO vem antes do círculo: o círculo promete que o aprimoramento chega num nível, e o
+		// "Apenas Divinos" na mão de um arcanista não chega nunca.
+		if !onSheet.CastsAs(a.ClassOnly) {
 			row.Locked = true
 			row.LockNote = "apenas " + a.ClassOnly
+		} else if a.RequiresCircle != nil && *a.RequiresCircle > onSheet.CircleReach {
+			row.Locked = true
+			row.LockNote = "exige o " + strconv.Itoa(*a.RequiresCircle) + "º círculo"
 		}
 		rows = append(rows, row)
 	}
