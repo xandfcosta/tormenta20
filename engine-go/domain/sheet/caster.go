@@ -123,15 +123,16 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 		}
 	}
 	out.Class, out.Tradition = castingClassOf(casting)
+	if len(casting) == 0 {
+		out.OffTheList = "fora da lista das suas classes: só vale se um poder a ensinou"
+	}
 	switch {
 	case len(casting) > 0:
 		out.CircleReach = highestReach(casting)
 	case len(c.classes) > 0:
 		out.CircleReach = highestReach(c.classes)
-		out.OffTheList = "fora da lista das suas classes: só vale se um poder a ensinou"
 	default:
 		out.CircleReach = spell.Circle
-		out.OffTheList = "fora da lista das suas classes: só vale se um poder a ensinou"
 	}
 	if spell.Circle > out.CircleReach {
 		out.AboveTheCircle = fmt.Sprintf("%s é do %dº círculo, e esta ficha alcança até o %dº (p170)",
