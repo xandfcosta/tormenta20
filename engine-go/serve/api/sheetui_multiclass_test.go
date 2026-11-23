@@ -226,6 +226,19 @@ func TestAClassWithSomethingChosenCannotLeave(t *testing.T) {
 			t.Errorf("a magia da outra classe segurou a saída: %q", refusal)
 		}
 	})
+
+	// A MAGIA DE FORA DA LISTA não veio da classe que sai, e não a segura: ela se aprende com aviso, porque um
+	// poder pode ensiná-la (p61), e nenhuma classe da ficha a lançava antes da saída.
+	t.Run("magia que nenhuma classe lança", func(t *testing.T) {
+		f, id := guerreiro(t)
+		if refusal := enterClass(t, f, id, "Arcanista"); refusal != "" {
+			t.Fatalf("entrar: %q", refusal)
+		}
+		learn(t, f, id, "curar-ferimentos")
+		if refusal := stepClass(t, f, id, "Arcanista", -1); refusal != "" {
+			t.Errorf("a magia divina, fora da lista do arcanista, segurou a saída dele: %q", refusal)
+		}
+	})
 }
 
 func learn(t *testing.T, f sceneFixture, id int64, spell string) {

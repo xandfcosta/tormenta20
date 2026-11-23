@@ -76,10 +76,12 @@ func (p Plays) LeaveClass(ctx context.Context, row sqlcgen.Character, class stri
 			remaining = append(remaining, c)
 		}
 	}
-	// A magia que só esta classe concede ficaria na ficha sem ninguém que a conjure.
+	// A magia que só esta classe concede ficaria na ficha sem ninguém que a conjure. A de fora da lista, que
+	// nenhuma classe lançava, não veio desta e não a segura: ela se aprende com aviso (`sheet.OffTheList`).
 	for _, learned := range dto.Spells {
 		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
-		if known && len(sheet.CastingClasses(dto, remaining, spell.School, spell.Classes)) == 0 {
+		if known && sheet.CastsTheSpell(dto, class, spell.School, spell.Classes) &&
+			len(sheet.CastingClasses(dto, remaining, spell.School, spell.Classes)) == 0 {
 			return fmt.Errorf("não dá para tirar %s: a magia %s veio dela", class, spell.Name)
 		}
 	}
