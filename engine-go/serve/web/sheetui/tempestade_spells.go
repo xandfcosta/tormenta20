@@ -121,6 +121,9 @@ func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
 	if requiresPrep && !spell.Prepared {
 		meta += " · não preparada"
 	}
+	if spell.AboveTheCircle != "" {
+		meta += " · acima do seu círculo"
+	}
 	return meta
 }
 

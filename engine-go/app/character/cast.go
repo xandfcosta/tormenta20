@@ -22,16 +22,22 @@ import (
 // LearnSpell põe uma magia do catálogo no grimório.
 //
 // O livro é conferido AQUI e não por quem chama: uma magia que não existe seria
-// uma linha órfã no grimório, que a ficha desenha como um espaço em branco.
-func (p Plays) LearnSpell(ctx context.Context, characterID int64, catalogSpellID string) error {
+// uma linha órfã no grimório, que a ficha desenha como um espaço em branco. E o
+// círculo também: "a classe diz até qual círculo você lança" (p170), e a magia
+// acima dele não se aprende (`sheet.SpellCircleReach`). A magia de fora da lista
+// das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
+func (p Plays) LearnSpell(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
 	if _, known := catalog.LookupSpell(catalogSpellID); !known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
+	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
+		return fmt.Errorf("%s", refusal)
+	}
 	if _, err := p.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
-		Characterid: characterID, Catalogspellid: catalogSpellID,
+		Characterid: dto.ID, Catalogspellid: catalogSpellID,
 		Prepared: 0, Learnedat: dbvalue.NowISO(),
 	}); err != nil {
-		return fmt.Errorf("aprender %q na ficha %d: %w", catalogSpellID, characterID, err)
+		return fmt.Errorf("aprender %q na ficha %d: %w", catalogSpellID, dto.ID, err)
 	}
 	return nil
 }
@@ -98,11 +104,17 @@ func (p Plays) Cast(
 	if learned == nil {
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
+	// A MAGIA GRAVADA ANTES DA REGRA fica no grimório, e conjurar recusa: o grimório
+	// não perde nada sozinho, e quem joga a esquece e aprende outra.
+	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
+		return fmt.Errorf("%s", refusal)
+	}
 	if sheet.RequiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
 		return fmt.Errorf("prepare a magia antes de conjurá-la")
 	}
-	augmentPm, augErr := validateAugments(spell, augments,
-		sheet.HighestCastableCircle(dto.Classes, spell.Circle))
+	// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171),
+	// e não pela maior entre todas.
+	augmentPm, augErr := validateAugments(spell, augments, sheet.SpellCircleReach(dto, catalogSpellID))
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
