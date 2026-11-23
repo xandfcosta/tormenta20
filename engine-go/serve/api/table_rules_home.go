@@ -25,7 +25,7 @@ import (
 // mesa ao vivo, e a mesa ao vivo é o que esses stores guardam.
 //
 // A diferença entre isto e receber o `*Server` não é o tamanho da lista, é o
-// que ela **não** tem — o `livro`, o `charMu`, a cena da
+// que ela **não** tem — o `livro`, a cena da
 // Mesa dentro dela mesma, e os métodos das outras dez cenas. Aqui está escrito
 // de que a mesa depende; no `*Server` estava escrito "de tudo".
 //
