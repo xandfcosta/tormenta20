@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -143,5 +144,46 @@ func TestTheAugmentThatSustainsTheSpellOpensItsUpkeep(t *testing.T) {
 	}
 	if _, open := sustainedEffectsOf(t, s, arcanist)["invisibilidade"]; !open {
 		t.Error("a esfera da Invisibilidade, sustentada, não abriu o efeito")
+	}
+}
+
+// A SEGUNDA SUSTENTADA TRANCA O CONJURAR NAS DUAS ABAS, com a frase do servidor, e a linha do grimório a marca.
+// A magia que não é sustentada fica de pé.
+func TestTheSecondSustainedSpellLocksTheCastOnBothTabs(t *testing.T) {
+	f := newSceneFixture(t)
+	if _, err := f.s.queries.UpsertActiveEffect(context.Background(), sqlcgen.UpsertActiveEffectParams{
+		Characterid: f.charID, Source: "spell", Catalogid: "tempestade-divina", Scope: "sustained",
+		Modifiers: "[]", Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		t.Fatalf("pôr a Tempestade Divina de pé: %v", err)
+	}
+	for _, spell := range []string{"velocidade", "explosao-de-chamas"} {
+		learn(t, f, f.charID, spell)
+	}
+	const clash = "Tempestade Divina já está sustentada"
+
+	actions := entre(t, acoesDaMesa(t, f), "Ação padrão", "Ação de movimento")
+	if line := castLineOf(t, actions, "Velocidade"); !strings.Contains(line, clash) {
+		t.Errorf("na aba Ações, o Conjurar · Velocidade não diz %q:\n%s", clash, recorte(line))
+	}
+	if line := castLineOf(t, actions, "Explosão de Chamas"); strings.Contains(line, clash) {
+		t.Errorf("na aba Ações, a Explosão de Chamas, que não é sustentada, tranca:\n%s", recorte(line))
+	}
+
+	grimoire := spellScreen(t, f, f.charID)
+	for _, c := range []struct {
+		name   string
+		locked bool
+	}{{"Velocidade", true}, {"Explosão de Chamas", false}} {
+		button := regexp.MustCompile(`<button[^>]*aria-label="Conjurar ` + c.name + `"[^>]*>`).FindString(grimoire)
+		if button == "" {
+			t.Fatalf("a aba Magias não desenhou o Conjurar %s", c.name)
+		}
+		if got := strings.Contains(button, "disabled"); got != c.locked {
+			t.Errorf("na aba Magias, o Conjurar %s trancado = %v; want %v", c.name, got, c.locked)
+		}
+	}
+	if !strings.Contains(grimoire, "outra sustentada de pé") {
+		t.Error("a linha da Velocidade no grimório não marca a sustentada que a tranca")
 	}
 }

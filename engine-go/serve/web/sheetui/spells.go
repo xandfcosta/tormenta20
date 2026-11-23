@@ -103,10 +103,12 @@ type learnedSpellRow struct {
 	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança, que fica no grimório; a linha a
 	// marca. OffTheList é o aviso de `SpellOnTheSheet.OffTheList`.
 	AboveTheCircle string
-	// CastLock é a recusa de conjurar que não depende do momento (`SpellOnTheSheet.CastLock`): o Conjurar das
-	// abas Magias e Ações tranca com ela, a mesma frase que o servidor diria.
-	CastLock   string
-	OffTheList string
+	// CastLock é a recusa de conjurar sem aprimoramento (`SpellOnTheSheet.CastLock`): o Conjurar das abas
+	// Magias e Ações tranca com ela, a mesma frase que o servidor diria. SustainedClash é ela quando a razão é
+	// outra magia sustentada de pé (p227), para a linha a marcar.
+	CastLock       string
+	SustainedClash string
+	OffTheList     string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -222,6 +224,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			SpellCut:       onlyHereCutNote(computed, computedOK, at),
 			AboveTheCircle: onSheet.AboveTheCircle,
 			CastLock:       onSheet.CastLock,
+			SustainedClash: sustainedClashOf(onSheet),
 			OffTheList:     onSheet.OffTheList,
 		})
 	}
@@ -394,4 +397,13 @@ func spellSheetOf(dto sheet.CharacterDTO) (engine.ComputedSheet, bool) {
 		return engine.ComputedSheet{}, false
 	}
 	return dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals)), true
+}
+
+// sustainedClashOf é a recusa da segunda sustentada quando é ELA que tranca o Conjurar, ou vazia: a magia
+// que não é sustentada não colide, e a acima do círculo tranca pelo círculo.
+func sustainedClashOf(onSheet sheet.SpellOnTheSheet) string {
+	if onSheet.CastLock != "" && onSheet.CastLock == onSheet.SustainedClash {
+		return onSheet.CastLock
+	}
+	return ""
 }
