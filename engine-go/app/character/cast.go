@@ -101,15 +101,14 @@ func (p Plays) Cast(
 	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string,
 	augments []sheet.AugmentPick, powerAugments []sheet.PowerAugmentPick,
 ) error {
-	spell, known := book.SpellByID(catalogSpellID)
-	if !known {
+	onSheet := sheet.CasterOf(dto).Spell(catalogSpellID)
+	if !onSheet.Known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
-	learned := findSpell(dto.Spells, catalogSpellID)
-	if learned == nil {
+	spell := onSheet.Spell
+	if findSpell(dto.Spells, catalogSpellID) == nil {
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
-	onSheet := sheet.CasterOf(dto).Spell(catalogSpellID)
 	// A RECUSA QUE NÃO DEPENDE DO MOMENTO é do conjurador, a mesma que tranca o
 	// Conjurar nas abas: a magia acima do círculo — a gravada antes da regra fica no
 	// grimório, e quem joga a esquece e aprende outra — e a do mago não memorizada.
@@ -122,7 +121,7 @@ func (p Plays) Cast(
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
-	powerPm, powerErr := validatePowerAugments(dto, spell, catalogSpellID, augments, powerAugments)
+	powerPm, powerErr := validatePowerAugments(dto, spell, augments, powerAugments)
 	if powerErr != "" {
 		return fmt.Errorf("%s", powerErr)
 	}
@@ -206,13 +205,12 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 // e a fronteira é o servidor: um pedido montado à mão pagaria o aprimoramento de
 // um poder que o personagem não tem.
 func validatePowerAugments(
-	dto sheet.CharacterDTO, spell book.Spell, spellID string,
+	dto sheet.CharacterDTO, spell book.Spell,
 	spellPicks []sheet.AugmentPick, picks []sheet.PowerAugmentPick,
 ) (int, string) {
 	if len(picks) == 0 {
 		return 0, ""
 	}
-	fromBook, _ := book.SpellByID(spellID)
 	owned := sheet.OwnedPowers(dto)
 	total := 0
 	for _, pick := range picks {
@@ -229,7 +227,7 @@ func validatePowerAugments(
 		if augment.Augment.Kind == "muda" && pick.Stacks > 1 {
 			return 0, fmt.Sprintf("%s muda a magia, e mudança não se acumula", augment.Name)
 		}
-		if bar := book.PowerAugmentBar(pick.PowerID, fromBook); bar != "" {
+		if bar := book.PowerAugmentBar(pick.PowerID, spell); bar != "" {
 			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, bar)
 		}
 		// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
@@ -243,8 +241,8 @@ func validatePowerAugments(
 					"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele", spellPick.AugmentIndex)
 			}
 			// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
-			if pick.PowerID == book.QuickenedSpellPower && spellPick.AugmentIndex < len(fromBook.Augments) &&
-				book.AugmentChangesExecution(fromBook.Augments[spellPick.AugmentIndex].Description) {
+			if pick.PowerID == book.QuickenedSpellPower && spellPick.AugmentIndex < len(spell.Augments) &&
+				book.AugmentChangesExecution(spell.Augments[spellPick.AugmentIndex].Description) {
 				return 0, fmt.Sprintf("%s e o aprimoramento %d mudam a execução, e mudança não se acumula",
 					augment.Name, spellPick.AugmentIndex)
 			}

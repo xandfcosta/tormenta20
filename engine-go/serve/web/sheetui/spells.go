@@ -198,26 +198,25 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	caster := sheet.CasterOf(dto)
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
-		spell, known := book.SpellByID(learned.CatalogSpellID)
-		if !known {
+		onSheet := caster.Spell(learned.CatalogSpellID)
+		if !onSheet.Known {
 			continue
 		}
-		onSheet := caster.Spell(learned.CatalogSpellID)
-		fromBook, at := onSheet.Spell, onSheet.At()
+		spell, at := onSheet.Spell, onSheet.At()
 		rows = append(rows, learnedSpellRow{
-			ID: learned.CatalogSpellID, Name: fromBook.Name,
-			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
-			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Memorized: learned.Prepared,
+			ID: learned.CatalogSpellID, Name: spell.Name,
+			Circle: circleName(spell.Circle), School: schoolName(spell.School),
+			BasePm: sheet.SpellBasePmCost[spell.Circle], Memorized: learned.Prepared,
 			NeedsMemorizing: onSheet.NeedsMemorizing,
 			MemorizeLock:    memorizeLockOf(caster, onSheet, learned),
 			CD:              spellCdOf(computed, computedOK, onSheet),
 			Augments:        augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
-			Execution:       fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
-			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
-			DurationWritten: book.SpellDurationWritten(fromBook),
-			Targeting:       fromBook.Targeting,
-			Resistance:      book.SpellResistanceWritten(fromBook),
-			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
+			Execution:       spell.Execution, Range: spell.Range, Duration: spell.Duration,
+			ExecutionWritten: book.SpellExecutionWritten(spell), RangeWritten: book.SpellRangeWritten(spell),
+			DurationWritten: book.SpellDurationWritten(spell),
+			Targeting:       spell.Targeting,
+			Resistance:      book.SpellResistanceWritten(spell),
+			Effect:          spell.BaseEffect, Page: spell.BookPage,
 			Command:        learned.CatalogSpellID,
 			CostCut:        costCutNote(computed, computedOK, onSheet.Tradition),
 			SpellCut:       onlyHereCutNote(computed, computedOK, at),
