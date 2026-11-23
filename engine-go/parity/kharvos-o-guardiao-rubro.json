@@ -462,7 +462,8 @@
           "condition": {
             "c": "vested"
           },
-          "note": "Reforçada: +1 Defesa"
+          "note": "Reforçada: +1 Defesa",
+          "raisesItem": true
         },
         {
           "target": {

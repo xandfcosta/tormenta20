@@ -59,9 +59,23 @@ func OverlayModifiers(hostCategory, overlayName string, mods []Modifier) []Modif
 		if len(m.AppliesToCategory) > 0 && !contains(m.AppliesToCategory, hostCategory) {
 			continue
 		}
-		out = append(out, withProvenance(m, overlayName))
+		out = append(out, withProvenance(wornLikeTheHost(m, hostCategory), overlayName))
 	}
 	return out
+}
+
+// wornLikeTheHost troca o "vestido" da sobreposição pelo jeito de usar o hospedeiro. A melhoria e o encanto de
+// armadura servem também ao escudo (a Reforçada "se for um escudo, possui uma chapa mais espessa", p165), e o
+// catálogo os escreve vestidos, como a armadura se usa; o escudo se EMPUNHA, e a condição vestida nunca valeria
+// nele.
+func wornLikeTheHost(m Modifier, hostCategory string) Modifier {
+	if m.Condition == nil || m.Condition.C != "vested" || ItemFamilyOf(hostCategory) != "shield" {
+		return m
+	}
+	condition := *m.Condition
+	condition.C = "wielded"
+	m.Condition = &condition
+	return m
 }
 
 // withProvenance põe o nome da sobreposição na nota, que é por onde a ficha

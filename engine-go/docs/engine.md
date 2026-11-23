@@ -10,6 +10,12 @@ mesmo alvo e tipo — com o balde do `targetKey` real, lido no `Modifier` real
 (passando pelo `UnmarshalJSON`). **Guarda que precisa de regra privada do motor
 mora no motor**: `switch` espelhado noutro pacote diverge em silêncio.
 
+**O aumento do item disputa só dentro do item.** O balde do empilhamento é
+alvo e tipo de bônus (`stackingKey`), e o modificador que aumenta o bônus do
+próprio item (`Modifier.RaisesItem`: a Reforçada, o Defensor, o Guardião) leva
+também o item. Assim a Reforçada da armadura e a do escudo somam, e o Defensor
+e o Guardião no mesmo escudo disputam.
+
 ## A MANOBRA é o primeiro teste OPOSTO do motor
 
 O resto do combate mede um total contra um número parado; na manobra (p234) os

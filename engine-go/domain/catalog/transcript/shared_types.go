@@ -31,6 +31,9 @@ type Modifier struct {
 	// "cumulativo com outras reduções de custo" (p131). Ver `pmCostDispute`, no motor.
 	StacksWith    []string `json:"stacksWith,omitempty"`
 	StacksWithAll bool     `json:"stacksWithAll,omitempty"`
+	// RaisesItem diz que o modificador aumenta o bônus que o próprio item dá ("o bônus na Defesa do item aumenta",
+	// p165, p337, p339). Ver `engine.Modifier.RaisesItem`.
+	RaisesItem bool `json:"raisesItem,omitempty"`
 }
 
 type ModifierCondition struct {

@@ -123,6 +123,9 @@ var demoCampaigns = []demoCampaign{
 			// A CARIDADE (p83): a Cura pelas Mãos, a Coragem e a Libertação custam 1 PM a menos num aliado, e o
 			// alvo se diz no gesto de usar (ALE-647).
 			{"jogador@t20.local", "Paladina Caridosa Nv6"},
+			// A MELHORIA E O ENCANTO NO ESCUDO (p165, p337): o escudo pesado reforçado e defensor dá +5 na Defesa, a
+			// Reforçada da armadura soma com a do escudo, e a Solidez leva o escudo inteiro às resistências (ALE-658).
+			{"jogador@t20.local", "Escudeira Reforçada Nv6"},
 		},
 		sessions: []demoSession{
 			{1, "A emboscada na ponte", "ended", "2026-07-11T19:00:00.000Z", "2026-07-11T23:10:00.000Z", ""},

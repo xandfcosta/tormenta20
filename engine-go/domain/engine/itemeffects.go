@@ -185,6 +185,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		From              string             `json:"from,omitempty"`
 		StacksWith        []string           `json:"stacksWith,omitempty"`
 		StacksWithAll     bool               `json:"stacksWithAll,omitempty"`
+		RaisesItem        bool               `json:"raisesItem,omitempty"`
 	}
 	return json.Marshal(wire{
 		Target:            m.Target,
@@ -200,6 +201,7 @@ func (m Modifier) MarshalJSON() ([]byte, error) {
 		From:              m.From,
 		StacksWith:        m.StacksWith,
 		StacksWithAll:     m.StacksWithAll,
+		RaisesItem:        m.RaisesItem,
 	})
 }
 

@@ -280,7 +280,7 @@ func resolveStacking(w *ecs.World) {
 		if dead(w, e) || deferred(w, e) || accumulates(t.Mod.BonusType) {
 			return
 		}
-		key := targetKey(t.Mod.Target) + "::" + t.Mod.BonusType
+		key := stackingKey(t)
 		held, seen := winner[key]
 		if !seen {
 			winner[key] = slot{best: e, amount: t.Mod.Amount}
@@ -301,6 +301,17 @@ func resolveStacking(w *ecs.World) {
 		won, _ := ecs.Get[Term](w, winner[l.key].best)
 		ecs.Set(w, l.loser, OutOfTheSum{Note: stackingLossNote(won.Source, won.Mod.BonusType)})
 	}
+}
+
+// stackingKey é o balde em que dois termos disputam: o mesmo alvo e o mesmo tipo de bônus (p226). O AUMENTO DO
+// ITEM (`Modifier.RaisesItem`) leva também o item, porque cada um aumenta o bônus do seu: a Reforçada da armadura
+// e a do escudo somam, e o Defensor e o Guardião no mesmo escudo disputam.
+func stackingKey(t Term) string {
+	key := targetKey(t.Mod.Target) + "::" + t.Mod.BonusType
+	if t.Mod.RaisesItem {
+		key += "::" + t.SourceID
+	}
+	return key
 }
 
 // OutOfTheSum marca a parcela que mirava um alvo e não entrou nele, com a frase que a conta da ficha mostra
