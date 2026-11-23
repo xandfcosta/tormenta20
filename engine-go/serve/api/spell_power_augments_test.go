@@ -26,14 +26,31 @@ func castWithPowers(t *testing.T) sceneFixture {
 
 // castWith conjura pela rota da aba Magias, com os sinais do diálogo no corpo, e
 // devolve a recusa e o PM gasto. O PM é medido sempre: toda recusa tem de sair de
-// graça.
+// graça. A magia que ainda não está no grimório é aprendida antes; a que já está, não, porque aprender de novo é
+// recusado.
 func castWith(t *testing.T, f sceneFixture, spellID, signals string) (string, int64) {
 	t.Helper()
-	learnSpell(t, f, spellID)
+	if !inTheGrimoire(t, f, spellID) {
+		learnSpell(t, f, spellID)
+	}
 	before := mpOf(t, f.s, f.charID)
 	target := fmt.Sprintf("/personagens/%d/magias/conjura/%s?tab=spells", f.charID, spellID)
 	refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, signals).Body.String())
 	return refusal, before - mpOf(t, f.s, f.charID)
+}
+
+func inTheGrimoire(t *testing.T, f sceneFixture, spellID string) bool {
+	t.Helper()
+	known, err := f.s.queries.ListSpellsByCharacter(context.Background(), f.charID)
+	if err != nil {
+		t.Fatalf("ler o grimório: %v", err)
+	}
+	for _, spell := range known {
+		if spell.Catalogspellid == spellID {
+			return true
+		}
+	}
+	return false
 }
 
 func TestSpellPowersAddTheirCostToTheCast(t *testing.T) {
@@ -157,6 +174,9 @@ func TestTheSpellSheetOffersTheSpellPowersTheCharacterHas(t *testing.T) {
 // Conjurar da linha abre a folha em vez de conjurar direto.
 func TestASpellWithoutItsOwnAugmentsOpensTheSheetForASpellPower(t *testing.T) {
 	f := castWithPowers(t)
+	// A Marionete é do 4º círculo, que o arcanista alcança no 13º nível: nenhuma arcana de 1º ou 2º círculo
+	// vem sem aprimoramento próprio.
+	seedClasse(t, f.s, f.charID, "Arcanista", 5)
 	learnSpell(t, f, "marionete")
 	opens := regexp.MustCompile(`aria-label="Conjurar Marionete"[^>]*commandfor=`)
 	if !opens.MatchString(spellScreen(t, f, f.charID)) {

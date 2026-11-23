@@ -16,8 +16,13 @@ const spellFocusPath = "escolha/foco-em-magia/"
 func learnSpell(t *testing.T, f sceneFixture, spellID string) {
 	t.Helper()
 	learnURL := fmt.Sprintf("/personagens/%d/magias/aprende/%s?tab=spells", f.charID, spellID)
-	if rec := f.requests(t, f.player, http.MethodPost, learnURL, ""); rec.Code != http.StatusOK {
+	rec := f.requests(t, f.player, http.MethodPost, learnURL, "")
+	if rec.Code != http.StatusOK {
 		t.Fatalf("aprender %q respondeu %d: %s", spellID, rec.Code, rec.Body.String())
+	}
+	// A recusa volta com 200, num sinal: sem esta conferência, a magia que não se aprende passava calada.
+	if refusal := sceneRefusal(rec.Body.String()); refusal != "" {
+		t.Fatalf("aprender %q foi recusado: %q", spellID, refusal)
 	}
 }
 
@@ -76,10 +81,11 @@ func TestTheSpellFocusOffersTheGrimoire(t *testing.T) {
 
 // "uma magia que possa LANÇAR": a do grimório acima do círculo que a ficha
 // alcança fica de fora. O Arcanista 8 lança até o 2º círculo (p37), e o
-// Teletransporte é do 3º.
+// Teletransporte é do 3º. Ele não se aprende mais acima do círculo, então entra
+// como a magia gravada antes da regra, que continua no grimório.
 func TestTheSpellFocusLeavesOutTheSpellTheSheetCannotCastYet(t *testing.T) {
 	f := newSceneFixture(t)
-	learnSpell(t, f, "teletransporte")
+	learn(t, f, f.charID, "teletransporte")
 	if refusal := powerCommand(t, f, f.charID, spellFocusPath+"teletransporte", ""); !strings.Contains(refusal, "círculo") {
 		t.Errorf("o Foco em Teletransporte, de 3º círculo, deu %q; want a recusa pelo círculo", refusal)
 	}

@@ -167,10 +167,11 @@ func TestTheSpellsPanelDrawsTheSpellbookAndTheCatalog(t *testing.T) {
 			t.Errorf("a tela não tem %s", want)
 		}
 	}
-	// O CATÁLOGO sai inteiro, menos o que já se sabe.
-	if strings.Count(screen, "/magias/aprende/") < 150 {
+	// O CATÁLOGO sai inteiro, menos o que já se sabe. Conta o BOTÃO, e não a rota: a magia acima do círculo
+	// aparece com o Aprender trancado, sem rota.
+	if strings.Count(screen, `aria-label="Aprender `) < 150 {
 		t.Errorf("o catálogo desenhou %d opções de aprender, e são ~197",
-			strings.Count(screen, "/magias/aprende/"))
+			strings.Count(screen, `aria-label="Aprender `))
 	}
 	if strings.Contains(screen, "/magias/aprende/bola-de-fogo") {
 		t.Error("uma magia JÁ aprendida continua ofertada no catálogo")

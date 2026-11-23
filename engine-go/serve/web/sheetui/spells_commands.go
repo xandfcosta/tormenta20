@@ -19,7 +19,11 @@ import (
 // magia vem do caminho, e os aprimoramentos vêm dos sinais do diálogo.
 
 func learnSpell(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	return s.plays.LearnSpell(r.Context(), row.ID, chi.URLParam(r, "magia"))
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	return s.plays.LearnSpell(r.Context(), dto, chi.URLParam(r, "magia"))
 }
 
 func forgetSpell(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {

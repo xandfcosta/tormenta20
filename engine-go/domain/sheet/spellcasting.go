@@ -2,6 +2,8 @@ package sheet
 
 import (
 	"encoding/json"
+	"fmt"
+	"slices"
 	"strconv"
 
 	"t20engine/domain/book"
@@ -46,14 +48,10 @@ func RequiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
 	return choices["Arcanista"].Path == "mago"
 }
 
-// HighestCastableCircle é o maior círculo que o personagem alcança.
-//
-// O piso é o círculo da PRÓPRIA magia, e essa é a regra que não se adivinha: uma
-// magia concedida por poder (Totem Espiritual, p42) é conjurável por quem não
-// tem classe nenhuma de conjurador — no círculo dela, e só nele. Sem o piso, um
-// bárbaro com Totem não conseguiria conjurar a magia que o poder lhe deu.
-func HighestCastableCircle(classes []ClassDTO, spellCircle int) int {
-	best := spellCircle
+// HighestCastableCircle é o maior círculo que estas classes alcançam, 0 sem classe que conjure. O
+// círculo de uma magia é do `SpellCircleReach`, que escolhe as classes e põe o piso.
+func HighestCastableCircle(classes []ClassDTO) int {
+	best := 0
 	progressions := book.SpellProgressions()
 	for _, entry := range classes {
 		prog, casts := progressions[entry.ClassName]
@@ -73,11 +71,68 @@ func HighestCastableCircle(classes []ClassDTO, spellCircle int) int {
 	return best
 }
 
+// SpellCircleReach é o maior círculo que a ficha alcança PARA ESTA MAGIA, que é o que aprender e conjurar
+// conferem e o que libera o aprimoramento de círculo alto (p171). Em ordem:
+//
+//   - o das classes que lançam a magia, e não o maior entre todas: o Arcanista 9 / Clérigo 1 alcança o 3º
+//     círculo nas arcanas e o 1º nas divinas;
+//   - sem nenhuma delas, o das classes que conjuram: um poder ensinou a magia de fora da lista (o Aspecto da
+//     Primavera do druida, p61, aprende encantamento "arcana ou divina");
+//   - sem classe que conjure, o da própria magia, que veio de fora das classes: a magia concedida por
+//     poder (Totem Espiritual, p42) se conjura no círculo dela, e sem esse piso o bárbaro com Totem não
+//     conjuraria a magia que o poder lhe deu.
+//
+// Magia desconhecida alcança o círculo 0.
+//
+//	sheet.SpellCircleReach(arcanista9clerigo1, "curar-ferimentos") // 1
+func SpellCircleReach(dto CharacterDTO, spellID string) int {
+	spell, found := book.SpellByID(spellID)
+	if !found {
+		return 0
+	}
+	casting := CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
+	classes := slices.DeleteFunc(slices.Clone(dto.Classes), func(c ClassDTO) bool { return !slices.Contains(casting, c.ClassName) })
+	if len(classes) == 0 {
+		classes = slices.DeleteFunc(slices.Clone(dto.Classes), func(c ClassDTO) bool { return !IsCasterClass(c.ClassName) })
+	}
+	if len(classes) == 0 {
+		return spell.Circle
+	}
+	return HighestCastableCircle(classes)
+}
+
 // CanCastCircleOf diz se a ficha alcança o círculo da magia — "uma magia que
 // possa lançar" (Foco em Magia, p131). Magia desconhecida não alcança.
 func CanCastCircleOf(dto CharacterDTO, spellID string) bool {
 	spell, found := book.SpellByID(spellID)
-	return found && spell.Circle <= HighestCastableCircle(dto.Classes, 0)
+	return found && spell.Circle <= SpellCircleReach(dto, spellID)
+}
+
+// AboveTheCircle é a frase da magia que passa do círculo que a ficha alcança para ela, ou vazia. É a
+// recusa de aprender e de conjurar, e o que a aba Magias escreve na linha trancada. Magia desconhecida
+// é vazia: quem a recusa é quem procura no livro.
+//
+//	sheet.AboveTheCircle(arcanista4, "bola-de-fogo") // "Bola de Fogo é do 2º círculo, e esta ficha alcança até o 1º (p170)"
+func AboveTheCircle(dto CharacterDTO, spellID string) string {
+	spell, found := book.SpellByID(spellID)
+	if !found {
+		return ""
+	}
+	reach := SpellCircleReach(dto, spellID)
+	if spell.Circle <= reach {
+		return ""
+	}
+	return fmt.Sprintf("%s é do %dº círculo, e esta ficha alcança até o %dº (p170)", spell.Name, spell.Circle, reach)
+}
+
+// OffTheList é o aviso da magia que nenhuma classe da ficha lança pela lista (p170), ou vazio. Não
+// recusa nada: um poder pode ensiná-la, e quem confere de onde ela veio é o mestre.
+func OffTheList(dto CharacterDTO, spellID string) string {
+	spell, found := book.SpellByID(spellID)
+	if !found || len(CastingClasses(dto, dto.Classes, spell.School, spell.Classes)) > 0 {
+		return ""
+	}
+	return "fora da lista das suas classes: só vale se um poder a ensinou"
 }
 
 // IsCasterClass diz se a classe conjura.

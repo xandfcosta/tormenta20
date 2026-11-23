@@ -45,10 +45,7 @@ type spellbookPanel struct {
 	// RequiresPrep é Clérigo, Druida e o Arcanista do caminho `mago`: para eles
 	// a magia precisa estar PREPARADA para ser conjurada.
 	RequiresPrep bool
-	// CastableCircle é o maior círculo que este personagem alcança, e é o que
-	// TRANCA os aprimoramentos de círculo alto.
-	CastableCircle int
-	PmCurrent      int64
+	PmCurrent    int64
 	// Ritual diz que a próxima magia é ritual, e o diálogo escreve a conta dele (p131).
 	Ritual bool
 	// ShapeSilence é a frase da forma que não conjura (p62), vazia fora dela ou com a Magia Natural: o
@@ -97,6 +94,10 @@ type learnedSpellRow struct {
 	// SpellCut é quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" do Combate já mostra:
 	// o medalhão de prata nas de alcance pessoal (p160), o Foco em Magia na escolhida (p131).
 	SpellCut string
+	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança: ela fica no grimório, e o
+	// Conjurar tranca com a frase (`sheet.AboveTheCircle`). OffTheList é o aviso de `sheet.OffTheList`.
+	AboveTheCircle string
+	OffTheList     string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -116,26 +117,29 @@ type catalogSpellRow struct {
 	Effect  string
 	Page    int
 	Command string
+	// AboveTheCircle tranca o Aprender, e aparece em vez de sumir, como o aprimoramento de círculo alto:
+	// quem ainda não alcança merece saber que a magia existe. OffTheList só avisa.
+	AboveTheCircle string
+	OffTheList     string
 }
 
 // spellbookPanelOf monta a aba.
 func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school string) spellbookPanel {
 	panel := spellbookPanel{
-		IsCaster:       len(casterClassesOf(dto)) > 0,
-		RequiresPrep:   sheet.RequiresPreparation(dto.Classes, dto.ClassChoices),
-		CastableCircle: sheet.HighestCastableCircle(dto.Classes, 0),
-		PmCurrent:      dto.MpCurrent,
-		Ritual:         character.CastsAsRitual(dto),
-		Search:         search,
-		Circle:         circle,
-		School:         school,
-		Schools:        schoolOptions(school),
-		Granted:        grantedSpellRowsOf(dto),
+		IsCaster:     len(casterClassesOf(dto)) > 0,
+		RequiresPrep: sheet.RequiresPreparation(dto.Classes, dto.ClassChoices),
+		PmCurrent:    dto.MpCurrent,
+		Ritual:       character.CastsAsRitual(dto),
+		Search:       search,
+		Circle:       circle,
+		School:       school,
+		Schools:      schoolOptions(school),
+		Granted:      grantedSpellRowsOf(dto),
 	}
 	if ec, err := sheet.EngineCharacterFrom(dto); err == nil && !engine.CastsInTheShape(ec) {
 		panel.ShapeSilence = character.ShapeSilence
 	}
-	panel.Learned = learnedSpellRowsOf(dto, panel.CastableCircle)
+	panel.Learned = learnedSpellRowsOf(dto)
 	// Quem não conjura não aprende, e por isso não paga o catálogo: a lista
 	// inteira do Capítulo 4 viajaria em toda cena da ficha de um guerreiro.
 	if panel.IsCaster {
@@ -159,7 +163,7 @@ func casterClassesOf(dto sheet.CharacterDTO) []string {
 //
 // A FICHA É CALCULADA UMA VEZ para a lista inteira, e cada linha pergunta a ela o que vale para a magia
 // (`ForSpell`): o grimório de um conjurador de nível alto tem dezenas de magias.
-func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow {
+func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	computed, computedOK := spellSheetOf(dto)
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
@@ -175,16 +179,18 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO, castable int) []learnedSpellRow 
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
 			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
 			CD:        spellCdOf(dto, computed, computedOK, spell, at),
-			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, castable),
+			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, sheet.SpellCircleReach(dto, learned.CatalogSpellID)),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
 			DurationWritten: book.SpellDurationWritten(fromBook),
 			Targeting:       fromBook.Targeting,
 			Resistance:      book.SpellResistanceWritten(fromBook),
 			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
-			Command:  learned.CatalogSpellID,
-			CostCut:  costCutNote(computed, computedOK, tradition),
-			SpellCut: onlyHereCutNote(computed, computedOK, at),
+			Command:        learned.CatalogSpellID,
+			CostCut:        costCutNote(computed, computedOK, tradition),
+			SpellCut:       onlyHereCutNote(computed, computedOK, at),
+			AboveTheCircle: sheet.AboveTheCircle(dto, learned.CatalogSpellID),
+			OffTheList:     sheet.OffTheList(dto, learned.CatalogSpellID),
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {
@@ -250,6 +256,7 @@ func catalogSpellRowsOf(dto sheet.CharacterDTO, search, circle, school string) [
 		rows = append(rows, catalogSpellRow{
 			ID: m.ID, Name: m.Name, Circle: circleName(m.Circle), School: schoolName(m.School),
 			Effect: m.BaseEffect, Page: m.BookPage, Command: m.ID,
+			AboveTheCircle: sheet.AboveTheCircle(dto, m.ID), OffTheList: sheet.OffTheList(dto, m.ID),
 		})
 	}
 	return rows

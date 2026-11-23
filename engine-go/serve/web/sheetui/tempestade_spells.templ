@@ -96,6 +96,10 @@ templ castGesture(v View, spell learnedSpellRow) {
 		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "disabled": true, "title": v.Spells.ShapeSilence}) {
 			Conjurar
 		}
+	} else if spell.AboveTheCircle != "" {
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "disabled": true, "title": spell.AboveTheCircle}) {
+			Conjurar
+		}
 	} else if castOpensSheet(spell) {
 		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "commandfor": spellSheetID(spell), "command": "show-modal", "aria-haspopup": "dialog"}) {
 			Conjurar
@@ -115,6 +119,12 @@ templ spellSheet(v View, spell learnedSpellRow) {
 		<p class="ds-row-meta">{ spellSheetMeta(spell) }</p>
 		<p class="ds-row-meta">{ spellSheetReach(spell) }</p>
 		<p class="ds-card-text">{ spell.Effect }</p>
+		if spell.AboveTheCircle != "" {
+			<p class="ds-help">{ spell.AboveTheCircle }</p>
+		}
+		if spell.OffTheList != "" {
+			<p class="ds-help">{ spell.OffTheList }</p>
+		}
 		if v.Spells.RequiresPrep {
 			@ds.Switch("Preparada", spell.Prepared, templ.Attributes{"data-on:change": sheetPost(v, "/magias/prepara/"+spell.Command)})
 		}
@@ -142,7 +152,7 @@ templ spellSheetFootBody(v View, spell learnedSpellRow) {
 	@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "aria-label": "Esquecer " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/esquece/"+spell.Command)}) {
 		Esquecer
 	}
-	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command), "disabled": v.Spells.ShapeSilence != ""}) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command), "disabled": v.Spells.ShapeSilence != "" || spell.AboveTheCircle != ""}) {
 		<span data-text={ "'Conjurar · ' + " + costPreview(spell) }>Conjurar</span>
 	}
 }
@@ -205,11 +215,17 @@ templ learnSpellSheet(v View) {
 					<div class="ds-row ds-pick-row">
 						<div class="min-w-0">
 							<div class="ds-row-title">{ spell.Name }</div>
-							<div class="ds-row-meta">{ spell.Circle + " círculo · " + spell.School + " · p" + strconv.Itoa(spell.Page) }</div>
+							<div class="ds-row-meta">{ catalogSpellMeta(spell) }</div>
 							<div class="ds-pick-detail">{ spell.Effect }</div>
 						</div>
-						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "data-on:click": sheetPost(v, "/magias/aprende/"+spell.Command)}) {
-							Aprender
+						if spell.AboveTheCircle != "" {
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "disabled": true, "title": spell.AboveTheCircle}) {
+								Aprender
+							}
+						} else {
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "data-on:click": sheetPost(v, "/magias/aprende/"+spell.Command)}) {
+								Aprender
+							}
 						}
 					</div>
 				}

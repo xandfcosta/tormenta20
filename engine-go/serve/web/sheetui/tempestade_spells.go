@@ -121,6 +121,25 @@ func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
 	if requiresPrep && !spell.Prepared {
 		meta += " · não preparada"
 	}
+	if spell.AboveTheCircle != "" {
+		meta += " · acima do seu círculo"
+	}
+	return meta
+}
+
+// catalogSpellMeta é a linha de meta da magia no Aprender. A marca de círculo e de lista mora AQUI, curta, e
+// não numa frase própria: num arcanista, metade do catálogo é divina, e um aviso em corpo de texto em cada
+// carta pesaria mais que o nome da magia. A frase inteira do círculo vai no `title` do Aprender trancado.
+//
+//	catalogSpellMeta(row) // "2º círculo · Evocação · p182 · acima do seu círculo", no Arcanista 4
+func catalogSpellMeta(spell catalogSpellRow) string {
+	meta := spell.Circle + " círculo · " + spell.School + " · p" + strconv.Itoa(spell.Page)
+	if spell.AboveTheCircle != "" {
+		meta += " · acima do seu círculo"
+	}
+	if spell.OffTheList != "" {
+		meta += " · fora da lista das suas classes"
+	}
 	return meta
 }
 

@@ -283,7 +283,7 @@
               "prepared": true
             },
             {
-              "id": "metamorfose"
+              "id": "controlar-madeira"
             }
           ]
         },
@@ -358,11 +358,11 @@
               "prepared": true
             },
             {
-              "id": "bola-de-fogo",
+              "id": "explosao-de-chamas",
               "prepared": true
             },
             {
-              "id": "relampago",
+              "id": "seta-infalivel-de-talude",
               "prepared": true
             }
           ]
@@ -427,14 +427,14 @@
               "prepared": true
             },
             {
-              "id": "abencoar-alimentos",
+              "id": "bencao",
               "prepared": true
             },
             {
-              "id": "voz-divina"
+              "id": "comando"
             },
             {
-              "id": "tempestade-divina"
+              "id": "protecao-divina"
             }
           ]
         },
@@ -1052,14 +1052,14 @@
               "prepared": true
             },
             {
-              "id": "abencoar-alimentos",
+              "id": "bencao",
               "prepared": true
             },
             {
-              "id": "voz-divina"
+              "id": "comando"
             },
             {
-              "id": "tempestade-divina"
+              "id": "protecao-divina"
             }
           ]
         },
