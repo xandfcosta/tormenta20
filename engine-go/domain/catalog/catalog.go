@@ -89,6 +89,11 @@ type Augment struct {
 	// tradução assentada, como `tormenta` — e os valores deste catálogo já são
 	// assim (`kind: "muda"`, `classOnly: "arcanos"`).
 	Cantrip bool `json:"truque"`
+	// ClassOnly é o aprimoramento que o livro marca "Apenas Arcanos", "Apenas Divinos" ou "Apenas Druidas"
+	// (a Luz, p197; o Controlar o Clima, p187): ele só existe para quem lança a magia por aquela tradição ou
+	// classe, e quem responde por onde a ficha lança é o conjurador (`SpellOnTheSheet.CastsAs`). Vazio é
+	// "todos".
+	ClassOnly string `json:"classOnly"`
 }
 
 // Buff carries the modifiers an applied spell effect stores (raw JSON so it

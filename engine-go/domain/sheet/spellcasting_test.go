@@ -32,7 +32,7 @@ func TestTheReachableCircleRisesWithTheLevel(t *testing.T) {
 		{"arcanista de 5º abre o 2º", []ClassDTO{{ClassName: "Arcanista", Level: 5}}, 2},
 		{"arcanista de 17º chega ao 5º", []ClassDTO{{ClassName: "Arcanista", Level: 17}}, 5},
 		{"bardo de 20º para no 4º", []ClassDTO{{ClassName: "Bardo", Level: 20}}, 4},
-		// O piso da magia de quem não conjura é do `SpellCircleReach` (ver o teste dele).
+		// O piso da magia de quem não conjura é do conjurador (`SpellOnTheSheet.CircleReach`).
 		{"guerreiro não conjura", []ClassDTO{{ClassName: "Guerreiro", Level: 20}}, 0},
 		{"multiclasse fica com o MAIOR", []ClassDTO{
 			{ClassName: "Guerreiro", Level: 10}, {ClassName: "Arcanista", Level: 9},

@@ -25,13 +25,13 @@ import (
 // O livro é conferido AQUI e não por quem chama: uma magia que não existe seria
 // uma linha órfã no grimório, que a ficha desenha como um espaço em branco. E o
 // círculo também: aprende-se a magia "de um tipo e círculo que possa lançar com
-// aquela classe" (p170), e a acima dele não se aprende (`sheet.SpellCircleReach`). A magia de fora da lista
-// das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
+// aquela classe" (p170), e a acima dele não se aprende (o conjurador, `sheet.CasterOf`). A magia de fora da
+// lista das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
 func (p Plays) LearnSpell(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
 	if _, known := catalog.LookupSpell(catalogSpellID); !known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
-	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
+	if refusal := sheet.CasterOf(dto).Spell(catalogSpellID).AboveTheCircle; refusal != "" {
 		return errors.New(refusal)
 	}
 	if _, err := p.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
@@ -105,9 +105,10 @@ func (p Plays) Cast(
 	if learned == nil {
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
+	onSheet := sheet.CasterOf(dto).Spell(catalogSpellID)
 	// A MAGIA GRAVADA ANTES DA REGRA fica no grimório, e conjurar recusa: o grimório
 	// não perde nada sozinho, e quem joga a esquece e aprende outra.
-	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
+	if refusal := onSheet.AboveTheCircle; refusal != "" {
 		return errors.New(refusal)
 	}
 	if sheet.RequiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
@@ -115,7 +116,7 @@ func (p Plays) Cast(
 	}
 	// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171),
 	// e não pela maior entre todas.
-	augmentPm, augErr := validateAugments(spell, augments, sheet.SpellCircleReach(dto, catalogSpellID))
+	augmentPm, augErr := validateAugments(spell, augments, onSheet)
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
@@ -150,14 +151,10 @@ func (p Plays) Cast(
 	active := sheet.ToStringSet(dto.Conditionals)
 	// QUEM LANÇA a magia é a pergunta das duas contas, e não a lista do verbete: o bardo de evocação lança a
 	// Bola de Fogo, que lista só o Arcanista (p44).
-	casting := sheet.CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
-	at := engine.SpellAt{
-		Tradition: sheet.SpellTradition(dto.Classes, casting), School: spell.School, Range: spell.Range, Spell: catalogSpellID,
-		Classes: casting,
-	}
+	at := onSheet.At()
 	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, at)
 	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, at)
-	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting, at)
+	limit := dto.Ruleset.SpellPmLimitFor(ec, active, onSheet.Casting, at)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
@@ -224,12 +221,12 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 // `catalog.Spell` com o `book.Spell` tipado, que é trabalho próprio e mexe nos
 // dois lados. Até lá ela fica com o único chamador que tem.
 //
-// O `castableCircle` fechou uma FRONTEIRA que estava aberta (ALE-272, fatia 6):
+// O círculo do aprimoramento fechou uma FRONTEIRA que estava aberta (ALE-272, fatia 6):
 // 126 dos 486 aprimoramentos do catálogo exigem um círculo mínimo, e até aqui
 // esse limite existia só na tela. A tabela que o decide vivia só no TypeScript,
 // então o servidor nem tinha como perguntar — e um pedido montado à mão
 // conjurava o que a regra não permite. Travar na UI é UX; a fronteira é aqui.
-func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, castableCircle int) (int, string) {
+func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, onSheet sheet.SpellOnTheSheet) (int, string) {
 	if len(picks) == 0 {
 		return 0, ""
 	}
@@ -267,10 +264,16 @@ func validateAugments(spell catalog.Spell, picks []sheet.AugmentPick, castableCi
 				"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele",
 				p.AugmentIndex)
 		}
-		if a.RequiresCircle != nil && *a.RequiresCircle > castableCircle {
+		// O "APENAS ARCANOS / DIVINOS / DRUIDAS" (p187, p197) pergunta por onde a ficha lança a magia, e vem
+		// antes do círculo pela mesma razão do cadeado da folha: é o motivo que não passa com o nível.
+		if !onSheet.CastsAs(a.ClassOnly) {
+			return 0, fmt.Sprintf("o aprimoramento %d é \"apenas %s\", e esta ficha não lança %s assim",
+				p.AugmentIndex, a.ClassOnly, onSheet.Spell.Name)
+		}
+		if a.RequiresCircle != nil && *a.RequiresCircle > onSheet.CircleReach {
 			return 0, fmt.Sprintf(
 				"aprimoramento %d exige o %dº círculo e este personagem alcança o %dº",
-				p.AugmentIndex, *a.RequiresCircle, castableCircle)
+				p.AugmentIndex, *a.RequiresCircle, onSheet.CircleReach)
 		}
 		total += a.PmCost * p.Stacks
 	}

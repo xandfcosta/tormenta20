@@ -36,6 +36,8 @@ type SpellAugment struct {
 	PmCost      int    `json:"pmCost"`
 	Kind        string `json:"kind"`
 	Description string `json:"description"`
+	// ClassOnly é a marca "Apenas Arcanos / Divinos / Druidas" (p187, p197), vazia em todos os outros.
+	ClassOnly string `json:"classOnly"`
 }
 
 // AugmentKindName: o livro separa o que AUMENTA um efeito do que o

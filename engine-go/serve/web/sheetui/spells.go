@@ -165,21 +165,21 @@ func casterClassesOf(dto sheet.CharacterDTO) []string {
 // (`ForSpell`): o grimório de um conjurador de nível alto tem dezenas de magias.
 func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	computed, computedOK := spellSheetOf(dto)
+	caster := sheet.CasterOf(dto)
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
 		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
 		if !known {
 			continue
 		}
-		fromBook := spellOfBook(learned.CatalogSpellID)
-		tradition := sheet.SpellTradition(dto.Classes, sheet.CastingClasses(dto, dto.Classes, fromBook.School, fromBook.Classes))
-		at := engine.SpellAt{Tradition: tradition, School: spell.School, Range: spell.Range, Spell: learned.CatalogSpellID}
+		onSheet := caster.Spell(learned.CatalogSpellID)
+		fromBook, at := onSheet.Spell, onSheet.At()
 		rows = append(rows, learnedSpellRow{
 			ID: learned.CatalogSpellID, Name: fromBook.Name,
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
 			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
-			CD:        spellCdOf(dto, computed, computedOK, spell, at),
-			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, sheet.SpellCircleReach(dto, learned.CatalogSpellID)),
+			CD:        spellCdOf(computed, computedOK, onSheet),
+			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
 			DurationWritten: book.SpellDurationWritten(fromBook),
@@ -187,10 +187,10 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			Resistance:      book.SpellResistanceWritten(fromBook),
 			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
 			Command:        learned.CatalogSpellID,
-			CostCut:        costCutNote(computed, computedOK, tradition),
+			CostCut:        costCutNote(computed, computedOK, onSheet.Tradition),
 			SpellCut:       onlyHereCutNote(computed, computedOK, at),
-			AboveTheCircle: sheet.AboveTheCircle(dto, learned.CatalogSpellID),
-			OffTheList:     sheet.OffTheList(dto, learned.CatalogSpellID),
+			AboveTheCircle: onSheet.AboveTheCircle,
+			OffTheList:     onSheet.OffTheList,
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {
@@ -211,19 +211,15 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 // Arcanista sai do caminho (p37), e a feiticeira lia a CD de Inteligência. O bônus
 // é o que alcança a magia (`ForSpell`), com a tradição da classe que lança: a varinha arcana
 // sobe a CD das arcanas e não a das divinas (p160), e o tomo hermético só a da escola dele.
-func spellCdOf(dto sheet.CharacterDTO, computed engine.ComputedSheet, ok bool, spell catalog.Spell, at engine.SpellAt) string {
+func spellCdOf(computed engine.ComputedSheet, ok bool, spell sheet.SpellOnTheSheet) string {
 	if !ok {
 		return "—"
 	}
 	best := 0
-	for _, class := range dto.Classes {
-		prog, casts := book.SpellProgressions()[class.ClassName]
-		if !casts || !sheet.CastsTheSpell(dto, class.ClassName, spell.School, spell.Classes) {
-			continue
-		}
-		byThisClass := at
-		byThisClass.Tradition = prog.List
-		attribute := computed.SpellAttributeByClass[class.ClassName]
+	for _, class := range spell.Casting {
+		byThisClass := spell.At()
+		byThisClass.Tradition = book.SpellProgressions()[class].List
+		attribute := computed.SpellAttributeByClass[class]
 		if cd := computed.SpellCdByAttribute[attribute] + computed.ForSpell("spellDC", byThisClass).Total; cd > best {
 			best = cd
 		}
@@ -248,15 +244,17 @@ func catalogSpellRowsOf(dto sheet.CharacterDTO, search, circle, school string) [
 	for _, s := range dto.Spells {
 		known[s.CatalogSpellID] = true
 	}
+	caster := sheet.CasterOf(dto)
 	rows := []catalogSpellRow{}
 	for _, m := range book.Catalogs().Spells {
 		if known[m.ID] || !passesFilter(m, search, circle, school) {
 			continue
 		}
+		onSheet := caster.Spell(m.ID)
 		rows = append(rows, catalogSpellRow{
 			ID: m.ID, Name: m.Name, Circle: circleName(m.Circle), School: schoolName(m.School),
 			Effect: m.BaseEffect, Page: m.BookPage, Command: m.ID,
-			AboveTheCircle: sheet.AboveTheCircle(dto, m.ID), OffTheList: sheet.OffTheList(dto, m.ID),
+			AboveTheCircle: onSheet.AboveTheCircle, OffTheList: onSheet.OffTheList,
 		})
 	}
 	return rows

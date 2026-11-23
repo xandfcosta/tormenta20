@@ -6,7 +6,6 @@ import (
 	"slices"
 
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
@@ -77,12 +76,16 @@ func (p Plays) LeaveClass(ctx context.Context, row sqlcgen.Character, class stri
 		}
 	}
 	// A magia que só esta classe concede ficaria na ficha sem ninguém que a conjure. A de fora da lista, que
-	// nenhuma classe lançava, não veio desta e não a segura: ela se aprende com aviso (`sheet.OffTheList`).
+	// nenhuma classe lançava, não veio desta e não a segura: ela se aprende com aviso (`OffTheList`).
+	// A ficha depois da saída é a MESMA com outras classes: montada à mão com só os campos que o conjurador lê
+	// hoje, ela perguntaria a uma ficha diferente no dia em que ele lesse mais um.
+	withoutTheClass := dto
+	withoutTheClass.Classes = remaining
+	before, after := sheet.CasterOf(dto), sheet.CasterOf(withoutTheClass)
 	for _, learned := range dto.Spells {
-		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
-		if known && sheet.CastsTheSpell(dto, class, spell.School, spell.Classes) &&
-			len(sheet.CastingClasses(dto, remaining, spell.School, spell.Classes)) == 0 {
-			return fmt.Errorf("não dá para tirar %s: a magia %s veio dela", class, spell.Name)
+		spell := before.Spell(learned.CatalogSpellID)
+		if slices.Contains(spell.Casting, class) && len(after.Spell(learned.CatalogSpellID).Casting) == 0 {
+			return fmt.Errorf("não dá para tirar %s: a magia %s veio dela", class, spell.Spell.Name)
 		}
 	}
 	return p.inTx(ctx, "tirar "+class, func(q *sqlcgen.Queries) error {
