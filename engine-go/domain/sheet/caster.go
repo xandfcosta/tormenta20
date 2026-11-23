@@ -117,6 +117,13 @@ type SpellOnTheSheet struct {
 	// NeedsMemorizing diz que a ficha só lança a magia memorizada: todas as classes que a lançam são o mago
 	// (p37). No multiclasse, a Luz que o clérigo também lança se conjura sem memorizar.
 	NeedsMemorizing bool
+	// Memorized diz que a magia está no grimório e memorizada.
+	Memorized bool
+	// CastLock é a recusa de conjurar que não depende do momento, ou vazia: a magia acima do círculo
+	// (`AboveTheCircle`) ou a do mago não memorizada (p37). O servidor recusa por ela, e as abas Magias e Ações
+	// trancam o Conjurar com ela. O que depende do momento — a forma selvagem, o PM, o turno — é de quem
+	// conjura.
+	CastLock string
 }
 
 // Spell é o que a magia `spellID` é para esta ficha.
@@ -151,6 +158,15 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 	if spell.Circle > out.CircleReach {
 		out.AboveTheCircle = fmt.Sprintf("%s é do %dº círculo, e esta ficha alcança até o %dº (p170)",
 			spell.Name, spell.Circle, out.CircleReach)
+	}
+	out.Memorized = slices.ContainsFunc(c.spells, func(learned SpellDTO) bool {
+		return learned.CatalogSpellID == spellID && learned.Prepared
+	})
+	switch {
+	case out.AboveTheCircle != "":
+		out.CastLock = out.AboveTheCircle
+	case out.NeedsMemorizing && !out.Memorized:
+		out.CastLock = "memorize a magia antes de conjurá-la: o mago só lança magias memorizadas (p37)"
 	}
 	return out
 }

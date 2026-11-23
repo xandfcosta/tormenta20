@@ -100,10 +100,13 @@ type learnedSpellRow struct {
 	// SpellCut é quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" do Combate já mostra:
 	// o medalhão de prata nas de alcance pessoal (p160), o Foco em Magia na escolhida (p131).
 	SpellCut string
-	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança: ela fica no grimório, e o
-	// Conjurar tranca com a frase (`sheet.AboveTheCircle`). OffTheList é o aviso de `sheet.OffTheList`.
+	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança, que fica no grimório; a linha a
+	// marca. OffTheList é o aviso de `SpellOnTheSheet.OffTheList`.
 	AboveTheCircle string
-	OffTheList     string
+	// CastLock é a recusa de conjurar que não depende do momento (`SpellOnTheSheet.CastLock`): o Conjurar das
+	// abas Magias e Ações tranca com ela, a mesma frase que o servidor diria.
+	CastLock   string
+	OffTheList string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -219,6 +222,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			CostCut:        costCutNote(computed, computedOK, onSheet.Tradition),
 			SpellCut:       onlyHereCutNote(computed, computedOK, at),
 			AboveTheCircle: onSheet.AboveTheCircle,
+			CastLock:       onSheet.CastLock,
 			OffTheList:     onSheet.OffTheList,
 		})
 	}

@@ -426,7 +426,7 @@ func castGesture(v View, spell learnedSpellRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else if spell.AboveTheCircle != "" {
+		} else if spell.CastLock != "" {
 			templ_7745c5c3_Var18 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 				templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 				templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -445,7 +445,7 @@ func castGesture(v View, spell learnedSpellRow) templ.Component {
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "disabled": true, "title": spell.AboveTheCircle}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Conjurar " + spell.Name, "disabled": true, "title": spell.CastLock}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -579,15 +579,15 @@ func spellSheet(v View, spell learnedSpellRow) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if spell.AboveTheCircle != "" {
+			if spell.CastLock != "" {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<p class=\"ds-help\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var26 string
-				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(spell.AboveTheCircle)
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(spell.CastLock)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_spells.templ`, Line: 126, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/sheetui/tempestade_spells.templ`, Line: 126, Col: 38}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -862,7 +862,7 @@ func spellSheetFootBody(v View, spell learnedSpellRow) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command), "disabled": v.Spells.ShapeSilence != "" || spell.AboveTheCircle != ""}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + spell.Name, "commandfor": spellSheetID(spell), "command": "close", "data-on:click": sheetPost(v, "/magias/conjura/"+spell.Command), "disabled": v.Spells.ShapeSilence != "" || spell.CastLock != ""}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var37), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

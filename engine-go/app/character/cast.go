@@ -110,13 +110,11 @@ func (p Plays) Cast(
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
 	onSheet := sheet.CasterOf(dto).Spell(catalogSpellID)
-	// A MAGIA GRAVADA ANTES DA REGRA fica no grimório, e conjurar recusa: o grimório
-	// não perde nada sozinho, e quem joga a esquece e aprende outra.
-	if refusal := onSheet.AboveTheCircle; refusal != "" {
-		return errors.New(refusal)
-	}
-	if onSheet.NeedsMemorizing && !learned.Prepared {
-		return fmt.Errorf("memorize a magia antes de conjurá-la: o mago só lança magias memorizadas (p37)")
+	// A RECUSA QUE NÃO DEPENDE DO MOMENTO é do conjurador, a mesma que tranca o
+	// Conjurar nas abas: a magia acima do círculo — a gravada antes da regra fica no
+	// grimório, e quem joga a esquece e aprende outra — e a do mago não memorizada.
+	if lock := onSheet.CastLock; lock != "" {
+		return errors.New(lock)
 	}
 	// O APRIMORAMENTO é do conjurador: o preço e a recusa do livro (p170-171), a
 	// mesma resposta que tranca o cadeado da folha.

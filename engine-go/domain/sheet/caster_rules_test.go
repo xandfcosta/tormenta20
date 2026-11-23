@@ -2,6 +2,7 @@ package sheet
 
 import (
 	"slices"
+	"strings"
 	"testing"
 
 	"t20engine/domain/book"
@@ -185,5 +186,36 @@ func TestOnlyTheMagoMemorizesHalfOfHisSpells(t *testing.T) {
 	mage := CasterOf(CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 9}}, ClassChoices: path("mago"), Spells: seven})
 	if memorized, limit := mage.Memorization(); memorized != 2 || limit != 3 {
 		t.Errorf("o mago com 7 magias e 2 memorizadas contou %d de %d; want 2 de 3", memorized, limit)
+	}
+}
+
+// A RECUSA DE CONJURAR QUE NÃO DEPENDE DO MOMENTO: a magia acima do círculo (p170) e a do mago não memorizada
+// (p37). A memorizada e a do bruxo, que não memoriza, se conjuram.
+func TestTheCastLockIsTheCircleAndTheMemorization(t *testing.T) {
+	mage := CasterOf(CharacterDTO{
+		Classes:      []ClassDTO{{ClassName: "Arcanista", Level: 4}},
+		ClassChoices: `{"Arcanista":{"caminho":"mago"}}`,
+		Spells:       []SpellDTO{{CatalogSpellID: "luz", Prepared: true}, {CatalogSpellID: "explosao-de-chamas"}, {CatalogSpellID: "bola-de-fogo", Prepared: true}},
+	})
+	warlock := CasterOf(CharacterDTO{
+		Classes:      []ClassDTO{{ClassName: "Arcanista", Level: 4}},
+		ClassChoices: `{"Arcanista":{"caminho":"bruxo"}}`,
+		Spells:       []SpellDTO{{CatalogSpellID: "explosao-de-chamas"}},
+	})
+	for _, c := range []struct {
+		why    string
+		caster Caster
+		spell  string
+		want   string
+	}{
+		{"a memorizada do mago", mage, "luz", ""},
+		{"a não memorizada do mago", mage, "explosao-de-chamas", "memorize a magia antes de conjurá-la"},
+		{"a acima do círculo, mesmo memorizada", mage, "bola-de-fogo", "Bola de Fogo é do 2º círculo"},
+		{"a do bruxo, que não memoriza", warlock, "explosao-de-chamas", ""},
+	} {
+		got := c.caster.Spell(c.spell).CastLock
+		if (c.want == "") != (got == "") || !strings.Contains(got, c.want) {
+			t.Errorf("%s: a recusa saiu %q; want %q", c.why, got, c.want)
+		}
 	}
 }

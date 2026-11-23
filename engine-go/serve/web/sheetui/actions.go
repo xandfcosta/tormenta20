@@ -305,6 +305,11 @@ func rowFromSpell(spell learnedSpellRow) actionRow {
 	if spell.CD != "" {
 		row.Detail = joinWithDot(row.Detail, "CD "+spell.CD)
 	}
+	// A RECUSA QUE NÃO DEPENDE DO MOMENTO é a do conjurador, a mesma do servidor e da aba Magias: a linha
+	// tranca com a frase, em vez de ficar de pé para o servidor recusar ao tocar.
+	if spell.CastLock != "" {
+		row.Can, row.Why = false, spell.CastLock
+	}
 	return row
 }
 
