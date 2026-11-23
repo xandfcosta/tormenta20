@@ -427,10 +427,6 @@ func attributeWrittenChoice(choice attributeChoice) string {
 	return text
 }
 
-// sourceThree são as abas do diálogo, na ordem em que o livro monta um
-// personagem: raça, origem, classe.
-var sourceThree = []string{"raca", "origem", "classe"}
-
 // choiceClassCommand escreve o `@post` do caminho.
 func choiceClassCommand(v View, class, choice, value string) string {
 	return sheetPost(v, "/poderes/classe/"+url.PathEscape(class)+"/"+choice+"/"+value)

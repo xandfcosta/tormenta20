@@ -236,6 +236,3 @@ func writtenPendings(total int) string {
 	}
 	return strconv.Itoa(total) + " escolhas pendentes"
 }
-
-// writtenSources é o rótulo da aba do diálogo.
-var writtenSources = map[string]string{"raca": "Raça", "origem": "Origem", "classe": "Classe"}
