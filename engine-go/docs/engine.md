@@ -10,11 +10,15 @@ mesmo alvo e tipo — com o balde do `targetKey` real, lido no `Modifier` real
 (passando pelo `UnmarshalJSON`). **Guarda que precisa de regra privada do motor
 mora no motor**: `switch` espelhado noutro pacote diverge em silêncio.
 
-**O aumento do item disputa só dentro do item.** O balde do empilhamento é
-alvo e tipo de bônus (`stackingKey`), e o modificador que aumenta o bônus do
-próprio item (`Modifier.RaisesItem`: a Reforçada, o Defensor, o Guardião) leva
-também o item. Assim a Reforçada da armadura e a do escudo somam, e o Defensor
-e o Guardião no mesmo escudo disputam.
+**Quem disputa com quem se diz no BALDE da parcela** (`Contribution.stackBucket`),
+e as duas pilhas o leem: a do mundo (`resolveStacking`), que cala o termo que
+perde, e a das parcelas (`resolveStack`), que junta as pilhas das perícias com
+a resistência. O balde é o tipo de bônus; vazio no `untyped`, que soma
+sempre; e com o item no modificador que aumenta o bônus do próprio item
+(`Modifier.RaisesItem`: a Reforçada, o Defensor, o Guardião). Assim a Reforçada
+da armadura e a do escudo somam, e o Defensor e o Guardião no mesmo escudo
+disputam. O termo vira parcela por uma função só (`contributionOf`), e é por ela
+que o mundo pergunta o balde.
 
 ## A MANOBRA é o primeiro teste OPOSTO do motor
 

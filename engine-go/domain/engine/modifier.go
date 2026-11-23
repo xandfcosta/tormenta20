@@ -77,7 +77,7 @@ type Modifier struct {
 	StacksWithAll bool     `json:"stacksWithAll,omitempty"`
 	// RaisesItem diz que o modificador AUMENTA o bônus que o próprio item dá: "o bônus na Defesa do item aumenta"
 	// (a Reforçada, p165; o Defensor e o Guardião, p337 e p339). No empilhamento ele disputa só com outro aumento
-	// do MESMO item, e o da armadura soma com o do escudo, porque cada um aumenta o seu — ver `stackingKey`.
+	// do MESMO item, e o da armadura soma com o do escudo, porque cada um aumenta o seu — ver `Contribution.stackBucket`.
 	RaisesItem bool `json:"raisesItem,omitempty"`
 	// classLevel é o nível na classe que concedeu o poder, anotado pela coleta
 	// (`classActiveItems`) para o teto `classLevel` de um `scale` por atributo.

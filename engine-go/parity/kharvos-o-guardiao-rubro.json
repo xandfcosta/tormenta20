@@ -865,7 +865,8 @@
             "source": "Couraça",
             "bonusType": "enhancement",
             "amount": 1,
-            "note": "Reforçada: +1 Defesa"
+            "note": "Reforçada: +1 Defesa",
+            "raisesItem": true
           },
           {
             "sourceId": "minotauro",

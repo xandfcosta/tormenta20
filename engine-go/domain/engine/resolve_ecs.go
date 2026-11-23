@@ -277,10 +277,11 @@ func resolveStacking(w *ecs.World) {
 	}
 	losses := []loss{}
 	ecs.Each(w, func(e ecs.Entity, t Term) {
-		if dead(w, e) || deferred(w, e) || accumulates(t.Mod.BonusType) {
+		bucket := contributionOf(t).stackBucket()
+		if dead(w, e) || deferred(w, e) || bucket == "" {
 			return
 		}
-		key := stackingKey(t)
+		key := targetKey(t.Mod.Target) + "::" + bucket
 		held, seen := winner[key]
 		if !seen {
 			winner[key] = slot{best: e, amount: t.Mod.Amount}
@@ -303,15 +304,13 @@ func resolveStacking(w *ecs.World) {
 	}
 }
 
-// stackingKey é o balde em que dois termos disputam: o mesmo alvo e o mesmo tipo de bônus (p226). O AUMENTO DO
-// ITEM (`Modifier.RaisesItem`) leva também o item, porque cada um aumenta o bônus do seu: a Reforçada da armadura
-// e a do escudo somam, e o Defensor e o Guardião no mesmo escudo disputam.
-func stackingKey(t Term) string {
-	key := targetKey(t.Mod.Target) + "::" + t.Mod.BonusType
-	if t.Mod.RaisesItem {
-		key += "::" + t.SourceID
+// contributionOf é o termo dobrado em parcela: o que a conta da ficha mostra e o que o empilhamento lê
+// (`stackBucket`). A fonte e a nota de quem está ligado, e o motivo de quem ficou de fora, quem põe é quem chama.
+func contributionOf(t Term) Contribution {
+	return Contribution{
+		SourceID: t.SourceID, Source: t.Source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount,
+		StacksWith: t.Mod.StacksWith, StacksWithAll: t.Mod.StacksWithAll, RaisesItem: t.Mod.RaisesItem,
 	}
-	return key
 }
 
 // OutOfTheSum marca a parcela que mirava um alvo e não entrou nele, com a frase que a conta da ficha mostra
@@ -350,9 +349,9 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 	ecs.Each(w, func(e ecs.Entity, t Term) {
 		if out, has := ecs.Get[OutOfTheSum](w, e); has && !deferred(w, e) {
 			key := targetKey(t.Mod.Target)
-			dropped[key] = append(dropped[key], Contribution{
-				SourceID: t.SourceID, Source: t.Source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount, Note: out.Note,
-			})
+			c := contributionOf(t)
+			c.Note = out.Note
+			dropped[key] = append(dropped[key], c)
 		}
 	})
 	ecs.Each(w, func(e ecs.Entity, t Term) {
@@ -374,8 +373,8 @@ func effectsFromWorld(w *ecs.World, resource ecs.Entity) ItemEffects {
 			// separa a Fúria acesa de um bônus que vale sempre.
 			source += " (cond.)"
 		}
-		c := Contribution{SourceID: t.SourceID, Source: source, BonusType: t.Mod.BonusType, Amount: t.Mod.Amount,
-			StacksWith: t.Mod.StacksWith, StacksWithAll: t.Mod.StacksWithAll}
+		c := contributionOf(t)
+		c.Source = source
 		if note := t.Mod.Note; on {
 			// A NOTA DO LIGADO é a do interruptor ("Em Fúria", "no subterrâneo"): é ela que diz na conta por
 			// que a parcela vale agora.
