@@ -266,6 +266,28 @@ type Contribution struct {
 	// disputa da p226 acontece sobre as parcelas, e não sobre o catálogo.
 	StacksWith    []string `json:"stacksWith,omitempty"`
 	StacksWithAll bool     `json:"stacksWithAll,omitempty"`
+	// RaisesItem atravessa a dobra vindo do modificador pela mesma razão: o aumento do item disputa só dentro do
+	// item, e quem decide isso é o balde da parcela (`stackBucket`).
+	RaisesItem bool `json:"raisesItem,omitempty"`
+}
+
+// stackBucket é o balde em que a parcela disputa (p226): o tipo de bônus, e também o item quando ela aumenta o
+// bônus do próprio item (`Modifier.RaisesItem`) — a Reforçada da armadura e a do escudo somam. Vazio quando ela
+// soma sempre, que é o `untyped`.
+//
+// É a ÚNICA resposta a "quem disputa com quem": a pilha do mundo (`resolveStacking`) e a das parcelas
+// (`resolveStack`) a leem, e duas cópias já discordaram — o aumento do item entrou numa e não na outra.
+//
+//	Contribution{BonusType: "enhancement", SourceID: "escudo-pesado", RaisesItem: true}.stackBucket()
+//	// "enhancement::escudo-pesado"
+func (c Contribution) stackBucket() string {
+	if accumulates(c.BonusType) {
+		return ""
+	}
+	if c.RaisesItem {
+		return c.BonusType + "::" + c.SourceID
+	}
+	return c.BonusType
 }
 
 type AggregatedStat struct {
@@ -724,24 +746,24 @@ func sourceFactorOf(factors map[string]Ratio, sourceID string) Ratio {
 	return factors[targetKey(ModifierTarget{K: "source", Name: sourceID})]
 }
 
-// resolveStack aplica a regra de NÃO-EMPILHAMENTO do T20: dentro de um alvo,
-// entradas do mesmo `bonusType` guardam só a de maior valor ABSOLUTO; `untyped`
-// empilha à vontade. A ordem das contribuições segue a de PRIMEIRA APARIÇÃO de
-// cada `bonusType`, que é o que faz a paridade de JSON valer.
+// resolveStack aplica a regra de NÃO-EMPILHAMENTO do T20 sobre as parcelas: dentro de um balde (`stackBucket`)
+// fica só a de maior valor ABSOLUTO, e a parcela sem balde soma sempre. A ordem das contribuições segue a de
+// PRIMEIRA APARIÇÃO de cada balde, que é o que faz a paridade de JSON valer.
 func resolveStack(contribs []Contribution) AggregatedStat {
 	order := []string{}
-	byType := map[string][]Contribution{}
+	byBucket := map[string][]Contribution{}
 	for _, c := range contribs {
-		if _, ok := byType[c.BonusType]; !ok {
-			order = append(order, c.BonusType)
+		bucket := c.stackBucket()
+		if _, ok := byBucket[bucket]; !ok {
+			order = append(order, bucket)
 		}
-		byType[c.BonusType] = append(byType[c.BonusType], c)
+		byBucket[bucket] = append(byBucket[bucket], c)
 	}
 
 	kept, dropped := []Contribution{}, []Contribution{}
-	for _, bt := range order {
-		list := byType[bt]
-		if accumulates(bt) {
+	for _, bucket := range order {
+		list := byBucket[bucket]
+		if bucket == "" {
 			kept = append(kept, list...)
 			continue
 		}
@@ -755,7 +777,7 @@ func resolveStack(contribs []Contribution) AggregatedStat {
 		// O QUE PERDEU vai para a conta com o motivo, como o perdedor da resolução (`stackingLossNote`).
 		for i, e := range list {
 			if i != best {
-				e.Note = stackingLossNote(list[best].Source, bt)
+				e.Note = stackingLossNote(list[best].Source, list[best].BonusType)
 				dropped = append(dropped, e)
 			}
 		}
