@@ -49,6 +49,11 @@ func (s SpellOnTheSheet) AugmentLock(index int) string {
 	case bar.circle > 0:
 		return "exige o " + strconv.Itoa(bar.circle) + "º círculo"
 	}
+	// O que TORNA a magia sustentada tranca com outra sustentada de pé (p227). Quem recusa no servidor é a
+	// `CastRefusal`, que sabe a conjuração inteira; aqui é o cadeado do aprimoramento que a provocaria.
+	if sustains := s.Spell.Augments[index].Sustains; sustains != nil && *sustains && s.SustainedClash != "" {
+		return "só uma magia sustentada por vez"
+	}
 	return ""
 }
 

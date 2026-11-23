@@ -109,11 +109,12 @@ func (p Plays) Cast(
 	if findSpell(dto.Spells, catalogSpellID) == nil {
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
-	// A RECUSA QUE NÃO DEPENDE DO MOMENTO é do conjurador, a mesma que tranca o
+	// A RECUSA QUE A FICHA RESPONDE SOZINHA é do conjurador, a mesma que tranca o
 	// Conjurar nas abas: a magia acima do círculo — a gravada antes da regra fica no
-	// grimório, e quem joga a esquece e aprende outra — e a do mago não memorizada.
-	if lock := onSheet.CastLock; lock != "" {
-		return errors.New(lock)
+	// grimório, e quem joga a esquece e aprende outra —, a do mago não memorizada e a
+	// segunda sustentada, que depende do aprimoramento escolhido (p227).
+	if refusal := onSheet.CastRefusal(augments); refusal != "" {
+		return errors.New(refusal)
 	}
 	// O APRIMORAMENTO é do conjurador: o preço e a recusa do livro (p170-171), a
 	// mesma resposta que tranca o cadeado da folha.
@@ -166,27 +167,61 @@ func (p Plays) Cast(
 	if available := dto.ManaAvailable(); int64(totalPm) > available {
 		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
 	}
-	if !active[RitualSwitch] {
+	ritual, sustains := active[RitualSwitch], onSheet.Sustains(augments)
+	if !ritual && !sustains {
 		return sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm)
 	}
-	// O RITUAL VALE PARA ESTA CONJURAÇÃO: é aqui e não no gesto porque ela pode ser recusada acima, e a recusa
-	// não gasta o interruptor. E os dois saem na mesma transação: se desligar falhasse com o PM já cobrado, a
-	// tela diria erro, o interruptor ficaria ligado, e tentar de novo cobraria outra vez.
+	// O RITUAL e A SUSTENTADA valem para esta conjuração: é aqui e não no gesto porque ela pode ser recusada
+	// acima, e a recusa não gasta o interruptor nem abre a manutenção. E saem na mesma transação que o PM: se
+	// a segunda escrita falhasse com o PM já cobrado, a tela diria erro, e tentar de novo cobraria outra vez.
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("abrir a transação do ritual: %w", err)
+		return fmt.Errorf("abrir a transação de %s: %w", spell.Name, err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := p.queries.WithTx(tx)
 	if err := sheet.SpendLoadedMana(ctx, q, &dto, totalPm); err != nil {
 		return err
 	}
-	if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
-		Characterid: dto.ID, Conditionalid: RitualSwitch,
-	}); err != nil {
-		return fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
+	if ritual {
+		if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
+			Characterid: dto.ID, Conditionalid: RitualSwitch,
+		}); err != nil {
+			return fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
+		}
+	}
+	if sustains {
+		if err := openSustainedEffect(ctx, q, dto.ID, catalogSpellID); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
+}
+
+// openSustainedEffect abre na ficha de quem conjurou o efeito que a manutenção cobra e o limite de uma conta
+// (p227), sem modificadores: quem paga o fluxo de mana é quem lança, e o bônus — se a magia tem um — é do
+// Aplicar da aba Efeitos, na ficha de quem o recebe.
+//
+// A LINHA QUE JÁ EXISTE FICA como está: o Aplicar pode ter vindo antes e gravado os modificadores nela, e o
+// `UpsertActiveEffect` os trocaria por nenhum. Reconjurar a mesma também não a toca.
+func openSustainedEffect(ctx context.Context, q *sqlcgen.Queries, characterID int64, spellID string) error {
+	scope := engine.Duration{Kind: engine.DurationSustained}.Stored()
+	effects, err := q.ListActiveEffectsByCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
+	}
+	for _, e := range effects {
+		if e.Catalogid == spellID && e.Scope == scope {
+			return nil
+		}
+	}
+	if _, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+		Characterid: characterID, Source: "spell", Catalogid: spellID, Scope: scope,
+		Modifiers: "[]", Createdat: dbvalue.NowISO(),
+	}); err != nil {
+		return fmt.Errorf("abrir a sustentada %q na ficha %d: %w", spellID, characterID, err)
+	}
+	return nil
 }
 
 func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
