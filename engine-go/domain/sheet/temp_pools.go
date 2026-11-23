@@ -273,9 +273,6 @@ func IsTempModifier(target string, m map[string]any) bool {
 	return ok && t["k"] == target
 }
 
-// IsTempHpModifier é o invólucro de PV, para quem só pergunta por ele.
-func IsTempHpModifier(m map[string]any) bool { return IsTempModifier(TempHpTarget, m) }
-
 // ToInt lê um número de um modificador cru, que vem do JSON como `any`.
 func ToInt(v any) int {
 	if f, ok := v.(float64); ok {
