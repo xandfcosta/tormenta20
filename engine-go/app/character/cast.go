@@ -118,9 +118,9 @@ func (p Plays) Cast(
 	if onSheet.NeedsMemorizing && !learned.Prepared {
 		return fmt.Errorf("memorize a magia antes de conjurá-la: o mago só lança magias memorizadas (p37)")
 	}
-	// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171),
-	// e não pela maior entre todas.
-	augmentPm, augErr := validateAugments(spell, augments, onSheet)
+	// O APRIMORAMENTO é do conjurador: o preço e a recusa do livro (p170-171), a
+	// mesma resposta que tranca o cadeado da folha.
+	augmentPm, augErr := onSheet.AugmentPrice(augments)
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
@@ -143,10 +143,10 @@ func (p Plays) Cast(
 	// normal (ALE-339).
 	//
 	// O `augmentPm` também vai a zero, e não por precaução: o truque é
-	// `Exclusive`, então o `validateAugments` já recusou qualquer companhia e não
+	// `Exclusive`, então o `AugmentPrice` já recusou qualquer companhia e não
 	// há segunda parcela — zerar aqui diz isso em voz alta em vez de depender de
 	// uma invariante que mora noutra função.
-	if truqueEscolhido(spell, augments) {
+	if onSheet.ChoosesTheCantrip(augments) {
 		basePm, augmentPm = 0, 0
 	}
 	// OS CONDICIONAIS LIGADOS entram nas três contas. Aqui iam três conjuntos
@@ -192,21 +192,6 @@ func (p Plays) Cast(
 	return tx.Commit()
 }
 
-// truqueEscolhido diz se um dos aprimoramentos pedidos é um truque.
-//
-// Índice fora de faixa é ignorado de propósito: quem recusa o pedido malformado é
-// o `validateAugments`, que roda antes, e repetir a checagem aqui daria duas
-// respostas para a mesma pergunta.
-func truqueEscolhido(spell book.Spell, picks []sheet.AugmentPick) bool {
-	for _, p := range picks {
-		if p.AugmentIndex >= 0 && p.AugmentIndex < len(spell.Augments) &&
-			spell.Augments[p.AugmentIndex].Cantrip {
-			return true
-		}
-	}
-	return false
-}
-
 func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 	for i := range spells {
 		if spells[i].CatalogSpellID == catalogSpellID {
@@ -214,68 +199,6 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 		}
 	}
 	return nil
-}
-
-// validateAugments confere os aprimoramentos escolhidos e devolve o PM deles,
-// ou a frase da recusa.
-//
-// O círculo do aprimoramento fechou uma FRONTEIRA que estava aberta (ALE-272, fatia 6):
-// 126 dos 486 aprimoramentos do catálogo exigem um círculo mínimo, e até aqui
-// esse limite existia só na tela. A tabela que o decide vivia só no TypeScript,
-// então o servidor nem tinha como perguntar — e um pedido montado à mão
-// conjurava o que a regra não permite. Travar na UI é UX; a fronteira é aqui.
-func validateAugments(spell book.Spell, picks []sheet.AugmentPick, onSheet sheet.SpellOnTheSheet) (int, string) {
-	if len(picks) == 0 {
-		return 0, ""
-	}
-	if spell.Circle == 0 {
-		return 0, "truque não recebe aprimoramento"
-	}
-	seen := map[int]bool{}
-	total := 0
-	for _, p := range picks {
-		if p.AugmentIndex < 0 || p.AugmentIndex >= len(spell.Augments) {
-			return 0, fmt.Sprintf("o aprimoramento %d não existe nesta magia", p.AugmentIndex)
-		}
-		if seen[p.AugmentIndex] {
-			return 0, fmt.Sprintf("o aprimoramento %d veio duas vezes: junte as repetições num pedido só", p.AugmentIndex)
-		}
-		seen[p.AugmentIndex] = true
-		if p.Stacks < 1 {
-			return 0, fmt.Sprintf("o aprimoramento %d pede um número de repetições de 1 para cima (veio %d)", p.AugmentIndex, p.Stacks)
-		}
-		a := spell.Augments[p.AugmentIndex]
-		// O "MUDA" não se repete: "Mudanças na mesma característica da magia
-		// nunca se acumulam" (p171).
-		if a.Kind == "muda" && p.Stacks > 1 {
-			return 0, fmt.Sprintf("o aprimoramento %d muda a magia, e mudança não se acumula", p.AugmentIndex)
-		}
-		// O EXCLUSIVO recusa companhia: "truques não podem ser usados em conjunto
-		// com outros aprimoramentos" (p171), e o livro repete a frase à mão na
-		// esfera da Invisibilidade (p195) e na Luz permanente (p197).
-		//
-		// A pergunta é feita DENTRO do laço, sobre cada pedido, e não sobre o
-		// primeiro: a ordem da lista é do cliente, e um ramo que olhasse só
-		// `picks[0]` deixaria passar a mesma combinação escrita ao contrário.
-		if a.Exclusive && len(picks) > 1 {
-			return 0, fmt.Sprintf(
-				"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele",
-				p.AugmentIndex)
-		}
-		// O "APENAS ARCANOS / DIVINOS / DRUIDAS" (p187, p197) pergunta por onde a ficha lança a magia, e vem
-		// antes do círculo pela mesma razão do cadeado da folha: é o motivo que não passa com o nível.
-		if !onSheet.CastsAs(a.ClassOnly) {
-			return 0, fmt.Sprintf("o aprimoramento %d é \"apenas %s\", e esta ficha não lança %s assim",
-				p.AugmentIndex, a.ClassOnly, onSheet.Spell.Name)
-		}
-		if a.RequiresCircle != nil && *a.RequiresCircle > onSheet.CircleReach {
-			return 0, fmt.Sprintf(
-				"aprimoramento %d exige o %dº círculo e este personagem alcança o %dº",
-				p.AugmentIndex, *a.RequiresCircle, onSheet.CircleReach)
-		}
-		total += a.PmCost * p.Stacks
-	}
-	return total, ""
 }
 
 // validatePowerAugments confere os poderes escolhidos como aprimoramento (p131) e
