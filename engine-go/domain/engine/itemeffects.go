@@ -281,7 +281,7 @@ type Contribution struct {
 //	Contribution{BonusType: "enhancement", SourceID: "escudo-pesado", RaisesItem: true}.stackBucket()
 //	// "enhancement::escudo-pesado"
 func (c Contribution) stackBucket() string {
-	if accumulates(c.BonusType) {
+	if BonusTypeAccumulates(c.BonusType) {
 		return ""
 	}
 	if c.RaisesItem {
@@ -711,19 +711,18 @@ func absInt(n int) int {
 
 // ─── non-stacking resolution ──────────────────────────────────────────
 
-// AS DUAS FRASES DO EMPILHAMENTO (T20 p226 e p333), num dono só.
+// AS FRASES DO EMPILHAMENTO (T20 p226 e p333), num dono só.
 //
 // Elas existem como função porque DOIS percursos as usam: o `resolveStack`, que
 // dobra uma lista, e o sistema `resolveStacking` da resolução em ECS, que
 // percorre entidades. Os percursos são diferentes de propósito; a REGRA não
-// pode ser, ou ela diverge na primeira vez que alguém mexer num dos dois.
+// pode ser, ou ela diverge na primeira vez que alguém mexer num dos dois. Quem
+// disputa com quem os dois leem no `Contribution.stackBucket`; quem vence, no
+// `strongerThan`.
 
-// accumulates diz se o tipo de bônus SOMA em vez de disputar. Só o `untyped`.
-func accumulates(bonusType string) bool { return BonusTypeAccumulates(bonusType) }
-
-// BonusTypeAccumulates é a mesma pergunta, para quem está FORA do motor.
-//
-// Ela existe porque quem MONTA um modificador precisa saber se o número que
+// BonusTypeAccumulates diz se o tipo de bônus SOMA em vez de disputar: só o
+// `untyped`. O motor a lê no `stackBucket`, e ela é exportada porque quem MONTA
+// um modificador fora dele precisa saber se o número que
 // escrever vai somar ou disputar: o degrau de uma postura (p41) aumenta um bônus
 // que já existe, e "aumentar" é escrever o total quando o tipo disputa e a
 // diferença quando ele soma. Sem isto a decisão seria tomada por um `== "untyped"`
