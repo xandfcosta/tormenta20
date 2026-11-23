@@ -582,8 +582,8 @@ RETURNING *;
 -- name: GetPasswordReset :one
 SELECT * FROM password_resets WHERE token = ? LIMIT 1;
 
--- Same single-use guard as the account invite: the UPDATE, not the read, is
--- what decides who won.
+-- A trava de uso unico: quem decide quem ganhou e o UPDATE, e nao a leitura. (O
+-- convite de conta nao e de uso unico: ele serve para varias contas ate vencer.)
 -- name: SpendPasswordReset :execrows
 UPDATE password_resets SET usedAt = ? WHERE id = ? AND usedAt IS NULL;
 

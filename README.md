@@ -105,9 +105,10 @@ ou com `pnpm start` num terminal.
 
 ### Quem entra na mesa
 
-O registro **não é aberto**: quem administra gera um link de uso único (menu do
+O registro **não é aberto**: quem administra gera um link de convite (menu do
 Hub → **Convidar jogador**) e manda para o jogador, que abre e escolhe a própria
-senha. Sem isso, qualquer um que alcance `http://<ip>:3001` criaria conta —
+senha. O link serve para mais de uma conta até vencer, em sete dias, ou até
+outro ser gerado, o que derruba o anterior. Sem isso, qualquer um que alcance `http://<ip>:3001` criaria conta —
 o preço de servir na LAN.
 
 Quem administra vem do `ADMIN_EMAILS`, e **só de lá**: não existe coluna de papel
