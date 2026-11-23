@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/app/character"
-	"t20engine/domain/catalog"
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -46,7 +46,7 @@ func toggleMemorized(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 // pedido.
 func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	spellID := chi.URLParam(r, "magia")
-	spell, known := catalog.LookupSpell(spellID)
+	spell, known := book.SpellByID(spellID)
 	if !known {
 		return fmt.Errorf("a magia %q não existe no livro", spellID)
 	}

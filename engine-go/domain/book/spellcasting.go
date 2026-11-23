@@ -1,5 +1,7 @@
 package book
 
+import "sync"
+
 // A PROGRESSÃO DE CÍRCULO por classe: em que nível cada classe conjuradora
 // destrava cada círculo.
 //
@@ -46,17 +48,25 @@ func SpellProgressions() map[string]SpellProgression {
 	return table
 }
 
-// SpellByID acha a magia no acervo.
+// SpellByID acha a magia no acervo. Por mapa, montado uma vez: o conjurador pergunta pelas magias do livro
+// inteiro a cada carta do Aprender.
 //
 //	SpellByID("bola-de-fogo") // {bola-de-fogo Bola de Fogo 2 …}, true
 func SpellByID(id string) (Spell, bool) {
-	for _, m := range Catalogs().Spells {
-		if m.ID == id {
-			return m, true
+	spellsByIDOnce.Do(func() {
+		spellsByID = make(map[string]Spell, len(Catalogs().Spells))
+		for _, m := range Catalogs().Spells {
+			spellsByID[m.ID] = m
 		}
-	}
-	return Spell{}, false
+	})
+	spell, found := spellsByID[id]
+	return spell, found
 }
+
+var (
+	spellsByIDOnce sync.Once
+	spellsByID     map[string]Spell
+)
 
 // SpellName é o nome da magia; id desconhecido volta como veio, para a frase
 // de recusa ainda dizer o que chegou.

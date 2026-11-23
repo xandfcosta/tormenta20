@@ -8,7 +8,6 @@ import (
 
 	"t20engine/app/character"
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/search"
 	"t20engine/domain/sheet"
@@ -101,10 +100,13 @@ type learnedSpellRow struct {
 	// SpellCut é quem corta o custo SÓ DESTA magia, além do que a caixa "Custo PM" do Combate já mostra:
 	// o medalhão de prata nas de alcance pessoal (p160), o Foco em Magia na escolhida (p131).
 	SpellCut string
-	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança: ela fica no grimório, e o
-	// Conjurar tranca com a frase (`sheet.AboveTheCircle`). OffTheList é o aviso de `sheet.OffTheList`.
+	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança, que fica no grimório; a linha a
+	// marca. OffTheList é o aviso de `SpellOnTheSheet.OffTheList`.
 	AboveTheCircle string
-	OffTheList     string
+	// CastLock é a recusa de conjurar que não depende do momento (`SpellOnTheSheet.CastLock`): o Conjurar das
+	// abas Magias e Ações tranca com ela, a mesma frase que o servidor diria.
+	CastLock   string
+	OffTheList string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -196,30 +198,30 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	caster := sheet.CasterOf(dto)
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
-		spell, known := catalog.LookupSpell(learned.CatalogSpellID)
-		if !known {
+		onSheet := caster.Spell(learned.CatalogSpellID)
+		if !onSheet.Known {
 			continue
 		}
-		onSheet := caster.Spell(learned.CatalogSpellID)
-		fromBook, at := onSheet.Spell, onSheet.At()
+		spell, at := onSheet.Spell, onSheet.At()
 		rows = append(rows, learnedSpellRow{
-			ID: learned.CatalogSpellID, Name: fromBook.Name,
-			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
-			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Memorized: learned.Prepared,
+			ID: learned.CatalogSpellID, Name: spell.Name,
+			Circle: circleName(spell.Circle), School: schoolName(spell.School),
+			BasePm: sheet.SpellBasePmCost[spell.Circle], Memorized: learned.Prepared,
 			NeedsMemorizing: onSheet.NeedsMemorizing,
 			MemorizeLock:    memorizeLockOf(caster, onSheet, learned),
 			CD:              spellCdOf(computed, computedOK, onSheet),
 			Augments:        augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
-			Execution:       fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
-			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
-			DurationWritten: book.SpellDurationWritten(fromBook),
-			Targeting:       fromBook.Targeting,
-			Resistance:      book.SpellResistanceWritten(fromBook),
-			Effect:          fromBook.BaseEffect, Page: fromBook.BookPage,
+			Execution:       spell.Execution, Range: spell.Range, Duration: spell.Duration,
+			ExecutionWritten: book.SpellExecutionWritten(spell), RangeWritten: book.SpellRangeWritten(spell),
+			DurationWritten: book.SpellDurationWritten(spell),
+			Targeting:       spell.Targeting,
+			Resistance:      book.SpellResistanceWritten(spell),
+			Effect:          spell.BaseEffect, Page: spell.BookPage,
 			Command:        learned.CatalogSpellID,
 			CostCut:        costCutNote(computed, computedOK, onSheet.Tradition),
 			SpellCut:       onlyHereCutNote(computed, computedOK, at),
 			AboveTheCircle: onSheet.AboveTheCircle,
+			CastLock:       onSheet.CastLock,
 			OffTheList:     onSheet.OffTheList,
 		})
 	}

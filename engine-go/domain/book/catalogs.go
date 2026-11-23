@@ -36,8 +36,40 @@ type SpellAugment struct {
 	PmCost      int    `json:"pmCost"`
 	Kind        string `json:"kind"`
 	Description string `json:"description"`
-	// ClassOnly é a marca "Apenas Arcanos / Divinos / Druidas" (p187, p197), vazia em todos os outros.
+	// RequiresCircle é o círculo MÍNIMO que o personagem precisa alcançar para escolher este aprimoramento
+	// (p171).
+	//
+	// Ponteiro e não zero: círculo 0 é o TRUQUE, um valor legítimo, e um `int` zerado não distinguiria
+	// "exige truque" de "não exige nada".
+	RequiresCircle *int `json:"requiresCircle"`
+	// Exclusive é o aprimoramento que não aceita companhia na mesma conjuração.
+	//
+	// A marca é do APRIMORAMENTO e não do truque porque o livro diz a mesma frase em três lugares: como
+	// regra geral dos truques (p171) e à mão em dois aprimoramentos comuns — a esfera da Invisibilidade
+	// (p195) e a Luz permanente de pó de rubi (p197). Um ramo que perguntasse "é truque?" deixaria os outros
+	// dois de fora. Ver GLOSSARY, **aprimoramento exclusivo**.
+	Exclusive bool `json:"exclusive"`
+	// Cantrip zera o custo da magia INTEIRA, e não só o do aprimoramento: "reduz seu custo em PM para zero"
+	// (p171).
+	//
+	// São dois campos e não um porque são duas perguntas: `Exclusive` responde se ele aceita companhia (os
+	// truques e mais dois), `Cantrip` responde quanto a conjuração custa (só os truques). Quem impede os dois
+	// de divergirem é o `TestEveryTruqueIsFreeAndAlone`.
+	Cantrip bool `json:"truque"`
+	// ClassOnly é a marca "Apenas Arcanos / Divinos / Druidas" (p187, p197), vazia em todos os outros: o
+	// aprimoramento só existe para quem lança a magia por aquela tradição ou classe, e quem responde por onde
+	// a ficha lança é o conjurador (`SpellOnTheSheet.CastsAs`).
 	ClassOnly string `json:"classOnly"`
+}
+
+// SpellBuff é o efeito em curso que a magia aplica: os modificadores, crus, para gravarem byte a byte como o
+// livro transcrito os tem.
+type SpellBuff struct {
+	// DefaultScope só existe onde a magia NÃO PODE dizer quanto o efeito dura: a instantânea, cuja
+	// consequência não é a magia, e a definida sem quantia. Nos outros casos ele era uma cópia da duração e
+	// foi apagado — quem recusa o retorno dele é o `TestEveryBuffLastsAsLongAsItsSpell`.
+	DefaultScope string          `json:"defaultScope"`
+	Modifiers    json.RawMessage `json:"modifiers"`
 }
 
 // AugmentKindName: o livro separa o que AUMENTA um efeito do que o
@@ -73,6 +105,8 @@ type Spell struct {
 	Augments       []SpellAugment `json:"augments"`
 	Classes        []string       `json:"classes"`
 	BookPage       int            `json:"bookPage"`
+	// Buff é o efeito em curso que a magia aplica, nil na que não aplica nenhum.
+	Buff *SpellBuff `json:"buff"`
 }
 
 // Power é o poder ACHATADO. O livro espalha poder por três catálogos —

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"t20engine/domain/catalog"
+	"t20engine/domain/book"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -105,8 +105,8 @@ func TestTheSpellsTabLocksWhatTheCircleRefusesAndWarnsWhatTheListLeavesOut(t *te
 // O APRIMORAMENTO "APENAS ARCANOS" da Luz (p197) não se escolhe na Luz do clérigo, que é divina: o servidor
 // recusa, e a folha da magia o tranca com a marca do livro.
 func TestTheArcaneOnlyAugmentIsRefusedOnTheClericsLight(t *testing.T) {
-	light, _ := catalog.LookupSpell("luz")
-	arcaneOnly := slices.IndexFunc(light.Augments, func(a catalog.Augment) bool { return a.ClassOnly == "arcanos" && a.RequiresCircle == nil })
+	light, _ := book.SpellByID("luz")
+	arcaneOnly := slices.IndexFunc(light.Augments, func(a book.SpellAugment) bool { return a.ClassOnly == "arcanos" && a.RequiresCircle == nil })
 	if arcaneOnly < 0 {
 		t.Fatal("a Luz não tem aprimoramento apenas arcano sem círculo: o caso não mede nada")
 	}

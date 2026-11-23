@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"t20engine/domain/book"
 
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
@@ -22,7 +21,7 @@ import (
 func (p Plays) ApplySpellBuff(
 	ctx context.Context, characterID int64, spellID string, duration *string,
 ) (sheet.EffectDTO, error) {
-	spell, known := catalog.LookupSpell(spellID)
+	spell, known := book.SpellByID(spellID)
 	if !known || spell.Buff == nil {
 		return sheet.EffectDTO{}, fmt.Errorf("a magia %q não deixa efeito para aplicar", spellID)
 	}
@@ -187,7 +186,7 @@ func (p Plays) assertOnlyOneSustainedSpell(ctx context.Context, characterID int6
 
 // spellName é o nome do livro; sem verbete, o id serve.
 func spellName(spellID string) string {
-	if spell, known := catalog.LookupSpell(spellID); known && spell.Name != "" {
+	if spell, known := book.SpellByID(spellID); known && spell.Name != "" {
 		return spell.Name
 	}
 	return spellID

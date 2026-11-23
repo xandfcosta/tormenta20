@@ -172,8 +172,10 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
 
   // O DIÁLOGO DE CONJURAR é onde mora o contador de pilha e o cadeado do
   // aprimoramento fora de alcance — o Necromante é nível 12, alcança o 3º
-  // círculo, e a Invisibilidade tem aprimoramento de 4º.
-  await page.getByRole('button', { name: 'Conjurar Invisibilidade' }).click()
+  // círculo, e a Invisibilidade tem aprimoramento de 4º. Abre pela LINHA, e não
+  // pelo Conjurar: o Necromante é mago, a Invisibilidade não está memorizada, e o
+  // Conjurar dela fica trancado (p37).
+  await page.locator('button.ds-action-row-open', { hasText: 'Invisibilidade' }).click()
   const cast = page.getByRole('dialog', { name: 'Invisibilidade' })
   await expect(cast.getByText(/exige o 4º círculo/)).toBeVisible()
   await expectDentroDaJanela(page)
@@ -220,7 +222,10 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
     ).toBeVisible()
     await learn.getByRole('button', { name: 'Fechar' }).click()
 
-    await page.getByRole('button', { name: 'Conjurar Explosão de Chamas' }).click()
+    // Pela LINHA, e não pelo Conjurar: o Necromante é mago, a magia recém-aprendida
+    // não está memorizada, e o Conjurar dela fica trancado (p37). A prévia do custo
+    // não depende de conjurar.
+    await page.locator('button.ds-action-row-open', { hasText: 'Explosão de Chamas' }).click()
     const cast = page.getByRole('dialog', { name: 'Explosão de Chamas' })
     // A prévia é o `<b>` do "Custo … · você tem … PM": o rodapé repete o número
     // no botão de conjurar, e um `getByText` de "N PM" casaria os dois.
@@ -250,11 +255,11 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
     // que abre o grimório deste herói acha uma magia que ninguém lhe deu.
     await tidyUp('a Explosão de Chamas no grimório do conjurador', async () => {
       await page.goto(`/personagens/${id}?tab=spells`)
-      const cast = page.getByRole('button', { name: 'Conjurar Explosão de Chamas' })
-      if ((await cast.count()) === 0) return
-      await cast.click()
+      const row = page.locator('button.ds-action-row-open', { hasText: 'Explosão de Chamas' })
+      if ((await row.count()) === 0) return
+      await row.click()
       await page.getByRole('button', { name: 'Esquecer Explosão de Chamas' }).click()
-      await expect(cast).toHaveCount(0, { timeout: 5000 })
+      await expect(row).toHaveCount(0, { timeout: 5000 })
     })
   }
 })
