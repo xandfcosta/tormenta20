@@ -8,12 +8,12 @@ import (
 	"t20engine/domain/engine"
 )
 
-// BoardReader é o tabuleiro ABERTO de uma sessão, e só isso.
+// BoardReader são os tabuleiros ABERTOS de uma sessão, na ordem das abas, e só isso.
 //
-// Porta de uma função porque é uma pergunta só: a id vazia quer dizer "a aba
-// padrão", que é a convenção do `boards.Store`.
+// Porta de uma função porque é uma pergunta só. Ela devolve todos, e não o da aba padrão: o golpe lê o tabuleiro
+// em que as duas peças estão, ou o do alvo (`board.BoardForTheStrike`).
 type BoardReader interface {
-	Get(ctx context.Context, sessionID int64, boardID string) (*board.BoardState, error)
+	OpenBoards(ctx context.Context, sessionID int64) ([]*board.BoardState, error)
 }
 
 // BoardSituations é o adaptador que faz o tabuleiro responder em REGRA.
@@ -28,16 +28,16 @@ func NewBoardSituations(b BoardReader) BoardSituations { return BoardSituations{
 // Between são as situações especiais que o tabuleiro produz entre dois
 // combatentes.
 //
-// Sem tabuleiro aberto a resposta é VAZIA e não é erro — a maior parte de uma
+// Sem tabuleiro aberto, ou sem um que tenha o alvo, a resposta é VAZIA e não é erro — a maior parte de uma
 // sessão não tem mapa, e o ataque acontece do mesmo jeito.
 //
 // @example combat.NewBoardSituations(store).Between(ctx, 7, "atk", board.AttackTargetOnTheBoard{EntryID: "alvo"})
 func (b BoardSituations) Between(
 	ctx context.Context, sessionID int64, attackerEntry string, target board.AttackTargetOnTheBoard,
 ) ([]engine.SpecialSituation, error) {
-	state, err := b.boards.Get(ctx, sessionID, "")
+	open, err := b.boards.OpenBoards(ctx, sessionID)
 	if err != nil {
-		return nil, fmt.Errorf("ler o tabuleiro da sessão %d para o ataque: %w", sessionID, err)
+		return nil, fmt.Errorf("ler os tabuleiros da sessão %d para o ataque: %w", sessionID, err)
 	}
-	return board.SituationsBetween(state, attackerEntry, target), nil
+	return board.SituationsBetween(board.BoardForTheStrike(open, attackerEntry, target), attackerEntry, target), nil
 }

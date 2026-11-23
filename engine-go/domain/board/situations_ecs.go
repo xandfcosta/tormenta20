@@ -140,7 +140,42 @@ func SituationsBetween(
 // beyondShortRange diz que o alvo está além do alcance curto, 9m (p224), medido de corpo a corpo
 // (`ApartBetween`). É a distância e nada mais: o que ela tira do golpe é do motor.
 func beyondShortRange(b *BoardState, attackerEntry string, target AttackTargetOnTheBoard) bool {
-	var from, to *BoardToken
+	from, to := piecesOf(b, attackerEntry, target)
+	return from != nil && to != nil && ApartBetween(*from, *to).Squares > engine.ShortRangeSquares
+}
+
+// BoardForTheStrike é o tabuleiro de que o golpe lê as situações: o primeiro, na ordem das abas, em que estão as
+// DUAS peças — a de quem ataca e a do alvo —; senão, o primeiro em que está o ALVO; nil quando o alvo não está em
+// nenhum.
+//
+// O DO ALVO É A RESERVA porque metade da Tabela 5-3 é só dele: a cobertura, a camuflagem e o combate corpo a corpo
+// valem com o arqueiro fora do mapa. O que precisa de quem ataca (o elevado, o alcance) some sozinho, porque ele
+// não está naquele tabuleiro.
+//
+// NÃO É A ABA DE NINGUÉM: a aba ativa é de cada pessoa e mora no navegador, e o golpe sai igual da ficha ou do
+// toque na peça. Com o mesmo combatente em dois tabuleiros, vale o primeiro, que é o padrão.
+//
+//	board.BoardForTheStrike(abertos, "entry-do-atacante", board.AttackTargetOnTheBoard{EntryID: "entry-do-alvo"})
+func BoardForTheStrike(open []*BoardState, attackerEntry string, target AttackTargetOnTheBoard) *BoardState {
+	var targets *BoardState
+	for _, b := range open {
+		from, to := piecesOf(b, attackerEntry, target)
+		if from != nil && to != nil {
+			return b
+		}
+		if to != nil && targets == nil {
+			targets = b
+		}
+	}
+	return targets
+}
+
+// piecesOf são as peças de quem ataca (pela linha da fila) e do alvo (pela peça, ou pela linha) neste tabuleiro;
+// nil a que não está nele.
+func piecesOf(b *BoardState, attackerEntry string, target AttackTargetOnTheBoard) (from, to *BoardToken) {
+	if b == nil {
+		return nil, nil
+	}
 	for i := range b.Tokens {
 		token := &b.Tokens[i]
 		if token.EntryID != nil && *token.EntryID == attackerEntry {
@@ -151,7 +186,7 @@ func beyondShortRange(b *BoardState, attackerEntry string, target AttackTargetOn
 			to = token
 		}
 	}
-	return from != nil && to != nil && ApartBetween(*from, *to).Squares > engine.ShortRangeSquares
+	return from, to
 }
 
 // targetInMeleeCombat diz se o alvo está "dentro do alcance natural de qualquer
