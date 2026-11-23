@@ -212,10 +212,16 @@ func (g Gate) registrationInvite(
 // usableInvite carrega um convite que ainda abre conta: ele existe, ninguém o
 // revogou, e não venceu.
 func (g Gate) usableInvite(ctx context.Context, token string) (sqlcgen.AccountInviteLink, bool) {
+	return usableInviteIn(ctx, g.queries, token)
+}
+
+// usableInviteIn é a mesma pergunta feita por quem a faz: o portão, fora de transação, ou a transação do
+// cadastro, que a refaz (ver `createUser`).
+func usableInviteIn(ctx context.Context, q *sqlcgen.Queries, token string) (sqlcgen.AccountInviteLink, bool) {
 	if token == "" {
 		return sqlcgen.AccountInviteLink{}, false
 	}
-	invite, err := g.queries.GetAccountInvite(ctx, token)
+	invite, err := q.GetAccountInvite(ctx, token)
 	if err != nil || invite.Revokedat.Valid {
 		return sqlcgen.AccountInviteLink{}, false
 	}
@@ -230,6 +236,10 @@ func (g Gate) usableInvite(ctx context.Context, token string) (sqlcgen.AccountIn
 // onde ela entrou na MESMA transação: conta e registro existem juntos ou não
 // existem.
 //
+// O CONVITE SE CONFERE DE NOVO AQUI DENTRO. A primeira checagem vem antes do bcrypt, que leva tempo, e fora da
+// transação: o mestre que gera outro link nesse intervalo derruba o que o jogador tem na mão, e sem a segunda a
+// conta nasceria pelo link revogado. Com o `_txlock=immediate`, a releitura e a gravação não se separam.
+//
 // `invite` é nulo quando um endereço de `ADMIN_EMAILS` cria a própria conta.
 func (g Gate) createUser(
 	ctx context.Context, params sqlcgen.CreateUserParams, invite *sqlcgen.AccountInviteLink,
@@ -241,6 +251,11 @@ func (g Gate) createUser(
 	defer func() { _ = tx.Rollback() }()
 
 	q := g.queries.WithTx(tx)
+	if invite != nil {
+		if _, stillOpen := usableInviteIn(ctx, q, invite.Token); !stillOpen {
+			return sqlcgen.User{}, ErrBadInvite
+		}
+	}
 	user, err := q.CreateUser(ctx, params)
 	if db.IsUniqueViolation(err) {
 		return sqlcgen.User{}, ErrEmailTaken
