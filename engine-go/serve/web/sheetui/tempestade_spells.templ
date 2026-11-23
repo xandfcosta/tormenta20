@@ -215,14 +215,8 @@ templ learnSpellSheet(v View) {
 					<div class="ds-row ds-pick-row">
 						<div class="min-w-0">
 							<div class="ds-row-title">{ spell.Name }</div>
-							<div class="ds-row-meta">{ spell.Circle + " círculo · " + spell.School + " · p" + strconv.Itoa(spell.Page) }</div>
+							<div class="ds-row-meta">{ catalogSpellMeta(spell) }</div>
 							<div class="ds-pick-detail">{ spell.Effect }</div>
-							if spell.AboveTheCircle != "" {
-								<p class="ds-help">{ spell.AboveTheCircle }</p>
-							}
-							if spell.OffTheList != "" {
-								<p class="ds-help">{ spell.OffTheList }</p>
-							}
 						</div>
 						if spell.AboveTheCircle != "" {
 							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Aprender " + spell.Name, "disabled": true, "title": spell.AboveTheCircle}) {
