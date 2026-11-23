@@ -113,13 +113,14 @@ func grantedSheetID(index int) string {
 }
 
 // spellLineMeta é a nota da linha: a execução e o alcance, como a mesa fala, e
-// o aviso de quem prepara.
+// o aviso da magia do mago que não está memorizada — a folha não o repete, porque
+// tem o interruptor.
 //
 //	spellLineMeta(row, false) // "Padrão · médio", na Bola de Fogo
-func spellLineMeta(spell learnedSpellRow, requiresPrep bool) string {
+func spellLineMeta(spell learnedSpellRow, withMemorization bool) string {
 	meta := spell.ExecutionWritten + " · " + strings.ToLower(spell.RangeWritten)
-	if requiresPrep && !spell.Prepared {
-		meta += " · não preparada"
+	if withMemorization && spell.NeedsMemorizing && !spell.Memorized {
+		meta += " · não memorizada"
 	}
 	if spell.AboveTheCircle != "" {
 		meta += " · acima do seu círculo"

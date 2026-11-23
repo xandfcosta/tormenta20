@@ -87,7 +87,7 @@ func Routes(r chi.Router, s Scene) {
 	// AS MAGIAS.
 	r.Post("/personagens/{id}/magias/aprende/{magia}", s.sheetCommand(learnSpell))
 	r.Post("/personagens/{id}/magias/esquece/{magia}", s.sheetCommand(forgetSpell))
-	r.Post("/personagens/{id}/magias/prepara/{magia}", s.sheetCommand(togglePrepared))
+	r.Post("/personagens/{id}/magias/memoriza/{magia}", s.sheetCommand(toggleMemorized))
 	r.Post("/personagens/{id}/magias/conjura/{magia}", s.sheetCommand(castSpellFromSheet))
 	// A MOCHILA.
 	r.Post("/personagens/{id}/itens/{item}/guarda", s.sheetCommand(stowItem))
@@ -242,7 +242,7 @@ func (s Scene) sheetCommand(
 		// console e o gesto simplesmente não aconteceria na tela.
 		//
 		// Todas as recusas da ficha são de REGRA — o teto de duas mãos, o PM que
-		// falta, a magia que não está preparada —, e regra recusada é informação
+		// falta, a magia que não está memorizada —, e regra recusada é informação
 		// para quem joga. Ela sobe com a cena inteira redesenhada, que é o que
 		// prova que nada mudou, mais a frase. A API JSON continua respondendo os
 		// status dela; esta rota desenha página.

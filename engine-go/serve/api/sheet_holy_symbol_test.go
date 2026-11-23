@@ -86,7 +86,6 @@ func TestTheEnergizedSymbolCutsTheDivineCast(t *testing.T) {
 		t.Fatalf("escolher Wynna foi recusado: %q", refusal)
 	}
 	learnSpell(t, f, "tempestade-divina")
-	spell(t, f, f.charID, "prepara/tempestade-divina")
 
 	before := mpOf(t, f.s, f.charID)
 	if refusal := powerCommand(t, f, f.charID, "usa/class.clerigo.simbolo-sagrado-energizado", ""); refusal != "" {

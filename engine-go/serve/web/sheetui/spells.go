@@ -42,9 +42,11 @@ type spellbookPanel struct {
 	// IsCaster diz se há classe conjuradora. Sem ela não há o que aprender — mas
 	// as concedidas continuam aparecendo.
 	IsCaster bool
-	// RequiresPrep é Clérigo, Druida e o Arcanista do caminho `mago`: para eles
-	// a magia precisa estar PREPARADA para ser conjurada.
-	RequiresPrep bool
+	// Memorization é "2 de 3 memorizadas" com a regra do estudo, só para quem tem o mago (p37), e vazia
+	// para os outros: o clérigo e o druida conjuram o que conhecem.
+	Memorization string
+	// MemorizeFull diz que o mago chegou à metade do que conhece: o Memorizada das outras tranca.
+	MemorizeFull bool
 	PmCurrent    int64
 	// Ritual diz que a próxima magia é ritual, e o diálogo escreve a conta dele (p131).
 	Ritual bool
@@ -64,12 +66,15 @@ type filterOption struct {
 }
 
 type learnedSpellRow struct {
-	ID       string
-	Name     string
-	Circle   string
-	School   string
-	BasePm   int
-	Prepared bool
+	ID        string
+	Name      string
+	Circle    string
+	School    string
+	BasePm    int
+	Memorized bool
+	// NeedsMemorizing é a magia que a ficha só lança memorizada (`SpellOnTheSheet.NeedsMemorizing`): só ela
+	// tem o interruptor.
+	NeedsMemorizing bool
 	// CD é a Classe de Dificuldade dos testes contra esta magia, pelo
 	// atributo-chave da classe que a concede.
 	CD        string
@@ -125,9 +130,11 @@ type catalogSpellRow struct {
 
 // spellbookPanelOf monta a aba.
 func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school string) spellbookPanel {
+	memorization, memorizeFull := memorizationOf(dto)
 	panel := spellbookPanel{
 		IsCaster:     len(casterClassesOf(dto)) > 0,
-		RequiresPrep: sheet.RequiresPreparation(dto.Classes, dto.ClassChoices),
+		Memorization: memorization,
+		MemorizeFull: memorizeFull,
 		PmCurrent:    dto.MpCurrent,
 		Ritual:       character.CastsAsRitual(dto),
 		Search:       search,
@@ -146,6 +153,19 @@ func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school s
 		panel.Catalog = catalogSpellRowsOf(dto, search, circle, school)
 	}
 	return panel
+}
+
+// memorizationOf é "2 de 3 memorizadas" com a regra do estudo (p37), e se o mago chegou ao limite; vazia e
+// falso sem mago na ficha. A hora de estudo uma vez por dia não se confere: quando o dia passou é o mestre
+// quem diz.
+func memorizationOf(dto sheet.CharacterDTO) (line string, full bool) {
+	caster := sheet.CasterOf(dto)
+	if !caster.Memorizes() {
+		return "", false
+	}
+	memorized, limit := caster.Memorization()
+	return strconv.Itoa(memorized) + " de " + strconv.Itoa(limit) +
+		" memorizadas · trocar pede uma hora de estudo, uma vez por dia (p37)", memorized >= limit
 }
 
 // casterClassesOf são as classes do personagem que conjuram.
@@ -177,10 +197,11 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 		rows = append(rows, learnedSpellRow{
 			ID: learned.CatalogSpellID, Name: fromBook.Name,
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
-			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
-			CD:        spellCdOf(computed, computedOK, onSheet),
-			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
-			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
+			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Memorized: learned.Prepared,
+			NeedsMemorizing: onSheet.NeedsMemorizing,
+			CD:              spellCdOf(computed, computedOK, onSheet),
+			Augments:        augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
+			Execution:       fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
 			DurationWritten: book.SpellDurationWritten(fromBook),
 			Targeting:       fromBook.Targeting,

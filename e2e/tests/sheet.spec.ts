@@ -226,8 +226,8 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
     // no botão de conjurar, e um `getByText` de "N PM" casaria os dois.
     const cost = cast.locator('p', { hasText: /^Custo/ }).locator('b')
     const moreDamage = cast.getByRole('button', { name: 'Mais de Aumenta o dano em +1d6.' })
-    // Pelo NOME, e não pelo primeiro: quem prepara magia tem o "Preparada" antes
-    // dos aprimoramentos, e ele também é um interruptor.
+    // Pelo NOME, e não pelo primeiro: o mago tem o "Memorizada" antes dos
+    // aprimoramentos, e ele também é um interruptor.
     const cantrip = cast.getByRole('switch', { name: /^Truque:/ })
 
     // O CONTROLE em duas medidas: o mostrador tem de MUDAR antes do que eu vim
