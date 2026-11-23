@@ -187,20 +187,6 @@ func (s Scene) sheetForPanels(dto sheet.CharacterDTO) (engine.ComputedSheet, []e
 	return dto.Ruleset.ComputeSheet(ec, active), dto.Ruleset.ComputeWeaponCards(ec, active), true
 }
 
-// panelOfCombat computa a aba Combate de um personagem.
-//
-// SEM CATÁLOGO PRIMADO ela devolve o painel vazio, pela mesma razão que a Defesa
-// do crachá vira travessão: a ficha inteira não pode deixar de abrir por causa
-// de um número, e a aba diz que não sabe em vez de mostrar zeros — um zero é um
-// valor plausível, e o jogador agiria sobre ele.
-func (s Scene) panelOfCombat(dto sheet.CharacterDTO) panelCombat {
-	sheet, cards, ok := s.sheetForPanels(dto)
-	if !ok {
-		return panelCombat{}
-	}
-	return panelForCombat(sheet, cards, isCaster(sheet), dto)
-}
-
 // panelForCombat monta a aba inteira.
 //
 // Ela recebe a ficha JÁ computada em vez de computar: o `Load` chama o

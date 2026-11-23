@@ -212,13 +212,6 @@ func passesRole(campaignRole, filterText string) bool {
 	return campaignRole == filterText
 }
 
-func valueOrEmpty(p *string) string {
-	if p == nil {
-		return ""
-	}
-	return *p
-}
-
 // textOrEmpty achata o ponteiro da descrição.
 //
 // O caso de uso a carrega como PONTEIRO porque o banco — e a rota JSON — fazem

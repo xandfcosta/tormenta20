@@ -81,12 +81,3 @@ func trimOrNull(p *string) sql.NullString {
 	}
 	return sql.NullString{String: t, Valid: true}
 }
-
-// nullableArg converts a NullString to a driver arg (nil when invalid) for the
-// dynamic UPDATE builders.
-func nullableArg(ns sql.NullString) any {
-	if !ns.Valid {
-		return nil
-	}
-	return ns.String
-}
