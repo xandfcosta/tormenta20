@@ -125,17 +125,20 @@ release_answers() {
   curl -sf -o /dev/null "http://localhost:$PORT/entrar"
 }
 
-# take_backup faz o backup e devolve a mensagem dele. Banco que ainda não existe não é erro.
+# take_backup faz o backup e devolve a mensagem dele. Banco que ainda não existe não é erro, e ele se reconhece
+# pelo CÓDIGO de saída do `backup-db.sh` (3, o `NO_DATABASE`), e não pelo texto: o `.env` ausente também diz
+# "não existe", e lido pelo texto ele fazia o deploy seguir sem backup.
 take_backup() {
-  local output
-  if output="$(bash "$ROOT_DIR/scripts/backup-db.sh" production 2>&1)"; then
-    echo "$output"
-  elif grep -q 'não existe' <<<"$output"; then
-    echo "sem backup: o banco ainda não existia"
-  else
-    echo "$output" >&2
-    return 1
-  fi
+  local output status=0
+  output="$(bash "$ROOT_DIR/scripts/backup-db.sh" production 2>&1)" || status=$?
+  case "$status" in
+    0) echo "$output" ;;
+    3) echo "sem backup: o banco ainda não existia" ;;
+    *)
+      echo "$output" >&2
+      return 1
+      ;;
+  esac
 }
 
 # stop_whatever_answers derruba o que subiu e não serviu. Ele já passou pela conferência
