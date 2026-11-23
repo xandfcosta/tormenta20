@@ -11,8 +11,8 @@ import (
 	"t20engine/infra/db/sqlcgen"
 )
 
-// A MAGIA ACIMA DO CÍRCULO QUE A FICHA ALCANÇA não se aprende nem se conjura (p170): "a classe diz até qual
-// círculo você lança". O arcanista de 8º nível alcança o 2º círculo — o 3º vem no 9º nível —, e o Desintegrar é
+// A MAGIA ACIMA DO CÍRCULO QUE A FICHA ALCANÇA não se aprende nem se conjura: aprende-se a magia "de um tipo
+// e círculo que possa lançar com aquela classe" (p170). O arcanista de 8º nível alcança o 2º círculo — o 3º vem no 9º nível —, e o Desintegrar é
 // do 4º. Antes, aprender não conferia nada, e conjurar só conferia o PM: o limite libera o custo mínimo.
 func TestTheSpellAboveTheCircleIsNeitherLearnedNorCast(t *testing.T) {
 	f := newSceneFixture(t)
@@ -40,8 +40,8 @@ func TestTheSpellAboveTheCircleIsNeitherLearnedNorCast(t *testing.T) {
 	}
 }
 
-// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171): "o pré-requisito se cumpre com
-// a classe com que se usa a magia". O Arcanista 9 / Clérigo 1 alcança o 3º círculo nas arcanas e só o 1º na
+// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171): "você deve cumprir o requisito
+// com a classe com a qual usa a magia". O Arcanista 9 / Clérigo 1 alcança o 3º círculo nas arcanas e só o 1º na
 // Orientação, que é do clérigo. Antes, o círculo saía do maior entre as classes, e o aprimoramento de 2º passava.
 func TestTheAugmentCircleComesFromTheClassThatCastsTheSpell(t *testing.T) {
 	s := newCastServer(t)

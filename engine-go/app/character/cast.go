@@ -23,8 +23,8 @@ import (
 //
 // O livro é conferido AQUI e não por quem chama: uma magia que não existe seria
 // uma linha órfã no grimório, que a ficha desenha como um espaço em branco. E o
-// círculo também: "a classe diz até qual círculo você lança" (p170), e a magia
-// acima dele não se aprende (`sheet.SpellCircleReach`). A magia de fora da lista
+// círculo também: aprende-se a magia "de um tipo e círculo que possa lançar com
+// aquela classe" (p170), e a acima dele não se aprende (`sheet.SpellCircleReach`). A magia de fora da lista
 // das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
 func (p Plays) LearnSpell(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
 	if _, known := catalog.LookupSpell(catalogSpellID); !known {
