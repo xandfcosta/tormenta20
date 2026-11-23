@@ -128,8 +128,9 @@ templ spellSheet(v View, spell learnedSpellRow) {
 		if spell.OffTheList != "" {
 			<p class="ds-help">{ spell.OffTheList }</p>
 		}
-		if spell.NeedsMemorizing && !spell.Memorized && v.Spells.MemorizeFull {
-			@ds.Switch("Memorizada", false, templ.Attributes{"disabled": true, "title": "o mago memoriza até metade das magias que conhece (p37)"})
+		if spell.MemorizeLock != "" {
+			@ds.Switch("Memorizada", false, templ.Attributes{"disabled": true, "title": spell.MemorizeLock})
+			<p class="ds-help">{ spell.MemorizeLock }</p>
 		} else if spell.NeedsMemorizing {
 			@ds.Switch("Memorizada", spell.Memorized, templ.Attributes{"data-on:change": sheetPost(v, "/magias/memoriza/"+spell.Command)})
 		}

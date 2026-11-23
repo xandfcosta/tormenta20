@@ -49,9 +49,13 @@ func TestTheMagoMemorizesHalfOfWhatSheKnows(t *testing.T) {
 	if !strings.Contains(full, "2 de 2 memorizadas") {
 		t.Error("a aba não diz quantas o mago memorizou do limite")
 	}
-	// No limite, o Memorizada das outras tranca: o servidor recusaria de todo jeito.
-	if toggle := regexp.MustCompile(`<input type="checkbox" role="switch"[^>]*>\s*Memorizada`).FindString(spellSheetOf(t, full, "spell-bola-de-fogo")); !strings.Contains(toggle, "disabled") {
+	// No limite, o Memorizada das outras tranca, e a folha diz por quê: o `title` não chega ao celular.
+	ball := spellSheetOf(t, full, "spell-bola-de-fogo")
+	if toggle := regexp.MustCompile(`<input type="checkbox" role="switch"[^>]*>\s*Memorizada`).FindString(ball); !strings.Contains(toggle, "disabled") {
 		t.Errorf("no limite, o Memorizada da Bola de Fogo está de pé: %q", toggle)
+	}
+	if !strings.Contains(ball, "metade das magias que conhece: já são 2 de 2") {
+		t.Error("no limite, a folha da Bola de Fogo não escreve por que o Memorizada trancou")
 	}
 	// Desmemorizar abre a vaga.
 	spellRefusal(t, f, id, "memoriza/luz")
