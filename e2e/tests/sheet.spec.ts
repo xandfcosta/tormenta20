@@ -175,7 +175,7 @@ test('o grimório e os diálogos de conjurar e aprender cabem no telefone', asyn
   // círculo, e a Invisibilidade tem aprimoramento de 4º. Abre pela LINHA, e não
   // pelo Conjurar: o Necromante é mago, a Invisibilidade não está memorizada, e o
   // Conjurar dela fica trancado (p37).
-  await page.locator('button.ds-action-row-open[commandfor="spell-invisibilidade"]').click()
+  await page.locator('button.ds-action-row-open', { hasText: 'Invisibilidade' }).click()
   const cast = page.getByRole('dialog', { name: 'Invisibilidade' })
   await expect(cast.getByText(/exige o 4º círculo/)).toBeVisible()
   await expectDentroDaJanela(page)
@@ -225,7 +225,7 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
     // Pela LINHA, e não pelo Conjurar: o Necromante é mago, a magia recém-aprendida
     // não está memorizada, e o Conjurar dela fica trancado (p37). A prévia do custo
     // não depende de conjurar.
-    await page.locator('button.ds-action-row-open[commandfor="spell-explosao-de-chamas"]').click()
+    await page.locator('button.ds-action-row-open', { hasText: 'Explosão de Chamas' }).click()
     const cast = page.getByRole('dialog', { name: 'Explosão de Chamas' })
     // A prévia é o `<b>` do "Custo … · você tem … PM": o rodapé repete o número
     // no botão de conjurar, e um `getByText` de "N PM" casaria os dois.
@@ -255,7 +255,7 @@ test('ligar o truque zera o custo na tela e apaga o aprimoramento ligado', async
     // que abre o grimório deste herói acha uma magia que ninguém lhe deu.
     await tidyUp('a Explosão de Chamas no grimório do conjurador', async () => {
       await page.goto(`/personagens/${id}?tab=spells`)
-      const row = page.locator('button.ds-action-row-open[commandfor="spell-explosao-de-chamas"]')
+      const row = page.locator('button.ds-action-row-open', { hasText: 'Explosão de Chamas' })
       if ((await row.count()) === 0) return
       await row.click()
       await page.getByRole('button', { name: 'Esquecer Explosão de Chamas' }).click()
