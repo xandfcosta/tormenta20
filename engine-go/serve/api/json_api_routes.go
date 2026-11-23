@@ -92,7 +92,6 @@ func (s *Server) benchJSONRoutes(r chi.Router) {
 
 	r.Route("/personagens", func(r chi.Router) {
 		r.Use(s.requireAuth)
-		r.Use(s.serializeCharacterWrites)
 		// A varredura das CONDIÇÕES: o spec da sessão aplica Abalado, Agarrado e
 		// Cego para medir a faixa cheia, e a limpeza dele mora no corpo do teste
 		// — quando ele falha, a condição fica gravada e ele falha PARA SEMPRE.

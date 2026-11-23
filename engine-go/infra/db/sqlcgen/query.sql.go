@@ -4967,8 +4967,8 @@ type SpendPasswordResetParams struct {
 	ID     int64          `json:"id"`
 }
 
-// Same single-use guard as the account invite: the UPDATE, not the read, is
-// what decides who won.
+// A trava de uso unico: quem decide quem ganhou e o UPDATE, e nao a leitura. (O
+// convite de conta nao e de uso unico: ele serve para varias contas ate vencer.)
 func (q *Queries) SpendPasswordReset(ctx context.Context, arg SpendPasswordResetParams) (int64, error) {
 	result, err := q.db.ExecContext(ctx, spendPasswordReset, arg.Usedat, arg.ID)
 	if err != nil {

@@ -28,7 +28,7 @@ func (s *Server) accountRules() accountRules {
 }
 
 // accountGate é a porta de entrar e cadastrar-se, e ela recebe o `*sql.DB`
-// porque criar conta gasta o convite na MESMA transação.
+// porque criar conta confere o convite de novo e registra a entrada por ele na MESMA transação.
 func (s *Server) accountGate() accounts.Gate {
 	return accounts.NewGate(s.db, s.queries, s.cfg)
 }

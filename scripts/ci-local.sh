@@ -4,12 +4,15 @@
 #
 #   pnpm ci:local              # tudo, com o e2e
 #   pnpm ci:local --sem-e2e    # para iterar
-#   bash scripts/ci-local.sh   # em worktree: o pnpm recusa o `node_modules` em symlink
+#   bash scripts/ci-local.sh   # o mesmo, sem passar pelo `pnpm` para chamar o script
+#
+# Em worktree, o `node_modules` tem de ser de verdade (`pnpm install --frozen-lockfile`), e não um link para o do
+# checkout principal: o passo do lockfile roda o `pnpm`, e ele recusa `node_modules` em symlink.
 #
 # Cada passo dá o próprio veredito, e um que falha não impede os outros: uma cadeia com `&&` para no
 # primeiro e deixa o resto parecendo aprovado. Por isso também os binários são chamados direto, como nos
 # scripts de CSS e de JS, e o build vai para um arquivo temporário: `pnpm build` regravaria o
-# `bin/t20-api`, que é o binário da produção.
+# `bin/t20-api`, que é o binário da produção. A exceção é o lockfile, que é pergunta do próprio `pnpm`.
 #
 # A CI compara o artefato com o commit, num clone limpo. Aqui pode haver trabalho em andamento, então a
 # comparação é do antes com o depois de regenerar: o que mudou estava desatualizado.
@@ -74,11 +77,27 @@ else
   echo "ok      nenhum arquivo fora do índice"
 fi
 
+# O LOCKFILE como a CI o confere: o `pnpm install --frozen-lockfile` reprova quando o `package.json` mudou e o
+# lockfile não acompanhou. Ele vai antes dos geradores porque pode religar o `node_modules` que eles usam.
+run_step "lockfile" pnpm install --frozen-lockfile
 regenerated_step "ilhas de JS" ./engine-go/scripts/build-js.sh
 regenerated_step "ícones" node engine-go/scripts/gen-icons-templ.mjs
 regenerated_step "templ" bash -c 'cd engine-go && go tool templ generate'
 regenerated_step "folha de estilo" ./engine-go/scripts/build-css.sh
 regenerated_step "biome" ./node_modules/.bin/biome lint --write .
+
+# O ARTEFATO REGENERADO E NÃO COMMITADO passa no par antes-e-depois acima: regenerar de novo não muda nada, e o
+# passo diz ok. A CI regenera num clone limpo e compara com o COMMIT, e é lá que ele reprovaria. Os caminhos são os
+# que o `ci.yml` confere.
+UNCOMMITTED_ARTIFACTS="$(git -c core.fsmonitor=false diff --name-only HEAD -- \
+  engine-go/serve/web/assets/static/ engine-go/serve/web/ui/icons.templ \
+  'engine-go/serve/api/*_templ.go' 'engine-go/serve/web/**/*_templ.go')"
+if [ -n "$UNCOMMITTED_ARTIFACTS" ]; then
+  record_failure "artefato gerado e não commitado, que a CI compara com o commit. Commite:"
+  echo "$UNCOMMITTED_ARTIFACTS" | sed 's/^/        /'
+else
+  echo "ok      artefatos commitados"
+fi
 
 UNFORMATTED="$(cd engine-go && gofmt -l .)"
 if [ -n "$UNFORMATTED" ]; then
@@ -94,7 +113,8 @@ run_step "go test" bash -c 'cd engine-go && go test -count=1 ./...'
 run_step "build" bash -c "cd engine-go && go build -o '$LOGS/t20-api' ./cmd/api"
 run_step "typecheck" bash -c 'cd engine-go && ./node_modules/.bin/tsc --noEmit -p tsconfig.json'
 if [ "$RUN_E2E" = 1 ]; then
-  run_step "e2e" bash -c 'cd e2e && npx playwright test'
+  # `CI=1` como na CI: ele liga o `forbidOnly`, e sem ele um `test.only` esquecido passa aqui e reprova lá.
+  run_step "e2e" bash -c 'cd e2e && CI=1 npx playwright test'
 else
   echo "pulado  e2e"
 fi

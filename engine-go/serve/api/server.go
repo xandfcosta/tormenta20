@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"log/slog"
 	"net/http"
-	"strconv"
-	"strings"
 	"sync"
 	"t20engine/app/boards"
 	"t20engine/app/campaign"
@@ -69,9 +67,6 @@ type Server struct {
 	// ficha e o TABULEIRO juntos (ALE-373, ALE-376). O servidor a guarda porque
 	// mais de um caso de uso a pede.
 	units session.Units
-	// charMu serializa as escritas por personagem (id → *sync.Mutex), para
-	// cliques rápidos de dano e vitais não se perderem no ler-computar-gravar.
-	charMu sync.Map
 }
 
 // Aqui moravam o contador `inBackground` e o `WaitForBackground`, que faziam o
@@ -164,45 +159,6 @@ func (sr sheetRules) remeasurePieces(ctx context.Context, characterID int64) {
 			slog.Warn("tabuleiro: peças não medidas de novo", "character_id", characterID, "session_id", sessionID, "err", err)
 		}
 	}
-}
-
-// lockCharacter toma a trava de escrita deste personagem e devolve como soltar.
-func (s *Server) lockCharacter(id int64) func() {
-	m, _ := s.charMu.LoadOrStore(id, &sync.Mutex{})
-	Mu := m.(*sync.Mutex)
-	Mu.Lock()
-	return Mu.Unlock
-}
-
-// serializeCharacterWrites serializa POST/PATCH/DELETE por personagem, para
-// dois handlers de ler-computar-gravar não perderem uma atualização. Leitura
-// passa direto.
-func (s *Server) serializeCharacterWrites(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet || r.Method == http.MethodHead {
-			next.ServeHTTP(w, r)
-			return
-		}
-		if id, ok := characterIDFromPath(r.URL.Path); ok {
-			unlock := s.lockCharacter(id)
-			defer unlock()
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-// characterIDFromPath tira o {id} de `/personagens/{id}/…` para chavear a
-// trava. Falso quando não há id numérico no caminho.
-func characterIDFromPath(path string) (int64, bool) {
-	parts := strings.Split(strings.Trim(path, "/"), "/")
-	for i, seg := range parts {
-		if seg == "characters" && i+1 < len(parts) {
-			if id, err := strconv.ParseInt(parts[i+1], 10, 64); err == nil {
-				return id, true
-			}
-		}
-	}
-	return 0, false
 }
 
 // NewServer monta o servidor. O banco já chega aberto e migrado pelo `db.Open`;

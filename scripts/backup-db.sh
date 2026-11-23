@@ -22,6 +22,9 @@ die() {
   exit 1
 }
 
+# shellcheck source=backup-exit-codes.sh
+source "$REPO_ROOT/scripts/backup-exit-codes.sh"
+
 # resolve_env normaliza o apelido do ambiente para o sufixo do arquivo `.env`.
 resolve_env() {
   case "${1:-production}" in
@@ -49,7 +52,10 @@ ENV_FILE="$ENGINE_DIR/.env.$APP_ENV"
 [ -f "$ENV_FILE" ] || die "$ENV_FILE não existe — copie o .env.production.example"
 
 DB_PATH="$(database_path "$ENV_FILE")"
-[ -f "$DB_PATH" ] || die "banco $DB_PATH não existe (o servidor de $APP_ENV já subiu alguma vez?)"
+if [ ! -f "$DB_PATH" ]; then
+  echo "backup: banco $DB_PATH não existe (o servidor de $APP_ENV já subiu alguma vez?)" >&2
+  exit "$BACKUP_NO_DATABASE"
+fi
 
 mkdir -p "$BACKUP_DIR"
 OUT="$BACKUP_DIR/t20-$APP_ENV-$(date +%Y%m%d-%H%M%S).db"

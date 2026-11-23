@@ -20,6 +20,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENGINE_DIR="$ROOT_DIR/engine-go"
+# shellcheck source=backup-exit-codes.sh
+source "$ROOT_DIR/scripts/backup-exit-codes.sh"
 ENV_FILE="$ENGINE_DIR/.env.production"
 BINARY="$ENGINE_DIR/bin/t20-api"
 LOG_FILE="$ENGINE_DIR/data/prod.log"
@@ -125,17 +127,19 @@ release_answers() {
   curl -sf -o /dev/null "http://localhost:$PORT/entrar"
 }
 
-# take_backup faz o backup e devolve a mensagem dele. Banco que ainda não existe não é erro.
+# take_backup faz o backup e devolve a mensagem dele. Banco que ainda não existe não é erro, e ele se reconhece
+# pelo CÓDIGO de saída do `backup-db.sh` (`BACKUP_NO_DATABASE`), e não pelo texto — ver o `backup-exit-codes.sh`.
 take_backup() {
-  local output
-  if output="$(bash "$ROOT_DIR/scripts/backup-db.sh" production 2>&1)"; then
-    echo "$output"
-  elif grep -q 'não existe' <<<"$output"; then
-    echo "sem backup: o banco ainda não existia"
-  else
-    echo "$output" >&2
-    return 1
-  fi
+  local output status=0
+  output="$(bash "$ROOT_DIR/scripts/backup-db.sh" production 2>&1)" || status=$?
+  case "$status" in
+    0) echo "$output" ;;
+    "$BACKUP_NO_DATABASE") echo "sem backup: o banco ainda não existia" ;;
+    *)
+      echo "$output" >&2
+      return 1
+      ;;
+  esac
 }
 
 # stop_whatever_answers derruba o que subiu e não serviu. Ele já passou pela conferência
@@ -208,8 +212,12 @@ HAD_PREVIOUS=""
 [ -f "$BINARY" ] && HAD_PREVIOUS="yes"
 
 if ! DB_BACKUP="$(take_backup)"; then
-  # Sem backup a troca não acontece. A versão que estava no ar volta.
-  [ -n "$HAD_PREVIOUS" ] && [ -n "$RUNNING_PID" ] && start_and_wait || true
+  # Sem backup a troca não acontece, e a versão que estava no ar tenta voltar. A frase diz o que de fato
+  # aconteceu: um `|| true` aqui fazia o deploy dizer "a versão anterior voltou" com a mesa fora do ar.
+  if [ -z "$HAD_PREVIOUS" ] || [ -z "$RUNNING_PID" ]; then
+    die "o backup falhou, e nada foi trocado. A mesa não estava no ar antes do deploy"
+  fi
+  start_and_wait || die "o backup falhou, e a versão anterior NÃO voltou: a mesa está FORA DO AR. Veja $LOG_FILE"
   die "o backup falhou, e a versão anterior voltou"
 fi
 say "$DB_BACKUP"

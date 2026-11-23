@@ -32,7 +32,7 @@ type RegisterBody struct {
 	Email    string  `json:"email"`
 	Password string  `json:"password"`
 	Name     *string `json:"name"`
-	// InviteToken é o link de uso único que o admin entregou ao jogador.
+	// InviteToken é o link de convite que o admin entregou ao jogador. Ele serve para várias contas até vencer.
 	// Obrigatório para todo mundo menos os endereços do ADMIN_EMAILS.
 	InviteToken string `json:"inviteToken"`
 }
