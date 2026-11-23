@@ -85,6 +85,9 @@ type SpellOnTheSheet struct {
 	// nível, a mesma regra do `engine.SpellPmLimit` para "a classe que fornece a habilidade" (p224): o app
 	// não guarda de qual lista a magia foi aprendida, e uma segunda regra daria duas respostas na mesma ficha.
 	Tradition string
+	// Class é a classe com que a ficha lança a magia, a de maior nível entre as de `Casting`, vazia quando
+	// nenhuma a lança: é de onde sai a `Tradition`, e o que o aprimoramento "Apenas Druidas" pergunta.
+	Class string
 	// CircleReach é o maior círculo que a ficha alcança PARA ESTA MAGIA (p170-171), em ordem:
 	//
 	//   - o das classes que lançam a magia, e não o maior entre todas: o Arcanista 9 / Clérigo 1 alcança o 3º
@@ -119,7 +122,7 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 			out.Casting = append(out.Casting, class.name)
 		}
 	}
-	out.Tradition = traditionOf(casting)
+	out.Class, out.Tradition = castingClassOf(casting)
 	switch {
 	case len(casting) > 0:
 		out.CircleReach = highestReach(casting)
@@ -154,7 +157,28 @@ func (s SpellOnTheSheet) At() engine.SpellAt {
 // MainTradition é a tradição da classe conjuradora de maior nível, vazia sem classe que conjure: a que as
 // caixas de CD e de limite de PM do Combate resumem.
 func (c Caster) MainTradition() string {
-	return traditionOf(c.classes)
+	_, tradition := castingClassOf(c.classes)
+	return tradition
+}
+
+// classOnlyCasts é o que cada marca "Apenas …" do livro pergunta sobre a magia lançada.
+var classOnlyCasts = map[string]func(SpellOnTheSheet) bool{
+	"arcanos": func(s SpellOnTheSheet) bool { return s.Tradition == "arcana" },
+	"divinos": func(s SpellOnTheSheet) bool { return s.Tradition == "divina" },
+	"druidas": func(s SpellOnTheSheet) bool { return s.Class == "Druida" },
+}
+
+// CastsAs diz se a ficha lança a magia como a marca "Apenas Arcanos / Divinos / Druidas" de um aprimoramento
+// pede (`catalog.Augment.ClassOnly`, p187 e p197). Sem marca, sim; com uma marca que o mapa não conhece, não —
+// e o `TestEveryClassOnlyMarkIsUnderstood` reprova a marca nova antes de ela chegar aqui.
+//
+//	sheet.CasterOf(clerigo).Spell("luz").CastsAs("arcanos") // false: a Luz do clérigo é divina
+func (s SpellOnTheSheet) CastsAs(classOnly string) bool {
+	if classOnly == "" {
+		return true
+	}
+	casts, known := classOnlyCasts[classOnly]
+	return known && casts(s)
 }
 
 // casts diz se a classe lança a magia. A que não escolhe escola segue a lista do verbete; a que escolhe
@@ -171,15 +195,15 @@ func (class casterClass) casts(spell book.Spell) bool {
 	return sameTradition && slices.Contains(class.schools, spell.School)
 }
 
-// traditionOf é a lista da classe de maior nível entre estas, vazia sem nenhuma.
-func traditionOf(classes []casterClass) string {
-	best, tradition := int64(0), ""
+// castingClassOf é a classe de maior nível entre estas e a lista dela, vazias sem nenhuma.
+func castingClassOf(classes []casterClass) (name, tradition string) {
+	best := int64(0)
 	for _, class := range classes {
 		if class.level > best {
-			best, tradition = class.level, class.list
+			best, name, tradition = class.level, class.name, class.list
 		}
 	}
-	return tradition
+	return name, tradition
 }
 
 func highestReach(classes []casterClass) int {

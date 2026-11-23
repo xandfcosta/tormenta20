@@ -3,6 +3,8 @@ package sheet
 import (
 	"slices"
 	"testing"
+
+	"t20engine/domain/book"
 )
 
 // O CONJURADOR responde, sobre cada magia, o que aprender, conjurar e a aba Magias perguntam (p170-171).
@@ -96,5 +98,57 @@ func TestTheMainTraditionIsTheHighestLevelCastersList(t *testing.T) {
 	both := CasterOf(CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 20}, {ClassName: "Clérigo", Level: 10}}})
 	if got := both.Spell("luz").Tradition; got != "arcana" {
 		t.Errorf("a Luz do Arcanista 20/Clérigo 10 saiu %q; want arcana, pela classe de maior nível", got)
+	}
+}
+
+// O APRIMORAMENTO "APENAS ARCANOS / DIVINOS / DRUIDAS" (a Luz, p197; o Controlar o Clima, p187) existe só para
+// quem lança a magia por aquela tradição ou classe. A Luz é arcana na mão do arcanista e divina na do clérigo; o
+// multiclasse a lança pela classe de maior nível, a mesma regra da tradição.
+func TestTheClassOnlyAugmentFollowsHowTheSheetCastsTheSpell(t *testing.T) {
+	sheetOf := func(classes ...ClassDTO) Caster { return CasterOf(CharacterDTO{Classes: classes}) }
+	// O druida lança as divinas das escolas que escolheu (p61): a de transmutação traz o Controlar o Clima.
+	druid := CasterOf(CharacterDTO{
+		Classes:      []ClassDTO{{ClassName: "Druida", Level: 14}},
+		PowerChoices: `{"class.druida.magias-1-circulo":["transmutacao"]}`,
+	})
+	for _, c := range []struct {
+		why       string
+		caster    Caster
+		spell     string
+		classOnly string
+		want      bool
+	}{
+		{"a Luz do arcanista é arcana", sheetOf(ClassDTO{ClassName: "Arcanista", Level: 5}), "luz", "arcanos", true},
+		{"a Luz do arcanista não é divina", sheetOf(ClassDTO{ClassName: "Arcanista", Level: 5}), "luz", "divinos", false},
+		{"a Luz do clérigo é divina", sheetOf(ClassDTO{ClassName: "Clérigo", Level: 5}), "luz", "divinos", true},
+		{"a Luz do Clérigo 5 / Arcanista 3 é divina", sheetOf(ClassDTO{ClassName: "Clérigo", Level: 5}, ClassDTO{ClassName: "Arcanista", Level: 3}), "luz", "arcanos", false},
+		{"o Controlar o Clima do druida", druid, "controlar-o-clima", "druidas", true},
+		{"o Controlar o Clima do clérigo não é de druida", sheetOf(ClassDTO{ClassName: "Clérigo", Level: 14}), "controlar-o-clima", "druidas", false},
+		{"sem marca, todos", sheetOf(ClassDTO{ClassName: "Clérigo", Level: 5}), "luz", "", true},
+		{"a magia que nenhuma classe lança não é de tradição nenhuma", sheetOf(ClassDTO{ClassName: "Bárbaro", Level: 5}), "luz", "arcanos", false},
+	} {
+		if got := c.caster.Spell(c.spell).CastsAs(c.classOnly); got != c.want {
+			t.Errorf("%s: CastsAs(%q) = %v; want %v", c.why, c.classOnly, got, c.want)
+		}
+	}
+}
+
+// TODA MARCA "Apenas …" DO CATÁLOGO tem quem a responda: uma marca nova sem resposta trancaria o aprimoramento
+// para todo mundo, calada.
+func TestEveryClassOnlyMarkIsUnderstood(t *testing.T) {
+	seen := 0
+	for _, spell := range book.Catalogs().Spells {
+		for i, augment := range spell.Augments {
+			if augment.ClassOnly == "" {
+				continue
+			}
+			seen++
+			if _, known := classOnlyCasts[augment.ClassOnly]; !known {
+				t.Errorf("%s, aprimoramento %d: a marca %q não tem resposta em classOnlyCasts; escreva o que ela pergunta", spell.ID, i, augment.ClassOnly)
+			}
+		}
+	}
+	if seen == 0 {
+		t.Error("nenhum aprimoramento com marca: o catálogo perdeu o campo, e o guarda não mede nada")
 	}
 }

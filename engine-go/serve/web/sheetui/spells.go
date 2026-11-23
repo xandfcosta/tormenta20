@@ -179,7 +179,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			Circle: circleName(fromBook.Circle), School: schoolName(fromBook.School),
 			BasePm: sheet.SpellBasePmCost[fromBook.Circle], Prepared: learned.Prepared,
 			CD:        spellCdOf(computed, computedOK, onSheet),
-			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet.CircleReach),
+			Augments:  augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
 			Execution: fromBook.Execution, Range: fromBook.Range, Duration: fromBook.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(fromBook), RangeWritten: book.SpellRangeWritten(fromBook),
 			DurationWritten: book.SpellDurationWritten(fromBook),

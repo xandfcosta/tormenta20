@@ -44,7 +44,7 @@ type augmentRow struct {
 // augmentRowsOf traduz os aprimoramentos da magia e os poderes da ficha que são
 // aprimoramento (p131), trancando os fora de alcance e montando os gestos que se
 // apagam entre si.
-func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell catalog.Spell, castable int) []augmentRow {
+func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell catalog.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow {
 	fromBook := spellOfBook(spellID)
 	rows := make([]augmentRow, 0, len(spell.Augments))
 	for i, a := range spell.Augments {
@@ -53,9 +53,12 @@ func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell catalog.Spell, 
 			Description: augmentDescription(spellID, i),
 			Exclusive:   a.Exclusive, Cantrip: a.Cantrip,
 		}
-		if a.RequiresCircle != nil && *a.RequiresCircle > castable {
+		if a.RequiresCircle != nil && *a.RequiresCircle > onSheet.CircleReach {
 			row.Locked = true
 			row.LockNote = "exige o " + strconv.Itoa(*a.RequiresCircle) + "º círculo"
+		} else if !onSheet.CastsAs(a.ClassOnly) {
+			row.Locked = true
+			row.LockNote = "apenas " + a.ClassOnly
 		}
 		rows = append(rows, row)
 	}

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
+	"t20engine/domain/catalog"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -97,5 +99,40 @@ func TestTheSpellsTabLocksWhatTheCircleRefusesAndWarnsWhatTheListLeavesOut(t *te
 	}
 	if !strings.Contains(grimoire, "acima do seu círculo") {
 		t.Error("a linha do Desintegrar não diz que ele está acima do círculo")
+	}
+}
+
+// O APRIMORAMENTO "APENAS ARCANOS" da Luz (p197) não se escolhe na Luz do clérigo, que é divina: o servidor
+// recusa, e a folha da magia o tranca com a marca do livro.
+func TestTheArcaneOnlyAugmentIsRefusedOnTheClericsLight(t *testing.T) {
+	light, _ := catalog.LookupSpell("luz")
+	arcaneOnly := slices.IndexFunc(light.Augments, func(a catalog.Augment) bool { return a.ClassOnly == "arcanos" && a.RequiresCircle == nil })
+	if arcaneOnly < 0 {
+		t.Fatal("a Luz não tem aprimoramento apenas arcano sem círculo: o caso não mede nada")
+	}
+	s := newCastServer(t)
+	owner := seedUser(t, s, "clerigo@t20.local")
+	char := seedCaster(t, s, owner, "Clérigo", 5, 20, "luz")
+	err := castSpell(t, s, owner, char, "luz", fmt.Sprintf(`{"augments":[{"augmentIndex":%d,"stacks":1}]}`, arcaneOnly))
+	if err == nil || !strings.Contains(err.Error(), "apenas arcanos") {
+		t.Errorf("o aprimoramento apenas arcano na Luz do clérigo deu %v; want a recusa", err)
+	}
+	if arcanist := seedCaster(t, s, owner, "Arcanista", 5, 20, "luz"); castSpell(t, s, owner, arcanist,
+		"luz", fmt.Sprintf(`{"augments":[{"augmentIndex":%d,"stacks":1}]}`, arcaneOnly)) != nil {
+		t.Error("o controle falhou: o arcanista não escolheu o aprimoramento apenas arcano da Luz")
+	}
+}
+
+// Na folha da Luz do arcanista, os dois aprimoramentos "Apenas Divinos" (p197) aparecem trancados com a marca do
+// livro, em vez de sumir, como o de círculo alto; o "Apenas Arcanos" fica livre.
+func TestTheSpellSheetLocksTheAugmentOfTheOtherTradition(t *testing.T) {
+	f := newSceneFixture(t)
+	learnSpell(t, f, "luz")
+	light := spellSheetOf(t, spellScreen(t, f, f.charID), "spell-luz")
+	if got := strings.Count(light, "apenas divinos"); got != 2 {
+		t.Errorf("a folha da Luz do arcanista tranca %d aprimoramentos apenas divinos; want 2", got)
+	}
+	if strings.Contains(light, "apenas arcanos") {
+		t.Error("a folha da Luz do arcanista tranca um aprimoramento apenas arcano")
 	}
 }

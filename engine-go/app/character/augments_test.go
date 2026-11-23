@@ -35,12 +35,12 @@ func TestAnAugmentAboveTheCircleIsRefusedByTheServer(t *testing.T) {
 	picks := []sheet.AugmentPick{{AugmentIndex: target, Stacks: 1}}
 
 	// QUEM NÃO ALCANÇA é recusado…
-	if _, failure := validateAugments(spell, picks, 2); failure == "" {
+	if _, failure := validateAugments(spell, picks, sheet.SpellOnTheSheet{CircleReach: 2}); failure == "" {
 		t.Error("um aprimoramento de círculo alto passou para quem alcança só o 2º")
 	}
 	// …e quem alcança, passa. Sem esta metade o guarda ficaria verde numa
 	// validação que recusa TUDO.
-	if _, failure := validateAugments(spell, picks, 5); failure != "" {
+	if _, failure := validateAugments(spell, picks, sheet.SpellOnTheSheet{CircleReach: 5}); failure != "" {
 		t.Errorf("quem alcança o 5º foi recusado: %s", failure)
 	}
 }
