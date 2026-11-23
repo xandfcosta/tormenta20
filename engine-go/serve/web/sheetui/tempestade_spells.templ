@@ -58,7 +58,7 @@ templ tempestadeSpells(v View) {
 				for _, group := range groups {
 					@ds.ListHead(group.Title, strconv.Itoa(len(group.Spells)))
 					for _, spell := range group.Spells {
-						@ds.ActionRow(spell.Name, spellLineMeta(spell, true), spellSheetID(spell)) {
+						@ds.ActionRow(spell.Name, spellLineMeta(spell), spellSheetID(spell)) {
 							@castGesture(v, spell)
 						}
 					}

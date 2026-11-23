@@ -61,10 +61,9 @@ func (p Plays) ForgetSpell(ctx context.Context, characterID int64, catalogSpellI
 // (`MemorizeRefusal`): só o mago memoriza, e até metade do que conhece.
 // Desmemorizar sempre se pode.
 func (p Plays) ToggleMemorized(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
-	characterID := dto.ID
-	all, err := p.queries.ListSpellsByCharacter(ctx, characterID)
+	all, err := p.queries.ListSpellsByCharacter(ctx, dto.ID)
 	if err != nil {
-		return fmt.Errorf("ler o grimório da ficha %d: %w", characterID, err)
+		return fmt.Errorf("ler o grimório da ficha %d: %w", dto.ID, err)
 	}
 	for _, m := range all {
 		if m.Catalogspellid != catalogSpellID {
@@ -78,7 +77,7 @@ func (p Plays) ToggleMemorized(ctx context.Context, dto sheet.CharacterDTO, cata
 			after = 1
 		}
 		if _, err := p.queries.SetSpellPreparedByCatalog(ctx, sqlcgen.SetSpellPreparedByCatalogParams{
-			Prepared: after, CharacterId: characterID, CatalogSpellId: catalogSpellID,
+			Prepared: after, CharacterId: dto.ID, CatalogSpellId: catalogSpellID,
 		}); err != nil {
 			return fmt.Errorf("gravar a memorização de %q: %w", catalogSpellID, err)
 		}
