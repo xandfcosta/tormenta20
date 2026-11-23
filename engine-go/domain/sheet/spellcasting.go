@@ -2,8 +2,6 @@ package sheet
 
 import (
 	"encoding/json"
-	"fmt"
-	"slices"
 	"strconv"
 
 	"t20engine/domain/book"
@@ -49,7 +47,7 @@ func RequiresPreparation(classes []ClassDTO, classChoicesRaw string) bool {
 }
 
 // HighestCastableCircle é o maior círculo que estas classes alcançam, 0 sem classe que conjure. O
-// círculo de uma magia é do `SpellCircleReach`, que escolhe as classes e põe o piso.
+// círculo de uma magia é do conjurador (`SpellOnTheSheet.CircleReach`), que escolhe as classes e põe o piso.
 func HighestCastableCircle(classes []ClassDTO) int {
 	best := 0
 	progressions := book.SpellProgressions()
@@ -71,105 +69,8 @@ func HighestCastableCircle(classes []ClassDTO) int {
 	return best
 }
 
-// SpellCircleReach é o maior círculo que a ficha alcança PARA ESTA MAGIA, que é o que aprender e conjurar
-// conferem e o que libera o aprimoramento de círculo alto (p171). Em ordem:
-//
-//   - o das classes que lançam a magia, e não o maior entre todas: o Arcanista 9 / Clérigo 1 alcança o 3º
-//     círculo nas arcanas e o 1º nas divinas;
-//   - sem nenhuma delas, o das classes que conjuram: um poder ensinou a magia de fora da lista (o Aspecto da
-//     Primavera do druida, p61, aprende encantamento "arcana ou divina");
-//   - sem classe que conjure, o da própria magia, que veio de fora das classes: a magia concedida por
-//     poder (Totem Espiritual, p42) se conjura no círculo dela, e sem esse piso o bárbaro com Totem não
-//     conjuraria a magia que o poder lhe deu.
-//
-// Magia desconhecida alcança o círculo 0.
-//
-//	sheet.SpellCircleReach(arcanista9clerigo1, "curar-ferimentos") // 1
-func SpellCircleReach(dto CharacterDTO, spellID string) int {
-	spell, found := book.SpellByID(spellID)
-	if !found {
-		return 0
-	}
-	casting := CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
-	classes := slices.DeleteFunc(slices.Clone(dto.Classes), func(c ClassDTO) bool { return !slices.Contains(casting, c.ClassName) })
-	if len(classes) == 0 {
-		classes = slices.DeleteFunc(slices.Clone(dto.Classes), func(c ClassDTO) bool { return !IsCasterClass(c.ClassName) })
-	}
-	if len(classes) == 0 {
-		return spell.Circle
-	}
-	return HighestCastableCircle(classes)
-}
-
-// CanCastCircleOf diz se a ficha alcança o círculo da magia — "uma magia que
-// possa lançar" (Foco em Magia, p131). Magia desconhecida não alcança.
-func CanCastCircleOf(dto CharacterDTO, spellID string) bool {
-	spell, found := book.SpellByID(spellID)
-	return found && spell.Circle <= SpellCircleReach(dto, spellID)
-}
-
-// AboveTheCircle é a frase da magia que passa do círculo que a ficha alcança para ela, ou vazia. É a
-// recusa de aprender e de conjurar, e o que a aba Magias escreve na linha trancada. Magia desconhecida
-// é vazia: quem a recusa é quem procura no livro.
-//
-//	sheet.AboveTheCircle(arcanista4, "bola-de-fogo") // "Bola de Fogo é do 2º círculo, e esta ficha alcança até o 1º (p170)"
-func AboveTheCircle(dto CharacterDTO, spellID string) string {
-	spell, found := book.SpellByID(spellID)
-	if !found {
-		return ""
-	}
-	reach := SpellCircleReach(dto, spellID)
-	if spell.Circle <= reach {
-		return ""
-	}
-	return fmt.Sprintf("%s é do %dº círculo, e esta ficha alcança até o %dº (p170)", spell.Name, spell.Circle, reach)
-}
-
-// OffTheList é o aviso da magia que nenhuma classe da ficha lança pela lista (p170), ou vazio. Não
-// recusa nada: um poder pode ensiná-la, e quem confere de onde ela veio é o mestre.
-func OffTheList(dto CharacterDTO, spellID string) string {
-	spell, found := book.SpellByID(spellID)
-	if !found || len(CastingClasses(dto, dto.Classes, spell.School, spell.Classes)) > 0 {
-		return ""
-	}
-	return "fora da lista das suas classes: só vale se um poder a ensinou"
-}
-
 // IsCasterClass diz se a classe conjura.
 func IsCasterClass(name string) bool {
 	_, casts := book.SpellProgressions()[name]
 	return casts
-}
-
-// SpellTradition é a LISTA de onde esta magia vem para ESTE personagem:
-// `arcana`, `divina`, ou vazio quando nenhuma classe dele a concede.
-//
-// A tradição não é propriedade da magia — a Luz (p197) é arcana na mão do
-// arcanista e divina na do clérigo, e o catálogo a declara com as quatro
-// classes que a conhecem. Quem tem lista é a CLASSE (`spellcasting.list`), e
-// por isso a pergunta precisa das duas pontas.
-//
-// EMPATE RESOLVE PELO MAIOR NÍVEL, que é a mesma regra que o
-// `engine.SpellPmLimit` já usa para "a classe que fornece a habilidade" (p224):
-// um Arcanista 20/Clérigo 10 que conjura uma magia das duas listas a conjura
-// como arcanista. O app não guarda de qual lista a magia foi aprendida, e
-// inventar uma segunda regra aqui faria a mesma pergunta ter duas respostas na
-// mesma ficha.
-//
-// @example SpellTradition(classes, []string{"Arcanista"}) // "arcana"
-func SpellTradition(classes []ClassDTO, spellClasses []string) string {
-	grants := map[string]bool{}
-	for _, name := range spellClasses {
-		grants[name] = true
-	}
-	progressions := book.SpellProgressions()
-	best, tradition := int64(0), ""
-	for _, entry := range classes {
-		prog, casts := progressions[entry.ClassName]
-		if !casts || !grants[entry.ClassName] || entry.Level <= best {
-			continue
-		}
-		best, tradition = entry.Level, prog.List
-	}
-	return tradition
 }

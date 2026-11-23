@@ -20,7 +20,7 @@ import (
 //	SpellAt{Tradition: "arcana", School: "evocacao", Range: "medio", Spell: "bola-de-fogo"}
 type SpellAt struct {
 	Tradition, School, Range, Spell string
-	// Classes são as classes que lançam a magia (`sheet.CastingClasses`): o que vale para as habilidades de uma
+	// Classes são as classes que lançam a magia (`SpellOnTheSheet.Casting`): o que vale para as habilidades de uma
 	// classe só alcança a magia que ela lança.
 	Classes []string
 }

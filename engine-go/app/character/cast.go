@@ -25,13 +25,13 @@ import (
 // O livro é conferido AQUI e não por quem chama: uma magia que não existe seria
 // uma linha órfã no grimório, que a ficha desenha como um espaço em branco. E o
 // círculo também: aprende-se a magia "de um tipo e círculo que possa lançar com
-// aquela classe" (p170), e a acima dele não se aprende (`sheet.SpellCircleReach`). A magia de fora da lista
-// das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
+// aquela classe" (p170), e a acima dele não se aprende (o conjurador, `sheet.CasterOf`). A magia de fora da
+// lista das classes se aprende, porque um poder pode ensiná-la; a ficha só avisa.
 func (p Plays) LearnSpell(ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string) error {
 	if _, known := catalog.LookupSpell(catalogSpellID); !known {
 		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
-	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
+	if refusal := sheet.CasterOf(dto).Spell(catalogSpellID).AboveTheCircle; refusal != "" {
 		return errors.New(refusal)
 	}
 	if _, err := p.queries.CreateSpell(ctx, sqlcgen.CreateSpellParams{
@@ -105,9 +105,10 @@ func (p Plays) Cast(
 	if learned == nil {
 		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
+	onSheet := sheet.CasterOf(dto).Spell(catalogSpellID)
 	// A MAGIA GRAVADA ANTES DA REGRA fica no grimório, e conjurar recusa: o grimório
 	// não perde nada sozinho, e quem joga a esquece e aprende outra.
-	if refusal := sheet.AboveTheCircle(dto, catalogSpellID); refusal != "" {
+	if refusal := onSheet.AboveTheCircle; refusal != "" {
 		return errors.New(refusal)
 	}
 	if sheet.RequiresPreparation(dto.Classes, dto.ClassChoices) && !learned.Prepared {
@@ -115,7 +116,7 @@ func (p Plays) Cast(
 	}
 	// O APRIMORAMENTO DE CÍRCULO ALTO se libera pela classe que lança a magia (p171),
 	// e não pela maior entre todas.
-	augmentPm, augErr := validateAugments(spell, augments, sheet.SpellCircleReach(dto, catalogSpellID))
+	augmentPm, augErr := validateAugments(spell, augments, onSheet.CircleReach)
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
@@ -150,14 +151,10 @@ func (p Plays) Cast(
 	active := sheet.ToStringSet(dto.Conditionals)
 	// QUEM LANÇA a magia é a pergunta das duas contas, e não a lista do verbete: o bardo de evocação lança a
 	// Bola de Fogo, que lista só o Arcanista (p44).
-	casting := sheet.CastingClasses(dto, dto.Classes, spell.School, spell.Classes)
-	at := engine.SpellAt{
-		Tradition: sheet.SpellTradition(dto.Classes, casting), School: spell.School, Range: spell.Range, Spell: catalogSpellID,
-		Classes: casting,
-	}
+	at := onSheet.At()
 	totalPm := dto.Ruleset.SpellPmCostFor(ec, basePm, augmentPm, active, at)
 	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, at)
-	limit := dto.Ruleset.SpellPmLimitFor(ec, active, casting, at)
+	limit := dto.Ruleset.SpellPmLimitFor(ec, active, onSheet.Casting, at)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
 		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}

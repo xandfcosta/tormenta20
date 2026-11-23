@@ -105,6 +105,7 @@ func WithPowerPick(blob, power, option string, choice book.PowerChoice) string {
 // spellPicksFit confere as escolhas do Foco em Magia (p131): "uma magia que
 // possa lançar" — uma do grimório — e "magias diferentes".
 func spellPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) error {
+	caster := CasterOf(dto)
 	for i, pick := range picks {
 		if slices.Contains(picks[:i], pick) {
 			return fmt.Errorf("%s já escolheu %s; cada vez é uma magia diferente", power.Name, book.SpellName(pick))
@@ -112,7 +113,7 @@ func spellPicksFit(dto CharacterDTO, power book.ClassPower, picks []string) erro
 		if !slices.ContainsFunc(dto.Spells, func(s SpellDTO) bool { return s.CatalogSpellID == pick }) {
 			return fmt.Errorf("%s escolhe uma magia que a ficha possa lançar, e %s não está no grimório", power.Name, book.SpellName(pick))
 		}
-		if !CanCastCircleOf(dto, pick) {
+		if !caster.Spell(pick).ReachesTheCircle() {
 			return fmt.Errorf("%s escolhe uma magia que a ficha possa lançar, e %s é de um círculo que ela ainda não alcança",
 				power.Name, book.SpellName(pick))
 		}

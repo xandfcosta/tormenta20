@@ -608,7 +608,7 @@ queria dizer tradição num lugar e alcance no outro, e o −1 PM do cajado do p
 caiu entre os dois sem ninguém o ler.
 
 - **A tradição é da CLASSE, não da magia**: a Luz é arcana no arcanista e divina
-  no clérigo, e quem a diz é a `sheet.SpellTradition`. A Alta Arcana corta "suas
+  no clérigo, e quem a diz é o conjurador (`SpellOnTheSheet.Tradition`). A Alta Arcana corta "suas
   magias arcanas" (p39), os esotéricos arcanos sobem a CD e o limite "em magias
   arcanas" (p160), o cajado do poder corta e sobe as arcanas (p337) e o símbolo
   abençoado corta as divinas (p345).

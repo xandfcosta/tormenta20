@@ -398,11 +398,7 @@ func spellDcTotal(sheet engine.ComputedSheet, tradition string) int {
 // mainTradition é a tradição da classe conjuradora de maior nível: a que as caixas de CD e de limite de PM
 // do Combate e a linha de CD da aba Magias resumem.
 func mainTradition(dto sheet.CharacterDTO) string {
-	names := make([]string, 0, len(dto.Classes))
-	for _, class := range dto.Classes {
-		names = append(names, class.ClassName)
-	}
-	return sheet.SpellTradition(dto.Classes, names)
+	return sheet.CasterOf(dto).MainTradition()
 }
 
 // weaponOtherUseTile são as duas contas do outro uso da arma, dentro da linha dela.
