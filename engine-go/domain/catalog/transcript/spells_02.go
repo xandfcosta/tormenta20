@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 2 de 15 de `Spells` (spells.go).
+// Parte 2 de 17 de `Spells` (spells.go).
 var spellsPart02 = []Spell{
 	{
 		ID:         "toque-vampirico",

@@ -173,7 +173,10 @@ func (p Plays) Cast(
 	// **dado da vez**): ela abre a linha em vigor mesmo sem manutenção (a Poeira da Podridão dura a cena), e os
 	// grava junto.
 	turns := spell.TurnRoll != nil
-	if !ritual && !sustains && !turns {
+	// AS AÇÕES DA MAGIA também rolam depois com os aprimoramentos desta conjuração (ver GLOSSARY, **ação da
+	// magia**), e os dardos da Lança Ígnea abrem a linha de cena com as cargas contadas.
+	acts, charges := onSheet.Actions(augments) != nil, onSheet.Charges(augments)
+	if !ritual && !sustains && !turns && !acts {
 		if err := sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm); err != nil {
 			return SpellCast{}, err
 		}
@@ -198,7 +201,7 @@ func (p Plays) Cast(
 			return SpellCast{}, fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
 		}
 	}
-	if sustains || turns {
+	if sustains || turns || acts {
 		scope := engine.Duration{Kind: engine.DurationSustained}.Stored()
 		if !sustains {
 			scope = engine.Duration{Kind: engine.DurationScene}.Stored()
@@ -207,9 +210,14 @@ func (p Plays) Cast(
 		if err != nil {
 			return SpellCast{}, err
 		}
-		if turns {
+		if turns || acts {
 			if err := saveCastAugments(ctx, q, effectID, augments); err != nil {
 				return SpellCast{}, err
+			}
+		}
+		if charges > 0 {
+			if err := q.SetEffectCharges(ctx, sqlcgen.SetEffectChargesParams{Effectid: effectID, Remaining: int64(charges)}); err != nil {
+				return SpellCast{}, fmt.Errorf("gravar as cargas de %s: %w", spell.Name, err)
 			}
 		}
 	}

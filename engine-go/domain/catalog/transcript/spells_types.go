@@ -30,6 +30,25 @@ type Spell struct {
 	Rolls []SpellRoll `json:"rolls,omitempty"`
 	// TurnRoll é o dado da vez — ver `book.Spell.TurnRoll`.
 	TurnRoll *SpellTurnRoll `json:"turnRoll,omitempty"`
+	// Actions são as ações da magia em vigor — ver `book.Spell.Actions`.
+	Actions *SpellActions `json:"actions,omitempty"`
+}
+
+// SpellActions são as ações da magia em vigor — ver `book.SpellActions`.
+type SpellActions struct {
+	OncePerTurn bool          `json:"oncePerTurn,omitempty"`
+	Options     []SpellAction `json:"options"`
+}
+
+// SpellAction é uma opção — ver `book.SpellAction`.
+type SpellAction struct {
+	Name     string      `json:"name"`
+	Action   string      `json:"action"`
+	Rolls    []SpellRoll `json:"rolls,omitempty"`
+	CastRoll bool        `json:"castRoll,omitempty"`
+	Save     string      `json:"save,omitempty"`
+	Note     string      `json:"note,omitempty"`
+	Ends     bool        `json:"ends,omitempty"`
 }
 
 // SpellTurnRoll é o dado da vez — ver `book.SpellTurnRoll`.
@@ -65,6 +84,9 @@ type SpellAugment struct {
 	Adds           []SpellRoll `json:"adds,omitempty"`
 	Rolls          []SpellRoll `json:"rolls,omitempty"`
 	ChangesTheRoll bool        `json:"changesTheRoll,omitempty"`
+	// Actions e Charges são as ações que o aprimoramento dá — ver `book.SpellAugment`.
+	Actions *SpellActions `json:"actions,omitempty"`
+	Charges int           `json:"charges,omitempty"`
 }
 
 type SpellBuff struct {

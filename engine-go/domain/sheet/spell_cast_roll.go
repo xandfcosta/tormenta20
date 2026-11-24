@@ -14,6 +14,10 @@ import (
 type CastRoll struct {
 	Parts  []book.SpellRoll
 	ByText bool
+	// Charges são as cargas que o aprimoramento escolhido cria EM VEZ do efeito normal (os quatro dardos da Lança
+	// Ígnea, p196): a conjuração não rola nada, e cada carga rola o dado dela depois (ver GLOSSARY, **ação da
+	// magia**).
+	Charges int
 }
 
 // CastRoll monta o dado da conjuração com os aprimoramentos escolhidos: o que MUDA troca as parcelas da magia, e o
@@ -24,6 +28,9 @@ type CastRoll struct {
 //
 //	sheet.CasterOf(dto).Spell("bola-de-fogo").CastRoll([]sheet.AugmentPick{{AugmentIndex: 0, Stacks: 2}}) // 10d6 de fogo
 func (s SpellOnTheSheet) CastRoll(picks []AugmentPick) (CastRoll, error) {
+	if charges := s.Charges(picks); charges > 0 {
+		return CastRoll{Charges: charges}, nil
+	}
 	return s.augmentedRoll(s.Spell.Rolls, picks)
 }
 

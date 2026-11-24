@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 4 de 15 de `Spells` (spells.go).
+// Parte 4 de 17 de `Spells` (spells.go).
 var spellsPart04 = []Spell{
 	{
 		ID:         "alterar-memoria",

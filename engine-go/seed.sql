@@ -2141,6 +2141,9 @@ INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared",
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (46, 18, 'luz', 1, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (47, 18, 'bola-de-fogo', 1, '2026-01-01T00:00:00.000Z');
 INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (48, 18, 'chuva-de-meteoros', 1, '2026-01-01T00:00:00.000Z');
+INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (49, 18, 'mao-poderosa-de-talude', 1, '2026-01-01T00:00:00.000Z');
+INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (50, 18, 'relampago-flamejante-de-reynard', 1, '2026-01-01T00:00:00.000Z');
+INSERT INTO character_spells ("id", "characterId", "catalogSpellId", "prepared", "learnedAt") VALUES (51, 18, 'lanca-ignea-de-aleph', 1, '2026-01-01T00:00:00.000Z');
 
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (1, 1, 1, 'class', 'Guerreiro', '', 0);
 INSERT INTO character_level_choices ("id", "characterId", "level", "kind", "ref", "pick", "estimated") VALUES (2, 1, 2, 'class', 'Guerreiro', '', 0);

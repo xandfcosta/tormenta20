@@ -137,10 +137,19 @@ func Load(
 		}
 		picksOf[row.Effectid] = picks
 	}
+	charges, err := q.ListEffectChargesByCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	chargesOf := make(map[int64]int, len(charges))
+	for _, row := range charges {
+		chargesOf[row.Effectid] = int(row.Remaining)
+	}
 	for _, ef := range effects {
 		dto.ActiveEffects = append(dto.ActiveEffects, EffectDTO{
 			ID: ef.ID, CatalogID: ef.Catalogid, Scope: ef.Scope,
 			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat, CastAugments: picksOf[ef.ID],
+			Charges: chargesOf[ef.ID],
 		})
 	}
 

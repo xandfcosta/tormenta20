@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
@@ -123,6 +124,44 @@ func (st *Store) SpendCharacterAction(ctx context.Context, characterID int64, co
 		return nil
 	}
 	_, err = st.SpendAction(ctx, sessionID, cost)
+	return err
+}
+
+// CharacterActionOnceFits é o `CharacterActionFits` do gesto que também é "uma vez por turno" (ver GLOSSARY,
+// **ação da magia**): a marca `onceKey` já gasta na vez dele recusa com `refusal`, antes de rolar. Sem marca, ou
+// fora de uma cena de ação, é o `CharacterActionFits`.
+func (st *Store) CharacterActionOnceFits(ctx context.Context, characterID int64, cost engine.ActionCost, onceKey, refusal string) error {
+	if err := st.CharacterActionFits(ctx, characterID, cost); err != nil || onceKey == "" {
+		return err
+	}
+	sessionID, _, inScene, err := st.momentOf(ctx, characterID)
+	if err != nil || !inScene {
+		return err
+	}
+	s, err := st.State(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+	if isOnTurn(s, characterID) && live.UsedOncePerRound(s, s.Initiative[s.TurnIndex].ID, onceKey) {
+		return errors.New(refusal)
+	}
+	return nil
+}
+
+// SpendCharacterActionOnce cobra do turno o que o gesto FEITO custou e registra a marca `onceKey` na vez dele, na
+// MESMA mutação: cobrar a ação e esquecer a marca daria a segunda Fúria da vez de graça.
+func (st *Store) SpendCharacterActionOnce(ctx context.Context, characterID int64, cost engine.ActionCost, onceKey, refusal string) error {
+	sessionID, _, inScene, err := st.momentOf(ctx, characterID)
+	if err != nil || !inScene {
+		return err
+	}
+	_, err = st.apply(ctx, sessionID, events.TurnAdvanced{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error {
+			if onceKey != "" && isOnTurn(s, characterID) && !live.UsesOncePerRound(s, s.Initiative[s.TurnIndex].ID, onceKey) {
+				return errors.New(refusal)
+			}
+			return chargeTurn(s, cost)
+		})
 	return err
 }
 

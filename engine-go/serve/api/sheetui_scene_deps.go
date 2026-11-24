@@ -65,6 +65,18 @@ func (h sheetHost) SpendActionOnTurn(ctx context.Context, characterID int64, cos
 	return h.rules.sessions.SpendCharacterAction(ctx, characterID, cost)
 }
 
+func (h sheetHost) SpellActionFitsOnTurn(
+	ctx context.Context, characterID int64, cost engine.ActionCost, onceKey, refusal string,
+) error {
+	return h.rules.sessions.CharacterActionOnceFits(ctx, characterID, cost, onceKey, refusal)
+}
+
+func (h sheetHost) SpendSpellActionOnTurn(
+	ctx context.Context, characterID int64, cost engine.ActionCost, onceKey, refusal string,
+) error {
+	return h.rules.sessions.SpendCharacterActionOnce(ctx, characterID, cost, onceKey, refusal)
+}
+
 // PublishSkillTest leva o teste rolado na ficha para a mesa (p220-221).
 //
 // O NOME DE QUEM ROLOU sai daqui e não da cena da ficha: a faixa da mesa diz

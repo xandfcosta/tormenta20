@@ -100,6 +100,9 @@ type actionRow struct {
 	ClearsDose bool
 	// Hand é o "ou rolei" da linha que rola dados de dano (a bola de fogo da Flamejante), ou nulo.
 	Hand *handTotal
+	// SpellSheet é o diálogo da ação da magia em vigor (ver `spell_actions.go`), com o dado e o "ou rolei" de cada
+	// parcela; nulo no resto.
+	SpellSheet *spellActionSheet
 	// Sheet é a folha que o Rolar abre antes de mandar o gesto, com o interruptor do que se liga NESTE golpe —
 	// o Golpe Imprudente no Golpe Relâmpago (p77) —, como os aprimoramentos de uma magia. Nulo é rolar direto.
 	Sheet *rollSheet
@@ -171,7 +174,7 @@ func rollCommand(v View, roll actionRoll, after string) string {
 func actionsPanelFrom(
 	id int64, computed engine.ComputedSheet,
 	combat panelCombat, powers powersPanel, spells spellbookPanel, effects effectsPanel,
-	boosts [][]attackBoost, blasts, shapeRows []actionRow,
+	boosts [][]attackBoost, blasts, shapeRows []actionRow, spellActions map[engine.ActionCost][]actionRow,
 ) actionsPanel {
 	melee := expertiseOrZero(computed, "Luta", "strength").Total + computed.AttackMelee.Total
 	byCost := map[engine.ActionCost][]actionRow{
@@ -180,6 +183,9 @@ func actionsPanelFrom(
 		engine.ActionFull:     fullRows(combat, computed, ownsPower(powers, engine.RecklessChargePowerID), boosts),
 		engine.ActionFree: slices.Concat(extraStrikeRows(combat, boosts, ownsPower(powers, engine.ImpulsiveStrikePowerID)),
 			followUpRows(combat.FollowUps, melee), shapeRows),
+	}
+	for cost, rows := range spellActions {
+		byCost[cost] = append(byCost[cost], rows...)
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {

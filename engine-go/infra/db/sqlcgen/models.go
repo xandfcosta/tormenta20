@@ -281,6 +281,11 @@ type EffectCastAugment struct {
 	Augments string `json:"augments"`
 }
 
+type EffectCharge struct {
+	Effectid  int64 `json:"effectid"`
+	Remaining int64 `json:"remaining"`
+}
+
 type OpenBoard struct {
 	Sessionid int64  `json:"sessionid"`
 	Boardid   string `json:"boardid"`

@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 5 de 15 de `Spells` (spells.go).
+// Parte 5 de 17 de `Spells` (spells.go).
 var spellsPart05 = []Spell{
 	{
 		ID:         "aura-divina",

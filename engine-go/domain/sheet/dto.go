@@ -149,6 +149,9 @@ type EffectDTO struct {
 	// CastAugments são os aprimoramentos escolhidos ao conjurar a magia que rola de novo na vez de quem conjurou
 	// (ver GLOSSARY, **dado da vez**), vazios no resto.
 	CastAugments []AugmentPick `json:"castAugments,omitempty"`
+	// Charges são as cargas que a magia em vigor ainda tem (os dardos da Lança Ígnea, ver GLOSSARY, **ação da
+	// magia**), zero na que não as conta.
+	Charges int `json:"charges,omitempty"`
 }
 
 type SpellDTO struct {

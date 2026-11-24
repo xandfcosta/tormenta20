@@ -29,11 +29,11 @@ type turnRollOffer struct {
 	Dialog string
 	// Title é a cabeça do diálogo: "Ferver Sangue · início do turno".
 	Title string
-	Lines []turnRollLine
+	Lines []handRollLine
 }
 
-// turnRollLine é uma parcela escrita ("5d8 de fogo"), a condição do texto e o campo do total da mão dela.
-type turnRollLine struct {
+// handRollLine é uma parcela escrita ("5d8 de fogo"), a condição do texto e o campo do total da mão dela.
+type handRollLine struct {
 	Written string
 	Note    string
 	Signal  string
@@ -62,16 +62,7 @@ func turnRollOffersOf(caster sheet.Caster, effect sheet.EffectDTO) []turnRollOff
 			EffectID: effect.ID, Version: version, Button: button, Label: "Rolar " + name,
 			Dialog: fmt.Sprintf("turn-roll-%d-%d", effect.ID, i), Title: name + " · " + at,
 		}
-		for j, part := range parts {
-			written := part.Dice
-			if part.Kind != "" {
-				written += " de " + part.Kind
-			}
-			offer.Lines = append(offer.Lines, turnRollLine{
-				Written: written, Note: part.Note, Signal: "spell_hand_" + strconv.Itoa(j+1),
-				Label: fmt.Sprintf("O total da parcela %d que você rolou na mesa para %s", j+1, name),
-			})
-		}
+		offer.Lines = handRollLinesOf(parts, name)
 		offers = append(offers, offer)
 	}
 	return offers
@@ -84,6 +75,27 @@ func turnRollOffersIn(v View) []turnRollOffer {
 		offers = append(offers, a.TurnRolls...)
 	}
 	return offers
+}
+
+// handRollLinesOf escreve as parcelas de um dado da magia para o diálogo de rolar: "5d8 de fogo", com o campo da
+// mão de cada uma ligado ao sinal da posição dela.
+func handRollLinesOf(parts []book.SpellRoll, name string) []handRollLine {
+	lines := make([]handRollLine, 0, len(parts))
+	for j, part := range parts {
+		lines = append(lines, handRollLine{
+			Written: writtenSpellPart(part), Note: part.Note, Signal: "spell_hand_" + strconv.Itoa(j+1),
+			Label: fmt.Sprintf("O total da parcela %d que você rolou na mesa para %s", j+1, name),
+		})
+	}
+	return lines
+}
+
+// writtenSpellPart é a parcela como a mesa a lê: "5d8 de fogo", e só o dado na parcela sem tipo.
+func writtenSpellPart(part book.SpellRoll) string {
+	if part.Kind == "" {
+		return part.Dice
+	}
+	return part.Dice + " de " + part.Kind
 }
 
 // turnRollMeta é o que a linha em vigor diz do dado da vez: "rola no início do turno". Vazia sem dado da vez.
