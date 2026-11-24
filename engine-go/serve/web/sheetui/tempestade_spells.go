@@ -197,8 +197,13 @@ func castOpensSheet(spell learnedSpellRow) bool {
 
 // augmentsReset zera as pilhas: quem abre uma folha limpa, ou a escolha de uma
 // magia reapareceria na próxima.
-const augmentsReset = "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; " +
-	"$augment_quickened = 0; $augment_amplified = 0; $augment_discreet = 0; "
+var augmentsReset = func() string {
+	reset := "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; "
+	for _, s := range powerAugmentSignals {
+		reset += "$" + s.name + " = 0; "
+	}
+	return reset
+}()
 
 // circleFilterOptions são os círculos do catálogo, para o Aprender: não há
 // magia de círculo zero — o truque é aprimoramento (ver o GLOSSARY).

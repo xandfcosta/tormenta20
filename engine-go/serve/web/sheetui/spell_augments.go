@@ -60,7 +60,7 @@ func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow
 	}
 	for _, power := range onSheet.PowerAugments {
 		rows = append(rows, augmentRow{
-			Signal: powerAugmentSignals[power.Power.PowerID], PM: power.Power.Augment.PmCost,
+			Signal: powerAugmentSignalOf(power.Power.PowerID), PM: power.Power.Augment.PmCost,
 			Stacks:      power.Power.Augment.Kind != "muda",
 			Description: power.Power.Name + ": " + power.Power.Augment.Description,
 			Locked:      power.Lock != "", LockNote: power.Lock,
@@ -92,7 +92,7 @@ func withAugmentGestures(rows []augmentRow, onSheet sheet.SpellOnTheSheet) []aug
 // signalOf é o sinal que guarda a pilha do aprimoramento da chave.
 func signalOf(key sheet.AugmentKey) string {
 	if key.PowerID != "" {
-		return powerAugmentSignals[key.PowerID]
+		return powerAugmentSignalOf(key.PowerID)
 	}
 	return augmentSignal(key.Index)
 }
@@ -116,11 +116,38 @@ func augmentSignal(index int) string {
 	return "$augment" + strconv.Itoa(index)
 }
 
-// powerAugmentSignals são os sinais dos poderes que são aprimoramento, um por poder.
-var powerAugmentSignals = map[string]string{
-	book.QuickenedSpellPower: "$augment_quickened",
-	book.AmplifiedSpellPower: "$augment_amplified",
-	book.DiscreetSpellPower:  "$augment_discreet",
+// powerAugmentSignals são os sinais dos poderes que são aprimoramento (p131), um por poder, pelo nome — eles
+// valem para qualquer magia, e por isso não têm o índice da lista da magia.
+//
+// É a ÚNICA lista: a declaração no `<body>`, o zerar da folha, o gesto de cada linha e a leitura do corpo
+// saem dela. Poder novo é uma linha, e o `TestEveryPowerAugmentHasASignal` reprova o que ficar sem ela — um
+// sinal que falta não é erro no navegador, é o gesto não fazer nada.
+var powerAugmentSignals = []struct{ power, name string }{
+	{book.QuickenedSpellPower, "augment_quickened"},
+	{book.AmplifiedSpellPower, "augment_amplified"},
+	{book.DiscreetSpellPower, "augment_discreet"},
+}
+
+// powerAugmentSignalOf é o sinal do poder, com o `$`, ou vazio no poder sem sinal.
+func powerAugmentSignalOf(power string) string {
+	for _, s := range powerAugmentSignals {
+		if s.power == power {
+			return "$" + s.name
+		}
+	}
+	return ""
+}
+
+// powerAugmentsDeclared é a declaração dos sinais dos poderes no `<body>`: "augment_quickened: 0, …".
+func powerAugmentsDeclared() string {
+	declared := ""
+	for i, s := range powerAugmentSignals {
+		if i > 0 {
+			declared += ", "
+		}
+		declared += s.name + ": 0"
+	}
+	return declared
 }
 
 // costPreview é a expressão que soma o custo na tela.
