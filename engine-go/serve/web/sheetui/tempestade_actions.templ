@@ -49,8 +49,7 @@ templ tempestadeActionsBody(v View) {
 				for _, row := range group.Rows {
 					if row.Sheet != nil {
 						@rollSheetDs(v, group, *row.Sheet)
-					}
-					if row.SpellSheet != nil {
+					} else if row.SpellSheet != nil {
 						@spellActionSheetDs(v, group, *row.SpellSheet)
 					}
 				}
