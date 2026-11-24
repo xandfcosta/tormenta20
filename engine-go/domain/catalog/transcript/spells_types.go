@@ -28,6 +28,20 @@ type Spell struct {
 	ResistanceNote string `json:"resistanceNote,omitempty"`
 	// Rolls é o dado que a magia rola ao ser conjurada — ver `book.Spell.Rolls`.
 	Rolls []SpellRoll `json:"rolls,omitempty"`
+	// TurnRoll é o dado da vez — ver `book.Spell.TurnRoll`.
+	TurnRoll *SpellTurnRoll `json:"turnRoll,omitempty"`
+}
+
+// SpellTurnRoll é o dado da vez — ver `book.SpellTurnRoll`.
+type SpellTurnRoll struct {
+	At       string             `json:"at"`
+	Versions []SpellTurnVersion `json:"versions"`
+}
+
+// SpellTurnVersion é uma versão do dado da vez — ver `book.SpellTurnVersion`.
+type SpellTurnVersion struct {
+	Name  string      `json:"name,omitempty"`
+	Rolls []SpellRoll `json:"rolls"`
 }
 
 // SpellRoll é uma parcela do dado da magia — ver `book.SpellRoll`.
