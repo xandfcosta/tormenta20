@@ -372,6 +372,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	view.Attack = s.attackProposalFor(st, userID, role, campaignID, sessionID, sheets)
 	view.SkillTest = s.skillTestBandFor(st, userID, campaignID, sessionID, sheets)
 	view.Blast = blastBandOf(st)
+	view.SpellCast = spellCastBandOf(st)
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Title = sess.Title.String

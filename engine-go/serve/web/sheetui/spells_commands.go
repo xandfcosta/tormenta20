@@ -68,8 +68,12 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 		}
 		return err
 	}
-	if err := s.plays.Cast(r.Context(), dto, spellID, signals.augments(), powerAugments); err != nil {
+	cast, err := s.plays.Cast(r.Context(), dto, spellID, signals.augments(), powerAugments, signals.spellHandTotals())
+	if err != nil {
 		return err
 	}
-	return s.deps.SpendActionOnTurn(r.Context(), row.ID, cost)
+	if err := s.deps.SpendActionOnTurn(r.Context(), row.ID, cost); err != nil {
+		return err
+	}
+	return s.deps.PublishSpellCast(r.Context(), row.ID, cast)
 }

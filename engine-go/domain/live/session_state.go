@@ -99,6 +99,9 @@ type SessionRuntimeState struct {
 	// LastBlast é o ÚLTIMO disparo de encanto em vez do golpe — a bola de fogo da Flamejante —, pela razão do
 	// teste: ele informa, e o próximo o substitui. Ver `blast.go`.
 	LastBlast *BlastRoll `json:"lastBlast,omitempty"`
+	// LastSpellCast é a ÚLTIMA magia conjurada com o dado dela, pela razão do teste: ela informa, e a próxima a
+	// substitui. Ver `spell_cast.go`.
+	LastSpellCast *SpellCastRoll `json:"lastSpellCast,omitempty"`
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,
@@ -369,6 +372,8 @@ func redactForViewer(st *SessionRuntimeState, own map[int64]bool) *SessionRuntim
 		// precisa dela. Medido: sem esta linha o jogador não via o próprio teste.
 		limpo := EmptyRuntimeState()
 		limpo.LastSkillTest = st.LastSkillTest
+		// A MAGIA CONJURADA atravessa pela mesma razão: a cura entre as cenas é conjurada fora delas.
+		limpo.LastSpellCast = st.LastSpellCast
 		return limpo
 	}
 	out := CloneState(st)

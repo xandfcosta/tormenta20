@@ -99,6 +99,8 @@ type View struct {
 	SkillTest *skillTestBand
 	// Blast é o ÚLTIMO disparo de encanto em vez do golpe (a bola de fogo da Flamejante), nil quando não há.
 	Blast *blastBand
+	// SpellCast é a ÚLTIMA magia conjurada com o dado dela, nil quando não há. Ver `spell_cast_view.go`.
+	SpellCast *spellCastBand
 	// Banners são as faixas do Estandarte (p54), só do MESTRE e só com a cena aberta.
 	Banners []bannerBand
 	GM      *viewGm

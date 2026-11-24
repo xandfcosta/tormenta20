@@ -30,6 +30,15 @@ func (st *Store) RecordSkillTest(
 		func(s *live.SessionRuntimeState) error { return live.RecordSkillTest(s, roll) })
 }
 
+// RecordSpellCast guarda a magia conjurada com o dado dela para a mesa ver (ver GLOSSARY, **dado da magia**), pelo
+// evento do ataque rolado, pela razão do `RecordSkillTest`: "alguém rolou um dado, redesenhe".
+func (st *Store) RecordSpellCast(
+	ctx context.Context, sessionID int64, cast live.SpellCastRoll,
+) (*live.SessionRuntimeState, error) {
+	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
+		func(s *live.SessionRuntimeState) error { live.RecordSpellCast(s, cast); return nil })
+}
+
 // PublishCharacterSkillTest põe o teste na mesa onde este personagem está.
 //
 // AS SESSÕES VIVAS e não "a cena de ação", que é a diferença para o

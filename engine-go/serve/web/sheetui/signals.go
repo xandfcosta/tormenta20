@@ -58,6 +58,13 @@ type Signals struct {
 	// vêm da tabela `powerAugmentSignals`, e quem os lê é o `UnmarshalJSON`: um campo por poder seria a
 	// segunda lista que esquece o poder novo.
 	PowerAugmentStacks map[string]*int `json:"-"`
+	// SpellHand são os totais do dado da magia rolados na mão, um por parcela, na ordem da conjuração (ver
+	// GLOSSARY, **dado da magia**). Zero é "não informado", como o d20 da perícia. Quatro porque é o máximo do
+	// catálogo (as quatro esferas da Barragem Elemental).
+	SpellHand1 *int `json:"spell_hand_1"`
+	SpellHand2 *int `json:"spell_hand_2"`
+	SpellHand3 *int `json:"spell_hand_3"`
+	SpellHand4 *int `json:"spell_hand_4"`
 	// SheetDialog é o diálogo PESADO aberto agora (`spell-learn`, `item-add`, `power-choices`), ou vazio:
 	// o corpo dele só se desenha com ele aberto. Ver `lazyBody`.
 	SheetDialog string `json:"sheet_dialog"`
@@ -188,6 +195,30 @@ func (s Signals) powerAugments() []sheet.PowerAugmentPick {
 		}
 	}
 	return picks
+}
+
+// spellHandTotals são os totais da mão até o último informado, ou nil quando a mesa não rolou nada: aí o app
+// rola. Um zero no meio fica, e o caso de uso o recusa dizendo o que os dados tiram.
+func (s Signals) spellHandTotals() []int {
+	all := []*int{s.SpellHand1, s.SpellHand2, s.SpellHand3, s.SpellHand4}
+	last := -1
+	for i, value := range all {
+		if value != nil && *value != 0 {
+			last = i
+		}
+	}
+	if last < 0 {
+		return nil
+	}
+	totals := make([]int, 0, last+1)
+	for _, value := range all[:last+1] {
+		if value == nil {
+			totals = append(totals, 0)
+			continue
+		}
+		totals = append(totals, *value)
+	}
+	return totals
 }
 
 // UnmarshalJSON lê os sinais como a struct os declara e, além deles, os dos poderes que são aprimoramento,

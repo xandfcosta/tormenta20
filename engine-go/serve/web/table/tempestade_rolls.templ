@@ -68,3 +68,32 @@ templ tempestadeBlast(v View) {
 		<section id="table-blast" hidden></section>
 	}
 }
+
+// tempestadeSpellCast é a magia conjurada com o dado dela, nas duas sessões: uma linha por parcela, a resistência
+// com a CD, e nada de verbos — o mestre aplica com os gestos de PV.
+templ tempestadeSpellCast(v View) {
+	if v.SpellCast != nil {
+		<section id="table-spell-cast" class="ds-strike" data-test role="status" aria-label="Magia conjurada">
+			<div class="ds-strike-head">
+				<span class="ds-row-meta"><b>{ v.SpellCast.Head }</b></span>
+			</div>
+			for _, part := range v.SpellCast.Parts {
+				<div class="ds-strike-roll" aria-live="polite">
+					<b class="ds-strike-verdict">{ strconv.Itoa(part.Total) }</b>
+					<span class="ds-strike-tally">{ part.Tally }</span>
+				</div>
+				if part.Note != "" {
+					<p class="ds-help">{ part.Note }</p>
+				}
+			}
+			if v.SpellCast.ByText != "" {
+				<p class="ds-help">{ v.SpellCast.ByText }</p>
+			}
+			if v.SpellCast.Save != "" {
+				<p class="ds-help">{ v.SpellCast.Save }</p>
+			}
+		</section>
+	} else {
+		<section id="table-spell-cast" hidden></section>
+	}
+}

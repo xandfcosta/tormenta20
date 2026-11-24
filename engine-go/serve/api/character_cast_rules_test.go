@@ -107,7 +107,8 @@ func castSpell(t *testing.T, s *Server, userID, characterID int64, spellID, body
 	}
 	// Sem `httptest.NewRequest`: a regra recebe CONTEXTO, e montar um pedido só
 	// para entregá-lo era o sintoma que a ALE-347 veio tirar.
-	return s.characterPlays().Cast(context.Background(), dto, spellID, payload.Augments, nil)
+	_, err = s.characterPlays().Cast(context.Background(), dto, spellID, payload.Augments, nil, nil)
+	return err
 }
 
 func mpOf(t *testing.T, s *Server, characterID int64) int64 {

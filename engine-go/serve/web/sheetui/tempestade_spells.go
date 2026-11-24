@@ -198,7 +198,8 @@ func castOpensSheet(spell learnedSpellRow) bool {
 // augmentsReset zera as pilhas: quem abre uma folha limpa, ou a escolha de uma
 // magia reapareceria na próxima.
 var augmentsReset = func() string {
-	reset := "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; "
+	reset := "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; " +
+		"$spell_hand_1 = 0; $spell_hand_2 = 0; $spell_hand_3 = 0; $spell_hand_4 = 0; "
 	for _, s := range powerAugmentSignals {
 		reset += "$" + s.name + " = 0; "
 	}
