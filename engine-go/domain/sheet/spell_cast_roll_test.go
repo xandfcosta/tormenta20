@@ -21,6 +21,9 @@ func TestTheCastRollFollowsTheAugments(t *testing.T) {
 		{"o aumento de luz da Coluna de Chamas", "coluna-de-chamas", []AugmentPick{{AugmentIndex: 1, Stacks: 1}}, "[6d6 fogo 7d6 luz]"},
 		{"o +2d6 sem tipo da Lança Ígnea fica à parte", "lanca-ignea-de-aleph", []AugmentPick{{AugmentIndex: 0, Stacks: 1}}, "[4d6 fogo 4d6 perfuração 2d6 ]"},
 		{"a Curar Ferimentos com dois aumentos", "curar-ferimentos", []AugmentPick{{AugmentIndex: 1, Stacks: 2}}, "[4d8+4 cura]"},
+		// O aumento do Raio Solar soma à luz e à cura, e a cura só existe com o aprimoramento 2 (p203).
+		{"o aumento de cura sem a parcela de cura não cria uma", "raio-solar", []AugmentPick{{AugmentIndex: 1, Stacks: 1}}, "[5d8 luz]"},
+		{"com o aprimoramento 2, o aumento soma às duas", "raio-solar", []AugmentPick{{AugmentIndex: 1, Stacks: 1}, {AugmentIndex: 2, Stacks: 1}}, "[5d8 cura 5d8 luz]"},
 	} {
 		roll, err := caster.Spell(c.spell).CastRoll(c.picks)
 		if err != nil || roll.ByText {

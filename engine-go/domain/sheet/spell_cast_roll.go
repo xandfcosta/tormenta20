@@ -17,8 +17,8 @@ type CastRoll struct {
 }
 
 // CastRoll monta o dado da conjuração com os aprimoramentos escolhidos: o que MUDA troca as parcelas da magia, e o
-// que AUMENTA soma, por repetição, à parcela do mesmo tipo — ou fica à parte, quando nenhuma tem o tipo dele (os
-// +2d6 sem tipo da Lança Ígnea, p196). A magia que não rola na conjuração devolve nada.
+// que AUMENTA soma, por repetição, à parcela do mesmo tipo; o aumento sem tipo fica à parte (os +2d6 da Lança
+// Ígnea, p196). A magia que não rola na conjuração devolve nada.
 //
 // Índice fora de faixa é ignorado de propósito: quem recusa o pedido malformado é o `AugmentPrice`.
 //
@@ -50,8 +50,8 @@ func (s SpellOnTheSheet) CastRoll(picks []AugmentPick) (CastRoll, error) {
 	return CastRoll{Parts: parts}, nil
 }
 
-// addToTheRoll soma `add` `times` vezes a toda parcela do mesmo tipo, ou o põe à parte quando nenhuma tem o tipo
-// dele. A nota do aumento vai junto da parcela, com as vezes: "+1d12 em mortos-vivos ×2".
+// addToTheRoll soma `add` `times` vezes a toda parcela do mesmo tipo; o sem tipo fica à parte, e o tipado sem
+// parcela do tipo não soma nada. A nota do aumento vai junto da parcela, com as vezes: "+1d12 em mortos-vivos ×2".
 func addToTheRoll(parts []book.SpellRoll, add book.SpellRoll, times int) ([]book.SpellRoll, error) {
 	more, err := engine.ParseDiceSum(add.Dice)
 	if err != nil {
@@ -74,7 +74,9 @@ func addToTheRoll(parts []book.SpellRoll, add book.SpellRoll, times int) ([]book
 		parts[i].Note = joinedNote(part.Note, add.Note, times)
 		matched = true
 	}
-	if matched {
+	// O aumento TIPADO sem parcela do tipo não cria uma: ele soma à parcela que outro aprimoramento traz (o +1d8 de
+	// cura do Raio Solar só existe com a cura do aprimoramento 2, p203). Só o sem tipo fica à parte.
+	if matched || add.Kind != "" {
 		return parts, nil
 	}
 	alone, err := engine.ParseDiceSum(add.Dice)

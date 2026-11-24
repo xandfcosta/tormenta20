@@ -72,7 +72,8 @@ type SpellAugment struct {
 	// prende a marca ao texto é o `TestEveryAugmentThatChangesTheExecutionSaysWhichOne`.
 	Execution string `json:"execution"`
 	// Adds é o dado que o aprimoramento que AUMENTA soma, por repetição, à parcela do mesmo tipo do dado da
-	// magia ("Aumenta o dano em +2d6"); o tipo que nenhuma parcela tem vira parcela própria. Rolls é o dado que
+	// magia ("Aumenta o dano em +2d6"); o aumento sem tipo vira parcela própria, e o tipado sem parcela do tipo
+	// não soma — ele vale com o aprimoramento que traz a parcela (a cura do Raio Solar). Rolls é o dado que
 	// o que MUDA põe no lugar do da magia, e ChangesTheRoll diz que ele o muda — sem Rolls, o novo dado é do
 	// texto, e a conjuração não o rola. Ver GLOSSARY, **dado da magia**.
 	Adds           []SpellRoll `json:"adds"`
