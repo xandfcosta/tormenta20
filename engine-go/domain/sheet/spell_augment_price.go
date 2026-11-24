@@ -49,6 +49,11 @@ func (s SpellOnTheSheet) AugmentLock(index int) string {
 	case bar.circle > 0:
 		return "exige o " + strconv.Itoa(bar.circle) + "º círculo"
 	}
+	// O que MUDA A EXECUÇÃO tranca com o ritual ligado, que também a muda (p131), e mudança na mesma
+	// característica não se acumula (p171).
+	if s.ritual && s.Spell.Augments[index].Execution != "" {
+		return "não combina com o ritual"
+	}
 	// O que TORNA a magia sustentada tranca com outra sustentada de pé (p227). Quem recusa no servidor é a
 	// `CastRefusal`, que sabe a conjuração inteira; aqui é o cadeado do aprimoramento que a provocaria.
 	if sustains := s.Spell.Augments[index].Sustains; sustains != nil && *sustains && s.SustainedClash != "" {
@@ -110,7 +115,11 @@ func (s SpellOnTheSheet) spellAugmentPrice(picks []AugmentPick) (int, string) {
 				"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele",
 				p.AugmentIndex)
 		}
-		// "Mudanças na mesma característica da magia nunca se acumulam" (p171): dois que mudam a execução.
+		// "Mudanças na mesma característica da magia nunca se acumulam" (p171): o ritual, que muda a execução
+		// (p131), e dois aprimoramentos que a mudam.
+		if a.Execution != "" && s.ritual {
+			return 0, fmt.Sprintf("o ritual e o aprimoramento %d mudam a execução, e mudança não se acumula", p.AugmentIndex)
+		}
 		if a.Execution != "" && executionChanger >= 0 {
 			return 0, fmt.Sprintf("os aprimoramentos %d e %d mudam a execução, e mudança não se acumula",
 				executionChanger, p.AugmentIndex)
