@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -116,17 +115,12 @@ func (p Plays) Cast(
 	if refusal := onSheet.CastRefusal(augments); refusal != "" {
 		return errors.New(refusal)
 	}
-	// O APRIMORAMENTO é do conjurador: o preço e a recusa do livro (p170-171), a
-	// mesma resposta que tranca o cadeado da folha.
-	augmentPm, augErr := onSheet.AugmentPrice(augments)
+	// O APRIMORAMENTO é do conjurador, o da magia e o poder que é aprimoramento (p131): o preço e a recusa do
+	// livro (p170-171), a mesma resposta que tranca o cadeado da folha.
+	augmentPm, augErr := onSheet.AugmentPrice(augments, powerAugments)
 	if augErr != "" {
 		return fmt.Errorf("%s", augErr)
 	}
-	powerPm, powerErr := validatePowerAugments(dto, spell, augments, powerAugments)
-	if powerErr != "" {
-		return fmt.Errorf("%s", powerErr)
-	}
-	augmentPm += powerPm
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
 		return err
@@ -167,7 +161,7 @@ func (p Plays) Cast(
 	if available := dto.ManaAvailable(); int64(totalPm) > available {
 		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
 	}
-	ritual, sustains := active[RitualSwitch], onSheet.Sustains(augments)
+	ritual, sustains := active[sheet.RitualSwitch], onSheet.Sustains(augments)
 	if !ritual && !sustains {
 		return sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm)
 	}
@@ -185,7 +179,7 @@ func (p Plays) Cast(
 	}
 	if ritual {
 		if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
-			Characterid: dto.ID, Conditionalid: RitualSwitch,
+			Characterid: dto.ID, Conditionalid: sheet.RitualSwitch,
 		}); err != nil {
 			return fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
 		}
@@ -231,68 +225,6 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 		}
 	}
 	return nil
-}
-
-// validatePowerAugments confere os poderes escolhidos como aprimoramento (p131) e
-// devolve o PM deles, ou a frase da recusa.
-//
-// O poder que falta na ficha é recusado aqui porque quem desenha a linha é a tela,
-// e a fronteira é o servidor: um pedido montado à mão pagaria o aprimoramento de
-// um poder que o personagem não tem.
-func validatePowerAugments(
-	dto sheet.CharacterDTO, spell book.Spell,
-	spellPicks []sheet.AugmentPick, picks []sheet.PowerAugmentPick,
-) (int, string) {
-	if len(picks) == 0 {
-		return 0, ""
-	}
-	owned := sheet.OwnedPowers(dto)
-	total := 0
-	for _, pick := range picks {
-		augment, known := book.PowerAugmentOf(pick.PowerID)
-		if !known {
-			return 0, fmt.Sprintf("o poder %q não é aprimoramento de magia", pick.PowerID)
-		}
-		if !slices.ContainsFunc(owned, func(p sheet.OwnedPower) bool { return p.ID == pick.PowerID }) {
-			return 0, fmt.Sprintf("esta ficha não tem %s", augment.Name)
-		}
-		if pick.Stacks < 1 {
-			return 0, fmt.Sprintf("%s pede um número de repetições de 1 para cima (veio %d)", augment.Name, pick.Stacks)
-		}
-		if augment.Augment.Kind == "muda" && pick.Stacks > 1 {
-			return 0, fmt.Sprintf("%s muda a magia, e mudança não se acumula", augment.Name)
-		}
-		if bar := book.PowerAugmentBar(pick.PowerID, spell); bar != "" {
-			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, bar)
-		}
-		// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
-		if pick.PowerID == book.QuickenedSpellPower && CastsAsRitual(dto) {
-			return 0, fmt.Sprintf("o ritual e %s mudam a execução, e mudança não se acumula", augment.Name)
-		}
-		for _, spellPick := range spellPicks {
-			own := spell.Augments[spellPick.AugmentIndex]
-			if own.Exclusive {
-				return 0, fmt.Sprintf(
-					"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele", spellPick.AugmentIndex)
-			}
-			// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
-			if pick.PowerID == book.QuickenedSpellPower && spellPick.AugmentIndex < len(spell.Augments) &&
-				book.AugmentChangesExecution(spell.Augments[spellPick.AugmentIndex].Description) {
-				return 0, fmt.Sprintf("%s e o aprimoramento %d mudam a execução, e mudança não se acumula",
-					augment.Name, spellPick.AugmentIndex)
-			}
-		}
-		total += augment.Augment.PmCost * pick.Stacks
-	}
-	return total, ""
-}
-
-// RitualSwitch é o interruptor do Celebrar Ritual (p131).
-var RitualSwitch = engine.FlagGroupID("ritual")
-
-// CastsAsRitual diz se a próxima magia desta ficha é ritual.
-func CastsAsRitual(dto sheet.CharacterDTO) bool {
-	return sheet.ToStringSet(dto.Conditionals)[RitualSwitch]
 }
 
 // CastExecution é a execução que esta conjuração cobra do turno: a da magia, a ação livre da Magia

@@ -23,13 +23,13 @@ func TestAnAugmentAboveTheCircleIsRefused(t *testing.T) {
 	}
 	picks := []AugmentPick{{AugmentIndex: target, Stacks: 1}}
 	// O arcanista de 5º alcança o 2º círculo; o de 17º, o 5º.
-	if _, refusal := invisibility(5).AugmentPrice(picks); refusal == "" {
+	if _, refusal := invisibility(5).AugmentPrice(picks, nil); refusal == "" {
 		t.Error("um aprimoramento de círculo alto passou para quem alcança só o 2º")
 	}
 	if lock := invisibility(5).AugmentLock(target); lock == "" {
 		t.Error("o cadeado do aprimoramento de círculo alto está aberto para quem alcança só o 2º")
 	}
-	if _, refusal := invisibility(17).AugmentPrice(picks); refusal != "" {
+	if _, refusal := invisibility(17).AugmentPrice(picks, nil); refusal != "" {
 		t.Errorf("quem alcança o 5º foi recusado: %s", refusal)
 	}
 	if lock := invisibility(17).AugmentLock(target); lock != "" {

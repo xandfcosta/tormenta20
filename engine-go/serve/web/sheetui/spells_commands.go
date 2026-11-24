@@ -9,6 +9,7 @@ import (
 	"t20engine/app/character"
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
 
@@ -59,7 +60,7 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	if err != nil {
 		return err
 	}
-	ritual := character.CastsAsRitual(dto)
+	ritual := sheet.CasterOf(dto).CastsAsRitual()
 	cost := engine.ActionCost(character.CastExecution(spell.Execution, ritual, powerAugments))
 	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
 		if ritual {

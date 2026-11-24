@@ -36,6 +36,15 @@ type Caster struct {
 	spells []SpellDTO
 	// effects são os efeitos em curso, onde mora a magia sustentada de pé (p227).
 	effects []EffectDTO
+	// powerAugments são os poderes da ficha que são aprimoramento (p131), na ordem do livro, e ritual diz que
+	// a próxima magia é ritual (o interruptor do Celebrar Ritual, `RitualSwitch`).
+	powerAugments []book.PowerAugment
+	ritual        bool
+}
+
+// CastsAsRitual diz se a próxima magia desta ficha é ritual: o interruptor do Celebrar Ritual (p131) ligado.
+func (c Caster) CastsAsRitual() bool {
+	return c.ritual
 }
 
 type casterClass struct {
@@ -64,7 +73,10 @@ func CasterOf(dto CharacterDTO) Caster {
 		Path string `json:"caminho"`
 	}
 	_ = json.Unmarshal([]byte(dto.ClassChoices), &paths)
-	caster := Caster{spells: dto.Spells, effects: dto.ActiveEffects}
+	caster := Caster{
+		spells: dto.Spells, effects: dto.ActiveEffects,
+		powerAugments: ownedPowerAugments(dto), ritual: ToStringSet(dto.Conditionals)[RitualSwitch],
+	}
 	for _, entry := range dto.Classes {
 		prog, casts := progressions[entry.ClassName]
 		if !casts {
@@ -128,8 +140,13 @@ type SpellOnTheSheet struct {
 	// círculo (`AboveTheCircle`), a do mago não memorizada (p37) e a segunda sustentada (p227). As abas Magias
 	// e Ações trancam o Conjurar com ela, e o servidor recusa pela `CastRefusal` dos aprimoramentos escolhidos.
 	CastLock string
+	// PowerAugments são os poderes da ficha que são aprimoramento (p131), cada um com o cadeado DESTA magia
+	// (`book.PowerAugmentBar`): a folha os desenha e o `AugmentPrice` os cobra.
+	PowerAugments []PowerAugmentOnTheSheet
 	// fixedLock é a parte da recusa que nenhum aprimoramento muda: o círculo e a memorização.
 	fixedLock string
+	// ritual diz que a próxima magia da ficha é ritual, que muda a execução como a Magia Acelerada (p131).
+	ritual bool
 }
 
 // Spell é o que a magia `spellID` é para esta ficha.
@@ -140,7 +157,12 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 	if !found {
 		return SpellOnTheSheet{Spell: book.Spell{ID: spellID, Name: spellID}}
 	}
-	out := SpellOnTheSheet{Known: true, Spell: spell, Casting: []string{}}
+	out := SpellOnTheSheet{Known: true, Spell: spell, Casting: []string{}, ritual: c.ritual}
+	for _, power := range c.powerAugments {
+		out.PowerAugments = append(out.PowerAugments, PowerAugmentOnTheSheet{
+			Power: power, Lock: book.PowerAugmentBar(power.PowerID, spell),
+		})
+	}
 	var casting []casterClass
 	for _, class := range c.classes {
 		if class.casts(spell) {

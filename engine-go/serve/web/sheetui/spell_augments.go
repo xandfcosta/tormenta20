@@ -43,7 +43,7 @@ type augmentRow struct {
 // augmentRowsOf traduz os aprimoramentos da magia e os poderes da ficha que são
 // aprimoramento (p131), trancando os fora de alcance e montando os gestos que se
 // apagam entre si.
-func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow {
+func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow {
 	rows := make([]augmentRow, 0, len(spell.Augments))
 	for i, a := range spell.Augments {
 		row := augmentRow{
@@ -56,16 +56,12 @@ func augmentRowsOf(dto sheet.CharacterDTO, spellID string, spell book.Spell, onS
 		}
 		rows = append(rows, row)
 	}
-	owned := sheet.OwnedPowers(dto)
-	for _, power := range book.PowerAugments() {
-		if !slices.ContainsFunc(owned, func(p sheet.OwnedPower) bool { return p.ID == power.PowerID }) {
-			continue
-		}
-		bar := book.PowerAugmentBar(power.PowerID, spell)
+	for _, power := range onSheet.PowerAugments {
 		rows = append(rows, augmentRow{
-			Signal: powerAugmentSignals[power.PowerID], PM: power.Augment.PmCost, Stacks: power.Augment.Kind != "muda",
-			Description: power.Name + ": " + power.Augment.Description,
-			Locked:      bar != "", LockNote: bar,
+			Signal: powerAugmentSignals[power.Power.PowerID], PM: power.Power.Augment.PmCost,
+			Stacks:      power.Power.Augment.Kind != "muda",
+			Description: power.Power.Name + ": " + power.Power.Augment.Description,
+			Locked:      power.Lock != "", LockNote: power.Lock,
 		})
 	}
 	return withAugmentGestures(rows)
