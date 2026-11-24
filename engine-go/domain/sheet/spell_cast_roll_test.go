@@ -24,6 +24,8 @@ func TestTheCastRollFollowsTheAugments(t *testing.T) {
 		// O aumento do Raio Solar soma à luz e à cura, e a cura só existe com o aprimoramento 2 (p203).
 		{"o aumento de cura sem a parcela de cura não cria uma", "raio-solar", []AugmentPick{{AugmentIndex: 1, Stacks: 1}}, "[5d8 luz]"},
 		{"com o aprimoramento 2, o aumento soma às duas", "raio-solar", []AugmentPick{{AugmentIndex: 1, Stacks: 1}, {AugmentIndex: 2, Stacks: 1}}, "[5d8 cura 5d8 luz]"},
+		// "Se causar dano, aumenta dano em +1d10" (p211): o aumento da Vitalidade Fantasma vale para a sucção de trevas.
+		{"o aumento da Vitalidade Fantasma na sucção", "vitalidade-fantasma", []AugmentPick{{AugmentIndex: 0, Stacks: 1}, {AugmentIndex: 1, Stacks: 1}}, "[2d10 trevas]"},
 	} {
 		roll, err := caster.Spell(c.spell).CastRoll(c.picks)
 		if err != nil || roll.ByText {

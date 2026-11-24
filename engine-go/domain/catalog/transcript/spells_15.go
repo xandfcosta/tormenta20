@@ -343,7 +343,7 @@ var spellsPart15 = []Spell{
 				PMCost:      2,
 				Kind:        "aumenta",
 				Description: "Aumenta os PV temporários em +1d10. Se causar dano, aumenta dano em +1d10.",
-				Adds:        []SpellRoll{{Dice: "1d10", Kind: "PV temporários"}},
+				Adds:        []SpellRoll{{Dice: "1d10", Kind: "PV temporários"}, {Dice: "1d10", Kind: "trevas"}},
 			},
 			{
 				PMCost:         5,
