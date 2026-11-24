@@ -50,7 +50,7 @@ func ownedPowerAugments(dto CharacterDTO) []book.PowerAugment {
 // O poder que falta na ficha é recusado aqui porque quem desenha a linha é a tela, e a fronteira é o
 // servidor: um pedido montado à mão pagaria o aprimoramento de um poder que o personagem não tem.
 func (s SpellOnTheSheet) powerAugmentPrice(spellPicks []AugmentPick, picks []PowerAugmentPick) (int, string) {
-	total := 0
+	total, executionChanger := 0, ""
 	for _, pick := range picks {
 		augment, known := book.PowerAugmentOf(pick.PowerID)
 		if !known {
@@ -69,9 +69,18 @@ func (s SpellOnTheSheet) powerAugmentPrice(spellPicks []AugmentPick, picks []Pow
 		if lock := s.PowerAugments[at].Lock; lock != "" {
 			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, lock)
 		}
-		// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
-		if pick.PowerID == book.QuickenedSpellPower && s.ritual {
+		// "Mudanças na mesma característica da magia nunca se acumulam" (p171): o poder que muda a execução — a
+		// Acelerada, a Prece de Combate — não se junta ao ritual, a outro poder que a muda, nem ao aprimoramento
+		// da magia que a muda.
+		changesExecution := augment.Augment.Execution != ""
+		if changesExecution && s.ritual {
 			return 0, fmt.Sprintf("o ritual e %s mudam a execução, e mudança não se acumula", augment.Name)
+		}
+		if changesExecution && executionChanger != "" {
+			return 0, fmt.Sprintf("%s e %s mudam a execução, e mudança não se acumula", executionChanger, augment.Name)
+		}
+		if changesExecution {
+			executionChanger = augment.Name
 		}
 		for _, spellPick := range spellPicks {
 			own := s.Spell.Augments[spellPick.AugmentIndex]
@@ -80,7 +89,7 @@ func (s SpellOnTheSheet) powerAugmentPrice(spellPicks []AugmentPick, picks []Pow
 					"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele", spellPick.AugmentIndex)
 			}
 			// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
-			if pick.PowerID == book.QuickenedSpellPower && own.Execution != "" {
+			if changesExecution && own.Execution != "" {
 				return 0, fmt.Sprintf("%s e o aprimoramento %d mudam a execução, e mudança não se acumula",
 					augment.Name, spellPick.AugmentIndex)
 			}

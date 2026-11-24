@@ -323,6 +323,7 @@ var classPowersPart07 = []ClassPower{
 			Kind:        "muda",
 			Description: "Lançada em você mesmo, a magia sai como ação de movimento.",
 			ClassOnly:   "divinos",
+			Execution:   "movimento",
 		},
 	},
 	{

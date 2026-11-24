@@ -1,6 +1,7 @@
 package sheet
 
 import (
+	"slices"
 	"strings"
 	"testing"
 )
@@ -82,5 +83,30 @@ func TestTheArcanistAndDruidPowersLockByTheSpell(t *testing.T) {
 	// A Arma Espiritual é pessoal (p180).
 	if lock := powerLocksOf(t, druid, "arma-espiritual")["Liberdade da Pradaria"]; !strings.Contains(lock, "alcance") {
 		t.Errorf("a Pradaria na Arma Espiritual tranca com %q", lock)
+	}
+}
+
+// A PRECE DE COMBATE MUDA A EXECUÇÃO para ação de movimento (p58), como a Magia Acelerada a muda para livre
+// (p131): o turno cobra o movimento, e as duas — mudanças na mesma característica — não se acumulam (p171).
+func TestTheCombatPrayerCastsAsAMovementAction(t *testing.T) {
+	cleric := CharacterDTO{
+		Classes:     []ClassDTO{{ClassName: "Clérigo", Level: 8}},
+		ClassPowers: `["class.clerigo.prece-de-combate","magia-acelerada"]`,
+	}
+	heal := CasterOf(cleric).Spell("curar-ferimentos")
+	prayer := []PowerAugmentPick{{PowerID: "class.clerigo.prece-de-combate", Stacks: 1}}
+	if got := heal.Execution(nil, prayer); got != "movimento" {
+		t.Errorf("a Curar Ferimentos com a Prece sai como %q; want movimento", got)
+	}
+	both := append(prayer, PowerAugmentPick{PowerID: "magia-acelerada", Stacks: 1})
+	if _, refusal := heal.AugmentPrice(nil, both); !strings.Contains(refusal, "mudam a execução") {
+		t.Errorf("a Prece com a Acelerada foi recusada com %q", refusal)
+	}
+	prayerKey, quickened := PowerAugmentKey("class.clerigo.prece-de-combate"), PowerAugmentKey("magia-acelerada")
+	if got := heal.Clears(prayerKey); !slices.Contains(got, quickened) {
+		t.Errorf("ligar a Prece apaga %v; want a Acelerada", got)
+	}
+	if got := heal.Clears(quickened); !slices.Contains(got, prayerKey) {
+		t.Errorf("ligar a Acelerada apaga %v; want a Prece", got)
 	}
 }
