@@ -385,30 +385,3 @@ func spellSheetOf(dto sheet.CharacterDTO) (engine.ComputedSheet, bool) {
 	}
 	return dto.Ruleset.ComputeSheet(ec, sheet.ToStringSet(dto.Conditionals)), true
 }
-
-// spellRollLine é uma parcela do dado da magia na folha: "6d6 de fogo", a condição do texto, e o sinal do total
-// que a mesa rolou na mão para ela.
-type spellRollLine struct {
-	Written string
-	Note    string
-	Signal  string
-	Label   string
-}
-
-// spellRollLinesOf são as parcelas do dado da magia, sem aprimoramento: a linha de cada aprimoramento já diz o
-// que ele soma, e o servidor confere o total da mão contra o dado da conjuração inteira.
-func spellRollLinesOf(spell book.Spell) []spellRollLine {
-	lines := []spellRollLine{}
-	for i, part := range spell.Rolls {
-		written := part.Dice
-		if part.Kind != "" {
-			written += " de " + part.Kind
-		}
-		lines = append(lines, spellRollLine{
-			Written: written, Note: part.Note,
-			Signal: "spell_hand_" + strconv.Itoa(i+1),
-			Label:  "O total de " + written + " que você rolou na mesa para " + spell.Name,
-		})
-	}
-	return lines
-}

@@ -142,16 +142,7 @@ templ spellSheet(v View, spell learnedSpellRow) {
 			}
 		}
 		for _, roll := range spell.Rolls {
-			<div class="ds-sum-line">
-				<span class="ds-help">Rola <b>{ roll.Written }</b></span>
-				<span class="ds-sum-line flex-nowrap">
-					<span class="ds-row-meta">ou rolei</span>
-					<input class="ds-input ds-table-die" type="number" min="1" inputmode="numeric" placeholder="total" data-bind={ roll.Signal } aria-label={ roll.Label }/>
-				</span>
-			</div>
-			if roll.Note != "" {
-				<p class="ds-help">{ roll.Note }</p>
-			}
+			@spellRollRow(roll)
 		}
 		<p class="ds-help">Custo <b data-text={ costPreview(spell) }></b> · { "você tem " + strconv.FormatInt(v.Spells.PmCurrent, 10) + " PM" }</p>
 		if v.Spells.Ritual {
@@ -250,4 +241,26 @@ templ learnSpellSheet(v View) {
 			}
 		}
 	}
+}
+
+// spellRollRow é uma linha do dado da magia: o dado com os aumentos ligados e o "ou rolei", ou a frase do
+// aprimoramento que manda rolar pelo texto. A que nasce escondida leva o `display:none` estático (ver
+// docs/datastar.md, "data-show esconde TARDE").
+templ spellRollRow(roll spellRollLine) {
+	<div { rollRowAttrs(roll)... }>
+		if roll.ByText {
+			<p class="ds-help">{ roll.Static }</p>
+		} else {
+			<div class="ds-sum-line">
+				<span class="ds-help">Rola <b data-text={ roll.Text }>{ roll.Static }</b></span>
+				<span class="ds-sum-line flex-nowrap">
+					<span class="ds-row-meta">ou rolei</span>
+					<input class="ds-input ds-table-die" type="number" min="1" inputmode="numeric" placeholder="total" data-bind={ roll.Signal } aria-label={ roll.Label }/>
+				</span>
+			</div>
+			if roll.Note != "" {
+				<p class="ds-help">{ roll.Note }</p>
+			}
+		}
+	</div>
 }
