@@ -34,6 +34,8 @@ type Caster struct {
 	classes []casterClass
 	// spells é o grimório, que a conta da memorização lê.
 	spells []SpellDTO
+	// effects são os efeitos em curso, onde mora a magia sustentada de pé (p227).
+	effects []EffectDTO
 }
 
 type casterClass struct {
@@ -62,7 +64,7 @@ func CasterOf(dto CharacterDTO) Caster {
 		Path string `json:"caminho"`
 	}
 	_ = json.Unmarshal([]byte(dto.ClassChoices), &paths)
-	caster := Caster{spells: dto.Spells}
+	caster := Caster{spells: dto.Spells, effects: dto.ActiveEffects}
 	for _, entry := range dto.Classes {
 		prog, casts := progressions[entry.ClassName]
 		if !casts {
@@ -119,11 +121,15 @@ type SpellOnTheSheet struct {
 	NeedsMemorizing bool
 	// Memorized diz que a magia está no grimório e memorizada.
 	Memorized bool
-	// CastLock é a recusa de conjurar que não depende do momento, ou vazia: a magia acima do círculo
-	// (`AboveTheCircle`) ou a do mago não memorizada (p37). O servidor recusa por ela, e as abas Magias e Ações
-	// trancam o Conjurar com ela. O que depende do momento — a forma selvagem, o PM, o turno — é de quem
-	// conjura.
+	// SustainedClash é a recusa da segunda magia sustentada (`sheet.SustainedClash`), ou vazia. Ela só
+	// recusa a conjuração que É sustentada (`Sustains`).
+	SustainedClash string
+	// CastLock é a recusa de conjurar sem aprimoramento (`CastRefusal(nil)`), ou vazia: a magia acima do
+	// círculo (`AboveTheCircle`), a do mago não memorizada (p37) e a segunda sustentada (p227). As abas Magias
+	// e Ações trancam o Conjurar com ela, e o servidor recusa pela `CastRefusal` dos aprimoramentos escolhidos.
 	CastLock string
+	// fixedLock é a parte da recusa que nenhum aprimoramento muda: o círculo e a memorização.
+	fixedLock string
 }
 
 // Spell é o que a magia `spellID` é para esta ficha.
@@ -164,10 +170,12 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 	})
 	switch {
 	case out.AboveTheCircle != "":
-		out.CastLock = out.AboveTheCircle
+		out.fixedLock = out.AboveTheCircle
 	case out.NeedsMemorizing && !out.Memorized:
-		out.CastLock = "memorize a magia antes de conjurá-la: o mago só lança magias memorizadas (p37)"
+		out.fixedLock = "memorize a magia antes de conjurá-la: o mago só lança magias memorizadas (p37)"
 	}
+	out.SustainedClash = SustainedClash(c.effects, spellID)
+	out.CastLock = out.CastRefusal(nil)
 	return out
 }
 

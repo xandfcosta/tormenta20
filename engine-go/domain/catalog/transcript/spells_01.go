@@ -320,6 +320,7 @@ var spellsPart01 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda a duração para sustentada. A cada rodada, com ação livre, pode mover a imagem ou alterar levemente o som, dentro dos limites do efeito.",
+				Sustains:    ptr(true),
 			},
 			{PMCost: 1, Kind: "aumenta", Description: "Aumenta o efeito da ilusão em +1 cubo de 1,5m."},
 			{
@@ -354,6 +355,7 @@ var spellsPart01 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda a duração para sustentada. Além do normal, com ação livre pode modificar a ilusão livremente — mas não acrescentar aprimoramentos depois de lançada.",
 				RequiresCircle: 3,
+				Sustains:       ptr(true),
 			},
 		},
 		BookPage: 189,
@@ -416,6 +418,7 @@ var spellsPart01 = []Spell{
 				Description:    "Muda a duração para sustentada. Em vez do normal, o alvo gera uma esfera de invisibilidade: ele e todas as criaturas a até 3m ficam invisíveis (e visíveis ao fazer ação hostil). A esfera acompanha o alvo; o que sair dela fica visível.",
 				Exclusive:      true,
 				RequiresCircle: 3,
+				Sustains:       ptr(true),
 			},
 			{
 				PMCost:         7,

@@ -103,10 +103,12 @@ type learnedSpellRow struct {
 	// AboveTheCircle é a magia gravada acima do círculo que a ficha alcança, que fica no grimório; a linha a
 	// marca. OffTheList é o aviso de `SpellOnTheSheet.OffTheList`.
 	AboveTheCircle string
-	// CastLock é a recusa de conjurar que não depende do momento (`SpellOnTheSheet.CastLock`): o Conjurar das
-	// abas Magias e Ações tranca com ela, a mesma frase que o servidor diria.
-	CastLock   string
-	OffTheList string
+	// CastLock é a recusa de conjurar sem aprimoramento (`SpellOnTheSheet.CastLock`): o Conjurar das abas
+	// Magias e Ações tranca com ela, a mesma frase que o servidor diria. LockedBySustained diz que a razão é
+	// outra magia sustentada de pé (p227), para a linha a marcar.
+	CastLock          string
+	LockedBySustained bool
+	OffTheList        string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -217,12 +219,13 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			Targeting:       spell.Targeting,
 			Resistance:      book.SpellResistanceWritten(spell),
 			Effect:          spell.BaseEffect, Page: spell.BookPage,
-			Command:        learned.CatalogSpellID,
-			CostCut:        costCutNote(computed, computedOK, onSheet.Tradition),
-			SpellCut:       onlyHereCutNote(computed, computedOK, at),
-			AboveTheCircle: onSheet.AboveTheCircle,
-			CastLock:       onSheet.CastLock,
-			OffTheList:     onSheet.OffTheList,
+			Command:           learned.CatalogSpellID,
+			CostCut:           costCutNote(computed, computedOK, onSheet.Tradition),
+			SpellCut:          onlyHereCutNote(computed, computedOK, at),
+			AboveTheCircle:    onSheet.AboveTheCircle,
+			CastLock:          onSheet.CastLock,
+			LockedBySustained: onSheet.LockedBySustained(),
+			OffTheList:        onSheet.OffTheList,
 		})
 	}
 	sort.SliceStable(rows, func(a, b int) bool {

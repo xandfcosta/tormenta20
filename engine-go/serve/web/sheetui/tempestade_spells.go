@@ -113,13 +113,16 @@ func grantedSheetID(index int) string {
 }
 
 // spellLineMeta é a nota da linha do grimório: a execução e o alcance, como a mesa fala, e as marcas da magia do
-// mago que não está memorizada e da que passa do círculo.
+// mago que não está memorizada, da que passa do círculo e da sustentada que outra de pé tranca (p227).
 //
 //	spellLineMeta(row) // "Padrão · médio · não memorizada", na Bola de Fogo do mago
 func spellLineMeta(spell learnedSpellRow) string {
 	meta := spell.ExecutionWritten + " · " + strings.ToLower(spell.RangeWritten)
 	if spell.NeedsMemorizing && !spell.Memorized {
 		meta += " · não memorizada"
+	}
+	if spell.LockedBySustained {
+		meta += " · outra sustentada de pé"
 	}
 	return meta + aboveTheCircleMark(spell)
 }

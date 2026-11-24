@@ -66,7 +66,7 @@ var spellsPart09 = []Spell{
 				Description: "Alvos que passem na resistência não sabem que foram vítimas de uma magia.",
 			},
 			{PMCost: 2, Kind: "muda", Description: "Muda o alvo para animais ou humanoides escolhidos."},
-			{PMCost: 2, Kind: "muda", Description: "Muda a duração para sustentada."},
+			{PMCost: 2, Kind: "muda", Description: "Muda a duração para sustentada.", Sustains: ptr(true)},
 			{
 				PMCost:         2,
 				Kind:           "aumenta",

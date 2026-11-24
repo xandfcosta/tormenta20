@@ -302,6 +302,7 @@ var spellsPart04 = []Spell{
 				PMCost:      2,
 				Kind:        "muda",
 				Description: "Muda a duração para sustentada. Uma vez por rodada, ação livre faz a arma acertar automaticamente alvo adjacente. Se atacar, não contra-ataca até o próximo turno.",
+				Sustains:    ptr(true),
 			},
 			{PMCost: 2, Kind: "muda", Description: "Muda o tipo do dano para essência.", RequiresCircle: 2},
 			{

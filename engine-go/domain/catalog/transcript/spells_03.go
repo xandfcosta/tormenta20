@@ -209,6 +209,7 @@ var spellsPart03 = []Spell{
 				PMCost:      0,
 				Kind:        "muda",
 				Description: "Muda duração para cena. Ação adicional só pode ser de movimento. Uma criatura só pode receber uma ação adicional por turno por Velocidade.",
+				Sustains:    ptr(false),
 			},
 			{
 				PMCost:         7,
