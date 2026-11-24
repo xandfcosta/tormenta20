@@ -3,14 +3,6 @@ package transcript
 // Parte 5 de 12 de `Activations` (activations.go).
 var activationsPart05 = []Activation{
 	{
-		ID:     "class.druida.espirito-dos-solsticios",
-		Name:   "Espírito dos Solstícios",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 4},
-		Uses:   nil,
-	},
-	{
 		ID:     "class.druida.forca-dos-penhascos",
 		Name:   "Força dos Penhascos",
 		Kind:   "instant",
@@ -48,14 +40,6 @@ var activationsPart05 = []Activation{
 		Kind:   "instant",
 		Action: "completa",
 		PMCost: PMCost{Fixed: 10},
-		Uses:   nil,
-	},
-	{
-		ID:     "class.druida.liberdade-da-pradaria",
-		Name:   "Liberdade da Pradaria",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
 		Uses:   nil,
 	},
 	{

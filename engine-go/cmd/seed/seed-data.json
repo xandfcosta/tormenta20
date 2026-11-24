@@ -84,7 +84,8 @@
             "size": "Médio",
             "displacement": 9,
             "classPowers": ["magia-ilimitada", "celebrar-ritual",
-              "class.clerigo.simbolo-sagrado-energizado"],
+              "class.clerigo.simbolo-sagrado-energizado", "class.clerigo.prece-de-combate",
+              "class.clerigo.magia-sagrada-profana", "class.clerigo.comunhao-vital"],
             "items": [
               {
                 "catalogId": "simbolo-sagrado",
@@ -138,6 +139,7 @@
         {
           "create": {
             "name": "Necromante Nv12 Magias",
+            "classPowers": ["class.arcanista.magia-pungente"],
             "races": [
               "osteon"
             ],
@@ -228,6 +230,7 @@
           "sceneEffect": false,
           "create": {
             "name": "Druida Natureza Nv9",
+            "classPowers": ["class.druida.liberdade-da-pradaria"],
             "powerChoices": {
               "class.druida.magias-1-circulo": [
                 "convocacao",

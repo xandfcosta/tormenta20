@@ -158,11 +158,6 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 		return SpellOnTheSheet{Spell: book.Spell{ID: spellID, Name: spellID}}
 	}
 	out := SpellOnTheSheet{Known: true, Spell: spell, Casting: []string{}, ritual: c.ritual}
-	for _, power := range c.powerAugments {
-		out.PowerAugments = append(out.PowerAugments, PowerAugmentOnTheSheet{
-			Power: power, Lock: book.PowerAugmentBar(power.PowerID, spell),
-		})
-	}
 	var casting []casterClass
 	for _, class := range c.classes {
 		if class.casts(spell) {
@@ -171,6 +166,10 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 		}
 	}
 	out.Class, out.Tradition = castingClassOf(casting)
+	// Os PODERES depois da tradição: a Prece de Combate é "apenas divinos" (p58).
+	for _, power := range c.powerAugments {
+		out.PowerAugments = append(out.PowerAugments, PowerAugmentOnTheSheet{Power: power, Lock: out.powerLock(power)})
+	}
 	out.NeedsMemorizing = len(casting) > 0 && !slices.ContainsFunc(casting, func(class casterClass) bool { return !class.memorizes })
 	if len(casting) == 0 {
 		out.OffTheList = "fora da lista das suas classes: só vale se um poder a ensinou"

@@ -2,9 +2,9 @@ package sheetui
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
-	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -54,11 +54,10 @@ type Signals struct {
 	Aug3 *int `json:"augment3"`
 	Aug4 *int `json:"augment4"`
 	Aug5 *int `json:"augment5"`
-	// Os poderes que são aprimoramento (p131) valem para qualquer magia, e por isso
-	// têm sinal pelo nome, e não pelo índice da lista da magia.
-	AugmentQuickened *int `json:"augment_quickened"`
-	AugmentAmplified *int `json:"augment_amplified"`
-	AugmentDiscreet  *int `json:"augment_discreet"`
+	// PowerAugmentStacks são as pilhas dos poderes que são aprimoramento (p131), pelo id do poder. Os sinais
+	// vêm da tabela `powerAugmentSignals`, e quem os lê é o `UnmarshalJSON`: um campo por poder seria a
+	// segunda lista que esquece o poder novo.
+	PowerAugmentStacks map[string]*int `json:"-"`
 	// SheetDialog é o diálogo PESADO aberto agora (`spell-learn`, `item-add`, `power-choices`), ou vazio:
 	// o corpo dele só se desenha com ele aberto. Ver `lazyBody`.
 	SheetDialog string `json:"sheet_dialog"`
@@ -180,22 +179,43 @@ func (s Signals) augments() []sheet.AugmentPick {
 	return picks
 }
 
-// powerAugments traduz os sinais dos poderes, com a mesma regra do zero e do nulo.
+// powerAugments traduz os sinais dos poderes, com a mesma regra do zero e do nulo, na ordem da tabela.
 func (s Signals) powerAugments() []sheet.PowerAugmentPick {
 	picks := []sheet.PowerAugmentPick{}
-	for _, power := range []struct {
-		id    string
-		value *int
-	}{
-		{book.QuickenedSpellPower, s.AugmentQuickened},
-		{book.AmplifiedSpellPower, s.AugmentAmplified},
-		{book.DiscreetSpellPower, s.AugmentDiscreet},
-	} {
-		if power.value != nil && *power.value > 0 {
-			picks = append(picks, sheet.PowerAugmentPick{PowerID: power.id, Stacks: *power.value})
+	for _, signal := range powerAugmentSignals {
+		if value := s.PowerAugmentStacks[signal.power]; value != nil && *value > 0 {
+			picks = append(picks, sheet.PowerAugmentPick{PowerID: signal.power, Stacks: *value})
 		}
 	}
 	return picks
+}
+
+// UnmarshalJSON lê os sinais como a struct os declara e, além deles, os dos poderes que são aprimoramento,
+// pela tabela `powerAugmentSignals`.
+func (s *Signals) UnmarshalJSON(body []byte) error {
+	type declared Signals
+	if err := json.Unmarshal(body, (*declared)(s)); err != nil {
+		return err
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return err
+	}
+	for _, signal := range powerAugmentSignals {
+		value, sent := raw[signal.name]
+		if !sent {
+			continue
+		}
+		var stacks *int
+		if err := json.Unmarshal(value, &stacks); err != nil {
+			return fmt.Errorf("o sinal %s veio %s, e ele é um número de repetições: %w", signal.name, value, err)
+		}
+		if s.PowerAugmentStacks == nil {
+			s.PowerAugmentStacks = map[string]*int{}
+		}
+		s.PowerAugmentStacks[signal.power] = stacks
+	}
+	return nil
 }
 
 // sheetSignals lê o que o cliente mandou, caindo na URL quando não há sinal.

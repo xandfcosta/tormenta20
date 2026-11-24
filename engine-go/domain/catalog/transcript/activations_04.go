@@ -191,14 +191,6 @@ var activationsPart04 = []Activation{
 		Uses:   nil,
 	},
 	{
-		ID:     "class.clerigo.comunhao-vital",
-		Name:   "Comunhão Vital",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 2},
-		Uses:   nil,
-	},
-	{
 		ID:     "class.clerigo.conhecimento-magico",
 		Name:   "Conhecimento Mágico",
 		Kind:   "passive",
@@ -220,14 +212,6 @@ var activationsPart04 = []Activation{
 		Kind:   "instant",
 		Action: "movimento",
 		PMCost: PMCost{Fixed: 0},
-		Uses:   nil,
-	},
-	{
-		ID:     "class.clerigo.magia-sagrada-profana",
-		Name:   "Magia Sagrada/Profana",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
 		Uses:   nil,
 	},
 	{
@@ -276,14 +260,6 @@ var activationsPart04 = []Activation{
 		Kind:   "instant",
 		Action: "varia",
 		PMCost: PMCost{Fixed: 1},
-		Uses:   nil,
-	},
-	{
-		ID:     "class.clerigo.prece-de-combate",
-		Name:   "Prece de Combate",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 2},
 		Uses:   nil,
 	},
 	{

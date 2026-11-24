@@ -195,12 +195,17 @@ var classPowersPart07 = []ClassPower{
 	},
 	{
 		ID:          "class.clerigo.comunhao-vital",
+		Modeled:     []string{"o aprimoramento no diálogo de conjurar"},
 		ClassName:   "Clérigo",
 		Name:        "Comunhão Vital",
 		Description: "Quando lança magia que cura criatura, paga +2 PM para outra criatura em alcance curto (incluindo você mesmo) recuperar PV iguais à metade da cura original.",
 		BookPage:    58,
 		UID:         "pwr_zmygypvcvf",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
+		SpellAugment: &SpellAugment{
+			PMCost:      2,
+			Kind:        "muda",
+			Description: "Se a magia cura uma criatura, outra em alcance curto (você incluído) recupera metade dos PV dessa cura.",
+		},
 	},
 	{
 		ID:          "class.clerigo.conhecimento-magico",
@@ -230,12 +235,18 @@ var classPowersPart07 = []ClassPower{
 	},
 	{
 		ID:          "class.clerigo.magia-sagrada-profana",
+		Modeled:     []string{"o aprimoramento no diálogo de conjurar"},
 		ClassName:   "Clérigo",
 		Name:        "Magia Sagrada/Profana",
 		Description: "Quando lança magia divina que causa dano, paga +1 PM para mudar tipo do dano da magia para luz (energia positiva) ou trevas (energia negativa).",
 		BookPage:    58,
 		UID:         "pwr_swg3ujr2je",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
+		SpellAugment: &SpellAugment{
+			PMCost:      1,
+			Kind:        "muda",
+			Description: "Se a magia causa dano, o tipo dele vira luz (energia positiva) ou trevas (energia negativa), conforme a sua divindade.",
+			ClassOnly:   "divinos",
+		},
 	},
 	{
 		ID:          "class.clerigo.mestre-celebrante",
@@ -301,12 +312,19 @@ var classPowersPart07 = []ClassPower{
 	},
 	{
 		ID:          "class.clerigo.prece-de-combate",
+		Modeled:     []string{"o aprimoramento no diálogo de conjurar"},
 		ClassName:   "Clérigo",
 		Name:        "Prece de Combate",
 		Description: "Quando lança magia divina com tempo de conjuração de ação padrão em si mesmo, paga +2 PM para lançá-la como ação de movimento.",
 		BookPage:    58,
 		UID:         "pwr_qwfo7ekgcu",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
+		SpellAugment: &SpellAugment{
+			PMCost:      2,
+			Kind:        "muda",
+			Description: "Lançada em você mesmo, a magia sai como ação de movimento.",
+			ClassOnly:   "divinos",
+			Execution:   "movimento",
+		},
 	},
 	{
 		ID:          "class.clerigo.simbolo-sagrado-energizado",

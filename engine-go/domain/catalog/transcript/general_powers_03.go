@@ -294,6 +294,7 @@ var generalPowersPart03 = []GeneralPower{
 			PMCost:      4,
 			Kind:        "muda",
 			Description: "Muda a execução para ação livre. Só uma magia por rodada.",
+			Execution:   "livre",
 		},
 	},
 	{

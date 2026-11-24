@@ -110,17 +110,22 @@ var classPowersPart08 = []ClassPower{
 	},
 	{
 		ID:          "class.druida.espirito-dos-solsticios",
+		Modeled:     []string{"o aprimoramento no diálogo de conjurar"},
 		ClassName:   "Druida",
 		Name:        "Espírito dos Solstícios",
 		Description: "Transita entre extremos do mundo natural. Em magia com efeitos variáveis, paga +4 PM para maximizar valores (ex: Curar Ferimentos aprimorada 5d8+5 vira 45 PV).",
 		BookPage:    62,
 		UID:         "pwr_mkkl6amov3",
-		Unmodeled:   "é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
 		Prerequisites: []Prerequisite{
 			{Kind: "power", ID: "class.druida.aspecto-do-inverno"},
 			{Kind: "power", ID: "class.druida.aspecto-do-verao"},
 		},
 		MinLevel: 10,
+		SpellAugment: &SpellAugment{
+			PMCost:      4,
+			Kind:        "muda",
+			Description: "Maximiza os efeitos numéricos variáveis da magia, sem rolar; a magia sem efeito variável não muda.",
+		},
 	},
 	{
 		ID:          "class.druida.forca-dos-penhascos",
@@ -190,7 +195,7 @@ var classPowersPart08 = []ClassPower{
 	},
 	{
 		ID:          "class.druida.liberdade-da-pradaria",
-		Modeled:     []string{"o +2 em Reflexos"},
+		Modeled:     []string{"o +2 em Reflexos", "o alcance um passo acima, como aprimoramento ao conjurar"},
 		ClassName:   "Druida",
 		Name:        "Liberdade da Pradaria",
 		Description: "+2 Reflexos. Se for ar livre, ao lançar magia paga 1 PM para aumentar alcance um passo.",
@@ -199,7 +204,11 @@ var classPowersPart08 = []ClassPower{
 		Modifiers: []Modifier{
 			{Target: ModifierTarget{Kind: "expertise", Name: "Reflexos"}, Amount: 2, BonusType: "untyped"},
 		},
-		Unmodeled: "o alcance da magia um passo acima ao ar livre: é regra de magia, e o motor de magia é do capítulo 4 (ALE-465)",
+		SpellAugment: &SpellAugment{
+			PMCost:      1,
+			Kind:        "muda",
+			Description: "Ao ar livre, o alcance sobe um passo: de toque para curto, de curto para médio, de médio para longo.",
+		},
 	},
 	{
 		ID: "class.druida.magia-natural",

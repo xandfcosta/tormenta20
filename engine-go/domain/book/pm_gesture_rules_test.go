@@ -30,6 +30,8 @@ var notAGesture = map[string]string{
 	"class.lutador.lutador-de-chao":       "a derrubada em seguida é a linha da manobra livre, aberta pelo agarrar declarado",
 	// o PM deles se paga no diálogo de conjurar, somado ao custo da magia (p131)
 	QuickenedSpellPower: "aprimoramento", AmplifiedSpellPower: "aprimoramento", DiscreetSpellPower: "aprimoramento",
+	PiercingSpellPower: "aprimoramento", CombatPrayerPower: "aprimoramento", PrairieFreedomPower: "aprimoramento",
+	HolySpellPower: "aprimoramento", VitalCommunionPower: "aprimoramento", SolsticeSpiritPower: "aprimoramento",
 	// o TOTAL de PM
 	"class.arcanista.caminho-bruxo": "total de PM", "class.arcanista.caminho-feiticeiro": "total de PM",
 	"class.arcanista.caminho-mago": "total de PM", "class.arcanista.magias-1-circulo": "total de PM",

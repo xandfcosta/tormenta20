@@ -197,3 +197,22 @@ func TestSpellPowersHaveNoUseGestureOfTheirOwn(t *testing.T) {
 		}
 	}
 }
+
+// OS PODERES DE CLASSE que se pagam ao conjurar seguem os gerais: a Magia Pungente (p38) mora no diálogo de
+// conjurar, soma no custo da magia, e não tem um Usar que cobre o PM sem magia nenhuma.
+func TestTheClassPowerIsPaidInTheCastAndNotByAUseGesture(t *testing.T) {
+	f := newSceneFixture(t)
+	seedPowerChoices(t, f.s, f.charID, `["class.arcanista.magia-pungente"]`, "{}")
+	page := f.requests(t, f.player, http.MethodGet, fmt.Sprintf("/personagens/%d?tab=abilities", f.charID), "").Body.String()
+	if !strings.Contains(page, "Magia Pungente") {
+		t.Fatal("o controle falhou: a aba Poderes não lista a Magia Pungente")
+	}
+	if strings.Contains(page, `aria-label="Usar Magia Pungente"`) {
+		t.Error("a Magia Pungente ainda tem o botão Usar")
+	}
+	// O Sono é do 1º círculo: 1 PM (Tabela 4-1, p170), mais o 1 da Pungente.
+	refusal, spent := castWith(t, f, "sono", `{"augment_piercing":1}`)
+	if refusal != "" || spent != 2 {
+		t.Errorf("o Sono com a Pungente gastou %d PM, recusa %q; want 2", spent, refusal)
+	}
+}

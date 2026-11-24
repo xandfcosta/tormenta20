@@ -2,6 +2,7 @@ package sheet
 
 import (
 	"slices"
+	"strings"
 	"testing"
 
 	"t20engine/domain/book"
@@ -67,5 +68,20 @@ func TestTheExecutionFollowsTheChoices(t *testing.T) {
 	ritual.Conditionals = []string{RitualSwitch}
 	if got := CasterOf(ritual).Spell("luz").Execution(nil, nil); got != engine.ActionLong {
 		t.Errorf("como ritual, a Luz leva %q; want a longa de 1 hora (p131)", got)
+	}
+}
+
+// DOIS APRIMORAMENTOS DA PRÓPRIA MAGIA que mudam a execução não se acumulam — "mudanças na mesma característica
+// da magia nunca se acumulam" (p171): os aprimoramentos 0 e 3 da Invisibilidade a fazem padrão (p195), e
+// ligar um apaga o outro, como o servidor recusa os dois juntos.
+func TestTwoAugmentsThatChangeTheExecutionDoNotStack(t *testing.T) {
+	arcanist := CharacterDTO{Classes: []ClassDTO{{ClassName: "Arcanista", Level: 20}}}
+	invisibility := CasterOf(arcanist).Spell("invisibilidade")
+	if got := invisibility.Clears(SpellAugmentKey(0)); !slices.Contains(got, SpellAugmentKey(3)) {
+		t.Errorf("ligar o aprimoramento 0 apaga %v; want o 3, que também muda a execução", got)
+	}
+	_, refusal := invisibility.AugmentPrice([]AugmentPick{{AugmentIndex: 0, Stacks: 1}, {AugmentIndex: 3, Stacks: 1}}, nil)
+	if !strings.Contains(refusal, "mudam a execução") {
+		t.Errorf("os aprimoramentos 0 e 3 juntos foram recusados com %q", refusal)
 	}
 }
