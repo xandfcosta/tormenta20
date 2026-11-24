@@ -30,7 +30,7 @@ func sustainedEffectsOf(t *testing.T, s *Server, characterID int64) map[string]s
 	return out
 }
 
-func learnToo(t *testing.T, s *Server, characterID int64, spellID string) {
+func learnPrepared(t *testing.T, s *Server, characterID int64, spellID string) {
 	t.Helper()
 	if _, err := s.queries.CreateSpell(context.Background(), sqlcgen.CreateSpellParams{
 		Characterid: characterID, Catalogspellid: spellID, Prepared: 1, Learnedat: dbvalue.NowISO(),
@@ -43,8 +43,8 @@ func TestCastingASustainedSpellOpensItsUpkeep(t *testing.T) {
 	s := newCastServer(t)
 	owner := seedUser(t, s, "clerigo@t20.local")
 	cleric := seedCaster(t, s, owner, "Clérigo", 8, 30, "tempestade-divina")
-	learnToo(t, s, cleric, "silencio")
-	learnToo(t, s, cleric, "curar-ferimentos")
+	learnPrepared(t, s, cleric, "silencio")
+	learnPrepared(t, s, cleric, "curar-ferimentos")
 
 	if err := castSpell(t, s, owner, cleric, "curar-ferimentos", `{}`); err != nil {
 		t.Fatalf("conjurar a Curar Ferimentos: %v", err)

@@ -121,7 +121,7 @@ func spellLineMeta(spell learnedSpellRow) string {
 	if spell.NeedsMemorizing && !spell.Memorized {
 		meta += " · não memorizada"
 	}
-	if spell.SustainedClash != "" {
+	if spell.LockedBySustained {
 		meta += " · outra sustentada de pé"
 	}
 	return meta + aboveTheCircleMark(spell)

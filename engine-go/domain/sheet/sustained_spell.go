@@ -37,8 +37,11 @@ func SustainedClash(effects []EffectDTO, spellID string) string {
 func (s SpellOnTheSheet) Sustains(picks []AugmentPick) bool {
 	is := sustained(s.Spell.Duration)
 	for _, p := range picks {
-		if p.AugmentIndex >= 0 && p.AugmentIndex < len(s.Spell.Augments) && s.Spell.Augments[p.AugmentIndex].Sustains != nil {
-			is = *s.Spell.Augments[p.AugmentIndex].Sustains
+		if p.AugmentIndex < 0 || p.AugmentIndex >= len(s.Spell.Augments) {
+			continue
+		}
+		if says := s.Spell.Augments[p.AugmentIndex].Sustains; says != nil {
+			is = *says
 		}
 	}
 	return is
@@ -58,6 +61,12 @@ func (s SpellOnTheSheet) CastRefusal(picks []AugmentPick) string {
 		return s.SustainedClash
 	}
 	return ""
+}
+
+// LockedBySustained diz se quem tranca o Conjurar sem aprimoramento (`CastLock`) é a outra sustentada de pé,
+// e não o círculo nem a memorização: a linha do grimório a marca.
+func (s SpellOnTheSheet) LockedBySustained() bool {
+	return s.fixedLock == "" && s.Sustains(nil) && s.SustainedClash != ""
 }
 
 // sustained diz se a duração escrita é sustentada, na grafia do catálogo ou na da coluna `scope`.
