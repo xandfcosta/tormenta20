@@ -83,25 +83,9 @@ type SessionRuntimeState struct {
 	// Mora aqui, e não no tabuleiro, porque o ataque é entre LINHAS DA FILA: uma
 	// mesa sem mapa aberto continua tendo combate. Ver `attack.go`.
 	PendingAttack *PendingAttack `json:"pendingAttack,omitempty"`
-	// LastSkillTest é o ÚLTIMO teste rolado na sessão — no máximo um, e o novo
-	// substitui o antigo.
-	//
-	// NÃO É UM PROVISÓRIO, e é isso que o separa do ataque: um teste não muda
-	// nada, ele INFORMA. Não há o que confirmar nem o que cancelar, e por isso
-	// ele não tem os verbos que o `PendingAttack` tem — a faixa dele é a mesma
-	// menos os botões.
-	//
-	// Ele mora no estado da sessão e não numa notícia que passa porque a mesa
-	// REDESENHA: quem chega atrasado, ou quem troca de superfície, tem de ver o
-	// teste que acabou de ser rolado. Uma notícia sem estado deixaria a faixa
-	// sumir no primeiro quadro seguinte.
-	LastSkillTest *SkillTestRoll `json:"lastSkillTest,omitempty"`
-	// LastBlast é o ÚLTIMO disparo de encanto em vez do golpe — a bola de fogo da Flamejante —, pela razão do
-	// teste: ele informa, e o próximo o substitui. Ver `blast.go`.
-	LastBlast *BlastRoll `json:"lastBlast,omitempty"`
-	// LastSpellCast é a ÚLTIMA magia conjurada com o dado dela, pela razão do teste: ela informa, e a próxima a
-	// substitui. Ver `spell_cast.go`.
-	LastSpellCast *SpellCastRoll `json:"lastSpellCast,omitempty"`
+	// InformedRolls são as últimas rolagens que a mesa só informa: o teste, o disparo e a magia. Ver
+	// `informed_rolls.go`.
+	InformedRolls
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,
@@ -364,17 +348,10 @@ func redactForViewer(st *SessionRuntimeState, own map[int64]bool) *SessionRuntim
 		// Rastreador limpo e não `CloneState` com a lista zerada: a rodada e o
 		// contador de turnos também são da cena, e "rodada 7, ninguém na fila"
 		// é uma contradição que o jogador leria como defeito.
-		//
-		// O TESTE ROLADO ATRAVESSA, e ele é a exceção porque não é rastreador: a
-		// maior parte dos testes de uma mesa acontece FORA de cena — a Percepção
-		// que abre a cena vem antes de haver cena —, e apagá-lo aqui faria a
-		// faixa aparecer só para o mestre, que é a metade da mesa que menos
-		// precisa dela. Medido: sem esta linha o jogador não via o próprio teste.
-		limpo := EmptyRuntimeState()
-		limpo.LastSkillTest = st.LastSkillTest
-		// A MAGIA CONJURADA atravessa pela mesma razão: a cura entre as cenas é conjurada fora delas.
-		limpo.LastSpellCast = st.LastSpellCast
-		return limpo
+		offScene := EmptyRuntimeState()
+		// As rolagens que não dependem da fila atravessam: ver `outOfScene`.
+		offScene.InformedRolls = st.InformedRolls.outOfScene()
+		return offScene
 	}
 	out := CloneState(st)
 	for i := range out.Initiative {

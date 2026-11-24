@@ -21,7 +21,7 @@ func (st *Store) FireBlast(ctx context.Context, sessionID int64, blast live.Blas
 	moved := &blast.CharacterID
 	clone, err := st.unitGesture(ctx, sessionID,
 		func(inUnit context.Context, u Unit, s *live.SessionRuntimeState) error {
-			if err := live.RecordBlast(s, blast); err != nil {
+			if err := live.RecordRoll(s, blast); err != nil {
 				return err
 			}
 			if s.CountsRounds() {

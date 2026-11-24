@@ -33,7 +33,8 @@ type SpellCastPart struct {
 	ByHand bool   `json:"byHand,omitempty"`
 }
 
-// RecordSpellCast guarda a magia conjurada, substituindo a anterior.
-func RecordSpellCast(st *SessionRuntimeState, cast SpellCastRoll) {
+// recordIn guarda a magia conjurada no lugar da anterior.
+func (cast SpellCastRoll) recordIn(st *SessionRuntimeState) error {
 	st.LastSpellCast = &cast
+	return nil
 }
