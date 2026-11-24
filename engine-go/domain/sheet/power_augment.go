@@ -71,7 +71,7 @@ func (s SpellOnTheSheet) powerAugmentPrice(spellPicks []AugmentPick, picks []Pow
 					"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele", spellPick.AugmentIndex)
 			}
 			// "Mudanças na mesma característica da magia nunca se acumulam" (p171).
-			if pick.PowerID == book.QuickenedSpellPower && book.AugmentChangesExecution(own.Description) {
+			if pick.PowerID == book.QuickenedSpellPower && own.Execution != "" {
 				return 0, fmt.Sprintf("%s e o aprimoramento %d mudam a execução, e mudança não se acumula",
 					augment.Name, spellPick.AugmentIndex)
 			}

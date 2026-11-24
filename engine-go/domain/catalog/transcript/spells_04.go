@@ -382,7 +382,12 @@ var spellsPart04 = []Spell{
 		BaseEffect: "Fortalece arma mundana primitiva (sem custo T$: bordão, clava, funda, tacape), arma natural ou ataque desarmado. Dano +1 passo, considerada mágica. Ao lançar, pode mudar tipo de dano (corte, impacto ou perfuração).",
 		Augments: []SpellAugment{
 			{PMCost: 1, Kind: "aumenta", Description: "Fornece +1 nos testes de ataque com a arma."},
-			{PMCost: 2, Kind: "muda", Description: "Muda a execução para ação de movimento."},
+			{
+				PMCost:      2,
+				Kind:        "muda",
+				Description: "Muda a execução para ação de movimento.",
+				Execution:   "movimento",
+			},
 			{PMCost: 3, Kind: "aumenta", Description: "Aumenta o bônus nos testes de ataque em +1."},
 			{PMCost: 5, Kind: "aumenta", Description: "Aumenta o dano da arma em mais um passo."},
 		},
@@ -433,12 +438,14 @@ var spellsPart04 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda a execução para 1 minuto. Consulta divindade com pergunta sobre evento até 1 dia no futuro. 2-6: resposta (frase, profecia ou enigma) com pistas de caminho. Falha: sem resposta.",
 				RequiresCircle: 3,
+				Execution:      "longa",
 			},
 			{
 				PMCost:         7,
 				Kind:           "muda",
 				Description:    "Muda execução para 10 min e duração para 1 min. Consulta divindade — uma pergunta por rodada respondida por sim/não/não sei. Chance de falha por pergunta; falha = \"não sei\".",
 				RequiresCircle: 4,
+				Execution:      "longa",
 			},
 			{PMCost: 7, Kind: "muda", Description: "O mestre rola 1d12; a magia só falha em resultado 1."},
 			{PMCost: 12, Kind: "muda", Description: "O mestre rola 1d20; a magia só falha em resultado 1."},

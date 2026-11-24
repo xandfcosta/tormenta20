@@ -221,6 +221,7 @@ var spellsPart05 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda execução para reação e duração para instantânea. Em vez do normal, RD 30 contra o próximo dano.",
+				Execution:   "reacao",
 			},
 			{
 				PMCost:         3,
@@ -334,6 +335,7 @@ var spellsPart05 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda execução para padrão, alcance para pessoal, alvo para conjurador, duração para cena, resistência para nenhuma. Criaturas/objetos invisíveis em alcance curto ficam visíveis (sem dissipar); ao sair do alcance voltam a ficar invisíveis.",
+				Execution:   "padrao",
 			},
 			{
 				PMCost:         3,

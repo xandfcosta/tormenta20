@@ -189,6 +189,7 @@ var spellsPart11 = []Spell{
 				PMCost:      3,
 				Kind:        "muda",
 				Description: "Muda execução para reação, alcance para toque, alvo para 1 criatura, duração para instantânea. Contra criatura que acabou de testar — obriga novo teste e aceitar novo resultado. Involuntária faz Vontade para negar.",
+				Execution:   "reacao",
 			},
 			{PMCost: 10, Kind: "muda", Description: "Muda a duração para 1 dia."},
 		},
@@ -220,6 +221,7 @@ var spellsPart11 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda execução para ação de movimento, alcance para pessoal, alvo para conjurador, duração para instantânea. Salta em corpo a corpo de criatura em alcance — se atacar corpo a corpo neste turno, ignora benefícios/penalidades de investida + arma causa 1 dado extra do mesmo tipo.",
+				Execution:   "movimento",
 			},
 			{
 				PMCost:         3,
@@ -277,6 +279,7 @@ var spellsPart11 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda execução para 1 hora, duração para permanente, adiciona componente material (incenso e óleos T$ 1.000).",
 				RequiresCircle: 4,
+				Execution:      "longa",
 			},
 		},
 		BookPage: 202,
@@ -370,6 +373,7 @@ var spellsPart11 = []Spell{
 				PMCost:      2,
 				Kind:        "muda",
 				Description: "Muda execução para reação, alcance para curto, duração para 1 rodada. Alvo recebe +5 no próximo teste de resistência (cumulativo com o efeito básico).",
+				Execution:   "reacao",
 			},
 			{
 				PMCost:      2,
