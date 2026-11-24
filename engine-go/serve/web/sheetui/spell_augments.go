@@ -1,7 +1,6 @@
 package sheetui
 
 import (
-	"slices"
 	"strconv"
 
 	"t20engine/domain/book"
@@ -38,6 +37,8 @@ type augmentRow struct {
 	Toggle string
 	More   string
 	Less   string
+	// key é o aprimoramento para o conjurador, que diz o que ligá-lo apaga.
+	key sheet.AugmentKey
 }
 
 // augmentRowsOf traduz os aprimoramentos da magia e os poderes da ficha que são
@@ -50,6 +51,7 @@ func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow
 			Signal: augmentSignal(i), PM: a.PmCost, Stacks: a.Kind != "muda",
 			Description: a.Description,
 			Exclusive:   a.Exclusive, Cantrip: a.Cantrip,
+			key: sheet.SpellAugmentKey(i),
 		}
 		if lock := onSheet.AugmentLock(i); lock != "" {
 			row.Locked, row.LockNote = true, lock
@@ -62,54 +64,44 @@ func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow
 			Stacks:      power.Power.Augment.Kind != "muda",
 			Description: power.Power.Name + ": " + power.Power.Augment.Description,
 			Locked:      power.Lock != "", LockNote: power.Lock,
+			key: sheet.PowerAugmentKey(power.Power.PowerID),
 		})
 	}
-	return withAugmentGestures(rows)
+	return withAugmentGestures(rows, onSheet)
 }
 
-// withAugmentGestures monta o que cada gesto APAGA: o exclusivo apaga todos os
-// outros, os outros apagam os exclusivos, e a Magia Acelerada e o aprimoramento
-// que muda a execução se apagam entre si. Sem isto a tela deixa montar uma
-// combinação proibida, mostra um custo e o servidor recusa na hora do clique: a
-// recusa é a fronteira, mas oferecer o que não vale é a tela mentindo.
-func withAugmentGestures(rows []augmentRow) []augmentRow {
-	var all, exclusive, execution []string
-	quickened := powerAugmentSignals[book.QuickenedSpellPower]
-	for _, row := range rows {
-		all = append(all, row.Signal)
-		if row.Exclusive {
-			exclusive = append(exclusive, row.Signal)
-		}
-		if book.AugmentChangesExecution(row.Description) {
-			execution = append(execution, row.Signal)
-		}
-	}
+// withAugmentGestures monta os gestos de cada linha com o que ligá-la APAGA, que é do conjurador
+// (`SpellOnTheSheet.Clears`): aqui só a chave vira sinal. Sem isto a tela deixa montar uma combinação que o
+// servidor recusa, e mostra um custo que não vale: a recusa é a fronteira, mas oferecer o que não vale é a
+// tela mentindo.
+func withAugmentGestures(rows []augmentRow, onSheet sheet.SpellOnTheSheet) []augmentRow {
 	for i := range rows {
 		row := &rows[i]
-		deletes := exclusive
-		switch {
-		case row.Exclusive:
-			deletes = all
-		case row.Signal == quickened:
-			deletes = slices.Concat(exclusive, execution)
-		case slices.Contains(execution, row.Signal):
-			deletes = slices.Concat(exclusive, []string{quickened})
+		var clears []string
+		for _, key := range onSheet.Clears(row.key) {
+			clears = append(clears, signalOf(key))
 		}
-		row.Toggle = clearSignals(deletes, row.Signal) + row.Signal + " = " + row.Signal + " ? 0 : 1"
-		row.More = clearSignals(deletes, row.Signal) + row.Signal + "++"
+		row.Toggle = clearSignals(clears) + row.Signal + " = " + row.Signal + " ? 0 : 1"
+		row.More = clearSignals(clears) + row.Signal + "++"
 		// Diminuir não apaga nada: tirar uma pilha não monta combinação nova.
 		row.Less = row.Signal + " = Math.max(0, " + row.Signal + " - 1)"
 	}
 	return rows
 }
 
-// clearSignals monta "$sinal = 0; " para cada sinal, pulando o próprio.
-func clearSignals(signals []string, own string) string {
+// signalOf é o sinal que guarda a pilha do aprimoramento da chave.
+func signalOf(key sheet.AugmentKey) string {
+	if key.PowerID != "" {
+		return powerAugmentSignals[key.PowerID]
+	}
+	return augmentSignal(key.Index)
+}
+
+// clearSignals monta "$sinal = 0; " para cada sinal.
+func clearSignals(signals []string) string {
 	expr := ""
 	for _, signal := range signals {
-		if signal != own {
-			expr += signal + " = 0; "
-		}
+		expr += signal + " = 0; "
 	}
 	return expr
 }

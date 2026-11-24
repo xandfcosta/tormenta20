@@ -1,7 +1,6 @@
 package book
 
 import (
-	"regexp"
 	"slices"
 	"strings"
 )
@@ -68,14 +67,4 @@ func PowerAugmentBar(powerID string, spell Spell) string {
 		}
 	}
 	return ""
-}
-
-// changesExecutionText casa o início da frase, e não a palavra solta: "Como parte
-// da execução: ataque corpo a corpo" não muda a execução de nada.
-var changesExecutionText = regexp.MustCompile(`(?i)^(muda (a )?)?execução `)
-
-// AugmentChangesExecution diz se o texto do aprimoramento muda a execução da magia,
-// que é a característica que a Magia Acelerada também muda (p171).
-func AugmentChangesExecution(description string) bool {
-	return changesExecutionText.MatchString(description)
 }
