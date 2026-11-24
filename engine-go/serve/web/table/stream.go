@@ -340,45 +340,55 @@ func TableRegions(v View) []tableRegion {
 		return nil
 	}
 	if v.GM != nil {
-		return []tableRegion{
+		regions := []tableRegion{
 			{"table-header", gmHeader(v)},
 			{"table-gm-menu", gmMenu(v)},
 			// O ATAQUE PROPOSTO muda no ritmo do COMBATE, que não é o do
 			// cabeçalho nem o do mapa: ele nasce e morre várias vezes por turno.
 			{"table-attack", gmAttack(v)},
-			{"table-skill-test", tempestadeSkillTest(v)},
-			{"table-blast", tempestadeBlast(v)},
-			{"table-spell-cast", tempestadeSpellCast(v)},
+		}
+		regions = append(regions, informedRollTableRegions(v)...)
+		return append(regions,
 			// O ESTANDARTE nasce com a cena e encolhe a cada aliado que o mestre toca.
-			{"table-banner", gmBanner(v)},
-			{"table-tracker", gmQueue(v)},
-			{"table-commands", gmTurnBar(v)},
-			{"table-board", gmBoardRegion(v)},
+			tableRegion{"table-banner", gmBanner(v)},
+			tableRegion{"table-tracker", gmQueue(v)},
+			tableRegion{"table-commands", gmTurnBar(v)},
+			tableRegion{"table-board", gmBoardRegion(v)},
 			// O PÔR NO MAPA é região própria porque muda com a FILA (quem existe)
 			// e com o MAPA (quem já tem peça): pendurado em qualquer uma das duas,
 			// a outra seria remendada de graça — e a peça debaixo do dedo do
 			// mestre trocada no meio do arrasto (`TestATrackerChangeDoesNotPatchTheMap`).
-			{"table-populate", gmPopulate(v)},
+			tableRegion{"table-populate", gmPopulate(v)},
 			// O ACERVO pela mesma razão: a lista de lugares guardados muda duas
 			// vezes por sessão, e o mapa a cada peça que anda.
-			{"table-archive", gmArchive(v)},
+			tableRegion{"table-archive", gmArchive(v)},
 			// As CONFIGURAÇÕES mudam com o CICLO da sessão, que não é o ritmo
 			// de nenhuma das outras.
-			{"table-session-config", tableConfigSession(v)},
-		}
+			tableRegion{"table-session-config", tableConfigSession(v)},
+		)
 	}
 	// A SESSÃO DO JOGADOR tem as regiões das superfícies que ela desenha; a Ficha
 	// o stream nunca toca.
-	return []tableRegion{
+	regions := []tableRegion{
 		{"table-header", tempestadeHeader(v)},
 		{"table-attack", tempestadeAttack(v)},
-		{"table-skill-test", tempestadeSkillTest(v)},
-		{"table-blast", tempestadeBlast(v)},
-		{"table-spell-cast", tempestadeSpellCast(v)},
-		{"table-turn-target", tempestadeTargetBar(v)},
-		{"table-register", tempestadeRegister(v)},
-		{"table-party", tempestadeParty(v)},
-		{"table-tracker", tempestadeTracker(v)},
-		{"table-board", tempestadeBoardRegion(v)},
 	}
+	regions = append(regions, informedRollTableRegions(v)...)
+	return append(regions,
+		tableRegion{"table-turn-target", tempestadeTargetBar(v)},
+		tableRegion{"table-register", tempestadeRegister(v)},
+		tableRegion{"table-party", tempestadeParty(v)},
+		tableRegion{"table-tracker", tempestadeTracker(v)},
+		tableRegion{"table-board", tempestadeBoardRegion(v)},
+	)
+}
+
+// informedRollTableRegions são as faixas que informam uma rolagem, as MESMAS nas duas sessões e na mesma ordem
+// da tela, com a raiz de cada uma mesmo quando ninguém rolou.
+func informedRollTableRegions(v View) []tableRegion {
+	regions := make([]tableRegion, 0, informedRollKindCount)
+	for kind, band := range v.Rolls {
+		regions = append(regions, tableRegion{informedRollRegions[kind].id, informedRoll(informedRollKind(kind), band)})
+	}
+	return regions
 }

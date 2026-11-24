@@ -6,35 +6,46 @@ import (
 	"t20engine/serve/web/ds"
 )
 
-// O TESTE ROLADO DA SESSÃO DO JOGADOR (ALE-473), pelo mockup `paridade.html`:
-// o cartão do ataque SEM os verbos: um teste informa e não muda nada, e a CD
-// é do mestre, em voz. O selo diz só os
-// naturais (p221), e o "Rolar de novo" é de quem rolou (p226).
-templ tempestadeSkillTest(v View) {
-	if v.SkillTest != nil {
-		<section id="table-skill-test" class="ds-strike" data-test role="status" aria-label="Teste rolado">
+// informedRoll é a faixa de uma rolagem que a mesa só informa, nas duas sessões (ver `informed_roll_view.go`):
+// a cabeça com quem rolou e o quê, um total por linha com a conta ao lado, as frases do que o mestre aplica e,
+// só no teste de quem rolou, o "Rolar de novo" (p226). Sem os verbos do ataque: ela não muda nada. Sem
+// rolagem, o NÓ VAZIO fica, pela razão do ataque: o stream remenda POR ID.
+templ informedRoll(kind informedRollKind, band *rollBand) {
+	if band != nil {
+		<section id={ informedRollRegions[kind].id } class="ds-strike" data-test role="status" aria-label={ informedRollRegions[kind].label }>
 			<div class="ds-strike-head">
-				@ds.Badge("Teste", true)
-				if v.SkillTest.Tone != "" {
-					<span class="ds-seal" data-tone={ v.SkillTest.Tone }>{ v.SkillTest.Seal }</span>
+				if band.Badge != "" {
+					@ds.Badge(band.Badge, true)
 				}
-				<span class="ds-row-meta">{ v.SkillTest.Who + " · " }<b>{ v.SkillTest.Skill }</b></span>
+				if band.Tone != "" {
+					<span class="ds-seal" data-tone={ band.Tone }>{ band.Seal }</span>
+				}
+				<span class="ds-row-meta">{ band.Who }<b>{ band.What }</b></span>
 			</div>
-			// `aria-live` na CONTA, pela razão do de hoje: o selo já é lido no
+			// `aria-live` na CONTA, pela razão do ataque: o selo já é lido no
 			// nome acessível, e quem ouve precisa do resultado.
-			<div class="ds-strike-roll" aria-live="polite">
-				<b class="ds-strike-verdict">{ strconv.Itoa(v.SkillTest.Total) }</b>
-				<span class="ds-strike-tally">{ rolledTestLine(*v.SkillTest) }</span>
-			</div>
-			if len(v.SkillTest.Offers) > 0 {
+			for _, line := range band.Lines {
+				<div class="ds-strike-roll" aria-live="polite">
+					<b class="ds-strike-verdict">{ strconv.Itoa(line.Total) }</b>
+					<span class="ds-strike-tally">{ line.Tally }</span>
+				</div>
+				if line.Note != "" {
+					<p class="ds-help">{ line.Note }</p>
+				}
+			}
+			for _, help := range band.Help {
+				<p class="ds-help">{ help }</p>
+			}
+			@damageTakenBlock(band.Taken)
+			if len(band.Offers) > 0 {
 				<div class="ds-strike-foot" data-fill>
-					if v.SkillTest.ByHand {
+					if band.HandReroll {
 						<label class="ds-strike-hand">
 							<span class="ds-row-meta">Eu rolei</span>
 							<input class="ds-input" type="number" min="1" max="20" inputmode="numeric" data-bind:reroll_d20 aria-label="O d20 que você rolou de novo na mesa"/>
 						</label>
 					}
-					for _, offer := range v.SkillTest.Offers {
+					for _, offer := range band.Offers {
 						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": offerCommand(offer)}) {
 							{ offer.Label }
 						}
@@ -43,57 +54,6 @@ templ tempestadeSkillTest(v View) {
 			}
 		</section>
 	} else {
-		// O NÓ VAZIO fica, pela razão do ataque: o stream remenda POR ID.
-		<section id="table-skill-test" hidden></section>
-	}
-}
-
-// tempestadeBlast é o disparo de um encanto em vez do golpe — a bola de fogo da Flamejante (p335) —, nas duas
-// sessões: a rolagem, o tipo do dano e a resistência que o mestre aplica. Sem verbos: ela informa.
-templ tempestadeBlast(v View) {
-	if v.Blast != nil {
-		<section id="table-blast" class="ds-strike" data-test role="status" aria-label="Disparo do encanto">
-			<div class="ds-strike-head">
-				@ds.Badge(v.Blast.Weapon, true)
-				<span class="ds-row-meta"><b>{ v.Blast.Head }</b></span>
-			</div>
-			<div class="ds-strike-roll" aria-live="polite">
-				<b class="ds-strike-verdict">{ strconv.Itoa(v.Blast.Total) }</b>
-				<span class="ds-strike-tally">{ v.Blast.Tally }</span>
-			</div>
-			<p class="ds-help">{ v.Blast.Save }</p>
-			@damageTakenBlock(v.Blast.Taken)
-		</section>
-	} else {
-		<section id="table-blast" hidden></section>
-	}
-}
-
-// tempestadeSpellCast é a magia conjurada com o dado dela, nas duas sessões: uma linha por parcela, a resistência
-// com a CD, e nada de verbos — o mestre aplica com os gestos de PV.
-templ tempestadeSpellCast(v View) {
-	if v.SpellCast != nil {
-		<section id="table-spell-cast" class="ds-strike" data-test role="status" aria-label="Magia conjurada">
-			<div class="ds-strike-head">
-				<span class="ds-row-meta"><b>{ v.SpellCast.Head }</b></span>
-			</div>
-			for _, part := range v.SpellCast.Parts {
-				<div class="ds-strike-roll" aria-live="polite">
-					<b class="ds-strike-verdict">{ strconv.Itoa(part.Total) }</b>
-					<span class="ds-strike-tally">{ part.Tally }</span>
-				</div>
-				if part.Note != "" {
-					<p class="ds-help">{ part.Note }</p>
-				}
-			}
-			if v.SpellCast.ByText != "" {
-				<p class="ds-help">{ v.SpellCast.ByText }</p>
-			}
-			if v.SpellCast.Save != "" {
-				<p class="ds-help">{ v.SpellCast.Save }</p>
-			}
-		</section>
-	} else {
-		<section id="table-spell-cast" hidden></section>
+		<section id={ informedRollRegions[kind].id } hidden></section>
 	}
 }

@@ -92,15 +92,9 @@ type View struct {
 	// Ele é da CENA e não do tabuleiro: a mesa sem mapa aberto continua tendo
 	// combate, e a faixa tem de aparecer do mesmo jeito.
 	Attack *attackProposal
-	// SkillTest é o ÚLTIMO teste rolado na sessão — nil quando ninguém rolou
-	// ainda. Ele é irmão do `Attack` e DIFERENTE num ponto: não tem verbos, e
-	// por isso não tem `Mine` nem precisa saber quem é o mestre. Um teste não
-	// muda nada; ele informa.
-	SkillTest *skillTestBand
-	// Blast é o ÚLTIMO disparo de encanto em vez do golpe (a bola de fogo da Flamejante), nil quando não há.
-	Blast *blastBand
-	// SpellCast é a ÚLTIMA magia conjurada com o dado dela, nil quando não há. Ver `spell_cast_view.go`.
-	SpellCast *spellCastBand
+	// Rolls são as faixas que informam uma rolagem — o teste, o disparo e a magia —, nil a que ninguém rolou.
+	// Elas são irmãs do `Attack` e DIFERENTES num ponto: não têm verbos. Ver `informed_roll_view.go`.
+	Rolls [informedRollKindCount]*rollBand
 	// Banners são as faixas do Estandarte (p54), só do MESTRE e só com a cena aberta.
 	Banners []bannerBand
 	GM      *viewGm
