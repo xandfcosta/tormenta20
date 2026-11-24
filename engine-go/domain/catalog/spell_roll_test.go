@@ -10,6 +10,7 @@ import (
 // aprimoramentos.
 type spellForRollSweep struct {
 	Name       string          `json:"name"`
+	Duration   string          `json:"duration"`
 	BaseEffect string          `json:"baseEffect"`
 	Rolls      []spellRollSeen `json:"rolls"`
 	TurnRoll   *struct {
@@ -167,6 +168,11 @@ func TestEveryTurnRollSaysWhenAndWhatItRolls(t *testing.T) {
 		turning++
 		if m.TurnRoll.At != "inicio" && m.TurnRoll.At != "fim" {
 			t.Errorf("%s (%s): o dado da vez é no %q, e o momento é \"inicio\" ou \"fim\"", m.Name, id, m.TurnRoll.At)
+		}
+		// A conjuração abre a linha em vigor da sustentada ou da de cena, e é dela que o dado da vez sai: outra
+		// duração não teria de onde rolar.
+		if m.Duration != "sustentada" && m.Duration != "cena" {
+			t.Errorf("%s (%s) rola na vez e dura %q: a conjuração só abre linha em vigor para \"sustentada\" e \"cena\"", m.Name, id, m.Duration)
 		}
 		if len(m.TurnRoll.Versions) == 0 {
 			t.Errorf("%s (%s): o dado da vez não tem versão nenhuma", m.Name, id)

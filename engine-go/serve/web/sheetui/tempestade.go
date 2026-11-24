@@ -118,6 +118,8 @@ type activeEffect struct {
 	Meta   string
 	Text   string
 	Terms  []ds.SumTerm
+	// TurnRolls são os botões do dado da vez da magia em vigor (ver `turn_roll.go`).
+	TurnRolls []turnRollOffer
 }
 
 func activeEffects(v View) []activeEffect {
@@ -168,11 +170,20 @@ func activeEffects(v View) []activeEffect {
 	for _, a := range v.Effects.Applied {
 		out = append(out, activeEffect{
 			Kind: "applied", Name: a.Name, Remove: sheetPost(v, "/efeitos/encerra/"+a.Command),
-			Dialog: "effect-applied-" + strconv.FormatInt(a.ID, 10), Meta: strings.TrimSuffix("Efeito · "+a.Scope, " · "),
-			Text: a.Detail, Terms: sumTermsOf(a.Modifiers),
+			Dialog: "effect-applied-" + strconv.FormatInt(a.ID, 10), Meta: appliedMeta(a),
+			Text: a.Detail, Terms: sumTermsOf(a.Modifiers), TurnRolls: a.TurnRolls,
 		})
 	}
 	return out
+}
+
+// appliedMeta é "Efeito · sustentada", e "· rola no início do turno" na magia com dado da vez.
+func appliedMeta(a appliedEffectRow) string {
+	meta := strings.TrimSuffix("Efeito · "+a.Scope, " · ")
+	if a.TurnMeta != "" {
+		meta += " · " + a.TurnMeta
+	}
+	return meta
 }
 
 // stanceMeta é "Postura · pago 2 PM · +3".

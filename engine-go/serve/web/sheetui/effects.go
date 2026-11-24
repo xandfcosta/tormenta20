@@ -86,6 +86,10 @@ type appliedEffectRow struct {
 	// aplicado de um nome numa lista.
 	Modifiers []breakdownRow
 	Command   string
+	// TurnRolls são os botões do dado da vez, e TurnMeta quando ele vale ("rola no início do turno"), vazios na
+	// linha que não é magia com dado da vez (ver `turn_roll.go`).
+	TurnRolls []turnRollOffer
+	TurnMeta  string
 }
 
 type situationalRow struct {
@@ -248,6 +252,8 @@ func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 			Scope:     scopeLabel(e.Scope),
 			Modifiers: modifierRowsOf(e.Modifiers),
 			Command:   strconv.FormatInt(e.ID, 10),
+			TurnRolls: turnRollOffersOf(dto, e),
+			TurnMeta:  turnRollMeta(dto, e),
 		})
 	}
 	return rows

@@ -18,6 +18,11 @@ func spellCastBandOf(st *live.SessionRuntimeState) *rollBand {
 	}
 	c := st.LastSpellCast
 	band := &rollBand{What: c.Who + " · " + c.Spell}
+	// O DADO DA VEZ diz o momento na cabeça (ver GLOSSARY, **dado da vez**): a mesma faixa, e quem lê sabe que não
+	// é uma conjuração nova.
+	if c.When != "" {
+		band.What += " · " + c.When
+	}
 	for _, part := range c.Parts {
 		band.Lines = append(band.Lines, rollLine{
 			Total: part.Total, Tally: writtenRoll(part.Dice, part.Rolls, part.Kind, part.ByHand), Note: part.Note,

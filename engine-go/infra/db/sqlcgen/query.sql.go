@@ -3215,6 +3215,35 @@ func (q *Queries) ListClassesByCharacters(ctx context.Context, ids []int64) ([]L
 	return items, nil
 }
 
+const listEffectCastAugmentsByCharacter = `-- name: ListEffectCastAugmentsByCharacter :many
+SELECT c.effectId, c.augments FROM effect_cast_augments c
+JOIN active_effects e ON e.id = c.effectId
+WHERE e.characterId = ? ORDER BY c.effectId ASC
+`
+
+func (q *Queries) ListEffectCastAugmentsByCharacter(ctx context.Context, characterid int64) ([]EffectCastAugment, error) {
+	rows, err := q.db.QueryContext(ctx, listEffectCastAugmentsByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EffectCastAugment{}
+	for rows.Next() {
+		var i EffectCastAugment
+		if err := rows.Scan(&i.Effectid, &i.Augments); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectIdsByCatalog = `-- name: ListEffectIdsByCatalog :many
 SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?
 `
@@ -4629,6 +4658,23 @@ func (q *Queries) SaveCharacterWildShapePrimal(ctx context.Context, arg SaveChar
 		arg.Weaponfrom,
 		arg.Sizefrom,
 	)
+	return err
+}
+
+const saveEffectCastAugments = `-- name: SaveEffectCastAugments :exec
+INSERT INTO effect_cast_augments (effectId, augments) VALUES (?, ?)
+ON CONFLICT (effectId) DO UPDATE SET augments = excluded.augments
+`
+
+type SaveEffectCastAugmentsParams struct {
+	Effectid int64  `json:"effectid"`
+	Augments string `json:"augments"`
+}
+
+// The augments chosen when casting a spell that rolls again on the caster's turn (see
+// the 00038 migration); casting it again while it is in effect replaces them.
+func (q *Queries) SaveEffectCastAugments(ctx context.Context, arg SaveEffectCastAugmentsParams) error {
+	_, err := q.db.ExecContext(ctx, saveEffectCastAugments, arg.Effectid, arg.Augments)
 	return err
 }
 

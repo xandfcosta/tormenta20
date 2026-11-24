@@ -52,6 +52,25 @@ func endAppliedEffect(s Scene, r *http.Request, row sqlcgen.Character, _ Signals
 	return s.plays.EndAppliedEffect(r.Context(), row.ID, id)
 }
 
+// rollTurnFromSheet rola o dado da vez da magia em vigor (ver GLOSSARY, **dado da vez**) e o põe na faixa da
+// magia da mesa. A versão vem do endereço, que é o botão que quem joga apertou; o total da mão, dos sinais do
+// diálogo, pelos mesmos campos da conjuração.
+func rollTurnFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
+	id, err := strconv.ParseInt(chi.URLParam(r, "efeito"), 10, 64)
+	if err != nil {
+		return fmt.Errorf("o efeito %q não é um número", chi.URLParam(r, "efeito"))
+	}
+	dto, err := s.deps.LoadCharacter(r.Context(), row)
+	if err != nil {
+		return err
+	}
+	cast, err := s.plays.RollTurn(dto, id, r.URL.Query().Get("versao"), signals.spellHandTotals())
+	if err != nil {
+		return err
+	}
+	return s.deps.PublishSpellCast(r.Context(), row.ID, cast)
+}
+
 // endStance encerra uma postura.
 //
 // Encerrar apaga a linha da postura, desliga os condicionais e leva embora o que

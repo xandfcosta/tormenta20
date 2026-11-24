@@ -169,7 +169,8 @@ func targetOf(table string, row map[string]int64, columns []string) (tableWrite,
 	switch {
 	case table == "characters":
 		return tableWrite{table: table, character: row["id"]}, true
-	case strings.HasPrefix(table, "character_") || table == "active_effects":
+	// Os aprimoramentos da conjuração pendem do efeito ativo, e mudam com a ficha dele.
+	case strings.HasPrefix(table, "character_") || table == "active_effects" || table == "effect_cast_augments":
 		if has("characterId") {
 			return tableWrite{table: table, character: row["characterId"]}, true
 		}

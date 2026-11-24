@@ -133,6 +133,17 @@ VALUES (?, ?, ?, ?, ?, ?)
 ON CONFLICT (characterId, catalogId, scope) DO UPDATE SET modifiers = excluded.modifiers, source = excluded.source
 RETURNING id, catalogId, scope, modifiers, createdAt;
 
+-- name: SaveEffectCastAugments :exec
+-- The augments chosen when casting a spell that rolls again on the caster's turn (see
+-- the 00038 migration); casting it again while it is in effect replaces them.
+INSERT INTO effect_cast_augments (effectId, augments) VALUES (?, ?)
+ON CONFLICT (effectId) DO UPDATE SET augments = excluded.augments;
+
+-- name: ListEffectCastAugmentsByCharacter :many
+SELECT c.effectId, c.augments FROM effect_cast_augments c
+JOIN active_effects e ON e.id = c.effectId
+WHERE e.characterId = ? ORDER BY c.effectId ASC;
+
 -- name: ListEffectIdsByCatalog :many
 SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?;
 

@@ -72,6 +72,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/efeitos/condicao/{cond}", s.sheetCommand(toggleBookCondition))
 	r.Post("/personagens/{id}/efeitos/aplica/{magia}", s.sheetCommand(applySpellBuff))
 	r.Post("/personagens/{id}/efeitos/encerra/{efeito}", s.sheetCommand(endAppliedEffect))
+	r.Post("/personagens/{id}/efeitos/vez/{efeito}", s.sheetCommand(rollTurnFromSheet))
 	r.Post("/personagens/{id}/efeitos/postura/{flag}", s.sheetCommand(endStance))
 	r.Post("/personagens/{id}/efeitos/declaracao/{flag}", s.sheetCommand(endDeclaration))
 	r.Post("/personagens/{id}/declara/{flag}", s.sheetCommand(declares))

@@ -276,6 +276,11 @@ type CharacterWildShapePrimal struct {
 	Sizefrom    string `json:"sizefrom"`
 }
 
+type EffectCastAugment struct {
+	Effectid int64  `json:"effectid"`
+	Augments string `json:"augments"`
+}
+
 type OpenBoard struct {
 	Sessionid int64  `json:"sessionid"`
 	Boardid   string `json:"boardid"`
