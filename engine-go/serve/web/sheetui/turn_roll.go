@@ -14,6 +14,9 @@ import (
 // conjurou ganha, ao lado do Encerrar, um botão por versão. Ele abre o diálogo com o dado — já com os aprimoramentos
 // da conjuração, que o servidor guardou — e o campo do total rolado na mão, pelos mesmos sinais da conjuração.
 // Quem diz se é a hora é a mesa: a linha só diz quando vale.
+//
+// O Rolar e o Encerrar vão juntos no par de gestos do kit (`ds-row-gesture-pair`): soltos na linha, a 390px o
+// Encerrar caía sozinho embaixo do nome. A linha sem dado da vez fica como era.
 
 // turnRollOffer é um botão do dado da vez: uma versão da magia, o diálogo dela e as parcelas escritas.
 type turnRollOffer struct {
@@ -38,8 +41,8 @@ type turnRollLine struct {
 }
 
 // turnRollOffersOf são os botões do dado da vez de uma linha em vigor, vazios na que não é magia com dado da vez.
-func turnRollOffersOf(dto sheet.CharacterDTO, effect sheet.EffectDTO) []turnRollOffer {
-	onSheet := sheet.CasterOf(dto).Spell(effect.CatalogID)
+func turnRollOffersOf(caster sheet.Caster, effect sheet.EffectDTO) []turnRollOffer {
+	onSheet := caster.Spell(effect.CatalogID)
 	if !onSheet.Known || onSheet.Spell.TurnRoll == nil {
 		return nil
 	}
@@ -74,9 +77,18 @@ func turnRollOffersOf(dto sheet.CharacterDTO, effect sheet.EffectDTO) []turnRoll
 	return offers
 }
 
+// turnRollOffersIn são os botões do dado da vez de todas as linhas em vigor da ficha, na ordem delas.
+func turnRollOffersIn(v View) []turnRollOffer {
+	var offers []turnRollOffer
+	for _, a := range v.Effects.Applied {
+		offers = append(offers, a.TurnRolls...)
+	}
+	return offers
+}
+
 // turnRollMeta é o que a linha em vigor diz do dado da vez: "rola no início do turno". Vazia sem dado da vez.
-func turnRollMeta(dto sheet.CharacterDTO, effect sheet.EffectDTO) string {
-	onSheet := sheet.CasterOf(dto).Spell(effect.CatalogID)
+func turnRollMeta(caster sheet.Caster, effect sheet.EffectDTO) string {
+	onSheet := caster.Spell(effect.CatalogID)
 	if !onSheet.Known || onSheet.Spell.TurnRoll == nil {
 		return ""
 	}

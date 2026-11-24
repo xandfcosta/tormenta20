@@ -245,6 +245,7 @@ func stanceRowsOf(dto sheet.CharacterDTO) []stanceRow {
 // appliedEffectRowsOf são os consumíveis e as magias de bônus em curso.
 func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 	rows := []appliedEffectRow{}
+	caster := sheet.CasterOf(dto)
 	for _, e := range dto.ActiveEffects {
 		rows = append(rows, appliedEffectRow{
 			ID:        e.ID,
@@ -252,8 +253,8 @@ func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 			Scope:     scopeLabel(e.Scope),
 			Modifiers: modifierRowsOf(e.Modifiers),
 			Command:   strconv.FormatInt(e.ID, 10),
-			TurnRolls: turnRollOffersOf(dto, e),
-			TurnMeta:  turnRollMeta(dto, e),
+			TurnRolls: turnRollOffersOf(caster, e),
+			TurnMeta:  turnRollMeta(caster, e),
 		})
 	}
 	return rows

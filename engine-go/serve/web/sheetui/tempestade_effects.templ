@@ -29,8 +29,6 @@ templ tempestadeEffects(v View) {
 			}
 			for _, e := range effectsOfKind(v, "stance", "declared", "applied") {
 				@ds.ActionRow(e.Name, e.Meta, e.Dialog) {
-					// O DADO DA VEZ põe o Rolar ao lado do Encerrar, e o par de gestos é que os mantém juntos: soltos na
-					// linha, a 390px o Encerrar caía sozinho embaixo do nome.
 					if len(e.TurnRolls) > 0 {
 						<div class="ds-row-gesture-pair">
 							for _, offer := range e.TurnRolls {
@@ -78,13 +76,13 @@ templ tempestadeEffects(v View) {
 		@situationalSheet(v, row)
 	}
 	// QUEM ABRE O DADO DA VEZ COMEÇA DO ZERO: o fechar zera os totais da mão, pela razão da folha da magia.
-	<div class="contents" data-on:close__capture={ augmentsReset }>
-		for _, e := range effectsOfKind(v, "applied") {
-			for _, offer := range e.TurnRolls {
+	if offers := turnRollOffersIn(v); len(offers) > 0 {
+		<div class="contents" data-on:close__capture={ augmentsReset }>
+			for _, offer := range offers {
 				@turnRollSheet(v, offer)
 			}
-		}
-	</div>
+		</div>
+	}
 	@sheetDialog(v, "condition-picker", "Aplicar condição", nil) {
 		@ds.FilterBar() {
 			@ds.SearchField("condition-search", "Buscar condição", templ.Attributes{
@@ -186,8 +184,8 @@ templ turnRollSheet(v View, offer turnRollOffer) {
 			<div class="ds-sum-line">
 				<span class="ds-help">Rola <b>{ line.Written }</b></span>
 				<span class="ds-sum-line flex-nowrap">
-					<span class="ds-row-meta">ou rolei</span>
-					<input class="ds-input ds-table-die" type="number" min="1" inputmode="numeric" placeholder="total" data-bind={ line.Signal } aria-label={ line.Label }/>
+					<span class="ds-row-meta">ou rolei</span>{ " " }
+					@handTotalField(line.Signal, line.Label)
 				</span>
 			</div>
 			if line.Note != "" {
