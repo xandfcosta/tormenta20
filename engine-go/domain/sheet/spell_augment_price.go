@@ -57,10 +57,25 @@ func (s SpellOnTheSheet) AugmentLock(index int) string {
 	return ""
 }
 
-// AugmentPrice é o PM dos aprimoramentos escolhidos, ou a frase da recusa.
+// AugmentPrice é o PM de TODOS os aprimoramentos escolhidos — os da magia e os poderes que são aprimoramento
+// (p131) —, ou a frase da recusa. Os da magia são conferidos primeiro: o poder pergunta por eles (a mudança de
+// execução, o exclusivo), e um índice fora de faixa já foi recusado quando ele pergunta.
 //
-//	pm, refusal := sheet.CasterOf(dto).Spell("bola-de-fogo").AugmentPrice(picks)
-func (s SpellOnTheSheet) AugmentPrice(picks []AugmentPick) (int, string) {
+//	pm, refusal := sheet.CasterOf(dto).Spell("bola-de-fogo").AugmentPrice(picks, powerPicks)
+func (s SpellOnTheSheet) AugmentPrice(picks []AugmentPick, powerPicks []PowerAugmentPick) (int, string) {
+	spellPm, refusal := s.spellAugmentPrice(picks)
+	if refusal != "" {
+		return 0, refusal
+	}
+	powerPm, refusal := s.powerAugmentPrice(picks, powerPicks)
+	if refusal != "" {
+		return 0, refusal
+	}
+	return spellPm + powerPm, ""
+}
+
+// spellAugmentPrice é o PM dos aprimoramentos da própria magia, ou a frase da recusa.
+func (s SpellOnTheSheet) spellAugmentPrice(picks []AugmentPick) (int, string) {
 	if len(picks) == 0 {
 		return 0, ""
 	}

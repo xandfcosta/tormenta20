@@ -212,7 +212,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			NeedsMemorizing: onSheet.NeedsMemorizing,
 			MemorizeLock:    memorizeLockOf(caster, onSheet, learned),
 			CD:              spellCdOf(computed, computedOK, onSheet),
-			Augments:        augmentRowsOf(dto, learned.CatalogSpellID, spell, onSheet),
+			Augments:        augmentRowsOf(spell, onSheet),
 			Execution:       spell.Execution, Range: spell.Range, Duration: spell.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(spell), RangeWritten: book.SpellRangeWritten(spell),
 			DurationWritten: book.SpellDurationWritten(spell),
