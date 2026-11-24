@@ -24,6 +24,15 @@ type PowerAugmentOnTheSheet struct {
 	Lock  string
 }
 
+// powerLock é o cadeado do poder nesta magia, vazio quando ele se aplica: a marca "apenas divinos" que a ficha
+// não cumpre, como no aprimoramento da magia, e depois o que a magia não tem (`book.PowerAugmentBar`).
+func (s SpellOnTheSheet) powerLock(power book.PowerAugment) string {
+	if !s.CastsAs(power.Augment.ClassOnly) {
+		return "apenas " + power.Augment.ClassOnly
+	}
+	return book.PowerAugmentBar(power.PowerID, s.Spell)
+}
+
 // ownedPowerAugments são os poderes que são aprimoramento e que a ficha tem, na ordem do livro.
 func ownedPowerAugments(dto CharacterDTO) []book.PowerAugment {
 	owned := OwnedPowers(dto)

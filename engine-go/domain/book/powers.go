@@ -56,6 +56,9 @@ type ClassPower struct {
 	// Boost é o que o poder vende no golpe, por PM (o Golpe Divino, p82): nil no poder que não se paga no
 	// ataque. A ficha lê só se ele existe — é a lista que a arma Harmonizada oferece (p165).
 	Boost *engine.ClassPowerBoost `json:"boost"`
+	// SpellAugment é o preço e o efeito do poder de classe que se paga ao conjurar (a Magia Pungente, p38), como
+	// os gerais da p131. Nulo em todos os outros. Ver `PowerAugments`.
+	SpellAugment *SpellAugment `json:"spellAugment"`
 }
 
 // PowerPrerequisite é um pré-requisito. `IDs` é "um destes" (o `ID` é um só).

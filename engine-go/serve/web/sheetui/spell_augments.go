@@ -126,6 +126,12 @@ var powerAugmentSignals = []struct{ power, name string }{
 	{book.QuickenedSpellPower, "augment_quickened"},
 	{book.AmplifiedSpellPower, "augment_amplified"},
 	{book.DiscreetSpellPower, "augment_discreet"},
+	{book.PiercingSpellPower, "augment_piercing"},
+	{book.CombatPrayerPower, "augment_combat_prayer"},
+	{"class.clerigo.magia-sagrada-profana", "augment_holy"},
+	{"class.clerigo.comunhao-vital", "augment_vital_communion"},
+	{"class.druida.espirito-dos-solsticios", "augment_solstice"},
+	{book.PrairieFreedomPower, "augment_prairie"},
 }
 
 // powerAugmentSignalOf é o sinal do poder, com o `$`, ou vazio no poder sem sinal.

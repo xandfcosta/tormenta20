@@ -230,14 +230,6 @@ var activationsPart12 = []Activation{
 		Uses:   nil,
 	},
 	{
-		ID:     "class.arcanista.magia-pungente",
-		Name:   "Magia Pungente",
-		Kind:   "instant",
-		Action: "livre",
-		PMCost: PMCost{Fixed: 1},
-		Uses:   nil,
-	},
-	{
 		ID:     "class.arcanista.raio-elemental",
 		Name:   "Raio Elemental",
 		Kind:   "instant",

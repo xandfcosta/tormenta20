@@ -30,6 +30,9 @@ type ClassPower struct {
 	FollowUp *ClassPowerFollowUp `json:"followUp,omitempty"`
 	// UnarmedDamageVariant é a linha do dano desarmado numa situação — ver `engine.DamageVariant`.
 	UnarmedDamageVariant *ClassPowerUnarmedDamageVariant `json:"unarmedDamageVariant,omitempty"`
+	// SpellAugment é o preço e o efeito do poder que se paga ao conjurar, como os gerais da p131 — ver
+	// `book.PowerAugments`.
+	SpellAugment *SpellAugment `json:"spellAugment,omitempty"`
 }
 
 // ClassPowerUnarmedDamageVariant é a linha que o poder dá à carta desarmada: a situação e quantos passos o dado
@@ -134,12 +137,12 @@ type ClassPowerFavoredWeaponDie struct {
 
 // HasEngineEffect diz se o motor aplica alguma coisa deste poder: um modificador, ou um campo que o motor lê sem
 // modificador — o ataque pago, o aprimoramento, o que se soma a ele, o dado da arma favorita, a escala de PM, a
-// proficiência, a manobra em seguida e a linha do dano desarmado. É o que o auditor de cobertura conta como efeito, e um campo novo do tipo
+// proficiência, a manobra em seguida, a linha do dano desarmado e o que se paga ao conjurar. É o que o auditor de cobertura conta como efeito, e um campo novo do tipo
 // tem de decidir de que lado fica (`TestEveryClassPowerFieldSaysWhetherItIsAnEngineEffect`).
 //
 //	if power.HasEngineEffect() { … }
 func (p ClassPower) HasEngineEffect() bool {
 	return len(p.Modifiers) > 0 || len(p.ProficientWith) > 0 || p.Degrees != nil || p.Boost != nil ||
 		p.ExtraStrike != nil || p.BoostAddOn != nil || p.FavoredWeaponDie != nil || p.FollowUp != nil ||
-		p.UnarmedDamageVariant != nil
+		p.UnarmedDamageVariant != nil || p.SpellAugment != nil
 }
