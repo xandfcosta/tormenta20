@@ -31,8 +31,7 @@ var notAGesture = map[string]string{
 	// o PM deles se paga no diálogo de conjurar, somado ao custo da magia (p131)
 	QuickenedSpellPower: "aprimoramento", AmplifiedSpellPower: "aprimoramento", DiscreetSpellPower: "aprimoramento",
 	PiercingSpellPower: "aprimoramento", CombatPrayerPower: "aprimoramento", PrairieFreedomPower: "aprimoramento",
-	"class.clerigo.magia-sagrada-profana": "aprimoramento", "class.clerigo.comunhao-vital": "aprimoramento",
-	"class.druida.espirito-dos-solsticios": "aprimoramento",
+	HolySpellPower: "aprimoramento", VitalCommunionPower: "aprimoramento", SolsticeSpiritPower: "aprimoramento",
 	// o TOTAL de PM
 	"class.arcanista.caminho-bruxo": "total de PM", "class.arcanista.caminho-feiticeiro": "total de PM",
 	"class.arcanista.caminho-mago": "total de PM", "class.arcanista.magias-1-circulo": "total de PM",

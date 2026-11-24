@@ -23,6 +23,12 @@ const (
 	CombatPrayerPower = "class.clerigo.prece-de-combate"
 	// PrairieFreedomPower é a Liberdade da Pradaria do druida (p62).
 	PrairieFreedomPower = "class.druida.liberdade-da-pradaria"
+	// HolySpellPower é a Magia Sagrada/Profana do clérigo (p58).
+	HolySpellPower = "class.clerigo.magia-sagrada-profana"
+	// VitalCommunionPower é a Comunhão Vital do clérigo (p58).
+	VitalCommunionPower = "class.clerigo.comunhao-vital"
+	// SolsticeSpiritPower é o Espírito dos Solstícios do druida (p62).
+	SolsticeSpiritPower = "class.druida.espirito-dos-solsticios"
 )
 
 // PowerAugment é um desses poderes, com o que ele custa ao conjurar.

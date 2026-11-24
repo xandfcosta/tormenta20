@@ -128,9 +128,9 @@ var powerAugmentSignals = []struct{ power, name string }{
 	{book.DiscreetSpellPower, "augment_discreet"},
 	{book.PiercingSpellPower, "augment_piercing"},
 	{book.CombatPrayerPower, "augment_combat_prayer"},
-	{"class.clerigo.magia-sagrada-profana", "augment_holy"},
-	{"class.clerigo.comunhao-vital", "augment_vital_communion"},
-	{"class.druida.espirito-dos-solsticios", "augment_solstice"},
+	{book.HolySpellPower, "augment_holy"},
+	{book.VitalCommunionPower, "augment_vital_communion"},
+	{book.SolsticeSpiritPower, "augment_solstice"},
 	{book.PrairieFreedomPower, "augment_prairie"},
 }
 
