@@ -144,6 +144,17 @@ SELECT c.effectId, c.augments FROM effect_cast_augments c
 JOIN active_effects e ON e.id = c.effectId
 WHERE e.characterId = ? ORDER BY c.effectId ASC;
 
+-- name: SetEffectCharges :exec
+-- The charges a spell in effect still has (see the 00039 migration): casting sets them,
+-- and each one spent writes what is left.
+INSERT INTO effect_charges (effectId, remaining) VALUES (?, ?)
+ON CONFLICT (effectId) DO UPDATE SET remaining = excluded.remaining;
+
+-- name: ListEffectChargesByCharacter :many
+SELECT c.effectId, c.remaining FROM effect_charges c
+JOIN active_effects e ON e.id = c.effectId
+WHERE e.characterId = ? ORDER BY c.effectId ASC;
+
 -- name: ListEffectIdsByCatalog :many
 SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?;
 

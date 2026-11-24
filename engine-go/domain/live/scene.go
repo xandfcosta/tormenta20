@@ -255,6 +255,12 @@ func UsesOncePerRound(st *SessionRuntimeState, entryID, key string) bool {
 	return true
 }
 
+// UsedOncePerRound diz se o gasto `key` de `entryID` já foi registrado nesta rodada dele, sem registrar: é a
+// pergunta de quem recusa antes de rolar.
+func UsedOncePerRound(st *SessionRuntimeState, entryID, key string) bool {
+	return st.Scene != nil && slices.Contains(st.Scene.OncePerRoundUsed, entryID+"|"+key)
+}
+
 // GivesOncePerRoundBack desfaz o registro: o golpe cancelado não gastou a vez da rodada.
 func GivesOncePerRoundBack(st *SessionRuntimeState, entryID, key string) {
 	if st.Scene == nil {

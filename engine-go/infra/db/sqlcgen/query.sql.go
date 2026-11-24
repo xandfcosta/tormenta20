@@ -3244,6 +3244,35 @@ func (q *Queries) ListEffectCastAugmentsByCharacter(ctx context.Context, charact
 	return items, nil
 }
 
+const listEffectChargesByCharacter = `-- name: ListEffectChargesByCharacter :many
+SELECT c.effectId, c.remaining FROM effect_charges c
+JOIN active_effects e ON e.id = c.effectId
+WHERE e.characterId = ? ORDER BY c.effectId ASC
+`
+
+func (q *Queries) ListEffectChargesByCharacter(ctx context.Context, characterid int64) ([]EffectCharge, error) {
+	rows, err := q.db.QueryContext(ctx, listEffectChargesByCharacter, characterid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EffectCharge{}
+	for rows.Next() {
+		var i EffectCharge
+		if err := rows.Scan(&i.Effectid, &i.Remaining); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEffectIdsByCatalog = `-- name: ListEffectIdsByCatalog :many
 SELECT id FROM active_effects WHERE characterId = ? AND catalogId = ?
 `
@@ -4825,6 +4854,23 @@ type SetCharacterTibarParams struct {
 
 func (q *Queries) SetCharacterTibar(ctx context.Context, arg SetCharacterTibarParams) error {
 	_, err := q.db.ExecContext(ctx, setCharacterTibar, arg.Tibar, arg.UpdatedAt, arg.ID)
+	return err
+}
+
+const setEffectCharges = `-- name: SetEffectCharges :exec
+INSERT INTO effect_charges (effectId, remaining) VALUES (?, ?)
+ON CONFLICT (effectId) DO UPDATE SET remaining = excluded.remaining
+`
+
+type SetEffectChargesParams struct {
+	Effectid  int64 `json:"effectid"`
+	Remaining int64 `json:"remaining"`
+}
+
+// The charges a spell in effect still has (see the 00039 migration): casting sets them,
+// and each one spent writes what is left.
+func (q *Queries) SetEffectCharges(ctx context.Context, arg SetEffectChargesParams) error {
+	_, err := q.db.ExecContext(ctx, setEffectCharges, arg.Effectid, arg.Remaining)
 	return err
 }
 

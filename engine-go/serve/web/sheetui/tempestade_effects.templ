@@ -180,18 +180,7 @@ templ effectEndButton(e activeEffect) {
 // mesa, informa o resultado.
 templ turnRollSheet(v View, offer turnRollOffer) {
 	@sheetDialog(v, offer.Dialog, offer.Title, turnRollFoot(v, offer)) {
-		for _, line := range offer.Lines {
-			<div class="ds-sum-line">
-				<span class="ds-help">Rola <b>{ line.Written }</b></span>
-				<span class="ds-sum-line flex-nowrap">
-					<span class="ds-row-meta">ou rolei</span>{ " " }
-					@handTotalField(line.Signal, line.Label)
-				</span>
-			</div>
-			if line.Note != "" {
-				<p class="ds-help">{ line.Note }</p>
-			}
-		}
+		@handRollLines(offer.Lines)
 		<p class="ds-help">Não cobra PM: a conjuração já pagou, e quem diz se é a hora é a mesa.</p>
 	}
 }
@@ -199,5 +188,22 @@ templ turnRollSheet(v View, offer turnRollOffer) {
 templ turnRollFoot(v View, offer turnRollOffer) {
 	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + offer.Label, "commandfor": offer.Dialog, "command": "close", "data-on:click": turnRollCommand(v, offer)}) {
 		Rolar
+	}
+}
+
+// handRollLines são as parcelas de um diálogo de rolar da magia — o dado da vez e a ação da magia —, cada uma com
+// o "ou rolei" dela, pelos mesmos sinais da conjuração.
+templ handRollLines(lines []handRollLine) {
+	for _, line := range lines {
+		<div class="ds-sum-line">
+			<span class="ds-help">Rola <b>{ line.Written }</b></span>
+			<span class="ds-sum-line flex-nowrap">
+				<span class="ds-row-meta">ou rolei</span>{ " " }
+				@handTotalField(line.Signal, line.Label)
+			</span>
+		</div>
+		if line.Note != "" {
+			<p class="ds-help">{ line.Note }</p>
+		}
 	}
 }

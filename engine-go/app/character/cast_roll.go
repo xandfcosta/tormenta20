@@ -19,7 +19,9 @@ type SpellCast struct {
 	Save   string
 	DC     int
 	Range  string
-	// When é o momento do dado da vez ("início do turno"), vazio na conjuração (ver GLOSSARY, **dado da vez**).
+	// When diz o que esta rolagem é além da magia, para a cabeça da faixa: o momento do dado da vez ("início do
+	// turno", ver GLOSSARY, **dado da vez**), a opção da ação da magia ("Esmagar", ver **ação da magia**), ou as
+	// cargas que a conjuração criou. Vazio na conjuração comum.
 	When string
 }
 
@@ -46,6 +48,10 @@ func (p Plays) rollTheCast(
 		return SpellCast{}, err
 	}
 	cast.ByText = roll.ByText
+	// A CONJURAÇÃO QUE CRIA CARGAS não rola nada: a faixa diz o que ficou no lugar ("Dardo de lava ×4").
+	if roll.Charges > 0 {
+		cast.When = fmt.Sprintf("%s ×%d", onSheet.Actions(augments).Options[0].Name, roll.Charges)
+	}
 	if cast.Parts, err = p.rollTheParts(cast.Name, roll.Parts, fromTheTable); err != nil {
 		return SpellCast{}, err
 	}

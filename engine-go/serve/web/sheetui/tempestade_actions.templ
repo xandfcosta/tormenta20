@@ -50,6 +50,9 @@ templ tempestadeActionsBody(v View) {
 					if row.Sheet != nil {
 						@rollSheetDs(v, group, *row.Sheet)
 					}
+					if row.SpellSheet != nil {
+						@spellActionSheetDs(v, group, *row.SpellSheet)
+					}
 				}
 			</section>
 		}
@@ -231,6 +234,23 @@ templ rollSheetFootBody(v View, group actionGroup, sheet rollSheet) {
 	@ds.Button(ds.ButtonPrimary, rollAttrs(v, group, sheet.Roll, templ.Attributes{
 		"aria-label": "Rolar " + sheet.Title, "commandfor": sheet.ID, "command": "close",
 		"data-on:click": rollCommand(v, sheet.Roll, sheet.After),
+	})) {
+		Rolar
+	}
+}
+
+// spellActionSheetDs é o diálogo da ação da magia em vigor (ver GLOSSARY, **ação da magia**): o dado já com os
+// aprimoramentos da conjuração, o "ou rolei" de cada parcela, e o Rolar, que espera a vez como o grupo.
+templ spellActionSheetDs(v View, group actionGroup, sheet spellActionSheet) {
+	@sheetDialog(v, sheet.Dialog, sheet.Title, spellActionSheetFoot(v, group, sheet)) {
+		@handRollLines(sheet.Lines)
+	}
+}
+
+templ spellActionSheetFoot(v View, group actionGroup, sheet spellActionSheet) {
+	@ds.Button(ds.ButtonPrimary, rollAttrs(v, group, sheet.Roll, templ.Attributes{
+		"aria-label": "Rolar " + sheet.Title, "commandfor": sheet.Dialog, "command": "close",
+		"data-on:click": rollCommand(v, sheet.Roll, ""),
 	})) {
 		Rolar
 	}

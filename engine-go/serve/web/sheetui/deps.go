@@ -62,6 +62,11 @@ type Deps interface {
 	// porta. Fora de uma cena de ação nenhuma das duas cobra nem recusa.
 	ActionFitsOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error
 	SpendActionOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost) error
+	// SpellActionFitsOnTurn e SpendSpellActionOnTurn são as duas acima para a ação da magia (ver GLOSSARY, **ação
+	// da magia**), que também pode ser "uma vez por turno": a marca `onceKey` já gasta na vez recusa com
+	// `refusal`, e gastar registra a marca junto da ação. Marca vazia é o par de cima.
+	SpellActionFitsOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost, onceKey, refusal string) error
+	SpendSpellActionOnTurn(ctx context.Context, characterID int64, cost engine.ActionCost, onceKey, refusal string) error
 	// PublishSkillTest põe um teste rolado na MESA onde este personagem está
 	// (p220-221), e entra na porta pela mesma razão das duas acima: a ficha sabe
 	// QUAL perícia e QUAL foi a conta, e quem sabe em que sessão o personagem
