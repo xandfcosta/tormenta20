@@ -25,10 +25,14 @@ type PowerAugmentOnTheSheet struct {
 }
 
 // powerLock é o cadeado do poder nesta magia, vazio quando ele se aplica: a marca "apenas divinos" que a ficha
-// não cumpre, como no aprimoramento da magia, e depois o que a magia não tem (`book.PowerAugmentBar`).
+// não cumpre, como no aprimoramento da magia, o ritual ligado no poder que muda a execução (p131, p171), e
+// depois o que a magia não tem (`book.PowerAugmentBar`).
 func (s SpellOnTheSheet) powerLock(power book.PowerAugment) string {
 	if !s.CastsAs(power.Augment.ClassOnly) {
 		return "apenas " + power.Augment.ClassOnly
+	}
+	if s.ritual && power.Augment.Execution != "" {
+		return "não combina com o ritual"
 	}
 	return book.PowerAugmentBar(power.PowerID, s.Spell)
 }
@@ -66,15 +70,16 @@ func (s SpellOnTheSheet) powerAugmentPrice(spellPicks []AugmentPick, picks []Pow
 		if augment.Augment.Kind == "muda" && pick.Stacks > 1 {
 			return 0, fmt.Sprintf("%s muda a magia, e mudança não se acumula", augment.Name)
 		}
-		if lock := s.PowerAugments[at].Lock; lock != "" {
-			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, lock)
-		}
 		// "Mudanças na mesma característica da magia nunca se acumulam" (p171): o poder que muda a execução — a
 		// Acelerada, a Prece de Combate — não se junta ao ritual, a outro poder que a muda, nem ao aprimoramento
 		// da magia que a muda.
 		changesExecution := augment.Augment.Execution != ""
 		if changesExecution && s.ritual {
 			return 0, fmt.Sprintf("o ritual e %s mudam a execução, e mudança não se acumula", augment.Name)
+		}
+		// O CADEADO depois do ritual: a recusa diz "o ritual e a Acelerada", e não só "não combina".
+		if lock := s.PowerAugments[at].Lock; lock != "" {
+			return 0, fmt.Sprintf("%s nesta magia: %s", augment.Name, lock)
 		}
 		if changesExecution && executionChanger != "" {
 			return 0, fmt.Sprintf("%s e %s mudam a execução, e mudança não se acumula", executionChanger, augment.Name)
