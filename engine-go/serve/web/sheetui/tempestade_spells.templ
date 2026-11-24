@@ -141,6 +141,18 @@ templ spellSheet(v View, spell learnedSpellRow) {
 				}
 			}
 		}
+		for _, roll := range spell.Rolls {
+			<div class="ds-sum-line">
+				<span class="ds-help">Rola <b>{ roll.Written }</b></span>
+				<span class="ds-sum-line flex-nowrap">
+					<span class="ds-row-meta">ou rolei</span>
+					<input class="ds-input ds-table-die" type="number" min="1" inputmode="numeric" placeholder="total" data-bind={ roll.Signal } aria-label={ roll.Label }/>
+				</span>
+			</div>
+			if roll.Note != "" {
+				<p class="ds-help">{ roll.Note }</p>
+			}
+		}
 		<p class="ds-help">Custo <b data-text={ costPreview(spell) }></b> · { "você tem " + strconv.FormatInt(v.Spells.PmCurrent, 10) + " PM" }</p>
 		if v.Spells.Ritual {
 			<p class="ds-help" data-text={ ritualBillPreview(spell) }></p>

@@ -52,3 +52,17 @@ func TestTheSpellRollTheTableRolledByHand(t *testing.T) {
 		t.Errorf("os 40 na mão foram recusados com %q, gastando %d PM", refusal, spent)
 	}
 }
+
+// A FOLHA DA MAGIA diz o dado que ela rola, parcela por parcela, com o campo do total rolado na mão ligado ao
+// sinal da parcela: a Coluna de Chamas rola 6d6 de fogo e 6d6 de luz.
+func TestTheSpellSheetSaysWhatItRollsAndTakesTheTablesTotal(t *testing.T) {
+	f := newSceneFixture(t)
+	learn(t, f, f.charID, "bola-de-fogo")
+	page := spellScreen(t, f, f.charID)
+	if !strings.Contains(page, "6d6 de fogo") {
+		t.Error("a folha da Bola de Fogo não diz que rola 6d6 de fogo")
+	}
+	if !strings.Contains(page, `data-bind="spell_hand_1"`) {
+		t.Error("a folha da Bola de Fogo não tem o campo do total rolado na mão")
+	}
+}
