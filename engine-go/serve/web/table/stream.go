@@ -348,6 +348,7 @@ func TableRegions(v View) []tableRegion {
 			{"table-attack", gmAttack(v)},
 			{"table-skill-test", tempestadeSkillTest(v)},
 			{"table-blast", tempestadeBlast(v)},
+			{"table-spell-cast", tempestadeSpellCast(v)},
 			// O ESTANDARTE nasce com a cena e encolhe a cada aliado que o mestre toca.
 			{"table-banner", gmBanner(v)},
 			{"table-tracker", gmQueue(v)},
@@ -373,6 +374,7 @@ func TableRegions(v View) []tableRegion {
 		{"table-attack", tempestadeAttack(v)},
 		{"table-skill-test", tempestadeSkillTest(v)},
 		{"table-blast", tempestadeBlast(v)},
+		{"table-spell-cast", tempestadeSpellCast(v)},
 		{"table-turn-target", tempestadeTargetBar(v)},
 		{"table-register", tempestadeRegister(v)},
 		{"table-party", tempestadeParty(v)},

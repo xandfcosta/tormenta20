@@ -46,7 +46,7 @@ func TestTheEndlessStripStartsNowAndMarksEveryNewRound(t *testing.T) {
 }
 
 // O STREAM DA SESSÃO DO JOGADOR manda só o que ela desenha: o cabeçalho, o
-// cartão do ataque, a barra de alvo das Ações, as três peças da Mesa e o
+// cartão do ataque, as faixas que informam uma rolagem, a barra de alvo das Ações, as três peças da Mesa e o
 // Tabuleiro. A lista e a página não podem
 // discordar sobre quais regiões existem — um remendo para um id que não está
 // na página é escrever no vazio.
@@ -56,7 +56,7 @@ func TestTheParallelSessionStreamsOnlyWhatItDraws(t *testing.T) {
 	for _, r := range regions {
 		ids = append(ids, r.ID)
 	}
-	want := []string{"table-header", "table-attack", "table-skill-test", "table-blast", "table-turn-target", "table-register", "table-party", "table-tracker", "table-board"}
+	want := []string{"table-header", "table-attack", "table-skill-test", "table-blast", "table-spell-cast", "table-turn-target", "table-register", "table-party", "table-tracker", "table-board"}
 	if strings.Join(ids, ",") != strings.Join(want, ",") {
 		t.Errorf("a sessão do jogador recebe as regiões %v; queria %v", ids, want)
 	}
