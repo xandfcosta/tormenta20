@@ -4,10 +4,12 @@ import (
 	"slices"
 
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 )
 
-// A ESCOLHA DOS APRIMORAMENTOS vista pelo conjurador: o que cada um apaga ao ser ligado. A folha monta os
-// gestos por aqui, e o `AugmentPrice` recusa pela mesma regra — um aprimoramento novo entra num lugar só.
+// A ESCOLHA DOS APRIMORAMENTOS vista pelo conjurador: o que cada um apaga ao ser ligado, e a execução que a
+// conjuração cobra do turno com as escolhas feitas. A folha monta os gestos por aqui e a cena cobra o turno por
+// aqui, e o `AugmentPrice` recusa pela mesma regra — um aprimoramento novo entra num lugar só.
 
 // AugmentKey identifica um aprimoramento na folha da magia: o da própria magia pelo índice, o poder que é
 // aprimoramento (p131) pelo id. Monte-a com `SpellAugmentKey` ou `PowerAugmentKey`.
@@ -61,4 +63,25 @@ func (s SpellOnTheSheet) Clears(key AugmentKey) []AugmentKey {
 		clears = slices.Concat(exclusive, quickened)
 	}
 	return slices.DeleteFunc(slices.Clone(clears), func(k AugmentKey) bool { return k == key })
+}
+
+// Execution é a execução que a conjuração cobra do turno com estas escolhas: a longa do ritual (p131), a ação
+// livre da Magia Acelerada (p131), a que o aprimoramento escolhido dá (`book.SpellAugment.Execution`), ou a da
+// magia. Quem cobra é a cena, ANTES de conjurar; a combinação que o livro recusa (o ritual com a Acelerada,
+// duas mudanças de execução) é recusada pelo `AugmentPrice` logo depois, sem gastar nada.
+//
+//	sheet.CasterOf(dto).Spell("armamento-da-natureza").Execution(movimento, nil) // engine.ActionMovement
+func (s SpellOnTheSheet) Execution(picks []AugmentPick, powerPicks []PowerAugmentPick) engine.ActionCost {
+	if s.ritual {
+		return engine.ActionLong
+	}
+	if slices.ContainsFunc(powerPicks, func(p PowerAugmentPick) bool { return p.PowerID == book.QuickenedSpellPower }) {
+		return engine.ActionFree
+	}
+	for _, p := range picks {
+		if p.AugmentIndex >= 0 && p.AugmentIndex < len(s.Spell.Augments) && s.Spell.Augments[p.AugmentIndex].Execution != "" {
+			return engine.ActionCost(s.Spell.Augments[p.AugmentIndex].Execution)
+		}
+	}
+	return engine.ActionCost(s.Spell.Execution)
 }

@@ -6,9 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"t20engine/app/character"
 	"t20engine/domain/book"
-	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -47,12 +45,13 @@ func toggleMemorized(s Scene, r *http.Request, row sqlcgen.Character, _ Signals)
 // pedido.
 func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals Signals) error {
 	spellID := chi.URLParam(r, "magia")
-	spell, known := book.SpellByID(spellID)
-	if !known {
+	if _, known := book.SpellByID(spellID); !known {
 		return fmt.Errorf("a magia %q não existe no livro", spellID)
 	}
-	// A HORA É PERGUNTADA ANTES e a ação é cobrada DEPOIS. A execução da magia
-	// diz o que ela custa do turno (p233), e a conjuração ainda pode ser
+	// A HORA É PERGUNTADA ANTES e a ação é cobrada DEPOIS. A execução da
+	// conjuração — a da magia, a do aprimoramento escolhido, a da Acelerada ou a
+	// do ritual, respondida pelo conjurador — diz o que ela custa do turno
+	// (p233), e a conjuração ainda pode ser
 	// recusada pelo grimório, pela memorização ou pelo PM — cobrar antes tiraria
 	// a padrão de alguém por uma magia que nunca saiu.
 	powerAugments := signals.powerAugments()
@@ -60,8 +59,9 @@ func castSpellFromSheet(s Scene, r *http.Request, row sqlcgen.Character, signals
 	if err != nil {
 		return err
 	}
-	ritual := sheet.CasterOf(dto).CastsAsRitual()
-	cost := engine.ActionCost(character.CastExecution(spell.Execution, ritual, powerAugments))
+	caster := sheet.CasterOf(dto)
+	ritual := caster.CastsAsRitual()
+	cost := caster.Spell(spellID).Execution(signals.augments(), powerAugments)
 	if err := s.deps.ActionFitsOnTurn(r.Context(), row.ID, cost); err != nil {
 		if ritual {
 			return fmt.Errorf("como ritual, a magia leva 1 hora (p131), e ela não cabe numa cena de ação: desligue o Celebrar Ritual para conjurá-la na vez")

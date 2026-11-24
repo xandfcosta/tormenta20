@@ -226,20 +226,3 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 	}
 	return nil
 }
-
-// CastExecution é a execução que esta conjuração cobra do turno: a da magia, a ação livre da Magia
-// Acelerada, ou a hora do ritual (p131).
-//
-// Quem chama pergunta ANTES de conjurar, e um pedido sem o poder na ficha só passa
-// por aqui para ser recusado pelo `Cast` logo em seguida, sem gastar nada.
-func CastExecution(execution string, ritual bool, powerAugments []sheet.PowerAugmentPick) string {
-	if ritual {
-		return string(engine.ActionLong)
-	}
-	for _, pick := range powerAugments {
-		if pick.PowerID == book.QuickenedSpellPower {
-			return string(engine.ActionFree)
-		}
-	}
-	return execution
-}

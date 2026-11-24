@@ -154,3 +154,18 @@ func TestAnUnconsciousCharacterCannotReact(t *testing.T) {
 		t.Errorf("a recusa diz %q, e quem lê precisa saber que é a inconsciência tirando a reação", refusal)
 	}
 }
+
+// O APRIMORAMENTO QUE MUDA A EXECUÇÃO muda o que o turno cobra: a Armadura Arcana é padrão, e o aprimoramento
+// 0 a faz reação (p181), que "pode ocorrer mesmo fora do seu turno" (p233).
+func TestTheAugmentThatChangesTheExecutionChangesWhatTheTurnCharges(t *testing.T) {
+	f := newSceneFixture(t)
+	startCombatWithSomeoneElseOnTurn(t, f)
+	if refusal := sceneRefusal(learnAndCast(t, f, "armadura-arcana").Body); !strings.Contains(refusal, "não é a sua vez") {
+		t.Fatalf("o controle falhou: a Armadura Arcana padrão fora da vez deu %q", refusal)
+	}
+	castURL := fmt.Sprintf("/personagens/%d/magias/conjura/armadura-arcana?tab=spells", f.charID)
+	rec := f.requests(t, f.player, http.MethodPost, castURL, `{"augment0":1}`)
+	if refusal := sceneRefusal(rec.Body.String()); refusal != "" {
+		t.Errorf("a Armadura Arcana como reação foi recusada fora da vez: %q", refusal)
+	}
+}
