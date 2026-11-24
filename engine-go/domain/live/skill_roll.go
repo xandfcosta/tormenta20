@@ -73,12 +73,12 @@ type SkillTestPaid struct {
 	PM    int    `json:"pm"`
 }
 
-// RecordSkillTest guarda o teste rolado, substituindo o anterior.
+// recordIn guarda o teste rolado no lugar do anterior.
 //
 // SEM VALIDAÇÃO DE FILA, ao contrário do `ProposeAttack`: quem rola um teste não
 // precisa estar em combate, e exigir linha na fila proibiria o teste de
 // Percepção que abre a cena.
-func RecordSkillTest(st *SessionRuntimeState, roll SkillTestRoll) error {
+func (roll SkillTestRoll) recordIn(st *SessionRuntimeState) error {
 	st.LastSkillTest = &roll
 	return nil
 }

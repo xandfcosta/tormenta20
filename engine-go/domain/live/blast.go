@@ -34,9 +34,9 @@ type BlastRoll struct {
 	ByUserID    int64  `json:"byUserId"`
 }
 
-// RecordBlast guarda o disparo, substituindo o anterior. O alvo tem de estar na fila: a bola de fogo é
-// "contra um alvo", e a faixa o nomeia.
-func RecordBlast(st *SessionRuntimeState, blast BlastRoll) error {
+// recordIn guarda o disparo no lugar do anterior. O alvo tem de estar na fila: a bola de fogo é "contra um
+// alvo", e a faixa o nomeia.
+func (blast BlastRoll) recordIn(st *SessionRuntimeState) error {
 	if FindEntryIndex(st, blast.TargetEntryID) < 0 {
 		return fmt.Errorf("o alvo %q não está na fila", blast.TargetEntryID)
 	}

@@ -89,12 +89,7 @@ func (h sheetHost) PublishSkillTest(
 	for _, spent := range test.Spends {
 		roll.Spends = append(roll.Spends, live.SkillTestPaid{Name: spent.Name, Bonus: spent.Bonus, PM: spent.PM})
 	}
-	for _, sessionID := range h.liveSessionsOf(ctx, characterID) {
-		if _, err := h.rules.sessions.RecordSkillTest(ctx, sessionID, roll); err != nil {
-			return err
-		}
-	}
-	return nil
+	return h.publishRoll(ctx, characterID, roll)
 }
 
 // PublishSpellCast põe a magia conjurada na mesa onde este personagem está, com o nome de quem conjurou, pela
@@ -114,8 +109,14 @@ func (h sheetHost) PublishSpellCast(ctx context.Context, characterID int64, cast
 			Dice: part.Dice, Kind: part.Kind, Note: part.Note, Rolls: part.Rolls, Total: part.Total, ByHand: part.ByHand,
 		})
 	}
+	return h.publishRoll(ctx, characterID, roll)
+}
+
+// publishRoll põe a rolagem informada em cada sessão em curso das mesas deste personagem (ver GLOSSARY,
+// **rolagem informada**). Sem sessão não faz nada, e não é erro: ver `liveSessionsOf`.
+func (h sheetHost) publishRoll(ctx context.Context, characterID int64, roll live.InformedRoll) error {
 	for _, sessionID := range h.liveSessionsOf(ctx, characterID) {
-		if _, err := h.rules.sessions.RecordSpellCast(ctx, sessionID, roll); err != nil {
+		if _, err := h.rules.sessions.RecordRoll(ctx, sessionID, roll); err != nil {
 			return err
 		}
 	}

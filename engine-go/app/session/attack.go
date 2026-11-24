@@ -14,7 +14,8 @@ import (
 // gesto de combate. O que as junta a ele é o mesmo estado de sessão, e não o
 // mesmo assunto. O pagamento da proposta mora em `attack_payment.go`.
 
-// RecordSkillTest guarda o teste rolado para a mesa ver (p220-221).
+// RecordRoll guarda uma rolagem que a mesa só informa — o teste (p220-221), o disparo do encanto ou a magia
+// conjurada (ver GLOSSARY, **rolagem informada**) — no lugar da última do mesmo tipo.
 //
 // Ele mora neste arquivo e não num irmão porque é a MESMA pergunta que as
 // mutações do ataque respondem — "o que a mesa acabou de rolar?" —, e a
@@ -23,40 +24,14 @@ import (
 // O EVENTO é o do ataque rolado, e isso é deliberado: o que ele diz à mesa é
 // "alguém rolou um dado, redesenhe", e inventar um segundo evento para a mesma
 // frase faria todo ouvinte assinar os dois.
-func (st *Store) RecordSkillTest(
-	ctx context.Context, sessionID int64, roll live.SkillTestRoll,
+//
+// O disparo que COBRA (a vez, a ação e o PM) não passa por aqui, e sim pelo `FireBlast`, que grava na mesma
+// transação da cobrança.
+func (st *Store) RecordRoll(
+	ctx context.Context, sessionID int64, roll live.InformedRoll,
 ) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { return live.RecordSkillTest(s, roll) })
-}
-
-// RecordSpellCast guarda a magia conjurada com o dado dela para a mesa ver (ver GLOSSARY, **dado da magia**), pelo
-// evento do ataque rolado, pela razão do `RecordSkillTest`: "alguém rolou um dado, redesenhe".
-func (st *Store) RecordSpellCast(
-	ctx context.Context, sessionID int64, cast live.SpellCastRoll,
-) (*live.SessionRuntimeState, error) {
-	return st.apply(ctx, sessionID, events.AttackRolled{SessionID: sessionID},
-		func(s *live.SessionRuntimeState) error { live.RecordSpellCast(s, cast); return nil })
-}
-
-// PublishCharacterSkillTest põe o teste na mesa onde este personagem está.
-//
-// AS SESSÕES VIVAS e não "a cena de ação", que é a diferença para o
-// `CharacterActionFits` logo abaixo: aquele só cobra turno DENTRO de uma cena
-// que conta rodadas, e um teste acontece o tempo todo — a Percepção que abre a
-// cena é rolada antes de haver cena.
-//
-// SEM SESSÃO NÃO É ERRO: a ficha aberta sozinha rola e mostra o número a quem
-// está olhando; o que não existe é mesa para onde publicar.
-func (st *Store) PublishCharacterSkillTest(
-	ctx context.Context, characterID int64, roll live.SkillTestRoll,
-) error {
-	for _, sessionID := range st.LiveSessionsWithCharacter(ctx, characterID) {
-		if _, err := st.RecordSkillTest(ctx, sessionID, roll); err != nil {
-			return err
-		}
-	}
-	return nil
+		func(s *live.SessionRuntimeState) error { return live.RecordRoll(s, roll) })
 }
 
 // CommitAttack aplica o dano do provisório e o tira da mesa.

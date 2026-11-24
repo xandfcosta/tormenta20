@@ -370,9 +370,11 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	// depende de QUEM OLHA — só quem rolou vê os botões de rolar de novo —, e o
 	// construtor puro não recebe o usuário.
 	view.Attack = s.attackProposalFor(st, userID, role, campaignID, sessionID, sheets)
-	view.SkillTest = s.skillTestBandFor(st, userID, campaignID, sessionID, sheets)
-	view.Blast = blastBandOf(st)
-	view.SpellCast = spellCastBandOf(st)
+	view.Rolls = [informedRollKindCount]*rollBand{
+		skillTestRoll: s.skillTestBandFor(st, userID, campaignID, sessionID, sheets),
+		blastRoll:     blastBandOf(st),
+		spellCastRoll: spellCastBandOf(st),
+	}
 	view.Status = sess.Status
 	if sess.Title.Valid {
 		view.Title = sess.Title.String
@@ -459,8 +461,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		r := ofViewGm(st, members, present, true)
 		r.DamageTaken = damageTakenOf(sheets, onTable)
-		if view.Blast != nil {
-			view.Blast.Taken = r.DamageTaken[view.Blast.TargetCharacterID]
+		if blast := view.Rolls[blastRoll]; blast != nil {
+			blast.Taken = r.DamageTaken[blast.TargetCharacterID]
 		}
 		view.GM = &r
 		view.Display = s.displays.StateOf(sessionID)

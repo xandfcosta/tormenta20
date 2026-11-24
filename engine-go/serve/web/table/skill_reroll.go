@@ -64,7 +64,7 @@ func rerollsSkillTest(st Scene, c commandCtx) (*live.SessionRuntimeState, error)
 	if err != nil {
 		return nil, err
 	}
-	recorded, err := st.deps.Sessions().RecordSkillTest(ctx, c.SessionID, rolled)
+	recorded, err := st.deps.Sessions().RecordRoll(ctx, c.SessionID, rolled)
 	if err == nil {
 		// O "Eu rolei" ZERA depois de valer: o próximo teste rolado na mão abria com
 		// este número já escrito. Na recusa ele fica, para quem digitou não o perder.
@@ -97,7 +97,7 @@ func rerollDie(c commandCtx) (*int, error) {
 // OLHA, quando é ele quem rolou.
 func (s Scene) skillTestBandFor(
 	st *live.SessionRuntimeState, userID, campaignID, sessionID int64, sheets *tableSheets,
-) *skillTestBand {
+) *rollBand {
 	band := skillTestBandOf(st)
 	if band == nil || st.LastSkillTest.ByUserID != userID || st.LastSkillTest.CharacterID == 0 {
 		return band

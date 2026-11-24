@@ -16,6 +16,7 @@ var gmRegionNames = []string{
 	"table-attack",
 	"table-skill-test",
 	"table-blast",
+	"table-spell-cast",
 	"table-banner",
 	"table-tracker",
 	"table-commands",
