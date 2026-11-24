@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 6 de 15 de `Spells` (spells.go).
+// Parte 6 de 17 de `Spells` (spells.go).
 var spellsPart06 = []Spell{
 	{
 		ID:         "compreensao",

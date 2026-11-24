@@ -81,6 +81,11 @@ type SpellAugment struct {
 	Adds           []SpellRoll `json:"adds"`
 	Rolls          []SpellRoll `json:"rolls"`
 	ChangesTheRoll bool        `json:"changesTheRoll"`
+	// Actions são as ações que o aprimoramento dá a quem conjurou, e Charges quantas vezes, nil e zero no resto:
+	// os quatro dardos de lava da Lança Ígnea (p196), que valem "em vez do efeito normal" — a conjuração com
+	// ele não rola nada, e cada dardo rola o dado dela. Ver GLOSSARY, **ação da magia**.
+	Actions *SpellActions `json:"actions"`
+	Charges int           `json:"charges"`
 }
 
 // SpellRoll é uma parcela do dado que a magia rola ao ser conjurada: "6d6" de fogo, "2d8+2" de cura.
@@ -145,6 +150,8 @@ type Spell struct {
 	// TurnRoll é o dado da vez, nil na magia que não rola nada de novo na vez de quem conjurou (ver GLOSSARY,
 	// **dado da vez**).
 	TurnRoll *SpellTurnRoll `json:"turnRoll"`
+	// Actions são as ações da magia em vigor, nil na que não dá nenhuma (ver GLOSSARY, **ação da magia**).
+	Actions *SpellActions `json:"actions"`
 }
 
 // SpellTurnRoll é o dado que a magia rola de novo na vez de quem a conjurou, enquanto ela dura: o Ferver Sangue
@@ -164,6 +171,32 @@ type SpellTurnRoll struct {
 type SpellTurnVersion struct {
 	Name  string      `json:"name"`
 	Rolls []SpellRoll `json:"rolls"`
+}
+
+// SpellActions são as ações que a magia em vigor dá a quem a conjurou (ver GLOSSARY, **ação da magia**): o
+// Esmagar da Mão Poderosa de Talude (p198), as rajadas do Relâmpago Flamejante de Reynard (p204), as tempestades
+// da Fúria do Panteão (p194). Os aprimoramentos escolhidos ao conjurar valem sobre o dado delas como valem sobre
+// o da conjuração.
+type SpellActions struct {
+	// OncePerTurn é o "uma vez por turno" do livro, que vale para a magia inteira e não para cada opção.
+	OncePerTurn bool          `json:"oncePerTurn"`
+	Options     []SpellAction `json:"options"`
+}
+
+// SpellAction é uma opção: o nome, a ação que ela custa na grafia do turno (`engine.ActionCost`) e o dado.
+type SpellAction struct {
+	Name   string      `json:"name"`
+	Action string      `json:"action"`
+	Rolls  []SpellRoll `json:"rolls"`
+	// CastRoll diz que a opção rola o dado da conjuração, e não um dela: o dardo da Lança Ígnea causa "o efeito
+	// normal da magia".
+	CastRoll bool `json:"castRoll"`
+	// Save é a resistência escrita da opção, quando ela tem uma própria (as tempestades da Fúria); vazia, vale a
+	// da magia. Note é o que o dado não diz: a área, quem é atingido, a condição.
+	Save string `json:"save"`
+	Note string `json:"note"`
+	// Ends diz que a opção termina a magia: a energia mista do Relâmpago "consome toda a energia da magia".
+	Ends bool `json:"ends"`
 }
 
 // TurnRollAt escreve o momento do dado da vez como a mesa o lê: "início do turno", "fim do turno".

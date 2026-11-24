@@ -9,10 +9,11 @@ import (
 // spellForRollSweep é o que a varredura do dado da magia precisa: o efeito, o dado declarado e os
 // aprimoramentos.
 type spellForRollSweep struct {
-	Name       string          `json:"name"`
-	Duration   string          `json:"duration"`
-	BaseEffect string          `json:"baseEffect"`
-	Rolls      []spellRollSeen `json:"rolls"`
+	Name       string            `json:"name"`
+	Duration   string            `json:"duration"`
+	BaseEffect string            `json:"baseEffect"`
+	Rolls      []spellRollSeen   `json:"rolls"`
+	Actions    *spellActionsSeen `json:"actions"`
 	TurnRoll   *struct {
 		At       string `json:"at"`
 		Versions []struct {
@@ -21,11 +22,23 @@ type spellForRollSweep struct {
 		} `json:"versions"`
 	} `json:"turnRoll"`
 	Augments []struct {
-		Description    string          `json:"description"`
-		Adds           []spellRollSeen `json:"adds"`
-		Rolls          []spellRollSeen `json:"rolls"`
-		ChangesTheRoll bool            `json:"changesTheRoll"`
+		Description    string            `json:"description"`
+		Adds           []spellRollSeen   `json:"adds"`
+		Rolls          []spellRollSeen   `json:"rolls"`
+		ChangesTheRoll bool              `json:"changesTheRoll"`
+		Actions        *spellActionsSeen `json:"actions"`
+		Charges        int               `json:"charges"`
 	} `json:"augments"`
+}
+
+type spellActionsSeen struct {
+	OncePerTurn bool `json:"oncePerTurn"`
+	Options     []struct {
+		Name     string          `json:"name"`
+		Action   string          `json:"action"`
+		Rolls    []spellRollSeen `json:"rolls"`
+		CastRoll bool            `json:"castRoll"`
+	} `json:"options"`
 }
 
 type spellRollSeen struct {
@@ -62,9 +75,9 @@ var noCastingRoll = map[string]string{
 	"assassino-fantasmagorico":        "o dano é do espectro, depois",
 	"controlar-a-gravidade":           "o dano é da queda, depois",
 	"forma-eterea":                    "o dano é de materializar em espaço ocupado, depois",
-	"mao-poderosa-de-talude":          "o dano é do esmagar, uma ação depois",
-	"relampago-flamejante-de-reynard": "o dano é das rajadas, uma ação depois",
-	"furia-do-panteao":                "o dano é da ação escolhida a cada turno",
+	"mao-poderosa-de-talude":          actionRollOnly,
+	"relampago-flamejante-de-reynard": actionRollOnly,
+	"furia-do-panteao":                actionRollOnly,
 	"enxame-de-pestes":                turnRollOnly,
 	"enxame-rubro-de-ichabod":         turnRollOnly,
 	"circulo-da-restauracao":          "a cura é no fim do turno de quem está no círculo",
@@ -82,6 +95,10 @@ var noCastingRoll = map[string]string{
 // turnRollOnly é o motivo da magia cujo dado é só o da vez de quem conjurou (ver GLOSSARY, **dado da vez**): ela
 // declara o `TurnRoll`, e a varredura confere.
 const turnRollOnly = "o dado é o da vez de quem conjurou"
+
+// actionRollOnly é o motivo da magia cujo dado é só o das ações dela em vigor (ver GLOSSARY, **ação da magia**):
+// ela declara `Actions`, e a varredura confere.
+const actionRollOnly = "o dado é o das ações da magia em vigor"
 
 // augmentDiceNotTheCastRoll são os aprimoramentos com dado na prosa, de magias que rolam na conjuração, cujo
 // dado não é o da conjuração.
@@ -123,8 +140,11 @@ func TestEverySpellSaysWhatItRollsWhenCast(t *testing.T) {
 		if (reason == turnRollOnly) != (m.TurnRoll != nil && len(m.Rolls) == 0) {
 			t.Errorf("%s (%s): o motivo %q e o dado da vez não concordam: a magia que só rola na vez declara `TurnRoll` e tem este motivo", m.Name, id, reason)
 		}
-		// O aprimoramento mexe no dado da conjuração E no da vez (`SpellOnTheSheet.TurnRoll`).
-		rolls := len(m.Rolls) > 0 || m.TurnRoll != nil
+		if (reason == actionRollOnly) != (m.Actions != nil && len(m.Rolls) == 0) {
+			t.Errorf("%s (%s): o motivo %q e as ações da magia não concordam: a magia que só rola nas ações declara `Actions` e tem este motivo", m.Name, id, reason)
+		}
+		// O aprimoramento mexe no dado da conjuração, no da vez (`SpellOnTheSheet.TurnRoll`) e no das ações.
+		rolls := len(m.Rolls) > 0 || m.TurnRoll != nil || m.Actions != nil
 		for i, a := range m.Augments {
 			key := fmt.Sprintf("%s[%d]", id, i)
 			declares := len(a.Adds) > 0 || len(a.Rolls) > 0 || a.ChangesTheRoll
@@ -198,5 +218,62 @@ func TestEveryTurnRollSaysWhenAndWhatItRolls(t *testing.T) {
 	}
 	if turning == 0 {
 		t.Fatal("nenhuma magia declara o dado da vez: a varredura não mediu nada")
+	}
+}
+
+// TestEverySpellActionSaysWhatItCostsAndRolls confere a forma das ações da magia (ver GLOSSARY, **ação da magia**):
+// toda opção custa uma ação do turno e rola um dado — o dela, ou o da conjuração —, os nomes não se repetem, e o
+// aprimoramento que dá ações diz quantas vezes. A magia com ações próprias é sustentada: é a linha em vigor dela
+// que as oferece.
+func TestEverySpellActionSaysWhatItCostsAndRolls(t *testing.T) {
+	spells := decodeResource[map[string]spellForRollSweep](t, "spells")
+	acting := 0
+	check := func(where string, actions *spellActionsSeen, castRolls int) {
+		acting++
+		if len(actions.Options) == 0 {
+			t.Errorf("%s: as ações não têm opção nenhuma", where)
+		}
+		named := map[string]bool{}
+		for _, o := range actions.Options {
+			switch o.Action {
+			case "padrao", "movimento", "livre", "completa":
+			default:
+				t.Errorf("%s, %q: a ação %q não é uma do turno (padrao, movimento, livre, completa)", where, o.Name, o.Action)
+			}
+			if o.Name == "" || named[o.Name] {
+				t.Errorf("%s: a opção %q não tem nome ou o repete", where, o.Name)
+			}
+			named[o.Name] = true
+			if o.CastRoll == (len(o.Rolls) > 0) {
+				t.Errorf("%s, %q: a opção rola o dado dela OU o da conjuração, e não os dois nem nenhum", where, o.Name)
+			}
+			if o.CastRoll && castRolls == 0 {
+				t.Errorf("%s, %q: a opção rola o dado da conjuração, e a magia não rola nada ao ser conjurada", where, o.Name)
+			}
+			for _, r := range o.Rolls {
+				if !diceShape.MatchString(r.Dice) {
+					t.Errorf("%s, %q: o dado %q não tem a forma NdM ou NdM+K", where, o.Name, r.Dice)
+				}
+			}
+		}
+	}
+	for id, m := range spells {
+		if m.Actions != nil {
+			if m.Duration != "sustentada" {
+				t.Errorf("%s (%s) tem ações e dura %q: a linha em vigor que as oferece é a da sustentada", m.Name, id, m.Duration)
+			}
+			check(fmt.Sprintf("%s (%s)", m.Name, id), m.Actions, len(m.Rolls))
+		}
+		for i, a := range m.Augments {
+			if (a.Actions != nil) != (a.Charges > 0) {
+				t.Errorf("%s (%s) aprimoramento %d: as ações (%v) e as cargas (%d) andam juntas", m.Name, id, i, a.Actions != nil, a.Charges)
+			}
+			if a.Actions != nil {
+				check(fmt.Sprintf("%s (%s) aprimoramento %d", m.Name, id, i), a.Actions, len(m.Rolls))
+			}
+		}
+	}
+	if acting == 0 {
+		t.Fatal("nenhuma magia declara ações: a varredura não mediu nada")
 	}
 }

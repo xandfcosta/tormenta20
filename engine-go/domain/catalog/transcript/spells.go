@@ -18,4 +18,6 @@ var Spells = concat(
 	spellsPart13,
 	spellsPart14,
 	spellsPart15,
+	spellsPart16,
+	spellsPart17,
 )

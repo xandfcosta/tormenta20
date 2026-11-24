@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 7 de 15 de `Spells` (spells.go).
+// Parte 7 de 17 de `Spells` (spells.go).
 var spellsPart07 = []Spell{
 	{
 		ID:         "controlar-terra",
