@@ -33,14 +33,13 @@ func toggleBookCondition(s Scene, r *http.Request, row sqlcgen.Character, _ Sign
 	return nil
 }
 
-// applySpellBuff aplica uma magia de bônus como efeito de cena ou dia.
+// applySpellBuff aplica o bônus de uma magia, na duração que a linha do escolhedor trouxe no endereço (vazia é a
+// do verbete).
 //
-// A gravação é a do caso de uso (`character.Plays.ApplySpellBuff`): duas
-// escritas divergiriam no dia em que uma regra nova chegasse, e o escopo padrão
-// de cada magia vive no catálogo, não aqui.
+// A gravação é a do caso de uso (`character.Plays.ApplySpellBuff`), que também recusa a duração que a magia não
+// tem: o endereço se escreve à mão.
 func applySpellBuff(s Scene, r *http.Request, row sqlcgen.Character, _ Signals) error {
-	_, err := s.plays.ApplySpellBuff(r.Context(), row.ID, chi.URLParam(r, "magia"), nil)
-	return err
+	return s.plays.ApplySpellBuff(r.Context(), row.ID, chi.URLParam(r, "magia"), r.URL.Query().Get("duracao"))
 }
 
 // endAppliedEffect encerra um efeito em curso.

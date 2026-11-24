@@ -753,7 +753,7 @@ func effectPickerRows(v View, id, title, route string, options []pickerOption) t
 					}
 					return nil
 				})
-				templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": title + ": " + o.Label, "commandfor": id, "command": "close", "data-on:click": sheetPost(v, route+o.Command)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": pickerRowName(title, o), "commandfor": id, "command": "close", "data-on:click": pickerRowCommand(v, route, o)}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var30), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

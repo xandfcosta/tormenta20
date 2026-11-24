@@ -1,6 +1,8 @@
 package sheetui
 
 import (
+	"fmt"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -101,6 +103,24 @@ func pickerOptionsShown(options []pickerOption, query, circle string) []pickerOp
 		shown = append(shown, o)
 	}
 	return shown
+}
+
+// pickerRowName é o nome acessível do Aplicar de uma linha do escolhedor; a duração que o aprimoramento dá vai
+// junto, porque a magia tem outra linha com o mesmo nome.
+func pickerRowName(title string, o pickerOption) string {
+	if o.Duration == "" {
+		return title + ": " + o.Label
+	}
+	return title + ": " + o.Label + " · " + o.Duration
+}
+
+// pickerRowCommand é o `@post` do Aplicar de uma linha do escolhedor. A duração vai depois da aba, porque o
+// `commandRoute` já abre a query.
+func pickerRowCommand(v View, route string, o pickerOption) string {
+	if o.Duration == "" {
+		return sheetPost(v, route+o.Command)
+	}
+	return fmt.Sprintf("@post('%s&duracao=%s')", commandRoute(v, route+o.Command), url.QueryEscape(o.Duration))
 }
 
 // buffCircleOptions são as opções do filtro do escolhedor de magia: "Todos" e

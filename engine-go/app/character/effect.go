@@ -4,47 +4,51 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"t20engine/domain/book"
+	"slices"
+	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
 	"t20engine/infra/db/sqlcgen"
 )
 
-// ApplySpellBuff liga o efeito de uma magia de melhoria.
+// ApplySpellBuff grava o bônus de uma magia na ficha de quem o recebe, pela escrita do efeito da magia
+// (`writeSpellEffect`; ver GLOSSARY, **efeito da magia**).
 //
-// A magia tem de CARREGAR um bloco de melhoria; o escopo vem dela e o chamador
-// só o sobrescreve quando quer. A gravação é a mesma para as duas entradas que
-// existiram — a rota JSON, que morreu, e a aba Efeitos da ficha —, e é isso que
-// mantém uma resposta só para "esta magia deixa efeito?".
+// A DURAÇÃO é a escolhida entre as que o bônus pode ter (`sheet.BuffDurations`): a do verbete, quando vem vazia, ou
+// a que o aprimoramento deu à conjuração, como a Velocidade de cena. Quem aplica não sustenta nada — a manutenção e
+// o limite de uma sustentada são de quem conjurou —, e por isso aqui não há recusa da segunda sustentada.
 //
-// Quem aplica não sustenta nada: a manutenção e o limite de uma sustentada são de quem conjurou
-// (`sheet.EffectDTO.Sustaining`), e por isso aqui não há recusa da segunda sustentada.
-func (p Plays) ApplySpellBuff(
-	ctx context.Context, characterID int64, spellID string, duration *string,
-) (sheet.EffectDTO, error) {
+//	p.ApplySpellBuff(ctx, characterID, "velocidade", "cena")
+func (p Plays) ApplySpellBuff(ctx context.Context, characterID int64, spellID, duration string) error {
 	spell, known := book.SpellByID(spellID)
 	if !known || spell.Buff == nil {
-		return sheet.EffectDTO{}, fmt.Errorf("a magia %q não deixa efeito para aplicar", spellID)
+		return fmt.Errorf("a magia %q não deixa efeito para aplicar", spellID)
 	}
-	// QUEM DIZ QUANTO O EFEITO DURA É A MAGIA, e o chamador só sobrescreve
-	// quando quer (o aprimoramento que "muda a duração para um dia", p227).
-	scope, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
+	durations, err := sheet.BuffDurations(spell)
 	if err != nil {
-		return sheet.EffectDTO{}, fmt.Errorf("a magia %q: %w", spellID, err)
+		return err
 	}
-	if duration != nil {
-		scope = *duration
+	scope := durations[0]
+	if duration != "" {
+		asked, err := engine.ParseDuration(duration)
+		if err != nil || !slices.Contains(durations, asked.Stored()) {
+			labels := make([]string, 0, len(durations))
+			for _, d := range durations {
+				labels = append(labels, engine.DurationLabel(d))
+			}
+			return fmt.Errorf("%s não dura %q: o bônus dela dura %s", spell.Name, duration, strings.Join(labels, " ou "))
+		}
+		scope = asked.Stored()
 	}
-	eff, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
-		Characterid: characterID, Source: "spell", Catalogid: spellID, Scope: scope,
-		Modifiers: string(spell.Buff.Modifiers), Createdat: dbvalue.NowISO(),
-	})
-	if err != nil {
-		return sheet.EffectDTO{}, fmt.Errorf("gravar o efeito de %q na ficha %d: %w", spellID, characterID, err)
+	if _, err := writeSpellEffect(ctx, p.queries, characterID, spellID, spellEffectWrite{
+		Scope: scope, Modifiers: string(spell.Buff.Modifiers),
+	}); err != nil {
+		return err
 	}
-	return effectFrom(eff), nil
+	return nil
 }
 
 // ApplyTempHpPool liga uma reserva de PV temporários.

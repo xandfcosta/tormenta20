@@ -63,6 +63,9 @@ type pickerOption struct {
 	Command string
 	// Circle é o círculo da magia ("2º"), para o filtro; a condição não tem.
 	Circle string
+	// Duration é a duração que o aprimoramento dá ao bônus da magia ("cena"), vazia na do verbete: ela vai no
+	// endereço do Aplicar e no nome acessível da linha, que senão repetiria o da outra.
+	Duration string
 }
 
 type stanceRow struct {
@@ -278,7 +281,8 @@ func modifierRowsOf(raw string) []breakdownRow {
 	return rows
 }
 
-// buffOptions são as magias com efeito aplicável.
+// buffOptions são as magias com efeito aplicável, uma linha por duração que o bônus pode ter
+// (`sheet.BuffDurations`): a do verbete, e a que o aprimoramento dá, que leva a duração no endereço.
 func buffOptions() []pickerOption {
 	options := []pickerOption{}
 	for _, m := range book.Catalogs().Spells {
@@ -289,7 +293,7 @@ func buffOptions() []pickerOption {
 		// A DURAÇÃO DA MAGIA MANDA, aqui como na gravação. Ler o
 		// `defaultScope` cru mostrava a SEGUNDA transcrição — a que divergia em
 		// oito magias, e que o Escudo da Fé deixou de ter (ALE-365).
-		scope, err := engine.EffectScope(spell.Duration, spell.DurationNote, spell.Buff.DefaultScope)
+		durations, err := sheet.BuffDurations(spell)
 		if err != nil {
 			// Magia cujo efeito não sabe quando acaba não é aplicável: some da
 			// lista em vez de virar uma opção que falha ao clicar. Que ela não
@@ -299,10 +303,20 @@ func buffOptions() []pickerOption {
 		options = append(options, pickerOption{
 			ID:      m.ID,
 			Label:   m.Name,
-			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(scope),
+			Detail:  circleLabel(m.Circle) + " · " + scopeLabel(durations[0]),
 			Command: m.ID,
 			Circle:  circleName(m.Circle),
 		})
+		for _, augmented := range durations[1:] {
+			options = append(options, pickerOption{
+				ID:       m.ID + "-" + augmented,
+				Label:    m.Name,
+				Detail:   circleLabel(m.Circle) + " · " + scopeLabel(augmented) + ", com o aprimoramento",
+				Command:  m.ID,
+				Circle:   circleName(m.Circle),
+				Duration: engine.DurationLabel(augmented),
+			})
+		}
 	}
 	return options
 }

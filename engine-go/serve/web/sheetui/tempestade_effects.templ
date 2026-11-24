@@ -161,7 +161,7 @@ templ effectPickerRows(v View, id, title, route string, options []pickerOption) 
 					<div class="ds-row-title">{ o.Label }</div>
 					<div class="ds-pick-detail">{ o.Detail }</div>
 				</div>
-				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": title + ": " + o.Label, "commandfor": id, "command": "close", "data-on:click": sheetPost(v, route+o.Command)}) {
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": pickerRowName(title, o), "commandfor": id, "command": "close", "data-on:click": pickerRowCommand(v, route, o)}) {
 					Aplicar
 				}
 			</div>

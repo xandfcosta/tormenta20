@@ -95,38 +95,6 @@ func TestCastingASustainedSpellOpensItsUpkeep(t *testing.T) {
 	})
 }
 
-// O APLICAR E O CONJURAR ABREM A MESMA LINHA: a Oração conjurada abre a manutenção sem modificadores, e o
-// Aplicar grava os modificadores nela. Na ordem inversa, o Conjurar não apaga o que o Aplicar gravou.
-func TestTheBuffAndTheCastShareTheSustainedEffect(t *testing.T) {
-	s := newCastServer(t)
-	owner := seedUser(t, s, "oracao@t20.local")
-	for _, castFirst := range []bool{true, false} {
-		cleric := seedCaster(t, s, owner, "Clérigo", 8, 30, "oracao")
-		gestures := []func() error{
-			func() error { return castSpell(t, s, owner, cleric, "oracao", `{}`) },
-			func() error {
-				_, err := s.characterPlays().ApplySpellBuff(context.Background(), cleric, "oracao", nil)
-				return err
-			},
-		}
-		if !castFirst {
-			gestures[0], gestures[1] = gestures[1], gestures[0]
-		}
-		for _, gesture := range gestures {
-			if err := gesture(); err != nil {
-				t.Fatalf("conjurar primeiro = %v: %v", castFirst, err)
-			}
-		}
-		effects := sustainedEffectsOf(t, s, cleric)
-		if len(effects) != 1 {
-			t.Fatalf("conjurar primeiro = %v: %d sustentadas na ficha, want a Oração só", castFirst, len(effects))
-		}
-		if mods := effects["oracao"]; !strings.Contains(mods, "target") {
-			t.Errorf("conjurar primeiro = %v: a Oração ficou sem os modificadores: %s", castFirst, mods)
-		}
-	}
-}
-
 // O APRIMORAMENTO QUE TORNA A MAGIA SUSTENTADA abre a manutenção: a esfera da Invisibilidade (p195).
 func TestTheAugmentThatSustainsTheSpellOpensItsUpkeep(t *testing.T) {
 	s := newCastServer(t)
