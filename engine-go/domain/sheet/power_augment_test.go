@@ -18,7 +18,7 @@ func TestTheSpellListsThePowerAugmentsTheSheetHas(t *testing.T) {
 	listed := CasterOf(arcanist).Spell("queda-suave").PowerAugments
 	var names []string
 	for _, p := range listed {
-		names = append(names, p.Augment.Name)
+		names = append(names, p.Power.Name)
 	}
 	if strings.Join(names, ", ") != "Magia Acelerada, Magia Discreta" {
 		t.Fatalf("a magia lista %v; want os dois poderes que a ficha tem, sem a Ampliada", names)

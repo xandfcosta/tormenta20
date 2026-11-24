@@ -140,7 +140,7 @@ func (s Scene) spellbookPanelOf(dto sheet.CharacterDTO, search, circle, school s
 		IsCaster:     len(casterClassesOf(dto)) > 0,
 		Memorization: memorizationOf(dto),
 		PmCurrent:    dto.MpCurrent,
-		Ritual:       character.CastsAsRitual(dto),
+		Ritual:       sheet.CasterOf(dto).CastsAsRitual(),
 		Search:       search,
 		Circle:       circle,
 		School:       school,

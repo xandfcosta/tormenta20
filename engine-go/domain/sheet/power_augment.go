@@ -20,8 +20,8 @@ var RitualSwitch = engine.FlagGroupID("ritual")
 // ele se aplica: "só em execução de movimento, padrão ou completa" na Acelerada de uma reação. O trancado
 // aparece em vez de sumir, como o aprimoramento de círculo alto.
 type PowerAugmentOnTheSheet struct {
-	Augment book.PowerAugment
-	Lock    string
+	Power book.PowerAugment
+	Lock  string
 }
 
 // ownedPowerAugments são os poderes que são aprimoramento e que a ficha tem, na ordem do livro.
@@ -47,7 +47,7 @@ func (s SpellOnTheSheet) powerAugmentPrice(spellPicks []AugmentPick, picks []Pow
 		if !known {
 			return 0, fmt.Sprintf("o poder %q não é aprimoramento de magia", pick.PowerID)
 		}
-		at := slices.IndexFunc(s.PowerAugments, func(p PowerAugmentOnTheSheet) bool { return p.Augment.PowerID == pick.PowerID })
+		at := slices.IndexFunc(s.PowerAugments, func(p PowerAugmentOnTheSheet) bool { return p.Power.PowerID == pick.PowerID })
 		if at < 0 {
 			return 0, fmt.Sprintf("esta ficha não tem %s", augment.Name)
 		}

@@ -42,6 +42,11 @@ type Caster struct {
 	ritual        bool
 }
 
+// CastsAsRitual diz se a próxima magia desta ficha é ritual: o interruptor do Celebrar Ritual (p131) ligado.
+func (c Caster) CastsAsRitual() bool {
+	return c.ritual
+}
+
 type casterClass struct {
 	name  string
 	level int64
@@ -155,7 +160,7 @@ func (c Caster) Spell(spellID string) SpellOnTheSheet {
 	out := SpellOnTheSheet{Known: true, Spell: spell, Casting: []string{}, ritual: c.ritual}
 	for _, power := range c.powerAugments {
 		out.PowerAugments = append(out.PowerAugments, PowerAugmentOnTheSheet{
-			Augment: power, Lock: book.PowerAugmentBar(power.PowerID, spell),
+			Power: power, Lock: book.PowerAugmentBar(power.PowerID, spell),
 		})
 	}
 	var casting []casterClass

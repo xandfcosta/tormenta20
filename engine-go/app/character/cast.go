@@ -227,11 +227,6 @@ func findSpell(spells []sheet.SpellDTO, catalogSpellID string) *sheet.SpellDTO {
 	return nil
 }
 
-// CastsAsRitual diz se a próxima magia desta ficha é ritual.
-func CastsAsRitual(dto sheet.CharacterDTO) bool {
-	return sheet.ToStringSet(dto.Conditionals)[sheet.RitualSwitch]
-}
-
 // CastExecution é a execução que esta conjuração cobra do turno: a da magia, a ação livre da Magia
 // Acelerada, ou a hora do ritual (p131).
 //

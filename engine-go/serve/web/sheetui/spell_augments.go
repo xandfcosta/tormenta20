@@ -58,9 +58,9 @@ func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow
 	}
 	for _, power := range onSheet.PowerAugments {
 		rows = append(rows, augmentRow{
-			Signal: powerAugmentSignals[power.Augment.PowerID], PM: power.Augment.Augment.PmCost,
-			Stacks:      power.Augment.Augment.Kind != "muda",
-			Description: power.Augment.Name + ": " + power.Augment.Augment.Description,
+			Signal: powerAugmentSignals[power.Power.PowerID], PM: power.Power.Augment.PmCost,
+			Stacks:      power.Power.Augment.Kind != "muda",
+			Description: power.Power.Name + ": " + power.Power.Augment.Description,
 			Locked:      power.Lock != "", LockNote: power.Lock,
 		})
 	}
