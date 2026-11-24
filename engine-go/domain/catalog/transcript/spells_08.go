@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 8 de 14 de `Spells` (spells.go).
+// Parte 8 de 15 de `Spells` (spells.go).
 var spellsPart08 = []Spell{
 	{
 		ID:         "engenho-de-mana",
@@ -117,6 +117,7 @@ var spellsPart08 = []Spell{
 				PMCost:      3,
 				Kind:        "aumenta",
 				Description: "Aumenta o dano de frio em +2d6 e o dano de corte em +2d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "frio"}, {Dice: "2d6", Kind: "corte"}},
 			},
 			{
 				PMCost:         4,
@@ -124,10 +125,12 @@ var spellsPart08 = []Spell{
 				Description:    "Muda área para cilindro 6m raio × 6m altura, duração para sustentada. Tempestade de granizo: 3d6 impacto + 3d6 frio em todas as criaturas (sem resistência) + camuflagem leve + piso escorregadio (terreno difícil, Acrobacia equilíbrio).",
 				RequiresCircle: 4,
 				Sustains:       ptr(true),
+				ChangesTheRoll: true,
 			},
 		},
 		BookPage: 192,
 		UID:      "spl_yiatgnalvl",
+		Rolls:    []SpellRoll{{Dice: "4d6", Kind: "corte", Note: "quem passa evita"}, {Dice: "4d6", Kind: "frio"}},
 	},
 	{
 		ID:         "esculpir-sons",
@@ -225,11 +228,17 @@ var spellsPart08 = []Spell{
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Sangue do alvo (1 criatura) ferve. No lançamento e no início de cada turno do conjurador: 4d8 fogo + enjoado 1 rodada (Fortitude metade + evita condição). 2 Fortitude seguidos passados = dissipa. Reduzido a 0 PV = corpo explode, 6d6 fogo em 3m (Reflexos metade). Não afeta sem sangue (construtos/mortos-vivos).",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d8."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d8.",
+				Adds:        []SpellRoll{{Dice: "1d8", Kind: "fogo"}},
+			},
 			{PMCost: 9, Kind: "muda", Description: "Muda alvo para criaturas escolhidas.", RequiresCircle: 5},
 		},
 		BookPage: 193,
 		UID:      "spl_nk5ethmdmz",
+		Rolls:    []SpellRoll{{Dice: "4d8", Kind: "fogo", Note: "no lançamento e no início de cada turno seu"}},
 	},
 	{
 		ID:         "fisico-divino",
@@ -279,10 +288,18 @@ var spellsPart08 = []Spell{
 				Description: "Além do normal, armadura/escudo do alvo corroídos: -1 Defesa permanente do item (conserto restaura, ver Ofício p121).",
 			},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta a redução na Defesa em +1."},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano inicial e o dano por rodada em +1d6."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano inicial e o dano por rodada em +1d6.",
+				Adds:        []SpellRoll{{Dice: "1d6", Kind: "ácido"}},
+			},
 		},
 		BookPage: 193,
 		UID:      "spl_6muy3sdqri",
+		Rolls: []SpellRoll{
+			{Dice: "4d6", Kind: "ácido", Note: "quem falha sofre mais 2d6 no início dos 2 próximos turnos"},
+		},
 	},
 	{
 		ID:         "forma-eterea",

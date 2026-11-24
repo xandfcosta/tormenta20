@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 12 de 14 de `Spells` (spells.go).
+// Parte 12 de 15 de `Spells` (spells.go).
 var spellsPart12 = []Spell{
 	{
 		ID:         "raio-do-enfraquecimento",
@@ -50,7 +50,12 @@ var spellsPart12 = []Spell{
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Raio azul-esbranquiçado em 1 criatura: 10d8 frio + preso em bloco de gelo (paralisado). Sucesso = metade dano + lento 1 rodada. Bloco: 20 PV, RD 10, vulnerável a fogo. Presa: ação completa + Atletismo — sucesso causa 10 dano ao bloco (ignora RD).",
 		Augments: []SpellAugment{
-			{PMCost: 3, Kind: "aumenta", Description: "Aumenta o dano em +2d8."},
+			{
+				PMCost:      3,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +2d8.",
+				Adds:        []SpellRoll{{Dice: "2d8", Kind: "frio"}},
+			},
 			{
 				PMCost:      5,
 				Kind:        "muda",
@@ -59,6 +64,7 @@ var spellsPart12 = []Spell{
 		},
 		BookPage: 203,
 		UID:      "spl_xrdavl32zj",
+		Rolls:    []SpellRoll{{Dice: "10d8", Kind: "frio"}},
 	},
 	{
 		ID:         "raio-solar",
@@ -82,17 +88,28 @@ var spellsPart12 = []Spell{
 				Exclusive:   true,
 				Cantrip:     true,
 			},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta dano ou cura em +1d8 (+1d12 em mortos-vivos)."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta dano ou cura em +1d8 (+1d12 em mortos-vivos).",
+				Adds:        []SpellRoll{{Dice: "1d8", Kind: "luz", Note: "+1d12 em mortos-vivos"}, {Dice: "1d8", Kind: "cura"}},
+			},
 			{
 				PMCost:      3,
 				Kind:        "muda",
 				Description: "Criaturas vivas na área curam 4d8 PV; restante sofre dano normalmente.",
+				Rolls: []SpellRoll{
+					{Dice: "4d8", Kind: "cura", Note: "as criaturas vivas"},
+					{Dice: "4d8", Kind: "luz", Note: "as outras; 4d12 em mortos-vivos"},
+				},
+				ChangesTheRoll: true,
 			},
 			{PMCost: 3, Kind: "aumenta", Description: "Falha na resistência = cegas 1d4 rodadas."},
 		},
 		BookPage:       203,
 		UID:            "spl_74qef7sk4q",
 		ResistanceNote: "Reflexos (veja texto)",
+		Rolls:          []SpellRoll{{Dice: "4d8", Kind: "luz", Note: "4d12 em mortos-vivos"}},
 	},
 	{
 		ID:         "reanimacao-impura",

@@ -71,6 +71,23 @@ type SpellAugment struct {
 	// cena de ação não cabe. É o que a conjuração cobra do turno e o que a Magia Acelerada apaga (p171); quem
 	// prende a marca ao texto é o `TestEveryAugmentThatChangesTheExecutionSaysWhichOne`.
 	Execution string `json:"execution"`
+	// Adds é o dado que o aprimoramento que AUMENTA soma, por repetição, à parcela do mesmo tipo do dado da
+	// magia ("Aumenta o dano em +2d6"); o tipo que nenhuma parcela tem vira parcela própria. Rolls é o dado que
+	// o que MUDA põe no lugar do da magia, e ChangesTheRoll diz que ele o muda — sem Rolls, o novo dado é do
+	// texto, e a conjuração não o rola. Ver GLOSSARY, **dado da magia**.
+	Adds           []SpellRoll `json:"adds"`
+	Rolls          []SpellRoll `json:"rolls"`
+	ChangesTheRoll bool        `json:"changesTheRoll"`
+}
+
+// SpellRoll é uma parcela do dado que a magia rola ao ser conjurada: "6d6" de fogo, "2d8+2" de cura.
+//
+// Kind é o tipo do dano ("fogo", "luz"), ou "cura", ou "PV temporários"; vazio quando o livro não diz o tipo,
+// que não é adivinhado. Note é a condição que o texto põe e o dado não diz: "4d12 em mortos-vivos".
+type SpellRoll struct {
+	Dice string `json:"dice"`
+	Kind string `json:"kind"`
+	Note string `json:"note"`
 }
 
 // SpellBuff é o efeito em curso que a magia aplica: os modificadores, crus, para gravarem byte a byte como o
@@ -118,6 +135,10 @@ type Spell struct {
 	BookPage       int            `json:"bookPage"`
 	// Buff é o efeito em curso que a magia aplica, nil na que não aplica nenhum.
 	Buff *SpellBuff `json:"buff"`
+	// Rolls é o dado que a magia rola AO SER CONJURADA, em parcelas: a Coluna de Chamas tem 6d6 de fogo e 6d6 de
+	// luz. Vazio na que não rola nada na conjuração — o `TestEverySpellSaysWhatItRollsWhenCast` diz por quê de
+	// cada uma.
+	Rolls []SpellRoll `json:"rolls"`
 }
 
 // Power é o poder ACHATADO. O livro espalha poder por três catálogos —

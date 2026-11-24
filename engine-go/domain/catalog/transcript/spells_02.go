@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 2 de 14 de `Spells` (spells.go).
+// Parte 2 de 15 de `Spells` (spells.go).
 var spellsPart02 = []Spell{
 	{
 		ID:         "toque-vampirico",
@@ -22,16 +22,23 @@ var spellsPart02 = []Spell{
 				Kind:        "muda",
 				Description: "Vira ataque corpo a corpo; soma dano do ataque + magia; cura metade do dano da magia.",
 			},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +2d6."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +2d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "trevas"}},
+			},
 			{
 				PMCost:         2,
 				Kind:           "muda",
 				Description:    "Alcance pessoal, duração cena; uma vez por rodada toca 1 criatura para 3d6 trevas.",
 				RequiresCircle: 3,
+				ChangesTheRoll: true,
 			},
 		},
 		BookPage: 209,
 		UID:      "spl_7sco4irtcg",
+		Rolls:    []SpellRoll{{Dice: "6d6", Kind: "trevas", Note: "você recupera PV iguais à metade do dano"}},
 	},
 	{
 		ID:         "relampago",
@@ -48,7 +55,12 @@ var spellsPart02 = []Spell{
 		Classes:    []string{"Arcanista"},
 		BaseEffect: "Raio em linha de 30m causa 6d6 de dano de eletricidade em todas as criaturas e objetos.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +2d6."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +2d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "eletricidade"}},
+			},
 			{
 				PMCost:         3,
 				Kind:           "muda",
@@ -58,6 +70,7 @@ var spellsPart02 = []Spell{
 		},
 		BookPage: 203,
 		UID:      "spl_rmgozorike",
+		Rolls:    []SpellRoll{{Dice: "6d6", Kind: "eletricidade"}},
 	},
 	{
 		ID:         "metamorfose",
@@ -421,7 +434,12 @@ var spellsPart02 = []Spell{
 				Exclusive:   true,
 				Cantrip:     true,
 			},
-			{PMCost: 1, Kind: "aumenta", Description: "Aumenta o dano em +1d6."},
+			{
+				PMCost:      1,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d6.",
+				Adds:        []SpellRoll{{Dice: "1d6", Kind: "fogo"}},
+			},
 			{
 				PMCost:      1,
 				Kind:        "muda",
@@ -430,5 +448,6 @@ var spellsPart02 = []Spell{
 		},
 		BookPage: 193,
 		UID:      "spl_s4p34leuf4",
+		Rolls:    []SpellRoll{{Dice: "2d6", Kind: "fogo"}},
 	},
 }

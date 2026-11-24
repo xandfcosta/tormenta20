@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 7 de 14 de `Spells` (spells.go).
+// Parte 7 de 15 de `Spells` (spells.go).
 var spellsPart07 = []Spell{
 	{
 		ID:         "controlar-terra",
@@ -78,11 +78,17 @@ var spellsPart07 = []Spell{
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Crânio envolto em energia negativa: 4d8+4 dano trevas + som horrendo (abalado no alvo e inimigos em 3m; já abalados = apavorados 1d4 rodadas). Sucesso: metade dano, sem condição.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d8+1."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d8+1.",
+				Adds:        []SpellRoll{{Dice: "1d8+1", Kind: "trevas"}},
+			},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o número de alvos em +1."},
 		},
 		BookPage: 188,
 		UID:      "spl_accoe5oqu3",
+		Rolls:    []SpellRoll{{Dice: "4d8+4", Kind: "trevas"}},
 	},
 	{
 		ID:         "criar-elementos",
@@ -236,10 +242,12 @@ var spellsPart07 = []Spell{
 				PMCost:      4,
 				Kind:        "aumenta",
 				Description: "Aumenta o dano total em +2d12 e o dano mínimo em +1d12.",
+				Adds:        []SpellRoll{{Dice: "2d12", Kind: "essência", Note: "e +1d12 em quem passa"}},
 			},
 		},
 		BookPage: 190,
 		UID:      "spl_d337rvusiy",
+		Rolls:    []SpellRoll{{Dice: "10d12", Kind: "essência", Note: "quem passa sofre 2d12"}},
 	},
 	{
 		ID:         "despedacar",
@@ -256,7 +264,12 @@ var spellsPart07 = []Spell{
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Som agudo em 1 criatura ou objeto mundano Pequeno: 1d8+2 impacto (dobro + ignora RD contra construto/objeto mundano) + atordoado 1 rodada (uma vez por cena). Fortitude reduz metade + evita atordoamento. Anula Transmutar Objetos.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d8+2."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d8+2.",
+				Adds:        []SpellRoll{{Dice: "1d8+2", Kind: "impacto"}},
+			},
 			{PMCost: 2, Kind: "muda", Description: "Muda o alvo para objeto mundano Médio.", RequiresCircle: 2},
 			{PMCost: 5, Kind: "muda", Description: "Muda o alvo para objeto mundano Grande.", RequiresCircle: 3},
 			{PMCost: 9, Kind: "muda", Description: "Muda o alvo para objeto mundano Enorme.", RequiresCircle: 4},
@@ -274,6 +287,7 @@ var spellsPart07 = []Spell{
 		},
 		BookPage: 190,
 		UID:      "spl_jmpk3dqtrg",
+		Rolls:    []SpellRoll{{Dice: "1d8+2", Kind: "impacto", Note: "o dobro contra construto ou objeto mundano"}},
 	},
 	{
 		ID:         "despertar-consciencia",

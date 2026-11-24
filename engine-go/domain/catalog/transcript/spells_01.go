@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 1 de 14 de `Spells` (spells.go).
+// Parte 1 de 15 de `Spells` (spells.go).
 var spellsPart01 = []Spell{
 	{
 		ID:         "luz",
@@ -166,19 +166,27 @@ var spellsPart01 = []Spell{
 		BaseEffect: "Canaliza luz que recupera 2d8+2 PV no alvo. Anula Infligir Ferimentos.",
 		Augments: []SpellAugment{
 			{
-				PMCost:      0,
-				Kind:        "muda",
-				Description: "Truque: muda o alvo para um morto-vivo; em vez de curar, causa 1d8 de dano de luz (Vontade reduz à metade).",
-				Exclusive:   true,
-				Cantrip:     true,
+				PMCost:         0,
+				Kind:           "muda",
+				Description:    "Truque: muda o alvo para um morto-vivo; em vez de curar, causa 1d8 de dano de luz (Vontade reduz à metade).",
+				Exclusive:      true,
+				Cantrip:        true,
+				Rolls:          []SpellRoll{{Dice: "1d8", Kind: "luz", Note: "no morto-vivo; Vontade reduz à metade"}},
+				ChangesTheRoll: true,
 			},
-			{PMCost: 1, Kind: "aumenta", Description: "Aumenta a cura em +1d8+1."},
+			{
+				PMCost:      1,
+				Kind:        "aumenta",
+				Description: "Aumenta a cura em +1d8+1.",
+				Adds:        []SpellRoll{{Dice: "1d8+1", Kind: "cura"}},
+			},
 			{PMCost: 2, Kind: "aumenta", Description: "Também remove uma condição de cansaço do alvo."},
 			{PMCost: 2, Kind: "muda", Description: "Muda alcance para curto."},
 			{PMCost: 5, Kind: "muda", Description: "Alcance curto e alvo para criaturas escolhidas."},
 		},
 		BookPage: 189,
 		UID:      "spl_atv6vk346b",
+		Rolls:    []SpellRoll{{Dice: "2d8+2", Kind: "cura"}},
 	},
 	{
 		ID:         "enfeiticar",
@@ -377,11 +385,18 @@ var spellsPart01 = []Spell{
 		Classes:    []string{"Arcanista"},
 		BaseEffect: "Explosão de 6d6 de dano de fogo em todas as criaturas e objetos numa esfera de 6m de raio.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +2d6."},
 			{
 				PMCost:      2,
-				Kind:        "muda",
-				Description: "Cria esfera flamejante Média de 1,5m que causa 3d6 dano de fogo; pode voar 9m com ação de movimento.",
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +2d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "fogo"}},
+			},
+			{
+				PMCost:         2,
+				Kind:           "muda",
+				Description:    "Cria esfera flamejante Média de 1,5m que causa 3d6 dano de fogo; pode voar 9m com ação de movimento.",
+				Rolls:          []SpellRoll{{Dice: "3d6", Kind: "fogo", Note: "a esfera flamejante"}},
+				ChangesTheRoll: true,
 			},
 			{
 				PMCost:      3,
@@ -391,6 +406,7 @@ var spellsPart01 = []Spell{
 		},
 		BookPage: 182,
 		UID:      "spl_o3s2zc5lms",
+		Rolls:    []SpellRoll{{Dice: "6d6", Kind: "fogo"}},
 	},
 	{
 		ID:         "invisibilidade",

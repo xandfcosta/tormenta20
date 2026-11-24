@@ -26,6 +26,15 @@ type Spell struct {
 	ExecutionNote  string `json:"executionNote,omitempty"`
 	RangeNote      string `json:"rangeNote,omitempty"`
 	ResistanceNote string `json:"resistanceNote,omitempty"`
+	// Rolls é o dado que a magia rola ao ser conjurada — ver `book.Spell.Rolls`.
+	Rolls []SpellRoll `json:"rolls,omitempty"`
+}
+
+// SpellRoll é uma parcela do dado da magia — ver `book.SpellRoll`.
+type SpellRoll struct {
+	Dice string `json:"dice"`
+	Kind string `json:"kind,omitempty"`
+	Note string `json:"note,omitempty"`
 }
 
 type SpellAugment struct {
@@ -38,6 +47,10 @@ type SpellAugment struct {
 	Cantrip        bool   `json:"truque,omitempty"`
 	Sustains       *bool  `json:"sustains,omitempty"`
 	Execution      string `json:"execution,omitempty"`
+	// Adds, Rolls e ChangesTheRoll são o que o aprimoramento faz com o dado da magia — ver `book.SpellAugment`.
+	Adds           []SpellRoll `json:"adds,omitempty"`
+	Rolls          []SpellRoll `json:"rolls,omitempty"`
+	ChangesTheRoll bool        `json:"changesTheRoll,omitempty"`
 }
 
 type SpellBuff struct {
