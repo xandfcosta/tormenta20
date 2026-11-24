@@ -121,36 +121,8 @@ func Load(
 		})
 	}
 
-	effects, err := q.ListActiveEffectsByCharacter(ctx, c.ID)
-	if err != nil {
+	if dto.ActiveEffects, err = LoadActiveEffects(ctx, q, c.ID); err != nil {
 		return dto, err
-	}
-	castAugments, err := q.ListEffectCastAugmentsByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	picksOf := make(map[int64][]AugmentPick, len(castAugments))
-	for _, row := range castAugments {
-		var picks []AugmentPick
-		if err := json.Unmarshal([]byte(row.Augments), &picks); err != nil {
-			return dto, fmt.Errorf("ler os aprimoramentos da conjuração do efeito %d: %w", row.Effectid, err)
-		}
-		picksOf[row.Effectid] = picks
-	}
-	charges, err := q.ListEffectChargesByCharacter(ctx, c.ID)
-	if err != nil {
-		return dto, err
-	}
-	chargesOf := make(map[int64]int, len(charges))
-	for _, row := range charges {
-		chargesOf[row.Effectid] = int(row.Remaining)
-	}
-	for _, ef := range effects {
-		dto.ActiveEffects = append(dto.ActiveEffects, EffectDTO{
-			ID: ef.ID, CatalogID: ef.Catalogid, Scope: ef.Scope,
-			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat, CastAugments: picksOf[ef.ID],
-			Charges: chargesOf[ef.ID],
-		})
 	}
 
 	spells, err := q.ListSpellsByCharacter(ctx, c.ID)
@@ -405,4 +377,44 @@ func (c overlayChoices) add(itemID int64, enchant string, choice sql.NullString)
 		c[itemID] = map[string]string{}
 	}
 	c[itemID][enchant] = choice.String
+}
+
+// LoadActiveEffects são as linhas em vigor da ficha, por id, com o que pende de cada uma: a conjuração que a abriu
+// e as cargas (ver GLOSSARY, **efeito da magia**). A ficha montada e a manutenção da mesa leem por aqui, para a
+// pergunta "esta ficha sustenta a linha?" (`EffectDTO.Sustaining`) ter uma resposta só.
+func LoadActiveEffects(ctx context.Context, q *sqlcgen.Queries, characterID int64) ([]EffectDTO, error) {
+	effects, err := q.ListActiveEffectsByCharacter(ctx, characterID)
+	if err != nil {
+		return nil, err
+	}
+	castAugments, err := q.ListEffectCastAugmentsByCharacter(ctx, characterID)
+	if err != nil {
+		return nil, err
+	}
+	picksOf := make(map[int64][]AugmentPick, len(castAugments))
+	for _, row := range castAugments {
+		picks := []AugmentPick{}
+		if err := json.Unmarshal([]byte(row.Augments), &picks); err != nil {
+			return nil, fmt.Errorf("ler os aprimoramentos da conjuração do efeito %d: %w", row.Effectid, err)
+		}
+		picksOf[row.Effectid] = picks
+	}
+	charges, err := q.ListEffectChargesByCharacter(ctx, characterID)
+	if err != nil {
+		return nil, err
+	}
+	chargesOf := make(map[int64]int, len(charges))
+	for _, row := range charges {
+		chargesOf[row.Effectid] = int(row.Remaining)
+	}
+	var out []EffectDTO
+	for _, ef := range effects {
+		picks, cast := picksOf[ef.ID]
+		out = append(out, EffectDTO{
+			ID: ef.ID, Source: ef.Source, CatalogID: ef.Catalogid, Scope: ef.Scope,
+			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat, CastHere: cast, CastAugments: picks,
+			Charges: chargesOf[ef.ID],
+		})
+	}
+	return out, nil
 }

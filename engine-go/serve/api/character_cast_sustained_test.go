@@ -151,11 +151,18 @@ func TestTheAugmentThatSustainsTheSpellOpensItsUpkeep(t *testing.T) {
 // A magia que não é sustentada fica de pé.
 func TestTheSecondSustainedSpellLocksTheCastOnBothTabs(t *testing.T) {
 	f := newSceneFixture(t)
-	if _, err := f.s.queries.UpsertActiveEffect(context.Background(), sqlcgen.UpsertActiveEffectParams{
+	// A Tempestade Divina que ESTA ficha conjurou: a marca da conjuração é o que a faz sustentada por ela.
+	storm, err := f.s.queries.UpsertActiveEffect(context.Background(), sqlcgen.UpsertActiveEffectParams{
 		Characterid: f.charID, Source: "spell", Catalogid: "tempestade-divina", Scope: "sustained",
 		Modifiers: "[]", Createdat: dbvalue.NowISO(),
-	}); err != nil {
+	})
+	if err != nil {
 		t.Fatalf("pôr a Tempestade Divina de pé: %v", err)
+	}
+	if err := f.s.queries.SaveEffectCastAugments(context.Background(), sqlcgen.SaveEffectCastAugmentsParams{
+		Effectid: storm.ID, Augments: "[]",
+	}); err != nil {
+		t.Fatalf("marcar a Tempestade Divina como conjurada aqui: %v", err)
 	}
 	for _, spell := range []string{"velocidade", "explosao-de-chamas"} {
 		learn(t, f, f.charID, spell)

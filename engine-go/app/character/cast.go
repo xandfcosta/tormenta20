@@ -210,10 +210,8 @@ func (p Plays) Cast(
 		if err != nil {
 			return SpellCast{}, err
 		}
-		if turns || acts {
-			if err := saveCastAugments(ctx, q, effectID, augments); err != nil {
-				return SpellCast{}, err
-			}
+		if err := saveCastAugments(ctx, q, effectID, augments); err != nil {
+			return SpellCast{}, err
 		}
 		if charges > 0 {
 			if err := q.SetEffectCharges(ctx, sqlcgen.SetEffectChargesParams{Effectid: effectID, Remaining: int64(charges)}); err != nil {
@@ -254,8 +252,9 @@ func openCastEffect(ctx context.Context, q *sqlcgen.Queries, characterID int64, 
 	return opened.ID, nil
 }
 
-// saveCastAugments grava, junto da linha em vigor, os aprimoramentos da conjuração que o dado da vez usa; a
-// conjuração de novo, com a magia em vigor, os troca pelos dela.
+// saveCastAugments grava, junto da linha em vigor, os aprimoramentos da conjuração: é a marca de que esta ficha
+// sustenta a linha (`sheet.EffectDTO.Sustaining`), e o que o dado da vez e a ação da magia usam. A conjuração de
+// novo, com a magia em vigor, os troca pelos dela.
 func saveCastAugments(ctx context.Context, q *sqlcgen.Queries, effectID int64, augments []sheet.AugmentPick) error {
 	if augments == nil {
 		augments = []sheet.AugmentPick{}

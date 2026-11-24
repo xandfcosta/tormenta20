@@ -3,7 +3,6 @@ package character
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"t20engine/domain/book"
 
@@ -19,6 +18,9 @@ import (
 // só o sobrescreve quando quer. A gravação é a mesma para as duas entradas que
 // existiram — a rota JSON, que morreu, e a aba Efeitos da ficha —, e é isso que
 // mantém uma resposta só para "esta magia deixa efeito?".
+//
+// Quem aplica não sustenta nada: a manutenção e o limite de uma sustentada são de quem conjurou
+// (`sheet.EffectDTO.Sustaining`), e por isso aqui não há recusa da segunda sustentada.
 func (p Plays) ApplySpellBuff(
 	ctx context.Context, characterID int64, spellID string, duration *string,
 ) (sheet.EffectDTO, error) {
@@ -34,9 +36,6 @@ func (p Plays) ApplySpellBuff(
 	}
 	if duration != nil {
 		scope = *duration
-	}
-	if err := p.assertOnlyOneSustainedSpell(ctx, characterID, spellID, scope); err != nil {
-		return sheet.EffectDTO{}, err
 	}
 	eff, err := p.queries.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
 		Characterid: characterID, Source: "spell", Catalogid: spellID, Scope: scope,
@@ -146,26 +145,4 @@ func effectFrom(e sqlcgen.UpsertActiveEffectRow) sheet.EffectDTO {
 		ID: e.ID, CatalogID: e.Catalogid, Scope: e.Scope,
 		Modifiers: e.Modifiers, CreatedAt: e.Createdat,
 	}
-}
-
-// assertOnlyOneSustainedSpell recusa a SEGUNDA magia sustentada (T20 p227), pela mesma frase do Conjurar
-// (`sheet.SustainedClash`). A lista é relida aqui porque o Aplicar chega sem a ficha montada.
-//
-// Reaplicar A MESMA magia não é uma segunda: é a gravação que já era um upsert.
-func (p Plays) assertOnlyOneSustainedSpell(ctx context.Context, characterID int64, spellID, scope string) error {
-	if duration, err := engine.ParseDuration(scope); err != nil || duration.Kind != engine.DurationSustained {
-		return nil
-	}
-	active, err := p.queries.ListActiveEffectsByCharacter(ctx, characterID)
-	if err != nil {
-		return fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
-	}
-	effects := make([]sheet.EffectDTO, 0, len(active))
-	for _, e := range active {
-		effects = append(effects, sheet.EffectDTO{CatalogID: e.Catalogid, Scope: e.Scope})
-	}
-	if clash := sheet.SustainedClash(effects, spellID); clash != "" {
-		return errors.New(clash)
-	}
-	return nil
 }

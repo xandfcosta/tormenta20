@@ -12,7 +12,7 @@ import (
 func TestOnlyOneSustainedSpellIsCastAtATime(t *testing.T) {
 	cleric := CharacterDTO{
 		Classes:       []ClassDTO{{ClassName: "Clérigo", Level: 8}},
-		ActiveEffects: []EffectDTO{{CatalogID: "tempestade-divina", Scope: "sustained"}},
+		ActiveEffects: []EffectDTO{{Source: "spell", CatalogID: "tempestade-divina", Scope: "sustained", CastHere: true}},
 	}
 	const clash = "Tempestade Divina já está sustentada"
 	caster := CasterOf(cleric)
@@ -37,10 +37,19 @@ func TestOnlyOneSustainedSpellIsCastAtATime(t *testing.T) {
 	// A sustentada que DURA A CENA não é magia sustentada de pé: só o escopo conta.
 	byScene := CasterOf(CharacterDTO{
 		Classes:       cleric.Classes,
-		ActiveEffects: []EffectDTO{{CatalogID: "tempestade-divina", Scope: "scene"}},
+		ActiveEffects: []EffectDTO{{Source: "spell", CatalogID: "tempestade-divina", Scope: "scene", CastHere: true}},
 	})
 	if lock := byScene.Spell("silencio").CastLock; lock != "" {
 		t.Errorf("com a Tempestade Divina valendo a cena, o Silêncio tranca com %q", lock)
+	}
+
+	// A sustentada SÓ APLICADA aqui veio de outro conjurador, e é ele quem a sustenta (decisão do dono).
+	received := CasterOf(CharacterDTO{
+		Classes:       cleric.Classes,
+		ActiveEffects: []EffectDTO{{Source: "spell", CatalogID: "velocidade", Scope: "sustained"}},
+	})
+	if lock := received.Spell("silencio").CastLock; lock != "" {
+		t.Errorf("com a Velocidade de outro conjurador aplicada aqui, o Silêncio tranca com %q", lock)
 	}
 }
 
@@ -50,7 +59,7 @@ func TestOnlyOneSustainedSpellIsCastAtATime(t *testing.T) {
 func TestTheAugmentThatSustainsTheSpellMeetsTheLimit(t *testing.T) {
 	arcanist := CharacterDTO{
 		Classes:       []ClassDTO{{ClassName: "Arcanista", Level: 9}},
-		ActiveEffects: []EffectDTO{{CatalogID: "velocidade", Scope: "sustained"}},
+		ActiveEffects: []EffectDTO{{Source: "spell", CatalogID: "velocidade", Scope: "sustained", CastHere: true}},
 	}
 	spell := CasterOf(arcanist).Spell("invisibilidade")
 	if refusal := spell.CastRefusal(nil); refusal != "" {
