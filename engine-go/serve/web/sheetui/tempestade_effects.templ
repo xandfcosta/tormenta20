@@ -29,13 +29,19 @@ templ tempestadeEffects(v View) {
 			}
 			for _, e := range effectsOfKind(v, "stance", "declared", "applied") {
 				@ds.ActionRow(e.Name, e.Meta, e.Dialog) {
-					for _, offer := range e.TurnRolls {
-						@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": offer.Label, "aria-haspopup": "dialog", "commandfor": offer.Dialog, "command": "show-modal"}) {
-							{ offer.Button }
-						}
-					}
-					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + e.Name, "data-on:click": e.Remove}) {
-						Encerrar
+					// O DADO DA VEZ põe o Rolar ao lado do Encerrar, e o par de gestos é que os mantém juntos: soltos na
+					// linha, a 390px o Encerrar caía sozinho embaixo do nome.
+					if len(e.TurnRolls) > 0 {
+						<div class="ds-row-gesture-pair">
+							for _, offer := range e.TurnRolls {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": offer.Label, "aria-haspopup": "dialog", "commandfor": offer.Dialog, "command": "show-modal"}) {
+									{ offer.Button }
+								}
+							}
+							@effectEndButton(e)
+						</div>
+					} else {
+						@effectEndButton(e)
 					}
 				}
 			}
@@ -162,6 +168,12 @@ templ effectPickerRows(v View, id, title, route string, options []pickerOption) 
 				}
 			</div>
 		}
+	}
+}
+
+templ effectEndButton(e activeEffect) {
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + e.Name, "data-on:click": e.Remove}) {
+		Encerrar
 	}
 }
 
