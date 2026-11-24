@@ -77,6 +77,7 @@ var spellsPart01 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Execução para reação; vira escudo mágico contra um único ataque, dando +5 na Defesa contra ele.",
+				Execution:   "reacao",
 			},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o bônus de Defesa em +1."},
 			{PMCost: 2, Kind: "muda", Description: "Muda a duração para um dia."},
@@ -410,6 +411,7 @@ var spellsPart01 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Execução padrão, alcance toque, alvo 1 criatura ou objeto Grande ou menor.",
+				Execution:   "padrao",
 			},
 			{PMCost: 3, Kind: "muda", Description: "Muda a duração para cena.", RequiresCircle: 3},
 			{
@@ -425,6 +427,7 @@ var spellsPart01 = []Spell{
 				Kind:           "muda",
 				Description:    "Execução padrão, alcance toque; magia não dissipa por ação hostil.",
 				RequiresCircle: 4,
+				Execution:      "padrao",
 			},
 		},
 		BookPage:     195,

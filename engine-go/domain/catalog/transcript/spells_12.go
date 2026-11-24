@@ -359,6 +359,7 @@ var spellsPart12 = []Spell{
 				PMCost:      2,
 				Kind:        "muda",
 				Description: "Muda execução para reação. +5 na Defesa e Reflexos contra ataque/efeito iminente. Após resolução, salta 1,5m para espaço adjacente.",
+				Execution:   "reacao",
 			},
 			{PMCost: 3, Kind: "muda", Description: "Muda o alcance para longo."},
 		},

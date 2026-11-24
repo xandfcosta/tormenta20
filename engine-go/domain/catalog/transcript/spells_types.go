@@ -37,6 +37,7 @@ type SpellAugment struct {
 	ClassOnly      string `json:"classOnly,omitempty"`
 	Cantrip        bool   `json:"truque,omitempty"`
 	Sustains       *bool  `json:"sustains,omitempty"`
+	Execution      string `json:"execution,omitempty"`
 }
 
 type SpellBuff struct {

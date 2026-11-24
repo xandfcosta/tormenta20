@@ -161,6 +161,7 @@ var spellsPart02 = []Spell{
 				PMCost:      1,
 				Kind:        "muda",
 				Description: "Muda execução para padrão, alcance toque, duração cena.",
+				Execution:   "padrao",
 			},
 			{
 				PMCost:      1,
@@ -344,6 +345,7 @@ var spellsPart02 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda execução para completa, duração para cena, adiciona sacrifício de 1 PM. Em vez do normal, cria um círculo de 1,5m no chão que transporta quem pisar nele. O destino é escolhido ao lançar e pode ser qualquer lugar conhecido, em qualquer mundo, sem teste. O círculo é quase invisível.",
 				RequiresCircle: 5,
+				Execution:      "completa",
 			},
 		},
 		BookPage: 208,
