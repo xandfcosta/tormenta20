@@ -97,6 +97,31 @@ func (h sheetHost) PublishSkillTest(
 	return nil
 }
 
+// PublishSpellCast põe a magia conjurada na mesa onde este personagem está, com o nome de quem conjurou, pela
+// razão do `PublishSkillTest`.
+func (h sheetHost) PublishSpellCast(ctx context.Context, characterID int64, cast character.SpellCast) error {
+	row, err := h.rules.queries.GetCharacter(ctx, characterID)
+	if err != nil {
+		return fmt.Errorf("carregar o personagem %d para publicar a magia: %w", characterID, err)
+	}
+	roll := live.SpellCastRoll{
+		Who: row.Name, Spell: cast.Name, ByText: cast.ByText,
+		Save: cast.Save, DC: cast.DC, Range: cast.Range,
+		CharacterID: characterID, ByUserID: row.Ownerid,
+	}
+	for _, part := range cast.Parts {
+		roll.Parts = append(roll.Parts, live.SpellCastPart{
+			Dice: part.Dice, Kind: part.Kind, Note: part.Note, Rolls: part.Rolls, Total: part.Total, ByHand: part.ByHand,
+		})
+	}
+	for _, sessionID := range h.liveSessionsOf(ctx, characterID) {
+		if _, err := h.rules.sessions.RecordSpellCast(ctx, sessionID, roll); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ProposeStrikeOnTable rola o golpe — ou a manobra — da superfície Ações na
 // mesa onde este personagem está.
 //

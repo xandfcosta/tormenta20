@@ -198,7 +198,8 @@ func castOpensSheet(spell learnedSpellRow) bool {
 // augmentsReset zera as pilhas: quem abre uma folha limpa, ou a escolha de uma
 // magia reapareceria na próxima.
 var augmentsReset = func() string {
-	reset := "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; "
+	reset := "$augment0 = 0; $augment1 = 0; $augment2 = 0; $augment3 = 0; $augment4 = 0; $augment5 = 0; " +
+		"$spell_hand_1 = 0; $spell_hand_2 = 0; $spell_hand_3 = 0; $spell_hand_4 = 0; "
 	for _, s := range powerAugmentSignals {
 		reset += "$" + s.name + " = 0; "
 	}
@@ -210,4 +211,17 @@ var augmentsReset = func() string {
 var circleFilterOptions = []filterOption{
 	{Value: "", Label: "Todos"}, {Value: "1", Label: "1º"}, {Value: "2", Label: "2º"},
 	{Value: "3", Label: "3º"}, {Value: "4", Label: "4º"}, {Value: "5", Label: "5º"},
+}
+
+// rollRowAttrs são os atributos da linha do dado: o `data-show` do modo dela, e o `display:none` de quem nasce
+// escondida.
+func rollRowAttrs(roll spellRollLine) templ.Attributes {
+	attrs := templ.Attributes{}
+	if roll.Show != "" {
+		attrs["data-show"] = roll.Show
+	}
+	if roll.BornHidden {
+		attrs["style"] = "display:none"
+	}
+	return attrs
 }

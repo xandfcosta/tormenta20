@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 10 de 14 de `Spells` (spells.go).
+// Parte 10 de 15 de `Spells` (spells.go).
 var spellsPart10 = []Spell{
 	{
 		ID:         "manto-do-cruzado",
@@ -97,23 +97,31 @@ var spellsPart10 = []Spell{
 		UID:      "spl_vgz2m7drih",
 	},
 	{
-		ID:            "mata-dragao",
-		Name:          "Mata-Dragão",
-		Circle:        5,
-		School:        "evocacao",
-		Execution:     "completa",
-		Range:         "pessoal",
-		Targeting:     "Área: cone de 30m",
-		Duration:      "instantanea",
-		SaveType:      "reflexos",
-		Resistance:    ptr("metade"),
-		Components:    []string{"verbal", "gestual"},
-		Classes:       []string{"Arcanista", "Bardo"},
-		BaseEffect:    "Execução ritual de 2 rodadas (2 cânticos). Carga de energia em cone 30m: 20d12 essência em criaturas/construções/objetos livres. Cada resultado 12 rolado = +1d12. Lenta, difícil em combate.",
-		Augments:      []SpellAugment{{PMCost: 1, Kind: "aumenta", Description: "Aumenta o dano em +1d12."}},
+		ID:         "mata-dragao",
+		Name:       "Mata-Dragão",
+		Circle:     5,
+		School:     "evocacao",
+		Execution:  "completa",
+		Range:      "pessoal",
+		Targeting:  "Área: cone de 30m",
+		Duration:   "instantanea",
+		SaveType:   "reflexos",
+		Resistance: ptr("metade"),
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Arcanista", "Bardo"},
+		BaseEffect: "Execução ritual de 2 rodadas (2 cânticos). Carga de energia em cone 30m: 20d12 essência em criaturas/construções/objetos livres. Cada resultado 12 rolado = +1d12. Lenta, difícil em combate.",
+		Augments: []SpellAugment{
+			{
+				PMCost:      1,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d12.",
+				Adds:        []SpellRoll{{Dice: "1d12", Kind: "essência"}},
+			},
+		},
 		BookPage:      198,
 		UID:           "spl_gqhtbdwxl6",
 		ExecutionNote: "duas rodadas",
+		Rolls:         []SpellRoll{{Dice: "20d12", Kind: "essência", Note: "cada 12 rolado soma mais 1d12"}},
 	},
 	{
 		ID:         "mente-divina",
@@ -164,12 +172,18 @@ var spellsPart10 = []Spell{
 				Exclusive:   true,
 				Cantrip:     true,
 			},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d6."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d6.",
+				Adds:        []SpellRoll{{Dice: "1d6", Kind: "ácido"}},
+			},
 			{PMCost: 3, Kind: "muda", Description: "Muda o tipo do dano para trevas."},
 		},
 		BookPage:       199,
 		UID:            "spl_mnbxujfviz",
 		ResistanceNote: "Fortitude (veja texto)",
+		Rolls:          []SpellRoll{{Dice: "5d6", Kind: "ácido"}},
 	},
 	{
 		ID:         "miragem",
@@ -287,6 +301,7 @@ var spellsPart10 = []Spell{
 		},
 		BookPage: 199,
 		UID:      "spl_jh5ffknnqk",
+		Rolls:    []SpellRoll{{Dice: "4d8", Kind: "corte", Note: "as criaturas na área e adjacentes"}},
 	},
 	{
 		ID:         "muralha-elemental",

@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 5 de 14 de `Spells` (spells.go).
+// Parte 5 de 15 de `Spells` (spells.go).
 var spellsPart05 = []Spell{
 	{
 		ID:         "aura-divina",
@@ -108,7 +108,17 @@ var spellsPart05 = []Spell{
 		Classes:    []string{"Arcanista"},
 		BaseEffect: "4 esferas (ácido, eletricidade, fogo, frio) até ponto escolhido. Cada explode em área de 12m de raio: 6d6 dano do respectivo tipo. Reflexos = metade. Alvos podem ser diferentes por esfera; criatura em múltiplas resiste por esfera. Efeitos por falha: Ácido = vulnerável até fim da cena; Elétrica = atordoado 1 rodada (uma vez/cena); Fogo = em chamas; Frio = lento até fim da cena.",
 		Augments: []SpellAugment{
-			{PMCost: 5, Kind: "aumenta", Description: "Aumenta o dano de cada esfera em +2d6."},
+			{
+				PMCost:      5,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano de cada esfera em +2d6.",
+				Adds: []SpellRoll{
+					{Dice: "2d6", Kind: "ácido"},
+					{Dice: "2d6", Kind: "eletricidade"},
+					{Dice: "2d6", Kind: "fogo"},
+					{Dice: "2d6", Kind: "frio"},
+				},
+			},
 			{
 				PMCost:      5,
 				Kind:        "muda",
@@ -117,6 +127,12 @@ var spellsPart05 = []Spell{
 		},
 		BookPage: 182,
 		UID:      "spl_gmdhwcaspl",
+		Rolls: []SpellRoll{
+			{Dice: "6d6", Kind: "ácido"},
+			{Dice: "6d6", Kind: "eletricidade"},
+			{Dice: "6d6", Kind: "fogo"},
+			{Dice: "6d6", Kind: "frio"},
+		},
 	},
 	{
 		ID:         "bencao",
@@ -311,10 +327,12 @@ var spellsPart05 = []Spell{
 				PMCost:      2,
 				Kind:        "aumenta",
 				Description: "Aumenta o número de meteoros: +2d6 impacto e +2d6 fogo.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "impacto"}, {Dice: "2d6", Kind: "fogo"}},
 			},
 		},
 		BookPage: 183,
 		UID:      "spl_katvkvnurv",
+		Rolls:    []SpellRoll{{Dice: "15d6", Kind: "impacto"}, {Dice: "15d6", Kind: "fogo"}},
 	},
 	{
 		ID:         "circulo-da-justica",
@@ -386,7 +404,12 @@ var spellsPart05 = []Spell{
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Fulgor dourado em esfera 6m. Criaturas: cegas 1d4 rodadas + em chamas + 10d6 dano de fogo (mortos-vivos 10d8). Sucesso: sem cegueira/chamas, metade do dano.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +2d6 (+2d8 contra mortos-vivos)."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +2d6 (+2d8 contra mortos-vivos).",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "fogo", Note: "+2d8 em mortos-vivos"}},
+			},
 			{PMCost: 2, Kind: "aumenta", Description: "Aumenta a área em +6m de raio."},
 			{
 				PMCost:         5,
@@ -397,6 +420,7 @@ var spellsPart05 = []Spell{
 		},
 		BookPage: 184,
 		UID:      "spl_axcedbtmgg",
+		Rolls:    []SpellRoll{{Dice: "10d6", Kind: "fogo", Note: "10d8 em mortos-vivos"}},
 	},
 	{
 		ID:         "coluna-de-chamas",
@@ -413,11 +437,22 @@ var spellsPart05 = []Spell{
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
 		BaseEffect: "Pilar de fogo sagrado (cilindro 3m raio, 30m altura): 6d6 dano de fogo + 6d6 dano de luz em criaturas e objetos livres.",
 		Augments: []SpellAugment{
-			{PMCost: 1, Kind: "aumenta", Description: "Aumenta o dano de fogo em +1d6."},
-			{PMCost: 1, Kind: "aumenta", Description: "Aumenta o dano de luz em +1d6."},
+			{
+				PMCost:      1,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano de fogo em +1d6.",
+				Adds:        []SpellRoll{{Dice: "1d6", Kind: "fogo"}},
+			},
+			{
+				PMCost:      1,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano de luz em +1d6.",
+				Adds:        []SpellRoll{{Dice: "1d6", Kind: "luz"}},
+			},
 		},
 		BookPage: 184,
 		UID:      "spl_htmzfktzr2",
+		Rolls:    []SpellRoll{{Dice: "6d6", Kind: "fogo"}, {Dice: "6d6", Kind: "luz"}},
 	},
 	{
 		ID:         "comando",

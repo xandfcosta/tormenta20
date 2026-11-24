@@ -108,7 +108,10 @@ type learnedSpellRow struct {
 	// outra magia sustentada de pé (p227), para a linha a marcar.
 	CastLock          string
 	LockedBySustained bool
-	OffTheList        string
+	// Rolls é o dado que a magia rola ao ser conjurada, uma linha por parcela (ver GLOSSARY, **dado da magia**),
+	// com o campo do total rolado na mão.
+	Rolls      []spellRollLine
+	OffTheList string
 }
 
 // grantedSpellRow é a magia que um PODER ensinou.
@@ -225,6 +228,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			AboveTheCircle:    onSheet.AboveTheCircle,
 			CastLock:          onSheet.CastLock,
 			LockedBySustained: onSheet.LockedBySustained(),
+			Rolls:             spellRollLinesOf(spell),
 			OffTheList:        onSheet.OffTheList,
 		})
 	}
@@ -237,32 +241,15 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	return rows
 }
 
-// spellCdOf é a CD dos testes contra a magia, pelo atributo-chave da classe,
-// com os bônus de CD de item e de poder (a Flauta Mística, p158).
-//
-// Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já
-// usa: uma segunda conta aqui daria dois números para a mesma pergunta. O
-// atributo de cada classe também é dele (`SpellAttributeByClass`), porque o do
-// Arcanista sai do caminho (p37), e a feiticeira lia a CD de Inteligência. O bônus
-// é o que alcança a magia (`ForSpell`), com a tradição da classe que lança: a varinha arcana
-// sobe a CD das arcanas e não a das divinas (p160), e o tomo hermético só a da escola dele.
+// spellCdOf é a CD da magia escrita na linha, ou "—" sem ela (`SpellOnTheSheet.DC`).
 func spellCdOf(computed engine.ComputedSheet, ok bool, spell sheet.SpellOnTheSheet) string {
 	if !ok {
 		return "—"
 	}
-	best := 0
-	for _, class := range spell.Casting {
-		byThisClass := spell.At()
-		byThisClass.Tradition = book.SpellProgressions()[class].List
-		attribute := computed.SpellAttributeByClass[class]
-		if cd := computed.SpellCdByAttribute[attribute] + computed.ForSpell("spellDC", byThisClass).Total; cd > best {
-			best = cd
-		}
+	if dc, has := spell.DC(computed); has {
+		return strconv.Itoa(dc)
 	}
-	if best == 0 {
-		return "—"
-	}
-	return strconv.Itoa(best)
+	return "—"
 }
 
 // spellOfBook acha a magia no acervo já ordenado.

@@ -98,35 +98,35 @@ const ShapeSilence = "Na Forma Selvagem você não lança magias (p62); a Magia 
 // não é tipada no `doc.go` do pacote.
 func (p Plays) Cast(
 	ctx context.Context, dto sheet.CharacterDTO, catalogSpellID string,
-	augments []sheet.AugmentPick, powerAugments []sheet.PowerAugmentPick,
-) error {
+	augments []sheet.AugmentPick, powerAugments []sheet.PowerAugmentPick, fromTheTable []int,
+) (SpellCast, error) {
 	onSheet := sheet.CasterOf(dto).Spell(catalogSpellID)
 	if !onSheet.Known {
-		return fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
+		return SpellCast{}, fmt.Errorf("a magia %q não existe no livro", catalogSpellID)
 	}
 	spell := onSheet.Spell
 	if findSpell(dto.Spells, catalogSpellID) == nil {
-		return fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
+		return SpellCast{}, fmt.Errorf("%q não está no grimório desta ficha", catalogSpellID)
 	}
 	// A RECUSA QUE A FICHA RESPONDE SOZINHA é do conjurador, a mesma que tranca o
 	// Conjurar nas abas: a magia acima do círculo — a gravada antes da regra fica no
 	// grimório, e quem joga a esquece e aprende outra —, a do mago não memorizada e a
 	// segunda sustentada, que depende do aprimoramento escolhido (p227).
 	if refusal := onSheet.CastRefusal(augments); refusal != "" {
-		return errors.New(refusal)
+		return SpellCast{}, errors.New(refusal)
 	}
 	// O APRIMORAMENTO é do conjurador, o da magia e o poder que é aprimoramento (p131): o preço e a recusa do
 	// livro (p170-171), a mesma resposta que tranca o cadeado da folha.
 	augmentPm, augErr := onSheet.AugmentPrice(augments, powerAugments)
 	if augErr != "" {
-		return fmt.Errorf("%s", augErr)
+		return SpellCast{}, fmt.Errorf("%s", augErr)
 	}
 	ec, err := sheet.EngineCharacterFrom(dto)
 	if err != nil {
-		return err
+		return SpellCast{}, err
 	}
 	if !engine.CastsInTheShape(ec) {
-		return fmt.Errorf("%s", ShapeSilence)
+		return SpellCast{}, fmt.Errorf("%s", ShapeSilence)
 	}
 	basePm := sheet.SpellBasePmCost[spell.Circle]
 	// O TRUQUE zera a conjuração INTEIRA e não só a parte dele: "reduz seu custo
@@ -152,44 +152,56 @@ func (p Plays) Cast(
 	minPm := dto.Ruleset.SpellPmCostFor(ec, basePm, 0, active, at)
 	limit := dto.Ruleset.SpellPmLimitFor(ec, active, onSheet.Casting, at)
 	if spell.Circle > 0 && totalPm > limit && totalPm > minPm {
-		return fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
+		return SpellCast{}, fmt.Errorf("o custo de %d PM passa do limite de %d por magia", totalPm, limit)
 	}
 	// O MANA DISPONÍVEL inclui a poça temporária, e as duas metades da p106
 	// andam juntas: se o gasto drena a poça primeiro, a poça CONTA para decidir
 	// se o gasto cabe. Com `dto.MpCurrent` aqui, o bardo de poço vazio e poça
 	// cheia seria recusado — a poça existiria só para ser ignorada.
 	if available := dto.ManaAvailable(); int64(totalPm) > available {
-		return fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
+		return SpellCast{}, fmt.Errorf("faltam PM: a magia custa %d e restam %d", totalPm, available)
+	}
+	// O DADO é rolado depois das recusas e antes da cobrança: o total da mesa que os dados não tiram é recusado
+	// sem gastar nada.
+	cast, err := p.rollTheCast(dto, onSheet, augments, fromTheTable)
+	if err != nil {
+		return SpellCast{}, err
 	}
 	ritual, sustains := active[sheet.RitualSwitch], onSheet.Sustains(augments)
 	if !ritual && !sustains {
-		return sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm)
+		if err := sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm); err != nil {
+			return SpellCast{}, err
+		}
+		return cast, nil
 	}
 	// O RITUAL e A SUSTENTADA valem para esta conjuração: é aqui e não no gesto porque ela pode ser recusada
 	// acima, e a recusa não gasta o interruptor nem abre a manutenção. E saem na mesma transação que o PM: se
 	// a segunda escrita falhasse com o PM já cobrado, a tela diria erro, e tentar de novo cobraria outra vez.
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("abrir a transação de %s: %w", spell.Name, err)
+		return SpellCast{}, fmt.Errorf("abrir a transação de %s: %w", spell.Name, err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	q := p.queries.WithTx(tx)
 	if err := sheet.SpendLoadedMana(ctx, q, &dto, totalPm); err != nil {
-		return err
+		return SpellCast{}, err
 	}
 	if ritual {
 		if err := q.RemoveCharacterConditional(ctx, sqlcgen.RemoveCharacterConditionalParams{
 			Characterid: dto.ID, Conditionalid: sheet.RitualSwitch,
 		}); err != nil {
-			return fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
+			return SpellCast{}, fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
 		}
 	}
 	if sustains {
 		if err := openSustainedEffect(ctx, q, dto.ID, catalogSpellID); err != nil {
-			return err
+			return SpellCast{}, err
 		}
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return SpellCast{}, err
+	}
+	return cast, nil
 }
 
 // openSustainedEffect abre na ficha de quem conjurou o efeito que a manutenção cobra e o limite de uma conta

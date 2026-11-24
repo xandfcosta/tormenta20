@@ -73,6 +73,10 @@ type Deps interface {
 	// não está numa sessão" num defeito do gesto.
 	PublishSkillTest(ctx context.Context, characterID int64, skill string,
 		test engine.SkillTest, byHand bool) error
+	// PublishSpellCast põe a magia conjurada com o dado dela na MESA onde este personagem está (ver GLOSSARY,
+	// **dado da magia**), pela razão do `PublishSkillTest`: fora de uma sessão ela não faz nada e não é erro — a
+	// magia conjurada sozinha cobrou o PM e rolou, e o que não existe é a mesa para onde publicar.
+	PublishSpellCast(ctx context.Context, characterID int64, cast character.SpellCast) error
 	// ProposeStrikeOnTable leva o golpe — ou a MANOBRA — rolado na superfície
 	// Ações para a mesa onde este personagem está (p233-234), e ele entra na
 	// porta pela mesma razão do `PublishSkillTest`: a ficha sabe COM O QUE se

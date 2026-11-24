@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 3 de 14 de `Spells` (spells.go).
+// Parte 3 de 15 de `Spells` (spells.go).
 var spellsPart03 = []Spell{
 	{
 		ID:         "tempestade-divina",
@@ -113,7 +113,12 @@ var spellsPart03 = []Spell{
 		Classes:    []string{"Arcanista"},
 		BaseEffect: "Sopra ar gélido em cone de 9m: 4d6 dano de frio (Fortitude metade). Criaturas Médias que falham ficam caídas e empurradas 6m. Parede no caminho para o movimento, mas vítima sofre +2d6 de impacto.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta dano de frio em +2d6."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta dano de frio em +2d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "frio"}},
+			},
 			{
 				PMCost:         3,
 				Kind:           "aumenta",
@@ -123,6 +128,7 @@ var spellsPart03 = []Spell{
 		},
 		BookPage: 207,
 		UID:      "spl_erhlb2xf5y",
+		Rolls:    []SpellRoll{{Dice: "4d6", Kind: "frio", Note: "quem bate numa parede sofre mais 2d6 de impacto"}},
 	},
 	{
 		ID:         "conjurar-mortos-vivos",
@@ -355,10 +361,16 @@ var spellsPart03 = []Spell{
 				Kind:        "muda",
 				Description: "Muda a duração para um dia. Além do normal, finca a adaga na mente do alvo — sabe direção/localização enquanto no mesmo mundo.",
 			},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d6."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d6.",
+				Adds:        []SpellRoll{{Dice: "1d6", Kind: "psíquico"}},
+			},
 		},
 		BookPage: 178,
 		UID:      "spl_lz5hmd4ugj",
+		Rolls:    []SpellRoll{{Dice: "2d6", Kind: "psíquico"}},
 	},
 	{
 		ID:         "alarme",

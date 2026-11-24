@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 9 de 14 de `Spells` (spells.go).
+// Parte 9 de 15 de `Spells` (spells.go).
 var spellsPart09 = []Spell{
 	{
 		ID:         "heroismo",
@@ -99,11 +99,17 @@ var spellsPart09 = []Spell{
 		Classes:    []string{"Arcanista", "Bardo"},
 		BaseEffect: "Ilusão de perigo mortal em cubo 9m. No lançamento: criaturas na área testam Vontade — falha = crê real + 3d6 psíquico não letal. Início do turno na área repete Vontade; falha = repete dano. Só quem falha vê a ilusão e racionaliza (mesmo teto pode \"cair\" várias vezes).",
 		Augments: []SpellAugment{
-			{PMCost: 3, Kind: "aumenta", Description: "Aumenta o dano em +2d6."},
+			{
+				PMCost:      3,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +2d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Kind: "psíquico"}},
+			},
 			{PMCost: 4, Kind: "muda", Description: "Muda a área para um cubo de 90m.", RequiresCircle: 4},
 		},
 		BookPage: 195,
 		UID:      "spl_hneazo5zee",
+		Rolls:    []SpellRoll{{Dice: "3d6", Kind: "psíquico", Note: "não letal, em quem falha"}},
 	},
 	{
 		ID:         "imobilizar",
@@ -147,7 +153,12 @@ var spellsPart09 = []Spell{
 				Kind:        "aumenta",
 				Description: "Além do normal, alvo fica fraco pela cena (resistência evita).",
 			},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d8+1."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d8+1.",
+				Adds:        []SpellRoll{{Dice: "1d8+1", Kind: "trevas"}},
+			},
 			{
 				PMCost:      2,
 				Kind:        "muda",
@@ -161,6 +172,7 @@ var spellsPart09 = []Spell{
 		},
 		BookPage: 195,
 		UID:      "spl_fe3lbdle4i",
+		Rolls:    []SpellRoll{{Dice: "2d8+2", Kind: "trevas", Note: "cura em vez disso o morto-vivo"}},
 	},
 	{
 		ID:             "intervencao-divina",
@@ -232,6 +244,7 @@ var spellsPart09 = []Spell{
 				PMCost:      3,
 				Kind:        "aumenta",
 				Description: "Aumenta o dano inicial em +2d6 e o dano em chamas em +1d6.",
+				Adds:        []SpellRoll{{Dice: "2d6", Note: "o livro não diz o tipo"}},
 			},
 			{
 				PMCost:         4,
@@ -242,6 +255,7 @@ var spellsPart09 = []Spell{
 		},
 		BookPage: 196,
 		UID:      "spl_mqyvzax3eb",
+		Rolls:    []SpellRoll{{Dice: "4d6", Kind: "fogo"}, {Dice: "4d6", Kind: "perfuração"}},
 	},
 	{
 		ID:         "legiao",

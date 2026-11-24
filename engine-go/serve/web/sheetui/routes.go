@@ -183,6 +183,7 @@ func (s Scene) sheetHandle(w http.ResponseWriter, r *http.Request) {
 		Signals: "{sheet_version: '', detail: '', craft: false, new_expertise: '', new_attribute: 'intelligence'," +
 			" condition_dialog: false, buff_dialog: false, conditional: ''," +
 			" sheet_dialog: '', augment0: 0, augment1: 0, augment2: 0, augment3: 0, augment4: 0, augment5: 0, " + powerAugmentsDeclared() + "," +
+			" spell_hand_1: 0, spell_hand_2: 0, spell_hand_3: 0, spell_hand_4: 0," +
 			" spell_search: '', spell_circle: '', spell_school: '', grimoire_search: '', grimoire_circle: ''," +
 			" condition_search: '', buff_search: '', buff_circle: ''," +
 			" item_search: '', item_category: '', tibar_mode: 'receber', tibar_value: 0," +

@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 11 de 14 de `Spells` (spells.go).
+// Parte 11 de 15 de `Spells` (spells.go).
 var spellsPart11 = []Spell{
 	{
 		ID:           "palavra-primordial",
@@ -77,23 +77,31 @@ var spellsPart11 = []Spell{
 		ResistanceNote: "nenhuma",
 	},
 	{
-		ID:             "poeira-da-podridao",
-		Name:           "Poeira da Podridão",
-		Circle:         3,
-		School:         "necromancia",
-		Execution:      "padrao",
-		Range:          "medio",
-		Targeting:      "Área: nuvem com 6m de raio",
-		Duration:       "cena",
-		SaveType:       "fortitude",
-		Resistance:     ptr("metade"),
-		Components:     []string{"verbal", "gestual"},
-		Classes:        []string{"Clérigo", "Paladino"},
-		BaseEffect:     "Nuvem 6m raio de energia negativa. Ao lançar e no início do turno do conjurador: criaturas na área sofrem 2d8+8 trevas (Fortitude metade). Falha = sem cura de PV por 1 rodada.",
-		Augments:       []SpellAugment{{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d8+4."}},
+		ID:         "poeira-da-podridao",
+		Name:       "Poeira da Podridão",
+		Circle:     3,
+		School:     "necromancia",
+		Execution:  "padrao",
+		Range:      "medio",
+		Targeting:  "Área: nuvem com 6m de raio",
+		Duration:   "cena",
+		SaveType:   "fortitude",
+		Resistance: ptr("metade"),
+		Components: []string{"verbal", "gestual"},
+		Classes:    []string{"Clérigo", "Paladino"},
+		BaseEffect: "Nuvem 6m raio de energia negativa. Ao lançar e no início do turno do conjurador: criaturas na área sofrem 2d8+8 trevas (Fortitude metade). Falha = sem cura de PV por 1 rodada.",
+		Augments: []SpellAugment{
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d8+4.",
+				Adds:        []SpellRoll{{Dice: "1d8+4", Kind: "trevas"}},
+			},
+		},
 		BookPage:       201,
 		UID:            "spl_fpdmrutwx4",
 		ResistanceNote: "Fortitude (veja texto)",
+		Rolls:          []SpellRoll{{Dice: "2d8+8", Kind: "trevas", Note: "ao lançar e no início de cada turno seu"}},
 	},
 	{
 		ID:         "possessao",
