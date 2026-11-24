@@ -320,3 +320,26 @@ func schoolChoicePower(class string) string {
 	}
 	return ""
 }
+
+// DC é a CD dos testes contra a magia, pelo atributo-chave da classe que a lança, com os bônus de CD de item e
+// de poder (a Flauta Mística, p158), e false quando nenhuma classe a lança.
+//
+// Ela vem do MOTOR, pelo mapa por atributo que a caixa "CD Magia" do Combate já usa: uma segunda conta daria dois
+// números para a mesma pergunta. O atributo de cada classe também é dele (`SpellAttributeByClass`), porque o do
+// Arcanista sai do caminho (p37), e a feiticeira lia a CD de Inteligência. O bônus é o que alcança a magia
+// (`ForSpell`), com a tradição da classe que lança: a varinha arcana sobe a CD das arcanas e não a das divinas
+// (p160), e o tomo hermético só a da escola dele. A linha da folha e a faixa da conjuração leem daqui.
+//
+//	dc, has := sheet.CasterOf(dto).Spell("bola-de-fogo").DC(computed) // 18, true
+func (s SpellOnTheSheet) DC(computed engine.ComputedSheet) (int, bool) {
+	best := 0
+	for _, class := range s.Casting {
+		byThisClass := s.At()
+		byThisClass.Tradition = book.SpellProgressions()[class].List
+		attribute := computed.SpellAttributeByClass[class]
+		if dc := computed.SpellCdByAttribute[attribute] + computed.ForSpell("spellDC", byThisClass).Total; dc > best {
+			best = dc
+		}
+	}
+	return best, best > 0
+}
