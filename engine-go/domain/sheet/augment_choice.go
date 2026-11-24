@@ -79,8 +79,11 @@ func (s SpellOnTheSheet) Execution(picks []AugmentPick, powerPicks []PowerAugmen
 		return engine.ActionFree
 	}
 	for _, p := range picks {
-		if p.AugmentIndex >= 0 && p.AugmentIndex < len(s.Spell.Augments) && s.Spell.Augments[p.AugmentIndex].Execution != "" {
-			return engine.ActionCost(s.Spell.Augments[p.AugmentIndex].Execution)
+		if p.AugmentIndex < 0 || p.AugmentIndex >= len(s.Spell.Augments) {
+			continue
+		}
+		if gives := s.Spell.Augments[p.AugmentIndex].Execution; gives != "" {
+			return engine.ActionCost(gives)
 		}
 	}
 	return engine.ActionCost(s.Spell.Execution)
