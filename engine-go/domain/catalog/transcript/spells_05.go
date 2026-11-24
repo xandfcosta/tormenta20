@@ -252,11 +252,12 @@ var spellsPart05 = []Spell{
 				RequiresCircle: 4,
 			},
 			{
-				PMCost:         7,
-				Kind:           "muda",
-				Description:    "Muda alcance para curto, alvo para criatura/objeto sólido Enorme ou menor, duração para sustentada. Esfera imóvel e tremeluzente: nada passa (dano, criaturas, objetos); respiração normal. Criaturas na área: Reflexos para evitar aprisionamento (e sempre que o conjurador se concentrar).",
-				RequiresCircle: 4,
-				Sustains:       ptr(true),
+				PMCost:          7,
+				Kind:            "muda",
+				Description:     "Muda alcance para curto, alvo para criatura/objeto sólido Enorme ou menor, duração para sustentada. Esfera imóvel e tremeluzente: nada passa (dano, criaturas, objetos); respiração normal. Criaturas na área: Reflexos para evitar aprisionamento (e sempre que o conjurador se concentrar).",
+				RequiresCircle:  4,
+				Sustains:        ptr(true),
+				ReplacesTheBuff: true,
 			},
 			{
 				PMCost:         9,
