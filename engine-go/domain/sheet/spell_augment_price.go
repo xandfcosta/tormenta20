@@ -83,7 +83,7 @@ func (s SpellOnTheSheet) spellAugmentPrice(picks []AugmentPick) (int, string) {
 		return 0, "truque não recebe aprimoramento"
 	}
 	seen := map[int]bool{}
-	total := 0
+	total, executionChanger := 0, -1
 	for _, p := range picks {
 		if p.AugmentIndex < 0 || p.AugmentIndex >= len(s.Spell.Augments) {
 			return 0, fmt.Sprintf("o aprimoramento %d não existe nesta magia", p.AugmentIndex)
@@ -109,6 +109,14 @@ func (s SpellOnTheSheet) spellAugmentPrice(picks []AugmentPick) (int, string) {
 			return 0, fmt.Sprintf(
 				"o aprimoramento %d não pode ser usado em conjunto com outros: escolha só ele",
 				p.AugmentIndex)
+		}
+		// "Mudanças na mesma característica da magia nunca se acumulam" (p171): dois que mudam a execução.
+		if a.Execution != "" && executionChanger >= 0 {
+			return 0, fmt.Sprintf("os aprimoramentos %d e %d mudam a execução, e mudança não se acumula",
+				executionChanger, p.AugmentIndex)
+		}
+		if a.Execution != "" {
+			executionChanger = p.AugmentIndex
 		}
 		bar := s.barOf(a)
 		if bar.classOnly != "" {

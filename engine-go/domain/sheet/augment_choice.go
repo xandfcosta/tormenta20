@@ -29,11 +29,9 @@ func PowerAugmentKey(powerID string) AugmentKey { return AugmentKey{Index: -1, P
 //
 //   - o EXCLUSIVO apaga todos os outros, e os outros apagam o exclusivo — "truques não podem ser usados em
 //     conjunto com outros aprimoramentos";
-//   - o poder que muda a execução (a Magia Acelerada, a Prece de Combate) apaga o aprimoramento da magia e o
-//     outro poder que a mudam, e é apagado por eles — "mudanças na mesma característica da magia nunca se
-//     acumulam". Dois aprimoramentos da própria magia que a mudam ainda não se apagam entre si, e o
-//     `AugmentPrice` também não os recusa — a mesma lacuna nas duas pontas, de propósito: a folha não tranca
-//     o que o servidor aceita.
+//   - tudo o que muda a execução se apaga entre si — o aprimoramento da magia, o outro aprimoramento da magia
+//     e o poder (a Magia Acelerada, a Prece de Combate): "mudanças na mesma característica da magia nunca se
+//     acumulam".
 //
 // Sem isto a folha deixa montar uma combinação que o `AugmentPrice` recusa, e mostra um custo que não vale.
 //
@@ -63,7 +61,7 @@ func (s SpellOnTheSheet) Clears(key AugmentKey) []AugmentKey {
 	case slices.Contains(powerExecution, key):
 		clears = slices.Concat(exclusive, execution, powerExecution)
 	case slices.Contains(execution, key):
-		clears = slices.Concat(exclusive, powerExecution)
+		clears = slices.Concat(exclusive, execution, powerExecution)
 	}
 	return slices.DeleteFunc(slices.Clone(clears), func(k AugmentKey) bool { return k == key })
 }
