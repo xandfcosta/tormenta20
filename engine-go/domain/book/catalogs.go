@@ -142,6 +142,36 @@ type Spell struct {
 	// luz. Vazio na que não rola nada na conjuração — o `TestEverySpellSaysWhatItRollsWhenCast` diz por quê de
 	// cada uma.
 	Rolls []SpellRoll `json:"rolls"`
+	// TurnRoll é o dado da vez, nil na magia que não rola nada de novo na vez de quem conjurou (ver GLOSSARY,
+	// **dado da vez**).
+	TurnRoll *SpellTurnRoll `json:"turnRoll"`
+}
+
+// SpellTurnRoll é o dado que a magia rola de novo na vez de quem a conjurou, enquanto ela dura: o Ferver Sangue
+// no início de cada um dos seus turnos (p193), o Enxame de Pestes no final deles (p192).
+//
+// Os aprimoramentos escolhidos ao conjurar valem sobre ele como valem sobre o dado da conjuração: o que muda troca
+// as parcelas, e o que aumenta soma à do mesmo tipo (`SpellOnTheSheet.TurnRoll`).
+type SpellTurnRoll struct {
+	// At é o momento: "inicio" ou "fim" do turno de quem conjurou.
+	At string `json:"at"`
+	// Versions são as versões que se excluem, cada uma com as parcelas dela: o Manto de Luz e o de Trevas,
+	// escolhidos ao aprender (p197). A magia de uma versão só tem uma, sem nome.
+	Versions []SpellTurnVersion `json:"versions"`
+}
+
+// SpellTurnVersion é uma versão do dado da vez: o nome, vazio na magia de versão única, e as parcelas.
+type SpellTurnVersion struct {
+	Name  string      `json:"name"`
+	Rolls []SpellRoll `json:"rolls"`
+}
+
+// TurnRollAt escreve o momento do dado da vez como a mesa o lê: "início do turno", "fim do turno".
+func TurnRollAt(at string) string {
+	if at == "fim" {
+		return "fim do turno"
+	}
+	return "início do turno"
 }
 
 // Power é o poder ACHATADO. O livro espalha poder por três catálogos —

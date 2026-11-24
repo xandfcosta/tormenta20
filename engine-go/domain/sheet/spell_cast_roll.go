@@ -24,7 +24,13 @@ type CastRoll struct {
 //
 //	sheet.CasterOf(dto).Spell("bola-de-fogo").CastRoll([]sheet.AugmentPick{{AugmentIndex: 0, Stacks: 2}}) // 10d6 de fogo
 func (s SpellOnTheSheet) CastRoll(picks []AugmentPick) (CastRoll, error) {
-	parts := slices.Clone(s.Spell.Rolls)
+	return s.augmentedRoll(s.Spell.Rolls, picks)
+}
+
+// augmentedRoll aplica os aprimoramentos escolhidos a um dado da magia, o da conjuração ou o da vez: o que muda
+// troca as parcelas, e o que aumenta soma depois, sobre o que ficou.
+func (s SpellOnTheSheet) augmentedRoll(base []book.SpellRoll, picks []AugmentPick) (CastRoll, error) {
+	parts := slices.Clone(base)
 	for _, p := range picks {
 		if p.AugmentIndex < 0 || p.AugmentIndex >= len(s.Spell.Augments) {
 			continue

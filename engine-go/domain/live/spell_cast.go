@@ -15,9 +15,11 @@ type SpellCastRoll struct {
 	ByText bool            `json:"byText,omitempty"`
 	// Save é a resistência escrita ("Reflexos reduz à metade"), vazia na magia sem ela, e DC a CD de quem
 	// conjurou. Range é o alcance da magia.
-	Save        string `json:"save,omitempty"`
-	DC          int    `json:"dc,omitempty"`
-	Range       string `json:"range"`
+	Save  string `json:"save,omitempty"`
+	DC    int    `json:"dc,omitempty"`
+	Range string `json:"range"`
+	// When é o momento do dado da vez ("início do turno"), vazio na conjuração (ver GLOSSARY, **dado da vez**).
+	When        string `json:"when,omitempty"`
 	CharacterID int64  `json:"characterId"`
 	ByUserID    int64  `json:"byUserId"`
 }

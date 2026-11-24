@@ -125,10 +125,22 @@ func Load(
 	if err != nil {
 		return dto, err
 	}
+	castAugments, err := q.ListEffectCastAugmentsByCharacter(ctx, c.ID)
+	if err != nil {
+		return dto, err
+	}
+	picksOf := make(map[int64][]AugmentPick, len(castAugments))
+	for _, row := range castAugments {
+		var picks []AugmentPick
+		if err := json.Unmarshal([]byte(row.Augments), &picks); err != nil {
+			return dto, fmt.Errorf("ler os aprimoramentos da conjuração do efeito %d: %w", row.Effectid, err)
+		}
+		picksOf[row.Effectid] = picks
+	}
 	for _, ef := range effects {
 		dto.ActiveEffects = append(dto.ActiveEffects, EffectDTO{
 			ID: ef.ID, CatalogID: ef.Catalogid, Scope: ef.Scope,
-			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat,
+			Modifiers: ef.Modifiers, CreatedAt: ef.Createdat, CastAugments: picksOf[ef.ID],
 		})
 	}
 

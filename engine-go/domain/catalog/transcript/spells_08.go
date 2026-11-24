@@ -40,13 +40,26 @@ var spellsPart08 = []Spell{
 		Resistance: ptr("metade"),
 		Components: []string{"verbal", "gestual"},
 		Classes:    []string{"Clérigo", "Druida", "Paladino"},
-		BaseEffect: "Enxame Médio (1,5m²) — besouros/gafanhotos/ratos/morcegos/serpentes. Passa por espaços; permite outras criaturas. Fim do turno: 2d12 dano a criaturas no espaço (Fortitude metade). Ação de movimento: move 12m.",
+		BaseEffect: "Enxame Médio (1,5m²) — besouros/gafanhotos/ratos/morcegos/serpentes. Passa por espaços; permite outras criaturas. Fim do turno: 2d12 dano de corte a criaturas no espaço (Fortitude metade). Ação de movimento: move 12m.",
 		Augments: []SpellAugment{
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d12."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d12.",
+				Adds: []SpellRoll{
+					{Dice: "1d12", Kind: "corte"},
+					{Dice: "1d12", Kind: "corte, impacto ou perfuração"},
+					{Dice: "1d12", Kind: "ácido, eletricidade, fogo ou frio"},
+				},
+			},
 			{
 				PMCost:      3,
 				Kind:        "muda",
 				Description: "Muda resistência para Reflexos metade e enxame para criaturas maiores (gatos/guaxinins/compsognatos/kobolds). 3d12 dano à escolha entre corte/impacto/perfuração.",
+				Rolls: []SpellRoll{
+					{Dice: "3d12", Kind: "corte, impacto ou perfuração", Note: "Reflexos reduz à metade"},
+				},
+				ChangesTheRoll: true,
 			},
 			{
 				PMCost:         5,
@@ -59,10 +72,18 @@ var spellsPart08 = []Spell{
 				Kind:           "muda",
 				Description:    "Muda resistência para Reflexos metade e enxame para criaturas elementais. 5d12 dano à escolha entre ácido/eletricidade/fogo/frio.",
 				RequiresCircle: 4,
+				Rolls: []SpellRoll{
+					{Dice: "5d12", Kind: "ácido, eletricidade, fogo ou frio", Note: "Reflexos reduz à metade"},
+				},
+				ChangesTheRoll: true,
 			},
 		},
 		BookPage: 192,
 		UID:      "spl_yd5ss6jmxd",
+		TurnRoll: &SpellTurnRoll{
+			At:       "fim",
+			Versions: []SpellTurnVersion{{Rolls: []SpellRoll{{Dice: "2d12", Kind: "corte"}}}},
+		},
 	},
 	{
 		ID:         "enxame-rubro-de-ichabod",
@@ -84,8 +105,19 @@ var spellsPart08 = []Spell{
 				Kind:        "muda",
 				Description: "Além do normal, falha em Reflexos = agarrada (enxame cobre corpo). Escapar: padrão + Acrobacia/Atletismo. Mover o enxame libera.",
 			},
-			{PMCost: 2, Kind: "aumenta", Description: "Aumenta o dano em +1d12."},
-			{PMCost: 2, Kind: "muda", Description: "Muda o dano para trevas."},
+			{
+				PMCost:      2,
+				Kind:        "aumenta",
+				Description: "Aumenta o dano em +1d12.",
+				Adds:        []SpellRoll{{Dice: "1d12", Kind: "ácido"}, {Dice: "1d12", Kind: "trevas"}},
+			},
+			{
+				PMCost:         2,
+				Kind:           "muda",
+				Description:    "Muda o dano para trevas.",
+				Rolls:          []SpellRoll{{Dice: "4d12", Kind: "trevas"}},
+				ChangesTheRoll: true,
+			},
 			{PMCost: 3, Kind: "muda", Description: "O enxame vira Enorme (quadrado 6m)."},
 			{PMCost: 3, Kind: "muda", Description: "Enxame ganha voo 18m e ocupa cubo em vez de quadrado."},
 			{
@@ -97,6 +129,10 @@ var spellsPart08 = []Spell{
 		},
 		BookPage: 192,
 		UID:      "spl_hgcpwwxltz",
+		TurnRoll: &SpellTurnRoll{
+			At:       "fim",
+			Versions: []SpellTurnVersion{{Rolls: []SpellRoll{{Dice: "4d12", Kind: "ácido"}}}},
+		},
 	},
 	{
 		ID:         "erupcao-glacial",
@@ -239,6 +275,10 @@ var spellsPart08 = []Spell{
 		BookPage: 193,
 		UID:      "spl_nk5ethmdmz",
 		Rolls:    []SpellRoll{{Dice: "4d8", Kind: "fogo", Note: "no lançamento e no início de cada turno seu"}},
+		TurnRoll: &SpellTurnRoll{
+			At:       "inicio",
+			Versions: []SpellTurnVersion{{Rolls: []SpellRoll{{Dice: "4d8", Kind: "fogo"}}}},
+		},
 	},
 	{
 		ID:         "fisico-divino",

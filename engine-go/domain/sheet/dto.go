@@ -146,6 +146,9 @@ type EffectDTO struct {
 	Scope     string `json:"scope"`
 	Modifiers string `json:"modifiers"`
 	CreatedAt string `json:"createdAt"`
+	// CastAugments são os aprimoramentos escolhidos ao conjurar a magia que rola de novo na vez de quem conjurou
+	// (ver GLOSSARY, **dado da vez**), vazios no resto.
+	CastAugments []AugmentPick `json:"castAugments,omitempty"`
 }
 
 type SpellDTO struct {

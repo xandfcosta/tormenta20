@@ -10,9 +10,17 @@ import (
 // aprimoramentos.
 type spellForRollSweep struct {
 	Name       string          `json:"name"`
+	Duration   string          `json:"duration"`
 	BaseEffect string          `json:"baseEffect"`
 	Rolls      []spellRollSeen `json:"rolls"`
-	Augments   []struct {
+	TurnRoll   *struct {
+		At       string `json:"at"`
+		Versions []struct {
+			Name  string          `json:"name"`
+			Rolls []spellRollSeen `json:"rolls"`
+		} `json:"versions"`
+	} `json:"turnRoll"`
+	Augments []struct {
 		Description    string          `json:"description"`
 		Adds           []spellRollSeen `json:"adds"`
 		Rolls          []spellRollSeen `json:"rolls"`
@@ -57,10 +65,10 @@ var noCastingRoll = map[string]string{
 	"mao-poderosa-de-talude":          "o dano é do esmagar, uma ação depois",
 	"relampago-flamejante-de-reynard": "o dano é das rajadas, uma ação depois",
 	"furia-do-panteao":                "o dano é da ação escolhida a cada turno",
-	"enxame-de-pestes":                "o dano é no fim do turno",
-	"enxame-rubro-de-ichabod":         "o dano é no fim do turno",
+	"enxame-de-pestes":                turnRollOnly,
+	"enxame-rubro-de-ichabod":         turnRollOnly,
 	"circulo-da-restauracao":          "a cura é no fim do turno de quem está no círculo",
-	"manto-do-cruzado":                "a cura e o dano são no início do turno",
+	"manto-do-cruzado":                turnRollOnly,
 	"criar-elementos":                 "o dano depende do elemento escolhido",
 	"controlar-fogo":                  "o dano depende do efeito escolhido",
 	"controlar-agua":                  "o dano depende do efeito escolhido",
@@ -71,10 +79,15 @@ var noCastingRoll = map[string]string{
 	"palavra-primordial":              "o dano depende da palavra escolhida e da resistência",
 }
 
+// turnRollOnly é o motivo da magia cujo dado é só o da vez de quem conjurou (ver GLOSSARY, **dado da vez**): ela
+// declara o `TurnRoll`, e a varredura confere.
+const turnRollOnly = "o dado é o da vez de quem conjurou"
+
 // augmentDiceNotTheCastRoll são os aprimoramentos com dado na prosa, de magias que rolam na conjuração, cujo
 // dado não é o da conjuração.
 var augmentDiceNotTheCastRoll = map[string]string{
-	"raio-solar[3]": "o dado é da duração da cegueira",
+	"raio-solar[3]":              "o dado é da duração da cegueira",
+	"enxame-rubro-de-ichabod[5]": "o dado diz se surge um enxame novo, e não é dano",
 }
 
 // TestEverySpellSaysWhatItRollsWhenCast amarra o dado da magia à prosa do efeito: toda magia com dado no texto
@@ -107,14 +120,19 @@ func TestEverySpellSaysWhatItRollsWhenCast(t *testing.T) {
 				t.Errorf("%s (%s): o dado %q não tem a forma NdM ou NdM+K", m.Name, id, r.Dice)
 			}
 		}
+		if (reason == turnRollOnly) != (m.TurnRoll != nil && len(m.Rolls) == 0) {
+			t.Errorf("%s (%s): o motivo %q e o dado da vez não concordam: a magia que só rola na vez declara `TurnRoll` e tem este motivo", m.Name, id, reason)
+		}
+		// O aprimoramento mexe no dado da conjuração E no da vez (`SpellOnTheSheet.TurnRoll`).
+		rolls := len(m.Rolls) > 0 || m.TurnRoll != nil
 		for i, a := range m.Augments {
 			key := fmt.Sprintf("%s[%d]", id, i)
 			declares := len(a.Adds) > 0 || len(a.Rolls) > 0 || a.ChangesTheRoll
 			reason, excused := augmentDiceNotTheCastRoll[key]
 			switch {
-			case len(m.Rolls) == 0 && declares:
-				t.Errorf("%s (%s) aprimoramento %d mexe no dado de uma magia que não rola na conjuração", m.Name, id, i)
-			case len(m.Rolls) > 0 && diceInText.MatchString(a.Description) && !declares && !excused:
+			case !rolls && declares:
+				t.Errorf("%s (%s) aprimoramento %d mexe no dado de uma magia que não rola na conjuração nem na vez", m.Name, id, i)
+			case rolls && diceInText.MatchString(a.Description) && !declares && !excused:
 				t.Errorf("%s (%s) aprimoramento %d tem dado e não diz o que faz com o da conjuração: declare `Adds`, `Rolls` ou `ChangesTheRoll`, ou ponha-o em `augmentDiceNotTheCastRoll` com o motivo: %q",
 					m.Name, id, i, a.Description)
 			case declares && excused:
@@ -134,5 +152,51 @@ func TestEverySpellSaysWhatItRollsWhenCast(t *testing.T) {
 	}
 	if rolling == 0 {
 		t.Fatal("nenhuma magia declara o dado da conjuração: a varredura não mediu nada")
+	}
+}
+
+// TestEveryTurnRollSaysWhenAndWhatItRolls confere a forma do dado da vez (ver GLOSSARY, **dado da vez**): o momento
+// é o início ou o fim do turno, toda versão tem parcela, e o nome da versão existe só quando há mais de uma —
+// é ele que vai no botão de quem rola.
+func TestEveryTurnRollSaysWhenAndWhatItRolls(t *testing.T) {
+	spells := decodeResource[map[string]spellForRollSweep](t, "spells")
+	turning := 0
+	for id, m := range spells {
+		if m.TurnRoll == nil {
+			continue
+		}
+		turning++
+		if m.TurnRoll.At != "inicio" && m.TurnRoll.At != "fim" {
+			t.Errorf("%s (%s): o dado da vez é no %q, e o momento é \"inicio\" ou \"fim\"", m.Name, id, m.TurnRoll.At)
+		}
+		// A conjuração abre a linha em vigor da sustentada ou da de cena, e é dela que o dado da vez sai: outra
+		// duração não teria de onde rolar.
+		if m.Duration != "sustentada" && m.Duration != "cena" {
+			t.Errorf("%s (%s) rola na vez e dura %q: a conjuração só abre linha em vigor para \"sustentada\" e \"cena\"", m.Name, id, m.Duration)
+		}
+		if len(m.TurnRoll.Versions) == 0 {
+			t.Errorf("%s (%s): o dado da vez não tem versão nenhuma", m.Name, id)
+		}
+		named := map[string]bool{}
+		for _, v := range m.TurnRoll.Versions {
+			if (v.Name != "") != (len(m.TurnRoll.Versions) > 1) {
+				t.Errorf("%s (%s): a versão %q tem nome com %d versão(ões); o nome existe só quando há mais de uma", m.Name, id, v.Name, len(m.TurnRoll.Versions))
+			}
+			if named[v.Name] {
+				t.Errorf("%s (%s): duas versões se chamam %q", m.Name, id, v.Name)
+			}
+			named[v.Name] = true
+			if len(v.Rolls) == 0 {
+				t.Errorf("%s (%s): a versão %q não rola nada", m.Name, id, v.Name)
+			}
+			for _, r := range v.Rolls {
+				if !diceShape.MatchString(r.Dice) {
+					t.Errorf("%s (%s): o dado da vez %q não tem a forma NdM ou NdM+K", m.Name, id, r.Dice)
+				}
+			}
+		}
+	}
+	if turning == 0 {
+		t.Fatal("nenhuma magia declara o dado da vez: a varredura não mediu nada")
 	}
 }

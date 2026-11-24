@@ -25,6 +25,7 @@ var notCloned = map[string]string{
 	"character_damage":            "estado de jogo: a cópia nasce com o PV e o PM cheios",
 	"character_nonlethal_damage":  "estado de jogo: a cópia nasce sem dano não letal",
 	"active_effects":              "estado de jogo: a cópia nasce sem efeito ativo",
+	"effect_cast_augments":        "estado de jogo: os aprimoramentos da conjuração saem com o efeito ativo",
 	"character_conditionals":      "estado de jogo: as situações ligadas são da cena",
 	"character_power_uses":        "estado de jogo: a cópia nasce com os usos inteiros",
 	"character_stances":           "estado de jogo: a cópia nasce sem postura",

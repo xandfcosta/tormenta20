@@ -29,8 +29,17 @@ templ tempestadeEffects(v View) {
 			}
 			for _, e := range effectsOfKind(v, "stance", "declared", "applied") {
 				@ds.ActionRow(e.Name, e.Meta, e.Dialog) {
-					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + e.Name, "data-on:click": e.Remove}) {
-						Encerrar
+					if len(e.TurnRolls) > 0 {
+						<div class="ds-row-gesture-pair">
+							for _, offer := range e.TurnRolls {
+								@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": offer.Label, "aria-haspopup": "dialog", "commandfor": offer.Dialog, "command": "show-modal"}) {
+									{ offer.Button }
+								}
+							}
+							@effectEndButton(e)
+						</div>
+					} else {
+						@effectEndButton(e)
 					}
 				}
 			}
@@ -65,6 +74,14 @@ templ tempestadeEffects(v View) {
 	</section>
 	for _, row := range v.Effects.Situational {
 		@situationalSheet(v, row)
+	}
+	// QUEM ABRE O DADO DA VEZ COMEÇA DO ZERO: o fechar zera os totais da mão, pela razão da folha da magia.
+	if offers := turnRollOffersIn(v); len(offers) > 0 {
+		<div class="contents" data-on:close__capture={ augmentsReset }>
+			for _, offer := range offers {
+				@turnRollSheet(v, offer)
+			}
+		</div>
 	}
 	@sheetDialog(v, "condition-picker", "Aplicar condição", nil) {
 		@ds.FilterBar() {
@@ -149,5 +166,38 @@ templ effectPickerRows(v View, id, title, route string, options []pickerOption) 
 				}
 			</div>
 		}
+	}
+}
+
+templ effectEndButton(e activeEffect) {
+	@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Encerrar " + e.Name, "data-on:click": e.Remove}) {
+		Encerrar
+	}
+}
+
+// turnRollSheet é o diálogo do dado da vez (ver GLOSSARY, **dado da vez**): o dado já com os aprimoramentos da
+// conjuração, o "ou rolei" de cada parcela, e o Rolar, que fecha o diálogo no mesmo toque. A faixa da magia, na
+// mesa, informa o resultado.
+templ turnRollSheet(v View, offer turnRollOffer) {
+	@sheetDialog(v, offer.Dialog, offer.Title, turnRollFoot(v, offer)) {
+		for _, line := range offer.Lines {
+			<div class="ds-sum-line">
+				<span class="ds-help">Rola <b>{ line.Written }</b></span>
+				<span class="ds-sum-line flex-nowrap">
+					<span class="ds-row-meta">ou rolei</span>{ " " }
+					@handTotalField(line.Signal, line.Label)
+				</span>
+			</div>
+			if line.Note != "" {
+				<p class="ds-help">{ line.Note }</p>
+			}
+		}
+		<p class="ds-help">Não cobra PM: a conjuração já pagou, e quem diz se é a hora é a mesa.</p>
+	}
+}
+
+templ turnRollFoot(v View, offer turnRollOffer) {
+	@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "aria-label": "Confirmar " + offer.Label, "commandfor": offer.Dialog, "command": "close", "data-on:click": turnRollCommand(v, offer)}) {
+		Rolar
 	}
 }

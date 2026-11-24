@@ -19,6 +19,8 @@ type SpellCast struct {
 	Save   string
 	DC     int
 	Range  string
+	// When é o momento do dado da vez ("início do turno"), vazio na conjuração (ver GLOSSARY, **dado da vez**).
+	When string
 }
 
 // RolledSpellPart é uma parcela do dado da magia, rolada no app ou dita pela mesa.
@@ -35,6 +37,23 @@ type RolledSpellPart struct {
 func (p Plays) rollTheCast(
 	dto sheet.CharacterDTO, onSheet sheet.SpellOnTheSheet, augments []sheet.AugmentPick, fromTheTable []int,
 ) (SpellCast, error) {
+	cast, err := spellCastOf(dto, onSheet)
+	if err != nil {
+		return SpellCast{}, err
+	}
+	roll, err := onSheet.CastRoll(augments)
+	if err != nil {
+		return SpellCast{}, err
+	}
+	cast.ByText = roll.ByText
+	if cast.Parts, err = p.rollTheParts(cast.Name, roll.Parts, fromTheTable); err != nil {
+		return SpellCast{}, err
+	}
+	return cast, nil
+}
+
+// spellCastOf é a faixa da magia sem o dado: o nome, a resistência com a CD de quem conjura e o alcance.
+func spellCastOf(dto sheet.CharacterDTO, onSheet sheet.SpellOnTheSheet) (SpellCast, error) {
 	cast := SpellCast{
 		Name: onSheet.Spell.Name, Save: book.SpellResistanceWritten(onSheet.Spell),
 		Range: strings.ToLower(book.SpellRangeWritten(onSheet.Spell)),
@@ -46,31 +65,32 @@ func (p Plays) rollTheCast(
 		}
 		cast.DC, _ = onSheet.DC(computed)
 	}
-	roll, err := onSheet.CastRoll(augments)
-	if err != nil {
-		return SpellCast{}, err
+	return cast, nil
+}
+
+// rollTheParts rola cada parcela, ou confere o total que a mesa disse para ela: o total que os dados não tiram é
+// recusado, e a mesa que mandou um número de totais que não é o de parcelas também.
+func (p Plays) rollTheParts(name string, parts []book.SpellRoll, fromTheTable []int) ([]RolledSpellPart, error) {
+	if fromTheTable != nil && len(fromTheTable) != len(parts) {
+		return nil, fmt.Errorf("%s rola %d parcela(s) aqui, e a mesa mandou %d total(is)", name, len(parts), len(fromTheTable))
 	}
-	cast.ByText = roll.ByText
-	if fromTheTable != nil && len(fromTheTable) != len(roll.Parts) {
-		return SpellCast{}, fmt.Errorf("%s rola %d parcela(s) nesta conjuração, e a mesa mandou %d total(is)",
-			cast.Name, len(roll.Parts), len(fromTheTable))
-	}
-	for i, part := range roll.Parts {
+	rolled := make([]RolledSpellPart, 0, len(parts))
+	for i, part := range parts {
 		dice, err := engine.ParseDiceSum(part.Dice)
 		if err != nil {
-			return SpellCast{}, err
+			return nil, err
 		}
-		rolled := RolledSpellPart{SpellRoll: part}
+		one := RolledSpellPart{SpellRoll: part}
 		if fromTheTable != nil {
 			lowest, highest := dice.Range()
 			if fromTheTable[i] < lowest || fromTheTable[i] > highest {
-				return SpellCast{}, fmt.Errorf("%s tira de %d a %d, e a mesa disse %d", part.Dice, lowest, highest, fromTheTable[i])
+				return nil, fmt.Errorf("%s tira de %d a %d, e a mesa disse %d", part.Dice, lowest, highest, fromTheTable[i])
 			}
-			rolled.Total, rolled.ByHand = fromTheTable[i], true
-		} else if rolled.Rolls, rolled.Total, err = dice.RollWith(p.rollDie); err != nil {
-			return SpellCast{}, err
+			one.Total, one.ByHand = fromTheTable[i], true
+		} else if one.Rolls, one.Total, err = dice.RollWith(p.rollDie); err != nil {
+			return nil, err
 		}
-		cast.Parts = append(cast.Parts, rolled)
+		rolled = append(rolled, one)
 	}
-	return cast, nil
+	return rolled, nil
 }

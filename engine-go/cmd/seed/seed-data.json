@@ -223,6 +223,13 @@
             },
             {
               "id": "imagem-espelhada"
+            },
+            {
+              "id": "ferver-sangue",
+              "prepared": true
+            },
+            {
+              "id": "enxame-rubro-de-ichabod"
             }
           ]
         },
@@ -287,6 +294,10 @@
             },
             {
               "id": "controlar-madeira"
+            },
+            {
+              "id": "enxame-de-pestes",
+              "prepared": true
             }
           ]
         },

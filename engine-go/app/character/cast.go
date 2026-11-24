@@ -2,6 +2,7 @@ package character
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -168,7 +169,11 @@ func (p Plays) Cast(
 		return SpellCast{}, err
 	}
 	ritual, sustains := active[sheet.RitualSwitch], onSheet.Sustains(augments)
-	if !ritual && !sustains {
+	// O DADO DA VEZ rola de novo enquanto a magia dura, com os aprimoramentos desta conjuração (ver GLOSSARY,
+	// **dado da vez**): ela abre a linha em vigor mesmo sem manutenção (a Poeira da Podridão dura a cena), e os
+	// grava junto.
+	turns := spell.TurnRoll != nil
+	if !ritual && !sustains && !turns {
 		if err := sheet.SpendLoadedMana(ctx, p.queries, &dto, totalPm); err != nil {
 			return SpellCast{}, err
 		}
@@ -193,9 +198,19 @@ func (p Plays) Cast(
 			return SpellCast{}, fmt.Errorf("desligar o ritual da ficha %d: %w", dto.ID, err)
 		}
 	}
-	if sustains {
-		if err := openSustainedEffect(ctx, q, dto.ID, catalogSpellID); err != nil {
+	if sustains || turns {
+		scope := engine.Duration{Kind: engine.DurationSustained}.Stored()
+		if !sustains {
+			scope = engine.Duration{Kind: engine.DurationScene}.Stored()
+		}
+		effectID, err := openCastEffect(ctx, q, dto.ID, catalogSpellID, scope)
+		if err != nil {
 			return SpellCast{}, err
+		}
+		if turns {
+			if err := saveCastAugments(ctx, q, effectID, augments); err != nil {
+				return SpellCast{}, err
+			}
 		}
 	}
 	if err := tx.Commit(); err != nil {
@@ -204,28 +219,45 @@ func (p Plays) Cast(
 	return cast, nil
 }
 
-// openSustainedEffect abre na ficha de quem conjurou o efeito que a manutenção cobra e o limite de uma conta
-// (p227), sem modificadores: quem paga o fluxo de mana é quem lança, e o bônus — se a magia tem um — é do
-// Aplicar da aba Efeitos, na ficha de quem o recebe.
+// openCastEffect abre na ficha de quem conjurou a linha em vigor da magia, sem modificadores, e devolve o id dela:
+// a sustentada, que a manutenção cobra e o limite de uma conta (p227), ou a de cena da magia com dado da vez. Quem
+// paga o fluxo de mana é quem lança, e o bônus — se a magia tem um — é do Aplicar da aba Efeitos, na ficha de
+// quem o recebe.
 //
 // A LINHA QUE JÁ EXISTE FICA como está: o Aplicar pode ter vindo antes e gravado os modificadores nela, e o
 // `UpsertActiveEffect` os trocaria por nenhum. Reconjurar a mesma também não a toca.
-func openSustainedEffect(ctx context.Context, q *sqlcgen.Queries, characterID int64, spellID string) error {
-	scope := engine.Duration{Kind: engine.DurationSustained}.Stored()
+func openCastEffect(ctx context.Context, q *sqlcgen.Queries, characterID int64, spellID, scope string) (int64, error) {
 	effects, err := q.ListActiveEffectsByCharacter(ctx, characterID)
 	if err != nil {
-		return fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
+		return 0, fmt.Errorf("ler os efeitos da ficha %d: %w", characterID, err)
 	}
 	for _, e := range effects {
 		if e.Catalogid == spellID && e.Scope == scope {
-			return nil
+			return e.ID, nil
 		}
 	}
-	if _, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
+	opened, err := q.UpsertActiveEffect(ctx, sqlcgen.UpsertActiveEffectParams{
 		Characterid: characterID, Source: "spell", Catalogid: spellID, Scope: scope,
 		Modifiers: "[]", Createdat: dbvalue.NowISO(),
-	}); err != nil {
-		return fmt.Errorf("abrir a sustentada %q na ficha %d: %w", spellID, characterID, err)
+	})
+	if err != nil {
+		return 0, fmt.Errorf("abrir %q (%s) na ficha %d: %w", spellID, scope, characterID, err)
+	}
+	return opened.ID, nil
+}
+
+// saveCastAugments grava, junto da linha em vigor, os aprimoramentos da conjuração que o dado da vez usa; a
+// conjuração de novo, com a magia em vigor, os troca pelos dela.
+func saveCastAugments(ctx context.Context, q *sqlcgen.Queries, effectID int64, augments []sheet.AugmentPick) error {
+	if augments == nil {
+		augments = []sheet.AugmentPick{}
+	}
+	written, err := json.Marshal(augments)
+	if err != nil {
+		return err
+	}
+	if err := q.SaveEffectCastAugments(ctx, sqlcgen.SaveEffectCastAugmentsParams{Effectid: effectID, Augments: string(written)}); err != nil {
+		return fmt.Errorf("gravar os aprimoramentos da conjuração do efeito %d: %w", effectID, err)
 	}
 	return nil
 }
