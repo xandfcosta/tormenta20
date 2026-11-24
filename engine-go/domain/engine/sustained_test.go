@@ -73,7 +73,7 @@ func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
 // tem objeto quando existir uma habilidade sustentada que não seja magia, e
 // nenhuma existe: as 32 estão todas no catálogo de magias. Este guarda reprova
 // no dia em que uma aparecer, que é quando o
-// `assertOnlyOneSustainedSpell` precisa passar a filtrar pela fonte.
+// `sheet.SustainedClash` precisa passar a filtrar pela fonte.
 func TestOnlySpellsAreSustainedInTheBook(t *testing.T) {
 	outside := map[string]int{}
 	measured := 0
@@ -96,7 +96,7 @@ func TestOnlySpellsAreSustainedInTheBook(t *testing.T) {
 	}
 	if len(outside) > 0 {
 		t.Errorf("habilidade sustentada FORA das magias: %v — o limite de uma sustentada por vez "+
-			"passa a precisar do filtro por fonte em `assertOnlyOneSustainedSpell` (p227)", outside)
+			"passa a precisar do filtro por fonte em `sheet.SustainedClash` (p227)", outside)
 	}
 	t.Logf("%d catálogos varridos; a duração sustentada vive só nas magias", measured)
 }
