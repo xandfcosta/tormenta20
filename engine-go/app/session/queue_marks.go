@@ -62,7 +62,11 @@ func (st *Store) RollDue(
 	}
 	asked := due[n]
 	roll := live.SpellCastRoll{
-		Who: asked.Who, Spell: asked.Spell, When: asked.When, Save: asked.Save, DC: asked.DC, ByUserID: byUserID,
+		Kind: live.RollOfTheMark, Who: asked.Who, Spell: asked.Spell, Moment: asked.At, Target: asked.Target,
+		Save: asked.Save, DC: asked.DC, ByUserID: byUserID,
+	}
+	if asked.Condition != "" {
+		roll.Kind, roll.Condition = live.RollOfTheCondition, asked.Condition
 	}
 	if entry.CharacterID != nil {
 		roll.CharacterID = *entry.CharacterID

@@ -70,7 +70,7 @@ func dueViewsOf(v View, st *live.SessionRuntimeState) []dueView {
 	for i, due := range live.DueRolls(entry, v.Queue[st.TurnIndex].Conditions) {
 		// O MOMENTO sem o nome: a linha da vez já é a de quem está marcado.
 		detail := []string{partsWritten(due.Parts), live.MomentWritten(due.At)}
-		if due.Who != entry.Label {
+		if due.Who != "" {
 			detail = append(detail, "de "+due.Who)
 		}
 		if due.Save != "" {
@@ -79,9 +79,14 @@ func dueViewsOf(v View, st *live.SessionRuntimeState) []dueView {
 		if due.Last {
 			detail = append(detail, "último turno")
 		}
+		// O NOME é o da magia, ou o da condição, que não é magia.
+		name := due.Spell
+		if due.Condition != "" {
+			name = due.Condition
+		}
 		views = append(views, dueView{
-			EntryID: entry.ID, Index: i, Name: due.Spell, Detail: strings.Join(detail, " · "),
-			Aria:       "Rolar " + due.Spell + " na vez de " + entry.Label,
+			EntryID: entry.ID, Index: i, Name: name, Detail: strings.Join(detail, " · "),
+			Aria:       "Rolar " + name + " na vez de " + entry.Label,
 			HandSignal: dueHandSignal(i), Highest: highestOf(due.Parts),
 		})
 	}
