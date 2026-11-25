@@ -57,3 +57,16 @@ func TestThePowersAddTheirOwnPartToTheSpellRoll(t *testing.T) {
 		}
 	}
 }
+
+// PV TEMPORÁRIOS não são dano: a Vitalidade Fantasma, que só os dá, não ganha o Arcano de Batalha (p38), e a Magia
+// Sagrada/Profana não os troca por luz (p58).
+func TestTemporaryHitPointsAreNotDamage(t *testing.T) {
+	temporary := []book.SpellRoll{{Dice: "2d10", Kind: "PV temporários"}}
+	powers := SpellRollPowers{battleArcane: 4}
+	if bonuses := powers.CastBonuses(temporary); len(bonuses) != 0 {
+		t.Errorf("a Vitalidade Fantasma ganhou as parcelas %+v; want nenhuma, porque PV temporários não são dano", bonuses)
+	}
+	if parts := (PoweredCast{DamageKind: "luz"}).Apply(temporary); parts[0].Kind != "PV temporários" {
+		t.Errorf("a Magia Sagrada trocou os PV temporários por %q; want PV temporários", parts[0].Kind)
+	}
+}

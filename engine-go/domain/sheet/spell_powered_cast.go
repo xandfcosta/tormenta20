@@ -63,7 +63,7 @@ func holyKindOf(godEnergy, chosen string) (string, error) {
 	return "", fmt.Errorf("a Magia Sagrada/Profana segue a energia do deus, e a ficha não tem deus que a canalize (p58)")
 }
 
-// Apply troca o tipo das parcelas de DANO pela Magia Sagrada/Profana; a cura fica. O máximo e a divisão da cura são
+// Apply troca o tipo das parcelas de DANO pela Magia Sagrada/Profana; a cura e os PV temporários ficam. O máximo e a divisão da cura são
 // de quem rola.
 func (p PoweredCast) Apply(parts []book.SpellRoll) []book.SpellRoll {
 	if p.DamageKind == "" {
@@ -71,7 +71,7 @@ func (p PoweredCast) Apply(parts []book.SpellRoll) []book.SpellRoll {
 	}
 	out := slices.Clone(parts)
 	for i := range out {
-		if out[i].Kind != "cura" {
+		if isDamage(out[i]) {
 			out[i].Kind = p.DamageKind
 		}
 	}
