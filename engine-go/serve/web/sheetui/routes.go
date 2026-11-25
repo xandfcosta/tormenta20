@@ -68,6 +68,7 @@ func Routes(r chi.Router, s Scene) {
 	r.Post("/personagens/{id}/acoes/mirar", s.sheetCommand(aimsAtTheTarget))
 	r.Post("/personagens/{id}/acoes/bola-de-fogo/{item}", s.sheetCommand(firesTheBlastOnTheTarget))
 	r.Post("/personagens/{id}/acoes/magia/{efeito}/{opcao}", s.sheetCommand(actsOnSpell))
+	r.Post("/personagens/{id}"+arcaneBoltPath, s.sheetCommand(firesArcaneBolt))
 	r.Post("/personagens/{id}/acoes/investida-imprudente/{arma}", s.sheetCommand(chargesTheTarget(engine.ChargeReckless)))
 	// OS EFEITOS: quatro donos de estado, quatro caminhos.
 	r.Post("/personagens/{id}/efeitos/condicao/{cond}", s.sheetCommand(toggleBookCondition))

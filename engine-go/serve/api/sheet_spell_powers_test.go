@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -143,5 +144,48 @@ func TestTheHolySpellTurnsTheDamageByTheGod(t *testing.T) {
 	}
 	if got := strings.Join(kinds(), ","); got != "trevas,trevas" {
 		t.Errorf("a Coluna de Chamas do devoto de Nimb, com trevas, rola %s; want trevas,trevas", got)
+	}
+}
+
+// O RAIO ARCANO na aba Ações (p39; ver GLOSSARY, **raio arcano**): a linha no grupo da ação padrão, e o disparo com
+// o Raio Elemental de fogo, rolado na mão, vai pela faixa da magia com a condição de quem falha e a parcela do
+// Arcano de Batalha, porque o raio conta como magia; ele cobra 1 PM e a ação padrão.
+func TestTheArcaneBoltFiresFromTheActionsTab(t *testing.T) {
+	f := turnCasterAtTheTable(t, "Arcanista")
+	seedPowerChoices(t, f.s, f.charID,
+		`["class.arcanista.raio-arcano","class.arcanista.raio-elemental","class.arcanista.arcano-de-batalha"]`, "{}")
+	if _, err := f.s.db.Exec(`UPDATE characters SET intelligence = 4 WHERE id = ?`, f.charID); err != nil {
+		t.Fatalf("dar Inteligência ao Arcanista: %v", err)
+	}
+	// A mesa desenha as Ações da PRIMEIRA ficha do jogador na campanha: o conjurador fica sendo a única.
+	if _, err := f.s.db.Exec(`DELETE FROM campaign_members WHERE campaignId = ? AND characterId != ?`, f.campaignID, f.charID); err != nil {
+		t.Fatalf("tirar a outra ficha do jogador da mesa: %v", err)
+	}
+	onTurnInAnActionScene(t, f)
+
+	standard := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Ação padrão", `</section>`)
+	if !strings.Contains(standard, "Raio Arcano") || !strings.Contains(standard, "5d8 de essência") {
+		t.Errorf("o grupo da ação padrão não tem o Raio Arcano de 5d8 do arcanista de 20º (5º círculo)")
+	}
+
+	mpBefore := mpOf(t, f.s, f.charID)
+	target := fmt.Sprintf("/personagens/%d/acoes/raio-arcano?tab=combat", f.charID)
+	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, `{"arcane_bolt_element":"fogo","spell_hand_1":20}`).Body.String()); refusal != "" {
+		t.Fatalf("o Raio Arcano de fogo foi recusado: %q", refusal)
+	}
+	state := stateOf(t, f.s.sessions, f.sessionID)
+	cast := state.LastSpellCast
+	if cast == nil || cast.Spell != "Raio Arcano" || len(cast.Parts) != 1 || cast.Parts[0].Kind != "fogo" || cast.Parts[0].Total != 20 ||
+		!strings.Contains(cast.Parts[0].Note, "em chamas") || cast.Save != "Reflexos reduz à metade" {
+		t.Fatalf("a faixa diz %+v; want o Raio Arcano de fogo, 20 da mesa, Reflexos reduz à metade, em chamas para quem falha", cast)
+	}
+	if len(cast.Bonuses) != 1 || cast.Bonuses[0].Name != "Arcano de Batalha" {
+		t.Errorf("o Raio Arcano traz as parcelas %+v; want a do Arcano de Batalha, porque ele conta como magia", cast.Bonuses)
+	}
+	if spent := mpBefore - mpOf(t, f.s, f.charID); spent != 1 {
+		t.Errorf("o Raio Elemental cobrou %d PM; want 1", spent)
+	}
+	if state.Scene.StandardLeft {
+		t.Error("o Raio Arcano não gastou a ação padrão")
 	}
 }
