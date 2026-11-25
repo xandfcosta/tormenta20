@@ -74,6 +74,9 @@ func TestTheBurningGoblinRollsItsFireOnItsTurn(t *testing.T) {
 		live.EntryPatch{Conditions: &[]string{live.ConditionBurning}}); err != nil {
 		t.Fatalf("pôr o Goblin em chamas: %v", err)
 	}
+	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, `aria-label="Rolar Em Chamas na vez de Goblin"`) {
+		t.Error("na vez do Goblin em chamas, a mesa do mestre não oferece o Rolar das chamas")
+	}
 	if refusal := tableRefusal(t, f.requests(t, f.gm, http.MethodPost, f.tableUrl()+"/iniciativa/"+goblin+"/na-vez/0/rolar", `{}`).Body.String()); refusal != "" {
 		t.Fatalf("rolar as chamas do Goblin foi recusado: %q", refusal)
 	}
