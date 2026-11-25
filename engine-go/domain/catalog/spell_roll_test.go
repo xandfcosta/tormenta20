@@ -230,7 +230,7 @@ func TestEveryTurnRollSaysWhenAndWhatItRolls(t *testing.T) {
 }
 
 // TestEveryLingeringRollSaysWhenAndWhatItRolls confere a forma da marca na fila (ver GLOSSARY, **marca na fila**): o
-// momento é o início ou o fim do turno de quem foi atingido, há parcela, a duração não é negativa, as chamas são
+// momento é o início ou o fim do turno de quem foi atingido, há uma parcela, a duração não é negativa, as chamas são
 // do início do turno (a condição Em Chamas, p394), e o aumento que soma ao dado do alvo é de magia que deixa marca.
 func TestEveryLingeringRollSaysWhenAndWhatItRolls(t *testing.T) {
 	spells := decodeResource[map[string]spellForRollSweep](t, "spells")
@@ -255,8 +255,10 @@ func TestEveryLingeringRollSaysWhenAndWhatItRolls(t *testing.T) {
 		if l.Turns < 0 {
 			t.Errorf("%s (%s): a marca dura %d turnos", m.Name, id, l.Turns)
 		}
-		if len(l.Rolls) == 0 {
-			t.Errorf("%s (%s): a marca não rola nada", m.Name, id)
+		// UMA PARCELA SÓ: a linha do mestre tem um campo da mão por dado da vez, e uma segunda parcela não teria
+		// onde receber o total da mesa.
+		if len(l.Rolls) != 1 {
+			t.Errorf("%s (%s): a marca rola %d parcelas, e a linha do mestre recebe o total da mão de uma", m.Name, id, len(l.Rolls))
 		}
 		for _, r := range l.Rolls {
 			if !diceShape.MatchString(r.Dice) {

@@ -1,0 +1,64 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// gmDueRolls são os dados da vez da linha que está na vez (ver GLOSSARY, **marca na fila**): um por marca e o da
+// condição Em Chamas, cada um com o "ou rolei" e o Rolar. O mestre aplica com os gestos de PV da fila.
+templ gmDueRolls(v View) {
+	<section class="ds-reg" data-due-rolls aria-label="Dados da vez">
+		for _, due := range v.GM.Due {
+			<div class="ds-reg-line">
+				<span class="min-w-0">
+					<span class="ds-row-title">{ due.Name }</span>
+					<span class="ds-row-meta">{ due.Detail }</span>
+				</span>
+				@ds.TextField(ds.Field{ID: "due-hand-" + strconv.Itoa(due.Index), Label: "ou rolei", Type: "number"}, dueHandAttrs(due))
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": due.Aria, "data-on:click": tableCommand(v, "POST", fmt.Sprintf("iniciativa/%s/na-vez/%d/rolar", due.EntryID, due.Index))}) {
+					@ui.Icon("Dices", "ds-icon")
+					Rolar
+				}
+			</div>
+		}
+	</section>
+}
+
+// gmRowMarks são os crachás das marcas na linha da fila do mestre.
+templ gmRowMarks(row tableRow) {
+	<span class="ds-badges">
+		for _, m := range row.Marks {
+			<span title={ m.Detail }>
+				@ds.Badge(m.Spell, true)
+			</span>
+		}
+	</span>
+}
+
+// gmSheetMarks é o bloco das marcas na folha da linha: cada uma com o que rola e o Tirar, e o Marcar com a magia da
+// última conjuração que deixa marca.
+templ gmSheetMarks(v View, row tableRow) {
+	<div class="ds-gm-conds">
+		<span class="ds-field-label">Marcas de magia</span>
+		for i, m := range row.Marks {
+			<div class="ds-reg-line">
+				<span class="min-w-0">
+					<span class="ds-row-title">{ m.Spell }</span>
+					<span class="ds-row-meta">{ m.Detail }</span>
+				</span>
+				@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "aria-label": "Tirar " + m.Spell + " de " + row.Label, "data-on:click": rowCommand(v, row, fmt.Sprintf("marcas/%d/tirar", i))}) {
+					Tirar
+				}
+			</div>
+		}
+		if v.GM.Markable != "" {
+			@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "aria-label": "Marcar " + row.Label + " com " + v.GM.Markable, "data-on:click": rowCommand(v, row, "marcar")}) {
+				{ "+ Marcar com " + v.GM.Markable }
+			}
+		}
+	</div>
+}

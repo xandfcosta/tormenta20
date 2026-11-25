@@ -80,6 +80,13 @@ func (p Plays) ActOnSpell(ctx context.Context, dto sheet.CharacterDTO, asked Spe
 	if cast.Parts, err = p.rollTheParts(cast.Name, parts, fromTheTable); err != nil {
 		return SpellCast{}, err
 	}
+	// A AÇÃO COM O EFEITO NORMAL da magia deixa a marca dela, como a conjuração: o dardo de lava põe o alvo em
+	// chamas (p196; ver GLOSSARY, **marca na fila**).
+	if asked.Action.CastRoll {
+		if cast.Lingering, err = lingeringOf(asked.Spell, asked.Effect.CastAugments, cast); err != nil {
+			return SpellCast{}, err
+		}
+	}
 	ends := asked.Action.Ends
 	if asked.Spell.Charges(asked.Effect.CastAugments) > 0 {
 		left := asked.Effect.Charges - 1

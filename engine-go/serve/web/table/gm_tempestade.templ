@@ -86,6 +86,9 @@ templ gmTurnBar(v View) {
 		if v.Bleeding != nil {
 			@tempestadeBleeding(v)
 		}
+		if v.GM != nil && len(v.GM.Due) > 0 {
+			@gmDueRolls(v)
+		}
 		if v.GM != nil {
 			<span class="ds-row-meta ds-gm-turn-what" aria-live="polite">{ v.GM.Counter }</span>
 			<p class="ds-help ds-reg-error" data-show="$command_error != ''" data-text="$command_error" aria-live="assertive"></p>
@@ -167,6 +170,9 @@ templ gmQueueRow(v View, row tableRow) {
 						@conditionBadge(c)
 					}
 				</span>
+			}
+			if len(row.Marks) > 0 {
+				@gmRowMarks(row)
 			}
 		</button>
 		if row.PV != nil {
@@ -251,6 +257,9 @@ templ gmCombatantSheet(v View, row tableRow) {
 				}
 			</div>
 		</div>
+		if len(row.Marks) > 0 || v.GM.Markable != "" {
+			@gmSheetMarks(v, row)
+		}
 		<div class="ds-gm-sheet-foot">
 			@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": rowCommand(v, row, "remover")}) {
 				@ui.Icon("Trash2", "ds-icon")

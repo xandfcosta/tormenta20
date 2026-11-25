@@ -52,6 +52,9 @@ type InitiativeEntry struct {
 	HpMax     *int64 `json:"hpMax,omitempty"`
 	MpCurrent *int64 `json:"mpCurrent,omitempty"`
 	MpMax     *int64 `json:"mpMax,omitempty"`
+	// Marks são as marcas de magia desta linha (ver GLOSSARY, **marca na fila**): o que a magia deixou nela e rola
+	// na vez dela. Moram na linha, como as condições do NPC, e valem igual para o PC.
+	Marks []QueueMark `json:"marks,omitempty"`
 }
 
 // SessionRuntimeState é o rastreador vivo da sessão: a fila ordenada por
@@ -86,6 +89,9 @@ type SessionRuntimeState struct {
 	// InformedRolls são as últimas rolagens que a mesa só informa: o teste, o disparo e a magia. Ver
 	// `informed_rolls.go`.
 	InformedRolls
+	// Markable é a marca da última magia conjurada que deixa marca na criatura atingida, a que o mestre põe nas
+	// linhas de quem falhou (ver GLOSSARY, **marca na fila**). Fica até outra magia dessas ser conjurada.
+	Markable *QueueMark `json:"markable,omitempty"`
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,

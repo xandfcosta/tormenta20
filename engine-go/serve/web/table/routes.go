@@ -461,6 +461,8 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 	if role == "gm" {
 		r := ofViewGm(st, members, present, true)
 		r.DamageTaken = damageTakenOf(sheets, onTable)
+		// A MARCA NA FILA lê as condições que a linha já desenha (`withSheetState`), então vem depois delas.
+		r.Due, r.Markable = dueViewsOf(view, st), markableOf(st)
 		if blast := view.Rolls[blastRoll]; blast != nil {
 			blast.Taken = r.DamageTaken[blast.TargetCharacterID]
 		}

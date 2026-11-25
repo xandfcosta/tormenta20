@@ -30,6 +30,7 @@ func AdvanceTurn(st *SessionRuntimeState) {
 			st.Round = 1
 		}
 		st.TurnsTaken++
+		countTheMarksOfTheTurn(st)
 		return
 	}
 	leavesTheTurnBehind(st)
@@ -40,6 +41,7 @@ func AdvanceTurn(st *SessionRuntimeState) {
 		st.Round++
 	}
 	RefreshTurn(st)
+	countTheMarksOfTheTurn(st)
 }
 
 // dropTheSettledAttack tira da mesa o ataque ENCERRADO (`Settled`): o erro do golpe e a
