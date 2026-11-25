@@ -32,6 +32,8 @@ type SpellCast struct {
 	// Bonuses são as parcelas fixas que os poderes de quem conjurou somam ao dado, cada uma com o nome do poder (ver
 	// GLOSSARY, **dado da magia**).
 	Bonuses []sheet.SpellBonus
+	// VitalShare são os PV que outra criatura recupera pela Comunhão Vital, a metade da cura (p58); zero sem ela.
+	VitalShare int
 }
 
 // RolledSpellPart é uma parcela do dado da magia, rolada no app ou dita pela mesa.
@@ -40,13 +42,16 @@ type RolledSpellPart struct {
 	Rolls  []int
 	Total  int
 	ByHand bool
+	// Maximized diz que a parcela não rolou: o Espírito dos Solstícios a pôs no máximo (p62).
+	Maximized bool
 }
 
 // rollTheCast rola o dado da conjuração, ou confere o total que a mesa rolou na mão para cada parcela (o dado da
 // mesa é de primeira classe). Ela recusa o total que os dados não tiram e a mesa que mandou um número de
 // parcelas que não é o da conjuração — antes de qualquer cobrança.
 func (p Plays) rollTheCast(
-	dto sheet.CharacterDTO, onSheet sheet.SpellOnTheSheet, augments []sheet.AugmentPick, fromTheTable []int,
+	dto sheet.CharacterDTO, onSheet sheet.SpellOnTheSheet, augments []sheet.AugmentPick,
+	powerAugments []sheet.PowerAugmentPick, fromTheTable []int,
 ) (SpellCast, error) {
 	cast, powers, err := spellCastOf(dto, onSheet)
 	if err != nil {
@@ -56,13 +61,32 @@ func (p Plays) rollTheCast(
 	if err != nil {
 		return SpellCast{}, err
 	}
+	// OS PODERES QUE SÃO APRIMORAMENTO agem no dado antes de ele rolar: a Magia Sagrada troca o tipo do dano, e é
+	// por isso que o frio que virou luz não ganha o Aspecto do Inverno (ver GLOSSARY, **dado da magia**).
+	god := ""
+	if dto.God != nil {
+		god = *dto.God
+	}
+	powered, err := sheet.PoweredCastOf(powerAugments, book.GodEnergy(god))
+	if err != nil {
+		return SpellCast{}, err
+	}
+	roll.Parts = powered.Apply(roll.Parts)
 	cast.ByText = roll.ByText
 	// A CONJURAÇÃO QUE CRIA CARGAS não rola nada: a faixa diz o que ficou no lugar ("Dardo de lava ×4").
 	if roll.Charges > 0 {
 		cast.Option, cast.Charges = onSheet.Actions(augments).Options[0].Name, roll.Charges
 	}
-	if cast.Parts, err = p.rollTheParts(cast.Name, roll.Parts, fromTheTable); err != nil {
+	if powered.Maximize {
+		cast.Parts, err = maximizedParts(roll.Parts)
+	} else {
+		cast.Parts, err = p.rollTheParts(cast.Name, roll.Parts, fromTheTable)
+	}
+	if err != nil {
 		return SpellCast{}, err
+	}
+	if powered.VitalShare {
+		cast.VitalShare = halfTheHealing(cast.Parts)
 	}
 	// OS DARDOS DA LANÇA valem "em vez do efeito normal": a conjuração que só os cria não atinge ninguém, e a marca
 	// sai de cada dardo (`ActOnSpell`).
@@ -127,6 +151,32 @@ func LiveBonuses(bonuses []sheet.SpellBonus) []live.SpellCastBonus {
 		out = append(out, live.SpellCastBonus{Name: b.Name, Amount: b.Amount, Kind: b.Kind, Note: b.Note})
 	}
 	return out
+}
+
+// maximizedParts põe cada parcela no máximo, sem rolar e sem o total da mão: "uma magia Curar Ferimentos
+// aprimorada para curar 5d8+5 PV irá curar automaticamente 45 PV" (p62).
+func maximizedParts(parts []book.SpellRoll) ([]RolledSpellPart, error) {
+	out := make([]RolledSpellPart, 0, len(parts))
+	for _, part := range parts {
+		dice, err := engine.ParseDiceSum(part.Dice)
+		if err != nil {
+			return nil, err
+		}
+		_, highest := dice.Range()
+		out = append(out, RolledSpellPart{SpellRoll: part, Total: highest, Maximized: true})
+	}
+	return out, nil
+}
+
+// halfTheHealing é a metade da cura rolada, que a Comunhão Vital dá a outra criatura (p58), arredondada para baixo.
+func halfTheHealing(parts []RolledSpellPart) int {
+	healing := 0
+	for _, part := range parts {
+		if part.Kind == "cura" {
+			healing += part.Total
+		}
+	}
+	return healing / 2
 }
 
 // rollTheParts rola cada parcela, ou confere o total que a mesa disse para ela: o total que os dados não tiram é

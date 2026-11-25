@@ -175,6 +175,13 @@ templ augmentLine(a augmentRow) {
 		<div>
 			<div class="ds-row-title">{ a.Description }</div>
 			<div class="ds-row-meta">{ augmentPriceWritten(a) }</div>
+			if a.EnergyChoice {
+				<select class="ds-input ds-select" aria-label="Luz ou trevas da Magia Sagrada/Profana" data-bind:augment_holy_energy data-show={ a.Signal + " > 0" }>
+					<option value="">Luz ou trevas?</option>
+					<option value="luz">Luz</option>
+					<option value="trevas">Trevas</option>
+				</select>
+			}
 		</div>
 		if a.Locked {
 			@ui.Icon("Lock", "ds-icon")

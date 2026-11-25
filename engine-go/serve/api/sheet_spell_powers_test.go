@@ -72,3 +72,76 @@ func TestTheWinterAspectAddsToTheFrostAfterTheCast(t *testing.T) {
 		t.Errorf("a Nevasca traz %+v; want +10 do Aspecto do Inverno, um por dado de frio", cast)
 	}
 }
+
+// O ESPÍRITO DOS SOLSTÍCIOS põe o dado no máximo, sem rolar (p62): a Curar Ferimentos, 2d8+2, cura 18.
+func TestTheSolsticeSpiritMaximizesTheCast(t *testing.T) {
+	f := turnCasterAtTheTable(t, "Druida")
+	seedPowerChoices(t, f.s, f.charID,
+		`["class.druida.aspecto-do-inverno","class.druida.aspecto-do-verao","class.druida.espirito-dos-solsticios"]`, "{}")
+	if refusal, _ := castWith(t, f, "curar-ferimentos", `{"augment_solstice":1}`); refusal != "" {
+		t.Fatalf("conjurar a Curar Ferimentos com o Espírito dos Solstícios foi recusado: %q", refusal)
+	}
+	cast := stateOf(t, f.s.sessions, f.sessionID).LastSpellCast
+	if cast == nil || len(cast.Parts) != 1 || cast.Parts[0].Total != 18 || !cast.Parts[0].Maximized || len(cast.Parts[0].Rolls) != 0 {
+		t.Fatalf("a Curar Ferimentos maximizada diz %+v; want 18, no máximo, sem dados", cast)
+	}
+}
+
+// A COMUNHÃO VITAL faz a faixa dizer a metade da cura que outra criatura recupera (p58).
+func TestTheVitalCommunionSharesHalfTheHealing(t *testing.T) {
+	f := turnCasterAtTheTable(t, "Clérigo")
+	seedPowerChoices(t, f.s, f.charID, `["class.clerigo.comunhao-vital"]`, "{}")
+	if refusal, _ := castWith(t, f, "curar-ferimentos", `{"augment_vital_communion":1,"spell_hand_1":15}`); refusal != "" {
+		t.Fatalf("conjurar a Curar Ferimentos com a Comunhão Vital foi recusado: %q", refusal)
+	}
+	if cast := stateOf(t, f.s.sessions, f.sessionID).LastSpellCast; cast == nil || cast.VitalShare != 7 {
+		t.Fatalf("a Comunhão Vital diz %+v; want 7, a metade dos 15 da cura", cast)
+	}
+	page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if !strings.Contains(page, "Comunhão Vital: outra criatura em alcance curto recupera 7 PV") {
+		t.Error("a faixa da mesa não diz a cura da Comunhão Vital")
+	}
+}
+
+// A MAGIA SAGRADA/PROFANA troca o tipo do dano pela energia do deus (p58): o de Khalmyr vira luz, e o de Nimb, que
+// canaliza qualquer uma, pede a escolha no diálogo.
+func TestTheHolySpellTurnsTheDamageByTheGod(t *testing.T) {
+	f := turnCasterAtTheTable(t, "Clérigo")
+	seedPowerChoices(t, f.s, f.charID, `["class.clerigo.magia-sagrada-profana"]`, "{}")
+	godOf := func(god string) {
+		t.Helper()
+		if _, err := f.s.db.Exec(`UPDATE characters SET god = ? WHERE id = ?`, god, f.charID); err != nil {
+			t.Fatalf("pôr o deus %s: %v", god, err)
+		}
+	}
+	kinds := func() []string {
+		t.Helper()
+		var out []string
+		for _, part := range stateOf(t, f.s.sessions, f.sessionID).LastSpellCast.Parts {
+			out = append(out, part.Kind)
+		}
+		return out
+	}
+
+	godOf("khalmyr")
+	if refusal, _ := castWith(t, f, "coluna-de-chamas", `{"augment_holy":1}`); refusal != "" {
+		t.Fatalf("a Coluna de Chamas sagrada foi recusada: %q", refusal)
+	}
+	if got := strings.Join(kinds(), ","); got != "luz,luz" {
+		t.Errorf("a Coluna de Chamas do devoto de Khalmyr rola %s; want luz,luz", got)
+	}
+
+	godOf("nimb")
+	if screen := spellScreen(t, f, f.charID); !strings.Contains(screen, `aria-label="Luz ou trevas da Magia Sagrada/Profana"`) {
+		t.Error("o diálogo de conjurar do devoto de Nimb não pergunta luz ou trevas")
+	}
+	if refusal, _ := castWith(t, f, "coluna-de-chamas", `{"augment_holy":1}`); !strings.Contains(refusal, "luz ou trevas") {
+		t.Errorf("a Coluna de Chamas sagrada do devoto de Nimb, sem escolha, devolveu %q; want a recusa que pede luz ou trevas", refusal)
+	}
+	if refusal, _ := castWith(t, f, "coluna-de-chamas", `{"augment_holy":1,"augment_holy_energy":"trevas"}`); refusal != "" {
+		t.Fatalf("a Coluna de Chamas de trevas foi recusada: %q", refusal)
+	}
+	if got := strings.Join(kinds(), ","); got != "trevas,trevas" {
+		t.Errorf("a Coluna de Chamas do devoto de Nimb, com trevas, rola %s; want trevas,trevas", got)
+	}
+}
