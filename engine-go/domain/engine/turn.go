@@ -81,7 +81,7 @@ const ConditionSickened = "enjoado"
 //
 // @example OneActionTurn([]string{"enjoado"}) // true
 func OneActionTurn(conditions []string) bool {
-	return slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == OneAction })
+	return slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == ActsOnce })
 }
 
 // Spend devolve o turno DEPOIS de pagar o custo, ou a recusa.

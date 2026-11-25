@@ -105,7 +105,7 @@ func BleedingCheckPasses(d20, constitution int) bool {
 //
 // @example IsUnconscious([]string{"petrificado"}) // true
 func IsUnconscious(conditions []string) bool {
-	return slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == Unconscious })
+	return slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == ActsUnconscious })
 }
 
 // MomentFor monta o instante de quem vai agir, a partir do PV e das condições.
@@ -119,7 +119,7 @@ func MomentFor(onTurn bool, hp int64, conditions []string) ActionMoment {
 	if IsUnconscious(conditions) {
 		moment.CanAct, moment.CanReact = false, false
 	}
-	if slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == NoAction }) {
+	if slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == ActsNot }) {
 		moment.CanAct = false
 	}
 	return moment

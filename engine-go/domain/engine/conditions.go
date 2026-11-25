@@ -20,12 +20,12 @@ type ConditionActs int
 const (
 	// ActsNormally é a condição que não mexe na ação.
 	ActsNormally ConditionActs = iota
-	// NoAction não age, e ainda reage (p233).
-	NoAction
-	// Unconscious não age nem reage: "sem ações (incluindo reações)" (p395).
-	Unconscious
-	// OneAction tem uma ação só no turno, padrão ou de movimento (p394).
-	OneAction
+	// ActsNot não age, e ainda reage (p233).
+	ActsNot
+	// ActsUnconscious não age nem reage: "sem ações (incluindo reações)" (p395).
+	ActsUnconscious
+	// ActsOnce tem uma ação só no turno, padrão ou de movimento (p394).
+	ActsOnce
 )
 
 // ConditionOutcome é uma linha da tabela do dado da condição: até que total ela vale, e o que manda.
@@ -36,7 +36,8 @@ type ConditionOutcome struct {
 
 // ConditionTurnRoll é o dado que a condição rola no início da vez de quem a tem.
 type ConditionTurnRoll struct {
-	// ID é a condição, e Name o nome dela na fila e na faixa ("Em Chamas").
+	// ID é a condição, e Name o nome dela na fila e na faixa ("Em Chamas"). Os dois vêm da chave da tabela e
+	// do catálogo, no `ConditionTurnRolls`: escritos na linha, seriam uma segunda grafia do mesmo fato.
 	ID, Name string
 	Dice     string
 	// Kind é o tipo do dano, vazio no dado que não é dano (o do Confuso).
@@ -68,21 +69,21 @@ func (r ConditionRule) hasDestination() bool {
 var conditionRules = map[string]ConditionRule{
 	// "não pode fazer ações" (p394-395). O fascinado entra porque a exceção dele, "observar aquilo que o
 	// fascinou", é um teste de Percepção, e o turno não cobra teste de perícia (decisão do dono).
-	"atordoado":    {Acts: NoAction},
-	"pasmo":        {Acts: NoAction},
-	"surpreendido": {Acts: NoAction},
-	"fascinado":    {Acts: NoAction},
+	"atordoado":    {Acts: ActsNot},
+	"pasmo":        {Acts: ActsNot},
+	"surpreendido": {Acts: ActsNot},
+	"fascinado":    {Acts: ActsNot},
 	// "sem ações (incluindo reações)" (p395); o petrificado "fica inconsciente" (p395), e a ficha grava só o
 	// nome dele.
-	ConditionUnconscious: {Acts: Unconscious},
-	"petrificado":        {Acts: Unconscious},
+	ConditionUnconscious: {Acts: ActsUnconscious},
+	"petrificado":        {Acts: ActsUnconscious},
 	// "só pode realizar uma ação padrão ou de movimento (não ambas) por rodada" (p394).
-	ConditionSickened: {Acts: OneAction},
+	ConditionSickened: {Acts: ActsOnce},
 	// "No início de seus turnos, sofre 1d6 pontos de dano de fogo" (p394).
-	"em-chamas": {TurnRoll: &ConditionTurnRoll{ID: "em-chamas", Name: "Em Chamas", Dice: "1d6", Kind: "fogo"}},
+	"em-chamas": {TurnRoll: &ConditionTurnRoll{Dice: "1d6", Kind: "fogo"}},
 	// "Role 1d6 no início de seus turnos" (p394), e a tabela em paráfrase. Quem aplica é o mestre: o app não
 	// tira a ação nem a condição (decisão do dono).
-	"confuso": {TurnRoll: &ConditionTurnRoll{ID: "confuso", Name: "Confuso", Dice: "1d6", Outcomes: []ConditionOutcome{
+	"confuso": {TurnRoll: &ConditionTurnRoll{Dice: "1d6", Outcomes: []ConditionOutcome{
 		{UpTo: 1, Says: "anda numa direção sorteada por 1d8"},
 		{UpTo: 3, Says: "não age, e balbucia"},
 		{UpTo: 5, Says: "ataca a criatura mais próxima com a arma empunhada, ou a si mesmo se estiver sozinho"},
@@ -109,7 +110,9 @@ func ConditionTurnRolls(conditions []string) []ConditionTurnRoll {
 	var rolls []ConditionTurnRoll
 	for _, id := range conditions {
 		if roll := conditionRules[id].TurnRoll; roll != nil {
-			rolls = append(rolls, *roll)
+			named := *roll
+			named.ID, named.Name = id, conditionNameOf(id)
+			rolls = append(rolls, named)
 		}
 	}
 	return rolls
@@ -141,11 +144,15 @@ func HandMarkRefusal(id string) error {
 	if !rule.Derived {
 		return nil
 	}
-	name := id
+	return fmt.Errorf("%s não se marca à mão: quem a dá é %s", conditionNameOf(id), rule.Elsewhere)
+}
+
+// conditionNameOf é o nome da condição no livro ("Em Chamas"), ou o id na que o catálogo não tem.
+func conditionNameOf(id string) string {
 	for _, c := range transcript.Conditions {
 		if c.ID == id {
-			name = c.Name
+			return c.Name
 		}
 	}
-	return fmt.Errorf("%s não se marca à mão: quem a dá é %s", name, rule.Elsewhere)
+	return id
 }
