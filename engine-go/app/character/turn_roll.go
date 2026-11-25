@@ -1,7 +1,7 @@
 package character
 
 import (
-	"t20engine/domain/book"
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 )
 
@@ -24,7 +24,7 @@ func (p Plays) RollTurn(dto sheet.CharacterDTO, effectID int64, version string, 
 	if err != nil {
 		return SpellCast{}, err
 	}
-	cast.When = book.TurnRollAt(spellEffect.Spell.Spell.TurnRoll.At)
+	cast.Kind, cast.Moment = live.RollOfTheTurn, spellEffect.Spell.Spell.TurnRoll.At
 	if version != "" {
 		cast.Name += " (" + version + ")"
 	}

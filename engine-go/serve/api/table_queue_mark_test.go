@@ -58,7 +58,7 @@ func TestTheGMMarksTheCreatureHitAndRollsOnItsTurn(t *testing.T) {
 	}
 	f.requests(t, f.gm, http.MethodPost, roll, `{"due_hand_0":9}`)
 	cast := stateOf(t, f.s.sessions, f.sessionID).LastSpellCast
-	if cast == nil || cast.Spell != "Flecha Ácida" || cast.When != "início do turno de Goblin" {
+	if cast == nil || cast.Kind != live.RollOfTheMark || cast.Head() != "Conjurador da Vez · Flecha Ácida · início do turno de Goblin" {
 		t.Fatalf("a faixa da magia diz %+v; want o muco da Flecha na vez do Goblin", cast)
 	}
 	if part := cast.Parts[0]; part.Total != 9 || !part.ByHand || part.Dice != "3d6" || part.Kind != "ácido" {
@@ -78,7 +78,9 @@ func TestTheBurningGoblinRollsItsFireOnItsTurn(t *testing.T) {
 		t.Fatalf("rolar as chamas do Goblin foi recusado: %q", refusal)
 	}
 	cast := stateOf(t, f.s.sessions, f.sessionID).LastSpellCast
-	if cast == nil || cast.Spell != "Em Chamas" || cast.Who != "Goblin" || len(cast.Parts) != 1 {
+	// A CONDIÇÃO NÃO É MAGIA: ela não veste os campos de magia nem de quem conjurou.
+	if cast == nil || cast.Kind != live.RollOfTheCondition || cast.Condition != "Em Chamas" || cast.Target != "Goblin" ||
+		cast.Spell != "" || cast.Who != "" || len(cast.Parts) != 1 {
 		t.Fatalf("a faixa diz %+v; want as chamas do Goblin", cast)
 	}
 	if part := cast.Parts[0]; part.Dice != "1d6" || part.Kind != "fogo" || part.Total < 1 || part.Total > 6 || part.ByHand {

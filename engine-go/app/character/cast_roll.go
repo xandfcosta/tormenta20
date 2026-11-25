@@ -20,10 +20,12 @@ type SpellCast struct {
 	Save   string
 	DC     int
 	Range  string
-	// When diz o que esta rolagem é além da magia, para a cabeça da faixa: o momento do dado da vez ("início do
-	// turno", ver GLOSSARY, **dado da vez**), a opção da ação da magia ("Esmagar", ver **ação da magia**), ou as
-	// cargas que a conjuração criou. Vazio na conjuração comum.
-	When string
+	// Kind é o que esta rolagem é, e Moment, Option e Charges o que o tipo diz além da magia: o momento do dado da
+	// vez, a opção da ação da magia, ou a ação e as cargas que a conjuração criou (ver `live.SpellCastRoll`).
+	Kind    live.SpellBandKind
+	Moment  string
+	Option  string
+	Charges int
 	// Lingering é a marca que a magia deixa em quem foi atingido, com os aumentos escolhidos, nil na que não deixa
 	// nada (ver GLOSSARY, **marca na fila**). Quem conjurou entra na publicação.
 	Lingering *live.QueueMark
@@ -54,7 +56,7 @@ func (p Plays) rollTheCast(
 	cast.ByText = roll.ByText
 	// A CONJURAÇÃO QUE CRIA CARGAS não rola nada: a faixa diz o que ficou no lugar ("Dardo de lava ×4").
 	if roll.Charges > 0 {
-		cast.When = fmt.Sprintf("%s ×%d", onSheet.Actions(augments).Options[0].Name, roll.Charges)
+		cast.Option, cast.Charges = onSheet.Actions(augments).Options[0].Name, roll.Charges
 	}
 	if cast.Parts, err = p.rollTheParts(cast.Name, roll.Parts, fromTheTable); err != nil {
 		return SpellCast{}, err

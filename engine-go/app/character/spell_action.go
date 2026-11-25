@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"t20engine/domain/book"
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
 )
@@ -52,7 +53,7 @@ func (p Plays) ActOnSpell(ctx context.Context, dto sheet.CharacterDTO, asked Spe
 	if err != nil {
 		return SpellCast{}, err
 	}
-	cast.When = asked.Action.Name
+	cast.Kind, cast.Option = live.RollOfTheAction, asked.Action.Name
 	if asked.Action.Save != "" {
 		cast.Save = asked.Action.Save
 	}

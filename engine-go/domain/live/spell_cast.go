@@ -1,5 +1,7 @@
 package live
 
+import "fmt"
+
 // SpellCastRoll é a magia conjurada com o dado dela, rolado na ficha (ver GLOSSARY, **dado da magia**).
 //
 // NÃO É UM PROVISÓRIO, como o disparo da Flamejante (`BlastRoll`) não é: o mestre diz quem passou na resistência
@@ -18,13 +20,57 @@ type SpellCastRoll struct {
 	Save  string `json:"save,omitempty"`
 	DC    int    `json:"dc,omitempty"`
 	Range string `json:"range"`
-	// When é o momento do dado da vez ("início do turno"), vazio na conjuração (ver GLOSSARY, **dado da vez**).
-	When string `json:"when,omitempty"`
+	// Kind é o que esta rolagem é (ver GLOSSARY, **rolagem informada**), e a cabeça da faixa sai dele (`Head`).
+	// O zero é a conjuração, e é por isso que a faixa gravada antes do campo continua lendo como conjuração.
+	Kind SpellBandKind `json:"kind,omitempty"`
+	// Moment é "inicio" ou "fim" do turno: o do dado da vez, o da marca e o da condição.
+	Moment string `json:"moment,omitempty"`
+	// Option é a opção da ação da magia ("Esmagar"), ou, na conjuração que cria cargas, a ação que elas dão
+	// ("Dardo de lava") — e Charges quantas.
+	Option  string `json:"option,omitempty"`
+	Charges int    `json:"charges,omitempty"`
+	// Target é de quem é a vez em que a marca ou a condição rolou, e Condition o nome da condição, que NÃO é magia:
+	// na condição, `Who` e `Spell` ficam vazios.
+	Target    string `json:"target,omitempty"`
+	Condition string `json:"condition,omitempty"`
 	// Lingering é a marca que esta conjuração deixa em quem foi atingido, nil na que não deixa nada (ver GLOSSARY,
 	// **marca na fila**): ela vira a `Markable` da mesa, a que o mestre põe nas linhas de quem falhou.
 	Lingering   *QueueMark `json:"lingering,omitempty"`
 	CharacterID int64      `json:"characterId"`
 	ByUserID    int64      `json:"byUserId"`
+}
+
+// SpellBandKind é o tipo de uma rolagem da faixa da magia.
+type SpellBandKind string
+
+// Os tipos da faixa da magia. O da conjuração é o zero (ver o `SpellCastRoll.Kind`).
+const (
+	RollOfTheCast      SpellBandKind = ""
+	RollOfTheTurn      SpellBandKind = "turn"
+	RollOfTheAction    SpellBandKind = "action"
+	RollOfTheMark      SpellBandKind = "mark"
+	RollOfTheCondition SpellBandKind = "condition"
+)
+
+// Head é a cabeça da faixa, escrita pelo tipo da rolagem: "Arwen · Flecha Ácida · início do turno de Ogro".
+//
+//	live.SpellCastRoll{Kind: live.RollOfTheAction, Who: "Arwen", Spell: "Mão Poderosa de Talude", Option: "Esmagar"}.Head()
+func (r SpellCastRoll) Head() string {
+	switch r.Kind {
+	case RollOfTheTurn:
+		return r.Who + " · " + r.Spell + " · " + MomentWritten(r.Moment)
+	case RollOfTheAction:
+		return r.Who + " · " + r.Spell + " · " + r.Option
+	case RollOfTheMark:
+		return r.Who + " · " + r.Spell + " · " + MomentWritten(r.Moment) + " de " + r.Target
+	case RollOfTheCondition:
+		return r.Target + " · " + r.Condition + " · " + MomentWritten(r.Moment)
+	}
+	head := r.Who + " · " + r.Spell
+	if r.Charges > 0 {
+		head += fmt.Sprintf(" · %s ×%d", r.Option, r.Charges)
+	}
+	return head
 }
 
 // SpellCastPart é uma parcela rolada: o dado, o tipo, a condição do texto, os dados e o total. ByHand: o total

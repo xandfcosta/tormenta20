@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 )
 
@@ -71,7 +72,7 @@ func TestTheTurnRollRollsWithTheAugmentsOfTheCast(t *testing.T) {
 		t.Fatalf("o dado da vez foi recusado: %q", refusal)
 	}
 	cast := stateOf(t, f.s.sessions, f.sessionID).LastSpellCast
-	if cast == nil || cast.Spell != "Ferver Sangue" || cast.When != "início do turno" {
+	if cast == nil || cast.Spell != "Ferver Sangue" || cast.Kind != live.RollOfTheTurn || cast.Moment != "inicio" {
 		t.Fatalf("a faixa da magia diz %+v; want o Ferver Sangue no início do turno", cast)
 	}
 	if len(cast.Parts) != 1 || cast.Parts[0].Dice != "6d8" || cast.Parts[0].Kind != "fogo" || len(cast.Parts[0].Rolls) != 6 {

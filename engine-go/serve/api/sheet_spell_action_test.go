@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 )
 
@@ -52,7 +53,7 @@ func TestTheMightyHandCrushesWithTheAugmentsOfTheCastAndSpendsTheMovement(t *tes
 	}
 	state := stateOf(t, f.s.sessions, f.sessionID)
 	cast := state.LastSpellCast
-	if cast == nil || cast.Spell != "Mão Poderosa de Talude" || cast.When != "Esmagar" {
+	if cast == nil || cast.Spell != "Mão Poderosa de Talude" || cast.Kind != live.RollOfTheAction || cast.Option != "Esmagar" {
 		t.Fatalf("a faixa da magia diz %+v; want o Esmagar da Mão Poderosa", cast)
 	}
 	if len(cast.Parts) != 1 || cast.Parts[0].Dice != "3d6+15" || cast.Parts[0].Kind != "impacto" {
@@ -108,8 +109,8 @@ func TestTheMixedEnergyEndsTheSpell(t *testing.T) {
 		t.Fatalf("a energia mista foi recusada: %q", refusal)
 	}
 	state := stateOf(t, f.s.sessions, f.sessionID)
-	if cast := state.LastSpellCast; cast.Parts[0].Dice != "20d12" || cast.When != "Energia mista" {
-		t.Errorf("a energia mista rolou %+v (%q); want 20d12", cast.Parts, cast.When)
+	if cast := state.LastSpellCast; cast.Parts[0].Dice != "20d12" || cast.Option != "Energia mista" {
+		t.Errorf("a energia mista rolou %+v (%q); want 20d12", cast.Parts, cast.Option)
 	}
 	if state.Scene.StandardLeft {
 		t.Error("a energia mista não gastou a ação padrão")

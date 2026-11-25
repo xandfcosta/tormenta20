@@ -1,9 +1,6 @@
 package live
 
-import (
-	"strings"
-	"testing"
-)
+import "testing"
 
 // acidArrow é a marca que a Flecha Ácida deixa: o muco, no início dos dois próximos turnos de quem falhou (p193).
 func acidArrow() *QueueMark {
@@ -80,7 +77,7 @@ func TestTheMarkRollsOnTheMarkedCreaturesTurnAndCountsItsTurns(t *testing.T) {
 func TestTheBurningConditionRollsAndTheLanceReplacesItsDie(t *testing.T) {
 	ogre := InitiativeEntry{ID: "ogro", Label: "Ogro", Conditions: []string{"em-chamas"}}
 	due := DueRolls(ogre, ogre.Conditions)
-	if len(due) != 1 || due[0].Spell != "Em Chamas" || due[0].Parts[0].Dice != "1d6" || due[0].Parts[0].Kind != "fogo" {
+	if len(due) != 1 || due[0].Condition != "Em Chamas" || due[0].Spell != "" || due[0].Parts[0].Dice != "1d6" || due[0].Parts[0].Kind != "fogo" {
 		t.Fatalf("o ogro Em Chamas rola %+v; want 1d6 de fogo", due)
 	}
 
@@ -94,7 +91,7 @@ func TestTheBurningConditionRollsAndTheLanceReplacesItsDie(t *testing.T) {
 	healed := InitiativeEntry{ID: "anao", Label: "Anão", Marks: []QueueMark{{Spell: "Círculo da Restauração", At: "fim",
 		Parts: []QueueMarkPart{{Dice: "3d8+3", Kind: "cura"}}}}}
 	due = DueRolls(healed, nil)
-	if len(due) != 1 || !strings.Contains(due[0].When, "fim do turno") {
+	if len(due) != 1 || due[0].At != "fim" {
 		t.Errorf("o Círculo da Restauração rola %+v; want no fim do turno", due)
 	}
 }
