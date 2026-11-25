@@ -18,12 +18,6 @@ const (
 	WinterAspectPower = "class.druida.aspecto-do-inverno"
 )
 
-// isDamage diz se a parcela do dado da magia é DANO: a cura e os PV temporários não são, e é a eles que os poderes
-// "que causam dano" não se aplicam (p38, p58).
-func isDamage(part book.SpellRoll) bool {
-	return part.Kind != "cura" && part.Kind != "PV temporários"
-}
-
 // SpellBonus é uma parcela fixa que um poder soma ao dado da magia: o número, o tipo quando ele é de um, e o que a
 // faixa diz além do nome.
 type SpellBonus struct {
@@ -63,7 +57,7 @@ func SpellRollPowersOf(dto CharacterDTO, computed engine.ComputedSheet) SpellRol
 // Inverno.
 func (p SpellRollPowers) CastBonuses(parts []book.SpellRoll) []SpellBonus {
 	var bonuses []SpellBonus
-	if p.battleArcane != 0 && slices.ContainsFunc(parts, isDamage) {
+	if p.battleArcane != 0 && slices.ContainsFunc(parts, book.SpellRoll.IsDamage) {
 		bonuses = append(bonuses, SpellBonus{Name: "Arcano de Batalha", Amount: p.battleArcane})
 	}
 	return append(bonuses, p.LaterBonuses(parts)...)

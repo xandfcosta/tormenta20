@@ -71,7 +71,7 @@ func (p PoweredCast) Apply(parts []book.SpellRoll) []book.SpellRoll {
 	}
 	out := slices.Clone(parts)
 	for i := range out {
-		if isDamage(out[i]) {
+		if out[i].IsDamage() {
 			out[i].Kind = p.DamageKind
 		}
 	}
