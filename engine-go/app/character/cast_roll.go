@@ -172,7 +172,7 @@ func maximizedParts(parts []book.SpellRoll) ([]RolledSpellPart, error) {
 func halfTheHealing(parts []RolledSpellPart) int {
 	healing := 0
 	for _, part := range parts {
-		if part.Kind == "cura" {
+		if part.IsHealing() {
 			healing += part.Total
 		}
 	}

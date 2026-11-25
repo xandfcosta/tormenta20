@@ -109,6 +109,25 @@ type SpellRoll struct {
 	Note string `json:"note"`
 }
 
+// Os dois tipos de parcela que não são dano (ver GLOSSARY, **dado da magia**).
+const (
+	HealingKind            = "cura"
+	TemporaryHitPointsKind = "PV temporários"
+)
+
+// IsDamage diz se a parcela é DANO: tudo que não é cura nem PV temporários, inclusive a sem tipo. É a pergunta dos
+// poderes que valem "se a magia causa dano" (p38, p58).
+//
+//	book.SpellRoll{Dice: "6d6", Kind: "fogo"}.IsDamage() // true
+func (r SpellRoll) IsDamage() bool {
+	return r.Kind != HealingKind && r.Kind != TemporaryHitPointsKind
+}
+
+// IsHealing diz se a parcela é CURA, a que a Comunhão Vital divide (p58).
+func (r SpellRoll) IsHealing() bool {
+	return r.Kind == HealingKind
+}
+
 // SpellBuff é o efeito em curso que a magia aplica: os modificadores, crus, para gravarem byte a byte como o
 // livro transcrito os tem.
 type SpellBuff struct {
