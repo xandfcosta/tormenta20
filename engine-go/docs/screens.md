@@ -22,6 +22,13 @@
   `<span> proposto</span>` sai `>proposto<` no `_templ.go`, e duas partes
   coladas viram "MOVIMENTOPROPOSTO". O espaço que separa vai como expressão,
   `{ " proposto" }`, que o templ não apara.
+- **Um bloco entre dois elementos solta UM ESPAÇO antes do elemento seguinte**:
+  `if`, `for` ou `@componente` posto entre um `</div>` e um `<div>` irmão faz o
+  `_templ.go` escrever `" <div …>"` — com o `if` falso também. A tela não muda,
+  mas o HTML de toda página muda, e quem denuncia é a equivalência contra a
+  `main`. O conserto que não mexe no resto é pôr o bloco DENTRO do elemento
+  anterior, antes do fechamento dele, onde o templ não solta nada; confira nas
+  strings do `WriteString` do `_templ.go`, antes e depois.
 - **Atributo CONSTANTE sai literal; só o DINÂMICO é escapado** (`'` vira
   `&#39;`) — importa ao afirmar HTML em teste.
 - **NUNCA passe formatador em arquivo GERADO.** O `goimports -w` reordena os
