@@ -143,8 +143,7 @@ func countTheMarksOfTheTurn(st *SessionRuntimeState) {
 
 // DueRolls são os dados que se rolam na vez da linha: o de cada marca, no início ou no fim do turno, o 1d6 de
 // fogo da condição Em Chamas (p394) — a menos que uma marca SEJA as chamas, e aí o dado é o dela — e o 1d6 do
-// Confuso (p394). As condições vêm
-// de quem pergunta, porque a do PC mora na ficha e a do NPC na linha.
+// Confuso (p394). As condições vêm de quem pergunta, porque a do PC mora na ficha e a do NPC na linha.
 //
 //	live.DueRolls(entry, entry.Conditions) // [{Spell: "Flecha Ácida", When: "início do turno de Ogro", …}]
 func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {

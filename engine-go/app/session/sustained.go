@@ -183,16 +183,9 @@ func limitsTheSickenedTurn(ctx context.Context, u Unit, s *live.SessionRuntimeSt
 	if !s.Scene.CountsRounds() || s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
 		return nil
 	}
-	entry := s.Initiative[s.TurnIndex]
-	conditions := entry.Conditions
-	if entry.CharacterID != nil {
-		if u.TurnEffects == nil {
-			return nil
-		}
-		var err error
-		if conditions, err = u.TurnEffects.ConditionsOf(ctx, *entry.CharacterID); err != nil {
-			return fmt.Errorf("ler as condições de %s: %w", entry.Label, err)
-		}
+	conditions, err := conditionsOfEntry(ctx, u.TurnEffects, s.Initiative[s.TurnIndex])
+	if err != nil {
+		return err
 	}
 	s.Scene.OneActionOnly = engine.OneActionTurn(conditions)
 	return nil

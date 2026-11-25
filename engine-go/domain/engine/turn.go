@@ -104,6 +104,8 @@ func (b TurnBudget) Spend(cost ActionCost) (TurnBudget, error) {
 		return b, fmt.Errorf("%w: enjoado, só uma ação padrão ou de movimento por rodada (p394)", ErrNoActionLeft)
 	}
 	left, err := b.spendFromTheBook(cost)
+	// O que não tirou nada do turno — a livre, a reação — não é a ação do
+	// enjoado, e o turno fica como estava.
 	if err != nil || left == b {
 		return left, err
 	}
