@@ -32,6 +32,17 @@ type Spell struct {
 	TurnRoll *SpellTurnRoll `json:"turnRoll,omitempty"`
 	// Actions são as ações da magia em vigor — ver `book.Spell.Actions`.
 	Actions *SpellActions `json:"actions,omitempty"`
+	// Lingering é o que a magia deixa no alvo — ver `book.Spell.Lingering`.
+	Lingering *SpellLingering `json:"lingering,omitempty"`
+}
+
+// SpellLingering é o que a magia deixa no alvo — ver `book.SpellLingering`.
+type SpellLingering struct {
+	At          string      `json:"at"`
+	Rolls       []SpellRoll `json:"rolls"`
+	Turns       int         `json:"turns,omitempty"`
+	RepeatsSave bool        `json:"repeatsSave,omitempty"`
+	Burning     bool        `json:"burning,omitempty"`
 }
 
 // SpellActions são as ações da magia em vigor — ver `book.SpellActions`.
@@ -90,6 +101,8 @@ type SpellAugment struct {
 	// Actions e Charges são as ações que o aprimoramento dá — ver `book.SpellAugment`.
 	Actions *SpellActions `json:"actions,omitempty"`
 	Charges int           `json:"charges,omitempty"`
+	// LingerAdds é o que o aumento soma ao dado que a magia deixa no alvo — ver `book.SpellAugment`.
+	LingerAdds []SpellRoll `json:"lingerAdds,omitempty"`
 }
 
 type SpellBuff struct {

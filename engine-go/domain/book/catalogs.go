@@ -91,6 +91,9 @@ type SpellAugment struct {
 	// ele não rola nada, e cada dardo rola o dado dela. Ver GLOSSARY, **ação da magia**.
 	Actions *SpellActions `json:"actions"`
 	Charges int           `json:"charges"`
+	// LingerAdds é o que o aumento soma ao dado que a magia deixa no alvo (`Spell.Lingering`), pela regra do
+	// `Adds` (ver GLOSSARY, **marca na fila**).
+	LingerAdds []SpellRoll `json:"lingerAdds"`
 }
 
 // SpellRoll é uma parcela do dado que a magia rola ao ser conjurada: "6d6" de fogo, "2d8+2" de cura.
@@ -157,6 +160,28 @@ type Spell struct {
 	TurnRoll *SpellTurnRoll `json:"turnRoll"`
 	// Actions são as ações da magia em vigor, nil na que não dá nenhuma (ver GLOSSARY, **ação da magia**).
 	Actions *SpellActions `json:"actions"`
+	// Lingering é o que a magia deixa na criatura atingida e rola na vez DELA, nil na que não deixa nada (ver
+	// GLOSSARY, **marca na fila**).
+	Lingering *SpellLingering `json:"lingering"`
+}
+
+// SpellLingering é o dado que a magia deixa na criatura atingida, rolado na vez dela, e não na de quem conjurou:
+// o muco da Flecha Ácida (p193), as chamas da Lança Ígnea de Aleph (p196), a Ilusão Lacerante (p195) e a cura do
+// Círculo da Restauração (p184). O mestre marca quem ficou sob ele (ver GLOSSARY, **marca na fila**).
+//
+// Os aprimoramentos escolhidos ao conjurar valem sobre ele pelo `LingerAdds`, e não pelo `Adds`: o aumento da
+// Lança soma +2d6 ao dado da conjuração e +1d6 às chamas (`SpellOnTheSheet.LingeringRoll`).
+type SpellLingering struct {
+	// At é o momento: "inicio" ou "fim" do turno de quem foi atingido.
+	At    string      `json:"at"`
+	Rolls []SpellRoll `json:"rolls"`
+	// Turns são quantos turnos de quem foi atingido a marca dura: os dois da Flecha, as 5 rodadas do Círculo. Zero
+	// é até o mestre a tirar — a Ilusão sustentada, as chamas que alguém apaga.
+	Turns int `json:"turns"`
+	// RepeatsSave diz que quem está sob a marca repete a resistência antes do dado (a Vontade da Ilusão).
+	RepeatsSave bool `json:"repeatsSave"`
+	// Burning diz que a marca SÃO as chamas da condição Em Chamas, com o dado dela no lugar do 1d6 (p394).
+	Burning bool `json:"burning"`
 }
 
 // SpellTurnRoll é o dado que a magia rola de novo na vez de quem a conjurou, enquanto ela dura: o Ferver Sangue
