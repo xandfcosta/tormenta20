@@ -59,3 +59,22 @@ func TestTheSickenedCreatureHasOneActionOnTheTurn(t *testing.T) {
 		t.Errorf("o Goblin enjoado pagou %d movimentos, want 1", got)
 	}
 }
+
+// Voltar a vez devolve ao enjoado o turno de UMA ação, e não um turno cheio.
+func TestRewindingToTheSickenedTurnKeepsOneAction(t *testing.T) {
+	f := newSceneFixture(t)
+	if err := sheet.SaveConditions(t.Context(), f.s.queries, f.charID, []string{"enjoado"}); err != nil {
+		t.Fatalf("marcar enjoado: %v", err)
+	}
+	startCombatWithSomeoneElseOnTurn(t, f)
+	passToTheCharacter(t, f)
+	if _, err := f.s.sessions.NextTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatalf("passar: %v", err)
+	}
+	if _, err := f.s.sessions.PreviousTurn(t.Context(), f.sessionID); err != nil {
+		t.Fatalf("voltar: %v", err)
+	}
+	if got := movementsOnTurn(t, f); got != 1 {
+		t.Errorf("o turno devolvido ao enjoado pagou %d movimentos, want 1", got)
+	}
+}
