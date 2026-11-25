@@ -73,7 +73,7 @@ func (a SpellActionAsked) OnceKey() string {
 // magia: o dardo sai das cargas, e o último — como a opção que termina a magia (a energia mista, p204) — encerra
 // a linha em vigor. A ação da vez é de quem chama.
 func (p Plays) ActOnSpell(ctx context.Context, dto sheet.CharacterDTO, asked SpellActionAsked, fromTheTable []int) (SpellCast, error) {
-	cast, err := spellCastOf(dto, asked.Spell)
+	cast, powers, err := spellCastOf(dto, asked.Spell)
 	if err != nil {
 		return SpellCast{}, err
 	}
@@ -89,10 +89,11 @@ func (p Plays) ActOnSpell(ctx context.Context, dto sheet.CharacterDTO, asked Spe
 	if cast.Parts, err = p.rollTheParts(cast.Name, parts, fromTheTable); err != nil {
 		return SpellCast{}, err
 	}
+	cast.Bonuses = powers.LaterBonuses(parts)
 	// A AÇÃO COM O EFEITO NORMAL da magia deixa a marca dela, como a conjuração: o dardo de lava põe o alvo em
 	// chamas (p196; ver GLOSSARY, **marca na fila**).
 	if asked.Action.CastRoll {
-		if cast.Lingering, err = lingeringOf(asked.Spell, asked.Effect.CastAugments, cast); err != nil {
+		if cast.Lingering, err = lingeringOf(asked.Spell, asked.Effect.CastAugments, cast, powers); err != nil {
 			return SpellCast{}, err
 		}
 	}

@@ -1207,7 +1207,11 @@
             },
             "classPowers": [
               "class.arcanista.especialista-em-escola",
-              "class.arcanista.mestre-em-escola"
+              "class.arcanista.mestre-em-escola",
+              "class.arcanista.arcano-de-batalha",
+              "class.arcanista.raio-arcano",
+              "class.arcanista.raio-poderoso",
+              "class.arcanista.raio-elemental"
             ],
             "powerChoices": {
               "class.arcanista.especialista-em-escola": [
@@ -2468,7 +2472,10 @@
               "class.druida.forma-selvagem",
               "class.druida.forma-selvagem-aprimorada",
               "class.druida.forma-selvagem-superior",
-              "class.druida.forma-primal"
+              "class.druida.forma-primal",
+              "class.druida.aspecto-do-inverno",
+              "class.druida.aspecto-do-verao",
+              "class.druida.espirito-dos-solsticios"
             ],
             "strength": 2,
             "dexterity": 2,

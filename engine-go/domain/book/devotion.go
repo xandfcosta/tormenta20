@@ -70,3 +70,15 @@ func CatalogGods() []God {
 	slices.SortStableFunc(all, func(a, b God) int { return strings.Compare(a.Name, b.Name) })
 	return all
 }
+
+// GodEnergy é a energia que o deus canaliza — "positiva", "negativa" ou "qualquer" —, vazia no id que não é deus.
+//
+//	book.GodEnergy("khalmyr") // "positiva"
+func GodEnergy(id string) string {
+	for _, god := range CatalogGods() {
+		if god.ID == id {
+			return god.Energy
+		}
+	}
+	return ""
+}

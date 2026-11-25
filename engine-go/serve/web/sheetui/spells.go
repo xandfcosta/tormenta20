@@ -201,6 +201,10 @@ func casterClassesOf(dto sheet.CharacterDTO) []string {
 func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 	computed, computedOK := spellSheetOf(dto)
 	caster := sheet.CasterOf(dto)
+	godEnergy := ""
+	if dto.God != nil {
+		godEnergy = book.GodEnergy(*dto.God)
+	}
 	rows := []learnedSpellRow{}
 	for _, learned := range dto.Spells {
 		onSheet := caster.Spell(learned.CatalogSpellID)
@@ -215,7 +219,7 @@ func learnedSpellRowsOf(dto sheet.CharacterDTO) []learnedSpellRow {
 			NeedsMemorizing: onSheet.NeedsMemorizing,
 			MemorizeLock:    memorizeLockOf(caster, onSheet, learned),
 			CD:              spellCdOf(computed, computedOK, onSheet),
-			Augments:        augmentRowsOf(spell, onSheet),
+			Augments:        augmentRowsOf(spell, onSheet, godEnergy),
 			Execution:       spell.Execution, Range: spell.Range, Duration: spell.Duration,
 			ExecutionWritten: book.SpellExecutionWritten(spell), RangeWritten: book.SpellRangeWritten(spell),
 			DurationWritten: book.SpellDurationWritten(spell),

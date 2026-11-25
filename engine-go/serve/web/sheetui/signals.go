@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 
 	"github.com/starfederation/datastar-go/datastar"
@@ -58,6 +59,12 @@ type Signals struct {
 	// vêm da tabela `powerAugmentSignals`, e quem os lê é o `UnmarshalJSON`: um campo por poder seria a
 	// segunda lista que esquece o poder novo.
 	PowerAugmentStacks map[string]*int `json:"-"`
+	// HolyEnergy é "luz" ou "trevas", a escolha da Magia Sagrada/Profana de quem segue deus de energia qualquer
+	// (p58). O sinal nasce do `data-bind` do seletor, que só aparece para essa ficha.
+	HolyEnergy string `json:"augment_holy_energy"`
+	// ArcaneBoltElement é o tipo que o Raio Elemental escolheu no diálogo do Raio Arcano, vazio na essência (p39).
+	// O sinal nasce do `data-bind` do seletor, que só aparece para quem tem o poder.
+	ArcaneBoltElement string `json:"arcane_bolt_element"`
 	// SpellHand são os totais do dado da magia rolados na mão, um por parcela, na ordem da conjuração (ver
 	// GLOSSARY, **dado da magia**). Zero é "não informado", como o d20 da perícia. Quatro porque é o máximo do
 	// catálogo (as quatro esferas da Barragem Elemental).
@@ -191,7 +198,11 @@ func (s Signals) powerAugments() []sheet.PowerAugmentPick {
 	picks := []sheet.PowerAugmentPick{}
 	for _, signal := range powerAugmentSignals {
 		if value := s.PowerAugmentStacks[signal.power]; value != nil && *value > 0 {
-			picks = append(picks, sheet.PowerAugmentPick{PowerID: signal.power, Stacks: *value})
+			pick := sheet.PowerAugmentPick{PowerID: signal.power, Stacks: *value}
+			if signal.power == book.HolySpellPower {
+				pick.Energy = s.HolyEnergy
+			}
+			picks = append(picks, pick)
 		}
 	}
 	return picks

@@ -8,6 +8,8 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
+
+	"github.com/a-h/templ"
 )
 
 // O DADO DA VEZ NA LINHA EM VIGOR (ver GLOSSARY, **dado da vez**): a magia em vigor que rola de novo na vez de quem
@@ -35,9 +37,12 @@ type turnRollOffer struct {
 // handRollLine é uma parcela escrita ("5d8 de fogo"), a condição do texto e o campo do total da mão dela.
 type handRollLine struct {
 	Written string
-	Note    string
-	Signal  string
-	Label   string
+	// WrittenLive é a expressão que reescreve o `Written` quando um seletor do diálogo muda o tipo (o do Raio
+	// Elemental); vazia na linha que não muda.
+	WrittenLive string
+	Note        string
+	Signal      string
+	Label       string
 }
 
 // turnRollOffersOf são os botões do dado da vez de um efeito da magia, vazios no que não tem dado da vez — e no
@@ -116,4 +121,12 @@ func turnRollCommand(v View, offer turnRollOffer) string {
 		route += "&versao=" + url.QueryEscape(offer.Version)
 	}
 	return fmt.Sprintf("@post('%s')", strings.ReplaceAll(route, "'", "\\'"))
+}
+
+// writtenLiveAttrs liga o texto da linha à expressão que o reescreve, quando ela tem uma.
+func writtenLiveAttrs(line handRollLine) templ.Attributes {
+	if line.WrittenLive == "" {
+		return templ.Attributes{}
+	}
+	return templ.Attributes{"data-text": line.WrittenLive}
 }

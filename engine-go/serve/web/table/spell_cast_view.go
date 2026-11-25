@@ -21,9 +21,28 @@ func spellCastBandOf(st *live.SessionRuntimeState) *rollBand {
 	// conjuração, o dado da vez, a ação, a marca ou a condição.
 	band := &rollBand{What: c.Head()}
 	for _, part := range c.Parts {
-		band.Lines = append(band.Lines, rollLine{
-			Total: part.Total, Tally: writtenRoll(part.Dice, part.Rolls, part.Kind, part.ByHand), Note: part.Note,
-		})
+		tally := writtenRoll(part.Dice, part.Rolls, part.Kind, part.ByHand)
+		// O MÁXIMO do Espírito dos Solstícios não rolou, e a conta diz isso no lugar dos dados (p62).
+		if part.Maximized {
+			tally += " · máximo"
+		}
+		band.Lines = append(band.Lines, rollLine{Total: part.Total, Tally: tally, Note: part.Note})
+	}
+	// A PARCELA DE CADA PODER vem depois das do dado, com o nome dele (ver GLOSSARY, **dado da magia**): "+4 · Arcano
+	// de Batalha", "+3 de frio · Aspecto do Inverno · 3 dados de frio".
+	for _, bonus := range c.Bonuses {
+		tally := fmt.Sprintf("%+d", bonus.Amount)
+		if bonus.Kind != "" {
+			tally += " de " + bonus.Kind
+		}
+		note := bonus.Name
+		if bonus.Note != "" {
+			note += " · " + bonus.Note
+		}
+		band.Lines = append(band.Lines, rollLine{Total: bonus.Amount, Tally: tally, Note: note})
+	}
+	if c.VitalShare > 0 {
+		band.Help = append(band.Help, fmt.Sprintf("Comunhão Vital: outra criatura em alcance curto recupera %d PV", c.VitalShare))
 	}
 	if c.ByText {
 		band.Help = append(band.Help, "um aprimoramento mudou o dado para um que não sai na conjuração: role pelo texto dele")

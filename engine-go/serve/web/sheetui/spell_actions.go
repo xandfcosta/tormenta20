@@ -26,6 +26,8 @@ type spellActionSheet struct {
 	Title  string
 	Lines  []handRollLine
 	Roll   actionRoll
+	// Elements são os tipos do Raio Elemental, no seletor do diálogo do Raio Arcano; vazio no resto.
+	Elements []boltElementOption
 }
 
 // handResets zera os totais da mão ao abrir o diálogo: o número digitado numa opção não vale na outra.
@@ -101,6 +103,10 @@ func spellActionRows(dto sheet.CharacterDTO, computed engine.ComputedSheet) map[
 			cost := engine.ActionCost(action.Action)
 			rows[cost] = append(rows[cost], row)
 		}
+	}
+	// O RAIO ARCANO conta como magia (p39), e a linha dele mora com as das magias, no grupo da ação padrão.
+	if row, has := arcaneBoltRow(dto, computed); has {
+		rows[engine.ActionStandard] = append(rows[engine.ActionStandard], row)
 	}
 	return rows
 }

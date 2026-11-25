@@ -13,8 +13,13 @@ type SpellCastRoll struct {
 	Spell string `json:"spell"`
 	// Parts são as parcelas rodadas. ByText diz que um aprimoramento escolhido mudou o dado para um que não sai
 	// na conjuração: não há parcela, e quem joga rola pelo texto.
-	Parts  []SpellCastPart `json:"parts,omitempty"`
-	ByText bool            `json:"byText,omitempty"`
+	Parts []SpellCastPart `json:"parts,omitempty"`
+	// Bonuses são as parcelas fixas que os poderes de quem conjurou somam (o Arcano de Batalha, o Aspecto do
+	// Inverno; ver GLOSSARY, **dado da magia**), cada uma com o nome do poder.
+	Bonuses []SpellCastBonus `json:"bonuses,omitempty"`
+	// VitalShare são os PV que outra criatura recupera pela Comunhão Vital, a metade da cura (p58); zero sem ela.
+	VitalShare int  `json:"vitalShare,omitempty"`
+	ByText     bool `json:"byText,omitempty"`
 	// Save é a resistência escrita ("Reflexos reduz à metade"), vazia na magia sem ela, e DC a CD de quem
 	// conjurou. Range é o alcance da magia.
 	Save  string `json:"save,omitempty"`
@@ -38,6 +43,14 @@ type SpellCastRoll struct {
 	Lingering   *QueueMark `json:"lingering,omitempty"`
 	CharacterID int64      `json:"characterId"`
 	ByUserID    int64      `json:"byUserId"`
+}
+
+// SpellCastBonus é uma parcela fixa de um poder: o nome dele, o número, o tipo quando tem, e a nota.
+type SpellCastBonus struct {
+	Name   string `json:"name"`
+	Amount int    `json:"amount"`
+	Kind   string `json:"kind,omitempty"`
+	Note   string `json:"note,omitempty"`
 }
 
 // SpellBandKind é o tipo de uma rolagem da faixa da magia.
@@ -82,6 +95,8 @@ type SpellCastPart struct {
 	Rolls  []int  `json:"rolls,omitempty"`
 	Total  int    `json:"total"`
 	ByHand bool   `json:"byHand,omitempty"`
+	// Maximized diz que a parcela não rolou: o Espírito dos Solstícios a pôs no máximo (p62).
+	Maximized bool `json:"maximized,omitempty"`
 }
 
 // recordIn guarda a magia conjurada no lugar da anterior, e a marca dela, se deixa uma, no lugar da última marca

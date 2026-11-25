@@ -264,4 +264,7 @@ type AugmentPick struct {
 type PowerAugmentPick struct {
 	PowerID string
 	Stacks  int
+	// Energy é "luz" ou "trevas", a escolha de quem segue deus de energia qualquer na Magia Sagrada/Profana (p58);
+	// vazia no resto.
+	Energy string
 }

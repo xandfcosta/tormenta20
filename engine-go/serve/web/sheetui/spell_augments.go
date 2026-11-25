@@ -37,14 +37,17 @@ type augmentRow struct {
 	Toggle string
 	More   string
 	Less   string
+	// EnergyChoice pede luz ou trevas na Magia Sagrada/Profana de quem segue deus de energia qualquer (p58): o deus
+	// não decide, e quem conjura escolhe (decisão do dono).
+	EnergyChoice bool
 	// key é o aprimoramento para o conjurador, que diz o que ligá-lo apaga.
 	key sheet.AugmentKey
 }
 
 // augmentRowsOf traduz os aprimoramentos da magia e os poderes da ficha que são
 // aprimoramento (p131), trancando os fora de alcance e montando os gestos que se
-// apagam entre si.
-func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow {
+// apagam entre si. A energia do deus diz se a Magia Sagrada/Profana pede a escolha.
+func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet, godEnergy string) []augmentRow {
 	rows := make([]augmentRow, 0, len(spell.Augments))
 	for i, a := range spell.Augments {
 		row := augmentRow{
@@ -64,7 +67,8 @@ func augmentRowsOf(spell book.Spell, onSheet sheet.SpellOnTheSheet) []augmentRow
 			Stacks:      power.Power.Augment.Kind != "muda",
 			Description: power.Power.Name + ": " + power.Power.Augment.Description,
 			Locked:      power.Lock != "", LockNote: power.Lock,
-			key: sheet.PowerAugmentKey(power.Power.PowerID),
+			EnergyChoice: power.Power.PowerID == book.HolySpellPower && godEnergy == "qualquer",
+			key:          sheet.PowerAugmentKey(power.Power.PowerID),
 		})
 	}
 	return withAugmentGestures(rows, onSheet)

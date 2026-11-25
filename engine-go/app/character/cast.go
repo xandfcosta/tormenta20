@@ -163,7 +163,7 @@ func (p Plays) Cast(
 	}
 	// O DADO é rolado depois das recusas e antes da cobrança: o total da mesa que os dados não tiram é recusado
 	// sem gastar nada.
-	cast, err := p.rollTheCast(dto, onSheet, augments, fromTheTable)
+	cast, err := p.rollTheCast(dto, onSheet, augments, powerAugments, fromTheTable)
 	if err != nil {
 		return SpellCast{}, err
 	}
