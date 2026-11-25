@@ -86,6 +86,31 @@ func TestAnInventedConditionIsRefused(t *testing.T) {
 	}
 }
 
+// SOBRECARREGADO NASCE DA CARGA (p394): a ficha não a oferece, recusa pô-la à mão e diz por quê — e a marca que
+// já estava gravada ainda sai pelo mesmo gesto (decisão do dono).
+func TestTheSheetDoesNotMarkOverloadedByHand(t *testing.T) {
+	f, id := fighterFixture(t)
+	if strings.Contains(effectScreen(t, f, id), "Sobrecarregado") {
+		t.Error("a aba Efeitos oferece Sobrecarregado, que só a carga dá")
+	}
+	refusal := sceneRefusal(effect(t, f, id, "condicao/sobrecarregado").Body)
+	if !strings.Contains(refusal, "carga") {
+		t.Errorf("a recusa de marcar Sobrecarregado diz %q; want que ela vem da carga", refusal)
+	}
+	if got := conditions(t, f, id); len(got) != 0 {
+		t.Fatalf("a recusa gravou assim mesmo: %v", got)
+	}
+	if err := sheet.SaveConditions(t.Context(), f.s.sceneCore().Queries(), id, []string{"sobrecarregado"}); err != nil {
+		t.Fatalf("gravar a marca antiga: %v", err)
+	}
+	if refusal := sceneRefusal(effect(t, f, id, "condicao/sobrecarregado").Body); refusal != "" {
+		t.Errorf("tirar a marca antiga foi recusado: %q", refusal)
+	}
+	if got := conditions(t, f, id); len(got) != 0 {
+		t.Errorf("a marca antiga de Sobrecarregado ficou: %v", got)
+	}
+}
+
 // O EFEITO APLICADO É DE QUEM O APLICOU, e a query não confere isso sozinha.
 //
 // O `DeleteEffectByID` apaga por id e mais nada. Sem a leitura de posse que o

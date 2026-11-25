@@ -6,6 +6,7 @@ import (
 
 	"t20engine/domain/board"
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 
 	"github.com/a-h/templ"
 )
@@ -101,7 +102,16 @@ var restOptions = []struct{ Value, Label string }{
 }
 
 // conditionCatalog são as condições do livro, para a lista de aplicar.
-func conditionCatalog() []book.Condition { return book.Catalogs().Conditions }
+func conditionCatalog() []book.Condition {
+	// A que o app deriva (Sobrecarregado, da carga) não se marca à mão (`engine.HandMarkRefusal`).
+	var markable []book.Condition
+	for _, c := range book.Catalogs().Conditions {
+		if engine.HandMarkRefusal(c.ID) == nil {
+			markable = append(markable, c)
+		}
+	}
+	return markable
+}
 
 // gmCurtainLabel e gmLensLabel dizem o que o toque FAZ, nos dois estados.
 func gmCurtainLabel(b BoardView) string {

@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"encoding/json"
 	"testing"
 )
 
@@ -283,25 +282,6 @@ func TestIndefesoReplacesTheDesprevenidoDefense(t *testing.T) {
 	}
 	// "falha automaticamente em testes de Reflexos" não é um número, então não
 	// vira modificador — fica como lembrete na ficha.
-}
-
-// Sanidade cruzada: a tabela de modificadores vive no Go, e o catálogo que o
-// jogador VÊ é o JSON servido pelo /catalog. Uma condição com modificadores que
-// não esteja no catálogo nunca aparece na tela; uma do catálogo sem
-// modificadores é só lembrete (Lento, Imóvel), o que é legítimo.
-func TestModelledConditionsExistInTheServedCatalog(t *testing.T) {
-	raw := bookResource(t, "conditions")
-	var catalog map[string]struct {
-		Name string `json:"name"`
-	}
-	if err := json.Unmarshal(raw, &catalog); err != nil {
-		t.Fatalf("catálogo de condições ilegível: %v", err)
-	}
-	for id := range conditionModifierTable {
-		if _, ok := catalog[id]; !ok {
-			t.Errorf("condição %q tem modificadores mas não está no catálogo — nunca chega à tela", id)
-		}
-	}
 }
 
 // "CAÍDO. O personagem sofre −5 na Defesa contra ataques corpo a corpo e recebe

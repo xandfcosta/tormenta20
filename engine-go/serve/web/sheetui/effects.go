@@ -212,7 +212,8 @@ func conditionOptionsFor(dto sheet.CharacterDTO) []pickerOption {
 	on := sheet.ToStringSet(sheet.UnmarshalStrings(dto.ActiveConditions))
 	options := []pickerOption{}
 	for _, c := range book.Catalogs().Conditions {
-		if on[c.ID] {
+		// A que o app deriva (Sobrecarregado, da carga) não se marca à mão (`engine.HandMarkRefusal`).
+		if on[c.ID] || engine.HandMarkRefusal(c.ID) != nil {
 			continue
 		}
 		options = append(options, pickerOption{ID: c.ID, Label: c.Name, Detail: c.Description, Command: c.ID})

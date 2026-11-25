@@ -1048,3 +1048,16 @@ gravação acontecem debaixo dela. O dono recusou: o SQLite já tem UM escritor 
 para o banco inteiro, então uma trava por sessão só deixaria as LEITURAS de duas
 mesas andarem juntas, e o servidor atende uma mesa por vez. Não se reabre sem
 uma medida de duas mesas esperando uma pela outra.
+
+
+### O instante de agir do NPC foi recusado (2026-11)
+
+Duas revisões seguidas (a ALE-478 e a ALE-713) sugeriram juntar num lugar só a
+pergunta "de onde vêm as condições desta linha da fila" — da ficha para o
+personagem, da linha para o NPC — e, com isso, dar ao NPC o instante de agir
+(`MomentFor`), que hoje só responde para personagem. O dono recusou: o NPC não
+age pelo app — o ataque é só de personagem, e o mestre move a criatura na voz —,
+então um NPC pasmo que "não age" não tem gesto nenhum a recusar, e o instante
+dele seria uma resposta que ninguém pergunta. As condições de linha que já têm
+leitor (o dado da vez, o turno do enjoado) passam pelo `conditionsOfEntry`. Não
+se reabre antes de o NPC ganhar um gesto que o turno cobre.

@@ -9,33 +9,14 @@ import (
 // mestre diz quem falhou na resistência, então é ele que marca a linha; a mesa guarda a marca, conta os turnos e
 // diz o que se rola na vez da linha marcada. Quem rola e aplica é o mestre.
 
-// ConditionBurning é a condição Em Chamas do livro (p394), que rola 1d6 de fogo no início da vez de quem a tem.
+// ConditionBurning é a condição Em Chamas do livro (p394). O dado dela é do motor; o regime a conhece pelo id
+// porque é aqui que a marca que SÃO as chamas toma o lugar dele.
 const ConditionBurning = "em-chamas"
 
-// ConditionConfused é a condição Confuso do livro (p394), que rola 1d6 no início da vez de quem a tem.
-const ConditionConfused = "confuso"
-
-// confusedName é o nome do Confuso na fila e na faixa, como o "Em Chamas" das chamas.
-const confusedName = "Confuso"
-
-// ConditionRollNote é o que o resultado do dado de uma condição manda fazer, ou vazio na condição sem tabela. Só o
-// Confuso tem tabela (p394), e a frase é dela em paráfrase: quem aplica é o mestre, e o app não tira a ação nem a
-// condição (decisão do dono).
-//
-//	live.ConditionRollNote("Confuso", 3) // "não age, e balbucia"
-func ConditionRollNote(condition string, total int) string {
-	if condition != confusedName {
-		return ""
-	}
-	switch {
-	case total <= 1:
-		return "anda numa direção sorteada por 1d8"
-	case total <= 3:
-		return "não age, e balbucia"
-	case total <= 5:
-		return "ataca a criatura mais próxima com a arma empunhada, ou a si mesmo se estiver sozinho"
-	}
-	return "a condição termina, e age normalmente"
+// ConditionDue é o dado que uma condição rola no início da vez, como o motor o diz (`engine.ConditionTurnRolls`):
+// a regra de qual condição rola o quê mora lá, e o regime só a põe na fila.
+type ConditionDue struct {
+	ID, Name, Dice, Kind string
 }
 
 // QueueMark é a marca de uma magia numa linha da fila: o dado já com os aumentos da conjuração, o momento e a
@@ -77,14 +58,15 @@ type DueRoll struct {
 	Spell string
 	Who   string
 	// At é "inicio" ou "fim" do turno, e Target de quem é a vez. Condition é o nome da condição que rola (Em
-	// Chamas), e nela `Spell` e `Who` ficam vazios: condição não é magia.
-	At        string
-	Target    string
-	Condition string
-	Parts     []QueueMarkPart
-	Bonuses   []SpellCastBonus
-	Save      string
-	DC        int
+	// Chamas) e ConditionID o id dela, e nela `Spell` e `Who` ficam vazios: condição não é magia.
+	At          string
+	Target      string
+	Condition   string
+	ConditionID string
+	Parts       []QueueMarkPart
+	Bonuses     []SpellCastBonus
+	Save        string
+	DC          int
 	// Last diz que é o último turno da marca contada.
 	Last bool
 }
@@ -141,12 +123,13 @@ func countTheMarksOfTheTurn(st *SessionRuntimeState) {
 	}
 }
 
-// DueRolls são os dados que se rolam na vez da linha: o de cada marca, no início ou no fim do turno, o 1d6 de
-// fogo da condição Em Chamas (p394) — a menos que uma marca SEJA as chamas, e aí o dado é o dela — e o 1d6 do
-// Confuso (p394). As condições vêm de quem pergunta, porque a do PC mora na ficha e a do NPC na linha.
+// DueRolls são os dados que se rolam na vez da linha: o de cada marca, no início ou no fim do turno, e o de cada
+// condição, no início — a menos que uma marca SEJA as chamas, e aí o 1d6 do Em Chamas dá lugar ao dado dela (p196).
+// Os dados das condições vêm de quem pergunta, porque a do PC mora na ficha e a do NPC na linha, e o que cada uma
+// rola é do motor.
 //
-//	live.DueRolls(entry, entry.Conditions) // [{Spell: "Flecha Ácida", When: "início do turno de Ogro", …}]
-func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {
+//	live.DueRolls(entry, nil) // [{Spell: "Flecha Ácida", At: "inicio", Target: "Ogro", …}]
+func DueRolls(entry InitiativeEntry, conditions []ConditionDue) []DueRoll {
 	var due []DueRoll
 	burning := false
 	for _, m := range entry.Marks {
@@ -156,16 +139,13 @@ func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {
 			Parts: m.Parts, Save: m.Save, DC: m.DC, Last: m.Counted && m.TurnsLeft == 0,
 		})
 	}
-	if !burning && slices.Contains(conditions, ConditionBurning) {
+	for _, c := range conditions {
+		if burning && c.ID == ConditionBurning {
+			continue
+		}
 		due = append(due, DueRoll{
-			Condition: "Em Chamas", At: "inicio", Target: entry.Label,
-			Parts: []QueueMarkPart{{Dice: "1d6", Kind: "fogo"}},
-		})
-	}
-	if slices.Contains(conditions, ConditionConfused) {
-		due = append(due, DueRoll{
-			Condition: confusedName, At: "inicio", Target: entry.Label,
-			Parts: []QueueMarkPart{{Dice: "1d6"}},
+			Condition: c.Name, ConditionID: c.ID, At: "inicio", Target: entry.Label,
+			Parts: []QueueMarkPart{{Dice: c.Dice, Kind: c.Kind}},
 		})
 	}
 	return due

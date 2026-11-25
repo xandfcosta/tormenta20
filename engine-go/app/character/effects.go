@@ -139,6 +139,10 @@ func (p Plays) ToggleBookCondition(
 		after = append(after, c)
 	}
 	if !had {
+		// Só o que ENTRA é barrado: a marca gravada antes desta regra ainda sai pelo mesmo gesto.
+		if err := engine.HandMarkRefusal(condition); err != nil {
+			return err
+		}
 		after = append(after, condition)
 	}
 	// NUMA TRANSAÇÃO porque a Inconsciente desfaz a forma selvagem junto (ver `sheet.SaveConditions`):

@@ -7,6 +7,7 @@ import (
 
 	"github.com/a-h/templ"
 
+	"t20engine/app/session"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 )
@@ -67,7 +68,7 @@ func dueViewsOf(v View, st *live.SessionRuntimeState) []dueView {
 	}
 	entry := st.Initiative[st.TurnIndex]
 	var views []dueView
-	for i, due := range live.DueRolls(entry, v.Queue[st.TurnIndex].Conditions) {
+	for i, due := range session.DueRollsWith(entry, v.Queue[st.TurnIndex].Conditions) {
 		// O MOMENTO sem o nome: a linha da vez já é a de quem está marcado.
 		detail := []string{partsWritten(due.Parts), live.MomentWritten(due.At)}
 		if due.Who != "" {

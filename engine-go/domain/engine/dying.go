@@ -100,25 +100,12 @@ func BleedingCheckPasses(d20, constitution int) bool {
 	return d20+constitution >= BleedingCheckDC
 }
 
-// actionlessConditions tiram a AÇÃO, e o texto do livro é o critério: "não pode
-// fazer ações" (atordoado, pasmo, surpreendido, p394-395). O fascinado entra
-// porque a exceção dele, "observar aquilo que o fascinou" (p394), é um teste de
-// Percepção, e o turno não cobra teste de perícia.
-//
-// O paralisado fica de fora: ele "só pode realizar ações puramente mentais"
-// (p395), e o app não sabe quais ações são mentais — quem decide é o mestre.
-var actionlessConditions = map[string]bool{"atordoado": true, "pasmo": true, "surpreendido": true, "fascinado": true}
-
-// unconsciousConditions são as que deixam a criatura inconsciente: a própria, e o
-// petrificado, que "fica inconsciente" (p395) com a ficha gravando só o nome dele.
-var unconsciousConditions = map[string]bool{ConditionUnconscious: true, "petrificado": true}
-
 // IsUnconscious diz se as condições deixam a criatura inconsciente — e com isso
 // sem ações nem reações (p395) e fora da forma selvagem (p63).
 //
 // @example IsUnconscious([]string{"petrificado"}) // true
 func IsUnconscious(conditions []string) bool {
-	return slices.ContainsFunc(conditions, func(c string) bool { return unconsciousConditions[c] })
+	return slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == ActsUnconscious })
 }
 
 // MomentFor monta o instante de quem vai agir, a partir do PV e das condições.
@@ -132,7 +119,7 @@ func MomentFor(onTurn bool, hp int64, conditions []string) ActionMoment {
 	if IsUnconscious(conditions) {
 		moment.CanAct, moment.CanReact = false, false
 	}
-	if slices.ContainsFunc(conditions, func(c string) bool { return actionlessConditions[c] }) {
+	if slices.ContainsFunc(conditions, func(c string) bool { return conditionActs(c) == ActsNot }) {
 		moment.CanAct = false
 	}
 	return moment

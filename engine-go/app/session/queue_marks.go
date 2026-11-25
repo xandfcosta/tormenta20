@@ -32,7 +32,18 @@ func (st *Store) DueRollsOf(ctx context.Context, entry live.InitiativeEntry) ([]
 	if err != nil {
 		return nil, err
 	}
-	return live.DueRolls(entry, conditions), nil
+	return DueRollsWith(entry, conditions), nil
+}
+
+// DueRollsWith são os dados que se rolam na vez da linha com estas condições: as marcas, e o dado que o motor diz
+// que cada condição rola (`engine.ConditionTurnRolls`). É o único lugar que junta os dois, e a tela da Mesa o chama
+// com as condições que ela já desenha.
+func DueRollsWith(entry live.InitiativeEntry, conditions []string) []live.DueRoll {
+	var fromConditions []live.ConditionDue
+	for _, roll := range engine.ConditionTurnRolls(conditions) {
+		fromConditions = append(fromConditions, live.ConditionDue{ID: roll.ID, Name: roll.Name, Dice: roll.Dice, Kind: roll.Kind})
+	}
+	return live.DueRolls(entry, fromConditions)
 }
 
 // conditionsOfEntry são as condições de uma linha da fila, de onde elas moram: as do PC na ficha, as do NPC na
@@ -96,7 +107,7 @@ func (st *Store) RollDue(
 		}
 		// O DADO DO CONFUSO diz o que o resultado manda, pela tabela da condição (p394).
 		note := part.Note
-		if outcome := live.ConditionRollNote(asked.Condition, total); outcome != "" {
+		if outcome := engine.ConditionRollSays(asked.ConditionID, total); outcome != "" {
 			note = outcome
 		}
 		roll.Parts = append(roll.Parts, live.SpellCastPart{
