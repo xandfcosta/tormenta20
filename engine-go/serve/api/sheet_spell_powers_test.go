@@ -173,6 +173,9 @@ func TestTheArcaneBoltFiresFromTheActionsTab(t *testing.T) {
 		t.Errorf("o grupo da ação padrão tem %d linhas do Raio Arcano; want 1, a do gesto", len(rows))
 	}
 
+	if !strings.Contains(standard, ">Ácido (+1 PM) · quem falha fica vulnerável por 1 rodada<") {
+		t.Error("o seletor do Raio Elemental não escreve Ácido com o acento inteiro")
+	}
 	// A LINHA DO DADO no diálogo acompanha o tipo que o seletor do Raio Elemental escolhe.
 	if !strings.Contains(standard, `data-text="&#39;5d8 de &#39; + ($arcane_bolt_element || &#39;essência&#39;)"`) {
 		t.Error("a linha do dado no diálogo do Raio Arcano não acompanha o tipo do Raio Elemental")

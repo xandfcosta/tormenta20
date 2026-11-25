@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -387,14 +389,14 @@ func maneuverRolls() []actionRoll {
 	return rolls
 }
 
-// capitalized sobe a primeira letra. Cópia da irmã do pacote da Mesa, e a cópia
-// é deliberada: três linhas sobre `string[:1]` custam menos que um lugar novo
-// para morar, e as cinco manobras são ASCII.
+// capitalized sobe a primeira LETRA, e não o primeiro byte: o "ácido" do Raio
+// Elemental começa num caractere de dois bytes, e `s[:1]` o partia ao meio.
 func capitalized(s string) string {
-	if s == "" {
+	first, size := utf8.DecodeRuneInString(s)
+	if size == 0 {
 		return s
 	}
-	return strings.ToUpper(s[:1]) + s[1:]
+	return string(unicode.ToUpper(first)) + s[size:]
 }
 
 // expertiseRoll é o gesto de rolar uma PERÍCIA, e ele reusa o comando que a aba
