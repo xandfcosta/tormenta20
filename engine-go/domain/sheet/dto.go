@@ -141,13 +141,17 @@ func (c CharacterDTO) WieldedCatalogIDs() []string {
 }
 
 type EffectDTO struct {
-	ID        int64  `json:"id"`
+	ID int64 `json:"id"`
+	// Source é de onde a linha veio, como a coluna grava: "spell", "power", "rule", "consumable".
+	Source    string `json:"source,omitempty"`
 	CatalogID string `json:"catalogId"`
 	Scope     string `json:"scope"`
 	Modifiers string `json:"modifiers"`
 	CreatedAt string `json:"createdAt"`
-	// CastAugments são os aprimoramentos escolhidos ao conjurar a magia que rola de novo na vez de quem conjurou
-	// (ver GLOSSARY, **dado da vez**), vazios no resto.
+	// CastHere diz que o Conjurar DESTA ficha abriu ou tocou a linha, e CastAugments são os aprimoramentos que ele
+	// escolheu, que o dado da vez e a ação da magia usam (ver GLOSSARY, **efeito da magia**). A linha só aplicada
+	// aqui veio de outro conjurador.
+	CastHere     bool          `json:"castHere,omitempty"`
 	CastAugments []AugmentPick `json:"castAugments,omitempty"`
 	// Charges são as cargas que a magia em vigor ainda tem (os dardos da Lança Ígnea, ver GLOSSARY, **ação da
 	// magia**), zero na que não as conta.

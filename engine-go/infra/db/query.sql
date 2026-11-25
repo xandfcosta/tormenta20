@@ -133,9 +133,15 @@ VALUES (?, ?, ?, ?, ?, ?)
 ON CONFLICT (characterId, catalogId, scope) DO UPDATE SET modifiers = excluded.modifiers, source = excluded.source
 RETURNING id, catalogId, scope, modifiers, createdAt;
 
+-- name: UpdateActiveEffect :exec
+-- The one row a spell leaves on a sheet takes the duration of the latest gesture,
+-- and the modifiers it brings (see writeSpellEffect).
+UPDATE active_effects SET scope = sqlc.arg('scope'), modifiers = sqlc.arg('modifiers')
+WHERE id = sqlc.arg('id');
+
 -- name: SaveEffectCastAugments :exec
--- The augments chosen when casting a spell that rolls again on the caster's turn (see
--- the 00038 migration); casting it again while it is in effect replaces them.
+-- The augments chosen when casting the spell whose row this is (see the 00038 migration);
+-- the row marks the cast of this sheet, and casting again replaces them.
 INSERT INTO effect_cast_augments (effectId, augments) VALUES (?, ?)
 ON CONFLICT (effectId) DO UPDATE SET augments = excluded.augments;
 

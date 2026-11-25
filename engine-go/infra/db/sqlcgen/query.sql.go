@@ -4700,8 +4700,8 @@ type SaveEffectCastAugmentsParams struct {
 	Augments string `json:"augments"`
 }
 
-// The augments chosen when casting a spell that rolls again on the caster's turn (see
-// the 00038 migration); casting it again while it is in effect replaces them.
+// The augments chosen when casting the spell whose row this is (see the 00038 migration);
+// the row marks the cast of this sheet, and casting again replaces them.
 func (q *Queries) SaveEffectCastAugments(ctx context.Context, arg SaveEffectCastAugmentsParams) error {
 	_, err := q.db.ExecContext(ctx, saveEffectCastAugments, arg.Effectid, arg.Augments)
 	return err
@@ -5178,6 +5178,24 @@ func (q *Queries) UnmarkOversizedWeapon(ctx context.Context, itemid int64) (int6
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const updateActiveEffect = `-- name: UpdateActiveEffect :exec
+UPDATE active_effects SET scope = ?1, modifiers = ?2
+WHERE id = ?3
+`
+
+type UpdateActiveEffectParams struct {
+	Scope     string `json:"scope"`
+	Modifiers string `json:"modifiers"`
+	ID        int64  `json:"id"`
+}
+
+// The one row a spell leaves on a sheet takes the duration of the latest gesture,
+// and the modifiers it brings (see writeSpellEffect).
+func (q *Queries) UpdateActiveEffect(ctx context.Context, arg UpdateActiveEffectParams) error {
+	_, err := q.db.ExecContext(ctx, updateActiveEffect, arg.Scope, arg.Modifiers, arg.ID)
+	return err
 }
 
 const updateCampaignCreature = `-- name: UpdateCampaignCreature :one

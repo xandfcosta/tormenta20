@@ -273,21 +273,21 @@ func (v sheetVitals) PoolsOf(
 // O adaptador é o MESMO da `SheetVitals` porque a fonte é a mesma tabela e a
 // mesma conexão; as portas é que são duas, porque mudam por razões diferentes.
 
-// SustainedOf lista os efeitos que cobram mana por turno, do mais antigo para o
-// mais novo — a ordem em que serão pagos quando o mana não cobrir todos.
+// SustainedOf lista os efeitos que esta ficha sustenta (`sheet.EffectDTO.Sustaining`), do mais antigo para o mais
+// novo — a ordem em que serão pagos quando o mana não cobrir todos. A magia só aplicada aqui é paga por quem a
+// conjurou.
 func (v sheetVitals) SustainedOf(ctx context.Context, charID int64) ([]live.SustainedEffect, error) {
-	rows, err := v.q.ListActiveEffectsByCharacter(ctx, charID)
+	effects, err := sheet.LoadActiveEffects(ctx, v.q, charID)
 	if err != nil {
 		return nil, err
 	}
 	var sustained []live.SustainedEffect
-	for _, l := range rows {
-		duration, err := engine.ParseDuration(l.Scope)
-		if err != nil || duration.Kind != engine.DurationSustained {
+	for _, e := range effects {
+		if !e.Sustaining() {
 			continue
 		}
 		sustained = append(sustained, live.SustainedEffect{
-			CatalogID: l.Catalogid, Label: spellLabel(l.Catalogid),
+			CatalogID: e.CatalogID, Label: spellLabel(e.CatalogID),
 		})
 	}
 	return sustained, nil

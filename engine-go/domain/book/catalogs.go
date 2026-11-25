@@ -66,6 +66,11 @@ type SpellAugment struct {
 	// não têm marca, porque nenhuma conta as lê. Quem prende a marca ao texto é o
 	// `TestEveryAugmentThatChangesWhetherTheSpellIsSustainedSaysSo`.
 	Sustains *bool `json:"sustains"`
+	// ReplacesTheBuff é o aprimoramento que troca o efeito INTEIRO, e o bônus da magia não vale com ele: a esfera
+	// do Campo de Força prende outra criatura e não dá os 30 PV temporários (p183). É o que tira a duração dele do
+	// Aplicar da aba Efeitos (`sheet.BuffDurations`; ver GLOSSARY, **efeito da magia**). Só importa no que muda a
+	// duração, porque é só ela que o Aplicar oferece.
+	ReplacesTheBuff bool `json:"replacesTheBuff"`
 	// Execution é a execução que o aprimoramento dá ("Muda a execução para ação de movimento"), na grafia do
 	// turno (`engine.ActionCost`), vazia no que não a muda: 1 minuto, 1 hora e 1 dia são a longa, que numa
 	// cena de ação não cabe. É o que a conjuração cobra do turno e o que a Magia Acelerada apaga (p171); quem

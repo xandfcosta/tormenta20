@@ -79,7 +79,10 @@ type SpellAugment struct {
 	ClassOnly      string `json:"classOnly,omitempty"`
 	Cantrip        bool   `json:"truque,omitempty"`
 	Sustains       *bool  `json:"sustains,omitempty"`
-	Execution      string `json:"execution,omitempty"`
+	// ReplacesTheBuff é o aprimoramento que troca o efeito inteiro, e o bônus da magia não vale com ele — ver
+	// `book.SpellAugment`.
+	ReplacesTheBuff bool   `json:"replacesTheBuff,omitempty"`
+	Execution       string `json:"execution,omitempty"`
 	// Adds, Rolls e ChangesTheRoll são o que o aprimoramento faz com o dado da magia — ver `book.SpellAugment`.
 	Adds           []SpellRoll `json:"adds,omitempty"`
 	Rolls          []SpellRoll `json:"rolls,omitempty"`

@@ -14,14 +14,14 @@ import (
 // SustainedClash é a frase que recusa uma SEGUNDA magia sustentada, ou vazia: "você pode manter diversas
 // habilidades sustentadas, pagando o custo de cada uma, mas apenas uma magia sustentada por vez" (p227).
 //
-// Ela conta TODA sustentada de pé, porque hoje só magia é sustentada — o `TestOnlySpellsAreSustainedInTheBook`
-// reprova no dia em que outra coisa for. A recusa NOMEIA a que está de pé, para quem joga saber o que
-// encerrar; reconjurar a mesma não é uma segunda.
+// Ela conta a MAGIA sustentada que ESTA ficha mantém (`EffectDTO.Sustaining`): a que outro conjurador lançou e só
+// foi aplicada aqui é dele, e o poder sustentado (a Aura Sagrada) paga a manutenção sem contar no limite. A recusa NOMEIA a que está de pé, para quem joga saber o que encerrar; reconjurar
+// a mesma não é uma segunda.
 //
 //	sheet.SustainedClash(dto.ActiveEffects, "silencio") // "Tempestade Divina já está sustentada, e o livro permite uma magia sustentada por vez (p227)"
 func SustainedClash(effects []EffectDTO, spellID string) string {
 	for _, e := range effects {
-		if e.CatalogID != spellID && sustained(e.Scope) {
+		if e.Source == "spell" && e.CatalogID != spellID && e.Sustaining() {
 			return fmt.Sprintf("%s já está sustentada, e o livro permite uma magia sustentada por vez (p227)",
 				book.SpellName(e.CatalogID))
 		}
@@ -67,6 +67,16 @@ func (s SpellOnTheSheet) CastRefusal(picks []AugmentPick) string {
 // e não o círculo nem a memorização: a linha do grimório a marca.
 func (s SpellOnTheSheet) LockedBySustained() bool {
 	return s.fixedLock == "" && s.Sustains(nil) && s.SustainedClash != ""
+}
+
+// Sustaining diz se ESTA ficha sustenta a linha: ela é sustentada e, sendo de magia, o Conjurar desta ficha a
+// abriu ou a tocou. É a linha que a manutenção cobra e que conta no limite de uma (p227); a magia só aplicada
+// aqui veio de outro conjurador, que é quem paga (decisão do dono; ver GLOSSARY, **magia sustentada**). A
+// sustentada que não é magia é de quem a ativou.
+//
+//	sheet.EffectDTO{Source: "spell", Scope: "sustained"}.Sustaining() // false: foi só aplicada
+func (e EffectDTO) Sustaining() bool {
+	return sustained(e.Scope) && (e.Source != "spell" || e.CastHere)
 }
 
 // sustained diz se a duração escrita é sustentada, na grafia do catálogo ou na da coluna `scope`.
