@@ -115,6 +115,27 @@ func TestTheWildShapeEndsWhenTheDruidFallsUnconscious(t *testing.T) {
 	}
 }
 
+// PETRIFICADO "fica inconsciente" (p395), e a ficha grava só o nome dele: a forma reverte do mesmo jeito.
+func TestTheWildShapeEndsWhenTheDruidIsPetrified(t *testing.T) {
+	f, id := wildDruid(t)
+	shape := `{"wild_form":"feroz","wild_tier":"normal","wild_damage":"perfuracao","wild_move":""}`
+	if refusal := powerCommand(t, f, id, "forma-selvagem", shape); refusal != "" {
+		t.Fatalf("a transformação foi recusada: %q", refusal)
+	}
+	if !inTheWildShape(t, f, id) {
+		t.Fatal("o druida devia estar na forma antes de virar pedra")
+	}
+	if refusal := sheetPost(t, f, id, "/efeitos/condicao/petrificado", ""); refusal != "" {
+		t.Fatalf("petrificar foi recusado: %q", refusal)
+	}
+	if !strings.Contains(activeConditionsOf(t, f, id), "petrificado") {
+		t.Fatalf("o caso precisa da condição Petrificado na ficha, e ela tem %s", activeConditionsOf(t, f, id))
+	}
+	if inTheWildShape(t, f, id) {
+		t.Error("petrificado fica inconsciente (p395) e reverte à forma normal (p63), e a forma continua gravada")
+	}
+}
+
 // inTheWildShape lê a tabela da forma, e não a tela: a tela poderia esconder uma forma que continua
 // valendo na ficha.
 func inTheWildShape(t *testing.T, f sceneFixture, id int64) bool {
