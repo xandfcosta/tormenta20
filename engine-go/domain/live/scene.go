@@ -104,6 +104,9 @@ type Scene struct {
 	// ExtraMovementLeft é a ação de movimento a mais do turno em curso, de quem
 	// entrou no primeiro turno do combate com Reflexos de Combate (p129).
 	ExtraMovementLeft bool `json:"extraMovementLeft,omitempty"`
+	// OneActionOnly diz que quem está na vez entrou nela enjoado: uma ação padrão
+	// ou de movimento, não as duas (p394). A condição é lida ao entrar na vez.
+	OneActionOnly bool `json:"oneActionOnly,omitempty"`
 	// TurnsBegun são as linhas da fila que já entraram na vez neste combate. A
 	// rodada sozinha não responde "é o primeiro turno dela?": quem chega no meio da
 	// briga tem o primeiro turno numa rodada adiantada.
@@ -185,6 +188,7 @@ func RefreshTurn(st *SessionRuntimeState) {
 		return
 	}
 	st.Scene.StandardLeft, st.Scene.MovementLeft, st.Scene.ExtraMovementLeft = true, true, false
+	st.Scene.OneActionOnly = false
 	if st.TurnIndex >= 0 && st.TurnIndex < len(st.Initiative) {
 		mine := st.Initiative[st.TurnIndex].ID + "|"
 		st.Scene.OncePerRoundUsed = slices.DeleteFunc(slices.Clone(st.Scene.OncePerRoundUsed),
@@ -214,6 +218,9 @@ func (s *Scene) actionsLeft() string {
 		extra = " e movimento extra"
 	}
 	switch {
+	case s.OneActionOnly && s.StandardLeft && s.MovementLeft:
+		// O enjoado escolhe UMA das duas (p394), e "padrão e movimento" leria como as duas.
+		return "padrão ou movimento"
 	case s.StandardLeft && s.MovementLeft:
 		if extra != "" {
 			return "padrão, movimento" + extra

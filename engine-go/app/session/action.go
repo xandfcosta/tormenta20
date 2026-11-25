@@ -65,6 +65,7 @@ func spendsFromTurn(s *live.SessionRuntimeState, cost engine.ActionCost) (engine
 	}
 	left, err := engine.TurnBudget{
 		Standard: s.Scene.StandardLeft, Movement: s.Scene.MovementLeft, ExtraMovement: s.Scene.ExtraMovementLeft,
+		OneAction: s.Scene.OneActionOnly,
 	}.Spend(cost)
 	if err != nil {
 		return left, true, fmt.Errorf("%s: %w", whoIsOnTurn(s), err)

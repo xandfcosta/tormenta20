@@ -175,3 +175,25 @@ func grantFirstTurnMovement(ctx context.Context, u Unit, s *live.SessionRuntimeS
 	s.Scene.ExtraMovementLeft = gains
 	return nil
 }
+
+// limitsTheSickenedTurn lê as condições de quem ACABOU DE ENTRAR na vez e marca o turno de uma ação só
+// do enjoado (p394). Da ficha para o personagem, e da linha da fila para o NPC, que ficha não tem. Lida
+// ao entrar e não a cada cobrança: o livro conta "por rodada", e marcar no meio do turno vale no próximo.
+func limitsTheSickenedTurn(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
+	if !s.Scene.CountsRounds() || s.TurnIndex < 0 || s.TurnIndex >= len(s.Initiative) {
+		return nil
+	}
+	entry := s.Initiative[s.TurnIndex]
+	conditions := entry.Conditions
+	if entry.CharacterID != nil {
+		if u.TurnEffects == nil {
+			return nil
+		}
+		var err error
+		if conditions, err = u.TurnEffects.ConditionsOf(ctx, *entry.CharacterID); err != nil {
+			return fmt.Errorf("ler as condições de %s: %w", entry.Label, err)
+		}
+	}
+	s.Scene.OneActionOnly = engine.OneActionTurn(conditions)
+	return nil
+}

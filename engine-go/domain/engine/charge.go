@@ -63,12 +63,13 @@ func ChargeSituation(charge string) (SpecialSituation, bool) {
 }
 
 // StrikeAction é o que o golpe custa do turno: a padrão de agredir (p233), ou a
-// completa da investida (p235). Uma conta para a proposta e a confirmação.
+// investida, que é completa (p235) e padrão para o enjoado (p394) — quem decide
+// qual das duas é o turno, no `Spend`. Uma conta para a proposta e a confirmação.
 //
-//	StrikeAction(ChargePlain) // ActionFull
+//	StrikeAction(ChargePlain) // ActionCharge
 func StrikeAction(charge string) ActionCost {
 	if charge != "" {
-		return ActionFull
+		return ActionCharge
 	}
 	return ActionStandard
 }
