@@ -27,6 +27,9 @@ type attackProposal struct {
 	// ao lado de quem ataca quem; vazio no golpe comum.
 	Action   string
 	Maneuver bool
+	// BySpellHand diz que a manobra é da mão de uma magia (a Mão Poderosa de Talude, p198), e a cabeça da carta do
+	// mestre escreve o meio: sem ele, ela leria como a manobra de quem conjurou, com o Luta dele.
+	BySpellHand bool
 	// Tally é a conta inteira numa linha, na notação da mesa, para os Detalhes
 	// do mestre (`attackLine`) — e, no cartão do jogador, a rolagem dele.
 	Tally string
@@ -115,7 +118,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	}
 	if pa.Maneuver != nil {
 		var note string
-		out.Maneuver, out.Action = true, maneuverSeal(*pa.Maneuver)
+		out.Maneuver, out.Action, out.BySpellHand = true, maneuverSeal(*pa.Maneuver), pa.Hand
 		out.Duel, note = maneuverDuel(*pa)
 		out.Tally = maneuverLine(*pa)
 		out.Rows = maneuverConsequence(*pa)

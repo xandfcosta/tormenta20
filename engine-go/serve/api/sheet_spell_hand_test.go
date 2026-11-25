@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -85,6 +87,13 @@ func TestTheMightyHandGrabsWithMysticismAndTheMovement(t *testing.T) {
 	if state.Scene.MovementLeft || !state.Scene.StandardLeft {
 		t.Errorf("a vez ficou com movimento = %v e padrão = %v; want o movimento gasto e a padrão inteira",
 			state.Scene.MovementLeft, state.Scene.StandardLeft)
+	}
+
+	// A CARTA DO MESTRE diz que é a mão, e não quem conjurou, que agarra: sem isso, ela leria como o Luta dele.
+	gm := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	head := regexp.MustCompile(`(?s)<section id="table-attack".*?<div class="ds-strike-head"[^>]*>(.*?)</div>`).FindStringSubmatch(gm)
+	if head == nil || !strings.Contains(head[1], "· Mão Poderosa de Talude") {
+		t.Errorf("a cabeça da carta do mestre não diz que a manobra é da Mão Poderosa: %q", head)
 	}
 
 	t.Run("o cancelamento do mestre devolve a ação de movimento", func(t *testing.T) {
