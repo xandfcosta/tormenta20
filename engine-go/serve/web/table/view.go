@@ -443,8 +443,8 @@ type viewGm struct {
 	CanAdvance bool
 	// Due são os dados que se rolam na vez da linha que está na vez, e Markable a magia que o mestre pode marcar
 	// agora, escrita (ver GLOSSARY, **marca na fila**).
-	Due      []dueView
-	Markable string
+	Due                   []dueView
+	Markable, MarkableWho string
 }
 
 func ofViewGm(

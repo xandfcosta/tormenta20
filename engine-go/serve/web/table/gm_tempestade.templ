@@ -164,15 +164,15 @@ templ gmQueueRow(v View, row tableRow) {
 			</span>
 			@gmPoolLine("PV", "pv", row.PV)
 			@gmPoolLine("PM", "pm", row.PM)
-			if len(row.Conditions) > 0 {
+			if len(row.Conditions) > 0 || len(row.Marks) > 0 {
 				<span class="ds-badges">
 					for _, c := range row.Conditions {
 						@conditionBadge(c)
 					}
+					for _, m := range row.Marks {
+						<span class="ds-badge" title={ m.Detail }>{ m.Spell }</span>
+					}
 				</span>
-			}
-			if len(row.Marks) > 0 {
-				@gmRowMarks(row)
 			}
 		</button>
 		if row.PV != nil {
@@ -256,10 +256,10 @@ templ gmCombatantSheet(v View, row tableRow) {
 					+ Aplicar condição
 				}
 			</div>
+			if len(row.Marks) > 0 || v.GM.Markable != "" {
+				@gmSheetMarks(v, row)
+			}
 		</div>
-		if len(row.Marks) > 0 || v.GM.Markable != "" {
-			@gmSheetMarks(v, row)
-		}
 		<div class="ds-gm-sheet-foot">
 			@ds.Button(ds.ButtonDanger, templ.Attributes{"type": "button", "data-on:click": rowCommand(v, row, "remover")}) {
 				@ui.Icon("Trash2", "ds-icon")

@@ -18,6 +18,8 @@ import (
 type rowMark struct {
 	Spell  string
 	Detail string
+	// Chip é o que a ficha da marca diz na folha da linha: o nome e quantos turnos faltam.
+	Chip string
 }
 
 // dueView é um dado que se rola na vez da linha, na barra do mestre: o Rolar e o "ou rolei" dele.
@@ -47,11 +49,12 @@ func dueHandAttrs(due dueView) templ.Attributes {
 func marksOf(e live.InitiativeEntry) []rowMark {
 	var marks []rowMark
 	for _, m := range e.Marks {
-		detail := []string{partsWritten(m.Parts), live.MomentWritten(m.At)}
+		detail, chip := []string{partsWritten(m.Parts), live.MomentWritten(m.At)}, m.Spell
 		if m.Counted {
 			detail = append(detail, turnsLeftWritten(m.TurnsLeft))
+			chip += " · " + turnsLeftWritten(m.TurnsLeft)
 		}
-		marks = append(marks, rowMark{Spell: m.Spell, Detail: strings.Join(detail, " · ")})
+		marks = append(marks, rowMark{Spell: m.Spell, Detail: strings.Join(detail, " · "), Chip: chip})
 	}
 	return marks
 }
@@ -65,7 +68,8 @@ func dueViewsOf(v View, st *live.SessionRuntimeState) []dueView {
 	entry := st.Initiative[st.TurnIndex]
 	var views []dueView
 	for i, due := range live.DueRolls(entry, v.Queue[st.TurnIndex].Conditions) {
-		detail := []string{partsWritten(due.Parts), due.When}
+		// O MOMENTO sem o nome: a linha da vez já é a de quem está marcado.
+		detail := []string{partsWritten(due.Parts), live.MomentWritten(due.At)}
 		if due.Who != entry.Label {
 			detail = append(detail, "de "+due.Who)
 		}
@@ -84,12 +88,22 @@ func dueViewsOf(v View, st *live.SessionRuntimeState) []dueView {
 	return views
 }
 
-// markableOf é a magia que o mestre pode marcar agora, escrita com quem a conjurou, ou vazia.
-func markableOf(st *live.SessionRuntimeState) string {
+// markableOf é a magia que o mestre pode marcar agora e quem a conjurou, ou vazios.
+func markableOf(st *live.SessionRuntimeState) (spell, who string) {
 	if st.Markable == nil {
-		return ""
+		return "", ""
 	}
-	return st.Markable.Spell + ", de " + st.Markable.Who
+	return st.Markable.Spell, st.Markable.Who
+}
+
+// dueSignals declara o "ou rolei" de cada dado da vez VAZIO: sem a declaração, o campo numérico nasce ligado a 0,
+// e o Rolar mandaria um total que nenhum dado tira.
+func dueSignals(dues []dueView) string {
+	declared := make([]string, 0, len(dues))
+	for _, due := range dues {
+		declared = append(declared, due.HandSignal+": ''")
+	}
+	return "{" + strings.Join(declared, ", ") + "}"
 }
 
 // partsWritten é o dado da marca: "3d6 de ácido".

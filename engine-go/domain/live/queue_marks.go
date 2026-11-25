@@ -45,7 +45,8 @@ type QueueMarkPart struct {
 type DueRoll struct {
 	Spell string
 	Who   string
-	// When é o momento escrito para a cabeça da faixa: "início do turno de Ogro".
+	// At é "inicio" ou "fim" do turno, e When o momento escrito para a cabeça da faixa: "início do turno de Ogro".
+	At    string
 	When  string
 	Parts []QueueMarkPart
 	Save  string
@@ -114,13 +115,13 @@ func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {
 	for _, m := range entry.Marks {
 		burning = burning || m.Burning
 		due = append(due, DueRoll{
-			Spell: m.Spell, Who: m.Who, When: MomentWritten(m.At) + " de " + entry.Label,
+			Spell: m.Spell, Who: m.Who, At: m.At, When: MomentWritten(m.At) + " de " + entry.Label,
 			Parts: m.Parts, Save: m.Save, DC: m.DC, Last: m.Counted && m.TurnsLeft == 0,
 		})
 	}
 	if !burning && slices.Contains(conditions, ConditionBurning) {
 		due = append(due, DueRoll{
-			Spell: "Em Chamas", Who: entry.Label, When: MomentWritten("inicio"),
+			Spell: "Em Chamas", Who: entry.Label, At: "inicio", When: MomentWritten("inicio"),
 			Parts: []QueueMarkPart{{Dice: "1d6", Kind: "fogo"}},
 		})
 	}
