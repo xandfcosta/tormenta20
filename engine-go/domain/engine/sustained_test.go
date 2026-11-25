@@ -1,11 +1,8 @@
 package engine
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
-
-	"t20engine/domain/catalog"
 )
 
 // A MANUTENÇÃO DO INÍCIO DO TURNO (T20 p227): "o personagem deve gastar 1 PM
@@ -63,64 +60,6 @@ func TestSustainedAbilitiesCostAPointOfManaEachTurn(t *testing.T) {
 			}
 		})
 	}
-}
-
-// SÓ MAGIA É SUSTENTADA, hoje — e é isso que deixa o limite de "uma sustentada
-// por vez" contar todas sem olhar a fonte do efeito.
-//
-// O livro SEPARA as duas coisas: "você pode manter diversas habilidades
-// sustentadas… mas apenas uma magia sustentada por vez" (p227). A separação só
-// tem objeto quando existir uma habilidade sustentada que não seja magia, e
-// nenhuma existe: as 32 estão todas no catálogo de magias. Este guarda reprova
-// no dia em que uma aparecer, que é quando o
-// `sheet.SustainedClash` precisa passar a filtrar pela fonte.
-func TestOnlySpellsAreSustainedInTheBook(t *testing.T) {
-	outside := map[string]int{}
-	measured := 0
-	for _, name := range catalog.Resources() {
-		payload, ok := catalog.Resource(name)
-		if !ok {
-			continue
-		}
-		measured++
-		var raw any
-		if err := json.Unmarshal(payload, &raw); err != nil {
-			continue
-		}
-		if n := countSustained(raw); n > 0 && name != "spells" {
-			outside[name] = n
-		}
-	}
-	if measured < 10 {
-		t.Fatalf("só %d catálogos varridos — a varredura está olhando o lugar errado", measured)
-	}
-	if len(outside) > 0 {
-		t.Errorf("habilidade sustentada FORA das magias: %v — o limite de uma sustentada por vez "+
-			"passa a precisar do filtro por fonte em `sheet.SustainedClash` (p227)", outside)
-	}
-	t.Logf("%d catálogos varridos; a duração sustentada vive só nas magias", measured)
-}
-
-// countSustained conta `"duration": "sustentada"` em qualquer profundidade.
-func countSustained(no any) int {
-	switch v := no.(type) {
-	case map[string]any:
-		n := 0
-		for k, child := range v {
-			if k == "duration" && child == "sustentada" {
-				n++
-			}
-			n += countSustained(child)
-		}
-		return n
-	case []any:
-		n := 0
-		for _, child := range v {
-			n += countSustained(child)
-		}
-		return n
-	}
-	return 0
 }
 
 // A RAZÃO DA QUEDA é diferente, e a mesa lê a diferença: sem mana é uma escolha

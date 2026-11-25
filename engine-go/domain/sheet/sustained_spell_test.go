@@ -51,6 +51,20 @@ func TestOnlyOneSustainedSpellIsCastAtATime(t *testing.T) {
 	if lock := received.Spell("silencio").CastLock; lock != "" {
 		t.Errorf("com a Velocidade de outro conjurador aplicada aqui, o Silêncio tranca com %q", lock)
 	}
+
+	// O PODER SUSTENTADO não é magia: "você pode manter diversas habilidades sustentadas, pagando o custo de cada
+	// uma, mas apenas uma magia sustentada por vez" (p227). A Aura Sagrada do paladino paga a manutenção e não
+	// tranca a magia.
+	aura := CasterOf(CharacterDTO{
+		Classes:       cleric.Classes,
+		ActiveEffects: []EffectDTO{{Source: "power", CatalogID: "class.paladino.aura-sagrada", Scope: "sustained"}},
+	})
+	if lock := aura.Spell("silencio").CastLock; lock != "" {
+		t.Errorf("com a Aura Sagrada ligada, o Silêncio tranca com %q", lock)
+	}
+	if !aura.effects[0].Sustaining() {
+		t.Error("a Aura Sagrada deixou de ser sustentada pela ficha, e a manutenção não a cobra")
+	}
 }
 
 // O APRIMORAMENTO QUE TORNA A MAGIA SUSTENTADA passa pelo mesmo limite: a Invisibilidade é definida, e o

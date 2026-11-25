@@ -14,14 +14,14 @@ import (
 // SustainedClash é a frase que recusa uma SEGUNDA magia sustentada, ou vazia: "você pode manter diversas
 // habilidades sustentadas, pagando o custo de cada uma, mas apenas uma magia sustentada por vez" (p227).
 //
-// Ela conta a sustentada que ESTA ficha mantém (`EffectDTO.Sustaining`): a magia que outro conjurador lançou e
-// só foi aplicada aqui é dele. A recusa NOMEIA a que está de pé, para quem joga saber o que encerrar; reconjurar
+// Ela conta a MAGIA sustentada que ESTA ficha mantém (`EffectDTO.Sustaining`): a que outro conjurador lançou e só
+// foi aplicada aqui é dele, e o poder sustentado (a Aura Sagrada) paga a manutenção sem contar no limite. A recusa NOMEIA a que está de pé, para quem joga saber o que encerrar; reconjurar
 // a mesma não é uma segunda.
 //
 //	sheet.SustainedClash(dto.ActiveEffects, "silencio") // "Tempestade Divina já está sustentada, e o livro permite uma magia sustentada por vez (p227)"
 func SustainedClash(effects []EffectDTO, spellID string) string {
 	for _, e := range effects {
-		if e.CatalogID != spellID && e.Sustaining() {
+		if e.Source == "spell" && e.CatalogID != spellID && e.Sustaining() {
 			return fmt.Sprintf("%s já está sustentada, e o livro permite uma magia sustentada por vez (p227)",
 				book.SpellName(e.CatalogID))
 		}
