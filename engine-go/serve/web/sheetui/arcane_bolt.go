@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -29,22 +30,21 @@ func arcaneBoltRow(dto sheet.CharacterDTO, computed engine.ComputedSheet) (actio
 	if !has {
 		return actionRow{}, false
 	}
-	parts, err := bolt.Roll("")
-	if err != nil {
-		return actionRow{}, false
-	}
+	essence := bolt.Essence()
 	const name = "Raio Arcano"
-	detail := []string{writtenSpellPart(parts[0]), fmt.Sprintf("Reflexos reduz à metade · CD %d", bolt.DC), "alcance " + bolt.Range}
+	detail := []string{writtenSpellPart(essence), fmt.Sprintf("Reflexos reduz à metade · CD %d", bolt.DC), "alcance " + bolt.Range}
 	dialog := "arcane-bolt"
 	row := actionRow{
 		Name: name, Detail: strings.Join(detail, " · "), Can: true,
 		Rolls: []actionRoll{{Label: "Rolar", Dialog: dialog, Before: handResets, Path: arcaneBoltPath, Primary: true}},
 		SpellSheet: &spellActionSheet{
-			Dialog: dialog, Title: name, Lines: handRollLinesOf(parts, name),
+			Dialog: dialog, Title: name, Lines: handRollLinesOf([]book.SpellRoll{essence}, name),
 			Roll: actionRoll{Label: "Rolar", Path: arcaneBoltPath},
 		},
 	}
 	if bolt.Elemental {
+		// A LINHA DO DADO acompanha o seletor: o tipo escolhido no lugar da essência.
+		row.SpellSheet.Lines[0].WrittenLive = fmt.Sprintf("'%s de ' + ($arcane_bolt_element || 'essência')", bolt.Dice)
 		row.SpellSheet.Elements = []boltElementOption{{Value: "", Label: "Essência"}}
 		for _, e := range sheet.ArcaneBoltElements {
 			row.SpellSheet.Elements = append(row.SpellSheet.Elements, boltElementOption{

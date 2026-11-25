@@ -173,6 +173,11 @@ func TestTheArcaneBoltFiresFromTheActionsTab(t *testing.T) {
 		t.Errorf("o grupo da ação padrão tem %d linhas do Raio Arcano; want 1, a do gesto", len(rows))
 	}
 
+	// A LINHA DO DADO no diálogo acompanha o tipo que o seletor do Raio Elemental escolhe.
+	if !strings.Contains(standard, `data-text="&#39;5d8 de &#39; + ($arcane_bolt_element || &#39;essência&#39;)"`) {
+		t.Error("a linha do dado no diálogo do Raio Arcano não acompanha o tipo do Raio Elemental")
+	}
+
 	mpBefore := mpOf(t, f.s, f.charID)
 	target := fmt.Sprintf("/personagens/%d/acoes/raio-arcano?tab=combat", f.charID)
 	if refusal := sceneRefusal(f.requests(t, f.player, http.MethodPost, target, `{"arcane_bolt_element":"fogo","spell_hand_1":20}`).Body.String()); refusal != "" {

@@ -65,11 +65,16 @@ func ArcaneBoltOf(dto CharacterDTO, computed engine.ComputedSheet) (ArcaneBolt, 
 	}, true
 }
 
+// Essence é a parcela do raio sem o Raio Elemental: o dado, de essência.
+func (b ArcaneBolt) Essence() book.SpellRoll {
+	return book.SpellRoll{Dice: b.Dice, Kind: "essência"}
+}
+
 // Roll é a parcela do raio: de essência, ou do tipo que o Raio Elemental escolheu, com a condição de quem falha
 // na nota. O tipo que não é um dos cinco, ou sem o Raio Elemental, é recusado.
 func (b ArcaneBolt) Roll(element string) ([]book.SpellRoll, error) {
 	if element == "" {
-		return []book.SpellRoll{{Dice: b.Dice, Kind: "essência"}}, nil
+		return []book.SpellRoll{b.Essence()}, nil
 	}
 	if !b.Elemental {
 		return nil, fmt.Errorf("o Raio Arcano só muda o tipo do dano com o Raio Elemental (p39)")

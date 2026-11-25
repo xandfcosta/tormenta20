@@ -196,7 +196,7 @@ templ turnRollFoot(v View, offer turnRollOffer) {
 templ handRollLines(lines []handRollLine) {
 	for _, line := range lines {
 		<div class="ds-sum-line">
-			<span class="ds-help">Rola <b>{ line.Written }</b></span>
+			<span class="ds-help">Rola <b { writtenLiveAttrs(line)... }>{ line.Written }</b></span>
 			<span class="ds-sum-line flex-nowrap">
 				<span class="ds-row-meta">ou rolei</span>{ " " }
 				@handTotalField(line.Signal, line.Label)
