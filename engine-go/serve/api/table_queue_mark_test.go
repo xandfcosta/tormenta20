@@ -96,7 +96,7 @@ func TestTheConfusedGoblinRollsItsD6OnItsTurn(t *testing.T) {
 	f := newSceneFixture(t)
 	goblin := f.actionSceneWithTheGoblinFirst(t, "Arcanista", f.charID, 1)
 	if _, err := f.s.sessions.UpdateInitiativeEntry(t.Context(), f.sessionID, goblin,
-		live.EntryPatch{Conditions: &[]string{live.ConditionConfused}}); err != nil {
+		live.EntryPatch{Conditions: &[]string{"confuso"}}); err != nil {
 		t.Fatalf("deixar o Goblin confuso: %v", err)
 	}
 	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, `aria-label="Rolar Confuso na vez de Goblin"`) {

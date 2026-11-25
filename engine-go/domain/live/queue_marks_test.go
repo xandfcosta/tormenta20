@@ -26,7 +26,7 @@ func combatWithAnOgre() *SessionRuntimeState {
 func dueOf(t *testing.T, st *SessionRuntimeState) []DueRoll {
 	t.Helper()
 	entry := st.Initiative[st.TurnIndex]
-	return DueRolls(entry, entry.Conditions)
+	return DueRolls(entry, nil)
 }
 
 // A MARCA NA FILA (ver GLOSSARY, **marca na fila**): o mestre marca o ogro com a magia da última conjuração que
@@ -76,14 +76,15 @@ func TestTheMarkRollsOnTheMarkedCreaturesTurnAndCountsItsTurns(t *testing.T) {
 // dado pelo dela (p196). O Círculo da Restauração rola no FIM do turno.
 func TestTheBurningConditionRollsAndTheLanceReplacesItsDie(t *testing.T) {
 	ogre := InitiativeEntry{ID: "ogro", Label: "Ogro", Conditions: []string{"em-chamas"}}
-	due := DueRolls(ogre, ogre.Conditions)
+	flames := []ConditionDue{{ID: ConditionBurning, Name: "Em Chamas", Dice: "1d6", Kind: "fogo"}}
+	due := DueRolls(ogre, flames)
 	if len(due) != 1 || due[0].Condition != "Em Chamas" || due[0].Spell != "" || due[0].Parts[0].Dice != "1d6" || due[0].Parts[0].Kind != "fogo" {
 		t.Fatalf("o ogro Em Chamas rola %+v; want 1d6 de fogo", due)
 	}
 
 	ogre.Marks = []QueueMark{{Spell: "Lança Ígnea de Aleph", Who: "Arcanista", At: "inicio", Burning: true,
 		Parts: []QueueMarkPart{{Dice: "3d6", Kind: "fogo"}}}}
-	due = DueRolls(ogre, ogre.Conditions)
+	due = DueRolls(ogre, flames)
 	if len(due) != 1 || due[0].Spell != "Lança Ígnea de Aleph" || due[0].Parts[0].Dice != "3d6" {
 		t.Errorf("com as chamas da Lança, o ogro rola %+v; want só os 3d6 da Lança", due)
 	}
