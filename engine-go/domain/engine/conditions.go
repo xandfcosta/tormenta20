@@ -1,5 +1,11 @@
 package engine
 
+import (
+	"fmt"
+
+	"t20engine/domain/catalog/transcript"
+)
+
 // O DESTINO DE CADA CONDIÇÃO (p394-395, ver GLOSSARY, **condição**).
 //
 // Os NÚMEROS que uma condição muda moram no `conditionModifierTable` (collect.go), que o
@@ -43,8 +49,12 @@ type ConditionTurnRoll struct {
 type ConditionRule struct {
 	Acts     ConditionActs
 	TurnRoll *ConditionTurnRoll
-	// Elsewhere é o mecanismo de fora que aplica a condição, dito para quem a procurar aqui.
+	// Elsewhere é o mecanismo de fora que aplica a condição, escrito para uma PESSOA: ele sai na recusa de marcar
+	// a condição derivada.
 	Elsewhere string
+	// Derived diz que é o mecanismo de `Elsewhere` que dá a condição, e ninguém a marca à mão: a marca seria um
+	// sinal que nada lê.
+	Derived bool
 	// ByMaster é o que fica com o mestre por desenho, e por quê.
 	ByMaster string
 }
@@ -78,10 +88,11 @@ var conditionRules = map[string]ConditionRule{
 		{UpTo: 5, Says: "ataca a criatura mais próxima com a arma empunhada, ou a si mesmo se estiver sozinho"},
 		{UpTo: 6, Says: "a condição termina, e age normalmente"},
 	}}},
-	ConditionBleeding: {Elsewhere: "o teste de Constituição CD 15 no início da vez (p236): `BleedingCheckPasses`"},
-	"sobrecarregado": {Elsewhere: "a carga (`loadBreakdownOf`), que dá a penalidade de armadura e o deslocamento; " +
-		"ela não se marca à mão (decisão do dono)"},
-	"paralisado": {ByMaster: "as \"ações puramente mentais\" (p395): o app não sabe quais ações são mentais"},
+	ConditionBleeding: {Elsewhere: "o teste de Constituição CD 15 no início da vez (p236)"},
+	// Só a carga a dá — nenhuma magia ou poder do livro a impõe —, e por isso ela não se marca à mão (decisão do
+	// dono).
+	"sobrecarregado": {Elsewhere: "a carga que o personagem leva (p141)", Derived: true},
+	"paralisado":     {ByMaster: "as \"ações puramente mentais\" (p395): o app não sabe quais ações são mentais"},
 	"enfeiticado": {ByMaster: "o +10 vale nos testes de Diplomacia da FONTE com quem está enfeitiçado (p394), " +
 		"e o teste de perícia do app não tem alvo"},
 	"doente":     {ByMaster: "o efeito é o da doença, que o livro descreve em cada uma (p394)"},
@@ -119,4 +130,22 @@ func ConditionRollSays(id string, total int) string {
 		}
 	}
 	return ""
+}
+
+// HandMarkRefusal é nil na condição que se marca à mão; na que o app deriva, é a recusa, dizendo de onde ela vem.
+// Ela barra só o que ENTRA: a marca gravada antes desta regra ainda sai.
+//
+// @example HandMarkRefusal("sobrecarregado") // "Sobrecarregado não se marca à mão: quem a dá é a carga (…)"
+func HandMarkRefusal(id string) error {
+	rule := conditionRules[id]
+	if !rule.Derived {
+		return nil
+	}
+	name := id
+	for _, c := range transcript.Conditions {
+		if c.ID == id {
+			name = c.Name
+		}
+	}
+	return fmt.Errorf("%s não se marca à mão: quem a dá é %s", name, rule.Elsewhere)
 }

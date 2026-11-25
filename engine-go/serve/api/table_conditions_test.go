@@ -10,6 +10,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 
 	"golang.org/x/net/html"
@@ -186,15 +187,44 @@ func TestTheDialogOffersTheCatalogConditions(t *testing.T) {
 	f.scene(t)
 
 	screen := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String()
+	// O DIÁLOGO e não a página: o nome de uma condição aparece também nos crachás e nas folhas da fila.
+	start := strings.Index(screen, `id="gm-conditions"`)
+	if start < 0 {
+		t.Fatal("a Mesa não desenhou o diálogo Aplicar condição — o laço abaixo não mediria nada")
+	}
+	dialog := screen[start:]
+	dialog = dialog[:strings.Index(dialog, "</dialog>")]
 
 	conditions := book.Catalogs().Conditions
 	if len(conditions) == 0 {
 		t.Fatal("o catálogo não tem condição nenhuma — o laço abaixo não mediria nada")
 	}
 	for _, c := range conditions {
-		if !strings.Contains(screen, c.Name) {
-			t.Errorf("a condição %q (%s) não é oferecida na Mesa", c.Name, c.ID)
+		// A que o app deriva (Sobrecarregado, da carga) não se marca à mão (decisão do dono).
+		byHand := engine.HandMarkRefusal(c.ID) == nil
+		if offered := strings.Contains(dialog, ">"+c.Name+"<") || strings.Contains(dialog, c.Name+"\n"); offered != byHand {
+			t.Errorf("a condição %q (%s) oferecida no diálogo: %v, want %v", c.Name, c.ID, offered, byHand)
 		}
+	}
+}
+
+// SOBRECARREGADO NASCE DA CARGA (p394), e marcá-la à mão seria um sinal que ninguém lê: a Mesa recusa pôr, no NPC
+// e no PC, e diz por quê (decisão do dono).
+func TestTheTableDoesNotMarkOverloadedByHand(t *testing.T) {
+	f := newSceneFixture(t)
+	f.scene(t)
+	pc, npc := sceneIds(t, f)
+	for _, row := range []string{npc, pc} {
+		body := f.posts(t, f.gm, f.tableUrl()+"/iniciativa/"+row+"/condicao/sobrecarregado", "")
+		if !strings.Contains(body, "carga") {
+			t.Errorf("a recusa de marcar Sobrecarregado não diz que ela vem da carga; resposta: %.300s", body)
+		}
+	}
+	if c := rowConditions(t, f, npc); len(c) != 0 {
+		t.Errorf("Sobrecarregado entrou na linha do NPC: %v", c)
+	}
+	if got := sheetConditions(t, f, f.charID); len(got) != 0 {
+		t.Errorf("Sobrecarregado entrou na ficha pela Mesa: %v", got)
 	}
 }
 

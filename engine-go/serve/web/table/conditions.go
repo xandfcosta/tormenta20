@@ -81,6 +81,9 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	// tem de continuar funcionando, senão uma marcada antes desta regra ficaria
 	// presa na linha para sempre.
 	if !slices.Contains(current, id) {
+		if err := engine.HandMarkRefusal(id); err != nil {
+			return nil, err
+		}
 		if err := st.refuseIfImmune(c, state.Initiative[i], id); err != nil {
 			return nil, err
 		}
