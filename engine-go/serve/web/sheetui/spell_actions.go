@@ -34,16 +34,14 @@ const handResets = "$spell_hand_1 = 0; $spell_hand_2 = 0; $spell_hand_3 = 0; $sp
 // spellActionRows são as linhas das ações das magias em vigor, pelo custo de cada uma.
 func spellActionRows(dto sheet.CharacterDTO, computed engine.ComputedSheet) map[engine.ActionCost][]actionRow {
 	rows := map[engine.ActionCost][]actionRow{}
-	caster := sheet.CasterOf(dto)
-	for _, effect := range dto.ActiveEffects {
-		onSheet := caster.Spell(effect.CatalogID)
-		actions := onSheet.Actions(effect.CastAugments)
-		if !onSheet.Known || actions == nil {
+	for _, spellEffect := range sheet.CasterOf(dto).SpellEffects() {
+		onSheet, effect, actions := spellEffect.Spell, spellEffect.Effect, spellEffect.Actions()
+		if actions == nil {
 			continue
 		}
 		dc, _ := onSheet.DC(computed)
-		for i, option := range actions.Options {
-			action, parts, err := onSheet.ActionRoll(effect.CastAugments, option.Name)
+		for i := range actions.Options {
+			action, parts, err := spellEffect.Action(i)
 			if err != nil {
 				continue
 			}
@@ -69,8 +67,8 @@ func spellActionRows(dto sheet.CharacterDTO, computed engine.ComputedSheet) map[
 			if actions.OncePerTurn {
 				detail = append(detail, "uma vez por turno")
 			}
-			if onSheet.Charges(effect.CastAugments) > 0 {
-				detail = append(detail, fmt.Sprintf("sobram %d", effect.Charges))
+			if left, counted := spellEffect.Charges(); counted {
+				detail = append(detail, fmt.Sprintf("sobram %d", left))
 			}
 			dialog := fmt.Sprintf("spell-action-%d-%d", effect.ID, i)
 			path := fmt.Sprintf("/acoes/magia/%d/%d", effect.ID, i)

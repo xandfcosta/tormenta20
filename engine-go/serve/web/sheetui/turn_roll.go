@@ -40,9 +40,10 @@ type handRollLine struct {
 	Label   string
 }
 
-// turnRollOffersOf são os botões do dado da vez de uma linha em vigor, vazios na que não é magia com dado da vez.
-func turnRollOffersOf(caster sheet.Caster, effect sheet.EffectDTO) []turnRollOffer {
-	onSheet := caster.Spell(effect.CatalogID)
+// turnRollOffersOf são os botões do dado da vez de um efeito da magia, vazios no que não tem dado da vez — e no
+// zero, que é a linha que não é magia.
+func turnRollOffersOf(spellEffect sheet.SpellEffect) []turnRollOffer {
+	onSheet, effect := spellEffect.Spell, spellEffect.Effect
 	if !onSheet.Known || onSheet.Spell.TurnRoll == nil {
 		return nil
 	}
@@ -50,7 +51,7 @@ func turnRollOffersOf(caster sheet.Caster, effect sheet.EffectDTO) []turnRollOff
 	versions := onSheet.TurnVersions()
 	offers := make([]turnRollOffer, 0, len(versions))
 	for i, version := range versions {
-		parts, err := onSheet.TurnRoll(effect.CastAugments, version)
+		parts, err := spellEffect.TurnRoll(version)
 		if err != nil {
 			continue
 		}
@@ -99,8 +100,8 @@ func writtenSpellPart(part book.SpellRoll) string {
 }
 
 // turnRollMeta é o que a linha em vigor diz do dado da vez: "rola no início do turno". Vazia sem dado da vez.
-func turnRollMeta(caster sheet.Caster, effect sheet.EffectDTO) string {
-	onSheet := caster.Spell(effect.CatalogID)
+func turnRollMeta(spellEffect sheet.SpellEffect) string {
+	onSheet := spellEffect.Spell
 	if !onSheet.Known || onSheet.Spell.TurnRoll == nil {
 		return ""
 	}

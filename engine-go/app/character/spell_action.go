@@ -13,39 +13,23 @@ import (
 // **ação da magia**), com o dado já montado com os aprimoramentos da conjuração. Quem cobra a ação da vez é quem
 // chama, ANTES de `ActOnSpell`: a opção diz quanto ela custa e se é uma vez por turno.
 func SpellActionOf(dto sheet.CharacterDTO, effectID int64, option int) (SpellActionAsked, error) {
-	var effect *sheet.EffectDTO
-	for i := range dto.ActiveEffects {
-		if dto.ActiveEffects[i].ID == effectID {
-			effect = &dto.ActiveEffects[i]
-		}
-	}
-	if effect == nil {
-		return SpellActionAsked{}, fmt.Errorf("o efeito %d não está mais em vigor na ficha de %s", effectID, dto.Name)
-	}
-	onSheet := sheet.CasterOf(dto).Spell(effect.CatalogID)
-	actions := onSheet.Actions(effect.CastAugments)
-	if !onSheet.Known || actions == nil {
-		return SpellActionAsked{}, fmt.Errorf("o efeito em vigor %q não dá ação nenhuma", effect.CatalogID)
-	}
-	if option < 0 || option >= len(actions.Options) {
-		return SpellActionAsked{}, fmt.Errorf("%s tem %d ação(ões), e o pedido foi a de índice %d", onSheet.Spell.Name, len(actions.Options), option)
-	}
-	action, parts, err := onSheet.ActionRoll(effect.CastAugments, actions.Options[option].Name)
+	spellEffect, err := sheet.CasterOf(dto).SpellEffect(effectID)
 	if err != nil {
 		return SpellActionAsked{}, err
 	}
-	if onSheet.Charges(effect.CastAugments) > 0 && effect.Charges <= 0 {
-		return SpellActionAsked{}, fmt.Errorf("%s já foi descarregada", onSheet.Spell.Name)
+	action, parts, err := spellEffect.Action(option)
+	if err != nil {
+		return SpellActionAsked{}, err
 	}
 	return SpellActionAsked{
-		Effect: *effect, Spell: onSheet, Action: action, Parts: parts, OncePerTurn: actions.OncePerTurn,
+		SpellEffect: spellEffect, Action: action, Parts: parts, OncePerTurn: spellEffect.Actions().OncePerTurn,
 	}, nil
 }
 
-// SpellActionAsked é a ação da magia pedida, pronta para rolar.
+// SpellActionAsked é a ação da magia pedida, pronta para rolar: o efeito da magia de onde ela sai, a opção e o dado.
+// O campo `Action` é a opção pedida, e cobre o método do efeito que a acha.
 type SpellActionAsked struct {
-	Effect      sheet.EffectDTO
-	Spell       sheet.SpellOnTheSheet
+	sheet.SpellEffect
 	Action      book.SpellAction
 	Parts       []book.SpellRoll
 	OncePerTurn bool
@@ -88,8 +72,8 @@ func (p Plays) ActOnSpell(ctx context.Context, dto sheet.CharacterDTO, asked Spe
 		}
 	}
 	ends := asked.Action.Ends
-	if asked.Spell.Charges(asked.Effect.CastAugments) > 0 {
-		left := asked.Effect.Charges - 1
+	if charges, counted := asked.Charges(); counted {
+		left := charges - 1
 		if err := p.queries.SetEffectCharges(ctx, sqlcgen.SetEffectChargesParams{Effectid: asked.Effect.ID, Remaining: int64(left)}); err != nil {
 			return SpellCast{}, fmt.Errorf("gastar uma carga de %s: %w", asked.Spell.Spell.Name, err)
 		}

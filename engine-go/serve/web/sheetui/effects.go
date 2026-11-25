@@ -248,7 +248,11 @@ func stanceRowsOf(dto sheet.CharacterDTO) []stanceRow {
 // appliedEffectRowsOf são os consumíveis e as magias de bônus em curso.
 func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 	rows := []appliedEffectRow{}
-	caster := sheet.CasterOf(dto)
+	// O EFEITO DA MAGIA de cada linha, pelo id: a linha que não é magia fica com o zero, que não rola nada.
+	spellEffects := map[int64]sheet.SpellEffect{}
+	for _, s := range sheet.CasterOf(dto).SpellEffects() {
+		spellEffects[s.Effect.ID] = s
+	}
 	for _, e := range dto.ActiveEffects {
 		rows = append(rows, appliedEffectRow{
 			ID:        e.ID,
@@ -256,8 +260,8 @@ func appliedEffectRowsOf(dto sheet.CharacterDTO) []appliedEffectRow {
 			Scope:     scopeLabel(e.Scope),
 			Modifiers: modifierRowsOf(e.Modifiers),
 			Command:   strconv.FormatInt(e.ID, 10),
-			TurnRolls: turnRollOffersOf(caster, e),
-			TurnMeta:  turnRollMeta(caster, e),
+			TurnRolls: turnRollOffersOf(spellEffects[e.ID]),
+			TurnMeta:  turnRollMeta(spellEffects[e.ID]),
 		})
 	}
 	return rows

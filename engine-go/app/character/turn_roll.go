@@ -1,8 +1,6 @@
 package character
 
 import (
-	"fmt"
-
 	"t20engine/domain/book"
 	"t20engine/domain/sheet"
 )
@@ -14,28 +12,19 @@ import (
 //
 // A versão é a que quem joga apertou, no Manto do Cruzado; vazia na magia de versão única.
 func (p Plays) RollTurn(dto sheet.CharacterDTO, effectID int64, version string, fromTheTable []int) (SpellCast, error) {
-	var effect *sheet.EffectDTO
-	for i := range dto.ActiveEffects {
-		if dto.ActiveEffects[i].ID == effectID {
-			effect = &dto.ActiveEffects[i]
-		}
-	}
-	if effect == nil {
-		return SpellCast{}, fmt.Errorf("o efeito %d não está mais em vigor na ficha de %s", effectID, dto.Name)
-	}
-	onSheet := sheet.CasterOf(dto).Spell(effect.CatalogID)
-	if !onSheet.Known {
-		return SpellCast{}, fmt.Errorf("o efeito em vigor %q não é uma magia do livro", effect.CatalogID)
-	}
-	parts, err := onSheet.TurnRoll(effect.CastAugments, version)
+	spellEffect, err := sheet.CasterOf(dto).SpellEffect(effectID)
 	if err != nil {
 		return SpellCast{}, err
 	}
-	cast, err := spellCastOf(dto, onSheet)
+	parts, err := spellEffect.TurnRoll(version)
 	if err != nil {
 		return SpellCast{}, err
 	}
-	cast.When = book.TurnRollAt(onSheet.Spell.TurnRoll.At)
+	cast, err := spellCastOf(dto, spellEffect.Spell)
+	if err != nil {
+		return SpellCast{}, err
+	}
+	cast.When = book.TurnRollAt(spellEffect.Spell.Spell.TurnRoll.At)
 	if version != "" {
 		cast.Name += " (" + version + ")"
 	}
