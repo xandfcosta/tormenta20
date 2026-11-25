@@ -55,7 +55,7 @@ var inheritance = map[string]string{
 var helpers = map[string]bool{
 	"juntar": true, "append": true, "Modifier": true, "condAllSkills": true, "condIntSabCar": true,
 	"condAttack": true, "condSkill": true, "condByAttr": true, "condDefense": true, "condDefenseVs": true,
-	"condDamageReduction": true, "condPmCost": true, "condFactor": true, "condFlag": true, "condMod": true,
+	"condDamageReduction": true, "condAbilityPmCost": true, "condFactor": true, "condFlag": true, "condMod": true,
 	"ModifierTarget": true, "K": true, "Name": true, "Scope": true, "Attribute": true,
 }
 
@@ -138,9 +138,11 @@ func main() {
 			byID[id].Name, pyfmt.SortedList(setKeys(fromBook)), pyfmt.SortedList(setKeys(fromEngine)), pyfmt.SortedList(missing))
 	}
 
-	fmt.Printf("\ncondições: %d | com verbete no livro: %d | com regra no motor: %d | divergem: %d\n",
+	fmt.Printf("\ncondições: %d | com verbete no livro: %d | com modificador no motor: %d | divergem: %d\n",
 		len(transcript.Conditions), len(blocks), len(entries), diverge)
-	fmt.Printf("sem efeito mecânico, e por isso fora da tabela (%d): %s\n", len(withoutRule), strings.Join(withoutRule, ", "))
+	// SEM MODIFICADOR não é sem regra: o Enjoado tem o turno de uma ação só, o Confuso o 1d6 da vez, e quem diz o
+	// destino de cada uma é o `TestEveryBookConditionHasADestination`, no `engine`.
+	fmt.Printf("sem modificador, e por isso fora da tabela (%d): %s\n", len(withoutRule), strings.Join(withoutRule, ", "))
 	for _, c := range complaints {
 		fmt.Printf("  NÃO MEDIDO %s\n", c)
 	}

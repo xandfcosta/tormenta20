@@ -120,7 +120,7 @@ func condDamageReduction(n int) Modifier {
 	return Modifier{Target: ModifierTarget{K: "damageReduction"}, Amount: n, BonusType: "condition"}
 }
 
-// condPmCost é o único modificador de condição que NÃO é penalidade em teste: o
+// condAbilityPmCost é o único modificador de condição que NÃO é penalidade em teste: o
 // Alquebrado encarece as habilidades do personagem.
 func condAbilityPmCost(n int) Modifier {
 	return Modifier{Target: ModifierTarget{K: abilityPmCostTarget}, Amount: n, BonusType: "condition"}
