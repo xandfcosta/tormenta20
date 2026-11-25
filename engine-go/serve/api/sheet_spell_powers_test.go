@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -166,6 +167,10 @@ func TestTheArcaneBoltFiresFromTheActionsTab(t *testing.T) {
 	standard := entre(t, superficieDeAcoes(t, acoesDaMesa(t, f)), "Ação padrão", `</section>`)
 	if !strings.Contains(standard, "Raio Arcano") || !strings.Contains(standard, "5d8 de essência") {
 		t.Errorf("o grupo da ação padrão não tem o Raio Arcano de 5d8 do arcanista de 20º (5º círculo)")
+	}
+	// O gesto próprio SUBSTITUI o Usar da ativação, que só gastava a ação padrão sem rolar nada.
+	if rows := regexp.MustCompile(`ds-row-title">\s*Raio Arcano\s*<`).FindAllString(standard, -1); len(rows) != 1 {
+		t.Errorf("o grupo da ação padrão tem %d linhas do Raio Arcano; want 1, a do gesto", len(rows))
 	}
 
 	mpBefore := mpOf(t, f.s, f.charID)

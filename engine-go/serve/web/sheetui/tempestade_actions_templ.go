@@ -1151,7 +1151,7 @@ func spellActionSheetDs(v View, group actionGroup, sheet spellActionSheet) templ
 				return templ_7745c5c3_Err
 			}
 			if len(sheet.Elements) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<select class=\"ds-input ds-select\" aria-label=\"Tipo do Raio Elemental\" data-bind:arcane_bolt_element>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<select class=\"ds-input\" aria-label=\"Tipo do Raio Elemental\" data-bind:arcane_bolt_element>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

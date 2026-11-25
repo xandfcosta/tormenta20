@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // O QUE DÁ PARA FAZER, agrupado pelo que a vez CUSTA (T20 p233).
@@ -189,6 +190,11 @@ func actionsPanelFrom(
 	}
 	panel := actionsPanel{}
 	for _, row := range powers.Actions {
+		// O RAIO ARCANO tem gesto próprio (`arcaneBoltRow`), que rola o dado; o Usar da ativação só gastaria a ação
+		// padrão, e as duas linhas diriam a mesma coisa. A aba Poderes segue com o Usar dela.
+		if row.ID == sheet.ArcaneBoltPower {
+			continue
+		}
 		cost := engine.ActionCost(row.Action)
 		byCost[cost] = append(byCost[cost], rowFromPower(row))
 	}

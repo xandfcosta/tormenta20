@@ -244,7 +244,7 @@ templ spellActionSheetDs(v View, group actionGroup, sheet spellActionSheet) {
 	@sheetDialog(v, sheet.Dialog, sheet.Title, spellActionSheetFoot(v, group, sheet)) {
 		@handRollLines(sheet.Lines)
 		if len(sheet.Elements) > 0 {
-			<select class="ds-input ds-select" aria-label="Tipo do Raio Elemental" data-bind:arcane_bolt_element>
+			<select class="ds-input" aria-label="Tipo do Raio Elemental" data-bind:arcane_bolt_element>
 				for _, e := range sheet.Elements {
 					<option value={ e.Value }>{ e.Label }</option>
 				}
