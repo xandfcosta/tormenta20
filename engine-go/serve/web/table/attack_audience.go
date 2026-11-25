@@ -32,7 +32,7 @@ func (a attackProposal) forPlayer(pa live.PendingAttack) *attackProposal {
 		return &attackProposal{
 			Stage:    a.Stage,
 			Attacker: a.Attacker, Target: a.Target, TargetEntryID: a.TargetEntryID,
-			Weapon: a.Weapon, Mine: a.Mine, Maneuver: a.Maneuver, Action: a.Action,
+			Weapon: a.Weapon, Mine: a.Mine, Maneuver: a.Maneuver, Action: a.Action, BySpellHand: a.BySpellHand,
 		}
 	}
 	out := a
