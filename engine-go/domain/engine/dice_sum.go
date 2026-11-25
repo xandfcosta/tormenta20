@@ -75,3 +75,18 @@ func (d DiceSum) RollWith(rollDie func(faces int) (int, error)) (rolls []int, to
 	}
 	return rolls, total + d.Bonus, nil
 }
+
+// RollOrTake rola o dado, ou confere o total que a mesa rolou na mão quando `told` vem (o dado da mesa é de
+// primeira classe): o total que os dados não tiram é recusado, e o da mão volta sem dados.
+//
+//	rolls, total, err := dice.RollOrTake(&nine, engine.RollDie) // nil, 9, nil num 3d6
+func (d DiceSum) RollOrTake(told *int, rollDie func(faces int) (int, error)) (rolls []int, total int, err error) {
+	if told == nil {
+		return d.RollWith(rollDie)
+	}
+	lowest, highest := d.Range()
+	if *told < lowest || *told > highest {
+		return nil, 0, fmt.Errorf("%s tira de %d a %d, e a mesa disse %d", d, lowest, highest, *told)
+	}
+	return nil, *told, nil
+}

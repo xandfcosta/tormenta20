@@ -58,6 +58,9 @@ func (h tableHost) CharacterChanged(ctx context.Context, characterID int64) {
 }
 func (h tableHost) Bus() *events.Bus { return h.rules.bus }
 
+// RollDie é o dado do servidor, o mesmo da ficha e do ataque.
+func (h tableHost) RollDie(faces int) (int, error) { return h.rules.rollDie(faces) }
+
 // LiveStreamsClosing fecha quando o processo vai encerrar.
 func (h tableHost) LiveStreamsClosing() <-chan struct{} { return h.rules.liveStreamsClosing }
 

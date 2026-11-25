@@ -14,7 +14,14 @@ type spellForRollSweep struct {
 	BaseEffect string            `json:"baseEffect"`
 	Rolls      []spellRollSeen   `json:"rolls"`
 	Actions    *spellActionsSeen `json:"actions"`
-	TurnRoll   *struct {
+	Lingering  *struct {
+		At          string          `json:"at"`
+		Rolls       []spellRollSeen `json:"rolls"`
+		Turns       int             `json:"turns"`
+		RepeatsSave bool            `json:"repeatsSave"`
+		Burning     bool            `json:"burning"`
+	} `json:"lingering"`
+	TurnRoll *struct {
 		At       string `json:"at"`
 		Versions []struct {
 			Name  string          `json:"name"`
@@ -28,6 +35,7 @@ type spellForRollSweep struct {
 		ChangesTheRoll bool              `json:"changesTheRoll"`
 		Actions        *spellActionsSeen `json:"actions"`
 		Charges        int               `json:"charges"`
+		LingerAdds     []spellRollSeen   `json:"lingerAdds"`
 	} `json:"augments"`
 }
 
@@ -218,6 +226,48 @@ func TestEveryTurnRollSaysWhenAndWhatItRolls(t *testing.T) {
 	}
 	if turning == 0 {
 		t.Fatal("nenhuma magia declara o dado da vez: a varredura não mediu nada")
+	}
+}
+
+// TestEveryLingeringRollSaysWhenAndWhatItRolls confere a forma da marca na fila (ver GLOSSARY, **marca na fila**): o
+// momento é o início ou o fim do turno de quem foi atingido, há uma parcela, a duração não é negativa, as chamas são
+// do início do turno (a condição Em Chamas, p394), e o aumento que soma ao dado do alvo é de magia que deixa marca.
+func TestEveryLingeringRollSaysWhenAndWhatItRolls(t *testing.T) {
+	spells := decodeResource[map[string]spellForRollSweep](t, "spells")
+	lingering := 0
+	for id, m := range spells {
+		for i, a := range m.Augments {
+			if len(a.LingerAdds) > 0 && m.Lingering == nil {
+				t.Errorf("%s (%s), aprimoramento %d, soma ao dado do alvo e a magia não deixa marca", m.Name, id, i)
+			}
+		}
+		if m.Lingering == nil {
+			continue
+		}
+		lingering++
+		l := m.Lingering
+		if l.At != "inicio" && l.At != "fim" {
+			t.Errorf("%s (%s): a marca rola no %q, e o momento é \"inicio\" ou \"fim\"", m.Name, id, l.At)
+		}
+		if l.Burning && l.At != "inicio" {
+			t.Errorf("%s (%s): as chamas rolam no início do turno (p394), e a marca diz %q", m.Name, id, l.At)
+		}
+		if l.Turns < 0 {
+			t.Errorf("%s (%s): a marca dura %d turnos", m.Name, id, l.Turns)
+		}
+		// UMA PARCELA SÓ: a linha do mestre tem um campo da mão por dado da vez, e uma segunda parcela não teria
+		// onde receber o total da mesa.
+		if len(l.Rolls) != 1 {
+			t.Errorf("%s (%s): a marca rola %d parcelas, e a linha do mestre recebe o total da mão de uma", m.Name, id, len(l.Rolls))
+		}
+		for _, r := range l.Rolls {
+			if !diceShape.MatchString(r.Dice) {
+				t.Errorf("%s (%s): o dado da marca %q não tem a forma NdM ou NdM+K", m.Name, id, r.Dice)
+			}
+		}
+	}
+	if lingering == 0 {
+		t.Fatal("nenhuma magia deixa marca: a varredura não mediu nada")
 	}
 }
 

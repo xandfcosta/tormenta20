@@ -228,6 +228,8 @@ type tableRow struct {
 	// PM é o mana da linha.
 	PM         *tableBar
 	Conditions []string
+	// Marks são as marcas de magia da linha (ver GLOSSARY, **marca na fila**); só a fila do mestre as desenha.
+	Marks []rowMark
 }
 
 // barLabel é o nome ACESSÍVEL de uma barra: "PV 22 de 40", mais a reserva
@@ -298,6 +300,7 @@ func tableTrackerOf(
 			Mine:       e.CharacterID != nil && mine[*e.CharacterID],
 			OnTurn:     i == st.TurnIndex,
 			Conditions: e.Conditions,
+			Marks:      marksOf(*e),
 		}
 		// O `HpMax` nil depois da redação é como o servidor DIZ "isto não é seu
 		// para ver". Desenhar barra aqui inventaria um número — mas a MARCA que
@@ -438,6 +441,10 @@ type viewGm struct {
 	// cena aberta o avanço não existe, e um botão aceso que recusa é pior que um
 	// apagado que explica.
 	CanAdvance bool
+	// Due são os dados que se rolam na vez da linha que está na vez, e Markable a magia que o mestre pode marcar
+	// agora, escrita (ver GLOSSARY, **marca na fila**).
+	Due                   []dueView
+	Markable, MarkableWho string
 }
 
 func ofViewGm(

@@ -1,0 +1,48 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/serve/web/ds"
+	"t20engine/serve/web/ui"
+)
+
+// gmDueRolls são os dados da vez da linha que está na vez (ver GLOSSARY, **marca na fila**): um por marca e o da
+// condição Em Chamas, cada um com o "ou rolei" e o Rolar. O mestre aplica com os gestos de PV da fila.
+templ gmDueRolls(v View) {
+	<section class="ds-reg" data-due-rolls aria-label="Dados da vez" data-signals={ dueSignals(v.GM.Due) }>
+		for _, due := range v.GM.Due {
+			<div class="ds-reg-line">
+				<span class="min-w-0">
+					<span class="ds-row-title">{ due.Name }</span>
+					<span class="ds-row-meta">{ due.Detail }</span>
+				</span>
+				@ds.TextField(ds.Field{ID: "due-hand-" + strconv.Itoa(due.Index), Label: "ou rolei", Type: "number"}, dueHandAttrs(due))
+				@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": due.Aria, "data-on:click": tableCommand(v, "POST", fmt.Sprintf("iniciativa/%s/na-vez/%d/rolar", due.EntryID, due.Index))}) {
+					@ui.Icon("Dices", "ds-icon")
+					Rolar
+				}
+			</div>
+		}
+	</section>
+}
+
+// gmSheetMarks é o bloco das marcas na folha da linha, na forma das condições logo acima: cada marca é uma ficha que
+// se toca para tirar, com o que ela rola no `title`, e o Marcar põe a magia da última conjuração que deixa marca.
+templ gmSheetMarks(v View, row tableRow) {
+	<span class="ds-field-label">Marcas de magia</span>
+	<div class="ds-badges">
+		for i, m := range row.Marks {
+			<button type="button" class="ds-gm-cond" title={ m.Detail } aria-label={ "Tirar " + m.Spell + " de " + row.Label } data-on:click={ rowCommand(v, row, fmt.Sprintf("marcas/%d/tirar", i)) }>
+				{ m.Chip }
+				@ui.Icon("X", "ds-icon")
+			</button>
+		}
+		if v.GM.Markable != "" {
+			@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "aria-label": "Marcar " + row.Label + " com " + v.GM.Markable + ", de " + v.GM.MarkableWho, "data-on:click": rowCommand(v, row, "marcar")}) {
+				{ "+ Marcar: " + v.GM.Markable }
+			}
+		}
+	</div>
+}

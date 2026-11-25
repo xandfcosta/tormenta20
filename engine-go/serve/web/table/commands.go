@@ -57,6 +57,7 @@ func (s Scene) TableCommandRoutes(r chi.Router) {
 		r.Post("/vitais/{pool}/oculto", s.gmCommand(toggleEye))
 		r.Post("/editar", s.gmCommand(editaOCombatente))
 		r.Post("/remover", s.gmCommand(tiraDaFila))
+		s.queueMarkRoutes(r)
 	})
 }
 

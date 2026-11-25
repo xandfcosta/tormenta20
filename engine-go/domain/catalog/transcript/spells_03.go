@@ -1,6 +1,6 @@
 package transcript
 
-// Parte 3 de 17 de `Spells` (spells.go).
+// Parte 3 de 21 de `Spells` (spells.go).
 var spellsPart03 = []Spell{
 	{
 		ID:         "tempestade-divina",

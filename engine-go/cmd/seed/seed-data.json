@@ -298,6 +298,10 @@
             {
               "id": "enxame-de-pestes",
               "prepared": true
+            },
+            {
+              "id": "circulo-da-restauracao",
+              "prepared": true
             }
           ]
         },
@@ -1247,6 +1251,14 @@
             },
             {
               "id": "lanca-ignea-de-aleph",
+              "prepared": true
+            },
+            {
+              "id": "flecha-acida",
+              "prepared": true
+            },
+            {
+              "id": "ilusao-lacerante",
               "prepared": true
             }
           ]

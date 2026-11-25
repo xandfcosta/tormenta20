@@ -19,9 +19,12 @@ type SpellCastRoll struct {
 	DC    int    `json:"dc,omitempty"`
 	Range string `json:"range"`
 	// When é o momento do dado da vez ("início do turno"), vazio na conjuração (ver GLOSSARY, **dado da vez**).
-	When        string `json:"when,omitempty"`
-	CharacterID int64  `json:"characterId"`
-	ByUserID    int64  `json:"byUserId"`
+	When string `json:"when,omitempty"`
+	// Lingering é a marca que esta conjuração deixa em quem foi atingido, nil na que não deixa nada (ver GLOSSARY,
+	// **marca na fila**): ela vira a `Markable` da mesa, a que o mestre põe nas linhas de quem falhou.
+	Lingering   *QueueMark `json:"lingering,omitempty"`
+	CharacterID int64      `json:"characterId"`
+	ByUserID    int64      `json:"byUserId"`
 }
 
 // SpellCastPart é uma parcela rolada: o dado, o tipo, a condição do texto, os dados e o total. ByHand: o total
@@ -35,8 +38,14 @@ type SpellCastPart struct {
 	ByHand bool   `json:"byHand,omitempty"`
 }
 
-// recordIn guarda a magia conjurada no lugar da anterior.
+// recordIn guarda a magia conjurada no lugar da anterior, e a marca dela, se deixa uma, no lugar da última marca
+// que o mestre podia pôr.
 func (cast SpellCastRoll) recordIn(st *SessionRuntimeState) error {
 	st.LastSpellCast = &cast
+	if cast.Lingering != nil {
+		mark := *cast.Lingering
+		mark.Who = cast.Who
+		st.Markable = &mark
+	}
 	return nil
 }

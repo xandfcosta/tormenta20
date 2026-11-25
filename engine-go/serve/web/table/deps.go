@@ -51,6 +51,10 @@ type Deps interface {
 	// LiveStreamsClosing fecha quando o processo vai encerrar: é a deixa para o
 	// fluxo sair e não prender o desligamento.
 	LiveStreamsClosing() <-chan struct{}
+	// RollDie é o dado do servidor, para o que a mesa rola por conta própria: o dado da marca na fila (ver
+	// GLOSSARY, **marca na fila**). Injetado, e não o `engine.RollDie` direto, pela razão do `combat.NewStrike`: a
+	// bancada crava o dado.
+	RollDie(faces int) (int, error)
 	// BuildRevision é o commit deste binário, para a página aberta saber que ficou velha.
 	BuildRevision() string
 	// CurrentUserID é quem está pedindo, pelo ID e não pelo usuário inteiro —

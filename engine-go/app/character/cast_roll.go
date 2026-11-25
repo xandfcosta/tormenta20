@@ -6,6 +6,7 @@ import (
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
+	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 )
 
@@ -23,6 +24,9 @@ type SpellCast struct {
 	// turno", ver GLOSSARY, **dado da vez**), a opção da ação da magia ("Esmagar", ver **ação da magia**), ou as
 	// cargas que a conjuração criou. Vazio na conjuração comum.
 	When string
+	// Lingering é a marca que a magia deixa em quem foi atingido, com os aumentos escolhidos, nil na que não deixa
+	// nada (ver GLOSSARY, **marca na fila**). Quem conjurou entra na publicação.
+	Lingering *live.QueueMark
 }
 
 // RolledSpellPart é uma parcela do dado da magia, rolada no app ou dita pela mesa.
@@ -55,7 +59,39 @@ func (p Plays) rollTheCast(
 	if cast.Parts, err = p.rollTheParts(cast.Name, roll.Parts, fromTheTable); err != nil {
 		return SpellCast{}, err
 	}
+	// OS DARDOS DA LANÇA valem "em vez do efeito normal": a conjuração que só os cria não atinge ninguém, e a marca
+	// sai de cada dardo (`ActOnSpell`).
+	if roll.Charges == 0 {
+		if cast.Lingering, err = lingeringOf(onSheet, augments, cast); err != nil {
+			return SpellCast{}, err
+		}
+	}
 	return cast, nil
+}
+
+// lingeringOf é a marca que a magia deixa em quem foi atingido, com os aumentos escolhidos ao conjurar, ou nil na
+// magia que não deixa nada (ver GLOSSARY, **marca na fila**). A resistência vai junto só na que se repete na vez do
+// alvo (a Vontade da Ilusão Lacerante).
+func lingeringOf(onSheet sheet.SpellOnTheSheet, picks []sheet.AugmentPick, cast SpellCast) (*live.QueueMark, error) {
+	lingering := onSheet.Spell.Lingering
+	if lingering == nil {
+		return nil, nil
+	}
+	parts, err := onSheet.LingeringRoll(picks)
+	if err != nil {
+		return nil, err
+	}
+	mark := &live.QueueMark{
+		Spell: cast.Name, At: lingering.At, Counted: lingering.Turns > 0, TurnsLeft: lingering.Turns,
+		Burning: lingering.Burning,
+	}
+	for _, part := range parts {
+		mark.Parts = append(mark.Parts, live.QueueMarkPart{Dice: part.Dice, Kind: part.Kind, Note: part.Note})
+	}
+	if lingering.RepeatsSave {
+		mark.Save, mark.DC = cast.Save, cast.DC
+	}
+	return mark, nil
 }
 
 // spellCastOf é a faixa da magia sem o dado: o nome, a resistência com a CD de quem conjura e o alcance.
@@ -87,13 +123,11 @@ func (p Plays) rollTheParts(name string, parts []book.SpellRoll, fromTheTable []
 			return nil, err
 		}
 		one := RolledSpellPart{SpellRoll: part}
+		var told *int
 		if fromTheTable != nil {
-			lowest, highest := dice.Range()
-			if fromTheTable[i] < lowest || fromTheTable[i] > highest {
-				return nil, fmt.Errorf("%s tira de %d a %d, e a mesa disse %d", part.Dice, lowest, highest, fromTheTable[i])
-			}
-			one.Total, one.ByHand = fromTheTable[i], true
-		} else if one.Rolls, one.Total, err = dice.RollWith(p.rollDie); err != nil {
+			told, one.ByHand = &fromTheTable[i], true
+		}
+		if one.Rolls, one.Total, err = dice.RollOrTake(told, p.rollDie); err != nil {
 			return nil, err
 		}
 		rolled = append(rolled, one)

@@ -113,7 +113,7 @@ func (h sheetHost) PublishSpellCast(ctx context.Context, characterID int64, cast
 	}
 	roll := live.SpellCastRoll{
 		Who: row.Name, Spell: cast.Name, ByText: cast.ByText,
-		Save: cast.Save, DC: cast.DC, Range: cast.Range, When: cast.When,
+		Save: cast.Save, DC: cast.DC, Range: cast.Range, When: cast.When, Lingering: cast.Lingering,
 		CharacterID: characterID, ByUserID: row.Ownerid,
 	}
 	for _, part := range cast.Parts {

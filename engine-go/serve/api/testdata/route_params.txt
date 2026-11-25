@@ -44,6 +44,7 @@ characterId
 classe
 cond
 cor
+dado
 decisao
 deus
 die
@@ -62,6 +63,7 @@ item
 linha
 lista
 magia
+marca
 manobra
 melhoria
 modo
