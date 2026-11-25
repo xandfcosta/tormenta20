@@ -23,6 +23,9 @@ templ gmAttack(v View) {
 			<div class="ds-strike-head" data-float-handle>
 				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+				if v.Attack.BySpellHand {
+					<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
+				}
 				if v.Attack.Action != "" {
 					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
 				}

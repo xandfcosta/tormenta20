@@ -3,7 +3,10 @@ package catalog
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"testing"
+
+	"t20engine/domain/engine"
 )
 
 // spellForRollSweep é o que a varredura do dado da magia precisa: o efeito, o dado declarado e os
@@ -46,6 +49,9 @@ type spellActionsSeen struct {
 		Action   string          `json:"action"`
 		Rolls    []spellRollSeen `json:"rolls"`
 		CastRoll bool            `json:"castRoll"`
+		Maneuver string          `json:"maneuver"`
+		Skill    string          `json:"skill"`
+		Bonus    int             `json:"bonus"`
 	} `json:"options"`
 }
 
@@ -294,8 +300,19 @@ func TestEverySpellActionSaysWhatItCostsAndRolls(t *testing.T) {
 				t.Errorf("%s: a opção %q não tem nome ou o repete", where, o.Name)
 			}
 			named[o.Name] = true
-			if o.CastRoll == (len(o.Rolls) > 0) {
-				t.Errorf("%s, %q: a opção rola o dado dela OU o da conjuração, e não os dois nem nenhum", where, o.Name)
+			// TRÊS JEITOS, e um só por opção: o dado dela, o da conjuração, ou a manobra do livro (p234), que não
+			// rola dado e soma a perícia e o bônus da magia ao d20.
+			ways := 0
+			for _, way := range []bool{len(o.Rolls) > 0, o.CastRoll, o.Maneuver != ""} {
+				if way {
+					ways++
+				}
+			}
+			if ways != 1 {
+				t.Errorf("%s, %q: a opção rola o dado dela, o da conjuração OU faz uma manobra, e não mais de um nem nenhum", where, o.Name)
+			}
+			if o.Maneuver != "" && (!slices.Contains(engine.ManeuversOfTheBook(), o.Maneuver) || o.Skill == "" || o.Bonus <= 0) {
+				t.Errorf("%s, %q: a manobra %q não é da p234, ou falta a perícia (%q) ou o bônus (%d)", where, o.Name, o.Maneuver, o.Skill, o.Bonus)
 			}
 			if o.CastRoll && castRolls == 0 {
 				t.Errorf("%s, %q: a opção rola o dado da conjuração, e a magia não rola nada ao ser conjurada", where, o.Name)

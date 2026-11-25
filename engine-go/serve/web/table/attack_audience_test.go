@@ -19,7 +19,7 @@ import (
 var attackCardAudience = map[string]string{
 	// A cabeça do cartão: todo jogador vê quem ataca quem.
 	"Stage": everyone, "Attacker": everyone, "Target": everyone, "TargetEntryID": everyone,
-	"Weapon": everyone, "Action": everyone, "Maneuver": everyone, "Mine": everyone,
+	"Weapon": everyone, "Action": everyone, "Maneuver": everyone, "BySpellHand": everyone, "Mine": everyone,
 	// O que é de quem rolou, e só dele.
 	"Boost": roller, "Dose": roller, "FollowUp": roller, "Guard": roller, "Rerolled": roller,
 	"Offers": roller, "ToRoll": roller, "DamageLines": roller, "Hand": roller, "HandBonus": roller, "Said": roller,

@@ -27,6 +27,9 @@ type attackProposal struct {
 	// ao lado de quem ataca quem; vazio no golpe comum.
 	Action   string
 	Maneuver bool
+	// BySpellHand diz que a manobra é da mão de uma magia (a Mão Poderosa de Talude, p198), e a cabeça da carta do
+	// mestre escreve o meio: sem ele, ela leria como a manobra de quem conjurou, com o Luta dele.
+	BySpellHand bool
 	// Tally é a conta inteira numa linha, na notação da mesa, para os Detalhes
 	// do mestre (`attackLine`) — e, no cartão do jogador, a rolagem dele.
 	Tally string
@@ -115,7 +118,7 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 	}
 	if pa.Maneuver != nil {
 		var note string
-		out.Maneuver, out.Action = true, maneuverSeal(*pa.Maneuver)
+		out.Maneuver, out.Action, out.BySpellHand = true, maneuverSeal(*pa.Maneuver), pa.Hand
 		out.Duel, note = maneuverDuel(*pa)
 		out.Tally = maneuverLine(*pa)
 		out.Rows = maneuverConsequence(*pa)
@@ -137,56 +140,6 @@ func attackProposalOf(st *live.SessionRuntimeState, userID int64) *attackProposa
 		out.DamageTotal = pa.RawDamage
 	}
 	return out
-}
-
-// maneuverSeal é o NOME da manobra em curso ("Derrubar"), que a cabeça das
-// duas faixas mostra. O desfecho não mora aqui: para o mestre ele é o
-// `maneuverVerdict`, e o jogador não o vê (ALE-532).
-func maneuverSeal(m live.ManeuverRoll) string {
-	if nome, conhecida := maneuverNames[m.Kind]; conhecida {
-		return nome
-	}
-	return "Manobra"
-}
-
-// maneuverNames são as cinco da p234 como a mesa as lê, no INFINITIVO.
-//
-// Eram pares — "Derrubou" / "não derrubou" —, e o passado afirmava um desfecho
-// que o sistema não tem mais como saber. O infinitivo diz o que foi TENTADO, que
-// é o que de fato aconteceu.
-var maneuverNames = map[string]string{
-	"agarrar":  "Agarrar",
-	"derrubar": "Derrubar",
-	"desarmar": "Desarmar",
-	"empurrar": "Empurrar",
-	"quebrar":  "Quebrar",
-}
-
-// maneuverLine escreve a conta do teste OPOSTO, e ela é a resposta inteira: dois
-// totais e a diferença entre eles.
-//
-// A linha é a CONTA, e ela é do mestre: o selo ao lado diz o desfecho que os
-// números sugerem (`maneuverVerdict`), e a diferença aparece porque é a
-// subtração que ele faria de cabeça.
-//
-//	maneuverLine(...) // "d20 (15) + 4 = 19 vs d20 (4) + 6 = 10 → diferença +9 | vitória deixa caído"
-func maneuverLine(pa live.PendingAttack) string {
-	m := *pa.Maneuver
-	// O NOME DA MANOBRA NÃO ENTRA AQUI: o crachá ao lado já o diz, e repeti-lo
-	// gastaria o começo da linha — que a 390px é o pedaço mais caro dela.
-	line := fmt.Sprintf("%s = %d vs %s = %d → diferença\u00a0%+d",
-		rollNotation(pa.Roll, pa.Total), pa.Total, rollNotation(m.OpposedRoll, m.Opposed), m.Opposed, m.Margin)
-	// O QUE O LIVRO PREVÊ, dito SEMPRE e não só na vitória: o sistema não sabe
-	// quem venceu, e esta linha existe justamente para o mestre decidir com a
-	// consequência à vista. Nem toda manobra deixa condição — o desarmar derruba
-	// um item —, e por isso ela só aparece quando há.
-	//
-	// O NOME ESCRITO e não o id: "fica caido" é o identificador vazando para a
-	// tela. Quem o traduz é o catálogo, que é onde o nome é autorado.
-	if m.ConditionOnAWin != "" {
-		line += notationStep + "vitória deixa " + strings.ToLower(book.ConditionName(m.ConditionOnAWin))
-	}
-	return line
 }
 
 func capitalize(s string) string {

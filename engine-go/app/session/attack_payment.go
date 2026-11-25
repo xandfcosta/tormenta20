@@ -133,6 +133,10 @@ func takesTheEnchantBoostOfTheRound(s *live.SessionRuntimeState, attack live.Pen
 // chargeStrike cobra a ação do golpe. O Disparo Rápido é agredir com a ação completa (p125), e a
 // recusa diz isso: quem já andou ainda pode atirar, desligando o interruptor.
 func chargeStrike(s *live.SessionRuntimeState, attack live.PendingAttack) error {
+	// A MANOBRA DA MÃO de uma magia é comandada com a ação de movimento (p198).
+	if attack.Hand {
+		return chargeTurn(s, engine.ActionMovement)
+	}
 	if !attack.FullAction {
 		return chargeTurn(s, engine.StrikeAction(attack.Charge))
 	}

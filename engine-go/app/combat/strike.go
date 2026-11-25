@@ -168,6 +168,9 @@ type Request struct {
 	// Maneuver é a manobra do livro quando o gesto é uma MANOBRA e não um golpe
 	// (p234): agarrar, derrubar, desarmar, empurrar ou quebrar. Vazio é golpe.
 	Maneuver string
+	// Hand é quem faz a manobra no lugar da arma, nil no resto: a Mão Poderosa de Talude agarra e empurra com o
+	// Misticismo de quem conjurou mais 10 (p198; ver GLOSSARY, **ação da magia**).
+	Hand *SpellHand
 	// SwitchesDamageType é a ESCOLHA da p236: usar a arma contra a natureza dela
 	// — o fio para derrubar, ou o punho para matar. Custa −5 nos dois sentidos.
 	//
@@ -320,6 +323,9 @@ func (s Strike) setUp(ctx context.Context, role string, req Request) (strikeSetu
 		return strikeSetup{}, fmt.Errorf("o impulso de PM é do golpe, e não da manobra: %w", app.ErrRefused)
 	}
 	weapon, boost, err := weaponFor(striker, req)
+	if req.Hand != nil {
+		weapon, boost, err = handFor(req)
+	}
 	if err != nil {
 		return strikeSetup{}, err
 	}
