@@ -84,8 +84,13 @@ func (st *Store) RollDue(
 		if err != nil {
 			return nil, err
 		}
+		// O DADO DO CONFUSO diz o que o resultado manda, pela tabela da condição (p394).
+		note := part.Note
+		if outcome := live.ConditionRollNote(asked.Condition, total); outcome != "" {
+			note = outcome
+		}
 		roll.Parts = append(roll.Parts, live.SpellCastPart{
-			Dice: part.Dice, Kind: part.Kind, Note: part.Note, Rolls: rolls, Total: total, ByHand: told != nil,
+			Dice: part.Dice, Kind: part.Kind, Note: note, Rolls: rolls, Total: total, ByHand: told != nil,
 		})
 	}
 	return st.RecordRoll(ctx, sessionID, roll)
