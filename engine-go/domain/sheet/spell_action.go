@@ -43,7 +43,8 @@ func (s SpellOnTheSheet) chargingAugment(picks []AugmentPick) *book.SpellAugment
 
 // ActionRoll é a opção pedida das ações desta magia e o dado dela, com os aprimoramentos escolhidos ao conjurar,
 // pela regra do dado da conjuração (`CastRoll`). A opção que rola "o efeito normal da magia" rola o dado da
-// conjuração sem as cargas — o dardo é a Lança Ígnea que não saiu ao conjurar.
+// conjuração sem as cargas — o dardo é a Lança Ígnea que não saiu ao conjurar. A opção que é MANOBRA não rola dado:
+// ela volta sem parcelas, com o bônus que o aprimoramento escolhido pôs no lugar (`ManeuverBonus`).
 //
 //	action, parts, err := sheet.CasterOf(dto).Spell("mao-poderosa-de-talude").ActionRoll(picks, "Esmagar")
 func (s SpellOnTheSheet) ActionRoll(picks []AugmentPick, option string) (book.SpellAction, []book.SpellRoll, error) {
@@ -56,6 +57,14 @@ func (s SpellOnTheSheet) ActionRoll(picks []AugmentPick, option string) (book.Sp
 		names = append(names, action.Name)
 		if action.Name != option {
 			continue
+		}
+		if action.Maneuver != "" {
+			for _, p := range picks {
+				if p.AugmentIndex >= 0 && p.AugmentIndex < len(s.Spell.Augments) && s.Spell.Augments[p.AugmentIndex].ManeuverBonus > 0 {
+					action.Bonus = s.Spell.Augments[p.AugmentIndex].ManeuverBonus
+				}
+			}
+			return action, nil, nil
 		}
 		base := action.Rolls
 		if action.CastRoll {

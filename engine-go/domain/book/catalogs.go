@@ -91,6 +91,9 @@ type SpellAugment struct {
 	// ele não rola nada, e cada dardo rola o dado dela. Ver GLOSSARY, **ação da magia**.
 	Actions *SpellActions `json:"actions"`
 	Charges int           `json:"charges"`
+	// ManeuverBonus é o bônus que o aprimoramento põe no lugar do das opções que são manobra: "muda o bônus em
+	// Misticismo para +20" da Mão Poderosa (p198). Zero no que não mexe nisso.
+	ManeuverBonus int `json:"maneuverBonus"`
 	// LingerAdds é o que o aumento soma ao dado que a magia deixa no alvo (`Spell.Lingering`), pela regra do
 	// `Adds` (ver GLOSSARY, **marca na fila**).
 	LingerAdds []SpellRoll `json:"lingerAdds"`
@@ -227,6 +230,12 @@ type SpellAction struct {
 	Note string `json:"note"`
 	// Ends diz que a opção termina a magia: a energia mista do Relâmpago "consome toda a energia da magia".
 	Ends bool `json:"ends"`
+	// Maneuver é a manobra do livro (p234) que a opção faz em vez de rolar dado, e Skill e Bonus o que soma ao
+	// d20 dela: o Agarrar e o Empurrar da Mão Poderosa são manobras com o Misticismo de quem conjurou mais 10
+	// (p198). Vazio na opção que rola dado.
+	Maneuver string `json:"maneuver"`
+	Skill    string `json:"skill"`
+	Bonus    int    `json:"bonus"`
 }
 
 // TurnRollAt escreve o momento do dado da vez como a mesa o lê: "início do turno", "fim do turno".

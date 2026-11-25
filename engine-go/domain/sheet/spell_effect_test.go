@@ -68,3 +68,52 @@ func TestTheSpellEffectAnswersWithTheCastItRecorded(t *testing.T) {
 		}
 	}
 }
+
+// A MÃO AGARRA E EMPURRA COMO MANOBRA (p198, p234; ver GLOSSARY, **ação da magia**): a opção não rola dado, diz a
+// manobra do livro e o bônus que a mão soma ao Misticismo de quem conjurou, e o aprimoramento de 5º círculo muda
+// esse bônus para +20.
+func TestTheMightyHandGrabsAndPushesAsManeuvers(t *testing.T) {
+	handWith := func(picks []AugmentPick) SpellEffect {
+		t.Helper()
+		caster := CasterOf(CharacterDTO{
+			Classes: []ClassDTO{{ClassName: "Arcanista", Level: 20}},
+			ActiveEffects: []EffectDTO{{ID: 7, Source: "spell", CatalogID: "mao-poderosa-de-talude", Scope: "sustained",
+				CastHere: true, CastAugments: picks}},
+		})
+		hand, err := caster.SpellEffect(7)
+		if err != nil {
+			t.Fatalf("achar a Mão Poderosa: %v", err)
+		}
+		return hand
+	}
+	optionNamed := func(hand SpellEffect, name string) int {
+		t.Helper()
+		for i, o := range hand.Actions().Options {
+			if o.Name == name {
+				return i
+			}
+		}
+		t.Fatalf("a Mão Poderosa não tem a ação %q", name)
+		return -1
+	}
+	for _, c := range []struct {
+		option, maneuver string
+		picks            []AugmentPick
+		bonus            int
+	}{
+		{"Agarrar", "agarrar", nil, 10},
+		{"Empurrar", "empurrar", nil, 10},
+		// O aprimoramento 1 da Mão muda o bônus em Misticismo para +20.
+		{"Agarrar", "agarrar", []AugmentPick{{AugmentIndex: 1, Stacks: 1}}, 20},
+	} {
+		hand := handWith(c.picks)
+		action, parts, err := hand.Action(optionNamed(hand, c.option))
+		if err != nil {
+			t.Fatalf("%s: %v", c.option, err)
+		}
+		if action.Maneuver != c.maneuver || action.Skill != "Misticismo" || action.Bonus != c.bonus || action.Action != "movimento" || len(parts) != 0 {
+			t.Errorf("%s com %v é %+v e rola %v; want a manobra %s com Misticismo +%d, na ação de movimento, sem dado",
+				c.option, c.picks, action, parts, c.maneuver, c.bonus)
+		}
+	}
+}

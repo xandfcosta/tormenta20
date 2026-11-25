@@ -60,6 +60,10 @@ type SpellAction struct {
 	Save     string      `json:"save,omitempty"`
 	Note     string      `json:"note,omitempty"`
 	Ends     bool        `json:"ends,omitempty"`
+	// Maneuver, Skill e Bonus são a manobra que a opção faz — ver `book.SpellAction`.
+	Maneuver string `json:"maneuver,omitempty"`
+	Skill    string `json:"skill,omitempty"`
+	Bonus    int    `json:"bonus,omitempty"`
 }
 
 // SpellTurnRoll é o dado da vez — ver `book.SpellTurnRoll`.
@@ -101,6 +105,8 @@ type SpellAugment struct {
 	// Actions e Charges são as ações que o aprimoramento dá — ver `book.SpellAugment`.
 	Actions *SpellActions `json:"actions,omitempty"`
 	Charges int           `json:"charges,omitempty"`
+	// ManeuverBonus é o bônus que o aprimoramento põe nas opções que são manobra — ver `book.SpellAugment`.
+	ManeuverBonus int `json:"maneuverBonus,omitempty"`
 	// LingerAdds é o que o aumento soma ao dado que a magia deixa no alvo — ver `book.SpellAugment`.
 	LingerAdds []SpellRoll `json:"lingerAdds,omitempty"`
 }
