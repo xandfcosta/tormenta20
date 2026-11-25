@@ -25,6 +25,19 @@ func spellCastBandOf(st *live.SessionRuntimeState) *rollBand {
 			Total: part.Total, Tally: writtenRoll(part.Dice, part.Rolls, part.Kind, part.ByHand), Note: part.Note,
 		})
 	}
+	// A PARCELA DE CADA PODER vem depois das do dado, com o nome dele (ver GLOSSARY, **dado da magia**): "+4 · Arcano
+	// de Batalha", "+3 de frio · Aspecto do Inverno · 3 dados de frio".
+	for _, bonus := range c.Bonuses {
+		tally := fmt.Sprintf("%+d", bonus.Amount)
+		if bonus.Kind != "" {
+			tally += " de " + bonus.Kind
+		}
+		note := bonus.Name
+		if bonus.Note != "" {
+			note += " · " + bonus.Note
+		}
+		band.Lines = append(band.Lines, rollLine{Total: bonus.Amount, Tally: tally, Note: note})
+	}
 	if c.ByText {
 		band.Help = append(band.Help, "um aprimoramento mudou o dado para um que não sai na conjuração: role pelo texto dele")
 	}

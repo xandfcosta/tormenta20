@@ -21,6 +21,8 @@ type QueueMark struct {
 	// At é "inicio" ou "fim" do turno de quem está marcado.
 	At    string          `json:"at"`
 	Parts []QueueMarkPart `json:"parts"`
+	// Bonuses são as parcelas fixas que os poderes de quem conjurou somam ao dado da marca (o Aspecto do Inverno).
+	Bonuses []SpellCastBonus `json:"bonuses,omitempty"`
 	// Save e DC são a resistência que quem está marcado repete antes do dado (a Vontade da Ilusão Lacerante),
 	// vazios no resto.
 	Save string `json:"save,omitempty"`
@@ -54,6 +56,7 @@ type DueRoll struct {
 	Target    string
 	Condition string
 	Parts     []QueueMarkPart
+	Bonuses   []SpellCastBonus
 	Save      string
 	DC        int
 	// Last diz que é o último turno da marca contada.
@@ -123,7 +126,7 @@ func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {
 	for _, m := range entry.Marks {
 		burning = burning || m.Burning
 		due = append(due, DueRoll{
-			Spell: m.Spell, Who: m.Who, At: m.At, Target: entry.Label,
+			Spell: m.Spell, Who: m.Who, At: m.At, Target: entry.Label, Bonuses: m.Bonuses,
 			Parts: m.Parts, Save: m.Save, DC: m.DC, Last: m.Counted && m.TurnsLeft == 0,
 		})
 	}

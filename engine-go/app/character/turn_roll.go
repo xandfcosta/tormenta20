@@ -20,7 +20,7 @@ func (p Plays) RollTurn(dto sheet.CharacterDTO, effectID int64, version string, 
 	if err != nil {
 		return SpellCast{}, err
 	}
-	cast, err := spellCastOf(dto, spellEffect.Spell)
+	cast, powers, err := spellCastOf(dto, spellEffect.Spell)
 	if err != nil {
 		return SpellCast{}, err
 	}
@@ -31,5 +31,6 @@ func (p Plays) RollTurn(dto sheet.CharacterDTO, effectID int64, version string, 
 	if cast.Parts, err = p.rollTheParts(cast.Name, parts, fromTheTable); err != nil {
 		return SpellCast{}, err
 	}
+	cast.Bonuses = powers.LaterBonuses(parts)
 	return cast, nil
 }
