@@ -34,11 +34,7 @@ func arcaneBoltRow(dto sheet.CharacterDTO, computed engine.ComputedSheet) (actio
 		return actionRow{}, false
 	}
 	const name = "Raio Arcano"
-	reach := "curto"
-	if bolt.Range == "medio" {
-		reach = "médio"
-	}
-	detail := []string{writtenSpellPart(parts[0]), fmt.Sprintf("Reflexos reduz à metade · CD %d", bolt.DC), "alcance " + reach}
+	detail := []string{writtenSpellPart(parts[0]), fmt.Sprintf("Reflexos reduz à metade · CD %d", bolt.DC), "alcance " + bolt.Range}
 	dialog := "arcane-bolt"
 	row := actionRow{
 		Name: name, Detail: strings.Join(detail, " · "), Can: true,

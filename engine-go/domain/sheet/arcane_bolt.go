@@ -31,7 +31,8 @@ const ArcaneBoltElementPM = 1
 
 // ArcaneBolt é o Raio Arcano desta ficha: o dado, o alcance, a CD do atributo-chave e se ela muda o tipo.
 type ArcaneBolt struct {
-	Dice      string
+	Dice string
+	// Range é o alcance como a tela o escreve: "curto", ou "médio" com o Raio Poderoso.
 	Range     string
 	DC        int
 	Elemental bool
@@ -53,7 +54,7 @@ func ArcaneBoltOf(dto CharacterDTO, computed engine.ComputedSheet) (ArcaneBolt, 
 	}
 	faces, reach := 8, "curto"
 	if has(MightyBoltPower) {
-		faces, reach = 12, "medio"
+		faces, reach = 12, "médio"
 	}
 	attribute := computed.SpellAttributeByClass["Arcanista"]
 	at := engine.SpellAt{Tradition: "arcana", Classes: []string{"Arcanista"}}

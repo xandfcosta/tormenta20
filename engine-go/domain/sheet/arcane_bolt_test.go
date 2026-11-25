@@ -44,7 +44,7 @@ func TestTheArcaneBoltGrowsWithTheCircleAndThePowers(t *testing.T) {
 	}
 
 	mighty, _ := boltOf(`["class.arcanista.raio-arcano","class.arcanista.raio-poderoso"]`)
-	if mighty.Dice != "3d12" || mighty.Range != "medio" {
+	if mighty.Dice != "3d12" || mighty.Range != "médio" {
 		t.Errorf("o Raio Poderoso é %+v; want 3d12, alcance médio", mighty)
 	}
 

@@ -34,7 +34,7 @@ func (p Plays) FireArcaneBolt(ctx context.Context, dto sheet.CharacterDTO, eleme
 		return SpellCast{}, fmt.Errorf("faltam PM: o Raio Elemental custa %d e restam %d", sheet.ArcaneBoltElementPM, dto.ManaAvailable())
 	}
 	cast := SpellCast{
-		Name: "Raio Arcano", Save: "Reflexos reduz à metade", DC: bolt.DC, Range: arcaneBoltRangeWritten(bolt.Range),
+		Name: "Raio Arcano", Save: "Reflexos reduz à metade", DC: bolt.DC, Range: bolt.Range,
 		Kind: live.RollOfTheCast,
 	}
 	if cast.Parts, err = p.rollTheParts(cast.Name, parts, fromTheTable); err != nil {
@@ -47,12 +47,4 @@ func (p Plays) FireArcaneBolt(ctx context.Context, dto sheet.CharacterDTO, eleme
 		}
 	}
 	return cast, nil
-}
-
-// arcaneBoltRangeWritten é o alcance do raio como a faixa o escreve.
-func arcaneBoltRangeWritten(reach string) string {
-	if reach == "medio" {
-		return "médio"
-	}
-	return reach
 }
