@@ -204,6 +204,9 @@ func (st *Store) NextTurn(ctx context.Context, sessionID int64) (*live.SessionRu
 		if err := grantFirstTurnMovement(ctx, u, s); err != nil {
 			return err
 		}
+		if err := limitsTheSickenedTurn(ctx, u, s); err != nil {
+			return err
+		}
 		return st.payUpkeep(ctx, u, s)
 	})
 }
@@ -267,7 +270,10 @@ func (st *Store) unitGesture(
 func (st *Store) PreviousTurn(ctx context.Context, sessionID int64) (*live.SessionRuntimeState, error) {
 	return st.turnGesture(ctx, sessionID, func(ctx context.Context, u Unit, s *live.SessionRuntimeState) error {
 		live.RewindTurn(s)
-		return grantFirstTurnMovement(ctx, u, s)
+		if err := grantFirstTurnMovement(ctx, u, s); err != nil {
+			return err
+		}
+		return limitsTheSickenedTurn(ctx, u, s)
 	})
 }
 

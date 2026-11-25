@@ -273,6 +273,7 @@ func turnCannotPay(b *board.BoardState, st *live.SessionRuntimeState, cost, budg
 	}
 	left := engine.TurnBudget{
 		Standard: st.Scene.StandardLeft, Movement: st.Scene.MovementLeft, ExtraMovement: st.Scene.ExtraMovementLeft,
+		OneAction: st.Scene.OneActionOnly,
 	}
 	for paid := 0; paid < cost; paid += budget {
 		next, err := left.Spend(engine.ActionMovement)

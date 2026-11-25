@@ -12,6 +12,32 @@ import (
 // ConditionBurning é a condição Em Chamas do livro (p394), que rola 1d6 de fogo no início da vez de quem a tem.
 const ConditionBurning = "em-chamas"
 
+// ConditionConfused é a condição Confuso do livro (p394), que rola 1d6 no início da vez de quem a tem.
+const ConditionConfused = "confuso"
+
+// confusedName é o nome do Confuso na fila e na faixa, como o "Em Chamas" das chamas.
+const confusedName = "Confuso"
+
+// ConditionRollNote é o que o resultado do dado de uma condição manda fazer, ou vazio na condição sem tabela. Só o
+// Confuso tem tabela (p394), e a frase é dela em paráfrase: quem aplica é o mestre, e o app não tira a ação nem a
+// condição (decisão do dono).
+//
+//	live.ConditionRollNote("Confuso", 3) // "não age, e balbucia"
+func ConditionRollNote(condition string, total int) string {
+	if condition != confusedName {
+		return ""
+	}
+	switch {
+	case total <= 1:
+		return "anda numa direção sorteada por 1d8"
+	case total <= 3:
+		return "não age, e balbucia"
+	case total <= 5:
+		return "ataca a criatura mais próxima com a arma empunhada, ou a si mesmo se estiver sozinho"
+	}
+	return "a condição termina, e age normalmente"
+}
+
 // QueueMark é a marca de uma magia numa linha da fila: o dado já com os aumentos da conjuração, o momento e a
 // duração.
 type QueueMark struct {
@@ -115,9 +141,9 @@ func countTheMarksOfTheTurn(st *SessionRuntimeState) {
 	}
 }
 
-// DueRolls são os dados que se rolam na vez da linha: o de cada marca, no início ou no fim do turno, e o 1d6 de
-// fogo da condição Em Chamas (p394) — a menos que uma marca SEJA as chamas, e aí o dado é o dela. As condições vêm
-// de quem pergunta, porque a do PC mora na ficha e a do NPC na linha.
+// DueRolls são os dados que se rolam na vez da linha: o de cada marca, no início ou no fim do turno, o 1d6 de
+// fogo da condição Em Chamas (p394) — a menos que uma marca SEJA as chamas, e aí o dado é o dela — e o 1d6 do
+// Confuso (p394). As condições vêm de quem pergunta, porque a do PC mora na ficha e a do NPC na linha.
 //
 //	live.DueRolls(entry, entry.Conditions) // [{Spell: "Flecha Ácida", When: "início do turno de Ogro", …}]
 func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {
@@ -134,6 +160,12 @@ func DueRolls(entry InitiativeEntry, conditions []string) []DueRoll {
 		due = append(due, DueRoll{
 			Condition: "Em Chamas", At: "inicio", Target: entry.Label,
 			Parts: []QueueMarkPart{{Dice: "1d6", Kind: "fogo"}},
+		})
+	}
+	if slices.Contains(conditions, ConditionConfused) {
+		due = append(due, DueRoll{
+			Condition: confusedName, At: "inicio", Target: entry.Label,
+			Parts: []QueueMarkPart{{Dice: "1d6"}},
 		})
 	}
 	return due

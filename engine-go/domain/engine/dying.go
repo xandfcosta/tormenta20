@@ -1,5 +1,7 @@
 package engine
 
+import "slices"
+
 // CAIR, SANGRAR, ESTABILIZAR E MORRER (T20 p236).
 //
 //	"Se ficar com 0 PV ou menos, você cai inconsciente e fica sangrando. No
@@ -99,13 +101,25 @@ func BleedingCheckPasses(d20, constitution int) bool {
 }
 
 // actionlessConditions tiram a AÇÃO, e o texto do livro é o critério: "não pode
-// fazer ações" (atordoado, pasmo, surpreendido, p394-395). A inconsciência tira
-// também a REAÇÃO — "sem ações (incluindo reações)", p395 — e mora à parte.
+// fazer ações" (atordoado, pasmo, surpreendido, p394-395). O fascinado entra
+// porque a exceção dele, "observar aquilo que o fascinou" (p394), é um teste de
+// Percepção, e o turno não cobra teste de perícia.
 //
-// Três ficam de fora por não serem sim-ou-não, e decidi-las não é desta fatia:
-// fascinado ("sem ações exceto observar"), paralisado ("só ações mentais") e
-// enjoado (uma ação por rodada).
-var actionlessConditions = map[string]bool{"atordoado": true, "pasmo": true, "surpreendido": true}
+// O paralisado fica de fora: ele "só pode realizar ações puramente mentais"
+// (p395), e o app não sabe quais ações são mentais — quem decide é o mestre.
+var actionlessConditions = map[string]bool{"atordoado": true, "pasmo": true, "surpreendido": true, "fascinado": true}
+
+// unconsciousConditions são as que deixam a criatura inconsciente: a própria, e o
+// petrificado, que "fica inconsciente" (p395) com a ficha gravando só o nome dele.
+var unconsciousConditions = map[string]bool{ConditionUnconscious: true, "petrificado": true}
+
+// IsUnconscious diz se as condições deixam a criatura inconsciente — e com isso
+// sem ações nem reações (p395) e fora da forma selvagem (p63).
+//
+// @example IsUnconscious([]string{"petrificado"}) // true
+func IsUnconscious(conditions []string) bool {
+	return slices.ContainsFunc(conditions, func(c string) bool { return unconsciousConditions[c] })
+}
 
 // MomentFor monta o instante de quem vai agir, a partir do PV e das condições.
 //
@@ -115,13 +129,11 @@ var actionlessConditions = map[string]bool{"atordoado": true, "pasmo": true, "su
 // @example MomentFor(true, 10, []string{"atordoado"}) // age não, reage sim
 func MomentFor(onTurn bool, hp int64, conditions []string) ActionMoment {
 	moment := ActionMoment{OnTurn: onTurn, CanAct: hp > 0, CanReact: hp > 0}
-	for _, c := range conditions {
-		if c == ConditionUnconscious {
-			moment.CanAct, moment.CanReact = false, false
-		}
-		if actionlessConditions[c] {
-			moment.CanAct = false
-		}
+	if IsUnconscious(conditions) {
+		moment.CanAct, moment.CanReact = false, false
+	}
+	if slices.ContainsFunc(conditions, func(c string) bool { return actionlessConditions[c] }) {
+		moment.CanAct = false
 	}
 	return moment
 }

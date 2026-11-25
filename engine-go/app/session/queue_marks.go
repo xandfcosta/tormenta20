@@ -28,14 +28,24 @@ func (st *Store) UnmarkEntry(ctx context.Context, sessionID int64, entryID, spel
 // DueRollsOf são os dados que se rolam na vez da linha (`live.DueRolls`), com as condições de onde elas moram: as
 // do PC na ficha, as do NPC na linha.
 func (st *Store) DueRollsOf(ctx context.Context, entry live.InitiativeEntry) ([]live.DueRoll, error) {
-	conditions := entry.Conditions
-	if entry.CharacterID != nil && st.turnEffects != nil {
-		var err error
-		if conditions, err = st.turnEffects.ConditionsOf(ctx, *entry.CharacterID); err != nil {
-			return nil, fmt.Errorf("ler as condições de %s: %w", entry.Label, err)
-		}
+	conditions, err := conditionsOfEntry(ctx, st.turnEffects, entry)
+	if err != nil {
+		return nil, err
 	}
 	return live.DueRolls(entry, conditions), nil
+}
+
+// conditionsOfEntry são as condições de uma linha da fila, de onde elas moram: as do PC na ficha, as do NPC na
+// linha. Sem porta para a ficha, ficam as da linha.
+func conditionsOfEntry(ctx context.Context, effects live.SheetTurnEffects, entry live.InitiativeEntry) ([]string, error) {
+	if entry.CharacterID == nil || effects == nil {
+		return entry.Conditions, nil
+	}
+	conditions, err := effects.ConditionsOf(ctx, *entry.CharacterID)
+	if err != nil {
+		return nil, fmt.Errorf("ler as condições de %s: %w", entry.Label, err)
+	}
+	return conditions, nil
 }
 
 // RollDue rola o n-ésimo dado da vez da linha, ou recebe o total que a mesa rolou na mão para cada parcela, e o
@@ -84,8 +94,13 @@ func (st *Store) RollDue(
 		if err != nil {
 			return nil, err
 		}
+		// O DADO DO CONFUSO diz o que o resultado manda, pela tabela da condição (p394).
+		note := part.Note
+		if outcome := live.ConditionRollNote(asked.Condition, total); outcome != "" {
+			note = outcome
+		}
 		roll.Parts = append(roll.Parts, live.SpellCastPart{
-			Dice: part.Dice, Kind: part.Kind, Note: part.Note, Rolls: rolls, Total: total, ByHand: told != nil,
+			Dice: part.Dice, Kind: part.Kind, Note: note, Rolls: rolls, Total: total, ByHand: told != nil,
 		})
 	}
 	return st.RecordRoll(ctx, sessionID, roll)

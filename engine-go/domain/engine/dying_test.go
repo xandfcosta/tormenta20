@@ -120,3 +120,22 @@ func TestTheMomentComesFromTheConditions(t *testing.T) {
 		t.Errorf("de pé e na vez, age e reage, e deu %+v", m)
 	}
 }
+
+// PETRIFICADO "fica inconsciente" (p395), então não age nem reage, mesmo com o PV
+// inteiro. FASCINADO não age "exceto observar aquilo que o fascinou" (p394), e
+// observar é um teste de Percepção, que o turno não cobra: para o turno ele não
+// age, e ainda reage. PARALISADO fica com o mestre, porque o app não sabe quais
+// ações são "puramente mentais" (p395).
+func TestThePetrifiedAndTheFascinatedDoNotAct(t *testing.T) {
+	stone := MomentFor(true, 30, []string{"petrificado"})
+	if stone.CanAct || stone.CanReact {
+		t.Errorf("petrificado fica inconsciente: não age nem reage (p395), e deu %+v", stone)
+	}
+	fascinated := MomentFor(true, 30, []string{"fascinado"})
+	if fascinated.CanAct || !fascinated.CanReact {
+		t.Errorf("fascinado não age e ainda reage (p394), e deu %+v", fascinated)
+	}
+	if m := MomentFor(true, 30, []string{"paralisado"}); !m.CanAct || !m.CanReact {
+		t.Errorf("paralisado fica com o mestre e o app não o recusa, e deu %+v", m)
+	}
+}

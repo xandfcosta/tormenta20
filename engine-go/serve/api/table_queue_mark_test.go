@@ -90,3 +90,30 @@ func TestTheBurningGoblinRollsItsFireOnItsTurn(t *testing.T) {
 		t.Errorf("as chamas rolaram %+v; want 1d6 de fogo rolado no app", part)
 	}
 }
+
+// O CONFUSO (p394) rola o 1d6 na vez dele pelo mesmo caminho, e a faixa diz o que o resultado manda.
+func TestTheConfusedGoblinRollsItsD6OnItsTurn(t *testing.T) {
+	f := newSceneFixture(t)
+	goblin := f.actionSceneWithTheGoblinFirst(t, "Arcanista", f.charID, 1)
+	if _, err := f.s.sessions.UpdateInitiativeEntry(t.Context(), f.sessionID, goblin,
+		live.EntryPatch{Conditions: &[]string{live.ConditionConfused}}); err != nil {
+		t.Fatalf("deixar o Goblin confuso: %v", err)
+	}
+	if page := f.requests(t, f.gm, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, `aria-label="Rolar Confuso na vez de Goblin"`) {
+		t.Error("na vez do Goblin confuso, a mesa do mestre não oferece o Rolar do 1d6")
+	}
+	roll := f.tableUrl() + "/iniciativa/" + goblin + "/na-vez/0/rolar"
+	if refusal := tableRefusal(t, f.requests(t, f.gm, http.MethodPost, roll, `{"due_hand_0":3}`).Body.String()); refusal != "" {
+		t.Fatalf("rolar o 1d6 do Goblin confuso foi recusado: %q", refusal)
+	}
+	cast := stateOf(t, f.s.sessions, f.sessionID).LastSpellCast
+	if cast == nil || cast.Kind != live.RollOfTheCondition || cast.Condition != "Confuso" || len(cast.Parts) != 1 {
+		t.Fatalf("a faixa diz %+v; want o 1d6 do Goblin confuso", cast)
+	}
+	if part := cast.Parts[0]; part.Total != 3 || !part.ByHand || !strings.Contains(part.Note, "não age") {
+		t.Errorf("o 1d6 rolou %+v; want os 3 da mesa, que mandam não agir", part)
+	}
+	if page := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String(); !strings.Contains(page, "não age") {
+		t.Error("a faixa do jogador não diz o que o 3 do confuso manda")
+	}
+}

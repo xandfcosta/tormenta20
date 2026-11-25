@@ -115,8 +115,8 @@ type SheetTurnEffects interface {
 	// primeiro turno de cada combate — Reflexos de Combate (p129).
 	GainsFirstTurnMovement(ctx context.Context, charID int64) (bool, error)
 	// ConditionsOf devolve as condições ligadas na ficha. O instante de quem
-	// age sai delas — o inconsciente não reage, o atordoado não age —, e é
-	// nelas que o sangramento da p236 mora.
+	// age sai delas — o inconsciente não reage, o atordoado não age —, o turno
+	// de uma ação só do enjoado também, e é nelas que o sangramento da p236 mora.
 	ConditionsOf(ctx context.Context, charID int64) ([]string, error)
 	// ConstitutionOf é o total de Constituição da ficha computada — o que se
 	// soma ao d20 do teste de quem sangra (p236).

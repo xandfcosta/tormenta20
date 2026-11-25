@@ -3,7 +3,6 @@ package sheet
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"t20engine/domain/engine"
 	"t20engine/infra/db/dbvalue"
@@ -28,7 +27,7 @@ func SaveConditions(ctx context.Context, q *sqlcgen.Queries, characterID int64, 
 	}); err != nil {
 		return fmt.Errorf("gravar as condições da ficha %d: %w", characterID, err)
 	}
-	if !slices.Contains(conditions, engine.ConditionUnconscious) {
+	if !engine.IsUnconscious(conditions) {
 		return nil
 	}
 	if err := q.ClearCharacterWildShape(ctx, characterID); err != nil {

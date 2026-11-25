@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"fmt"
+	"slices"
 )
 
 // A ECONOMIA DE AÇÃO DO TURNO (T20 p233).
@@ -42,6 +43,11 @@ const (
 	// ActionLong é o que leva mais que um turno: o ritual, de 1 hora (p131). Fora de cena de ação nada
 	// custa (p252), e dentro dela ele não cabe.
 	ActionLong ActionCost = "longa"
+	// ActionCharge é o golpe da INVESTIDA, e é o único custo que o catálogo não
+	// escreve: ele depende do turno de quem investe. É ação completa (p235), e
+	// padrão para o enjoado, que "pode gastar uma ação padrão para fazer uma
+	// investida" (p394).
+	ActionCharge ActionCost = "investida"
 )
 
 // ErrNoActionLeft é a recusa por falta de ação no turno. Ela é reconhecível
@@ -60,10 +66,21 @@ type TurnBudget struct {
 	// ExtraMovement é a ação de movimento a mais do primeiro turno de quem tem
 	// Reflexos de Combate (p129).
 	ExtraMovement bool `json:"extraMovement,omitempty"`
+	// OneAction é o turno de quem entrou na vez enjoado: "uma ação padrão ou de
+	// movimento (não ambas) por rodada" (p394).
+	OneAction bool `json:"oneAction,omitempty"`
 }
 
 // FullTurn é o turno de quem acabou de entrar nele.
 func FullTurn() TurnBudget { return TurnBudget{Standard: true, Movement: true} }
+
+// ConditionSickened é a condição Enjoado do livro (p394), que deixa uma ação só no turno.
+const ConditionSickened = "enjoado"
+
+// OneActionTurn diz se quem entra na vez com estas condições tem uma ação só.
+//
+// @example OneActionTurn([]string{"enjoado"}) // true
+func OneActionTurn(conditions []string) bool { return slices.Contains(conditions, ConditionSickened) }
 
 // Spend devolve o turno DEPOIS de pagar o custo, ou a recusa.
 //
@@ -71,6 +88,32 @@ func FullTurn() TurnBudget { return TurnBudget{Standard: true, Movement: true} }
 // TELA perguntar "daria para usar?" sem gastar nada — a mesma pergunta que o
 // `UseDecision` faz para desenhar o botão.
 func (b TurnBudget) Spend(cost ActionCost) (TurnBudget, error) {
+	if cost == ActionCharge {
+		cost = ActionFull
+		if b.OneAction {
+			cost = ActionStandard
+		}
+	}
+	if !b.OneAction {
+		return b.spendFromTheBook(cost)
+	}
+	// ENJOADO: "uma ação padrão ou de movimento (não ambas)" (p394). A completa
+	// exige as duas, e a que coube leva o turno inteiro — inclusive o movimento
+	// extra dos Reflexos de Combate, que seria uma segunda ação.
+	if cost == ActionFull {
+		return b, fmt.Errorf("%w: enjoado, só uma ação padrão ou de movimento por rodada (p394)", ErrNoActionLeft)
+	}
+	left, err := b.spendFromTheBook(cost)
+	// O que não tirou nada do turno — a livre, a reação — não é a ação do
+	// enjoado, e o turno fica como estava.
+	if err != nil || left == b {
+		return left, err
+	}
+	return TurnBudget{OneAction: true}, nil
+}
+
+// spendFromTheBook é a economia de ação de quem não tem limite: a da p233.
+func (b TurnBudget) spendFromTheBook(cost ActionCost) (TurnBudget, error) {
 	switch cost {
 	// Não custam nada e cabem sempre: "como ações livres, reações tomam tão
 	// pouco tempo que você pode realizar qualquer quantidade delas" (p233). A
@@ -186,7 +229,7 @@ func UsableNow(cost ActionCost, moment ActionMoment) error {
 		return nil
 	case ActionPassive, ActionVaries:
 		return nil
-	case ActionStandard, ActionMovement, ActionFull, ActionFree, ActionLong:
+	case ActionStandard, ActionMovement, ActionFull, ActionCharge, ActionFree, ActionLong:
 	default:
 		return unknownActionCost(cost)
 	}
