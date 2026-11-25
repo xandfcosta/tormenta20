@@ -45,6 +45,24 @@ func spellActionRows(dto sheet.CharacterDTO, computed engine.ComputedSheet) map[
 			if err != nil {
 				continue
 			}
+			// A OPÇÃO QUE É MANOBRA não tem dado nem diálogo: o Rolar pede o alvo da barra da Mesa, como as manobras
+			// com arma, e o detalhe diz o que a mão soma ao d20 (ver GLOSSARY, **ação da magia**).
+			if action.Maneuver != "" {
+				bonus, found := character.ManeuverBonusOf(computed, action)
+				if !found {
+					continue
+				}
+				name := action.Name + " · " + onSheet.Spell.Name
+				detail := []string{fmt.Sprintf("manobra %s · %s %s contra o Luta do alvo", action.Maneuver, action.Skill, book.WithSign(bonus))}
+				if action.Note != "" {
+					detail = append(detail, action.Note)
+				}
+				rows[engine.ActionCost(action.Action)] = append(rows[engine.ActionCost(action.Action)], actionRow{
+					Name: name, Detail: strings.Join(detail, " · "), Can: true,
+					Rolls: []actionRoll{{Label: "Rolar", Path: fmt.Sprintf("/acoes/magia/%d/%d", effect.ID, i), NeedsTarget: true, Primary: true}},
+				})
+				continue
+			}
 			name := action.Name + " · " + onSheet.Spell.Name
 			written := make([]string, 0, len(parts))
 			for _, part := range parts {
@@ -105,6 +123,16 @@ func actsOnSpell(s Scene, r *http.Request, row sqlcgen.Character, signals Signal
 	asked, err := character.SpellActionOf(dto, effectID, option)
 	if err != nil {
 		return err
+	}
+	// A OPÇÃO QUE É MANOBRA vai pela manobra da mesa, contra o alvo da barra, com a mão no lugar da arma: a
+	// proposta cobra a ação de movimento, e o veredito é do mestre (ver GLOSSARY, **ação da magia**).
+	if asked.Action.Maneuver != "" {
+		bonus, err := asked.ManeuverBonus(dto)
+		if err != nil {
+			return err
+		}
+		hand := &SpellHand{Name: asked.Spell.Spell.Name, Bonus: bonus}
+		return s.proposeOnTheTable(r, row, ActionStrike{Maneuver: asked.Action.Maneuver, Hand: hand}, signals)
 	}
 	cost := engine.ActionCost(asked.Action.Action)
 	refusal := fmt.Sprintf("%s é uma vez por turno (p%d), e já saiu nesta vez", asked.Spell.Spell.Name, asked.Spell.Spell.BookPage)

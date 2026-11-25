@@ -196,6 +196,9 @@ type PendingAttack struct {
 	// Num golpe, os campos de dano falam e este é nulo; numa manobra, o inverso.
 	// É ele que diz à faixa qual das duas frases escrever.
 	Maneuver *ManeuverRoll `json:"maneuver,omitempty"`
+	// Hand diz que a manobra é da mão de uma magia, e não de quem a conjurou (a Mão Poderosa de Talude, p198): ela
+	// cobra a ação de movimento, e não a de agredir, e não abre o ataque extra nem o estilo.
+	Hand bool `json:"hand,omitempty"`
 	// ByUserID é quem rolou. O mestre confirma e cancela por qualquer um; quem propôs
 	// só rola o dano e fecha o próprio erro.
 	ByUserID int64 `json:"byUserId"`

@@ -175,6 +175,7 @@ func (h sheetHost) ProposeStrikeOnTable(
 			ExtraPower:      strike.ExtraPower,
 			Impulsive:       strike.Impulsive,
 			TakesFollowUp:   strike.TakesFollowUp,
+			Hand:            handOf(strike.Hand),
 			OwnsAttacker:    true,
 		})
 		return err
@@ -316,4 +317,12 @@ func (h sheetHost) liveTablesOf(ctx context.Context, characterID int64) []liveTa
 		}
 	}
 	return out
+}
+
+// handOf leva a mão da magia da ficha para a manobra da mesa, ou nil.
+func handOf(hand *sheetui.SpellHand) *combat.SpellHand {
+	if hand == nil {
+		return nil
+	}
+	return &combat.SpellHand{Name: hand.Name, Bonus: hand.Bonus}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"t20engine/domain/book"
+	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/sqlcgen"
@@ -34,6 +35,29 @@ type SpellActionAsked struct {
 	Action      book.SpellAction
 	Parts       []book.SpellRoll
 	OncePerTurn bool
+}
+
+// ManeuverBonus é o que a mão soma ao d20 da opção que é manobra (`ManeuverBonusOf`), com a ficha computada aqui.
+func (a SpellActionAsked) ManeuverBonus(dto sheet.CharacterDTO) (int, error) {
+	computed, err := sheet.Compute(dto)
+	if err != nil {
+		return 0, fmt.Errorf("computar a ficha para a manobra de %s: %w", a.Spell.Spell.Name, err)
+	}
+	bonus, found := ManeuverBonusOf(computed, a.Action)
+	if !found {
+		return 0, fmt.Errorf("a ficha não tem a perícia %q que a manobra de %s soma", a.Action.Skill, a.Spell.Spell.Name)
+	}
+	return bonus, nil
+}
+
+// ManeuverBonusOf é o que a mão de uma magia soma ao d20 da manobra: o total da perícia de quem conjurou e o bônus
+// da opção — o Misticismo mais 10 da Mão Poderosa (p198). Falso quando a ficha não tem a perícia. A aba Ações e o
+// gesto leem a mesma conta.
+//
+//	bonus, ok := character.ManeuverBonusOf(computed, grab) // Misticismo +10
+func ManeuverBonusOf(computed engine.ComputedSheet, action book.SpellAction) (int, bool) {
+	total, found := expertiseTotalOf(computed, action.Skill)
+	return total + action.Bonus, found
 }
 
 // OnceKey é a marca do "uma vez por turno" desta magia na rodada de quem a conjurou, vazia na que não tem o

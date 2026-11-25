@@ -27,6 +27,11 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 		Bonus:  weapon.Attack + striker.ManeuverOffense[req.Maneuver],
 		Ranged: !weapon.IsMelee(),
 	}
+	// A MÃO DA MAGIA age onde o alvo está, com o bônus que a magia diz e nada mais: o que quem conjurou ganha nas
+	// próprias manobras não é dela (p198).
+	if req.Hand != nil {
+		ataque = engine.ManeuverSide{Bonus: weapon.Attack}
+	}
 
 	opposed, err := s.d20Of(req.OpposedD20)
 	if err != nil {
@@ -45,8 +50,9 @@ func (s Strike) rollManeuver(who app.Caller, req Request, setup strikeSetup, d20
 			Kind: out.Kind, OpposedRoll: out.DefenderRoll, Opposed: out.DefenderTotal,
 			Margin: out.Margin, ConditionOnAWin: out.ConditionOnAWin,
 		},
-		// A MANOBRA EM SEGUIDA é livre, e não a ação agredir: ela não abre o extra nem o estilo.
-		BoostPM: setup.boost.pm, FollowUps: setup.followUps, FollowUpOf: setup.followUpOf, OpensExtra: setup.followUpOf == nil,
+		// A MANOBRA EM SEGUIDA é livre, e não a ação agredir: ela não abre o extra nem o estilo. A da mão também não.
+		BoostPM: setup.boost.pm, FollowUps: setup.followUps, FollowUpOf: setup.followUpOf,
+		OpensExtra: setup.followUpOf == nil && req.Hand == nil, Hand: req.Hand != nil,
 	}
 	if pending.OpensExtra {
 		opensTheStyle(&pending, weapon)

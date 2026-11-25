@@ -135,6 +135,12 @@ func New(d Deps, gestures character.Plays, log *slog.Logger) Scene {
 // O ATACANTE NÃO ESTÁ AQUI: quem ataca é a VEZ, e quem a resolve é o
 // hospedeiro, contra o banco (p231). Um campo de atacante nesta estrutura seria
 // o cliente escolhendo de quem é o turno.
+// SpellHand é a mão de uma magia na manobra: o nome e o bônus, já com a perícia de quem conjurou.
+type SpellHand struct {
+	Name  string
+	Bonus int
+}
+
 type ActionStrike struct {
 	// ExtraStrike é o ataque extra da arma natural `Weapon` (p25).
 	ExtraStrike bool
@@ -153,6 +159,9 @@ type ActionStrike struct {
 	OtherUse bool
 	// Maneuver é uma das cinco da p234 quando o gesto é manobra. Vazio é golpe.
 	Maneuver string
+	// Hand é a mão de uma magia que faz a manobra no lugar da arma, com o que ela soma ao d20 (a Mão Poderosa de
+	// Talude, p198); nil no resto.
+	Hand *SpellHand
 	// Boost é o impulso de PM pedido para este golpe; o poder vazio é sem.
 	Boost engine.BoostChoice
 	// Dose é a dose escolhida na linha da arma; vazio é a mais antiga.
