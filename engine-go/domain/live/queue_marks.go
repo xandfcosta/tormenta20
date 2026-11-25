@@ -29,6 +29,9 @@ type QueueMark struct {
 	// rodadas do Círculo. Sem contagem, ela fica até o mestre a tirar.
 	Counted   bool `json:"counted,omitempty"`
 	TurnsLeft int  `json:"turnsLeft,omitempty"`
+	// CountedAt é o `TurnsTaken` em que a marca gastou o último turno: voltar a vez e passar de novo entra no
+	// MESMO turno, com o mesmo número, e ele não se gasta duas vezes.
+	CountedAt int `json:"countedAt,omitempty"`
 	// Burning diz que a marca SÃO as chamas da condição Em Chamas, com o dado dela no lugar do 1d6 (p196).
 	Burning bool `json:"burning,omitempty"`
 }
@@ -88,15 +91,18 @@ func UnmarkEntry(st *SessionRuntimeState, entryID, spell string) error {
 
 // countTheMarksOfTheTurn gasta um turno de cada marca contada de quem acabou de entrar na vez, e tira a que já
 // tinha gastado o último: a Flecha marcada com dois rola na primeira e na segunda vez do alvo, e sai na terceira.
+// O turno entrado de novo depois do "Turno anterior" não se gasta outra vez (`CountedAt`).
 func countTheMarksOfTheTurn(st *SessionRuntimeState) {
 	if st.TurnIndex < 0 || st.TurnIndex >= len(st.Initiative) {
 		return
 	}
 	entry := &st.Initiative[st.TurnIndex]
-	entry.Marks = slices.DeleteFunc(entry.Marks, func(m QueueMark) bool { return m.Counted && m.TurnsLeft <= 0 })
+	again := func(m QueueMark) bool { return m.CountedAt == st.TurnsTaken }
+	entry.Marks = slices.DeleteFunc(entry.Marks, func(m QueueMark) bool { return m.Counted && m.TurnsLeft <= 0 && !again(m) })
 	for i := range entry.Marks {
-		if entry.Marks[i].Counted {
+		if entry.Marks[i].Counted && !again(entry.Marks[i]) {
 			entry.Marks[i].TurnsLeft--
+			entry.Marks[i].CountedAt = st.TurnsTaken
 		}
 	}
 	if len(entry.Marks) == 0 {

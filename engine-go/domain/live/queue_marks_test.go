@@ -98,3 +98,24 @@ func TestTheBurningConditionRollsAndTheLanceReplacesItsDie(t *testing.T) {
 		t.Errorf("o Círculo da Restauração rola %+v; want no fim do turno", due)
 	}
 }
+
+// VOLTAR A VEZ E PASSAR DE NOVO NÃO GASTA OUTRO TURNO da marca: o "Turno anterior" é conserto de mesa, e o mesmo
+// turno do ogro, entrado duas vezes, é um turno só.
+func TestRewindingTheTurnDoesNotSpendAnotherTurnOfTheMark(t *testing.T) {
+	st := combatWithAnOgre()
+	st.Markable = acidArrow()
+	if err := MarkEntry(st, "ogro"); err != nil {
+		t.Fatalf("marcar o ogro: %v", err)
+	}
+	AdvanceTurn(st) // a vez do ogro: 2 → 1
+	RewindTurn(st)  // volta ao arcanista
+	AdvanceTurn(st) // a vez do ogro de novo, o mesmo turno
+	if left := st.Initiative[1].Marks[0].TurnsLeft; left != 1 {
+		t.Fatalf("depois de voltar e passar, a Flecha tem %d turno(s); want 1, o mesmo turno do ogro", left)
+	}
+	AdvanceTurn(st)
+	AdvanceTurn(st) // o segundo turno do ogro: o último do muco
+	if due := dueOf(t, st); len(due) != 1 || !due[0].Last {
+		t.Errorf("no segundo turno do ogro, a vez rola %+v; want o último muco", due)
+	}
+}
