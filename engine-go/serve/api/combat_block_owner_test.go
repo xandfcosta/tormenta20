@@ -60,6 +60,9 @@ func TestTheCombatRefusesACreatureBlockFromAnotherCampaign(t *testing.T) {
 
 // linePointingAtBlock põe na fila da sessão uma linha de NPC apontando o bloco, e
 // devolve a linha como o estado a guardou — com o id que o store escolheu.
+//
+// ACHADA PELO BLOCO, e não pela posição: numa fila com mais gente, a primeira
+// linha é a de maior iniciativa, e o gesto iria para outro combatente.
 func linePointingAtBlock(t *testing.T, s *Server, sessionID, blockID int64) live.InitiativeEntry {
 	t.Helper()
 	state, err := s.sessions.AddInitiativeEntry(context.Background(), sessionID, live.InitiativeEntry{
@@ -68,5 +71,11 @@ func linePointingAtBlock(t *testing.T, s *Server, sessionID, blockID int64) live
 	if err != nil {
 		t.Fatalf("pôr a linha na fila da sessão %d: %v", sessionID, err)
 	}
-	return state.Initiative[0]
+	for _, e := range state.Initiative {
+		if e.CreatureID != nil && *e.CreatureID == blockID {
+			return e
+		}
+	}
+	t.Fatalf("a linha do bloco %d não entrou na fila da sessão %d", blockID, sessionID)
+	return live.InitiativeEntry{}
 }
