@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
@@ -49,34 +48,6 @@ func (v sheetVitals) touch(ctx context.Context, charID int64) {
 	if v.touched != nil {
 		v.touched(ctx, charID)
 	}
-}
-
-// AddCondition acende uma condição na ficha, sem apagar as que já estão.
-//
-// LÊ E ESCREVE a lista inteira porque a coluna é um JSON de strings, e não uma
-// tabela de ligação: não há `INSERT` de uma condição só. A leitura e a escrita
-// acontecem na mesma chamada do gesto, que é serializada pela trava do escritor
-// do SQLite — duas manobras simultâneas na mesma ficha não é caso que a mesa
-// produza, e o `busy_timeout` cobre a corrida se um dia for.
-//
-// REPETIDA não duplica: derrubar quem já está caído confirma o estado em vez de
-// escrever "caido" duas vezes numa lista que a tela desenha como crachás.
-func (v sheetVitals) AddCondition(ctx context.Context, charID int64, condition string) error {
-	defer v.touch(ctx, charID)
-	if !catalog.IsCondition(condition) {
-		return fmt.Errorf("condição desconhecida: %q — esperava um id do catálogo", condition)
-	}
-	row, err := v.q.GetCharacter(ctx, charID)
-	if err != nil {
-		return fmt.Errorf("carregar o personagem %d: %w", charID, err)
-	}
-	atuais := sheet.UnmarshalStrings(row.Activeconditions)
-	for _, c := range atuais {
-		if c == condition {
-			return nil
-		}
-	}
-	return sheet.SaveConditions(ctx, v.q, charID, append(atuais, condition))
 }
 
 // ApplyDelta move o PV/PM de um personagem por um delta e grava, devolvendo os
