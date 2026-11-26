@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"t20engine/domain/catalog"
 	"t20engine/domain/catalog/transcript"
 )
 
@@ -175,7 +174,7 @@ type ConditionTarget struct {
 //
 // @example MarkRefusal("envenenado", ConditionTarget{Name: "Osso", Immunities: ImmunitiesOfCreature("morto-vivo", nil)}) // "Osso é imune…"
 func MarkRefusal(condition string, who ConditionTarget) error {
-	if !catalog.IsCondition(condition) {
+	if !isBookCondition(condition) {
 		return fmt.Errorf("%q não é uma condição do livro (p394-395)", condition)
 	}
 	if err := HandMarkRefusal(condition); err != nil {
@@ -188,6 +187,17 @@ func MarkRefusal(condition string, who ConditionTarget) error {
 		return fmt.Errorf("%s não fica %s: tem %s", who.Name, strings.ToLower(conditionNameOf(condition)), power)
 	}
 	return nil
+}
+
+// isBookCondition diz se o id é de uma condição do livro. Pela transcrição, e não pelo `catalog.IsCondition`: o
+// catálogo é servido A PARTIR dela, e o motor não importa o pacote cujo teste o importa.
+func isBookCondition(id string) bool {
+	for _, c := range transcript.Conditions {
+		if c.ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 // conditionTagsOf são os tipos de efeito da condição pelo catálogo ("veneno", "medo"), que é por onde a imunidade a
