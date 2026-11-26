@@ -29,6 +29,7 @@ var layouts = []resourceLayout{
 	listLayout("races", "Races", "races", "as raças: atributos, tamanho, deslocamento e visão", &Races, []*[]Race{&racesPart01, &racesPart02}, func(v Race) string { return v.ID }),
 	listLayout("spell-schools", "SpellSchools", "spell_schools", "as oito escolas de magia (p172)", &SpellSchools, nil, nil),
 	listLayout("spells", "Spells", "spells", "as magias do Capítulo 4", &Spells, []*[]Spell{&spellsPart01, &spellsPart02, &spellsPart03, &spellsPart04, &spellsPart05, &spellsPart06, &spellsPart07, &spellsPart08, &spellsPart09, &spellsPart10, &spellsPart11, &spellsPart12, &spellsPart13, &spellsPart14}, func(v Spell) string { return v.ID }),
+	valueLayout("threat-stats", "ThreatStats", "threat_stats", "a Tabela 7-2 e os pacotes de atributos das fichas de NPC (p322-323)", &ThreatStats, func() ([]byte, error) { return marshalPlain(ThreatStats) }),
 	listLayout("tormenta-powers", "TormentaPowers", "tormenta_powers", "os poderes da Tormenta", &TormentaPowers, nil, func(v TormentaPower) string { return v.ID }),
 }
 
