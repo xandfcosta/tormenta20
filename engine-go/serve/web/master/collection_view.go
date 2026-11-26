@@ -430,11 +430,11 @@ func expertiseMarks(p book.Expertise) []string {
 
 // firstUpper é o dado em caixa baixa com a inicial maiúscula, para a tela: o dado
 // guarda `negativa` e `contato` porque é assim que o filtro os casa.
-func firstUpper(energy string) string {
-	if energy == "" {
+func firstUpper(text string) string {
+	if text == "" {
 		return ""
 	}
-	return strings.ToUpper(energy[:1]) + energy[1:]
+	return strings.ToUpper(text[:1]) + text[1:]
 }
 
 // nonEmpty é o crachá que só sai quando o dado existe.

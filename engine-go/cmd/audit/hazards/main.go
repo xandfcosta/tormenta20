@@ -85,7 +85,9 @@ func auditTraps(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(string
 	section := text[start+len("nível de desafio de uma criatura.") : end]
 	magical := magicalNames(pdf)
 
-	measured := 0
+	// POR ID, e não por quantidade: uma ficha casando duas vezes com o mesmo verbete e outra sem casar com nenhum
+	// dariam 23 = 23.
+	measured := map[string]bool{}
 	cursor := 0
 	for _, m := range trapEnd.FindAllStringSubmatchIndex(section, -1) {
 		entry := strings.TrimSpace(section[cursor:m[0]])
@@ -96,7 +98,10 @@ func auditTraps(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(string
 			fail("a ficha %q do livro não casa nenhuma armadilha do catálogo", firstWords(entry))
 			continue
 		}
-		measured++
+		if measured[trap.ID] {
+			fail("%s casou com duas fichas do livro: a segunda é %q", trap.Name, firstWords(entry))
+		}
+		measured[trap.ID] = true
 		t := trap.Trap
 		if ndOf(nd) != t.ND {
 			fail("%s: ND %v no catálogo, %s no livro", trap.Name, t.ND, nd)
@@ -121,12 +126,14 @@ func auditTraps(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(string
 			fail("%s: mágica no livro (nome em itálico) %v, no catálogo %v", trap.Name, italic, t.Magical)
 		}
 	}
-	fmt.Printf("ARMADILHAS       livro: %d fichas · catálogo: %d\n", measured, len(catalog))
+	fmt.Printf("ARMADILHAS       livro: %d fichas · catálogo: %d\n", len(measured), len(catalog))
 	// O DENOMINADOR: uma leitura que perdesse fichas conferiria só as que achou.
-	if measured != len(catalog) {
-		fail("o livro rendeu %d fichas de armadilha e o catálogo tem %d", measured, len(catalog))
+	for _, h := range catalog {
+		if !measured[h.ID] {
+			fail("%s está no catálogo e nenhuma ficha do livro casou com ela", h.Name)
+		}
 	}
-	return measured
+	return len(measured)
 }
 
 // trapOf é a armadilha cujo nome abre a ficha. A comparação é pela chave, porque o nome mágico sai do PDF com a
@@ -214,7 +221,12 @@ func auditDiseases(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(str
 			fail("%s: o livro tem %d efeitos (%s), o catálogo %d", h.Name, steps, m[3], len(d.Effects))
 		}
 	}
-	fmt.Printf("DOENÇAS          medidas: %d de %d\n", measured, len(catalog))
+	// O DENOMINADOR do lado do livro: percorrer só o catálogo deixaria passar a doença que faltasse nele.
+	inBook := len(diseaseRe.FindAllString(text, -1))
+	fmt.Printf("DOENÇAS          livro: %d fichas · medidas: %d de %d\n", inBook, measured, len(catalog))
+	if inBook != len(catalog) {
+		fail("a p318 tem %d fichas de doença e o catálogo tem %d", inBook, len(catalog))
+	}
 	return measured
 }
 
