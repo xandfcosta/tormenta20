@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"t20engine/app"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
@@ -58,7 +57,6 @@ type EntryRequest struct {
 	// campanha. Um diz "veio do livro", o outro "é do mestre".
 	MonsterID  string
 	CreatureID *int64
-	Conditions []string
 }
 
 // Roster monta as linhas da fila.
@@ -145,7 +143,6 @@ func (r Roster) npcEntry(requested EntryRequest) (live.InitiativeEntry, error) {
 	if requested.CreatureID != nil && *requested.CreatureID > 0 {
 		row.CreatureID = requested.CreatureID
 	}
-	row.Conditions = KnownConditions(requested.Conditions)
 	return row, nil
 }
 
@@ -185,23 +182,4 @@ func overriddenOr(overlapping *int64, fromSheet int64) *int64 {
 		return live.PtrInt64(*overlapping)
 	}
 	return live.PtrInt64(fromSheet)
-}
-
-// KnownConditions filtra pelo CATÁLOGO, que é onde as condições são autoradas.
-//
-// Uma lista escrita à mão aqui seria a segunda cópia da tabela do livro, e ela
-// desvia — uma condição faltando dá 400 na hora de aplicá-la. Id desconhecido é
-// descartado em silêncio de propósito: a alternativa seria derrubar a aplicação
-// inteira no meio do combate por causa de um item.
-func KnownConditions(requested []string) []string {
-	outside := []string{}
-	seen := map[string]bool{}
-	for _, id := range requested {
-		if id == "" || seen[id] || !catalog.IsCondition(id) {
-			continue
-		}
-		seen[id] = true
-		outside = append(outside, id)
-	}
-	return outside
 }

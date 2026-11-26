@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"t20engine/domain/catalog"
+	"t20engine/domain/engine"
+	"t20engine/domain/sheet"
 )
 
 // A validação de condições tinha uma CÓPIA da tabela do livro escrita à mão na
@@ -33,6 +35,13 @@ func TestEveryCatalogConditionIsAccepted(t *testing.T) {
 
 			rec := authed(t, s, owner, http.MethodPatch, path, string(body))
 
+			// A que o app deriva (Sobrecarregado, da carga) não entra por porta nenhuma (`engine.HandMarkRefusal`).
+			if engine.HandMarkRefusal(id) != nil {
+				if rec.Code != http.StatusBadRequest {
+					t.Errorf("condição derivada %q aceita com %d: %s", id, rec.Code, rec.Body.String())
+				}
+				return
+			}
 			if rec.Code != http.StatusOK {
 				t.Errorf("condição %q recusada com %d: %s", id, rec.Code, rec.Body.String())
 			}
@@ -55,5 +64,32 @@ func TestAnUnknownConditionIsRejected(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), "voando") {
 		t.Errorf("a mensagem tem de nomear o id ofensivo, veio %s", rec.Body.String())
+	}
+}
+
+// A TROCA DA LISTA PERGUNTA O MESMO que os gestos (ver GLOSSARY, **condição**), e só pelo que ENTRA: o osteon não
+// recebe Envenenado (p228), e o que já estava gravado passa direto.
+func TestTheConditionListAsksWhoCanReceiveWhatEnters(t *testing.T) {
+	f := newSceneFixture(t)
+	seedRaca(t, f.s, f.charID, "Osteon")
+	path := "/personagens/" + id64(f.charID) + "/conditions"
+
+	rec := authed(t, f.s, f.player, http.MethodPatch, path, `{"activeConditions":["envenenado"]}`)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "veneno") {
+		t.Errorf("a lista deu Envenenado ao osteon: %d %s", rec.Code, rec.Body.String())
+	}
+	if got := conditions(t, f, f.charID); len(got) != 0 {
+		t.Fatalf("a recusa gravou assim mesmo: %v", got)
+	}
+
+	if err := sheet.SaveConditions(t.Context(), f.s.queries, f.charID, []string{"envenenado"}); err != nil {
+		t.Fatalf("gravar a marca antiga: %v", err)
+	}
+	rec = authed(t, f.s, f.player, http.MethodPatch, path, `{"activeConditions":["envenenado","caido"]}`)
+	if rec.Code != http.StatusOK {
+		t.Errorf("a marca antiga barrou a lista que só acrescenta Caído: %d %s", rec.Code, rec.Body.String())
+	}
+	if got := conditions(t, f, f.charID); len(got) != 2 {
+		t.Errorf("a ficha ficou com %v; want a marca antiga e o Caído", got)
 	}
 }

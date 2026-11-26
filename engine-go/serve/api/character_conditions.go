@@ -1,18 +1,17 @@
 package api
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
-	"strings"
+
+	"t20engine/app"
 	"t20engine/domain/sheet"
 	"t20engine/infra/httpio"
 	"t20engine/infra/wire"
-
-	"t20engine/domain/catalog"
 )
 
-// handleUpdateConditions replace the
-// active book conditions after validating every id against the catalog.
+// handleUpdateConditions troca a lista inteira das condições da ficha. Quem decide o que pode entrar é o
+// `character.Plays.ReplaceConditions`, com a mesma pergunta dos gestos da ficha e da Mesa.
 func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) {
 	row, ok := s.characterFor(w, r)
 	if !ok {
@@ -28,18 +27,11 @@ func (s *Server) handleUpdateConditions(w http.ResponseWriter, r *http.Request) 
 		httpio.WriteValidationError(w, wire.FieldErrorMap{"activeConditions": {"activeConditions must be an array"}})
 		return
 	}
-	var unknown []string
-	for _, c := range body.ActiveConditions {
-		if !catalog.IsCondition(c) {
-			unknown = append(unknown, c)
+	if err := s.characterPlays().ReplaceConditions(r.Context(), row, body.ActiveConditions); err != nil {
+		if errors.Is(err, app.ErrRefused) {
+			httpio.WriteError(w, http.StatusBadRequest, err.Error())
+			return
 		}
-	}
-	if len(unknown) > 0 {
-		httpio.WriteError(w, http.StatusBadRequest, fmt.Sprintf(
-			"Unknown condition ids: %s — expected ids from the CONDITIONS catalog", strings.Join(unknown, ", ")))
-		return
-	}
-	if err := sheet.SaveConditions(r.Context(), s.queries, row.ID, body.ActiveConditions); err != nil {
 		httpio.WriteServerError(w, "Could not update conditions", err)
 		return
 	}

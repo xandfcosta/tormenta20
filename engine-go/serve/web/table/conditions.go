@@ -8,11 +8,9 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/live"
 	"t20engine/domain/sheet"
-	"t20engine/infra/db/sqlcgen"
 )
 
 // AS CONDIÇÕES do combatente na Mesa.
@@ -55,12 +53,6 @@ func (s Scene) ConditionRoutes(r chi.Router) {
 func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) {
 	entryID := chi.URLParam(c.R, "entryId")
 	id := chi.URLParam(c.R, "id")
-	// A VALIDAÇÃO é do catálogo e não de uma lista daqui, pela razão do
-	// `book.Catalogs`. Sem ela, um id inventado entraria na linha e a tela o
-	// desenharia como se fosse condição do livro.
-	if !catalog.IsCondition(id) {
-		return nil, fmt.Errorf("%q não é uma condição do livro (p394-395)", id)
-	}
 	state, err := st.deps.Sessions().State(c.R.Context(), c.SessionID)
 	if err != nil {
 		return nil, err
@@ -81,10 +73,7 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	// tem de continuar funcionando, senão uma marcada antes desta regra ficaria
 	// presa na linha para sempre.
 	if !slices.Contains(current, id) {
-		if err := engine.HandMarkRefusal(id); err != nil {
-			return nil, err
-		}
-		if err := st.refuseIfImmune(c, state.Initiative[i], id); err != nil {
+		if err := engine.MarkRefusal(id, st.creatureTarget(c, state.Initiative[i])); err != nil {
 			return nil, err
 		}
 	}
@@ -112,11 +101,9 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	return newState, nil
 }
 
-// refuseIfImmune recusa a condição que a criatura não pode receber (p228).
-//
-// A recusa diz QUAL tipo de efeito barrou — "imune a veneno" explica; "imune"
-// manda procurar. O personagem passa pelo `refuseIfTheCharacterIsImmune`, pelo
-// tipo da raça dele.
+// creatureTarget é a criatura por trás da linha do NPC, para a pergunta de quem pode receber a condição: o nome, e
+// as imunidades do tipo dela (p228). Sem criatura — linha digitada à mão —, ela não é imune a nada. O personagem
+// tem a dele no `character.Plays`, pelo tipo da raça.
 //
 // AS DUAS PROCEDÊNCIAS NÃO SÃO IGUAIS, e a diferença é do dado e não do desenho.
 // O VERBETE do bestiário guarda a Inteligência como ponteiro, então ele sabe
@@ -125,59 +112,13 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 // verbete para o bloco converte a ausência em ZERO de propósito (ver o
 // `entry_to_block.go`). Então um Zumbi copiado para a campanha continua imune a
 // veneno, pelo TIPO, e deixa de ser imune a medo — e isso é a perda conhecida da
-// cópia, agora com uma consequência que ela não tinha.
-func (st Scene) refuseIfImmune(c commandCtx, entry live.InitiativeEntry, condition string) error {
-	tipo, inteligencia, achou := st.creatureNatureOf(c, entry)
-	if !achou {
-		return nil
+// cópia.
+func (st Scene) creatureTarget(c commandCtx, entry live.InitiativeEntry) engine.ConditionTarget {
+	target := engine.ConditionTarget{Name: entry.Label}
+	if kind, intelligence, found := st.creatureNatureOf(c, entry); found {
+		target.Immunities = engine.ImmunitiesOfCreature(kind, intelligence)
 	}
-	return immunityRefusal(entry.Label, engine.ImmunitiesOfCreature(tipo, inteligencia), condition)
-}
-
-// refuseIfTheCharacterIsImmune é a mesma recusa para o PERSONAGEM, pelo tipo da raça dele (ALE-650): o osteon é
-// morto-vivo e o golem é construto (p27, p29), e a p228 barra veneno, cansaço e metabolismo aos dois. A mente ele
-// tem — é personagem —, e por isso o medo e o mental entram.
-func (st Scene) refuseIfTheCharacterIsImmune(c commandCtx, row sqlcgen.Character, condition string) error {
-	races, err := st.deps.Queries().ListRacesByCharacter(c.R.Context(), row.ID)
-	if err != nil {
-		return fmt.Errorf("ler a raça da ficha %d: %w", row.ID, err)
-	}
-	if len(races) > 0 {
-		mind := int(row.Intelligence)
-		refusal := immunityRefusal(row.Name, engine.ImmunitiesOfCreature(book.CharacterNature(races[0]).Kind, &mind), condition)
-		if refusal != nil {
-			return refusal
-		}
-	}
-	return st.refuseIfAPowerBarsIt(c, row, condition)
-}
-
-// refuseIfAPowerBarsIt é a recusa da condição que um poder da ficha barra — a Esquiva Sobrenatural e o
-// surpreendido (p42) —, pelos efeitos que a ficha tem agora.
-func (st Scene) refuseIfAPowerBarsIt(c commandCtx, row sqlcgen.Character, condition string) error {
-	dto, err := sheet.Load(c.R.Context(), st.deps.Queries(), st.deps.Catalogs(), row)
-	if err != nil {
-		return fmt.Errorf("montar a ficha %d: %w", row.ID, err)
-	}
-	effects, _, err := sheet.CharacterEffects(dto)
-	if err != nil {
-		return err
-	}
-	power, barred := engine.ConditionBarredByAPower(effects, condition)
-	if !barred {
-		return nil
-	}
-	return fmt.Errorf("%s não fica %s: tem %s", row.Name, strings.ToLower(book.ConditionName(condition)), power)
-}
-
-// immunityRefusal é a recusa da condição a quem é imune ao tipo de efeito dela, ou nil.
-func immunityRefusal(label string, immunities []string, condition string) error {
-	porque, imune := engine.ImmuneToCondition(immunities, conditionTags(condition))
-	if !imune {
-		return nil
-	}
-	return fmt.Errorf("%s é imune a efeitos de %s, e %s é um deles (p228)",
-		label, porque, book.ConditionName(condition))
+	return target
 }
 
 // creatureNatureOf devolve o TIPO e a Inteligência da criatura por trás da
@@ -209,16 +150,6 @@ func (st Scene) creatureNatureOf(c commandCtx, entry live.InitiativeEntry) (stri
 	return bloco.Kind, &inteligencia, true
 }
 
-// conditionTags são os tipos de efeito desta condição, pelo catálogo.
-func conditionTags(id string) []string {
-	for _, c := range book.Catalogs().Conditions {
-		if c.ID == id {
-			return c.Tags
-		}
-	}
-	return nil
-}
-
 // toggleSheetCondition alterna a condição NA FICHA do personagem da linha.
 //
 // A fila não muda — ela LÊ as condições da ficha a cada desenho —, e quem acorda
@@ -229,12 +160,8 @@ func toggleSheetCondition(st Scene, c commandCtx, characterID int64, id string) 
 	if err != nil {
 		return nil, fmt.Errorf("ler a ficha %d: %w", characterID, err)
 	}
-	// A IMUNIDADE só barra o que ENTRA, como na linha do NPC.
-	if !slices.Contains(sheet.UnmarshalStrings(row.Activeconditions), id) {
-		if err := st.refuseIfTheCharacterIsImmune(c, row, id); err != nil {
-			return nil, err
-		}
-	}
+	// QUEM PODE RECEBER a condição é perguntado pelo gesto da ficha (`character.Plays`), pela raça e pelos poderes
+	// do personagem: a Mesa e a ficha dão a mesma resposta.
 	if err := st.plays.ToggleBookCondition(c.R.Context(), row, id); err != nil {
 		return nil, err
 	}

@@ -67,29 +67,3 @@ func TestTheOwnRollHasToBeAD20(t *testing.T) {
 		}
 	}
 }
-
-// CONDIÇÃO QUE O CATÁLOGO NÃO CONHECE é descartada em silêncio, e as repetidas
-// entram uma vez só: derrubar a aplicação inteira no meio do combate por causa
-// de um item seria pior que ignorar o item.
-func TestOnlyConditionsTheBookHasGetThrough(t *testing.T) {
-	// O `enfeiticado` está no caso de propósito: ele era `enfeitiçado`, com
-	// cedilha, e a grafia irregular fazia toda cópia da lista errar NELE. Quem
-	// segura a forma hoje é o `catalog.TestNoCatalogIDIsAccented`.
-	outside := KnownConditions([]string{"caido", "inventada", "enfeiticado", "atordoado"})
-	if len(outside) != 3 {
-		t.Fatalf("passaram %v, e as três do livro deviam passar", outside)
-	}
-	for _, id := range outside {
-		if id == "inventada" {
-			t.Fatalf("um id fora do catálogo passou: %v", outside)
-		}
-	}
-
-	repeated := KnownConditions([]string{"caido", "caido", ""})
-	if len(repeated) != 1 || repeated[0] != "caido" {
-		t.Errorf("as repetidas viraram %v, e a mesma condição entra uma vez só", repeated)
-	}
-	if empty := KnownConditions(nil); empty == nil || len(empty) != 0 {
-		t.Errorf("lista vazia virou %v, e um nulo faria o JSON dizer null em vez de []", empty)
-	}
-}

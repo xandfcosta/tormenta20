@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
 	"t20engine/domain/catalog/transcript"
 )
@@ -149,10 +150,52 @@ func HandMarkRefusal(id string) error {
 
 // conditionNameOf é o nome da condição no livro ("Em Chamas"), ou o id na que o catálogo não tem.
 func conditionNameOf(id string) string {
-	for _, c := range transcript.Conditions {
-		if c.ID == id {
-			return c.Name
-		}
+	if c, found := bookCondition(id); found {
+		return c.Name
 	}
 	return id
+}
+
+// ConditionTarget é quem receberia a condição: o nome, para a recusa; as imunidades do tipo dele (p228), que cada
+// porta descobre do seu jeito — o personagem pela raça, o NPC pelo verbete ou pelo bloco —; e os efeitos da ficha,
+// onde mora o poder que barra uma condição.
+type ConditionTarget struct {
+	Name       string
+	Immunities []string
+	Effects    ItemEffects
+}
+
+// MarkRefusal é a recusa de pôr a condição em quem, ou nil: a condição é do livro, não é derivada, ele não é imune
+// ao tipo dela (p228) e nenhum poder dele a barra. É o lugar único dessa pergunta (ver GLOSSARY, **condição**), e
+// quem a faz é toda porta que recebe uma condição escolhida por alguém — só pelo que ENTRA: a marca que já estava
+// sai sem pergunta.
+//
+// @example MarkRefusal("envenenado", ConditionTarget{Name: "Osso", Immunities: ImmunitiesOfCreature("morto-vivo", nil)}) // "Osso é imune…"
+func MarkRefusal(condition string, who ConditionTarget) error {
+	entry, found := bookCondition(condition)
+	if !found {
+		return fmt.Errorf("%q não é uma condição do livro (p394-395)", condition)
+	}
+	if err := HandMarkRefusal(condition); err != nil {
+		return err
+	}
+	// As TAGS são o tipo de efeito da condição ("veneno", "medo"), e é por elas que a imunidade a alcança.
+	if why, immune := ImmuneToCondition(who.Immunities, entry.Tags); immune {
+		return fmt.Errorf("%s é imune a efeitos de %s, e %s é um deles (p228)", who.Name, why, entry.Name)
+	}
+	if power, barred := ConditionBarredByAPower(who.Effects, condition); barred {
+		return fmt.Errorf("%s não fica %s: tem %s", who.Name, strings.ToLower(entry.Name), power)
+	}
+	return nil
+}
+
+// bookCondition é o verbete da condição na transcrição, e se ela é do livro. Pela transcrição, e não pelo
+// `catalog.IsCondition`: o catálogo é servido A PARTIR dela, e o motor não importa o pacote cujo teste o importa.
+func bookCondition(id string) (transcript.Condition, bool) {
+	for _, c := range transcript.Conditions {
+		if c.ID == id {
+			return c, true
+		}
+	}
+	return transcript.Condition{}, false
 }

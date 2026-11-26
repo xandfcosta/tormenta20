@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
+	"t20engine/app"
 	"t20engine/domain/book"
-	"t20engine/domain/catalog"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
 	"t20engine/infra/db/dbvalue"
@@ -126,9 +127,6 @@ func (p Plays) TouchTempVital(ctx context.Context, row sqlcgen.Character, which 
 func (p Plays) ToggleBookCondition(
 	ctx context.Context, row sqlcgen.Character, condition string,
 ) error {
-	if !catalog.IsCondition(condition) {
-		return fmt.Errorf("%q não é uma condição do livro", condition)
-	}
 	after := []string{}
 	had := false
 	for _, c := range sheet.UnmarshalStrings(row.Activeconditions) {
@@ -139,8 +137,13 @@ func (p Plays) ToggleBookCondition(
 		after = append(after, c)
 	}
 	if !had {
-		// Só o que ENTRA é barrado: a marca gravada antes desta regra ainda sai pelo mesmo gesto.
-		if err := engine.HandMarkRefusal(condition); err != nil {
+		// Só o que ENTRA é perguntado (`engine.MarkRefusal`): a marca gravada antes de uma regra ainda sai pelo mesmo
+		// gesto. É a mesma pergunta para a ficha e para a linha do personagem na Mesa, que chama este gesto.
+		who, err := p.conditionTarget(ctx, row)
+		if err != nil {
+			return err
+		}
+		if err := engine.MarkRefusal(condition, who); err != nil {
 			return err
 		}
 		after = append(after, condition)
@@ -150,6 +153,67 @@ func (p Plays) ToggleBookCondition(
 	return p.inTx(ctx, "marcar a condição "+condition, func(q *sqlcgen.Queries) error {
 		return sheet.SaveConditions(ctx, q, row.ID, after)
 	})
+}
+
+// ReplaceConditions troca a lista inteira das condições da ficha — a porta da API, que a bancada do e2e usa para
+// limpar a ficha. Cada condição que ENTRA passa pela mesma pergunta dos gestos (`engine.MarkRefusal`); a que já
+// estava gravada passa direto, pela razão do `ToggleBookCondition`. A recusa sai embrulhada em `app.ErrRefused`.
+//
+// @example plays.ReplaceConditions(ctx, row, []string{}) // limpa a ficha
+func (p Plays) ReplaceConditions(ctx context.Context, row sqlcgen.Character, conditions []string) error {
+	before := sheet.UnmarshalStrings(row.Activeconditions)
+	// O PERSONAGEM SÓ É MONTADO quando alguma condição entra: montar é ler a ficha inteira, e a faxina do e2e, que
+	// manda a lista vazia, não tem por que pagar isso.
+	var who *engine.ConditionTarget
+	for _, condition := range conditions {
+		if slices.Contains(before, condition) {
+			continue
+		}
+		if who == nil {
+			target, err := p.conditionTarget(ctx, row)
+			if err != nil {
+				return err
+			}
+			who = &target
+		}
+		if err := engine.MarkRefusal(condition, *who); err != nil {
+			return fmt.Errorf("%w: %w", err, app.ErrRefused)
+		}
+	}
+	return p.inTx(ctx, "trocar as condições", func(q *sqlcgen.Queries) error {
+		return sheet.SaveConditions(ctx, q, row.ID, conditions)
+	})
+}
+
+// conditionTarget é o personagem para a pergunta de quem pode receber a condição: as imunidades do tipo da raça
+// dele (p228) — o osteon é morto-vivo e o golem é construto (p27, p29); a mente ele tem, é personagem, e por isso o
+// medo e o mental entram — e os efeitos da ficha, onde mora o poder que barra uma condição (a Esquiva Sobrenatural).
+//
+// A FICHA SEM REGRAS não tem efeito a ler, e então nenhum poder a barra: é o "nada a ler" do
+// `sheet.ErrSheetWithoutRules`, e não uma falha do gesto.
+func (p Plays) conditionTarget(ctx context.Context, row sqlcgen.Character) (engine.ConditionTarget, error) {
+	who := engine.ConditionTarget{Name: row.Name}
+	races, err := p.queries.ListRacesByCharacter(ctx, row.ID)
+	if err != nil {
+		return who, fmt.Errorf("ler a raça da ficha %d: %w", row.ID, err)
+	}
+	if len(races) > 0 {
+		mind := int(row.Intelligence)
+		who.Immunities = engine.ImmunitiesOfCreature(book.CharacterNature(races[0]).Kind, &mind)
+	}
+	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
+	if err != nil {
+		return who, fmt.Errorf("montar a ficha %d: %w", row.ID, err)
+	}
+	effects, _, err := sheet.CharacterEffects(dto)
+	if errors.Is(err, sheet.ErrSheetWithoutRules) {
+		return who, nil
+	}
+	if err != nil {
+		return who, err
+	}
+	who.Effects = effects
+	return who, nil
 }
 
 // EndAppliedEffect encerra um efeito em curso.
