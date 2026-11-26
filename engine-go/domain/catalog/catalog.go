@@ -164,6 +164,9 @@ var resources = []string{
 	// sem página e sem as duas regras que o livro imprime ao lado de cada uma — só
 	// treinada e penalidade de armadura, da Tabela 2-1.
 	"expertises",
+	// `threat-stats` é a Tabela 7-2 (p323) e os pacotes de atributos dos patamares (p322): o editor do bloco do
+	// NPC preenche Defesa, PV e ataques pelo ND, e o resto mostra como guia (ver GLOSSARY, **estatísticas pelo ND**).
+	"threat-stats",
 }
 
 var valid = func() map[string]bool {
