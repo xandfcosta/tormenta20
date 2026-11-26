@@ -3,6 +3,7 @@ package book
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -68,6 +69,25 @@ type HazardTrap struct {
 	Rounds        string `json:"rounds"`
 	Investigation int    `json:"investigation"`
 	Thievery      int    `json:"thievery"`
+}
+
+// DamageWritten é o dano da armadilha como TODA tela o escreve: curto, o dado e o tipo de cada parcela — "1
+// perfuração + 1d12 perda de vida por veneno" —, porque o mestre o lê de relance e a frase do livro fica no selo de
+// página (decisão do dono). Vazio na armadilha sem dano.
+func (t HazardTrap) DamageWritten() string {
+	parts := make([]string, len(t.Damage))
+	for i, d := range t.Damage {
+		parts[i] = strings.TrimSpace(d.Dice + " " + d.Kind)
+	}
+	return strings.Join(parts, " + ")
+}
+
+// SaveWritten é a resistência da vítima escrita: "Reflexos CD 20 evita". Vazio na armadilha sem resistência.
+func (t HazardTrap) SaveWritten() string {
+	if t.Save == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s CD %d %s", t.Save.Test, t.Save.DC, t.Save.Effect)
 }
 
 // HazardDamage é uma parcela do dano da armadilha ("1d12" de "perda de vida por veneno").

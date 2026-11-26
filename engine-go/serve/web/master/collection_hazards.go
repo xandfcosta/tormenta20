@@ -36,18 +36,14 @@ func hazardBadges(h book.Hazard) []string {
 func hazardSheet(h book.Hazard) []string {
 	var lines []string
 	if t := h.Trap; t != nil {
-		if len(t.Damage) > 0 {
-			parts := make([]string, len(t.Damage))
-			for i, d := range t.Damage {
-				parts[i] = strings.TrimSpace(d.Dice + " " + d.Kind)
-			}
-			lines = append(lines, "Dano: "+strings.Join(parts, " + "))
+		if damage := t.DamageWritten(); damage != "" {
+			lines = append(lines, "Dano: "+damage)
 		}
 		if t.Area != "" {
 			lines = append(lines, "Área: "+t.Area)
 		}
-		if t.Save != nil {
-			lines = append(lines, fmt.Sprintf("Resistência: %s CD %d %s", t.Save.Test, t.Save.DC, t.Save.Effect))
+		if save := t.SaveWritten(); save != "" {
+			lines = append(lines, "Resistência: "+save)
 		}
 		lines = append(lines, fmt.Sprintf("Investigação CD %d · Ladinagem CD %d", t.Investigation, t.Thievery))
 	}

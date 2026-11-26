@@ -71,15 +71,11 @@ func hazardRows() (ambient, traps []hazardRow) {
 // trapSheet é a ficha da armadilha numa linha: o ND, o dano, a resistência com a CD e se é mágica.
 func trapSheet(t book.HazardTrap) []string {
 	sheet := []string{"ND " + book.CRWritten(t.ND)}
-	var damage []string
-	for _, d := range t.Damage {
-		damage = append(damage, d.Dice+" de "+d.Kind)
+	if damage := t.DamageWritten(); damage != "" {
+		sheet = append(sheet, damage)
 	}
-	if len(damage) > 0 {
-		sheet = append(sheet, strings.Join(damage, " + "))
-	}
-	if t.Save != nil {
-		sheet = append(sheet, fmt.Sprintf("%s CD %d %s", t.Save.Test, t.Save.DC, t.Save.Effect))
+	if save := t.SaveWritten(); save != "" {
+		sheet = append(sheet, save)
 	}
 	if t.Magical {
 		sheet = append(sheet, "mágica")
