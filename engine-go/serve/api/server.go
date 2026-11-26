@@ -236,13 +236,19 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.tableScene = table.New(
 		s.tableHost(), s.sessionLifecycle(), s.tableMemory, s.restParty(),
 		s.initiativeQueue(), s.campaignCast(), s.characterPlays(), s.combatStrike(),
-		combat.NewRoster(s.queries, s.catalogs), s.boardGestures())
+		s.combatRoster(), s.boardGestures())
 }
 
 // boardGestures são os gestos que escrevem no tabuleiro E na fila, e que por
 // isso abrem a unidade de trabalho (ALE-376).
 func (s *Server) boardGestures() boards.Gestures {
 	return boards.NewGestures(s.boards, s.sessions, s.units, session.NewAccess(s.queries))
+}
+
+// combatRoster diz quem está por trás de uma linha da fila — a ficha, o verbete ou o bloco —, e é montado AQUI só:
+// o golpe e a Mesa (a imunidade às condições) leem a natureza do mesmo leitor.
+func (s *Server) combatRoster() combat.Roster {
+	return combat.NewRoster(s.queries, s.catalogs)
 }
 
 // combatStrike é o caso de uso de ATACAR.
@@ -254,7 +260,7 @@ func (s *Server) boardGestures() boards.Gestures {
 // atendidas ao mesmo tempo não podem ter rolagens correlacionadas.
 func (s *Server) combatStrike() combat.Strike {
 	return combat.NewStrike(
-		combat.NewRoster(s.queries, s.catalogs), s.sessions,
+		s.combatRoster(), s.sessions,
 		combat.NewBoardSituations(s.boards), s.rollDie,
 	)
 }
