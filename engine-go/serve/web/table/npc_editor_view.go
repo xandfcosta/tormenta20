@@ -199,19 +199,12 @@ func threatGuide(s book.ThreatStats) string {
 		attributes[i] = strconv.Itoa(a)
 	}
 	return fmt.Sprintf("Pela Tabela 7-2 (p323), ND %s · %s: perícias %+d nas focadas e %+d nas outras · CD %d · atributos %s para distribuir",
-		ndWritten(s.ND), s.Tier.Name, s.FocusedSkills, s.OtherSkills, s.DC, strings.Join(attributes, ", "))
+		book.CRWritten(s.ND), s.Tier.Name, s.FocusedSkills, s.OtherSkills, s.DC, strings.Join(attributes, ", "))
 }
 
-// ndWritten é o ND como o livro o escreve: ½ e não 0.5.
-func ndWritten(nd float64) string {
-	switch nd {
-	case 0.5:
-		return "½"
-	case 0.25:
-		return "¼"
-	}
-	return strconv.FormatFloat(nd, 'f', -1, 64)
-}
+// outsideTheTable é o porquê de o botão se apagar e de o servidor recusar: uma frase só, para a tela e a recusa
+// dizerem o mesmo.
+const outsideTheTable = "A Tabela 7-2 vai do ND 1/2 ao 20 (p323)."
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v View) string {

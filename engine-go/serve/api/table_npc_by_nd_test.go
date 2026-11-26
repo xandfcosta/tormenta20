@@ -54,14 +54,14 @@ func TestFillingTheNPCByTheNDWritesTheDraftAndSavesNothing(t *testing.T) {
 	}
 }
 
-// FORA DA TABELA não há número: o ND ¼ do Bandido e o 21 não têm linha na Tabela 7-2, e a recusa diz por quê,
+// FORA DA TABELA não há número: o ND 1/4 do Bandido e o 21 não têm linha na Tabela 7-2, e a recusa diz por quê,
 // dentro do editor (decisão do dono).
 func TestFillingOutsideTheTableIsRefusedWithTheReason(t *testing.T) {
 	f := newSceneFixture(t)
 	for _, nd := range []string{"0.25", "21"} {
 		response := f.posts(t, f.gm, f.tableUrl()+"/elenco/npc/rascunho/preencher-pelo-nd", npcAtND(nd))
-		if !strings.Contains(response, "draft_error") || !strings.Contains(response, "Tabela 7-2") || !strings.Contains(response, "½ ao 20") {
-			t.Errorf("o ND %s não foi recusado dizendo que a Tabela 7-2 vai do ND ½ ao 20:\n%.500s", nd, response)
+		if !strings.Contains(response, "draft_error") || !strings.Contains(response, "Tabela 7-2") || !strings.Contains(response, "1/2 ao 20") {
+			t.Errorf("o ND %s não foi recusado dizendo que a Tabela 7-2 vai do ND 1/2 ao 20:\n%.500s", nd, response)
 		}
 	}
 }

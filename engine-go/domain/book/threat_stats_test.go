@@ -6,8 +6,8 @@ import (
 	"t20engine/domain/creature"
 )
 
-// A TABELA 7-2 PELO ND (p323), com o patamar da p35: o ND ½ é Iniciante, o 5 é Veterano, o 20 é Lenda. Fora da
-// tabela — o ND ¼ do Bandido, ou acima de 20 — não há linha, e o app não inventa uma.
+// A TABELA 7-2 PELO ND (p323), com o patamar da p35: o ND 1/2 é Iniciante, o 5 é Veterano, o 20 é Lenda. Fora da
+// tabela — o ND 1/4 do Bandido, ou acima de 20 — não há linha, e o app não inventa uma.
 func TestTheThreatStatsComeFromTheNDRow(t *testing.T) {
 	for _, c := range []struct {
 		nd           float64
@@ -30,7 +30,7 @@ func TestTheThreatStatsComeFromTheNDRow(t *testing.T) {
 	}
 	for _, nd := range []float64{0.25, 21, 0} {
 		if _, ok := ThreatStatsFor(nd); ok {
-			t.Errorf("ND %v achou linha, e a Tabela 7-2 vai do ½ ao 20", nd)
+			t.Errorf("ND %v achou linha, e a Tabela 7-2 vai do 1/2 ao 20", nd)
 		}
 	}
 }

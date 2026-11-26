@@ -310,7 +310,7 @@ templ fillByND(v View) {
 		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": fillByNDCommand(v), "data-attr:disabled": "!(" + ndInTheTable() + ")"}) {
 			Preencher pelo ND
 		}
-		<p class="ds-help" data-show={ "!(" + ndInTheTable() + ")" }>A Tabela 7-2 vai do ND ½ ao 20 (p323).</p>
+		<p class="ds-help" data-show={ "!(" + ndInTheTable() + ")" }>{ outsideTheTable }</p>
 		<p class="ds-help" data-show="$draft_guide !== ''" data-text="$draft_guide"></p>
 	</div>
 }

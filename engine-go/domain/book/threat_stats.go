@@ -54,7 +54,7 @@ func threatRows() ([]ThreatRow, []ThreatTier) {
 	return threatTable.Rows, threatTable.Tiers
 }
 
-// ThreatNDs são os NDs que têm linha na Tabela 7-2, na ordem dela: ½ e 1 a 20.
+// ThreatNDs são os NDs que têm linha na Tabela 7-2, na ordem dela: 1/2 e 1 a 20.
 func ThreatNDs() []float64 {
 	rows, _ := threatRows()
 	nds := make([]float64, len(rows))
@@ -64,8 +64,8 @@ func ThreatNDs() []float64 {
 	return nds
 }
 
-// ThreatStatsFor é a linha do ND na Tabela 7-2, ou false fora dela: a tabela vai do ND ½ ao 20, e um ND entre
-// linhas (o ¼ do Bandido) ou acima de 20 não tem número no livro — inventar um seria regra que ele não tem.
+// ThreatStatsFor é a linha do ND na Tabela 7-2, ou false fora dela: a tabela vai do ND 1/2 ao 20, e um ND entre
+// linhas (o 1/4 do Bandido) ou acima de 20 não tem número no livro — inventar um seria regra que ele não tem.
 //
 //	book.ThreatStatsFor(5) // {Attack: 18, Attacks: 2, Defense: 28, HP: 150, …, Tier: Veterano}
 func ThreatStatsFor(nd float64) (ThreatStats, bool) {

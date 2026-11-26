@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/domain/book"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -38,7 +39,7 @@ var tableRow = regexp.MustCompile(`^(?:[A-Za-zÀ-ú]+ )?(1/2|\d+) \+(\d+)(?:, x(
 var tierPackage = regexp.MustCompile(`(Iniciante|Veterano|Campeão|Lenda): ((?:[–-]?\d, ){5}[–-]?\d)`)
 
 func main() {
-	book, err := bookpdf.Open()
+	pdf, err := bookpdf.Open()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -49,32 +50,32 @@ func main() {
 		fmt.Printf("  FALHA "+format+"\n", args...)
 	}
 
-	fromBook := bookRows(book)
+	fromBook := bookRows(pdf)
 	catalog := map[float64]transcript.ThreatStatsRow{}
 	for _, r := range transcript.ThreatStats.Rows {
 		catalog[r.ND] = r
 	}
 	fmt.Printf("TABELA 7-2       livro: %d linhas · catálogo: %d linhas\n", len(fromBook), len(catalog))
-	// O DENOMINADOR: o ND ½ e os vinte inteiros. Uma leitura que perdesse linhas conferiria só as que achou.
+	// O DENOMINADOR: o ND 1/2 e os vinte inteiros. Uma leitura que perdesse linhas conferiria só as que achou.
 	if len(fromBook) != 21 {
-		fail("o livro rendeu %d linhas, e a Tabela 7-2 tem 21 (ND ½ e 1 a 20): defeito de LEITURA", len(fromBook))
+		fail("o livro rendeu %d linhas, e a Tabela 7-2 tem 21 (ND 1/2 e 1 a 20): defeito de LEITURA", len(fromBook))
 	}
 	for _, b := range fromBook {
 		c, ok := catalog[b.ND]
 		if !ok {
-			fail("ND %s está no livro e não no catálogo", ndWritten(b.ND))
+			fail("ND %s está no livro e não no catálogo", book.CRWritten(b.ND))
 			continue
 		}
 		if c != b {
-			fail("ND %s: o catálogo diz %+v e o livro %+v", ndWritten(b.ND), c, b)
+			fail("ND %s: o catálogo diz %+v e o livro %+v", book.CRWritten(b.ND), c, b)
 		}
 		delete(catalog, b.ND)
 	}
 	for nd := range catalog {
-		fail("ND %s está no catálogo e não no livro", ndWritten(nd))
+		fail("ND %s está no catálogo e não no livro", book.CRWritten(nd))
 	}
 
-	packages := bookPackages(book)
+	packages := bookPackages(pdf)
 	fmt.Printf("PATAMARES        livro: %d pacotes · catálogo: %d patamares\n", len(packages), len(transcript.ThreatStats.Tiers))
 	if len(packages) != 4 {
 		fail("o livro rendeu %d pacotes de atributos, e a p322 tem 4", len(packages))
@@ -156,11 +157,4 @@ func number(s string) int {
 		panic(fmt.Sprintf("o número %q do livro não é inteiro: %v", s, err))
 	}
 	return n
-}
-
-func ndWritten(nd float64) string {
-	if nd == 0.5 {
-		return "½"
-	}
-	return strconv.FormatFloat(nd, 'f', -1, 64)
 }

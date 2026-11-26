@@ -158,7 +158,7 @@ func (s Scene) fillByND(w http.ResponseWriter, r *http.Request) {
 	stats, found := book.ThreatStatsFor(draft.Block.ND)
 	if !found {
 		writeSignals(w, r, map[string]any{"draft_error": fmt.Sprintf(
-			"A Tabela 7-2 vai do ND ½ ao 20 (p323), e este NPC está no ND %s: escreva os números à mão.", ndWritten(draft.Block.ND))})
+			"%s Este NPC está no ND %s: escreva os números à mão.", outsideTheTable, book.CRWritten(draft.Block.ND))})
 		return
 	}
 	draft.Block = stats.FillBlock(draft.Block)
