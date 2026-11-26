@@ -27,6 +27,7 @@ import (
 	"strings"
 	"t20engine/cmd/internal/pyfmt"
 
+	"t20engine/cmd/internal/auditscope"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -218,7 +219,7 @@ func audit(book *bookpdf.Book) int {
 	inApp := map[string]transcript.Item{}
 	var appOrder []string
 	for _, it := range transcript.Items {
-		if !it.Artifact {
+		if auditscope.Of(it) != auditscope.Artifacts {
 			continue
 		}
 		k := bookpdf.Key(it.Name)

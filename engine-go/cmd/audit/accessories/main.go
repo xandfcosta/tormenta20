@@ -23,6 +23,7 @@ import (
 	"strings"
 	"t20engine/cmd/internal/pyfmt"
 
+	"t20engine/cmd/internal/auditscope"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -158,11 +159,13 @@ func audit(book *bookpdf.Book) int {
 }
 
 // apparelByKey são os acessórios pelo nome normalizado; o último de um nome
-// repetido vence, como no dicionário do auditor original.
+// repetido vence, como no dicionário do auditor original. São os deste auditor
+// pela regra comum (`auditscope.Of`): o `apparel` do capítulo 3 é do
+// `equipment`, e o artefato é do `artifacts`.
 func apparelByKey() map[string]*transcript.Item {
 	out := map[string]*transcript.Item{}
 	for i := range transcript.Items {
-		if it := &transcript.Items[i]; it.Category == "apparel" {
+		if it := &transcript.Items[i]; auditscope.Of(*it) == auditscope.Accessories {
 			out[bookpdf.Key(it.Name)] = it
 		}
 	}
