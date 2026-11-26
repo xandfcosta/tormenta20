@@ -61,11 +61,18 @@ que ele compra com esse atrito é tempo de interpretação.
 o vencedor e aplica os efeitos em cada um. Quem diz quem venceu, e o que isso
 causa, é o mestre — na voz.
 
-Isto cortou fatias inteiras que o livro descreve e que seriam fiéis a ele: o
-TESTE OPOSTO e o AJUDAR da p220-221, e os TESTES ESTENDIDOS da p222-223. As três
-pressupõem um turno dentro do sistema com embate de dados e um vencedor
-anunciado, e é exatamente essa a linha. Elas ficaram fora de escopo de
-propósito, e não se reabrem achando que foram esquecidas.
+Isto cortou fatias que o livro descreve e que seriam fiéis a ele: o TESTE
+OPOSTO e o AJUDAR da p220-221. Os dois pressupõem um turno dentro do sistema com
+embate de dados e um vencedor anunciado, e é exatamente essa a linha. Ficaram
+fora de escopo de propósito, e não se reabrem achando que foram esquecidos.
+
+O TESTE ESTENDIDO da p222-223 saiu pela mesma razão e voltou por decisão do
+dono, na forma que não cruza a linha: ele é um CONTADOR que o mestre abre e
+alimenta. O jogador rola a perícia como em qualquer teste, sem CD nem veredito;
+o MESTRE marca cada resultado — sucesso, sucesso que conta dois, ou falha —, e o
+app só soma e mostra, às duas sessões, quanto falta e o que o livro prevê ao
+chegar lá. O app não compara a rolagem com uma CD, não marca sozinho e não
+aplica a falha total: o que o desfecho causa é o mestre quem diz.
 
 ### A fronteira não é "rolar"; é "julgar"
 
