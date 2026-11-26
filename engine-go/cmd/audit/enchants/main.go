@@ -227,7 +227,7 @@ func audit(book *bookpdf.Book, p profile) int {
 		// nada dele — falsa em dez dos vinte e oito, e o efeito era SILÊNCIO:
 		// escrever a nota honesta reprovava (ALE-459). Quem aplica EM PARTE diz
 		// as duas coisas, e o `modeled` impede a nota de virar desculpa.
-		hasModel := len(entry.Modifiers) > 0
+		hasModel := appliesSomething(entry)
 		reason := ""
 		if entry.Unmodeled != nil {
 			reason = entry.Unmodeled.Note
@@ -272,4 +272,13 @@ func audit(book *bookpdf.Book, p profile) int {
 		fmt.Printf("  %s\n", f)
 	}
 	return len(failures)
+}
+
+// appliesSomething diz se o motor aplica alguma regra do encanto: um modificador fixo, ou o IMPULSO — o gasto de PM
+// no golpe com o seu efeito (`Boost`), que é como o Anticriatura entra inteiro (+4d8 contra o tipo escolhido) e o
+// Corrosivo entra em parte. Contar só os modificadores lia o impulso como silêncio.
+//
+//	appliesSomething(transcript.Item{Boost: &transcript.ItemBoost{PM: 2}}) // true
+func appliesSomething(entry transcript.Item) bool {
+	return len(entry.Modifiers) > 0 || entry.Boost != nil
 }
