@@ -75,7 +75,12 @@ func (r SpellCastRoll) Head() string {
 	case RollOfTheAction:
 		return r.Who + " · " + r.Spell + " · " + r.Option
 	case RollOfTheMark:
-		return r.Who + " · " + r.Spell + " · " + MomentWritten(r.Moment) + " de " + r.Target
+		// A marca do PERIGO não tem conjurador, e a cabeça começa pela origem.
+		head := r.Spell + " · " + MomentWritten(r.Moment) + " de " + r.Target
+		if r.Who == "" {
+			return head
+		}
+		return r.Who + " · " + head
 	case RollOfTheCondition:
 		return r.Target + " · " + r.Condition + " · " + MomentWritten(r.Moment)
 	}
