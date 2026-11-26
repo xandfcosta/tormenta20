@@ -30,8 +30,8 @@ func Routes(r chi.Router, s Scene) {
 	// Cada catálogo é uma parada do menu, e parada do menu é uma cena: a aba
 	// vem do CAMINHO. O laço, e não dez linhas escritas, para o catálogo que
 	// entrar amanhã ganhar rota sozinho.
-	for _, aba := range collectionTabs {
-		r.Get("/mestre/"+aba.ID, s.handleCollection)
+	for _, catalog := range collectionCatalogs {
+		r.Get("/mestre/"+catalog.Stop.Slug, s.handleCollection)
 	}
 	r.Get("/mestre/encontros", s.handleEncounters)
 	r.Post("/mestre/encontros/adicionar/{id}", s.handleEncounterAdd)

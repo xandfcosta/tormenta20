@@ -229,7 +229,7 @@ func TestTheGmSceneTalksToTheGmRoute(t *testing.T) {
 
 // O trilho lista TODOS os catálogos.
 //
-// Por AMOSTRAGEM sobre `collectionTabs` e não por lista escrita à mão: um número
+// Por AMOSTRAGEM sobre `collectionCatalogs` e não por lista escrita à mão: um número
 // de paradas escrito à mão fica vermelho por envelhecer, e não por defeito. Aqui
 // o catálogo novo entra medido no dia em que entra na lista.
 //
@@ -238,9 +238,9 @@ func TestTheGmSceneTalksToTheGmRoute(t *testing.T) {
 func TestTheRailHasOneStopPerCatalog(t *testing.T) {
 	body := pedeNaCena(t, "/mestre/condicoes").Body.String()
 
-	for _, a := range collectionTabs {
-		if !strings.Contains(body, `href="/mestre/`+a.ID+`"`) {
-			t.Errorf("o catálogo %q não tem parada no trilho", a.ID)
+	for _, c := range collectionCatalogs {
+		if !strings.Contains(body, `href="/mestre/`+c.Stop.Slug+`"`) {
+			t.Errorf("o catálogo %q não tem parada no trilho", c.Stop.Slug)
 		}
 	}
 	// O bestiário é catálogo como os outros, e as duas ferramentas

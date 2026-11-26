@@ -311,9 +311,10 @@ func CharacterCatalogs() ([]Race, []Class, []God) {
 
 // Os três catálogos DO PERSONAGEM no acervo do mestre: raça, classe e divindade.
 //
-// Eles ficam no FIM da fileira de abas porque a ordem segue a frequência da
-// consulta (ver `collectionTabs`): condição, magia, poder e item são consulta de
-// MESA, aberta no meio do combate; raça, classe e deus são consulta de CRIAÇÃO.
+// Eles ficam no FIM da busca unificada do mestre porque a ordem segue a
+// frequência da consulta (ver `collectionCatalogs`): condição, magia, poder e
+// item são consulta de MESA, aberta no meio do combate; raça, classe e deus são
+// consulta de CRIAÇÃO.
 //
 // A CLASSE é o caso especial e vale dizer o que ela NÃO tem: três campos apenas
 // — id, nome e página. PV, PM e proficiências são transcrição de tabela, e

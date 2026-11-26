@@ -19,7 +19,7 @@ import (
 // espera de uma linha de crachás, e é o que a lista de tipos já fazia.
 //
 // Os filtros SOMEM durante a busca. Com termo digitado a cena responde outra
-// pergunta — os oito catálogos, não este —, e um crachá de círculo aceso sobre
+// pergunta — todos os catálogos, não este —, e um crachá de círculo aceso sobre
 // uma lista que tem itens e condições diria que ele está filtrando o que não
 // filtra.
 
@@ -37,45 +37,6 @@ type collectionFilter struct {
 	Key     string
 	Label   string
 	Options []filterOption
-}
-
-// filtersForTab diz quais linhas de crachá aquele catálogo mostra.
-//
-// Classes (14) e Efeitos (18) não têm nenhuma, e é decisão e não esquecimento:
-// numa lista que cabe na tela, filtro é cromo que não poupa rolagem.
-func filtersForTab(aba string) []collectionFilter {
-	switch aba {
-	case "condicoes":
-		return []collectionFilter{{Key: "efeito", Label: "Tipo de efeito", Options: effectOptions()}}
-	case "perigos":
-		return []collectionFilter{{Key: "tipo", Label: "Tipo", Options: hazardKindOptions()}}
-	case "magias":
-		return []collectionFilter{
-			{Key: "circulo", Label: "Círculo", Options: circleOptions()},
-			{Key: "escola", Label: "Escola", Options: schoolOptions()},
-			{Key: "classe", Label: "Classe", Options: spellClassOptions()},
-		}
-	case "pericias":
-		return []collectionFilter{
-			{Key: "atributo", Label: "Atributo", Options: attributeOptions()},
-			{Key: "treino", Label: "Treino", Options: []filterOption{
-				{"so-treinada", "Só treinada"}, {"armadura", "Penalidade de armadura"},
-			}},
-		}
-	case "poderes":
-		return []collectionFilter{{Key: "fonte", Label: "Fonte", Options: powerSourceOptions()}}
-	case "itens":
-		return []collectionFilter{{Key: "familia", Label: "Família", Options: itemFamilies}}
-	case "deuses":
-		return []collectionFilter{{Key: "energia", Label: "Energia", Options: []filterOption{
-			{"positiva", "Positiva"}, {"negativa", "Negativa"}, {"qualquer", "Qualquer"},
-		}}}
-	case "racas":
-		return []collectionFilter{{Key: "linhagem", Label: "Linhagem", Options: []filterOption{
-			{"comum", "Comum"}, {"extra", "Exótica"},
-		}}}
-	}
-	return nil
 }
 
 // ── as opções que saem do próprio catálogo ───────────────────────────────────

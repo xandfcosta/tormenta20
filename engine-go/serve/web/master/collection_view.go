@@ -12,7 +12,8 @@ import (
 	"t20engine/domain/book"
 )
 
-// OS CATÁLOGOS do mestre: condições, magias, poderes e itens numa busca só.
+// A CENA dos Catálogos do mestre: um catálogo por aba, e todos numa busca só.
+// Quais são os catálogos, e o que cada um sabe fazer, é do `collectionCatalogs`.
 //
 // A cena manda TUDO, e não uma lista virtualizada: o custo é DOM no telefone, e
 // o que se compra com ele é o mestre poder rolar a lista inteira e usar o Ctrl+F
@@ -47,104 +48,27 @@ func matchesAllTerms(fields []string, query string) bool {
 
 // ── o que se busca ───────────────────────────────────────────────────────────
 
-// collectionTab é uma parada da fileira de abas.
-type collectionTab struct {
-	ID    string
-	Label string
-}
-
-// A ORDEM é por frequência na mesa: condição primeiro, porque é a consulta mais
-// comum no meio do combate, e o perigo logo depois, porque a armadilha e a
-// doença se consultam na hora em que disparam. Raça, classe e deus vão no FIM
-// porque são consulta de CRIAÇÃO de personagem, e não de mesa com o combate em
-// curso.
-var collectionTabs = []collectionTab{
-	{"condicoes", "Condições"},
-	{"perigos", "Perigos"},
-	{"magias", "Magias"},
-	{"pericias", "Perícias"},
-	{"poderes", "Poderes"},
-	{"itens", "Itens"},
-	{"efeitos", "Efeitos"},
-	{"escolas", "Escolas"},
-	{"racas", "Raças"},
-	{"classes", "Classes"},
-	{"deuses", "Deuses"},
-}
-
-// tabLabel devolve o nome que a fileira mostra, para a frase de volta não
-// dizer "condicoes" com a cara de chave.
-func tabLabel(id string) string {
-	for _, a := range collectionTabs {
-		if a.ID == id {
-			return a.Label
-		}
-	}
-	return id
-}
-
-func knownTab(id string) string {
-	for _, a := range collectionTabs {
-		if a.ID == id {
-			return id
-		}
-	}
-	// Aba desconhecida cai na primeira em vez de mostrar tela vazia: o `?aba=`
-	// é endereço e alguém o digita errado.
-	return collectionTabs[0].ID
-}
+// tabLabel devolve o nome que o trilho mostra, para a frase de volta não dizer
+// "condicoes" com a cara de chave.
+func tabLabel(aba string) string { return catalogNamed(aba).Stop.Label }
 
 // collectionGroup é um catálogo com o que sobrou do filtro. Grupo VAZIO não é
 // montado: cabeçalho sobre nada é ruído numa consulta no meio do combate.
 type collectionGroup struct {
-	Label      string
-	Conditions []book.Condition
-	Hazards    []book.Hazard
-	Spells     []book.Spell
-	Powers     []book.Power
-	Items      []book.Item
-	Effects    []book.EffectKind
-	Schools    []book.SpellSchool
-	Expertises []book.Expertise
-	Races      []book.Race
-	Classes    []book.Class
-	Gods       []book.God
+	Label   string
+	Entries []collectionEntry
 }
 
 // entryName é o nome do primeiro verbete do grupo, ou vazio. Quem o chama é a caixa
 // do elo, em que o grupo tem um verbete só.
 func (g collectionGroup) entryName() string {
-	switch {
-	case len(g.Conditions) > 0:
-		return g.Conditions[0].Name
-	case len(g.Hazards) > 0:
-		return g.Hazards[0].Name
-	case len(g.Spells) > 0:
-		return g.Spells[0].Name
-	case len(g.Powers) > 0:
-		return g.Powers[0].Name
-	case len(g.Items) > 0:
-		return g.Items[0].Name
-	case len(g.Effects) > 0:
-		return g.Effects[0].Name
-	case len(g.Schools) > 0:
-		return g.Schools[0].Name
-	case len(g.Expertises) > 0:
-		return g.Expertises[0].Name
-	case len(g.Races) > 0:
-		return g.Races[0].Name
-	case len(g.Classes) > 0:
-		return g.Classes[0].Name
-	case len(g.Gods) > 0:
-		return g.Gods[0].Name
+	if len(g.Entries) == 0 {
+		return ""
 	}
-	return ""
+	return g.Entries[0].Name
 }
 
-func (g collectionGroup) Count() int {
-	return len(g.Conditions) + len(g.Hazards) + len(g.Spells) + len(g.Powers) + len(g.Items) +
-		len(g.Effects) + len(g.Schools) + len(g.Expertises) + len(g.Races) + len(g.Classes) + len(g.Gods)
-}
+func (g collectionGroup) Count() int { return len(g.Entries) }
 
 // collectionCriteria é o que a URL (ou os sinais) pedem da cena.
 type collectionCriteria struct {
@@ -152,7 +76,7 @@ type collectionCriteria struct {
 	Aba  string
 	// Entry é o ID de UM verbete, e ela ganha de tudo: com ela a cena mostra
 	// aquele verbete sozinho. É o endereço que um ELO usa — quem clica em "Medo"
-	// pediu o Medo, não uma busca por "medo" nos oito catálogos.
+	// pediu o Medo, não uma busca por "medo" em todos os catálogos.
 	Entry string
 	// Filters são os crachás acesos, por chave (`{"circulo": ["2","3"]}`). Vêm
 	// da URL na carga fria e dos sinais quando o Datastar chama, como a busca.
@@ -214,15 +138,16 @@ func (v collectionView) groupCount(g collectionGroup) string {
 	return fmt.Sprintf("%d de %d", g.Count(), v.Total)
 }
 
-// loadCollection monta a cena: os quatro catálogos quando há busca, um só
+// loadCollection monta a cena: todos os catálogos quando há busca, um só
 // quando não há.
 func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collectionView {
 	v := collectionView{
 		Term: c.Term, Aba: knownTab(c.Aba), Book: bookRef, Entry: c.Entry,
 		Lit: c.Filters,
 	}
-	v.Filters = filtersForTab(v.Aba)
-	v.Total = groupForTab(book.Catalogs(), v.Aba, nil).Count()
+	catalog := catalogNamed(v.Aba)
+	v.Filters = catalog.Filters()
+	v.Total = catalog.group(nil).Count()
 	// A ENTRADA vem primeiro e encerra: ela é um endereço para um verbete só, e
 	// misturá-la com busca daria uma tela que responde duas perguntas.
 	if c.Entry != "" {
@@ -230,30 +155,15 @@ func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collection
 		v.Findings = v.Groups[0].Count()
 		return v
 	}
-	search := c.Term
-	a := book.Catalogs()
 
 	if !v.Searching() {
-		v.Groups = []collectionGroup{groupForTab(a, v.Aba, c.Filters)}
+		v.Groups = []collectionGroup{catalog.group(c.Filters)}
 		v.Findings = v.Groups[0].Count()
 		return v
 	}
 
-	races, classes, _ := book.CharacterCatalogs()
-	gods := book.CatalogGods()
-	for _, g := range []collectionGroup{
-		{Label: "Condições", Conditions: filter(a.Conditions, book.ConditionFields, search)},
-		{Label: "Perigos", Hazards: filter(book.Hazards(), book.HazardFields, search)},
-		{Label: "Magias", Spells: filter(a.Spells, book.SpellFields, search)},
-		{Label: "Poderes", Powers: filter(a.Powers, book.PowerFields, search)},
-		{Label: "Itens", Items: filter(a.Items, book.ItemFields, search)},
-		{Label: "Efeitos", Effects: filter(book.EffectKinds(), book.EffectFields, search)},
-		{Label: "Escolas", Schools: filter(book.SpellSchools(), book.SchoolFields, search)},
-		{Label: "Perícias", Expertises: filter(book.Expertises(), book.ExpertiseFields, search)},
-		{Label: "Raças", Races: filter(races, book.RaceFields, search)},
-		{Label: "Classes", Classes: filter(classes, book.ClassFields, search)},
-		{Label: "Deuses", Gods: filter(gods, book.GodFields, search)},
-	} {
+	for _, catalog := range collectionCatalogs {
+		g := collectionGroup{Label: catalog.Stop.Label, Entries: catalog.matching(c.Term)}
 		if g.Count() == 0 {
 			continue
 		}
@@ -275,62 +185,14 @@ func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collection
 func groupForEntry(aba, id string) collectionGroup {
 	// Sem filtro: o elo pede UM verbete pelo id, e um crachá aceso na cena de
 	// origem não pode esconder o destino do elo.
-	whole := groupForTab(book.Catalogs(), aba, nil)
-	return collectionGroup{
-		Label:      whole.Label,
-		Conditions: withID(whole.Conditions, id, func(c book.Condition) string { return c.ID }),
-		Hazards:    withID(whole.Hazards, id, func(h book.Hazard) string { return h.ID }),
-		Spells:     withID(whole.Spells, id, func(m book.Spell) string { return m.ID }),
-		Powers:     withID(whole.Powers, id, func(p book.Power) string { return p.ID }),
-		Items:      withID(whole.Items, id, func(i book.Item) string { return i.ID }),
-		Effects:    withID(whole.Effects, id, func(e book.EffectKind) string { return e.ID }),
-		Schools:    withID(whole.Schools, id, func(e book.SpellSchool) string { return e.ID }),
-		Expertises: withID(whole.Expertises, id, func(p book.Expertise) string { return p.ID }),
-		Races:      withID(whole.Races, id, func(r book.Race) string { return r.ID }),
-		Classes:    withID(whole.Classes, id, func(c book.Class) string { return c.ID }),
-		Gods:       withID(whole.Gods, id, func(d book.God) string { return d.ID }),
-	}
-}
-
-// withID são os verbetes da lista com aquele id: um, ou nenhum.
-func withID[T any](list []T, id string, idOf func(T) string) []T {
-	var outside []T
-	for _, e := range list {
-		if idOf(e) == id {
-			outside = append(outside, e)
+	whole := catalogNamed(aba).group(nil)
+	outside := collectionGroup{Label: whole.Label}
+	for _, e := range whole.Entries {
+		if e.ID == id {
+			outside.Entries = append(outside.Entries, e)
 		}
 	}
 	return outside
-}
-
-// groupForTab monta o catálogo da cena, já com os crachás aplicados.
-func groupForTab(a book.GMCatalogs, aba string, lit map[string][]string) collectionGroup {
-	races, classes, _ := book.CharacterCatalogs()
-	gods := book.CatalogGods()
-	switch aba {
-	case "perigos":
-		return collectionGroup{Label: "Perigos", Hazards: applyFilters(book.Hazards(), lit, hazardMatches)}
-	case "magias":
-		return collectionGroup{Label: "Magias", Spells: applyFilters(a.Spells, lit, spellMatches)}
-	case "poderes":
-		return collectionGroup{Label: "Poderes", Powers: applyFilters(a.Powers, lit, powerMatches)}
-	case "itens":
-		return collectionGroup{Label: "Itens", Items: applyFilters(a.Items, lit, itemMatches)}
-	case "efeitos":
-		return collectionGroup{Label: "Efeitos", Effects: book.EffectKinds()}
-	case "escolas":
-		return collectionGroup{Label: "Escolas", Schools: book.SpellSchools()}
-	case "pericias":
-		return collectionGroup{Label: "Perícias", Expertises: applyFilters(book.Expertises(), lit, expertiseMatches)}
-	case "racas":
-		return collectionGroup{Label: "Raças", Races: applyFilters(races, lit, raceMatches)}
-	case "classes":
-		return collectionGroup{Label: "Classes", Classes: classes}
-	case "deuses":
-		return collectionGroup{Label: "Deuses", Gods: applyFilters(gods, lit, godMatches)}
-	default:
-		return collectionGroup{Label: "Condições", Conditions: applyFilters(a.Conditions, lit, conditionMatches)}
-	}
 }
 
 func filter[T any](list []T, fields func(T) []string, search string) []T {

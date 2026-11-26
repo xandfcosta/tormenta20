@@ -46,7 +46,7 @@ func (s Scene) handleCollection(w http.ResponseWriter, r *http.Request) {
 // estado que ela não sabe desenhar.
 func filtersFromURL(q url.Values, aba string) map[string][]string {
 	outside := map[string][]string{}
-	for _, f := range filtersForTab(knownTab(aba)) {
+	for _, f := range catalogNamed(aba).Filters() {
 		if values := q[f.Key]; len(values) > 0 {
 			outside[f.Key] = values
 		}
@@ -82,7 +82,7 @@ func collectionCriteriaFromRequest(r *http.Request) collectionCriteria {
 	// toda cena declarar os filtros das outras.
 	var all map[string]json.RawMessage
 	if err := datastar.ReadSignals(r, &all); err == nil {
-		for _, f := range filtersForTab(knownTab(aba)) {
+		for _, f := range catalogNamed(aba).Filters() {
 			var values []string
 			if raw, found := all[f.Key]; found && json.Unmarshal(raw, &values) == nil {
 				c.Filters[f.Key] = values

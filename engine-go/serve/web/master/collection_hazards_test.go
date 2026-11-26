@@ -44,7 +44,7 @@ func TestTheHazardFilterSeparatesTheKinds(t *testing.T) {
 func TestTheUnifiedSearchFindsTheHazard(t *testing.T) {
 	v := loadCollection(collectionCriteria{Term: "variola"}, bookui.BookAddress{})
 	for _, g := range v.Groups {
-		if g.Label == "Perigos" && len(g.Hazards) > 0 {
+		if g.Label == "Perigos" && g.Count() > 0 {
 			return
 		}
 	}
