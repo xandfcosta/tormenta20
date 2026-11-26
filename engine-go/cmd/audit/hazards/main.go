@@ -1,5 +1,6 @@
 // Command hazards confere os perigos do catálogo (p317-319) contra o livro: as armadilhas campo a campo, as doenças
-// pelo contágio, pela CD e pelos efeitos, e o ambiente pelos dados e pelas páginas que a paráfrase cita.
+// pelo contágio, pela CD e pelos efeitos, e o ambiente pelos dados e pelas páginas que a paráfrase cita e pelo dano
+// por rodada de quem fica nele.
 //
 // As armadilhas se leem pela FICHA, que o livro escreve numa frase só terminada em "ND x." — cortar o texto nesses
 // pontos dá uma ficha por pedaço, na ordem do livro. A armadilha MÁGICA é a do nome em itálico (p317), e o itálico
@@ -31,6 +32,9 @@ var (
 	diceRe    = regexp.MustCompile(`\d+d\d+(?:\+\d+)?`)
 	citedPage = regexp.MustCompile(`página \d+`)
 	diseaseRe = regexp.MustCompile(`(Contato|Inalação), CD (\d+), vítima (?:fica )?([^.]*)\.`)
+	roundsRe  = regexp.MustCompile(`durante (\d+d\d+) rodadas`)
+	// perExposure é o dano por rodada de exposição (p317, p319): o denominador do ambiente que rola na fila.
+	perExposure = regexp.MustCompile(`por rodada de exposição`)
 )
 
 func main() {
@@ -121,6 +125,15 @@ func auditTraps(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(string
 			if diceRe.MatchString(d.Dice) && !strings.Contains(entry, d.Dice) {
 				fail("%s: o dado %s do catálogo não está na ficha do livro", trap.Name, d.Dice)
 			}
+		}
+		// AS RODADAS conferem nos dois sentidos: a ficha que dura e o catálogo que não diz quanto deixaria o gás
+		// rolar uma vez só na mesa.
+		inBook := ""
+		if r := roundsRe.FindStringSubmatch(entry); r != nil {
+			inBook = r[1]
+		}
+		if inBook != t.Rounds {
+			fail("%s: o dano dura %q rodadas no livro e %q no catálogo", trap.Name, inBook, t.Rounds)
 		}
 		if italic := inItalic(magical, trap.Name); italic != t.Magical {
 			fail("%s: mágica no livro (nome em itálico) %v, no catálogo %v", trap.Name, italic, t.Magical)
@@ -231,7 +244,7 @@ func auditDiseases(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(str
 }
 
 func auditAmbient(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(string, ...any)) int {
-	measured := 0
+	measured, exposed := 0, 0
 	texts := map[int]string{}
 	for _, h := range catalog {
 		if _, ok := texts[h.BookPage]; !ok {
@@ -248,6 +261,23 @@ func auditAmbient(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(stri
 				fail("%s: a paráfrase cita %s, e a p%d não tem esse dado", h.Name, d, h.BookPage)
 			}
 		}
+		for _, e := range h.Exposures {
+			// O DADO COM O TIPO E O "POR RODADA", na frase do livro: "10d6 pontos de dano por rodada", "2d6 pontos
+			// de dano de fogo por rodada". O dado solto casaria com o 1d6 de qualquer outro parágrafo da página.
+			said := e.Dice + " pontos de dano"
+			if e.Kind != "" {
+				said += " de " + e.Kind
+			}
+			if !strings.Contains(page, said+" por rodada") {
+				fail("%s: a %s diz %q por rodada, e a p%d não tem essa frase", h.Name, e.Name, said, h.BookPage)
+			}
+			if e.Lingers && !strings.Contains(page, "persiste por uma rodada adicional") {
+				fail("%s: a %s persiste uma rodada depois de sair, e a p%d não diz isso", h.Name, e.Name, h.BookPage)
+			}
+			if e.ID == "exposicao" {
+				exposed++
+			}
+		}
 		for _, cited := range citedPage.FindAllString(h.Description, -1) {
 			if !strings.Contains(page, cited) {
 				fail("%s: a paráfrase diz %q, e a p%d não cita essa página", h.Name, cited, h.BookPage)
@@ -255,6 +285,16 @@ func auditAmbient(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(stri
 		}
 	}
 	fmt.Printf("AMBIENTE         medidos: %d de %d\n", measured, len(catalog))
+	// O DENOMINADOR do dano por rodada: o perigo que o livro faz rolar "por rodada de exposição" e o catálogo não
+	// sabe expor ficaria fora da página Perigos sem ninguém notar.
+	inBook := 0
+	for page := range texts {
+		inBook += len(perExposure.FindAllString(texts[page], -1))
+	}
+	fmt.Printf("EXPOSIÇÃO        livro: %d · catálogo: %d\n", inBook, exposed)
+	if inBook != exposed {
+		fail("o livro tem %d dano(s) por rodada de exposição e o catálogo expõe %d", inBook, exposed)
+	}
 	return measured
 }
 
