@@ -31,9 +31,7 @@ type filterOption struct {
 
 // collectionFilter é uma LINHA de crachás.
 type collectionFilter struct {
-	// Key é o nome no endereço e no sinal (`?circulo=3`). Minúscula e uma
-	// palavra: ela vira nome de sinal do Datastar, e o analisador de HTML
-	// minuscula nome de atributo.
+	// Key vem da `filterLine`, que é onde ela se escreve.
 	Key     string
 	Label   string
 	Options []filterOption
@@ -99,7 +97,7 @@ func spellClassOptions() []filterOption {
 //
 // A fonte de um poder é a string que o cartão mostra ("Arcanista", "Geral ·
 // combate", "Divino · Khalmyr"), e filtrar por ela inteira daria um crachá por
-// deus. O filtro casa pelo COMEÇO — ver `powerMatches`.
+// deus. O filtro casa pelo COMEÇO — ver a linha `fonte` no `collectionCatalogs`.
 func powerSourceOptions() []filterOption {
 	outside := []filterOption{{"Geral", "Geral"}, {"Divino", "Divino"}}
 	_, classes, _ := book.CharacterCatalogs()
@@ -170,83 +168,20 @@ func attributeOptions() []filterOption {
 	return outside
 }
 
-func expertiseMatches(p book.Expertise, key, value string) bool {
-	switch key {
-	case "atributo":
-		return p.Attribute == value
-	case "treino":
-		// As duas marcas do livro num filtro só: são as duas coisas que mudam
-		// COMO a perícia se usa, e separá-las em duas linhas de um crachá cada
-		// gastaria duas linhas para dizer o que uma diz.
-		return (value == "so-treinada" && p.TrainedOnly) ||
-			(value == "armadura" && p.ArmorPenalty)
-	}
-	return true
-}
-
-func conditionMatches(c book.Condition, key, value string) bool {
-	if key == "efeito" {
-		return slices.Contains(c.Tags, value)
-	}
-	return true
-}
-
-func spellMatches(m book.Spell, key, value string) bool {
-	switch key {
-	case "circulo":
-		return strconv.Itoa(m.Circle) == value
-	case "escola":
-		return m.School == value
-	case "classe":
-		return slices.Contains(m.Classes, value)
-	}
-	return true
-}
-
-// powerMatches pelo COMEÇO da fonte: ela é "Geral · combate" e "Divino · Khalmyr",
-// e o crachá diz "Geral" e "Divino". Para classe a fonte é o nome puro.
-func powerMatches(p book.Power, key, value string) bool {
-	if key == "fonte" {
-		return p.Source == value || strings.HasPrefix(p.Source, value+" ·")
-	}
-	return true
-}
-
-func itemMatches(i book.Item, key, value string) bool {
-	if key == "familia" {
-		return familyOfCategory(i.Category) == value
-	}
-	return true
-}
-
-func godMatches(d book.God, key, value string) bool {
-	if key == "energia" {
-		return d.Energy == value
-	}
-	return true
-}
-
-func raceMatches(r book.Race, key, value string) bool {
-	if key == "linhagem" {
-		return r.Tier == value
-	}
-	return true
-}
-
-// applyFilters é a regra de combinação: OU dentro de um filtro, E entre eles.
+// applyFilters é a regra de combinação: OU dentro de uma linha, E entre elas.
 //
-// A ordem em que as chaves saem do mapa não importa porque tudo entre filtros é
-// E — mas vale dizer, porque um dia alguém acrescenta um "ou" e a ordem passa a
-// decidir o resultado.
-func applyFilters[T any](list []T, chosen map[string][]string, square func(T, string, string) bool) []T {
-	for key, values := range chosen {
+// A ordem das linhas não importa porque tudo entre linhas é E — mas vale dizer,
+// porque um dia alguém acrescenta um "ou" e a ordem passa a decidir o resultado.
+func applyFilters[T any](list []T, chosen map[string][]string, lines []filterLine[T]) []T {
+	for _, line := range lines {
+		values := chosen[line.Key]
 		if len(values) == 0 {
 			continue
 		}
 		var remaining []T
 		for _, entry := range list {
 			for _, value := range values {
-				if square(entry, key, value) {
+				if line.Match(entry, value) {
 					remaining = append(remaining, entry)
 					break
 				}

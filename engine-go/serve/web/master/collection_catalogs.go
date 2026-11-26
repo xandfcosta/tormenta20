@@ -2,6 +2,7 @@ package master
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -47,16 +48,36 @@ type collectionCatalog struct {
 }
 
 // catalogSpec é como um catálogo se DECLARA: de onde vêm os verbetes, o que a
-// busca varre, o que cada crachá casa, e como cada verbete se chama e se desenha.
+// busca varre, as linhas de crachá, e como cada verbete se chama e se desenha.
 type catalogSpec[T any] struct {
 	Stop    railStop
 	Load    func() []T
 	Fields  func(T) []string
-	Filters func() []collectionFilter
-	Matches func(T, string, string) bool
+	Filters []filterLine[T]
 	ID      func(T) string
 	Name    func(T) string
 	Card    func(T, bookui.BookAddress) templ.Component
+}
+
+// filterLine é uma linha de crachás COM o que cada crachá dela casa.
+//
+// A chave mora aqui uma vez só. Ela era escrita na linha e de novo no `switch` de
+// uma função de casamento por catálogo, que terminava em `return true`: uma
+// grafia diferente nos dois lugares fazia o crachá acender e a lista não filtrar,
+// sem erro nenhum.
+type filterLine[T any] struct {
+	// Key é o nome no endereço e no sinal (`?circulo=3`). Minúscula e uma
+	// palavra: ela vira nome de sinal do Datastar, e o analisador de HTML
+	// minuscula nome de atributo.
+	Key     string
+	Label   string
+	Options func() []filterOption
+	Match   func(entry T, value string) bool
+}
+
+// fixedOptions são as opções escritas à mão, para a linha cujo dado não as lista.
+func fixedOptions(options ...filterOption) func() []filterOption {
+	return func() []filterOption { return options }
 }
 
 // catalogOf monta o catálogo a partir da declaração.
@@ -74,17 +95,21 @@ func catalogOf[T any](s catalogSpec[T]) collectionCatalog {
 		}
 		return outside
 	}
-	return collectionCatalog{
-		Stop:    s.Stop,
-		filters: s.Filters,
-		entries: func(lit map[string][]string) []collectionEntry {
-			if s.Matches == nil {
-				return ready(s.Load())
-			}
-			return ready(applyFilters(s.Load(), lit, s.Matches))
-		},
+	c := collectionCatalog{
+		Stop:     s.Stop,
+		entries:  func(lit map[string][]string) []collectionEntry { return ready(applyFilters(s.Load(), lit, s.Filters)) },
 		matching: func(term string) []collectionEntry { return ready(filter(s.Load(), s.Fields, term)) },
 	}
+	if len(s.Filters) > 0 {
+		c.filters = func() []collectionFilter {
+			drawn := make([]collectionFilter, len(s.Filters))
+			for i, line := range s.Filters {
+				drawn[i] = collectionFilter{Key: line.Key, Label: line.Label, Options: line.Options()}
+			}
+			return drawn
+		}
+	}
+	return c
 }
 
 // Filters são as linhas de crachá do catálogo, ou nenhuma.
@@ -112,65 +137,59 @@ var collectionCatalogs = []collectionCatalog{
 		Stop:   railStop{"condicoes", "Condições", "HeartPulse", "As 35 condições do livro e o que cada uma faz."},
 		Load:   func() []book.Condition { return book.Catalogs().Conditions },
 		Fields: book.ConditionFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{{Key: "efeito", Label: "Tipo de efeito", Options: effectOptions()}}
-		},
-		Matches: conditionMatches,
-		ID:      func(c book.Condition) string { return c.ID },
-		Name:    func(c book.Condition) string { return c.Name },
-		Card:    conditionCard,
+		Filters: []filterLine[book.Condition]{{Key: "efeito", Label: "Tipo de efeito", Options: effectOptions,
+			Match: func(c book.Condition, v string) bool { return slices.Contains(c.Tags, v) }}},
+		ID:   func(c book.Condition) string { return c.ID },
+		Name: func(c book.Condition) string { return c.Name },
+		Card: conditionCard,
 	}),
 	catalogOf(catalogSpec[book.Hazard]{
 		Stop:   railStop{"perigos", "Perigos", "AlertTriangle", "Armadilhas, doenças e o ambiente (p317), com CD e ND."},
 		Load:   book.Hazards,
 		Fields: book.HazardFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{{Key: "tipo", Label: "Tipo", Options: hazardKindOptions()}}
-		},
-		Matches: hazardMatches,
-		ID:      func(h book.Hazard) string { return h.ID },
-		Name:    func(h book.Hazard) string { return h.Name },
-		Card:    hazardCard,
+		Filters: []filterLine[book.Hazard]{{Key: "tipo", Label: "Tipo", Options: hazardKindOptions,
+			Match: func(h book.Hazard, v string) bool { return h.Kind == v }}},
+		ID:   func(h book.Hazard) string { return h.ID },
+		Name: func(h book.Hazard) string { return h.Name },
+		Card: hazardCard,
 	}),
 	catalogOf(catalogSpec[book.Spell]{
 		Stop:   railStop{"magias", "Magias", "Wand2", "As 198 magias, por círculo, com aprimoramentos."},
 		Load:   func() []book.Spell { return book.Catalogs().Spells },
 		Fields: book.SpellFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{
-				{Key: "circulo", Label: "Círculo", Options: circleOptions()},
-				{Key: "escola", Label: "Escola", Options: schoolOptions()},
-				{Key: "classe", Label: "Classe", Options: spellClassOptions()},
-			}
+		Filters: []filterLine[book.Spell]{
+			{Key: "circulo", Label: "Círculo", Options: circleOptions,
+				Match: func(m book.Spell, v string) bool { return strconv.Itoa(m.Circle) == v }},
+			{Key: "escola", Label: "Escola", Options: schoolOptions,
+				Match: func(m book.Spell, v string) bool { return m.School == v }},
+			{Key: "classe", Label: "Classe", Options: spellClassOptions,
+				Match: func(m book.Spell, v string) bool { return slices.Contains(m.Classes, v) }},
 		},
-		Matches: spellMatches,
-		ID:      func(m book.Spell) string { return m.ID },
-		Name:    func(m book.Spell) string { return m.Name },
-		Card:    spellCard,
+		ID:   func(m book.Spell) string { return m.ID },
+		Name: func(m book.Spell) string { return m.Name },
+		Card: spellCard,
 	}),
 	catalogOf(catalogSpec[book.Power]{
 		Stop:   railStop{"poderes", "Poderes", "Star", "Poderes de classe, gerais e divinos numa lista só."},
 		Load:   func() []book.Power { return book.Catalogs().Powers },
 		Fields: book.PowerFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{{Key: "fonte", Label: "Fonte", Options: powerSourceOptions()}}
-		},
-		Matches: powerMatches,
-		ID:      func(p book.Power) string { return p.ID },
-		Name:    func(p book.Power) string { return p.Name },
-		Card:    powerCard,
+		// A FONTE casa pelo COMEÇO: ela é "Geral · combate" e "Divino · Khalmyr",
+		// e o crachá é a família.
+		Filters: []filterLine[book.Power]{{Key: "fonte", Label: "Fonte", Options: powerSourceOptions,
+			Match: func(p book.Power, v string) bool { return p.Source == v || strings.HasPrefix(p.Source, v+" ·") }}},
+		ID:   func(p book.Power) string { return p.ID },
+		Name: func(p book.Power) string { return p.Name },
+		Card: powerCard,
 	}),
 	catalogOf(catalogSpec[book.Item]{
 		Stop:   railStop{"itens", "Itens", "Backpack", "Armas, armaduras e equipamento, com preço e espaços."},
 		Load:   func() []book.Item { return book.Catalogs().Items },
 		Fields: book.ItemFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{{Key: "familia", Label: "Família", Options: itemFamilies}}
-		},
-		Matches: itemMatches,
-		ID:      func(i book.Item) string { return i.ID },
-		Name:    func(i book.Item) string { return i.Name },
-		Card:    itemCard,
+		Filters: []filterLine[book.Item]{{Key: "familia", Label: "Família", Options: fixedOptions(itemFamilies...),
+			Match: func(i book.Item, v string) bool { return familyOfCategory(i.Category) == v }}},
+		ID:   func(i book.Item) string { return i.ID },
+		Name: func(i book.Item) string { return i.Name },
+		Card: itemCard,
 	}),
 	catalogOf(catalogSpec[book.EffectKind]{
 		Stop:   railStop{"efeitos", "Efeitos", "Zap", "Os tipos de efeito (p228): medo, mental, metabolismo…"},
@@ -192,32 +211,32 @@ var collectionCatalogs = []collectionCatalog{
 		Stop:   railStop{"pericias", "Perícias", "Dices", "As 29 perícias, com atributo e as regras de treino."},
 		Load:   book.Expertises,
 		Fields: book.ExpertiseFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{
-				{Key: "atributo", Label: "Atributo", Options: attributeOptions()},
-				{Key: "treino", Label: "Treino", Options: []filterOption{
-					{"so-treinada", "Só treinada"}, {"armadura", "Penalidade de armadura"},
+		Filters: []filterLine[book.Expertise]{
+			{Key: "atributo", Label: "Atributo", Options: attributeOptions,
+				Match: func(p book.Expertise, v string) bool { return p.Attribute == v }},
+			// As duas marcas do livro num filtro só: são as duas coisas que mudam
+			// COMO a perícia se usa, e separá-las em duas linhas de um crachá cada
+			// gastaria duas linhas para dizer o que uma diz.
+			{Key: "treino", Label: "Treino",
+				Options: fixedOptions(filterOption{"so-treinada", "Só treinada"}, filterOption{"armadura", "Penalidade de armadura"}),
+				Match: func(p book.Expertise, v string) bool {
+					return (v == "so-treinada" && p.TrainedOnly) || (v == "armadura" && p.ArmorPenalty)
 				}},
-			}
 		},
-		Matches: expertiseMatches,
-		ID:      func(p book.Expertise) string { return p.ID },
-		Name:    func(p book.Expertise) string { return p.Name },
-		Card:    expertiseCard,
+		ID:   func(p book.Expertise) string { return p.ID },
+		Name: func(p book.Expertise) string { return p.Name },
+		Card: expertiseCard,
 	}),
 	catalogOf(catalogSpec[book.Race]{
 		Stop:   railStop{"racas", "Raças", "Users2", "As 17 raças, com modificadores e habilidades."},
 		Load:   func() []book.Race { races, _, _ := book.CharacterCatalogs(); return races },
 		Fields: book.RaceFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{{Key: "linhagem", Label: "Linhagem", Options: []filterOption{
-				{"comum", "Comum"}, {"extra", "Exótica"},
-			}}}
-		},
-		Matches: raceMatches,
-		ID:      func(r book.Race) string { return r.ID },
-		Name:    func(r book.Race) string { return r.Name },
-		Card:    raceCard,
+		Filters: []filterLine[book.Race]{{Key: "linhagem", Label: "Linhagem",
+			Options: fixedOptions(filterOption{"comum", "Comum"}, filterOption{"extra", "Exótica"}),
+			Match:   func(r book.Race, v string) bool { return r.Tier == v }}},
+		ID:   func(r book.Race) string { return r.ID },
+		Name: func(r book.Race) string { return r.Name },
+		Card: raceCard,
 	}),
 	catalogOf(catalogSpec[book.Class]{
 		Stop:   railStop{"classes", "Classes", "Shield", "As 14 classes, com perícias treinadas e poderes."},
@@ -231,15 +250,12 @@ var collectionCatalogs = []collectionCatalog{
 		Stop:   railStop{"deuses", "Deuses", "Church", "Os 20 deuses, com símbolo, devotos e poderes concedidos."},
 		Load:   book.CatalogGods,
 		Fields: book.GodFields,
-		Filters: func() []collectionFilter {
-			return []collectionFilter{{Key: "energia", Label: "Energia", Options: []filterOption{
-				{"positiva", "Positiva"}, {"negativa", "Negativa"}, {"qualquer", "Qualquer"},
-			}}}
-		},
-		Matches: godMatches,
-		ID:      func(d book.God) string { return d.ID },
-		Name:    func(d book.God) string { return d.Name },
-		Card:    godCard,
+		Filters: []filterLine[book.God]{{Key: "energia", Label: "Energia",
+			Options: fixedOptions(filterOption{"positiva", "Positiva"}, filterOption{"negativa", "Negativa"}, filterOption{"qualquer", "Qualquer"}),
+			Match:   func(d book.God, v string) bool { return d.Energy == v }}},
+		ID:   func(d book.God) string { return d.ID },
+		Name: func(d book.God) string { return d.Name },
+		Card: godCard,
 	}),
 }
 
