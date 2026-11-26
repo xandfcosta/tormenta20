@@ -19,8 +19,9 @@ import (
 // decidida) não tem mais nada a pedir, e o cartão sai.
 templ gmAttack(v View) {
 	if v.Attack != nil && v.Attack.Stage != stageSettled {
-		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ gmAttackBadge(v.Attack.Stage) }>
+		<section id="table-attack" class="ds-strike" data-attack data-float aria-label={ gmAttackBadge(v.Attack.Stage) }>
 			<div class="ds-strike-head" data-float-handle>
+				@floatGrip()
 				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
 				if v.Attack.BySpellHand {
@@ -34,6 +35,7 @@ templ gmAttack(v View) {
 				if v.Attack.Boost != "" {
 					@ds.Badge(v.Attack.Boost, true)
 				}
+				@floatFold("o ataque")
 			</div>
 			@attackSheetOpener()
 			@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
@@ -162,8 +164,9 @@ templ duelRowView(row duelRow) {
 // nem a RD — no papel do personagem, ele não conhece a ficha de outra entidade.
 templ tempestadeAttack(v View) {
 	if v.Attack != nil {
-		<section id="table-attack" class="ds-strike" data-attack data-float data-preserve-attr="style" aria-label={ playerAttackBadge(v.Attack) }>
+		<section id="table-attack" class="ds-strike" data-attack data-float aria-label={ playerAttackBadge(v.Attack) }>
 			<div class="ds-strike-head" data-float-handle>
+				@floatGrip()
 				@ds.Badge(playerAttackBadge(v.Attack), true)
 				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
 				if v.Attack.Weapon != "" {
@@ -172,6 +175,7 @@ templ tempestadeAttack(v View) {
 				if v.Attack.Action != "" {
 					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
 				}
+				@floatFold("o ataque")
 			</div>
 			if v.Attack.Mine {
 				@attackSheetOpener()

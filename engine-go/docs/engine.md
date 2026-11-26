@@ -84,13 +84,19 @@ mão não saberia quantos dados pegar.
   CABEÇA, e o corpo é o diálogo `attack-sheet` que ela abre. É o mesmo nó nas
   duas larguras: no desktop o diálogo é desenhado dentro do cartão
   (`display: contents`), para o conteúdo não existir duas vezes. A posição vive
-  no `style`, e o cartão declara `data-preserve-attr="style"`: sem isso o
-  remendo do servidor o devolve ao lugar padrão no primeiro toque do mestre. O
-  `attack-card-float.spec.ts` prova com um remendo que muda o PRÓPRIO cartão —
-  passar a vez não o remenda, e "ficou no lugar" mediria o nada.
+  no `style`, que o remendo do servidor apaga; o observador do `float-card.ts`
+  a devolve a cada remendo, antes da pintura. O `attack-card-float.spec.ts`
+  prova com um remendo que muda o PRÓPRIO cartão — passar a vez não o remenda,
+  e "ficou no lugar" mediria o nada.
+- **Os cartões NASCEM empilhados embaixo, à direita** (ALE-723; ver GLOSSARY,
+  **cartão flutuante**), acima do chão marcado com `data-float-floor` (a linha
+  do turno do mestre), e não no topo, onde moram as faixas. Arrastado, o cartão
+  sai da pilha e fica onde foi posto; a seta da cabeça o recolhe até a cabeça,
+  e o recolhido também fica no aparelho. O `float-dock.spec.ts` prova o lugar,
+  o recolhido depois do remendo e do recarregar, e o celular sem alça nem seta.
 - **O mesmo padrão vale para o que fica sobre o tabuleiro** (mockup aprovado,
-  ALE-653), para o mapa ser o foco no celular: a faixa do Estandarte
-  (`banner-sheet`) flutua no canto de cima, e a posição dela tem chave própria
+  ALE-653), para o mapa ser o foco no celular: o cartão do Estandarte
+  (`banner-sheet`) flutua na pilha, e a posição arrastada dele tem chave própria
   no `float-card.ts`, para não pousar sobre o ataque; o cartão do movimento
   (`move-sheet`) mostra no celular a cabeça com o Confirmar à mão, e no desktop
   fica no pé do mapa, sem flutuar. A faixa continua região à parte, FORA do

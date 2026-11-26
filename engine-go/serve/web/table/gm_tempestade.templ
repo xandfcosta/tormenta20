@@ -29,6 +29,7 @@ templ gmTempestadeScene(v View) {
 			@informedRoll(kind, v.Rolls[kind])
 		}
 		@extendedBand(v)
+		@gmExtendedMarks(v)
 		@gmBanner(v)
 		<nav class="ds-session-nav ds-gm-nav" aria-label="Superfícies do mestre">
 			for _, s := range gmSurfaces {
@@ -81,7 +82,7 @@ templ gmHeader(v View) {
 // gmTurnBar é a linha do turno, fixa embaixo: o que a vez ainda tem, o ‹ e o
 // Próximo. Não repete quem joga — o nome já está no topo.
 templ gmTurnBar(v View) {
-	<div id="table-commands" class="ds-gm-turn">
+	<div id="table-commands" class="ds-gm-turn" data-float-floor>
 		// O TESTE DE QUEM SANGRA (p236) mora na linha do turno: ele chega com a
 		// vez de quem caiu, e o mestre o responde antes do Próximo.
 		if v.Bleeding != nil {

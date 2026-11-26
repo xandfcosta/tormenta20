@@ -1,6 +1,10 @@
 package table
 
-import "t20engine/serve/web/ds"
+import (
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
 
 // bannerSheet é o diálogo do corpo da faixa no celular, e o corpo dela no desktop.
 const bannerSheet = "banner-sheet"
@@ -15,10 +19,12 @@ const bannerSheet = "banner-sheet"
 // trocaria a peça debaixo do dedo de quem arrasta.
 templ gmBanner(v View) {
 	if len(v.Banners) > 0 {
-		<section id="table-banner" class="ds-strike" data-banner data-float data-preserve-attr="style" aria-label="Estandarte">
+		<section id="table-banner" class="ds-strike" data-banner data-float aria-label="Estandarte">
 			<div class="ds-strike-head" data-float-handle>
-				@ds.Badge("Estandarte · p54", true)
-				<span class="ds-row-meta">{ bannerSummary(v.Banners) }</span>
+				@floatGrip()
+				<span class="ds-float-title">Estandarte · a escolher</span>
+				<b class="ds-float-count">{ strconv.Itoa(bannerWaiting(v.Banners)) }</b>
+				@floatFold("o Estandarte")
 			</div>
 			@ds.Dialog(bannerSheet, "Estandarte", nil) {
 				for _, band := range v.Banners {

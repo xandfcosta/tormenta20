@@ -2916,6 +2916,53 @@
     align-items: center;
     gap: 0.5rem;
   }
+  /* A CABEÇA DO CARTÃO FLUTUANTE: o título encolhe, e o número que importa fica grande
+   * à direita. A alça e a seta são do desktop, onde o cartão se arrasta e recolhe. */
+  /* A LOMBADA é a matéria do cartão nas duas larguras; a sombra é só de quem paira,
+   * no desktop. */
+  .ds-strike[data-float] {
+    border: 0;
+    border-left: 3px solid var(--ds-action);
+  }
+  .ds-strike-head > .ds-float-grip,
+  .ds-strike-head > .ds-float-fold {
+    display: none;
+  }
+  .ds-float-title {
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--ds-t-sm);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ds-float-count {
+    margin-left: auto;
+    color: var(--ds-action);
+    font-size: var(--ds-t-lg);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .ds-strike-head > .ds-float-count + .ds-float-fold {
+    margin-left: 0;
+  }
+  .ds-float-count-word {
+    color: var(--ds-ink);
+    font-size: var(--ds-t-xs);
+    font-weight: 400;
+  }
+  /* As linhas do Marcar de cada um, sem a caixa dentro da caixa. */
+  .ds-strike[data-extended-marks] .ds-reg {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ds-float-fold > .ds-icon {
+      transition: none;
+    }
+  }
   .ds-strike-roll {
     display: flex;
     flex-wrap: wrap;
@@ -3077,13 +3124,7 @@
     .ds-move-quick {
       display: none;
     }
-    /* O ESTANDARTE FLUTUA no canto de cima, à direita, e não no meio, onde nasce o
-     * ataque: os dois podem estar no ar juntos. Os aliados vão em duas colunas. */
-    .ds-strike[data-banner][data-float] {
-      top: var(--float-y, 11.5rem);
-      left: var(--float-x, calc(100% - 31rem));
-      width: min(30rem, 100vw - 2rem);
-    }
+    /* Os aliados do Estandarte vão em duas colunas. */
     .ds-strike[data-banner] .ds-strike-foot {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -3091,16 +3132,47 @@
   }
   /* NO DESKTOP O CARTÃO FLUTUA sobre a mesa, e não empurra as superfícies para
    * baixo; a cabeça é a alça de arrastar (`lib/float-card.ts`). No celular ele
-   * fica no fluxo, porque não há mesa sobrando para ele pairar em cima. */
+   * fica no fluxo, porque não há mesa sobrando para ele pairar em cima.
+   *
+   * A MATÉRIA É O QUE O SEPARA DA FAIXA (ver GLOSSARY, **cartão flutuante**): a faixa
+   * é plana e de contorno, o que todos leem; o cartão tem superfície cheia, sombra,
+   * a lombada à esquerda e a alça visível, a ação do mestre. Ele NASCE embaixo, à
+   * direita: o `float-card.ts` os empilha ali acima da linha do turno, e o lugar
+   * abaixo é só o de antes do script — nunca o topo, onde moram as faixas. */
   @media (min-width: 64rem) {
     .ds-strike[data-float] {
       position: fixed;
-      top: var(--float-y, 6.5rem);
-      left: var(--float-x, calc(50% - 16rem));
+      top: var(--float-y, calc(100dvh - 18rem));
+      left: var(--float-x, calc(100% - 31rem));
       z-index: 40;
-      width: min(32rem, 100vw - 2rem);
+      width: min(30rem, 100vw - 2rem);
       margin: 0;
-      box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+      box-shadow:
+        0 0 0 1px var(--ds-line),
+        0 12px 32px rgb(0 0 0 / 0.35);
+    }
+    /* RECOLHIDO, fica a cabeça: ela diz o número que importa. */
+    .ds-strike[data-float][data-folded] > :not(.ds-strike-head) {
+      display: none !important;
+    }
+    .ds-strike-head > .ds-float-grip {
+      display: inline-flex;
+      flex: none;
+      color: var(--ds-line-strong);
+    }
+    .ds-float-grip > .ds-icon {
+      width: 1rem;
+      height: 1rem;
+    }
+    .ds-strike-head > .ds-float-fold {
+      display: inline-flex;
+      margin-left: auto;
+    }
+    .ds-float-fold > .ds-icon {
+      transition: transform 0.15s;
+    }
+    .ds-strike[data-folded] .ds-float-fold > .ds-icon {
+      transform: rotate(180deg);
     }
     .ds-strike[data-float] [data-float-handle] {
       cursor: grab;

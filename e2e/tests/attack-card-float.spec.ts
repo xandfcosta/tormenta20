@@ -5,8 +5,9 @@ import { expect, type Page, test } from '@playwright/test'
  *
  * E2E porque os dois mecanismos só existem num navegador: o gesto de ponteiro,
  * e o REMENDO do Datastar, que reescreve os atributos do cartão a cada mudança
- * — sem o `data-preserve-attr="style"`, o cartão voltaria ao lugar padrão no
- * primeiro toque do mestre, e nenhum teste de Go veria.
+ * e apaga o `style` onde mora a posição: quem a devolve é o observador do
+ * `float-card.ts`, e sem ele o cartão voltaria à pilha no primeiro toque do
+ * mestre — nenhum teste de Go veria.
  *
  * A mesa é a da campanha 7 da semente (o Cavaleiro Postural tem espada), e o
  * alvo é um goblin do bestiário que o caso põe na fila.
@@ -64,11 +65,13 @@ test('o cartão do ataque flutua e se arrasta no desktop, e no celular mostra s�
     if (!before || !grip) throw new Error('o cartão não tem caixa')
     await page.mouse.move(grip.x + 30, grip.y + grip.height / 2)
     await page.mouse.down()
-    await page.mouse.move(grip.x + 30 + 200, grip.y + grip.height / 2 + 150, { steps: 10 })
+    // PARA A ESQUERDA E PARA CIMA: o cartão nasce encostado embaixo, à direita
+    // (ALE-723), e para o outro lado ele bateria na borda da janela.
+    await page.mouse.move(grip.x + 30 - 200, grip.y + grip.height / 2 - 150, { steps: 10 })
     await page.mouse.up()
     const dragged = await card.boundingBox()
-    expect(Math.round((dragged?.x ?? 0) - before.x)).toBe(200)
-    expect(Math.round((dragged?.y ?? 0) - before.y)).toBe(150)
+    expect(Math.round((dragged?.x ?? 0) - before.x)).toBe(-200)
+    expect(Math.round((dragged?.y ?? 0) - before.y)).toBe(-150)
 
     // O REMENDO QUE MUDA O PRÓPRIO CARTÃO: o crachá trocar é o controle de que
     // ele chegou — sem isso, "ficou no lugar" pode ser "nada foi remendado".

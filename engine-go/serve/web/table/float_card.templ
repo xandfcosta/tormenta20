@@ -1,0 +1,21 @@
+package table
+
+import "t20engine/serve/web/ui"
+
+// AS PEÇAS DA CABEÇA DO CARTÃO FLUTUANTE (ver GLOSSARY, **cartão flutuante**): a alça visível por onde ele se
+// arrasta e a seta que o recolhe até a cabeça. As duas são do desktop, onde ele flutua; no celular o CSS as tira. Quem
+// as liga é o `lib/float-card.ts`, e o recolhido fica guardado no aparelho como a posição.
+
+// floatGrip é a alça: até aqui o arrastar só se anunciava no cursor.
+templ floatGrip() {
+	<span class="ds-float-grip" data-float-grip aria-hidden="true">
+		@ui.Icon("GripVertical", "ds-icon")
+	</span>
+}
+
+// floatFold é a seta de recolher. O `aria-expanded` vem do aparelho: o `float-card.ts` o acerta a cada remendo.
+templ floatFold(what string) {
+	<button type="button" class="ds-button ds-float-fold" data-variant="ghost" data-icon data-float-fold aria-expanded="true" aria-label={ "Recolher ou abrir " + what } title={ "Recolher ou abrir " + what }>
+		@ui.Icon("ChevronDown", "ds-icon")
+	</button>
+}

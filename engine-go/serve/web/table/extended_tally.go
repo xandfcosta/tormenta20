@@ -141,3 +141,13 @@ func extendedMark(l extendedLine, kind string) string {
 	}
 	return "teste-estendido/linha/" + l.EntryID + "/marcar/" + kind
 }
+
+// extendedReached é quantas linhas do teste de cada um já chegaram ao exigido, e de quantas.
+func extendedReached(t live.ExtendedTest) (reached, total int) {
+	for _, w := range t.Who {
+		if t.TallyOf(w.EntryID).Outcome == live.ExtendedReached {
+			reached++
+		}
+	}
+	return reached, len(t.Who)
+}
