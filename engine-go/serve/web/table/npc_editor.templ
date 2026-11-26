@@ -43,7 +43,7 @@ templ blockEditor(v View) {
 				}
 			</div>
 			<div>
-				@blockNumbers()
+				@blockNumbers(v)
 				@attacksTab(v)
 				@ownedTab(v)
 			</div>
@@ -87,10 +87,11 @@ templ editorTabLink(aba editorTab) {
 // A ordem é do livro porque é dele que o mestre está copiando: quem tem a página
 // aberta ao lado lê de cima para baixo, e uma ordem "melhor" o obrigaria a
 // procurar cada campo.
-templ blockNumbers() {
+templ blockNumbers(v View) {
 	<div role="tabpanel" data-show={ onTabExpr(abaDosNumeros) } class="ds-npc-panel">
 		@blockSection("Identidade") {
 			@numberBlock("nd", "ND", 0, 30)
+			@fillByND(v)
 			@blockChoice("tipo", "Tipo", kindOptions())
 			@blockChoice("size", "Tamanho", sizeOptions())
 			@blockText("deslocamento", "Deslocamento", "9m (6q)")
@@ -296,4 +297,16 @@ templ numberRow(path, label string, min, max int) {
 // justamente o que se acabou de escrever.
 templ removeRowButton(v View, list string, index int, what string) {
 	@ds.IconButton(ds.ButtonGhost, "Trash2", "Tirar "+what, templ.Attributes{"type": "button", "title": "Tirar " + what, "data-on:click": listCommand(v, list, index)})
+}
+
+// fillByND é o "Preencher pelo ND" (ver GLOSSARY, **estatísticas pelo ND**): o botão, apagado fora da Tabela 7-2 com o
+// motivo escrito embaixo, e a linha de GUIA que a resposta acende — o que o livro deixa ao mestre.
+templ fillByND(v View) {
+	<div class="ds-field">
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": fillByNDCommand(v), "data-attr:disabled": "!(" + ndInTheTable() + ")"}) {
+			Preencher pelo ND
+		}
+		<p class="ds-help" data-show={ "!(" + ndInTheTable() + ")" }>A Tabela 7-2 vai do ND ½ ao 20 (p323).</p>
+		<p class="ds-help" data-show="$draft_guide !== ''" data-text="$draft_guide"></p>
+	</div>
 }

@@ -44,21 +44,37 @@ var (
 	}
 )
 
-// ThreatStatsFor é a linha do ND na Tabela 7-2, ou false fora dela: a tabela vai do ND ½ ao 20, e um ND entre
-// linhas (o ¼ do Bandido) ou acima de 20 não tem número no livro — inventar um seria regra que ele não tem.
-//
-//	book.ThreatStatsFor(5) // {Attack: 18, Attacks: 2, Defense: 28, HP: 150, …, Tier: Veterano}
-func ThreatStatsFor(nd float64) (ThreatStats, bool) {
+// threatRows lê o recurso uma vez.
+func threatRows() ([]ThreatRow, []ThreatTier) {
 	threatOnce.Do(func() {
 		if raw, ok := catalog.Resource("threat-stats"); ok {
 			_ = json.Unmarshal(raw, &threatTable)
 		}
 	})
-	for _, row := range threatTable.Rows {
+	return threatTable.Rows, threatTable.Tiers
+}
+
+// ThreatNDs são os NDs que têm linha na Tabela 7-2, na ordem dela: ½ e 1 a 20.
+func ThreatNDs() []float64 {
+	rows, _ := threatRows()
+	nds := make([]float64, len(rows))
+	for i, row := range rows {
+		nds[i] = row.ND
+	}
+	return nds
+}
+
+// ThreatStatsFor é a linha do ND na Tabela 7-2, ou false fora dela: a tabela vai do ND ½ ao 20, e um ND entre
+// linhas (o ¼ do Bandido) ou acima de 20 não tem número no livro — inventar um seria regra que ele não tem.
+//
+//	book.ThreatStatsFor(5) // {Attack: 18, Attacks: 2, Defense: 28, HP: 150, …, Tier: Veterano}
+func ThreatStatsFor(nd float64) (ThreatStats, bool) {
+	rows, tiers := threatRows()
+	for _, row := range rows {
 		if row.ND != nd {
 			continue
 		}
-		for _, tier := range threatTable.Tiers {
+		for _, tier := range tiers {
 			if nd >= tier.FirstND && nd <= tier.LastND {
 				return ThreatStats{ThreatRow: row, Tier: tier}, true
 			}
