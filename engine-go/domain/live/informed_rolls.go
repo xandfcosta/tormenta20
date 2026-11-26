@@ -4,8 +4,8 @@ package live
 // conjurada e o perigo disparado. A mesa as guarda para INFORMAR, e não há o que confirmar nem cancelar — é isso que as separa do
 // `PendingAttack`, que tem os verbos do mestre.
 //
-// Faixa nova entra aqui: o campo em `InformedRolls`, a decisão em `outOfScene` e o `recordIn` do tipo, ao lado
-// dele. A faixa da mesa que a desenha é do `serve/web/table`.
+// Faixa nova entra aqui: o campo em `InformedRolls`, a decisão em `outOfScene`, o `recordIn` do tipo, ao lado
+// dele, e, se ela é só do mestre, a linha no `redactForViewer` que a tira do jogador. A faixa da mesa que a desenha é do `serve/web/table`.
 
 // InformedRolls é a ÚLTIMA rolagem de cada tipo — no máximo uma, e a nova substitui a anterior do MESMO tipo.
 //

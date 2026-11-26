@@ -1,0 +1,44 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// gmHazardsPage é a página Perigos numa aba: a faixa do último disparo no topo, que o fluxo remenda (`table-hazard`),
+// e a lista do que se dispara e a que se expõe. A BUSCA mora fora da região, pela razão do Grupo: um campo remendado
+// no meio da digitação perderia o que o mestre escreve.
+templ gmHazardsPage(v View) {
+	<main class="ds-gm-page" data-signals="{gm_hazard_search: ''}">
+		<h1 class="ds-sheet-name">{ sidePageTitle(v, "Perigos") }</h1>
+		@gmPageRefusal()
+		@informedRoll(hazardRoll, v.Rolls[hazardRoll])
+		@ds.FilterBar() {
+			@ds.SearchField("gm-hazard-search", "Buscar perigo", templ.Attributes{"data-bind:gm_hazard_search": true})
+		}
+		{{ ambient, traps := hazardRows() }}
+		@gmHazardList(v, "Ambiente", ambient)
+		@gmHazardList(v, "Armadilhas", traps)
+	</main>
+}
+
+// gmHazardList é um grupo da página, com o gesto de cada linha.
+templ gmHazardList(v View, title string, rows []hazardRow) {
+	@ds.List(title, strconv.Itoa(len(rows))) {
+		for _, row := range rows {
+			<div class="ds-row ds-gm-npc" data-show={ nameMatches("gm_hazard_search", row.Name) }>
+				<span class="ds-gm-member-body">
+					<span class="ds-row-title">{ row.Name }</span>
+					<span class="ds-row-meta">{ row.Meta }</span>
+				</span>
+				<span class="ds-gm-steps">
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": row.Aria, "data-on:click": fmt.Sprintf("@post('%s/%s')", v.SessionBase(), row.Post)}) {
+						{ row.Verb }
+					}
+				</span>
+			</div>
+		}
+	}
+}

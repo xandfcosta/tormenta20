@@ -374,6 +374,7 @@ func (s Scene) LoadView(ctx context.Context, userID int64, campaignID, sessionID
 		skillTestRoll: s.skillTestBandFor(st, userID, campaignID, sessionID, sheets),
 		blastRoll:     blastBandOf(st),
 		spellCastRoll: spellCastBandOf(st),
+		hazardRoll:    hazardBandOf(st),
 	}
 	view.Status = sess.Status
 	if sess.Title.Valid {

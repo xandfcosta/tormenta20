@@ -29,6 +29,7 @@ const (
 	pageGroup    sidePage = "grupo"
 	pageCast     sidePage = "elenco"
 	pageBestiary sidePage = "bestiario"
+	pageHazards  sidePage = "perigos"
 )
 
 // pageParam é o nome da marca na query.
@@ -48,6 +49,7 @@ var sidePageLinks = []sidePageLink{
 	{"Grupo", string(pageGroup), "quem está na mesa, PV e PM"},
 	{"Elenco", string(pageCast), "os NPCs da campanha"},
 	{"Bestiário", string(pageBestiary), "as criaturas do livro"},
+	{"Perigos", string(pageHazards), "disparar armadilha, expor ao ácido e à lava"},
 	{"Tela da mesa", displayPath, "o tabuleiro para o display grande"},
 }
 
@@ -56,7 +58,7 @@ var sidePageLinks = []sidePageLink{
 // `TableRegions` da produção o que o fluxo de cada página manda.
 func SidePageFor(mark string) sidePage {
 	switch p := sidePage(mark); p {
-	case pageGroup, pageCast, pageBestiary:
+	case pageGroup, pageCast, pageBestiary, pageHazards:
 		return p
 	}
 	return pageTable
@@ -104,6 +106,8 @@ func sidePageTitle(v View, label string) string {
 func (s Scene) SidePageRoutes(r chi.Router) {
 	r.Get(sessionPattern+"/"+string(pageGroup), s.handleSidePage(pageGroup))
 	r.Get(sessionPattern+"/"+string(pageCast), s.handleSidePage(pageCast))
+	r.Get(sessionPattern+"/"+string(pageHazards), s.handleSidePage(pageHazards))
+	s.hazardRoutes(r)
 	// O Bestiário divide o endereço com o remendo do painel: quem decide é o
 	// cabeçalho do Datastar, no `handleBestiaryTable`.
 }
@@ -143,6 +147,11 @@ func (s Scene) handleSidePage(page sidePage) http.HandlerFunc {
 			p.Title = sidePageTitle(view, "Elenco")
 			p.Init = fmt.Sprintf("@get('%s')", streamOfPage(view))
 			s.deps.WritePage(w, r, http.StatusOK, p, gmCastPage(view))
+		case pageHazards:
+			// COM FLUXO: o livro não muda, mas a faixa do disparo sim.
+			p.Title = sidePageTitle(view, "Perigos")
+			p.Init = fmt.Sprintf("@get('%s')", streamOfPage(view))
+			s.deps.WritePage(w, r, http.StatusOK, p, gmHazardsPage(view))
 		case pageBestiary:
 			// SEM FLUXO: o livro não muda no meio da sessão, e o que o Pôr na
 			// fila tem a dizer volta na resposta dele (`entry_sent`).

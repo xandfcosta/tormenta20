@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-// AS FAIXAS QUE INFORMAM UMA ROLAGEM (ver GLOSSARY, **rolagem informada**): o teste, o disparo do encanto e a
-// magia conjurada. Elas são irmãs da faixa do ataque MENOS os verbos — não há o que confirmar nem cancelar, e ✓ e
-// ✕ aqui seriam dois controles que não fazem nada. O que muda de uma para outra é o que se escreve nela, e por
-// isso a forma é uma só: `rollBand`, desenhada pelo `informedRoll`.
+// AS FAIXAS QUE INFORMAM UMA ROLAGEM (ver GLOSSARY, **rolagem informada**): o teste, o disparo do encanto, a
+// magia conjurada e o perigo disparado, que só o mestre vê. Elas são irmãs da faixa do ataque MENOS os verbos —
+// não há o que confirmar nem cancelar, e ✓ e ✕ aqui seriam dois controles que não fazem nada. O que muda de uma
+// para outra é o que se escreve nela, e por isso a forma é uma só: `rollBand`, desenhada pelo `informedRoll`.
 //
-// Faixa nova: o tipo em `informedRollKind`, a região em `informedRollRegions` e o tradutor no `LoadView`. A
-// lista alimenta as duas sessões E o stream, e é por isso que ela é uma só: uma faixa desenhada na página e
-// esquecida no stream nasce e nunca mais muda.
+// Faixa nova: o tipo em `informedRollKind`, a região em `informedRollRegions`, o tradutor no `LoadView` e, se só
+// o mestre a vê, o `seenRolls`. A lista alimenta as duas sessões E o stream, e é por isso que ela é uma só: uma
+// faixa desenhada na página e esquecida no stream nasce e nunca mais muda.
 
 // informedRollKind é o índice de uma faixa em `View.Rolls`, na ordem da tela.
 type informedRollKind int
@@ -21,6 +21,7 @@ const (
 	skillTestRoll informedRollKind = iota
 	blastRoll
 	spellCastRoll
+	hazardRoll
 	informedRollKindCount
 )
 
@@ -30,6 +31,21 @@ var informedRollRegions = [informedRollKindCount]struct{ id, label string }{
 	skillTestRoll: {"table-skill-test", "Teste rolado"},
 	blastRoll:     {"table-blast", "Disparo do encanto"},
 	spellCastRoll: {"table-spell-cast", "Magia conjurada"},
+	hazardRoll:    {"table-hazard", "Perigo disparado"},
+}
+
+// seenRolls são as faixas que esta sessão desenha, na ordem da tela: todas na do mestre, e na do jogador todas
+// menos a do perigo, que é só do mestre (ver `live.HazardRoll`). Uma lista só para a página e para o fluxo, pela
+// razão das regiões: a sessão que recebe remendo de uma região que não desenha escreve no vazio.
+func seenRolls(v View) []informedRollKind {
+	kinds := make([]informedRollKind, 0, informedRollKindCount)
+	for kind := range informedRollKindCount {
+		if kind == hazardRoll && v.GM == nil {
+			continue
+		}
+		kinds = append(kinds, kind)
+	}
+	return kinds
 }
 
 // rollBand é uma rolagem informada do jeito que a mesa lê.

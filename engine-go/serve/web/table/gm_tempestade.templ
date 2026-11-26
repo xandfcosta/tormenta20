@@ -25,8 +25,8 @@ templ gmTempestadeScene(v View) {
 		@newVersionNotice()
 		@gmHeader(v)
 		@gmAttack(v)
-		for kind, band := range v.Rolls {
-			@informedRoll(informedRollKind(kind), band)
+		for _, kind := range seenRolls(v) {
+			@informedRoll(kind, v.Rolls[kind])
 		}
 		@gmBanner(v)
 		<nav class="ds-session-nav ds-gm-nav" aria-label="Superfícies do mestre">
