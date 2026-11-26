@@ -315,7 +315,7 @@ var itemsPart10 = []Item{
 				Note:      "-2 em Diplomacia",
 			},
 		},
-		BookPage:  332,
+		BookPage:  165,
 		UID:       "itm_5akd54yygh",
 		AppliesTo: []string{"weapon", "armor", "shield", "apparel"},
 	},

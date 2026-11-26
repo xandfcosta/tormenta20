@@ -243,7 +243,7 @@ var itemsPart07 = []Item{
 		ID:         "racao-de-viagem",
 		Name:       "Ração de Viagem",
 		Category:   "meal",
-		Price:      1,
+		Price:      0.5,
 		Slots:      0.5,
 		Equip:      "either",
 		Modifiers:  []Modifier{},

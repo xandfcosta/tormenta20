@@ -73,7 +73,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	items := catalogByKey()
+	items, elsewhere := catalogByKey()
 	seen := map[string]bool{}
 	checked := 0
 	var divergent []divergence
@@ -81,31 +81,52 @@ func main() {
 	for _, t := range tables {
 		priced, unpriced := 0, 0
 		for _, block := range blocksOfTable(book, t.pages, t.title, items) {
-			k := bookpdf.Key(block[0].text)
-			item := items[k]
+			k := nameKey(block[0].text)
 			seen[k] = true
 			price, ok := firstBookPrice(block)
-			if !ok {
-				unpriced++
-				continue
-			}
-			priced++
-			checked++
-			if math.Abs(price-item.Price) > 0.001 {
-				divergent = append(divergent, divergence{t.label, item.Name, item.Price, price})
+			// Uma linha da tabela pode ser de VÁRIOS verbetes — as cinco Coleções de livros são uma linha só —, e o
+			// preço dela vale para cada um.
+			for _, item := range items[k] {
+				if !ok {
+					unpriced++
+					continue
+				}
+				priced++
+				checked++
+				if math.Abs(price-item.Price) > 0.001 {
+					divergent = append(divergent, divergence{t.label, item.Name, item.Price, price})
+				}
 			}
 		}
-		fmt.Printf("  %-22s preço conferido: %3d   sem preço na tabela: %d\n", t.label, priced, unpriced)
+		fmt.Printf("  %-22s verbetes com preço conferido: %3d   verbetes sem preço na tabela: %d\n", t.label, priced, unpriced)
 	}
 
 	var unseen []string
-	for k, it := range items {
-		if !seen[k] {
+	mine := 0
+	for k, group := range items {
+		mine += len(group)
+		if seen[k] {
+			continue
+		}
+		for _, it := range group {
 			unseen = append(unseen, it.Name)
 		}
 	}
 	sort.Strings(unseen)
-	fmt.Printf("\nitens no catálogo:        %d\n", len(items))
+	// A SOMA ANTES DAS PARCELAS: os itens deste auditor e os dos irmãos têm de dar o catálogo inteiro. Um verbete
+	// que caísse fora das duas contas — um mapa de um item por nome engole os outros do mesmo nome — sumiria sem
+	// virar "não medido", e o relatório sairia limpo com a medida furada.
+	others := 0
+	for _, names := range elsewhere {
+		others += len(names)
+	}
+	if mine+others != len(transcript.Items) {
+		fmt.Fprintf(os.Stderr, "a conta não fecha: %d deste auditor + %d dos irmãos, e o catálogo tem %d itens\n",
+			mine, others, len(transcript.Items))
+		os.Exit(1)
+	}
+	fmt.Printf("\nitens no catálogo:        %d\n", len(transcript.Items))
+	fmt.Printf("  das tabelas do cap. 3:  %d\n", mine)
 	fmt.Printf("  com preço conferido:    %d\n", checked)
 	fmt.Printf("  NÃO MEDIDOS:            %d\n", len(unseen))
 	fmt.Printf("  divergem do livro:      %d\n", len(divergent))
@@ -117,21 +138,47 @@ func main() {
 		fmt.Printf("    PREÇO  %-20s %-30s catálogo=%s livro=%s\n", d.table, string(name), optionalNumber(d.catalog), pyFloat(d.book))
 	}
 	if len(unseen) > 0 {
-		fmt.Println("\nNÃO MEDIDOS (não aparecem em tabela nenhuma do capítulo 3):")
+		fmt.Println("\nNÃO MEDIDOS (do capítulo 3, e não aparecem em tabela nenhuma dele):")
 		for _, n := range unseen {
+			fmt.Printf("    %s\n", n)
+		}
+	}
+	// O QUE É DE OUTRO AUDITOR sai contado, e não somado aos não medidos: "não medido" quer dizer "deste capítulo e
+	// sem âncora". O "nenhum" é o item que auditor nenhum alcança, e esse sai pelo nome.
+	auditors := make([]string, 0, len(elsewhere))
+	for auditor := range elsewhere {
+		auditors = append(auditors, auditor)
+	}
+	sort.Strings(auditors)
+	fmt.Println("\nde outro auditor:")
+	for _, auditor := range auditors {
+		fmt.Printf("    %-16s %d\n", auditor, len(elsewhere[auditor]))
+	}
+	if orphans := elsewhere["nenhum"]; len(orphans) > 0 {
+		sort.Strings(orphans)
+		fmt.Println("\nDE AUDITOR NENHUM:")
+		for _, n := range orphans {
 			fmt.Printf("    %s\n", n)
 		}
 	}
 }
 
-// catalogByKey são os itens pelo nome normalizado; o último de um nome
-// repetido vence, como no dicionário do auditor original.
-func catalogByKey() map[string]*transcript.Item {
-	out := map[string]*transcript.Item{}
+// catalogByKey são os itens DESTE auditor pelo nome comparável (`nameKey`), e cada nome guarda TODOS os seus
+// verbetes: sem o qualificador, as cinco Coleções de livros têm um nome só, e um mapa de um item por nome mediria
+// uma e esqueceria quatro. O resto vai pelo nome, agrupado pelo auditor que o mede (`measuredBy`).
+func catalogByKey() (map[string][]*transcript.Item, map[string][]string) {
+	mine := map[string][]*transcript.Item{}
+	elsewhere := map[string][]string{}
 	for i := range transcript.Items {
-		out[bookpdf.Key(transcript.Items[i].Name)] = &transcript.Items[i]
+		it := &transcript.Items[i]
+		if auditor := measuredBy(*it); auditor != "" {
+			elsewhere[auditor] = append(elsewhere[auditor], it.Name)
+			continue
+		}
+		k := nameKey(it.Name)
+		mine[k] = append(mine[k], it)
 	}
-	return out
+	return mine, elsewhere
 }
 
 func firstBookPrice(block []cell) (float64, bool) {
@@ -151,7 +198,7 @@ func firstBookPrice(block []cell) (float64, bool) {
 
 // blocksOfTable é um bloco por ITEM: do nome dele até o próximo nome da mesma
 // linha, abaixo do título da tabela.
-func blocksOfTable(book *bookpdf.Book, pages []int, title string, items map[string]*transcript.Item) [][]cell {
+func blocksOfTable(book *bookpdf.Book, pages []int, title string, items map[string][]*transcript.Item) [][]cell {
 	var out [][]cell
 	for _, page := range pages {
 		lines := book.PositionedLines(page + pdfOffset)
@@ -188,7 +235,7 @@ func blocksOfTable(book *bookpdf.Book, pages []int, title string, items map[stri
 			})
 			var starts []int
 			for i, c := range cells {
-				if items[bookpdf.Key(c.text)] != nil {
+				if k := nameKey(c.text); k != "" && len(items[k]) > 0 {
 					starts = append(starts, i)
 				}
 			}
@@ -236,4 +283,50 @@ func pyFloat(x float64) string {
 		fixed += ".0"
 	}
 	return fixed
+}
+
+// As páginas do capítulo 3 no LIVRO: o que está fora delas é de outro auditor.
+const (
+	chapterThreeFirst = 138
+	chapterThreeLast  = 167
+)
+
+// measuredBy é o auditor que mede o item: "" é este, o das tabelas do capítulo 3; o resto é o nome do irmão em
+// `cmd/audit/`, e "nenhum" é o item que nenhum auditor alcança — o achado. A página decide primeiro, porque o
+// capítulo 3 também tem `apparel` e o capítulo 8 também tem arma; dentro do capítulo 8, o tipo do verbete diz qual
+// tabela o tem, que é como cada irmão escolhe os seus.
+//
+//	measuredBy(transcript.Item{Category: "material", BookPage: 166}) // "materials"
+func measuredBy(it transcript.Item) string {
+	if it.BookPage >= chapterThreeFirst && it.BookPage <= chapterThreeLast {
+		if it.Category == "material" {
+			return "materials"
+		}
+		return ""
+	}
+	switch {
+	case it.Category == "weapon-enchant" || it.Category == "armor-enchant":
+		return "enchants"
+	case it.Artifact:
+		return "artifacts"
+	case it.ComposedOf != nil:
+		return "specificitems"
+	case it.Consumable != nil && it.Consumable.Spell != "":
+		return "potions"
+	case it.Category == "apparel":
+		return "accessories"
+	}
+	return "nenhum"
+}
+
+// qualifier é o qualificador entre parênteses no fim do nome — "(10 m)", "(Guerra)", "(por dia)".
+var qualifier = regexp.MustCompile(`\s*\([^)]*\)\s*$`)
+
+// nameKey é o nome comparável, SEM o qualificador dos dois lados: o catálogo o guarda porque ele importa na mesa
+// ("Corda (10 m)", decisão do dono), e a tabela do livro tem o seu ("Ração de viagem (por dia)"). Comparar com ele
+// deixava esses itens sem medida. Uma célula só de qualificador vira chave vazia, e chave vazia não casa nada.
+//
+//	nameKey("Corda (10 m)") == nameKey("Corda") // true
+func nameKey(name string) string {
+	return bookpdf.Key(qualifier.ReplaceAllString(name, ""))
 }
