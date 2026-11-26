@@ -126,6 +126,10 @@ type Scene struct {
 	// strike é o CASO DE USO de atacar, e chega pelo mesmo caminho dos outros:
 	// por parâmetro, porque o `app/` está abaixo desta cena.
 	strike combat.Strike
+	// combatants diz quem está por trás de uma linha da fila — a ficha, o verbete do bestiário ou o bloco do mestre
+	// —, e a cena lê dele a NATUREZA do NPC (o tipo e a Inteligência) para a imunidade às condições (p228). É o
+	// mesmo leitor do golpe: a natureza se lê num lugar só.
+	combatants combat.Combatants
 	// gestures são os gestos que escrevem no tabuleiro E na fila, e por isso
 	// abrem a TRANSAÇÃO (ALE-376) — a cena não abre nenhuma. Eles chegam por
 	// parâmetro como os outros casos de uso, porque o `app/` está abaixo desta
@@ -149,12 +153,12 @@ type Scene struct {
 func New(
 	d Deps, cycle session.Lifecycle, ephemeral *EphemeralTableState, group rest.Party,
 	queue initiative.Queue, cast campaign.Cast, plays character.Plays, strike combat.Strike,
-	gestures boards.Gestures,
+	combatants combat.Combatants, gestures boards.Gestures,
 ) Scene {
 	return Scene{
 		deps: d, lifecycle: cycle, party: group, queue: queue, cast: cast, plays: plays, strike: strike,
-		gestures: gestures,
-		access:   cycle.Access(),
-		lenses:   ephemeral.lenses, chosenTabs: ephemeral.chosenTabs, displays: ephemeral.displays,
+		combatants: combatants, gestures: gestures,
+		access: cycle.Access(),
+		lenses: ephemeral.lenses, chosenTabs: ephemeral.chosenTabs, displays: ephemeral.displays,
 	}
 }

@@ -98,7 +98,7 @@ func (r Roster) fromSheet(ctx context.Context, e live.InitiativeEntry) (Combatan
 			return ""
 		},
 		// O PERSONAGEM tem a raça e o tipo dela (o osteon é morto-vivo, ALE-650).
-		Nature:      book.CharacterNature(primaryRace(dto)),
+		Nature:      book.CharacterNature(primaryRace(dto), int(row.Intelligence)),
 		DamageTaken: engine.DamageTakenFrom(effects),
 		WrittenDose: func(catalogID string) (string, string) {
 			return sheet.WrittenDose(catalogID, dto.Level, computed)
@@ -148,14 +148,21 @@ func (r Roster) fromBlock(
 	if err := json.Unmarshal([]byte(row.Block), &block); err != nil {
 		return Combatant{}, fmt.Errorf("o bloco de %s está ilegível: %w", e.Label, err)
 	}
-	return Combatant{EntryID: e.ID, Label: e.Label, Defense: block.Defense, Nature: book.CreatureNature{Kind: block.Kind}}, nil
+	// O INT DO BLOCO NUNCA É NULO: o bloco guarda um número, e a cópia do verbete para o bloco converte a nula em
+	// ZERO de propósito (ver o `entry_to_block.go`). Então um Zumbi copiado para a campanha continua imune a veneno,
+	// pelo TIPO, e deixa de ser imune a medo — a perda conhecida da cópia.
+	mind := block.Intelligence
+	return Combatant{EntryID: e.ID, Label: e.Label, Defense: block.Defense,
+		Nature: book.CreatureNature{Kind: block.Kind, Intelligence: &mind}}, nil
 }
 
 // fromBestiary: o bestiário do livro.
 func (r Roster) fromBestiary(e live.InitiativeEntry) (Combatant, error) {
 	for _, entry := range book.Creatures() {
 		if entry.ID == *e.MonsterID {
-			return Combatant{EntryID: e.ID, Label: e.Label, Defense: entry.Defense, Nature: book.CreatureNature{Kind: entry.Kind}}, nil
+			// O VERBETE sabe dizer a Inteligência NULA — o travessão do livro, nil aqui.
+			return Combatant{EntryID: e.ID, Label: e.Label, Defense: entry.Defense,
+				Nature: book.CreatureNature{Kind: entry.Kind, Intelligence: entry.Intelligence}}, nil
 		}
 	}
 	return Combatant{}, fmt.Errorf("o verbete %q não está no bestiário", *e.MonsterID)
