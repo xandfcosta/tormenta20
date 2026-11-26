@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
+
+	"t20engine/app"
 
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
@@ -150,6 +153,34 @@ func (p Plays) ToggleBookCondition(
 	// a condição gravada sem a forma revertida seria a metade do gesto.
 	return p.inTx(ctx, "marcar a condição "+condition, func(q *sqlcgen.Queries) error {
 		return sheet.SaveConditions(ctx, q, row.ID, after)
+	})
+}
+
+// ReplaceConditions troca a lista inteira das condições da ficha — a porta da API, que a bancada do e2e usa para
+// limpar a ficha. Cada condição que ENTRA passa pela mesma pergunta dos gestos (`engine.MarkRefusal`); a que já
+// estava gravada passa direto, pela razão do `ToggleBookCondition`. A recusa sai embrulhada em `app.ErrRefused`.
+//
+// @example plays.ReplaceConditions(ctx, row, []string{}) // limpa a ficha
+func (p Plays) ReplaceConditions(ctx context.Context, row sqlcgen.Character, conditions []string) error {
+	before := sheet.UnmarshalStrings(row.Activeconditions)
+	var who *engine.ConditionTarget
+	for _, condition := range conditions {
+		if slices.Contains(before, condition) {
+			continue
+		}
+		if who == nil {
+			target, err := p.conditionTarget(ctx, row)
+			if err != nil {
+				return err
+			}
+			who = &target
+		}
+		if err := engine.MarkRefusal(condition, *who); err != nil {
+			return fmt.Errorf("%w: %w", err, app.ErrRefused)
+		}
+	}
+	return p.inTx(ctx, "trocar as condições", func(q *sqlcgen.Queries) error {
+		return sheet.SaveConditions(ctx, q, row.ID, conditions)
 	})
 }
 
