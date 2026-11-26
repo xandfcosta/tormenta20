@@ -92,6 +92,8 @@ type SessionRuntimeState struct {
 	// Markable é a marca da última magia conjurada que deixa marca na criatura atingida, a que o mestre põe nas
 	// linhas de quem falhou (ver GLOSSARY, **marca na fila**). Fica até outra magia dessas ser conjurada.
 	Markable *QueueMark `json:"markable,omitempty"`
+	// ExtendedTest é o teste estendido aberto, que as duas sessões veem e só o mestre marca (ver `ExtendedTest`).
+	ExtendedTest *ExtendedTest `json:"extendedTest,omitempty"`
 }
 
 // EmptyRuntimeState é um rastreador novo. Cada chamada devolve uma fatia nova,
@@ -357,6 +359,8 @@ func redactForViewer(st *SessionRuntimeState, own map[int64]bool) *SessionRuntim
 		offScene := EmptyRuntimeState()
 		// As rolagens que não dependem da fila atravessam: ver `outOfScene`.
 		offScene.InformedRolls = st.InformedRolls.outOfScene()
+		// O TESTE ESTENDIDO atravessa: a jornada pelos ermos acontece fora de cena.
+		offScene.ExtendedTest = st.ExtendedTest
 		return offScene
 	}
 	out := CloneState(st)
