@@ -55,6 +55,7 @@ var masterRail = []railSection{
 		{"itens", "Itens", "Backpack", "Armas, armaduras e equipamento, com preço e espaços."},
 		{"magias", "Magias", "Wand2", "As 198 magias, por círculo, com aprimoramentos."},
 		{"pericias", "Perícias", "Dices", "As 29 perícias, com atributo e as regras de treino."},
+		{"perigos", "Perigos", "AlertTriangle", "Armadilhas, doenças e o ambiente (p317), com CD e ND."},
 		{"poderes", "Poderes", "Star", "Poderes de classe, gerais e divinos numa lista só."},
 		{"racas", "Raças", "Users2", "As 17 raças, com modificadores e habilidades."},
 	}},
@@ -110,7 +111,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 75, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 76, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -182,7 +183,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 91, Col: 17}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 92, Col: 17}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -247,7 +248,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 				var templ_7745c5c3_Var7 templ.SafeURL
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/mestre/" + stop.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 110, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 111, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -278,7 +279,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 117, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 118, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -372,7 +373,7 @@ func masterMenu(current string) templ.Component {
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 135, Col: 17}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 136, Col: 17}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {

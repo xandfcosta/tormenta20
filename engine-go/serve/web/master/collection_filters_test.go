@@ -16,6 +16,7 @@ import (
 func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 	want := map[string][]string{
 		"condicoes": {"efeito"},
+		"perigos":   {"tipo"},
 		"magias":    {"circulo", "escola", "classe"},
 		"pericias":  {"atributo", "treino"},
 		"poderes":   {"fonte"},

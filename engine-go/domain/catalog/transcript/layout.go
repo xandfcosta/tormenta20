@@ -21,7 +21,7 @@ var layouts = []resourceLayout{
 	valueLayout("gm-tables", "GMTables", "gm_tables", "as tabelas de improviso do mestre (Capítulo 6)", &GMTables, func() ([]byte, error) { return marshalPlain(GMTables) }),
 	listLayout("gods", "Gods", "gods", "o Panteão: os 20 deuses", &Gods, nil, nil),
 	listLayout("granted-powers", "GrantedPowers", "granted_powers", "os poderes concedidos que o motor sabe somar", &GrantedPowers, []*[]GrantedPower{&grantedPowersPart01, &grantedPowersPart02}, nil),
-	listLayout("hazards", "Hazards", "hazards", "os perigos do Capítulo 7 (p317-319): armadilhas, doenças e o ambiente", &Hazards, []*[]Hazard{&hazardsPart01, &hazardsPart02}, func(v Hazard) string { return v.ID }),
+	listLayout("hazards", "Hazards", "hazards", "os perigos do Capítulo 7 (p317-319): armadilhas, doenças e o ambiente", &Hazards, []*[]Hazard{&hazardsPart01, &hazardsPart02}, nil),
 	listLayout("items", "Items", "items", "o equipamento do Capítulo 3 e os itens mágicos do Capítulo 8", &Items, []*[]Item{&itemsPart01, &itemsPart02, &itemsPart03, &itemsPart04, &itemsPart05, &itemsPart06, &itemsPart07, &itemsPart08, &itemsPart09, &itemsPart10, &itemsPart11, &itemsPart12, &itemsPart13, &itemsPart14, &itemsPart15, &itemsPart16, &itemsPart17, &itemsPart18}, nil),
 	valueLayout("options", "CreationOptions", "options", "as listas de criação de personagem", &CreationOptions, func() ([]byte, error) { return marshalPlain(CreationOptions) }),
 	listLayout("origins-source", "OriginSources", "origins_source", "as origens como o livro as imprime: perícias, poderes e itens", &OriginSources, nil, func(v OriginSource) string { return v.ID }),

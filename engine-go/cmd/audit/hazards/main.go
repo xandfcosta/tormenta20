@@ -1,5 +1,5 @@
 // Command hazards confere os perigos do catálogo (p317-319) contra o livro: as armadilhas campo a campo, as doenças
-// pelo contágio, pela CD e pelos efeitos, e o ambiente pelos dados que a paráfrase cita.
+// pelo contágio, pela CD e pelos efeitos, e o ambiente pelos dados e pelas páginas que a paráfrase cita.
 //
 // As armadilhas se leem pela FICHA, que o livro escreve numa frase só terminada em "ND x." — cortar o texto nesses
 // pontos dá uma ficha por pedaço, na ordem do livro. A armadilha MÁGICA é a do nome em itálico (p317), e o itálico
@@ -29,6 +29,7 @@ var (
 	searchOne = regexp.MustCompile(`Investigação/ ?Ladinagem CD (\d+)`)
 	searchTwo = regexp.MustCompile(`Investigação CD (\d+), Ladinagem CD (\d+)`)
 	diceRe    = regexp.MustCompile(`\d+d\d+(?:\+\d+)?`)
+	citedPage = regexp.MustCompile(`página \d+`)
 	diseaseRe = regexp.MustCompile(`(Contato|Inalação), CD (\d+), vítima (?:fica )?([^.]*)\.`)
 )
 
@@ -235,8 +236,10 @@ func auditAmbient(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(stri
 				fail("%s: a paráfrase cita %s, e a p%d não tem esse dado", h.Name, d, h.BookPage)
 			}
 		}
-		if h.SeePage != 0 && !strings.Contains(page, fmt.Sprintf("página %d", h.SeePage)) {
-			fail("%s: o catálogo aponta a p%d, e o livro não", h.Name, h.SeePage)
+		for _, cited := range citedPage.FindAllString(h.Description, -1) {
+			if !strings.Contains(page, cited) {
+				fail("%s: a paráfrase diz %q, e a p%d não cita essa página", h.Name, cited, h.BookPage)
+			}
 		}
 	}
 	fmt.Printf("AMBIENTE         medidos: %d de %d\n", measured, len(catalog))

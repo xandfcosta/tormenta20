@@ -193,7 +193,7 @@ func TestTheTrailSlugsAreUnique(t *testing.T) {
 // "De pé" é responder 200, não existir no trilho: uma parada que perde a rota
 // some do trilho sem erro nenhum, e por isso o número fica preso.
 func TestTheRailOffersEveryStop(t *testing.T) {
-	if len(railStops) != 13 {
+	if len(railStops) != 14 {
 		t.Fatalf("o trilho tem %d paradas", len(railStops))
 	}
 	// E as DUAS seções existem: sem elas o trilho volta a ser uma lista só, que

@@ -8,12 +8,11 @@ type Hazard struct {
 	Kind     string `json:"kind"`
 	BookPage int    `json:"bookPage"`
 	UID      string `json:"uid"`
-	// Description é a regra em PARÁFRASE, com os números do livro.
+	// Description é a regra em PARÁFRASE, com os números do livro. A regra que mora noutro lugar diz "veja a página N"
+	// (o clima, na p267), e a frase vira elo para o livro.
 	Description string         `json:"description"`
 	Trap        *HazardTrap    `json:"trap,omitempty"`
 	Disease     *HazardDisease `json:"disease,omitempty"`
-	// SeePage é a página da regra quando ela mora noutro lugar — o clima, na p267.
-	SeePage int `json:"seePage,omitempty"`
 }
 
 // HazardTrap é a ficha da armadilha (p317): o que ela causa, a resistência, as CDs para achá-la e desarmá-la e o ND.

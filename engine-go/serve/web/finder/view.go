@@ -107,6 +107,7 @@ func buildHits(search string, byText bool) finderView {
 	gods := book.CatalogGods()
 	for _, g := range []finderGroup{
 		foundGroup("Condições", a.Conditions, search, byText, routes.MasterSearch("condicoes", search), book.ConditionFields, conditionHit),
+		foundGroup("Perigos", book.Hazards(), search, byText, routes.MasterSearch("perigos", search), book.HazardFields, hazardHit),
 		foundGroup("Criaturas", book.Creatures(), search, byText, routes.MasterBestiarySearch(search), entryFields, entryHit),
 		foundGroup("Magias", a.Spells, search, byText, routes.MasterSearch("magias", search), book.SpellFields, spellHit),
 		foundGroup("Poderes", a.Powers, search, byText, routes.MasterSearch("poderes", search), book.PowerFields, powerHit),
@@ -286,6 +287,15 @@ func classHit(c book.Class) finderHit {
 		Detail:      fmt.Sprintf("Classe · %d poderes", c.Powers),
 		Destination: routes.MasterEntry("classes", c.ID),
 		Page:        c.BookPage,
+	}
+}
+
+func hazardHit(h book.Hazard) finderHit {
+	return finderHit{
+		Name:        h.Name,
+		Detail:      book.HazardKindName(h.Kind),
+		Destination: routes.MasterEntry("perigos", h.ID),
+		Page:        h.BookPage,
 	}
 }
 

@@ -103,6 +103,10 @@ func TestAHitKnowsWhereToLead(t *testing.T) {
 	if creature.Page == 0 {
 		t.Error("a criatura veio sem página do livro, e o bestiário é o único catálogo que sabe a dele")
 	}
+	hazard := firstOfGroup(t, searchTheBook("fosso camuflado"), "Perigos")
+	if !strings.Contains(hazard.Destination, "/mestre/perigos") {
+		t.Errorf("o perigo leva para %q", hazard.Destination)
+	}
 	condition := firstOfGroup(t, searchTheBook("abalado"), "Condições")
 	if !strings.Contains(condition.Destination, "/mestre/condicoes") {
 		t.Errorf("a condição leva para %q", condition.Destination)

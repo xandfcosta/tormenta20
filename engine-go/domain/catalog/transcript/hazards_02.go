@@ -152,8 +152,7 @@ var hazardsPart02 = []Hazard{
 		Kind:        "ambiente",
 		BookPage:    318,
 		UID:         "hzd_aykstk25ny",
-		Description: "As regras do clima, do calor e do frio estão no Capítulo 6.",
-		SeePage:     267,
+		Description: "As regras do clima, do calor e do frio estão no Capítulo 6: veja a página 267.",
 	},
 	{
 		ID:          "escuridao",
