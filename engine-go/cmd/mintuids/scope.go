@@ -59,6 +59,9 @@ var scope = []scopeEntry{
 	{"items.json", "itm", func() [][]mintable {
 		return [][]mintable{collect(transcript.Items, func(v *transcript.Item) mintable { return mintable{v.ID, &v.UID} })}
 	}},
+	{"hazards.json", "hzd", func() [][]mintable {
+		return [][]mintable{collect(transcript.Hazards, func(v *transcript.Hazard) mintable { return mintable{v.ID, &v.UID} })}
+	}},
 	{"conditions.json", "cnd", func() [][]mintable {
 		return [][]mintable{collect(transcript.Conditions, func(v *transcript.Condition) mintable { return mintable{v.ID, &v.UID} })}
 	}},
@@ -111,10 +114,11 @@ var scope = []scopeEntry{
 //	gm-tables, dungeon-design, devotee-terms   tabelas de mestre
 //	class-expertises  é APONTAMENTO — classe para nomes de perícia, e as
 //	                  perícias já têm identidade em expertises
+//	threat-stats      a Tabela 7-2, uma linha por ND: tabela de mestre, sem verbete
 var outOfScope = map[string]bool{
 	"activations.json": true, "options.json": true,
 	"gm-tables.json": true, "dungeon-design.json": true, "devotee-terms.json": true,
-	"class-expertises.json": true,
+	"class-expertises.json": true, "threat-stats.json": true,
 }
 
 func scopeOf(file string) (scopeEntry, bool) {
