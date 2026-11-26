@@ -271,8 +271,11 @@ func auditAmbient(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(stri
 			if !strings.Contains(page, said+" por rodada") {
 				fail("%s: a %s diz %q por rodada, e a p%d não tem essa frase", h.Name, e.Name, said, h.BookPage)
 			}
-			if e.Lingers && !strings.Contains(page, "persiste por uma rodada adicional") {
-				fail("%s: a %s persiste uma rodada depois de sair, e a p%d não diz isso", h.Name, e.Name, h.BookPage)
+			// A RODADA QUE PERSISTE é da frase DESTA forma, e nos dois sentidos: a página inteira diz "persiste", e
+			// marcar a exposição como persistente passaria se a conferência fosse por página.
+			persists := strings.Contains(page, said+" por rodada e o dano persiste por uma rodada adicional")
+			if e.Lingers != persists {
+				fail("%s: a %s persiste uma rodada depois de sair %v no catálogo e %v na p%d", h.Name, e.Name, e.Lingers, persists, h.BookPage)
 			}
 			if e.ID == "exposicao" {
 				exposed++

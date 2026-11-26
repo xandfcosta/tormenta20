@@ -111,7 +111,7 @@ func hazardBandOf(st *live.SessionRuntimeState) *rollBand {
 	case h.Rounds > 0:
 		band.Help = append(band.Help, fmt.Sprintf(
 			"Dura %d rodadas (%s): esta, e mais %d na vez de quem estiver nele. Marque quem está nele: “+ Marcar: %s” na folha da linha.",
-			h.Rounds, writtenRoll(h.RoundsDice, h.RoundsRolls, "", false), h.Rounds-1, h.Lingering.Source))
+			h.Rounds, writtenRoll(h.RoundsDice, h.RoundsRolls, "", false), h.Rounds-1, h.Hazard))
 	case h.Lingering != nil:
 		said := partsWritten(h.Lingering.Parts) + " por rodada, no início do turno de quem está exposto."
 		if h.Lingers {
