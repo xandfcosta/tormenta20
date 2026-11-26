@@ -198,8 +198,8 @@ func (p Plays) conditionTarget(ctx context.Context, row sqlcgen.Character) (engi
 		return who, fmt.Errorf("ler a raça da ficha %d: %w", row.ID, err)
 	}
 	if len(races) > 0 {
-		mind := int(row.Intelligence)
-		who.Immunities = engine.ImmunitiesOfCreature(book.CharacterNature(races[0]).Kind, &mind)
+		nature := book.CharacterNature(races[0], int(row.Intelligence))
+		who.Immunities = engine.ImmunitiesOfCreature(nature.Kind, nature.Intelligence)
 	}
 	dto, err := sheet.Load(ctx, p.queries, p.catalogs, row)
 	if err != nil {

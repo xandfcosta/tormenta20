@@ -89,11 +89,12 @@ func TargetNatureName(chosen string, target CreatureNature) string {
 }
 
 // CharacterNature é o que a mesa sabe de um PERSONAGEM: a raça que a ficha guarda e o tipo de criatura dela —
-// o osteon é morto-vivo, o golem é construto (p27, p29; ALE-650). Raça que o livro não conhece fica sem tipo.
+// o osteon é morto-vivo, o golem é construto (p27, p29; ALE-650). Raça que o livro não conhece fica sem tipo. A
+// Inteligência é sempre um número: personagem tem mente, e nunca a nula do bestiário.
 //
-//	book.CharacterNature("osteon") // {Kind: "morto-vivo", Race: "osteon"}
-func CharacterNature(race string) CreatureNature {
-	nature := CreatureNature{Race: race}
+//	book.CharacterNature("osteon", 2) // {Kind: "morto-vivo", Race: "osteon", Intelligence: 2}
+func CharacterNature(race string, intelligence int) CreatureNature {
+	nature := CreatureNature{Race: race, Intelligence: &intelligence}
 	if traits, found := RaceTraitsByKey()[race]; found {
 		nature.Kind = traits.Type
 	}
@@ -105,6 +106,9 @@ func CharacterNature(race string) CreatureNature {
 type CreatureNature struct {
 	Kind string
 	Race string
+	// Intelligence é a Inteligência, e nil é a NULA — o travessão do livro, que o verbete do bestiário sabe dizer e
+	// o bloco do mestre não (ele guarda sempre um número). É o que decide a imunidade a medo e a mental (p228).
+	Intelligence *int
 }
 
 // ChosenKindMatch é a leitura do alvo contra o tipo escolhido.

@@ -236,7 +236,7 @@ func (s *Server) primeCatalogs(catalogs *engine.Catalogs) {
 	s.tableScene = table.New(
 		s.tableHost(), s.sessionLifecycle(), s.tableMemory, s.restParty(),
 		s.initiativeQueue(), s.campaignCast(), s.characterPlays(), s.combatStrike(),
-		s.boardGestures())
+		combat.NewRoster(s.queries, s.catalogs), s.boardGestures())
 }
 
 // boardGestures são os gestos que escrevem no tabuleiro E na fila, e que por

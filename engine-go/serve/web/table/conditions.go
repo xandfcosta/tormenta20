@@ -102,52 +102,20 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 }
 
 // creatureTarget é a criatura por trás da linha do NPC, para a pergunta de quem pode receber a condição: o nome, e
-// as imunidades do tipo dela (p228). Sem criatura — linha digitada à mão —, ela não é imune a nada. O personagem
-// tem a dele no `character.Plays`, pelo tipo da raça.
+// as imunidades da natureza dela (p228), que se lê no mesmo lugar que o golpe lê (`combat.Combatants`). O personagem
+// tem a dele no `character.Plays`.
 //
-// AS DUAS PROCEDÊNCIAS NÃO SÃO IGUAIS, e a diferença é do dado e não do desenho.
-// O VERBETE do bestiário guarda a Inteligência como ponteiro, então ele sabe
-// dizer "nula" — é o travessão do livro, e sete das onze criaturas de construto
-// e morto-vivo o têm. O BLOCO que o mestre escreveu guarda um int, e a cópia do
-// verbete para o bloco converte a ausência em ZERO de propósito (ver o
-// `entry_to_block.go`). Então um Zumbi copiado para a campanha continua imune a
-// veneno, pelo TIPO, e deixa de ser imune a medo — e isso é a perda conhecida da
-// cópia.
+// SEM CRIATURA NÃO SE RECUSA NADA: a linha digitada à mão não tem verbete nem bloco, e o id do bloco veio do cliente
+// e pode apontar para o nada (é o que o `initiative.npcEntry` permite de propósito). Transformar isso numa recusa
+// tiraria do mestre um gesto que não tem a ver com imunidade nenhuma.
 func (st Scene) creatureTarget(c commandCtx, entry live.InitiativeEntry) engine.ConditionTarget {
 	target := engine.ConditionTarget{Name: entry.Label}
-	if kind, intelligence, found := st.creatureNatureOf(c, entry); found {
-		target.Immunities = engine.ImmunitiesOfCreature(kind, intelligence)
-	}
-	return target
-}
-
-// creatureNatureOf devolve o TIPO e a Inteligência da criatura por trás da
-// linha, e `false` quando não há criatura — personagem ou linha digitada à mão.
-func (st Scene) creatureNatureOf(c commandCtx, entry live.InitiativeEntry) (string, *int, bool) {
-	if entry.MonsterID != nil {
-		for _, verbete := range book.Creatures() {
-			if verbete.ID == *entry.MonsterID {
-				return verbete.Kind, verbete.Intelligence, true
-			}
-		}
-		return "", nil, false
-	}
-	if entry.CreatureID == nil {
-		return "", nil, false
-	}
-	_, bloco, err := st.cast.Block(c.R.Context(), st.callerOf(c.R), c.CampaignID, *entry.CreatureID)
+	found, err := st.combatants.Of(c.R.Context(), c.CampaignID, entry)
 	if err != nil {
-		// SEM BLOCO NÃO SE RECUSA NADA: o id veio do cliente e pode apontar para
-		// o nada (é o que o `initiative.npcEntry` permite de propósito), e
-		// transformar um bloco ilegível numa recusa tiraria do mestre um gesto
-		// que não tem a ver com imunidade nenhuma.
-		return "", nil, false
+		return target
 	}
-	// O INT DO BLOCO NUNCA É NULO, e por isso ele vai como ponteiro para um
-	// número: o bloco não sabe dizer "não tem", e fingir que o zero é a ausência
-	// daria imunidade a medo a todo NPC que o mestre esqueceu de preencher.
-	inteligencia := bloco.Intelligence
-	return bloco.Kind, &inteligencia, true
+	target.Immunities = engine.ImmunitiesOfCreature(found.Nature.Kind, found.Nature.Intelligence)
+	return target
 }
 
 // toggleSheetCondition alterna a condição NA FICHA do personagem da linha.
