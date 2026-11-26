@@ -230,6 +230,7 @@ reprova o item que auditor nenhum alcança, pelo nome. O auditor só roda à mã
 | `cmd/audit/potions` | `transcript.Items` (os de `consumable.spell`) | a Tabela 8-12 (`d%` + a MAGIA + preço), resolvida contra o catálogo de magias — a poção não tem verbete |
 | `cmd/audit/accessories` | `transcript.Items` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15, com UMA lista alfabética de verbetes para as três |
 | `cmd/audit/artifacts` | `transcript.Items` (`artifact`), `transcript.GMTables` (`chaosDeck`) | NENHUMA tabela — a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção e o corpo têm corpos de letra diferentes, e nas p346-349 não há outra seção |
+| `cmd/audit/threatstats` | `transcript.ThreatStats` | a Tabela 7-2 (p323) linha a linha pelas palavras de cada altura, e os pacotes de atributos dos quatro patamares (p322) |
 
 **Dois não leem o livro.** O `cmd/audit/coverage` confere raça, classe e origem
 contra o MOTOR — quanto vira número, gesto ou nota do mestre. O balde é

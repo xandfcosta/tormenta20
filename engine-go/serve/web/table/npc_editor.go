@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/starfederation/datastar-go/datastar"
 
+	"t20engine/domain/book"
 	"t20engine/domain/creature"
 	"t20engine/domain/live"
 )
@@ -47,6 +48,7 @@ func (s Scene) RoutesEditorNpc(r chi.Router) {
 	r.Post(base+"/rascunho/{lista}/nova", s.moveList(addList))
 	r.Post(base+"/rascunho/{lista}/{indice}/remover", s.moveList(tiraDaLista))
 	r.Post(base+"/rascunho/salvar", s.gmCommand(saveDraft))
+	r.Post(base+"/rascunho/preencher-pelo-nd", s.fillByND)
 }
 
 // npcDraft é o formulário aberto, e não o bloco guardado.
@@ -99,7 +101,8 @@ func (s Scene) openDraft(w http.ResponseWriter, r *http.Request) {
 		}
 		draft = paraOFormulario(row.ID, row.Name, block)
 	}
-	s.respondDraft(w, r, c, draft)
+	// O GUIA do preenchimento é do formulário anterior, e o que abre agora nasce sem ele.
+	s.respondDraft(w, r, c, draft, map[string]any{"draft_guide": ""})
 }
 
 // moveList é o corpo dos quatro gestos de forma — acrescentar e tirar, em
@@ -135,8 +138,31 @@ func (s Scene) moveList(
 			writeSignals(w, r, map[string]any{"draft_error": err.Error()})
 			return
 		}
-		s.respondDraft(w, r, c, draft)
+		s.respondDraft(w, r, c, draft, nil)
 	}
+}
+
+// fillByND preenche o rascunho pela Tabela 7-2 (p323): Defesa, PV e os ataques, sobrescritos, e o GUIA do que o
+// livro deixa ao mestre — as perícias focadas e as outras, a CD e o pacote de atributos do patamar (ver GLOSSARY,
+// **estatísticas pelo ND**). Como o acrescentar um ataque, ele não grava: devolve o rascunho, e o Cancelar desfaz.
+func (s Scene) fillByND(w http.ResponseWriter, r *http.Request) {
+	c, ok := s.tableGm(w, r)
+	if !ok {
+		return
+	}
+	draft, err := pageDraft(r)
+	if err != nil {
+		writeSignals(w, r, map[string]any{"draft_error": err.Error()})
+		return
+	}
+	stats, found := book.ThreatStatsFor(draft.Block.ND)
+	if !found {
+		writeSignals(w, r, map[string]any{"draft_error": fmt.Sprintf(
+			"%s Este NPC está no ND %s: escreva os números à mão.", outsideTheTable, book.CRWritten(draft.Block.ND))})
+		return
+	}
+	draft.Block = stats.FillBlock(draft.Block)
+	s.respondDraft(w, r, c, draft, map[string]any{"draft_guide": threatGuide(stats)})
 }
 
 // addList põe uma linha VAZIA no fim.
@@ -303,21 +329,25 @@ func draftBlock(draft npcDraft) creature.Block {
 // AS DUAS COISAS, sempre. Só os sinais deixaria a lista com o número de linhas
 // antigo — o ataque existiria no rascunho e não na tela. Só o HTML deixaria a
 // linha nova ligada a um caminho de sinal que não existe, e ela nasceria muda.
-func (s Scene) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx, draft npcDraft) {
+func (s Scene) respondDraft(w http.ResponseWriter, r *http.Request, c commandCtx, draft npcDraft, extra map[string]any) {
 	sse := datastar.NewSSE(w, r)
 	for _, fragment := range draftLists(c, draft) {
 		if html, err := ui.RenderFragment(r.Context(), fragment); err == nil {
 			_ = sse.PatchElements(html)
 		}
 	}
-	_ = sse.MarshalAndPatchSignals(map[string]any{
+	signals := map[string]any{
 		"draft": draft,
 		// ABRIR o editor e apagar a recusa anterior fazem parte da resposta: uma
 		// frase de erro de dois gestos atrás sobre um formulário que acabou de
 		// abrir é a recusa certa na tela errada.
 		"draft_open":  true,
 		"draft_error": "",
-	})
+	}
+	for k, v := range extra {
+		signals[k] = v
+	}
+	_ = sse.MarshalAndPatchSignals(signals)
 }
 
 // tableGm é a leitura de acesso dos caminhos do rascunho.

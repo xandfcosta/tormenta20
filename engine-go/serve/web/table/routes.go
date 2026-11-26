@@ -244,7 +244,7 @@ func tableSignalsExpr(revision string) string {
 		// um sinal NOVO em vez de escrever no de baixo, e o campo ficaria mudo
 		// até o primeiro `@post`. A semente é a mesma do "criar do zero", vinda
 		// do `blocoEmBranco` — escrevê-la aqui à mão seria o segundo branco.
-		fmt.Sprintf("draft_open: false, draft_tab: %q, draft_error: '', draft: %s",
+		fmt.Sprintf("draft_open: false, draft_tab: %q, draft_error: '', draft_guide: '', draft: %s",
 			abaDosNumeros, blankDraft()),
 		// O ENQUADRAMENTO e o arrasto, que são do navegador de ponta a ponta.
 		fmt.Sprintf("square: %d", DefaultSquare),

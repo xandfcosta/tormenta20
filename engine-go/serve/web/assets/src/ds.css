@@ -4031,8 +4031,13 @@
     min-height: 0;
     flex-direction: column;
   }
+  /* AS LINHAS TÊM A ALTURA DO CONTEÚDO, e quem rola é o corpo. A fileira de abas também rola (`overflow-x` do
+   * `.ds-tabs`), e caixa que rola tem mínimo ZERO: com o corpo apertado, a grade encolhia a linha dela até a borda —
+   * 1 px, com o título "Identidade" por cima, e Ataques e Perícias não abriam. O `max-content` segura a linha; o
+   * `npc-editor.spec.ts` mede a altura da fileira e clica na aba. */
   .ds-npc-body {
     display: grid;
+    grid-auto-rows: max-content;
     flex: 1;
     min-height: 0;
     align-content: start;

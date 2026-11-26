@@ -43,7 +43,7 @@ templ blockEditor(v View) {
 				}
 			</div>
 			<div>
-				@blockNumbers()
+				@blockNumbers(v)
 				@attacksTab(v)
 				@ownedTab(v)
 			</div>
@@ -87,7 +87,7 @@ templ editorTabLink(aba editorTab) {
 // A ordem é do livro porque é dele que o mestre está copiando: quem tem a página
 // aberta ao lado lê de cima para baixo, e uma ordem "melhor" o obrigaria a
 // procurar cada campo.
-templ blockNumbers() {
+templ blockNumbers(v View) {
 	<div role="tabpanel" data-show={ onTabExpr(abaDosNumeros) } class="ds-npc-panel">
 		@blockSection("Identidade") {
 			@numberBlock("nd", "ND", 0, 30)
@@ -96,6 +96,7 @@ templ blockNumbers() {
 			@blockText("deslocamento", "Deslocamento", "9m (6q)")
 		}
 		@blockSection("Combate") {
+			@fillByND(v)
 			@numberBlock("iniciativa", "Iniciativa", -20, 60)
 			@numberBlock("percepcao", "Percepção", -20, 60)
 			@numberBlock("defesa", "Defesa", 0, 60)
@@ -296,4 +297,20 @@ templ numberRow(path, label string, min, max int) {
 // justamente o que se acabou de escrever.
 templ removeRowButton(v View, list string, index int, what string) {
 	@ds.IconButton(ds.ButtonGhost, "Trash2", "Tirar "+what, templ.Attributes{"type": "button", "title": "Tirar " + what, "data-on:click": listCommand(v, list, index)})
+}
+
+// fillByND é o "Preencher pelo ND" (ver GLOSSARY, **estatísticas pelo ND**): o botão, apagado fora da Tabela 7-2 com o
+// motivo escrito embaixo, e a linha de GUIA que a resposta acende — o que o livro deixa ao mestre.
+//
+// NO TOPO DO COMBATE e em largura inteira, e não ao lado do ND: é o Combate que ele escreve (Defesa, PV, ataques), e
+// numa célula da grade ao lado do ND a guia de quatro linhas afastava o rótulo "ND" da caixa dele e empurrava o Tipo
+// para fora da fileira — visto na tela, a 390px e no desktop.
+templ fillByND(v View) {
+	<div class="ds-field" data-wide>
+		@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": fillByNDCommand(v), "data-attr:disabled": "!(" + ndInTheTable() + ")"}) {
+			Preencher pelo ND
+		}
+		<p class="ds-help" data-show={ "!(" + ndInTheTable() + ")" }>{ outsideTheTable }</p>
+		<p class="ds-help" data-show="$draft_guide !== ''" data-text="$draft_guide"></p>
+	</div>
 }

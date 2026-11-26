@@ -3,6 +3,8 @@ package table
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"t20engine/domain/book"
 
 	"t20engine/domain/creature"
@@ -158,7 +160,7 @@ func openEditor(v View, npcID int64) string {
 
 // closeEditor é o Cancelar, e ele não fala com o servidor: o rascunho mora no
 // navegador e NADA foi escrito.
-const closeEditor = "$draft_open = false; $draft_error = ''"
+const closeEditor = "$draft_open = false; $draft_error = ''; $draft_guide = ''"
 
 // listCommand escreve o gesto que acrescenta ou tira uma linha.
 //
@@ -171,6 +173,38 @@ func listCommand(v View, list string, index int) string {
 	}
 	return fmt.Sprintf("@post('%s/%d/remover')", base, index)
 }
+
+// fillByNDCommand é o "Preencher pelo ND", que não grava.
+func fillByNDCommand(v View) string {
+	return fmt.Sprintf("@post('%s/elenco/npc/rascunho/preencher-pelo-nd')", v.SessionBase())
+}
+
+// ndInTheTable é a condição do botão: o ND do rascunho tem linha na Tabela 7-2. Os NDs saem da PRÓPRIA tabela, e não
+// de uma faixa escrita aqui, para a tela e a recusa do servidor lerem a mesma fonte.
+func ndInTheTable() string {
+	var nds []string
+	for _, nd := range book.ThreatNDs() {
+		nds = append(nds, strconv.FormatFloat(nd, 'f', -1, 64))
+	}
+	return fmt.Sprintf("[%s].includes(Number($draft.bloco.nd))", strings.Join(nds, ","))
+}
+
+// threatGuide é a linha de GUIA do preenchimento: o que a Tabela 7-2 diz e o bloco não tem onde guardar, porque é
+// escolha do mestre (p322) — quais perícias são focadas, a CD das habilidades, como distribuir os atributos.
+//
+// @example threatGuide(nd5) // "Pela Tabela 7-2 (p323), ND 5 · Veterano: perícias +14 nas focadas e +5 nas outras · CD 20 · atributos 4, 3, 2, 1, 0, 0 para distribuir"
+func threatGuide(s book.ThreatStats) string {
+	attributes := make([]string, len(s.Tier.Attributes))
+	for i, a := range s.Tier.Attributes {
+		attributes[i] = strconv.Itoa(a)
+	}
+	return fmt.Sprintf("Pela Tabela 7-2 (p323), ND %s · %s: perícias %+d nas focadas e %+d nas outras · CD %d · atributos %s para distribuir",
+		book.CRWritten(s.ND), s.Tier.Name, s.FocusedSkills, s.OtherSkills, s.DC, strings.Join(attributes, ", "))
+}
+
+// outsideTheTable é o porquê de o botão se apagar e de o servidor recusar: uma frase só, para a tela e a recusa
+// dizerem o mesmo.
+const outsideTheTable = "A Tabela 7-2 vai do ND 1/2 ao 20 (p323)."
 
 // salvaOBloco é o único gesto desta tela que grava.
 func salvaOBloco(v View) string {
