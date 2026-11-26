@@ -1,0 +1,121 @@
+package table
+
+import (
+	"fmt"
+	"strconv"
+
+	"t20engine/serve/web/ds"
+)
+
+// extendedBand é a faixa do teste estendido, a REGIÃO `table-extended` das duas sessões: a mesma conta para todos,
+// e os botões só na do mestre. A raiz existe sempre, escondida sem teste aberto, pela razão das regiões.
+templ extendedBand(v View) {
+	if t := v.Extended; t != nil {
+		<section id="table-extended" class="ds-strike" role="status" aria-label="Teste estendido">
+			<div class="ds-strike-head">
+				@ds.Badge(extendedBadge(*t), true)
+				<span class="ds-row-meta"><b>{ t.Name }</b></span>
+			</div>
+			if len(t.Who) == 0 {
+				{{ line := extendedLines(*t)[0] }}
+				<div class="ds-strike-roll" aria-live="polite">
+					<b class="ds-strike-verdict">{ line.Score }</b>
+					<span class="ds-strike-tally">{ line.Tally }</span>
+				</div>
+				<p class="ds-help">{ line.Said }</p>
+				if v.GM != nil {
+					// DUAS FILEIRAS: as marcas, que são o gesto do momento, e o desfazer e o encerrar. Numa fileira
+					// só, os cinco espremiam a faixa a 390px e o Encerrar saía da tela.
+					if !line.Done {
+						<div class="ds-strike-foot" data-fill>
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Marcar um sucesso", "data-on:click": tableCommand(v, "POST", extendedMark(line, "sucesso"))}) {
+								✓ Sucesso
+							}
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Marcar um sucesso que conta dois", "data-on:click": tableCommand(v, "POST", extendedMark(line, "duplo"))}) {
+								✓✓ Conta dois
+							}
+							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Marcar uma falha", "data-on:click": tableCommand(v, "POST", extendedMark(line, "falha"))}) {
+								✗ Falha
+							}
+						</div>
+					}
+					<div class="ds-strike-foot">
+						@extendedFoot(v)
+					</div>
+				}
+			} else {
+				<div class="ds-reg">
+					for _, line := range extendedLines(*t) {
+						<div class="ds-reg-line ds-extended-line">
+							<span class="min-w-0">
+								<span class="ds-row-title">{ line.Label }</span>
+								<span class="ds-row-meta">{ line.Meta }</span>
+							</span>
+							if v.GM != nil && !line.Done {
+								<span class="ds-gm-steps">
+									@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Sucesso de " + line.Label, "data-on:click": tableCommand(v, "POST", extendedMark(line, "sucesso"))}) {
+										✓
+									}
+									@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Sucesso que conta dois de " + line.Label, "data-on:click": tableCommand(v, "POST", extendedMark(line, "duplo"))}) {
+										✓✓
+									}
+									@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Falha de " + line.Label, "data-on:click": tableCommand(v, "POST", extendedMark(line, "falha"))}) {
+										✗
+									}
+								</span>
+							}
+						</div>
+					}
+				</div>
+				if v.GM != nil {
+					<div class="ds-strike-foot">
+						@extendedFoot(v)
+					</div>
+				}
+			}
+		</section>
+	} else {
+		<section id="table-extended" hidden></section>
+	}
+}
+
+// extendedFoot são os dois gestos que valem a qualquer hora: desfazer a última marca e encerrar.
+templ extendedFoot(v View) {
+	@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": tableCommand(v, "POST", "teste-estendido/desfazer")}) {
+		Desfazer a última
+	}
+	@ds.Button(ds.ButtonGhost, templ.Attributes{"type": "button", "data-on:click": tableCommand(v, "POST", "teste-estendido/encerrar")}) {
+		Encerrar
+	}
+}
+
+// gmExtendedDialog é o abrir do teste estendido: o que é, os sucessos exigidos pela complexidade (p223) e de quem
+// é a contagem.
+templ gmExtendedDialog(v View) {
+	@ds.Dialog("gm-extended", "Abrir teste estendido", nil) {
+		<div class="ds-gm-add">
+			@ds.TextField(ds.Field{ID: "gm-extended-name", Label: "O que é"}, templ.Attributes{"data-bind:ext_name": true, "placeholder": "Escalar um paredão"})
+			<span class="ds-field-label">Sucessos exigidos (p223)</span>
+			@ds.Segmented("Sucessos exigidos") {
+				for _, c := range extendedComplexities {
+					@ds.SegmentedOption(c.Required == 5, templ.Attributes{"data-attr:aria-pressed": fmt.Sprintf("$ext_required === %d ? 'true' : 'false'", c.Required), "data-on:click": "$ext_required = " + strconv.Itoa(c.Required)}) {
+						{ fmt.Sprintf("%d · %s", c.Required, c.Name) }
+					}
+				}
+			}
+			<span class="ds-field-label">De quem é a contagem</span>
+			@ds.Segmented("De quem é a contagem") {
+				@ds.SegmentedOption(true, templ.Attributes{"data-attr:aria-pressed": "$ext_each ? 'false' : 'true'", "data-on:click": "$ext_each = false"}) {
+					Do grupo
+				}
+				@ds.SegmentedOption(false, templ.Attributes{"data-attr:aria-pressed": "$ext_each ? 'true' : 'false'", "data-on:click": "$ext_each = true"}) {
+					Cada um da fila
+				}
+			}
+			<p class="ds-help">Três falhas antes dos sucessos são a falha total. Quem rola é cada jogador, sem CD; quem marca é você.</p>
+			@ds.Button(ds.ButtonPrimary, templ.Attributes{"type": "button", "data-attr:disabled": "$ext_name.trim() === ''", "data-on:click": "document.getElementById('gm-extended').close(); document.getElementById('gm-menu').close(); " + tableCommand(v, "POST", "teste-estendido/abrir")}) {
+				Abrir
+			}
+		</div>
+	}
+}

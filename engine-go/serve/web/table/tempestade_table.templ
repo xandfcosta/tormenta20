@@ -22,6 +22,7 @@ templ tempestadeTableScene(v View) {
 		for _, kind := range seenRolls(v) {
 			@informedRoll(kind, v.Rolls[kind])
 		}
+		@extendedBand(v)
 		<nav class="ds-session-nav" aria-label="Superfícies da sessão">
 			for _, layer := range surfaces(v) {
 				<button

@@ -95,6 +95,8 @@ type View struct {
 	// Rolls são as faixas que informam uma rolagem — o teste, o disparo e a magia —, nil a que ninguém rolou.
 	// Elas são irmãs do `Attack` e DIFERENTES num ponto: não têm verbos. Ver `informed_roll_view.go`.
 	Rolls [informedRollKindCount]*rollBand
+	// Extended é o teste estendido aberto, nil sem ele; as duas sessões o veem, e só a do mestre tem os botões.
+	Extended *live.ExtendedTest
 	// Banners são as faixas do Estandarte (p54), só do MESTRE e só com a cena aberta.
 	Banners []bannerBand
 	GM      *viewGm
@@ -409,6 +411,7 @@ func tableViewOf(
 		Endless:           endlessStripOf(st, mine),
 		Group:             group,
 		Queue:             tableTrackerOf(st, mine, pools),
+		Extended:          st.ExtendedTest,
 		Eu:                eu,
 	}
 }

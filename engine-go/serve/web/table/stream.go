@@ -351,6 +351,7 @@ func TableRegions(v View) []tableRegion {
 			{"table-attack", gmAttack(v)},
 		}
 		regions = append(regions, informedRollTableRegions(v)...)
+		regions = append(regions, tableRegion{"table-extended", extendedBand(v)})
 		return append(regions,
 			// O ESTANDARTE nasce com a cena e encolhe a cada aliado que o mestre toca.
 			tableRegion{"table-banner", gmBanner(v)},
@@ -377,6 +378,7 @@ func TableRegions(v View) []tableRegion {
 		{"table-attack", tempestadeAttack(v)},
 	}
 	regions = append(regions, informedRollTableRegions(v)...)
+	regions = append(regions, tableRegion{"table-extended", extendedBand(v)})
 	return append(regions,
 		tableRegion{"table-turn-target", tempestadeTargetBar(v)},
 		tableRegion{"table-register", tempestadeRegister(v)},

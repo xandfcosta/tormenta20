@@ -28,6 +28,7 @@ templ gmTempestadeScene(v View) {
 		for _, kind := range seenRolls(v) {
 			@informedRoll(kind, v.Rolls[kind])
 		}
+		@extendedBand(v)
 		@gmBanner(v)
 		<nav class="ds-session-nav ds-gm-nav" aria-label="Superfícies do mestre">
 			for _, s := range gmSurfaces {
@@ -330,6 +331,12 @@ templ gmMenu(v View) {
 						Recuperar · dia
 					}
 				</div>
+				if v.Extended == nil {
+					<span class="ds-field-label">Teste estendido</span>
+					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "commandfor": "gm-extended", "command": "show-modal"}) {
+						Abrir teste estendido
+					}
+				}
 				<span class="ds-field-label">Sessão</span>
 				<div class="ds-gm-two">
 					@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "data-on:click": "document.getElementById('gm-menu').close(); " + openConfigSession(v)}) {
@@ -343,6 +350,7 @@ templ gmMenu(v View) {
 				</div>
 			</div>
 		}
+		@gmExtendedDialog(v)
 		@ds.Dialog("gm-day-rest", "Descanso de dia", nil) {
 			<p class="ds-help">A qualidade do descanso decide quanto o grupo recupera de PV e PM (p106).</p>
 			@ds.Segmented("Qualidade do descanso") {
