@@ -8,7 +8,6 @@ import (
 	"slices"
 
 	"t20engine/app"
-
 	"t20engine/domain/book"
 	"t20engine/domain/engine"
 	"t20engine/domain/sheet"
@@ -163,6 +162,8 @@ func (p Plays) ToggleBookCondition(
 // @example plays.ReplaceConditions(ctx, row, []string{}) // limpa a ficha
 func (p Plays) ReplaceConditions(ctx context.Context, row sqlcgen.Character, conditions []string) error {
 	before := sheet.UnmarshalStrings(row.Activeconditions)
+	// O PERSONAGEM SÓ É MONTADO quando alguma condição entra: montar é ler a ficha inteira, e a faxina do e2e, que
+	// manda a lista vazia, não tem por que pagar isso.
 	var who *engine.ConditionTarget
 	for _, condition := range conditions {
 		if slices.Contains(before, condition) {
