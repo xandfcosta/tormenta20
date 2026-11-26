@@ -53,6 +53,7 @@ entryId
 escola
 escolha
 estado
+exposicao
 ferramenta
 flag
 gasto
@@ -71,6 +72,7 @@ nome
 opcao
 npcId
 passo
+perigo
 placeId
 poder
 pool

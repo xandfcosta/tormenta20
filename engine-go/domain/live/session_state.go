@@ -360,6 +360,8 @@ func redactForViewer(st *SessionRuntimeState, own map[int64]bool) *SessionRuntim
 		return offScene
 	}
 	out := CloneState(st)
+	// O PERIGO DISPARADO é do mestre (ver `HazardRoll`).
+	out.LastHazard = nil
 	for i := range out.Initiative {
 		e := &out.Initiative[i]
 		if e.CharacterID != nil && own[*e.CharacterID] {

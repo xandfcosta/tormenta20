@@ -176,9 +176,9 @@ func gmSheetMarks(v View, row tableRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tirar " + m.Spell + " de " + row.Label)
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue("Tirar " + m.Source + " de " + row.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/queue_marks.templ`, Line: 37, Col: 115}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/queue_marks.templ`, Line: 37, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 			if templ_7745c5c3_Err != nil {
@@ -191,7 +191,7 @@ func gmSheetMarks(v View, row tableRow) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(rowCommand(v, row, fmt.Sprintf("marcas/%d/tirar", i)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/queue_marks.templ`, Line: 37, Col: 187}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/queue_marks.templ`, Line: 37, Col: 188}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {

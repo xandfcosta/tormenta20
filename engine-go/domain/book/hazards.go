@@ -3,6 +3,7 @@ package book
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"t20engine/domain/catalog"
@@ -32,17 +33,61 @@ type Hazard struct {
 	Description string         `json:"description"`
 	Trap        *HazardTrap    `json:"trap"`
 	Disease     *HazardDisease `json:"disease"`
+	// Exposures é o dano por rodada de quem fica no perigo do ambiente: a exposição e a imersão total do ácido e da
+	// lava. Vazio no resto.
+	Exposures []HazardExposure `json:"exposures"`
+}
+
+// HazardExposure é uma forma de ficar no perigo do ambiente ("exposicao", "imersao") e o dano dela por rodada.
+// Lingers diz que o dano persiste uma rodada depois de sair (p317, p319).
+type HazardExposure struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Dice    string `json:"dice"`
+	Kind    string `json:"kind"`
+	Lingers bool   `json:"lingers"`
+}
+
+// ExposureByID acha a forma de ficar no perigo pelo id ("imersao").
+func (h Hazard) ExposureByID(id string) (HazardExposure, bool) {
+	for _, e := range h.Exposures {
+		if e.ID == id {
+			return e, true
+		}
+	}
+	return HazardExposure{}, false
 }
 
 // HazardTrap é a ficha da armadilha (p317). Investigation e Thievery são as CDs para achá-la e para desarmá-la.
 type HazardTrap struct {
-	ND            float64        `json:"nd"`
-	Magical       bool           `json:"magical"`
-	Damage        []HazardDamage `json:"damage"`
-	Area          string         `json:"area"`
-	Save          *HazardSave    `json:"save"`
-	Investigation int            `json:"investigation"`
-	Thievery      int            `json:"thievery"`
+	ND      float64        `json:"nd"`
+	Magical bool           `json:"magical"`
+	Damage  []HazardDamage `json:"damage"`
+	Area    string         `json:"area"`
+	Save    *HazardSave    `json:"save"`
+	// Rounds é o dado de quantas rodadas o dano se repete ("2d4" no Gás Venenoso), vazio no dano de uma vez.
+	Rounds        string `json:"rounds"`
+	Investigation int    `json:"investigation"`
+	Thievery      int    `json:"thievery"`
+}
+
+// DamageWritten é o dano da armadilha como TODA tela o escreve: curto, o dado e o tipo de cada parcela — "1
+// perfuração + 1d12 perda de vida por veneno" —, porque o mestre o lê de relance e a frase do livro fica no selo de
+// página (decisão do dono). Vazio na armadilha sem dano.
+func (t HazardTrap) DamageWritten() string {
+	parts := make([]string, len(t.Damage))
+	for i, d := range t.Damage {
+		parts[i] = strings.TrimSpace(d.Dice + " " + d.Kind)
+	}
+	return strings.Join(parts, " + ")
+}
+
+// SaveWritten é a resistência da vítima escrita: "Reflexos CD 20 evita". Vazio na armadilha sem resistência.
+func (t HazardTrap) SaveWritten() string {
+	if t.Save == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s CD %d %s", t.Save.Test, t.Save.DC, t.Save.Effect)
 }
 
 // HazardDamage é uma parcela do dano da armadilha ("1d12" de "perda de vida por veneno").

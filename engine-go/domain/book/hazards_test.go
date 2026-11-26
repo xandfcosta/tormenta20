@@ -37,3 +37,23 @@ func TestTheTrapCarriesWhatTheMasterRolls(t *testing.T) {
 		t.Error("a Runa de Proteção tem o nome em itálico (p317), e veio sem a marca mágica")
 	}
 }
+
+// A FICHA DA ARMADILHA SE ESCREVE NUM LUGAR SÓ, curta (decisão do dono), e as duas telas — o cartão da aba Perigos
+// do mestre e a linha da página Perigos da mesa — a leem daqui.
+func TestTheTrapSheetIsWrittenShortForEveryScreen(t *testing.T) {
+	needle, _ := HazardByID("agulha-envenenada")
+	if got, want := needle.Trap.DamageWritten(), "1 perfuração + 1d12 perda de vida por veneno"; got != want {
+		t.Errorf("o dano da agulha se escreve %q; want %q", got, want)
+	}
+	if got, want := needle.Trap.SaveWritten(), "Reflexos CD 20 evita"; got != want {
+		t.Errorf("a resistência da agulha se escreve %q; want %q", got, want)
+	}
+	net, _ := HazardByID("arame-farpado")
+	if net.Trap.SaveWritten() != "" {
+		t.Errorf("o arame farpado não tem resistência, e ela se escreve %q", net.Trap.SaveWritten())
+	}
+	symbol, _ := HazardByID("simbolo-do-medo")
+	if symbol.Trap.DamageWritten() != "" {
+		t.Errorf("o Símbolo do Medo não tem dano, e ele se escreve %q", symbol.Trap.DamageWritten())
+	}
+}

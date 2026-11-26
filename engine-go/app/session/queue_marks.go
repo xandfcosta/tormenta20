@@ -19,10 +19,10 @@ func (st *Store) MarkEntry(ctx context.Context, sessionID int64, entryID string)
 		func(s *live.SessionRuntimeState) error { return live.MarkEntry(s, entryID) })
 }
 
-// UnmarkEntry tira da linha a marca da magia.
-func (st *Store) UnmarkEntry(ctx context.Context, sessionID int64, entryID, spell string) (*live.SessionRuntimeState, error) {
+// UnmarkEntry tira da linha a marca que veio desta origem.
+func (st *Store) UnmarkEntry(ctx context.Context, sessionID int64, entryID, source string) (*live.SessionRuntimeState, error) {
 	return st.apply(ctx, sessionID, events.CombatantChanged{SessionID: sessionID, EntryID: entryID},
-		func(s *live.SessionRuntimeState) error { return live.UnmarkEntry(s, entryID, spell) })
+		func(s *live.SessionRuntimeState) error { return live.UnmarkEntry(s, entryID, source) })
 }
 
 // DueRollsOf são os dados que se rolam na vez da linha (`live.DueRolls`), com as condições de onde elas moram: as
@@ -83,7 +83,7 @@ func (st *Store) RollDue(
 	}
 	asked := due[n]
 	roll := live.SpellCastRoll{
-		Kind: live.RollOfTheMark, Who: asked.Who, Spell: asked.Spell, Moment: asked.At, Target: asked.Target,
+		Kind: live.RollOfTheMark, Who: asked.Who, Spell: asked.Source, Moment: asked.At, Target: asked.Target,
 		Save: asked.Save, DC: asked.DC, ByUserID: byUserID, Bonuses: asked.Bonuses,
 	}
 	if asked.Condition != "" {

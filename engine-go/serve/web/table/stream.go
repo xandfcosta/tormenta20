@@ -330,7 +330,7 @@ func TableRegions(v View) []tableRegion {
 	// UMA PÁGINA À PARTE tem só a região dela: mandar remendo para uma região
 	// que o documento não tem é escrever no vazio, e a lista e a página
 	// respondem à mesma `view`. O Bestiário não tem região viva — o livro não
-	// muda no meio da sessão.
+	// muda no meio da sessão —, e a página Perigos tem só a faixa do disparo.
 	switch v.Page {
 	case pageGroup:
 		return []tableRegion{{"table-group", gmGroup(v)}}
@@ -338,6 +338,9 @@ func TableRegions(v View) []tableRegion {
 		return []tableRegion{{"table-npcs", gmCastList(v)}}
 	case pageBestiary:
 		return nil
+	case pageHazards:
+		// A LISTA não muda; a faixa do disparo, sim.
+		return []tableRegion{{informedRollRegions[hazardRoll].id, informedRoll(hazardRoll, v.Rolls[hazardRoll])}}
 	}
 	if v.GM != nil {
 		regions := []tableRegion{
@@ -383,12 +386,12 @@ func TableRegions(v View) []tableRegion {
 	)
 }
 
-// informedRollTableRegions são as faixas que informam uma rolagem, as MESMAS nas duas sessões e na mesma ordem
-// da tela, com a raiz de cada uma mesmo quando ninguém rolou.
+// informedRollTableRegions são as faixas que informam uma rolagem e que esta sessão desenha (`seenRolls`), na
+// ordem da tela, com a raiz de cada uma mesmo quando ninguém rolou.
 func informedRollTableRegions(v View) []tableRegion {
 	regions := make([]tableRegion, 0, informedRollKindCount)
-	for kind, band := range v.Rolls {
-		regions = append(regions, tableRegion{informedRollRegions[kind].id, informedRoll(informedRollKind(kind), band)})
+	for _, kind := range seenRolls(v) {
+		regions = append(regions, tableRegion{informedRollRegions[kind].id, informedRoll(kind, v.Rolls[kind])})
 	}
 	return regions
 }

@@ -137,6 +137,10 @@ var hazardsPart02 = []Hazard{
 		BookPage:    317,
 		UID:         "hzd_tyfugbyoq4",
 		Description: "1d6 de dano por rodada de exposição. Na imersão total, 10d6 por rodada, e o dano dura mais uma rodada depois de sair.",
+		Exposures: []HazardExposure{
+			{ID: "exposicao", Name: "exposição", Dice: "1d6"},
+			{ID: "imersao", Name: "imersão total", Dice: "10d6", Lingers: true},
+		},
 	},
 	{
 		ID:          "areia-movedica",
@@ -193,6 +197,10 @@ var hazardsPart02 = []Hazard{
 		BookPage:    319,
 		UID:         "hzd_bxjycgabgh",
 		Description: "2d6 de fogo por rodada de exposição direta. Na imersão total, 20d6 por rodada, e o dano dura mais uma rodada depois de sair.",
+		Exposures: []HazardExposure{
+			{ID: "exposicao", Name: "exposição", Dice: "2d6", Kind: "fogo"},
+			{ID: "imersao", Name: "imersão total", Dice: "20d6", Kind: "fogo", Lingers: true},
+		},
 	},
 	{
 		ID:          "queda",

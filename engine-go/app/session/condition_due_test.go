@@ -14,9 +14,9 @@ func TestTheLanceReplacesTheFlamesTheEngineRolls(t *testing.T) {
 	if len(due) != 1 || due[0].Condition != "Em Chamas" || due[0].Parts[0].Dice != "1d6" {
 		t.Fatalf("o ogro Em Chamas rola %+v; want o 1d6 de fogo do motor", due)
 	}
-	ogre.Marks = []live.QueueMark{{Spell: "Lança Ígnea de Aleph", At: "inicio", Burning: true,
+	ogre.Marks = []live.QueueMark{{Source: "Lança Ígnea de Aleph", At: "inicio", Burning: true,
 		Parts: []live.QueueMarkPart{{Dice: "3d6", Kind: "fogo"}}}}
-	if due := DueRollsWith(ogre, []string{live.ConditionBurning}); len(due) != 1 || due[0].Spell != "Lança Ígnea de Aleph" {
+	if due := DueRollsWith(ogre, []string{live.ConditionBurning}); len(due) != 1 || due[0].Source != "Lança Ígnea de Aleph" {
 		t.Errorf("com as chamas da Lança, o ogro rola %+v; want só a Lança", due)
 	}
 }

@@ -70,8 +70,8 @@ func tempestadeTableScene(v View) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for kind, band := range v.Rolls {
-			templ_7745c5c3_Err = informedRoll(informedRollKind(kind), band).Render(ctx, templ_7745c5c3_Buffer)
+		for _, kind := range seenRolls(v) {
+			templ_7745c5c3_Err = informedRoll(kind, v.Rolls[kind]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

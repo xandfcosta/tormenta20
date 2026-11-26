@@ -114,7 +114,7 @@ func lingeringOf(
 		return nil, err
 	}
 	mark := &live.QueueMark{
-		Spell: cast.Name, At: lingering.At, Counted: lingering.Turns > 0, TurnsLeft: lingering.Turns,
+		Source: cast.Name, At: lingering.At, Counted: lingering.Turns > 0, TurnsLeft: lingering.Turns,
 		Burning: lingering.Burning,
 	}
 	for _, part := range parts {

@@ -31,7 +31,7 @@ func TestTheGMMarksTheCreatureHitAndRollsOnItsTurn(t *testing.T) {
 		t.Fatalf("conjurar a Flecha Ácida foi recusado: %q", refusal)
 	}
 	mark := stateOf(t, f.s.sessions, f.sessionID).Markable
-	if mark == nil || mark.Spell != "Flecha Ácida" || mark.Who != "Conjurador da Vez" || !mark.Counted || mark.TurnsLeft != 2 ||
+	if mark == nil || mark.Source != "Flecha Ácida" || mark.Who != "Conjurador da Vez" || !mark.Counted || mark.TurnsLeft != 2 ||
 		len(mark.Parts) != 1 || mark.Parts[0].Dice != "3d6" {
 		t.Fatalf("a conjuração deixou a marca %+v; want o muco de 3d6 da Flecha, por dois turnos", mark)
 	}

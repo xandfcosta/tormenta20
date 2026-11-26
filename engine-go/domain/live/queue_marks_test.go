@@ -5,7 +5,7 @@ import "testing"
 // acidArrow é a marca que a Flecha Ácida deixa: o muco, no início dos dois próximos turnos de quem falhou (p193).
 func acidArrow() *QueueMark {
 	return &QueueMark{
-		Spell: "Flecha Ácida", Who: "Arcanista", At: "inicio", TurnsLeft: 2, Counted: true,
+		Source: "Flecha Ácida", Who: "Arcanista", At: "inicio", TurnsLeft: 2, Counted: true,
 		Parts: []QueueMarkPart{{Dice: "3d6", Kind: "ácido", Note: "o muco corrosivo"}},
 	}
 }
@@ -50,7 +50,7 @@ func TestTheMarkRollsOnTheMarkedCreaturesTurnAndCountsItsTurns(t *testing.T) {
 		if len(due) != want {
 			t.Fatalf("no %dº turno do ogro, %d dado(s) na vez: %+v; want %d", turn+1, len(due), due, want)
 		}
-		if want == 1 && (due[0].Spell != "Flecha Ácida" || due[0].Who != "Arcanista" || due[0].Parts[0].Dice != "3d6") {
+		if want == 1 && (due[0].Source != "Flecha Ácida" || due[0].Who != "Arcanista" || due[0].Parts[0].Dice != "3d6") {
 			t.Errorf("no %dº turno do ogro, a vez rola %+v; want o muco de 3d6 da Flecha do Arcanista", turn+1, due[0])
 		}
 		AdvanceTurn(st) // a vez do arcanista
@@ -78,18 +78,18 @@ func TestTheBurningConditionRollsAndTheLanceReplacesItsDie(t *testing.T) {
 	ogre := InitiativeEntry{ID: "ogro", Label: "Ogro", Conditions: []string{"em-chamas"}}
 	flames := []ConditionDue{{ID: ConditionBurning, Name: "Em Chamas", Dice: "1d6", Kind: "fogo"}}
 	due := DueRolls(ogre, flames)
-	if len(due) != 1 || due[0].Condition != "Em Chamas" || due[0].Spell != "" || due[0].Parts[0].Dice != "1d6" || due[0].Parts[0].Kind != "fogo" {
+	if len(due) != 1 || due[0].Condition != "Em Chamas" || due[0].Source != "" || due[0].Parts[0].Dice != "1d6" || due[0].Parts[0].Kind != "fogo" {
 		t.Fatalf("o ogro Em Chamas rola %+v; want 1d6 de fogo", due)
 	}
 
-	ogre.Marks = []QueueMark{{Spell: "Lança Ígnea de Aleph", Who: "Arcanista", At: "inicio", Burning: true,
+	ogre.Marks = []QueueMark{{Source: "Lança Ígnea de Aleph", Who: "Arcanista", At: "inicio", Burning: true,
 		Parts: []QueueMarkPart{{Dice: "3d6", Kind: "fogo"}}}}
 	due = DueRolls(ogre, flames)
-	if len(due) != 1 || due[0].Spell != "Lança Ígnea de Aleph" || due[0].Parts[0].Dice != "3d6" {
+	if len(due) != 1 || due[0].Source != "Lança Ígnea de Aleph" || due[0].Parts[0].Dice != "3d6" {
 		t.Errorf("com as chamas da Lança, o ogro rola %+v; want só os 3d6 da Lança", due)
 	}
 
-	healed := InitiativeEntry{ID: "anao", Label: "Anão", Marks: []QueueMark{{Spell: "Círculo da Restauração", At: "fim",
+	healed := InitiativeEntry{ID: "anao", Label: "Anão", Marks: []QueueMark{{Source: "Círculo da Restauração", At: "fim",
 		Parts: []QueueMarkPart{{Dice: "3d8+3", Kind: "cura"}}}}}
 	due = DueRolls(healed, nil)
 	if len(due) != 1 || due[0].At != "fim" {

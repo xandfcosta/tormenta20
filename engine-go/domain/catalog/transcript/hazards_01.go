@@ -209,6 +209,7 @@ var hazardsPart01 = []Hazard{
 			ND:            3,
 			Damage:        []HazardDamage{{Dice: "1d12", Kind: "perda de vida por veneno"}},
 			Save:          &HazardSave{Test: "Fortitude", DC: 20, Effect: "reduz à metade"},
+			Rounds:        "2d4",
 			Investigation: 25,
 			Thievery:      25,
 		},
