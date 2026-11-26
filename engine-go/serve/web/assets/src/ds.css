@@ -5690,6 +5690,13 @@
     align-items: end;
     gap: 0.5rem;
   }
+  /* A linha do teste estendido de cada um: as marcas na direita, numa coluna só para todas as linhas. */
+  .ds-extended-line {
+    align-items: center;
+  }
+  .ds-extended-line > .ds-gm-steps {
+    margin-left: auto;
+  }
   .ds-reg-line > .ds-field .ds-input {
     width: 5.5rem;
   }

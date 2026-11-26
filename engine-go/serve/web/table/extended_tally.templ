@@ -24,8 +24,10 @@ templ extendedBand(v View) {
 				</div>
 				<p class="ds-help">{ line.Said }</p>
 				if v.GM != nil {
-					<div class="ds-strike-foot" data-fill>
-						if !line.Done {
+					// DUAS FILEIRAS: as marcas, que são o gesto do momento, e o desfazer e o encerrar. Numa fileira
+					// só, os cinco espremiam a faixa a 390px e o Encerrar saía da tela.
+					if !line.Done {
+						<div class="ds-strike-foot" data-fill>
 							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Marcar um sucesso", "data-on:click": tableCommand(v, "POST", extendedMark(line, "sucesso"))}) {
 								✓ Sucesso
 							}
@@ -35,14 +37,16 @@ templ extendedBand(v View) {
 							@ds.Button(ds.ButtonSecondary, templ.Attributes{"type": "button", "aria-label": "Marcar uma falha", "data-on:click": tableCommand(v, "POST", extendedMark(line, "falha"))}) {
 								✗ Falha
 							}
-						}
+						</div>
+					}
+					<div class="ds-strike-foot">
 						@extendedFoot(v)
 					</div>
 				}
 			} else {
 				<div class="ds-reg">
 					for _, line := range extendedLines(*t) {
-						<div class="ds-reg-line">
+						<div class="ds-reg-line ds-extended-line">
 							<span class="min-w-0">
 								<span class="ds-row-title">{ line.Label }</span>
 								<span class="ds-row-meta">{ eachLineMeta(*t, line) }</span>
@@ -64,7 +68,7 @@ templ extendedBand(v View) {
 					}
 				</div>
 				if v.GM != nil {
-					<div class="ds-strike-foot" data-fill>
+					<div class="ds-strike-foot">
 						@extendedFoot(v)
 					</div>
 				}
