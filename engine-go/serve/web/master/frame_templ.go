@@ -14,9 +14,9 @@ import (
 )
 
 // A MOLDURA DA MESA DO MESTRE no Tempestade (ALE-538, mockup `ferramentas.html`
-// aprovado). No desktop, o menu das treze telas fica à esquerda, em duas seções;
+// aprovado). No desktop, o menu das telas fica à esquerda, em duas seções;
 // no celular, a barra de baixo leva às duas ferramentas e aos Catálogos, que
-// abrem numa folha — onze destinos não cabem numa barra.
+// abrem numa folha — os catálogos não cabem numa barra.
 
 // railStop é uma parada da trilha.
 type railStop struct {
@@ -38,27 +38,14 @@ type railSection struct {
 	Stops []railStop
 }
 
-// A ordem dentro de CATÁLOGOS é alfabética, com o bestiário na frente — é o
-// mais consultado no meio do combate. Nas FERRAMENTAS a ordem é a de sempre.
+// Nas FERRAMENTAS a ordem é a de sempre. Os CATÁLOGOS saem dos descritores da
+// coleção, com o bestiário na frente (`catalogStops`).
 var masterRail = []railSection{
 	{"Na mesa", []railStop{
 		{"encontros", "Encontros", "Swords", "ND do combate e XP do grupo, combinando criaturas."},
 		{"improviso", "Improviso", "Dices", "Tabelas do Cap 6 e estrutura de masmorra na hora."},
 	}},
-	{"Catálogos", []railStop{
-		{"bestiario", "Bestiário", "Skull", "Criaturas por ND, tipo e tamanho, com ataques e habilidades."},
-		{"classes", "Classes", "Shield", "As 14 classes, com perícias treinadas e poderes."},
-		{"condicoes", "Condições", "HeartPulse", "As 35 condições do livro e o que cada uma faz."},
-		{"deuses", "Deuses", "Church", "Os 20 deuses, com símbolo, devotos e poderes concedidos."},
-		{"efeitos", "Efeitos", "Zap", "Os tipos de efeito (p228): medo, mental, metabolismo…"},
-		{"escolas", "Escolas", "Wand2", "As oito escolas de magia (p172), com o que cada uma faz."},
-		{"itens", "Itens", "Backpack", "Armas, armaduras e equipamento, com preço e espaços."},
-		{"magias", "Magias", "Wand2", "As 198 magias, por círculo, com aprimoramentos."},
-		{"pericias", "Perícias", "Dices", "As 29 perícias, com atributo e as regras de treino."},
-		{"perigos", "Perigos", "AlertTriangle", "Armadilhas, doenças e o ambiente (p317), com CD e ND."},
-		{"poderes", "Poderes", "Star", "Poderes de classe, gerais e divinos numa lista só."},
-		{"racas", "Raças", "Users2", "As 17 raças, com modificadores e habilidades."},
-	}},
+	{"Catálogos", catalogStops()},
 }
 
 // railStops é o menu ACHATADO, para quem precisa da lista e não das
@@ -111,7 +98,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 76, Col: 38}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 63, Col: 38}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -183,7 +170,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 					var templ_7745c5c3_Var5 string
 					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 92, Col: 17}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 79, Col: 17}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
@@ -248,7 +235,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 				var templ_7745c5c3_Var7 templ.SafeURL
 				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/mestre/" + stop.Slug))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 111, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 98, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 				if templ_7745c5c3_Err != nil {
@@ -279,7 +266,7 @@ func masterFrame(current, title string, acts, scene templ.Component) templ.Compo
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 118, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 105, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -373,7 +360,7 @@ func masterMenu(current string) templ.Component {
 						var templ_7745c5c3_Var12 string
 						templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(stop.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 136, Col: 17}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/master/frame.templ`, Line: 123, Col: 17}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 						if templ_7745c5c3_Err != nil {

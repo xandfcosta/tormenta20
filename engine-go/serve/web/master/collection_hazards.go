@@ -17,13 +17,6 @@ func hazardKindOptions() []filterOption {
 	return outside
 }
 
-func hazardMatches(h book.Hazard, key, value string) bool {
-	if key == "tipo" {
-		return h.Kind == value
-	}
-	return true
-}
-
 // hazardBadges são o tipo e, na armadilha, o ND e a marca de mágica — o nome em
 // itálico do livro, que diz que Dissipar Magia a anula (p317).
 func hazardBadges(h book.Hazard) []string {

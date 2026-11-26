@@ -14,7 +14,7 @@ func TestTheUnifiedSearchReachesTheThreeNewOnes(t *testing.T) {
 	}
 	foundGod := false
 	for _, g := range v.Groups {
-		if g.Label == "Deuses" && len(g.Gods) > 0 {
+		if g.Label == "Deuses" && g.Count() > 0 {
 			foundGod = true
 		}
 	}

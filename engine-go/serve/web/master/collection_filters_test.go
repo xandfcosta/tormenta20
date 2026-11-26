@@ -29,20 +29,21 @@ func TestEachCatalogOffersItsOwnFilters(t *testing.T) {
 		"efeitos": nil,
 		"escolas": nil,
 	}
-	for _, aba := range collectionTabs {
-		keys := want[aba.ID]
-		filters := filtersForTab(aba.ID)
+	for _, catalog := range collectionCatalogs {
+		aba := catalog.Stop.Slug
+		keys := want[aba]
+		filters := catalog.Filters()
 		if len(filters) != len(keys) {
-			t.Errorf("a aba %q tem %d filtros, esperado %d", aba.ID, len(filters), len(keys))
+			t.Errorf("a aba %q tem %d filtros, esperado %d", aba, len(filters), len(keys))
 			continue
 		}
 		for i, f := range filters {
 			if f.Key != keys[i] {
-				t.Errorf("a aba %q: filtro %d é %q, esperado %q", aba.ID, i, f.Key, keys[i])
+				t.Errorf("a aba %q: filtro %d é %q, esperado %q", aba, i, f.Key, keys[i])
 			}
 			// Filtro sem opção é uma linha de rótulo e mais nada.
 			if len(f.Options) == 0 {
-				t.Errorf("o filtro %q da aba %q nasceu sem opções", f.Key, aba.ID)
+				t.Errorf("o filtro %q da aba %q nasceu sem opções", f.Key, aba)
 			}
 		}
 	}

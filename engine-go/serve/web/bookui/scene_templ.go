@@ -334,9 +334,9 @@ func BookDialog() templ.Component {
 // puro quando não há, e nada quando o catálogo não sabe a página. O número puro NÃO
 // é consolo: o mestre com o livro de papel na mesa usa exatamente isso.
 //
-// Um componente e não um `if` em cada cartão porque são dez catálogos — e a regra
-// "zero significa que o catálogo não sabe" escrita dez vezes é a que alguém esquece
-// na décima primeira. O número HERDA o tamanho e a tinta da linha de meta
+// Um componente e não um `if` em cada cartão porque cada catálogo tem o seu — e a
+// regra "zero significa que o catálogo não sabe" escrita em cada um é a que alguém
+// esquece no próximo. O número HERDA o tamanho e a tinta da linha de meta
 // (`ds-row-meta`) em que ele mora.
 func PageSealInMeta(book BookAddress, page int, term string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -514,7 +514,7 @@ func CrossRef(aba, id, name string) templ.Component {
 // se estava lendo.
 //
 // Ela nasce com o "carregando" e é REMENDADA pelo `#crossref-entry` — o
-// conteúdo vem do servidor, que já tem os oito catálogos em memória. Sem sinal
+// conteúdo vem do servidor, que já tem os catálogos em memória. Sem sinal
 // nenhum: o que decide o que aparece é o endereço no `href` do elo, e sinal aqui
 // seria estado de cliente viajando em toda requisição da cena.
 //

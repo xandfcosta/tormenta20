@@ -96,7 +96,7 @@ func TestSearchingSweepsTheFourCatalogs(t *testing.T) {
 	}
 	foundSpell := false
 	for _, g := range v.Groups {
-		if g.Label == "Magias" && len(g.Spells) > 0 {
+		if g.Label == "Magias" && g.Count() > 0 {
 			foundSpell = true
 		}
 		if g.Count() == 0 {
@@ -234,15 +234,16 @@ func TestTheTabComesFromThePathAndTheQueryDoesNotMoveIt(t *testing.T) {
 	}
 }
 
-// AMOSTRAGEM e não enumeração: o teste percorre `collectionTabs`, então a aba que
+// AMOSTRAGEM e não enumeração: o teste percorre `collectionCatalogs`, então a aba que
 // entrar amanhã já nasce medida.
 //
 // O CONTROLE é a segunda metade: sem livro configurado, a mesma cena não pode
 // trazer link nenhum. Sem ele, "achei `#page=`" seria verdade sobre um endereço
 // que a cena escreve de qualquer jeito.
 func TestEveryCollectionTabOffersTheBook(t *testing.T) {
-	for _, aba := range collectionTabs {
-		body := pedeNaCenaComLivro(t, "/mestre/"+aba.ID).Body.String()
+	for _, catalog := range collectionCatalogs {
+		aba := catalog.Stop
+		body := pedeNaCenaComLivro(t, "/mestre/"+aba.Slug).Body.String()
 		if !strings.Contains(body, "/livro/ler?p=") {
 			t.Errorf("a aba %q não oferece o livro em nenhuma entrada", aba.Label)
 		}

@@ -3,6 +3,7 @@ package master
 import (
 	"net/http"
 
+	"t20engine/domain/book"
 	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/routes"
 	"t20engine/serve/web/ui"
@@ -40,7 +41,8 @@ func (s Scene) entryRoutes(r chi.Router) {
 // formato faria o link e o remendo poderem discordar sobre o que mostrar.
 func (s Scene) handleCrossRefEntry(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	group := groupForEntry(knownTab(q.Get("aba")), q.Get("entrada"))
+	aba := knownTab(q.Get("aba"))
+	group := groupForEntry(aba, q.Get("entrada"))
 
 	// `parte` pede um PEDAÇO do verbete em vez do cartão inteiro — hoje só os
 	// aprimoramentos da magia. Parâmetro e não segunda rota porque o que muda é
@@ -48,9 +50,11 @@ func (s Scene) handleCrossRefEntry(w http.ResponseWriter, r *http.Request) {
 	// chamar, e o dia em que houver um terceiro pedaço seriam três.
 	core := CrossRefEntry(group, s.deps.BookAddress())
 	title := group.entryName()
-	if q.Get("parte") == "aprimoramentos" && len(group.Spells) == 1 {
-		core = SpellAugments(group.Spells[0], s.deps.BookAddress())
-		title = "Aprimoramentos de " + group.Spells[0].Name
+	if aba == "magias" && q.Get("parte") == "aprimoramentos" {
+		if spell, found := book.SpellByID(q.Get("entrada")); found {
+			core = SpellAugments(spell, s.deps.BookAddress())
+			title = "Aprimoramentos de " + spell.Name
+		}
 	}
 	if title == "" {
 		title = bookui.EntryDialogTitle
