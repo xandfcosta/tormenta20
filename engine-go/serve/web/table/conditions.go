@@ -81,10 +81,7 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	// tem de continuar funcionando, senão uma marcada antes desta regra ficaria
 	// presa na linha para sempre.
 	if !slices.Contains(current, id) {
-		if err := engine.HandMarkRefusal(id); err != nil {
-			return nil, err
-		}
-		if err := st.refuseIfImmune(c, state.Initiative[i], id); err != nil {
+		if err := engine.MarkRefusal(id, st.creatureTarget(c, state.Initiative[i])); err != nil {
 			return nil, err
 		}
 	}
@@ -112,11 +109,9 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	return newState, nil
 }
 
-// refuseIfImmune recusa a condição que a criatura não pode receber (p228).
-//
-// A recusa diz QUAL tipo de efeito barrou — "imune a veneno" explica; "imune"
-// manda procurar. O personagem passa pelo `refuseIfTheCharacterIsImmune`, pelo
-// tipo da raça dele.
+// creatureTarget é a criatura por trás da linha do NPC, para a pergunta de quem pode receber a condição: o nome, e
+// as imunidades do tipo dela (p228). Sem criatura — linha digitada à mão —, ela não é imune a nada. O personagem
+// tem a dele no `character.Plays`, pelo tipo da raça.
 //
 // AS DUAS PROCEDÊNCIAS NÃO SÃO IGUAIS, e a diferença é do dado e não do desenho.
 // O VERBETE do bestiário guarda a Inteligência como ponteiro, então ele sabe
@@ -125,13 +120,13 @@ func toggleCondition(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 // verbete para o bloco converte a ausência em ZERO de propósito (ver o
 // `entry_to_block.go`). Então um Zumbi copiado para a campanha continua imune a
 // veneno, pelo TIPO, e deixa de ser imune a medo — e isso é a perda conhecida da
-// cópia, agora com uma consequência que ela não tinha.
-func (st Scene) refuseIfImmune(c commandCtx, entry live.InitiativeEntry, condition string) error {
-	tipo, inteligencia, achou := st.creatureNatureOf(c, entry)
-	if !achou {
-		return nil
+// cópia.
+func (st Scene) creatureTarget(c commandCtx, entry live.InitiativeEntry) engine.ConditionTarget {
+	target := engine.ConditionTarget{Name: entry.Label}
+	if kind, intelligence, found := st.creatureNatureOf(c, entry); found {
+		target.Immunities = engine.ImmunitiesOfCreature(kind, intelligence)
 	}
-	return immunityRefusal(entry.Label, engine.ImmunitiesOfCreature(tipo, inteligencia), condition)
+	return target
 }
 
 // refuseIfTheCharacterIsImmune é a mesma recusa para o PERSONAGEM, pelo tipo da raça dele (ALE-650): o osteon é

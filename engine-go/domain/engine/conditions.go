@@ -2,7 +2,9 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
+	"t20engine/domain/catalog"
 	"t20engine/domain/catalog/transcript"
 )
 
@@ -155,4 +157,46 @@ func conditionNameOf(id string) string {
 		}
 	}
 	return id
+}
+
+// ConditionTarget é quem receberia a condição: o nome, para a recusa; as imunidades do tipo dele (p228), que cada
+// porta descobre do seu jeito — o personagem pela raça, o NPC pelo verbete ou pelo bloco —; e os efeitos da ficha,
+// onde mora o poder que barra uma condição.
+type ConditionTarget struct {
+	Name       string
+	Immunities []string
+	Effects    ItemEffects
+}
+
+// MarkRefusal é a recusa de pôr a condição em quem, ou nil: a condição é do livro, não é derivada, ele não é imune
+// ao tipo dela (p228) e nenhum poder dele a barra. É o lugar único dessa pergunta (ver GLOSSARY, **condição**), e
+// quem a faz é toda porta que recebe uma condição escolhida por alguém — só pelo que ENTRA: a marca que já estava
+// sai sem pergunta.
+//
+// @example MarkRefusal("envenenado", ConditionTarget{Name: "Osso", Immunities: ImmunitiesOfCreature("morto-vivo", nil)}) // "Osso é imune…"
+func MarkRefusal(condition string, who ConditionTarget) error {
+	if !catalog.IsCondition(condition) {
+		return fmt.Errorf("%q não é uma condição do livro (p394-395)", condition)
+	}
+	if err := HandMarkRefusal(condition); err != nil {
+		return err
+	}
+	if why, immune := ImmuneToCondition(who.Immunities, conditionTagsOf(condition)); immune {
+		return fmt.Errorf("%s é imune a efeitos de %s, e %s é um deles (p228)", who.Name, why, conditionNameOf(condition))
+	}
+	if power, barred := ConditionBarredByAPower(who.Effects, condition); barred {
+		return fmt.Errorf("%s não fica %s: tem %s", who.Name, strings.ToLower(conditionNameOf(condition)), power)
+	}
+	return nil
+}
+
+// conditionTagsOf são os tipos de efeito da condição pelo catálogo ("veneno", "medo"), que é por onde a imunidade a
+// alcança.
+func conditionTagsOf(id string) []string {
+	for _, c := range transcript.Conditions {
+		if c.ID == id {
+			return c.Tags
+		}
+	}
+	return nil
 }
