@@ -44,7 +44,7 @@ func unmarksTheEntry(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 		if n < 0 || n >= len(e.Marks) {
 			return nil, fmt.Errorf("%s tem %d marca(s), e o pedido foi a %d", e.Label, len(e.Marks), n+1)
 		}
-		return st.deps.Sessions().UnmarkEntry(c.R.Context(), c.SessionID, entryID, e.Marks[n].Spell)
+		return st.deps.Sessions().UnmarkEntry(c.R.Context(), c.SessionID, entryID, e.Marks[n].Source)
 	}
 	return nil, fmt.Errorf("a linha %q não está na fila", entryID)
 }

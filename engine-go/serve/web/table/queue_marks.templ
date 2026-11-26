@@ -34,7 +34,7 @@ templ gmSheetMarks(v View, row tableRow) {
 	<span class="ds-field-label">Marcas de magia</span>
 	<div class="ds-badges">
 		for i, m := range row.Marks {
-			<button type="button" class="ds-gm-cond" title={ m.Detail } aria-label={ "Tirar " + m.Spell + " de " + row.Label } data-on:click={ rowCommand(v, row, fmt.Sprintf("marcas/%d/tirar", i)) }>
+			<button type="button" class="ds-gm-cond" title={ m.Detail } aria-label={ "Tirar " + m.Source + " de " + row.Label } data-on:click={ rowCommand(v, row, fmt.Sprintf("marcas/%d/tirar", i)) }>
 				{ m.Chip }
 				@ui.Icon("X", "ds-icon")
 			</button>

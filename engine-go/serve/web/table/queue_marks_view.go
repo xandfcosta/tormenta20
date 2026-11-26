@@ -15,9 +15,10 @@ import (
 // A MARCA NA FILA vista pelo mestre (ver GLOSSARY, **marca na fila**): o crachá na linha marcada, o Marcar e o Tirar
 // na folha dela, e os dados que se rolam na vez da linha, na barra da vez.
 
-// rowMark é uma marca numa linha da fila do mestre: o nome da magia e o que ela rola, quando e até quando.
+// rowMark é uma marca numa linha da fila do mestre: a origem (a magia ou o perigo) e o que ela rola, quando e até
+// quando.
 type rowMark struct {
-	Spell  string
+	Source string
 	Detail string
 	// Chip é o que a ficha da marca diz na folha da linha: o nome e quantos turnos faltam.
 	Chip string
@@ -50,12 +51,12 @@ func dueHandAttrs(due dueView) templ.Attributes {
 func marksOf(e live.InitiativeEntry) []rowMark {
 	var marks []rowMark
 	for _, m := range e.Marks {
-		detail, chip := []string{partsWritten(m.Parts), live.MomentWritten(m.At)}, m.Spell
+		detail, chip := []string{partsWritten(m.Parts), live.MomentWritten(m.At)}, m.Source
 		if m.Counted {
 			detail = append(detail, turnsLeftWritten(m.TurnsLeft))
 			chip += " · " + turnsLeftWritten(m.TurnsLeft)
 		}
-		marks = append(marks, rowMark{Spell: m.Spell, Detail: strings.Join(detail, " · "), Chip: chip})
+		marks = append(marks, rowMark{Source: m.Source, Detail: strings.Join(detail, " · "), Chip: chip})
 	}
 	return marks
 }
@@ -81,7 +82,7 @@ func dueViewsOf(v View, st *live.SessionRuntimeState) []dueView {
 			detail = append(detail, "último turno")
 		}
 		// O NOME é o da magia, ou o da condição, que não é magia.
-		name := due.Spell
+		name := due.Source
 		if due.Condition != "" {
 			name = due.Condition
 		}
@@ -99,7 +100,7 @@ func markableOf(st *live.SessionRuntimeState) (spell, who string) {
 	if st.Markable == nil {
 		return "", ""
 	}
-	return st.Markable.Spell, st.Markable.Who
+	return st.Markable.Source, st.Markable.Who
 }
 
 // dueSignals declara o "ou rolei" de cada dado da vez VAZIO: sem a declaração, o campo numérico nasce ligado a 0,

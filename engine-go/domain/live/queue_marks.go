@@ -19,12 +19,13 @@ type ConditionDue struct {
 	ID, Name, Dice, Kind string
 }
 
-// QueueMark é a marca de uma magia numa linha da fila: o dado já com os aumentos da conjuração, o momento e a
-// duração.
+// QueueMark é a marca de uma magia ou de um perigo numa linha da fila: o dado já com os aumentos da conjuração, o
+// momento e a duração.
 type QueueMark struct {
-	// Spell é o nome da magia, e Who o de quem a conjurou.
-	Spell string `json:"spell"`
-	Who   string `json:"who"`
+	// Source é a ORIGEM da marca — o nome da magia ou o do perigo —, e Who o de quem conjurou, vazio no perigo,
+	// que não tem conjurador. A chave JSON continua "spell" para a sessão gravada antes do perigo seguir lendo.
+	Source string `json:"spell"`
+	Who    string `json:"who"`
 	// At é "inicio" ou "fim" do turno de quem está marcado.
 	At    string          `json:"at"`
 	Parts []QueueMarkPart `json:"parts"`
@@ -55,10 +56,11 @@ type QueueMarkPart struct {
 // DueRoll é um dado que se rola na vez de uma linha: o de uma marca, ou o 1d6 da condição Em Chamas. O gesto do
 // mestre o pede pela posição na lista.
 type DueRoll struct {
-	Spell string
-	Who   string
+	// Source é a origem da marca (a magia ou o perigo), e Who quem conjurou, vazio no perigo.
+	Source string
+	Who    string
 	// At é "inicio" ou "fim" do turno, e Target de quem é a vez. Condition é o nome da condição que rola (Em
-	// Chamas) e ConditionID o id dela, e nela `Spell` e `Who` ficam vazios: condição não é magia.
+	// Chamas) e ConditionID o id dela, e nela `Source` e `Who` ficam vazios: condição não é magia.
 	At          string
 	Target      string
 	Condition   string
@@ -83,21 +85,21 @@ func MarkEntry(st *SessionRuntimeState, entryID string) error {
 	}
 	mark := *st.Markable
 	mark.Parts = slices.Clone(mark.Parts)
-	entry.Marks = slices.DeleteFunc(entry.Marks, func(m QueueMark) bool { return m.Spell == mark.Spell })
+	entry.Marks = slices.DeleteFunc(entry.Marks, func(m QueueMark) bool { return m.Source == mark.Source })
 	entry.Marks = append(entry.Marks, mark)
 	return nil
 }
 
-// UnmarkEntry tira da linha a marca da magia.
-func UnmarkEntry(st *SessionRuntimeState, entryID, spell string) error {
+// UnmarkEntry tira da linha a marca que veio desta origem.
+func UnmarkEntry(st *SessionRuntimeState, entryID, source string) error {
 	entry := findEntry(st, entryID)
 	if entry == nil {
 		return fmt.Errorf("a linha %q não está na fila", entryID)
 	}
 	before := len(entry.Marks)
-	entry.Marks = slices.DeleteFunc(entry.Marks, func(m QueueMark) bool { return m.Spell == spell })
+	entry.Marks = slices.DeleteFunc(entry.Marks, func(m QueueMark) bool { return m.Source == source })
 	if len(entry.Marks) == before {
-		return fmt.Errorf("%s não está marcado com %s", entry.Label, spell)
+		return fmt.Errorf("%s não está marcado com %s", entry.Label, source)
 	}
 	return nil
 }
@@ -128,14 +130,14 @@ func countTheMarksOfTheTurn(st *SessionRuntimeState) {
 // Os dados das condições vêm de quem pergunta, porque a do PC mora na ficha e a do NPC na linha, e o que cada uma
 // rola é do motor.
 //
-//	live.DueRolls(entry, nil) // [{Spell: "Flecha Ácida", At: "inicio", Target: "Ogro", …}]
+//	live.DueRolls(entry, nil) // [{Source: "Flecha Ácida", At: "inicio", Target: "Ogro", …}]
 func DueRolls(entry InitiativeEntry, conditions []ConditionDue) []DueRoll {
 	var due []DueRoll
 	burning := false
 	for _, m := range entry.Marks {
 		burning = burning || m.Burning
 		due = append(due, DueRoll{
-			Spell: m.Spell, Who: m.Who, At: m.At, Target: entry.Label, Bonuses: m.Bonuses,
+			Source: m.Source, Who: m.Who, At: m.At, Target: entry.Label, Bonuses: m.Bonuses,
 			Parts: m.Parts, Save: m.Save, DC: m.DC, Last: m.Counted && m.TurnsLeft == 0,
 		})
 	}
