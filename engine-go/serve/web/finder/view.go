@@ -325,8 +325,8 @@ func entryHit(m book.Entry) finderHit {
 // seria mais uma coisa a manter.
 //
 // `routes.MasterEntry` é o endereço de UM verbete: a aba dele, mostrando só
-// ele. Quem clica num conceito pediu o conceito, e não uma busca pelo termo nos
-// oito catálogos.
+// ele. Quem clica num conceito pediu o conceito, e não uma busca pelo termo em
+// todos os catálogos.
 //
 // `routes.MasterBestiarySearch` leva à cena do bestiário filtrada, e serve
 // tanto ao "+12" (com o termo digitado) quanto ao que o `entryHit` faz com o

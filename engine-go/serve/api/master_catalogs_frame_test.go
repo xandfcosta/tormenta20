@@ -8,7 +8,7 @@ import (
 	"t20engine/domain/book"
 )
 
-// Os dez catálogos vestem a moldura da Mesa do Mestre, cada um com o próprio nome
+// Os catálogos vestem a moldura da Mesa do Mestre, cada um com o próprio nome
 // no cabeçalho e o verbete em cartão. Os nomes estão escritos à mão de propósito:
 // o cabeçalho é o que diz à pessoa onde ela está.
 func TestEveryCatalogWearsTheMasterFrame(t *testing.T) {
@@ -18,7 +18,7 @@ func TestEveryCatalogWearsTheMasterFrame(t *testing.T) {
 	for slug, title := range map[string]string{
 		"classes": "Classes", "condicoes": "Condições", "deuses": "Deuses",
 		"efeitos": "Efeitos", "escolas": "Escolas", "itens": "Itens",
-		"magias": "Magias", "pericias": "Perícias", "poderes": "Poderes", "racas": "Raças",
+		"magias": "Magias", "pericias": "Perícias", "perigos": "Perigos", "poderes": "Poderes", "racas": "Raças",
 	} {
 		t.Run(slug, func(t *testing.T) {
 			body := pedeNoMestre(t, s, gm, "GET", "/mestre/"+slug, "").Body.String()

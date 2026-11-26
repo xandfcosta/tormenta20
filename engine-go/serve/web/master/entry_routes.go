@@ -50,9 +50,11 @@ func (s Scene) handleCrossRefEntry(w http.ResponseWriter, r *http.Request) {
 	// chamar, e o dia em que houver um terceiro pedaço seriam três.
 	core := CrossRefEntry(group, s.deps.BookAddress())
 	title := group.entryName()
-	if spell, found := book.SpellByID(q.Get("entrada")); found && aba == "magias" && q.Get("parte") == "aprimoramentos" {
-		core = SpellAugments(spell, s.deps.BookAddress())
-		title = "Aprimoramentos de " + spell.Name
+	if aba == "magias" && q.Get("parte") == "aprimoramentos" {
+		if spell, found := book.SpellByID(q.Get("entrada")); found {
+			core = SpellAugments(spell, s.deps.BookAddress())
+			title = "Aprimoramentos de " + spell.Name
+		}
 	}
 	if title == "" {
 		title = bookui.EntryDialogTitle

@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-// A MOLDURA DA MESA DO MESTRE leva a todas as treze telas, nas duas larguras
-// (ALE-538): o menu do desktop tem as duas ferramentas e os onze catálogos, e no
-// celular a barra de baixo tem as duas ferramentas e o botão dos Catálogos, que
-// abre a folha com os onze. Um destino que sumisse de um dos dois caminhos só
+// A MOLDURA DA MESA DO MESTRE leva a todas as telas, nas duas larguras
+// (ALE-538): o menu do desktop tem as ferramentas e os catálogos, e no celular a
+// barra de baixo tem as ferramentas e o botão dos Catálogos, que abre a folha com
+// eles. Um destino que sumisse de um dos dois caminhos só
 // seria notado por quem estivesse naquela largura.
 //
 // Os endereços estão escritos à mão de propósito: eles são a promessa para quem
@@ -17,7 +17,7 @@ var masterTools = []string{"encontros", "improviso"}
 
 var masterCatalogs = []string{
 	"bestiario", "classes", "condicoes", "deuses", "efeitos", "escolas",
-	"itens", "magias", "pericias", "poderes", "racas",
+	"itens", "magias", "pericias", "perigos", "poderes", "racas",
 }
 
 // sliceBetween devolve o trecho de `body` que começa no marcador e termina no
