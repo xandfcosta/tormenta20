@@ -203,12 +203,19 @@ ferramenta PROPÕE e o diff revisado contra o livro decide. **Mexeu num catálog
 rode o auditor dele.** É um por seção do sumário, e o que os distingue é a
 ÂNCORA — os campos que ligam um pedaço do livro a um verbete:
 
+**Qual auditor mede cada ITEM** se decide num lugar só, o `auditscope.Of`
+(`cmd/internal/auditscope`): a página do capítulo 3 primeiro, e no capítulo 8 o
+tipo do verbete. Os auditores que escolhem pelo catálogo selecionam por ele, e o
+`TestEveryCatalogItemHasTheAuditorThatMeasuresIt` — que roda na suíte, SEM o PDF —
+reprova o item que auditor nenhum alcança, pelo nome. O auditor só roda à mão; o
+órfão não espera alguém rodá-lo.
+
 | auditor | catálogo | âncora |
 |---|---|---|
 | `cmd/audit/bestiary` | `transcript.Bestiary` | Defesa + Pontos de Vida |
 | `cmd/audit/spells` | `transcript.Spells` | nome + escola, para os aprimoramentos; para a cobertura, os links em negrito do índice (p174-177) **e** o título do verbete (`Tormenta20` a 24pt) |
 | `cmd/audit/classes` | `transcript.Classes`, `transcript.ClassPowers` | nome na prosa, ou nível na tabela |
-| `cmd/audit/equipment` | `transcript.Items` das páginas do capítulo 3 (p138-167), menos o material | nome + preço na tabela, com o nome comparado SEM o qualificador entre parênteses (o catálogo o guarda — "Corda (10 m)" — e a tabela tem o seu); o que é de outro auditor sai contado por irmão, e a soma tem de fechar o catálogo |
+| `cmd/audit/equipment` | `transcript.Items` que o `auditscope.Of` dá a ele: as páginas do capítulo 3 (p138-167), menos o material | nome + preço na tabela, com o nome comparado SEM o qualificador entre parênteses (o catálogo o guarda — "Corda (10 m)" — e a tabela tem o seu); o que é de outro auditor sai contado por irmão, e a soma tem de fechar o catálogo |
 | `cmd/audit/races` | `transcript.Races` | linha de atributos, ligada por semântica |
 | `cmd/audit/expertises` | `transcript.Expertises` | Tabela 2-1 **e** a linha de estado do verbete |
 | `cmd/audit/gods` | `transcript.Gods` | Tabela 1-20 **e** os campos rotulados do verbete |

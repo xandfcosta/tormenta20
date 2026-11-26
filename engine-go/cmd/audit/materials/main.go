@@ -23,6 +23,7 @@ import (
 	"strings"
 	"t20engine/cmd/internal/pyfmt"
 
+	"t20engine/cmd/internal/auditscope"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -89,7 +90,7 @@ func audit(book *bookpdf.Book) (int, error) {
 
 	catalog := map[string]transcript.Item{}
 	for _, it := range transcript.Items {
-		if it.Category == category {
+		if auditscope.Of(it) == auditscope.Materials {
 			catalog[bookpdf.Key(it.Name)] = it
 		}
 	}

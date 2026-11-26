@@ -24,6 +24,7 @@ import (
 	"strings"
 	"t20engine/cmd/internal/pyfmt"
 
+	"t20engine/cmd/internal/auditscope"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -164,7 +165,9 @@ func audit(book *bookpdf.Book, p profile) int {
 
 	catalog := map[string]transcript.Item{}
 	for _, it := range transcript.Items {
-		if it.Category == p.catalogCategory {
+		// O ENCANTO é deste auditor pela regra comum (`auditscope.Of`), e a categoria escolhe a tabela: a 8-8 de arma ou
+		// a 8-10 de armadura.
+		if auditscope.Of(it) == auditscope.Enchants && it.Category == p.catalogCategory {
 			catalog[it.Name] = it
 		}
 	}
@@ -224,7 +227,7 @@ func audit(book *bookpdf.Book, p profile) int {
 		// nada dele — falsa em dez dos vinte e oito, e o efeito era SILÊNCIO:
 		// escrever a nota honesta reprovava (ALE-459). Quem aplica EM PARTE diz
 		// as duas coisas, e o `modeled` impede a nota de virar desculpa.
-		hasModel := len(entry.Modifiers) > 0
+		hasModel := appliesSomething(entry)
 		reason := ""
 		if entry.Unmodeled != nil {
 			reason = entry.Unmodeled.Note
@@ -269,4 +272,13 @@ func audit(book *bookpdf.Book, p profile) int {
 		fmt.Printf("  %s\n", f)
 	}
 	return len(failures)
+}
+
+// appliesSomething diz se o motor aplica alguma regra do encanto: um modificador fixo, ou o IMPULSO — o gasto de PM
+// no golpe com o seu efeito (`Boost`), que é como o Anticriatura entra inteiro (+4d8 contra o tipo escolhido) e o
+// Corrosivo entra em parte. Contar só os modificadores lia o impulso como silêncio.
+//
+//	appliesSomething(transcript.Item{Boost: &transcript.ItemBoost{PM: 2}}) // true
+func appliesSomething(entry transcript.Item) bool {
+	return len(entry.Modifiers) > 0 || entry.Boost != nil
 }

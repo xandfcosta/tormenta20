@@ -23,6 +23,7 @@ import (
 	"strings"
 	"t20engine/cmd/internal/pyfmt"
 
+	"t20engine/cmd/internal/auditscope"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -143,7 +144,7 @@ func potionsOfCatalog() []*transcript.Item {
 	at := map[string]int{}
 	for i := range transcript.Items {
 		it := &transcript.Items[i]
-		if it.Consumable == nil || it.Consumable.Spell == "" {
+		if auditscope.Of(*it) != auditscope.Potions {
 			continue
 		}
 		if j, seen := at[it.ID]; seen {

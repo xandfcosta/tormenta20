@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 
+	"t20engine/cmd/internal/auditscope"
 	"t20engine/domain/catalog/transcript"
 	"t20engine/infra/bookpdf"
 )
@@ -165,14 +166,14 @@ func main() {
 
 // catalogByKey são os itens DESTE auditor pelo nome comparável (`nameKey`), e cada nome guarda TODOS os seus
 // verbetes: sem o qualificador, as cinco Coleções de livros têm um nome só, e um mapa de um item por nome mediria
-// uma e esqueceria quatro. O resto vai pelo nome, agrupado pelo auditor que o mede (`measuredBy`).
+// uma e esqueceria quatro. O resto vai pelo nome, agrupado pelo auditor que o mede (`auditscope.Of`).
 func catalogByKey() (map[string][]*transcript.Item, map[string][]string) {
 	mine := map[string][]*transcript.Item{}
 	elsewhere := map[string][]string{}
 	for i := range transcript.Items {
 		it := &transcript.Items[i]
-		if auditor := measuredBy(*it); auditor != "" {
-			elsewhere[auditor] = append(elsewhere[auditor], it.Name)
+		if auditor := auditscope.Of(*it); auditor != auditscope.Equipment {
+			elsewhere[string(auditor)] = append(elsewhere[string(auditor)], it.Name)
 			continue
 		}
 		k := nameKey(it.Name)
@@ -283,40 +284,6 @@ func pyFloat(x float64) string {
 		fixed += ".0"
 	}
 	return fixed
-}
-
-// As páginas do capítulo 3 no LIVRO: o que está fora delas é de outro auditor.
-const (
-	chapterThreeFirst = 138
-	chapterThreeLast  = 167
-)
-
-// measuredBy é o auditor que mede o item: "" é este, o das tabelas do capítulo 3; o resto é o nome do irmão em
-// `cmd/audit/`, e "nenhum" é o item que nenhum auditor alcança — o achado. A página decide primeiro, porque o
-// capítulo 3 também tem `apparel` e o capítulo 8 também tem arma; dentro do capítulo 8, o tipo do verbete diz qual
-// tabela o tem, que é como cada irmão escolhe os seus.
-//
-//	measuredBy(transcript.Item{Category: "material", BookPage: 166}) // "materials"
-func measuredBy(it transcript.Item) string {
-	if it.BookPage >= chapterThreeFirst && it.BookPage <= chapterThreeLast {
-		if it.Category == "material" {
-			return "materials"
-		}
-		return ""
-	}
-	switch {
-	case it.Category == "weapon-enchant" || it.Category == "armor-enchant":
-		return "enchants"
-	case it.Artifact:
-		return "artifacts"
-	case it.ComposedOf != nil:
-		return "specificitems"
-	case it.Consumable != nil && it.Consumable.Spell != "":
-		return "potions"
-	case it.Category == "apparel":
-		return "accessories"
-	}
-	return "nenhum"
 }
 
 // qualifier é o qualificador entre parênteses no fim do nome — "(10 m)", "(Guerra)", "(por dia)".
