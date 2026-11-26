@@ -98,7 +98,7 @@ func main() {
 				}
 			}
 		}
-		fmt.Printf("  %-22s preço conferido: %3d   sem preço na tabela: %d\n", t.label, priced, unpriced)
+		fmt.Printf("  %-22s verbetes com preço conferido: %3d   verbetes sem preço na tabela: %d\n", t.label, priced, unpriced)
 	}
 
 	var unseen []string
