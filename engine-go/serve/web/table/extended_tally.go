@@ -65,9 +65,10 @@ var extendedComplexities = []struct {
 // extendedLine é uma contagem do jeito que a faixa a escreve.
 type extendedLine struct {
 	EntryID, Label string
-	// Score é o "2/5" grande, Tally o resto da conta, e Said o que falta ou o que o livro prevê.
-	Score, Tally, Said string
-	Done               bool
+	// Score é o "2/5" grande e Tally o resto da conta, no teste do grupo; Meta é a conta inteira numa linha, no de
+	// cada um ("3 de 5 sucessos · 0 de 3 falhas · chegou"); Said é o que falta ou o que o livro prevê.
+	Score, Tally, Meta, Said string
+	Done                     bool
 }
 
 // extendedBadge é a etiqueta da faixa: a complexidade do livro, ou "cada um da fila".
@@ -102,10 +103,13 @@ func extendedLineOf(t live.ExtendedTest, entryID, label string) extendedLine {
 		Score: fmt.Sprintf("%d/%d", tally.Successes, t.Required),
 		Tally: fmt.Sprintf("sucessos · %d de %d falhas", tally.Failures, live.ExtendedFailureLimit),
 	}
+	line.Meta = fmt.Sprintf("%d de %d sucessos · %d de %d falhas", tally.Successes, t.Required, tally.Failures, live.ExtendedFailureLimit)
 	switch tally.Outcome {
 	case live.ExtendedReached:
+		line.Meta += " · chegou"
 		line.Said = fmt.Sprintf("Alcançado: %d sucessos antes de %d falhas (p222). O que isso causa é seu.", t.Required, live.ExtendedFailureLimit)
 	case live.ExtendedTotalFailure:
+		line.Meta += " · falha total"
 		line.Said = fmt.Sprintf("Falha total: %d falhas antes de %d sucessos (p222). O que isso causa é seu.", live.ExtendedFailureLimit, t.Required)
 	default:
 		line.Said = missing(t.Required-tally.Successes, "sucesso", "Falta", "Faltam") + ". " +
@@ -113,19 +117,6 @@ func extendedLineOf(t live.ExtendedTest, entryID, label string) extendedLine {
 			plural(live.ExtendedFailureLimit-tally.Failures, "é a falha total.", "são a falha total.")
 	}
 	return line
-}
-
-// eachLineMeta é a conta da linha no teste de cada um: "3 de 5 sucessos · 0 de 3 falhas · chegou".
-func eachLineMeta(t live.ExtendedTest, l extendedLine) string {
-	tally := t.TallyOf(l.EntryID)
-	meta := fmt.Sprintf("%d de %d sucessos · %d de %d falhas", tally.Successes, t.Required, tally.Failures, live.ExtendedFailureLimit)
-	switch tally.Outcome {
-	case live.ExtendedReached:
-		meta += " · chegou"
-	case live.ExtendedTotalFailure:
-		meta += " · falha total"
-	}
-	return meta
 }
 
 // missing escreve "Faltam 3 sucessos." e "Mais 2 falhas", no singular quando é um.

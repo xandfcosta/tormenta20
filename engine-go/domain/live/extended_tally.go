@@ -124,7 +124,7 @@ func MarkExtendedTest(st *SessionRuntimeState, entryID, kind string) error {
 	if kind != ExtendedSuccess && kind != ExtendedDouble && kind != ExtendedFailure {
 		return fmt.Errorf("a marca %q não existe: é %q, %q ou %q", kind, ExtendedSuccess, ExtendedDouble, ExtendedFailure)
 	}
-	label := "o grupo"
+	whose := "do grupo"
 	if len(t.Who) == 0 && entryID != "" {
 		return fmt.Errorf("%s é do grupo, e a marca veio para a linha %q", t.Name, entryID)
 	}
@@ -133,10 +133,13 @@ func MarkExtendedTest(st *SessionRuntimeState, entryID, kind string) error {
 		if i < 0 {
 			return fmt.Errorf("%s conta cada um da fila de quando abriu, e a linha %q não estava nela", t.Name, entryID)
 		}
-		label = t.Who[i].Label
+		whose = "de " + t.Who[i].Label
 	}
-	if done := t.TallyOf(entryID).Outcome; done != "" {
-		return fmt.Errorf("a contagem de %s em %s já chegou ao fim (%s)", label, t.Name, done)
+	switch t.TallyOf(entryID).Outcome {
+	case ExtendedReached:
+		return fmt.Errorf("a contagem %s em %s já chegou ao exigido", whose, t.Name)
+	case ExtendedTotalFailure:
+		return fmt.Errorf("a contagem %s em %s já chegou à falha total", whose, t.Name)
 	}
 	next := *t
 	next.Marks = append(slices.Clone(t.Marks), ExtendedMark{EntryID: entryID, Kind: kind})

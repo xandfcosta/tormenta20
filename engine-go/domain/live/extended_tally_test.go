@@ -35,8 +35,9 @@ func TestTheGroupTallyCountsTheDoubleAndSaysWhatTheBookPredicts(t *testing.T) {
 	if got := st.ExtendedTest.TallyOf(""); got.Successes != 5 || got.Outcome != ExtendedReached {
 		t.Fatalf("aos 5 sucessos o contador diz %+v; want o exigido alcançado", got)
 	}
-	if err := MarkExtendedTest(st, "", ExtendedFailure); err == nil {
-		t.Error("o contador que já chegou aceitou outra marca")
+	// A RECUSA é frase da tela, e diz o desfecho em palavras, e não pelo id dele.
+	if err := MarkExtendedTest(st, "", ExtendedFailure); err == nil || !strings.Contains(err.Error(), "já chegou ao exigido") {
+		t.Errorf("o contador que já chegou respondeu %v; want a recusa que diz que ele chegou ao exigido", err)
 	}
 
 	// DESFAZER tira a última marca, e o desfecho some com ela.
@@ -56,6 +57,9 @@ func TestThreeFailuresBeforeTheSuccessesAreTheTotalFailure(t *testing.T) {
 	markAll(t, st, "", ExtendedSuccess, ExtendedFailure, ExtendedFailure, ExtendedFailure)
 	if got := st.ExtendedTest.TallyOf(""); got.Failures != 3 || got.Outcome != ExtendedTotalFailure {
 		t.Fatalf("três falhas deram %+v; want a falha total", got)
+	}
+	if err := MarkExtendedTest(st, "", ExtendedSuccess); err == nil || !strings.Contains(err.Error(), "já chegou à falha total") {
+		t.Errorf("o contador na falha total respondeu %v; want a recusa que diz a falha total", err)
 	}
 }
 

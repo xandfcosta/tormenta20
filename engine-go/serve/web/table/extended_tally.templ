@@ -49,7 +49,7 @@ templ extendedBand(v View) {
 						<div class="ds-reg-line ds-extended-line">
 							<span class="min-w-0">
 								<span class="ds-row-title">{ line.Label }</span>
-								<span class="ds-row-meta">{ eachLineMeta(*t, line) }</span>
+								<span class="ds-row-meta">{ line.Meta }</span>
 							</span>
 							if v.GM != nil && !line.Done {
 								<span class="ds-gm-steps">
