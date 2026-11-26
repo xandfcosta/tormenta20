@@ -47,6 +47,8 @@ func filtersForTab(aba string) []collectionFilter {
 	switch aba {
 	case "condicoes":
 		return []collectionFilter{{Key: "efeito", Label: "Tipo de efeito", Options: effectOptions()}}
+	case "perigos":
+		return []collectionFilter{{Key: "tipo", Label: "Tipo", Options: hazardKindOptions()}}
 	case "magias":
 		return []collectionFilter{
 			{Key: "circulo", Label: "Círculo", Options: circleOptions()},

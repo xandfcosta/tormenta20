@@ -12,12 +12,15 @@ import (
 // o cartão perde a moldura e o nome, porque lá a caixa já tem os dois
 // (`#entry-in-dialog`, no `ds.css`).
 
-// groupCards desenha os verbetes de um grupo. Um lugar só para os dez catálogos:
+// groupCards desenha os verbetes de um grupo. Um lugar só para todos os catálogos:
 // quando a lista e a caixa tinham cada uma a sua, a da caixa ficou sem Escolas e
 // sem Perícias, e o elo para elas abria uma caixa vazia.
 templ groupCards(g collectionGroup, bookRef bookui.BookAddress) {
 	for _, c := range g.Conditions {
 		@conditionCard(c, bookRef)
+	}
+	for _, h := range g.Hazards {
+		@hazardCard(h, bookRef)
 	}
 	for _, m := range g.Spells {
 		@spellCard(m, bookRef)
@@ -97,6 +100,18 @@ templ linkedNames(names []string, target func(string) (string, string)) {
 		} else {
 			{ name }
 		}
+	}
+}
+
+// O PERIGO mostra a ficha antes da descrição: é o número que o mestre procura
+// quando a armadilha dispara ou a doença pega, e a descrição é o porquê. A
+// página que a descrição cita ("veja a página 267") vira elo para o livro.
+templ hazardCard(h book.Hazard, bookRef bookui.BookAddress) {
+	@catalogCard(h.Name, h.BookPage, bookRef, plainBadges(hazardBadges(h)...)) {
+		for _, line := range hazardSheet(h) {
+			<p class="ds-row-meta">{ line }</p>
+		}
+		@describedText(h.Description, bookRef)
 	}
 }
 
@@ -248,7 +263,7 @@ func godBadges(d book.God) []string {
 	if d.Dead {
 		return []string{"Morto"}
 	}
-	return nonEmpty(energyWritten(d.Energy))
+	return nonEmpty(firstUpper(d.Energy))
 }
 
 templ godCard(d book.God, bookRef bookui.BookAddress) {

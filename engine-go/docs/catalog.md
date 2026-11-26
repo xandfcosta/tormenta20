@@ -231,6 +231,7 @@ reprova o item que auditor nenhum alcança, pelo nome. O auditor só roda à mã
 | `cmd/audit/accessories` | `transcript.Items` (`apparel` com faixa de `d%`) | as Tabelas 8-13/14/15, com UMA lista alfabética de verbetes para as três |
 | `cmd/audit/artifacts` | `transcript.Items` (`artifact`), `transcript.GMTables` (`chaosDeck`) | NENHUMA tabela — a p346 tira o artefato da geração aleatória. O denominador vem do TIPO: o cabeçalho de seção e o corpo têm corpos de letra diferentes, e nas p346-349 não há outra seção |
 | `cmd/audit/threatstats` | `transcript.ThreatStats` | a Tabela 7-2 (p323) linha a linha pelas palavras de cada altura, e os pacotes de atributos dos quatro patamares (p322) |
+| `cmd/audit/hazards` | `transcript.Hazards` | a ARMADILHA pela ficha que termina em "ND x." (ND, resistência e CD, Investigação e Ladinagem, os dados do dano, e a marca mágica pelo nome em itálico, com a capitular juntada pela posição); a DOENÇA pelo contágio, pela CD e pelo número de efeitos; o AMBIENTE pelos dados e pelas páginas ("veja a página 267") que a paráfrase cita, que têm de estar na página do verbete |
 
 **Dois não leem o livro.** O `cmd/audit/coverage` confere raça, classe e origem
 contra o MOTOR — quanto vira número, gesto ou nota do mestre. O balde é

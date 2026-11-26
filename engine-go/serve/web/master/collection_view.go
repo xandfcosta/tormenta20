@@ -54,10 +54,13 @@ type collectionTab struct {
 }
 
 // A ORDEM é por frequência na mesa: condição primeiro, porque é a consulta mais
-// comum no meio do combate. Raça, classe e deus vão no FIM porque são consulta
-// de CRIAÇÃO de personagem, e não de mesa com o combate em curso.
+// comum no meio do combate, e o perigo logo depois, porque a armadilha e a
+// doença se consultam na hora em que disparam. Raça, classe e deus vão no FIM
+// porque são consulta de CRIAÇÃO de personagem, e não de mesa com o combate em
+// curso.
 var collectionTabs = []collectionTab{
 	{"condicoes", "Condições"},
+	{"perigos", "Perigos"},
 	{"magias", "Magias"},
 	{"pericias", "Perícias"},
 	{"poderes", "Poderes"},
@@ -96,6 +99,7 @@ func knownTab(id string) string {
 type collectionGroup struct {
 	Label      string
 	Conditions []book.Condition
+	Hazards    []book.Hazard
 	Spells     []book.Spell
 	Powers     []book.Power
 	Items      []book.Item
@@ -113,6 +117,8 @@ func (g collectionGroup) entryName() string {
 	switch {
 	case len(g.Conditions) > 0:
 		return g.Conditions[0].Name
+	case len(g.Hazards) > 0:
+		return g.Hazards[0].Name
 	case len(g.Spells) > 0:
 		return g.Spells[0].Name
 	case len(g.Powers) > 0:
@@ -136,7 +142,7 @@ func (g collectionGroup) entryName() string {
 }
 
 func (g collectionGroup) Count() int {
-	return len(g.Conditions) + len(g.Spells) + len(g.Powers) + len(g.Items) +
+	return len(g.Conditions) + len(g.Hazards) + len(g.Spells) + len(g.Powers) + len(g.Items) +
 		len(g.Effects) + len(g.Schools) + len(g.Expertises) + len(g.Races) + len(g.Classes) + len(g.Gods)
 }
 
@@ -237,6 +243,7 @@ func loadCollection(c collectionCriteria, bookRef bookui.BookAddress) collection
 	gods := book.CatalogGods()
 	for _, g := range []collectionGroup{
 		{Label: "Condições", Conditions: filter(a.Conditions, book.ConditionFields, search)},
+		{Label: "Perigos", Hazards: filter(book.Hazards(), book.HazardFields, search)},
 		{Label: "Magias", Spells: filter(a.Spells, book.SpellFields, search)},
 		{Label: "Poderes", Powers: filter(a.Powers, book.PowerFields, search)},
 		{Label: "Itens", Items: filter(a.Items, book.ItemFields, search)},
@@ -269,55 +276,28 @@ func groupForEntry(aba, id string) collectionGroup {
 	// Sem filtro: o elo pede UM verbete pelo id, e um crachá aceso na cena de
 	// origem não pode esconder o destino do elo.
 	whole := groupForTab(book.Catalogs(), aba, nil)
-	outside := collectionGroup{Label: whole.Label}
-	for _, c := range whole.Conditions {
-		if c.ID == id {
-			outside.Conditions = append(outside.Conditions, c)
-		}
+	return collectionGroup{
+		Label:      whole.Label,
+		Conditions: withID(whole.Conditions, id, func(c book.Condition) string { return c.ID }),
+		Hazards:    withID(whole.Hazards, id, func(h book.Hazard) string { return h.ID }),
+		Spells:     withID(whole.Spells, id, func(m book.Spell) string { return m.ID }),
+		Powers:     withID(whole.Powers, id, func(p book.Power) string { return p.ID }),
+		Items:      withID(whole.Items, id, func(i book.Item) string { return i.ID }),
+		Effects:    withID(whole.Effects, id, func(e book.EffectKind) string { return e.ID }),
+		Schools:    withID(whole.Schools, id, func(e book.SpellSchool) string { return e.ID }),
+		Expertises: withID(whole.Expertises, id, func(p book.Expertise) string { return p.ID }),
+		Races:      withID(whole.Races, id, func(r book.Race) string { return r.ID }),
+		Classes:    withID(whole.Classes, id, func(c book.Class) string { return c.ID }),
+		Gods:       withID(whole.Gods, id, func(d book.God) string { return d.ID }),
 	}
-	for _, m := range whole.Spells {
-		if m.ID == id {
-			outside.Spells = append(outside.Spells, m)
-		}
-	}
-	for _, p := range whole.Powers {
-		if p.ID == id {
-			outside.Powers = append(outside.Powers, p)
-		}
-	}
-	for _, i := range whole.Items {
-		if i.ID == id {
-			outside.Items = append(outside.Items, i)
-		}
-	}
-	for _, e := range whole.Effects {
-		if e.ID == id {
-			outside.Effects = append(outside.Effects, e)
-		}
-	}
-	for _, e := range whole.Schools {
-		if e.ID == id {
-			outside.Schools = append(outside.Schools, e)
-		}
-	}
-	for _, p := range whole.Expertises {
-		if p.ID == id {
-			outside.Expertises = append(outside.Expertises, p)
-		}
-	}
-	for _, r := range whole.Races {
-		if r.ID == id {
-			outside.Races = append(outside.Races, r)
-		}
-	}
-	for _, c := range whole.Classes {
-		if c.ID == id {
-			outside.Classes = append(outside.Classes, c)
-		}
-	}
-	for _, d := range whole.Gods {
-		if d.ID == id {
-			outside.Gods = append(outside.Gods, d)
+}
+
+// withID são os verbetes da lista com aquele id: um, ou nenhum.
+func withID[T any](list []T, id string, idOf func(T) string) []T {
+	var outside []T
+	for _, e := range list {
+		if idOf(e) == id {
+			outside = append(outside, e)
 		}
 	}
 	return outside
@@ -328,6 +308,8 @@ func groupForTab(a book.GMCatalogs, aba string, lit map[string][]string) collect
 	races, classes, _ := book.CharacterCatalogs()
 	gods := book.CatalogGods()
 	switch aba {
+	case "perigos":
+		return collectionGroup{Label: "Perigos", Hazards: applyFilters(book.Hazards(), lit, hazardMatches)}
 	case "magias":
 		return collectionGroup{Label: "Magias", Spells: applyFilters(a.Spells, lit, spellMatches)}
 	case "poderes":
@@ -446,13 +428,13 @@ func expertiseMarks(p book.Expertise) []string {
 	return marks
 }
 
-// energyWritten é a energia do deus com a inicial maiúscula: o dado a guarda em
-// caixa baixa (`negativa`), que é como o filtro a casa.
-func energyWritten(energy string) string {
-	if energy == "" {
+// firstUpper é o dado em caixa baixa com a inicial maiúscula, para a tela: o dado
+// guarda `negativa` e `contato` porque é assim que o filtro os casa.
+func firstUpper(text string) string {
+	if text == "" {
 		return ""
 	}
-	return strings.ToUpper(energy[:1]) + energy[1:]
+	return strings.ToUpper(text[:1]) + text[1:]
 }
 
 // nonEmpty é o crachá que só sai quando o dado existe.
