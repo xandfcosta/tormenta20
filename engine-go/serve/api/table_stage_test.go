@@ -18,6 +18,7 @@ var gmRegionNames = []string{
 	"table-blast",
 	"table-spell-cast",
 	"table-hazard",
+	"table-extended",
 	"table-banner",
 	"table-tracker",
 	"table-commands",

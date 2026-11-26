@@ -51,6 +51,7 @@ func Routes(r chi.Router, s Scene) {
 	s.TableCommandRoutes(r)
 	s.TableBestiaryRoutes(r)
 	s.SidePageRoutes(r)
+	s.extendedTestRoutes(r)
 	s.DisplayRoutes(r)
 	s.MoveRoutes(r)
 	s.MovePreviewRoutes(r)
@@ -232,6 +233,7 @@ func tableSignalsExpr(revision string) string {
 		"new_token_material: 'madeira', new_token_hp: 0, new_token_defense: 10, new_token_rd: 5",
 		// A FILA e os verbos da linha.
 		"rest_quality: 'normal'",
+		"ext_name: '', ext_required: 5, ext_each: false",
 		"condition_row: '', row_conditions: '', row_label: ''",
 		"new_name: '', new_initiative: 10, new_hp: 0, new_type: 'npc'",
 		"edit_row: '', edit_name: '', edit_initiative: 0, edit_hp: 0, edit_hp_max: 0",
