@@ -13,11 +13,7 @@ import (
 // escondida sem teste aberto, pela razão das regiões.
 templ extendedBand(v View) {
 	if t := v.Extended; t != nil {
-		<section id="table-extended" class="ds-strike" role="status" aria-label="Teste estendido">
-			<div class="ds-strike-head">
-				@ds.Badge(extendedBadge(*t), true)
-				<span class="ds-row-meta"><b>{ t.Name }</b></span>
-			</div>
+		@strikeBand("table-extended", "Teste estendido", nil, extendedBandHead(*t)) {
 			if len(t.Who) == 0 {
 				{{ line := extendedLines(*t)[0] }}
 				<div class="ds-strike-roll" aria-live="polite">
@@ -37,7 +33,7 @@ templ extendedBand(v View) {
 					}
 				</div>
 			}
-		</section>
+		}
 	} else {
 		<section id="table-extended" hidden></section>
 	}
@@ -48,13 +44,7 @@ templ extendedBand(v View) {
 // diálogo por marca custaria um toque a mais toda vez (decisão do dono).
 templ gmExtendedMarks(v View) {
 	if t := v.Extended; t != nil && v.GM != nil {
-		<section id="table-extended-marks" class="ds-strike" data-extended-marks data-float aria-label="Marcar o teste estendido">
-			<div class="ds-strike-head" data-float-handle>
-				@floatGrip()
-				<span class="ds-float-title">{ "Marcar · " + t.Name }</span>
-				@extendedCount(*t)
-				@floatFold("o Marcar")
-			</div>
+		@floatCard("table-extended-marks", "Marcar o teste estendido", "o Marcar", templ.Attributes{"data-extended-marks": true}, extendedMarksHead(*t)) {
 			if len(t.Who) == 0 {
 				{{ line := extendedLines(*t)[0] }}
 				// DUAS FILEIRAS: as marcas, que são o gesto do momento, e o desfazer e o encerrar. Numa fileira
@@ -100,7 +90,7 @@ templ gmExtendedMarks(v View) {
 			<div class="ds-strike-foot">
 				@extendedFoot(v)
 			</div>
-		</section>
+		}
 	} else {
 		<section id="table-extended-marks" hidden></section>
 	}
@@ -156,4 +146,16 @@ templ gmExtendedDialog(v View) {
 			}
 		</div>
 	}
+}
+
+// extendedBandHead é a cabeça da faixa do teste estendido: a complexidade e o que é.
+templ extendedBandHead(t live.ExtendedTest) {
+	@ds.Badge(extendedBadge(t), true)
+	<span class="ds-row-meta"><b>{ t.Name }</b></span>
+}
+
+// extendedMarksHead é a cabeça do Marcar: o que é, e o número que importa.
+templ extendedMarksHead(t live.ExtendedTest) {
+	<span class="ds-float-title">{ "Marcar · " + t.Name }</span>
+	@extendedCount(t)
 }

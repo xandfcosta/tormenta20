@@ -12,16 +12,7 @@ import (
 // rolagem, o NÓ VAZIO fica, pela razão do ataque: o stream remenda POR ID.
 templ informedRoll(kind informedRollKind, band *rollBand) {
 	if band != nil {
-		<section id={ informedRollRegions[kind].id } class="ds-strike" data-test role="status" aria-label={ informedRollRegions[kind].label }>
-			<div class="ds-strike-head">
-				if band.Badge != "" {
-					@ds.Badge(band.Badge, true)
-				}
-				if band.Tone != "" {
-					<span class="ds-seal" data-tone={ band.Tone }>{ band.Seal }</span>
-				}
-				<span class="ds-row-meta">{ band.Who }<b>{ band.What }</b></span>
-			</div>
+		@strikeBand(informedRollRegions[kind].id, informedRollRegions[kind].label, templ.Attributes{"data-test": true}, informedRollHead(band)) {
 			// `aria-live` na CONTA, pela razão do ataque: o selo já é lido no
 			// nome acessível, e quem ouve precisa do resultado.
 			for _, line := range band.Lines {
@@ -52,8 +43,19 @@ templ informedRoll(kind informedRollKind, band *rollBand) {
 					}
 				</div>
 			}
-		</section>
+		}
 	} else {
 		<section id={ informedRollRegions[kind].id } hidden></section>
 	}
+}
+
+// informedRollHead é a cabeça da faixa: a etiqueta, o selo que só o dado decide, e quem rolou o quê.
+templ informedRollHead(band *rollBand) {
+	if band.Badge != "" {
+		@ds.Badge(band.Badge, true)
+	}
+	if band.Tone != "" {
+		<span class="ds-seal" data-tone={ band.Tone }>{ band.Seal }</span>
+	}
+	<span class="ds-row-meta">{ band.Who }<b>{ band.What }</b></span>
 }

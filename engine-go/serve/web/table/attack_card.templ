@@ -19,24 +19,7 @@ import (
 // decidida) não tem mais nada a pedir, e o cartão sai.
 templ gmAttack(v View) {
 	if v.Attack != nil && v.Attack.Stage != stageSettled {
-		<section id="table-attack" class="ds-strike" data-attack data-float data-float-fleeting aria-label={ gmAttackBadge(v.Attack.Stage) }>
-			<div class="ds-strike-head" data-float-handle>
-				@floatGrip()
-				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
-				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
-				if v.Attack.BySpellHand {
-					<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
-				}
-				if v.Attack.Action != "" {
-					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
-				}
-				// O IMPULSO fica à vista: a proposta já pagou o PM, e quem responde
-				// precisa saber quanto o cancelamento devolve (ALE-487).
-				if v.Attack.Boost != "" {
-					@ds.Badge(v.Attack.Boost, true)
-				}
-				@floatFold("o ataque")
-			</div>
+		@floatCard("table-attack", gmAttackBadge(v.Attack.Stage), "o ataque", templ.Attributes{"data-attack": true, "data-float-fleeting": true}, gmAttackHead(v)) {
 			@attackSheetOpener()
 			@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
 				@attackDuel(v.Attack.Duel)
@@ -98,7 +81,7 @@ templ gmAttack(v View) {
 					<p class="ds-help">{ line }</p>
 				}
 			}
-		</section>
+		}
 	} else {
 		<section id="table-attack" hidden></section>
 	}
@@ -164,26 +147,14 @@ templ duelRowView(row duelRow) {
 // nem a RD — no papel do personagem, ele não conhece a ficha de outra entidade.
 templ tempestadeAttack(v View) {
 	if v.Attack != nil {
-		<section id="table-attack" class="ds-strike" data-attack data-float data-float-fleeting aria-label={ playerAttackBadge(v.Attack) }>
-			<div class="ds-strike-head" data-float-handle>
-				@floatGrip()
-				@ds.Badge(playerAttackBadge(v.Attack), true)
-				<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
-				if v.Attack.Weapon != "" {
-					<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
-				}
-				if v.Attack.Action != "" {
-					<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
-				}
-				@floatFold("o ataque")
-			</div>
+		@floatCard("table-attack", playerAttackBadge(v.Attack), "o ataque", templ.Attributes{"data-attack": true, "data-float-fleeting": true}, playerAttackHead(v)) {
 			if v.Attack.Mine {
 				@attackSheetOpener()
 				@ds.Dialog(attackSheet, v.Attack.Attacker+" → "+v.Attack.Target, nil) {
 					@playerAttackBody(v)
 				}
 			}
-		</section>
+		}
 	} else {
 		<section id="table-attack" hidden></section>
 	}
@@ -306,5 +277,34 @@ templ damageLineChoice(v View) {
 				}
 			}
 		</div>
+	}
+}
+
+// gmAttackHead é a cabeça do ataque na mesa do mestre: o estágio, quem ataca quem, e o impulso pago.
+templ gmAttackHead(v View) {
+	@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
+	<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+	if v.Attack.BySpellHand {
+		<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
+	}
+	if v.Attack.Action != "" {
+		<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
+	}
+	// O IMPULSO fica à vista: a proposta já pagou o PM, e quem responde
+	// precisa saber quanto o cancelamento devolve (ALE-487).
+	if v.Attack.Boost != "" {
+		@ds.Badge(v.Attack.Boost, true)
+	}
+}
+
+// playerAttackHead é a cabeça do ataque na mesa do jogador: o estágio, quem ataca quem, a arma e a ação.
+templ playerAttackHead(v View) {
+	@ds.Badge(playerAttackBadge(v.Attack), true)
+	<span class="ds-row-meta">{ v.Attack.Attacker + " → " }<b>{ v.Attack.Target }</b></span>
+	if v.Attack.Weapon != "" {
+		<span class="ds-row-meta">{ "· " + v.Attack.Weapon }</span>
+	}
+	if v.Attack.Action != "" {
+		<span class="ds-row-meta">{ "· " + v.Attack.Action }</span>
 	}
 }

@@ -19,13 +19,7 @@ const bannerSheet = "banner-sheet"
 // trocaria a peça debaixo do dedo de quem arrasta.
 templ gmBanner(v View) {
 	if len(v.Banners) > 0 {
-		<section id="table-banner" class="ds-strike" data-banner data-float aria-label="Estandarte">
-			<div class="ds-strike-head" data-float-handle>
-				@floatGrip()
-				<span class="ds-float-title">Estandarte · a escolher</span>
-				<b class="ds-float-count">{ strconv.Itoa(bannerWaiting(v.Banners)) }</b>
-				@floatFold("o Estandarte")
-			</div>
+		@floatCard("table-banner", "Estandarte", "o Estandarte", templ.Attributes{"data-banner": true}, bannerHead(v)) {
 			@ds.Dialog(bannerSheet, "Estandarte", nil) {
 				for _, band := range v.Banners {
 					<p class="ds-row-meta"><b>{ band.Head }</b></p>
@@ -42,8 +36,14 @@ templ gmBanner(v View) {
 				}
 			}
 			<button type="button" class="ds-strike-open" commandfor={ bannerSheet } command="show-modal" aria-label="Abrir o Estandarte"></button>
-		</section>
+		}
 	} else {
 		<section id="table-banner" hidden></section>
 	}
+}
+
+// bannerHead é a cabeça do Estandarte: quantos aliados ainda esperam o toque do mestre.
+templ bannerHead(v View) {
+	<span class="ds-float-title">Estandarte · a escolher</span>
+	<b class="ds-float-count">{ strconv.Itoa(bannerWaiting(v.Banners)) }</b>
 }
