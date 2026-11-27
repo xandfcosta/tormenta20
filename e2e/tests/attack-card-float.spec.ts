@@ -42,7 +42,10 @@ async function proposesAnAttack(page: Page): Promise<string> {
   }, ALVO)
   expect(target, `o ${ALVO} não entrou na fila`).not.toBe('')
   let refusal = ''
-  for (let attempt = 0; attempt < 4; attempt++) {
+  // A FILA CRESCE a cada chamada — cada uma põe mais um goblin, e a repetição
+  // automática do Playwright chama de novo —, então as voltas cobrem uma fila
+  // longa, e não só a de dois da primeira vez.
+  for (let attempt = 0; attempt < 12; attempt++) {
     refusal = await command(page, `/iniciativa/${target}/atacar`)
     if (refusal === '') return target
     await command(page, '/iniciativa/proxima-vez')
@@ -73,10 +76,29 @@ test('o cartão do ataque flutua e se arrasta no desktop, e no celular mostra s�
     expect(Math.round((dragged?.x ?? 0) - before.x)).toBe(-200)
     expect(Math.round((dragged?.y ?? 0) - before.y)).toBe(-150)
 
+    // NO INSTANTE DO REMENDO, e não só depois: um observador da página, posto
+    // DEPOIS do do app, roda logo após o dele a cada remendo e anota onde o
+    // cartão está. O remendo apaga o `style`, e o app tem de devolver o lugar ali
+    // mesmo — esperar o quadro seguinte deixava a posição errada legível nesse
+    // intervalo, e a CI leu (ALE-721). Determinístico: não depende da máquina
+    // ser lenta para cair no intervalo.
+    await page.evaluate(() => {
+      const log: { x: number; y: number }[] = []
+      ;(window as unknown as { __attackSpots: typeof log }).__attackSpots = log
+      new MutationObserver(() => {
+        const box = document.getElementById('table-attack')?.getBoundingClientRect()
+        if (box) log.push({ x: Math.round(box.x), y: Math.round(box.y) })
+      }).observe(document.body, { subtree: true, childList: true })
+    })
+
     // O REMENDO QUE MUDA O PRÓPRIO CARTÃO: o crachá trocar é o controle de que
     // ele chegou — sem isso, "ficou no lugar" pode ser "nada foi remendado".
     await card.getByRole('button', { name: 'Acertou' }).click()
     await expect(card.getByText('Esperando o dano')).toBeVisible()
+    const atPatch = await page.evaluate(() => (window as unknown as { __attackSpots: { x: number; y: number }[] }).__attackSpots)
+    const draggedAt = { x: Math.round(dragged?.x ?? 0), y: Math.round(dragged?.y ?? 0) }
+    expect(atPatch.length, 'o observador não viu remendo nenhum').toBeGreaterThan(0)
+    expect(atPatch.filter((s) => s.x !== draggedAt.x || s.y !== draggedAt.y), 'no instante do remendo o cartão saiu de onde foi posto').toEqual([])
     // A POSIÇÃO, e não a caixa: o cartão encolhe ao perder os três botões.
     const spot = async () => {
       const box = await card.boundingBox()

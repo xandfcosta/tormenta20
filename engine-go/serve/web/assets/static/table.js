@@ -21,20 +21,30 @@ function o(e, t, n) {
 function s(e) {
 	return getComputedStyle(e).position === "fixed";
 }
-function c(e, t) {
-	let n = o(t, e.getBoundingClientRect(), {
+var c = /* @__PURE__ */ new Map();
+function l(e, t) {
+	e.style.setProperty("--float-x", `${t.x}px`), e.style.setProperty("--float-y", `${t.y}px`), e.id && c.set(e.id, t);
+}
+function u(e, t) {
+	l(e, o(t, e.getBoundingClientRect(), {
 		width: window.innerWidth,
 		height: window.innerHeight
-	});
-	e.style.setProperty("--float-x", `${n.x}px`), e.style.setProperty("--float-y", `${n.y}px`);
-}
-function l(t) {
-	return t.id === "table-attack" || !t.id ? e : `${e}:${t.id}`;
-}
-function u(e) {
-	return `${e.hasAttribute("data-float-fleeting") ? n : t}:${e.id}`;
+	}));
 }
 function d(e) {
+	for (let t of document.querySelectorAll("[data-float]")) {
+		h(t, e);
+		let n = t.id ? c.get(t.id) : void 0;
+		n && !t.style.getPropertyValue("--float-x") && l(t, n);
+	}
+}
+function f(t) {
+	return t.id === "table-attack" || !t.id ? e : `${e}:${t.id}`;
+}
+function p(e) {
+	return `${e.hasAttribute("data-float-fleeting") ? n : t}:${e.id}`;
+}
+function m(e) {
 	for (let t = e.length - 1; t >= 0; t--) {
 		let r = e.key(t);
 		if (!r?.startsWith(`${n}:`)) continue;
@@ -42,28 +52,31 @@ function d(e) {
 		document.querySelector(`#${CSS.escape(i)}[data-float]`) || e.removeItem(r);
 	}
 }
-function f(e, t) {
-	t.getItem(u(e)) && !e.hasAttribute("data-folded") && e.setAttribute("data-folded", ""), e.querySelector("[data-float-fold]")?.setAttribute("aria-expanded", e.hasAttribute("data-folded") ? "false" : "true");
+function h(e, t) {
+	t.getItem(p(e)) && !e.hasAttribute("data-folded") && e.setAttribute("data-folded", ""), e.querySelector("[data-float-fold]")?.setAttribute("aria-expanded", e.hasAttribute("data-folded") ? "false" : "true");
 }
-function p() {
+function g() {
 	let e = document.querySelector("[data-float-floor]");
 	return e ? e.getBoundingClientRect().top : window.innerHeight;
 }
-function m(e) {
-	d(e);
+function _(e) {
+	m(e);
 	let t = [];
 	for (let n of document.querySelectorAll("[data-float]")) {
-		if (f(n, e), !s(n)) continue;
-		let r = a(e.getItem(l(n)));
-		r ? c(n, r) : t.push(n);
+		if (h(n, e), !s(n)) continue;
+		let r = a(e.getItem(f(n)));
+		r ? u(n, r) : t.push(n);
 	}
-	let n = p() - i;
+	let n = g() - i;
 	for (let e of t.reverse()) {
 		let t = e.getBoundingClientRect();
-		n -= t.height, e.style.setProperty("--float-x", `${Math.max(i, window.innerWidth - t.width - i)}px`), e.style.setProperty("--float-y", `${Math.max(i, n)}px`), n -= r;
+		n -= t.height, l(e, {
+			x: Math.max(i, window.innerWidth - t.width - i),
+			y: Math.max(i, n)
+		}), n -= r;
 	}
 }
-function h(e = window.localStorage) {
+function v(e = window.localStorage) {
 	let t = null;
 	document.addEventListener("pointerdown", (e) => {
 		let n = e.target?.closest("[data-float-handle]"), r = n?.closest("[data-float]");
@@ -76,7 +89,7 @@ function h(e = window.localStorage) {
 			pointer: e.pointerId
 		}, n.setPointerCapture(e.pointerId), r.dataset.dragging = "", e.preventDefault();
 	}), document.addEventListener("pointermove", (e) => {
-		!t || e.pointerId !== t.pointer || c(t.card, {
+		!t || e.pointerId !== t.pointer || u(t.card, {
 			x: e.clientX - t.dx,
 			y: e.clientY - t.dy
 		});
@@ -84,20 +97,21 @@ function h(e = window.localStorage) {
 	let n = (n) => {
 		if (!t || n.pointerId !== t.pointer) return;
 		let r = t.card.getBoundingClientRect();
-		e.setItem(l(t.card), JSON.stringify({
+		e.setItem(f(t.card), JSON.stringify({
 			x: Math.round(r.left),
 			y: Math.round(r.top)
 		})), delete t.card.dataset.dragging, t = null;
 	};
 	document.addEventListener("pointerup", n), document.addEventListener("pointercancel", n), document.addEventListener("click", (t) => {
 		let n = (t.target?.closest("[data-float-fold]"))?.closest("[data-float]");
-		n && (n.toggleAttribute("data-folded") ? e.setItem(u(n), "1") : e.removeItem(u(n)), m(e));
+		n && (n.toggleAttribute("data-folded") ? e.setItem(p(n), "1") : e.removeItem(p(n)), _(e));
 	});
 	let r = 0, i = () => {
 		r ||= requestAnimationFrame(() => {
-			r = 0, m(e);
+			r = 0, _(e);
 		});
 	}, a = new ResizeObserver(i), o = () => {
+		d(e);
 		for (let e of document.querySelectorAll("[data-float]")) a.observe(e);
 		i();
 	};
@@ -108,11 +122,11 @@ function h(e = window.localStorage) {
 }
 //#endregion
 //#region serve/web/assets/src/lib/turn-juice.ts
-function g(e) {
+function y(e) {
 	return !!e && typeof e.animate == "function";
 }
-function _(e, t) {
-	if (!g(e)) return;
+function b(e, t) {
+	if (!y(e)) return;
 	let n = e.getBoundingClientRect();
 	if (n.width === 0 || n.height === 0) return;
 	let r = document.createElement("div");
@@ -131,8 +145,8 @@ function _(e, t) {
 		easing: "ease-out"
 	}).finished.then(() => r.remove()).catch(() => r.remove());
 }
-function v(e) {
-	g(e) && e.animate([
+function x(e) {
+	y(e) && e.animate([
 		{
 			transform: "scale(1)",
 			boxShadow: "0 0 0 0 transparent"
@@ -151,8 +165,8 @@ function v(e) {
 		easing: "ease-out"
 	});
 }
-function y(e) {
-	g(e) && e.animate([{
+function S(e) {
+	y(e) && e.animate([{
 		opacity: 0,
 		transform: "scale(0.92)"
 	}, {
@@ -165,7 +179,7 @@ function y(e) {
 }
 //#endregion
 //#region serve/web/assets/src/lib/token-move.ts
-function b(e) {
+function C(e) {
 	if (!e) return null;
 	let t = /--col:\s*(-?\d+)/.exec(e), n = /--lin:\s*(-?\d+)/.exec(e);
 	return !t || !n ? null : {
@@ -173,8 +187,8 @@ function b(e) {
 		lin: Number(n[1])
 	};
 }
-function x(e, t, n, r) {
-	if (!g(e)) return;
+function w(e, t, n, r) {
+	if (!y(e)) return;
 	let i = (t.col - n.col) * r, a = (t.lin - n.lin) * r;
 	i === 0 && a === 0 || e.animate([{ transform: `translate(${i}px, ${a}px)` }, { transform: "translate(0, 0)" }], {
 		duration: 200,
@@ -183,17 +197,17 @@ function x(e, t, n, r) {
 }
 //#endregion
 //#region serve/web/assets/src/table.ts
-var S = "(prefers-reduced-motion: reduce)";
-function C(e) {
+var T = "(prefers-reduced-motion: reduce)";
+function E(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) {
 			if (e.attributeName !== "style") continue;
 			let t = e.target;
 			if (!t.classList?.contains("board-token") || t.classList.contains("board-token-ghost")) continue;
-			let n = b(e.oldValue), r = b(t.getAttribute("style"));
+			let n = C(e.oldValue), r = C(t.getAttribute("style"));
 			if (!n || !r) continue;
 			let i = Number.parseFloat(getComputedStyle(t).getPropertyValue("--quadrado"));
-			!Number.isFinite(i) || i <= 0 || x(t, n, r, i);
+			!Number.isFinite(i) || i <= 0 || w(t, n, r, i);
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -202,14 +216,14 @@ function C(e) {
 		attributeFilter: ["style"]
 	});
 }
-function w(e) {
+function D(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) {
 			if (e.attributeName !== "aria-valuenow") continue;
 			let t = e.target, n = Number(e.oldValue), r = Number(t.getAttribute("aria-valuenow"));
 			if (!Number.isFinite(n) || !Number.isFinite(r) || n === r) continue;
 			let i = t.closest("li, .ds-row");
-			i && requestAnimationFrame(() => _(i, { curou: r > n }));
+			i && requestAnimationFrame(() => b(i, { curou: r > n }));
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -218,19 +232,19 @@ function w(e) {
 		attributeFilter: ["aria-valuenow"]
 	});
 }
-function T(e) {
+function O(e) {
 	let t = /^\s*(-?\d+)\s*\//.exec(e ?? "");
 	return t ? Number(t[1]) : null;
 }
-function E(e) {
+function k(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) {
 			let t = e.target, n = t.parentElement;
 			if (!n?.hasAttribute("data-vital")) continue;
-			let r = T(e.oldValue), i = T(t.textContent);
+			let r = O(e.oldValue), i = O(t.textContent);
 			if (r === null || i === null || r === i) continue;
 			let a = n.parentElement;
-			a && requestAnimationFrame(() => _(a, { curou: i > r }));
+			a && requestAnimationFrame(() => b(a, { curou: i > r }));
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -238,12 +252,12 @@ function E(e) {
 		characterDataOldValue: !0
 	});
 }
-function D(e) {
+function A(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) {
 			if (e.attributeName !== "aria-current") continue;
 			let t = e.target;
-			t.getAttribute("aria-current") === "true" && v(t);
+			t.getAttribute("aria-current") === "true" && x(t);
 		}
 	}).observe(document.body, {
 		subtree: !0,
@@ -251,18 +265,18 @@ function D(e) {
 		attributeFilter: ["aria-current"]
 	});
 }
-function O(e) {
+function j(e) {
 	new MutationObserver((t) => {
 		if (!e.matches) for (let e of t) for (let t of e.addedNodes) {
 			if (t.nodeType !== Node.ELEMENT_NODE) continue;
 			let e = t, n = e.matches("[data-condicao]") ? [e] : [...e.querySelectorAll("[data-condicao]")];
-			for (let e of n) y(e);
+			for (let e of n) S(e);
 		}
 	}).observe(document.body, {
 		subtree: !0,
 		childList: !0
 	});
 }
-var k = window.matchMedia(S);
-C(k), w(k), E(k), D(k), O(k), h();
+var M = window.matchMedia(T);
+E(M), D(M), k(M), A(M), j(M), v();
 //#endregion
