@@ -3151,6 +3151,23 @@
         0 0 0 1px var(--ds-line),
         0 12px 32px rgb(0 0 0 / 0.35);
     }
+    /* NO MÁXIMO METADE DA JANELA, e o corpo rola (decisão do dono): a pilha fica
+     * na metade de baixo, e o topo — as faixas e os botões do canto do mapa, como
+     * a cortina — continua livre. O Estandarte de uma mesa grande subia até lá e
+     * interceptava o clique. A cabeça fica presa no topo do cartão enquanto rola. */
+    .ds-strike[data-float] {
+      max-height: 50dvh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .ds-strike[data-float] > .ds-strike-head {
+      position: sticky;
+      top: -0.75rem;
+      z-index: 1;
+      margin-top: -0.75rem;
+      padding-top: 0.75rem;
+      background: var(--ds-surface);
+    }
     /* RECOLHIDO, fica a cabeça: ela diz o número que importa. */
     .ds-strike[data-float][data-folded] > :not(.ds-strike-head) {
       display: none !important;
