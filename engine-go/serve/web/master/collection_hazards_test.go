@@ -7,7 +7,7 @@ import (
 	"t20engine/serve/web/bookui"
 )
 
-// A aba Perigos (p317-319): o cartão de cada tipo diz o que a mesa usa, e o filtro separa os tipos.
+// A aba Perigos (p317-321): o cartão de cada tipo diz o que a mesa usa, e o filtro separa os tipos.
 
 func TestTheHazardCardSaysWhatTheTableUses(t *testing.T) {
 	body := pedeNaCenaComLivro(t, "/mestre/perigos").Body.String()
@@ -26,6 +26,12 @@ func TestTheHazardCardSaysWhatTheTableUses(t *testing.T) {
 			t.Errorf("o cartão do Calafrio Diabólico não diz %q: %s", want, chill)
 		}
 	}
+	avalanche := cardOf(t, body, "Avalanche")
+	for _, want := range []string{"Complexo", "ND 4", "Objetivo:", "Correr · Atletismo CD 20", "Procurar Caminho · Percepção CD 20"} {
+		if !strings.Contains(avalanche, want) {
+			t.Errorf("o cartão da Avalanche não diz %q: %s", want, avalanche)
+		}
+	}
 	// O clima mora no Capítulo 6, e o cartão leva ao livro na página dele.
 	if !strings.Contains(cardOf(t, body, "Clima, Calor e Frio"), "Abrir o livro na página 267") {
 		t.Error("o cartão do clima não leva à p267")
@@ -33,7 +39,7 @@ func TestTheHazardCardSaysWhatTheTableUses(t *testing.T) {
 }
 
 func TestTheHazardFilterSeparatesTheKinds(t *testing.T) {
-	for kind, want := range map[string]int{"armadilha": 23, "doenca": 8, "ambiente": 12} {
+	for kind, want := range map[string]int{"armadilha": 23, "doenca": 8, "ambiente": 12, "complexo": 4} {
 		v := loadCollection(collectionCriteria{Aba: "perigos", Filters: map[string][]string{"tipo": {kind}}}, bookui.BookAddress{})
 		if v.Findings != want {
 			t.Errorf("o filtro %q deu %d perigos, e o livro tem %d", kind, v.Findings, want)

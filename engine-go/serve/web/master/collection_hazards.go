@@ -7,7 +7,7 @@ import (
 	"t20engine/domain/book"
 )
 
-// A aba Perigos (p317-319): o filtro por tipo e a ficha que o cartão escreve.
+// A aba Perigos (p317-321): o filtro por tipo e a ficha que o cartão escreve.
 
 func hazardKindOptions() []filterOption {
 	outside := make([]filterOption, 0, len(book.HazardKinds))
@@ -27,12 +27,16 @@ func hazardBadges(h book.Hazard) []string {
 			badges = append(badges, "Mágica")
 		}
 	}
+	if h.Complex != nil {
+		badges = append(badges, "ND "+book.CRWritten(h.Complex.ND))
+	}
 	return badges
 }
 
 // hazardSheet são as linhas da ficha, na ordem em que a mesa as usa: o que a
 // armadilha causa e em quem, o teste da vítima, e as CDs para achar e desarmar;
-// na doença, como ela pega e o que cada falha seguida faz.
+// na doença, como ela pega e o que cada falha seguida faz. O complexo tem cartão próprio, na ordem da ficha
+// dele (`hazardCard`).
 func hazardSheet(h book.Hazard) []string {
 	var lines []string
 	if t := h.Trap; t != nil {

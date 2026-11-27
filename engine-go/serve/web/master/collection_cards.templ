@@ -78,10 +78,20 @@ templ linkedNames(names []string, target func(string) (string, string)) {
 // página que a descrição cita ("veja a página 267") vira elo para o livro.
 templ hazardCard(h book.Hazard, bookRef bookui.BookAddress) {
 	@catalogCard(h.Name, h.BookPage, bookRef, plainBadges(hazardBadges(h)...)) {
-		for _, line := range hazardSheet(h) {
-			<p class="ds-row-meta">{ line }</p>
+		if c := h.Complex; c != nil {
+			// NA ORDEM DA FICHA DO LIVRO (p320): o objetivo, o efeito e as ações — com o nome, a perícia e a CD
+			// de cada ação em destaque, que é o que o mestre procura com o olho no meio da cena.
+			<p class="ds-row-meta">{ "Objetivo: " + c.Objective }</p>
+			@describedText(h.Description, bookRef)
+			for _, a := range c.Actions {
+				<p class="ds-row-meta"><b>{ a.Written() }</b>{ " — " + a.Description }</p>
+			}
+		} else {
+			for _, line := range hazardSheet(h) {
+				<p class="ds-row-meta">{ line }</p>
+			}
+			@describedText(h.Description, bookRef)
 		}
-		@describedText(h.Description, bookRef)
 	}
 }
 
