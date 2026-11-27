@@ -47,14 +47,14 @@ func gmAttack(v View) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if v.Attack != nil && v.Attack.Stage != stageSettled {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"table-attack\" class=\"ds-strike\" data-attack data-float aria-label=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<section id=\"table-attack\" class=\"ds-strike\" data-attack data-float data-float-fleeting aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(gmAttackBadge(v.Attack.Stage))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/attack_card.templ`, Line: 22, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/attack_card.templ`, Line: 22, Col: 132}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -898,14 +898,14 @@ func tempestadeAttack(v View) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if v.Attack != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<section id=\"table-attack\" class=\"ds-strike\" data-attack data-float aria-label=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<section id=\"table-attack\" class=\"ds-strike\" data-attack data-float data-float-fleeting aria-label=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(playerAttackBadge(v.Attack))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/attack_card.templ`, Line: 167, Col: 110}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `serve/web/table/attack_card.templ`, Line: 167, Col: 130}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 			if templ_7745c5c3_Err != nil {

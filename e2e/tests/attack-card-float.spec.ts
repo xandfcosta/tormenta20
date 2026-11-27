@@ -24,8 +24,8 @@ async function command(page: Page, path: string, data: Record<string, unknown> =
   return found ? JSON.parse(`"${found[1]}"`) : ''
 }
 
-/** Põe um golpe do cavaleiro contra o alvo na mesa, passando a vez até ser a dele. */
-async function proposesAnAttack(page: Page): Promise<void> {
+/** Põe um golpe do cavaleiro contra o alvo na mesa, passando a vez até ser a dele, e devolve o alvo. */
+async function proposesAnAttack(page: Page): Promise<string> {
   await command(page, '/cena/iniciar/acao')
   await command(page, '/elenco/17/na-fila')
   // DO BESTIÁRIO, e não escrito à mão: a linha sem bloco não tem Defesa, e o
@@ -44,7 +44,7 @@ async function proposesAnAttack(page: Page): Promise<void> {
   let refusal = ''
   for (let attempt = 0; attempt < 4; attempt++) {
     refusal = await command(page, `/iniciativa/${target}/atacar`)
-    if (refusal === '') return
+    if (refusal === '') return target
     await command(page, '/iniciativa/proxima-vez')
   }
   throw new Error(`o cavaleiro não conseguiu atacar: ${refusal}`)
@@ -100,6 +100,33 @@ test('o cartão do ataque flutua e se arrasta no desktop, e no celular mostra s�
     await card.getByRole('button', { name: 'Abrir o ataque' }).click()
     await expect(sheet).toBeVisible()
     await expect(sheet.getByText('rola o dano')).toBeVisible()
+  } finally {
+    await command(page, '/ataque/cancelar').catch(() => '')
+  }
+})
+
+// O RECOLHIDO DO ATAQUE vale só para aquele golpe (ALE-723): cada ataque é uma
+// decisão nova, e nascer recolhido o faria passar despercebido (decisão do dono).
+test('o ataque recolhido não deixa o próximo nascer recolhido', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const target = await proposesAnAttack(page)
+  try {
+    await page.goto(MESA)
+    const card = page.locator('#table-attack')
+    await expect(card.getByRole('button', { name: 'Acertou' })).toBeVisible()
+    await card.getByRole('button', { name: 'Recolher ou abrir o ataque' }).click()
+    await expect(card.getByRole('button', { name: 'Acertou' })).toBeHidden()
+    // O CONTROLE: recolhido, ele continua recolhido no recarregar — é o mesmo golpe.
+    await page.reload()
+    await expect(card.getByText('Para julgar')).toBeVisible()
+    await expect(card.getByRole('button', { name: 'Acertou' })).toBeHidden()
+
+    expect(await command(page, '/ataque/cancelar')).toBe('')
+    await expect(card).toBeHidden()
+    // O MESMO ALVO, na mesma vez: o cancelar devolve o ataque a quem o propôs.
+    expect(await command(page, `/iniciativa/${target}/atacar`)).toBe('')
+    await page.goto(MESA)
+    await expect(card.getByRole('button', { name: 'Acertou' }), 'o ataque novo nasceu recolhido').toBeVisible()
   } finally {
     await command(page, '/ataque/cancelar').catch(() => '')
   }

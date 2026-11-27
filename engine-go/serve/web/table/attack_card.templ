@@ -19,7 +19,7 @@ import (
 // decidida) não tem mais nada a pedir, e o cartão sai.
 templ gmAttack(v View) {
 	if v.Attack != nil && v.Attack.Stage != stageSettled {
-		<section id="table-attack" class="ds-strike" data-attack data-float aria-label={ gmAttackBadge(v.Attack.Stage) }>
+		<section id="table-attack" class="ds-strike" data-attack data-float data-float-fleeting aria-label={ gmAttackBadge(v.Attack.Stage) }>
 			<div class="ds-strike-head" data-float-handle>
 				@floatGrip()
 				@ds.Badge(gmAttackBadge(v.Attack.Stage), true)
@@ -164,7 +164,7 @@ templ duelRowView(row duelRow) {
 // nem a RD — no papel do personagem, ele não conhece a ficha de outra entidade.
 templ tempestadeAttack(v View) {
 	if v.Attack != nil {
-		<section id="table-attack" class="ds-strike" data-attack data-float aria-label={ playerAttackBadge(v.Attack) }>
+		<section id="table-attack" class="ds-strike" data-attack data-float data-float-fleeting aria-label={ playerAttackBadge(v.Attack) }>
 			<div class="ds-strike-head" data-float-handle>
 				@floatGrip()
 				@ds.Badge(playerAttackBadge(v.Attack), true)

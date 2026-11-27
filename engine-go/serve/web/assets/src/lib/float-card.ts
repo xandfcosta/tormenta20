@@ -26,6 +26,7 @@
 
 const STORAGE_KEY = 't20-float-card'
 const FOLD_KEY = 't20-float-fold'
+const FLEETING_FOLD_KEY = 't20-float-fold-once'
 /** O vão entre os cartões da pilha, e entre ela e a borda da janela. */
 const DOCK_GAP = 8
 const DOCK_EDGE = 12
@@ -67,15 +68,29 @@ function place(card: HTMLElement, spot: Spot): void {
 /**
  * A CHAVE É POR CARTÃO: o ataque e o Estandarte flutuam ao mesmo tempo, e uma chave só os poria no
  * mesmo lugar, um em cima do outro. O ataque fica com a chave de antes, para quem já o arrastou não o
- * ver voltar ao meio.
+ * ver voltar à pilha.
  */
 function keyOf(card: HTMLElement): string {
   return card.id === 'table-attack' || !card.id ? STORAGE_KEY : `${STORAGE_KEY}:${card.id}`
 }
 
-/** O recolhido de um cartão fica guardado por cartão, como a posição. */
+/**
+ * O recolhido de um cartão fica guardado por cartão, como a posição. O cartão `data-float-fleeting` (o
+ * ataque) guarda numa chave à parte, que vale só enquanto ELE existe: cada ataque é uma decisão nova, e
+ * nascer recolhido o faria passar despercebido (decisão do dono).
+ */
 function foldKeyOf(card: HTMLElement): string {
-  return `${FOLD_KEY}:${card.id}`
+  return `${card.hasAttribute('data-float-fleeting') ? FLEETING_FOLD_KEY : FOLD_KEY}:${card.id}`
+}
+
+/** Esquece o recolhido do cartão passageiro que já sumiu, para o próximo nascer aberto. */
+function forgetGoneFleeting(storage: Storage): void {
+  for (let i = storage.length - 1; i >= 0; i--) {
+    const key = storage.key(i)
+    if (!key?.startsWith(`${FLEETING_FOLD_KEY}:`)) continue
+    const id = key.slice(FLEETING_FOLD_KEY.length + 1)
+    if (!document.querySelector(`#${CSS.escape(id)}[data-float]`)) storage.removeItem(key)
+  }
 }
 
 /** Aplica o recolhido guardado ao cartão que acabou de aparecer, e diz à seta em que estado ele está. */
@@ -95,6 +110,7 @@ function floorOf(): number {
  * baixo, à direita, na ordem da página — o último encostado no chão.
  */
 function layout(storage: Storage): void {
+  forgetGoneFleeting(storage)
   const docked: HTMLElement[] = []
   for (const card of document.querySelectorAll<HTMLElement>('[data-float]')) {
     applyFold(card, storage)
@@ -158,16 +174,27 @@ export function attachFloatCard(storage: Storage = window.localStorage): void {
     layout(storage)
   })
 
+  // UM LAYOUT POR QUADRO: o observador acorda a cada nó remendado em qualquer
+  // lugar da página — o arrasto de uma peça remenda muito —, e medir os cartões
+  // a cada um forçaria o leiaute repetidas vezes. O quadro roda antes da
+  // pintura, então o cartão remendado ainda não aparece fora do lugar.
+  let pending = 0
+  const soon = () => {
+    if (!pending) pending = requestAnimationFrame(() => {
+      pending = 0
+      layout(storage)
+    })
+  }
   // O TAMANHO de um cartão muda sem nó novo (o remendo troca o corpo, a seta o
   // recolhe), e a pilha tem de acompanhar: quem está em cima desce ou sobe.
-  const sizes = new ResizeObserver(() => layout(storage))
+  const sizes = new ResizeObserver(soon)
   const settle = () => {
     for (const card of document.querySelectorAll<HTMLElement>('[data-float]')) sizes.observe(card)
-    layout(storage)
+    soon()
   }
   // O CARTÃO NASCE pelo remendo do servidor: o observador fica no `body`, que
   // nunca é remendado, e não num nó que o próximo tique descarta.
   new MutationObserver(settle).observe(document.body, { subtree: true, childList: true })
-  window.addEventListener('resize', () => layout(storage))
+  window.addEventListener('resize', soon)
   settle()
 }
