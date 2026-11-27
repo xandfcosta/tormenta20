@@ -261,7 +261,7 @@ test('o dano do mestre chega na ficha do jogador, na seção em que ele está', 
     // A FILA INTEIRA antes de ler os nomes: o grupo entra uma linha por vez, e o
     // fluxo do jogador desenha cada passo. Lidos no meio, os nomes eram metade da
     // fila — e o personagem da Ficha embutida às vezes ficava de fora, sem levar
-    // o golpe, e o caso reprovava dizendo que a ficha não soube do dano (ALE-724).
+    // o golpe, e o caso reprovava dizendo que a ficha não soube do dano.
     // Recarregar desenha a fila do servidor, já completa; o fluxo que leva o dano
     // à ficha abre depois disso, e é ele que o caso mede.
     await playerScreen.reload()

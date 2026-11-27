@@ -88,7 +88,7 @@ mão não saberia quantos dados pegar.
   a devolve a cada remendo, antes da pintura. O `attack-card-float.spec.ts`
   prova com um remendo que muda o PRÓPRIO cartão — passar a vez não o remenda,
   e "ficou no lugar" mediria o nada.
-- **Os cartões NASCEM empilhados embaixo, à direita** (ALE-723; ver GLOSSARY,
+- **Os cartões NASCEM empilhados embaixo, à direita** (ver GLOSSARY,
   **cartão flutuante**), acima do chão marcado com `data-float-floor` (a linha
   do turno do mestre), e não no topo, onde moram as faixas. Arrastado, o cartão
   sai da pilha e fica onde foi posto; a seta da cabeça o recolhe até a cabeça,

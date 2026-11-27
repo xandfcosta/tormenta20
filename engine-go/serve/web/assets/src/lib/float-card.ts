@@ -11,10 +11,10 @@
  * Quem o devolve é o observador do `body`: ele RECOLOCA cada cartão a cada
  * remendo, do armazenamento deste aparelho ou da pilha, e roda antes da
  * pintura. Por isso o cartão não declara `data-preserve-attr`: seria uma
- * segunda forma de dizer a mesma coisa (sabotado na ALE-723 — sem ela, o
+ * segunda forma de dizer a mesma coisa (sabotado: sem ela, o
  * `attack-card-float.spec.ts` continua verde).
  *
- * # Onde nasce, e o recolher (ALE-723)
+ * # Onde nasce, e o recolher
  *
  * O cartão que ninguém arrastou NASCE empilhado embaixo, à direita, acima do
  * chão marcado com `data-float-floor` (a linha do turno do mestre) — e não no

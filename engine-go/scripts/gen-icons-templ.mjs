@@ -170,7 +170,7 @@ const QUERIDOS = [
   // O sistema novo (ALE-479): a linha que abre a conta e o botão de mais ações.
   'ChevronDown',
   'Ellipsis',
-  // O cartão flutuante (ALE-723): a alça visível por onde ele se arrasta.
+  // O cartão flutuante: a alça visível por onde ele se arrasta.
   'GripVertical',
 ]
 

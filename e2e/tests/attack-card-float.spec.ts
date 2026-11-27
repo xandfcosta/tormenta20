@@ -69,7 +69,7 @@ test('o cartão do ataque flutua e se arrasta no desktop, e no celular mostra s�
     await page.mouse.move(grip.x + 30, grip.y + grip.height / 2)
     await page.mouse.down()
     // PARA A ESQUERDA E PARA CIMA: o cartão nasce encostado embaixo, à direita
-    // (ALE-723), e para o outro lado ele bateria na borda da janela.
+    // (ver o `float-card.ts`), e para o outro lado ele bateria na borda da janela.
     await page.mouse.move(grip.x + 30 - 200, grip.y + grip.height / 2 - 150, { steps: 10 })
     await page.mouse.up()
     const dragged = await card.boundingBox()
@@ -80,7 +80,7 @@ test('o cartão do ataque flutua e se arrasta no desktop, e no celular mostra s�
     // DEPOIS do do app, roda logo após o dele a cada remendo e anota onde o
     // cartão está. O remendo apaga o `style`, e o app tem de devolver o lugar ali
     // mesmo — esperar o quadro seguinte deixava a posição errada legível nesse
-    // intervalo, e a CI leu (ALE-721). Determinístico: não depende da máquina
+    // intervalo, e a CI leu. Determinístico: não depende da máquina
     // ser lenta para cair no intervalo.
     await page.evaluate(() => {
       const log: { x: number; y: number }[] = []
@@ -127,7 +127,7 @@ test('o cartão do ataque flutua e se arrasta no desktop, e no celular mostra s�
   }
 })
 
-// O RECOLHIDO DO ATAQUE vale só para aquele golpe (ALE-723): cada ataque é uma
+// O RECOLHIDO DO ATAQUE vale só para aquele golpe: cada ataque é uma
 // decisão nova, e nascer recolhido o faria passar despercebido (decisão do dono).
 test('o ataque recolhido não deixa o próximo nascer recolhido', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
