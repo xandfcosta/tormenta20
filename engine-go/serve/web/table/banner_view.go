@@ -101,11 +101,11 @@ func dismissesBanner(st Scene, c commandCtx) (*live.SessionRuntimeState, error) 
 	return st.party.DismissBanner(c.R.Context(), app.Caller{ID: c.User}, c.CampaignID, c.SessionID, knight)
 }
 
-// bannerSummary é a cabeça da faixa: quantos aliados ainda esperam o toque do mestre.
-func bannerSummary(bands []bannerBand) string {
+// bannerWaiting é o número da cabeça do cartão: quantos aliados ainda esperam o toque do mestre.
+func bannerWaiting(bands []bannerBand) int {
 	waiting := 0
 	for _, band := range bands {
 		waiting += len(band.Offers)
 	}
-	return fmt.Sprintf("escolher quem vê · %d", waiting)
+	return waiting
 }

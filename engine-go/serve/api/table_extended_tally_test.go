@@ -46,7 +46,19 @@ func TestTheMasterOpensTheExtendedTestAndOnlyHeMarksIt(t *testing.T) {
 			t.Errorf("a mesa do mestre não tem %s", want)
 		}
 	}
+	// A FAIXA É A CONTA, e as marcas moram no cartão do mestre (ver GLOSSARY, **cartão flutuante**).
+	if strings.Contains(sectionOf(gm, "table-extended"), "Marcar um sucesso") {
+		t.Error("a faixa do teste estendido tem os botões de marcar: eles moram no cartão Marcar")
+	}
+	marks := sectionOf(gm, "table-extended-marks")
+	requireFloatingCard(t, marks, "Marcar")
+	if !strings.Contains(marks, "Marcar um sucesso") || !strings.Contains(marks, `class="ds-float-count">2/5<`) {
+		t.Error("o cartão Marcar não tem o sucesso ou não diz o placar 2/5 na cabeça")
+	}
 	player := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String()
+	if sectionOf(player, "table-extended-marks") != "" {
+		t.Error("a mesa do jogador tem o cartão Marcar, que é do mestre")
+	}
 	if !strings.Contains(player, "2/5") || !strings.Contains(player, "Atravessar o Pântano dos Juncos") {
 		t.Error("a mesa do jogador não mostra o contador")
 	}

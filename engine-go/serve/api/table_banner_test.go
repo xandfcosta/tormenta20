@@ -73,6 +73,12 @@ func TestTheGameMasterGivesTheBannerToTheAllyWhoSeesIt(t *testing.T) {
 	if strings.Contains(page, fmt.Sprintf("%s/estandarte/%d/%d", f.tableUrl(), knight, knight)) {
 		t.Error("a faixa oferece o Estandarte ao próprio cavaleiro, que já o recebe sozinho")
 	}
+	card := sectionOf(page, "table-banner")
+	requireFloatingCard(t, card, "do Estandarte")
+	// A CABEÇA diz quantos ainda faltam escolher: a Arcanista, porque o cavaleiro já o recebe sozinho.
+	if !strings.Contains(card, "Estandarte · a escolher") || !strings.Contains(card, `class="ds-float-count">1<`) {
+		t.Error("a cabeça do Estandarte não diz quantos faltam escolher")
+	}
 	if player := f.requests(t, f.player, http.MethodGet, f.tableUrl(), "").Body.String(); strings.Contains(player, "/estandarte/") {
 		t.Error("o jogador vê os botões do Estandarte, que são do mestre")
 	}

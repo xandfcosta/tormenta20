@@ -354,6 +354,7 @@ func TableRegions(v View) []tableRegion {
 		regions = append(regions, tableRegion{"table-extended", extendedBand(v)})
 		return append(regions,
 			// O ESTANDARTE nasce com a cena e encolhe a cada aliado que o mestre toca.
+			tableRegion{"table-extended-marks", gmExtendedMarks(v)},
 			tableRegion{"table-banner", gmBanner(v)},
 			tableRegion{"table-tracker", gmQueue(v)},
 			tableRegion{"table-commands", gmTurnBar(v)},
