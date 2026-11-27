@@ -348,11 +348,10 @@ func auditComplex(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(stri
 			}
 		}
 	}
-	inBook := len(actionHead.FindAllString(text, -1))
-	fmt.Printf("COMPLEXOS        livro: %d ND, %d ações · catálogo: %d perigos, %d ações\n",
-		len(complexND.FindAllString(text, -1)), inBook, len(catalog), actions)
-	if n := len(complexND.FindAllString(text, -1)); n != len(catalog) {
-		fail("as p320-321 têm %d fichas com ND e o catálogo tem %d complexos", n, len(catalog))
+	inBook, sheets := len(actionHead.FindAllString(text, -1)), len(complexND.FindAllString(text, -1))
+	fmt.Printf("COMPLEXOS        livro: %d ND, %d ações · catálogo: %d perigos, %d ações\n", sheets, inBook, len(catalog), actions)
+	if sheets != len(catalog) {
+		fail("as p320-321 têm %d fichas com ND e o catálogo tem %d complexos", sheets, len(catalog))
 	}
 	if inBook != actions {
 		fail("as p320-321 têm %d ações e o catálogo tem %d", inBook, actions)

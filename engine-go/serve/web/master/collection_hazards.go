@@ -1,13 +1,8 @@
 package master
 
-import (
-	"fmt"
-	"strings"
+import "t20engine/domain/book"
 
-	"t20engine/domain/book"
-)
-
-// A aba Perigos (p317-321): o filtro por tipo e a ficha que o cartão escreve.
+// A aba Perigos (p317-321): o filtro por tipo e os crachás do cartão. A ficha de cada tipo é do `hazardCard`.
 
 func hazardKindOptions() []filterOption {
 	outside := make([]filterOption, 0, len(book.HazardKinds))
@@ -31,31 +26,4 @@ func hazardBadges(h book.Hazard) []string {
 		badges = append(badges, "ND "+book.CRWritten(h.Complex.ND))
 	}
 	return badges
-}
-
-// hazardSheet são as linhas da ficha, na ordem em que a mesa as usa: o que a
-// armadilha causa e em quem, o teste da vítima, e as CDs para achar e desarmar;
-// na doença, como ela pega e o que cada falha seguida faz. O complexo tem cartão próprio, na ordem da ficha
-// dele (`hazardCard`).
-func hazardSheet(h book.Hazard) []string {
-	var lines []string
-	if t := h.Trap; t != nil {
-		if damage := t.DamageWritten(); damage != "" {
-			lines = append(lines, "Dano: "+damage)
-		}
-		if t.Area != "" {
-			lines = append(lines, "Área: "+t.Area)
-		}
-		if save := t.SaveWritten(); save != "" {
-			lines = append(lines, "Resistência: "+save)
-		}
-		lines = append(lines, fmt.Sprintf("Investigação CD %d · Ladinagem CD %d", t.Investigation, t.Thievery))
-	}
-	if d := h.Disease; d != nil {
-		lines = append(lines,
-			fmt.Sprintf("%s · Fortitude CD %d", firstUpper(d.Contagion), d.DC),
-			"Efeitos: "+strings.Join(d.Effects, " / "),
-		)
-	}
-	return lines
 }

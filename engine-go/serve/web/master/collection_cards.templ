@@ -2,6 +2,8 @@ package master
 
 import (
 	"fmt"
+	"strings"
+
 	"t20engine/domain/book"
 	"t20engine/serve/web/bookui"
 	"t20engine/serve/web/ds"
@@ -73,25 +75,54 @@ templ linkedNames(names []string, target func(string) (string, string)) {
 	}
 }
 
-// O PERIGO mostra a ficha antes da descrição: é o número que o mestre procura
-// quando a armadilha dispara ou a doença pega, e a descrição é o porquê. A
-// página que a descrição cita ("veja a página 267") vira elo para o livro.
+// hazardCard é o cartão do perigo, com a FICHA DE CADA TIPO toda aqui: o desenho do cartão mora num lugar só. A
+// armadilha e a doença mostram a ficha antes da descrição, porque é o número que o mestre procura quando ela
+// dispara ou pega; o complexo segue a ordem da ficha dele no livro. A página que a descrição cita ("veja a página
+// 267") vira elo para o livro.
 templ hazardCard(h book.Hazard, bookRef bookui.BookAddress) {
 	@catalogCard(h.Name, h.BookPage, bookRef, plainBadges(hazardBadges(h)...)) {
-		if c := h.Complex; c != nil {
-			// NA ORDEM DA FICHA DO LIVRO (p320): o objetivo, o efeito e as ações — com o nome, a perícia e a CD
-			// de cada ação em destaque, que é o que o mestre procura com o olho no meio da cena.
-			<p class="ds-row-meta">{ "Objetivo: " + c.Objective }</p>
-			@describedText(h.Description, bookRef)
-			for _, a := range c.Actions {
-				<p class="ds-row-meta"><b>{ a.Written() }</b>{ " — " + a.Description }</p>
-			}
-		} else {
-			for _, line := range hazardSheet(h) {
-				<p class="ds-row-meta">{ line }</p>
-			}
-			@describedText(h.Description, bookRef)
+		switch {
+			case h.Trap != nil:
+				@trapSheet(*h.Trap)
+				@describedText(h.Description, bookRef)
+			case h.Disease != nil:
+				@diseaseSheet(*h.Disease)
+				@describedText(h.Description, bookRef)
+			case h.Complex != nil:
+				@complexSheet(h, bookRef)
+			default:
+				@describedText(h.Description, bookRef)
 		}
+	}
+}
+
+// trapSheet é a ficha da armadilha: o que ela causa e em quem, o teste da vítima, e as CDs para achar e desarmar.
+templ trapSheet(t book.HazardTrap) {
+	if t.DamageWritten() != "" {
+		<p class="ds-row-meta">{ "Dano: " + t.DamageWritten() }</p>
+	}
+	if t.Area != "" {
+		<p class="ds-row-meta">{ "Área: " + t.Area }</p>
+	}
+	if t.SaveWritten() != "" {
+		<p class="ds-row-meta">{ "Resistência: " + t.SaveWritten() }</p>
+	}
+	<p class="ds-row-meta">{ fmt.Sprintf("Investigação CD %d · Ladinagem CD %d", t.Investigation, t.Thievery) }</p>
+}
+
+// diseaseSheet é a ficha da doença: como ela pega, a CD, e o que cada falha seguida faz.
+templ diseaseSheet(d book.HazardDisease) {
+	<p class="ds-row-meta">{ fmt.Sprintf("%s · Fortitude CD %d", firstUpper(d.Contagion), d.DC) }</p>
+	<p class="ds-row-meta">{ "Efeitos: " + strings.Join(d.Effects, " / ") }</p>
+}
+
+// complexSheet é a ficha do perigo complexo, NA ORDEM DO LIVRO (p320): o objetivo, o efeito e as ações — com o
+// nome, a perícia e a CD de cada ação em destaque, que é o que o mestre procura com o olho no meio da cena.
+templ complexSheet(h book.Hazard, bookRef bookui.BookAddress) {
+	<p class="ds-row-meta">{ "Objetivo: " + h.Complex.Objective }</p>
+	@describedText(h.Description, bookRef)
+	for _, a := range h.Complex.Actions {
+		<p class="ds-row-meta"><b>{ a.Written() }</b>{ " — " + a.Description }</p>
 	}
 }
 
