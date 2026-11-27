@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 
 /**
- * OS CARTÕES DO MESTRE NASCEM EMBAIXO, À DIREITA, E RECOLHEM (ALE-723; ver
+ * OS CARTÕES DO MESTRE NASCEM EMBAIXO, À DIREITA, E RECOLHEM (ver
  * GLOSSARY, **cartão flutuante**).
  *
  * E2E porque o lugar onde o cartão nasce é calculado no navegador
