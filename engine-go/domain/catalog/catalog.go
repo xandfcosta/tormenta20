@@ -167,7 +167,7 @@ var resources = []string{
 	// `threat-stats` é a Tabela 7-2 (p323) e os pacotes de atributos dos patamares (p322): o editor do bloco do
 	// NPC preenche Defesa, PV e ataques pelo ND, e o resto mostra como guia (ver GLOSSARY, **estatísticas pelo ND**).
 	"threat-stats",
-	// `hazards` são os perigos do Capítulo 7 (p317-319), consultáveis na aba Perigos do Catálogos do mestre (ver
+	// `hazards` são os perigos do Capítulo 7 (p317-321), consultáveis na aba Perigos do Catálogos do mestre (ver
 	// GLOSSARY, **perigo**).
 	"hazards",
 }

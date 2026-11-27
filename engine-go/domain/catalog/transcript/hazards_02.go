@@ -234,4 +234,123 @@ var hazardsPart02 = []Hazard{
 		UID:         "hzd_ra4ebn4gej",
 		Description: "Quem entra fica frustrado. A cada dia, Vontade (CD 25, +2 por dia seguido): esmorecido, depois confuso, e por fim insano — o personagem vira NPC do mestre. Lá dentro, habilidades custam +2 PM, itens mágicos perdem um encanto e o descanso recupera a metade. Lefeu e lefou são imunes.",
 	},
+	{
+		ID:          "avalanche",
+		Name:        "Avalanche",
+		Kind:        "complexo",
+		BookPage:    320,
+		UID:         "hzd_o6fmczie5r",
+		Description: "O grupo tem cinco rodadas para se afastar dos escombros. No fim da quinta, quem somou dois sucessos ou menos em correr ou carregar outro fica soterrado e sofre 16d6 de impacto; com três ou quatro, sofre 8d6 de impacto; com cinco ou mais, escapa sem dano. Sobrevivência CD 20 percebe a avalanche começando e dá uma ação a mais na primeira rodada. O soterrado fica imóvel e sofre 1d6 de impacto no início de cada turno; soltar-se, ou soltar um aliado, pede Força CD 25, e outros podem ajudar.",
+		Complex: &HazardComplex{
+			ND:        4,
+			Objective: "Escapar da avalanche.",
+			Actions: []HazardAction{
+				{
+					Name:        "Correr",
+					Test:        "Atletismo",
+					DC:          20,
+					Description: "Afasta-se dos escombros; passar por 10 ou mais, ou tirar 20 natural, conta dois sucessos. Tem os modificadores da corrida e vira Cavalgar ou Pilotagem com montaria ou veículo.",
+				},
+				{
+					Name:        "Carregar Outro",
+					Test:        "Atletismo",
+					DC:          25,
+					Description: "Leva um aliado próximo, com até um sucesso de diferença, como no correr; passando, os dois somam um sucesso.",
+				},
+				{
+					Name:        "Procurar Caminho",
+					Test:        "Percepção",
+					DC:          20,
+					Description: "Acha uma rota de fuga: +5 nos testes de correr e de carregar outro até o fim do perigo.",
+				},
+			},
+		},
+	},
+	{
+		ID:          "jornada-pelos-ermos",
+		Name:        "Jornada pelos Ermos",
+		Kind:        "complexo",
+		BookPage:    320,
+		UID:         "hzd_q3k3mfvjf7",
+		Description: "A jornada pede 3 testes se for curta (outro reino da mesma região), 5 se for média (outra região) e 7 se for longa (uma região distante ou outro continente). Cada falha tira 2d6 PV, que só se curam a partir de um dia depois do fim da viagem, e três falhas tiram 1 PM máximo por nível na próxima aventura. O grupo chega de qualquer jeito: o que está em jogo é o estado em que chega. É um teste estendido aberto (veja a página 223).",
+		Complex: &HazardComplex{
+			ND:        2,
+			Objective: "Chegar ao destino.",
+			Actions: []HazardAction{
+				{
+					Name:        "Avançar",
+					Test:        "Sobrevivência ou outras",
+					Varies:      true,
+					Description: "Os personagens se alternam nos testes até os sucessos exigidos ou três falhas. Outra perícia vale se o jogador a justificar e o mestre aprovar, uma vez por jornada cada. A CD é 15 em planícies e colinas, 20 em florestas e pântanos, 25 em desertos e montanhas, e 30 em regiões planares perigosas ou na Tormenta.",
+				},
+			},
+		},
+	},
+	{
+		ID:          "sala-esmagadora",
+		Name:        "Sala Esmagadora",
+		Kind:        "complexo",
+		BookPage:    321,
+		UID:         "hzd_xccnukwbe7",
+		Description: "Quando o grupo entra, a porta se fecha e as paredes começam a avançar. São três rodadas para agir; na quarta, quem está dentro sofre 10d6 de impacto, e na quinta a sala se fecha e mata quem ficou. Uma Âncora Dimensional impede qualquer movimento planar.",
+		Complex: &HazardComplex{
+			ND:        9,
+			Objective: "Abrir a porta e sair da sala, ou travar o mecanismo que move as paredes.",
+			Actions: []HazardAction{
+				{
+					Name:        "Derrubar Porta",
+					Test:        "Força",
+					DC:          30,
+					Description: "A porta é de aço maciço e não tem fechadura por dentro: derrubá-la pede três sucessos. No máximo dois personagens por rodada, cada um com o seu teste ou um ajudando o outro.",
+				},
+				{
+					Name:        "Desabilitar Mecanismo",
+					Test:        "Ladinagem",
+					DC:          30,
+					Description: "Três sucessos emperram as paredes, e depois a porta cai com calma, sem teste.",
+				},
+				{
+					Name:        "Segurar Paredes",
+					Test:        "Força",
+					DC:          25,
+					Description: "Cada dois sucessos dão mais uma rodada antes de a sala se fechar; sozinho não salva o grupo, mas dá tempo aos outros.",
+				},
+			},
+		},
+	},
+	{
+		ID:          "tempestade-em-alto-mar",
+		Name:        "Tempestade em Alto Mar",
+		Kind:        "complexo",
+		BookPage:    321,
+		UID:         "hzd_rybbnmogw4",
+		Description: "No início do turno, cada personagem faz Reflexos contra as ondas: quem falha sofre 4d6 de impacto, e quem falha por 10 ou mais também cai no mar. A CD é 20 + 1d6, rolada uma vez no início de cada rodada e igual para todos; quem está no mar falha sem rolar. Sobrevivência CD 20 percebe a tempestade começando e dá uma ação a mais na primeira rodada.",
+		Complex: &HazardComplex{
+			ND:        6,
+			Objective: "Sobreviver à fúria do mar. A tempestade dura 1d6+6 rodadas; depois a chuva pode seguir, mas sem os perigos.",
+			Actions: []HazardAction{
+				{
+					Name:        "Navegar",
+					Test:        "Pilotagem",
+					DC:          25,
+					Description: "Leva o navio para fora da tempestade: cada sucesso tira uma rodada da duração. Só um personagem por rodada.",
+				},
+				{
+					Name:        "Ajudar o Piloto",
+					Varies:      true,
+					Description: "Ajuda o teste de Pilotagem com qualquer perícia que o jogador justifique (veja a página 221).",
+				},
+				{
+					Name:        "Esconder-se",
+					Description: "Desce ao convés inferior: lá a CD de Reflexos é 20, sem o d6, e não há como cair no mar, mas não dá para navegar nem ajudar o piloto.",
+				},
+				{
+					Name:        "Voltar para o Navio",
+					Test:        "Atletismo",
+					DC:          25,
+					Description: "Quem caiu nada de volta com dois sucessos, um para alcançar o navio e outro para subir; falhar não avança, e falhar por 5 ou mais afunda. Quem não está escondido pode ajudar.",
+				},
+			},
+		},
+	},
 }
