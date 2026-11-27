@@ -58,11 +58,31 @@ function floats(card: HTMLElement): boolean {
   return getComputedStyle(card).position === 'fixed'
 }
 
+/** O último lugar de cada cartão, para o remendo que apagou o `style` o reaver sem medir nada (`restoreQuick`). */
+const lastSpot = new Map<string, Spot>()
+
+function put(card: HTMLElement, spot: Spot): void {
+  card.style.setProperty('--float-x', `${spot.x}px`)
+  card.style.setProperty('--float-y', `${spot.y}px`)
+  if (card.id) lastSpot.set(card.id, spot)
+}
+
 function place(card: HTMLElement, spot: Spot): void {
   const box = card.getBoundingClientRect()
-  const inside = clampSpot(spot, box, { width: window.innerWidth, height: window.innerHeight })
-  card.style.setProperty('--float-x', `${inside.x}px`)
-  card.style.setProperty('--float-y', `${inside.y}px`)
+  put(card, clampSpot(spot, box, { width: window.innerWidth, height: window.innerHeight }))
+}
+
+/**
+ * Devolve JÁ, no mesmo instante do remendo, o lugar e o recolhido que o remendo apagou, sem medir nada: a pilha
+ * se refaz no quadro seguinte (`layout`), mas entre os dois o cartão não pode ficar no lugar padrão — nada pinta
+ * ali, e mesmo assim quem mede a posição nesse intervalo a leria errada (o `attack-card-float.spec.ts` leu, na CI).
+ */
+function restoreQuick(storage: Storage): void {
+  for (const card of document.querySelectorAll<HTMLElement>('[data-float]')) {
+    applyFold(card, storage)
+    const spot = card.id ? lastSpot.get(card.id) : undefined
+    if (spot && !card.style.getPropertyValue('--float-x')) put(card, spot)
+  }
 }
 
 /**
@@ -123,8 +143,7 @@ function layout(storage: Storage): void {
   for (const card of docked.reverse()) {
     const box = card.getBoundingClientRect()
     bottom -= box.height
-    card.style.setProperty('--float-x', `${Math.max(DOCK_EDGE, window.innerWidth - box.width - DOCK_EDGE)}px`)
-    card.style.setProperty('--float-y', `${Math.max(DOCK_EDGE, bottom)}px`)
+    put(card, { x: Math.max(DOCK_EDGE, window.innerWidth - box.width - DOCK_EDGE), y: Math.max(DOCK_EDGE, bottom) })
     bottom -= DOCK_GAP
   }
 }
@@ -189,6 +208,7 @@ export function attachFloatCard(storage: Storage = window.localStorage): void {
   // recolhe), e a pilha tem de acompanhar: quem está em cima desce ou sobe.
   const sizes = new ResizeObserver(soon)
   const settle = () => {
+    restoreQuick(storage)
     for (const card of document.querySelectorAll<HTMLElement>('[data-float]')) sizes.observe(card)
     soon()
   }

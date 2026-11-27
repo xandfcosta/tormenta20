@@ -1,10 +1,10 @@
 package transcript
 
-// Hazard é um perigo do Capítulo 7 (p317-319): a ameaça que não é criatura (ver GLOSSARY, **perigo**).
+// Hazard é um perigo do Capítulo 7 (p317-321): a ameaça que não é criatura (ver GLOSSARY, **perigo**).
 type Hazard struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
-	// Kind é "armadilha", "doenca" ou "ambiente".
+	// Kind é "armadilha", "doenca", "ambiente" ou "complexo".
 	Kind     string `json:"kind"`
 	BookPage int    `json:"bookPage"`
 	UID      string `json:"uid"`
@@ -16,6 +16,26 @@ type Hazard struct {
 	// Exposures é o dano por rodada de quem fica no perigo do ambiente, uma por forma de ficar nele (a exposição e
 	// a imersão total do ácido e da lava); vazio no perigo que não rola dano por rodada.
 	Exposures []HazardExposure `json:"exposures,omitempty"`
+	// Complex é a ficha do perigo complexo (p320-321): o ND, o objetivo e as ações. O EFEITO é a `Description`.
+	Complex *HazardComplex `json:"complex,omitempty"`
+}
+
+// HazardComplex é a ficha do perigo complexo, que é uma cena por si só montada sobre o teste estendido.
+type HazardComplex struct {
+	ND        float64        `json:"nd"`
+	Objective string         `json:"objective"`
+	Actions   []HazardAction `json:"actions"`
+}
+
+// HazardAction é uma ação do perigo complexo: o nome, a perícia e a CD, e o que ela faz, em paráfrase. Sem perícia,
+// ela não tem teste; Varies diz que a CD — ou, sem perícia, a própria perícia — varia ("Sobrevivência ou Outras,
+// CD varia", "varia").
+type HazardAction struct {
+	Name        string `json:"name"`
+	Test        string `json:"test,omitempty"`
+	DC          int    `json:"dc,omitempty"`
+	Varies      bool   `json:"varies,omitempty"`
+	Description string `json:"description"`
 }
 
 // HazardExposure é uma forma de ficar no perigo do ambiente e o dano que ela causa por rodada. Kind fica vazio

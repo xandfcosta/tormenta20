@@ -9,11 +9,12 @@ import (
 	"t20engine/domain/catalog"
 )
 
-// Os três tipos de perigo (p317-319), como o recurso `hazards` os guarda (ver GLOSSARY, **perigo**).
+// Os quatro tipos de perigo (p317-321), como o recurso `hazards` os guarda (ver GLOSSARY, **perigo**).
 const (
 	HazardKindTrap    = "armadilha"
 	HazardKindDisease = "doenca"
 	HazardKindAmbient = "ambiente"
+	HazardKindComplex = "complexo"
 )
 
 // HazardKinds são os tipos na ordem em que a tela os oferece, com o nome que ela escreve.
@@ -21,10 +22,11 @@ var HazardKinds = []struct{ ID, Name string }{
 	{HazardKindTrap, "Armadilha"},
 	{HazardKindDisease, "Doença"},
 	{HazardKindAmbient, "Ambiente"},
+	{HazardKindComplex, "Complexo"},
 }
 
-// Hazard é um perigo do Capítulo 7: a ameaça que não é criatura. A armadilha e a doença trazem a ficha; o perigo
-// do ambiente é só a descrição, porque cada um tem regra própria.
+// Hazard é um perigo do Capítulo 7: a ameaça que não é criatura. A armadilha, a doença e o complexo trazem a
+// ficha; o perigo do ambiente é a descrição, porque cada um tem regra própria (o ácido e a lava, com a exposição).
 type Hazard struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
@@ -36,6 +38,39 @@ type Hazard struct {
 	// Exposures é o dano por rodada de quem fica no perigo do ambiente: a exposição e a imersão total do ácido e da
 	// lava. Vazio no resto.
 	Exposures []HazardExposure `json:"exposures"`
+	// Complex é a ficha do perigo complexo (p320-321): o ND, o objetivo e as ações; o efeito é a Description.
+	Complex *HazardComplex `json:"complex"`
+}
+
+// HazardComplex é a ficha do perigo complexo: uma cena por si só, montada sobre o teste estendido.
+type HazardComplex struct {
+	ND        float64        `json:"nd"`
+	Objective string         `json:"objective"`
+	Actions   []HazardAction `json:"actions"`
+}
+
+// HazardAction é uma ação do perigo complexo: o nome, a perícia e a CD, e o que ela faz. Sem perícia, não há
+// teste; Varies diz que a CD — ou, sem perícia, a própria perícia — varia.
+type HazardAction struct {
+	Name        string `json:"name"`
+	Test        string `json:"test"`
+	DC          int    `json:"dc"`
+	Varies      bool   `json:"varies"`
+	Description string `json:"description"`
+}
+
+// Written é a ação como a tela a escreve: "Correr · Atletismo CD 20", "Avançar · Sobrevivência ou outras, CD
+// varia", "Ajudar o Piloto · varia", "Esconder-se · sem teste".
+func (a HazardAction) Written() string {
+	switch {
+	case a.Test == "" && a.Varies:
+		return a.Name + " · varia"
+	case a.Test == "":
+		return a.Name + " · sem teste"
+	case a.Varies:
+		return a.Name + " · " + a.Test + ", CD varia"
+	}
+	return fmt.Sprintf("%s · %s CD %d", a.Name, a.Test, a.DC)
 }
 
 // HazardExposure é uma forma de ficar no perigo do ambiente ("exposicao", "imersao") e o dano dela por rodada.
@@ -153,5 +188,12 @@ func HazardKindName(kind string) string {
 
 // HazardFields é o que a busca dos catálogos varre no perigo.
 func HazardFields(h Hazard) []string {
-	return []string{h.Name, h.Description, HazardKindName(h.Kind)}
+	fields := []string{h.Name, h.Description, HazardKindName(h.Kind)}
+	if c := h.Complex; c != nil {
+		fields = append(fields, c.Objective)
+		for _, a := range c.Actions {
+			fields = append(fields, a.Name, a.Description)
+		}
+	}
+	return fields
 }

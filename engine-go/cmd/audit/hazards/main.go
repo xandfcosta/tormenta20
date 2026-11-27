@@ -1,6 +1,7 @@
-// Command hazards confere os perigos do catálogo (p317-319) contra o livro: as armadilhas campo a campo, as doenças
-// pelo contágio, pela CD e pelos efeitos, e o ambiente pelos dados e pelas páginas que a paráfrase cita e pelo dano
-// por rodada de quem fica nele.
+// Command hazards confere os perigos do catálogo (p317-321) contra o livro: as armadilhas campo a campo, as doenças
+// pelo contágio, pela CD e pelos efeitos, o ambiente pelos dados e pelas páginas que a paráfrase cita e pelo dano
+// por rodada de quem fica nele, e os complexos pelo ND, por cada ação com a perícia e a CD, e pelos números da
+// paráfrase.
 //
 // As armadilhas se leem pela FICHA, que o livro escreve numa frase só terminada em "ND x." — cortar o texto nesses
 // pontos dá uma ficha por pedaço, na ordem do livro. A armadilha MÁGICA é a do nome em itálico (p317), e o itálico
@@ -35,6 +36,11 @@ var (
 	roundsRe  = regexp.MustCompile(`durante (\d+d\d+) rodadas`)
 	// perExposure é o dano por rodada de exposição (p317, p319): o denominador do ambiente que rola na fila.
 	perExposure = regexp.MustCompile(`por rodada de exposição`)
+	// actionHead é o cabeçalho de uma ação do perigo complexo: o nome e, entre parênteses, a perícia com a CD, a
+	// CD que varia, "varia" ou "nenhum teste" (p320-321). O "(CD 20)" de um teste no meio do efeito não casa: o
+	// parêntese tem de começar pela perícia.
+	actionHead = regexp.MustCompile(`\(((?:[A-ZÀ-Ý][a-zà-ÿ]+(?: ou [A-Za-zÀ-ÿ]+)?(?:, CD varia| CD \d+))|varia|nenhum teste)\)`)
+	complexND  = regexp.MustCompile(`\bND \d+\b`)
 )
 
 func main() {
@@ -56,8 +62,9 @@ func main() {
 	traps := auditTraps(pdf, byKind["armadilha"], fail)
 	diseases := auditDiseases(pdf, byKind["doenca"], fail)
 	ambient := auditAmbient(pdf, byKind["ambiente"], fail)
+	complexes := auditComplex(pdf, byKind["complexo"], fail)
 
-	fmt.Printf("\nFALHAS: %d   (medidos: %d armadilhas, %d doenças, %d do ambiente)\n", failures, traps, diseases, ambient)
+	fmt.Printf("\nFALHAS: %d   (medidos: %d armadilhas, %d doenças, %d do ambiente, %d complexos)\n", failures, traps, diseases, ambient, complexes)
 	if failures > 0 {
 		os.Exit(1)
 	}
@@ -299,6 +306,70 @@ func auditAmbient(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(stri
 		fail("o livro tem %d dano(s) por rodada de exposição e o catálogo expõe %d", inBook, exposed)
 	}
 	return measured
+}
+
+// auditComplex confere os perigos complexos (p320-321): o nome com o ND, cada ação pelo parêntese do livro, e os
+// dados e as páginas que a paráfrase cita. O DENOMINADOR são as ações e os ND das duas páginas: uma leitura que
+// perdesse um cabeçalho conferiria só os que achou.
+func auditComplex(pdf *bookpdf.Book, catalog []transcript.Hazard, fail func(string, ...any)) int {
+	text := pageText(pdf, 320) + " " + pageText(pdf, 321)
+	key := bookpdf.Key(text)
+	measured, actions := 0, 0
+	for _, h := range catalog {
+		c := h.Complex
+		if c == nil {
+			fail("%s é complexo e não tem a ficha", h.Name)
+			continue
+		}
+		if !strings.Contains(key, bookpdf.Key(fmt.Sprintf("%s ND %v", h.Name, c.ND))) {
+			fail("%s: o livro não abre a ficha com \"%s ND %v\"", h.Name, h.Name, c.ND)
+			continue
+		}
+		measured++
+		said := []string{h.Description, c.Objective}
+		for _, a := range c.Actions {
+			actions++
+			head := a.Name + " (" + bookParenthesis(a) + ")"
+			if !strings.Contains(key, bookpdf.Key(head)) {
+				fail("%s: a ação %q não está no livro", h.Name, head)
+			}
+			said = append(said, a.Description)
+		}
+		for _, line := range said {
+			for _, d := range diceRe.FindAllString(line, -1) {
+				if !strings.Contains(text, d) {
+					fail("%s: a paráfrase cita %s, e as p320-321 não têm esse dado", h.Name, d)
+				}
+			}
+			for _, cited := range citedPage.FindAllString(line, -1) {
+				if !strings.Contains(text, cited) {
+					fail("%s: a paráfrase diz %q, e as p320-321 não citam essa página", h.Name, cited)
+				}
+			}
+		}
+	}
+	inBook, sheets := len(actionHead.FindAllString(text, -1)), len(complexND.FindAllString(text, -1))
+	fmt.Printf("COMPLEXOS        livro: %d ND, %d ações · catálogo: %d perigos, %d ações\n", sheets, inBook, len(catalog), actions)
+	if sheets != len(catalog) {
+		fail("as p320-321 têm %d fichas com ND e o catálogo tem %d complexos", sheets, len(catalog))
+	}
+	if inBook != actions {
+		fail("as p320-321 têm %d ações e o catálogo tem %d", inBook, actions)
+	}
+	return measured
+}
+
+// bookParenthesis é o parêntese que o livro escreve depois do nome da ação.
+func bookParenthesis(a transcript.HazardAction) string {
+	switch {
+	case a.Test == "" && a.Varies:
+		return "varia"
+	case a.Test == "":
+		return "nenhum teste"
+	case a.Varies:
+		return a.Test + ", CD varia"
+	}
+	return fmt.Sprintf("%s CD %d", a.Test, a.DC)
 }
 
 func ndOf(s string) float64 {
